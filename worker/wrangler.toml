@@ -1,0 +1,29 @@
+name = "tensorfeed-api"
+main = "index.ts"
+compatibility_date = "2024-01-01"
+
+[triggers]
+crons = [
+  "*/10 * * * *",
+  "* * * * *",
+  "0 * * * *",
+]
+
+[[kv_namespaces]]
+binding = "TENSORFEED_NEWS"
+id = ""
+
+[[kv_namespaces]]
+binding = "TENSORFEED_STATUS"
+id = ""
+
+[[kv_namespaces]]
+binding = "TENSORFEED_MODELS"
+id = ""
+
+[[kv_namespaces]]
+binding = "TENSORFEED_CONFIG"
+id = ""
+
+[vars]
+ENVIRONMENT = "production"

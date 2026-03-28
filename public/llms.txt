@@ -1,0 +1,22 @@
+# TensorFeed.ai
+> AI news, model tracking, and real-time AI ecosystem data.
+> Designed for humans and AI agents.
+
+## API Endpoints
+- /api/agents/news — Latest AI news articles (JSON)
+- /api/agents/status — AI service status (JSON)
+- /api/agents/models — Model release tracker (JSON)
+- /api/agents/papers — Latest arXiv AI papers (JSON)
+- /api/agents/pricing — AI API pricing data (JSON)
+
+## Feeds
+- /feed.xml — RSS 2.0 feed of all news
+- /feed.json — JSON Feed of all news
+- /feed/anthropic.xml — Anthropic-only RSS
+- /feed/openai.xml — OpenAI-only RSS
+- /feed/research.xml — Research papers RSS
+
+## About
+TensorFeed.ai is operated by Pizza Robot Studios LLC.
+Sister sites: terminalfeed.io, vr.org
+Contact: evan@pizzarobotstudios.com
