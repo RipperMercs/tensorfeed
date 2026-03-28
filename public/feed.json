@@ -6,6 +6,36 @@
   "description": "AI news, model tracking, and real-time AI ecosystem data for humans and agents.",
   "items": [
     {
+      "id": "https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/",
+      "url": "https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/",
+      "title": "Bluesky leans into AI with Attie, an app for building custom feeds",
+      "content_text": "Article URL: https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/ Comments URL: https://news.ycombinator.com/item?id=47558874 Points: 3 # Comments: 0",
+      "date_published": "2026-03-28T23:07:59.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use",
+      "url": "https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use",
+      "title": "Computer chip material inspired by the human brain could slash AI energy use",
+      "content_text": "Article URL: https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use Comments URL: https://news.ycombinator.com/item?id=47558849 Points: 3 # Comments: 0",
+      "date_published": "2026-03-28T23:04:14.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
       "id": "https://www.wsj.com/tech/ai/the-decadelong-feud-shaping-the-future-of-ai-7075acde",
       "url": "https://www.wsj.com/tech/ai/the-decadelong-feud-shaping-the-future-of-ai-7075acde",
       "title": "The Decadelong Feud Shaping the Future of AI",
@@ -24,7 +54,7 @@
       "id": "https://store.steampowered.com/app/294100/RimWorld/",
       "url": "https://store.steampowered.com/app/294100/RimWorld/",
       "title": "RimWorld: A sci-fi colony SIM driven by an intelligent AI storyteller",
-      "content_text": "Article URL: https://store.steampowered.com/app/294100/RimWorld/ Comments URL: https://news.ycombinator.com/item?id=47558798 Points: 1 # Comments: 0",
+      "content_text": "Article URL: https://store.steampowered.com/app/294100/RimWorld/ Comments URL: https://news.ycombinator.com/item?id=47558798 Points: 2 # Comments: 0",
       "date_published": "2026-03-28T22:55:04.000Z",
       "authors": [
         {
@@ -116,36 +146,6 @@
       "title": "Claude-IPC: Watch 5 claudes build a terminal Yubikey manager together [video]",
       "content_text": "Article URL: https://www.youtube.com/watch?v=6vEJNr8sASI Comments URL: https://news.ycombinator.com/item?id=47558429 Points: 1 # Comments: 1",
       "date_published": "2026-03-28T21:51:44.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
-      "id": "https://www.snackonai.com/p/the-web-of-trust-will-be-the-next-distribution-layer",
-      "url": "https://www.snackonai.com/p/the-web-of-trust-will-be-the-next-distribution-layer",
-      "title": "Is AI agent discoverability a reputation graph problem, not an SEO problem?",
-      "content_text": "Article URL: https://www.snackonai.com/p/the-web-of-trust-will-be-the-next-distribution-layer Comments URL: https://news.ycombinator.com/item?id=47558381 Points: 1 # Comments: 0",
-      "date_published": "2026-03-28T21:44:06.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
-      "id": "https://elliotfairbanksjunior.substack.com/p/i-predicted-a-number",
-      "url": "https://elliotfairbanksjunior.substack.com/p/i-predicted-a-number",
-      "title": "Verify_before – pre-deployment verifiability analysis for neuro-symbolic AI",
-      "content_text": "Article URL: https://elliotfairbanksjunior.substack.com/p/i-predicted-a-number Comments URL: https://news.ycombinator.com/item?id=47558292 Points: 1 # Comments: 0",
-      "date_published": "2026-03-28T21:33:35.000Z",
       "authors": [
         {
           "name": "Hacker News AI"

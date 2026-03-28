@@ -3,6 +3,32 @@
   "count": 107,
   "articles": [
     {
+      "id": "9u7sss",
+      "title": "Bluesky leans into AI with Attie, an app for building custom feeds",
+      "url": "https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/",
+      "source": "Hacker News AI",
+      "sourceDomain": "news.ycombinator.com",
+      "snippet": "Article URL: https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/ Comments URL: https://news.ycombinator.com/item?id=47558874 Points: 3 # Comments: 0",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-03-28T23:07:59.000Z",
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
+    },
+    {
+      "id": "v11gol",
+      "title": "Computer chip material inspired by the human brain could slash AI energy use",
+      "url": "https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use",
+      "source": "Hacker News AI",
+      "sourceDomain": "news.ycombinator.com",
+      "snippet": "Article URL: https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use Comments URL: https://news.ycombinator.com/item?id=47558849 Points: 3 # Comments: 0",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-03-28T23:04:14.000Z",
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
+    },
+    {
       "id": "yfrld0",
       "title": "The Decadelong Feud Shaping the Future of AI",
       "url": "https://www.wsj.com/tech/ai/the-decadelong-feud-shaping-the-future-of-ai-7075acde",
@@ -13,7 +39,7 @@
         "Community"
       ],
       "publishedAt": "2026-03-28T22:55:07.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
     },
     {
       "id": "6kewci",
@@ -21,12 +47,12 @@
       "url": "https://store.steampowered.com/app/294100/RimWorld/",
       "source": "Hacker News AI",
       "sourceDomain": "news.ycombinator.com",
-      "snippet": "Article URL: https://store.steampowered.com/app/294100/RimWorld/ Comments URL: https://news.ycombinator.com/item?id=47558798 Points: 1 # Comments: 0",
+      "snippet": "Article URL: https://store.steampowered.com/app/294100/RimWorld/ Comments URL: https://news.ycombinator.com/item?id=47558798 Points: 2 # Comments: 0",
       "categories": [
         "Community"
       ],
       "publishedAt": "2026-03-28T22:55:04.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
     },
     {
       "id": "17km5s",
@@ -39,7 +65,7 @@
         "Community"
       ],
       "publishedAt": "2026-03-28T22:51:47.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
     },
     {
       "id": "acahd0",
@@ -52,7 +78,7 @@
         "Community"
       ],
       "publishedAt": "2026-03-28T22:49:58.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
     },
     {
       "id": "eqqs8c",
@@ -65,7 +91,7 @@
         "Community"
       ],
       "publishedAt": "2026-03-28T22:42:23.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
     },
     {
       "id": "1zjdx",
@@ -78,7 +104,7 @@
         "Community"
       ],
       "publishedAt": "2026-03-28T22:06:59.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
     },
     {
       "id": "7a06h2",
@@ -91,7 +117,7 @@
         "Community"
       ],
       "publishedAt": "2026-03-28T22:00:50.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
     },
     {
       "id": "avvjb7",
@@ -104,33 +130,7 @@
         "Community"
       ],
       "publishedAt": "2026-03-28T21:51:44.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
-    },
-    {
-      "id": "9ghyqb",
-      "title": "Is AI agent discoverability a reputation graph problem, not an SEO problem?",
-      "url": "https://www.snackonai.com/p/the-web-of-trust-will-be-the-next-distribution-layer",
-      "source": "Hacker News AI",
-      "sourceDomain": "news.ycombinator.com",
-      "snippet": "Article URL: https://www.snackonai.com/p/the-web-of-trust-will-be-the-next-distribution-layer Comments URL: https://news.ycombinator.com/item?id=47558381 Points: 1 # Comments: 0",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-03-28T21:44:06.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
-    },
-    {
-      "id": "l2xj93",
-      "title": "Verify_before – pre-deployment verifiability analysis for neuro-symbolic AI",
-      "url": "https://elliotfairbanksjunior.substack.com/p/i-predicted-a-number",
-      "source": "Hacker News AI",
-      "sourceDomain": "news.ycombinator.com",
-      "snippet": "Article URL: https://elliotfairbanksjunior.substack.com/p/i-predicted-a-number Comments URL: https://news.ycombinator.com/item?id=47558292 Points: 1 # Comments: 0",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-03-28T21:33:35.000Z",
-      "fetchedAt": "2026-03-28T22:58:55.137Z"
+      "fetchedAt": "2026-03-28T23:24:22.687Z"
     },
     {
       "id": "g55tjz",
@@ -144,7 +144,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T21:00:57.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "hd0xqp",
@@ -158,7 +158,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T18:59:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "qnmwjp",
@@ -172,7 +172,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T18:41:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "ai4k99",
@@ -185,7 +185,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T18:33:10.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "b75qom",
@@ -199,7 +199,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T18:12:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "ml7a4z",
@@ -213,7 +213,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T17:51:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "hudb2o",
@@ -227,7 +227,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T16:00:40.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "emopy0",
@@ -241,7 +241,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T14:52:55.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "xirf4d",
@@ -255,7 +255,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T14:47:03.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "lbt4nn",
@@ -269,7 +269,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T14:39:17.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "qyfui",
@@ -283,7 +283,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T14:33:38.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.947Z"
+      "fetchedAt": "2026-03-28T23:24:21.467Z"
     },
     {
       "id": "d376p3",
@@ -296,7 +296,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T14:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "nps7ew",
@@ -309,7 +309,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-28T12:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "lqkozz",
@@ -323,7 +323,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-28T09:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "ku68ui",
@@ -336,7 +336,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-27T21:46:39.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "8hmauv",
@@ -349,7 +349,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-27T18:35:53.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "xf1gc",
@@ -362,7 +362,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-27T15:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "sxpi6w",
@@ -376,7 +376,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-27T12:32:54.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "clhim5",
@@ -389,7 +389,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-27T11:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "ruwb0c",
@@ -402,7 +402,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-27T10:30:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "u94n2j",
@@ -416,7 +416,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-27T09:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "i6lsvf",
@@ -429,7 +429,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-27T00:33:44.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "8fov1x",
@@ -443,7 +443,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-27T00:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "lxhh6r",
@@ -456,7 +456,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-26T23:40:22.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "t0ogtq",
@@ -469,7 +469,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-26T23:33:05.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "qtg2w",
@@ -482,7 +482,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-26T21:44:37.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "z0ssq8",
@@ -495,7 +495,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-26T21:31:27.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "plw3k4",
@@ -508,7 +508,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-26T20:51:31.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "vdpgxu",
@@ -521,7 +521,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-26T18:47:51.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.730Z"
+      "fetchedAt": "2026-03-28T23:24:21.240Z"
     },
     {
       "id": "xmy0ve",
@@ -534,7 +534,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-26T18:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "5q9pys",
@@ -547,7 +547,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-26T17:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "rprcfg",
@@ -560,7 +560,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-26T16:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "aq77fm",
@@ -573,7 +573,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-26T15:21:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "sp909r",
@@ -586,7 +586,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-26T15:00:56.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "ba4j03",
@@ -599,7 +599,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-26T15:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "dwlb3l",
@@ -612,7 +612,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-26T13:00:47.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "b29w5p",
@@ -626,7 +626,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-26T12:42:53.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "llipo5",
@@ -639,7 +639,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-26T12:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "wkbz7y",
@@ -652,7 +652,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-26T10:30:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "o55fqv",
@@ -666,7 +666,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-26T10:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "8234wd",
@@ -680,7 +680,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-26T10:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "cok2yc",
@@ -693,7 +693,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-25T19:00:04.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "oikwi2",
@@ -706,7 +706,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-25T18:49:40.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "8etkb3",
@@ -719,7 +719,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-25T18:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.787Z"
+      "fetchedAt": "2026-03-28T23:24:21.358Z"
     },
     {
       "id": "81jq7x",
@@ -733,7 +733,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-25T17:26:26.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "tkl9wb",
@@ -746,7 +746,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-25T16:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "52b5o2",
@@ -759,7 +759,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-25T16:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "jzyw3u",
@@ -772,7 +772,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-25T15:49:17.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "dzf8zp",
@@ -786,7 +786,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-25T15:02:50.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "qdiuqq",
@@ -800,7 +800,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-25T13:59:17.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "epe6p0",
@@ -814,7 +814,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-03-25T12:47:44.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.797Z"
+      "fetchedAt": "2026-03-28T23:24:21.298Z"
     },
     {
       "id": "i4dkxg",
@@ -827,7 +827,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-25T11:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "smh9ny",
@@ -840,7 +840,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-24T12:38:09.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "418cy3",
@@ -853,7 +853,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-24T08:00:12.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "ghuazk",
@@ -867,7 +867,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-24T02:01:52.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "2usf7i",
@@ -880,7 +880,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-23T15:00:03.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "o1qrld",
@@ -893,7 +893,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-20T20:50:46.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "lwbysn",
@@ -907,7 +907,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-20T19:38:16.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "z4ts0j",
@@ -921,7 +921,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-20T14:14:46.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "a1rbc0",
@@ -934,7 +934,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-20T00:15:17.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "gvi2ba",
@@ -947,7 +947,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-19T21:29:53.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "xy2akj",
@@ -960,7 +960,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-19T13:00:09.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "pfy3tz",
@@ -973,7 +973,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-18T17:36:40.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "22yufh",
@@ -986,7 +986,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-18T13:00:13.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "94atx1",
@@ -999,7 +999,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-17T17:07:12.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "mt85b8",
@@ -1012,7 +1012,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-17T17:00:58.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.864Z"
+      "fetchedAt": "2026-03-28T23:24:21.463Z"
     },
     {
       "id": "1bvl3g",
@@ -1026,7 +1026,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-17T16:37:55.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "a87jgi",
@@ -1039,7 +1039,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-17T16:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "kqd2xl",
@@ -1052,7 +1052,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-17T16:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "txg8n4",
@@ -1066,7 +1066,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-17T12:33:39.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "4y3pov",
@@ -1079,7 +1079,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-13T20:18:08.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "wfcua8",
@@ -1092,7 +1092,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-12T22:18:11.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "g9fv6y",
@@ -1105,7 +1105,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-12T15:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "hrw6jz",
@@ -1118,7 +1118,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-11T21:27:16.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "gkwhmz",
@@ -1131,7 +1131,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-03-10T13:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.927Z"
+      "fetchedAt": "2026-03-28T23:24:21.454Z"
     },
     {
       "id": "39w9u",
@@ -1145,7 +1145,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-10T00:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "pukzxn",
@@ -1159,7 +1159,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-10T00:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "y72wlt",
@@ -1173,7 +1173,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-09T00:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "k6ccms",
@@ -1187,7 +1187,7 @@
         "Models"
       ],
       "publishedAt": "2026-03-09T00:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.944Z"
+      "fetchedAt": "2026-03-28T23:24:21.331Z"
     },
     {
       "id": "5ztbzh",
@@ -1200,7 +1200,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-06T19:41:33.000Z",
-      "fetchedAt": "2026-03-28T22:58:54.164Z"
+      "fetchedAt": "2026-03-28T23:24:21.254Z"
     },
     {
       "id": "lt1nhr",
@@ -1214,7 +1214,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-22T14:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.873Z"
+      "fetchedAt": "2026-03-28T23:24:21.448Z"
     },
     {
       "id": "pw82ni",
@@ -1228,7 +1228,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-19T14:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.873Z"
+      "fetchedAt": "2026-03-28T23:24:21.448Z"
     },
     {
       "id": "2stlo5",
@@ -1242,7 +1242,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-16T14:01:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.873Z"
+      "fetchedAt": "2026-03-28T23:24:21.448Z"
     },
     {
       "id": "wkanl4",
@@ -1256,7 +1256,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-13T13:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.873Z"
+      "fetchedAt": "2026-03-28T23:24:21.448Z"
     },
     {
       "id": "3qldyo",
@@ -1269,7 +1269,7 @@
         "General AI"
       ],
       "publishedAt": "2026-01-13T11:30:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     },
     {
       "id": "69xvr0",
@@ -1283,7 +1283,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-12T11:30:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.873Z"
+      "fetchedAt": "2026-03-28T23:24:21.448Z"
     },
     {
       "id": "o3ucts",
@@ -1297,7 +1297,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-07T20:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.873Z"
+      "fetchedAt": "2026-03-28T23:24:21.448Z"
     },
     {
       "id": "k9er74",
@@ -1311,7 +1311,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-05T07:45:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.874Z"
+      "fetchedAt": "2026-03-28T23:24:21.449Z"
     },
     {
       "id": "e9o9yk",
@@ -1324,7 +1324,7 @@
         "General AI"
       ],
       "publishedAt": "2025-10-31T19:26:30.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     },
     {
       "id": "1wsfir",
@@ -1337,7 +1337,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-26T15:21:19.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     },
     {
       "id": "tm47qk",
@@ -1350,7 +1350,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-20T16:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     },
     {
       "id": "27akb2",
@@ -1363,7 +1363,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-20T15:56:53.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     },
     {
       "id": "tj3u0t",
@@ -1376,7 +1376,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-04T15:41:39.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     },
     {
       "id": "6xwg8b",
@@ -1389,7 +1389,7 @@
         "General AI"
       ],
       "publishedAt": "2025-06-04T14:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     },
     {
       "id": "yt0ltc",
@@ -1402,7 +1402,7 @@
         "General AI"
       ],
       "publishedAt": "2025-06-02T18:07:05.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     },
     {
       "id": "jrrt6d",
@@ -1415,7 +1415,7 @@
         "General AI"
       ],
       "publishedAt": "2025-05-27T12:00:00.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     },
     {
       "id": "sfwrni",
@@ -1428,8 +1428,8 @@
         "General AI"
       ],
       "publishedAt": "2025-05-22T16:49:53.000Z",
-      "fetchedAt": "2026-03-28T22:58:53.725Z"
+      "fetchedAt": "2026-03-28T23:24:21.234Z"
     }
   ],
-  "fetchedAt": "2026-03-28T22:58:55.143Z"
+  "fetchedAt": "2026-03-28T23:24:22.692Z"
 }

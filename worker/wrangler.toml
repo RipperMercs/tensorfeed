@@ -1,29 +1,30 @@
 name = "tensorfeed-api"
-main = "index.ts"
-compatibility_date = "2024-01-01"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 
 [triggers]
 crons = [
   "*/10 * * * *",
-  "* * * * *",
+  "*/2 * * * *",
   "0 * * * *",
 ]
 
 [[kv_namespaces]]
 binding = "TENSORFEED_NEWS"
 id = ""
+preview_id = ""
 
 [[kv_namespaces]]
 binding = "TENSORFEED_STATUS"
 id = ""
+preview_id = ""
 
 [[kv_namespaces]]
-binding = "TENSORFEED_MODELS"
+binding = "TENSORFEED_CACHE"
 id = ""
-
-[[kv_namespaces]]
-binding = "TENSORFEED_CONFIG"
-id = ""
+preview_id = ""
 
 [vars]
 ENVIRONMENT = "production"
+SITE_URL = "https://tensorfeed.ai"

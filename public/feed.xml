@@ -5,8 +5,26 @@
     <link>https://tensorfeed.ai</link>
     <description>AI news, model tracking, and real-time AI ecosystem data for humans and agents.</description>
     <language>en-us</language>
-    <lastBuildDate>Sat, 28 Mar 2026 22:58:55 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 28 Mar 2026 23:24:22 GMT</lastBuildDate>
     <atom:link href="https://tensorfeed.ai/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Bluesky leans into AI with Attie, an app for building custom feeds</title>
+      <link>https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/</link>
+      <description>Article URL: https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/ Comments URL: https://news.ycombinator.com/item?id=47558874 Points: 3 # Comments: 0</description>
+      <pubDate>Sat, 28 Mar 2026 23:07:59 GMT</pubDate>
+      <guid isPermaLink="true">https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/</guid>
+      <source url="https://news.ycombinator.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>Computer chip material inspired by the human brain could slash AI energy use</title>
+      <link>https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use</link>
+      <description>Article URL: https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use Comments URL: https://news.ycombinator.com/item?id=47558849 Points: 3 # Comments: 0</description>
+      <pubDate>Sat, 28 Mar 2026 23:04:14 GMT</pubDate>
+      <guid isPermaLink="true">https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use</guid>
+      <source url="https://news.ycombinator.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
     <item>
       <title>The Decadelong Feud Shaping the Future of AI</title>
       <link>https://www.wsj.com/tech/ai/the-decadelong-feud-shaping-the-future-of-ai-7075acde</link>
@@ -19,7 +37,7 @@
     <item>
       <title>RimWorld: A sci-fi colony SIM driven by an intelligent AI storyteller</title>
       <link>https://store.steampowered.com/app/294100/RimWorld/</link>
-      <description>Article URL: https://store.steampowered.com/app/294100/RimWorld/ Comments URL: https://news.ycombinator.com/item?id=47558798 Points: 1 # Comments: 0</description>
+      <description>Article URL: https://store.steampowered.com/app/294100/RimWorld/ Comments URL: https://news.ycombinator.com/item?id=47558798 Points: 2 # Comments: 0</description>
       <pubDate>Sat, 28 Mar 2026 22:55:04 GMT</pubDate>
       <guid isPermaLink="true">https://store.steampowered.com/app/294100/RimWorld/</guid>
       <source url="https://news.ycombinator.com">Hacker News AI</source>
@@ -76,24 +94,6 @@
       <description>Article URL: https://www.youtube.com/watch?v=6vEJNr8sASI Comments URL: https://news.ycombinator.com/item?id=47558429 Points: 1 # Comments: 1</description>
       <pubDate>Sat, 28 Mar 2026 21:51:44 GMT</pubDate>
       <guid isPermaLink="true">https://www.youtube.com/watch?v=6vEJNr8sASI</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>Is AI agent discoverability a reputation graph problem, not an SEO problem?</title>
-      <link>https://www.snackonai.com/p/the-web-of-trust-will-be-the-next-distribution-layer</link>
-      <description>Article URL: https://www.snackonai.com/p/the-web-of-trust-will-be-the-next-distribution-layer Comments URL: https://news.ycombinator.com/item?id=47558381 Points: 1 # Comments: 0</description>
-      <pubDate>Sat, 28 Mar 2026 21:44:06 GMT</pubDate>
-      <guid isPermaLink="true">https://www.snackonai.com/p/the-web-of-trust-will-be-the-next-distribution-layer</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>Verify_before – pre-deployment verifiability analysis for neuro-symbolic AI</title>
-      <link>https://elliotfairbanksjunior.substack.com/p/i-predicted-a-number</link>
-      <description>Article URL: https://elliotfairbanksjunior.substack.com/p/i-predicted-a-number Comments URL: https://news.ycombinator.com/item?id=47558292 Points: 1 # Comments: 0</description>
-      <pubDate>Sat, 28 Mar 2026 21:33:35 GMT</pubDate>
-      <guid isPermaLink="true">https://elliotfairbanksjunior.substack.com/p/i-predicted-a-number</guid>
       <source url="https://news.ycombinator.com">Hacker News AI</source>
         <category>Community</category>
     </item>
