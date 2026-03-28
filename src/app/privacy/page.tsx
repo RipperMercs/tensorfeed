@@ -121,10 +121,10 @@ export default function PrivacyPage() {
           <p>
             If you have any questions about this privacy policy, you can reach us at{' '}
             <a
-              href="mailto:evan@pizzarobotstudios.com"
+              href="mailto:feedback@tensorfeed.ai"
               className="text-accent-primary hover:underline"
             >
-              evan@pizzarobotstudios.com
+              feedback@tensorfeed.ai
             </a>
             .
           </p>

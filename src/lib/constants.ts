@@ -2,7 +2,8 @@ export const SITE_NAME = 'TensorFeed.ai';
 export const SITE_URL = 'https://tensorfeed.ai';
 export const SITE_DESCRIPTION = 'AI news, model tracking, and real-time AI ecosystem data for humans and agents.';
 export const PUBLISHER = 'Pizza Robot Studios LLC';
-export const CONTACT_EMAIL = 'evan@pizzarobotstudios.com';
+export const CONTACT_EMAIL = 'feedback@tensorfeed.ai';
+export const PRESS_EMAIL = 'press@tensorfeed.ai';
 
 export const NAV_LINKS = [
   { href: '/', label: 'Feed' },

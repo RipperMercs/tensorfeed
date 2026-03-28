@@ -184,21 +184,21 @@ export default function AboutPage() {
           <div className="flex items-center gap-3">
             <Mail className="w-4 h-4 text-text-muted" />
             <a
-              href="mailto:evan@pizzarobotstudios.com"
+              href="mailto:feedback@tensorfeed.ai"
               className="text-accent-primary hover:underline text-sm"
             >
-              evan@pizzarobotstudios.com
+              feedback@tensorfeed.ai
             </a>
           </div>
           <div className="flex items-center gap-3">
             <ExternalLink className="w-4 h-4 text-text-muted" />
             <a
-              href="https://github.com/pizzarobotstudios"
+              href="https://github.com/evanatpizzarobot/tensorfeed"
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent-primary hover:underline text-sm"
             >
-              github.com/pizzarobotstudios
+              github.com/evanatpizzarobot/tensorfeed
             </a>
           </div>
         </div>

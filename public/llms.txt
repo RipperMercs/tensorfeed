@@ -35,4 +35,5 @@ TensorFeed.ai is operated by Pizza Robot Studios LLC.
 All news articles link back to their original sources.
 Original content is published under /originals.
 Sister sites: terminalfeed.io, vr.org
-Contact: evan@pizzarobotstudios.com
+Contact: feedback@tensorfeed.ai
+Press: press@tensorfeed.ai
