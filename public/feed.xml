@@ -5,96 +5,96 @@
     <link>https://tensorfeed.ai</link>
     <description>AI news, model tracking, and real-time AI ecosystem data for humans and agents.</description>
     <language>en-us</language>
-    <lastBuildDate>Sat, 28 Mar 2026 23:24:22 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 28 Mar 2026 23:35:12 GMT</lastBuildDate>
     <atom:link href="https://tensorfeed.ai/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
       <title>Bluesky leans into AI with Attie, an app for building custom feeds</title>
       <link>https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/</link>
-      <description>Article URL: https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/ Comments URL: https://news.ycombinator.com/item?id=47558874 Points: 3 # Comments: 0</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 23:07:59 GMT</pubDate>
       <guid isPermaLink="true">https://techcrunch.com/2026/03/28/bluesky-leans-into-ai-with-attie-an-app-for-building-custom-feeds/</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://techcrunch.com">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
       <title>Computer chip material inspired by the human brain could slash AI energy use</title>
       <link>https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use</link>
-      <description>Article URL: https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use Comments URL: https://news.ycombinator.com/item?id=47558849 Points: 3 # Comments: 0</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 23:04:14 GMT</pubDate>
       <guid isPermaLink="true">https://www.cam.ac.uk/research/news/new-computer-chip-material-inspired-by-the-human-brain-could-slash-ai-energy-use</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://cam.ac.uk">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
       <title>The Decadelong Feud Shaping the Future of AI</title>
       <link>https://www.wsj.com/tech/ai/the-decadelong-feud-shaping-the-future-of-ai-7075acde</link>
-      <description>Article URL: https://www.wsj.com/tech/ai/the-decadelong-feud-shaping-the-future-of-ai-7075acde Comments URL: https://news.ycombinator.com/item?id=47558799 Points: 1 # Comments: 0</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 22:55:07 GMT</pubDate>
       <guid isPermaLink="true">https://www.wsj.com/tech/ai/the-decadelong-feud-shaping-the-future-of-ai-7075acde</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://wsj.com">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
       <title>RimWorld: A sci-fi colony SIM driven by an intelligent AI storyteller</title>
       <link>https://store.steampowered.com/app/294100/RimWorld/</link>
-      <description>Article URL: https://store.steampowered.com/app/294100/RimWorld/ Comments URL: https://news.ycombinator.com/item?id=47558798 Points: 2 # Comments: 0</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 22:55:04 GMT</pubDate>
       <guid isPermaLink="true">https://store.steampowered.com/app/294100/RimWorld/</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://store.steampowered.com">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
       <title>Why AI Companies Want to Take Control of Your Computer</title>
       <link>https://nymag.com/intelligencer/article/why-ai-agents-anthropic-claude-want-to-take-control-of-your-computer.html</link>
-      <description>Article URL: https://nymag.com/intelligencer/article/why-ai-agents-anthropic-claude-want-to-take-control-of-your-computer.html Comments URL: https://news.ycombinator.com/item?id=47558786 Points: 1 # Comments: 0</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 22:51:47 GMT</pubDate>
       <guid isPermaLink="true">https://nymag.com/intelligencer/article/why-ai-agents-anthropic-claude-want-to-take-control-of-your-computer.html</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://nymag.com">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
       <title>Why exposing young children to AI content could have irreversible consequences</title>
       <link>https://theconversation.com/why-exposing-young-children-to-ai-content-could-have-irreversible-consequences-277719</link>
-      <description>Article URL: https://theconversation.com/why-exposing-young-children-to-ai-content-could-have-irreversible-consequences-277719 Comments URL: https://news.ycombinator.com/item?id=47558774 Points: 1 # Comments: 0</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 22:49:58 GMT</pubDate>
       <guid isPermaLink="true">https://theconversation.com/why-exposing-young-children-to-ai-content-could-have-irreversible-consequences-277719</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://theconversation.com">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
       <title>From 300KB to 69KB per Token: How LLM Architectures Solve the KV Cache Problem</title>
       <link>https://news.future-shock.ai/the-weight-of-remembering/</link>
-      <description>Article URL: https://news.future-shock.ai/the-weight-of-remembering/ Comments URL: https://news.ycombinator.com/item?id=47558733 Points: 2 # Comments: 0</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 22:42:23 GMT</pubDate>
       <guid isPermaLink="true">https://news.future-shock.ai/the-weight-of-remembering/</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://news.future-shock.ai">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
       <title>AI Perfected Chess. Humans Made It Unpredictable Again</title>
       <link>https://www.bloomberg.com/news/articles/2026-03-27/ai-changed-chess-grandmasters-now-win-with-unpredictable-moves</link>
-      <description>Article URL: https://www.bloomberg.com/news/articles/2026-03-27/ai-changed-chess-grandmasters-now-win-with-unpredictable-moves Comments URL: https://news.ycombinator.com/item?id=47558531 Points: 4 # Comments: 1</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 22:06:59 GMT</pubDate>
       <guid isPermaLink="true">https://www.bloomberg.com/news/articles/2026-03-27/ai-changed-chess-grandmasters-now-win-with-unpredictable-moves</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://bloomberg.com">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
       <title>Intel Core Ultra Series 3 VPro: 18A AI PCs Debut with Dtect Security Updates</title>
       <link>https://hothardware.com/news/intel-unveils-core-ultra-series-3-vpro</link>
-      <description>Article URL: https://hothardware.com/news/intel-unveils-core-ultra-series-3-vpro Comments URL: https://news.ycombinator.com/item?id=47558498 Points: 1 # Comments: 0</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 22:00:50 GMT</pubDate>
       <guid isPermaLink="true">https://hothardware.com/news/intel-unveils-core-ultra-series-3-vpro</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://hothardware.com">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
       <title>Claude-IPC: Watch 5 claudes build a terminal Yubikey manager together [video]</title>
       <link>https://www.youtube.com/watch?v=6vEJNr8sASI</link>
-      <description>Article URL: https://www.youtube.com/watch?v=6vEJNr8sASI Comments URL: https://news.ycombinator.com/item?id=47558429 Points: 1 # Comments: 1</description>
+      <description></description>
       <pubDate>Sat, 28 Mar 2026 21:51:44 GMT</pubDate>
       <guid isPermaLink="true">https://www.youtube.com/watch?v=6vEJNr8sASI</guid>
-      <source url="https://news.ycombinator.com">Hacker News AI</source>
+      <source url="https://youtube.com">Hacker News AI</source>
         <category>Community</category>
     </item>
     <item>
