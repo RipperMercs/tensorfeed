@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>TensorFeed.ai - Tools &amp; Dev</title>
+    <link>https://tensorfeed.ai</link>
+    <description>Developer tools, SDKs, and AI engineering news.</description>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 28 Mar 2026 22:58:55 GMT</lastBuildDate>
+    <atom:link href="https://tensorfeed.ai/feed/tools.xml" rel="self" type="application/rss+xml"/>
+
+  </channel>
+</rss>

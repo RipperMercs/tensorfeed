@@ -2,21 +2,37 @@
 > AI news, model tracking, and real-time AI ecosystem data.
 > Designed for humans and AI agents.
 
-## API Endpoints
-- /api/agents/news — Latest AI news articles (JSON)
-- /api/agents/status — AI service status (JSON)
-- /api/agents/models — Model release tracker (JSON)
-- /api/agents/papers — Latest arXiv AI papers (JSON)
-- /api/agents/pricing — AI API pricing data (JSON)
-
 ## Feeds
-- /feed.xml — RSS 2.0 feed of all news
-- /feed.json — JSON Feed of all news
-- /feed/anthropic.xml — Anthropic-only RSS
-- /feed/openai.xml — OpenAI-only RSS
-- /feed/research.xml — Research papers RSS
+- /feed.xml — Full RSS 2.0 feed of all aggregated AI news
+- /feed.json — JSON Feed 1.1 of all aggregated AI news
+- /feed/research.xml — Research papers only (RSS)
+- /feed/tools.xml — Tools and developer news only (RSS)
+
+## Agent API (Static JSON)
+- /api/agents/news.json — Latest AI news articles
+- /api/agents/status.json — AI service operational status
+- /api/agents/pricing.json — AI API pricing comparison data
+
+## Pages
+- / — Main news feed (aggregated from 12+ RSS sources)
+- /models — AI model release tracker and pricing comparison
+- /agents — AI agent and framework directory
+- /research — arXiv papers and benchmark data
+- /status — Real-time AI service status dashboard
+- /live — Live data feeds (HN, GitHub trending, arXiv, pricing)
+- /originals — Original editorial articles by TensorFeed
+
+## Guides
+- /what-is-ai — Complete guide to artificial intelligence
+- /best-ai-tools — Best AI tools reviewed
+- /best-ai-chatbots — AI chatbot comparison
+- /ai-api-pricing-guide — API pricing breakdown
+- /what-are-ai-agents — Guide to AI agents
+- /best-open-source-llms — Open source LLM comparison
 
 ## About
 TensorFeed.ai is operated by Pizza Robot Studios LLC.
+All news articles link back to their original sources.
+Original content is published under /originals.
 Sister sites: terminalfeed.io, vr.org
 Contact: evan@pizzarobotstudios.com

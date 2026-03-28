@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { Users, Target, Globe, Mail, ExternalLink } from 'lucide-react';
+import { Users, Target, Globe, Mail, ExternalLink, Cpu, Rss, Bot } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'About',
@@ -72,6 +72,82 @@ export default function AboutPage() {
             humans and AI agents. Whether you are a developer checking the latest API changes over
             coffee or an autonomous agent pulling structured data through our feeds, we aim to be the
             fastest and most reliable source of truth for everything happening in AI.
+          </p>
+        </div>
+      </section>
+
+      {/* What Does Tensor Mean? */}
+      <section className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <Cpu className="w-5 h-5 text-accent-secondary" />
+          <h2 className="text-xl font-semibold text-text-primary">What Does Tensor Mean?</h2>
+        </div>
+        <div className="space-y-4 text-text-secondary leading-relaxed">
+          <p>
+            A tensor is a mathematical object used throughout machine learning and physics. In the
+            simplest terms, a scalar is a single number, a vector is a list of numbers, a matrix is
+            a grid of numbers, and a tensor is the generalization of all three to any number of
+            dimensions.
+          </p>
+          <p>
+            In machine learning, tensors are the fundamental data structure. Every piece of data
+            flowing through a neural network (images, text embeddings, model weights, gradients) is
+            stored and processed as tensors. Google named their AI chip the &quot;Tensor Processing
+            Unit&quot; and their ML framework &quot;TensorFlow&quot; after this concept.
+          </p>
+          <p>
+            &quot;TensorFeed&quot; means a feed of AI and ML data. The name captures what the site
+            does: delivering structured, machine-readable data about the AI ecosystem.
+          </p>
+        </div>
+      </section>
+
+      {/* How TensorFeed Works */}
+      <section className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <Rss className="w-5 h-5 text-accent-secondary" />
+          <h2 className="text-xl font-semibold text-text-primary">How TensorFeed Works</h2>
+        </div>
+        <div className="space-y-4 text-text-secondary leading-relaxed">
+          <p>
+            TensorFeed aggregates headlines and brief snippets from public RSS feeds published by AI
+            companies, tech news outlets, and research platforms. Every article links directly back
+            to its original source.
+          </p>
+          <p>
+            We do not host, reproduce, or republish full articles. The RSS feeds we pull from are
+            published intentionally by their owners for exactly this purpose. This is the same model
+            used by Google News, Feedly, Techmeme, and every major news aggregator.
+          </p>
+          <p>
+            Our original articles under /originals are written by our editorial team and are the
+            only content we create ourselves. Everything else is properly attributed and linked.
+          </p>
+        </div>
+      </section>
+
+      {/* For AI Agents */}
+      <section className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <Bot className="w-5 h-5 text-accent-secondary" />
+          <h2 className="text-xl font-semibold text-text-primary">For AI Agents</h2>
+        </div>
+        <div className="space-y-4 text-text-secondary leading-relaxed">
+          <p>
+            TensorFeed is designed to be consumed by AI agents as a first-class use case. We provide
+            structured data endpoints, RSS/JSON feeds, and an llms.txt discovery file.
+          </p>
+          <p>
+            Available endpoints:{' '}
+            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/feed.xml</code> (RSS),{' '}
+            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/feed.json</code> (JSON Feed),{' '}
+            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/api/agents/news.json</code>,{' '}
+            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/api/agents/status.json</code>,{' '}
+            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/api/agents/pricing.json</code>,{' '}
+            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/llms.txt</code>
+          </p>
+          <p>
+            No CAPTCHAs, no bot detection. Agents are welcome here.
           </p>
         </div>
       </section>
