@@ -199,12 +199,13 @@ export async function pollRSSFeeds(env: Env): Promise<void> {
   // Ping IndexNow if we got new articles (notify search engines of fresh content)
   if (final.length > 0 && env.INDEXNOW_KEY) {
     try {
-      await fetch('https://api.indexnow.org/IndexNow', {
+      await fetch('https://api.indexnow.org/indexnow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           host: 'tensorfeed.ai',
           key: env.INDEXNOW_KEY,
+          keyLocation: `https://tensorfeed.ai/${env.INDEXNOW_KEY}.txt`,
           urlList: [
             'https://tensorfeed.ai/',
             'https://tensorfeed.ai/status',
