@@ -49,6 +49,7 @@ export default function Navbar() {
               width={28}
               height={28}
               className="w-7 h-7"
+              style={{ animation: 'logo-breathe 4s ease-in-out infinite' }}
               priority
             />
             <span className="font-mono text-xl">
