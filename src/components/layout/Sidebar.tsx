@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { SISTER_SITES, STATUS_DOTS } from '@/lib/constants';
-import { Activity, Rss, TrendingUp, Globe, Megaphone } from 'lucide-react';
+import { Activity, Rss, TrendingUp, Globe } from 'lucide-react';
 import AgentActivity from '@/components/AgentActivity';
+import NewsletterSignup from '@/components/NewsletterSignup';
 
 const TRENDING_TOPICS = [
   '#Claude4',
@@ -142,15 +143,8 @@ export default async function Sidebar() {
         </ul>
       </div>
 
-      {/* Ad Placeholder */}
-      <div className="bg-bg-secondary rounded-lg border border-border p-4">
-        <div className="flex items-center justify-center h-48 border-2 border-dashed border-text-muted/30 rounded">
-          <div className="text-center">
-            <Megaphone className="w-5 h-5 text-text-muted mx-auto mb-1.5" />
-            <span className="text-xs text-text-muted">Ad Space</span>
-          </div>
-        </div>
-      </div>
+      {/* Newsletter Signup */}
+      <NewsletterSignup variant="sidebar" />
     </aside>
   );
 }

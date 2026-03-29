@@ -1,6 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 import { NewsArticle } from '@/lib/types';
 import { timeAgo } from '@/lib/api';
+import BookmarkButton from './BookmarkButton';
 
 const SOURCE_COLORS: Record<string, string> = {
   'Google AI Blog': 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
@@ -118,15 +119,18 @@ export default function NewsCard({ article, featured = false }: NewsCardProps & 
           ))}
           <span>{timeAgo(article.publishedAt)}</span>
         </div>
-        <a
-          href={article.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-text-muted hover:text-text-secondary transition-colors"
-        >
-          {article.sourceDomain}
-          <ExternalLink className="w-3 h-3" />
-        </a>
+        <div className="flex items-center gap-2">
+          <BookmarkButton articleId={article.id} />
+          <a
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-text-muted hover:text-text-secondary transition-colors"
+          >
+            {article.sourceDomain}
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
       </div>
     </article>
   );

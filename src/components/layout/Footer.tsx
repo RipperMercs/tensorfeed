@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SISTER_SITES, CONTACT_EMAIL } from '@/lib/constants';
+import NewsletterSignup from '@/components/NewsletterSignup';
 
 export default function Footer() {
   return (
@@ -71,8 +72,15 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Newsletter */}
+        <div className="mt-8 pt-4 border-t border-border">
+          <div className="max-w-sm mx-auto">
+            <NewsletterSignup variant="footer" />
+          </div>
+        </div>
+
         {/* Bottom tagline */}
-        <div className="mt-8 pt-4 border-t border-border text-center">
+        <div className="mt-4 pt-4 border-t border-border text-center">
           <p className="text-xs text-text-muted">
             Designed for humans and AI agents
           </p>

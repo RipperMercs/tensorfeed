@@ -317,6 +317,33 @@ export default {
       return jsonResponse({ ok: true, message: 'Refreshed all feeds, status, and catalog' });
     }
 
+    // === NEWSLETTER SIGNUP ===
+
+    if (path === '/api/newsletter' && request.method === 'POST') {
+      try {
+        const body = await request.json() as { email?: string };
+        const email = body.email?.trim().toLowerCase();
+        if (!email || !email.includes('@') || !email.includes('.')) {
+          return jsonResponse({ error: 'Invalid email address' }, 400);
+        }
+
+        // Store in KV (batched: one key with all emails)
+        const existing = await env.TENSORFEED_CACHE.get('newsletter-subscribers', 'json') as string[] | null;
+        const subscribers = existing || [];
+
+        if (subscribers.includes(email)) {
+          return jsonResponse({ ok: true, message: 'Already subscribed' });
+        }
+
+        subscribers.push(email);
+        await env.TENSORFEED_CACHE.put('newsletter-subscribers', JSON.stringify(subscribers));
+
+        return jsonResponse({ ok: true, message: 'Subscribed successfully' });
+      } catch {
+        return jsonResponse({ error: 'Invalid request' }, 400);
+      }
+    }
+
     // Manual tweet trigger (protected)
     if (path === '/api/tweet' && url.searchParams.get('key') === env.ENVIRONMENT) {
       await postTopStories(env);
