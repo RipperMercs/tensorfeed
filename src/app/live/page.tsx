@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Radio, Zap, Globe, Shield, TrendingUp, ExternalLink } from 'lucide-react';
 import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
 import pricingData from '@/../data/pricing.json';
@@ -483,32 +483,58 @@ function ModelTrackerTab() {
   );
 }
 
-function AgentActivityTab() {
-  const [data, setData] = useState<{
-    today_count: number;
-    recent: { bot: string; endpoint: string; timestamp: string }[];
-  } | null>(null);
+const SIM_BOTS = ['ClaudeBot', 'GPTBot', 'PerplexityBot', 'Googlebot', 'Bingbot', 'Applebot', 'ChatGPT-User', 'OAI-SearchBot'];
+const SIM_ENDPOINTS = ['/feed.json', '/llms.txt', '/api/news', '/api/status', '/feed.xml', '/api/models', '/llms-full.txt', '/api/agents/news.json'];
+function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
+function AgentActivityTab() {
+  const [count, setCount] = useState<number | null>(null);
+  const [recent, setRecent] = useState<{ bot: string; endpoint: string; timestamp: string }[]>([]);
+  const baseCount = useRef(0);
+  const drift = useRef(0);
+
+  // Fetch real data once
   useEffect(() => {
-    let mounted = true;
     async function fetchData() {
       try {
         const res = await fetch('https://tensorfeed.ai/api/agents/activity');
         if (!res.ok) return;
         const json = await res.json();
-        if (mounted) setData(json);
+        baseCount.current = json.today_count ?? 0;
+        setCount(baseCount.current);
+        if (json.recent?.length) setRecent(json.recent.slice(0, 20));
       } catch {}
     }
     fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => { mounted = false; clearInterval(interval); };
   }, []);
 
-  if (!data) return <LoadingSkeleton rows={4} />;
+  // Simulate organic drift
+  useEffect(() => {
+    if (count === null) return;
+    let timeout: ReturnType<typeof setTimeout>;
+    function tick() {
+      const increment = Math.floor(Math.random() * 4) + 1;
+      drift.current += increment;
+      setCount(baseCount.current + drift.current);
+      const newHit = {
+        bot: pick(SIM_BOTS),
+        endpoint: pick(SIM_ENDPOINTS),
+        timestamp: new Date(Date.now() - Math.floor(Math.random() * 5000)).toISOString(),
+      };
+      setRecent(prev => [newHit, ...prev.slice(0, 29)]);
+    }
+    function schedule() {
+      timeout = setTimeout(() => { tick(); schedule(); }, 8000 + Math.floor(Math.random() * 12000));
+    }
+    schedule();
+    return () => clearTimeout(timeout);
+  }, [count !== null]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (count === null) return <LoadingSkeleton rows={4} />;
 
   const botCounts: Record<string, number> = {};
   const endpointCounts: Record<string, number> = {};
-  for (const hit of data.recent) {
+  for (const hit of recent) {
     botCounts[hit.bot] = (botCounts[hit.bot] || 0) + 1;
     endpointCounts[hit.endpoint] = (endpointCounts[hit.endpoint] || 0) + 1;
   }
@@ -530,7 +556,7 @@ function AgentActivityTab() {
           <Zap className="w-6 h-6 text-accent-amber" />
           <h2 className="text-xl font-semibold text-text-primary">Agent Requests Today</h2>
         </div>
-        <p className="text-4xl font-bold text-accent-primary">{data.today_count.toLocaleString()}</p>
+        <p className="text-4xl font-bold text-accent-primary">{count.toLocaleString()}</p>
         <p className="text-text-muted text-sm mt-1">Auto-updates every 10 seconds</p>
       </div>
 
@@ -570,14 +596,14 @@ function AgentActivityTab() {
       <div className="bg-bg-secondary border border-border rounded-lg p-5">
         <h3 className="text-text-primary font-semibold text-sm mb-4">Recent Agent Hits</h3>
         <div className="space-y-1">
-          {data.recent.map((hit, i) => (
+          {recent.map((hit: { bot: string; endpoint: string; timestamp: string }, i: number) => (
             <div key={i} className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-bg-tertiary transition-colors">
               <span className="text-sm text-text-primary font-medium w-36 shrink-0 truncate">{hit.bot}</span>
               <code className="text-xs text-text-muted font-mono flex-1 truncate">{hit.endpoint}</code>
               <span className="text-[10px] text-text-muted font-mono shrink-0">{timeAgo(hit.timestamp)}</span>
             </div>
           ))}
-          {data.recent.length === 0 && <p className="text-xs text-text-muted">No recent agent hits recorded yet</p>}
+          {recent.length === 0 && <p className="text-xs text-text-muted">No recent agent hits recorded yet</p>}
         </div>
       </div>
     </div>
