@@ -1,85 +1,18 @@
-import { Metadata } from 'next';
-import { BookOpen, FileText, Trophy, Star } from 'lucide-react';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'AI Research',
-};
+import { useState, useEffect } from 'react';
+import { BookOpen, FileText, Trophy, ExternalLink } from 'lucide-react';
 
-const PAPERS = [
-  {
-    title: 'Scaling Sparse Mixture-of-Experts to 10 Trillion Parameters with Dynamic Routing',
-    authors: ['Yichen Zhang', 'Priya Nair', 'Tomás Rivera'],
-    abstract:
-      'We present a novel dynamic routing mechanism for sparse mixture-of-experts architectures that enables efficient scaling to 10 trillion parameters. Our approach reduces inference cost by 40% compared to dense models of equivalent capability while maintaining competitive performance across standard benchmarks.',
-    date: 'Mar 25, 2026',
-    categories: ['cs.AI', 'cs.LG'],
-  },
-  {
-    title: 'ReasonGraph: Chain-of-Thought Verification via Directed Acyclic Proof Structures',
-    authors: ['Sarah Chen', 'Marcus Weber', 'Aisha Patel'],
-    abstract:
-      'We introduce ReasonGraph, a framework that structures chain-of-thought reasoning as directed acyclic graphs with verifiable proof nodes. This approach catches 87% of reasoning errors that sequential chain-of-thought methods miss, significantly improving mathematical problem solving.',
-    date: 'Mar 23, 2026',
-    categories: ['cs.AI', 'cs.CL'],
-  },
-  {
-    title: 'Multi-Agent Constitutional AI: Emergent Cooperation in Self-Governing Language Models',
-    authors: ['James Park', 'Li Wei', 'Elena Sokolova'],
-    abstract:
-      'We study emergent cooperative behavior in systems of multiple constitutional AI agents tasked with self-governance. Our experiments demonstrate that groups of 8 or more agents reliably converge on stable behavioral norms that align with human preferences without explicit reward shaping.',
-    date: 'Mar 22, 2026',
-    categories: ['cs.AI', 'cs.CL', 'cs.LG'],
-  },
-  {
-    title: 'TokenFormer: Replacing Attention with Learned Token Interactions at Scale',
-    authors: ['David Kim', 'Fatima Al-Rashid', 'Igor Petrov'],
-    abstract:
-      'We propose TokenFormer, an architecture that replaces standard self-attention with learned pairwise token interaction functions. On language modeling benchmarks, TokenFormer achieves comparable perplexity to transformers while reducing memory requirements by 60% for long contexts.',
-    date: 'Mar 20, 2026',
-    categories: ['cs.LG', 'cs.CL'],
-  },
-  {
-    title: 'Grounding Language Models in Real-Time Sensor Data for Robotic Manipulation',
-    authors: ['Anna Kowalski', 'Raj Mehta', 'Yuki Tanaka'],
-    abstract:
-      'We present a method for grounding large language models in continuous real-time sensor streams for robotic manipulation tasks. Our system processes tactile, visual, and proprioceptive data at 100Hz, enabling language-guided dexterous manipulation with a 94% task success rate.',
-    date: 'Mar 18, 2026',
-    categories: ['cs.AI', 'cs.LG'],
-  },
-  {
-    title: 'Federated Reinforcement Learning from Human Feedback Across Distributed Deployments',
-    authors: ['Michael Torres', 'Chloe Dubois', 'Kenji Nakamura'],
-    abstract:
-      'We introduce a federated approach to RLHF that enables distributed model improvement without centralizing sensitive preference data. Our protocol achieves 95% of the alignment quality of centralized RLHF while preserving user privacy across deployment boundaries.',
-    date: 'Mar 16, 2026',
-    categories: ['cs.AI', 'cs.LG'],
-  },
-  {
-    title: 'Emergent Tool Use in Language Agents Without Explicit Tool Descriptions',
-    authors: ['Sophie Martin', 'Ahmed Hassan', 'Laura Gomez'],
-    abstract:
-      'We demonstrate that language agents can discover and learn to use novel tools through environmental interaction alone, without explicit tool descriptions or documentation. Agents trained with our method successfully utilize 78% of previously unseen APIs within 10 interaction steps.',
-    date: 'Mar 14, 2026',
-    categories: ['cs.AI', 'cs.CL'],
-  },
-  {
-    title: 'Compression-Aware Training: Producing Models That Quantize Without Quality Loss',
-    authors: ['Robert Yang', 'Natasha Ivanova', 'Felix Braun'],
-    abstract:
-      'We propose compression-aware training, a method that produces models resilient to post-training quantization down to 2-bit precision. Models trained with our approach retain 99.2% of their full-precision performance after aggressive quantization, enabling efficient edge deployment.',
-    date: 'Mar 12, 2026',
-    categories: ['cs.LG', 'cs.AI'],
-  },
-];
-
-const PAPER_OF_THE_DAY = {
-  title: 'Autonomous Agent Architectures with Hierarchical Memory and Self-Reflective Planning',
-  authors: ['Sarah Chen', 'James Park', 'Aisha Patel'],
-  abstract:
-    'We present a new agent architecture that combines hierarchical episodic memory with self-reflective planning loops. The system maintains a structured memory of past interactions, retrieves relevant episodes during planning, and critically evaluates its own reasoning before acting. On the AgentBench suite, our architecture achieves state-of-the-art results, outperforming the previous best by 12 points. We find that self-reflective planning is the single most impactful component, accounting for over half the improvement.',
-  date: 'Mar 27, 2026',
-  categories: ['cs.AI', 'cs.CL', 'cs.LG'],
-};
+interface Article {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  sourceDomain: string;
+  snippet: string;
+  categories: string[];
+  publishedAt: string;
+}
 
 const BENCHMARKS = [
   { name: 'MMLU', claudeOpus: 92.4, gpt45: 90.8, gemini25: 91.1, llama4: 86.3 },
@@ -95,7 +28,61 @@ function CategoryTag({ category }: { category: string }) {
   );
 }
 
+function timeAgo(dateStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 animate-pulse">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="bg-bg-secondary border border-border rounded-lg p-5">
+          <div className="h-4 bg-bg-tertiary rounded w-3/4 mb-3" />
+          <div className="h-3 bg-bg-tertiary rounded w-1/2 mb-2" />
+          <div className="h-3 bg-bg-tertiary rounded w-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ResearchPage() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchResearch() {
+      try {
+        const res = await fetch('https://tensorfeed.ai/api/news?limit=200');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.ok && data.articles?.length) {
+          // Get research-related articles from all sources
+          const research = data.articles.filter((a: Article) =>
+            a.categories.some((c: string) =>
+              ['Research', 'cs.AI', 'cs.LG', 'cs.CL'].some(tag =>
+                c.toLowerCase().includes(tag.toLowerCase())
+              )
+            ) ||
+            a.source === 'arXiv cs.AI' ||
+            a.source === 'MIT Technology Review' ||
+            /paper|research|study|benchmark|arxiv/i.test(a.title)
+          );
+          setArticles(research.length > 0 ? research : data.articles.slice(0, 20));
+        }
+      } catch {}
+      setLoading(false);
+    }
+    fetchResearch();
+  }, []);
+
+  const featured = articles[0];
+  const rest = articles.slice(1);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -109,73 +96,98 @@ export default function ResearchPage() {
         </p>
       </div>
 
-      {/* Paper of the Day */}
-      <section className="mb-12">
-        <div className="flex items-center gap-2 mb-4">
-          <Star className="w-5 h-5 text-accent-secondary" />
-          <h2 className="text-xl font-semibold text-text-primary">Paper of the Day</h2>
-        </div>
-        <a
-          href="#"
-          className="block bg-bg-secondary border-2 border-accent-primary rounded-xl p-6 shadow-glow hover:border-accent-secondary transition-colors"
-        >
-          <div className="flex items-start gap-4">
-            <FileText className="w-6 h-6 text-accent-primary shrink-0 mt-1" />
-            <div className="min-w-0">
-              <h3 className="text-lg font-semibold text-text-primary mb-1">
-                {PAPER_OF_THE_DAY.title}
-              </h3>
-              <p className="text-sm text-text-muted mb-2">
-                {PAPER_OF_THE_DAY.authors.join(', ')} &middot; {PAPER_OF_THE_DAY.date}
-              </p>
-              <p className="text-text-secondary text-sm mb-3 leading-relaxed">
-                {PAPER_OF_THE_DAY.abstract}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {PAPER_OF_THE_DAY.categories.map((cat) => (
-                  <CategoryTag key={cat} category={cat} />
-                ))}
+      {/* Featured Paper */}
+      {featured && (
+        <section className="mb-12">
+          <div className="flex items-center gap-2 mb-4">
+            <FileText className="w-5 h-5 text-accent-secondary" />
+            <h2 className="text-xl font-semibold text-text-primary">Featured</h2>
+          </div>
+          <a
+            href={featured.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block bg-bg-secondary border-2 border-accent-primary rounded-xl p-6 shadow-glow hover:border-accent-secondary transition-colors group"
+          >
+            <div className="flex items-start gap-4">
+              <FileText className="w-6 h-6 text-accent-primary shrink-0 mt-1" />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-semibold text-text-primary mb-1 group-hover:text-accent-cyan transition-colors">
+                  {featured.title}
+                </h3>
+                <p className="text-sm text-text-muted mb-2">
+                  {featured.source} &middot; {timeAgo(featured.publishedAt)}
+                </p>
+                {featured.snippet && (
+                  <p className="text-text-secondary text-sm mb-3 leading-relaxed">
+                    {featured.snippet}
+                  </p>
+                )}
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap gap-2">
+                    {featured.categories.map((cat) => (
+                      <CategoryTag key={cat} category={cat} />
+                    ))}
+                  </div>
+                  <span className="flex items-center gap-1 text-xs text-accent-primary">
+                    Read
+                    <ExternalLink className="w-3 h-3" />
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </a>
-      </section>
+          </a>
+        </section>
+      )}
 
       {/* Latest Papers */}
       <section className="mb-12">
         <div className="flex items-center gap-2 mb-4">
           <FileText className="w-5 h-5 text-accent-primary" />
-          <h2 className="text-xl font-semibold text-text-primary">Latest Papers</h2>
+          <h2 className="text-xl font-semibold text-text-primary">Latest Research</h2>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {PAPERS.map((paper, i) => (
-            <a
-              key={i}
-              href="#"
-              className="block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
-            >
-              <div className="flex items-start gap-3">
-                <FileText className="w-5 h-5 text-text-muted shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-text-primary mb-1 leading-snug">
-                    {paper.title}
-                  </h3>
-                  <p className="text-xs text-text-muted mb-2">
-                    {paper.authors.join(', ')} &middot; {paper.date}
-                  </p>
-                  <p className="text-text-secondary text-xs mb-3 leading-relaxed line-clamp-3">
-                    {paper.abstract}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {paper.categories.map((cat) => (
-                      <CategoryTag key={cat} category={cat} />
-                    ))}
+        {loading ? (
+          <LoadingSkeleton />
+        ) : rest.length === 0 ? (
+          <p className="text-text-muted">No research articles available right now.</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {rest.map((article) => (
+              <a
+                key={article.id}
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors group"
+              >
+                <div className="flex items-start gap-3">
+                  <FileText className="w-5 h-5 text-text-muted shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-semibold text-text-primary mb-1 leading-snug group-hover:text-accent-cyan transition-colors">
+                      {article.title}
+                    </h3>
+                    <p className="text-xs text-text-muted mb-2">
+                      {article.source} &middot; {timeAgo(article.publishedAt)}
+                    </p>
+                    {article.snippet && !/^(Article URL:|Comments URL:|Points:)/m.test(article.snippet) && (
+                      <p className="text-text-secondary text-xs mb-3 leading-relaxed line-clamp-3">
+                        {article.snippet}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap gap-1.5">
+                        {article.categories.map((cat) => (
+                          <CategoryTag key={cat} category={cat} />
+                        ))}
+                      </div>
+                      <ExternalLink className="w-3 h-3 text-text-muted group-hover:text-accent-primary transition-colors" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </a>
-          ))}
-        </div>
+              </a>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Benchmark Tracker */}
@@ -190,13 +202,9 @@ export default function ResearchPage() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-4 text-text-muted font-medium">Benchmark</th>
-                  <th className="text-right py-3 px-4 text-text-muted font-medium">
-                    Claude Opus 4.6
-                  </th>
+                  <th className="text-right py-3 px-4 text-text-muted font-medium">Claude Opus 4.6</th>
                   <th className="text-right py-3 px-4 text-text-muted font-medium">GPT-4.5</th>
-                  <th className="text-right py-3 px-4 text-text-muted font-medium">
-                    Gemini 2.5 Pro
-                  </th>
+                  <th className="text-right py-3 px-4 text-text-muted font-medium">Gemini 2.5 Pro</th>
                   <th className="text-right py-3 px-4 text-text-muted font-medium">Llama 4</th>
                 </tr>
               </thead>
@@ -207,24 +215,16 @@ export default function ResearchPage() {
                   return (
                     <tr key={row.name} className="border-b border-border last:border-0">
                       <td className="py-3 px-4 font-mono text-text-primary">{row.name}</td>
-                      <td
-                        className={`py-3 px-4 text-right font-mono ${row.claudeOpus === maxScore ? 'text-accent-primary font-bold' : 'text-text-secondary'}`}
-                      >
+                      <td className={`py-3 px-4 text-right font-mono ${row.claudeOpus === maxScore ? 'text-accent-primary font-bold' : 'text-text-secondary'}`}>
                         {row.claudeOpus}
                       </td>
-                      <td
-                        className={`py-3 px-4 text-right font-mono ${row.gpt45 === maxScore ? 'text-accent-primary font-bold' : 'text-text-secondary'}`}
-                      >
+                      <td className={`py-3 px-4 text-right font-mono ${row.gpt45 === maxScore ? 'text-accent-primary font-bold' : 'text-text-secondary'}`}>
                         {row.gpt45}
                       </td>
-                      <td
-                        className={`py-3 px-4 text-right font-mono ${row.gemini25 === maxScore ? 'text-accent-primary font-bold' : 'text-text-secondary'}`}
-                      >
+                      <td className={`py-3 px-4 text-right font-mono ${row.gemini25 === maxScore ? 'text-accent-primary font-bold' : 'text-text-secondary'}`}>
                         {row.gemini25}
                       </td>
-                      <td
-                        className={`py-3 px-4 text-right font-mono ${row.llama4 === maxScore ? 'text-accent-primary font-bold' : 'text-text-secondary'}`}
-                      >
+                      <td className={`py-3 px-4 text-right font-mono ${row.llama4 === maxScore ? 'text-accent-primary font-bold' : 'text-text-secondary'}`}>
                         {row.llama4}
                       </td>
                     </tr>
