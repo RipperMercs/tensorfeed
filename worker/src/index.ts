@@ -148,6 +148,10 @@ export default {
     }
 
     // Health check (1 KV read, cached 60s)
+    if (path === '/api/ping') {
+      return jsonResponse({ ok: true, deployed: 'auto', timestamp: new Date().toISOString() });
+    }
+
     if (path === '/api/health') {
       const newsMeta = await cachedKVGet(request, env.TENSORFEED_NEWS, 'meta', 60);
       return jsonResponse({
