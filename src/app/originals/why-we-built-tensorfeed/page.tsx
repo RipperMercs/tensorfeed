@@ -179,7 +179,9 @@ export default function WhyWeBuiltTensorFeedPage() {
 
         <p>
           The AI space is moving fast, and we intend to keep up. If you have ideas for what TensorFeed
-          should become, I genuinely want to hear them. Drop me a note or find us on social media.
+          should become, I genuinely want to hear them. Drop me a note at{' '}
+          <a href="mailto:evan@tensorfeed.ai" className="text-accent-primary hover:underline">evan@tensorfeed.ai</a>{' '}
+          or find us on social media.
           This thing is being built in public, and community input shapes what we prioritize.
         </p>
 
