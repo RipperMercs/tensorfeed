@@ -3,6 +3,7 @@ import { Activity } from 'lucide-react';
 import { MOCK_STATUSES } from '@/lib/mock-data';
 import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
 import { ServiceStatus, ServiceComponent } from '@/lib/types';
+import { WebApplicationJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'AI Service Status Dashboard',
@@ -117,6 +118,11 @@ export default function StatusPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <WebApplicationJsonLd
+        name="TensorFeed AI Service Status Dashboard"
+        description="Real-time operational status monitoring for major AI services including Claude, OpenAI, Gemini, and more."
+        url="https://tensorfeed.ai/status"
+      />
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">

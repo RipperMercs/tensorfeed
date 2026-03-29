@@ -12,6 +12,7 @@ import * as path from 'path';
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'public', 'llms-full.txt');
+const PUBLIC = path.join(ROOT, 'public');
 
 // Pages to extract, in order
 const PAGES: { file: string; title: string }[] = [
@@ -172,6 +173,40 @@ ${content}`);
 
   fs.writeFileSync(OUT, sections.join('\n\n'), 'utf-8');
   console.log(`[OK] Generated ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(1)} KB)`);
+
+  // Generate individual .md files for each pillar page (excluding about)
+  const PILLAR_SLUGS = [
+    'what-is-ai',
+    'best-ai-tools',
+    'best-ai-chatbots',
+    'ai-api-pricing-guide',
+    'what-are-ai-agents',
+    'best-open-source-llms',
+  ];
+
+  for (const page of PAGES) {
+    // Derive slug from file path: src/app/<slug>/page.tsx
+    const slug = page.file.split('/').slice(-2, -1)[0];
+    if (!PILLAR_SLUGS.includes(slug)) continue;
+
+    const filePath = path.join(ROOT, page.file);
+    if (!fs.existsSync(filePath)) continue;
+
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const content = extractText(raw);
+
+    const mdContent = `# ${page.title}
+
+> Source: https://tensorfeed.ai/${slug}
+> Last generated: ${today}
+
+${content}
+`;
+
+    const mdPath = path.join(PUBLIC, `${slug}.md`);
+    fs.writeFileSync(mdPath, mdContent, 'utf-8');
+    console.log(`[OK] Generated ${mdPath} (${(fs.statSync(mdPath).size / 1024).toFixed(1)} KB)`);
+  }
 }
 
 main();

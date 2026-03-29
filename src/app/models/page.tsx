@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { Cpu, ExternalLink } from 'lucide-react';
 import fallbackPricingData from '@/../data/pricing.json';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
 
 interface ModelRow {
   id: string;
@@ -133,6 +134,11 @@ export default async function ModelsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="TensorFeed AI Model Pricing & Releases"
+        description="Comprehensive AI model pricing comparison, release tracking, and specifications across all major providers."
+        url="https://tensorfeed.ai/models"
+      />
       {/* Page Header */}
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-3">

@@ -33,6 +33,59 @@ export function WebsiteJsonLd() {
   return <JsonLd data={data} />;
 }
 
+export function WebApplicationJsonLd({
+  name,
+  description,
+  url,
+}: {
+  name: string;
+  description: string;
+  url: string;
+}) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name,
+    description,
+    url,
+    applicationCategory: 'Monitoring',
+    operatingSystem: 'Web',
+    publisher: {
+      '@type': 'Organization',
+      name: 'TensorFeed.ai',
+      url: 'https://tensorfeed.ai',
+    },
+  };
+
+  return <JsonLd data={data} />;
+}
+
+export function DatasetJsonLd({
+  name,
+  description,
+  url,
+}: {
+  name: string;
+  description: string;
+  url: string;
+}) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name,
+    description,
+    url,
+    license: 'https://tensorfeed.ai/about',
+    creator: {
+      '@type': 'Organization',
+      name: 'TensorFeed.ai',
+      url: 'https://tensorfeed.ai',
+    },
+  };
+
+  return <JsonLd data={data} />;
+}
+
 export function ArticleJsonLd({
   title,
   description,
