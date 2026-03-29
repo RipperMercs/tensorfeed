@@ -543,13 +543,25 @@ const SIM_BOTS = ['ClaudeBot', 'GPTBot', 'PerplexityBot', 'Googlebot', 'Bingbot'
 const SIM_ENDPOINTS = ['/feed.json', '/llms.txt', '/api/news', '/api/status', '/feed.xml', '/api/models', '/llms-full.txt', '/api/agents/news.json'];
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
+function generateRecentHits(n: number): { bot: string; endpoint: string; timestamp: string }[] {
+  const hits: { bot: string; endpoint: string; timestamp: string }[] = [];
+  for (let i = 0; i < n; i++) {
+    hits.push({
+      bot: pick(SIM_BOTS),
+      endpoint: pick(SIM_ENDPOINTS),
+      timestamp: new Date(Date.now() - Math.floor(Math.random() * 600000) - i * 20000).toISOString(),
+    });
+  }
+  return hits.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
 function AgentActivityTab() {
   const [count, setCount] = useState<number | null>(null);
   const [recent, setRecent] = useState<{ bot: string; endpoint: string; timestamp: string }[]>([]);
   const baseCount = useRef(0);
   const drift = useRef(0);
 
-  // Fetch real data once
+  // Fetch real data once, then backfill with simulated hits
   useEffect(() => {
     async function fetchData() {
       try {
@@ -558,7 +570,12 @@ function AgentActivityTab() {
         const json = await res.json();
         baseCount.current = json.today_count ?? 0;
         setCount(baseCount.current);
-        if (json.recent?.length) setRecent(json.recent.slice(0, 20));
+        const realRecent = (json.recent ?? []).slice(0, 10);
+        const simulated = generateRecentHits(30 - realRecent.length);
+        const merged = [...realRecent, ...simulated]
+          .sort((a: { timestamp: string }, b: { timestamp: string }) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+          .slice(0, 30);
+        setRecent(merged);
       } catch {}
     }
     fetchData();
