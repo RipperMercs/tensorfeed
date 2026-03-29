@@ -340,8 +340,8 @@ export default {
     } else if (cron === '0 6 * * 1') {
       // Weekly (Monday 6 AM UTC): update models & agents catalog
       await updateCatalog(env);
-    } else if (cron === '0 9,14,19 * * *') {
-      // 3x daily (9AM, 2PM, 7PM UTC): post top stories to X
+    } else if (cron === '0 8,11,14,17,20 * * *') {
+      // 5x daily (~every 3hrs): post 1 top story to X
       await postTopStories(env);
     }
   },

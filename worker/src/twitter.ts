@@ -150,33 +150,19 @@ export async function postTopStories(env: Env): Promise<void> {
       return;
     }
 
-    // Pick up to 3 articles from different sources
-    const toPost: Article[] = [];
-    const usedSources = new Set<string>();
-
-    for (const article of unposted) {
-      if (toPost.length >= 3) break;
-      if (usedSources.has(article.source)) continue;
-      toPost.push(article);
-      usedSources.add(article.source);
-    }
-
-    // Post each one
-    for (const article of toPost) {
-      const tweet = formatTweet(article);
-      const success = await postTweet(tweet, env);
-      if (success) {
-        posted.add(article.url);
-      }
-      // Small delay between tweets
-      await new Promise(r => setTimeout(r, 2000));
+    // Pick 1 article per run (spread posts throughout the day)
+    const article = unposted[0];
+    const tweet = formatTweet(article);
+    const success = await postTweet(tweet, env);
+    if (success) {
+      posted.add(article.url);
     }
 
     // Save posted URLs (keep last 500 to avoid unbounded growth)
     const allPosted = [...posted].slice(-500);
     await env.TENSORFEED_CACHE.put('posted-tweets', JSON.stringify(allPosted));
 
-    console.log(`Posted ${toPost.length} tweets`);
+    console.log('Posted 1 tweet');
   } catch (e) {
     console.warn('Auto-post error:', e);
   }
