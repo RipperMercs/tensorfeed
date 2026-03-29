@@ -240,20 +240,14 @@ async function main() {
     JSON.stringify(buildAgentNews(articles), null, 2),
   );
 
-  // status.json - import from mock data
-  const { MOCK_STATUSES } = await import('../src/lib/mock-data');
-  writeFile(
-    path.join(agentApiDir, 'status.json'),
-    JSON.stringify(
-      {
-        ok: true,
-        services: MOCK_STATUSES,
-        fetchedAt: new Date().toISOString(),
-      },
-      null,
-      2,
-    ),
-  );
+  // status.json - fetch from live worker API
+  try {
+    const statusRes = await fetch('https://tensorfeed.ai/api/status');
+    const statusData = statusRes.ok ? await statusRes.json() : { ok: true, services: [], fetchedAt: new Date().toISOString() };
+    writeFile(path.join(agentApiDir, 'status.json'), JSON.stringify(statusData, null, 2));
+  } catch {
+    writeFile(path.join(agentApiDir, 'status.json'), JSON.stringify({ ok: true, services: [], fetchedAt: new Date().toISOString() }, null, 2));
+  }
 
   // pricing.json - copy from data/pricing.json
   const pricingRaw = fs.readFileSync(

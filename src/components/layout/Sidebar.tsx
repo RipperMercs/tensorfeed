@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { SISTER_SITES, STATUS_DOTS } from '@/lib/constants';
-import { MOCK_STATUSES } from '@/lib/mock-data';
 import { Activity, Rss, TrendingUp, Globe, Megaphone } from 'lucide-react';
 import AgentActivity from '@/components/AgentActivity';
 
@@ -19,8 +18,19 @@ import sourcesData from '../../../data/sources.json';
 
 const LIVE_SOURCES = sourcesData.sources.map(s => s.name).slice(0, 6);
 
-export default function Sidebar() {
-  const topStatuses = MOCK_STATUSES.slice(0, 5);
+async function fetchStatusSummary() {
+  try {
+    const res = await fetch('https://tensorfeed.ai/api/status/summary', { next: { revalidate: 120 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.ok && data.services?.length) return data.services.slice(0, 5);
+    }
+  } catch {}
+  return [];
+}
+
+export default async function Sidebar() {
+  const topStatuses = await fetchStatusSummary();
 
   return (
     <aside className="space-y-4">
@@ -39,10 +49,10 @@ export default function Sidebar() {
           </Link>
         </div>
         <ul className="space-y-2">
-          {topStatuses.map((service) => (
+          {topStatuses.map((service: { name: string; status: string }) => (
             <li key={service.name} className="flex items-center gap-2">
               <span
-                className={`w-2 h-2 rounded-full shrink-0 ${STATUS_DOTS[service.status]}`}
+                className={`w-2 h-2 rounded-full shrink-0 ${STATUS_DOTS[service.status] || STATUS_DOTS.unknown}`}
               />
               <span className="text-xs text-text-secondary truncate">
                 {service.name}
@@ -52,6 +62,9 @@ export default function Sidebar() {
               </span>
             </li>
           ))}
+          {topStatuses.length === 0 && (
+            <li className="text-xs text-text-muted">Loading status...</li>
+          )}
         </ul>
       </div>
 
@@ -77,7 +90,7 @@ export default function Sidebar() {
           ))}
         </ul>
         <Link
-          href="/sources"
+          href="/about"
           className="block mt-3 text-xs text-accent-primary hover:text-accent-cyan transition-colors"
         >
           View all sources

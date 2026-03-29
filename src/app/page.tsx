@@ -2,7 +2,6 @@ import Link from 'next/link';
 import NewsFeed from '@/components/news/NewsFeed';
 import Sidebar from '@/components/layout/Sidebar';
 import articlesData from '../../data/articles.json';
-import { MOCK_STATUSES } from '@/lib/mock-data';
 import { STATUS_DOTS } from '@/lib/constants';
 import {
   Rss,
@@ -16,6 +15,17 @@ import {
   ArrowRight,
   ChevronRight,
 } from 'lucide-react';
+
+async function fetchStatuses() {
+  try {
+    const res = await fetch('https://tensorfeed.ai/api/status/summary', { next: { revalidate: 120 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.ok && data.services?.length) return data.services;
+    }
+  } catch {}
+  return [];
+}
 
 const HERO_STATS = [
   { icon: Rss, label: '15+ Sources', sublabel: 'Aggregated' },
@@ -78,12 +88,12 @@ function getShortName(name: string) {
   return name;
 }
 
-export default function HomePage() {
+export default async function HomePage() {
   const articles = articlesData.articles;
-  const statuses = MOCK_STATUSES;
+  const statuses = await fetchStatuses();
 
   const quickStatuses = QUICK_STATUS_SERVICES.map((serviceName) => {
-    const svc = statuses.find((s) => s.name === serviceName);
+    const svc = statuses.find((s: { name: string; status: string }) => s.name === serviceName);
     return {
       name: getShortName(serviceName),
       status: svc?.status ?? 'unknown',

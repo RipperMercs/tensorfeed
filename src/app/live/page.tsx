@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Radio, Zap, Globe, Shield, TrendingUp, ExternalLink } from 'lucide-react';
-import { MOCK_STATUSES } from '@/lib/mock-data';
 import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
-import { ServiceStatus, ServiceComponent } from '@/lib/types';
 import pricingData from '@/../data/pricing.json';
 import {
   useGithubTrending,
@@ -34,52 +32,25 @@ const TABS = [
 
 type TabName = (typeof TABS)[number];
 
-// ─── Mock Data (kept for tabs not yet connected to live APIs) ────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────
 
-const MOCK_MODEL_RELEASES = [
-  {
-    name: 'Claude Opus 4.6',
-    provider: 'Anthropic',
-    date: '2026-03-28',
-    capabilities: ['Extended thinking up to 128K tokens', 'Native tool use', 'Agentic coding mode', '1M context window option'],
-    contextWindow: '200K (1M extended)',
-  },
-  {
-    name: 'GPT-5 Turbo',
-    provider: 'OpenAI',
-    date: '2026-03-27',
-    capabilities: ['40% latency reduction over GPT-5', 'Real-time multimodal reasoning', 'Native video understanding', 'Structured outputs v2'],
-    contextWindow: '256K',
-  },
-  {
-    name: 'Gemini 2.5 Pro',
-    provider: 'Google DeepMind',
-    date: '2026-03-24',
-    capabilities: ['2M token context window', 'Grounded code generation', 'Inline documentation citations', 'Multi-turn tool use'],
-    contextWindow: '2M',
-  },
-  {
-    name: 'DeepSeek-V4',
-    provider: 'DeepSeek',
-    date: '2026-03-20',
-    capabilities: ['671B MoE, 37B active', 'Apache 2.0 license', 'Matches GPT-4o on MMLU-Pro', 'Native function calling'],
-    contextWindow: '128K',
-  },
-  {
-    name: 'Codestral Mamba 2',
-    provider: 'Mistral AI',
-    date: '2026-03-18',
-    capabilities: ['State-space architecture', 'Unlimited context at linear cost', 'Repository-level code understanding', 'Multi-file editing'],
-    contextWindow: 'Unlimited (linear)',
-  },
-  {
-    name: 'Llama 4 Maverick',
-    provider: 'Meta',
-    date: '2026-03-15',
-    capabilities: ['17B active / 400B total MoE', 'Permissive license', 'Vision and code capabilities', '1M context window'],
-    contextWindow: '1M',
-  },
-];
+interface LiveStatus {
+  name: string;
+  provider: string;
+  status: string;
+  components: { name: string; status: string }[];
+  lastChecked?: string;
+}
+
+interface LiveModel {
+  id: string;
+  name: string;
+  inputPrice: number;
+  outputPrice: number;
+  contextWindow: number;
+  released: string;
+  capabilities: string[];
+}
 
 // ─── Loading Skeleton ───────────────────────────────────────────────────────
 
@@ -127,10 +98,31 @@ function StatusDot({ status }: { status: string }) {
 }
 
 function AIStatusTab() {
-  const statuses = MOCK_STATUSES;
+  const [statuses, setStatuses] = useState<LiveStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchStatus() {
+      try {
+        const res = await fetch('https://tensorfeed.ai/api/status');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted && data.services) setStatuses(data.services);
+      } catch {}
+      if (mounted) setLoading(false);
+    }
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 120000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, []);
+
+  if (loading) return <LoadingSkeleton rows={6} />;
+  if (statuses.length === 0) return <ErrorFallback error="No status data available" />;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-      {statuses.map((service: ServiceStatus) => (
+      {statuses.map((service) => (
         <div key={service.name} className="bg-bg-secondary border border-border rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -145,16 +137,12 @@ function AIStatusTab() {
             </div>
           </div>
           <div className="space-y-1">
-            {service.components.map((comp: ServiceComponent) => (
+            {service.components.map((comp) => (
               <div key={comp.name} className="flex items-center justify-between">
                 <span className="text-xs text-text-secondary">{comp.name}</span>
                 <StatusDot status={comp.status} />
               </div>
             ))}
-          </div>
-          <div className="mt-2 pt-2 border-t border-border flex items-center justify-between">
-            <span className="text-xs text-text-muted">Uptime</span>
-            <span className="text-xs font-mono text-text-secondary">{service.uptime7d.toFixed(2)}%</span>
           </div>
         </div>
       ))}
@@ -429,28 +417,66 @@ function APIPricingTab() {
 }
 
 function ModelTrackerTab() {
+  const [models, setModels] = useState<{ provider: string; models: LiveModel[] }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchModels() {
+      try {
+        const res = await fetch('https://tensorfeed.ai/api/models');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted && data.providers) setModels(data.providers);
+      } catch {}
+      if (mounted) setLoading(false);
+    }
+    fetchModels();
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading) return <LoadingSkeleton rows={6} />;
+  if (models.length === 0) return <ErrorFallback error="No model data available" />;
+
+  function formatContext(ctx: number): string {
+    if (ctx >= 1000000) return `${(ctx / 1000000).toFixed(ctx % 1000000 === 0 ? 0 : 1)}M`;
+    return `${(ctx / 1000).toFixed(0)}K`;
+  }
+
+  // Flatten and sort by release date (newest first)
+  const allModels = models.flatMap(p =>
+    p.models.map(m => ({ ...m, provider: p.provider || '' }))
+  ).sort((a, b) => (b.released || '').localeCompare(a.released || ''));
+
   return (
-    <div className="space-y-4">
-      {MOCK_MODEL_RELEASES.map((model) => (
-        <div key={model.name} className="bg-bg-secondary border border-border rounded-lg p-4 relative">
+    <div className="space-y-3">
+      {allModels.map((model) => (
+        <div key={model.id} className="bg-bg-secondary border border-border rounded-lg p-4">
           <div className="flex items-start justify-between mb-2">
             <div>
               <h3 className="text-text-primary font-semibold text-sm">{model.name}</h3>
               <p className="text-text-muted text-xs">{model.provider}</p>
             </div>
             <div className="text-right">
-              <span className="text-xs text-text-muted">{model.date}</span>
-              <p className="text-xs text-accent-cyan font-mono mt-0.5">{model.contextWindow}</p>
+              <span className="text-xs text-text-muted">{model.released}</span>
+              <p className="text-xs text-accent-cyan font-mono mt-0.5">{formatContext(model.contextWindow)}</p>
             </div>
           </div>
-          <ul className="space-y-1 mt-2">
-            {model.capabilities.map((cap) => (
-              <li key={cap} className="text-xs text-text-secondary flex items-start gap-2">
-                <span className="text-accent-primary mt-0.5">&#8226;</span>
-                {cap}
-              </li>
-            ))}
-          </ul>
+          <div className="flex items-center gap-3 mt-2">
+            <span className="text-xs text-text-muted">
+              Input: <span className="text-text-secondary font-mono">{model.inputPrice === 0 ? 'Free' : `$${model.inputPrice.toFixed(2)}/1M`}</span>
+            </span>
+            <span className="text-xs text-text-muted">
+              Output: <span className="text-text-secondary font-mono">{model.outputPrice === 0 ? 'Free' : `$${model.outputPrice.toFixed(2)}/1M`}</span>
+            </span>
+          </div>
+          {model.capabilities.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {model.capabilities.map((cap) => (
+                <span key={cap} className="text-xs px-2 py-0.5 rounded-full bg-bg-tertiary text-text-secondary border border-border">{cap}</span>
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>

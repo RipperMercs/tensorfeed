@@ -15,10 +15,9 @@ export interface ServiceStatus {
   name: string;
   provider: string;
   status: 'operational' | 'degraded' | 'down' | 'unknown';
-  uptime7d: number;
-  lastIncident: string | null;
   components: ServiceComponent[];
-  statusPageUrl: string;
+  statusPageUrl?: string;
+  lastChecked?: string;
 }
 
 export interface ServiceComponent {

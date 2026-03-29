@@ -1,9 +1,27 @@
 import { Metadata } from 'next';
 import { Activity } from 'lucide-react';
-import { MOCK_STATUSES } from '@/lib/mock-data';
 import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
-import { ServiceStatus, ServiceComponent } from '@/lib/types';
 import { WebApplicationJsonLd } from '@/components/seo/JsonLd';
+
+interface StatusService {
+  name: string;
+  provider: string;
+  status: string;
+  statusPageUrl?: string;
+  components: { name: string; status: string }[];
+  lastChecked?: string;
+}
+
+async function fetchStatuses(): Promise<StatusService[]> {
+  try {
+    const res = await fetch('https://tensorfeed.ai/api/status', { next: { revalidate: 120 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.ok && data.services?.length) return data.services;
+    }
+  } catch {}
+  return [];
+}
 
 export const metadata: Metadata = {
   title: 'AI Service Status Dashboard',
@@ -25,43 +43,7 @@ function StatusLabel({ status }: { status: string }) {
   );
 }
 
-function UptimeBar({ uptime }: { uptime: number }) {
-  const barColor =
-    uptime >= 99.9
-      ? 'bg-accent-green'
-      : uptime >= 99.0
-        ? 'bg-accent-amber'
-        : 'bg-accent-red';
-
-  return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-text-muted">7-day uptime</span>
-        <span className="text-xs font-mono text-text-secondary">{uptime.toFixed(2)}%</span>
-      </div>
-      <div className="h-1.5 w-full bg-bg-primary rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full ${barColor}`}
-          style={{ width: `${uptime}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function formatIncidentDate(dateStr: string | null): string {
-  if (!dateStr) return 'None recorded';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function StatusCard({ service }: { service: ServiceStatus }) {
+function StatusCard({ service }: { service: StatusService }) {
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-5 hover:shadow-glow transition-shadow">
       <div className="flex items-start justify-between mb-3">
@@ -75,28 +57,30 @@ function StatusCard({ service }: { service: ServiceStatus }) {
         </div>
       </div>
 
-      <div className="mb-4">
-        <p className="text-xs text-text-muted mb-2">Components</p>
-        <div className="space-y-1.5">
-          {service.components.map((comp: ServiceComponent) => (
-            <div key={comp.name} className="flex items-center justify-between">
-              <span className="text-sm text-text-secondary">{comp.name}</span>
-              <StatusDot status={comp.status} />
-            </div>
-          ))}
+      {service.components.length > 0 && (
+        <div className="mb-3">
+          <p className="text-xs text-text-muted mb-2">Components</p>
+          <div className="space-y-1.5">
+            {service.components.map((comp) => (
+              <div key={comp.name} className="flex items-center justify-between">
+                <span className="text-sm text-text-secondary">{comp.name}</span>
+                <StatusDot status={comp.status} />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      <UptimeBar uptime={service.uptime7d} />
-
-      <div className="mt-3 pt-3 border-t border-border">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-text-muted">Last incident</span>
-          <span className="text-xs text-text-secondary">
-            {formatIncidentDate(service.lastIncident)}
-          </span>
+      {service.lastChecked && (
+        <div className="mt-3 pt-3 border-t border-border">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-muted">Last checked</span>
+            <span className="text-xs text-text-secondary font-mono">
+              {new Date(service.lastChecked).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -107,8 +91,9 @@ const STATUS_PRIORITY: Record<string, number> = {
   operational: 2,
 };
 
-export default function StatusPage() {
-  const statuses = [...MOCK_STATUSES].sort(
+export default async function StatusPage() {
+  const raw = await fetchStatuses();
+  const statuses = [...raw].sort(
     (a, b) => (STATUS_PRIORITY[a.status] ?? 3) - (STATUS_PRIORITY[b.status] ?? 3)
   );
 
