@@ -12,18 +12,15 @@ crons = [
 
 [[kv_namespaces]]
 binding = "TENSORFEED_NEWS"
-id = ""
-preview_id = ""
+id = "4924c4d8a64446cea111fd63a5b3455a"
 
 [[kv_namespaces]]
 binding = "TENSORFEED_STATUS"
-id = ""
-preview_id = ""
+id = "68eec8e4d37349a6adc1278c9280f653"
 
 [[kv_namespaces]]
 binding = "TENSORFEED_CACHE"
-id = ""
-preview_id = ""
+id = "4de30d8becd24b3bba9556b98bad8e69"
 
 [vars]
 ENVIRONMENT = "production"
