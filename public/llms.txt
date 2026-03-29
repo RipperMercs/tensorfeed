@@ -33,15 +33,29 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 
 ## Content Hubs
 - [News Feed](https://tensorfeed.ai/): Aggregated AI news from 15+ sources, categorized and timestamped
+- [Today in AI](https://tensorfeed.ai/today): Daily digest of top AI stories, incidents, and releases
 - [Models](https://tensorfeed.ai/models): AI model release tracker, pricing comparison tables
+- [Compare Models](https://tensorfeed.ai/compare): Side-by-side model comparison (pricing, specs, capabilities)
+- [AI Timeline](https://tensorfeed.ai/timeline): Chronological timeline of AI milestones and model releases
 - [Agents Directory](https://tensorfeed.ai/agents): Curated directory of AI agents, tools, and frameworks
 - [Research](https://tensorfeed.ai/research): arXiv papers, benchmarks, and research news
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
-- [Is Claude Down?](https://tensorfeed.ai/is-claude-down): Live Claude API status monitor
-- [Is ChatGPT Down?](https://tensorfeed.ai/is-chatgpt-down): Live OpenAI/ChatGPT API status monitor
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
 - [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed
 - [Developer Docs](https://tensorfeed.ai/developers): Full API documentation with code examples
+- [Changelog](https://tensorfeed.ai/changelog): Public build log of features shipped
+
+## Status Pages
+- [Is Claude Down?](https://tensorfeed.ai/is-claude-down): Live Claude/Anthropic API status
+- [Is ChatGPT Down?](https://tensorfeed.ai/is-chatgpt-down): Live OpenAI/ChatGPT status
+- [Is Gemini Down?](https://tensorfeed.ai/is-gemini-down): Live Google Gemini status
+- [Is Perplexity Down?](https://tensorfeed.ai/is-perplexity-down): Live Perplexity AI status
+- [Is Copilot Down?](https://tensorfeed.ai/is-copilot-down): Live Microsoft Copilot status
+- [Is Midjourney Down?](https://tensorfeed.ai/is-midjourney-down): Live Midjourney status
+- [Is Hugging Face Down?](https://tensorfeed.ai/is-huggingface-down): Live Hugging Face status
+- [Is Mistral Down?](https://tensorfeed.ai/is-mistral-down): Live Mistral AI status
+- [Is Replicate Down?](https://tensorfeed.ai/is-replicate-down): Live Replicate status
+- [Is Cohere Down?](https://tensorfeed.ai/is-cohere-down): Live Cohere status
 
 ## About
 TensorFeed.ai is operated by Pizza Robot Studios LLC (Los Angeles, CA).
