@@ -10,6 +10,34 @@ interface NewsFeedProps {
   articles: NewsArticle[];
 }
 
+// Limit any single source to ~35% of displayed articles
+function balanceSources(articles: NewsArticle[]): NewsArticle[] {
+  const maxPerSource = Math.max(Math.floor(articles.length * 0.35), 10);
+  const sourceCounts: Record<string, number> = {};
+  const balanced: NewsArticle[] = [];
+  const overflow: NewsArticle[] = [];
+
+  for (const article of articles) {
+    const count = sourceCounts[article.source] || 0;
+    if (count < maxPerSource) {
+      balanced.push(article);
+      sourceCounts[article.source] = count + 1;
+    } else {
+      overflow.push(article);
+    }
+  }
+
+  // Backfill with overflow if we need more articles
+  const target = Math.min(articles.length, 100);
+  if (balanced.length < target) {
+    balanced.push(...overflow.slice(0, target - balanced.length));
+  }
+
+  // Re-sort by date
+  balanced.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  return balanced;
+}
+
 function AdPlaceholder({ index }: { index: number }) {
   return (
     <div className="rounded-lg border border-dashed border-border bg-bg-secondary/50 px-5 py-4 flex items-center justify-center">
@@ -27,16 +55,15 @@ export default function NewsFeed({ articles: initialArticles }: NewsFeedProps) {
   useEffect(() => {
     async function fetchLive() {
       try {
-        const res = await fetch('https://tensorfeed.ai/api/news?limit=100');
+        const res = await fetch('https://tensorfeed.ai/api/news?limit=200');
         if (!res.ok) return;
         const data = await res.json();
         if (data.ok && data.articles?.length) {
-          setArticles(data.articles);
+          setArticles(balanceSources(data.articles));
         }
       } catch {}
     }
     fetchLive();
-    // Refresh every 5 minutes
     const interval = setInterval(fetchLive, 300000);
     return () => clearInterval(interval);
   }, []);

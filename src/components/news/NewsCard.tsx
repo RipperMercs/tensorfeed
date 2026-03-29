@@ -55,15 +55,26 @@ interface NewsCardProps {
   article: NewsArticle;
 }
 
+function cleanSnippet(snippet: string | undefined, source: string): string | null {
+  if (!snippet) return null;
+  // Strip raw HN metadata (Article URL, Comments URL, Points, etc.)
+  if (/^(Article URL:|Comments URL:|Points:)/m.test(snippet)) return null;
+  if (snippet.startsWith('Hacker News discussion:')) return null;
+  const trimmed = snippet.trim();
+  if (!trimmed || trimmed.length < 20) return null;
+  return trimmed;
+}
+
 export default function NewsCard({ article, featured = false }: NewsCardProps & { featured?: boolean }) {
   const colorClass = SOURCE_COLORS[article.source] || 'bg-accent-primary/20 text-accent-primary';
   const borderHex = SOURCE_BORDER_HEX[article.source] || '#6366f1';
   const initials = getSourceInitials(article.source);
+  const snippet = cleanSnippet(article.snippet, article.source);
 
   return (
     <article
       className="bg-bg-secondary rounded-lg border border-border p-5 hover:shadow-glow hover:border-accent-primary transition-all"
-      style={{ borderLeftWidth: '3px', borderLeftColor: borderHex }}
+      style={{ borderLeftWidth: '4px', borderLeftColor: borderHex }}
     >
       {/* Source row */}
       <div className="flex items-center gap-2.5 mb-3">
@@ -88,9 +99,9 @@ export default function NewsCard({ article, featured = false }: NewsCardProps & 
       </h3>
 
       {/* Snippet */}
-      {article.snippet && (featured || article.snippet.length > 0) && (
+      {snippet && (
         <p className={`text-sm text-text-muted mb-4 ${featured ? 'line-clamp-3' : 'line-clamp-2'}`}>
-          {article.snippet}
+          {snippet}
         </p>
       )}
 
