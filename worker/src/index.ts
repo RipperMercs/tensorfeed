@@ -10,10 +10,10 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-function jsonResponse(data: unknown, status = 200): Response {
+function jsonResponse(data: unknown, status = 200, maxAge = 60): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' },
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${maxAge}` },
   });
 }
 
@@ -77,6 +77,58 @@ function articlesToJsonFeed(articles: Article[]): object {
   };
 }
 
+// ── Cache API helper (free, unlimited reads) ────────────────────────
+
+async function cacheGet(request: Request): Promise<Response | undefined> {
+  const cache = caches.default;
+  const cached = await cache.match(request);
+  return cached;
+}
+
+async function cachePut(request: Request, response: Response, ttlSeconds: number): Promise<void> {
+  const cache = caches.default;
+  const cloned = new Response(response.body, response);
+  cloned.headers.set('Cache-Control', `public, max-age=${ttlSeconds}`);
+  await cache.put(request, cloned);
+}
+
+/**
+ * Try Cache API first, then KV, then cache the KV result.
+ * Dramatically reduces KV read operations.
+ */
+async function cachedKVGet(
+  request: Request,
+  kvNamespace: KVNamespace,
+  key: string,
+  cacheTTL: number
+): Promise<unknown> {
+  // Build a synthetic cache URL for this KV key
+  const cacheUrl = new URL(request.url);
+  cacheUrl.pathname = `/__kv_cache/${key}`;
+  const cacheRequest = new Request(cacheUrl.toString());
+
+  // Try Cache API first (free, unlimited)
+  const cached = await cacheGet(cacheRequest);
+  if (cached) {
+    return cached.json();
+  }
+
+  // Cache miss: read from KV
+  const data = await kvNamespace.get(key, 'json');
+
+  // Store in Cache API for next time
+  if (data) {
+    const resp = new Response(JSON.stringify(data), {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${cacheTTL}` },
+    });
+    await cachePut(cacheRequest, resp, cacheTTL);
+  }
+
+  return data;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -86,18 +138,18 @@ export default {
       return new Response(null, { headers: CORS_HEADERS });
     }
 
-    // Track agent/bot activity (non-blocking)
+    // Track agent/bot activity (non-blocking, batched in memory)
     ctx.waitUntil(trackAgentActivity(request, env, path));
 
-    // Agent activity endpoint
+    // Agent activity endpoint (reads from memory cache, minimal KV)
     if (path === '/api/agents/activity') {
       const activity = await getAgentActivity(env);
-      return jsonResponse(activity);
+      return jsonResponse(activity, 200, 10);
     }
 
-    // Health check
+    // Health check (1 KV read, cached 60s)
     if (path === '/api/health') {
-      const newsMeta = await env.TENSORFEED_NEWS.get('meta', 'json') as Record<string, unknown> | null;
+      const newsMeta = await cachedKVGet(request, env.TENSORFEED_NEWS, 'meta', 60);
       return jsonResponse({
         ok: true,
         timestamp: new Date().toISOString(),
@@ -105,13 +157,13 @@ export default {
       });
     }
 
-    // === NEWS ENDPOINTS ===
+    // === NEWS ENDPOINTS (cached 60s via Cache API) ===
 
     if (path === '/api/news' || path === '/api/agents/news' || path === '/api/agents/news.json') {
       const category = url.searchParams.get('category');
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 200);
 
-      let articles = await env.TENSORFEED_NEWS.get('articles', 'json') as Article[] | null;
+      let articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60) as Article[] | null;
       if (!articles) articles = [];
 
       if (category && category !== 'All') {
@@ -129,16 +181,16 @@ export default {
       });
     }
 
-    // RSS feed
+    // RSS feed (cached 300s)
     if (path === '/api/feed.xml' || path === '/api/feed/all.xml') {
-      const articles = await env.TENSORFEED_NEWS.get('articles', 'json') as Article[] | null;
+      const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 300) as Article[] | null;
       return xmlResponse(articlesToRSS(articles || [], 'TensorFeed.ai', 'https://tensorfeed.ai/api/feed.xml'));
     }
 
     // Category RSS feeds
     if (path.startsWith('/api/feed/') && path.endsWith('.xml')) {
       const category = path.replace('/api/feed/', '').replace('.xml', '');
-      const articles = await env.TENSORFEED_NEWS.get('articles', 'json') as Article[] | null;
+      const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 300) as Article[] | null;
       if (!articles) return xmlResponse(articlesToRSS([], `TensorFeed.ai - ${category}`, `https://tensorfeed.ai${path}`));
 
       const categoryMap: Record<string, string[]> = {
@@ -158,71 +210,71 @@ export default {
       return xmlResponse(articlesToRSS(filtered, `TensorFeed.ai - ${category}`, `https://tensorfeed.ai${path}`));
     }
 
-    // JSON Feed
+    // JSON Feed (cached 60s)
     if (path === '/api/feed.json') {
-      const articles = await env.TENSORFEED_NEWS.get('articles', 'json') as Article[] | null;
-      return jsonResponse(articlesToJsonFeed(articles || []));
+      const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60) as Article[] | null;
+      return jsonResponse(articlesToJsonFeed(articles || []), 200, 60);
     }
 
-    // === STATUS ENDPOINTS ===
+    // === STATUS ENDPOINTS (cached 120s) ===
 
     if (path === '/api/status' || path === '/api/agents/status' || path === '/api/agents/status.json') {
-      const services = await env.TENSORFEED_STATUS.get('services', 'json');
+      const services = await cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120);
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
         checked: new Date().toISOString(),
         services: services || [],
-      });
+      }, 200, 120);
     }
 
     if (path === '/api/status/summary') {
-      const summary = await env.TENSORFEED_STATUS.get('summary', 'json');
+      const summary = await cachedKVGet(request, env.TENSORFEED_STATUS, 'summary', 120);
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
         services: summary || [],
-      });
+      }, 200, 120);
     }
 
-    // === PRICING ENDPOINT ===
+    // === PRICING ENDPOINT (cached 300s) ===
 
     if (path === '/api/agents/pricing' || path === '/api/pricing' || path === '/api/agents/pricing.json') {
-      const cached = await env.TENSORFEED_CACHE.get('pricing', 'json');
+      const cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'pricing', 300);
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
         updated: new Date().toISOString(),
         providers: cached || [],
-      });
+      }, 200, 300);
     }
 
-    // === MODELS ENDPOINT ===
+    // === MODELS ENDPOINT (cached 300s) ===
 
     if (path === '/api/models') {
-      const cached = await env.TENSORFEED_CACHE.get('pricing', 'json');
+      const cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'pricing', 300);
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
-        ...(cached || {}),
-      });
+        ...(cached as Record<string, unknown> || {}),
+      }, 200, 300);
     }
 
-    // === AGENTS DIRECTORY ENDPOINT ===
+    // === AGENTS DIRECTORY ENDPOINT (cached 300s) ===
 
     if (path === '/api/agents/directory') {
-      const cached = await env.TENSORFEED_CACHE.get('agents-directory', 'json');
+      const cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'agents-directory', 300);
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
-        ...(cached || {}),
-      });
+        ...(cached as Record<string, unknown> || {}),
+      }, 200, 300);
     }
 
-    // === META ENDPOINT ===
+    // === META ENDPOINT (cached 60s) ===
 
     if (path === '/api/meta') {
-      const newsMeta = await env.TENSORFEED_NEWS.get('meta', 'json');
+      const newsMeta = await cachedKVGet(request, env.TENSORFEED_NEWS, 'meta', 60);
       return jsonResponse({
         ok: true,
         site: 'tensorfeed.ai',
@@ -243,7 +295,7 @@ export default {
           health: '/api/health',
         },
         news: newsMeta,
-      });
+      }, 200, 60);
     }
 
     // === FORCE REFRESH (protected) ===
@@ -268,7 +320,7 @@ export default {
 
     if (cron === '*/10 * * * *') {
       await pollRSSFeeds(env);
-    } else if (cron === '*/2 * * * *') {
+    } else if (cron === '*/5 * * * *') {
       await pollStatusPages(env);
     } else if (cron === '0 * * * *') {
       // Hourly: refresh all
