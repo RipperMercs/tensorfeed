@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { LayoutGrid, List } from 'lucide-react';
 import { NewsArticle, FeedLayout } from '@/lib/types';
 import CategoryFilter from './CategoryFilter';
@@ -18,9 +18,28 @@ function AdPlaceholder({ index }: { index: number }) {
   );
 }
 
-export default function NewsFeed({ articles }: NewsFeedProps) {
+export default function NewsFeed({ articles: initialArticles }: NewsFeedProps) {
+  const [articles, setArticles] = useState<NewsArticle[]>(initialArticles);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [layout, setLayout] = useState<FeedLayout>('full');
+
+  // Fetch live articles from Worker API (replaces stale build-time data)
+  useEffect(() => {
+    async function fetchLive() {
+      try {
+        const res = await fetch('https://tensorfeed.ai/api/news?limit=100');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.ok && data.articles?.length) {
+          setArticles(data.articles);
+        }
+      } catch {}
+    }
+    fetchLive();
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchLive, 300000);
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredArticles = useMemo(() => {
     if (selectedCategory === 'All') return articles;
