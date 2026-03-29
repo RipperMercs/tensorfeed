@@ -92,7 +92,7 @@ function ModelSelector({
         </div>
       </button>
       {open && (
-        <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto bg-bg-secondary border border-border rounded-xl shadow-lg">
+        <div className="absolute z-20 mt-1 w-full max-h-96 overflow-y-auto bg-bg-secondary border border-border rounded-xl shadow-lg">
           {allModels.map((model) => (
             <button
               key={model.id}
