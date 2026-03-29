@@ -1,0 +1,165 @@
+{
+  "events": [
+    {
+      "date": "2026-03-25",
+      "title": "Claude Sonnet 4.6 Released",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic releases Claude Sonnet 4.6, a faster and more affordable model in the 4.6 family with strong coding and reasoning performance."
+    },
+    {
+      "date": "2026-03-15",
+      "title": "Claude Opus 4.6 Released",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic releases Claude Opus 4.6 with extended thinking and a 1M context window option, setting new benchmarks across reasoning tasks."
+    },
+    {
+      "date": "2026-03-12",
+      "title": "Gemini 2.5 Pro Released",
+      "provider": "Google",
+      "category": "model-release",
+      "description": "Google launches Gemini 2.5 Pro with a native 1M token context window and improved multimodal reasoning capabilities."
+    },
+    {
+      "date": "2026-03-05",
+      "title": "Llama 4 Scout & Maverick Released",
+      "provider": "Meta",
+      "category": "open-source",
+      "description": "Meta releases Llama 4 with Scout (10M context) and Maverick (1M context) variants, pushing open-source model capabilities forward."
+    },
+    {
+      "date": "2026-02-27",
+      "title": "GPT-4.5 Released",
+      "provider": "OpenAI",
+      "category": "model-release",
+      "description": "OpenAI launches GPT-4.5 with a 256K context window and significantly improved creative writing and emotional intelligence."
+    },
+    {
+      "date": "2026-02-14",
+      "title": "Grok 3 Released",
+      "provider": "xAI",
+      "category": "model-release",
+      "description": "xAI releases Grok 3 with strong reasoning performance, trained on the Colossus 200K GPU cluster."
+    },
+    {
+      "date": "2026-01-20",
+      "title": "DeepSeek V3 Released",
+      "provider": "DeepSeek",
+      "category": "open-source",
+      "description": "DeepSeek releases V3, a powerful open-source model trained with a fraction of the compute used by competitors, sparking industry debate about efficiency."
+    },
+    {
+      "date": "2025-10-22",
+      "title": "Claude 3.5 Haiku Released",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic releases Claude 3.5 Haiku, a fast and affordable model that outperforms the original Claude 3 Opus on many benchmarks."
+    },
+    {
+      "date": "2025-10-20",
+      "title": "Claude 3.5 Sonnet v2 Released",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic ships an upgraded Claude 3.5 Sonnet with computer use capabilities and significant improvements in coding and tool use."
+    },
+    {
+      "date": "2025-10-01",
+      "title": "EU AI Act Enforcement Begins",
+      "provider": "EU",
+      "category": "policy",
+      "description": "The European Union begins enforcing the AI Act, requiring risk assessments and transparency for high-risk AI systems deployed in EU markets."
+    },
+    {
+      "date": "2025-09-12",
+      "title": "OpenAI o1 Released",
+      "provider": "OpenAI",
+      "category": "model-release",
+      "description": "OpenAI launches o1, a reasoning-focused model that uses chain-of-thought at inference time to solve complex math and coding problems."
+    },
+    {
+      "date": "2025-07-23",
+      "title": "Llama 3.1 405B Released",
+      "provider": "Meta",
+      "category": "open-source",
+      "description": "Meta releases Llama 3.1 with a 405B parameter variant, the largest open-source model at the time, matching frontier closed models."
+    },
+    {
+      "date": "2025-07-18",
+      "title": "GPT-4o Mini Released",
+      "provider": "OpenAI",
+      "category": "pricing",
+      "description": "OpenAI launches GPT-4o Mini at $0.15 per million input tokens, dramatically undercutting existing pricing and pressuring the entire market."
+    },
+    {
+      "date": "2025-06-20",
+      "title": "Claude 3.5 Sonnet Released",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic releases Claude 3.5 Sonnet, surpassing GPT-4o on most benchmarks while maintaining fast response times and lower costs."
+    },
+    {
+      "date": "2025-05-13",
+      "title": "GPT-4o Released",
+      "provider": "OpenAI",
+      "category": "model-release",
+      "description": "OpenAI releases GPT-4o with native multimodal capabilities including real-time voice and vision, available free to all ChatGPT users."
+    },
+    {
+      "date": "2025-04-18",
+      "title": "Llama 3 Released",
+      "provider": "Meta",
+      "category": "open-source",
+      "description": "Meta releases Llama 3 in 8B and 70B variants, establishing a new bar for open-source language model performance."
+    },
+    {
+      "date": "2025-03-04",
+      "title": "Claude 3 Family Released",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic launches the Claude 3 model family (Haiku, Sonnet, Opus) with vision capabilities and a 200K context window."
+    },
+    {
+      "date": "2025-02-21",
+      "title": "Gemini 1.5 Pro Released",
+      "provider": "Google",
+      "category": "model-release",
+      "description": "Google launches Gemini 1.5 Pro with a 1M token context window, a major leap in long-context processing for production use."
+    },
+    {
+      "date": "2025-02-15",
+      "title": "Gemini 2.0 Flash Released",
+      "provider": "Google",
+      "category": "model-release",
+      "description": "Google releases Gemini 2.0 Flash with native tool use and multimodal output, optimized for agentic workflows."
+    },
+    {
+      "date": "2025-01-15",
+      "title": "Mistral Large 2 Released",
+      "provider": "Mistral",
+      "category": "model-release",
+      "description": "Mistral releases Large 2 with a 256K context window, strong multilingual support, and competitive pricing for enterprise use."
+    },
+    {
+      "date": "2024-11-06",
+      "title": "OpenAI Valued at $157B",
+      "provider": "OpenAI",
+      "category": "acquisition",
+      "description": "OpenAI closes a $6.6B funding round at a $157B valuation, making it the most valuable private AI company in the world."
+    },
+    {
+      "date": "2024-08-01",
+      "title": "EU AI Act Enters Into Force",
+      "provider": "EU",
+      "category": "policy",
+      "description": "The EU AI Act officially enters into force, establishing the world's first comprehensive legal framework for artificial intelligence regulation."
+    },
+    {
+      "date": "2024-03-28",
+      "title": "Anthropic Raises $2.75B from Amazon",
+      "provider": "Anthropic",
+      "category": "acquisition",
+      "description": "Amazon completes its $2.75B additional investment in Anthropic, bringing its total commitment to $4B and deepening the AWS partnership."
+    }
+  ]
+}
