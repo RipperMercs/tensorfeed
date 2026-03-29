@@ -155,10 +155,12 @@ export default {
 
     if (path === '/api/health') {
       const newsMeta = await cachedKVGet(request, env.TENSORFEED_NEWS, 'meta', 60);
+      const lastCron = await cachedKVGet(request, env.TENSORFEED_CACHE, 'last-cron-run', 30);
       return jsonResponse({
         ok: true,
         timestamp: new Date().toISOString(),
         news: newsMeta || { totalArticles: 0, lastUpdated: 'never' },
+        lastCronRun: lastCron || null,
       });
     }
 
@@ -416,5 +418,11 @@ export default {
       // 5x daily (~every 3hrs): post 1 top story to X
       await postTopStories(env);
     }
+
+    // Track last cron execution for debugging
+    await env.TENSORFEED_CACHE.put('last-cron-run', JSON.stringify({
+      cron,
+      timestamp: new Date().toISOString(),
+    }));
   },
 };

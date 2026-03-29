@@ -4,12 +4,17 @@ import { RSS_SOURCES } from './sources';
 // Keywords that must appear in title or description for non-AI-focused sources
 const AI_KEYWORDS = /\b(ai|a\.i\.|artificial intelligence|machine learning|deep learning|neural net|llm|large language model|language model|gpt|chatgpt|openai|anthropic|claude|gemini|deepmind|meta ai|mistral|cohere|hugging\s?face|transformer|diffusion model|generative ai|gen\s?ai|computer vision|natural language|nlp|chatbot|copilot|ai agent|ai model|robotics|automation|deepseek|llama|stable diffusion|midjourney|dall-e|sora|grok|perplexity)\b/i;
 
+// Titles matching these patterns are consumer/deal spam, not AI content (even if they mention "AI")
+const SPAM_TITLE_PATTERNS = /\b(best .* deals|amazon .* sale|costco .* deal|walmart .* deal|iphone .* deal|spring sale|black friday|cyber monday|prime day|best .* under \$|price drop|clearance|coupon|promo code|gift guide|buying guide|kitchen .* splurge|earbuds|headphones deal|robocall|robo.?call|smart speaker deal|smart home deal)\b/i;
+
 // Sources whose feeds are already AI-focused and don't need keyword filtering
 const AI_FOCUSED_SOURCES = new Set([
   'google-ai', 'huggingface', 'nvidia-ai', 'arxiv-ai',
 ]);
 
 function isAIRelated(title: string, description: string): boolean {
+  // Reject consumer/deals spam even if they mention AI peripherally
+  if (SPAM_TITLE_PATTERNS.test(title)) return false;
   return AI_KEYWORDS.test(title) || AI_KEYWORDS.test(description);
 }
 

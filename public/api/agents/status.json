@@ -1,254 +1,151 @@
 {
   "ok": true,
+  "source": "tensorfeed.ai",
+  "checked": "2026-03-29T15:57:05.249Z",
   "services": [
     {
       "name": "Claude API",
       "provider": "Anthropic",
       "status": "operational",
-      "uptime7d": 99.98,
-      "lastIncident": null,
+      "statusPageUrl": "https://status.anthropic.com",
       "components": [
         {
-          "name": "Messages API",
+          "name": "claude.ai",
           "status": "operational"
         },
         {
-          "name": "Batches API",
+          "name": "platform.claude.com (formerly console.anthropic.com)",
           "status": "operational"
         },
         {
-          "name": "Tool Use",
+          "name": "Claude API (api.anthropic.com)",
+          "status": "operational"
+        },
+        {
+          "name": "Claude Code",
+          "status": "operational"
+        },
+        {
+          "name": "Claude for Government",
           "status": "operational"
         }
       ],
-      "statusPageUrl": "https://status.anthropic.com"
+      "lastChecked": "2026-03-29T15:55:27.789Z"
     },
     {
-      "name": "ChatGPT / OpenAI API",
+      "name": "OpenAI API",
       "provider": "OpenAI",
       "status": "operational",
-      "uptime7d": 99.91,
-      "lastIncident": "2026-03-25T04:12:00Z",
+      "statusPageUrl": "https://status.openai.com",
       "components": [
         {
-          "name": "Chat Completions",
-          "status": "operational"
-        },
-        {
-          "name": "Assistants API",
-          "status": "operational"
-        },
-        {
-          "name": "Image Generation",
-          "status": "operational"
-        }
-      ],
-      "statusPageUrl": "https://status.openai.com"
-    },
-    {
-      "name": "Gemini API",
-      "provider": "Google",
-      "status": "degraded",
-      "uptime7d": 98.74,
-      "lastIncident": "2026-03-28T06:45:00Z",
-      "components": [
-        {
-          "name": "GenerateContent",
-          "status": "degraded"
-        },
-        {
-          "name": "Embeddings",
-          "status": "operational"
-        },
-        {
-          "name": "Grounding",
-          "status": "operational"
-        }
-      ],
-      "statusPageUrl": "https://status.cloud.google.com"
-    },
-    {
-      "name": "Azure OpenAI",
-      "provider": "Microsoft",
-      "status": "operational",
-      "uptime7d": 99.95,
-      "lastIncident": "2026-03-20T11:30:00Z",
-      "components": [
-        {
-          "name": "Inference (East US)",
-          "status": "operational"
-        },
-        {
-          "name": "Inference (West Europe)",
+          "name": "Login",
           "status": "operational"
         },
         {
           "name": "Fine-tuning",
           "status": "operational"
-        }
-      ],
-      "statusPageUrl": "https://status.azure.com"
-    },
-    {
-      "name": "AWS Bedrock",
-      "provider": "Amazon",
-      "status": "operational",
-      "uptime7d": 99.99,
-      "lastIncident": null,
-      "components": [
-        {
-          "name": "Model Inference",
-          "status": "operational"
-        },
-        {
-          "name": "Knowledge Bases",
-          "status": "operational"
-        },
-        {
-          "name": "Agents",
-          "status": "operational"
-        }
-      ],
-      "statusPageUrl": "https://health.aws.amazon.com"
-    },
-    {
-      "name": "Mistral Platform",
-      "provider": "Mistral AI",
-      "status": "operational",
-      "uptime7d": 99.87,
-      "lastIncident": "2026-03-22T09:00:00Z",
-      "components": [
-        {
-          "name": "Chat API",
-          "status": "operational"
         },
         {
           "name": "Embeddings",
           "status": "operational"
+        },
+        {
+          "name": "Images",
+          "status": "operational"
+        },
+        {
+          "name": "Batch",
+          "status": "operational"
+        },
+        {
+          "name": "Audio",
+          "status": "operational"
         }
       ],
-      "statusPageUrl": "https://status.mistral.ai"
+      "lastChecked": "2026-03-29T15:55:27.607Z"
+    },
+    {
+      "name": "Hugging Face",
+      "provider": "Hugging Face",
+      "status": "unknown",
+      "statusPageUrl": "https://status.huggingface.co",
+      "components": [],
+      "lastChecked": "2026-03-29T15:55:28.549Z"
     },
     {
       "name": "Replicate",
       "provider": "Replicate",
       "status": "operational",
-      "uptime7d": 99.82,
-      "lastIncident": "2026-03-23T14:20:00Z",
+      "statusPageUrl": "https://status.replicate.com",
       "components": [
         {
-          "name": "Predictions API",
+          "name": "Billing",
           "status": "operational"
         },
         {
-          "name": "Deployments",
+          "name": "Support Tickets",
+          "status": "operational"
+        },
+        {
+          "name": "Streaming API",
+          "status": "operational"
+        },
+        {
+          "name": "HTTP API",
+          "status": "operational"
+        },
+        {
+          "name": "CPU Hardware",
+          "status": "operational"
+        },
+        {
+          "name": "Replicate Registry (r8.im)",
           "status": "operational"
         }
       ],
-      "statusPageUrl": "https://status.replicate.com"
+      "lastChecked": "2026-03-29T15:55:27.851Z"
     },
     {
-      "name": "Hugging Face Inference",
-      "provider": "Hugging Face",
-      "status": "degraded",
-      "uptime7d": 99.12,
-      "lastIncident": "2026-03-28T03:20:00Z",
-      "components": [
-        {
-          "name": "Inference Endpoints",
-          "status": "operational"
-        },
-        {
-          "name": "Serverless API",
-          "status": "degraded"
-        },
-        {
-          "name": "Spaces",
-          "status": "operational"
-        }
-      ],
-      "statusPageUrl": "https://status.huggingface.co"
-    },
-    {
-      "name": "Cohere API",
+      "name": "Cohere",
       "provider": "Cohere",
-      "status": "down",
-      "uptime7d": 97.45,
-      "lastIncident": "2026-03-28T07:30:00Z",
+      "status": "operational",
+      "statusPageUrl": "https://status.cohere.com",
       "components": [
         {
-          "name": "Chat",
-          "status": "down"
+          "name": "Website",
+          "status": "operational"
         },
         {
-          "name": "Embed",
-          "status": "down"
+          "name": "embeddings",
+          "status": "operational"
         },
         {
-          "name": "Rerank",
+          "name": "command-a-vision-07-2025",
+          "status": "operational"
+        },
+        {
+          "name": "command-a-03-2025",
+          "status": "operational"
+        },
+        {
+          "name": "command-r-plus-082024",
+          "status": "operational"
+        },
+        {
+          "name": "command-r7b",
           "status": "operational"
         }
       ],
-      "statusPageUrl": "https://status.cohere.com"
+      "lastChecked": "2026-03-29T15:55:27.695Z"
     },
     {
-      "name": "Groq Cloud",
-      "provider": "Groq",
-      "status": "operational",
-      "uptime7d": 99.93,
-      "lastIncident": "2026-03-19T22:10:00Z",
-      "components": [
-        {
-          "name": "LPU Inference",
-          "status": "operational"
-        },
-        {
-          "name": "API Gateway",
-          "status": "operational"
-        }
-      ],
-      "statusPageUrl": "https://status.groq.com"
-    },
-    {
-      "name": "Perplexity API",
-      "provider": "Perplexity",
-      "status": "operational",
-      "uptime7d": 99.89,
-      "lastIncident": "2026-03-21T15:45:00Z",
-      "components": [
-        {
-          "name": "Sonar API",
-          "status": "operational"
-        },
-        {
-          "name": "Online Search",
-          "status": "operational"
-        }
-      ],
-      "statusPageUrl": "https://status.perplexity.ai"
-    },
-    {
-      "name": "Together AI",
-      "provider": "Together AI",
-      "status": "operational",
-      "uptime7d": 99.78,
-      "lastIncident": "2026-03-24T08:30:00Z",
-      "components": [
-        {
-          "name": "Inference API",
-          "status": "operational"
-        },
-        {
-          "name": "Fine-tuning",
-          "status": "operational"
-        },
-        {
-          "name": "Custom Models",
-          "status": "operational"
-        }
-      ],
-      "statusPageUrl": "https://status.together.ai"
+      "name": "Mistral",
+      "provider": "Mistral AI",
+      "status": "unknown",
+      "statusPageUrl": "https://status.mistral.ai",
+      "components": [],
+      "lastChecked": "2026-03-29T15:55:27.676Z"
     }
-  ],
-  "fetchedAt": "2026-03-28T23:35:12.174Z"
+  ]
 }
