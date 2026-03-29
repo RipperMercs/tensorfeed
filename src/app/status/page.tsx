@@ -100,8 +100,16 @@ function StatusCard({ service }: { service: ServiceStatus }) {
   );
 }
 
+const STATUS_PRIORITY: Record<string, number> = {
+  down: 0,
+  degraded: 1,
+  operational: 2,
+};
+
 export default function StatusPage() {
-  const statuses = MOCK_STATUSES;
+  const statuses = [...MOCK_STATUSES].sort(
+    (a, b) => (STATUS_PRIORITY[a.status] ?? 3) - (STATUS_PRIORITY[b.status] ?? 3)
+  );
 
   const operationalCount = statuses.filter((s) => s.status === 'operational').length;
   const degradedCount = statuses.filter((s) => s.status === 'degraded').length;
