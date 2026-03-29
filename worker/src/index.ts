@@ -233,6 +233,17 @@ export default {
       }, 200, 120);
     }
 
+    // === INCIDENTS ENDPOINT (cached 120s) ===
+
+    if (path === '/api/incidents') {
+      const incidents = await cachedKVGet(request, env.TENSORFEED_STATUS, 'incidents', 120);
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        incidents: incidents || [],
+      }, 200, 120);
+    }
+
     if (path === '/api/status/summary') {
       const summary = await cachedKVGet(request, env.TENSORFEED_STATUS, 'summary', 120);
       return jsonResponse({
@@ -339,6 +350,40 @@ export default {
         await env.TENSORFEED_CACHE.put('newsletter-subscribers', JSON.stringify(subscribers));
 
         return jsonResponse({ ok: true, message: 'Subscribed successfully' });
+      } catch {
+        return jsonResponse({ error: 'Invalid request' }, 400);
+      }
+    }
+
+    // === ALERT SUBSCRIPTION ===
+
+    if (path === '/api/alerts/subscribe' && request.method === 'POST') {
+      try {
+        const body = await request.json() as { email?: string; services?: string[]; frequency?: string };
+        const email = body.email?.trim().toLowerCase();
+        if (!email || !email.includes('@') || !email.includes('.')) {
+          return jsonResponse({ error: 'Invalid email address' }, 400);
+        }
+
+        const subscriber = {
+          email,
+          services: body.services || [],
+          frequency: body.frequency === 'digest' ? 'digest' : 'instant',
+          subscribedAt: new Date().toISOString(),
+        };
+
+        const existing = await env.TENSORFEED_CACHE.get('alert-subscribers', 'json') as { email: string }[] | null;
+        const subscribers = existing || [];
+
+        // Check for duplicate
+        if (subscribers.some(s => s.email === email)) {
+          return jsonResponse({ ok: true, message: 'Already subscribed' });
+        }
+
+        subscribers.push(subscriber);
+        await env.TENSORFEED_CACHE.put('alert-subscribers', JSON.stringify(subscribers));
+
+        return jsonResponse({ ok: true, message: 'Subscribed to alerts' });
       } catch {
         return jsonResponse({ error: 'Invalid request' }, 400);
       }
