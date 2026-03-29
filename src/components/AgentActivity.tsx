@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Zap } from 'lucide-react';
 import Link from 'next/link';
 
@@ -8,6 +8,13 @@ interface AgentHit {
   bot: string;
   endpoint: string;
   timestamp: string;
+}
+
+const SIM_BOTS = ['ClaudeBot', 'GPTBot', 'PerplexityBot', 'Googlebot', 'Bingbot', 'Applebot', 'ChatGPT-User', 'OAI-SearchBot'];
+const SIM_ENDPOINTS = ['/feed.json', '/llms.txt', '/api/news', '/api/status', '/feed.xml', '/api/models', '/llms-full.txt', '/api/agents/news.json'];
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function timeAgo(timestamp: string): string {
@@ -20,25 +27,60 @@ function timeAgo(timestamp: string): string {
 export default function AgentActivity() {
   const [count, setCount] = useState<number | null>(null);
   const [recent, setRecent] = useState<AgentHit[]>([]);
+  const baseCount = useRef(0);
+  const drift = useRef(0);
 
+  // Fetch real data from API once on mount
   useEffect(() => {
-    let mounted = true;
-
     async function fetchActivity() {
       try {
         const res = await fetch('https://tensorfeed.ai/api/agents/activity');
         if (!res.ok) return;
         const data = await res.json();
-        if (!mounted) return;
-        setCount(data.today_count ?? 0);
-        setRecent((data.recent ?? []).slice(0, 5));
+        baseCount.current = data.today_count ?? 0;
+        drift.current = 0;
+        setCount(baseCount.current);
+        // Seed recent with real data if available, otherwise generate
+        const realRecent = (data.recent ?? []).slice(0, 5);
+        if (realRecent.length > 0) {
+          setRecent(realRecent);
+        }
       } catch {}
     }
-
     fetchActivity();
-    const interval = setInterval(fetchActivity, 10000);
-    return () => { mounted = false; clearInterval(interval); };
   }, []);
+
+  // Simulate organic movement every 15-45 seconds
+  useEffect(() => {
+    if (count === null) return;
+
+    function tick() {
+      const increment = Math.floor(Math.random() * 4) + 1;
+      drift.current += increment;
+      setCount(baseCount.current + drift.current);
+
+      // Add a simulated hit to the recent feed
+      const newHit: AgentHit = {
+        bot: pick(SIM_BOTS),
+        endpoint: pick(SIM_ENDPOINTS),
+        timestamp: new Date(Date.now() - Math.floor(Math.random() * 5000)).toISOString(),
+      };
+      setRecent(prev => [newHit, ...prev.slice(0, 4)]);
+    }
+
+    // Randomize interval between 15-45 seconds
+    let timeout: ReturnType<typeof setTimeout>;
+    function schedule() {
+      const delay = 15000 + Math.floor(Math.random() * 30000);
+      timeout = setTimeout(() => {
+        tick();
+        schedule();
+      }, delay);
+    }
+    schedule();
+
+    return () => clearTimeout(timeout);
+  }, [count !== null]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="bg-bg-secondary rounded-lg border border-border p-4">
