@@ -118,14 +118,17 @@ function ModelSelector({
 
 export default function ComparePage() {
   const [pricingData, setPricingData] = useState<PricingData>(fallbackPricingData as PricingData);
-  const [selectedIds, setSelectedIds] = useState<(string | null)[]>([null, null]);
+  const [selectedIds, setSelectedIds] = useState<(string | null)[]>(['claude-opus-4-6', 'gpt-4o']);
 
   useEffect(() => {
     fetch('https://tensorfeed.ai/api/models')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.ok && data.providers?.length) {
-          setPricingData(data);
+          setPricingData({
+            lastUpdated: data.lastUpdated || '',
+            providers: data.providers,
+          });
         }
       })
       .catch(() => {});
