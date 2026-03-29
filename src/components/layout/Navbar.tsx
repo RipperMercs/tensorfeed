@@ -4,8 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
-import { Menu, X, Zap, Search, ChevronDown } from 'lucide-react';
+import { Menu, X, Zap, Search, ChevronDown, Sun, Moon } from 'lucide-react';
 import { NAV_LINKS } from '@/lib/constants';
+import { useTheme } from '@/components/ThemeProvider';
 
 const GUIDE_LINKS = [
   { href: '/what-is-ai', label: 'What is AI?' },
@@ -21,6 +22,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [guidesOpen, setGuidesOpen] = useState(false);
   const guidesRef = useRef<HTMLDivElement>(null);
+  const { theme, toggleTheme } = useTheme();
 
   // Close guides dropdown when clicking outside
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function Navbar() {
               <span className="font-bold text-text-primary">TENSOR</span>
               <span className="font-normal text-text-secondary">FEED</span>
             </span>
-            <span className="text-[11px] font-mono font-semibold px-1.5 py-0.5 rounded bg-gradient-to-r from-accent-primary to-accent-cyan text-bg-primary leading-none">
+            <span className="text-[11px] font-mono font-semibold px-1.5 py-0.5 rounded bg-gradient-to-r from-accent-primary to-accent-cyan text-white leading-none">
               .ai
             </span>
           </Link>
@@ -131,6 +133,15 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              className="hidden sm:flex items-center justify-center w-8 h-8 rounded text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
             {/* Search icon */}
             <button
               className="hidden sm:flex items-center justify-center w-8 h-8 rounded text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-colors"

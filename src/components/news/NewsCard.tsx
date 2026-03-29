@@ -3,18 +3,18 @@ import { NewsArticle } from '@/lib/types';
 import { timeAgo } from '@/lib/api';
 
 const SOURCE_COLORS: Record<string, string> = {
-  'Google AI Blog': 'bg-blue-500/20 text-blue-400',
-  'Hugging Face Blog': 'bg-yellow-500/20 text-yellow-400',
-  'TechCrunch AI': 'bg-green-500/20 text-green-400',
-  'The Verge AI': 'bg-purple-500/20 text-purple-400',
-  'Ars Technica': 'bg-orange-500/20 text-orange-400',
-  'VentureBeat AI': 'bg-teal-500/20 text-teal-400',
-  'MIT Technology Review': 'bg-red-500/20 text-red-400',
-  'NVIDIA AI Blog': 'bg-lime-500/20 text-lime-400',
-  'arXiv cs.AI': 'bg-rose-500/20 text-rose-400',
-  'Hacker News AI': 'bg-orange-500/20 text-orange-400',
-  'WIRED AI': 'bg-gray-400/20 text-gray-300',
-  'ZDNet AI': 'bg-red-500/20 text-red-400',
+  'Google AI Blog': 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
+  'Hugging Face Blog': 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400',
+  'TechCrunch AI': 'bg-green-500/20 text-green-700 dark:text-green-400',
+  'The Verge AI': 'bg-purple-500/20 text-purple-700 dark:text-purple-400',
+  'Ars Technica': 'bg-orange-500/20 text-orange-700 dark:text-orange-400',
+  'VentureBeat AI': 'bg-teal-500/20 text-teal-700 dark:text-teal-400',
+  'MIT Technology Review': 'bg-red-500/20 text-red-700 dark:text-red-400',
+  'NVIDIA AI Blog': 'bg-lime-500/20 text-lime-700 dark:text-lime-400',
+  'arXiv cs.AI': 'bg-rose-500/20 text-rose-700 dark:text-rose-400',
+  'Hacker News AI': 'bg-orange-500/20 text-orange-700 dark:text-orange-400',
+  'WIRED AI': 'bg-gray-400/20 text-gray-600 dark:text-gray-300',
+  'ZDNet AI': 'bg-red-500/20 text-red-700 dark:text-red-400',
 };
 
 function getSourceInitials(name: string): string {
