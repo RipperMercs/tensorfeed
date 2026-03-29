@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArticleJsonLd } from '@/components/seo/JsonLd';
+import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 import pricingData from '@/../data/pricing.json';
 
 export const metadata: Metadata = {
@@ -32,6 +32,14 @@ export default function AIAPIPricingGuidePage() {
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         AI API Pricing Guide: Every Provider Compared
       </h1>
+
+      <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-xl p-4 mb-8">
+        <p className="text-text-secondary text-base leading-relaxed">
+          AI API pricing in 2026 ranges from free open-source models to $75 per million tokens for
+          premium models like Claude Opus. Most developers spend between $0.10 and $15 per million
+          input tokens depending on the model tier and use case.
+        </p>
+      </div>
 
       <p className="text-lg text-text-secondary mb-8 leading-relaxed">
         AI API pricing can be confusing. Every provider uses slightly different units, some charge
@@ -544,6 +552,54 @@ export default function AIAPIPricingGuidePage() {
           both sides.
         </p>
       </section>
+
+      {/* FAQ */}
+      <section id="faq" className="mb-12">
+        <h2 className="text-2xl font-bold text-text-primary mb-6">Frequently Asked Questions</h2>
+        <div className="space-y-4">
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">How much does the OpenAI API cost?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              OpenAI API pricing varies by model. GPT-4o costs $2.50 per 1M input tokens and $10 per
+              1M output tokens. GPT-4o-mini is much cheaper at $0.15/$0.60. The o1 reasoning model
+              costs $15/$60.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">What is the cheapest AI API?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              Google&apos;s Gemini 2.0 Flash is one of the cheapest at $0.10 per 1M input tokens.
+              Open-source models like Llama 4 are free to self-host. Groq offers fast inference at
+              competitive prices.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">How are AI API tokens counted?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              Roughly, 1 token equals about 4 characters or 0.75 words in English. A 1,000-word
+              document is approximately 1,333 tokens. Most APIs charge separately for input (prompt)
+              and output (completion) tokens.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Which AI API is best for production?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              For reliability and quality, Anthropic (Claude) and OpenAI (GPT-4o) are the most popular
+              choices. For cost-sensitive applications, Gemini Flash or self-hosted open-source models
+              offer the best value.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <FAQPageJsonLd
+        faqs={[
+          { question: 'How much does the OpenAI API cost?', answer: 'OpenAI API pricing varies by model. GPT-4o costs $2.50 per 1M input tokens and $10 per 1M output tokens. GPT-4o-mini is much cheaper at $0.15/$0.60. The o1 reasoning model costs $15/$60.' },
+          { question: 'What is the cheapest AI API?', answer: "Google's Gemini 2.0 Flash is one of the cheapest at $0.10 per 1M input tokens. Open-source models like Llama 4 are free to self-host. Groq offers fast inference at competitive prices." },
+          { question: 'How are AI API tokens counted?', answer: 'Roughly, 1 token equals about 4 characters or 0.75 words in English. A 1,000-word document is approximately 1,333 tokens. Most APIs charge separately for input (prompt) and output (completion) tokens.' },
+          { question: 'Which AI API is best for production?', answer: 'For reliability and quality, Anthropic (Claude) and OpenAI (GPT-4o) are the most popular choices. For cost-sensitive applications, Gemini Flash or self-hosted open-source models offer the best value.' },
+        ]}
+      />
 
       {/* Related Content */}
       <section className="bg-bg-secondary border border-border rounded-lg p-6 mb-10">

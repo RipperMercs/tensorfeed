@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArticleJsonLd } from '@/components/seo/JsonLd';
+import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Best AI Chatbots Compared (2026): ChatGPT vs Claude vs Gemini | TensorFeed',
@@ -171,6 +171,14 @@ export default function BestAIChatbotsPage() {
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         Best AI Chatbots Compared (2026)
       </h1>
+
+      <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-xl p-4 mb-8">
+        <p className="text-text-secondary text-base leading-relaxed">
+          The best AI chatbots in 2026 are Claude (best for reasoning and coding), ChatGPT (best
+          for general use and plugins), and Gemini (best for Google ecosystem integration). Each
+          excels in different areas depending on your needs and budget.
+        </p>
+      </div>
 
       <p className="text-lg text-text-secondary mb-8 leading-relaxed">
         Choosing an AI chatbot used to be simple: there was ChatGPT, and that was basically it.
@@ -439,6 +447,52 @@ export default function BestAIChatbotsPage() {
           </p>
         </div>
       </section>
+
+      {/* FAQ */}
+      <section id="faq" className="mb-12">
+        <h2 className="text-2xl font-bold text-text-primary mb-6">Frequently Asked Questions</h2>
+        <div className="space-y-4">
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Which AI chatbot is the smartest?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude leads on
+              coding tasks and instruction following, while ChatGPT excels at creative tasks and has
+              the broadest plugin ecosystem.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Which AI chatbot is free?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              All major chatbots offer free tiers: ChatGPT Free, Claude Free, Gemini Free, and
+              Perplexity Free. Paid plans ($20/mo range) unlock more capable models and higher usage limits.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Is ChatGPT better than Claude?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              It depends on the task. ChatGPT has more integrations and plugins. Claude is generally
+              better at coding, reasoning, long documents, and following complex instructions. Both are
+              excellent general-purpose assistants.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">What is the best AI chatbot for coding?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              Claude is widely considered the best chatbot for coding, especially with Claude Code for
+              terminal-based development. ChatGPT and Gemini are also strong alternatives.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <FAQPageJsonLd
+        faqs={[
+          { question: 'Which AI chatbot is the smartest?', answer: 'Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude leads on coding tasks and instruction following, while ChatGPT excels at creative tasks and has the broadest plugin ecosystem.' },
+          { question: 'Which AI chatbot is free?', answer: 'All major chatbots offer free tiers: ChatGPT Free, Claude Free, Gemini Free, and Perplexity Free. Paid plans ($20/mo range) unlock more capable models and higher usage limits.' },
+          { question: 'Is ChatGPT better than Claude?', answer: 'It depends on the task. ChatGPT has more integrations and plugins. Claude is generally better at coding, reasoning, long documents, and following complex instructions. Both are excellent general-purpose assistants.' },
+          { question: 'What is the best AI chatbot for coding?', answer: 'Claude is widely considered the best chatbot for coding, especially with Claude Code for terminal-based development. ChatGPT and Gemini are also strong alternatives.' },
+        ]}
+      />
 
       {/* Related Guides */}
       <section className="bg-bg-secondary border border-border rounded-lg p-6 mb-10">

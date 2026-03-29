@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArticleJsonLd } from '@/components/seo/JsonLd';
+import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'What is Artificial Intelligence? A Complete Guide for 2026',
@@ -29,6 +29,15 @@ export default function WhatIsAIPage() {
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         What is Artificial Intelligence? A Complete Guide
       </h1>
+
+      <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-xl p-4 mb-8">
+        <p className="text-text-secondary text-base leading-relaxed">
+          Artificial intelligence (AI) refers to computer systems designed to perform tasks that
+          normally require human intelligence, like understanding language, recognizing images, and
+          learning from data. In 2026, AI powers everything from chatbots and code assistants to
+          medical diagnostics and self-driving cars.
+        </p>
+      </div>
 
       <p className="text-lg text-text-secondary mb-8 leading-relaxed">
         Artificial intelligence has gone from a niche research topic to the most talked-about
@@ -461,6 +470,52 @@ export default function WhatIsAIPage() {
           ))}
         </div>
       </section>
+
+      {/* FAQ */}
+      <section id="faq" className="mb-12">
+        <h2 className="text-2xl font-bold text-text-primary mb-6">Frequently Asked Questions</h2>
+        <div className="space-y-4">
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">What is AI in simple terms?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              AI refers to computer systems designed to perform tasks that normally require human
+              intelligence, like understanding language, recognizing images, making decisions, and
+              learning from data.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">What are the main types of AI?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              There are three types: Narrow AI (what exists today, good at specific tasks), General
+              AI (human-level intelligence, not yet achieved), and Super AI (surpasses humans, theoretical).
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">What is the difference between AI and machine learning?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              AI is the broad field of making intelligent systems. Machine learning is a subset of AI
+              where systems learn from data instead of being explicitly programmed. Deep learning is a
+              subset of machine learning using neural networks.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">What is a large language model (LLM)?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              An LLM is a type of AI model trained on massive amounts of text data that can understand
+              and generate human language. Examples include GPT-4, Claude, Gemini, and Llama.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <FAQPageJsonLd
+        faqs={[
+          { question: 'What is AI in simple terms?', answer: 'AI refers to computer systems designed to perform tasks that normally require human intelligence, like understanding language, recognizing images, making decisions, and learning from data.' },
+          { question: 'What are the main types of AI?', answer: 'There are three types: Narrow AI (what exists today, good at specific tasks), General AI (human-level intelligence, not yet achieved), and Super AI (surpasses humans, theoretical).' },
+          { question: 'What is the difference between AI and machine learning?', answer: 'AI is the broad field of making intelligent systems. Machine learning is a subset of AI where systems learn from data instead of being explicitly programmed. Deep learning is a subset of machine learning using neural networks.' },
+          { question: 'What is a large language model (LLM)?', answer: 'An LLM is a type of AI model trained on massive amounts of text data that can understand and generate human language. Examples include GPT-4, Claude, Gemini, and Llama.' },
+        ]}
+      />
 
       {/* CTA */}
       <section className="bg-bg-secondary border border-border rounded-lg p-6 mb-10 text-center">
