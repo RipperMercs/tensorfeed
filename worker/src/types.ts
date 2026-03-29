@@ -5,6 +5,10 @@ export interface Env {
   ENVIRONMENT: string;
   SITE_URL: string;
   INDEXNOW_KEY: string;
+  X_API_KEY: string;
+  X_API_SECRET: string;
+  X_ACCESS_TOKEN: string;
+  X_ACCESS_SECRET: string;
 }
 
 export interface Article {

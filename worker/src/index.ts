@@ -3,6 +3,7 @@ import { pollRSSFeeds } from './rss';
 import { pollStatusPages } from './status';
 import { updateCatalog } from './catalog';
 import { trackAgentActivity, getAgentActivity } from './activity';
+import { postTopStories } from './twitter';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -316,6 +317,12 @@ export default {
       return jsonResponse({ ok: true, message: 'Refreshed all feeds, status, and catalog' });
     }
 
+    // Manual tweet trigger (protected)
+    if (path === '/api/tweet' && url.searchParams.get('key') === env.ENVIRONMENT) {
+      await postTopStories(env);
+      return jsonResponse({ ok: true, message: 'Posted top stories to X' });
+    }
+
     return jsonResponse({ error: 'Not found', endpoints: ['/api/health', '/api/news', '/api/status', '/api/feed.xml', '/api/feed.json', '/api/meta'] }, 404);
   },
 
@@ -333,6 +340,9 @@ export default {
     } else if (cron === '0 6 * * 1') {
       // Weekly (Monday 6 AM UTC): update models & agents catalog
       await updateCatalog(env);
+    } else if (cron === '0 9,14,19 * * *') {
+      // 3x daily (9AM, 2PM, 7PM UTC): post top stories to X
+      await postTopStories(env);
     }
   },
 };
