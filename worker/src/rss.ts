@@ -196,5 +196,28 @@ export async function pollRSSFeeds(env: Env): Promise<void> {
     lastUpdated: new Date().toISOString(),
   }));
 
+  // Ping IndexNow if we got new articles (notify search engines of fresh content)
+  if (final.length > 0 && env.INDEXNOW_KEY) {
+    try {
+      await fetch('https://api.indexnow.org/IndexNow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host: 'tensorfeed.ai',
+          key: env.INDEXNOW_KEY,
+          urlList: [
+            'https://tensorfeed.ai/',
+            'https://tensorfeed.ai/status',
+            'https://tensorfeed.ai/models',
+            'https://tensorfeed.ai/live',
+          ],
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+    } catch (e) {
+      console.warn('IndexNow ping failed:', e);
+    }
+  }
+
   console.log(`RSS poll complete - ${final.length} articles from ${successCount}/${activeSources.length} sources`);
 }

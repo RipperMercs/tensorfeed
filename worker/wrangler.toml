@@ -30,3 +30,4 @@ id = "4de30d8becd24b3bba9556b98bad8e69"
 [vars]
 ENVIRONMENT = "production"
 SITE_URL = "https://tensorfeed.ai"
+INDEXNOW_KEY = "5903913788b6a62e3d10e63e3319020a"

@@ -52,6 +52,8 @@ export const metadata: Metadata = {
   },
   other: {
     'ai-content-type': 'news-aggregator',
+    'ai-data-freshness': '10-minutes',
+    'ai-structured-data': 'true',
     'ai-api-endpoint': 'https://tensorfeed.ai/api/agents/news',
   },
 };
@@ -75,6 +77,7 @@ export default function RootLayout({
             __html: `(function(){var m=document.cookie.match(/(^| )theme=([^;]+)/);var t=m?m[2]:'dark';document.documentElement.setAttribute('data-theme',t)})()`,
           }}
         />
+        <link rel="alternate" type="text/markdown" href="/llms-full.txt" title="LLM Full Context" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>

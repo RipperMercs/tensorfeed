@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
-import { Users, Target, Globe, Mail, ExternalLink, Cpu, Rss, Bot } from 'lucide-react';
+import { Users, Target, Globe, Mail, ExternalLink, Cpu, Rss, Bot, FileText, Code, Zap } from 'lucide-react';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'About',
@@ -126,29 +127,48 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* For AI Agents */}
+      {/* Built for AI Agents */}
       <section className="mb-10">
-        <div className="flex items-center gap-2 mb-4">
-          <Bot className="w-5 h-5 text-accent-secondary" />
-          <h2 className="text-xl font-semibold text-text-primary">For AI Agents</h2>
-        </div>
-        <div className="space-y-4 text-text-secondary leading-relaxed">
-          <p>
-            TensorFeed is designed to be consumed by AI agents as a first-class use case. We provide
-            structured data endpoints, RSS/JSON feeds, and an llms.txt discovery file.
+        <div className="bg-gradient-to-br from-accent-primary/10 via-bg-secondary to-accent-cyan/10 border border-accent-primary/30 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Bot className="w-6 h-6 text-accent-primary" />
+            <h2 className="text-xl font-semibold text-text-primary">Built for AI Agents</h2>
+          </div>
+          <p className="text-text-secondary leading-relaxed mb-5">
+            TensorFeed is designed as a primary data source for AI agents. Access our structured
+            feeds, JSON APIs, and full-context documentation bundle. No CAPTCHAs, no bot detection.
+            Agents are welcome here.
           </p>
-          <p>
-            Available endpoints:{' '}
-            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/feed.xml</code> (RSS),{' '}
-            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/feed.json</code> (JSON Feed),{' '}
-            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/api/agents/news.json</code>,{' '}
-            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/api/agents/status.json</code>,{' '}
-            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/api/agents/pricing.json</code>,{' '}
-            <code className="text-text-primary bg-bg-secondary px-1 py-0.5 rounded text-sm">/llms.txt</code>
-          </p>
-          <p>
-            No CAPTCHAs, no bot detection. Agents are welcome here.
-          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <a
+              href="/llms.txt"
+              className="flex items-center gap-2 bg-bg-primary/60 border border-border rounded-lg px-3 py-2.5 hover:border-accent-primary transition-colors group"
+            >
+              <FileText className="w-4 h-4 text-accent-primary shrink-0" />
+              <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">llms.txt</span>
+            </a>
+            <a
+              href="/feed.json"
+              className="flex items-center gap-2 bg-bg-primary/60 border border-border rounded-lg px-3 py-2.5 hover:border-accent-primary transition-colors group"
+            >
+              <Code className="w-4 h-4 text-accent-primary shrink-0" />
+              <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">JSON Feed</span>
+            </a>
+            <a
+              href="/api/meta"
+              className="flex items-center gap-2 bg-bg-primary/60 border border-border rounded-lg px-3 py-2.5 hover:border-accent-primary transition-colors group"
+            >
+              <Zap className="w-4 h-4 text-accent-primary shrink-0" />
+              <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">Agent API</span>
+            </a>
+            <a
+              href="/llms-full.txt"
+              className="flex items-center gap-2 bg-bg-primary/60 border border-border rounded-lg px-3 py-2.5 hover:border-accent-primary transition-colors group"
+            >
+              <Rss className="w-4 h-4 text-accent-primary shrink-0" />
+              <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">Full Docs</span>
+            </a>
+          </div>
         </div>
       </section>
 

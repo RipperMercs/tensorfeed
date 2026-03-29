@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Radio } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Radio, Zap } from 'lucide-react';
 import { MOCK_STATUSES } from '@/lib/mock-data';
 import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
 import { ServiceStatus, ServiceComponent } from '@/lib/types';
@@ -11,6 +11,7 @@ import pricingData from '@/../data/pricing.json';
 // For client components, metadata is handled by the layout or a head component.
 
 const TABS = [
+  'Agent Activity',
   'AI Status',
   'HN Feed',
   'GitHub Trending',
@@ -393,13 +394,132 @@ function ModelTrackerTab() {
   );
 }
 
+function AgentActivityTab() {
+  const [data, setData] = useState<{
+    today_count: number;
+    recent: { bot: string; endpoint: string; timestamp: string }[];
+  } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchData() {
+      try {
+        const res = await fetch('https://tensorfeed.ai/api/agents/activity');
+        if (!res.ok) return;
+        const json = await res.json();
+        if (mounted) setData(json);
+      } catch {}
+    }
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, []);
+
+  if (!data) {
+    return <p className="text-text-muted text-sm">Loading agent activity...</p>;
+  }
+
+  // Aggregate by bot name for breakdown
+  const botCounts: Record<string, number> = {};
+  const endpointCounts: Record<string, number> = {};
+  for (const hit of data.recent) {
+    botCounts[hit.bot] = (botCounts[hit.bot] || 0) + 1;
+    endpointCounts[hit.endpoint] = (endpointCounts[hit.endpoint] || 0) + 1;
+  }
+  const sortedBots = Object.entries(botCounts).sort((a, b) => b[1] - a[1]);
+  const sortedEndpoints = Object.entries(endpointCounts).sort((a, b) => b[1] - a[1]);
+  const maxBotCount = sortedBots.length > 0 ? sortedBots[0][1] : 1;
+
+  function timeAgo(ts: string) {
+    const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+    if (s < 60) return `${s}s ago`;
+    if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+    return `${Math.floor(s / 3600)}h ago`;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Summary */}
+      <div className="bg-bg-secondary border border-border rounded-lg p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <Zap className="w-6 h-6 text-accent-amber" />
+          <h2 className="text-xl font-semibold text-text-primary">Agent Requests Today</h2>
+        </div>
+        <p className="text-4xl font-bold text-accent-primary">{data.today_count.toLocaleString()}</p>
+        <p className="text-text-muted text-sm mt-1">Auto-updates every 10 seconds</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Bot Breakdown */}
+        <div className="bg-bg-secondary border border-border rounded-lg p-5">
+          <h3 className="text-text-primary font-semibold text-sm mb-4">Agent Breakdown</h3>
+          <div className="space-y-3">
+            {sortedBots.map(([bot, count]) => (
+              <div key={bot}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-text-secondary">{bot}</span>
+                  <span className="text-xs text-text-muted font-mono">{count}</span>
+                </div>
+                <div className="h-1.5 w-full bg-bg-primary rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-accent-primary"
+                    style={{ width: `${(count / maxBotCount) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+            {sortedBots.length === 0 && (
+              <p className="text-xs text-text-muted">No activity yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* Most Requested Endpoints */}
+        <div className="bg-bg-secondary border border-border rounded-lg p-5">
+          <h3 className="text-text-primary font-semibold text-sm mb-4">Top Endpoints</h3>
+          <div className="space-y-2">
+            {sortedEndpoints.map(([endpoint, count]) => (
+              <div key={endpoint} className="flex items-center justify-between">
+                <code className="text-xs text-accent-cyan font-mono truncate">{endpoint}</code>
+                <span className="text-xs text-text-muted font-mono shrink-0 ml-2">{count} hits</span>
+              </div>
+            ))}
+            {sortedEndpoints.length === 0 && (
+              <p className="text-xs text-text-muted">No activity yet</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity Feed */}
+      <div className="bg-bg-secondary border border-border rounded-lg p-5">
+        <h3 className="text-text-primary font-semibold text-sm mb-4">Recent Agent Hits</h3>
+        <div className="space-y-1">
+          {data.recent.map((hit, i) => (
+            <div key={i} className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-bg-tertiary transition-colors">
+              <span className="text-sm text-text-primary font-medium w-36 shrink-0 truncate">{hit.bot}</span>
+              <code className="text-xs text-text-muted font-mono flex-1 truncate">{hit.endpoint}</code>
+              <span className="text-[10px] text-text-muted font-mono shrink-0">{timeAgo(hit.timestamp)}</span>
+            </div>
+          ))}
+          {data.recent.length === 0 && (
+            <p className="text-xs text-text-muted">No recent agent hits recorded yet</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page Component ─────────────────────────────────────────────────────
 
 export default function LivePage() {
-  const [activeTab, setActiveTab] = useState<TabName>('AI Status');
+  const [activeTab, setActiveTab] = useState<TabName>('Agent Activity');
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'Agent Activity':
+        return <AgentActivityTab />;
       case 'AI Status':
         return <AIStatusTab />;
       case 'HN Feed':

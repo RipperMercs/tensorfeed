@@ -4,6 +4,7 @@ export interface Env {
   TENSORFEED_CACHE: KVNamespace;
   ENVIRONMENT: string;
   SITE_URL: string;
+  INDEXNOW_KEY: string;
 }
 
 export interface Article {

@@ -2,6 +2,7 @@ import { Env, Article } from './types';
 import { pollRSSFeeds } from './rss';
 import { pollStatusPages } from './status';
 import { updateCatalog } from './catalog';
+import { trackAgentActivity, getAgentActivity } from './activity';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -77,12 +78,21 @@ function articlesToJsonFeed(articles: Article[]): object {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: CORS_HEADERS });
+    }
+
+    // Track agent/bot activity (non-blocking)
+    ctx.waitUntil(trackAgentActivity(request, env, path));
+
+    // Agent activity endpoint
+    if (path === '/api/agents/activity') {
+      const activity = await getAgentActivity(env);
+      return jsonResponse(activity);
     }
 
     // Health check
@@ -229,6 +239,7 @@ export default {
           pricing: '/api/agents/pricing',
           models: '/api/models',
           agentsDirectory: '/api/agents/directory',
+          agentActivity: '/api/agents/activity',
           health: '/api/health',
         },
         news: newsMeta,

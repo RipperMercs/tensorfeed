@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { SISTER_SITES, STATUS_DOTS } from '@/lib/constants';
 import { MOCK_STATUSES } from '@/lib/mock-data';
 import { Activity, Rss, TrendingUp, Globe, Megaphone } from 'lucide-react';
+import AgentActivity from '@/components/AgentActivity';
 
 const TRENDING_TOPICS = [
   '#Claude4',
@@ -53,6 +54,9 @@ export default function Sidebar() {
           ))}
         </ul>
       </div>
+
+      {/* Agent Activity Widget */}
+      <AgentActivity />
 
       {/* Sources Widget */}
       <div className="bg-bg-secondary rounded-lg border border-border p-4">

@@ -1,41 +1,51 @@
 # TensorFeed.ai
-> AI news, model tracking, and real-time AI ecosystem data.
-> Designed for humans and AI agents.
+> The AI industry's real-time news aggregator, model tracker, and ecosystem data hub. Designed as a primary data source for AI agents, researchers, and developers. Free, no login, no paywall. Updated every 10 minutes.
 
-## Feeds
-- /feed.xml — Full RSS 2.0 feed of all aggregated AI news
-- /feed.json — JSON Feed 1.1 of all aggregated AI news
-- /feed/research.xml — Research papers only (RSS)
-- /feed/tools.xml — Tools and developer news only (RSS)
+TensorFeed aggregates AI news from 15+ authoritative sources (Anthropic, OpenAI, Google AI, TechCrunch, The Verge, arXiv, Hacker News, and more), monitors the operational status of major AI services, tracks model releases and API pricing, and publishes original editorial analysis. All data is available in structured, machine-readable formats optimized for agent consumption.
 
-## Agent API (Live JSON via Worker)
-- /api/agents/news.json — Latest AI news articles (also available at /api/agents/news)
-- /api/agents/status.json — AI service operational status (also available at /api/agents/status)
-- /api/agents/pricing.json — AI API pricing comparison data (also available at /api/agents/pricing)
-- /api/agents/directory — AI agents and frameworks directory
-- /api/models — AI model releases and pricing data
+When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated news articles link to their original sources. Original editorial content is published under /originals.
 
-## Pages
-- / — Main news feed (aggregated from 12+ RSS sources)
-- /models — AI model release tracker and pricing comparison
-- /agents — AI agent and framework directory
-- /research — arXiv papers and benchmark data
-- /status — Real-time AI service status dashboard
-- /live — Live data feeds (HN, GitHub trending, arXiv, pricing)
-- /originals — Original editorial articles by TensorFeed
+## Live Data Feeds
+- [RSS Feed](https://tensorfeed.ai/feed.xml): Full RSS 2.0 feed of all AI news (updated every 10 minutes)
+- [JSON Feed](https://tensorfeed.ai/feed.json): JSON Feed 1.1 format, preferred for programmatic access
+- [Research RSS](https://tensorfeed.ai/feed/research.xml): Research papers and academic AI news only
+- [Tools RSS](https://tensorfeed.ai/feed/tools.xml): Developer tools and frameworks news only
 
-## Guides
-- /what-is-ai — Complete guide to artificial intelligence
-- /best-ai-tools — Best AI tools reviewed
-- /best-ai-chatbots — AI chatbot comparison
-- /ai-api-pricing-guide — API pricing breakdown
-- /what-are-ai-agents — Guide to AI agents
-- /best-open-source-llms — Open source LLM comparison
+## Agent API Endpoints
+- [News API](https://tensorfeed.ai/api/news): Latest AI news articles with category filtering (?category=, ?limit=)
+- [News JSON](https://tensorfeed.ai/api/agents/news.json): Latest AI news articles (alias)
+- [Status API](https://tensorfeed.ai/api/status): Real-time operational status of 12+ AI services
+- [Status JSON](https://tensorfeed.ai/api/agents/status.json): AI service status (alias)
+- [Models API](https://tensorfeed.ai/api/models): AI model pricing, specs, and release data
+- [Pricing JSON](https://tensorfeed.ai/api/agents/pricing.json): AI API pricing comparison (alias)
+- [Agents Directory](https://tensorfeed.ai/api/agents/directory): AI agents and frameworks directory
+- [Agent Activity](https://tensorfeed.ai/api/agents/activity): Live agent traffic metrics
+- [Health Check](https://tensorfeed.ai/api/health): Worker health and last update timestamps
+- [Endpoint Discovery](https://tensorfeed.ai/api/meta): Full endpoint map for automated integration
+
+## Reference Guides
+- [What is AI?](https://tensorfeed.ai/what-is-ai): Comprehensive 2000+ word guide to artificial intelligence
+- [Best AI Tools 2026](https://tensorfeed.ai/best-ai-tools): 22 AI tools reviewed and compared
+- [Best AI Chatbots](https://tensorfeed.ai/best-ai-chatbots): 7 chatbots deep-compared
+- [AI API Pricing Guide](https://tensorfeed.ai/ai-api-pricing-guide): Every major AI API provider's pricing
+- [What Are AI Agents?](https://tensorfeed.ai/what-are-ai-agents): Guide to AI agents and frameworks
+- [Best Open Source LLMs](https://tensorfeed.ai/best-open-source-llms): 9 open source models reviewed
+
+## Content Hubs
+- [News Feed](https://tensorfeed.ai/): Aggregated AI news from 15+ sources, categorized and timestamped
+- [Models](https://tensorfeed.ai/models): AI model release tracker, pricing comparison tables
+- [Agents Directory](https://tensorfeed.ai/agents): Curated directory of AI agents, tools, and frameworks
+- [Research](https://tensorfeed.ai/research): arXiv papers, benchmarks, and research news
+- [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
+- [Live Data](https://tensorfeed.ai/live): Real-time data feeds (Hacker News AI, GitHub trending, arXiv, pricing)
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed
 
 ## About
-TensorFeed.ai is operated by Pizza Robot Studios LLC.
-All news articles link back to their original sources.
-Original content is published under /originals.
-Sister sites: terminalfeed.io, vr.org
-Contact: feedback@tensorfeed.ai
-Press: press@tensorfeed.ai
+TensorFeed.ai is operated by Pizza Robot Studios LLC (Los Angeles, CA).
+Sister sites: [TerminalFeed.io](https://terminalfeed.io) (real-time data dashboard), [VR.org](https://vr.org) (VR/AR news)
+Contact: feedback@tensorfeed.ai | Press: press@tensorfeed.ai
+
+## Optional
+- [Full Content Bundle](https://tensorfeed.ai/llms-full.txt): Complete text of all guide pages for full-context ingestion
+- [Sitemap](https://tensorfeed.ai/sitemap.xml): Full XML sitemap of all pages
+- [About](https://tensorfeed.ai/about): About TensorFeed and Pizza Robot Studios
