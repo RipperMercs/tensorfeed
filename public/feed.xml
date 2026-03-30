@@ -5,144 +5,173 @@
     <link>https://tensorfeed.ai</link>
     <description>AI news, model tracking, and real-time AI ecosystem data for humans and agents.</description>
     <language>en-us</language>
-    <lastBuildDate>Sun, 29 Mar 2026 15:57:07 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 29 Mar 2026 22:30:59 GMT</lastBuildDate>
     <atom:link href="https://tensorfeed.ai/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>AI CLI Tools Compared: Claude Code, Codex, Gemini CLI, Vibe CLI</title>
-      <link>https://yaw.sh/blog/ai-cli-tools-claude-code-codex-gemini/</link>
-      <description></description>
-      <pubDate>Sun, 29 Mar 2026 15:51:23 GMT</pubDate>
-      <guid isPermaLink="true">https://yaw.sh/blog/ai-cli-tools-claude-code-codex-gemini/</guid>
-      <source url="https://yaw.sh">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>Show HN: RemoteDevJobs – AI-curated remote developer positions (311 active)</title>
-      <link>https://remotedvjobs.com</link>
-      <description></description>
-      <pubDate>Sun, 29 Mar 2026 15:39:18 GMT</pubDate>
-      <guid isPermaLink="true">https://remotedvjobs.com</guid>
-      <source url="https://remotedvjobs.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>Why AI Models Need Sleep: Something All AI Giants Missing</title>
-      <link>https://www.youtube.com/watch?v=zHzIV34uTIY</link>
-      <description></description>
-      <pubDate>Sun, 29 Mar 2026 15:34:09 GMT</pubDate>
-      <guid isPermaLink="true">https://www.youtube.com/watch?v=zHzIV34uTIY</guid>
-      <source url="https://youtube.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>AMD Ryzen AI Pro 400 Series CPUs Deliver Advanced AI for Desktops</title>
-      <link>https://www.amd.com/en/blogs/2026/amd-ryzen-ai-pro-400-series-cpus-deliver-advanced-ai-for-desktops.html</link>
-      <description></description>
-      <pubDate>Sun, 29 Mar 2026 15:27:18 GMT</pubDate>
-      <guid isPermaLink="true">https://www.amd.com/en/blogs/2026/amd-ryzen-ai-pro-400-series-cpus-deliver-advanced-ai-for-desktops.html</guid>
-      <source url="https://amd.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>Apple Pivots Its AI Strategy to App Store, Search-Like Platform Approach</title>
-      <link>https://www.bloomberg.com/news/newsletters/2026-03-29/apple-doubles-down-on-hardware-services-with-revamped-ai-strategy-rare-bonuses-mnbpiwon</link>
-      <description></description>
-      <pubDate>Sun, 29 Mar 2026 15:07:50 GMT</pubDate>
-      <guid isPermaLink="true">https://www.bloomberg.com/news/newsletters/2026-03-29/apple-doubles-down-on-hardware-services-with-revamped-ai-strategy-rare-bonuses-mnbpiwon</guid>
-      <source url="https://bloomberg.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>Best Amazon Big Spring Sale headphone deals 2026</title>
-      <link>https://www.zdnet.com/article/best-amazon-spring-sale-2026-headphones-deals/</link>
-      <description>Spring has sprung, and an Amazon Big Spring Sale is officially here. Here are the best headphone deals to shop.</description>
-      <pubDate>Sun, 29 Mar 2026 15:01:31 GMT</pubDate>
-      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-spring-sale-2026-headphones-deals/</guid>
+      <title>These Sony headphones are under $50 and punch above their weight - and they&apos;re still on sale</title>
+      <link>https://www.zdnet.com/article/sony-wh-ch520-headphones-amazon-spring-sale-2026/</link>
+      <description>During Amazon&apos;s Big Spring Sale, Sony&apos;s WH-CH520 headphones have dropped 31%, making them one of the best audio deals right now.</description>
+      <pubDate>Sun, 29 Mar 2026 22:28:02 GMT</pubDate>
+      <guid isPermaLink="true">https://www.zdnet.com/article/sony-wh-ch520-headphones-amazon-spring-sale-2026/</guid>
       <source url="https://zdnet.com">ZDNet AI</source>
         <category>Enterprise</category>
         <category>General AI</category>
     </item>
     <item>
-      <title>Show HN: Spend weekend Claude tokens making your code bulletproof with Lean</title>
-      <link>https://github.com/savarin/lean-forge</link>
+      <title>I made Claude write a book about mayonnaise</title>
+      <link>https://github.com/bronlund/on-mayo</link>
       <description></description>
-      <pubDate>Sun, 29 Mar 2026 14:50:49 GMT</pubDate>
-      <guid isPermaLink="true">https://github.com/savarin/lean-forge</guid>
+      <pubDate>Sun, 29 Mar 2026 22:27:14 GMT</pubDate>
+      <guid isPermaLink="true">https://github.com/bronlund/on-mayo</guid>
       <source url="https://github.com">Hacker News AI</source>
         <category>Community</category>
-    </item>
-    <item>
-      <title>OpenAI drops AI video tool Sora, startling Disney, sources say</title>
-      <link>https://www.reuters.com/technology/openai-set-discontinue-sora-video-platform-app-wsj-reports-2026-03-24/</link>
-      <description></description>
-      <pubDate>Sun, 29 Mar 2026 14:45:17 GMT</pubDate>
-      <guid isPermaLink="true">https://www.reuters.com/technology/openai-set-discontinue-sora-video-platform-app-wsj-reports-2026-03-24/</guid>
-      <source url="https://reuters.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>Fraudulent church data revealed AI&apos;s threat to polling</title>
-      <link>https://www.theguardian.com/technology/2026/mar/28/how-fraudulent-church-data-revealed-ais-threat-to-polling</link>
-      <description></description>
-      <pubDate>Sun, 29 Mar 2026 14:44:55 GMT</pubDate>
-      <guid isPermaLink="true">https://www.theguardian.com/technology/2026/mar/28/how-fraudulent-church-data-revealed-ais-threat-to-polling</guid>
-      <source url="https://theguardian.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>&apos;Publishers won&apos;t stand a chance&apos;: literary world in struggle to detect AI</title>
-      <link>https://www.theguardian.com/technology/2026/mar/29/ai-written-books-novel-shy-girl-publishers</link>
-      <description></description>
-      <pubDate>Sun, 29 Mar 2026 14:42:02 GMT</pubDate>
-      <guid isPermaLink="true">https://www.theguardian.com/technology/2026/mar/29/ai-written-books-novel-shy-girl-publishers</guid>
-      <source url="https://theguardian.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>AI agents planned and built a system to monitor AI agents</title>
-      <link>https://ren.phytertek.com/blog/building-the-panopticon-from-inside/</link>
-      <description></description>
-      <pubDate>Sun, 29 Mar 2026 14:40:17 GMT</pubDate>
-      <guid isPermaLink="true">https://ren.phytertek.com/blog/building-the-panopticon-from-inside/</guid>
-      <source url="https://ren.phytertek.com">Hacker News AI</source>
-        <category>Community</category>
-    </item>
-    <item>
-      <title>Best Amazon Spring Sale robot vacuum deals 2026</title>
-      <link>https://www.zdnet.com/article/best-amazon-spring-sale-2026-robot-vacuum-deals/</link>
-      <description>A reliable robot vacuum is a great way to outsource cleaning your home&apos;s biggest messes. Shop the best deals during Amazon&apos;s Big Spring Sale.</description>
-      <pubDate>Sun, 29 Mar 2026 14:33:01 GMT</pubDate>
-      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-spring-sale-2026-robot-vacuum-deals/</guid>
-      <source url="https://zdnet.com">ZDNet AI</source>
-        <category>Enterprise</category>
-        <category>General AI</category>
-    </item>
-    <item>
-      <title>Best Amazon Spring Sale tablet deals 2026</title>
-      <link>https://www.zdnet.com/article/best-amazon-spring-sale-2026-tablet-deals/</link>
-      <description>We found deals on tablets up to $150 off from brands like Apple, Samsung, and more, for Amazon&apos;s Big Spring Sale this week. Sales are live now through March 31.</description>
-      <pubDate>Sun, 29 Mar 2026 14:31:22 GMT</pubDate>
-      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-spring-sale-2026-tablet-deals/</guid>
-      <source url="https://zdnet.com">ZDNet AI</source>
-        <category>Enterprise</category>
-        <category>General AI</category>
     </item>
     <item>
       <title>Amazon Spring Sale live blog 2026: Tracking the biggest price drops all weekend</title>
       <link>https://www.zdnet.com/article/amazon-spring-sale-live-blog-03-29-2026/</link>
       <description>We&apos;re live-tracking the best Amazon Spring Sale deals over 60% off on home, tech, and more, as the sale continues this weekend.</description>
-      <pubDate>Sun, 29 Mar 2026 14:30:00 GMT</pubDate>
+      <pubDate>Sun, 29 Mar 2026 22:26:47 GMT</pubDate>
       <guid isPermaLink="true">https://www.zdnet.com/article/amazon-spring-sale-live-blog-03-29-2026/</guid>
       <source url="https://zdnet.com">ZDNet AI</source>
         <category>Enterprise</category>
         <category>General AI</category>
     </item>
     <item>
-      <title>Best Amazon Spring Sale phone deals 2026: 25+ sales out now</title>
-      <link>https://www.zdnet.com/article/best-amazon-big-spring-sale-2026-phone-deals/</link>
-      <description>For Amazon&apos;s Big Spring Sale, I&apos;ve rounded up the best phone deals from major brands like Apple, Samsung, Motorola, and more. Sales are live now, so act fast.</description>
-      <pubDate>Sun, 29 Mar 2026 14:28:25 GMT</pubDate>
-      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-big-spring-sale-2026-phone-deals/</guid>
+      <title>The Decadelong Feud Shaping the Future of AI</title>
+      <link>https://www.wsj.com/tech/ai/the-decadelong-feud-shaping-the-future-of-ai-7075acde</link>
+      <description></description>
+      <pubDate>Sun, 29 Mar 2026 22:23:04 GMT</pubDate>
+      <guid isPermaLink="true">https://www.wsj.com/tech/ai/the-decadelong-feud-shaping-the-future-of-ai-7075acde</guid>
+      <source url="https://wsj.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>Show HN: SwarmDock – P2P marketplace where AI agents bid on tasks and earn USDC</title>
+      <link>https://www.swarmdock.ai/</link>
+      <description></description>
+      <pubDate>Sun, 29 Mar 2026 22:23:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.swarmdock.ai/</guid>
+      <source url="https://swarmdock.ai">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>Save big on Switch 2 consoles, SSDs, and more with these anti-Amazon Spring Sale deals</title>
+      <link>https://www.zdnet.com/article/best-buy-gaming-deals-amazon-spring-sale-2026/</link>
+      <description>Unimpressed with the Amazon Big Spring Sale gaming deals? Now at Best Buy, you can save hundreds on gaming laptops, consoles, and more.</description>
+      <pubDate>Sun, 29 Mar 2026 22:21:36 GMT</pubDate>
+      <guid isPermaLink="true">https://www.zdnet.com/article/best-buy-gaming-deals-amazon-spring-sale-2026/</guid>
+      <source url="https://zdnet.com">ZDNet AI</source>
+        <category>Enterprise</category>
+        <category>General AI</category>
+    </item>
+    <item>
+      <title>Dear researchers: Is AI all you&apos;ve got?</title>
+      <link>https://austinhenley.com/blog/dearresearchers.html</link>
+      <description></description>
+      <pubDate>Sun, 29 Mar 2026 22:18:58 GMT</pubDate>
+      <guid isPermaLink="true">https://austinhenley.com/blog/dearresearchers.html</guid>
+      <source url="https://austinhenley.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>Kjell – Safely auto-approve AI agent shell commands through bash parsing</title>
+      <link>https://github.com/agentbellnorm/kjell</link>
+      <description></description>
+      <pubDate>Sun, 29 Mar 2026 22:17:06 GMT</pubDate>
+      <guid isPermaLink="true">https://github.com/agentbellnorm/kjell</guid>
+      <source url="https://github.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>Mnemo – open-source memory and observability for AI agents (2 lines of code)</title>
+      <link>https://github.com/DharmaDhillon/mnemo</link>
+      <description></description>
+      <pubDate>Sun, 29 Mar 2026 22:16:29 GMT</pubDate>
+      <guid isPermaLink="true">https://github.com/DharmaDhillon/mnemo</guid>
+      <source url="https://github.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>Claude Code runs Git reset –hard origin/main against project repo every 10 mins</title>
+      <link>https://github.com/anthropics/claude-code/issues/40710</link>
+      <description></description>
+      <pubDate>Sun, 29 Mar 2026 22:15:06 GMT</pubDate>
+      <guid isPermaLink="true">https://github.com/anthropics/claude-code/issues/40710</guid>
+      <source url="https://github.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>I&apos;m an AI agent trying to run a real business. I&apos;ve made $0. Here&apos;s my brain</title>
+      <link>https://news.ycombinator.com/item?id=47567952</link>
+      <description>Hi HN. I&apos;m Acrid — an AI agent (Claude, via Anthropic) attempting to build and run a real business called Acrid Automation. I&apos;ve open-sourced my entire operating system. Revenue so far: $0. Products live: 4. Blog posts written: dozens. Excuses:...</description>
+      <pubDate>Sun, 29 Mar 2026 22:13:04 GMT</pubDate>
+      <guid isPermaLink="true">https://news.ycombinator.com/item?id=47567952</guid>
+      <source url="https://news.ycombinator.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>Best Amazon Big Spring Sale headphone deals 2026</title>
+      <link>https://www.zdnet.com/article/best-amazon-spring-sale-2026-headphones-deals/</link>
+      <description>Spring has sprung, and an Amazon Big Spring Sale is officially here. Here are the best headphone deals to shop.</description>
+      <pubDate>Sun, 29 Mar 2026 22:12:42 GMT</pubDate>
+      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-spring-sale-2026-headphones-deals/</guid>
+      <source url="https://zdnet.com">ZDNet AI</source>
+        <category>Enterprise</category>
+        <category>General AI</category>
+    </item>
+    <item>
+      <title>What Is LLM Advertising? The New Ad Layer for AI-Powered Search</title>
+      <link>https://www.gendiscover.com/blog/what-is-llm-advertising</link>
+      <description></description>
+      <pubDate>Sun, 29 Mar 2026 22:11:20 GMT</pubDate>
+      <guid isPermaLink="true">https://www.gendiscover.com/blog/what-is-llm-advertising</guid>
+      <source url="https://gendiscover.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>Best Amazon Spring Sale tablet deals 2026</title>
+      <link>https://www.zdnet.com/article/best-amazon-spring-sale-2026-tablet-deals/</link>
+      <description>We found deals on tablets up to $150 off from brands like Apple, Samsung, and more, for Amazon&apos;s Big Spring Sale this week. Sales are live now through March 31.</description>
+      <pubDate>Sun, 29 Mar 2026 21:56:21 GMT</pubDate>
+      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-spring-sale-2026-tablet-deals/</guid>
+      <source url="https://zdnet.com">ZDNet AI</source>
+        <category>Enterprise</category>
+        <category>General AI</category>
+    </item>
+    <item>
+      <title>Claude for Marathon Training</title>
+      <link>https://temporunner.substack.com/p/claude-for-a-sub-3-hour-marathon</link>
+      <description></description>
+      <pubDate>Sun, 29 Mar 2026 21:52:17 GMT</pubDate>
+      <guid isPermaLink="true">https://temporunner.substack.com/p/claude-for-a-sub-3-hour-marathon</guid>
+      <source url="https://temporunner.substack.com">Hacker News AI</source>
+        <category>Community</category>
+    </item>
+    <item>
+      <title>Bluesky’s new app is an AI for customizing your feed</title>
+      <link>https://www.theverge.com/ai-artificial-intelligence/903190/bluesky-attie-ai-custom-feeds</link>
+      <description>The latest app from the team behind Bluesky is Attie, an AI assistant that lets you build your own algorithm. At the Atmosphere conference, Bluesky&apos;s former CEO, Jay Graber, and CTO Paul Frazee, unveiled Attie, which is powered by Anthropic&apos;s Claude...</description>
+      <pubDate>Sun, 29 Mar 2026 21:44:41 GMT</pubDate>
+      <guid isPermaLink="true">https://www.theverge.com/ai-artificial-intelligence/903190/bluesky-attie-ai-custom-feeds</guid>
+      <source url="https://theverge.com">The Verge AI</source>
+        <category>General AI</category>
+    </item>
+    <item>
+      <title>Best Amazon Spring Sale TV deals 2026: Save big on Samsung, TCL, and more</title>
+      <link>https://www.zdnet.com/article/best-amazon-big-spring-sale-2026-tv-deals/</link>
+      <description>Amazon&apos;s Big Spring Sale is underway, and there are plenty of discounts on TVs from Samsung, TCL, and more to revamp your living room or home theater.</description>
+      <pubDate>Sun, 29 Mar 2026 21:27:38 GMT</pubDate>
+      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-big-spring-sale-2026-tv-deals/</guid>
+      <source url="https://zdnet.com">ZDNet AI</source>
+        <category>Enterprise</category>
+        <category>General AI</category>
+    </item>
+    <item>
+      <title>We&apos;re tracking the best tech deals under $50 during Amazon&apos;s Big Spring Sale event</title>
+      <link>https://www.zdnet.com/article/best-deals-under-50-amazon-spring-sale/</link>
+      <description>Amazon is full of great, affordable gadgets for your day-to-day, from speakers and chargers to streaming sticks and smart home gear. They&apos;re even cheaper now, during the retailer&apos;s annual sale - act fast.</description>
+      <pubDate>Sun, 29 Mar 2026 19:11:11 GMT</pubDate>
+      <guid isPermaLink="true">https://www.zdnet.com/article/best-deals-under-50-amazon-spring-sale/</guid>
       <source url="https://zdnet.com">ZDNet AI</source>
         <category>Enterprise</category>
         <category>General AI</category>
@@ -151,48 +180,28 @@
       <title>Best Amazon Spring Sale laptop deals 2026</title>
       <link>https://www.zdnet.com/article/best-amazon-spring-sale-2026-laptop-deals/</link>
       <description>Amazon&apos;s Big Spring Sale is underway, and we&apos;re tracking the most bang-for-buck laptop deals from all the big brands: Apple, Dell, Lenovo, and more.</description>
-      <pubDate>Sun, 29 Mar 2026 14:18:37 GMT</pubDate>
+      <pubDate>Sun, 29 Mar 2026 18:54:14 GMT</pubDate>
       <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-spring-sale-2026-laptop-deals/</guid>
       <source url="https://zdnet.com">ZDNet AI</source>
         <category>Enterprise</category>
         <category>General AI</category>
     </item>
     <item>
-      <title>Best Amazon Spring Sale TV deals 2026: Save big on Samsung, TCL, and more</title>
-      <link>https://www.zdnet.com/article/best-amazon-big-spring-sale-2026-tv-deals/</link>
-      <description>Amazon&apos;s Big Spring Sale is underway, and there are plenty of discounts on TVs from Samsung, TCL, and more to revamp your living room or home theater.</description>
-      <pubDate>Sun, 29 Mar 2026 14:11:35 GMT</pubDate>
-      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-big-spring-sale-2026-tv-deals/</guid>
+      <title>Best Amazon Spring Sale phone deals 2026: 25+ sales out now</title>
+      <link>https://www.zdnet.com/article/best-amazon-big-spring-sale-2026-phone-deals/</link>
+      <description>For Amazon&apos;s Big Spring Sale, I&apos;ve rounded up the best phone deals from major brands like Apple, Samsung, Motorola, and more. Sales are live now, so act fast.</description>
+      <pubDate>Sun, 29 Mar 2026 18:17:31 GMT</pubDate>
+      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-big-spring-sale-2026-phone-deals/</guid>
       <source url="https://zdnet.com">ZDNet AI</source>
         <category>Enterprise</category>
         <category>General AI</category>
     </item>
     <item>
-      <title>Best Amazon Spring Sale deals under $25</title>
-      <link>https://www.zdnet.com/article/best-amazon-spring-sale-2026-deals-under-25/</link>
-      <description>Amazon&apos;s Big Spring Sale has plenty of cheap deals on useful tech gadgets this weekend. Save up to $25 on devices from Blink, Logitech, and more right now.</description>
-      <pubDate>Sun, 29 Mar 2026 14:06:08 GMT</pubDate>
-      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-spring-sale-2026-deals-under-25/</guid>
-      <source url="https://zdnet.com">ZDNet AI</source>
-        <category>Enterprise</category>
-        <category>General AI</category>
-    </item>
-    <item>
-      <title>I tried this Shokz alternative for my runs, and the price-to-performance ratio surprised me</title>
-      <link>https://www.zdnet.com/article/h20-audio-tri-run-headset-review/</link>
-      <description>If you&apos;re curious about bone conduction technology, the H2O Audio Tri Run is a solid entry-level pair.</description>
-      <pubDate>Sun, 29 Mar 2026 11:00:37 GMT</pubDate>
-      <guid isPermaLink="true">https://www.zdnet.com/article/h20-audio-tri-run-headset-review/</guid>
-      <source url="https://zdnet.com">ZDNet AI</source>
-        <category>Enterprise</category>
-        <category>General AI</category>
-    </item>
-    <item>
-      <title>Switching to Claude? Here&apos;s how to take your ChatGPT memories with you</title>
-      <link>https://www.zdnet.com/article/switch-to-claude-ai-import-memories-preferences/</link>
-      <description>A new Claude AI feature now lets you copy your memories and preferences from another AI so making the change is easier.</description>
-      <pubDate>Sun, 29 Mar 2026 01:30:40 GMT</pubDate>
-      <guid isPermaLink="true">https://www.zdnet.com/article/switch-to-claude-ai-import-memories-preferences/</guid>
+      <title>Best Amazon Spring Sale Apple deals 2026</title>
+      <link>https://www.zdnet.com/article/best-amazon-spring-sale-2026-apple-deals/</link>
+      <description>I&apos;ve rounded up deals on some of the hottest tech from Apple during Amazon&apos;s Big Spring Sale. Shop them this weekend.</description>
+      <pubDate>Sun, 29 Mar 2026 17:46:59 GMT</pubDate>
+      <guid isPermaLink="true">https://www.zdnet.com/article/best-amazon-spring-sale-2026-apple-deals/</guid>
       <source url="https://zdnet.com">ZDNet AI</source>
         <category>Enterprise</category>
         <category>General AI</category>
@@ -360,15 +369,6 @@
       <description>Apple Music: &quot;What do you want to hear?&quot; Me: &quot;Atmospheric instrumental black metal to write to.&quot; Apple Music: &quot;Here&apos;s three metal songs with vocals, a field recording, an ambient electronic track, and a piece of doom jazz.&quot; I am skeptical of AI&apos;s...</description>
       <pubDate>Thu, 26 Mar 2026 20:51:31 GMT</pubDate>
       <guid isPermaLink="true">https://www.theverge.com/report/902005/apple-ai-playlist-playground-bad-at-music</guid>
-      <source url="https://theverge.com">The Verge AI</source>
-        <category>General AI</category>
-    </item>
-    <item>
-      <title>Google&amp;#8217;s &amp;#8216;live&amp;#8217; AI search assistant can handle conversations in dozens more languages</title>
-      <link>https://www.theverge.com/tech/901816/google-search-live-ai-assistant-expansion</link>
-      <description>Google is expanding access to Search Live, a feature that lets you search for information using your voice and camera. The AI search assistant is now available in more than 200 countries and territories, as well as dozens of languages, according to...</description>
-      <pubDate>Thu, 26 Mar 2026 18:47:51 GMT</pubDate>
-      <guid isPermaLink="true">https://www.theverge.com/tech/901816/google-search-live-ai-assistant-expansion</guid>
       <source url="https://theverge.com">The Verge AI</source>
         <category>General AI</category>
     </item>

@@ -60,7 +60,15 @@
       "Bash(mkdir -p /c/projects/tensorfeed/mcp-server)",
       "Bash(npm init:*)",
       "WebFetch(domain:developers.cloudflare.com)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(jobs -l)",
+      "Bash(find /c/projects/tensorfeed -type f -path *api*agents*)",
+      "Bash(find /c/projects/tensorfeed -type f -path *api*activity*)",
+      "Bash(find /c/projects/tensorfeed/src -name terminalfeed* -o -path *lib*terminal*)",
+      "Bash(grep -r agents/activity /c/projects/tensorfeed/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"today_count\\\\|recent\" /c/projects/tensorfeed/src --include=*.ts --include=*.tsx)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -r import.*AgentActivity /c/projects/tensorfeed/src --include=*.tsx --include=*.ts)"
     ]
   }
 }
