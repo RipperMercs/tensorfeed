@@ -68,7 +68,8 @@
       "Bash(grep -r agents/activity /c/projects/tensorfeed/src --include=*.ts --include=*.tsx)",
       "Bash(grep -r \"today_count\\\\|recent\" /c/projects/tensorfeed/src --include=*.ts --include=*.tsx)",
       "Bash(xargs grep:*)",
-      "Bash(grep -r import.*AgentActivity /c/projects/tensorfeed/src --include=*.tsx --include=*.ts)"
+      "Bash(grep -r import.*AgentActivity /c/projects/tensorfeed/src --include=*.tsx --include=*.ts)",
+      "Bash(gh api:*)"
     ]
   }
 }
