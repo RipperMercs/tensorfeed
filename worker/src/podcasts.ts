@@ -188,8 +188,17 @@ export async function pollPodcastFeeds(env: Env): Promise<void> {
   // Sort by date, newest first
   deduped.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
-  // Keep top 100 episodes (single KV key)
-  const final = deduped.slice(0, 100);
+  // Interleave: AI Daily Brief gets priority (every other slot), rest fill in between
+  const priority = deduped.filter(ep => ep.podcastName === 'AI Daily Brief');
+  const rest = deduped.filter(ep => ep.podcastName !== 'AI Daily Brief');
+  const interleaved: PodcastEpisode[] = [];
+  let pi = 0, ri = 0;
+  while (interleaved.length < 100 && (pi < priority.length || ri < rest.length)) {
+    if (pi < priority.length) interleaved.push(priority[pi++]);
+    if (ri < rest.length) interleaved.push(rest[ri++]);
+  }
+
+  const final = interleaved.slice(0, 100);
 
   await env.TENSORFEED_CACHE.put('podcasts', JSON.stringify(final), {
     metadata: { count: final.length, sources: successCount, updatedAt: new Date().toISOString() },
