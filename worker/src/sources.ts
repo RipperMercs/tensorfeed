@@ -99,41 +99,47 @@ export const RSS_SOURCES: RSSSource[] = [
   },
 ];
 
-export const STATUS_PAGES: { name: string; provider: string; url: string; statusPageUrl: string }[] = [
+export const STATUS_PAGES: { name: string; provider: string; url: string; statusPageUrl: string; type: 'statuspage' | 'html' }[] = [
   {
     name: 'Claude API',
     provider: 'Anthropic',
     url: 'https://status.anthropic.com/api/v2/summary.json',
     statusPageUrl: 'https://status.anthropic.com',
+    type: 'statuspage',
   },
   {
     name: 'OpenAI API',
     provider: 'OpenAI',
     url: 'https://status.openai.com/api/v2/summary.json',
     statusPageUrl: 'https://status.openai.com',
+    type: 'statuspage',
   },
   {
     name: 'Hugging Face',
     provider: 'Hugging Face',
-    url: 'https://status.huggingface.co/api/v2/summary.json',
+    url: 'https://status.huggingface.co',
     statusPageUrl: 'https://status.huggingface.co',
+    type: 'html',
   },
   {
     name: 'Replicate',
     provider: 'Replicate',
     url: 'https://status.replicate.com/api/v2/summary.json',
     statusPageUrl: 'https://status.replicate.com',
+    type: 'statuspage',
   },
   {
     name: 'Cohere',
     provider: 'Cohere',
     url: 'https://status.cohere.com/api/v2/summary.json',
     statusPageUrl: 'https://status.cohere.com',
+    type: 'statuspage',
   },
   {
     name: 'Mistral',
     provider: 'Mistral AI',
-    url: 'https://status.mistral.ai/api/v2/summary.json',
+    url: 'https://status.mistral.ai',
     statusPageUrl: 'https://status.mistral.ai',
+    type: 'html',
   },
 ];

@@ -30,13 +30,38 @@ function normalizeComponentStatus(status: string): string {
   }
 }
 
+function parseHtmlStatus(html: string): 'operational' | 'degraded' | 'down' | 'unknown' {
+  const lower = html.toLowerCase();
+  // Check for outage/down indicators first
+  if (lower.includes('major outage') || lower.includes('major_outage') || lower.includes('service disruption')) {
+    return 'down';
+  }
+  if (lower.includes('partial outage') || lower.includes('partial_outage') || lower.includes('degraded') || lower.includes('minor outage')) {
+    return 'degraded';
+  }
+  // Check for positive indicators
+  if (lower.includes('all systems operational') || lower.includes('all services are online') || lower.includes('fully operational') || lower.includes('all monitors are up')) {
+    return 'operational';
+  }
+  // Better Stack uses "operational" class/text for each monitor
+  const operationalCount = (lower.match(/operational/g) || []).length;
+  const downCount = (lower.match(/\bdown\b/g) || []).length + (lower.match(/\boutage\b/g) || []).length;
+  if (operationalCount > 0 && downCount === 0) {
+    return 'operational';
+  }
+  if (downCount > 0) {
+    return operationalCount > downCount ? 'degraded' : 'down';
+  }
+  return 'unknown';
+}
+
 async function fetchServiceStatus(
   service: typeof STATUS_PAGES[number]
 ): Promise<ServiceStatus> {
   try {
     const response = await fetch(service.url, {
       headers: { 'User-Agent': 'TensorFeed/1.0 (https://tensorfeed.ai)' },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
@@ -50,6 +75,20 @@ async function fetchServiceStatus(
       };
     }
 
+    // HTML-based status pages (Better Stack, Checkly, etc.)
+    if (service.type === 'html') {
+      const html = await response.text();
+      return {
+        name: service.name,
+        provider: service.provider,
+        status: parseHtmlStatus(html),
+        statusPageUrl: service.statusPageUrl,
+        components: [],
+        lastChecked: new Date().toISOString(),
+      };
+    }
+
+    // Atlassian Statuspage JSON API
     const data: StatusPageResponse = await response.json();
 
     const components = (data.components || [])
