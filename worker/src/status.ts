@@ -32,25 +32,19 @@ function normalizeComponentStatus(status: string): string {
 
 function parseHtmlStatus(html: string): 'operational' | 'degraded' | 'down' | 'unknown' {
   const lower = html.toLowerCase();
-  // Check for outage/down indicators first
-  if (lower.includes('major outage') || lower.includes('major_outage') || lower.includes('service disruption')) {
-    return 'down';
-  }
-  if (lower.includes('partial outage') || lower.includes('partial_outage') || lower.includes('degraded') || lower.includes('minor outage')) {
-    return 'degraded';
-  }
-  // Check for positive indicators
+  // Check for clear positive banner text first (most reliable)
   if (lower.includes('all systems operational') || lower.includes('all services are online') || lower.includes('fully operational') || lower.includes('all monitors are up')) {
     return 'operational';
   }
-  // Better Stack uses "operational" class/text for each monitor
-  const operationalCount = (lower.match(/operational/g) || []).length;
-  const downCount = (lower.match(/\bdown\b/g) || []).length + (lower.match(/\boutage\b/g) || []).length;
-  if (operationalCount > 0 && downCount === 0) {
-    return 'operational';
+  // Check for active incident banners (not historical logs)
+  if (lower.includes('active incident') || lower.includes('ongoing incident') || lower.includes('service disruption')) {
+    if (lower.includes('major') || lower.includes('critical')) return 'down';
+    return 'degraded';
   }
-  if (downCount > 0) {
-    return operationalCount > downCount ? 'degraded' : 'down';
+  // If the page loaded successfully and has status content, assume operational
+  // (pages with real issues prominently display incident banners)
+  if (html.length > 1000) {
+    return 'operational';
   }
   return 'unknown';
 }
