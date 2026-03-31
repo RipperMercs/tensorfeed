@@ -68,13 +68,19 @@ export default function Navbar() {
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
+            <Link
+              href="/status"
+              className="flex items-center justify-center w-7 h-7 rounded hover:bg-bg-secondary transition-colors mr-0.5"
+              aria-label="Status"
+              title="All systems operational"
+            >
+              <span className="live-dot" />
+            </Link>
             {NAV_LINKS.map((link) => {
               const isActive =
                 link.href === '/'
                   ? pathname === '/'
                   : pathname.startsWith(link.href);
-
-              const isStatus = link.href === '/status';
 
               return (
                 <Link
@@ -86,10 +92,7 @@ export default function Navbar() {
                       : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
                   }`}
                 >
-                  <span className="flex items-center gap-1.5">
-                    {link.label}
-                    {isStatus && <span className="live-dot" />}
-                  </span>
+                  {link.label}
                   {isActive && (
                     <span className="absolute bottom-0 left-1 right-1 h-0.5 rounded-full bg-gradient-to-r from-accent-primary to-accent-cyan" />
                   )}
@@ -183,13 +186,19 @@ export default function Navbar() {
         }`}
       >
         <div className="px-4 py-3 space-y-1">
+          <Link
+            href="/status"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 rounded text-sm text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-colors"
+          >
+            <span className="live-dot" />
+            <span>System Status</span>
+          </Link>
           {NAV_LINKS.map((link) => {
             const isActive =
               link.href === '/'
                 ? pathname === '/'
                 : pathname.startsWith(link.href);
-
-            const isStatus = link.href === '/status';
 
             return (
               <Link
@@ -202,10 +211,7 @@ export default function Navbar() {
                     : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
                 }`}
               >
-                <span className="flex items-center gap-1.5">
-                  {link.label}
-                  {isStatus && <span className="live-dot" />}
-                </span>
+                {link.label}
                 {isActive && (
                   <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-gradient-to-b from-accent-primary to-accent-cyan" />
                 )}
