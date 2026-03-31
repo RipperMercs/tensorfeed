@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { SISTER_SITES, STATUS_DOTS } from '@/lib/constants';
-import { Activity, Rss, TrendingUp, Globe } from 'lucide-react';
+import { Activity, Rss, TrendingUp, Globe, GitBranch, Star } from 'lucide-react';
 import AgentActivity from '@/components/AgentActivity';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import LatestPodcasts from '@/components/podcasts/LatestPodcasts';
@@ -20,6 +20,25 @@ import sourcesData from '../../../data/sources.json';
 
 const LIVE_SOURCES = sourcesData.sources.map(s => s.name).slice(0, 6);
 
+async function fetchTrendingRepos() {
+  try {
+    const res = await fetch('https://tensorfeed.ai/api/trending-repos?limit=5', { next: { revalidate: 300 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.ok && data.repos?.length) return data.repos.slice(0, 5);
+    }
+  } catch {}
+  return [];
+}
+
+const LANG_DOTS: Record<string, string> = {
+  Python: 'bg-yellow-400',
+  TypeScript: 'bg-blue-400',
+  JavaScript: 'bg-amber-400',
+  Rust: 'bg-orange-500',
+  Go: 'bg-cyan-400',
+};
+
 async function fetchStatusSummary() {
   try {
     const res = await fetch('https://tensorfeed.ai/api/status/summary', { next: { revalidate: 120 } });
@@ -32,7 +51,10 @@ async function fetchStatusSummary() {
 }
 
 export default async function Sidebar() {
-  const topStatuses = await fetchStatusSummary();
+  const [topStatuses, trendingRepos] = await Promise.all([
+    fetchStatusSummary(),
+    fetchTrendingRepos(),
+  ]);
 
   return (
     <aside className="space-y-4">
@@ -72,6 +94,52 @@ export default async function Sidebar() {
 
       {/* Agent Activity Widget */}
       <AgentActivity />
+
+      {/* Trending AI Repos Widget */}
+      {trendingRepos.length > 0 && (
+        <div className="bg-bg-secondary rounded-lg border border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
+              <GitBranch className="w-4 h-4 text-accent-primary" />
+              Trending AI Repos
+            </h3>
+            <Link
+              href="/live"
+              className="text-xs text-accent-primary hover:text-accent-cyan transition-colors"
+            >
+              View all
+            </Link>
+          </div>
+          <ul className="space-y-2.5">
+            {trendingRepos.map((repo: { name: string; language: string; stars: number; url: string }) => (
+              <li key={repo.name}>
+                <a
+                  href={repo.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block group"
+                >
+                  <span className="text-xs text-accent-primary group-hover:text-accent-cyan transition-colors font-medium truncate block">
+                    {repo.name}
+                  </span>
+                  <span className="flex items-center gap-2 mt-0.5 text-[10px] text-text-muted">
+                    {repo.language && (
+                      <span className="flex items-center gap-1">
+                        <span className={`w-1.5 h-1.5 rounded-full ${LANG_DOTS[repo.language] || 'bg-gray-400'}`} />
+                        {repo.language}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-0.5">
+                      <Star className="w-2.5 h-2.5" />
+                      {repo.stars.toLocaleString()}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Latest AI Podcasts Widget */}
       <LatestPodcasts />

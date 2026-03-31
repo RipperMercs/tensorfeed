@@ -9,6 +9,7 @@ export interface Env {
   X_API_SECRET: string;
   X_ACCESS_TOKEN: string;
   X_ACCESS_SECRET: string;
+  GITHUB_TOKEN: string;
 }
 
 export interface Article {
@@ -65,4 +66,17 @@ export interface PodcastSource {
   name: string;
   feedUrl: string;
   active: boolean;
+}
+
+export interface TrendingRepo {
+  name: string;
+  description: string;
+  language: string;
+  stars: number;
+  forks: number;
+  todayStars: number;
+  url: string;
+  topics: string[];
+  createdAt: string;
+  fetchedAt: string;
 }

@@ -5,6 +5,7 @@ import { updateCatalog } from './catalog';
 import { trackAgentActivity, getAgentActivity } from './activity';
 import { postTopStories } from './twitter';
 import { pollPodcastFeeds } from './podcasts';
+import { pollTrendingRepos } from './trending';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -304,6 +305,20 @@ export default {
       }, 200, 300);
     }
 
+    // === TRENDING REPOS ENDPOINT (cached 300s) ===
+
+    if (path === '/api/trending-repos') {
+      const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
+      const repos = await cachedKVGet(request, env.TENSORFEED_CACHE, 'trending-repos', 300) as unknown[] | null;
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        updated: new Date().toISOString(),
+        count: Math.min((repos || []).length, limit),
+        repos: (repos || []).slice(0, limit),
+      }, 200, 300);
+    }
+
     // === META ENDPOINT (cached 60s) ===
 
     if (path === '/api/meta') {
@@ -326,6 +341,7 @@ export default {
           agentsDirectory: '/api/agents/directory',
           agentActivity: '/api/agents/activity',
           podcasts: '/api/podcasts',
+          trendingRepos: '/api/trending-repos',
           health: '/api/health',
         },
         news: newsMeta,
@@ -335,7 +351,7 @@ export default {
     // === FORCE REFRESH (protected) ===
 
     if (path === '/api/refresh' && url.searchParams.get('key') === env.ENVIRONMENT) {
-      await Promise.all([pollRSSFeeds(env), pollStatusPages(env), updateCatalog(env), pollPodcastFeeds(env)]);
+      await Promise.all([pollRSSFeeds(env), pollStatusPages(env), updateCatalog(env), pollPodcastFeeds(env), pollTrendingRepos(env)]);
 
       return jsonResponse({ ok: true, message: 'Refreshed all feeds, status, and catalog' });
     }
@@ -407,7 +423,7 @@ export default {
       return jsonResponse({ ok: true, message: 'Posted top stories to X' });
     }
 
-    return jsonResponse({ error: 'Not found', endpoints: ['/api/health', '/api/news', '/api/status', '/api/podcasts', '/api/feed.xml', '/api/feed.json', '/api/meta'] }, 404);
+    return jsonResponse({ error: 'Not found', endpoints: ['/api/health', '/api/news', '/api/status', '/api/podcasts', '/api/trending-repos', '/api/feed.xml', '/api/feed.json', '/api/meta'] }, 404);
   },
 
   async scheduled(event: ScheduledEvent, env: Env): Promise<void> {
@@ -428,6 +444,9 @@ export default {
     } else if (cron === '0 8,11,14,17,20 * * *') {
       // 5x daily (~every 3hrs): post 1 top story to X
       await postTopStories(env);
+    } else if (cron === '30 8 * * *') {
+      // Daily 8:30 AM UTC: refresh trending AI repos from GitHub
+      await pollTrendingRepos(env);
     }
 
     // Track last cron execution for debugging

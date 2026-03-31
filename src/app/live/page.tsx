@@ -157,7 +157,29 @@ function GitHubTrendingTab() {
 
   useEffect(() => {
     async function fetchRepos() {
-      // Try TerminalFeed first, fall back to static curated list
+      // Primary: TensorFeed's own trending repos API
+      try {
+        const res = await fetch('https://tensorfeed.ai/api/trending-repos?limit=20');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.ok && json.repos?.length) {
+            setRepos(json.repos.map((r: { name: string; description: string; language: string; stars: number; forks: number; todayStars?: number; url: string; createdAt?: string }) => ({
+              name: r.name,
+              description: r.description,
+              language: r.language,
+              stars: r.stars,
+              forks: r.forks,
+              todayStars: r.todayStars || 0,
+              url: r.url,
+              createdAt: r.createdAt,
+            })));
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {}
+
+      // Fallback: TerminalFeed
       try {
         const res = await fetch('https://terminalfeed.io/api/github-trending');
         if (res.ok) {
@@ -166,25 +188,14 @@ function GitHubTrendingTab() {
         }
       } catch {}
 
-      // Fallback: curated AI repos
-      setRepos([
-        { name: 'anthropics/claude-code', description: 'Official CLI for Claude. Agentic coding in your terminal.', language: 'TypeScript', stars: 48200, forks: 0, todayStars: 0, url: 'https://github.com/anthropics/claude-code' },
-        { name: 'vllm-project/vllm', description: 'High-throughput inference engine for LLMs.', language: 'Python', stars: 52100, forks: 0, todayStars: 0, url: 'https://github.com/vllm-project/vllm' },
-        { name: 'huggingface/transformers', description: 'State-of-the-art ML for PyTorch, TensorFlow, and JAX.', language: 'Python', stars: 148000, forks: 0, todayStars: 0, url: 'https://github.com/huggingface/transformers' },
-        { name: 'langchain-ai/langchain', description: 'Build context-aware reasoning applications.', language: 'Python', stars: 102000, forks: 0, todayStars: 0, url: 'https://github.com/langchain-ai/langchain' },
-        { name: 'meta-llama/llama', description: 'Open source large language models from Meta.', language: 'Python', stars: 68000, forks: 0, todayStars: 0, url: 'https://github.com/meta-llama/llama' },
-        { name: 'ollama/ollama', description: 'Run LLMs locally. Get up and running with large language models.', language: 'Go', stars: 115000, forks: 0, todayStars: 0, url: 'https://github.com/ollama/ollama' },
-        { name: 'deepseek-ai/DeepSeek-V3', description: 'Open-weight MoE model. Apache 2.0 licensed.', language: 'Python', stars: 38900, forks: 0, todayStars: 0, url: 'https://github.com/deepseek-ai/DeepSeek-V3' },
-        { name: 'openai/openai-python', description: 'The official Python library for the OpenAI API.', language: 'Python', stars: 24000, forks: 0, todayStars: 0, url: 'https://github.com/openai/openai-python' },
-      ]);
+      setRepos([]);
       setLoading(false);
     }
     fetchRepos();
   }, []);
 
-  const data = repos;
   if (loading) return <LoadingSkeleton rows={6} />;
-  if (error || data.length === 0) return <ErrorFallback error={error || 'No data'} />;
+  if (error || repos.length === 0) return <ErrorFallback error={error || 'No trending repos available'} />;
 
   const LANG_COLORS: Record<string, string> = {
     Python: 'bg-yellow-400',
@@ -197,19 +208,19 @@ function GitHubTrendingTab() {
     Jupyter: 'bg-orange-400',
   };
 
-  // Filter for AI-related repos
-  const aiRepos = data.filter((repo: TFGithubRepo) =>
-    isAIRelated(`${repo.name} ${repo.description || ''}`)
-  );
-  const displayRepos = aiRepos.length > 0 ? aiRepos : data.slice(0, 10);
+  function createdAgo(dateStr?: string): string {
+    if (!dateStr) return '';
+    const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+    if (days === 0) return 'Created today';
+    if (days === 1) return 'Created yesterday';
+    return `Created ${days}d ago`;
+  }
 
   return (
     <div>
-      {aiRepos.length > 0 && (
-        <p className="text-xs text-text-muted mb-3">Showing {aiRepos.length} AI-related trending repos</p>
-      )}
+      <p className="text-xs text-text-muted mb-3">New AI repos gaining traction this week</p>
       <div className="space-y-3">
-        {displayRepos.map((repo: TFGithubRepo) => (
+        {repos.map((repo: TFGithubRepo & { createdAt?: string }) => (
           <a
             key={repo.name || repo.url}
             href={repo.url}
@@ -234,14 +245,13 @@ function GitHubTrendingTab() {
                 </span>
               )}
               <span>{(repo.stars || 0).toLocaleString()} stars</span>
-              {repo.todayStars > 0 && (
-                <span className="text-accent-green">+{repo.todayStars.toLocaleString()} today</span>
+              {repo.createdAt && (
+                <span className="text-text-muted">{createdAgo(repo.createdAt)}</span>
               )}
             </div>
           </a>
         ))}
       </div>
-      <TFAttribution />
     </div>
   );
 }
