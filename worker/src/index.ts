@@ -417,11 +417,11 @@ export default {
       }
     }
 
-    // Manual tweet trigger (protected)
-    if (path === '/api/tweet' && url.searchParams.get('key') === env.ENVIRONMENT) {
-      await postTopStories(env);
-      return jsonResponse({ ok: true, message: 'Posted top stories to X' });
-    }
+    // Manual tweet trigger (protected) - DISABLED: X account limited, re-enable after appeal
+    // if (path === '/api/tweet' && url.searchParams.get('key') === env.ENVIRONMENT) {
+    //   await postTopStories(env);
+    //   return jsonResponse({ ok: true, message: 'Posted top stories to X' });
+    // }
 
     return jsonResponse({ error: 'Not found', endpoints: ['/api/health', '/api/news', '/api/status', '/api/podcasts', '/api/trending-repos', '/api/feed.xml', '/api/feed.json', '/api/meta'] }, 404);
   },
@@ -441,9 +441,9 @@ export default {
     } else if (cron === '0 6 * * 1') {
       // Weekly (Monday 6 AM UTC): update models & agents catalog
       await updateCatalog(env);
-    } else if (cron === '0 8,11,14,17,20 * * *') {
-      // 5x daily (~every 3hrs): post 1 top story to X
-      await postTopStories(env);
+    // DISABLED: X account limited, re-enable after appeal
+    // } else if (cron === '0 8,11,14,17,20 * * *') {
+    //   await postTopStories(env);
     } else if (cron === '30 8 * * *') {
       // Daily 8:30 AM UTC: refresh trending AI repos from GitHub
       await pollTrendingRepos(env);
