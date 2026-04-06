@@ -111,6 +111,14 @@ const LATEST_ORIGINALS = [
     description:
       'Gartner says 40% of enterprise apps will have AI agents by end of 2026. OpenClaw went viral. NVIDIA shipped Agent Toolkit at GTC. What separates a chatbot from an agent and why it matters.',
   },
+  {
+    href: '/originals/claude-vs-gpt-vs-gemini',
+    title: 'Claude vs GPT vs Gemini: An Honest Comparison',
+    date: 'April 2, 2026',
+    readTime: '6 min read',
+    description:
+      'A real-world comparison of Claude, GPT, and Gemini across coding, writing, analysis, and research tasks. Includes pricing, context windows, and practical recommendations.',
+  },
 ];
 
 const HOMEPAGE_FAQS = [
@@ -294,7 +302,7 @@ export default async function HomePage() {
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           {LATEST_ORIGINALS.map((article) => (
             <Link
               key={article.href}
