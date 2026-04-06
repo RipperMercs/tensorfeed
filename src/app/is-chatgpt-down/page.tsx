@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { Activity, ArrowRight, HelpCircle } from 'lucide-react';
 import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
 import { WebApplicationJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 interface StatusService {
   name: string;
@@ -198,8 +197,6 @@ export default async function IsChatGPTDownPage() {
           <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-accent-primary transition-colors" />
         </Link>
       </div>
-
-      <AdPlaceholder className="my-8" />
 
       {/* FAQ Section */}
       <section className="mb-10">

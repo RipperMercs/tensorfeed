@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { BookOpen, FileText, Trophy, ExternalLink } from 'lucide-react';
-import AdPlaceholder from '@/components/AdPlaceholder';
-
 interface Article {
   id: string;
   title: string;
@@ -140,8 +138,6 @@ export default function ResearchPage() {
           </a>
         </section>
       )}
-
-      <AdPlaceholder className="my-8" />
 
       {/* Latest Papers */}
       <section className="mb-12">

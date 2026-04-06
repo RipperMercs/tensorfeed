@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Headphones, Clock, ExternalLink } from 'lucide-react';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import PodcastPlayer from '@/components/podcasts/PodcastPlayer';
 import type { PodcastEpisode } from '@/lib/types';
 import JsonLd from '@/components/seo/JsonLd';
@@ -130,8 +129,6 @@ export default function PodcastsPage() {
           <span>Updated hourly</span>
         </div>
       )}
-
-      <AdPlaceholder className="my-8" />
 
       {/* Episodes list */}
       {loading ? (

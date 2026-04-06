@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { FileCode2, Copy, Check, ArrowRight } from 'lucide-react';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import Link from 'next/link';
 
 const FRAMEWORKS = [
@@ -552,7 +551,6 @@ export default function ClaudeMdGeneratorPage() {
               </div>
             </div>
 
-            <AdPlaceholder className="w-full" />
           </div>
 
           {/* Preview */}

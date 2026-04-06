@@ -2,8 +2,6 @@ import { Metadata } from 'next';
 import { Cpu, ExternalLink } from 'lucide-react';
 import fallbackPricingData from '@/../data/pricing.json';
 import { DatasetJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
-
 interface ModelRow {
   id: string;
   name: string;
@@ -188,8 +186,6 @@ export default async function ModelsPage() {
           ))}
         </div>
       </section>
-
-      <AdPlaceholder className="my-8" />
 
       {/* Pricing Comparison Table */}
       <section className="mb-14">

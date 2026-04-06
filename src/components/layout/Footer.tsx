@@ -34,12 +34,18 @@ export default function Footer() {
             >
               Privacy
             </Link>
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
+            <Link
+              href="/terms"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/contact"
               className="text-sm text-text-muted hover:text-text-primary transition-colors"
             >
               Contact
-            </a>
+            </Link>
             <a
               href="https://x.com/tensorfeed"
               target="_blank"

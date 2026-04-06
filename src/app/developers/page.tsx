@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import { Code, Zap, Bot, FileText, Globe, ExternalLink } from 'lucide-react';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import { WebApplicationJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
@@ -295,8 +294,6 @@ export default function DevelopersPage() {
           ))}
         </div>
       </section>
-
-      <AdPlaceholder className="my-8" />
 
       {/* For AI Agents */}
       <section className="mb-14">

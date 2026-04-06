@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Bell, Check, Loader2, Shield } from 'lucide-react';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import Link from 'next/link';
 
 const SERVICES = [
@@ -112,8 +111,6 @@ export default function AlertsPage() {
           </div>
         </div>
       </div>
-
-      <AdPlaceholder className="my-8" />
 
       {status === 'success' ? (
         <div className="bg-accent-green/10 border border-accent-green/30 rounded-xl p-8 text-center">

@@ -4,8 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Cpu, Plus, X, ChevronDown, ArrowRight } from 'lucide-react';
 import fallbackPricingData from '@/../data/pricing.json';
 import Link from 'next/link';
-import AdPlaceholder from '@/components/AdPlaceholder';
-
 interface Model {
   id: string;
   name: string;
@@ -334,8 +332,6 @@ export default function ComparePage() {
           </p>
         </div>
       )}
-
-      <AdPlaceholder className="my-8" />
 
       {/* Popular Comparisons */}
       <section className="mb-10">

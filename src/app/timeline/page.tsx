@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Clock } from 'lucide-react';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import timelineData from '@/../data/timeline.json';
 
 type Category = 'model-release' | 'pricing' | 'acquisition' | 'policy' | 'research' | 'milestone' | 'open-source';
@@ -117,8 +116,6 @@ export default function TimelinePage() {
           </button>
         ))}
       </div>
-
-      <AdPlaceholder className="my-8" />
 
       {/* Timeline */}
       <div className="relative">

@@ -1,7 +1,5 @@
 import Link from 'next/link';
 import JsonLd from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
-
 const NEXTJS_EXAMPLE = `# Project: Acme Dashboard
 
 ## Overview
@@ -245,8 +243,6 @@ export default function ClaudeMdExamplesPage() {
         </div>
       </section>
 
-      <AdPlaceholder className="mb-12" />
-
       {/* Example 2: Python FastAPI */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold text-text-primary mb-2">2. Python Backend (FastAPI)</h2>
@@ -280,8 +276,6 @@ export default function ClaudeMdExamplesPage() {
           </pre>
         </div>
       </section>
-
-      <AdPlaceholder className="mb-12" />
 
       {/* Example 4: Cloudflare Workers */}
       <section className="mb-12">

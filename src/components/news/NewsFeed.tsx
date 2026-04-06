@@ -38,7 +38,6 @@ function balanceSources(articles: NewsArticle[]): NewsArticle[] {
   return balanced;
 }
 
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 export default function NewsFeed({ articles: initialArticles }: NewsFeedProps) {
   const [articles, setArticles] = useState<NewsArticle[]>(initialArticles);
@@ -119,11 +118,6 @@ export default function NewsFeed({ articles: initialArticles }: NewsFeedProps) {
           {filteredArticles.map((article, index) => (
             <div key={article.id}>
               <NewsCard article={article} featured={index % 5 === 0} />
-              {(index + 1) % 10 === 0 && index < filteredArticles.length - 1 && (
-                <div className="mt-4">
-                  <AdPlaceholder />
-                </div>
-              )}
             </div>
           ))}
         </div>

@@ -4,8 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Calculator, Info } from 'lucide-react';
 import fallbackPricingData from '@/../data/pricing.json';
 import { FAQPageJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
-
 interface Model {
   id: string;
   name: string;
@@ -256,8 +254,6 @@ export default function CostCalculatorPage() {
         </div>
       </section>
 
-      <AdPlaceholder className="my-8" />
-
       {/* Results Table */}
       <section className="mb-14">
         <h2 className="text-2xl font-semibold text-text-primary mb-6">
@@ -384,7 +380,6 @@ export default function CostCalculatorPage() {
         </div>
       </section>
 
-      <AdPlaceholder className="my-8" />
     </div>
   );
 }

@@ -1,8 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
-
 export const metadata: Metadata = {
   title: 'Best Open Source LLMs in 2026: Llama, Mistral, DeepSeek, Qwen & More | TensorFeed',
   description:
@@ -252,8 +250,6 @@ export default function BestOpenSourceLLMsPage() {
         </div>
       </section>
 
-      <AdPlaceholder className="my-8" />
-
       {/* Detailed Reviews */}
       <section id="detailed" className="mb-12">
         <h2 className="text-2xl font-bold text-text-primary mb-6">Detailed Model Reviews</h2>
@@ -388,8 +384,6 @@ export default function BestOpenSourceLLMsPage() {
           </p>
         </div>
       </section>
-
-      <AdPlaceholder className="my-8" />
 
       {/* How to Choose */}
       <section id="choosing" className="mb-12">
@@ -528,8 +522,6 @@ export default function BestOpenSourceLLMsPage() {
           in production. License terms can change between model versions.
         </p>
       </section>
-
-      <AdPlaceholder className="my-8" />
 
       {/* Open Source vs Proprietary */}
       <section className="mb-12">

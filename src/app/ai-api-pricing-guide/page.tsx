@@ -2,8 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 import pricingData from '@/../data/pricing.json';
-import AdPlaceholder from '@/components/AdPlaceholder';
-
 export const metadata: Metadata = {
   title: 'AI API Pricing Guide 2026: Every Provider Compared | TensorFeed',
   description:
@@ -112,8 +110,6 @@ export default function AIAPIPricingGuidePage() {
           (e.g., Together, Fireworks, Groq). {pricingNotes.disclaimer}
         </p>
       </section>
-
-      <AdPlaceholder className="my-8" />
 
       {/* Provider Details */}
       <section id="provider-details" className="mb-12">
@@ -313,8 +309,6 @@ export default function AIAPIPricingGuidePage() {
         </div>
       </section>
 
-      <AdPlaceholder className="my-8" />
-
       {/* Free Tiers */}
       <section id="free-tiers" className="mb-12">
         <h2 className="text-2xl font-bold text-text-primary mb-4">Free Tier Comparison</h2>
@@ -448,8 +442,6 @@ export default function AIAPIPricingGuidePage() {
           Frontier model = Claude Opus 4.6 / o1. Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
         </p>
       </section>
-
-      <AdPlaceholder className="my-8" />
 
       {/* Reducing Costs */}
       <section id="reducing-costs" className="mb-12">

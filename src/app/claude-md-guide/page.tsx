@@ -1,7 +1,5 @@
 import Link from 'next/link';
 import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
-
 const faqs = [
   {
     question: 'What is a CLAUDE.md file?',
@@ -175,8 +173,6 @@ export default function ClaudeMdGuidePage() {
           </div>
         </div>
       </section>
-
-      <AdPlaceholder className="my-8" />
 
       {/* Where to Put Your CLAUDE.md */}
       <section id="where-to-put" className="mb-12">
@@ -382,8 +378,6 @@ Currently in production with 40+ pages and growing.`}</code>
         </pre>
       </section>
 
-      <AdPlaceholder className="my-8" />
-
       {/* What NOT to Include */}
       <section id="what-not-to-include" className="mb-12">
         <h2 className="text-2xl font-bold text-text-primary mb-4">What NOT to Include</h2>
@@ -579,8 +573,6 @@ Currently in production with 40+ pages and growing.`}</code>
           </Link>
         </div>
       </section>
-
-      <AdPlaceholder className="my-8" />
 
       {/* Best Practices */}
       <section id="best-practices" className="mb-12">

@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import { WebApplicationJsonLd } from '@/components/seo/JsonLd';
 import StatusDashboard from '@/components/status/StatusDashboard';
 
@@ -18,7 +17,6 @@ export default function StatusPage() {
         url="https://tensorfeed.ai/status"
       />
       <StatusDashboard />
-      <AdPlaceholder className="my-8" />
     </div>
   );
 }
