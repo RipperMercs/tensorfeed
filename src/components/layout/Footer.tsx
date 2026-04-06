@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { SISTER_SITES, CONTACT_EMAIL } from '@/lib/constants';
-import NewsletterSignup from '@/components/NewsletterSignup';
 
 export default function Footer() {
   return (
@@ -74,13 +73,6 @@ export default function Footer() {
                 </a>
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* Newsletter */}
-        <div className="mt-8 pt-4 border-t border-border">
-          <div className="max-w-sm mx-auto">
-            <NewsletterSignup variant="footer" />
           </div>
         </div>
 

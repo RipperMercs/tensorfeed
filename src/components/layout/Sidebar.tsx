@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { SISTER_SITES, STATUS_DOTS } from '@/lib/constants';
 import { Activity, Rss, TrendingUp, Globe, GitBranch, Star } from 'lucide-react';
 import AgentActivity from '@/components/AgentActivity';
-import NewsletterSignup from '@/components/NewsletterSignup';
 import LatestPodcasts from '@/components/podcasts/LatestPodcasts';
 
 const TRENDING_TOPICS = [
@@ -215,8 +214,6 @@ export default async function Sidebar() {
         </ul>
       </div>
 
-      {/* Newsletter Signup */}
-      <NewsletterSignup variant="sidebar" />
     </aside>
   );
 }
