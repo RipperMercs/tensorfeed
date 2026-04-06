@@ -12,7 +12,7 @@ crons = [
   "*/10 * * * *",
   "*/5 * * * *",
   "0 * * * *",
-  "0 6 * * 1",
+  "0 6 * * *",
   "30 8 * * *",
   # X/Twitter auto-posting DISABLED (account flagged as spam, 2026-04-04)
   # When re-enabling, start with 1 post/day: "30 14 * * *"

@@ -24,7 +24,7 @@ TensorFeed.ai is an AI news aggregator and real-time data hub built for humans a
 - Every 2 min: Status page polling
 - Every 10 min: RSS feed fetching from all sources
 - Every hour: Full refresh
-- Monday 6am UTC: Model catalog and pricing update from LiteLLM
+- Daily 6am UTC: Model catalog and pricing update from LiteLLM
 
 ## KV Operation Limits (CRITICAL)
 Cloudflare free tier has 100,000 KV operations/day. To stay within limits:

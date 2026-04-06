@@ -440,8 +440,8 @@ export default {
       await pollRSSFeeds(env);
       await pollStatusPages(env);
       await pollPodcastFeeds(env);
-    } else if (cron === '0 6 * * 1') {
-      // Weekly (Monday 6 AM UTC): update models & agents catalog
+    } else if (cron === '0 6 * * *') {
+      // Daily (6 AM UTC): update models & agents catalog
       await updateCatalog(env);
     // X/Twitter auto-posting DISABLED 2026-04-04 (account flagged as spam).
     // Safe limits for new accounts: 1-2 posts/day for first month, then 3-4/day max.
