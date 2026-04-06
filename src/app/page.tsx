@@ -287,6 +287,48 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ===== FEATURED ORIGINALS ===== */}
+      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+            <Pen className="w-5 h-5 text-accent-secondary" />
+            Latest from TensorFeed
+          </h2>
+          <Link
+            href="/originals"
+            className="flex items-center gap-1 text-xs font-medium text-accent-primary hover:text-accent-secondary transition-colors"
+          >
+            View all
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {LATEST_ORIGINALS.map((article) => (
+            <Link
+              key={article.href}
+              href={article.href}
+              className="group relative bg-bg-secondary rounded-xl border border-accent-secondary/20 hover:border-accent-secondary/50 p-5 transition-all duration-300 hover:shadow-glow overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-accent-secondary to-accent-primary" />
+              <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-accent-secondary bg-accent-secondary/10 px-2 py-0.5 rounded mb-3">
+                Editorial
+              </span>
+              <h3 className="text-sm font-semibold text-text-primary mb-2 group-hover:text-accent-secondary transition-colors leading-snug line-clamp-2">
+                {article.title}
+              </h3>
+              <p className="text-xs text-text-muted leading-relaxed line-clamp-2 mb-3">
+                {article.description}
+              </p>
+              <div className="flex items-center gap-2 text-[11px] text-text-muted font-mono">
+                <span>{article.date}</span>
+                <span>&middot;</span>
+                <span>{article.readTime}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* ===== MAIN CONTENT: FEED + SIDEBAR ===== */}
       <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">

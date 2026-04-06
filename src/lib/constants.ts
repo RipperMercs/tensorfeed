@@ -14,6 +14,7 @@ export const NAV_LINKS = [
   { href: '/benchmarks', label: 'Benchmarks' },
   { href: '/agents', label: 'Agents' },
   { href: '/podcasts', label: 'Podcasts' },
+  { href: '/originals', label: 'Originals' },
   { href: '/live', label: 'Live' },
 ] as const;
 
