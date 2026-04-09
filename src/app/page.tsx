@@ -96,6 +96,14 @@ const EXPLORE_CARDS = [
 
 const LATEST_ORIGINALS = [
   {
+    href: '/originals/claude-mythos-not-afraid',
+    title: 'Claude Mythos: Anthropic\'s Most Powerful Model Yet, and Why I\'m Not Afraid',
+    date: 'April 8, 2026',
+    readTime: '8 min read',
+    description:
+      'Anthropic unveiled Claude Mythos Preview, a model that found tens of thousands of zero-days, broke every benchmark, and scared the internet. Here is what actually happened and why the panic is overblown.',
+  },
+  {
     href: '/originals/building-for-ai-agents',
     title: 'Building for AI Agents: What Developers Need to Know',
     date: 'April 5, 2026',
@@ -110,14 +118,6 @@ const LATEST_ORIGINALS = [
     readTime: '5 min read',
     description:
       'Gartner says 40% of enterprise apps will have AI agents by end of 2026. OpenClaw went viral. NVIDIA shipped Agent Toolkit at GTC. What separates a chatbot from an agent and why it matters.',
-  },
-  {
-    href: '/originals/claude-vs-gpt-vs-gemini',
-    title: 'Claude vs GPT vs Gemini: An Honest Comparison',
-    date: 'April 2, 2026',
-    readTime: '6 min read',
-    description:
-      'A real-world comparison of Claude, GPT, and Gemini across coding, writing, analysis, and research tasks. Includes pricing, context windows, and practical recommendations.',
   },
 ];
 
