@@ -64,7 +64,7 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 
 ## About
 TensorFeed.ai is an independent project built by Ripper.
-Sister site: [TerminalFeed.io](https://terminalfeed.io) (real-time data dashboard)
+Sister sites: [TerminalFeed.io](https://terminalfeed.io) (real-time data dashboard), [Phreak.fm](https://phreak.fm) (signals, frequencies, culture)
 Contact: feedback@tensorfeed.ai | Press: press@tensorfeed.ai
 
 ## Optional
