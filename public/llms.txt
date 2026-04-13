@@ -31,6 +31,8 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [AI API Pricing Guide](https://tensorfeed.ai/ai-api-pricing-guide): Every major AI API provider's pricing
 - [What Are AI Agents?](https://tensorfeed.ai/what-are-ai-agents): Guide to AI agents and frameworks
 - [Best Open Source LLMs](https://tensorfeed.ai/best-open-source-llms): 9 open source models reviewed
+- [AGI & ASI Hub](https://tensorfeed.ai/agi-asi): Live hub tracking the road to artificial general and superintelligence, with prediction tracker, timeline, research papers, and news
+- [Frontier Model Wars](https://tensorfeed.ai/model-wars): Live leaderboard, 90 day release timeline, category winners, and provider spotlights for the frontier AI race
 - [CLAUDE.md Guide](https://tensorfeed.ai/claude-md-guide): Complete guide to writing CLAUDE.md files for Claude Code
 - [CLAUDE.md Examples](https://tensorfeed.ai/claude-md-examples): Ready-to-use CLAUDE.md templates for Next.js, Python, React Native, and more
 - [CLAUDE.md Generator](https://tensorfeed.ai/claude-md-generator): Interactive tool to generate a custom CLAUDE.md for your project

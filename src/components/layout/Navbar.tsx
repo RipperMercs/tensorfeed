@@ -10,6 +10,8 @@ import { useTheme } from '@/components/ThemeProvider';
 
 const GUIDE_LINKS = [
   { href: '/what-is-ai', label: 'What is AI?' },
+  { href: '/agi-asi', label: 'AGI & ASI Hub' },
+  { href: '/model-wars', label: 'Frontier Model Wars' },
   { href: '/best-ai-tools', label: 'Best AI Tools' },
   { href: '/best-ai-chatbots', label: 'Best AI Chatbots' },
   { href: '/ai-api-pricing-guide', label: 'AI API Pricing Guide' },
