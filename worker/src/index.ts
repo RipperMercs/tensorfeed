@@ -543,11 +543,10 @@ export default {
     } else if (cron === '0 7 * * *') {
       // Daily (7 AM UTC): update models, benchmarks, agents staleness
       await run('updateDailyData', () => updateDailyData(env));
-    // X/Twitter auto-posting DISABLED 2026-04-04 (account flagged as spam).
-    // Safe limits for new accounts: 1-2 posts/day for first month, then 3-4/day max.
-    // Re-enable with "30 14 * * *" (1/day) in wrangler.toml first.
-    // } else if (cron === '30 14 * * *') {
-    //   await run('postTopStories', () => postTopStories(env));
+    // X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
+    // Hold at 1/day until 2026-05-04; do not increase cadence without 30 clean days.
+    } else if (cron === '30 14 * * *') {
+      await run('postTopStories', () => postTopStories(env));
     } else if (cron === '30 8 * * *') {
       // Daily 8:30 AM UTC: refresh trending AI repos + send daily summary email
       await run('pollTrendingRepos', () => pollTrendingRepos(env));

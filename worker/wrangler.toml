@@ -14,9 +14,9 @@ crons = [
   "0 * * * *",
   "0 7 * * *",
   "30 8 * * *",
-  # X/Twitter auto-posting DISABLED (account flagged as spam, 2026-04-04)
-  # When re-enabling, start with 1 post/day: "30 14 * * *"
-  # After 30 days with no flags, increase to 2/day: "30 8,17 * * *"
+  # X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
+  # Hold at 1/day for 30 clean days before bumping to 2/day ("30 8,17 * * *").
+  "30 14 * * *",
 ]
 
 [[kv_namespaces]]
