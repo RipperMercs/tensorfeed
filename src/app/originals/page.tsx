@@ -4,9 +4,59 @@ import { PenTool, Clock, ArrowRight } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'TensorFeed Originals | In-Depth AI Analysis & Editorial',
+  description: 'Original editorial analysis from TensorFeed: deep dives into AI trends, model releases, API pricing, and the future of artificial intelligence.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/originals',
+    title: 'TensorFeed Originals | In-Depth AI Analysis & Editorial',
+    description: 'Original editorial analysis from TensorFeed: deep dives into AI trends, model releases, API pricing, and the future of artificial intelligence.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'TensorFeed Originals | In-Depth AI Analysis & Editorial',
+    description: 'Original editorial analysis from TensorFeed: deep dives into AI trends, model releases, API pricing, and the future of artificial intelligence.',
+  },
 };
 
 const ARTICLES = [
+  {
+    slug: 'frontier-model-forum-vs-china',
+    title: 'OpenAI, Anthropic, and Google Just Teamed Up Against Chinese AI Theft',
+    author: 'Ripper',
+    date: 'Apr 14, 2026',
+    readTime: '6 min read',
+    description:
+      'Three of the biggest AI competitors are sharing intelligence through the Frontier Model Forum to stop adversarial distillation attacks. Anthropic alone documented 16 million malicious exchanges from 24,000 fraudulent accounts.',
+  },
+  {
+    slug: 'claude-mythos-ai-security',
+    title: 'Claude Mythos Is Rewriting the Rules of AI Security',
+    author: 'Kira Nolan',
+    date: 'Apr 13, 2026',
+    readTime: '5 min read',
+    description:
+      'The UK AI Security Institute tested Anthropic\'s Mythos Preview against complex attack scenarios and capture-the-flag challenges. It outperformed every other AI system and compressed weeks of security work into hours.',
+  },
+  {
+    slug: 'google-notebooklm-gemini',
+    title: 'Google Just Put NotebookLM Inside Gemini. Here\'s Why It Matters.',
+    author: 'Ripper',
+    date: 'Apr 12, 2026',
+    readTime: '5 min read',
+    description:
+      'Google integrated its AI research assistant directly into Gemini. Upload PDFs, documents, YouTube videos, and URLs through a side panel to build searchable repositories. Rolling out to paid subscribers this week.',
+  },
+  {
+    slug: 'stanford-ai-index-2026',
+    title: 'Stanford\'s 2026 AI Index Says We Can\'t Keep Up. They\'re Right.',
+    author: 'Marcus Chen',
+    date: 'Apr 11, 2026',
+    readTime: '7 min read',
+    description:
+      'Stanford\'s annual report finds AI capability growth is outpacing regulation and workforce adaptation. Anthropic leads frontier models, California enacted SB 53, and the gap between what AI can do and what society is ready for keeps widening.',
+  },
   {
     slug: 'claude-mythos-not-afraid',
     title: 'Claude Mythos: Anthropic\'s Most Powerful Model Yet, and Why I\'m Not Afraid',

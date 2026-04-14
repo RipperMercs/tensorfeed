@@ -113,20 +113,34 @@ async function cachedKVGet(
   const cacheRequest = new Request(cacheUrl.toString());
 
   // Try Cache API first (free, unlimited)
-  const cached = await cacheGet(cacheRequest);
-  if (cached) {
-    return cached.json();
+  try {
+    const cached = await cacheGet(cacheRequest);
+    if (cached) {
+      return cached.json();
+    }
+  } catch (cacheErr) {
+    console.warn(`Cache API read failed for key "${key}":`, cacheErr);
   }
 
   // Cache miss: read from KV
-  const data = await kvNamespace.get(key, 'json');
+  let data: unknown;
+  try {
+    data = await kvNamespace.get(key, 'json');
+  } catch (kvErr) {
+    console.error(`KV read failed for key "${key}":`, kvErr);
+    return undefined;
+  }
 
   // Store in Cache API for next time
   if (data) {
-    const resp = new Response(JSON.stringify(data), {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${cacheTTL}` },
-    });
-    await cachePut(cacheRequest, resp, cacheTTL);
+    try {
+      const resp = new Response(JSON.stringify(data), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${cacheTTL}` },
+      });
+      await cachePut(cacheRequest, resp, cacheTTL);
+    } catch (putErr) {
+      console.warn(`Cache API write failed for key "${key}":`, putErr);
+    }
   }
 
   return data;
@@ -205,7 +219,8 @@ export default {
 
     if (path === '/api/news' || path === '/api/agents/news' || path === '/api/agents/news.json') {
       const category = url.searchParams.get('category');
-      const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 200);
+      const parsedLimit = parseInt(url.searchParams.get('limit') || '50', 10);
+      const limit = Math.min(Number.isNaN(parsedLimit) ? 50 : parsedLimit, 200);
 
       let articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60) as Article[] | null;
       if (!articles) articles = [];
@@ -342,7 +357,8 @@ export default {
     // === PODCASTS ENDPOINT (cached 300s) ===
 
     if (path === '/api/podcasts') {
-      const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
+      const parsedPodLimit = parseInt(url.searchParams.get('limit') || '50', 10);
+      const limit = Math.min(Number.isNaN(parsedPodLimit) ? 50 : parsedPodLimit, 100);
       const episodes = await cachedKVGet(request, env.TENSORFEED_CACHE, 'podcasts', 300) as unknown[] | null;
       return jsonResponse({
         ok: true,
@@ -356,7 +372,8 @@ export default {
     // === TRENDING REPOS ENDPOINT (cached 300s) ===
 
     if (path === '/api/trending-repos') {
-      const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
+      const parsedRepoLimit = parseInt(url.searchParams.get('limit') || '20', 10);
+      const limit = Math.min(Number.isNaN(parsedRepoLimit) ? 20 : parsedRepoLimit, 50);
       const repos = await cachedKVGet(request, env.TENSORFEED_CACHE, 'trending-repos', 300) as unknown[] | null;
       return jsonResponse({
         ok: true,
@@ -438,7 +455,7 @@ export default {
       try {
         const body = await request.json() as { email?: string };
         const email = body.email?.trim().toLowerCase();
-        if (!email || !email.includes('@') || !email.includes('.')) {
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
           return jsonResponse({ error: 'Invalid email address' }, 400);
         }
 
@@ -451,11 +468,16 @@ export default {
         }
 
         subscribers.push(email);
-        await env.TENSORFEED_CACHE.put('newsletter-subscribers', JSON.stringify(subscribers));
+        try {
+          await env.TENSORFEED_CACHE.put('newsletter-subscribers', JSON.stringify(subscribers));
+        } catch (kvErr) {
+          console.error('Newsletter KV write failed:', kvErr);
+          return jsonResponse({ error: 'Server error, please try again' }, 500);
+        }
 
         return jsonResponse({ ok: true, message: 'Subscribed successfully' });
       } catch {
-        return jsonResponse({ error: 'Invalid request' }, 400);
+        return jsonResponse({ error: 'Invalid request body' }, 400);
       }
     }
 
@@ -465,7 +487,7 @@ export default {
       try {
         const body = await request.json() as { email?: string; services?: string[]; frequency?: string };
         const email = body.email?.trim().toLowerCase();
-        if (!email || !email.includes('@') || !email.includes('.')) {
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
           return jsonResponse({ error: 'Invalid email address' }, 400);
         }
 
@@ -485,11 +507,16 @@ export default {
         }
 
         subscribers.push(subscriber);
-        await env.TENSORFEED_CACHE.put('alert-subscribers', JSON.stringify(subscribers));
+        try {
+          await env.TENSORFEED_CACHE.put('alert-subscribers', JSON.stringify(subscribers));
+        } catch (kvErr) {
+          console.error('Alert subscription KV write failed:', kvErr);
+          return jsonResponse({ error: 'Server error, please try again' }, 500);
+        }
 
         return jsonResponse({ ok: true, message: 'Subscribed to alerts' });
       } catch {
-        return jsonResponse({ error: 'Invalid request' }, 400);
+        return jsonResponse({ error: 'Invalid request body' }, 400);
       }
     }
 
@@ -508,6 +535,15 @@ export default {
     const cron = event.cron;
     const startedAt = new Date().toISOString();
     const start = Date.now();
+
+    try {
+      await this._runScheduled(cron, startedAt, start, env);
+    } catch (err) {
+      console.error(`Top-level scheduled() crash for cron "${cron}":`, err);
+    }
+  },
+
+  async _runScheduled(cron: string, startedAt: string, start: number, env: Env): Promise<void> {
 
     const actions: Array<{
       name: string;
@@ -535,11 +571,13 @@ export default {
     } else if (cron === '*/5 * * * *') {
       await run('pollStatusPages', () => pollStatusPages(env));
     } else if (cron === '0 * * * *') {
-      // Hourly: refresh all + hourly rolling snapshot
+      // Hourly: refresh RSS + status + rolling snapshot
       rssResult = await run('pollRSSFeeds', () => pollRSSFeeds(env));
       await run('pollStatusPages', () => pollStatusPages(env));
-      await run('pollPodcastFeeds', () => pollPodcastFeeds(env));
       await run('captureAllSnapshots', () => captureAllSnapshots(env));
+    } else if (cron === '0 */2 * * *') {
+      // Every 2 hours: podcast feeds (10 sources, weekly release cadence)
+      await run('pollPodcastFeeds', () => pollPodcastFeeds(env));
     } else if (cron === '0 7 * * *') {
       // Daily (7 AM UTC): update models, benchmarks, agents staleness
       await run('updateDailyData', () => updateDailyData(env));

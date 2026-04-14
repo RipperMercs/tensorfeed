@@ -1,10 +1,18 @@
 import { Env, PodcastEpisode, PodcastSource } from './types';
 
 const PODCAST_SOURCES: PodcastSource[] = [
+  // Original sources
   { id: 'ai-daily-brief', name: 'AI Daily Brief', feedUrl: 'https://anchor.fm/s/f7cac464/podcast/rss', active: true },
   { id: 'practical-ai', name: 'Practical AI', feedUrl: 'https://changelog.com/practicalai/feed', active: true },
   { id: 'latent-space', name: 'Latent Space', feedUrl: 'https://api.substack.com/feed/podcast/1084089.rss', active: true },
   { id: 'last-week-in-ai', name: 'Last Week in AI', feedUrl: 'https://rss.art19.com/last-week-in-ai', active: true },
+  // Added 2026-04-14
+  { id: 'no-priors', name: 'No Priors', feedUrl: 'https://feeds.transistor.fm/no-priors-ai-technology-culture-and-the-future', active: true },
+  { id: 'twiml-ai', name: 'TWIML AI', feedUrl: 'https://twimlai.com/feed/', active: true },
+  { id: 'cognitive-revolution', name: 'Cognitive Revolution', feedUrl: 'https://feeds.buzzsprout.com/2136896.rss', active: true },
+  { id: 'lex-fridman', name: 'Lex Fridman Podcast', feedUrl: 'https://lexfridman.com/feed/podcast/', active: true },
+  { id: 'gradient-dissent', name: 'Gradient Dissent', feedUrl: 'https://feeds.soundcloud.com/users/soundcloud:users:495005692/sounds.rss', active: true },
+  { id: 'ai-breakdown', name: 'The AI Breakdown', feedUrl: 'https://feeds.libsyn.com/467386/rss', active: true },
 ];
 
 function hashString(str: string): string {

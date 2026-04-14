@@ -5,6 +5,19 @@ import { FileText } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description: 'TensorFeed.ai terms of service covering acceptable use, intellectual property, content attribution, disclaimers, and limitation of liability.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/terms',
+    title: 'Terms of Service',
+    description: 'TensorFeed.ai terms of service covering acceptable use, intellectual property, content attribution, disclaimers, and limitation of liability.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Terms of Service',
+    description: 'TensorFeed.ai terms of service covering acceptable use, intellectual property, content attribution, disclaimers, and limitation of liability.',
+  },
 };
 
 export default function TermsPage() {

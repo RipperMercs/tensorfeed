@@ -5,6 +5,19 @@ import { Mail, MessageSquare, Bug, Newspaper } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Contact Us',
   description: 'Get in touch with the TensorFeed.ai team. Reach out for feedback, press inquiries, support, or partnership opportunities.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/contact',
+    title: 'Contact Us',
+    description: 'Get in touch with the TensorFeed.ai team. Reach out for feedback, press inquiries, support, or partnership opportunities.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Contact Us',
+    description: 'Get in touch with the TensorFeed.ai team. Reach out for feedback, press inquiries, support, or partnership opportunities.',
+  },
 };
 
 export default function ContactPage() {

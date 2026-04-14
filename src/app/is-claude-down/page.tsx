@@ -30,6 +30,21 @@ export const metadata: Metadata = {
   title: 'Is Claude Down? Live Claude API Status | TensorFeed.ai',
   description:
     'Check if Claude is down right now. Real-time Claude API status monitoring with live updates. See current outages, degraded performance, and component status for Anthropic Claude.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-claude-down',
+    title: 'Is Claude Down? Live Claude API Status | TensorFeed.ai',
+    description:
+      'Check if Claude is down right now. Real-time Claude API status monitoring with live updates. See current outages, degraded performance, and component status for Anthropic Claude.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is Claude Down? Live Claude API Status | TensorFeed.ai',
+    description:
+      'Check if Claude is down right now. Real-time Claude API status monitoring with live updates. See current outages, degraded performance, and component status for Anthropic Claude.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

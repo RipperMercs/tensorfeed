@@ -38,6 +38,21 @@ export const metadata: Metadata = {
   title: 'Is Copilot Down? Live Microsoft Copilot Status | TensorFeed.ai',
   description:
     'Check if Microsoft Copilot is down right now. Real-time Copilot status monitoring with live updates. See current outages, degraded performance, and component status for Microsoft Copilot.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-copilot-down',
+    title: 'Is Copilot Down? Live Microsoft Copilot Status | TensorFeed.ai',
+    description:
+      'Check if Microsoft Copilot is down right now. Real-time Copilot status monitoring with live updates. See current outages, degraded performance, and component status for Microsoft Copilot.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is Copilot Down? Live Microsoft Copilot Status | TensorFeed.ai',
+    description:
+      'Check if Microsoft Copilot is down right now. Real-time Copilot status monitoring with live updates. See current outages, degraded performance, and component status for Microsoft Copilot.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

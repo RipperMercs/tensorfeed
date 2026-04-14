@@ -88,7 +88,12 @@
       "Bash(timeout 15 head -50)",
       "WebFetch(domain:status.huggingface.co)",
       "WebFetch(domain:status.mistral.ai)",
-      "Bash(find /c/projects/tensorfeed/src -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))"
+      "Bash(find /c/projects/tensorfeed/src -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
+      "Bash(git log:*)",
+      "Bash(cat .github/workflows/*.yml)",
+      "WebFetch(domain:phreak.fm)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(python -c ':*)"
     ]
   }
 }

@@ -102,6 +102,48 @@ export function FAQPageJsonLd({ faqs }: { faqs: { question: string; answer: stri
   return <JsonLd data={data} />;
 }
 
+export function SoftwareApplicationJsonLd({
+  name,
+  description,
+  url,
+  provider,
+  providerUrl,
+  offers,
+}: {
+  name: string;
+  description: string;
+  url: string;
+  provider: string;
+  providerUrl: string;
+  offers?: { price: string; priceCurrency: string; description: string };
+}) {
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name,
+    description,
+    url,
+    applicationCategory: 'AI Model',
+    operatingSystem: 'Cloud API',
+    provider: {
+      '@type': 'Organization',
+      name: provider,
+      url: providerUrl,
+    },
+  };
+
+  if (offers) {
+    data.offers = {
+      '@type': 'Offer',
+      price: offers.price,
+      priceCurrency: offers.priceCurrency,
+      description: offers.description,
+    };
+  }
+
+  return <JsonLd data={data} />;
+}
+
 export function ArticleJsonLd({
   title,
   description,

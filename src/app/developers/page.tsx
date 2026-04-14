@@ -6,6 +6,21 @@ export const metadata: Metadata = {
   title: 'Developer Docs & API | TensorFeed.ai',
   description:
     'Free, no-auth JSON API for AI news, service status, model pricing, and agent data. CORS enabled, no API key needed. Documentation and code examples for JavaScript and Python.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/developers',
+    title: 'Developer Docs & API | TensorFeed.ai',
+    description:
+      'Free, no-auth JSON API for AI news, service status, model pricing, and agent data. CORS enabled, no API key needed. Documentation and code examples for JavaScript and Python.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Developer Docs & API | TensorFeed.ai',
+    description:
+      'Free, no-auth JSON API for AI news, service status, model pricing, and agent data. CORS enabled, no API key needed. Documentation and code examples for JavaScript and Python.',
+  },
 };
 
 interface Endpoint {

@@ -1,7 +1,9 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { Cpu, ExternalLink } from 'lucide-react';
 import fallbackPricingData from '@/../data/pricing.json';
 import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import { MODEL_DIRECTORY } from '@/lib/model-directory';
 interface ModelRow {
   id: string;
   name: string;
@@ -20,6 +22,21 @@ export const metadata: Metadata = {
   title: 'AI Model Tracker & Pricing Comparison',
   description:
     'Track the latest AI model releases, compare pricing across providers, and explore benchmark leaderboards. Updated daily.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/models',
+    title: 'AI Model Tracker & Pricing Comparison',
+    description:
+      'Track the latest AI model releases, compare pricing across providers, and explore benchmark leaderboards. Updated daily.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'AI Model Tracker & Pricing Comparison',
+    description:
+      'Track the latest AI model releases, compare pricing across providers, and explore benchmark leaderboards. Updated daily.',
+  },
 };
 
 const latestReleases = [
@@ -218,7 +235,18 @@ export default async function ModelsPage() {
               {allModels.map((model) => (
                 <tr key={model.id} className="bg-bg-secondary hover:bg-bg-tertiary/50 transition-colors">
                   <td className="px-4 py-3 text-sm text-text-secondary">{model.provider}</td>
-                  <td className="px-4 py-3 text-sm text-text-primary font-medium">{model.name}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary font-medium">
+                    {MODEL_DIRECTORY.find(m => m.pricingId === model.id) ? (
+                      <Link
+                        href={`/models/${MODEL_DIRECTORY.find(m => m.pricingId === model.id)!.slug}`}
+                        className="hover:text-accent-primary transition-colors"
+                      >
+                        {model.name}
+                      </Link>
+                    ) : (
+                      model.name
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-sm text-right">
                     {model.inputPrice === 0 ? (
                       <span className="text-accent-green font-medium">Free</span>

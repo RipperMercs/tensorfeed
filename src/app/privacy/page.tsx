@@ -5,6 +5,19 @@ import { Shield } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description: 'TensorFeed.ai privacy policy covering data collection, cookies, advertising, GDPR compliance, and CCPA compliance.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/privacy',
+    title: 'Privacy Policy',
+    description: 'TensorFeed.ai privacy policy covering data collection, cookies, advertising, GDPR compliance, and CCPA compliance.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Privacy Policy',
+    description: 'TensorFeed.ai privacy policy covering data collection, cookies, advertising, GDPR compliance, and CCPA compliance.',
+  },
 };
 
 export default function PrivacyPage() {

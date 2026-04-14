@@ -30,6 +30,21 @@ export const metadata: Metadata = {
   title: 'Is ChatGPT Down? Live OpenAI API Status | TensorFeed.ai',
   description:
     'Check if ChatGPT is down right now. Real-time OpenAI API status monitoring with live updates. See current outages, degraded performance, and component status for ChatGPT and OpenAI.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-chatgpt-down',
+    title: 'Is ChatGPT Down? Live OpenAI API Status | TensorFeed.ai',
+    description:
+      'Check if ChatGPT is down right now. Real-time OpenAI API status monitoring with live updates. See current outages, degraded performance, and component status for ChatGPT and OpenAI.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is ChatGPT Down? Live OpenAI API Status | TensorFeed.ai',
+    description:
+      'Check if ChatGPT is down right now. Real-time OpenAI API status monitoring with live updates. See current outages, degraded performance, and component status for ChatGPT and OpenAI.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

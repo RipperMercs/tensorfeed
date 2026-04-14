@@ -7,6 +7,21 @@ export const metadata: Metadata = {
   title: 'Claude vs GPT vs Gemini: An Honest Comparison',
   description:
     'A real-world comparison of Claude, GPT, and Gemini across coding, writing, analysis, and research tasks. Includes pricing, context windows, and practical recommendations.',
+  openGraph: {
+    type: 'article',
+    url: 'https://tensorfeed.ai/originals/claude-vs-gpt-vs-gemini',
+    title: 'Claude vs GPT vs Gemini: An Honest Comparison',
+    description:
+      'A real-world comparison of Claude, GPT, and Gemini across coding, writing, analysis, and research tasks. Includes pricing, context windows, and practical recommendations.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Claude vs GPT vs Gemini: An Honest Comparison',
+    description:
+      'A real-world comparison of Claude, GPT, and Gemini across coding, writing, analysis, and research tasks. Includes pricing, context windows, and practical recommendations.',
+  },
 };
 
 export default function ClaudeVsGptVsGeminiPage() {

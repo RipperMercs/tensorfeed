@@ -7,6 +7,21 @@ export const metadata: Metadata = {
   title: 'Building for AI Agents: What Developers Need to Know',
   description:
     'A practical guide to building agent-friendly software: structured data, llms.txt, API design patterns, MCP protocol, and lessons learned from building TensorFeed as an agent-first platform.',
+  openGraph: {
+    type: 'article',
+    url: 'https://tensorfeed.ai/originals/building-for-ai-agents',
+    title: 'Building for AI Agents: What Developers Need to Know',
+    description:
+      'A practical guide to building agent-friendly software: structured data, llms.txt, API design patterns, MCP protocol, and lessons learned from building TensorFeed as an agent-first platform.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Building for AI Agents: What Developers Need to Know',
+    description:
+      'A practical guide to building agent-friendly software: structured data, llms.txt, API design patterns, MCP protocol, and lessons learned from building TensorFeed as an agent-first platform.',
+  },
 };
 
 export default function BuildingForAiAgentsPage() {

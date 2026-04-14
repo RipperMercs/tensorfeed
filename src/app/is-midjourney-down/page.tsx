@@ -35,6 +35,21 @@ export const metadata: Metadata = {
   title: 'Is Midjourney Down? Live Midjourney Status | TensorFeed.ai',
   description:
     'Check if Midjourney is down right now. Real-time Midjourney status monitoring with live updates. See current outages, degraded performance, and component status for Midjourney.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-midjourney-down',
+    title: 'Is Midjourney Down? Live Midjourney Status | TensorFeed.ai',
+    description:
+      'Check if Midjourney is down right now. Real-time Midjourney status monitoring with live updates. See current outages, degraded performance, and component status for Midjourney.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is Midjourney Down? Live Midjourney Status | TensorFeed.ai',
+    description:
+      'Check if Midjourney is down right now. Real-time Midjourney status monitoring with live updates. See current outages, degraded performance, and component status for Midjourney.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

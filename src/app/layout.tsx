@@ -69,18 +69,13 @@ export default function RootLayout({
       <head>
         <meta name="google-adsense-account" content="ca-pub-7224757913262984" />
         <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7224757913262984"
-          crossOrigin="anonymous"
-        />
-        <script
           dangerouslySetInnerHTML={{
             __html: `(function(){var m=document.cookie.match(/(^| )theme=([^;]+)/);var t=m?m[2]:'dark';document.documentElement.setAttribute('data-theme',t)})()`,
           }}
         />
         <link rel="alternate" type="text/markdown" href="/llms-full.txt" title="LLM Full Context" />
         <link rel="preconnect" href="https://tensorfeed.ai" />
-        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
+{/* AdSense preconnect: re-enable when ads go live */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

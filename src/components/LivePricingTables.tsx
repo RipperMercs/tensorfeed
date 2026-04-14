@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import fallbackData from '@/../data/pricing.json';
 
 interface Model {
@@ -33,7 +33,17 @@ function formatPrice(price: number): string {
   return price === 0 ? 'Free*' : `$${price.toFixed(2)}`;
 }
 
-export function PricingOverviewTable() {
+// Shared pricing data context to avoid duplicate fetches
+const PricingContext = createContext<PricingData | null>(null);
+
+function usePricingData(): PricingData {
+  const ctx = useContext(PricingContext);
+  if (ctx) return ctx;
+  // Fallback for standalone usage (shouldn't happen with PricingProvider)
+  return fallbackData as PricingData;
+}
+
+export function PricingProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<PricingData>(fallbackData as PricingData);
 
   useEffect(() => {
@@ -46,6 +56,16 @@ export function PricingOverviewTable() {
       })
       .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <PricingContext.Provider value={data}>
+      {children}
+    </PricingContext.Provider>
+  );
+}
+
+export function PricingOverviewTable() {
+  const data = usePricingData();
 
   return (
     <>
@@ -84,18 +104,7 @@ export function PricingOverviewTable() {
 }
 
 export function ProviderDetailsTables() {
-  const [data, setData] = useState<PricingData>(fallbackData as PricingData);
-
-  useEffect(() => {
-    fetch('https://tensorfeed.ai/api/models')
-      .then(res => res.ok ? res.json() : null)
-      .then((api: { ok?: boolean; providers?: Provider[]; pricingNotes?: PricingData['pricingNotes'] } | null) => {
-        if (api?.ok && api.providers?.length) {
-          setData({ providers: api.providers, pricingNotes: api.pricingNotes || data.pricingNotes });
-        }
-      })
-      .catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const data = usePricingData();
 
   return (
     <>

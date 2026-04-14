@@ -37,6 +37,23 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [CLAUDE.md Examples](https://tensorfeed.ai/claude-md-examples): Ready-to-use CLAUDE.md templates for Next.js, Python, React Native, and more
 - [CLAUDE.md Generator](https://tensorfeed.ai/claude-md-generator): Interactive tool to generate a custom CLAUDE.md for your project
 
+## Individual Model Pages
+- [Claude Opus 4.6](https://tensorfeed.ai/models/claude-opus-4-6): Pricing, benchmarks, specs for Anthropic's flagship
+- [Claude Sonnet 4.6](https://tensorfeed.ai/models/claude-sonnet-4-6): Pricing, benchmarks, specs for Anthropic's mid-tier
+- [Claude Haiku 4.5](https://tensorfeed.ai/models/claude-haiku-4-5): Pricing, benchmarks, specs for Anthropic's budget model
+- [GPT-4o](https://tensorfeed.ai/models/gpt-4o): Pricing, benchmarks, specs for OpenAI's multimodal flagship
+- [GPT-4o Mini](https://tensorfeed.ai/models/gpt-4o-mini): Pricing, benchmarks, specs for OpenAI's budget model
+- [OpenAI o1](https://tensorfeed.ai/models/o1): Pricing, benchmarks, specs for OpenAI's reasoning model
+- [OpenAI o3-mini](https://tensorfeed.ai/models/o3-mini): Pricing, benchmarks, specs for OpenAI's affordable reasoning model
+- [Gemini 2.5 Pro](https://tensorfeed.ai/models/gemini-2-5-pro): Pricing, benchmarks, specs for Google's flagship with 1M context
+- [Gemini 2.0 Flash](https://tensorfeed.ai/models/gemini-2-0-flash): Pricing, benchmarks, specs for Google's speed model
+- [Llama 4 Scout](https://tensorfeed.ai/models/llama-4-scout): Benchmarks, specs for Meta's 10M context open source model
+- [Llama 4 Maverick](https://tensorfeed.ai/models/llama-4-maverick): Benchmarks, specs for Meta's high-performance open source model
+- [Mistral Large](https://tensorfeed.ai/models/mistral-large): Pricing, benchmarks, specs for Mistral AI's flagship
+- [Mistral Small](https://tensorfeed.ai/models/mistral-small): Pricing, benchmarks, specs for Mistral AI's budget model
+- [Command R+](https://tensorfeed.ai/models/command-r-plus): Pricing, benchmarks, specs for Cohere's RAG flagship
+- [Command R](https://tensorfeed.ai/models/command-r): Pricing, benchmarks, specs for Cohere's affordable RAG model
+
 ## Content Hubs
 - [News Feed](https://tensorfeed.ai/): Aggregated AI news from 15+ sources, categorized and timestamped
 - [Today in AI](https://tensorfeed.ai/today): Daily digest of top AI stories, incidents, and releases
@@ -48,7 +65,11 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [AI Podcasts](https://tensorfeed.ai/podcasts): Stream AI podcast episodes from top shows
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
-- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (16 articles)
+- [Frontier Model Forum vs China](https://tensorfeed.ai/originals/frontier-model-forum-vs-china): OpenAI, Anthropic, and Google collaborate to stop AI model theft
+- [Claude Mythos AI Security](https://tensorfeed.ai/originals/claude-mythos-ai-security): How Mythos is rewriting cybersecurity rules
+- [Google NotebookLM in Gemini](https://tensorfeed.ai/originals/google-notebooklm-gemini): Google integrates research assistant into Gemini
+- [Stanford AI Index 2026](https://tensorfeed.ai/originals/stanford-ai-index-2026): Stanford says AI capability is outpacing readiness
 - [Developer Docs](https://tensorfeed.ai/developers): Full API documentation with code examples
 - [Changelog](https://tensorfeed.ai/changelog): Public build log of features shipped
 

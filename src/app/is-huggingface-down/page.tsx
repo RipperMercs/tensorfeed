@@ -37,6 +37,21 @@ export const metadata: Metadata = {
   title: 'Is Hugging Face Down? Live HF Status | TensorFeed.ai',
   description:
     'Check if Hugging Face is down right now. Real-time Hugging Face status monitoring with live updates. See current outages, degraded performance, and component status for HF.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-huggingface-down',
+    title: 'Is Hugging Face Down? Live HF Status | TensorFeed.ai',
+    description:
+      'Check if Hugging Face is down right now. Real-time Hugging Face status monitoring with live updates. See current outages, degraded performance, and component status for HF.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is Hugging Face Down? Live HF Status | TensorFeed.ai',
+    description:
+      'Check if Hugging Face is down right now. Real-time Hugging Face status monitoring with live updates. See current outages, degraded performance, and component status for HF.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

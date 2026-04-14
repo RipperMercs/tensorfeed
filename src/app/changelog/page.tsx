@@ -4,6 +4,19 @@ import { History } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Changelog | What We Shipped',
   description: 'Public build log for TensorFeed.ai. Every feature, fix, and improvement we ship, documented in real time.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/changelog',
+    title: 'Changelog | What We Shipped',
+    description: 'Public build log for TensorFeed.ai. Every feature, fix, and improvement we ship, documented in real time.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Changelog | What We Shipped',
+    description: 'Public build log for TensorFeed.ai. Every feature, fix, and improvement we ship, documented in real time.',
+  },
 };
 
 const CHANGELOG = [

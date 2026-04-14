@@ -35,6 +35,21 @@ export const metadata: Metadata = {
   title: 'Is Perplexity Down? Live Perplexity AI Status | TensorFeed.ai',
   description:
     'Check if Perplexity is down right now. Real-time Perplexity AI status monitoring with live updates. See current outages, degraded performance, and component status for Perplexity.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-perplexity-down',
+    title: 'Is Perplexity Down? Live Perplexity AI Status | TensorFeed.ai',
+    description:
+      'Check if Perplexity is down right now. Real-time Perplexity AI status monitoring with live updates. See current outages, degraded performance, and component status for Perplexity.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is Perplexity Down? Live Perplexity AI Status | TensorFeed.ai',
+    description:
+      'Check if Perplexity is down right now. Real-time Perplexity AI status monitoring with live updates. See current outages, degraded performance, and component status for Perplexity.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

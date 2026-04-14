@@ -7,6 +7,21 @@ export const metadata: Metadata = {
   title: 'The State of AI APIs in 2026',
   description:
     'A comprehensive look at the AI API landscape in 2026: pricing wars, context window expansion, agent-native endpoints, MCP protocol, and practical advice for developers choosing a provider.',
+  openGraph: {
+    type: 'article',
+    url: 'https://tensorfeed.ai/originals/state-of-ai-apis-2026',
+    title: 'The State of AI APIs in 2026',
+    description:
+      'A comprehensive look at the AI API landscape in 2026: pricing wars, context window expansion, agent-native endpoints, MCP protocol, and practical advice for developers choosing a provider.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'The State of AI APIs in 2026',
+    description:
+      'A comprehensive look at the AI API landscape in 2026: pricing wars, context window expansion, agent-native endpoints, MCP protocol, and practical advice for developers choosing a provider.',
+  },
 };
 
 export default function StateOfAiApisPage() {

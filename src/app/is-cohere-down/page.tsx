@@ -35,6 +35,21 @@ export const metadata: Metadata = {
   title: 'Is Cohere Down? Live Cohere Status | TensorFeed.ai',
   description:
     'Check if Cohere is down right now. Real-time Cohere status monitoring with live updates. See current outages, degraded performance, and component status for Cohere.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-cohere-down',
+    title: 'Is Cohere Down? Live Cohere Status | TensorFeed.ai',
+    description:
+      'Check if Cohere is down right now. Real-time Cohere status monitoring with live updates. See current outages, degraded performance, and component status for Cohere.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is Cohere Down? Live Cohere Status | TensorFeed.ai',
+    description:
+      'Check if Cohere is down right now. Real-time Cohere status monitoring with live updates. See current outages, degraded performance, and component status for Cohere.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

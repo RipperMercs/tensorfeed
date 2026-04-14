@@ -37,6 +37,21 @@ export const metadata: Metadata = {
   title: 'Is Gemini Down? Live Google AI Status | TensorFeed.ai',
   description:
     'Check if Gemini is down right now. Real-time Google Gemini API status monitoring with live updates. See current outages, degraded performance, and component status for Google AI.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-gemini-down',
+    title: 'Is Gemini Down? Live Google AI Status | TensorFeed.ai',
+    description:
+      'Check if Gemini is down right now. Real-time Google Gemini API status monitoring with live updates. See current outages, degraded performance, and component status for Google AI.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is Gemini Down? Live Google AI Status | TensorFeed.ai',
+    description:
+      'Check if Gemini is down right now. Real-time Google Gemini API status monitoring with live updates. See current outages, degraded performance, and component status for Google AI.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

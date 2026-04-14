@@ -1,8 +1,17 @@
 import { MetadataRoute } from 'next';
+import { getAllModelSlugs } from '@/lib/model-directory';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://tensorfeed.ai';
   const now = new Date();
+
+  // Individual model pages (generated from model directory)
+  const modelPages: MetadataRoute.Sitemap = getAllModelSlugs().map(slug => ({
+    url: `${baseUrl}/models/${slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
 
   return [
     // Core pages (update frequently)
@@ -11,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/today`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/live`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/models`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    ...modelPages,
     { url: `${baseUrl}/agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/research`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/podcasts`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
@@ -63,6 +73,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/rise-of-agentic-ai`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/originals/claude-mythos-not-afraid`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/originals/building-for-ai-agents`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/originals/frontier-model-forum-vs-china`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/originals/claude-mythos-ai-security`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/originals/google-notebooklm-gemini`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/originals/stanford-ai-index-2026`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/originals/claude-vs-gpt-vs-gemini`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/originals/state-of-ai-apis-2026`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
 

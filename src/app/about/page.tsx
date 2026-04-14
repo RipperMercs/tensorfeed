@@ -3,6 +3,20 @@ import { Users, Target, Globe, Mail, Cpu, Rss, Bot, FileText, Code, Zap } from '
 
 export const metadata: Metadata = {
   title: 'About TensorFeed | AI News Hub for Humans and Agents',
+  description: 'Learn about TensorFeed.ai: our mission, how we work, what tensor means, and why we built the leading real-time AI news aggregator.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/about',
+    title: 'About TensorFeed | AI News Hub for Humans and Agents',
+    description: 'Learn about TensorFeed.ai: our mission, how we work, what tensor means, and why we built the leading real-time AI news aggregator.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'About TensorFeed | AI News Hub for Humans and Agents',
+    description: 'Learn about TensorFeed.ai: our mission, how we work, what tensor means, and why we built the leading real-time AI news aggregator.',
+  },
 };
 
 const SISTER_SITES = [

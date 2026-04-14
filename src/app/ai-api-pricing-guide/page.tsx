@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
-import { PricingOverviewTable, ProviderDetailsTables } from '@/components/LivePricingTables';
+import { PricingProvider, PricingOverviewTable, ProviderDetailsTables } from '@/components/LivePricingTables';
 export const metadata: Metadata = {
   title: 'AI API Pricing Guide 2026: Every Provider Compared | TensorFeed',
   description:
@@ -60,6 +60,7 @@ export default function AIAPIPricingGuidePage() {
         </ol>
       </nav>
 
+      <PricingProvider>
       {/* Overview Table */}
       <section id="overview" className="mb-12">
         <h2 className="text-2xl font-bold text-text-primary mb-4">Pricing Overview: All Models</h2>
@@ -78,6 +79,7 @@ export default function AIAPIPricingGuidePage() {
 
         <ProviderDetailsTables />
       </section>
+      </PricingProvider>
 
       {/* Cost Calculator */}
       <section id="cost-calculator" className="mb-12">

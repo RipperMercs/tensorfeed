@@ -35,6 +35,21 @@ export const metadata: Metadata = {
   title: 'Is Mistral Down? Live Mistral AI Status | TensorFeed.ai',
   description:
     'Check if Mistral is down right now. Real-time Mistral AI status monitoring with live updates. See current outages, degraded performance, and component status for Mistral.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-mistral-down',
+    title: 'Is Mistral Down? Live Mistral AI Status | TensorFeed.ai',
+    description:
+      'Check if Mistral is down right now. Real-time Mistral AI status monitoring with live updates. See current outages, degraded performance, and component status for Mistral.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is Mistral Down? Live Mistral AI Status | TensorFeed.ai',
+    description:
+      'Check if Mistral is down right now. Real-time Mistral AI status monitoring with live updates. See current outages, degraded performance, and component status for Mistral.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

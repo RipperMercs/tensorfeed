@@ -35,6 +35,21 @@ export const metadata: Metadata = {
   title: 'Is Replicate Down? Live Replicate Status | TensorFeed.ai',
   description:
     'Check if Replicate is down right now. Real-time Replicate status monitoring with live updates. See current outages, degraded performance, and component status for Replicate.',
+  openGraph: {
+    type: 'website',
+    url: 'https://tensorfeed.ai/is-replicate-down',
+    title: 'Is Replicate Down? Live Replicate Status | TensorFeed.ai',
+    description:
+      'Check if Replicate is down right now. Real-time Replicate status monitoring with live updates. See current outages, degraded performance, and component status for Replicate.',
+    siteName: 'TensorFeed.ai',
+    images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Is Replicate Down? Live Replicate Status | TensorFeed.ai',
+    description:
+      'Check if Replicate is down right now. Real-time Replicate status monitoring with live updates. See current outages, degraded performance, and component status for Replicate.',
+  },
 };
 
 function StatusDot({ status }: { status: string }) {

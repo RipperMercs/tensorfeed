@@ -12,6 +12,7 @@ crons = [
   "*/10 * * * *",
   "*/5 * * * *",
   "0 * * * *",
+  "0 */2 * * *",
   "0 7 * * *",
   "30 8 * * *",
   # X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
