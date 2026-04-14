@@ -1,12 +1,17 @@
 # What is Artificial Intelligence? A Complete Guide
 
 > Source: https://tensorfeed.ai/what-is-ai
-> Last generated: 2026-03-29
+> Last generated: 2026-04-09
 
 Last Updated: March 2026
 
       # 
         What is Artificial Intelligence? A Complete Guide
+
+          Artificial intelligence (AI) refers to computer systems designed to perform tasks that
+          normally require human intelligence, like understanding language, recognizing images, and
+          learning from data. In 2026, AI powers everything from chatbots and code assistants to
+          medical diagnostics and self-driving cars.
 
         Artificial intelligence has gone from a niche research topic to the most talked-about
         technology on the planet. But what does it actually mean? This guide cuts through the hype
@@ -337,6 +342,30 @@ Last Updated: March 2026
               ****
 
           ))}
+
+        ## Frequently Asked Questions
+
+            ### What is AI in simple terms?
+
+              AI refers to computer systems designed to perform tasks that normally require human
+              intelligence, like understanding language, recognizing images, making decisions, and
+              learning from data.
+
+            ### What are the main types of AI?
+
+              There are three types: Narrow AI (what exists today, good at specific tasks), General
+              AI (human-level intelligence, not yet achieved), and Super AI (surpasses humans, theoretical).
+
+            ### What is the difference between AI and machine learning?
+
+              AI is the broad field of making intelligent systems. Machine learning is a subset of AI
+              where systems learn from data instead of being explicitly programmed. Deep learning is a
+              subset of machine learning using neural networks.
+
+            ### What is a large language model (LLM)?
+
+              An LLM is a type of AI model trained on massive amounts of text data that can understand
+              and generate human language. Examples include GPT-4, Claude, Gemini, and Llama.
 
         ## Stay Up to Date
 

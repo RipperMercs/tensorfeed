@@ -1,12 +1,17 @@
 # What Are AI Agents? Everything You Need to Know
 
 > Source: https://tensorfeed.ai/what-are-ai-agents
-> Last generated: 2026-03-29
+> Last generated: 2026-04-09
 
 Last Updated: March 2026
 
       # 
         What Are AI Agents? Everything You Need to Know
+
+          AI agents are autonomous systems that can perceive their environment, reason about tasks,
+          take actions using tools, and learn from results. Unlike chatbots that only respond to
+          prompts, agents can independently plan and execute multi-step workflows like writing code,
+          browsing the web, or managing files.
 
         AI agents are the next big leap in artificial intelligence. While chatbots can answer
         questions and generate text, agents can actually do things: browse the web, write and
@@ -341,6 +346,32 @@ Last Updated: March 2026
           - Choose a framework (LangChain for flexibility, CrewAI for multi-agent, OpenAI SDK for simplicity)
           - Start small: build a single-tool agent before adding complexity
           - Always include human approval for high-stakes actions
+
+        ## Frequently Asked Questions
+
+            ### What is an AI agent?
+
+              An AI agent is a software system powered by a large language model that can autonomously
+              perceive its environment, reason about goals, take actions using tools (like web browsing,
+              code execution, or file management), and adapt based on results.
+
+            ### How are AI agents different from chatbots?
+
+              Chatbots respond to individual messages. AI agents can independently plan and execute
+              multi-step tasks, use external tools, maintain context across actions, and work toward
+              goals without constant human input.
+
+            ### What are the best AI agent frameworks?
+
+              The leading frameworks in 2026 are LangChain, CrewAI, AutoGen, Anthropic's Model
+              Context Protocol (MCP), and OpenAI's Assistants API. Each has different strengths
+              for building custom agents.
+
+            ### Are AI agents safe?
+
+              AI agents have safety challenges including hallucination, unintended actions, and
+              difficulty with oversight. Leading providers implement guardrails like human-in-the-loop
+              approval, sandboxed execution, and constitutional AI techniques.
 
         ## Related Guides
 
