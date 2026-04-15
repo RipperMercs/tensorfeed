@@ -54,6 +54,22 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [Command R+](https://tensorfeed.ai/models/command-r-plus): Pricing, benchmarks, specs for Cohere's RAG flagship
 - [Command R](https://tensorfeed.ai/models/command-r): Pricing, benchmarks, specs for Cohere's affordable RAG model
 
+## Model Comparisons
+- [Claude vs ChatGPT](https://tensorfeed.ai/compare/claude-vs-chatgpt): Claude Opus 4.6 vs GPT-4o head-to-head
+- [Claude vs Gemini](https://tensorfeed.ai/compare/claude-vs-gemini): Claude Opus 4.6 vs Gemini 2.5 Pro comparison
+- [GPT-4o vs Gemini](https://tensorfeed.ai/compare/gpt-4o-vs-gemini): OpenAI vs Google flagship models
+- [Claude vs Llama](https://tensorfeed.ai/compare/claude-vs-llama): Closed-source vs open-source AI comparison
+- [GPT-4o vs Claude Sonnet](https://tensorfeed.ai/compare/gpt-4o-vs-claude-sonnet): Mid-tier production model showdown
+- [Gemini Flash vs GPT-4o Mini](https://tensorfeed.ai/compare/gemini-flash-vs-gpt-4o-mini): Budget AI model comparison
+
+## AI Providers
+- [Anthropic](https://tensorfeed.ai/providers/anthropic): Claude models, pricing, benchmarks, and company overview
+- [OpenAI](https://tensorfeed.ai/providers/openai): GPT models, ChatGPT, pricing, and company overview
+- [Google](https://tensorfeed.ai/providers/google): Gemini models, pricing, and Vertex AI overview
+- [Meta](https://tensorfeed.ai/providers/meta): Llama open-source models and deployment overview
+- [Mistral](https://tensorfeed.ai/providers/mistral): European AI models, pricing, and overview
+- [Cohere](https://tensorfeed.ai/providers/cohere): Enterprise RAG models and Command R overview
+
 ## Content Hubs
 - [News Feed](https://tensorfeed.ai/): Aggregated AI news from 15+ sources, categorized and timestamped
 - [Today in AI](https://tensorfeed.ai/today): Daily digest of top AI stories, incidents, and releases
