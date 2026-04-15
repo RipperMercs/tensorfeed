@@ -112,6 +112,19 @@ export default function TodayPage() {
         <p className="text-text-secondary text-lg">{todayStr}</p>
       </div>
 
+      {/* Editorial Intro */}
+      <div className="max-w-4xl mb-8 text-text-secondary leading-relaxed space-y-4">
+        <p>
+          The noise around AI is deafening. Every day brings a dozen new papers, price announcements, benchmarks, startups, and hot takes. How do you stay informed without drowning in information? That&apos;s why we built Today in AI: a single page that synthesizes the day&apos;s most important developments, aggregated from 12 authoritative sources, filtered for what actually matters.
+        </p>
+        <p>
+          This view shows you the last 24 hours of AI news, organized by category. The top story gets featured. Below that, stories are grouped into clusters: model releases, benchmarks, pricing, policy, research. We count sources reporting to highlight consensus stories. We track service incidents so you know if infrastructure failures affected your dependencies. Instead of checking Twitter, Reddit, Hacker News, and 6 different AI blogs, you get one digest.
+        </p>
+        <p>
+          New information arrives continuously. If you check this page at 7am and again at 7pm, you&apos;ll see new stories. What we filter out is hype, marketing, and noise. We care about technical substance: capability breakthroughs, price changes, policy shifts, and incidents. That&apos;s the signal. Everything else is static.
+        </p>
+      </div>
+
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
         <div className="bg-bg-secondary border border-border rounded-lg p-4 text-center">

@@ -100,6 +100,19 @@ export default function TimelinePage() {
         </p>
       </div>
 
+      {/* Editorial Intro */}
+      <div className="max-w-4xl mb-10 text-text-secondary leading-relaxed space-y-4">
+        <p>
+          The pace of AI advancement is accelerating. Every month brings new model releases, price drops, capability breakthroughs, and industry consolidation. Tracking this timeline helps you understand the trajectory: where we came from, where we are now, and what&apos;s coming next.
+        </p>
+        <p>
+          From April 2024 to April 2026, we&apos;ve seen Claude evolve from Opus to Sonnet to a new generation. OpenAI released GPT-4o with vision and function calling. Google launched Gemini 2.5 with 2 million token context. Mistral and Llama launched open-source models that changed the economics of AI deployment. Pricing dropped dramatically as providers competed for market share. Policy shifted too, with regulation discussions in the EU and debates over AI safety standards.
+        </p>
+        <p>
+          What patterns are visible in this data? Model releases cluster around major announcements. Pricing announcements typically decrease (rarely increase). Open-source releases create competitive pressure on commercial models. Major companies iterate quarterly. Filter this timeline by category to focus on what matters most to you: model releases, pricing changes, policy shifts, acquisitions, or research breakthroughs.
+        </p>
+      </div>
+
       {/* Category Filter Chips */}
       <div className="flex flex-wrap gap-2 mb-10">
         {CATEGORIES.map((cat) => (

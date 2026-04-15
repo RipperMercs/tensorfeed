@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Bot, Wrench, Palette, Search, Code, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import fallbackAgentsData from '@/../data/agents-directory.json';
 // Metadata must be in a separate file for client components, but we keep
 // the page as 'use client' for the interactive filter. Next.js will still
@@ -81,6 +82,19 @@ export default function AgentsPage() {
         </div>
         <p className="text-text-secondary text-lg max-w-2xl">
           Discover AI agents, frameworks, and tools shaping the ecosystem.
+        </p>
+      </div>
+
+      {/* Editorial Intro */}
+      <div className="max-w-4xl mb-10 text-text-secondary leading-relaxed space-y-4">
+        <p>
+          A decade ago, software was what you wrote. Today, software is what an AI writes while you watch. AI agents are the next shift: autonomous systems that perceive their environment, make decisions, take action, and iterate. They&apos;re not just chatbots that answer questions. They&apos;re systems that complete multi-step tasks independently: writing code, running tests, debugging, browsing the web, filing bugs, drafting reports.
+        </p>
+        <p>
+          Agents are specialized by domain. Coding agents like GitHub Copilot and Cursor use Claude or GPT-4 with deep IDE integration and version control awareness. They understand context beyond a single file. Research agents like Perplexity use web search, citation tracking, and academic database access to synthesize knowledge. Creative agents handle content generation, design, and copywriting. General-purpose agents like multi-turn Claude conversations can orchestrate workflows across multiple tools. Frameworks like LangChain, CrewAI, and Anthropic&apos;s Model Context Protocol (MCP) abstract away the implementation details and let you build agents by composition.
+        </p>
+        <p>
+          This directory catalogs agents and frameworks we&apos;re tracking. We curate this list based on production maturity, community adoption, and technical capability. For a deeper dive into what agents are, their capabilities, and how they&apos;ll reshape work, see our explainer on <Link href="/what-are-ai-agents" className="text-accent-primary hover:underline">what are AI agents</Link>. If you&apos;re building an agent, the resources section below has links to documentation for the major frameworks.
         </p>
       </div>
 

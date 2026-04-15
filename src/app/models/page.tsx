@@ -163,9 +163,27 @@ export default async function ModelsPage() {
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">AI Models</h1>
         </div>
-        <p className="text-text-secondary text-lg max-w-2xl">
+        <p className="text-text-secondary text-lg max-w-2xl mb-4">
           Track releases, compare pricing, and benchmark scores across all major providers.
         </p>
+        <div className="text-text-secondary leading-relaxed max-w-3xl space-y-3 text-sm">
+          <p>
+            The AI model landscape changes fast. New releases ship weekly, pricing drops without warning,
+            and context windows that seemed impossible a year ago are now standard. This page tracks every
+            major model from Anthropic, OpenAI, Google, Meta, Mistral, and Cohere with current pricing
+            (per million tokens), context window sizes, release dates, and capability tags. Click any model
+            name to see its full detail page with benchmark scores, strengths, and use case recommendations.
+          </p>
+          <p>
+            Pricing data is sourced directly from provider APIs and official documentation, updated daily
+            by our worker pipeline. For deeper analysis, see the{' '}
+            <Link href="/ai-api-pricing-guide" className="text-accent-primary hover:underline">full pricing guide</Link>,
+            use the{' '}
+            <Link href="/tools/cost-calculator" className="text-accent-primary hover:underline">cost calculator</Link>{' '}
+            for real-world cost estimates, or{' '}
+            <Link href="/compare" className="text-accent-primary hover:underline">compare models side by side</Link>.
+          </p>
+        </div>
       </div>
 
       {/* Latest Releases */}

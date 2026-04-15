@@ -95,6 +95,19 @@ export default function ResearchPage() {
         </p>
       </div>
 
+      {/* Editorial Intro */}
+      <div className="max-w-4xl mb-10 text-text-secondary leading-relaxed space-y-4">
+        <p>
+          AI moves in two tracks: products and research. Products are what you use (Claude, ChatGPT, Gemini). Research is where those products come from. Understanding AI research helps you see what&apos;s coming 18 to 36 months before it ships. Right now, papers on mixture-of-experts, improved scaling laws, and multimodal reasoning are being published. Six months later, new products will implement those ideas. A year later, they&apos;re commoditized.
+        </p>
+        <p>
+          This feed aggregates AI research from arXiv, academic conferences (NeurIPS, ICML, ACL, ICLR), and technical journals. We filter for practical relevance: papers that describe techniques likely to appear in products, new benchmarks that measure important capabilities, and theoretical work that advances our understanding of how to build better AI. We exclude purely mathematical papers not relevant to building systems. When a major paper drops, it spreads through the community in waves. Researchers read it first. Engineers implement it. Products ship it. Hype follows. Our job is to show you the research before the hype cycle obscures the substance.
+        </p>
+        <p>
+          Trends to watch: sparse models (mixture-of-experts, for efficiency), improved reasoning (chain-of-thought, tree search, planning), better calibration (understanding when models are uncertain), and mechanistic interpretability (understanding how models actually work). Below we also track benchmark scores for major models to show empirical progress on standardized tasks.
+        </p>
+      </div>
+
       {/* Featured Paper */}
       {featured && (
         <section className="mb-12">

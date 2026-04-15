@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { BarChart3 } from 'lucide-react';
+import Link from 'next/link';
 import fallbackData from '@/../data/benchmarks.json';
 
 interface BenchmarkDef {
@@ -139,6 +140,19 @@ export default function BenchmarksPage() {
         </p>
       </div>
 
+      {/* Editorial Intro */}
+      <div className="max-w-4xl mb-10 text-text-secondary leading-relaxed space-y-4">
+        <p>
+          How do you know if Claude is smarter than GPT-4? How does the new Llama 4 stack up against Gemini 2.5? Benchmarks provide the answer. These standardized tests measure specific AI capabilities across diverse domains and let us compare models objectively. They&apos;re imperfect (benchmarks are often gamed), but they&apos;re the only shared language we have for understanding AI progress.
+        </p>
+        <p>
+          MMLU measures broad knowledge across multiple choice questions across chemistry, history, law, and 50+ other domains. A score of 92 percent means the model answers 92 out of 100 random questions correctly across all topics. MMLU is the closest we have to a general intelligence test for AI. HumanEval tests code generation: the model writes functions to solve programming problems that humans created. GPQA (Graduate-Level Google-Proof Questions) is deliberately hard, asking obscure questions that require deep expertise. MATH benchmarks raw mathematical reasoning. SWE-bench tests software engineering tasks: given a failing test and a codebase, can the model write code to fix it?
+        </p>
+        <p>
+          No single benchmark captures everything. A model that excels at MMLU might struggle with code. Benchmarks have been leaked and learned during training. And real-world performance depends on your specific task, how you prompt, and how you integrate the model into your system. Use this data to narrow the field of candidates. Then test the finalists on your actual workloads. We&apos;ve also collected this data in our <Link href="/compare" className="text-accent-primary hover:underline">model comparison tool</Link> for side-by-side analysis.
+        </p>
+      </div>
+
       {/* Benchmark Tabs */}
       <div className="flex flex-wrap gap-2 mb-8">
         {benchmarks.map((b) => (
@@ -163,7 +177,7 @@ export default function BenchmarksPage() {
       {/* Benchmark Description */}
       <div className="bg-bg-secondary border border-border rounded-lg p-4 mb-6">
         <p className="text-sm text-text-secondary">
-          <span className="font-semibold text-text-primary">{activeDef.name}</span> — {activeDef.description}.
+          <span className="font-semibold text-text-primary">{activeDef.name}</span>: {activeDef.description}.
           Max score: {activeDef.maxScore}.
         </p>
       </div>

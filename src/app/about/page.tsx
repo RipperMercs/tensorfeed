@@ -104,6 +104,61 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Who We Are */}
+      <section className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <Users className="w-5 h-5 text-accent-secondary" />
+          <h2 className="text-xl font-semibold text-text-primary">Who We Are</h2>
+        </div>
+        <div className="space-y-4 text-text-secondary leading-relaxed">
+          <p>
+            TensorFeed was founded in March 2026 by Evan (&quot;Ripper&quot;), a software engineer and
+            entrepreneur with over a decade of experience building web applications, real-time data
+            systems, and developer tools. The project grew out of a personal frustration: keeping up
+            with AI news required checking too many sources every day, and none of them served both
+            human readers and AI agents well.
+          </p>
+          <p>
+            The editorial team includes Ripper (founder, lead developer, and primary writer),
+            Kira Nolan (contributing editor covering AI safety, open source, and agent ecosystems),
+            and Marcus Chen (contributing editor covering API economics, pricing analysis, and
+            enterprise AI). Together, we bring perspectives from software engineering, data science,
+            and technology journalism.
+          </p>
+          <p>
+            TensorFeed is operated by Pizza Robot Studios LLC, based in Los Angeles, California.
+            We are an independent publication with no venture capital funding, no investor
+            obligations, and no editorial conflicts. Our opinions are our own.
+          </p>
+        </div>
+      </section>
+
+      {/* Editorial Standards */}
+      <section className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <Target className="w-5 h-5 text-accent-secondary" />
+          <h2 className="text-xl font-semibold text-text-primary">Editorial Standards</h2>
+        </div>
+        <div className="space-y-4 text-text-secondary leading-relaxed">
+          <p>
+            We hold ourselves to a clear set of standards. Aggregated news always links back to the
+            original source. We never republish full articles from other outlets. Our original
+            editorial content is clearly labeled, fact-checked against primary sources, and written
+            by named authors. When we express opinions, we make that clear.
+          </p>
+          <p>
+            Our data (model pricing, benchmark scores, service status) is sourced directly from
+            provider APIs, official documentation, and public benchmark datasets. We update pricing
+            and model data daily, status monitoring runs every 2 to 5 minutes, and news feeds
+            refresh every 10 minutes. If you spot an error, email us at{' '}
+            <a href="mailto:feedback@tensorfeed.ai" className="text-accent-primary hover:underline">
+              feedback@tensorfeed.ai
+            </a>{' '}
+            and we will correct it promptly.
+          </p>
+        </div>
+      </section>
+
       {/* How TensorFeed Works */}
       <section className="mb-10">
         <div className="flex items-center gap-2 mb-4">

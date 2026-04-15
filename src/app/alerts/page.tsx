@@ -19,6 +19,19 @@ const SERVICES = [
 export default function AlertsPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Editorial Intro */}
+      <div className="prose prose-invert max-w-3xl mb-12 text-text-secondary leading-relaxed">
+        <p>
+          AI service outages are increasingly common and increasingly costly. When Claude, ChatGPT, or Gemini goes down, it disrupts thousands of applications, workflows, and businesses that depend on these APIs. Our monitoring data shows that major AI providers experience at least one significant incident per month, with some services degrading silently during peak traffic periods.
+        </p>
+        <p className="mt-4">
+          That&apos;s why we&apos;re building TensorFeed Alerts. Instead of discovering an outage through frustrated user reports or failed API calls, you&apos;ll receive an instant email notification the moment we detect degradation or downtime. We monitor 10 major AI services including Claude API, OpenAI GPT-4, Google Gemini, Mistral, Hugging Face Inference, Replicate, Cohere, Perplexity, Microsoft Copilot, and Midjourney. Detection happens within 5 minutes, and alerts are hyper-targeted: you only hear about services you actually care about.
+        </p>
+        <p className="mt-4">
+          Our data from the <Link href="/originals/ai-service-outages-month" className="text-accent-primary hover:underline">AI service outages report</Link> reveals patterns in downtime that developers need to understand. Infrastructure fails in predictable ways. By tracking incidents systematically on our <Link href="/incidents" className="text-accent-primary hover:underline">incident history page</Link>, we help teams build redundancy and fallback logic into their applications. No credit card required, no spam, just status updates when it matters.
+        </p>
+      </div>
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">

@@ -737,6 +737,19 @@ export default function LivePage() {
         </p>
       </div>
 
+      {/* Editorial Intro */}
+      <div className="max-w-4xl mb-8 text-text-secondary leading-relaxed space-y-4">
+        <p>
+          Real-time data feeds are how the AI industry operates. Decisions happen at scale, in milliseconds, based on live information. Trending GitHub repos tell us where the energy is in open-source AI development. Prediction markets aggregate thousands of bets to forecast the probability of AI milestones. Internet latency from 6 regions tells infrastructure engineers if their deployments are healthy. Threat intelligence flags emerging vulnerabilities. API pricing changes in real time as providers adjust their economics.
+        </p>
+        <p>
+          This page aggregates live feeds from across the AI ecosystem. The Agent Activity tab shows which AI systems are actively hitting TensorFeed endpoints every 30 seconds, a real-time proxy for which agents are in active use. AI Status shows service health updated every 2 minutes. GitHub Trending surfaces new AI repositories gaining momentum this week. Predictions market shows the latest community bets on AI milestones. Internet Pulse measures latency to 6 global regions. Cyber Threats flags the latest vulnerability disclosures relevant to AI infrastructure.
+        </p>
+        <p>
+          Live data matters because AI moves fast. A model released yesterday is legacy today. Pricing changed 3 times this week. Market confidence on whether AGI arrives by 2027 just jumped 5 percent. This dashboard keeps you synchronized with the field, not reading about it days or weeks later in a report.
+        </p>
+      </div>
+
       {/* World Briefing Banner */}
       <WorldBriefingBanner />
 

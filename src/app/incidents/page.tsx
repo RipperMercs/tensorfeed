@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
 interface Incident {
   id: string;
   service: string;
@@ -97,6 +98,19 @@ export default function IncidentsPage() {
         </div>
         <p className="text-text-secondary text-lg max-w-2xl">
           A log of AI service incidents, outages, and degraded performance events detected by TensorFeed monitoring.
+        </p>
+      </div>
+
+      {/* Editorial Intro */}
+      <div className="max-w-4xl mb-10 text-text-secondary leading-relaxed space-y-4">
+        <p>
+          Outages happen. They&apos;re embarrassing, costly, and completely predictable. Infrastructure fails. Load balancers misconfigure. Deployments break things. Databases run out of disk space. Not a single major AI provider is immune. By studying incident patterns, we can predict when failures are likely and design our systems to tolerate them.
+        </p>
+        <p>
+          This database captures every incident we&apos;ve detected in the TensorFeed monitoring network: when it started, how long it lasted, severity (was it a full outage or partial degradation), and which provider was affected. The data reveals that outages cluster. Claude API might be flaky for a week, then stable for two months. OpenAI&apos;s API has experienced multiple major incidents, each lasting 30 to 90 minutes. Hugging Face and Replicate have historically lower reliability than the major commercial providers. Our monthly <Link href="/originals/ai-service-outages-month" className="text-accent-primary hover:underline">AI service outage report</Link> synthesizes this into actionable insights.
+        </p>
+        <p>
+          What should you learn from this? First, avoid single points of failure. Distribute your traffic across multiple providers if feasible. Claude and GPT-4 won&apos;t both go down at the same time often enough to matter, but their combination is more reliable than either alone. Second, implement exponential backoff and retry logic in your client code. Third, cache successful responses and degrade gracefully when APIs are down. Finally, monitor your own dependencies. The earlier you know an API is degraded, the earlier you can mitigate customer impact.
         </p>
       </div>
 

@@ -246,6 +246,19 @@ export default function ComparePage() {
         </p>
       </div>
 
+      {/* Editorial Intro */}
+      <div className="max-w-4xl mb-10 text-text-secondary leading-relaxed space-y-4">
+        <p>
+          Choosing between Claude, GPT-4, and Gemini isn&apos;t obvious. They&apos;re all excellent models, but they have different strengths, different pricing, and different deployment options. Claude excels at nuanced reasoning and long-context analysis. GPT-4 dominates at code generation and multimodal understanding. Gemini has the longest context window available. The question is: which one makes sense for your use case and your budget?
+        </p>
+        <p>
+          Use this comparison tool to evaluate models across the dimensions that matter: pricing (input and output token costs), context window (how much text you can process at once), release date, and capabilities (coding, vision, function calling, fine-tuning). Context window is often overlooked but critical. A model that costs half as much but has a 4K context window isn&apos;t useful if your documents are 20K tokens. Benchmarks tell you how smart a model is; we show you what it costs and what it can do.
+        </p>
+        <p>
+          The pricing vs performance tradeoff is central to AI economics. The newest flagship models offer marginal improvements over previous generations for 2-3x the cost. Open-source models like Llama are free but require self-hosting infrastructure. Small models like Claude Haiku or GPT-4o-mini are dramatically cheaper and often sufficient for non-critical tasks. See our <Link href="/ai-api-pricing-guide" className="text-accent-primary hover:underline">pricing guide</Link> for deeper analysis and cost optimization strategies, and <Link href="/benchmarks" className="text-accent-primary hover:underline">benchmarks</Link> to understand raw capability.
+        </p>
+      </div>
+
       {/* Model Selectors */}
       <section className="mb-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
