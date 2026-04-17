@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-03-28",
+  "lastUpdated": "2026-04-17",
   "providers": [
     {
       "id": "anthropic",
@@ -7,6 +7,15 @@
       "logo": "/images/providers/anthropic.png",
       "url": "https://www.anthropic.com",
       "models": [
+        {
+          "id": "claude-opus-4-7",
+          "name": "Claude Opus 4.7",
+          "inputPrice": 15.00,
+          "outputPrice": 75.00,
+          "contextWindow": 1000000,
+          "released": "2026-04",
+          "capabilities": ["text", "vision", "tool-use", "code"]
+        },
         {
           "id": "claude-opus-4-6",
           "name": "Claude Opus 4.6",

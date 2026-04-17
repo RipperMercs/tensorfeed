@@ -91,7 +91,7 @@ const TIMELINE: Array<{ year: string; title: string; body: string }> = [
   {
     year: '2026',
     title: 'Frontier models approach expert performance',
-    body: 'Claude Opus 4.6, GPT-4.5, Gemini 2.5 Pro, and others now rival or exceed expert humans on a growing list of professional benchmarks. Public debate shifts from "when will AGI arrive" to "how will we know when it has."',
+    body: 'Claude Opus 4.7, GPT-4.5, Gemini 2.5 Pro, and others now rival or exceed expert humans on a growing list of professional benchmarks. Public debate shifts from "when will AGI arrive" to "how will we know when it has."',
   },
 ];
 
@@ -635,7 +635,7 @@ export default function AgiAsiPage() {
           {[
             {
               name: 'Anthropic',
-              focus: 'Frontier capability research with an explicit safety mission. Claude 3 and Claude Opus 4.6 are its flagship model families. Dario Amodei publicly targets powerful AI within a few years and has argued that the first companies to reach advanced systems should use them to help solve the alignment problem.',
+              focus: 'Frontier capability research with an explicit safety mission. Claude 3 and the Claude 4 family (Opus 4.7, Sonnet 4.6, Haiku 4.5) are its flagship model lines. Dario Amodei publicly targets powerful AI within a few years and has argued that the first companies to reach advanced systems should use them to help solve the alignment problem.',
             },
             {
               name: 'OpenAI',

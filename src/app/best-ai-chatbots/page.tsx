@@ -37,13 +37,13 @@ const chatbots = [
   {
     name: 'Claude',
     company: 'Anthropic',
-    model: 'Claude Opus 4.6 / Sonnet 4.6 / Haiku 4.5',
+    model: 'Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5',
     pricing: 'Free / Pro $20/mo / Team $30/user/mo',
-    contextWindow: '200K tokens',
+    contextWindow: '1M tokens (Opus 4.7)',
     strengths: [
       'Best-in-class writing quality and nuance',
       'Exceptional at following complex instructions',
-      'Very large context window (200K tokens)',
+      '1M token context window on Opus 4.7',
       'Strong coding and analysis capabilities',
       'Artifacts feature for rich content creation',
       'More careful and honest about uncertainty',
@@ -52,7 +52,7 @@ const chatbots = [
       'No built-in image generation',
       'Smaller plugin ecosystem than ChatGPT',
       'Sometimes overly cautious with edge cases',
-      'No native voice mode (as of March 2026)',
+      'No native voice mode (as of April 2026)',
     ],
   },
   {

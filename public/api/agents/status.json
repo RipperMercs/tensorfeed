@@ -1,7 +1,7 @@
 {
   "ok": true,
   "source": "tensorfeed.ai",
-  "checked": "2026-04-09T07:47:21.586Z",
+  "checked": "2026-04-17T20:47:28.321Z",
   "services": [
     {
       "name": "Claude API",
@@ -34,7 +34,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-09T07:45:38.342Z"
+      "lastChecked": "2026-04-17T20:45:17.334Z"
     },
     {
       "name": "OpenAI API",
@@ -43,11 +43,19 @@
       "statusPageUrl": "https://status.openai.com",
       "components": [
         {
-          "name": "Fine-tuning",
+          "name": "Login",
           "status": "operational"
         },
         {
-          "name": "Embeddings",
+          "name": "Login",
+          "status": "operational"
+        },
+        {
+          "name": "Responses",
+          "status": "operational"
+        },
+        {
+          "name": "Fine-tuning",
           "status": "operational"
         },
         {
@@ -57,17 +65,9 @@
         {
           "name": "Batch",
           "status": "operational"
-        },
-        {
-          "name": "Audio",
-          "status": "operational"
-        },
-        {
-          "name": "Moderations",
-          "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-09T07:45:38.098Z"
+      "lastChecked": "2026-04-17T20:45:16.255Z"
     },
     {
       "name": "Hugging Face",
@@ -75,7 +75,7 @@
       "status": "operational",
       "statusPageUrl": "https://status.huggingface.co",
       "components": [],
-      "lastChecked": "2026-04-09T07:45:38.202Z"
+      "lastChecked": "2026-04-17T20:45:17.012Z"
     },
     {
       "name": "Replicate",
@@ -108,7 +108,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-09T07:45:38.134Z"
+      "lastChecked": "2026-04-17T20:45:16.486Z"
     },
     {
       "name": "Cohere",
@@ -125,7 +125,11 @@
           "status": "operational"
         },
         {
-          "name": "command-a-vision-07-2025",
+          "name": "embed-v4.0",
+          "status": "operational"
+        },
+        {
+          "name": "command-a-reasoning-08-2025",
           "status": "operational"
         },
         {
@@ -133,15 +137,11 @@
           "status": "operational"
         },
         {
-          "name": "command-r-plus-082024",
-          "status": "operational"
-        },
-        {
-          "name": "command-r7b",
+          "name": "embed-multilingual-light-v3.0",
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-09T07:45:38.165Z"
+      "lastChecked": "2026-04-17T20:45:16.331Z"
     },
     {
       "name": "Mistral",
@@ -149,7 +149,7 @@
       "status": "operational",
       "statusPageUrl": "https://status.mistral.ai",
       "components": [],
-      "lastChecked": "2026-04-09T07:45:38.167Z"
+      "lastChecked": "2026-04-17T20:45:16.028Z"
     }
   ]
 }

@@ -17,6 +17,33 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'claude-opus-4-7-release',
+    title: "Claude Opus 4.7 Just Dropped. Here's What Changed.",
+    author: 'Ripper',
+    date: 'Apr 17, 2026',
+    readTime: '6 min read',
+    description:
+      "Anthropic released Claude Opus 4.7 with a 1 million token context window at the same flagship pricing as 4.6. We break down the benchmark gains, what it means for agent workflows, and how the race shifts again.",
+  },
+  {
+    slug: 'llms-txt-every-developer',
+    title: 'Why Every Developer Needs an llms.txt File',
+    author: 'Kira Nolan',
+    date: 'Apr 17, 2026',
+    readTime: '5 min read',
+    description:
+      "Agent traffic is passing human traffic on many sites. llms.txt is the standard that makes your content legible to AI agents. Practical guide to what it is, why it matters, and how to ship one in an afternoon.",
+  },
+  {
+    slug: 'ai-pricing-floor',
+    title: "The AI Pricing Floor: How Low Can It Go?",
+    author: 'Marcus Chen',
+    date: 'Apr 16, 2026',
+    readTime: '5 min read',
+    description:
+      "Gemini Flash and Mistral Small are at $0.10 per million input tokens. Open source is free. We look at where the inference pricing floor actually sits and what breaks when it gets there.",
+  },
+  {
     slug: 'ai-adoption-faster-than-internet',
     title: "AI Adoption Is Outpacing the Internet. Stanford Has the Numbers to Prove It.",
     author: 'Ripper',

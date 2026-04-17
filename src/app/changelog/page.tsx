@@ -21,6 +21,19 @@ export const metadata: Metadata = {
 
 const CHANGELOG = [
   {
+    date: 'April 17, 2026',
+    entries: [
+      'Added Claude Opus 4.7 to model directory, pricing, benchmarks, and timeline with 1M context window',
+      'Published Opus 4.7 launch analysis article in /originals',
+      'Published "Why Every Developer Needs an llms.txt File" and "The AI Pricing Floor" articles',
+      'Added Claude Opus 4.7 vs 4.6 generational comparison at /compare/claude-opus-4-7-vs-claude-opus-4-6',
+      'Updated claude-vs-chatgpt, claude-vs-gemini, and claude-vs-llama comparisons to feature Opus 4.7',
+      'Refreshed pricing.json and benchmarks.json lastUpdated to 2026-04-17',
+      'Updated model-wars leaderboard, agi-asi timeline, best-ai-chatbots, and research benchmark tables to reflect Opus 4.7',
+      'Refreshed cost calculator FAQ copy for Opus 4.7 context window and pricing',
+    ],
+  },
+  {
     date: 'March 29, 2026',
     entries: [
       'Launched TensorFeed.ai with 12 RSS sources aggregating AI news',

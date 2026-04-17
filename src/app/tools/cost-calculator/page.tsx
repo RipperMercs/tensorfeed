@@ -54,16 +54,16 @@ const USE_CASE_TIPS: Record<string, string> = {
   coding:
     'For coding tasks, Claude Sonnet 4.6 and GPT-4o excel at code generation and debugging. Consider o3-mini for complex reasoning at lower cost.',
   analysis:
-    'For data analysis, Gemini 2.5 Pro handles massive contexts well. Claude Opus 4.6 and o1 provide the deepest reasoning capabilities.',
+    'For data analysis, Gemini 2.5 Pro handles massive contexts well. Claude Opus 4.7 and o1 provide the deepest reasoning capabilities.',
   creative:
-    'For creative writing, Claude Opus 4.6 and GPT-4o produce the most nuanced output. Smaller models work fine for shorter-form content.',
+    'For creative writing, Claude Opus 4.7 and GPT-4o produce the most nuanced output. Smaller models work fine for shorter-form content.',
 };
 
 const FAQ_ITEMS = [
   {
     question: 'How much does the Claude API cost?',
     answer:
-      'Claude API pricing varies by model tier. Claude Opus 4.6 costs $15/1M input tokens and $75/1M output tokens. Claude Sonnet 4.6 is $3/1M input and $15/1M output. Claude Haiku 4.5 is the most affordable at $0.80/1M input and $4/1M output. All Claude models support 200K context windows.',
+      'Claude API pricing varies by model tier. Claude Opus 4.7 costs $15/1M input tokens and $75/1M output tokens and ships with a 1M context window. Claude Sonnet 4.6 is $3/1M input and $15/1M output with a 200K context window. Claude Haiku 4.5 is the most affordable at $0.80/1M input and $4/1M output with 200K context.',
   },
   {
     question: 'What is the cheapest AI API?',
@@ -78,7 +78,7 @@ const FAQ_ITEMS = [
   {
     question: 'Which AI API is best for production?',
     answer:
-      'The best AI API for production depends on your use case. Claude Sonnet 4.6 and GPT-4o offer strong all-around performance at moderate cost. For budget-sensitive applications, GPT-4o-mini and Gemini 2.0 Flash deliver solid results at a fraction of the price. For tasks requiring deep reasoning, Claude Opus 4.6 or o1 are top choices, though they cost significantly more.',
+      'The best AI API for production depends on your use case. Claude Sonnet 4.6 and GPT-4o offer strong all-around performance at moderate cost. For budget-sensitive applications, GPT-4o-mini and Gemini 2.0 Flash deliver solid results at a fraction of the price. For tasks requiring deep reasoning, Claude Opus 4.7 or o1 are top choices, though they cost significantly more.',
   },
 ];
 

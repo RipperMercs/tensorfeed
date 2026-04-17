@@ -1,6 +1,13 @@
 {
   "events": [
     {
+      "date": "2026-04-17",
+      "title": "Claude Opus 4.7 Released",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic releases Claude Opus 4.7 with a 1 million token context window at flagship pricing and incremental gains across reasoning, code, and SWE-bench."
+    },
+    {
       "date": "2026-03-25",
       "title": "Claude Sonnet 4.6 Released",
       "provider": "Anthropic",

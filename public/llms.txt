@@ -38,7 +38,8 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [CLAUDE.md Generator](https://tensorfeed.ai/claude-md-generator): Interactive tool to generate a custom CLAUDE.md for your project
 
 ## Individual Model Pages
-- [Claude Opus 4.6](https://tensorfeed.ai/models/claude-opus-4-6): Pricing, benchmarks, specs for Anthropic's flagship
+- [Claude Opus 4.7](https://tensorfeed.ai/models/claude-opus-4-7): Pricing, benchmarks, specs for Anthropic's current flagship (1M context)
+- [Claude Opus 4.6](https://tensorfeed.ai/models/claude-opus-4-6): Pricing, benchmarks, specs for Anthropic's previous-generation flagship
 - [Claude Sonnet 4.6](https://tensorfeed.ai/models/claude-sonnet-4-6): Pricing, benchmarks, specs for Anthropic's mid-tier
 - [Claude Haiku 4.5](https://tensorfeed.ai/models/claude-haiku-4-5): Pricing, benchmarks, specs for Anthropic's budget model
 - [GPT-4o](https://tensorfeed.ai/models/gpt-4o): Pricing, benchmarks, specs for OpenAI's multimodal flagship
@@ -55,8 +56,9 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [Command R](https://tensorfeed.ai/models/command-r): Pricing, benchmarks, specs for Cohere's affordable RAG model
 
 ## Model Comparisons
-- [Claude vs ChatGPT](https://tensorfeed.ai/compare/claude-vs-chatgpt): Claude Opus 4.6 vs GPT-4o head-to-head
-- [Claude vs Gemini](https://tensorfeed.ai/compare/claude-vs-gemini): Claude Opus 4.6 vs Gemini 2.5 Pro comparison
+- [Claude Opus 4.7 vs 4.6](https://tensorfeed.ai/compare/claude-opus-4-7-vs-claude-opus-4-6): Generational comparison of Anthropic flagships
+- [Claude vs ChatGPT](https://tensorfeed.ai/compare/claude-vs-chatgpt): Claude Opus 4.7 vs GPT-4o head-to-head
+- [Claude vs Gemini](https://tensorfeed.ai/compare/claude-vs-gemini): Claude Opus 4.7 vs Gemini 2.5 Pro comparison
 - [GPT-4o vs Gemini](https://tensorfeed.ai/compare/gpt-4o-vs-gemini): OpenAI vs Google flagship models
 - [Claude vs Llama](https://tensorfeed.ai/compare/claude-vs-llama): Closed-source vs open-source AI comparison
 - [GPT-4o vs Claude Sonnet](https://tensorfeed.ai/compare/gpt-4o-vs-claude-sonnet): Mid-tier production model showdown
@@ -81,7 +83,10 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [AI Podcasts](https://tensorfeed.ai/podcasts): Stream AI podcast episodes from top shows
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
-- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (16 articles)
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (21 articles)
+- [Claude Opus 4.7 Release](https://tensorfeed.ai/originals/claude-opus-4-7-release): Analysis of Anthropic's April 17, 2026 flagship release
+- [Why Every Developer Needs an llms.txt](https://tensorfeed.ai/originals/llms-txt-every-developer): Practical guide to the agent-discovery standard
+- [The AI Pricing Floor](https://tensorfeed.ai/originals/ai-pricing-floor): Where budget AI inference pricing bottoms out and what it means
 - [Frontier Model Forum vs China](https://tensorfeed.ai/originals/frontier-model-forum-vs-china): OpenAI, Anthropic, and Google collaborate to stop AI model theft
 - [Claude Mythos AI Security](https://tensorfeed.ai/originals/claude-mythos-ai-security): How Mythos is rewriting cybersecurity rules
 - [Google NotebookLM in Gemini](https://tensorfeed.ai/originals/google-notebooklm-gemini): Google integrates research assistant into Gemini

@@ -5,194 +5,194 @@
     <link>https://tensorfeed.ai</link>
     <description>AI research papers, breakthroughs, and academic findings.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 09 Apr 2026 07:47:21 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 17 Apr 2026 20:47:28 GMT</lastBuildDate>
     <atom:link href="https://tensorfeed.ai/feed/research.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>Pramana: Fine-Tuning Large Language Models for Epistemic Reasoning through Navya-Nyaya</title>
-      <link>https://arxiv.org/abs/2604.04937</link>
-      <description>arXiv:2604.04937v1 Announce Type: new Abstract: Large language models produce fluent text but struggle with systematic reasoning, often hallucinating confident but unfounded claims. When Apple researchers added irrelevant context to mathematical...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.04937</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Operational Noncommutativity in Sequential Metacognitive Judgments</title>
-      <link>https://arxiv.org/abs/2604.04938</link>
-      <description>arXiv:2604.04938v1 Announce Type: new Abstract: Metacognition, understood as the monitoring and regulation of one&apos;s own cognitive processes, is inherently sequential: an agent evaluates an internal state, updates it, and may then re-evaluate under...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.04938</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Proximity Measure of Information Object Features for Solving the Problem of Their Identification in Information Systems</title>
-      <link>https://arxiv.org/abs/2604.04939</link>
-      <description>arXiv:2604.04939v1 Announce Type: new Abstract: The paper considers a new quantitative-qualitative proximity measure for the features of information objects, where data enters a common information resource from several sources independently. The...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.04939</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>ReVEL: Multi-Turn Reflective LLM-Guided Heuristic Evolution via Structured Performance Feedback</title>
-      <link>https://arxiv.org/abs/2604.04940</link>
-      <description>arXiv:2604.04940v1 Announce Type: new Abstract: Designing effective heuristics for NP-hard combinatorial optimization problems remains a challenging and expertise-intensive task. Existing applications of large language models (LLMs) primarily rely...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.04940</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Algebraic Structure Discovery for Real World Combinatorial Optimisation Problems: A General Framework from Abstract Algebra to Quotient Space Learning</title>
-      <link>https://arxiv.org/abs/2604.04941</link>
-      <description>arXiv:2604.04941v1 Announce Type: new Abstract: Many combinatorial optimisation problems hide algebraic structures that, once exposed, shrink the search space and improve the chance of finding the global optimal solution. We present a general...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.04941</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>PaperOrchestra: A Multi-Agent Framework for Automated AI Research Paper Writing</title>
-      <link>https://arxiv.org/abs/2604.05018</link>
-      <description>arXiv:2604.05018v1 Announce Type: new Abstract: Synthesizing unstructured research materials into manuscripts is an essential yet under-explored challenge in AI-driven scientific discovery. Existing autonomous writers are rigidly coupled to specific...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.05018</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Part-Level 3D Gaussian Vehicle Generation with Joint and Hinge Axis Estimation</title>
-      <link>https://arxiv.org/abs/2604.05070</link>
-      <description>arXiv:2604.05070v1 Announce Type: new Abstract: Simulation is essential for autonomous driving, yet current frameworks often model vehicles as rigid assets and fail to capture part-level articulation. With perception algorithms increasingly...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.05070</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>MMORF: A Multi-agent Framework for Designing Multi-objective Retrosynthesis Planning Systems</title>
-      <link>https://arxiv.org/abs/2604.05075</link>
-      <description>arXiv:2604.05075v1 Announce Type: new Abstract: Multi-objective retrosynthesis planning is a critical chemistry task requiring dynamic balancing of quality, safety, and cost objectives. Language model-based multi-agent systems (MAS) offer a...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.05075</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>MedGemma 1.5 Technical Report</title>
-      <link>https://arxiv.org/abs/2604.05081</link>
-      <description>arXiv:2604.05081v1 Announce Type: new Abstract: We introduce MedGemma 1.5 4B, the latest model in the MedGemma collection. MedGemma 1.5 expands on MedGemma 1 by integrating additional capabilities: high-dimensional medical imaging (CT/MRI volumes...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.05081</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Uncertainty-Guided Latent Diagnostic Trajectory Learning for Sequential Clinical Diagnosis</title>
-      <link>https://arxiv.org/abs/2604.05116</link>
-      <description>arXiv:2604.05116v1 Announce Type: new Abstract: Clinical diagnosis requires sequential evidence acquisition under uncertainty. However, most Large Language Model (LLM) based diagnostic systems assume fully observed patient information and therefore...</description>
-      <pubDate>Thu, 09 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.05116</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Mustafa Suleyman: AI development won’t hit a wall anytime soon—here’s why</title>
-      <link>https://www.technologyreview.com/2026/04/08/1135398/mustafa-suleyman-ai-future/</link>
-      <description>We evolved for a linear world. If you walk for an hour, you cover a certain distance. Walk for two hours and you cover double that distance. This intuition served us well on the savannah. But it catastrophically fails when confronting AI and the...</description>
-      <pubDate>Wed, 08 Apr 2026 14:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/08/1135398/mustafa-suleyman-ai-future/</guid>
+      <title>Pie Day 2026</title>
+      <link>https://www.technologyreview.com/2026/04/17/1136121/pie-day-links/</link>
+      <description>Ellie’s Pi Day post: https://mitadmissions.org/blogs/entry/pi-day-2026-food-institute/ How Ellie orchestrated the baking of 30 pies: https://mitadmissions.org/blogs/entry/behind-the-scenes-of-thirty-pies/</description>
+      <pubDate>Fri, 17 Apr 2026 14:07:41 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/17/1136121/pie-day-links/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
     </item>
     <item>
-      <title>The Download: water threats in Iran and AI’s impact on what entrepreneurs make</title>
-      <link>https://www.technologyreview.com/2026/04/08/1135405/the-download-water-threats-iran-ais-impact-on-entrepreneurs-make/</link>
-      <description>This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. Desalination plants in the Middle East are increasingly vulnerable As the conflict in Iran has escalated, a...</description>
-      <pubDate>Wed, 08 Apr 2026 12:10:00 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/08/1135405/the-download-water-threats-iran-ais-impact-on-entrepreneurs-make/</guid>
+      <title>The Download: bad news for inner Neanderthals, and AI warfare’s human illusion</title>
+      <link>https://www.technologyreview.com/2026/04/17/1136112/the-download-inner-neanderthal-ai-war-human-in-the-loop/</link>
+      <description>This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. The problem with thinking you’re part Neanderthal There’s a theory that many of us have an “inner Neanderthal.”...</description>
+      <pubDate>Fri, 17 Apr 2026 12:10:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/17/1136112/the-download-inner-neanderthal-ai-war-human-in-the-loop/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
     </item>
     <item>
-      <title>Desalination plants in the Middle East are increasingly vulnerable</title>
-      <link>https://www.technologyreview.com/2026/04/07/1135235/desalination-technology-water/</link>
-      <description>MIT Technology Review Explains: Let our writers untangle the complex, messy world of technology to help you understand what’s coming next. You can read more from the series here. As the conflict in Iran has escalated, a crucial resource is under...</description>
-      <pubDate>Tue, 07 Apr 2026 14:54:06 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/07/1135235/desalination-technology-water/</guid>
+      <title>The case for fixing everything</title>
+      <link>https://www.technologyreview.com/2026/04/17/1135408/book-review-stewart-brand-fixing-everything-maintenance/</link>
+      <description>The handsome new book Maintenance: Of Everything, Part One, by the tech industry legend Stewart Brand, promises to be the first in a series offering “a comprehensive overview of the civilizational importance of maintenance.” One of Brand’s several...</description>
+      <pubDate>Fri, 17 Apr 2026 10:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/17/1135408/book-review-stewart-brand-fixing-everything-maintenance/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
     </item>
     <item>
-      <title>Enabling agent-first process redesign</title>
-      <link>https://www.technologyreview.com/2026/04/07/1134966/enabling-agent-first-process-redesign/</link>
-      <description>Unlike static, rules-based systems, AI agents can learn, adapt, and optimize processes dynamically. As they interact with data, systems, people, and other agents in real time, AI agents can execute entire workflows autonomously. But unlocking their...</description>
-      <pubDate>Tue, 07 Apr 2026 14:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/07/1134966/enabling-agent-first-process-redesign/</guid>
+      <title>How robots learn: A brief, contemporary history</title>
+      <link>https://www.technologyreview.com/2026/04/17/1135416/how-robots-learn-brief-contemporary-history/</link>
+      <description>Roboticists used to dream big but build small. They’d hope to match or exceed the extraordinary complexity of the human body, and then they’d spend their career refining robotic arms for auto plants. Aim for C-3P0; end up with the Roomba. The real...</description>
+      <pubDate>Fri, 17 Apr 2026 10:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/17/1135416/how-robots-learn-brief-contemporary-history/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
     </item>
     <item>
-      <title>The Download: AI’s impact on jobs, and data centres in space</title>
-      <link>https://www.technologyreview.com/2026/04/07/1135208/the-download-ai-impact-jobs-data-centres-space/</link>
-      <description>This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. The one piece of data that could actually shed light on your job and AI Within Silicon Valley’s orbit, an...</description>
-      <pubDate>Tue, 07 Apr 2026 12:10:00 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/07/1135208/the-download-ai-impact-jobs-data-centres-space/</guid>
+      <title>NuHF Claw: A Risk Constrained Cognitive Agent Framework for Human Centered Procedure Support in Digital Nuclear Control Rooms</title>
+      <link>https://arxiv.org/abs/2604.14160</link>
+      <description>arXiv:2604.14160v1 Announce Type: new Abstract: The rapid digitization of nuclear power plant main control rooms has fundamentally reshaped operator interaction patterns, introducing complex soft-control behaviors and elevated cognitive risks that...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14160</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>Simulating Human Cognition: Heartbeat-Driven Autonomous Thinking Activity Scheduling for LLM-based AI systems</title>
+      <link>https://arxiv.org/abs/2604.14178</link>
+      <description>arXiv:2604.14178v1 Announce Type: new Abstract: Large Language Model (LLM) agents have demonstrated remarkable capabilities in reasoning and tool use, yet they often suffer from rigid, reactive control flows that limit their adaptability and...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14178</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>Fun-TSG: A Function-Driven Multivariate Time Series Generator with Variable-Level Anomaly Labeling</title>
+      <link>https://arxiv.org/abs/2604.14221</link>
+      <description>arXiv:2604.14221v1 Announce Type: new Abstract: Reliable evaluation of anomaly detection methods in multivariate time series remains an open challenge, largely due to the limitations of existing benchmark datasets. Current resources often lack...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14221</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>Interpretable and Explainable Surrogate Modeling for Simulations: A State-of-the-Art Survey and Perspectives on Explainable AI for Decision-Making</title>
+      <link>https://arxiv.org/abs/2604.14240</link>
+      <description>arXiv:2604.14240v1 Announce Type: new Abstract: The simulation of complex systems increasingly relies on sophisticated but fundamentally opaque computational black-box simulators. Surrogate models play a central role in reducing the computational...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14240</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>Formalizing Kantian Ethics: Formula of the Universal Law Logic (FULL)</title>
+      <link>https://arxiv.org/abs/2604.14254</link>
+      <description>arXiv:2604.14254v1 Announce Type: new Abstract: The field of machine ethics aims to build Artificial Moral Agents (AMAs) to better understand morality and make AI agents safer. To do so, many approaches encode human moral intuition as a set of...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14254</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>GFT: From Imitation to Reward Fine-Tuning with Unbiased Group Advantages and Dynamic Coefficient Rectification</title>
+      <link>https://arxiv.org/abs/2604.14258</link>
+      <description>arXiv:2604.14258v1 Announce Type: new Abstract: Large language models are typically post-trained using supervised fine-tuning (SFT) and reinforcement learning (RL), yet effectively unifying efficient knowledge injection with robust generalization...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14258</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>Seeing Through Experts Eyes A Foundational Vision Language Model Trained on Radiologists Gaze and Reasoning</title>
+      <link>https://arxiv.org/abs/2604.14316</link>
+      <description>arXiv:2604.14316v1 Announce Type: new Abstract: Large scale vision language models have shown promise in automating chest Xray interpretation, yet their clinical utility remains limited by a gap between model outputs and radiologist reasoning. Most...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14316</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>Mistake gating leads to energy and memory efficient continual learning</title>
+      <link>https://arxiv.org/abs/2604.14336</link>
+      <description>arXiv:2604.14336v1 Announce Type: new Abstract: Synaptic plasticity is metabolically expensive, yet animals continuously update their internal models without exhausting energy reserves. However, when artificial neural networks are trained, the...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14336</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>Credo: Declarative Control of LLM Pipelines via Beliefs and Policies</title>
+      <link>https://arxiv.org/abs/2604.14401</link>
+      <description>arXiv:2604.14401v1 Announce Type: new Abstract: Agentic AI systems are becoming commonplace in domains that require long-lived, stateful decision-making in continuously evolving conditions. As such, correctness depends not only on the output of...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14401</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>Equifinality in Mixture of Experts: Routing Topology Does Not Determine Language Modeling Quality</title>
+      <link>https://arxiv.org/abs/2604.14419</link>
+      <description>arXiv:2604.14419v1 Announce Type: new Abstract: Sparse Mixture-of-Experts (MoE) architectures employ increasingly sophisticated routing mechanisms -- learned routers, multi-hop trajectories, token-dependent gating. We ask: does routing topology...</description>
+      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://arxiv.org/abs/2604.14419</guid>
+      <source url="https://arxiv.org">arXiv cs.AI</source>
+        <category>Research</category>
+    </item>
+    <item>
+      <title>Making AI operational in constrained public sector environments</title>
+      <link>https://www.technologyreview.com/2026/04/16/1135216/making-ai-operational-in-constrained-public-sector-environments/</link>
+      <description>The AI boom has hit across industries, and public sector organizations are facing pressure to accelerate adoption. At the same time, government institutions face distinct constraints around security, governance, and operations that set them apart...</description>
+      <pubDate>Thu, 16 Apr 2026 13:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/16/1135216/making-ai-operational-in-constrained-public-sector-environments/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
     </item>
     <item>
-      <title>The one piece of data that could actually shed light on your job and AI</title>
-      <link>https://www.technologyreview.com/2026/04/06/1135187/the-one-piece-of-data-that-could-actually-shed-light-on-your-job-and-ai/</link>
-      <description>This story originally appeared in The Algorithm, our weekly newsletter on AI. To get stories like this in your inbox first, sign up here. Within Silicon Valley’s orbit, an AI-fueled jobs apocalypse is spoken about as a given. The mood is so grim...</description>
-      <pubDate>Mon, 06 Apr 2026 16:33:35 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/06/1135187/the-one-piece-of-data-that-could-actually-shed-light-on-your-job-and-ai/</guid>
+      <title>Treating enterprise AI as an operating layer</title>
+      <link>https://www.technologyreview.com/2026/04/16/1135554/treating-enterprise-ai-as-an-operating-layer/</link>
+      <description>There’s a fault line running through enterprise AI, and it’s not the one getting the most attention. The public conversation still tracks foundation models and benchmarks—GPT versus Gemini, reasoning scores, and marginal capability gains. But in...</description>
+      <pubDate>Thu, 16 Apr 2026 13:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/16/1135554/treating-enterprise-ai-as-an-operating-layer/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
     </item>
     <item>
-      <title>AI is changing how small online sellers decide what to make</title>
-      <link>https://www.technologyreview.com/2026/04/06/1135118/ai-online-seller-alibaba-accio/</link>
-      <description>For years Mike McClary sold the Guardian LTE Flashlight, a heavy-duty black model, online through his small outdoor brand. The product, designed for brightness and durability, became one of his most popular items ever. Even after he stopped offering...</description>
-      <pubDate>Mon, 06 Apr 2026 11:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/06/1135118/ai-online-seller-alibaba-accio/</guid>
+      <title>The Download: cyberscammers’ banking bypasses, and carbon removal troubles</title>
+      <link>https://www.technologyreview.com/2026/04/16/1136034/the-download-cyberscammers-banking-bypasses-microsoft-carbon-removal-troubles/</link>
+      <description>This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. Cyberscammers are bypassing banks’ security with illicit tools sold on Telegram Inside a money-laundering...</description>
+      <pubDate>Thu, 16 Apr 2026 12:10:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/16/1136034/the-download-cyberscammers-banking-bypasses-microsoft-carbon-removal-troubles/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
     </item>
     <item>
-      <title>Four things we’d need to put data centers in space</title>
-      <link>https://www.technologyreview.com/2026/04/03/1135073/four-things-wed-need-to-put-data-centers-in-space/</link>
-      <description>MIT Technology Review Explains: Let our writers untangle the complex, messy world of technology to help you understand what’s coming next. You can read more from the series here. In January, Elon Musk’s SpaceX filed an application with the US...</description>
-      <pubDate>Fri, 03 Apr 2026 17:03:19 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/03/1135073/four-things-wed-need-to-put-data-centers-in-space/</guid>
+      <title>Why having “humans in the loop” in an AI war is an illusion</title>
+      <link>https://www.technologyreview.com/2026/04/16/1136029/humans-in-the-loop-ai-war-illusion/</link>
+      <description>The availability of artificial intelligence for use in warfare is at the center of a legal battle between Anthropic and the Pentagon. This debate has become urgent, with AI playing a bigger role than ever before in the current conflict with Iran. AI...</description>
+      <pubDate>Thu, 16 Apr 2026 12:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/16/1136029/humans-in-the-loop-ai-war-illusion/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
     </item>
     <item>
-      <title>The Download: plastic’s problem with fuel prices, and SpaceX’s blockbuster IPO</title>
-      <link>https://www.technologyreview.com/2026/04/02/1135049/the-download-plastic-problem-fuel-prices-spacex-ipo/</link>
-      <description>This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. Fuel prices are soaring. Plastic could be next. As the war in Iran continues, one of the most visible global...</description>
-      <pubDate>Thu, 02 Apr 2026 12:10:00 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/02/1135049/the-download-plastic-problem-fuel-prices-spacex-ipo/</guid>
+      <title>The noise we make is hurting animals. Can we learn to shut up?</title>
+      <link>https://www.technologyreview.com/2026/04/16/1135179/anthropogenic-noise-hurting-animals/</link>
+      <description>When the covid-19 pandemic started, Jennifer Phillips thought about the songs of the sparrows. They were easier to hear, because the world had suddenly become quieter. Car traffic plummeted as people sheltered at home and shifted to remote work. Air...</description>
+      <pubDate>Thu, 16 Apr 2026 10:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/16/1135179/anthropogenic-noise-hurting-animals/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
     </item>
     <item>
-      <title>Fuel prices are soaring. Plastic could be next.</title>
-      <link>https://www.technologyreview.com/2026/04/02/1135045/plastic-economic-effects/</link>
-      <description>As the war in Iran continues to engulf the Middle East and the Strait of Hormuz stays closed, one of the most visible global economic ripple effects has been fossil-fuel prices. In particular, you can’t get away from news about the price of...</description>
-      <pubDate>Thu, 02 Apr 2026 10:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/02/1135045/plastic-economic-effects/</guid>
+      <title>The quest to measure our relationship with nature</title>
+      <link>https://www.technologyreview.com/2026/04/16/1135245/measure-relationship-with-nature-index/</link>
+      <description>As a movement, environmentalism has been pretty misanthropic. Understandably so—we humans have done some destructive things to the ecosystems around us. In the 21st century, though, mainstream conservation is learning that humans can be a force for...</description>
+      <pubDate>Thu, 16 Apr 2026 10:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.technologyreview.com/2026/04/16/1135245/measure-relationship-with-nature-index/</guid>
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>

@@ -41,6 +41,13 @@ export const metadata: Metadata = {
 
 const latestReleases = [
   {
+    name: 'Claude Opus 4.7',
+    provider: 'Anthropic',
+    date: 'Apr 2026',
+    capabilities: ['Text', 'Vision', 'Tool Use', 'Code', 'Reasoning'],
+    contextWindow: '1M',
+  },
+  {
     name: 'Claude Opus 4.6',
     provider: 'Anthropic',
     date: 'Mar 2026',

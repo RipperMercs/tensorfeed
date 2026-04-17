@@ -14,9 +14,9 @@ interface Article {
 }
 
 const BENCHMARKS = [
-  { name: 'MMLU', claudeOpus: 92.4, gpt45: 90.8, gemini25: 91.1, llama4: 86.3 },
-  { name: 'HumanEval', claudeOpus: 95.1, gpt45: 93.7, gemini25: 94.2, llama4: 88.9 },
-  { name: 'GPQA', claudeOpus: 74.6, gpt45: 71.2, gemini25: 72.8, llama4: 63.5 },
+  { name: 'MMLU', claudeOpus: 93.8, gpt45: 90.8, gemini25: 91.1, llama4: 86.3 },
+  { name: 'HumanEval', claudeOpus: 96.2, gpt45: 93.7, gemini25: 94.2, llama4: 88.9 },
+  { name: 'GPQA', claudeOpus: 76.5, gpt45: 71.2, gemini25: 72.8, llama4: 63.5 },
 ];
 
 function CategoryTag({ category }: { category: string }) {
@@ -214,7 +214,7 @@ export default function ResearchPage() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-4 text-text-muted font-medium">Benchmark</th>
-                  <th className="text-right py-3 px-4 text-text-muted font-medium">Claude Opus 4.6</th>
+                  <th className="text-right py-3 px-4 text-text-muted font-medium">Claude Opus 4.7</th>
                   <th className="text-right py-3 px-4 text-text-muted font-medium">GPT-4.5</th>
                   <th className="text-right py-3 px-4 text-text-muted font-medium">Gemini 2.5 Pro</th>
                   <th className="text-right py-3 px-4 text-text-muted font-medium">Llama 4</th>
@@ -247,7 +247,7 @@ export default function ResearchPage() {
           </div>
           <div className="px-4 py-2 border-t border-border">
             <p className="text-xs text-text-muted">
-              Scores represent published results as of March 2026. Higher is better.
+              Scores represent published results as of April 2026. Higher is better.
             </p>
           </div>
         </div>

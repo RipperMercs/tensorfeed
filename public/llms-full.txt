@@ -2,7 +2,7 @@
 
 > Complete reference content from TensorFeed.ai for full-context AI ingestion.
 > Source: https://tensorfeed.ai
-> Last generated: 2026-04-09
+> Last generated: 2026-04-17
 
 
 ---
@@ -829,7 +829,7 @@ Last Updated: March 2026
                     | Total/month 
                   |
 
-                    | Claude Opus 4.6 
+                    | Claude Opus 4.7 
                     | $300.00 
                     | $750.00 
                     | $1,050.00 
@@ -879,7 +879,7 @@ Last Updated: March 2026
                     | Total/month 
                   |
 
-                    | Claude Opus 4.6 
+                    | Claude Opus 4.7 
                     | $187.50 
                   |
 
@@ -1030,7 +1030,7 @@ Last Updated: March 2026
                 | $0.0005 
               |
 
-          Frontier model = Claude Opus 4.6 / o1. Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
+          Frontier model = Claude Opus 4.7 / o1. Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
 
         ## Tips for Reducing API Costs
 
@@ -1893,6 +1893,40 @@ Last Updated: March 2026
 
             "TensorFeed" means a feed of AI and ML data. The name captures what the site
             does: delivering structured, machine-readable data about the AI ecosystem.
+
+          ## Who We Are
+
+            TensorFeed was founded in March 2026 by Evan ("Ripper"), a software engineer and
+            entrepreneur with over a decade of experience building web applications, real-time data
+            systems, and developer tools. The project grew out of a personal frustration: keeping up
+            with AI news required checking too many sources every day, and none of them served both
+            human readers and AI agents well.
+
+            The editorial team includes Ripper (founder, lead developer, and primary writer),
+            Kira Nolan (contributing editor covering AI safety, open source, and agent ecosystems),
+            and Marcus Chen (contributing editor covering API economics, pricing analysis, and
+            enterprise AI). Together, we bring perspectives from software engineering, data science,
+            and technology journalism.
+
+            TensorFeed is operated by Pizza Robot Studios LLC, based in Los Angeles, California.
+            We are an independent publication with no venture capital funding, no investor
+            obligations, and no editorial conflicts. Our opinions are our own.
+
+          ## Editorial Standards
+
+            We hold ourselves to a clear set of standards. Aggregated news always links back to the
+            original source. We never republish full articles from other outlets. Our original
+            editorial content is clearly labeled, fact-checked against primary sources, and written
+            by named authors. When we express opinions, we make that clear.
+
+            Our data (model pricing, benchmark scores, service status) is sourced directly from
+            provider APIs, official documentation, and public benchmark datasets. We update pricing
+            and model data daily, status monitoring runs every 2 to 5 minutes, and news feeds
+            refresh every 10 minutes. If you spot an error, email us at 
+
+              feedback@tensorfeed.ai
+
+            and we will correct it promptly.
 
           ## How TensorFeed Works
 

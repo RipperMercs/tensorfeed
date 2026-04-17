@@ -110,7 +110,7 @@ export default function AIAPIPricingGuidePage() {
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   <tr>
-                    <td className="py-2 text-text-secondary">Claude Opus 4.6</td>
+                    <td className="py-2 text-text-secondary">Claude Opus 4.7</td>
                     <td className="py-2 text-right text-text-muted">$300.00</td>
                     <td className="py-2 text-right text-text-muted">$750.00</td>
                     <td className="py-2 text-right text-text-primary font-semibold">$1,050.00</td>
@@ -171,7 +171,7 @@ export default function AIAPIPricingGuidePage() {
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   <tr>
-                    <td className="py-2 text-text-secondary">Claude Opus 4.6</td>
+                    <td className="py-2 text-text-secondary">Claude Opus 4.7</td>
                     <td className="py-2 text-right text-text-primary font-semibold">$187.50</td>
                   </tr>
                   <tr>
@@ -364,7 +364,7 @@ export default function AIAPIPricingGuidePage() {
         </div>
 
         <p className="text-text-muted text-sm mt-3">
-          Frontier model = Claude Opus 4.6 / o1. Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
+          Frontier model = Claude Opus 4.7 / o1. Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
         </p>
       </section>
 

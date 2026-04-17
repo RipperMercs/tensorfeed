@@ -38,18 +38,35 @@ export interface ModelPageMeta {
 export const MODEL_DIRECTORY: ModelPageMeta[] = [
   // ── Anthropic ──────────────────────────────────────────────────────
   {
+    slug: 'claude-opus-4-7',
+    pricingId: 'claude-opus-4-7',
+    benchmarkName: 'Claude Opus 4.7',
+    providerId: 'anthropic',
+    providerName: 'Anthropic',
+    providerUrl: 'https://www.anthropic.com',
+    seoTitle: 'Claude Opus 4.7: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Claude Opus 4.7 by Anthropic. The new flagship with a 1M token context window. Pricing, benchmark scores, capabilities, and comparisons on TensorFeed.',
+    intro:
+      'Claude Opus 4.7 is Anthropic\'s newest flagship, released April 17, 2026. The headline change is a 1 million token context window at the same API pricing as 4.6, alongside incremental gains on reasoning, math, and SWE-bench. It is built for long-context code work, multi-document analysis, and agent workflows that span hours of tool calls.',
+    strengths: ['1M token context window', 'Leads on HumanEval and SWE-bench', 'Same price as 4.6 with 5x context', 'Strongest agentic tool use to date'],
+    useCases: ['Whole-repository refactors', 'Multi-document research synthesis', 'Long-running agent workflows', 'Extended codebase debugging'],
+    docsUrl: 'https://docs.anthropic.com/en/docs/about-claude/models',
+    tier: 'flagship',
+  },
+  {
     slug: 'claude-opus-4-6',
     pricingId: 'claude-opus-4-6',
     benchmarkName: 'Claude Opus 4.6',
     providerId: 'anthropic',
     providerName: 'Anthropic',
     providerUrl: 'https://www.anthropic.com',
-    seoTitle: 'Claude Opus 4.6: Pricing, Benchmarks, Specs',
+    seoTitle: 'Claude Opus 4.6: Pricing, Benchmarks, Specs (Previous Gen)',
     seoDescription:
-      'Claude Opus 4.6 by Anthropic. Full pricing, benchmark scores, context window, capabilities, and comparison data. Updated daily on TensorFeed.',
+      'Claude Opus 4.6 by Anthropic, now the previous-generation flagship. Pricing, benchmarks, context window, and how it compares to Opus 4.7 on TensorFeed.',
     intro:
-      'Claude Opus 4.6 is Anthropic\'s most capable model, built for complex reasoning, extended code generation, and agentic workflows. It leads on SWE-bench and GPQA Diamond while supporting a 200K context window with vision and tool use.',
-    strengths: ['Top-tier reasoning', 'Best-in-class code generation', 'Agentic tool use', '200K context window'],
+      'Claude Opus 4.6 was Anthropic\'s flagship until April 17, 2026, when Opus 4.7 succeeded it with a 1 million token context window at the same price. 4.6 remains available on the API and still leads on many reasoning and code benchmarks. It ships with a 200K context window, full tool use, and vision, and is a solid choice for workloads that do not need the larger context.',
+    strengths: ['Previous-gen flagship, still strong', 'Top-tier reasoning', 'Best-in-class code generation', '200K context window'],
     useCases: ['Complex analysis and research', 'Large codebase refactoring', 'Multi-step agent workflows', 'Long document processing'],
     docsUrl: 'https://docs.anthropic.com/en/docs/about-claude/models',
     tier: 'flagship',

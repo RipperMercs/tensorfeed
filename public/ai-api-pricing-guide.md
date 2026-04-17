@@ -1,7 +1,7 @@
 # AI API Pricing Guide: Every Provider Compared
 
 > Source: https://tensorfeed.ai/ai-api-pricing-guide
-> Last generated: 2026-04-09
+> Last generated: 2026-04-17
 
 Last Updated: March 2026
 
@@ -54,7 +54,7 @@ Last Updated: March 2026
                     | Total/month 
                   |
 
-                    | Claude Opus 4.6 
+                    | Claude Opus 4.7 
                     | $300.00 
                     | $750.00 
                     | $1,050.00 
@@ -104,7 +104,7 @@ Last Updated: March 2026
                     | Total/month 
                   |
 
-                    | Claude Opus 4.6 
+                    | Claude Opus 4.7 
                     | $187.50 
                   |
 
@@ -255,7 +255,7 @@ Last Updated: March 2026
                 | $0.0005 
               |
 
-          Frontier model = Claude Opus 4.6 / o1. Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
+          Frontier model = Claude Opus 4.7 / o1. Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
 
         ## Tips for Reducing API Costs
 
