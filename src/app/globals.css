@@ -8,9 +8,11 @@
   --bg-primary: #0a0a0f;
   --bg-secondary: #12121a;
   --bg-tertiary: #1a1a2e;
+  --bg-quaternary: #20203a;
   --text-primary: #e2e8f0;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
+  --text-dim: #475569;
   --accent-primary: #6366f1;
   --accent-secondary: #8b5cf6;
   --accent-green: #10b981;
@@ -18,16 +20,33 @@
   --accent-amber: #f59e0b;
   --accent-cyan: #06b6d4;
   --border: #1e293b;
+  --border-strong: #334155;
   --glow: rgba(99, 102, 241, 0.15);
+
+  --src-anthropic: #e8806b;
+  --src-openai: #10a37f;
+  --src-google: #4285f4;
+  --src-hackernews: #ff6600;
+  --src-theverge: #a855f7;
+  --src-techcrunch: #0bd67b;
+  --src-huggingface: #ffd21e;
+  --src-nvidia: #76b900;
+  --src-meta: #0668e1;
+  --src-arxiv: #b31b1b;
+  --src-arstechnica: #ff4e00;
+
+  --motion: 1;
 }
 
 [data-theme="light"] {
   --bg-primary: #fafaf9;
   --bg-secondary: #f5f5f4;
   --bg-tertiary: #e7e5e4;
+  --bg-quaternary: #d6d3d1;
   --text-primary: #1c1917;
   --text-secondary: #44403c;
   --text-muted: #78716c;
+  --text-dim: #a8a29e;
   --accent-primary: #4f46e5;
   --accent-secondary: #7c3aed;
   --accent-green: #059669;
@@ -35,6 +54,7 @@
   --accent-amber: #d97706;
   --accent-cyan: #0e7490;
   --border: #d6d3d1;
+  --border-strong: #a8a29e;
   --glow: rgba(79, 70, 229, 0.08);
 }
 
@@ -197,4 +217,152 @@ a, button, input, select, textarea,
     box-shadow: 0 0 24px var(--glow), 0 4px 12px rgba(0, 0, 0, 0.1);
     border-color: var(--accent-primary);
   }
+}
+
+/* ===== Phase 1 facelift: shared keyframes + utilities ===== */
+
+@keyframes tf-ticker-scroll {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes tf-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.85); }
+}
+@keyframes tf-pulse-ring {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes tf-char-in {
+  to { opacity: 1; }
+}
+@keyframes tf-card-pulse {
+  0% { box-shadow: inset 0 0 0 2px var(--accent-cyan); }
+  100% { box-shadow: inset 0 0 0 0 transparent; }
+}
+
+.tf-ticker-track {
+  animation: tf-ticker-scroll calc(90s / var(--motion, 1)) linear infinite;
+  will-change: transform;
+}
+.tf-ticker:hover .tf-ticker-track { animation-play-state: paused; }
+
+.tf-live-dot {
+  animation: tf-pulse-dot calc(2s / var(--motion, 1)) ease-in-out infinite;
+}
+.tf-live-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-green);
+  opacity: 0.6;
+  animation: tf-pulse-ring calc(2s / var(--motion, 1)) ease-out infinite;
+}
+
+.tf-hero-grid {
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 80%);
+}
+.tf-hero-scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 3px,
+    rgba(255, 255, 255, 0.012) 3px,
+    rgba(255, 255, 255, 0.012) 4px
+  );
+}
+.tf-hero-title-reveal {
+  opacity: 0;
+  animation: tf-char-in 0.7s ease 0.1s forwards;
+}
+
+.tf-status-card.changed {
+  animation: tf-card-pulse calc(2.5s / var(--motion, 1)) ease-out;
+}
+
+.tf-source-chip:hover {
+  filter: none !important;
+  opacity: 1 !important;
+  color: var(--src-color) !important;
+}
+.tf-agent-pill:hover {
+  color: var(--accent-cyan) !important;
+  border-color: var(--accent-cyan) !important;
+}
+
+/* ===== Phase 2 facelift utilities ===== */
+
+@keyframes tf-activity-in {
+  0% { opacity: 0; transform: translateY(-8px); background: rgba(6,182,212,0.08); }
+  100% { opacity: 1; transform: translateY(0); background: transparent; }
+}
+.tf-activity-enter {
+  animation: tf-activity-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.tf-mag-lead h2 a {
+  background-image: linear-gradient(to right, var(--accent-cyan), var(--accent-cyan));
+  background-size: 0 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.4s;
+  padding-bottom: 4px;
+}
+.tf-mag-lead h2 a:hover {
+  background-size: 100% 1px;
+}
+
+.tf-explore-card { position: relative; overflow: hidden; transition: background 0.2s; }
+.tf-explore-card:hover { background: var(--bg-tertiary); }
+.tf-explore-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 0%, var(--explore-color, var(--accent-primary)) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  filter: blur(30px);
+}
+.tf-explore-card:hover::before { opacity: 0.25; }
+.tf-explore-card .tf-explore-vis {
+  position: absolute;
+  right: -14px;
+  bottom: -14px;
+  width: 76px;
+  height: 76px;
+  opacity: 0.14;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--explore-color, var(--accent-primary));
+}
+.tf-explore-card:hover .tf-explore-vis { opacity: 0.45; }
+.tf-explore-card .tf-explore-arrow {
+  color: var(--explore-color, var(--accent-primary));
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.tf-explore-card:hover .tf-explore-arrow { opacity: 1; transform: translateX(0); }
+.tf-explore-card > * { position: relative; z-index: 1; }
+.tf-explore-card .tf-explore-vis { z-index: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-ticker-track,
+  .tf-live-dot,
+  .tf-live-pulse::after,
+  .tf-hero-title-reveal,
+  .tf-status-card.changed,
+  .tf-activity-enter {
+    animation: none !important;
+  }
+  .tf-hero-title-reveal { opacity: 1; }
 }

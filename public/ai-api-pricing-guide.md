@@ -1,7 +1,7 @@
 # AI API Pricing Guide: Every Provider Compared
 
 > Source: https://tensorfeed.ai/ai-api-pricing-guide
-> Last generated: 2026-04-17
+> Last generated: 2026-04-18
 
 Last Updated: March 2026
 

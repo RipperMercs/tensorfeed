@@ -144,21 +144,10 @@ export default function ContactPage() {
           </p>
         </div>
 
-        <div>
-          <h2 className="text-lg font-semibold text-text-primary mb-3">Response Time</h2>
-          <p className="text-text-secondary text-sm">
-            We aim to respond to all emails within 48 hours. For urgent matters (data accuracy issues,
-            content removal requests), we prioritize faster responses.
-          </p>
-        </div>
-
-        <div className="bg-bg-secondary border border-border rounded-lg p-5">
-          <p className="text-text-primary font-medium mb-2">Pizza Robot Studios LLC</p>
-          <p className="text-text-secondary text-sm">
-            3705 W Pico Blvd #B<br />
-            Los Angeles, CA 90019
-          </p>
-        </div>
+        <p className="text-xs text-text-muted pt-4 border-t border-border leading-relaxed">
+          Response time: within 48 hours; faster for data accuracy and content removal requests. Published
+          by Pizza Robot Studios LLC, 3705 W Pico Blvd #B, Los Angeles, CA 90019.
+        </p>
       </div>
     </div>
   );

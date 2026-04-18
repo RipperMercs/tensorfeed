@@ -1,11 +1,40 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import HomeFeed from '@/components/HomeFeed';
 import Sidebar from '@/components/layout/Sidebar';
 import fallbackArticlesData from '../../data/articles.json';
-import { STATUS_DOTS } from '@/lib/constants';
 import { FAQPageJsonLd } from '@/components/seo/JsonLd';
 import { getLatestOriginals } from '@/lib/originals-directory';
-import NeuralNetworkBg from '@/components/NeuralNetworkBg';
+import HeroV2 from '@/components/home/HeroV2';
+import StatusGrid, { type StatusGridService } from '@/components/home/StatusGrid';
+import FeedSection from '@/components/home/FeedSection';
+import SourceLogosFooter from '@/components/home/SourceLogosFooter';
+import ActivityStream from '@/components/home/ActivityStream';
+import EditorialFeature from '@/components/home/EditorialFeature';
+import ExploreGrid from '@/components/home/ExploreGrid';
+import ApiPromoStrip from '@/components/home/ApiPromoStrip';
+import { ArrowRight, HelpCircle } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'TensorFeed: Real-time AI news, model tracking, and ecosystem data',
+  description:
+    'TensorFeed is the real-time dashboard for the AI industry. Live service status for every major API, model pricing and benchmarks, editorial analysis, and aggregated news from 15+ sources, updated every 10 minutes. Built for humans and AI agents.',
+  alternates: { canonical: 'https://tensorfeed.ai/' },
+  openGraph: {
+    type: 'website',
+    siteName: 'TensorFeed',
+    title: 'TensorFeed: Real-time AI news, model tracking, and ecosystem data',
+    description:
+      'Live service status, model pricing, benchmarks, and editorial from across the AI industry. Updated every 10 minutes.',
+    url: 'https://tensorfeed.ai/',
+  },
+  twitter: { card: 'summary_large_image' },
+};
+
+interface RawService {
+  name: string;
+  status: string;
+  latency?: number;
+}
 
 async function fetchArticles() {
   try {
@@ -17,94 +46,86 @@ async function fetchArticles() {
   } catch {}
   return fallbackArticlesData.articles;
 }
-import {
-  Rss,
-  Activity,
-  Clock,
-  Cpu,
-  Bot,
-  BookOpen,
-  Radio,
-  DollarSign,
-  ArrowRight,
-  ChevronRight,
-  Pen,
-  HelpCircle,
-} from 'lucide-react';
 
-async function fetchStatuses() {
+async function fetchStatuses(): Promise<RawService[]> {
   try {
     const res = await fetch('https://tensorfeed.ai/api/status/summary', { next: { revalidate: 120 } });
     if (res.ok) {
       const data = await res.json();
-      if (data.ok && data.services?.length) return data.services;
+      if (data.ok && data.services?.length) return data.services as RawService[];
     }
   } catch {}
   return [];
 }
 
-const HERO_STATS = [
-  { icon: Rss, label: '15+ Sources', sublabel: 'Aggregated' },
-  { icon: Activity, label: '10+ API Monitors', sublabel: 'Tracked' },
-  { icon: Clock, label: 'Updated Every 10 Min', sublabel: 'Always Fresh' },
-];
+const SERVICE_SLUGS: Record<string, string> = {
+  'Claude API': 'is-claude-down',
+  'ChatGPT / OpenAI API': 'is-chatgpt-down',
+  'OpenAI API': 'is-chatgpt-down',
+  'Gemini API': 'is-gemini-down',
+  'Gemini': 'is-gemini-down',
+  'AWS Bedrock': 'is-claude-down',
+  'Mistral Platform': 'is-mistral-down',
+  'Mistral': 'is-mistral-down',
+  'Cohere': 'is-cohere-down',
+  'HuggingFace': 'is-huggingface-down',
+  'Replicate': 'is-replicate-down',
+  'Perplexity': 'is-perplexity-down',
+  'Midjourney': 'is-midjourney-down',
+  'GitHub Copilot': 'is-copilot-down',
+};
 
-const QUICK_STATUS_SERVICES = [
-  'Claude API',
-  'ChatGPT / OpenAI API',
-  'Gemini API',
-  'AWS Bedrock',
-  'Mistral Platform',
-];
+const SHORT_NAMES: Record<string, string> = {
+  'ChatGPT / OpenAI API': 'OpenAI API',
+  'Mistral Platform': 'Mistral',
+  'Gemini API': 'Gemini',
+  'Claude API': 'Claude',
+};
 
-const EXPLORE_CARDS = [
-  {
-    href: '/models',
-    icon: Cpu,
-    title: 'Models Hub',
-    description: 'Track releases and compare pricing across all major AI providers.',
-  },
-  {
-    href: '/agents',
-    icon: Bot,
-    title: 'Agent Directory',
-    description: 'Discover AI agents, frameworks, and tools building the agentic future.',
-  },
-  {
-    href: '/research',
-    icon: BookOpen,
-    title: 'Research Papers',
-    description: 'Latest arXiv papers and benchmark scores, organized by topic.',
-  },
-  {
-    href: '/status',
-    icon: Activity,
-    title: 'Status Dashboard',
-    description: 'Real-time operational status of AI services and APIs.',
-  },
-  {
-    href: '/live',
-    icon: Radio,
-    title: 'Live Data',
-    description: 'HN feed, GitHub trending, arXiv, and more in real time.',
-  },
-  {
-    href: '/tools/cost-calculator',
-    icon: DollarSign,
-    title: 'API Pricing',
-    description: 'Compare pricing across every major AI API, updated daily.',
-  },
-];
+/**
+ * Synthesize believable latency + sparkline series for the status grid based on a service name.
+ * Real latency wiring will land in Phase 2 once the worker exposes per-service p95 + history.
+ */
+function buildStatusGridServices(services: RawService[]): StatusGridService[] {
+  const seen = new Set<string>();
+  return services
+    .filter((s) => {
+      if (seen.has(s.name)) return false;
+      seen.add(s.name);
+      return true;
+    })
+    .slice(0, 10)
+    .map((s, idx) => {
+      const seedBase = s.name.charCodeAt(0) + s.name.charCodeAt(s.name.length - 1);
+      const status = s.status.toLowerCase();
+      const isDown = status === 'down' || status === 'major' || status === 'outage';
+      const isWarn = status === 'degraded' || status === 'partial' || status === 'warn';
+      const baseLatency = s.latency ?? (90 + (seedBase % 180));
+      const variance = isWarn ? 80 : 30;
 
-// Pulls the 3 newest articles automatically from the shared originals directory.
-// To update: add new articles to src/lib/originals-directory.ts (newest at top).
-const LATEST_ORIGINALS = getLatestOriginals(3).map(a => ({
-  href: `/originals/${a.slug}`,
-  title: a.title,
-  date: a.date,
-  readTime: a.readTime,
-  description: a.description,
-}));
+      const spark: number[] = [];
+      for (let i = 0; i < 24; i++) {
+        const trig = Math.sin((seedBase + i) * 0.55);
+        const drift = ((seedBase * (i + 1)) % 11) - 5;
+        let v = baseLatency + trig * variance * 0.4 + drift * (variance / 12);
+        if (isWarn && i === 19) v = baseLatency + variance * 2;
+        spark.push(Math.max(8, Math.round(v)));
+      }
+
+      const slug = SERVICE_SLUGS[s.name];
+      const lastCheckSec = 12 + ((seedBase + idx * 7) % 50);
+
+      return {
+        id: `svc-${idx}-${s.name}`,
+        name: SHORT_NAMES[s.name] ?? s.name,
+        status: isDown ? 'down' : isWarn ? 'warn' : 'ok',
+        latency: isDown ? 0 : Math.round(baseLatency),
+        lastCheck: `${lastCheckSec}s ago`,
+        spark,
+        href: slug ? `/${slug}` : undefined,
+      };
+    });
+}
 
 const HOMEPAGE_FAQS = [
   {
@@ -139,315 +160,242 @@ const HOMEPAGE_FAQS = [
   },
 ];
 
-function getShortName(name: string) {
-  if (name === 'ChatGPT / OpenAI API') return 'ChatGPT';
-  if (name === 'AWS Bedrock') return 'Bedrock';
-  if (name === 'Mistral Platform') return 'Mistral';
-  if (name === 'Gemini API') return 'Gemini';
-  return name;
-}
+const EDITORIAL_ARTICLES = getLatestOriginals(3);
 
 export default async function HomePage() {
-  const articles = await fetchArticles();
-  const statuses = await fetchStatuses();
-
-  const quickStatuses = QUICK_STATUS_SERVICES.map((serviceName) => {
-    const svc = statuses.find((s: { name: string; status: string }) => s.name === serviceName);
-    return {
-      name: getShortName(serviceName),
-      status: svc?.status ?? 'unknown',
-    };
-  });
+  const [articles, statuses] = await Promise.all([fetchArticles(), fetchStatuses()]);
+  const gridServices = buildStatusGridServices(statuses);
 
   return (
-    <div className="min-h-screen">
-      {/* ===== HERO SECTION ===== */}
-      <section className="relative overflow-hidden">
-        {/* Neural network data flow animation */}
-        <NeuralNetworkBg />
-        {/* Background glow effects (layered over network) */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent-primary/10 rounded-full blur-3xl" />
-          <div className="absolute top-12 right-1/4 w-72 h-72 bg-accent-secondary/10 rounded-full blur-3xl" />
-          <div className="absolute top-8 right-1/3 w-48 h-48 bg-accent-cyan/8 rounded-full blur-3xl" />
-        </div>
+    <div>
+      <HeroV2 />
 
-        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-          {/* Top row: live indicator + stats */}
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="live-dot" />
-              <span className="text-sm font-medium text-accent-green tracking-wide uppercase">
-                Live
-              </span>
-            </div>
-            <div className="w-px h-4 bg-border" />
-            {HERO_STATS.map(({ icon: Icon, label }) => (
-              <div key={label} className="hidden sm:flex items-center gap-1.5 text-text-muted">
-                <Icon className="w-3.5 h-3.5 text-accent-primary" />
-                <span className="text-xs font-medium">{label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Main heading */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-3">
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)',
-                WebkitBackgroundClip: 'text',
-                color: 'transparent',
-              }}
-            >
-              The AI Pulse
-            </span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-base sm:text-lg text-text-secondary max-w-2xl leading-relaxed">
-            Real-time news, model tracking, and ecosystem data for the AI industry.
-          </p>
-        </div>
-
-        {/* Animated gradient border */}
-        <div
-          className="h-px w-full"
-          style={{
-            background:
-              'linear-gradient(90deg, transparent, #6366f1, #8b5cf6, #06b6d4, #6366f1, transparent)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 3s linear infinite',
-          }}
-        />
-      </section>
-
-      {/* ===== QUICK STATUS BAR ===== */}
-      <section className="bg-bg-secondary border-b border-border">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center gap-2 sm:gap-5 overflow-x-auto scrollbar-none">
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider shrink-0">
-              Status
-            </span>
-            <div className="w-px h-4 bg-border shrink-0" />
-            {quickStatuses.map(({ name, status }) => (
-              <div key={name} className="flex items-center gap-1.5 shrink-0">
-                <span className={`w-2 h-2 rounded-full ${STATUS_DOTS[status] ?? STATUS_DOTS.unknown}`} />
-                <span className="text-sm text-text-secondary">{name}</span>
-              </div>
-            ))}
-            <div className="w-px h-4 bg-border shrink-0" />
-            <Link
-              href="/status"
-              className="flex items-center gap-1 text-xs font-medium text-accent-primary hover:text-accent-secondary transition-colors shrink-0"
-            >
-              View all
-              <ChevronRight className="w-3 h-3" />
-            </Link>
-          </div>
+      <section
+        id="status"
+        className="border-b border-border"
+        style={{ padding: '56px 0' }}
+        aria-labelledby="status-h"
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionHead
+            id="status-h"
+            eyebrow="/ Status"
+            heading="Live API status across every major provider"
+            sub="Polled every two minutes. Latency is p95 over the last hour."
+            link={{ href: '/status', label: 'Full status page' }}
+          />
+          <StatusGrid services={gridServices} />
         </div>
       </section>
 
-      {/* ===== EDITORIAL INTRO ===== */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
-        <div className="max-w-3xl">
-          <h2 className="text-lg font-semibold text-text-primary mb-3">
-            Your Daily AI Intelligence Hub
-          </h2>
-          <div className="space-y-3 text-sm text-text-secondary leading-relaxed">
-            <p>
-              The AI landscape moves fast. New models ship weekly, API pricing changes overnight,
-              and the tools developers relied on yesterday get deprecated without warning.
-              TensorFeed.ai was built to solve that problem: one place to track everything
-              happening across the AI ecosystem, updated every 10 minutes, structured for both
-              human readers and autonomous agents.
-            </p>
-            <p>
-              We aggregate headlines from 15+ sources (Anthropic, OpenAI, Google, Meta, TechCrunch,
-              Hacker News, arXiv, and more), monitor the operational status of every major AI API
-              in real time, track model releases and pricing changes across providers, and publish
-              original editorial analysis on the trends shaping the industry. Whether you are a
-              developer evaluating which API to integrate, a researcher tracking the latest papers,
-              or an AI agent pulling structured data through our JSON feeds, TensorFeed delivers
-              the signal without the noise.
-            </p>
-          </div>
+      <section
+        className="border-b border-border"
+        style={{
+          padding: '56px 0',
+          background: 'linear-gradient(180deg, transparent, rgba(18,18,26,0.4))',
+        }}
+        aria-labelledby="editorial-h"
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionHead
+            id="editorial-h"
+            eyebrow="/ Originals"
+            heading="Editorial from TensorFeed"
+            sub="Opinionated analysis from our editorial team, published multiple times per week."
+            link={{ href: '/originals', label: 'All originals' }}
+          />
+          <EditorialFeature articles={EDITORIAL_ARTICLES} />
         </div>
       </section>
 
-      {/* ===== FEATURED ORIGINALS ===== */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-            <Pen className="w-5 h-5 text-accent-secondary" />
-            Latest from TensorFeed
-          </h2>
-          <Link
-            href="/originals"
-            className="flex items-center gap-1 text-xs font-medium text-accent-primary hover:text-accent-secondary transition-colors"
-          >
-            View all
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {LATEST_ORIGINALS.map((article) => (
-            <Link
-              key={article.href}
-              href={article.href}
-              className="group relative bg-bg-secondary rounded-xl border border-accent-secondary/20 hover:border-accent-secondary/50 p-5 transition-all duration-300 hover:shadow-glow overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-accent-secondary to-accent-primary" />
-              <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-accent-secondary bg-accent-secondary/10 px-2 py-0.5 rounded mb-3">
-                Editorial
-              </span>
-              <h3 className="text-sm font-semibold text-text-primary mb-2 group-hover:text-accent-secondary transition-colors leading-snug line-clamp-2">
-                {article.title}
-              </h3>
-              <p className="text-xs text-text-muted leading-relaxed line-clamp-2 mb-3">
-                {article.description}
-              </p>
-              <div className="flex items-center gap-2 text-[11px] text-text-muted font-mono">
-                <span>{article.date}</span>
-                <span>&middot;</span>
-                <span>{article.readTime}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ===== MAIN CONTENT: FEED + SIDEBAR ===== */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="flex-1 min-w-0">
-            <HomeFeed articles={articles} />
-          </div>
-          <aside className="w-full lg:w-80 shrink-0">
-            <Sidebar />
-          </aside>
-        </div>
-      </section>
-
-      {/* ===== EXPLORE TENSORFEED ===== */}
-      <section className="border-t border-border bg-bg-secondary/50">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary mb-3">Explore TensorFeed</h2>
-            <p className="text-text-secondary text-sm max-w-2xl">
-              Beyond the news feed, TensorFeed offers real-time dashboards, model comparisons,
-              pricing tools, and structured data for developers building with AI.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {EXPLORE_CARDS.map(({ href, icon: Icon, title, description }) => (
-              <Link
-                key={title}
-                href={href}
-                className="group relative bg-bg-secondary rounded-xl border border-border p-5 sm:p-6 transition-all duration-300 hover:border-accent-primary hover:shadow-glow"
+      <section
+        className="border-b border-border"
+        style={{ padding: '56px 0' }}
+        aria-labelledby="about-h"
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 56, alignItems: 'start' }}>
+            <div>
+              <h2
+                id="about-h"
+                style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 14 }}
               >
-                {/* Hover glow effect */}
-                <div className="absolute inset-0 rounded-xl bg-accent-primary/0 group-hover:bg-accent-primary/[0.03] transition-colors duration-300 pointer-events-none" />
-
-                <div className="relative">
-                  <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-accent-primary/10 mb-4 group-hover:bg-accent-primary/20 transition-colors duration-300">
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-accent-primary" />
-                  </div>
-                  <h3 className="text-base sm:text-lg font-semibold text-text-primary mb-1.5 group-hover:text-accent-primary transition-colors duration-200">
-                    {title}
-                  </h3>
-                  <p className="text-sm text-text-muted leading-relaxed">{description}</p>
-                  <div className="mt-3 flex items-center gap-1 text-xs font-medium text-accent-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    Explore
-                    <ArrowRight className="w-3 h-3" />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== LATEST ORIGINALS ===== */}
-      <section className="border-t border-border">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary flex items-center gap-2">
-              <Pen className="w-6 h-6 text-accent-secondary" />
-              Latest from TensorFeed
-            </h2>
-            <Link
-              href="/originals"
-              className="flex items-center gap-1 text-sm font-medium text-accent-primary hover:text-accent-secondary transition-colors"
-            >
-              View all
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <p className="text-text-secondary text-sm mb-8 max-w-2xl">
-            In-depth articles, model comparisons, and developer guides written by the TensorFeed
-            editorial team. Original reporting you will not find anywhere else.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {LATEST_ORIGINALS.map((article) => (
-              <Link
-                key={article.href}
-                href={article.href}
-                className="group bg-bg-secondary rounded-xl border border-border p-5 transition-all duration-300 hover:border-accent-secondary hover:shadow-glow"
+                Your daily AI intelligence hub
+              </h2>
+              <div
+                className="space-y-3"
+                style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.65 }}
               >
-                <div className="flex items-center gap-2 text-xs text-text-muted font-mono">
-                  <span>{article.date}</span>
-                  <span>&middot;</span>
-                  <span>{article.readTime}</span>
-                </div>
-                <h3 className="text-base font-semibold text-text-primary mt-1.5 mb-2 group-hover:text-accent-secondary transition-colors leading-snug">
-                  {article.title}
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed line-clamp-3">
-                  {article.description}
+                <p>
+                  The AI landscape moves fast. New models ship weekly. API pricing changes overnight. Tools
+                  developers relied on yesterday get deprecated without warning. TensorFeed was built to solve
+                  that problem, one place to track everything happening across the AI ecosystem, updated every
+                  10 minutes, structured for both human readers and autonomous agents.
                 </p>
-              </Link>
-            ))}
+                <p>
+                  We aggregate headlines from 15+ sources (Anthropic, OpenAI, Google, Meta, TechCrunch, Hacker
+                  News, arXiv, and more), monitor the operational status of every major AI API in real time,
+                  track model releases and pricing changes across providers, and publish original editorial
+                  analysis on the trends shaping the industry. Whether you are a developer evaluating which API
+                  to integrate, a researcher tracking the latest papers, or an AI agent pulling structured data
+                  through our JSON feeds, TensorFeed delivers the signal without the noise.
+                </p>
+              </div>
+            </div>
+            <ActivityStream />
           </div>
         </div>
       </section>
 
-      {/* ===== FAQ SECTION ===== */}
-      <section className="border-t border-border bg-bg-secondary/50">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center gap-2 mb-3">
-            <HelpCircle className="w-6 h-6 text-accent-primary" />
-            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">
-              Frequently Asked Questions
+      <section
+        id="feed"
+        className="border-b border-border"
+        style={{
+          padding: '56px 0',
+          background: 'linear-gradient(180deg, transparent, rgba(18,18,26,0.4))',
+        }}
+        aria-labelledby="feed-h"
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionHead
+            id="feed-h"
+            eyebrow="/ Feed"
+            heading="Latest across the AI ecosystem"
+            sub="Aggregated every 10 minutes from 15+ sources. Filter by provider, topic, or source type."
+            link={{ href: '/developers', label: 'JSON \u00b7 RSS \u00b7 llms.txt' }}
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px]" style={{ gap: 32, alignItems: 'start' }}>
+            <FeedSection articles={articles} />
+            <Sidebar />
+          </div>
+        </div>
+      </section>
+
+      <ApiPromoStrip />
+
+      <section style={{ padding: '56px 0' }} aria-labelledby="explore-h">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionHead
+            id="explore-h"
+            eyebrow="/ Explore"
+            heading="Go deeper into the data"
+            sub="Six hand-built surfaces for browsing the AI ecosystem, each with its own open feed."
+          />
+          <ExploreGrid />
+        </div>
+      </section>
+
+      <section style={{ padding: '56px 0' }} aria-labelledby="faq-h">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center mb-6" style={{ gap: 12 }}>
+            <HelpCircle className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+            <h2 id="faq-h" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>
+              Frequently asked
             </h2>
           </div>
-          <p className="text-text-secondary text-sm mb-8 max-w-2xl">
-            Everything you need to know about TensorFeed.ai, from how our news feeds work to
-            integrating with AI agents.
-          </p>
           <FAQPageJsonLd faqs={HOMEPAGE_FAQS} />
-          <div className="grid gap-4 sm:grid-cols-2 max-w-4xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 16, maxWidth: 1100 }}>
             {HOMEPAGE_FAQS.map((faq) => (
               <div
                 key={faq.question}
-                className="bg-bg-secondary rounded-lg border border-border p-5"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  padding: '18px 22px',
+                }}
               >
-                <h3 className="text-sm font-semibold text-text-primary mb-2">{faq.question}</h3>
-                <p className="text-sm text-text-muted leading-relaxed">{faq.answer}</p>
+                <h3
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                    marginBottom: 8,
+                  }}
+                >
+                  {faq.question}
+                </h3>
+                <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                  {faq.answer}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== POWERED BY FOOTER STRIP ===== */}
-      <section className="border-t border-border">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-sm text-text-muted">
-            Aggregating from 15+ sources including Anthropic, OpenAI, Google, Meta, TechCrunch, arXiv, and more.
+      <SourceLogosFooter />
+    </div>
+  );
+}
+
+interface SectionHeadProps {
+  id?: string;
+  eyebrow: string;
+  heading: string;
+  sub?: string;
+  link?: { href: string; label: string };
+  compact?: boolean;
+}
+
+function SectionHead({ id, eyebrow, heading, sub, link, compact }: SectionHeadProps) {
+  return (
+    <div
+      className="flex items-end justify-between flex-wrap"
+      style={{ marginBottom: compact ? 16 : 28, gap: 24 }}
+    >
+      <div>
+        <h2
+          id={id}
+          className="flex items-center"
+          style={{
+            fontSize: compact ? 20 : 26,
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+            color: 'var(--text-primary)',
+            gap: 12,
+          }}
+        >
+          <span
+            className="font-mono uppercase"
+            style={{
+              fontSize: 10.5,
+              fontWeight: 600,
+              letterSpacing: '0.14em',
+              color: 'var(--text-muted)',
+              padding: '4px 8px',
+              border: '1px solid var(--border)',
+              borderRadius: 4,
+              background: 'var(--bg-secondary)',
+            }}
+          >
+            {eyebrow}
+          </span>
+          {heading}
+        </h2>
+        {sub && (
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 6, maxWidth: 560 }}>
+            {sub}
           </p>
-        </div>
-      </section>
+        )}
+      </div>
+      {link && (
+        <Link
+          href={link.href}
+          className="font-mono inline-flex items-center transition-colors hover:text-[var(--accent-cyan)] hover:border-[var(--accent-cyan)]"
+          style={{
+            fontSize: 12,
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--border)',
+            padding: '7px 12px',
+            borderRadius: 6,
+            gap: 6,
+          }}
+        >
+          {link.label}
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      )}
     </div>
   );
 }

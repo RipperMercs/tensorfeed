@@ -5,7 +5,7 @@
     <link>https://tensorfeed.ai</link>
     <description>AI research papers, breakthroughs, and academic findings.</description>
     <language>en-us</language>
-    <lastBuildDate>Fri, 17 Apr 2026 20:47:28 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 18 Apr 2026 05:45:27 GMT</lastBuildDate>
     <atom:link href="https://tensorfeed.ai/feed/research.xml" rel="self" type="application/rss+xml"/>
     <item>
       <title>Pie Day 2026</title>
@@ -46,96 +46,6 @@
       <source url="https://technologyreview.com">MIT Technology Review</source>
         <category>Research</category>
         <category>Policy &amp; Safety</category>
-    </item>
-    <item>
-      <title>NuHF Claw: A Risk Constrained Cognitive Agent Framework for Human Centered Procedure Support in Digital Nuclear Control Rooms</title>
-      <link>https://arxiv.org/abs/2604.14160</link>
-      <description>arXiv:2604.14160v1 Announce Type: new Abstract: The rapid digitization of nuclear power plant main control rooms has fundamentally reshaped operator interaction patterns, introducing complex soft-control behaviors and elevated cognitive risks that...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14160</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Simulating Human Cognition: Heartbeat-Driven Autonomous Thinking Activity Scheduling for LLM-based AI systems</title>
-      <link>https://arxiv.org/abs/2604.14178</link>
-      <description>arXiv:2604.14178v1 Announce Type: new Abstract: Large Language Model (LLM) agents have demonstrated remarkable capabilities in reasoning and tool use, yet they often suffer from rigid, reactive control flows that limit their adaptability and...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14178</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Fun-TSG: A Function-Driven Multivariate Time Series Generator with Variable-Level Anomaly Labeling</title>
-      <link>https://arxiv.org/abs/2604.14221</link>
-      <description>arXiv:2604.14221v1 Announce Type: new Abstract: Reliable evaluation of anomaly detection methods in multivariate time series remains an open challenge, largely due to the limitations of existing benchmark datasets. Current resources often lack...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14221</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Interpretable and Explainable Surrogate Modeling for Simulations: A State-of-the-Art Survey and Perspectives on Explainable AI for Decision-Making</title>
-      <link>https://arxiv.org/abs/2604.14240</link>
-      <description>arXiv:2604.14240v1 Announce Type: new Abstract: The simulation of complex systems increasingly relies on sophisticated but fundamentally opaque computational black-box simulators. Surrogate models play a central role in reducing the computational...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14240</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Formalizing Kantian Ethics: Formula of the Universal Law Logic (FULL)</title>
-      <link>https://arxiv.org/abs/2604.14254</link>
-      <description>arXiv:2604.14254v1 Announce Type: new Abstract: The field of machine ethics aims to build Artificial Moral Agents (AMAs) to better understand morality and make AI agents safer. To do so, many approaches encode human moral intuition as a set of...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14254</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>GFT: From Imitation to Reward Fine-Tuning with Unbiased Group Advantages and Dynamic Coefficient Rectification</title>
-      <link>https://arxiv.org/abs/2604.14258</link>
-      <description>arXiv:2604.14258v1 Announce Type: new Abstract: Large language models are typically post-trained using supervised fine-tuning (SFT) and reinforcement learning (RL), yet effectively unifying efficient knowledge injection with robust generalization...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14258</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Seeing Through Experts Eyes A Foundational Vision Language Model Trained on Radiologists Gaze and Reasoning</title>
-      <link>https://arxiv.org/abs/2604.14316</link>
-      <description>arXiv:2604.14316v1 Announce Type: new Abstract: Large scale vision language models have shown promise in automating chest Xray interpretation, yet their clinical utility remains limited by a gap between model outputs and radiologist reasoning. Most...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14316</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Mistake gating leads to energy and memory efficient continual learning</title>
-      <link>https://arxiv.org/abs/2604.14336</link>
-      <description>arXiv:2604.14336v1 Announce Type: new Abstract: Synaptic plasticity is metabolically expensive, yet animals continuously update their internal models without exhausting energy reserves. However, when artificial neural networks are trained, the...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14336</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Credo: Declarative Control of LLM Pipelines via Beliefs and Policies</title>
-      <link>https://arxiv.org/abs/2604.14401</link>
-      <description>arXiv:2604.14401v1 Announce Type: new Abstract: Agentic AI systems are becoming commonplace in domains that require long-lived, stateful decision-making in continuously evolving conditions. As such, correctness depends not only on the output of...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14401</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
-    </item>
-    <item>
-      <title>Equifinality in Mixture of Experts: Routing Topology Does Not Determine Language Modeling Quality</title>
-      <link>https://arxiv.org/abs/2604.14419</link>
-      <description>arXiv:2604.14419v1 Announce Type: new Abstract: Sparse Mixture-of-Experts (MoE) architectures employ increasingly sophisticated routing mechanisms -- learned routers, multi-hop trajectories, token-dependent gating. We ask: does routing topology...</description>
-      <pubDate>Fri, 17 Apr 2026 04:00:00 GMT</pubDate>
-      <guid isPermaLink="true">https://arxiv.org/abs/2604.14419</guid>
-      <source url="https://arxiv.org">arXiv cs.AI</source>
-        <category>Research</category>
     </item>
     <item>
       <title>Making AI operational in constrained public sector environments</title>

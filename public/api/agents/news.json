@@ -1,7 +1,204 @@
 {
   "ok": true,
-  "count": 117,
+  "count": 107,
   "articles": [
+    {
+      "id": "kqo0hd",
+      "title": "Tinder and Zoom offer 'proof of humanity' eye-scans to combat AI",
+      "url": "https://www.bbc.com/news/articles/cp9vppem4evo",
+      "source": "Hacker News AI",
+      "sourceDomain": "bbc.com",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T05:02:00.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.778Z"
+    },
+    {
+      "id": "6xb9jz",
+      "title": "Study: The Logic Behind AI's Judgments of People",
+      "url": "https://en.huji.ac.il/news/hidden-logic-behind-ai%E2%80%99s-judgments-people/",
+      "source": "Hacker News AI",
+      "sourceDomain": "en.huji.ac.il",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T04:43:27.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.779Z"
+    },
+    {
+      "id": "g8sbz6",
+      "title": "Many anti-AI arguments are conservative arguments",
+      "url": "https://www.seangoedecke.com/many-anti-ai-arguments-are-conservative/",
+      "source": "Hacker News AI",
+      "sourceDomain": "seangoedecke.com",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T04:29:33.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.779Z"
+    },
+    {
+      "id": "gbw2e0",
+      "title": "The Digital Ouija Effect – Emergent Behavior in AI Models",
+      "url": "https://kennethreitz.org/essays/2026-04-17-the_digital_ouija_effect",
+      "source": "Hacker News AI",
+      "sourceDomain": "kennethreitz.org",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T04:11:53.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.779Z"
+    },
+    {
+      "id": "jhbpei",
+      "title": "Why AI Needs a Sense of Smell",
+      "url": "https://www.noemamag.com/why-ai-needs-a-sense-of-smell/",
+      "source": "Hacker News AI",
+      "sourceDomain": "noemamag.com",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T04:11:38.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.779Z"
+    },
+    {
+      "id": "qjdn0c",
+      "title": "Google Told to Share Search Data with AI Rivals in EU Proposal",
+      "url": "https://www.bloomberg.com/news/articles/2026-04-16/google-told-to-share-search-data-with-ai-rivals-in-eu-proposal",
+      "source": "Hacker News AI",
+      "sourceDomain": "bloomberg.com",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T04:06:54.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.779Z"
+    },
+    {
+      "id": "qcfe6e",
+      "title": "LLM wiki daemon with per-wiki filesystem isolation",
+      "url": "https://github.com/wastedcode/memex",
+      "source": "Hacker News AI",
+      "sourceDomain": "github.com",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T03:37:46.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.779Z"
+    },
+    {
+      "id": "1b9jfp",
+      "title": "Why hasn't AI improved design quality the way it improved dev speed?",
+      "url": "https://starzup.vercel.app/",
+      "source": "Hacker News AI",
+      "sourceDomain": "starzup.vercel.app",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T03:26:37.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.779Z"
+    },
+    {
+      "id": "aed1a1",
+      "title": "OpenAI's Vision for the AI Economy",
+      "url": "https://techcrunch.com/2026/04/06/openais-vision-for-the-ai-economy-public-wealth-funds-robot-taxes-and-a-four-day-work-week/",
+      "source": "Hacker News AI",
+      "sourceDomain": "techcrunch.com",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T03:11:45.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.779Z"
+    },
+    {
+      "id": "w2g139",
+      "title": "Deep Dive into Claude's Memory Architecture",
+      "url": "https://twitter.com/spandan_madan/status/2045336831999475789",
+      "source": "Hacker News AI",
+      "sourceDomain": "twitter.com",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-04-18T03:05:05.000Z",
+      "fetchedAt": "2026-04-18T05:45:27.779Z"
+    },
+    {
+      "id": "4t111q",
+      "title": "Your old iPad or Android tablet can be your new smart home panel - here's how",
+      "url": "https://www.zdnet.com/article/how-to-use-an-old-tablet-as-a-smart-home-control-panel/",
+      "source": "ZDNet AI",
+      "sourceDomain": "zdnet.com",
+      "snippet": "Do you have an old tablet tucked away in a drawer somewhere? It's easy to turn it into a control panel for your smart home devices.",
+      "categories": [
+        "Enterprise",
+        "General AI"
+      ],
+      "publishedAt": "2026-04-18T01:00:38.000Z",
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
+    },
+    {
+      "id": "jyd1fu",
+      "title": "US-sanctioned currency exchange says $15 million heist done by \"unfriendly states\"",
+      "url": "https://arstechnica.com/security/2026/04/russia-friendly-exchange-says-western-special-service-behind-15-million-cyberattack/",
+      "source": "Ars Technica",
+      "sourceDomain": "arstechnica.com",
+      "snippet": "Grinex says needed hacking resources \"available exclusively to ... unfriendly states.\"",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-04-17T21:28:35.000Z",
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
+    },
+    {
+      "id": "effpx",
+      "title": "OpenAI’s former Sora boss is leaving",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/914463/openai-sora-bill-peebles-kevin-weil-leaving-departing",
+      "source": "The Verge AI",
+      "sourceDomain": "theverge.com",
+      "snippet": "Last month, OpenAI gave up on its Sora video generation tool, and on Friday, the Sora team's leader, Bill Peebles, announced that he is leaving the company. OpenAI has been shifting its priorities as part of an effort to avoid \"side quests,\" and...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-04-17T21:13:25.000Z",
+      "fetchedAt": "2026-04-18T05:45:26.114Z"
+    },
+    {
+      "id": "szqvqg",
+      "title": "Apple's original AirTag still tracks effectively, and you can get a 4-pack for its best price ever",
+      "url": "https://www.zdnet.com/article/apple-airtag-gen-1-deal/",
+      "source": "ZDNet AI",
+      "sourceDomain": "zdnet.com",
+      "snippet": "The AirTag Gen 1 isn't the latest and greatest anymore, but it still offers reliable Bluetooth tracking at almost half the cost of the newer Gen 2 model.",
+      "categories": [
+        "Enterprise",
+        "General AI"
+      ],
+      "publishedAt": "2026-04-17T21:00:42.000Z",
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
+    },
+    {
+      "id": "nn5r8p",
+      "title": "Should you stare into Sam Altman&#8217;s orb before your next date?",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/914385/world-id-tinder-identity-verifying-orb",
+      "source": "The Verge AI",
+      "sourceDomain": "theverge.com",
+      "snippet": "Tinder users who prove they're a real person by visiting an identity-verifying orb will soon be able to get five free boosts in the app - and it's just the latest service to embrace the orb. World, which was co-founded by OpenAI CEO Sam Altman,...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-04-17T20:42:47.000Z",
+      "fetchedAt": "2026-04-18T05:45:26.114Z"
+    },
     {
       "id": "3dg9nk",
       "title": "Anthropic’s new cybersecurity model could get it back in the government’s good graces",
@@ -13,46 +210,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T20:14:21.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.835Z"
-    },
-    {
-      "id": "ls5pqk",
-      "title": "Stalwart-Sentinel – A physics-based logic gate to stop AI hallucinations",
-      "url": "https://github.com/taxischramm347-pixel/Stalwart-Sentinel-MVP-/tree/main",
-      "source": "Hacker News AI",
-      "sourceDomain": "github.com",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T20:12:50.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
-    },
-    {
-      "id": "djfgcw",
-      "title": "Show HN: Agents.ml – a public identity page and A2A card for your AI agent",
-      "url": "https://agents.ml",
-      "source": "Hacker News AI",
-      "sourceDomain": "agents.ml",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T20:10:25.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
-    },
-    {
-      "id": "iovzqu",
-      "title": "How to Build Advanced Generative AI Agents (Kinda)",
-      "url": "https://www.generative.inc/how-to-build-advanced-generative-ai-agents",
-      "source": "Hacker News AI",
-      "sourceDomain": "generative.inc",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T19:59:30.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
+      "fetchedAt": "2026-04-18T05:45:26.114Z"
     },
     {
       "id": "y3s83n",
@@ -65,85 +223,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T19:56:42.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.899Z"
-    },
-    {
-      "id": "kyd23f",
-      "title": "Ask HN: In the AI world what does \"great\" look like?",
-      "url": "https://news.ycombinator.com/item?id=47809594",
-      "source": "Hacker News AI",
-      "sourceDomain": "news.ycombinator.com",
-      "snippet": "I had a chat with my team mate today and they brought up an interesting point. If AI is cooking our software and doing an amazing job, for us devs what does \"great\" look like? How do WE improve? How do we assess performance of us, i.e. \"the humans\"?...",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T19:23:47.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
-    },
-    {
-      "id": "jp9snn",
-      "title": "Why AI Is Not Getting You Out of a Job",
-      "url": "https://yeikoff.xyz/blog/17-04-2026-not-out-of-a-job/",
-      "source": "Hacker News AI",
-      "sourceDomain": "yeikoff.xyz",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T19:21:02.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
-    },
-    {
-      "id": "kyd1z3",
-      "title": "Claude Code is unable to respond to this request",
-      "url": "https://news.ycombinator.com/item?id=47809543",
-      "source": "Hacker News AI",
-      "sourceDomain": "news.ycombinator.com",
-      "snippet": "I hit a restriction, while using Claude Code today: API Error: Claude Code is unable to respond to this request, which appears to violate our Usage Policy (https://www.anthropic.com/legal/aup). Please double press esc to edit your last message or...",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T19:19:16.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
-    },
-    {
-      "id": "n311hw",
-      "title": "Show HN: Navox Agents – 8 AI Agents for Claude Code with HITL Checkpoints",
-      "url": "https://github.com/navox-labs/agents",
-      "source": "Hacker News AI",
-      "sourceDomain": "github.com",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T19:16:08.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
-    },
-    {
-      "id": "deb38s",
-      "title": "Show HN: Smith – AI Agent Orchestrator",
-      "url": "https://getsmith.dev/",
-      "source": "Hacker News AI",
-      "sourceDomain": "getsmith.dev",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T19:09:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
-    },
-    {
-      "id": "hb6ups",
-      "title": "AI in Onboarding",
-      "url": "https://app.soon.works/create",
-      "source": "Hacker News AI",
-      "sourceDomain": "app.soon.works",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T19:01:40.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "5j1ptb",
@@ -157,20 +237,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T18:58:44.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
-    },
-    {
-      "id": "25fvqj",
-      "title": "Easy code and work AI agent system: auto, asynchronous, concurrency, efficiently",
-      "url": "https://github.com/vcaesar/codg",
-      "source": "Hacker News AI",
-      "sourceDomain": "github.com",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-04-17T18:56:37.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.229Z"
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
     },
     {
       "id": "83yyc2",
@@ -184,7 +251,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T18:30:41.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
     },
     {
       "id": "p2tejb",
@@ -198,7 +265,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T18:28:13.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
     },
     {
       "id": "13xsn",
@@ -212,7 +279,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T18:06:37.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
     },
     {
       "id": "lcwjpp",
@@ -225,7 +292,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T17:30:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.835Z"
+      "fetchedAt": "2026-04-18T05:45:26.114Z"
     },
     {
       "id": "psi1m7",
@@ -239,7 +306,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T17:22:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
     },
     {
       "id": "7v8fod",
@@ -252,7 +319,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T17:14:51.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.899Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "j9pvh0",
@@ -266,7 +333,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T17:00:39.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
     },
     {
       "id": "hg2urz",
@@ -280,7 +347,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T16:30:38.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
     },
     {
       "id": "gwe95v",
@@ -294,7 +361,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-17T16:17:55.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "407v54",
@@ -308,7 +375,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T15:47:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
+      "fetchedAt": "2026-04-18T05:45:26.645Z"
     },
     {
       "id": "nf7hmt",
@@ -321,7 +388,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T15:46:37.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.835Z"
+      "fetchedAt": "2026-04-18T05:45:26.114Z"
     },
     {
       "id": "fn996p",
@@ -334,35 +401,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T15:46:06.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.899Z"
-    },
-    {
-      "id": "8caoxt",
-      "title": "The best Kindles in 2026: Expert recommended",
-      "url": "https://www.zdnet.com/article/best-kindle/",
-      "source": "ZDNet AI",
-      "sourceDomain": "zdnet.com",
-      "snippet": "A Kindle condenses a library of books into a handheld device, making reading convenient and uber-portable. Here are our top Kindle reading tablet picks for 2026.",
-      "categories": [
-        "Enterprise",
-        "General AI"
-      ],
-      "publishedAt": "2026-04-17T15:35:29.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
-    },
-    {
-      "id": "5taqxj",
-      "title": "Does Best Buy price match? Everything to know about matching prices online and in-store",
-      "url": "https://www.zdnet.com/article/does-best-buy-price-match-faq/",
-      "source": "ZDNet AI",
-      "sourceDomain": "zdnet.com",
-      "snippet": "Here's what you need to know about Best Buy's price-matching policy.",
-      "categories": [
-        "Enterprise",
-        "General AI"
-      ],
-      "publishedAt": "2026-04-17T14:42:38.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.178Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "o38ijh",
@@ -376,7 +415,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-17T14:07:41.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "xccxqf",
@@ -389,7 +428,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-17T14:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "a0l2nq",
@@ -402,7 +441,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T13:24:34.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.835Z"
+      "fetchedAt": "2026-04-18T05:45:26.114Z"
     },
     {
       "id": "4pu0qf",
@@ -416,7 +455,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-17T12:10:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "iss8gl",
@@ -429,7 +468,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-17T11:00:50.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
     },
     {
       "id": "5camyw",
@@ -443,7 +482,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-17T10:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "g8fr4p",
@@ -457,137 +496,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-17T10:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
-    },
-    {
-      "id": "2x5zhv",
-      "title": "NuHF Claw: A Risk Constrained Cognitive Agent Framework for Human Centered Procedure Support in Digital Nuclear Control Rooms",
-      "url": "https://arxiv.org/abs/2604.14160",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14160v1 Announce Type: new Abstract: The rapid digitization of nuclear power plant main control rooms has fundamentally reshaped operator interaction patterns, introducing complex soft-control behaviors and elevated cognitive risks that...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
-    },
-    {
-      "id": "2x5ziy",
-      "title": "Simulating Human Cognition: Heartbeat-Driven Autonomous Thinking Activity Scheduling for LLM-based AI systems",
-      "url": "https://arxiv.org/abs/2604.14178",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14178v1 Announce Type: new Abstract: Large Language Model (LLM) agents have demonstrated remarkable capabilities in reasoning and tool use, yet they often suffer from rigid, reactive control flows that limit their adaptability and...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
-    },
-    {
-      "id": "2x6055",
-      "title": "Fun-TSG: A Function-Driven Multivariate Time Series Generator with Variable-Level Anomaly Labeling",
-      "url": "https://arxiv.org/abs/2604.14221",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14221v1 Announce Type: new Abstract: Reliable evaluation of anomaly detection methods in multivariate time series remains an open challenge, largely due to the limitations of existing benchmark datasets. Current resources often lack...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
-    },
-    {
-      "id": "2x606u",
-      "title": "Interpretable and Explainable Surrogate Modeling for Simulations: A State-of-the-Art Survey and Perspectives on Explainable AI for Decision-Making",
-      "url": "https://arxiv.org/abs/2604.14240",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14240v1 Announce Type: new Abstract: The simulation of complex systems increasingly relies on sophisticated but fundamentally opaque computational black-box simulators. Surrogate models play a central role in reducing the computational...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
-    },
-    {
-      "id": "2x607t",
-      "title": "Formalizing Kantian Ethics: Formula of the Universal Law Logic (FULL)",
-      "url": "https://arxiv.org/abs/2604.14254",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14254v1 Announce Type: new Abstract: The field of machine ethics aims to build Artificial Moral Agents (AMAs) to better understand morality and make AI agents safer. To do so, many approaches encode human moral intuition as a set of...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
-    },
-    {
-      "id": "2x607x",
-      "title": "GFT: From Imitation to Reward Fine-Tuning with Unbiased Group Advantages and Dynamic Coefficient Rectification",
-      "url": "https://arxiv.org/abs/2604.14258",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14258v1 Announce Type: new Abstract: Large language models are typically post-trained using supervised fine-tuning (SFT) and reinforcement learning (RL), yet effectively unifying efficient knowledge injection with robust generalization...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
-    },
-    {
-      "id": "2x60v4",
-      "title": "Seeing Through Experts Eyes A Foundational Vision Language Model Trained on Radiologists Gaze and Reasoning",
-      "url": "https://arxiv.org/abs/2604.14316",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14316v1 Announce Type: new Abstract: Large scale vision language models have shown promise in automating chest Xray interpretation, yet their clinical utility remains limited by a gap between model outputs and radiologist reasoning. Most...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
-    },
-    {
-      "id": "2x60wu",
-      "title": "Mistake gating leads to energy and memory efficient continual learning",
-      "url": "https://arxiv.org/abs/2604.14336",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14336v1 Announce Type: new Abstract: Synaptic plasticity is metabolically expensive, yet animals continuously update their internal models without exhausting energy reserves. However, when artificial neural networks are trained, the...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
-    },
-    {
-      "id": "2x61kt",
-      "title": "Credo: Declarative Control of LLM Pipelines via Beliefs and Policies",
-      "url": "https://arxiv.org/abs/2604.14401",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14401v1 Announce Type: new Abstract: Agentic AI systems are becoming commonplace in domains that require long-lived, stateful decision-making in continuously evolving conditions. As such, correctness depends not only on the output of...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
-    },
-    {
-      "id": "2x61lw",
-      "title": "Equifinality in Mixture of Experts: Routing Topology Does Not Determine Language Modeling Quality",
-      "url": "https://arxiv.org/abs/2604.14419",
-      "source": "arXiv cs.AI",
-      "sourceDomain": "arxiv.org",
-      "snippet": "arXiv:2604.14419v1 Announce Type: new Abstract: Sparse Mixture-of-Experts (MoE) architectures employ increasingly sophisticated routing mechanisms -- learned routers, multi-hop trajectories, token-dependent gating. We ask: does routing topology...",
-      "categories": [
-        "Research"
-      ],
-      "publishedAt": "2026-04-17T04:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.951Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "fl1mxu",
@@ -600,7 +509,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-16T18:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.899Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "sd2c6h",
@@ -613,7 +522,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-16T17:30:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.899Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "tpa6bl",
@@ -626,7 +535,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-16T17:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "s0s5sa",
@@ -639,7 +548,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-16T17:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.835Z"
+      "fetchedAt": "2026-04-18T05:45:26.115Z"
     },
     {
       "id": "nvel39",
@@ -652,7 +561,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-16T17:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.835Z"
+      "fetchedAt": "2026-04-18T05:45:26.115Z"
     },
     {
       "id": "xxmceo",
@@ -665,7 +574,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-16T17:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.899Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "tbgshb",
@@ -678,7 +587,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-16T16:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "g2sqn5",
@@ -691,7 +600,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-16T16:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.835Z"
+      "fetchedAt": "2026-04-18T05:45:26.115Z"
     },
     {
       "id": "5zc97b",
@@ -704,33 +613,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-16T15:59:24.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.835Z"
-    },
-    {
-      "id": "ky9wl4",
-      "title": "Ronan Farrow on Sam Altman&#8217;s ‘unconstrained’ relationship with the truth",
-      "url": "https://www.theverge.com/podcast/911753/sam-altman-openai-ronan-farrow-new-yorker-feature-trust-liar-ai-industry",
-      "source": "The Verge AI",
-      "sourceDomain": "theverge.com",
-      "snippet": "Today on Decoder, I’m talking with Ronan Farrow, one of the biggest stars of investigative reporting working today. He broke the Harvey Weinstein story, among many, many others. And just last week, he and co-author Andrew Marantz published an...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-04-16T14:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.836Z"
-    },
-    {
-      "id": "djbjf3",
-      "title": "Character.AI’s new Books mode turns reading into roleplay",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/912997/character-ai-books-mode",
-      "source": "The Verge AI",
-      "sourceDomain": "theverge.com",
-      "snippet": "Mired in controversy and legal woes over concerns about its chatbots' interactions with users, particularly teens, Character.AI seems to be playing it safer with a new \"Books\" mode. The new format lets users step inside familiar worlds for a more...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-04-16T14:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.836Z"
+      "fetchedAt": "2026-04-18T05:45:26.115Z"
     },
     {
       "id": "up5r08",
@@ -743,7 +626,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-16T13:49:35.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.899Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "oelrq6",
@@ -756,7 +639,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-04-16T13:00:11.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "o3c3i7",
@@ -770,7 +653,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-16T13:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "34b1sm",
@@ -784,7 +667,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-16T13:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "1zp59w",
@@ -798,7 +681,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-16T12:10:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "1a8rcr",
@@ -812,7 +695,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-16T12:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "6ua04c",
@@ -825,7 +708,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-16T11:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.900Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "kux0m5",
@@ -839,7 +722,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-16T10:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "l6vctm",
@@ -853,7 +736,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-04-16T10:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.868Z"
+      "fetchedAt": "2026-04-18T05:45:26.172Z"
     },
     {
       "id": "felbsr",
@@ -867,7 +750,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-16T00:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "stspmt",
@@ -881,7 +764,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-16T00:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "dd9arf",
@@ -895,7 +778,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-16T00:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "75305w",
@@ -908,7 +791,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-15T18:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.900Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "9wj4g3",
@@ -921,7 +804,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-04-15T15:00:26.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "4xkx7h",
@@ -934,7 +817,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-15T15:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "xyzg27",
@@ -947,7 +830,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-15T14:58:08.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.900Z"
+      "fetchedAt": "2026-04-18T05:45:26.238Z"
     },
     {
       "id": "49tk2i",
@@ -960,7 +843,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-04-15T13:00:38.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "4aeonk",
@@ -974,7 +857,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-15T12:07:25.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "eulp96",
@@ -988,7 +871,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-15T09:25:20.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "55o87b",
@@ -1001,7 +884,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-14T17:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "5lcz5n",
@@ -1014,7 +897,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-14T09:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "8bdd67",
@@ -1027,7 +910,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-04-10T19:40:59.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "rvl7e1",
@@ -1040,7 +923,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-09T19:44:31.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
     },
     {
       "id": "cpqpdt",
@@ -1053,7 +936,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-04-09T13:00:57.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "w34osi",
@@ -1067,7 +950,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-09T00:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "ozwan4",
@@ -1081,7 +964,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-09T00:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "b57ssl",
@@ -1094,7 +977,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-08T20:49:11.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
     },
     {
       "id": "dkd5sk",
@@ -1107,7 +990,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-08T11:00:08.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
     },
     {
       "id": "xvdw12",
@@ -1121,7 +1004,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-08T00:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "n6ppsr",
@@ -1134,7 +1017,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-03T20:30:15.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
     },
     {
       "id": "8fizty",
@@ -1147,7 +1030,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-02T17:00:11.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
     },
     {
       "id": "ei5ih",
@@ -1160,7 +1043,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-04-02T16:15:58.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "o7t0d",
@@ -1173,7 +1056,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-02T16:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "7cq53d",
@@ -1186,7 +1069,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-02T16:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "emeuqt",
@@ -1199,7 +1082,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-04-02T13:00:09.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "dzzriy",
@@ -1213,7 +1096,7 @@
         "Models"
       ],
       "publishedAt": "2026-04-02T00:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.989Z"
+      "fetchedAt": "2026-04-18T05:45:26.232Z"
     },
     {
       "id": "4fpkur",
@@ -1226,7 +1109,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-01T13:30:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "p3rxtj",
@@ -1239,7 +1122,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-04-01T13:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.032Z"
+      "fetchedAt": "2026-04-18T05:45:26.340Z"
     },
     {
       "id": "gtdeqx",
@@ -1252,7 +1135,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-31T18:25:33.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
     },
     {
       "id": "byy962",
@@ -1265,7 +1148,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-31T15:00:51.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "sp909r",
@@ -1278,7 +1161,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-26T15:00:56.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "dwlb3l",
@@ -1291,7 +1174,7 @@
         "Hardware/Chips"
       ],
       "publishedAt": "2026-03-26T13:00:47.000Z",
-      "fetchedAt": "2026-04-17T20:47:28.110Z"
+      "fetchedAt": "2026-04-18T05:45:26.333Z"
     },
     {
       "id": "jzyw3u",
@@ -1304,7 +1187,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-25T15:49:17.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
     },
     {
       "id": "smh9ny",
@@ -1317,20 +1200,7 @@
         "General AI"
       ],
       "publishedAt": "2026-03-24T12:38:09.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
-    },
-    {
-      "id": "o1qrld",
-      "title": "Widely used Trivy scanner compromised in ongoing supply-chain attack",
-      "url": "https://arstechnica.com/security/2026/03/widely-used-trivy-scanner-compromised-in-ongoing-supply-chain-attack/",
-      "source": "Ars Technica",
-      "sourceDomain": "arstechnica.com",
-      "snippet": "Admins: Sorry to say, but it's likely a rotate-your-secrets kind of weekend.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-03-20T20:50:46.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.859Z"
+      "fetchedAt": "2026-04-18T05:45:26.163Z"
     },
     {
       "id": "lt1nhr",
@@ -1344,7 +1214,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-22T14:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.998Z"
+      "fetchedAt": "2026-04-18T05:45:26.364Z"
     },
     {
       "id": "pw82ni",
@@ -1358,7 +1228,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-19T14:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.998Z"
+      "fetchedAt": "2026-04-18T05:45:26.364Z"
     },
     {
       "id": "2stlo5",
@@ -1372,7 +1242,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-16T14:01:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.998Z"
+      "fetchedAt": "2026-04-18T05:45:26.364Z"
     },
     {
       "id": "wkanl4",
@@ -1386,7 +1256,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-13T13:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.998Z"
+      "fetchedAt": "2026-04-18T05:45:26.365Z"
     },
     {
       "id": "3qldyo",
@@ -1399,7 +1269,7 @@
         "General AI"
       ],
       "publishedAt": "2026-01-13T11:30:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.813Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     },
     {
       "id": "69xvr0",
@@ -1413,7 +1283,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-12T11:30:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.998Z"
+      "fetchedAt": "2026-04-18T05:45:26.365Z"
     },
     {
       "id": "o3ucts",
@@ -1427,7 +1297,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-07T20:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.999Z"
+      "fetchedAt": "2026-04-18T05:45:26.365Z"
     },
     {
       "id": "k9er74",
@@ -1441,7 +1311,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-05T07:45:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.999Z"
+      "fetchedAt": "2026-04-18T05:45:26.365Z"
     },
     {
       "id": "e9o9yk",
@@ -1454,7 +1324,7 @@
         "General AI"
       ],
       "publishedAt": "2025-10-31T19:26:30.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.813Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     },
     {
       "id": "1wsfir",
@@ -1467,7 +1337,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-26T15:21:19.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.813Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     },
     {
       "id": "tm47qk",
@@ -1480,7 +1350,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-20T16:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.813Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     },
     {
       "id": "27akb2",
@@ -1493,7 +1363,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-20T15:56:53.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.814Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     },
     {
       "id": "tj3u0t",
@@ -1506,7 +1376,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-04T15:41:39.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.814Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     },
     {
       "id": "6xwg8b",
@@ -1519,7 +1389,7 @@
         "General AI"
       ],
       "publishedAt": "2025-06-04T14:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.814Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     },
     {
       "id": "yt0ltc",
@@ -1532,7 +1402,7 @@
         "General AI"
       ],
       "publishedAt": "2025-06-02T18:07:05.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.814Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     },
     {
       "id": "jrrt6d",
@@ -1545,7 +1415,7 @@
         "General AI"
       ],
       "publishedAt": "2025-05-27T12:00:00.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.814Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     },
     {
       "id": "sfwrni",
@@ -1558,8 +1428,8 @@
         "General AI"
       ],
       "publishedAt": "2025-05-22T16:49:53.000Z",
-      "fetchedAt": "2026-04-17T20:47:27.814Z"
+      "fetchedAt": "2026-04-18T05:45:26.085Z"
     }
   ],
-  "fetchedAt": "2026-04-17T20:47:28.235Z"
+  "fetchedAt": "2026-04-18T05:45:27.786Z"
 }

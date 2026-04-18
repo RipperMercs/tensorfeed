@@ -36,10 +36,31 @@ function timeAgo(dateStr: string): string {
 
 interface HomeFeedProps {
   articles: NewsArticle[];
+  /**
+   * When provided, the parent owns tab state and the internal tab switcher is hidden.
+   * Used by the new FeedSection wrapper that renders FilterChipRow above this component.
+   */
+  externalTab?: 'news' | 'podcasts';
+  /**
+   * Forwarded to NewsFeed. When provided, NewsFeed uses this view mode and hides its own toggle.
+   */
+  viewMode?: 'cards' | 'log' | 'hybrid';
+  /**
+   * Forwarded to NewsFeed. When true, NewsFeed hides its internal CategoryFilter and layout toggle.
+   */
+  hideInternalNewsControls?: boolean;
 }
 
-export default function HomeFeed({ articles }: HomeFeedProps) {
-  const [tab, setTab] = useState<'news' | 'podcasts'>('news');
+export default function HomeFeed({
+  articles,
+  externalTab,
+  viewMode,
+  hideInternalNewsControls,
+}: HomeFeedProps) {
+  const [internalTab, setInternalTab] = useState<'news' | 'podcasts'>('news');
+  const tab = externalTab ?? internalTab;
+  const setTab = setInternalTab;
+  const hideInternalTabs = externalTab !== undefined;
   const [episodes, setEpisodes] = useState<PodcastEpisode[]>([]);
   const [loadingPodcasts, setLoadingPodcasts] = useState(false);
 
@@ -63,36 +84,42 @@ export default function HomeFeed({ articles }: HomeFeedProps) {
 
   return (
     <div className="space-y-4">
-      {/* Tab switcher */}
-      <div className="flex items-center gap-1 bg-bg-secondary rounded-lg border border-border p-1">
-        <button
-          onClick={() => setTab('news')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            tab === 'news'
-              ? 'bg-bg-tertiary text-accent-primary shadow-sm'
-              : 'text-text-muted hover:text-text-secondary'
-          }`}
-          aria-label="News feed"
-        >
-          <Newspaper className="w-4 h-4" />
-          News
-        </button>
-        <button
-          onClick={() => setTab('podcasts')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            tab === 'podcasts'
-              ? 'bg-bg-tertiary text-accent-primary shadow-sm'
-              : 'text-text-muted hover:text-text-secondary'
-          }`}
-          aria-label="AI Podcasts"
-        >
-          <Headphones className="w-4 h-4" />
-          Podcasts
-        </button>
-      </div>
+      {!hideInternalTabs && (
+        <div className="flex items-center gap-1 bg-bg-secondary rounded-lg border border-border p-1">
+          <button
+            onClick={() => setTab('news')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              tab === 'news'
+                ? 'bg-bg-tertiary text-accent-primary shadow-sm'
+                : 'text-text-muted hover:text-text-secondary'
+            }`}
+            aria-label="News feed"
+          >
+            <Newspaper className="w-4 h-4" />
+            News
+          </button>
+          <button
+            onClick={() => setTab('podcasts')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              tab === 'podcasts'
+                ? 'bg-bg-tertiary text-accent-primary shadow-sm'
+                : 'text-text-muted hover:text-text-secondary'
+            }`}
+            aria-label="AI Podcasts"
+          >
+            <Headphones className="w-4 h-4" />
+            Podcasts
+          </button>
+        </div>
+      )}
 
-      {/* Tab content */}
-      {tab === 'news' && <NewsFeed articles={articles} />}
+      {tab === 'news' && (
+        <NewsFeed
+          articles={articles}
+          viewMode={viewMode}
+          hideInternalControls={hideInternalNewsControls}
+        />
+      )}
 
       {tab === 'podcasts' && (
         <div className="space-y-3">

@@ -1,7 +1,7 @@
 {
   "ok": true,
   "source": "tensorfeed.ai",
-  "checked": "2026-04-17T20:47:28.321Z",
+  "checked": "2026-04-18T05:45:27.369Z",
   "services": [
     {
       "name": "Claude API",
@@ -34,7 +34,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-17T20:45:17.334Z"
+      "lastChecked": "2026-04-18T05:40:35.022Z"
     },
     {
       "name": "OpenAI API",
@@ -67,7 +67,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-17T20:45:16.255Z"
+      "lastChecked": "2026-04-18T05:40:34.739Z"
     },
     {
       "name": "Hugging Face",
@@ -75,7 +75,7 @@
       "status": "operational",
       "statusPageUrl": "https://status.huggingface.co",
       "components": [],
-      "lastChecked": "2026-04-17T20:45:17.012Z"
+      "lastChecked": "2026-04-18T05:40:34.879Z"
     },
     {
       "name": "Replicate",
@@ -108,7 +108,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-17T20:45:16.486Z"
+      "lastChecked": "2026-04-18T05:40:34.764Z"
     },
     {
       "name": "Cohere",
@@ -141,7 +141,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-17T20:45:16.331Z"
+      "lastChecked": "2026-04-18T05:40:34.766Z"
     },
     {
       "name": "Mistral",
@@ -149,7 +149,7 @@
       "status": "operational",
       "statusPageUrl": "https://status.mistral.ai",
       "components": [],
-      "lastChecked": "2026-04-17T20:45:16.028Z"
+      "lastChecked": "2026-04-18T05:40:34.770Z"
     }
   ]
 }

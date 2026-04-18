@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
+import ConditionalFooter from '@/components/layout/ConditionalFooter';
 import ThemeProvider from '@/components/ThemeProvider';
 import CookieConsent from '@/components/CookieConsent';
+import LiveTicker from '@/components/home/LiveTicker';
+import JsonLd from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: {
@@ -81,10 +83,36 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="antialiased min-h-screen flex flex-col">
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'TensorFeed',
+            url: 'https://tensorfeed.ai/',
+            logo: 'https://tensorfeed.ai/tensorfeed-logo.png',
+            sameAs: ['https://x.com/tensorfeed', 'https://github.com/RipperMercs/tensorfeed'],
+            description:
+              'Real-time AI news, model tracking, and ecosystem data for the AI industry.',
+          }}
+        />
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'TensorFeed',
+            url: 'https://tensorfeed.ai/',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: 'https://tensorfeed.ai/search?q={search_term_string}',
+              'query-input': 'required name=search_term_string',
+            },
+          }}
+        />
         <ThemeProvider>
+          <LiveTicker />
           <Navbar />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <ConditionalFooter />
           <CookieConsent />
         </ThemeProvider>
       </body>

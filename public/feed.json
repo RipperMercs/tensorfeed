@@ -6,6 +6,233 @@
   "description": "AI news, model tracking, and real-time AI ecosystem data for humans and agents.",
   "items": [
     {
+      "id": "https://www.bbc.com/news/articles/cp9vppem4evo",
+      "url": "https://www.bbc.com/news/articles/cp9vppem4evo",
+      "title": "Tinder and Zoom offer 'proof of humanity' eye-scans to combat AI",
+      "content_text": "",
+      "date_published": "2026-04-18T05:02:00.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://en.huji.ac.il/news/hidden-logic-behind-ai%E2%80%99s-judgments-people/",
+      "url": "https://en.huji.ac.il/news/hidden-logic-behind-ai%E2%80%99s-judgments-people/",
+      "title": "Study: The Logic Behind AI's Judgments of People",
+      "content_text": "",
+      "date_published": "2026-04-18T04:43:27.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://www.seangoedecke.com/many-anti-ai-arguments-are-conservative/",
+      "url": "https://www.seangoedecke.com/many-anti-ai-arguments-are-conservative/",
+      "title": "Many anti-AI arguments are conservative arguments",
+      "content_text": "",
+      "date_published": "2026-04-18T04:29:33.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://kennethreitz.org/essays/2026-04-17-the_digital_ouija_effect",
+      "url": "https://kennethreitz.org/essays/2026-04-17-the_digital_ouija_effect",
+      "title": "The Digital Ouija Effect – Emergent Behavior in AI Models",
+      "content_text": "",
+      "date_published": "2026-04-18T04:11:53.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://www.noemamag.com/why-ai-needs-a-sense-of-smell/",
+      "url": "https://www.noemamag.com/why-ai-needs-a-sense-of-smell/",
+      "title": "Why AI Needs a Sense of Smell",
+      "content_text": "",
+      "date_published": "2026-04-18T04:11:38.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://www.bloomberg.com/news/articles/2026-04-16/google-told-to-share-search-data-with-ai-rivals-in-eu-proposal",
+      "url": "https://www.bloomberg.com/news/articles/2026-04-16/google-told-to-share-search-data-with-ai-rivals-in-eu-proposal",
+      "title": "Google Told to Share Search Data with AI Rivals in EU Proposal",
+      "content_text": "",
+      "date_published": "2026-04-18T04:06:54.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://github.com/wastedcode/memex",
+      "url": "https://github.com/wastedcode/memex",
+      "title": "LLM wiki daemon with per-wiki filesystem isolation",
+      "content_text": "",
+      "date_published": "2026-04-18T03:37:46.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://starzup.vercel.app/",
+      "url": "https://starzup.vercel.app/",
+      "title": "Why hasn't AI improved design quality the way it improved dev speed?",
+      "content_text": "",
+      "date_published": "2026-04-18T03:26:37.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://techcrunch.com/2026/04/06/openais-vision-for-the-ai-economy-public-wealth-funds-robot-taxes-and-a-four-day-work-week/",
+      "url": "https://techcrunch.com/2026/04/06/openais-vision-for-the-ai-economy-public-wealth-funds-robot-taxes-and-a-four-day-work-week/",
+      "title": "OpenAI's Vision for the AI Economy",
+      "content_text": "",
+      "date_published": "2026-04-18T03:11:45.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://twitter.com/spandan_madan/status/2045336831999475789",
+      "url": "https://twitter.com/spandan_madan/status/2045336831999475789",
+      "title": "Deep Dive into Claude's Memory Architecture",
+      "content_text": "",
+      "date_published": "2026-04-18T03:05:05.000Z",
+      "authors": [
+        {
+          "name": "Hacker News AI"
+        }
+      ],
+      "tags": [
+        "Community"
+      ]
+    },
+    {
+      "id": "https://www.zdnet.com/article/how-to-use-an-old-tablet-as-a-smart-home-control-panel/",
+      "url": "https://www.zdnet.com/article/how-to-use-an-old-tablet-as-a-smart-home-control-panel/",
+      "title": "Your old iPad or Android tablet can be your new smart home panel - here's how",
+      "content_text": "Do you have an old tablet tucked away in a drawer somewhere? It's easy to turn it into a control panel for your smart home devices.",
+      "date_published": "2026-04-18T01:00:38.000Z",
+      "authors": [
+        {
+          "name": "ZDNet AI"
+        }
+      ],
+      "tags": [
+        "Enterprise",
+        "General AI"
+      ]
+    },
+    {
+      "id": "https://arstechnica.com/security/2026/04/russia-friendly-exchange-says-western-special-service-behind-15-million-cyberattack/",
+      "url": "https://arstechnica.com/security/2026/04/russia-friendly-exchange-says-western-special-service-behind-15-million-cyberattack/",
+      "title": "US-sanctioned currency exchange says $15 million heist done by \"unfriendly states\"",
+      "content_text": "Grinex says needed hacking resources \"available exclusively to ... unfriendly states.\"",
+      "date_published": "2026-04-17T21:28:35.000Z",
+      "authors": [
+        {
+          "name": "Ars Technica"
+        }
+      ],
+      "tags": [
+        "General AI"
+      ]
+    },
+    {
+      "id": "https://www.theverge.com/ai-artificial-intelligence/914463/openai-sora-bill-peebles-kevin-weil-leaving-departing",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/914463/openai-sora-bill-peebles-kevin-weil-leaving-departing",
+      "title": "OpenAI’s former Sora boss is leaving",
+      "content_text": "Last month, OpenAI gave up on its Sora video generation tool, and on Friday, the Sora team's leader, Bill Peebles, announced that he is leaving the company. OpenAI has been shifting its priorities as part of an effort to avoid \"side quests,\" and...",
+      "date_published": "2026-04-17T21:13:25.000Z",
+      "authors": [
+        {
+          "name": "The Verge AI"
+        }
+      ],
+      "tags": [
+        "General AI"
+      ]
+    },
+    {
+      "id": "https://www.zdnet.com/article/apple-airtag-gen-1-deal/",
+      "url": "https://www.zdnet.com/article/apple-airtag-gen-1-deal/",
+      "title": "Apple's original AirTag still tracks effectively, and you can get a 4-pack for its best price ever",
+      "content_text": "The AirTag Gen 1 isn't the latest and greatest anymore, but it still offers reliable Bluetooth tracking at almost half the cost of the newer Gen 2 model.",
+      "date_published": "2026-04-17T21:00:42.000Z",
+      "authors": [
+        {
+          "name": "ZDNet AI"
+        }
+      ],
+      "tags": [
+        "Enterprise",
+        "General AI"
+      ]
+    },
+    {
+      "id": "https://www.theverge.com/ai-artificial-intelligence/914385/world-id-tinder-identity-verifying-orb",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/914385/world-id-tinder-identity-verifying-orb",
+      "title": "Should you stare into Sam Altman&#8217;s orb before your next date?",
+      "content_text": "Tinder users who prove they're a real person by visiting an identity-verifying orb will soon be able to get five free boosts in the app - and it's just the latest service to embrace the orb. World, which was co-founded by OpenAI CEO Sam Altman,...",
+      "date_published": "2026-04-17T20:42:47.000Z",
+      "authors": [
+        {
+          "name": "The Verge AI"
+        }
+      ],
+      "tags": [
+        "General AI"
+      ]
+    },
+    {
       "id": "https://www.theverge.com/ai-artificial-intelligence/914229/tides-turning-anthropic-trump-administration-cybersecurity-mythos-preview",
       "url": "https://www.theverge.com/ai-artificial-intelligence/914229/tides-turning-anthropic-trump-administration-cybersecurity-mythos-preview",
       "title": "Anthropic’s new cybersecurity model could get it back in the government’s good graces",
@@ -18,51 +245,6 @@
       ],
       "tags": [
         "General AI"
-      ]
-    },
-    {
-      "id": "https://github.com/taxischramm347-pixel/Stalwart-Sentinel-MVP-/tree/main",
-      "url": "https://github.com/taxischramm347-pixel/Stalwart-Sentinel-MVP-/tree/main",
-      "title": "Stalwart-Sentinel – A physics-based logic gate to stop AI hallucinations",
-      "content_text": "",
-      "date_published": "2026-04-17T20:12:50.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
-      "id": "https://agents.ml",
-      "url": "https://agents.ml",
-      "title": "Show HN: Agents.ml – a public identity page and A2A card for your AI agent",
-      "content_text": "",
-      "date_published": "2026-04-17T20:10:25.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
-      "id": "https://www.generative.inc/how-to-build-advanced-generative-ai-agents",
-      "url": "https://www.generative.inc/how-to-build-advanced-generative-ai-agents",
-      "title": "How to Build Advanced Generative AI Agents (Kinda)",
-      "content_text": "",
-      "date_published": "2026-04-17T19:59:30.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
       ]
     },
     {
@@ -81,96 +263,6 @@
       ]
     },
     {
-      "id": "https://news.ycombinator.com/item?id=47809594",
-      "url": "https://news.ycombinator.com/item?id=47809594",
-      "title": "Ask HN: In the AI world what does \"great\" look like?",
-      "content_text": "I had a chat with my team mate today and they brought up an interesting point. If AI is cooking our software and doing an amazing job, for us devs what does \"great\" look like? How do WE improve? How do we assess performance of us, i.e. \"the humans\"?...",
-      "date_published": "2026-04-17T19:23:47.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
-      "id": "https://yeikoff.xyz/blog/17-04-2026-not-out-of-a-job/",
-      "url": "https://yeikoff.xyz/blog/17-04-2026-not-out-of-a-job/",
-      "title": "Why AI Is Not Getting You Out of a Job",
-      "content_text": "",
-      "date_published": "2026-04-17T19:21:02.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
-      "id": "https://news.ycombinator.com/item?id=47809543",
-      "url": "https://news.ycombinator.com/item?id=47809543",
-      "title": "Claude Code is unable to respond to this request",
-      "content_text": "I hit a restriction, while using Claude Code today: API Error: Claude Code is unable to respond to this request, which appears to violate our Usage Policy (https://www.anthropic.com/legal/aup). Please double press esc to edit your last message or...",
-      "date_published": "2026-04-17T19:19:16.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
-      "id": "https://github.com/navox-labs/agents",
-      "url": "https://github.com/navox-labs/agents",
-      "title": "Show HN: Navox Agents – 8 AI Agents for Claude Code with HITL Checkpoints",
-      "content_text": "",
-      "date_published": "2026-04-17T19:16:08.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
-      "id": "https://getsmith.dev/",
-      "url": "https://getsmith.dev/",
-      "title": "Show HN: Smith – AI Agent Orchestrator",
-      "content_text": "",
-      "date_published": "2026-04-17T19:09:00.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
-      "id": "https://app.soon.works/create",
-      "url": "https://app.soon.works/create",
-      "title": "AI in Onboarding",
-      "content_text": "",
-      "date_published": "2026-04-17T19:01:40.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
-      ]
-    },
-    {
       "id": "https://www.zdnet.com/article/t-mobile-ipad-11-deal/",
       "url": "https://www.zdnet.com/article/t-mobile-ipad-11-deal/",
       "title": "T-Mobile will give you an iPad for $99 when you sign up for a new line - here's how",
@@ -184,21 +276,6 @@
       "tags": [
         "Enterprise",
         "General AI"
-      ]
-    },
-    {
-      "id": "https://github.com/vcaesar/codg",
-      "url": "https://github.com/vcaesar/codg",
-      "title": "Easy code and work AI agent system: auto, asynchronous, concurrency, efficiently",
-      "content_text": "",
-      "date_published": "2026-04-17T18:56:37.000Z",
-      "authors": [
-        {
-          "name": "Hacker News AI"
-        }
-      ],
-      "tags": [
-        "Community"
       ]
     },
     {
@@ -390,38 +467,6 @@
       ]
     },
     {
-      "id": "https://www.zdnet.com/article/best-kindle/",
-      "url": "https://www.zdnet.com/article/best-kindle/",
-      "title": "The best Kindles in 2026: Expert recommended",
-      "content_text": "A Kindle condenses a library of books into a handheld device, making reading convenient and uber-portable. Here are our top Kindle reading tablet picks for 2026.",
-      "date_published": "2026-04-17T15:35:29.000Z",
-      "authors": [
-        {
-          "name": "ZDNet AI"
-        }
-      ],
-      "tags": [
-        "Enterprise",
-        "General AI"
-      ]
-    },
-    {
-      "id": "https://www.zdnet.com/article/does-best-buy-price-match-faq/",
-      "url": "https://www.zdnet.com/article/does-best-buy-price-match-faq/",
-      "title": "Does Best Buy price match? Everything to know about matching prices online and in-store",
-      "content_text": "Here's what you need to know about Best Buy's price-matching policy.",
-      "date_published": "2026-04-17T14:42:38.000Z",
-      "authors": [
-        {
-          "name": "ZDNet AI"
-        }
-      ],
-      "tags": [
-        "Enterprise",
-        "General AI"
-      ]
-    },
-    {
       "id": "https://www.technologyreview.com/2026/04/17/1136121/pie-day-links/",
       "url": "https://www.technologyreview.com/2026/04/17/1136121/pie-day-links/",
       "title": "Pie Day 2026",
@@ -528,156 +573,6 @@
       "tags": [
         "Research",
         "Policy & Safety"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14160",
-      "url": "https://arxiv.org/abs/2604.14160",
-      "title": "NuHF Claw: A Risk Constrained Cognitive Agent Framework for Human Centered Procedure Support in Digital Nuclear Control Rooms",
-      "content_text": "arXiv:2604.14160v1 Announce Type: new Abstract: The rapid digitization of nuclear power plant main control rooms has fundamentally reshaped operator interaction patterns, introducing complex soft-control behaviors and elevated cognitive risks that...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14178",
-      "url": "https://arxiv.org/abs/2604.14178",
-      "title": "Simulating Human Cognition: Heartbeat-Driven Autonomous Thinking Activity Scheduling for LLM-based AI systems",
-      "content_text": "arXiv:2604.14178v1 Announce Type: new Abstract: Large Language Model (LLM) agents have demonstrated remarkable capabilities in reasoning and tool use, yet they often suffer from rigid, reactive control flows that limit their adaptability and...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14221",
-      "url": "https://arxiv.org/abs/2604.14221",
-      "title": "Fun-TSG: A Function-Driven Multivariate Time Series Generator with Variable-Level Anomaly Labeling",
-      "content_text": "arXiv:2604.14221v1 Announce Type: new Abstract: Reliable evaluation of anomaly detection methods in multivariate time series remains an open challenge, largely due to the limitations of existing benchmark datasets. Current resources often lack...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14240",
-      "url": "https://arxiv.org/abs/2604.14240",
-      "title": "Interpretable and Explainable Surrogate Modeling for Simulations: A State-of-the-Art Survey and Perspectives on Explainable AI for Decision-Making",
-      "content_text": "arXiv:2604.14240v1 Announce Type: new Abstract: The simulation of complex systems increasingly relies on sophisticated but fundamentally opaque computational black-box simulators. Surrogate models play a central role in reducing the computational...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14254",
-      "url": "https://arxiv.org/abs/2604.14254",
-      "title": "Formalizing Kantian Ethics: Formula of the Universal Law Logic (FULL)",
-      "content_text": "arXiv:2604.14254v1 Announce Type: new Abstract: The field of machine ethics aims to build Artificial Moral Agents (AMAs) to better understand morality and make AI agents safer. To do so, many approaches encode human moral intuition as a set of...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14258",
-      "url": "https://arxiv.org/abs/2604.14258",
-      "title": "GFT: From Imitation to Reward Fine-Tuning with Unbiased Group Advantages and Dynamic Coefficient Rectification",
-      "content_text": "arXiv:2604.14258v1 Announce Type: new Abstract: Large language models are typically post-trained using supervised fine-tuning (SFT) and reinforcement learning (RL), yet effectively unifying efficient knowledge injection with robust generalization...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14316",
-      "url": "https://arxiv.org/abs/2604.14316",
-      "title": "Seeing Through Experts Eyes A Foundational Vision Language Model Trained on Radiologists Gaze and Reasoning",
-      "content_text": "arXiv:2604.14316v1 Announce Type: new Abstract: Large scale vision language models have shown promise in automating chest Xray interpretation, yet their clinical utility remains limited by a gap between model outputs and radiologist reasoning. Most...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14336",
-      "url": "https://arxiv.org/abs/2604.14336",
-      "title": "Mistake gating leads to energy and memory efficient continual learning",
-      "content_text": "arXiv:2604.14336v1 Announce Type: new Abstract: Synaptic plasticity is metabolically expensive, yet animals continuously update their internal models without exhausting energy reserves. However, when artificial neural networks are trained, the...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14401",
-      "url": "https://arxiv.org/abs/2604.14401",
-      "title": "Credo: Declarative Control of LLM Pipelines via Beliefs and Policies",
-      "content_text": "arXiv:2604.14401v1 Announce Type: new Abstract: Agentic AI systems are becoming commonplace in domains that require long-lived, stateful decision-making in continuously evolving conditions. As such, correctness depends not only on the output of...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
-      ]
-    },
-    {
-      "id": "https://arxiv.org/abs/2604.14419",
-      "url": "https://arxiv.org/abs/2604.14419",
-      "title": "Equifinality in Mixture of Experts: Routing Topology Does Not Determine Language Modeling Quality",
-      "content_text": "arXiv:2604.14419v1 Announce Type: new Abstract: Sparse Mixture-of-Experts (MoE) architectures employ increasingly sophisticated routing mechanisms -- learned routers, multi-hop trajectories, token-dependent gating. We ask: does routing topology...",
-      "date_published": "2026-04-17T04:00:00.000Z",
-      "authors": [
-        {
-          "name": "arXiv cs.AI"
-        }
-      ],
-      "tags": [
-        "Research"
       ]
     },
     {
@@ -806,36 +701,6 @@
       "title": "Anthropic releases a new Opus model amid Mythos Preview buzz",
       "content_text": "Anthropic has released its most powerful \"generally available\" model to date: Claude Opus 4.7. The company called it a step up from Opus 4.6 for advanced software engineering tasks, particularly in complex coding areas that in the past required more...",
       "date_published": "2026-04-16T15:59:24.000Z",
-      "authors": [
-        {
-          "name": "The Verge AI"
-        }
-      ],
-      "tags": [
-        "General AI"
-      ]
-    },
-    {
-      "id": "https://www.theverge.com/podcast/911753/sam-altman-openai-ronan-farrow-new-yorker-feature-trust-liar-ai-industry",
-      "url": "https://www.theverge.com/podcast/911753/sam-altman-openai-ronan-farrow-new-yorker-feature-trust-liar-ai-industry",
-      "title": "Ronan Farrow on Sam Altman&#8217;s ‘unconstrained’ relationship with the truth",
-      "content_text": "Today on Decoder, I’m talking with Ronan Farrow, one of the biggest stars of investigative reporting working today. He broke the Harvey Weinstein story, among many, many others. And just last week, he and co-author Andrew Marantz published an...",
-      "date_published": "2026-04-16T14:00:00.000Z",
-      "authors": [
-        {
-          "name": "The Verge AI"
-        }
-      ],
-      "tags": [
-        "General AI"
-      ]
-    },
-    {
-      "id": "https://www.theverge.com/ai-artificial-intelligence/912997/character-ai-books-mode",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/912997/character-ai-books-mode",
-      "title": "Character.AI’s new Books mode turns reading into roleplay",
-      "content_text": "Mired in controversy and legal woes over concerns about its chatbots' interactions with users, particularly teens, Character.AI seems to be playing it safer with a new \"Books\" mode. The new format lets users step inside familiar worlds for a more...",
-      "date_published": "2026-04-16T14:00:00.000Z",
       "authors": [
         {
           "name": "The Verge AI"
@@ -1511,21 +1376,6 @@
       "title": "Self-propagating malware poisons open source software and wipes Iran-based machines",
       "content_text": "Development houses: It's time to check your networks for infections.",
       "date_published": "2026-03-24T12:38:09.000Z",
-      "authors": [
-        {
-          "name": "Ars Technica"
-        }
-      ],
-      "tags": [
-        "General AI"
-      ]
-    },
-    {
-      "id": "https://arstechnica.com/security/2026/03/widely-used-trivy-scanner-compromised-in-ongoing-supply-chain-attack/",
-      "url": "https://arstechnica.com/security/2026/03/widely-used-trivy-scanner-compromised-in-ongoing-supply-chain-attack/",
-      "title": "Widely used Trivy scanner compromised in ongoing supply-chain attack",
-      "content_text": "Admins: Sorry to say, but it's likely a rotate-your-secrets kind of weekend.",
-      "date_published": "2026-03-20T20:50:46.000Z",
       "authors": [
         {
           "name": "Ars Technica"
