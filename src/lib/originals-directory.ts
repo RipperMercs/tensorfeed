@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'google-anthropic-40b-compute',
+    title: 'Google Just Committed $40 Billion to Anthropic Compute. The Stakes Just Got Real.',
+    author: 'Ripper',
+    date: 'Apr 24, 2026',
+    readTime: '6 min read',
+    description:
+      'Google is pouring $40B into Anthropic for compute capacity, one of the largest single infrastructure commitments in AI history. What the deal buys, what it means for AWS and Nvidia, and why it signals the real cost of frontier AI.',
+  },
+  {
     slug: 'ai-week-april-24-2026',
     title: 'This Week in AI: GPT-5.5, DeepSeek V4, and a $250 Billion Acquisition',
     author: 'Kira Nolan',

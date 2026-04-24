@@ -87,7 +87,8 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [AI Podcasts](https://tensorfeed.ai/podcasts): Stream AI podcast episodes from top shows
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
-- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (24 articles)
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (25 articles)
+- [Google $40B Anthropic Compute Deal](https://tensorfeed.ai/originals/google-anthropic-40b-compute): Analysis of Google's $40B compute commitment to Anthropic and what it means for AWS, Nvidia, and frontier AI
 - [Claude Opus 4.7 Release](https://tensorfeed.ai/originals/claude-opus-4-7-release): Analysis of Anthropic's April 17, 2026 flagship release
 - [Why Every Developer Needs an llms.txt](https://tensorfeed.ai/originals/llms-txt-every-developer): Practical guide to the agent-discovery standard
 - [The AI Pricing Floor](https://tensorfeed.ai/originals/ai-pricing-floor): Where budget AI inference pricing bottoms out and what it means
