@@ -110,6 +110,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/google-anthropic-40b-compute`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/originals/deepseek-v4-open-source-frontier`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/originals/ai-money-gap-pwc`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/originals/anthropic-project-deal-agent-marketplace`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
 
     // Info pages
     { url: `${baseUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },

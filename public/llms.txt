@@ -87,7 +87,8 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [AI Podcasts](https://tensorfeed.ai/podcasts): Stream AI podcast episodes from top shows
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
-- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (27 articles)
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (28 articles)
+- [Anthropic Project Deal Marketplace](https://tensorfeed.ai/originals/anthropic-project-deal-agent-marketplace): Anthropic ran a real-money agent-to-agent marketplace and a hidden A/B test exposed a model-tier inequality
 - [AI Money Gap](https://tensorfeed.ai/originals/ai-money-gap-pwc): PwC found 74% of AI economic value goes to 20% of companies
 - [DeepSeek V4 Open Source Frontier](https://tensorfeed.ai/originals/deepseek-v4-open-source-frontier): Why DeepSeek V4 is the first open source frontier model and what its architecture and pricing mean for closed labs
 - [Google $40B Anthropic Compute Deal](https://tensorfeed.ai/originals/google-anthropic-40b-compute): Analysis of Google's $40B compute commitment to Anthropic and what it means for AWS, Nvidia, and frontier AI

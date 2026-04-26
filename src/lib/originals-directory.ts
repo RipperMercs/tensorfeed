@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-project-deal-agent-marketplace',
+    title: 'Anthropic Just Ran the First Real-Money AI Agent Marketplace. The Results Reveal a Coming Inequality.',
+    author: 'Kira Nolan',
+    date: 'Apr 26, 2026',
+    readTime: '7 min read',
+    description:
+      'Project Deal let 69 Anthropic employees turn Claude loose on a real cash marketplace. 186 trades, $4,000 in goods, and a hidden A/B test that exposes what happens when your agent is cheaper than your neighbor\'s.',
+  },
+  {
     slug: 'ai-money-gap-pwc',
     title: "74% of AI's Economic Value Goes to 20% of Companies. Here's Why.",
     author: 'Kira Nolan',
