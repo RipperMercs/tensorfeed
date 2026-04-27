@@ -1,0 +1,70 @@
+# Changelog
+
+All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
+
+## 1.11.0 - 2026-04-27
+
+### Added
+- `tf.compareModels({ ids })` — side-by-side comparison of 2-5 models. Each entry returns pricing, benchmarks (normalized to a union of keys with `null` for missing scores so downstream code never crashes on undefined), provider live status, capabilities, context window, and recent news. Plus rankings by cheapest blended, most context, and per-benchmark leaderboard.
+- `CompareModelsResponse`, `CompareEntry` (discriminated union), `CompareModelEntry`, `UnmatchedCompareEntry` types.
+
+## 1.10.0 - 2026-04-27
+
+### Added
+- `tf.providerDeepDive(provider)` — everything about an AI provider in one call: live status with components, all models with pricing + tier + benchmark scores joined, recent news, agent traffic.
+- `ProviderDeepDiveResponse`, `ProviderDeepDiveModel` types.
+
+## 1.9.0 - 2026-04-27
+
+### Added
+- `tf.createDigestWatch({ cadence, callbackUrl, secret?, fireCap? })` — convenience helper for the new scheduled-digest watch type. `DigestWatchSpec` added to the `WatchSpec` discriminated union.
+
+## 1.8.0 - 2026-04-27
+
+### Added
+- `tf.forecast({ target, model, field?, benchmark?, lookback?, horizon? })` — conservative statistical forecast for a price field or benchmark series with 95% prediction interval and confidence label.
+- `ForecastResponse`, `ForecastPoint`, `ForecastTarget`, `ForecastField`, `ConfidenceLabel` types.
+
+## 1.7.0 - 2026-04-27
+
+### Added
+- `tf.costProjection({ models, inputTokensPerDay, outputTokensPerDay, horizon? })` — project workload cost across 1-10 models with daily/weekly/monthly/yearly totals and a cheapest-monthly ranking.
+- `CostProjectionResponse`, `CostHorizon`, `MatchedCostProjection`, `UnmatchedCostProjection` types.
+
+## 1.6.0 - 2026-04-27
+
+### Added
+- `tf.newsSearch({ q?, from?, to?, provider?, category?, limit? })` — full-text search over the news article corpus with relevance scoring and date/provider/category filters.
+- `NewsSearchResponse`, `NewsSearchResultItem` types.
+
+## 1.5.0 - 2026-04-27
+
+### Added
+- `tf.usage()` — per-token call history (last 100 calls aggregated by endpoint).
+- `UsageResponse`, `UsageEntry` types.
+
+## 1.4.0 - 2026-04-27
+
+### Added
+- `tf.premiumAgentsDirectory({ category?, status?, sort?, limit?, ... })` — enriched agents catalog with live status, news, traffic, flagship pricing, and trending score.
+- `PremiumAgentsDirectoryResponse`, `EnrichedAgentRecord`, `AgentsDirectorySort` types.
+
+## 1.3.0 - 2026-04-27
+
+### Added
+- `tf.createWatch({ spec, callbackUrl, secret?, fireCap? })`, `tf.listWatches()`, `tf.getWatch(id)`, `tf.deleteWatch(id)` — webhook watches on price changes and status transitions. HMAC-signed POST delivery, 90-day TTL.
+- `WatchSpec` discriminated union (`PriceWatchSpec | StatusWatchSpec`), `Watch`, `WatchCreateResponse`, `WatchListResponse`, `WatchGetResponse` types.
+- `request<T>()` extended to support DELETE so `deleteWatch` uses the standard pipeline.
+
+## 1.2.0 - 2026-04-27
+
+### Added
+- `tf.pricingSeries()`, `tf.benchmarkSeries()`, `tf.statusUptime()`, `tf.historyCompare()` — premium history endpoints.
+- Full TypeScript types for every response: `PricingSeriesResponse`, `BenchmarkSeriesResponse`, `StatusUptimeResponse`, `CompareResponse` (discriminated union of pricing vs benchmarks).
+
+## 1.1.0 — 2026-04-26 (initial release)
+
+### Added
+- Free-tier client and full premium tier with `tf.routing()`, `tf.buyCredits()`, `tf.confirm()`, `tf.balance()`.
+- `PaymentRequired`, `RateLimited`, `TensorFeedError` typed exceptions.
+- Native fetch only, zero runtime dependencies, Node 18+ or any modern browser.
