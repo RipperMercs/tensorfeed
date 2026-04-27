@@ -12,6 +12,7 @@ import ActivityStream from '@/components/home/ActivityStream';
 import EditorialFeature from '@/components/home/EditorialFeature';
 import ExploreGrid from '@/components/home/ExploreGrid';
 import ApiPromoStrip from '@/components/home/ApiPromoStrip';
+import BuildPulse from '@/components/home/BuildPulse';
 import { ArrowRight, HelpCircle } from 'lucide-react';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
@@ -212,6 +213,8 @@ export default async function HomePage() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <AdPlaceholder format="horizontal" />
       </div>
+
+      <BuildPulse />
 
       <section
         className="border-b border-border"
