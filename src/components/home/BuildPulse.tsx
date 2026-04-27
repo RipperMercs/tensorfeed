@@ -11,21 +11,21 @@ interface MetricCard {
 const METRICS: MetricCard[] = [
   {
     label: 'Paid premium endpoints',
-    value: '16',
+    value: '18',
     hint: 'pay-per-call in USDC on Base',
     href: '/developers/agent-payments',
   },
   {
     label: 'Worker tests',
-    value: '129',
+    value: '147',
     hint: 'pure-logic, all passing',
     href: '/changelog',
   },
   {
-    label: 'Webhook watch types',
-    value: '3',
-    hint: 'price, status, daily/weekly digest',
-    href: '/developers/agent-payments',
+    label: 'MCP tools',
+    value: '20',
+    hint: '5 free + 15 premium for Claude Desktop',
+    href: 'https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server',
   },
   {
     label: 'Editorial articles',
@@ -43,7 +43,12 @@ interface ShippingEntry {
 
 const RECENT_SHIPS: ShippingEntry[] = [
   {
-    what: 'Daily/weekly digest webhook tier (set-and-forget agent summaries)',
+    what: 'Side-by-side model comparison endpoint with normalized benchmarks + rankings',
+    when: 'Apr 27, 2026',
+    href: '/developers/agent-payments',
+  },
+  {
+    what: 'Provider deep-dive: one provider, one paid call, four free endpoints aggregated',
     when: 'Apr 27, 2026',
     href: '/developers/agent-payments',
   },
@@ -58,12 +63,7 @@ const RECENT_SHIPS: ShippingEntry[] = [
     href: '/developers/agent-payments',
   },
   {
-    what: 'Premium forecast endpoint with 95% prediction interval',
-    when: 'Apr 27, 2026',
-    href: '/developers/agent-payments',
-  },
-  {
-    what: 'MCP server 1.5.0 exposing 18 tools to Claude Desktop',
+    what: 'MCP server 1.7.0 exposing 20 tools to Claude Desktop',
     when: 'Apr 27, 2026',
     href: 'https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server',
   },
@@ -299,7 +299,7 @@ export default function BuildPulse() {
                   lineHeight: 1.55,
                 }}
               >
-                USDC on Base. No accounts, no API keys, no Stripe. 16 premium endpoints validated
+                USDC on Base. No accounts, no API keys, no Stripe. 18 premium endpoints validated
                 end-to-end on mainnet. $0.02 per credit.
               </p>
             </div>
