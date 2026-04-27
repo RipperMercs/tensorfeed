@@ -9,6 +9,13 @@ import { pollTrendingRepos } from './trending';
 import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatestSnapshot } from './snapshots';
 import { captureHistory, listHistory, readHistory } from './history';
 import { computeRouting, checkRoutingPreviewRateLimit, hoursUntilUTCRollover, RoutingTask } from './routing';
+import {
+  requirePayment,
+  getPaymentInfo,
+  createQuote,
+  confirmPayment,
+  getBalance,
+} from './payments';
 import { recordPollRun, checkNewsStaleness, alertStaleNews, sendDailySummary, getAlertsStatus } from './alerts';
 
 const CORS_HEADERS = {
@@ -414,6 +421,11 @@ export default {
           history: '/api/history',
           historySnapshot: '/api/history/{YYYY-MM-DD}/{type}',
           routingPreview: '/api/preview/routing',
+          premiumRouting: '/api/premium/routing',
+          paymentInfo: '/api/payment/info',
+          paymentBuyCredits: '/api/payment/buy-credits',
+          paymentConfirm: '/api/payment/confirm',
+          paymentBalance: '/api/payment/balance',
         },
         news: newsMeta,
       }, 200, 60);
@@ -520,6 +532,139 @@ export default {
         },
         200,
         0, // do not Cache-API the response; rate limiting is per-IP
+      );
+    }
+
+    // === PAYMENT ENDPOINTS (Phase 1 of agent payments) ===
+
+    if (path === '/api/payment/info') {
+      const info = await getPaymentInfo(env);
+      return jsonResponse(info, 200, 60);
+    }
+
+    if (path === '/api/payment/buy-credits' && request.method === 'POST') {
+      try {
+        const body = await request.json() as { amount_usd?: number };
+        const amountUsd = typeof body.amount_usd === 'number' ? body.amount_usd : NaN;
+        if (!Number.isFinite(amountUsd) || amountUsd < 0.5 || amountUsd > 10000) {
+          return jsonResponse(
+            { ok: false, error: 'invalid_amount', message: 'amount_usd must be a number between 0.5 and 10000.' },
+            400,
+          );
+        }
+        const { nonce, quote, wallet } = await createQuote(env, amountUsd);
+        return jsonResponse({
+          ok: true,
+          wallet,
+          memo: nonce,
+          amount_usd: quote.amount_usd,
+          credits: quote.credits,
+          currency: 'USDC',
+          network: 'base',
+          expires_at: new Date(quote.expires_at).toISOString(),
+          ttl_seconds: Math.round((quote.expires_at - Date.now()) / 1000),
+          next_step: `Send ${quote.amount_usd} USDC on Base to ${wallet}, then POST /api/payment/confirm with { tx_hash, nonce: "${nonce}" }`,
+        });
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_request_body' }, 400);
+      }
+    }
+
+    if (path === '/api/payment/confirm' && request.method === 'POST') {
+      try {
+        const body = await request.json() as { tx_hash?: string; nonce?: string };
+        const txHash = (body.tx_hash || '').trim();
+        const nonce = body.nonce ? String(body.nonce).trim() : undefined;
+        if (!txHash) {
+          return jsonResponse({ ok: false, error: 'tx_hash_required' }, 400);
+        }
+        const result = await confirmPayment(env, txHash, request, nonce);
+        if (!result.ok) {
+          return jsonResponse(result, 400);
+        }
+        return jsonResponse(result);
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_request_body' }, 400);
+      }
+    }
+
+    if (path === '/api/payment/balance') {
+      const authHeader = request.headers.get('Authorization');
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+      if (!token) {
+        return jsonResponse(
+          { ok: false, error: 'token_required', message: 'Send the bearer token via Authorization: Bearer <token>' },
+          401,
+        );
+      }
+      const result = await getBalance(env, token);
+      if (!result.ok) {
+        return jsonResponse(result, 404);
+      }
+      return jsonResponse(result, 200, 0);
+    }
+
+    // === PAID PREMIUM ENDPOINT: ROUTING (Tier 2, requires credits) ===
+
+    if (path === '/api/premium/routing') {
+      const payment = await requirePayment(request, env, 2);
+      if (!payment.paid) {
+        return payment.response!;
+      }
+
+      const taskParam = url.searchParams.get('task');
+      const task: RoutingTask | undefined =
+        taskParam === 'code' || taskParam === 'reasoning' || taskParam === 'creative' || taskParam === 'general'
+          ? taskParam
+          : undefined;
+      const budget = parseFloat(url.searchParams.get('budget') ?? '');
+      const minQuality = parseFloat(url.searchParams.get('min_quality') ?? '');
+      const topNRaw = parseInt(url.searchParams.get('top_n') ?? '5', 10);
+      const topN = Number.isFinite(topNRaw) ? Math.max(1, Math.min(topNRaw, 10)) : 5;
+
+      const wq = parseFloat(url.searchParams.get('w_quality') ?? '');
+      const wa = parseFloat(url.searchParams.get('w_availability') ?? '');
+      const wc = parseFloat(url.searchParams.get('w_cost') ?? '');
+      const wl = parseFloat(url.searchParams.get('w_latency') ?? '');
+      const customWeights =
+        Number.isFinite(wq) || Number.isFinite(wa) || Number.isFinite(wc) || Number.isFinite(wl)
+          ? {
+              ...(Number.isFinite(wq) ? { quality: wq } : {}),
+              ...(Number.isFinite(wa) ? { availability: wa } : {}),
+              ...(Number.isFinite(wc) ? { cost: wc } : {}),
+              ...(Number.isFinite(wl) ? { latency: wl } : {}),
+            }
+          : undefined;
+
+      const result = await computeRouting(env, {
+        task,
+        budget: Number.isFinite(budget) ? budget : undefined,
+        minQuality: Number.isFinite(minQuality) ? minQuality : undefined,
+        weights: customWeights,
+        topN,
+      });
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-store',
+      };
+      if (payment.token) headers['X-Payment-Token-Balance'] = String(payment.tokenRemaining ?? 0);
+      if (payment.newToken && payment.token) {
+        headers['X-Payment-Token'] = payment.token;
+        headers['X-Payment-Token-Note'] = 'Save this token; use Authorization: Bearer <token> for future calls.';
+      }
+
+      return new Response(
+        JSON.stringify({
+          ...result,
+          billing: {
+            credits_charged: 1,
+            credits_remaining: payment.tokenRemaining,
+            ...(payment.newToken ? { new_token_issued: true, token: payment.token } : {}),
+          },
+        }),
+        { status: 200, headers },
       );
     }
 

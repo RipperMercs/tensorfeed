@@ -13,6 +13,10 @@ export interface Env {
   RESEND_API_KEY: string;
   ALERT_EMAIL_TO: string;
   ALERT_EMAIL_FROM: string;
+  // Agent payments (Phase 1)
+  PAYMENT_WALLET: string;
+  PAYMENT_ENABLED: string;
+  BASE_RPC_URL?: string;
 }
 
 export interface Article {

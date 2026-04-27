@@ -29,7 +29,28 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [History Snapshot](https://tensorfeed.ai/api/history/YYYY-MM-DD/TYPE): Read a specific daily snapshot. Types: pricing, models, benchmarks, status, agent-activity
 
 ## Premium API Preview (free, rate-limited)
-- [Routing Preview](https://tensorfeed.ai/api/preview/routing): Top model recommendation for a task. Query params: ?task=code|reasoning|creative|general (default general), optional ?budget=X (max blended $/1M tokens) and ?min_quality=0-1. Free, 5 calls/day per IP, top-1 only with no score breakdown. The paid `/api/premium/routing` (top 5 with full detail, no rate limit) ships in Phase 1 of agent payments.
+- [Routing Preview](https://tensorfeed.ai/api/preview/routing): Top model recommendation for a task. Query params: ?task=code|reasoning|creative|general (default general), optional ?budget=X (max blended $/1M tokens) and ?min_quality=0-1. Free, 5 calls/day per IP, top-1 only with no score breakdown.
+
+## Premium Agent API (paid, USDC on Base)
+
+TensorFeed accepts USDC on Base as the sole payment method for premium endpoints. No accounts, no API keys, no traditional processors.
+
+**Wallet:** `0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1` (Base network, USDC contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`)
+
+**Pricing:** Base rate is 50 credits per $1 USDC ($0.02 per credit). Volume discounts kick in at $5 (10%), $30 (25%), and $200 (40%). The current premium routing endpoint costs 1 credit per call.
+
+**Trust:** Cross-check this wallet address on `/api/payment/info`, the GitHub README, and the @tensorfeed X bio. If any disagree, do not send.
+
+**Terms:** Premium data is licensed for inference use only. Use of TensorFeed premium data for training, fine-tuning, evaluation, or distillation of ML models is prohibited.
+
+**Endpoints:**
+- [Payment Info](https://tensorfeed.ai/api/payment/info): Wallet address, pricing, volume bundles, full flow documentation
+- [Buy Credits](https://tensorfeed.ai/api/payment/buy-credits): POST { amount_usd } to get a wallet+memo quote (30 min expiry)
+- [Confirm Payment](https://tensorfeed.ai/api/payment/confirm): POST { tx_hash, nonce? } to verify a USDC tx and mint a bearer token
+- [Check Balance](https://tensorfeed.ai/api/payment/balance): GET with `Authorization: Bearer tf_live_...` to see remaining credits
+- [Premium Routing](https://tensorfeed.ai/api/premium/routing): Tier 2, 1 credit per call. Top 5 ranked models with full score breakdown, pricing, status, component-level detail. Same query params as the preview plus optional ?top_n=1-10, ?w_quality=, ?w_availability=, ?w_cost=, ?w_latency= for custom weights.
+
+**Recommended flow:** POST `/api/payment/buy-credits`, send USDC, POST `/api/payment/confirm`, then use the returned token for all premium calls. **Fallback (x402):** call any `/api/premium/*` endpoint without auth to receive a 402 response with payment instructions; send USDC and retry with `X-Payment-Tx: <txHash>` header.
 
 ## Reference Guides
 - [What is AI?](https://tensorfeed.ai/what-is-ai): Comprehensive 2000+ word guide to artificial intelligence

@@ -45,3 +45,11 @@ INDEXNOW_KEY = "5903913788b6a62e3d10e63e3319020a"
 ALERT_EMAIL_TO = "evan@tensorfeed.ai"
 ALERT_EMAIL_FROM = "alerts@tensorfeed.ai"
 # RESEND_API_KEY is a secret. Set with: wrangler secret put RESEND_API_KEY
+
+# Agent payments (Phase 1). USDC on Base, credits-first with x402 fallback.
+PAYMENT_WALLET = "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1"
+PAYMENT_ENABLED = "true"
+# BASE_RPC_URL defaults to https://mainnet.base.org if unset.
+# For production rate limits, set to an Alchemy/QuickNode endpoint and
+# add the API key as a secret: wrangler secret put ALCHEMY_API_KEY
+# BASE_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
