@@ -52,6 +52,8 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 
 **Recommended flow:** POST `/api/payment/buy-credits`, send USDC, POST `/api/payment/confirm`, then use the returned token for all premium calls. **Fallback (x402):** call any `/api/premium/*` endpoint without auth to receive a 402 response with payment instructions; send USDC and retry with `X-Payment-Tx: <txHash>` header.
 
+**SDK (Python, stdlib-only, free + premium):** `pip install tensorfeed`. Single-class client (`TensorFeed`) covers every free endpoint plus the full payment flow and premium routing. See [tensorfeed on PyPI](https://pypi.org/project/tensorfeed/) and the [SDK source](https://github.com/RipperMercs/tensorfeed/tree/main/sdk/python). TypeScript SDK is in `sdk/javascript/` (free endpoints today, premium support coming).
+
 ## Reference Guides
 - [What is AI?](https://tensorfeed.ai/what-is-ai): Comprehensive 2000+ word guide to artificial intelligence
 - [Best AI Tools 2026](https://tensorfeed.ai/best-ai-tools): 22 AI tools reviewed and compared
