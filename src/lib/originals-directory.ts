@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'publishing-bot-traffic',
+    title: "We Made Our AI Bot Traffic Public. Here's What We're Seeing.",
+    author: 'Ripper',
+    date: 'Apr 28, 2026',
+    readTime: '6 min read',
+    description:
+      'Most sites hide bot traffic. We just published ours at /agent-traffic with a per-bot breakdown, top hit endpoints, and a live tail. ClaudeBot, GPTBot, PerplexityBot, Bytespider, Google-Extended, and the rest of the AI crawler set, refreshed every 30 seconds. Why we did it, what we are seeing, and why every site built for agents should do the same.',
+  },
+  {
     slug: 'kv-ops-budget-edge-architecture',
     title: 'The 100,000 KV Ops Daily Budget and What Fits in It',
     author: 'Ripper',

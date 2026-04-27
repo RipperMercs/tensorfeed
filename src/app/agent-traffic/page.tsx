@@ -140,12 +140,14 @@ export default function AgentTrafficPage() {
             </p>
           </Link>
           <Link
-            href="/originals/building-for-ai-agents"
+            href="/originals/publishing-bot-traffic"
             className="block bg-bg-secondary border border-border rounded-xl p-4 hover:border-accent-primary transition"
           >
-            <h3 className="text-text-primary font-semibold text-sm mb-1">Building for AI agents</h3>
+            <h3 className="text-text-primary font-semibold text-sm mb-1">
+              Why we publish this dashboard
+            </h3>
             <p className="text-text-muted text-xs">
-              Why TensorFeed welcomes crawlers in robots.txt and ships llms.txt + .well-known/x402.
+              The editorial argument: most sites hide bot traffic. We count and publish.
             </p>
           </Link>
           <Link
