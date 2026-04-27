@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'kv-ops-budget-edge-architecture',
+    title: 'The 100,000 KV Ops Daily Budget and What Fits in It',
+    author: 'Ripper',
+    date: 'Apr 28, 2026',
+    readTime: '7 min read',
+    description:
+      'Cloudflare KV gives you 100,000 operations per day on the free tier. We run a real-time AI news API, status monitoring, model pricing, and a paid agent payments tier inside that budget. Here is the engineering that makes it possible: cache API for reads, batched writes, cron-only writers, in-memory buffers, and per-type index keys.',
+  },
+  {
     slug: 'mcp-server-fifty-line-file',
     title: 'An MCP Server Is a 50-Line File. Why Every Paid API Should Ship One.',
     author: 'Ripper',
