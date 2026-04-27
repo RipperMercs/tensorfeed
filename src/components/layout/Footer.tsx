@@ -52,6 +52,18 @@ export default function Footer() {
               Agent Payments
             </Link>
             <Link
+              href="/api-reference"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors"
+            >
+              API Reference
+            </Link>
+            <Link
+              href="/agent-traffic"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors"
+            >
+              Agent Traffic
+            </Link>
+            <Link
               href="/account"
               className="text-sm text-text-muted hover:text-text-primary transition-colors"
             >

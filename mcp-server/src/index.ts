@@ -5,7 +5,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 
 const API_BASE = 'https://tensorfeed.ai/api';
-const SDK_VERSION = '1.8.0';
+const SDK_VERSION = '1.9.0';
 
 // ── API helpers ─────────────────────────────────────────────────────
 
@@ -204,6 +204,50 @@ server.tool(
 
     return { content: [{ type: 'text' as const, text: `Today in AI:\n\n${text}` }] };
   }
+);
+
+// ── Tool: get_agent_activity ────────────────────────────────────────
+
+server.tool(
+  'get_agent_activity',
+  'Get live AI bot traffic on TensorFeed.ai. Returns today\'s bot hit count, the most recent 50 hits with bot name + endpoint + timestamp, and a derived top-bots breakdown. Useful when an agent wants to see which crawlers are pulling AI ecosystem data and how that distribution shifts. Free, no auth.',
+  {},
+  async () => {
+    const data = (await fetchJSON('/agents/activity')) as {
+      today_count: number;
+      last_updated: string;
+      recent: { bot: string; endpoint: string; timestamp: string }[];
+    };
+
+    const tally = new Map<string, number>();
+    for (const hit of data.recent) {
+      tally.set(hit.bot, (tally.get(hit.bot) || 0) + 1);
+    }
+    const breakdown = Array.from(tally.entries())
+      .map(([bot, count]) => `  ${bot}: ${count}`)
+      .sort()
+      .join('\n');
+
+    const tail = data.recent
+      .slice(0, 10)
+      .map(h => `  ${h.bot}  ${h.endpoint}  (${h.timestamp})`)
+      .join('\n');
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text:
+            `AI bot traffic on TensorFeed.ai\n\n` +
+            `Today's bot hits: ${data.today_count}\n` +
+            `Last updated: ${data.last_updated}\n\n` +
+            `Bot breakdown (recent ${data.recent.length} hits):\n${breakdown || '  (none)'}\n\n` +
+            `Recent tail (10 most recent):\n${tail || '  (none)'}\n\n` +
+            `Public dashboard: https://tensorfeed.ai/agent-traffic`,
+        },
+      ],
+    };
+  },
 );
 
 // ════════════════════════════════════════════════════════════════════

@@ -11,25 +11,25 @@ interface MetricCard {
 const METRICS: MetricCard[] = [
   {
     label: 'Paid premium endpoints',
-    value: '18',
+    value: '13',
     hint: 'pay-per-call in USDC on Base',
-    href: '/developers/agent-payments',
+    href: '/api-reference',
   },
   {
     label: 'Worker tests',
-    value: '147',
+    value: '158',
     hint: 'pure-logic, all passing',
     href: '/changelog',
   },
   {
     label: 'MCP tools',
-    value: '20',
-    hint: '5 free + 15 premium for Claude Desktop',
+    value: '25',
+    hint: '6 free + 19 premium for Claude Desktop',
     href: 'https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server',
   },
   {
     label: 'Editorial articles',
-    value: '33',
+    value: '37',
     hint: 'first-person analysis',
     href: '/originals',
   },
@@ -43,29 +43,29 @@ interface ShippingEntry {
 
 const RECENT_SHIPS: ShippingEntry[] = [
   {
+    what: 'Public /agent-traffic dashboard surfacing live AI bot crawls (ClaudeBot, GPTBot, PerplexityBot, etc)',
+    when: 'Apr 27, 2026',
+    href: '/agent-traffic',
+  },
+  {
+    what: 'Per-endpoint API reference (21 pages) with TechArticle + FAQPage JSON-LD',
+    when: 'Apr 27, 2026',
+    href: '/api-reference',
+  },
+  {
     what: 'Side-by-side model comparison endpoint with normalized benchmarks + rankings',
     when: 'Apr 27, 2026',
-    href: '/developers/agent-payments',
+    href: '/api-reference/compare-models',
   },
   {
-    what: 'Provider deep-dive: one provider, one paid call, four free endpoints aggregated',
+    what: 'Provider deep-dive: one paid call, four free endpoints aggregated',
     when: 'Apr 27, 2026',
-    href: '/developers/agent-payments',
-  },
-  {
-    what: 'Cross-Worker validate-and-charge powering TerminalFeed cross-site bundle',
-    when: 'Apr 27, 2026',
-    href: '/changelog',
+    href: '/api-reference/provider-deepdive',
   },
   {
     what: '/.well-known/x402 V2 discovery manifest for agent auto-discovery',
     when: 'Apr 27, 2026',
     href: '/developers/agent-payments',
-  },
-  {
-    what: 'MCP server 1.7.0 exposing 20 tools to Claude Desktop',
-    when: 'Apr 27, 2026',
-    href: 'https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server',
   },
 ];
 
@@ -299,8 +299,8 @@ export default function BuildPulse() {
                   lineHeight: 1.55,
                 }}
               >
-                USDC on Base. No accounts, no API keys, no Stripe. 18 premium endpoints validated
-                end-to-end on mainnet. $0.02 per credit.
+                USDC on Base. No accounts, no API keys, no Stripe. Validated end-to-end on
+                mainnet. $0.02 per credit.
               </p>
             </div>
             <div className="flex" style={{ gap: 8 }}>

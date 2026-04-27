@@ -1,6 +1,6 @@
 {
   "name": "@tensorfeed/mcp-server",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "MCP server for TensorFeed.ai - AI news, status, model data, and premium endpoints (routing, cost projection, forecast, history series, news search, webhook watches with digest tier, enriched directory) for AI agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
