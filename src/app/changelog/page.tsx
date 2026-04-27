@@ -21,6 +21,23 @@ export const metadata: Metadata = {
 
 const CHANGELOG = [
   {
+    date: 'April 27, 2026',
+    entries: [
+      'Launched the agent payments stack: AI agents can now pay TensorFeed directly via USDC on Base for premium API access. No accounts, no API keys, no traditional payment processors.',
+      'New paid endpoint /api/premium/routing (Tier 2, 1 credit per call) returns top-N ranked model recommendations with full composite-score breakdown synthesizing live pricing, benchmarks, and status data',
+      'New free /api/preview/routing returns the top-1 recommendation, rate-limited to 5 calls per UTC day per IP for discovery before committing credits',
+      'New free payment flow endpoints: /api/payment/info, /api/payment/buy-credits, /api/payment/confirm, /api/payment/balance support the full credit purchase and bearer-token cycle',
+      'New free /api/history (and /api/history/{date}/{type}) exposes daily snapshots of pricing, models, benchmarks, status, and agent activity. The dataset compounds daily.',
+      'New documentation page at /developers/agent-payments covers the wallet address, pricing tiers, both payment flows (credits and x402), every endpoint with examples, and the no-training Terms summary',
+      'Updated /terms with Premium API and Agent Payments section: inference-only license, refund policy, bearer token security, replay protection, no-SLA disclaimer',
+      'Python SDK 1.2.0: pip install tensorfeed gets free + premium support. pip install tensorfeed[web3] adds tf.purchase_credits() for one-call sign-and-send via web3.py.',
+      'TypeScript SDK 1.1.0: full premium tier support with typed responses and PaymentRequired/RateLimited/TensorFeedError exception classes. Native fetch, zero runtime deps, Node 18+ or any modern browser.',
+      'New admin endpoint /api/admin/usage rolls up daily revenue, per-endpoint call counts, and a top-agents leaderboard so we can see which premium endpoints are being used and by which agents',
+      'Wallet attestation via TLS plus multi-publication: the TensorFeed payment wallet is published on /llms.txt, /api/payment/info, GitHub README, and the @tensorfeed bio; cross-check before sending funds',
+      'Added unit tests for the routing engine (worker/src/routing.test.ts) covering quality weighting per task type, cost normalization, budget and quality filters, and custom weight overrides',
+    ],
+  },
+  {
     date: 'April 17, 2026',
     entries: [
       'Added Claude Opus 4.7 to model directory, pricing, benchmarks, and timeline with 1M context window',

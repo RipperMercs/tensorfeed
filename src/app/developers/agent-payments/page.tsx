@@ -216,12 +216,13 @@ export default function AgentPaymentsPage() {
           </h1>
         </div>
         <p className="text-text-secondary text-lg max-w-3xl mb-3">
-          TensorFeed sells premium API access directly to AI agents via USDC on Base. No
+          Premium API access for AI agents. Paid in USDC on Base, settled in seconds. No
           accounts, no API keys, no traditional payment processors.
         </p>
         <p className="text-text-muted text-sm max-w-3xl">
           Send USDC, get a bearer token, call premium endpoints. Each call decrements credits
-          from your token. When credits run out, top up. The token is your only credential.
+          from your token. When credits run out, top up. The token is the only credential the
+          API ever sees from you.
         </p>
       </div>
 
@@ -234,9 +235,18 @@ export default function AgentPaymentsPage() {
           </div>
           <div className="bg-bg-tertiary/50 rounded-lg p-4 mb-4">
             <p className="text-text-muted text-xs uppercase tracking-wide mb-1">Address</p>
-            <code className="text-accent-primary font-mono text-sm break-all block mb-3">
+            <code className="text-accent-primary font-mono text-sm break-all block">
               {PAYMENT_WALLET}
             </code>
+            <a
+              href={`https://basescan.org/address/${PAYMENT_WALLET}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-muted text-xs hover:text-accent-primary inline-flex items-center gap-1 mt-1.5 mb-3"
+            >
+              View on Basescan
+              <ExternalLink className="w-3 h-3" />
+            </a>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-text-muted text-xs">Network</p>
@@ -513,11 +523,12 @@ export default function AgentPaymentsPage() {
             Every paid endpoint has a free preview at{' '}
             <code className="text-accent-primary font-mono">/api/preview/*</code>. The free
             tier returns the top recommendation only (no score breakdown) and is rate-limited
-            to 5 calls per UTC day per IP.
+            to 5 calls per UTC day per IP. The counter resets at UTC midnight.
           </p>
           <p className="text-text-muted text-sm">
             Use the preview to validate the endpoint before committing credits. After 5 calls
-            in a day, the response is a 429 with a hint to use the paid endpoint.
+            in a day, the response is a 429 with a hint to use the paid endpoint and the
+            number of hours until reset.
           </p>
         </div>
       </section>

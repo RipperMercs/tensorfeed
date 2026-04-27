@@ -33,13 +33,17 @@ tensorfeed/
       catalog.ts      Models/benchmarks/agents catalog
       activity.ts     Agent traffic tracking
       alerts.ts       Staleness watchdog + daily email summary
-      snapshots.ts    Fallback snapshots (restore if live data fails)
+      snapshots.ts    Rolling fallback snapshots (restore if live data fails)
+      history.ts      Daily historical snapshots for premium products (Phase 0 of agent payments)
+      routing.ts      Tier 2 routing recommendation engine + free preview rate limiter
+      routing.test.ts Vitest unit tests for the routing engine (pure-logic, no chain)
+      payments.ts     Payment middleware: credits + x402 fallback, USDC on Base verification, daily rollup analytics
       podcasts.ts     Podcast feed polling
       trending.ts     Trending GitHub repos
       twitter.ts      X/Twitter auto-posting
       sources.ts      Status page source definitions
-      types.ts        Shared Worker types
-    wrangler.toml     Worker config, KV bindings, cron triggers, vars
+      types.ts        Shared Worker types (Env interface includes PAYMENT_WALLET, PAYMENT_ENABLED, BASE_RPC_URL)
+    wrangler.toml     Worker config, KV bindings, cron triggers, vars (PAYMENT_WALLET hardcoded)
   data/               Bundled JSON snapshots (built into static export)
     articles.json     Latest article cache (refreshed by prebuild script)
     sources.json      RSS source definitions (id, url, categories, active)
@@ -52,7 +56,11 @@ tensorfeed/
     generate-llms-full.ts  Prebuild: regenerates /llms-full.txt
   public/             Static assets served as-is (feeds, markdown guides, llms.txt, robots.txt, sitemap.xml, ads.txt, images)
   mcp-server/         MCP server exposing TensorFeed data to Claude Desktop
-  sdk/                TypeScript SDK for consuming the public API
+  sdk/
+    python/           Python SDK (pip install tensorfeed). Free + premium endpoints, optional web3 auto-send via the [web3] extra. Single tensorfeed.client module, no required deps. PUBLISHING.md documents the maintainer release flow.
+    javascript/       TypeScript SDK (npm install tensorfeed). Mirrors the Python surface. Native fetch only, Node 18+ or any modern browser.
+  AGENT-PAYMENTS-SPEC.md          Canonical agent payments architecture (v3, USDC-only).
+  AGENT-PAYMENTS-PHASE-0-SPEC.md  Original Phase 0 snapshotting deliverable. Implementation note at top documents the naming deviations from the original draft.
 ```
 
 ## Stack
@@ -94,7 +102,14 @@ GET https://tensorfeed.ai/api/refresh?key=production
 
 - `TENSORFEED_NEWS`: `4924c4d8a64446cea111fd63a5b3455a`: articles, feeds, podcasts
 - `TENSORFEED_STATUS`: `68eec8e4d37349a6adc1278c9280f653`: status pages, incidents
-- `TENSORFEED_CACHE`: `4de30d8becd24b3bba9556b98bad8e69`: request cache, rate-limit state, misc
+- `TENSORFEED_CACHE`: `4de30d8becd24b3bba9556b98bad8e69`: request cache, rate-limit state, misc, plus all agent-payments state under the `pay:*` and `history:*` prefixes:
+  - `history:{YYYY-MM-DD}:{type}`: daily snapshots (pricing, models, benchmarks, status, agent-activity)
+  - `history:index`: ordered list of dates with snapshot data
+  - `pay:credits:{token}`: `{ balance, created, last_used, agent_ua, total_purchased }` (no TTL)
+  - `pay:tx:{txHash}`: `{ amount_usd, credits, token, block_number, created }` (no TTL, replay protection)
+  - `pay:quote:{nonce}`: `{ amount_usd, credits, expires_at }` (30-min TTL)
+  - `pay:rollup:{YYYY-MM-DD}`: daily revenue + usage rollup with per-endpoint breakdown and top-agents leaderboard
+  - `rate:routing-preview:{YYYY-MM-DD}:{ip}`: free preview rate limit counter (2-day TTL)
 
 ## KV Operation Limits (CRITICAL)
 
@@ -156,21 +171,32 @@ Typography: JetBrains Mono for numbers, code, pricing tables, and status badges.
 
 All mounted under `https://tensorfeed.ai/api/*` via the Worker.
 
+**Free, no auth:**
 - `/api/news`: Articles. Supports `?category=` and `?limit=`
-- `/api/status`: Live service status for tracked providers
+- `/api/status`, `/api/status/summary`: Live service status for tracked providers
 - `/api/models`: Model pricing, context windows, specs
 - `/api/benchmarks`: AI model benchmark scores
 - `/api/incidents`: Historical incident database
-- `/api/agents/activity`: Agent traffic metrics (which AI agents visit the site)
-- `/api/agents/news`: News feed formatted for agent consumption
-- `/api/health`: Worker health check
-- `/api/meta`: Endpoint discovery manifest
-- `/api/ask`: Ask TensorFeed (Claude Haiku powered Q&A)
+- `/api/agents/activity`, `/api/agents/news`, `/api/agents/status`, `/api/agents/pricing`, `/api/agents/directory`: Agent-friendly aliases
+- `/api/podcasts`, `/api/trending-repos`
+- `/api/health`, `/api/ping`, `/api/meta`, `/api/cron-status`, `/api/snapshots`, `/api/alerts-status`
+- `/api/history`, `/api/history/{YYYY-MM-DD}/{type}`: Daily historical snapshots (Phase 0 of agent payments)
+- `/api/preview/routing?task=code|reasoning|creative|general&budget=&min_quality=`: Free top-1 routing recommendation (5 calls/day per IP)
+- `/api/payment/info`: Wallet, pricing tiers, supported flows, verification metadata
+- `/api/payment/buy-credits` (POST): Generate a 30-min payment quote with memo nonce
+- `/api/payment/confirm` (POST): Verify USDC tx on-chain, mint a bearer token
+- `/api/payment/balance`: Read remaining credits for the current bearer token
 - `/api/alerts/subscribe`: Outage alert email signup
-- `/api/refresh?key=production`: Manual data refresh trigger
-- `/api/ping`: Worker health ping
+- `/api/refresh?key=production[&task=history]`: Manual data refresh / history capture trigger
 
-Every new endpoint MUST be documented on `/developers` and added to `/api/meta`.
+**Paid (USDC on Base, credits-first):**
+- `/api/premium/routing`: Tier 2 routing engine, 1 credit per call. Top-N ranked recommendations with full composite score breakdown.
+
+**Admin (auth-gated via `?key=ENVIRONMENT`):**
+- `/api/admin/usage?date=YYYY-MM-DD`: Daily revenue + usage rollup
+- `/api/admin/usage/dates`: List of dates with rollup data
+
+Every new endpoint MUST be documented on `/developers` (or `/developers/agent-payments` for paid endpoints), added to `/api/meta`, and linked from `public/llms.txt`.
 
 ## RSS Sources (12 active)
 
@@ -199,7 +225,7 @@ To add a source: append to `data/sources.json` with `id`, `name`, `url`, `domain
 - **Guides** (pillar SEO pages): `/what-is-ai`, `/best-ai-tools`, `/best-ai-chatbots`, `/ai-api-pricing-guide`, `/what-are-ai-agents`, `/best-open-source-llms`
 - **Editorial originals**: `/originals/why-we-built-tensorfeed`, `/originals/claude-mythos-not-afraid`, `/originals/claude-code-leak`, `/originals/ai-api-pricing-war-2026`, `/originals/rise-of-agentic-ai`, `/originals/state-of-ai-apis-2026`, `/originals/mcp-97-million-installs`, `/originals/openai-killed-sora`, `/originals/claude-vs-gpt-vs-gemini`, `/originals/open-source-llms-closing-gap`, `/originals/ai-service-outages-month`, `/originals/building-for-ai-agents`
 - **Hubs**: `/agi-asi`, `/model-wars`
-- **Meta/legal**: `/about`, `/privacy`, `/terms`, `/contact`, `/developers`, `/changelog`
+- **Meta/legal**: `/about`, `/privacy`, `/terms`, `/contact`, `/developers`, `/developers/agent-payments`, `/changelog`
 - **Meta editorial**: `/claude-md-guide`, `/claude-md-generator`, `/claude-md-examples`
 
 ## Feeds & Agent Discovery
@@ -258,6 +284,45 @@ To add a source: append to `data/sources.json` with `id`, `name`, `url`, `domain
 - `.env`, `.env.*`, and `worker/.env*` are gitignored. Keep it that way.
 - Pre-commit hook (`.husky/pre-commit`) greps staged diffs for key patterns (`sk-ant-`, `sk-proj-`, `AIza`, `re_`, `github_pat`). Do not bypass with `--no-verify`.
 - Verify repo visibility (public vs private) before assessing severity of any leaked secret. `RipperMercs/tensorfeed` is currently public, so any secret in git history is world-readable and must be rotated.
+
+## Agent Payments (Phase 1, shipped 2026-04-27)
+
+TensorFeed sells premium API access to AI agents via USDC on Base mainnet. No accounts, no API keys, no traditional payment processors. Decision locked 2026-04-27: USDC-only, no Stripe.
+
+**Wallet:** `0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1` (Rabby on Base, self-custodied)
+**USDC contract on Base:** `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+**Pricing:** 50 credits per $1 USDC base rate. Volume discounts at $5 (10%), $30 (25%), $200 (40%). Tier 2 routing currently 1 credit per call.
+
+Architecture (full detail in `AGENT-PAYMENTS-SPEC.md`):
+- Credits-first flow primary, x402 per-call as fallback for one-off discovery
+- Bearer token (`tf_live_<256-bit hex>`) is a debit account; each premium call decrements credits
+- On-chain verification reads the USDC Transfer event from `eth_getTransactionReceipt` on Base RPC
+- Replay protection: every used tx hash is permanently recorded in `pay:tx:{txHash}` (no TTL)
+- Trust attestation via TLS + multi-publication (llms.txt, /api/payment/info, GitHub README, X bio); no DNS TXT signing in MVP
+
+Key modules:
+- `worker/src/payments.ts`: middleware (`requirePayment`), USDC verification, quote/confirm/balance, daily rollup analytics
+- `worker/src/routing.ts`: routing engine + free preview rate limiter
+- `worker/src/history.ts`: daily snapshot capture (the data moat)
+
+SDKs:
+- Python: `sdk/python/` (1.2.0). `pip install tensorfeed[web3]` enables `tf.purchase_credits()` for one-call sign-and-send. See `sdk/python/PUBLISHING.md` for the PyPI release flow.
+- TypeScript: `sdk/javascript/` (1.1.0). Mirrors the Python surface, uses native fetch.
+
+Frontend docs: `/developers/agent-payments` (Next.js page) covers the wallet, pricing, both flows, all endpoints, and code examples. `/terms` includes the Premium API and Agent Payments section with the no-training license, refund policy, and replay protection.
+
+## Testing
+
+The Worker has Vitest unit tests under `worker/src/*.test.ts`. Run from the `worker/` directory:
+
+```bash
+cd worker
+npm install   # one-time, pulls vitest
+npm test      # vitest run
+npm run test:watch
+```
+
+Current coverage: routing engine (quality weighting per task, cost normalization, filters, custom weights, edge cases). Future: payment middleware (mock RPC), history capture, request handlers.
 
 ## Email Addresses
 
