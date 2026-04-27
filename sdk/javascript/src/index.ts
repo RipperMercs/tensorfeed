@@ -10,7 +10,7 @@
  */
 
 const DEFAULT_BASE_URL = 'https://tensorfeed.ai/api';
-const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.1';
+const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.2';
 
 // ── Error types ─────────────────────────────────────────────────────
 
@@ -220,6 +220,121 @@ export interface RoutingResponse {
     token?: string;
   };
 }
+
+// ── Premium: history series ────────────────────────────────────────
+
+export interface PricingSeriesPoint {
+  date: string;
+  input: number;
+  output: number;
+  blended: number;
+}
+
+export interface PricingSeriesResponse {
+  ok: boolean;
+  model: string;
+  provider: string | null;
+  range: { from: string; to: string; days: number };
+  resolution: 'daily';
+  points: PricingSeriesPoint[];
+  summary: {
+    first: PricingSeriesPoint | null;
+    latest: PricingSeriesPoint | null;
+    min_blended: number | null;
+    max_blended: number | null;
+    delta_pct_blended: number | null;
+    changes_detected: number;
+    days_with_data: number;
+    days_missing: number;
+  };
+  billing?: { credits_charged: number; credits_remaining?: number };
+}
+
+export interface BenchmarkSeriesPoint {
+  date: string;
+  score: number;
+}
+
+export interface BenchmarkSeriesResponse {
+  ok: boolean;
+  model: string;
+  benchmark: string;
+  range: { from: string; to: string; days: number };
+  points: BenchmarkSeriesPoint[];
+  summary: {
+    first: BenchmarkSeriesPoint | null;
+    latest: BenchmarkSeriesPoint | null;
+    min_score: number | null;
+    max_score: number | null;
+    delta_pp: number | null;
+    days_with_data: number;
+    days_missing: number;
+  };
+  billing?: { credits_charged: number; credits_remaining?: number };
+}
+
+export interface UptimeIncidentDay {
+  date: string;
+  status: 'degraded' | 'down' | 'unknown';
+}
+
+export interface StatusUptimeResponse {
+  ok: boolean;
+  provider: string;
+  range: { from: string; to: string; days: number };
+  days_total: number;
+  days_with_data: number;
+  days_missing: number;
+  days_operational: number;
+  days_degraded: number;
+  days_down: number;
+  days_unknown: number;
+  uptime_pct: number | null;
+  incident_days: UptimeIncidentDay[];
+  billing?: { credits_charged: number; credits_remaining?: number };
+}
+
+export interface PricingChangeEntry {
+  model: string;
+  provider: string;
+  field: 'inputPrice' | 'outputPrice';
+  from: number;
+  to: number;
+  delta_pct: number | null;
+}
+
+export interface PricingCompareResponse {
+  ok: true;
+  type: 'pricing';
+  from_date: string;
+  to_date: string;
+  added: { model: string; provider: string; inputPrice: number; outputPrice: number }[];
+  removed: { model: string; provider: string; inputPrice: number; outputPrice: number }[];
+  changed: PricingChangeEntry[];
+  unchanged_count: number;
+  billing?: { credits_charged: number; credits_remaining?: number };
+}
+
+export interface BenchmarkChangeEntry {
+  model: string;
+  benchmark: string;
+  from: number;
+  to: number;
+  delta_pp: number;
+}
+
+export interface BenchmarkCompareResponse {
+  ok: true;
+  type: 'benchmarks';
+  from_date: string;
+  to_date: string;
+  added_models: string[];
+  removed_models: string[];
+  changed: BenchmarkChangeEntry[];
+  billing?: { credits_charged: number; credits_remaining?: number };
+}
+
+export type CompareResponse = PricingCompareResponse | BenchmarkCompareResponse;
 
 // ── Payment ─────────────────────────────────────────────────────────
 
@@ -516,6 +631,101 @@ export class TensorFeed {
     }
     return this.request<RoutingResponse>('GET', '/premium/routing', {
       params,
+      requireToken: true,
+    });
+  }
+
+  // ── Paid: history series (Tier 1, 1 credit per call) ──────────
+
+  private requireToken(name: string): void {
+    if (!this.token) {
+      throw new Error(
+        `${name}() requires a token. Buy credits via buyCredits() and confirm(), or pass a token to the constructor.`,
+      );
+    }
+  }
+
+  /**
+   * Daily price points for one model with min/max/delta summary.
+   * Costs 1 credit per call. Range capped at 90 days; default 30 days back.
+   *
+   * @throws Error if no token is set on the client
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async pricingSeries(options: {
+    model: string;
+    from?: string;
+    to?: string;
+  }): Promise<PricingSeriesResponse> {
+    this.requireToken('pricingSeries');
+    return this.request<PricingSeriesResponse>('GET', '/premium/history/pricing/series', {
+      params: { model: options.model, from: options.from, to: options.to },
+      requireToken: true,
+    });
+  }
+
+  /**
+   * Score evolution for a single benchmark on one model.
+   * Costs 1 credit per call. Benchmark keys: swe_bench, mmlu_pro,
+   * gpqa_diamond, math, human_eval (case-insensitive).
+   *
+   * @throws Error if no token is set on the client
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async benchmarkSeries(options: {
+    model: string;
+    benchmark: string;
+    from?: string;
+    to?: string;
+  }): Promise<BenchmarkSeriesResponse> {
+    this.requireToken('benchmarkSeries');
+    return this.request<BenchmarkSeriesResponse>('GET', '/premium/history/benchmarks/series', {
+      params: {
+        model: options.model,
+        benchmark: options.benchmark,
+        from: options.from,
+        to: options.to,
+      },
+      requireToken: true,
+    });
+  }
+
+  /**
+   * Daily uptime rollup for one provider. Operational days count fully,
+   * degraded days count as half, missing-data days are excluded from the
+   * denominator. Costs 1 credit per call.
+   *
+   * @throws Error if no token is set on the client
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async statusUptime(options: {
+    provider: string;
+    from?: string;
+    to?: string;
+  }): Promise<StatusUptimeResponse> {
+    this.requireToken('statusUptime');
+    return this.request<StatusUptimeResponse>('GET', '/premium/history/status/uptime', {
+      params: { provider: options.provider, from: options.from, to: options.to },
+      requireToken: true,
+    });
+  }
+
+  /**
+   * Diff two daily snapshots: added, removed, and changed entries with
+   * deltas. Useful for detecting price wars and benchmark regressions.
+   * Costs 1 credit per call.
+   *
+   * @throws Error if no token is set on the client
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async historyCompare(options: {
+    from: string;
+    to: string;
+    type?: 'pricing' | 'benchmarks';
+  }): Promise<CompareResponse> {
+    this.requireToken('historyCompare');
+    return this.request<CompareResponse>('GET', '/premium/history/compare', {
+      params: { from: options.from, to: options.to, type: options.type ?? 'pricing' },
       requireToken: true,
     });
   }

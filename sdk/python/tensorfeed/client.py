@@ -18,7 +18,7 @@ from typing import Any  # noqa: F401  (re-exported by purchase_credits return ty
 
 
 DEFAULT_BASE_URL = "https://tensorfeed.ai/api"
-DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.1"
+DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.3"
 
 
 class TensorFeedError(Exception):
@@ -404,4 +404,146 @@ class TensorFeed:
                     params[f"w_{key}"] = weights[key]
         return self._request(
             "GET", "/premium/routing", params=params, require_token=True
+        )
+
+    # ── Paid: history series (Tier 1, 1 credit/call) ───────────────
+
+    def _require_token(self, name: str) -> None:
+        if not self.token:
+            raise ValueError(
+                f"{name}() requires a token. Buy credits via buy_credits() and "
+                "confirm(), or pass an existing token to TensorFeed(token=...)."
+            )
+
+    def pricing_series(
+        self,
+        *,
+        model: str,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Daily price points for one model with min/max/delta summary.
+
+        Costs 1 credit per call. Range capped at 90 days; default 30 days
+        back from today.
+
+        Args:
+            model: Model id or display name (e.g. "Claude Opus 4.7" or
+                "claude-opus-4-7"). Case-insensitive.
+            from_date: Start date in YYYY-MM-DD UTC. Defaults to 30 days ago.
+            to_date: End date in YYYY-MM-DD UTC. Defaults to today.
+
+        Returns:
+            Dict with ``points`` (list of {date, input, output, blended}),
+            ``summary`` (first/latest/min/max/delta_pct/changes_detected),
+            ``range``, and ``billing``.
+
+        Raises:
+            ValueError: if no token is set on the client
+            PaymentRequired: if the token has insufficient credits
+        """
+        self._require_token("pricing_series")
+        return self._request(
+            "GET",
+            "/premium/history/pricing/series",
+            params={"model": model, "from": from_date, "to": to_date},
+            require_token=True,
+        )
+
+    def benchmark_series(
+        self,
+        *,
+        model: str,
+        benchmark: str,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Score evolution for a single benchmark on one model.
+
+        Costs 1 credit per call. Range capped at 90 days; default 30 days
+        back from today.
+
+        Args:
+            model: Model id or display name. Case-insensitive.
+            benchmark: Benchmark key (e.g. "swe_bench", "mmlu_pro",
+                "gpqa_diamond", "math", "human_eval"). Case-insensitive.
+            from_date: Start date in YYYY-MM-DD UTC. Defaults to 30 days ago.
+            to_date: End date in YYYY-MM-DD UTC. Defaults to today.
+
+        Returns:
+            Dict with ``points`` (list of {date, score}), ``summary``
+            (first/latest/min_score/max_score/delta_pp), ``range``, and ``billing``.
+        """
+        self._require_token("benchmark_series")
+        return self._request(
+            "GET",
+            "/premium/history/benchmarks/series",
+            params={
+                "model": model,
+                "benchmark": benchmark,
+                "from": from_date,
+                "to": to_date,
+            },
+            require_token=True,
+        )
+
+    def status_uptime(
+        self,
+        *,
+        provider: str,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Daily uptime rollup for one provider.
+
+        Costs 1 credit per call. Operational days count fully, degraded
+        days count as half, missing-data days are excluded from the
+        denominator.
+
+        Args:
+            provider: Provider name (e.g. "anthropic", "openai", "google").
+                Case-insensitive.
+            from_date: Start date in YYYY-MM-DD UTC. Defaults to 30 days ago.
+            to_date: End date in YYYY-MM-DD UTC. Defaults to today.
+
+        Returns:
+            Dict with ``uptime_pct``, day counts by status, ``incident_days``,
+            and ``billing``.
+        """
+        self._require_token("status_uptime")
+        return self._request(
+            "GET",
+            "/premium/history/status/uptime",
+            params={"provider": provider, "from": from_date, "to": to_date},
+            require_token=True,
+        )
+
+    def history_compare(
+        self,
+        *,
+        from_date: str,
+        to_date: str,
+        snapshot_type: str = "pricing",
+    ) -> dict[str, Any]:
+        """Diff two daily snapshots: added, removed, and changed entries.
+
+        Costs 1 credit per call.
+
+        Args:
+            from_date: Earlier snapshot date in YYYY-MM-DD UTC.
+            to_date: Later snapshot date in YYYY-MM-DD UTC.
+            snapshot_type: "pricing" (default) or "benchmarks".
+
+        Returns:
+            For pricing: ``added``, ``removed``, ``changed`` (with
+            field/from/to/delta_pct), and ``unchanged_count``.
+            For benchmarks: ``added_models``, ``removed_models``, and
+            ``changed`` (with model/benchmark/from/to/delta_pp).
+        """
+        self._require_token("history_compare")
+        return self._request(
+            "GET",
+            "/premium/history/compare",
+            params={"from": from_date, "to": to_date, "type": snapshot_type},
+            require_token=True,
         )

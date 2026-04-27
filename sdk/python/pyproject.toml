@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tensorfeed"
-version = "1.2.0"
-description = "Python SDK for the TensorFeed.ai API: AI news, status, model pricing, and agent-payable premium routing (USDC on Base, optional auto-send via web3)"
+version = "1.3.0"
+description = "Python SDK for the TensorFeed.ai API: AI news, status, model pricing, premium history series + routing, agent payments via USDC on Base (optional web3 auto-send)"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"

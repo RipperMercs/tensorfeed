@@ -75,6 +75,21 @@ rec = tf.routing(
     weights={"quality": 0.6, "cost": 0.3, "availability": 0.1, "latency": 0.0},
 )
 
+# Premium history series (1 credit each, range default = last 30 days, max 90)
+prices = tf.pricing_series(model="Claude Opus 4.7")
+print(f'Price changed {prices["summary"]["delta_pct_blended"]}% over the window')
+
+scores = tf.benchmark_series(model="Claude Opus 4.7", benchmark="swe_bench")
+print(f'SWE-bench moved {scores["summary"]["delta_pp"]} pp')
+
+uptime = tf.status_uptime(provider="anthropic")
+print(f'Anthropic uptime: {uptime["uptime_pct"]}% over {uptime["days_with_data"]} days')
+
+diff = tf.history_compare(
+    from_date="2026-04-01", to_date="2026-04-27", snapshot_type="pricing",
+)
+print(f'{len(diff["changed"])} price changes, {len(diff["added"])} new models')
+
 # Check remaining credits
 print(tf.balance())
 ```
@@ -171,6 +186,10 @@ except TensorFeedError as e:
 |--------|------|-------------|
 | `tf.balance()` | Free | Check remaining credits |
 | `tf.routing(task=, budget=, top_n=, weights=)` | 1 credit | Top-N ranked routing with full detail |
+| `tf.pricing_series(model=, from_date=, to_date=)` | 1 credit | Daily price points for one model with min/max/delta summary |
+| `tf.benchmark_series(model=, benchmark=, from_date=, to_date=)` | 1 credit | Score evolution for a benchmark on one model, returns delta_pp |
+| `tf.status_uptime(provider=, from_date=, to_date=)` | 1 credit | Uptime % per provider with incident days (degraded = half) |
+| `tf.history_compare(from_date=, to_date=, snapshot_type=)` | 1 credit | Diff two snapshots: added, removed, changed entries with deltas |
 
 ### Auto-send (requires `tensorfeed[web3]`)
 

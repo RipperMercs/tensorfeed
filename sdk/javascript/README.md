@@ -75,6 +75,28 @@ const ranked = await tf.routing({
   weights: { quality: 0.6, cost: 0.3, availability: 0.1, latency: 0.0 },
 });
 
+// Premium history series (1 credit each, default range = last 30 days, max 90)
+const prices = await tf.pricingSeries({ model: 'Claude Opus 4.7' });
+console.log(`Price moved ${prices.summary.delta_pct_blended}% over the window`);
+
+const scores = await tf.benchmarkSeries({
+  model: 'Claude Opus 4.7',
+  benchmark: 'swe_bench',
+});
+console.log(`SWE-bench moved ${scores.summary.delta_pp} pp`);
+
+const uptime = await tf.statusUptime({ provider: 'anthropic' });
+console.log(`Anthropic uptime: ${uptime.uptime_pct}% over ${uptime.days_with_data} days`);
+
+const diff = await tf.historyCompare({
+  from: '2026-04-01',
+  to: '2026-04-27',
+  type: 'pricing',
+});
+if (diff.type === 'pricing') {
+  console.log(`${diff.changed.length} price changes, ${diff.added.length} new models`);
+}
+
 // Check remaining credits
 console.log(await tf.balance());
 ```
@@ -141,6 +163,10 @@ try {
 |--------|------|-------------|
 | `tf.balance()` | Free | Check remaining credits |
 | `tf.routing({ task, budget, topN, weights })` | 1 credit | Top-N ranked routing with full detail |
+| `tf.pricingSeries({ model, from?, to? })` | 1 credit | Daily price points for one model with min/max/delta summary |
+| `tf.benchmarkSeries({ model, benchmark, from?, to? })` | 1 credit | Score evolution for a benchmark on one model, returns delta_pp |
+| `tf.statusUptime({ provider, from?, to? })` | 1 credit | Uptime % per provider with incident days (degraded = half) |
+| `tf.historyCompare({ from, to, type? })` | 1 credit | Diff two snapshots: added, removed, changed entries with deltas |
 
 ## Wallet & Trust
 
