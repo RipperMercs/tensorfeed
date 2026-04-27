@@ -378,11 +378,11 @@
     },
     {
       "language": "mcp",
-      "package": "@tensorfeed/mcp-server",
+      "package": "@tensorfeedai/mcp-server",
       "registry": "npm",
-      "install": "npx -y @tensorfeed/mcp-server",
+      "install": "npx -y @tensorfeedai/mcp-server",
       "envVar": "TENSORFEED_TOKEN",
-      "url": "https://www.npmjs.com/package/@tensorfeed/mcp-server",
+      "url": "https://www.npmjs.com/package/@tensorfeedai/mcp-server",
       "manifest": "https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
     }
   ],

@@ -43,4 +43,4 @@ All notable changes to the [TensorFeed.ai MCP server](https://github.com/RipperM
 ## 1.0.0 — 2026-04-26 (initial release)
 
 ### Added
-- 5 free tools: `get_ai_news`, `get_ai_status`, `is_service_down`, `get_model_pricing`, `get_ai_today`. No auth, no install beyond `npx -y @tensorfeed/mcp-server`.
+- 5 free tools: `get_ai_news`, `get_ai_status`, `is_service_down`, `get_model_pricing`, `get_ai_today`. No auth, no install beyond `npx -y @tensorfeedai/mcp-server`.

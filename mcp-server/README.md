@@ -47,7 +47,7 @@ Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json`):
   "mcpServers": {
     "tensorfeed": {
       "command": "npx",
-      "args": ["-y", "@tensorfeed/mcp-server"]
+      "args": ["-y", "@tensorfeedai/mcp-server"]
     }
   }
 }
@@ -60,7 +60,7 @@ To enable premium tools, add the `env` block:
   "mcpServers": {
     "tensorfeed": {
       "command": "npx",
-      "args": ["-y", "@tensorfeed/mcp-server"],
+      "args": ["-y", "@tensorfeedai/mcp-server"],
       "env": {
         "TENSORFEED_TOKEN": "tf_live_..."
       }
@@ -76,9 +76,9 @@ Add to Claude Desktop settings (same shape as above).
 ## Run Locally
 
 ```bash
-npx @tensorfeed/mcp-server
+npx @tensorfeedai/mcp-server
 # or with a token for premium endpoints
-TENSORFEED_TOKEN=tf_live_... npx @tensorfeed/mcp-server
+TENSORFEED_TOKEN=tf_live_... npx @tensorfeedai/mcp-server
 ```
 
 ## Example Queries

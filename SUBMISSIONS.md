@@ -2,7 +2,7 @@
 
 Copy-paste-ready submissions for the directories, registries, and awesome-lists where AI agent and MCP developers go to find tools. Work top to bottom; the early ones have the highest ceiling.
 
-**Prerequisite for most submissions:** the npm package `@tensorfeed/mcp-server` (now at 1.7.0 locally) must be published so `npx -y @tensorfeed/mcp-server` works for whoever clicks through. Publish first, then submit.
+**Prerequisite for most submissions:** the npm package `@tensorfeedai/mcp-server` (now at 1.7.0 locally) must be published so `npx -y @tensorfeedai/mcp-server` works for whoever clicks through. Publish first, then submit.
 
 ```
 # TypeScript SDK (1.1.0 on npm, 1.11.0 local)
@@ -39,7 +39,7 @@ The publisher CLI reads a `server.json` from the project root. We need to author
 **`mcp-server/server.json` (commit this to the repo):**
 ```json
 {
-  "name": "@tensorfeed/mcp-server",
+  "name": "@tensorfeedai/mcp-server",
   "version": "1.2.0",
   "description": "TensorFeed.ai MCP server: AI news, status, model pricing, premium routing, history series, webhook watches, and news search. Pay-per-call premium endpoints in USDC on Base.",
   "homepage": "https://tensorfeed.ai/developers/agent-payments",
@@ -59,7 +59,7 @@ The reference list inside the official MCP repo. PR adds us to the "Community Se
 
 **Submit a PR that adds this line under `## Resources` (alphabetical):**
 ```markdown
-- **[TensorFeed MCP Server](https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server)** ([npm](https://www.npmjs.com/package/@tensorfeed/mcp-server)) – AI news, service status, model pricing, plus 15 premium tools (routing, news search, history series, cost projection, forecasting, provider deep-dive, model comparison, webhook watches with digest tier, account management). Pay-per-call premium endpoints in USDC on Base, registered in the official MCP registry. Free tier with no auth, premium tier with bearer token via `TENSORFEED_TOKEN`.
+- **[TensorFeed MCP Server](https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server)** ([npm](https://www.npmjs.com/package/@tensorfeedai/mcp-server)) – AI news, service status, model pricing, plus 15 premium tools (routing, news search, history series, cost projection, forecasting, provider deep-dive, model comparison, webhook watches with digest tier, account management). Pay-per-call premium endpoints in USDC on Base, registered in the official MCP registry. Free tier with no auth, premium tier with bearer token via `TENSORFEED_TOKEN`.
 ```
 
 PR title: `Add TensorFeed MCP server to community resources`
@@ -76,7 +76,7 @@ What's novel: first MCP server I know of with native pay-per-call billing in USD
 
 Already registered in the official MCP registry (registry.modelcontextprotocol.io) as ai.tensorfeed/mcp-server.
 
-npm: https://www.npmjs.com/package/@tensorfeed/mcp-server
+npm: https://www.npmjs.com/package/@tensorfeedai/mcp-server
 Source: https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server
 Docs: https://tensorfeed.ai/developers/agent-payments
 Discovery: https://tensorfeed.ai/.well-known/x402
@@ -97,7 +97,7 @@ The most-mentioned awesome-mcp-servers list. Has an associated web frontend at g
 
 **Entry to paste (alphabetical by username):**
 ```markdown
-- [RipperMercs/tensorfeed](https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server) 📇 ☁️ - AI news + machine-payable intelligence. 5 free tools (news, status, is-down, pricing, today summary). 15 premium tools at 1 credit each (USDC on Base): routing recommendations, news search, pricing/benchmark/uptime history series, snapshot diff, enriched agents directory, cost projection, forecasting, provider deep-dive, model comparison, webhook watches with daily/weekly digest tier, account balance/usage. Install: `npx @tensorfeed/mcp-server`
+- [RipperMercs/tensorfeed](https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server) 📇 ☁️ - AI news + machine-payable intelligence. 5 free tools (news, status, is-down, pricing, today summary). 15 premium tools at 1 credit each (USDC on Base): routing recommendations, news search, pricing/benchmark/uptime history series, snapshot diff, enriched agents directory, cost projection, forecasting, provider deep-dive, model comparison, webhook watches with daily/weekly digest tier, account balance/usage. Install: `npx @tensorfeedai/mcp-server`
 ```
 
 Badges: 📇 = TypeScript, ☁️ = Cloud Service.
@@ -109,13 +109,13 @@ Add TensorFeed MCP server to Aggregators (machine-payable AI intelligence)
 
 **PR body:**
 ```
-Adds @tensorfeed/mcp-server to the Aggregators section.
+Adds @tensorfeedai/mcp-server to the Aggregators section.
 
 What it is: an MCP server that exposes 20 tools (5 free, 15 premium) for AI news, service status, model pricing, premium routing recommendations, news search, history series, cost projection, forecasting, provider deep-dive, model comparison, and webhook watches.
 
 Why it might be interesting to this list: this is the first MCP server I'm aware of with native pay-per-call billing in USDC on Base. Validated end-to-end on Base mainnet (tx 0x13bc9e2378edae44685a63bdedd3ba802372e2e656961610b8c169ca60431c0e). Free tools work without configuration; premium tools require a bearer token via the TENSORFEED_TOKEN env var. x402 V2 discovery manifest at /.well-known/x402 so x402-compatible facilitators can auto-index.
 
-Install: `npx @tensorfeed/mcp-server`
+Install: `npx @tensorfeedai/mcp-server`
 Source: https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server
 Docs: https://tensorfeed.ai/developers/agent-payments
 Already in the official MCP registry as ai.tensorfeed/mcp-server.
@@ -171,7 +171,7 @@ x402 V2 specifically:
 SDKs:
 - Python: `pip install tensorfeed` (PyPI)
 - TypeScript: `npm install tensorfeed` (npm)
-- MCP server: `npx @tensorfeed/mcp-server` (npm)
+- MCP server: `npx @tensorfeedai/mcp-server` (npm)
 
 Source: https://github.com/RipperMercs/tensorfeed
 Docs: https://tensorfeed.ai/developers/agent-payments
@@ -196,7 +196,7 @@ Same entry as #3, adapted to whatever section structure each repo uses. Each is 
 
 For all three, the line is the same:
 ```markdown
-- [tensorfeed](https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server) - AI news, status, model pricing, premium pay-per-call endpoints (USDC on Base). 5 free tools, 15 premium tools. `npx @tensorfeed/mcp-server`
+- [tensorfeed](https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server) - AI news, status, model pricing, premium pay-per-call endpoints (USDC on Base). 5 free tools, 15 premium tools. `npx @tensorfeedai/mcp-server`
 ```
 
 (Drop the badges if a list doesn't use them.)
@@ -210,7 +210,7 @@ For all three, the line is the same:
 Web-based MCP directory. Submit via whatever form/PR mechanism they use (check the site footer when you visit). The metadata they typically want:
 
 - Name: TensorFeed MCP Server
-- npm: @tensorfeed/mcp-server
+- npm: @tensorfeedai/mcp-server
 - Description: same as the punkpeye entry above
 - Categories: News, Pricing/Models, Premium/Paid
 
@@ -282,7 +282,7 @@ What's live as of now:
 - 18 paid premium endpoints at $0.02 per credit (50 credits per $1 USDC), volume discounts at $5/$30/$200
 - Endpoints cover: model routing recommendations with composite scoring, full-text news search over our article corpus, daily price/benchmark/uptime history series, snapshot diff between any two dates, enriched agents directory with derived trending score, cost projection across 1-10 models, conservative regression-based forecasting, single-call provider deep-dive, side-by-side model comparison, webhook watches with realtime price/status triggers AND a scheduled digest tier
 - Discovery: x402 V2 manifest at https://tensorfeed.ai/.well-known/x402 so CDP Bazaar facilitators auto-index us
-- MCP server at @tensorfeed/mcp-server so Claude Desktop / Code can call the premium tools directly via the TENSORFEED_TOKEN env var
+- MCP server at @tensorfeedai/mcp-server so Claude Desktop / Code can call the premium tools directly via the TENSORFEED_TOKEN env var
 - Python and TypeScript SDKs on PyPI/npm
 - Cross-site bundle: TerminalFeed.io shares the credit pool via an internal validate-and-charge endpoint, one purchase, both sites
 - 147 worker tests, all passing, all pure-logic so they run in 500ms
@@ -305,7 +305,7 @@ Post on a Tuesday-Thursday morning Pacific time for best engagement. Good titles
 Share the MCP server in the appropriate channel. Lightweight, a single message:
 
 ```
-Hey, just shipped a free MCP server that exposes AI news, model pricing, and service status to Claude Desktop / Claude Code: `npx -y @tensorfeed/mcp-server`. There's also a premium tier (model routing, news search, history series, webhook watches) that's pay-per-call in USDC on Base, no accounts. Validated end-to-end on mainnet today. Source: https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server. Happy to answer questions.
+Hey, just shipped a free MCP server that exposes AI news, model pricing, and service status to Claude Desktop / Claude Code: `npx -y @tensorfeedai/mcp-server`. There's also a premium tier (model routing, news search, history series, webhook watches) that's pay-per-call in USDC on Base, no accounts. Validated end-to-end on mainnet today. Source: https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server. Happy to answer questions.
 ```
 
 ### 12. r/LocalLLaMA + r/AIAgents (Reddit)

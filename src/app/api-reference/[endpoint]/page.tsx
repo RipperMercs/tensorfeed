@@ -179,7 +179,7 @@ export default function ApiReferencePage({ params }: { params: { endpoint: strin
                   TensorFeed MCP server
                 </Link>{' '}
                 as <code className="font-mono text-accent-primary">{meta.mcpTool}</code>. Add{' '}
-                <code className="font-mono text-accent-primary">npx -y @tensorfeed/mcp-server</code>{' '}
+                <code className="font-mono text-accent-primary">npx -y @tensorfeedai/mcp-server</code>{' '}
                 to your Claude Desktop or Claude Code MCP config.
               </p>
             </div>

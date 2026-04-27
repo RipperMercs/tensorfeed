@@ -14,7 +14,7 @@
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "@tensorfeed/mcp-server",
+      "identifier": "@tensorfeedai/mcp-server",
       "version": "1.9.0",
       "runtimeHint": "npx",
       "transport": {

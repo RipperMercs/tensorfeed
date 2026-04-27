@@ -37,7 +37,7 @@ const FAQ_JSONLD = {
     {
       '@type': 'Question',
       name: 'How do I add the TensorFeed MCP server to Claude Desktop?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Add this to your Claude Desktop config (`%APPDATA%\\Claude\\claude_desktop_config.json` on Windows, `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS): { "mcpServers": { "tensorfeed": { "command": "npx", "args": ["-y", "@tensorfeed/mcp-server"], "env": { "TENSORFEED_TOKEN": "tf_live_..." } } } }. The TENSORFEED_TOKEN is optional; without it the 5 free tools work, with it the 15 premium tools unlock.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'Add this to your Claude Desktop config (`%APPDATA%\\Claude\\claude_desktop_config.json` on Windows, `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS): { "mcpServers": { "tensorfeed": { "command": "npx", "args": ["-y", "@tensorfeedai/mcp-server"], "env": { "TENSORFEED_TOKEN": "tf_live_..." } } } }. The TENSORFEED_TOKEN is optional; without it the 5 free tools work, with it the 15 premium tools unlock.' },
     },
   ],
 };
@@ -104,7 +104,7 @@ export default function MCPGlossaryPage() {
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">TensorFeed&apos;s MCP server</h2>
         <p>
-          TensorFeed publishes <code className="text-accent-primary font-mono">@tensorfeed/mcp-server</code>{' '}
+          TensorFeed publishes <code className="text-accent-primary font-mono">@tensorfeedai/mcp-server</code>{' '}
           with 20 tools (5 free, 15 premium). Free tools cover real-time AI news, service status,
           model pricing, benchmarks, and a today summary. Premium tools cover routing
           recommendations, news search, history series, cost projection, forecasting, provider
@@ -115,7 +115,7 @@ export default function MCPGlossaryPage() {
   "mcpServers": {
     "tensorfeed": {
       "command": "npx",
-      "args": ["-y", "@tensorfeed/mcp-server"],
+      "args": ["-y", "@tensorfeedai/mcp-server"],
       "env": { "TENSORFEED_TOKEN": "tf_live_..." }
     }
   }

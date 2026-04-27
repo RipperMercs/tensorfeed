@@ -49,7 +49,7 @@ const FAQ_JSONLD = {
       name: 'Can my coding agent in Claude Code or Claude Desktop use TensorFeed?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. The @tensorfeed/mcp-server npm package exposes 20 tools including routing recommendations, SWE-bench history, news search, and webhook watches. Add `npx -y @tensorfeed/mcp-server` to your MCP config. Free tools work without auth; premium tools require a TENSORFEED_TOKEN env var pointing to a tf_live_ bearer token.',
+        text: 'Yes. The @tensorfeedai/mcp-server npm package exposes 20 tools including routing recommendations, SWE-bench history, news search, and webhook watches. Add `npx -y @tensorfeedai/mcp-server` to your MCP config. Free tools work without auth; premium tools require a TENSORFEED_TOKEN env var pointing to a tf_live_ bearer token.',
       },
     },
   ],
@@ -178,7 +178,7 @@ for r in rec["recommendations"]:
   "mcpServers": {
     "tensorfeed": {
       "command": "npx",
-      "args": ["-y", "@tensorfeed/mcp-server"],
+      "args": ["-y", "@tensorfeedai/mcp-server"],
       "env": { "TENSORFEED_TOKEN": "tf_live_..." }
     }
   }

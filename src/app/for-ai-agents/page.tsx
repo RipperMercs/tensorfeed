@@ -46,7 +46,7 @@ const FAQ_JSONLD = {
       name: 'How do AI agents discover TensorFeed.ai?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'TensorFeed publishes machine-readable manifests at multiple well-known URLs: llms.txt for general AI agent discovery, llms-full.txt for full content access, .well-known/x402 for x402 V2 payment-required discovery, and an MCP server (@tensorfeed/mcp-server) registered in the official MCP registry. Agents can pick whichever path fits their stack.',
+        text: 'TensorFeed publishes machine-readable manifests at multiple well-known URLs: llms.txt for general AI agent discovery, llms-full.txt for full content access, .well-known/x402 for x402 V2 payment-required discovery, and an MCP server (@tensorfeedai/mcp-server) registered in the official MCP registry. Agents can pick whichever path fits their stack.',
       },
     },
     {
@@ -78,7 +78,7 @@ const FAQ_JSONLD = {
       name: 'Is TensorFeed compatible with Claude Desktop and Claude Code?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. The @tensorfeed/mcp-server npm package exposes all 20 tools (5 free, 15 premium) through the Model Context Protocol. Add it to your Claude Desktop config with `npx -y @tensorfeed/mcp-server`. Pass your tf_live_ bearer token via the TENSORFEED_TOKEN env var to enable premium tools.',
+        text: 'Yes. The @tensorfeedai/mcp-server npm package exposes all 20 tools (5 free, 15 premium) through the Model Context Protocol. Add it to your Claude Desktop config with `npx -y @tensorfeedai/mcp-server`. Pass your tf_live_ bearer token via the TENSORFEED_TOKEN env var to enable premium tools.',
       },
     },
     {
@@ -146,7 +146,7 @@ export default function ForAIAgentsPage() {
           </li>
           <li>
             MCP server:{' '}
-            <code className="text-accent-primary font-mono text-sm">npx -y @tensorfeed/mcp-server</code>.
+            <code className="text-accent-primary font-mono text-sm">npx -y @tensorfeedai/mcp-server</code>.
             Free tools work without config; premium tools require a bearer token via the
             {' '}<code className="text-accent-primary font-mono text-sm">TENSORFEED_TOKEN</code> env var.
           </li>
@@ -221,7 +221,7 @@ export default function ForAIAgentsPage() {
   "mcpServers": {
     "tensorfeed": {
       "command": "npx",
-      "args": ["-y", "@tensorfeed/mcp-server"],
+      "args": ["-y", "@tensorfeedai/mcp-server"],
       "env": {
         "TENSORFEED_TOKEN": "tf_live_..."
       }

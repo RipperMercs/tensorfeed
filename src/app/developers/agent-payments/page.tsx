@@ -121,7 +121,7 @@ const FAQ_JSONLD = {
       name: 'Does TensorFeed work with the Model Context Protocol (MCP)?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. The @tensorfeed/mcp-server package exposes every premium endpoint as an MCP tool, so Claude Desktop, Claude Code, and other MCP clients can call routing, history series, watches, and the enriched agents directory directly. Pass your tf_live_ bearer token via the TENSORFEED_TOKEN env var in your MCP client config.',
+        text: 'Yes. The @tensorfeedai/mcp-server package exposes every premium endpoint as an MCP tool, so Claude Desktop, Claude Code, and other MCP clients can call routing, history series, watches, and the enriched agents directory directly. Pass your tf_live_ bearer token via the TENSORFEED_TOKEN env var in your MCP client config.',
       },
     },
   ],
