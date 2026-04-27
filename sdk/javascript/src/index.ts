@@ -1,13 +1,49 @@
 /**
  * TensorFeed.ai JavaScript/TypeScript SDK
  *
- * Free, no-auth API client for AI news, service status, and model data.
+ * Free endpoints (news, status, models, benchmarks, history, routing
+ * preview, agent activity) need no auth. The premium tier (top-N model
+ * routing, more endpoints landing later) is paid via USDC on Base.
+ *
  * https://tensorfeed.ai/developers
+ * https://tensorfeed.ai/developers/agent-payments
  */
 
 const DEFAULT_BASE_URL = 'https://tensorfeed.ai/api';
+const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.1';
 
-// ── Types ───────────────────────────────────────────────────────────
+// ── Error types ─────────────────────────────────────────────────────
+
+export class TensorFeedError extends Error {
+  readonly statusCode: number;
+  readonly payload: unknown;
+  constructor(statusCode: number, payload: unknown) {
+    const p = payload as { error?: string; message?: string } | undefined;
+    const msg = p?.error || p?.message || JSON.stringify(payload);
+    super(`TensorFeed API error ${statusCode}: ${msg}`);
+    this.name = 'TensorFeedError';
+    this.statusCode = statusCode;
+    this.payload = payload;
+  }
+}
+
+/** Thrown on HTTP 402 (premium endpoint requires payment). */
+export class PaymentRequired extends TensorFeedError {
+  constructor(payload: unknown) {
+    super(402, payload);
+    this.name = 'PaymentRequired';
+  }
+}
+
+/** Thrown on HTTP 429 (free preview rate limit, 5/day per IP). */
+export class RateLimited extends TensorFeedError {
+  constructor(payload: unknown) {
+    super(429, payload);
+    this.name = 'RateLimited';
+  }
+}
+
+// ── Free-endpoint response types (preserved from 1.0.0) ────────────
 
 export interface Article {
   id: string;
@@ -83,78 +119,405 @@ export interface HealthResponse {
   news: { totalArticles: number; sourcesPolled: number; sourcesSucceeded: number; lastUpdated: string };
 }
 
+// ── New in 1.1.0: benchmarks, history, premium ─────────────────────
+
+export interface BenchmarkDefinition {
+  id: string;
+  name: string;
+  description: string;
+  maxScore: number;
+}
+
+export interface BenchmarkModelEntry {
+  model: string;
+  provider: string;
+  released?: string;
+  scores: Record<string, number>;
+}
+
+export interface BenchmarksResponse {
+  ok: boolean;
+  source: string;
+  lastUpdated?: string;
+  benchmarks?: BenchmarkDefinition[];
+  models?: BenchmarkModelEntry[];
+}
+
+export interface HistoryListResponse {
+  ok: boolean;
+  dates: string[];
+  types: string[];
+  count: number;
+}
+
+export interface HistorySnapshot {
+  ok: boolean;
+  date: string;
+  type: string;
+  capturedAt: string;
+  data: unknown;
+}
+
+// ── Premium: routing ────────────────────────────────────────────────
+
+export type RoutingTask = 'code' | 'reasoning' | 'creative' | 'general';
+
+export interface RoutingPreviewResponse {
+  ok: boolean;
+  preview: true;
+  task: RoutingTask;
+  computed_at: string;
+  rate_limit: { limit: number; remaining: number; scope: string };
+  recommendation: { model: string; provider: string } | null;
+  upgrade: {
+    message: string;
+    premium_endpoint: string;
+    preview_limits: {
+      top_n: number;
+      includes_score_breakdown: boolean;
+      includes_pricing: boolean;
+      rate_limit_per_ip_per_day: number;
+    };
+  };
+}
+
+export interface RoutingRecommendation {
+  rank: number;
+  model: {
+    id: string;
+    name: string;
+    provider: string;
+    contextWindow: number;
+    capabilities: string[];
+    openSource: boolean;
+  };
+  pricing: { input: number; output: number; currency: 'USD'; unit: string };
+  status: ServiceStatus['status'];
+  composite_score: number;
+  components: { quality: number; availability: number; cost: number; latency: number };
+}
+
+export interface RoutingWeights {
+  quality: number;
+  availability: number;
+  cost: number;
+  latency: number;
+}
+
+export interface RoutingResponse {
+  ok: boolean;
+  task: RoutingTask;
+  computed_at: string;
+  weights: RoutingWeights;
+  filters_applied: { budget?: number; min_quality?: number };
+  data_freshness: { pricing: string | null; benchmarks: string | null; status: string | null };
+  recommendations: RoutingRecommendation[];
+  notes: string[];
+  billing?: {
+    credits_charged: number;
+    credits_remaining?: number;
+    new_token_issued?: boolean;
+    token?: string;
+  };
+}
+
+// ── Payment ─────────────────────────────────────────────────────────
+
+export interface PaymentInfo {
+  ok: boolean;
+  wallet: { address: string; currency: string; network: string; contract: string; decimals: number };
+  pricing: {
+    base_rate: string;
+    volume_bundles: { amount_usd: number; credits: number; rate: string }[];
+    tiers: Record<string, string>;
+  };
+  flow: { with_quote: string[]; x402_fallback: string[] };
+  verification: {
+    attestation_method: string;
+    address_published_at: string[];
+    note: string;
+  };
+  terms: { no_training: string; refund: string; kill_switch: string };
+}
+
+export interface QuoteResponse {
+  ok: boolean;
+  wallet: string;
+  memo: string;
+  amount_usd: number;
+  credits: number;
+  currency: 'USDC';
+  network: 'base';
+  expires_at: string;
+  ttl_seconds: number;
+  next_step: string;
+}
+
+export interface ConfirmResponse {
+  ok: boolean;
+  token?: string;
+  credits?: number;
+  balance?: number;
+  tx_amount_usd?: number;
+  rate?: string;
+  error?: string;
+  reason?: string;
+}
+
+export interface BalanceResponse {
+  ok: boolean;
+  balance: number;
+  created: string;
+  last_used: string;
+  total_purchased: number;
+}
+
+// ── Options ────────────────────────────────────────────────────────
+
 export interface TensorFeedOptions {
   baseUrl?: string;
+  /** Bearer token for premium endpoints. Auto-set after a successful confirm(). */
+  token?: string;
+  userAgent?: string;
 }
 
 // ── Client ──────────────────────────────────────────────────────────
 
 export class TensorFeed {
   private baseUrl: string;
+  private userAgent: string;
+  /** Bearer token used on premium endpoints and balance(). Mutable so confirm() can populate it. */
+  public token: string | undefined;
 
   constructor(options?: TensorFeedOptions) {
-    this.baseUrl = options?.baseUrl || DEFAULT_BASE_URL;
+    this.baseUrl = options?.baseUrl ?? DEFAULT_BASE_URL;
+    this.token = options?.token;
+    this.userAgent = options?.userAgent ?? DEFAULT_USER_AGENT;
   }
 
-  private async get<T>(path: string): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      headers: { 'User-Agent': 'TensorFeed-SDK-JS/1.0' },
-    });
-    if (!res.ok) {
-      throw new Error(`TensorFeed API error: ${res.status} ${res.statusText}`);
+  private async request<T>(
+    method: 'GET' | 'POST',
+    path: string,
+    options?: { params?: Record<string, unknown>; body?: unknown; requireToken?: boolean },
+  ): Promise<T> {
+    let url = `${this.baseUrl}${path}`;
+    if (options?.params) {
+      const usp = new URLSearchParams();
+      for (const [k, v] of Object.entries(options.params)) {
+        if (v !== undefined && v !== null) usp.set(k, String(v));
+      }
+      const qs = usp.toString();
+      if (qs) url += `?${qs}`;
     }
-    return res.json() as Promise<T>;
+
+    const headers: Record<string, string> = { 'User-Agent': this.userAgent };
+    let body: string | undefined;
+    if (options?.body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify(options.body);
+    }
+
+    const needsAuth =
+      options?.requireToken ||
+      path.startsWith('/premium/') ||
+      path === '/payment/balance';
+    if (needsAuth && this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    const res = await fetch(url, { method, headers, body });
+    let payload: unknown;
+    try {
+      payload = await res.json();
+    } catch {
+      payload = { error: 'non_json_response', status: res.status };
+    }
+    if (res.status === 402) throw new PaymentRequired(payload);
+    if (res.status === 429) throw new RateLimited(payload);
+    if (!res.ok) throw new TensorFeedError(res.status, payload);
+    return payload as T;
   }
 
-  /** Get latest AI news articles */
+  private get<T>(path: string, params?: Record<string, unknown>): Promise<T> {
+    return this.request<T>('GET', path, { params });
+  }
+
+  private post<T>(path: string, body?: unknown): Promise<T> {
+    return this.request<T>('POST', path, { body });
+  }
+
+  // ── Free: news, status, models ─────────────────────────────────
+
+  /** Get latest AI news articles. Free. */
   async news(options?: { category?: string; limit?: number }): Promise<NewsResponse> {
-    const params = new URLSearchParams();
-    if (options?.category) params.set('category', options.category);
-    if (options?.limit) params.set('limit', String(options.limit));
-    const qs = params.toString();
-    return this.get<NewsResponse>(`/news${qs ? `?${qs}` : ''}`);
+    return this.get<NewsResponse>('/news', {
+      category: options?.category,
+      limit: options?.limit,
+    });
   }
 
-  /** Get real-time AI service status */
+  /** Get real-time AI service status. Free. */
   async status(): Promise<StatusResponse> {
     return this.get<StatusResponse>('/status');
   }
 
-  /** Get status summary (lightweight) */
-  async statusSummary(): Promise<{ ok: boolean; services: { name: string; status: string; provider: string }[] }> {
+  /** Lightweight status summary. Free. */
+  async statusSummary(): Promise<{
+    ok: boolean;
+    services: { name: string; status: string; provider: string }[];
+  }> {
     return this.get('/status/summary');
   }
 
-  /** Get AI model pricing and specs */
+  /** AI model pricing and specs. Free. */
   async models(): Promise<ModelsResponse> {
     return this.get<ModelsResponse>('/models');
   }
 
-  /** Get agent activity metrics */
+  /** AI model benchmark scores. Free. */
+  async benchmarks(): Promise<BenchmarksResponse> {
+    return this.get<BenchmarksResponse>('/benchmarks');
+  }
+
+  /** Agent traffic metrics. Free. */
   async agentActivity(): Promise<AgentActivity> {
     return this.get<AgentActivity>('/agents/activity');
   }
 
-  /** Health check */
+  /** API health. Free. */
   async health(): Promise<HealthResponse> {
     return this.get<HealthResponse>('/health');
   }
 
-  /** Check if a specific service is down */
+  /** Check if a specific AI service is down. */
   async isDown(serviceName: string): Promise<{ name: string; status: string; isDown: boolean }> {
     const data = await this.status();
+    const needle = serviceName.toLowerCase();
     const service = data.services.find(
-      s => s.name.toLowerCase().includes(serviceName.toLowerCase()) ||
-           s.provider.toLowerCase().includes(serviceName.toLowerCase())
+      s => s.name.toLowerCase().includes(needle) || s.provider.toLowerCase().includes(needle),
     );
     if (!service) {
-      throw new Error(`Service "${serviceName}" not found. Available: ${data.services.map(s => s.name).join(', ')}`);
+      throw new Error(
+        `Service "${serviceName}" not found. Available: ${data.services.map(s => s.name).join(', ')}`,
+      );
     }
-    return {
-      name: service.name,
-      status: service.status,
-      isDown: service.status === 'down',
+    return { name: service.name, status: service.status, isDown: service.status === 'down' };
+  }
+
+  // ── Free: history snapshots ────────────────────────────────────
+
+  /** List available daily history snapshot dates. Free. */
+  async history(): Promise<HistoryListResponse> {
+    return this.get<HistoryListResponse>('/history');
+  }
+
+  /** Read a specific historical snapshot. Free.
+   * @param date YYYY-MM-DD UTC
+   * @param snapshotType pricing, models, benchmarks, status, or agent-activity
+   */
+  async historySnapshot(date: string, snapshotType: string): Promise<HistorySnapshot> {
+    return this.get<HistorySnapshot>(`/history/${date}/${snapshotType}`);
+  }
+
+  // ── Free: routing preview (rate-limited) ───────────────────────
+
+  /**
+   * Top-1 model recommendation. Free, 5 calls per UTC day per IP.
+   * For full top-N with score breakdown and no rate limit, use routing().
+   * @throws RateLimited after 5 free preview calls in a UTC day from your IP
+   */
+  async routingPreview(options?: {
+    task?: RoutingTask;
+    budget?: number;
+    minQuality?: number;
+  }): Promise<RoutingPreviewResponse> {
+    return this.get<RoutingPreviewResponse>('/preview/routing', {
+      task: options?.task,
+      budget: options?.budget,
+      min_quality: options?.minQuality,
+    });
+  }
+
+  // ── Payment flow ───────────────────────────────────────────────
+
+  /** Wallet, pricing, supported flows. Free. Use to verify the wallet address. */
+  async paymentInfo(): Promise<PaymentInfo> {
+    return this.get<PaymentInfo>('/payment/info');
+  }
+
+  /**
+   * Generate a 30-minute payment quote. Send USDC on Base to the returned
+   * wallet (memo optional), then call confirm() with the tx hash.
+   */
+  async buyCredits(options: { amountUsd: number }): Promise<QuoteResponse> {
+    return this.post<QuoteResponse>('/payment/buy-credits', { amount_usd: options.amountUsd });
+  }
+
+  /**
+   * Verify a USDC tx on-chain and mint a credit token.
+   * On success the returned token is auto-stored on this client instance.
+   * Pass `nonce` (the memo from buyCredits) if you want quoted credits with
+   * volume discount; otherwise credits are calculated from the actual tx amount.
+   */
+  async confirm(options: { txHash: string; nonce?: string }): Promise<ConfirmResponse> {
+    const body: Record<string, unknown> = { tx_hash: options.txHash };
+    if (options.nonce !== undefined) body.nonce = options.nonce;
+    const res = await this.post<ConfirmResponse>('/payment/confirm', body);
+    if (res.ok && res.token) this.token = res.token;
+    return res;
+  }
+
+  /**
+   * Check remaining credits for the current bearer token.
+   * @throws Error if no token is set on the client
+   */
+  async balance(): Promise<BalanceResponse> {
+    if (!this.token) {
+      throw new Error(
+        'balance() requires a token. Pass it via new TensorFeed({ token }) or call confirm() first.',
+      );
+    }
+    return this.request<BalanceResponse>('GET', '/payment/balance', { requireToken: true });
+  }
+
+  // ── Paid: routing (Tier 2, 1 credit per call) ─────────────────
+
+  /**
+   * Tier 2 routing recommendation: top-N ranked models with full score breakdown.
+   * Costs 1 credit per call.
+   *
+   * @throws Error if no token is set on the client
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async routing(options?: {
+    task?: RoutingTask;
+    budget?: number;
+    minQuality?: number;
+    topN?: number;
+    weights?: Partial<RoutingWeights>;
+  }): Promise<RoutingResponse> {
+    if (!this.token) {
+      throw new Error(
+        'routing() requires a token. Buy credits via buyCredits() and confirm(), or pass a token to the constructor.',
+      );
+    }
+    const params: Record<string, unknown> = {
+      task: options?.task,
+      budget: options?.budget,
+      min_quality: options?.minQuality,
+      top_n: options?.topN,
     };
+    const w = options?.weights;
+    if (w) {
+      if (w.quality !== undefined) params.w_quality = w.quality;
+      if (w.availability !== undefined) params.w_availability = w.availability;
+      if (w.cost !== undefined) params.w_cost = w.cost;
+      if (w.latency !== undefined) params.w_latency = w.latency;
+    }
+    return this.request<RoutingResponse>('GET', '/premium/routing', {
+      params,
+      requireToken: true,
+    });
   }
 }
 
