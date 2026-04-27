@@ -29,6 +29,7 @@ import {
   EnrichedOptions,
   SortKey,
 } from './agents-enriched';
+import { searchNews, NewsSearchOptions } from './news-search';
 import { computeRouting, checkRoutingPreviewRateLimit, hoursUntilUTCRollover, RoutingTask } from './routing';
 import {
   requirePayment,
@@ -488,6 +489,7 @@ export default {
           premiumWatchesList: 'GET /api/premium/watches',
           premiumWatchesItem: 'GET|DELETE /api/premium/watches/{id}',
           premiumAgentsDirectory: '/api/premium/agents/directory?category=&status=&open_source=&capability=&sort=&limit=',
+          premiumNewsSearch: '/api/premium/news/search?q=&from=&to=&provider=&category=&limit=',
           paymentInfo: '/api/payment/info',
           paymentBuyCredits: '/api/payment/buy-credits',
           paymentConfirm: '/api/payment/confirm',
@@ -886,6 +888,37 @@ export default {
       const result = await compareHistory(env, fromDate, toDate, typeParam);
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/history/compare', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return premiumResponse(result, payment, 1);
+    }
+
+    // === PAID PREMIUM: NEWS SEARCH (Tier 1, 1 credit) ===
+    // Full-text search over the article corpus with date range, provider,
+    // and category filters. Relevance scoring blends term hits in title
+    // (weight 3) and snippet (weight 1) plus a recency boost.
+
+    if (path === '/api/premium/news/search') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const limitParam = parseInt(url.searchParams.get('limit') ?? '25', 10);
+      const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(limitParam, 100)) : 25;
+
+      const opts: NewsSearchOptions = {
+        ...(url.searchParams.get('q') ? { q: url.searchParams.get('q')! } : {}),
+        ...(url.searchParams.get('from') ? { from: url.searchParams.get('from')! } : {}),
+        ...(url.searchParams.get('to') ? { to: url.searchParams.get('to')! } : {}),
+        ...(url.searchParams.get('provider') ? { provider: url.searchParams.get('provider')! } : {}),
+        ...(url.searchParams.get('category') ? { category: url.searchParams.get('category')! } : {}),
+        limit,
+      };
+
+      const result = await searchNews(env, opts);
+      if (!result.ok) {
+        return jsonResponse(result, 400);
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/news/search', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return premiumResponse(result, payment, 1);
     }

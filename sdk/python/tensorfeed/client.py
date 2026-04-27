@@ -18,7 +18,7 @@ from typing import Any  # noqa: F401  (re-exported by purchase_credits return ty
 
 
 DEFAULT_BASE_URL = "https://tensorfeed.ai/api"
-DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.6"
+DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.7"
 
 
 class TensorFeedError(Exception):
@@ -707,4 +707,64 @@ class TensorFeed:
             params["limit"] = limit
         return self._request(
             "GET", "/premium/agents/directory", params=params, require_token=True,
+        )
+
+    # ── Paid: news search (Tier 1, 1 credit) ───────────────────────
+
+    def news_search(
+        self,
+        *,
+        q: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        provider: str | None = None,
+        category: str | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """Full-text search over the TensorFeed news article corpus.
+
+        Costs 1 credit per call. Free /news returns the latest articles in
+        date order; this endpoint adds query, date range, provider, and
+        category filters with relevance scoring.
+
+        Relevance blends term hits in title (weight 3) and snippet
+        (weight 1) plus a recency boost. Stop words and tokens shorter
+        than 2 chars are stripped from the query.
+
+        Args:
+            q: Free-text query (e.g. "claude opus pricing"). If omitted,
+                returns the latest filtered articles in publishedAt desc.
+            from_date: Start date YYYY-MM-DD UTC (inclusive).
+            to_date: End date YYYY-MM-DD UTC (inclusive end-of-day).
+            provider: Substring match against source name and sourceDomain
+                (e.g. "anthropic", "openai", "techcrunch").
+            category: Substring match against article categories.
+            limit: Max results (1-100, default 25).
+
+        Returns:
+            Dict with ``query``, ``filters``, ``total_corpus``,
+            ``matched``, ``returned``, ``results`` (each with title, url,
+            source, snippet, published_at, relevance, matched_terms),
+            and ``billing``.
+
+        Raises:
+            ValueError: if no token is set on the client
+            PaymentRequired: if the token has insufficient credits
+        """
+        self._require_token("news_search")
+        params: dict[str, Any] = {}
+        if q is not None:
+            params["q"] = q
+        if from_date is not None:
+            params["from"] = from_date
+        if to_date is not None:
+            params["to"] = to_date
+        if provider is not None:
+            params["provider"] = provider
+        if category is not None:
+            params["category"] = category
+        if limit is not None:
+            params["limit"] = limit
+        return self._request(
+            "GET", "/premium/news/search", params=params, require_token=True,
         )

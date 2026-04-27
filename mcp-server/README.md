@@ -26,6 +26,7 @@ These tools require a `TENSORFEED_TOKEN` env var. Buy credits at [tensorfeed.ai/
 | `status_uptime` | 1 credit | Daily uptime % for one provider with incident-day list |
 | `history_compare` | 1 credit | Diff two daily snapshots: added, removed, changed entries |
 | `premium_agents_directory` | 1 credit | Enriched agents catalog with live status, news, traffic, trending_score |
+| `news_search` | 1 credit | Full-text news search with date/provider/category filters and relevance scoring |
 | `list_watches` | Free | List active webhook watches owned by the token |
 | `create_price_watch` | 1 credit | Register a webhook watch on a model price change |
 | `create_status_watch` | 1 credit | Register a webhook watch on a service status transition |

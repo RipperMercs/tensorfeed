@@ -221,6 +221,7 @@ except TensorFeedError as e:
 | `tf.get_watch(watch_id)` | Free | Read one watch including fire_count and last_fired_at |
 | `tf.delete_watch(watch_id)` | Free | Remove an owned watch |
 | `tf.premium_agents_directory(category=, status=, sort=, limit=, ...)` | 1 credit | Enriched directory: status, news, traffic, pricing, trending_score per agent |
+| `tf.news_search(q=, from_date=, to_date=, provider=, category=, limit=)` | 1 credit | Full-text news search with date/provider filters, relevance scoring, recency boost |
 
 ### Auto-send (requires `tensorfeed[web3]`)
 

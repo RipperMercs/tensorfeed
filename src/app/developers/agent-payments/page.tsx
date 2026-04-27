@@ -361,6 +361,36 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/news/search',
+    description:
+      'Full-text search over the TensorFeed news corpus with relevance scoring (term hits in title weighted 3, snippet weighted 1, plus recency boost). Filter by date range, provider, and category. Omit q to browse the latest filtered articles. Default limit=25, max 100.',
+    cost: '1 credit per call',
+    example: `// Query: ?q=opus+pricing&provider=anthropic&from=2026-04-01
+{
+  "ok": true,
+  "query": "opus pricing",
+  "filters": { "provider": "anthropic", "from": "2026-04-01" },
+  "total_corpus": 4823,
+  "matched": 12,
+  "returned": 12,
+  "results": [
+    {
+      "title": "Anthropic ships Claude Opus 4.7 with 1M context",
+      "url": "https://anthropic.com/opus-4-7",
+      "source": "Anthropic Blog",
+      "source_domain": "anthropic.com",
+      "snippet": "New flagship model with extended context window...",
+      "categories": ["Anthropic", "Models"],
+      "published_at": "2026-04-27T12:00:00Z",
+      "relevance": 0.85,
+      "matched_terms": ["opus"]
+    }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 47 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/agents/directory',
     description:
       'The agents catalog joined with live status, recent news (count + top 3 articles), agent traffic, flagship pricing, and a derived trending_score (0-100). Server-side filter and sort so you pull a ranked list in one call. Default limit=50, max 100.',

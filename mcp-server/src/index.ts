@@ -5,7 +5,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 
 const API_BASE = 'https://tensorfeed.ai/api';
-const SDK_VERSION = '1.1.0';
+const SDK_VERSION = '1.2.0';
 
 // ── API helpers ─────────────────────────────────────────────────────
 
@@ -544,6 +544,54 @@ server.tool(
         {
           type: 'text' as const,
           text: `Agents (sort: ${data.sort}, ${data.returned} of ${data.total}):\n\n${list}\n\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+        },
+      ],
+    };
+  },
+);
+
+// ── Tool: news_search (1 credit) ────────────────────────────────────
+
+server.tool(
+  'news_search',
+  'Full-text search over the TensorFeed news article corpus with optional date range, provider, and category filters. Relevance scoring with recency boost. Costs 1 credit.',
+  {
+    q: z.string().optional().describe('Free-text query, e.g. "claude opus pricing". Omit to browse latest filtered articles.'),
+    from: z.string().optional().describe('Start date YYYY-MM-DD UTC (inclusive)'),
+    to: z.string().optional().describe('End date YYYY-MM-DD UTC (inclusive end-of-day)'),
+    provider: z.string().optional().describe('Substring match against source name and domain (e.g. "anthropic", "openai", "techcrunch")'),
+    category: z.string().optional().describe('Substring match against article categories'),
+    limit: z.number().min(1).max(100).optional().describe('Max results (default 25, max 100)'),
+  },
+  async ({ q, from, to, provider, category, limit }) => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    if (provider) params.set('provider', provider);
+    if (category) params.set('category', category);
+    if (typeof limit === 'number') params.set('limit', String(limit));
+    const data = (await fetchJSON(`/premium/news/search?${params}`, { auth: true })) as {
+      query: string | null;
+      matched: number;
+      returned: number;
+      results: { title: string; url: string; source: string; published_at: string; relevance: number; matched_terms: string[]; snippet: string }[];
+      billing?: { credits_remaining?: number };
+    };
+    if (data.results.length === 0) {
+      return { content: [{ type: 'text' as const, text: `No articles matched. (matched: ${data.matched})` }] };
+    }
+    const list = data.results
+      .map(
+        (r, i) =>
+          `${i + 1}. ${r.title} (${r.source})\n   ${r.url}\n   ${r.published_at} | relevance ${r.relevance}${r.matched_terms.length ? ` | terms: ${r.matched_terms.join(', ')}` : ''}\n   ${r.snippet}`,
+      )
+      .join('\n\n');
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: `${data.returned} of ${data.matched} matches${data.query ? ` for "${data.query}"` : ''}:\n\n${list}\n\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
         },
       ],
     };

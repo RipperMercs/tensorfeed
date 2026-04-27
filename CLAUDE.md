@@ -43,6 +43,8 @@ tensorfeed/
       watches.test.ts Vitest coverage for predicate edge transitions, SSRF guard, dispatch end-to-end
       agents-enriched.ts  Premium enriched agents directory: joins catalog with status, news, activity, pricing; trending score; sort/filter
       agents-enriched.test.ts  Vitest coverage for enrichment join logic, filters, sort, scoring
+      news-search.ts  Premium news search: tokenization, relevance scoring (title weight 3, snippet 1, recency boost), date/provider/category filters
+      news-search.test.ts  Vitest coverage for query mode, filters, browse mode, validation
       podcasts.ts     Podcast feed polling
       trending.ts     Trending GitHub repos
       twitter.ts      X/Twitter auto-posting
@@ -205,6 +207,7 @@ All mounted under `https://tensorfeed.ai/api/*` via the Worker.
 - `/api/premium/watches` (GET): List watches owned by the bearer token. Free.
 - `/api/premium/watches/{id}` (GET|DELETE): Read or remove an owned watch. Free.
 - `/api/premium/agents/directory?category=&status=&open_source=&capability=&sort=&limit=`: Tier 1, 1 credit. Enriched agents catalog joined with live status, recent news (count + top 3), agent traffic, flagship pricing, and a derived trending_score. Sort options: trending, alphabetical, status, price_low, price_high, news_count.
+- `/api/premium/news/search?q=&from=&to=&provider=&category=&limit=`: Tier 1, 1 credit. Full-text search over the article corpus with relevance scoring (term hits weighted 3 in title, 1 in snippet, plus recency boost) and date/provider/category filters. Default limit 25, max 100.
 
 **Admin (auth-gated via `?key=ENVIRONMENT`):**
 - `/api/admin/usage?date=YYYY-MM-DD`: Daily revenue + usage rollup

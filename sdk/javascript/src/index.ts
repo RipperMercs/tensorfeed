@@ -10,7 +10,7 @@
  */
 
 const DEFAULT_BASE_URL = 'https://tensorfeed.ai/api';
-const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.5';
+const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.6';
 
 // ── Error types ─────────────────────────────────────────────────────
 
@@ -420,6 +420,29 @@ export type AgentsDirectorySort =
   | 'price_low'
   | 'price_high'
   | 'news_count';
+
+export interface NewsSearchResultItem {
+  title: string;
+  url: string;
+  source: string;
+  source_domain: string;
+  snippet: string;
+  categories: string[];
+  published_at: string;
+  relevance: number;
+  matched_terms: string[];
+}
+
+export interface NewsSearchResponse {
+  ok: boolean;
+  query: string | null;
+  filters: { from?: string; to?: string; provider?: string; category?: string };
+  total_corpus: number;
+  matched: number;
+  returned: number;
+  results: NewsSearchResultItem[];
+  billing?: { credits_charged: number; credits_remaining?: number };
+}
 
 export interface PremiumAgentsDirectoryResponse {
   ok: boolean;
@@ -952,6 +975,40 @@ export class TensorFeed {
     else if (options?.openSource === false) params.open_source = 'false';
     return this.request<PremiumAgentsDirectoryResponse>('GET', '/premium/agents/directory', {
       params,
+      requireToken: true,
+    });
+  }
+
+  // ── Paid: news search (1 credit per call) ──────────────────────
+
+  /**
+   * Full-text search over the TensorFeed news article corpus with date
+   * range, provider, and category filters. Relevance scoring blends term
+   * hits in title (weight 3) and snippet (weight 1) plus a recency boost.
+   * Costs 1 credit. Stop words and tokens shorter than 2 chars are
+   * stripped from the query.
+   *
+   * @throws Error if no token is set
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async newsSearch(options?: {
+    q?: string;
+    from?: string;
+    to?: string;
+    provider?: string;
+    category?: string;
+    limit?: number;
+  }): Promise<NewsSearchResponse> {
+    this.requireToken('newsSearch');
+    return this.request<NewsSearchResponse>('GET', '/premium/news/search', {
+      params: {
+        q: options?.q,
+        from: options?.from,
+        to: options?.to,
+        provider: options?.provider,
+        category: options?.category,
+        limit: options?.limit,
+      },
       requireToken: true,
     });
   }
