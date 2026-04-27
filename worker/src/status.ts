@@ -1,5 +1,6 @@
 import { Env, ServiceStatus, StatusPageResponse } from './types';
 import { STATUS_PAGES } from './sources';
+import { dispatchStatusWatches, StatusTransition } from './watches';
 
 function normalizeStatus(indicator: string): 'operational' | 'degraded' | 'down' | 'unknown' {
   switch (indicator?.toLowerCase()) {
@@ -142,6 +143,7 @@ export async function pollStatusPages(env: Env): Promise<void> {
   const previousRaw = await env.TENSORFEED_STATUS.get('previous-status', 'json') as
     { name: string; status: string; provider: string }[] | null;
 
+  const watchTransitions: StatusTransition[] = [];
   if (previousRaw) {
     const prevMap = new Map(previousRaw.map(s => [s.name, s]));
     const incidentsRaw = await env.TENSORFEED_STATUS.get('incidents', 'json') as Incident[] | null;
@@ -157,6 +159,15 @@ export async function pollStatusPages(env: Env): Promise<void> {
 
       if (prevStatus === curStatus) continue;
       if (curStatus === 'unknown' || prevStatus === 'unknown') continue;
+
+      // Collect for premium watch dispatch (fires only on real transitions,
+      // matching the same edge filter the incident detector uses).
+      watchTransitions.push({
+        provider: current.provider,
+        name: current.name,
+        from: prevStatus as StatusTransition['from'],
+        to: curStatus as StatusTransition['to'],
+      });
 
       // Service went from operational to degraded/down
       if (prevStatus === 'operational' && (curStatus === 'degraded' || curStatus === 'down')) {
@@ -203,6 +214,20 @@ export async function pollStatusPages(env: Env): Promise<void> {
   const down = statuses.filter(s => s.status === 'down').length;
 
   console.log(`Status poll complete - ${operational} operational, ${degraded} degraded, ${down} down`);
+
+  // Premium watch dispatch (no-op when no watches are subscribed)
+  if (watchTransitions.length > 0) {
+    try {
+      const summary = await dispatchStatusWatches(env, watchTransitions);
+      if (summary.watches_fired > 0) {
+        console.log(
+          `status watches fired: ${summary.watches_fired} of ${summary.watches_evaluated} (failures: ${summary.delivery_failures})`,
+        );
+      }
+    } catch (e) {
+      console.error('dispatchStatusWatches failed:', e instanceof Error ? e.message : e);
+    }
+  }
 }
 
 export interface Incident {

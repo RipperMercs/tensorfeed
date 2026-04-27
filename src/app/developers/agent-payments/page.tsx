@@ -228,6 +228,32 @@ const ENDPOINTS: PremiumEndpoint[] = [
   "unchanged_count": 8
 }`,
   },
+  {
+    method: 'POST',
+    path: '/api/premium/watches',
+    description:
+      'Register a webhook watch on a price change or service status transition. Each watch lives 90 days and fires up to 100 times by default. Deliveries POST to your callback URL with an HMAC-SHA256 signature header (X-TensorFeed-Signature: sha256=...). Per-token cap of 25 active watches. Listing and per-watch read/delete are free for the owning bearer token.',
+    cost: '1 credit per registration',
+    example: `// Body: { spec, callback_url, secret?, fire_cap? }
+// Spec types:
+//   { type: "price", model, field: "inputPrice"|"outputPrice"|"blended",
+//     op: "lt"|"gt"|"changes", threshold? }
+//   { type: "status", provider, op: "becomes"|"changes",
+//     value?: "operational"|"degraded"|"down" }
+{
+  "ok": true,
+  "watch": {
+    "id": "wat_a1b2c3d4e5f60718a9b0c1d2",
+    "spec": { "type": "price", "model": "Claude Opus 4.7",
+              "field": "blended", "op": "lt", "threshold": 30 },
+    "callback_url": "https://agent.example.com/hook",
+    "created": "2026-04-27T18:00:00Z",
+    "expires_at": "2026-07-26T18:00:00Z",
+    "fire_count": 0, "fire_cap": 100, "status": "active"
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+  },
 ];
 
 const PYTHON_QUICKSTART = `from tensorfeed import TensorFeed

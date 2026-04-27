@@ -17,6 +17,13 @@ import {
   MAX_RANGE_DAYS,
   DEFAULT_RANGE_DAYS,
 } from './history-series';
+import {
+  createWatch,
+  getWatch,
+  listWatchesForToken,
+  deleteWatch,
+  runPriceWatchCycle,
+} from './watches';
 import { computeRouting, checkRoutingPreviewRateLimit, hoursUntilUTCRollover, RoutingTask } from './routing';
 import {
   requirePayment,
@@ -471,6 +478,9 @@ export default {
           premiumBenchmarkSeries: '/api/premium/history/benchmarks/series?model=&benchmark=&from=&to=',
           premiumStatusUptime: '/api/premium/history/status/uptime?provider=&from=&to=',
           premiumHistoryCompare: '/api/premium/history/compare?from=&to=&type=pricing|benchmarks',
+          premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
+          premiumWatchesList: 'GET /api/premium/watches',
+          premiumWatchesItem: 'GET|DELETE /api/premium/watches/{id}',
           paymentInfo: '/api/payment/info',
           paymentBuyCredits: '/api/payment/buy-credits',
           paymentConfirm: '/api/payment/confirm',
@@ -856,6 +866,80 @@ export default {
       return premiumResponse(result, payment, 1);
     }
 
+    // === PAID PREMIUM: WATCHES (webhook alerts) ===
+    // Registration costs 1 credit. Read/list/delete are free for the
+    // bearer token that owns the watch (no charge, but token required).
+
+    if (path === '/api/premium/watches' && request.method === 'POST') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      if (!payment.token) {
+        return jsonResponse(
+          { ok: false, error: 'token_required', message: 'Watch creation requires a bearer token (use /api/payment/buy-credits).' },
+          401,
+        );
+      }
+      let body: { spec?: unknown; callback_url?: string; secret?: string; fire_cap?: number };
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      if (typeof body.callback_url !== 'string') {
+        return jsonResponse({ ok: false, error: 'callback_url_required' }, 400);
+      }
+      const result = await createWatch(env, payment.token, {
+        spec: body.spec as never,
+        callback_url: body.callback_url,
+        ...(typeof body.secret === 'string' ? { secret: body.secret } : {}),
+        ...(typeof body.fire_cap === 'number' ? { fire_cap: body.fire_cap } : {}),
+      });
+      if (!result.ok) {
+        return jsonResponse(result, 400);
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/watches', request.headers.get('User-Agent') || 'unknown', 1),
+      );
+      return premiumResponse(result, payment, 1);
+    }
+
+    if (path === '/api/premium/watches' && request.method === 'GET') {
+      // Listing requires a bearer token but no credits.
+      const authHeader = request.headers.get('Authorization');
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+      if (!token || !token.startsWith('tf_live_')) {
+        return jsonResponse({ ok: false, error: 'token_required' }, 401);
+      }
+      const watches = await listWatchesForToken(env, token);
+      return jsonResponse({ ok: true, count: watches.length, watches }, 200, 0);
+    }
+
+    const watchMatch = path.match(/^\/api\/premium\/watches\/(wat_[a-f0-9]{24})$/);
+    if (watchMatch) {
+      const id = watchMatch[1];
+      const authHeader = request.headers.get('Authorization');
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+      if (!token || !token.startsWith('tf_live_')) {
+        return jsonResponse({ ok: false, error: 'token_required' }, 401);
+      }
+      if (request.method === 'GET') {
+        const watch = await getWatch(env, id);
+        if (!watch) return jsonResponse({ ok: false, error: 'watch_not_found' }, 404);
+        if (watch.token !== token) return jsonResponse({ ok: false, error: 'forbidden' }, 403);
+        return jsonResponse({ ok: true, watch }, 200, 0);
+      }
+      if (request.method === 'DELETE') {
+        const result = await deleteWatch(env, id, token);
+        if (!result.ok) {
+          return jsonResponse(
+            result,
+            result.error === 'watch_not_found' ? 404 : result.error === 'forbidden' ? 403 : 400,
+          );
+        }
+        return jsonResponse({ ok: true }, 200, 0);
+      }
+    }
+
     // === ADMIN: usage and revenue rollup (auth-gated) ===
     // Same key pattern as /api/refresh: ?key=<ENVIRONMENT>. At MVP scale
     // this is sufficient; if/when revenue is real, swap to a dedicated
@@ -1029,6 +1113,9 @@ export default {
       // pricing, models, benchmarks, status, agent activity. Runs after
       // updateDailyData so the snapshot reflects freshly-updated data.
       await run('captureHistory', () => captureHistory(env));
+      // Premium webhook watches: fire price-change webhooks based on the
+      // diff between the last seen pricing and the freshly-updated payload.
+      await run('runPriceWatchCycle', () => runPriceWatchCycle(env));
     // X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
     // Hold at 1/day until 2026-05-04; do not increase cadence without 30 clean days.
     } else if (cron === '30 14 * * *') {

@@ -38,6 +38,9 @@ tensorfeed/
       routing.ts      Tier 2 routing recommendation engine + free preview rate limiter
       routing.test.ts Vitest unit tests for the routing engine (pure-logic, no chain)
       payments.ts     Payment middleware: credits + x402 fallback, USDC on Base verification, daily rollup analytics
+      history-series.ts  Premium history series: pricing/benchmark series, status uptime, snapshot diff
+      watches.ts      Premium webhook watches: register, predicate eval, HMAC-signed POST delivery, cron-driven dispatch
+      watches.test.ts Vitest coverage for predicate edge transitions, SSRF guard, dispatch end-to-end
       podcasts.ts     Podcast feed polling
       trending.ts     Trending GitHub repos
       twitter.ts      X/Twitter auto-posting
@@ -195,6 +198,9 @@ All mounted under `https://tensorfeed.ai/api/*` via the Worker.
 - `/api/premium/history/benchmarks/series?model=&benchmark=&from=&to=`: Tier 1, 1 credit. Score evolution for a single benchmark on one model. Returns delta in percentage points.
 - `/api/premium/history/status/uptime?provider=&from=&to=`: Tier 1, 1 credit. Daily uptime % for one provider (degraded counts as half) with incident-day list. Missing-data days excluded from denominator.
 - `/api/premium/history/compare?from=&to=&type=pricing|benchmarks`: Tier 1, 1 credit. Diff two daily snapshots: added, removed, changed entries with deltas.
+- `/api/premium/watches` (POST): Tier 1, 1 credit per registration. Body `{ spec, callback_url, secret?, fire_cap? }`. Spec is `{ type: "price"|"status", ... }`. Watch lives 90 days, default fire cap 100. Fires deliver HMAC-signed POST to callback URL.
+- `/api/premium/watches` (GET): List watches owned by the bearer token. Free.
+- `/api/premium/watches/{id}` (GET|DELETE): Read or remove an owned watch. Free.
 
 **Admin (auth-gated via `?key=ENVIRONMENT`):**
 - `/api/admin/usage?date=YYYY-MM-DD`: Daily revenue + usage rollup
@@ -308,6 +314,8 @@ Key modules:
 - `worker/src/payments.ts`: middleware (`requirePayment`), USDC verification, quote/confirm/balance, daily rollup analytics
 - `worker/src/routing.ts`: routing engine + free preview rate limiter
 - `worker/src/history.ts`: daily snapshot capture (the data moat)
+- `worker/src/history-series.ts`: premium aggregated views (series, uptime, compare) over the daily snapshots
+- `worker/src/watches.ts`: premium webhook watches; status dispatch hooks into `pollStatusPages` (every 5 min), price dispatch runs daily after `updateCatalog`
 
 SDKs:
 - Python: `sdk/python/` (1.2.0). `pip install tensorfeed[web3]` enables `tf.purchase_credits()` for one-call sign-and-send. See `sdk/python/PUBLISHING.md` for the PyPI release flow.
