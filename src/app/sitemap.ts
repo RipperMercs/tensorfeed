@@ -137,6 +137,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/glossary/mcp`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${baseUrl}/glossary/agent-payments`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
 
+    // Use-case landing pages (per agent persona)
+    { url: `${baseUrl}/use-cases`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/use-cases/coding-agents`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/use-cases/research-agents`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/use-cases/api-cost-monitoring`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/use-cases/agent-payments`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
+
     // Info pages
     { url: `${baseUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${baseUrl}/authors`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },

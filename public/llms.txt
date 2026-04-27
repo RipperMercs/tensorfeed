@@ -51,6 +51,8 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 
 **Per-benchmark leaderboards:** `https://tensorfeed.ai/benchmarks/{name}` (where `name` is `swe_bench`, `mmlu_pro`, `human_eval`, `gpqa_diamond`, or `math`). Each page is a ranked leaderboard for that benchmark with FAQPage and Dataset JSON-LD schema, score interpretation ranges, and a link from the leaderboard rows back to the relevant `/models/[slug]` pages. Computed live from `data/benchmarks.json` so the rankings stay current as scores are ingested.
 
+**Use-case landing pages:** `https://tensorfeed.ai/use-cases` is the index plus four agent-persona pages mapping common jobs-to-be-done to specific TensorFeed endpoints with full code examples: `/use-cases/coding-agents`, `/use-cases/research-agents`, `/use-cases/api-cost-monitoring`, `/use-cases/agent-payments`. Each page has FAQPage JSON-LD with high-intent agent-shaped questions for rich-results indexing.
+
 **Terms:** Premium data is licensed for inference use only. Use of TensorFeed premium data for training, fine-tuning, evaluation, or distillation of ML models is prohibited.
 
 **Endpoints:**
