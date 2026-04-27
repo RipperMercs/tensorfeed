@@ -15,6 +15,9 @@ import {
   createQuote,
   confirmPayment,
   getBalance,
+  logPremiumUsage,
+  getRollup,
+  listRollupDates,
 } from './payments';
 import { recordPollRun, checkNewsStaleness, alertStaleNews, sendDailySummary, getAlertsStatus } from './alerts';
 
@@ -427,6 +430,10 @@ export default {
           paymentConfirm: '/api/payment/confirm',
           paymentBalance: '/api/payment/balance',
         },
+        admin: {
+          usage: '/api/admin/usage?date=YYYY-MM-DD&key=<env>',
+          usageDates: '/api/admin/usage/dates?key=<env>',
+        },
         news: newsMeta,
       }, 200, 60);
     }
@@ -644,6 +651,11 @@ export default {
         topN,
       });
 
+      // Fire-and-forget usage logging so the response isn't blocked
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/routing', request.headers.get('User-Agent') || 'unknown', 1),
+      );
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
@@ -666,6 +678,25 @@ export default {
         }),
         { status: 200, headers },
       );
+    }
+
+    // === ADMIN: usage and revenue rollup (auth-gated) ===
+    // Same key pattern as /api/refresh: ?key=<ENVIRONMENT>. At MVP scale
+    // this is sufficient; if/when revenue is real, swap to a dedicated
+    // ADMIN_KEY secret.
+
+    if (path === '/api/admin/usage' && url.searchParams.get('key') === env.ENVIRONMENT) {
+      const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
+      const rollup = await getRollup(env, date);
+      if (!rollup) {
+        return jsonResponse({ ok: false, error: 'no_data_for_date', date }, 404);
+      }
+      return jsonResponse({ ok: true, ...rollup }, 200, 0);
+    }
+
+    if (path === '/api/admin/usage/dates' && url.searchParams.get('key') === env.ENVIRONMENT) {
+      const dates = await listRollupDates(env);
+      return jsonResponse({ ok: true, count: dates.length, dates }, 200, 0);
     }
 
     if (path === '/api/alerts-status') {

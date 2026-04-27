@@ -71,10 +71,27 @@ interface TxRecord {
   block_number?: number;
 }
 
-interface RevenueRecord {
+interface DailyRollup {
+  date: string;
+  // Revenue side (credit purchases)
   total_usd: number;
   tx_count: number;
-  unique_agents: string[];
+  // Usage side (premium endpoint calls)
+  total_credits_charged: number;
+  call_count: number;
+  // Cross-cutting
+  unique_agents: string[]; // capped at 100
+  by_endpoint: Record<
+    string,
+    { calls: number; credits_charged: number; first_seen: string; last_seen: string }
+  >;
+  top_agents: Array<{
+    agent_ua: string;
+    calls: number;
+    credits: number;
+    purchased_usd: number;
+    last_seen: string;
+  }>; // capped at 25, sorted by calls desc
 }
 
 // === Helpers ===
@@ -199,25 +216,140 @@ export async function verifyBaseUSDCTransaction(
   return { ok: false, reason: 'no_usdc_transfer_to_wallet', amountUsd: 0 };
 }
 
-// === Revenue rollup ===
+// === Daily rollup (revenue + usage analytics) ===
+//
+// Single KV key per day captures both purchase events (revenue side) and
+// per-endpoint call events (usage side) plus a top-agent leaderboard.
+// One read+write per event. KV is last-write-wins; under heavy concurrency
+// some increments may be lost but at MVP scale this is acceptable. If/when
+// concurrency becomes a problem, move to Durable Objects with atomic
+// counters.
+
+const ROLLUP_AGENT_CAP = 100;
+const ROLLUP_TOP_AGENTS_CAP = 25;
+
+function emptyRollup(date: string): DailyRollup {
+  return {
+    date,
+    total_usd: 0,
+    tx_count: 0,
+    total_credits_charged: 0,
+    call_count: 0,
+    unique_agents: [],
+    by_endpoint: {},
+    top_agents: [],
+  };
+}
+
+async function readRollup(env: Env, date: string): Promise<DailyRollup> {
+  const existing = (await env.TENSORFEED_CACHE.get(`pay:rollup:${date}`, 'json')) as DailyRollup | null;
+  return existing || emptyRollup(date);
+}
+
+async function writeRollup(env: Env, rollup: DailyRollup): Promise<void> {
+  await env.TENSORFEED_CACHE.put(`pay:rollup:${rollup.date}`, JSON.stringify(rollup));
+}
+
+function noteUniqueAgent(rollup: DailyRollup, agentUa: string): void {
+  if (!rollup.unique_agents.includes(agentUa)) {
+    rollup.unique_agents.push(agentUa);
+    if (rollup.unique_agents.length > ROLLUP_AGENT_CAP) {
+      rollup.unique_agents = rollup.unique_agents.slice(-ROLLUP_AGENT_CAP);
+    }
+  }
+}
+
+function bumpTopAgent(
+  rollup: DailyRollup,
+  agentUa: string,
+  delta: { calls?: number; credits?: number; purchased_usd?: number },
+): void {
+  const now = new Date().toISOString();
+  let entry = rollup.top_agents.find(a => a.agent_ua === agentUa);
+  if (!entry) {
+    entry = { agent_ua: agentUa, calls: 0, credits: 0, purchased_usd: 0, last_seen: now };
+    rollup.top_agents.push(entry);
+  }
+  entry.calls += delta.calls ?? 0;
+  entry.credits += delta.credits ?? 0;
+  entry.purchased_usd = parseFloat(((entry.purchased_usd ?? 0) + (delta.purchased_usd ?? 0)).toFixed(2));
+  entry.last_seen = now;
+  rollup.top_agents.sort((a, b) => b.calls - a.calls || b.credits - a.credits);
+  if (rollup.top_agents.length > ROLLUP_TOP_AGENTS_CAP) {
+    rollup.top_agents = rollup.top_agents.slice(0, ROLLUP_TOP_AGENTS_CAP);
+  }
+}
 
 async function logRevenue(env: Env, amountUsd: number, agentUa: string): Promise<void> {
-  const date = new Date().toISOString().slice(0, 10);
-  const key = `pay:revenue:${date}`;
   try {
-    const existing = (await env.TENSORFEED_CACHE.get(key, 'json')) as RevenueRecord | null;
-    const record: RevenueRecord = existing || { total_usd: 0, tx_count: 0, unique_agents: [] };
-    record.total_usd = parseFloat((record.total_usd + amountUsd).toFixed(2));
-    record.tx_count += 1;
-    if (!record.unique_agents.includes(agentUa)) {
-      record.unique_agents.push(agentUa);
-      // Cap at 100 unique UAs/day to keep the record bounded
-      if (record.unique_agents.length > 100) record.unique_agents = record.unique_agents.slice(-100);
-    }
-    await env.TENSORFEED_CACHE.put(key, JSON.stringify(record));
+    const date = new Date().toISOString().slice(0, 10);
+    const rollup = await readRollup(env, date);
+    rollup.total_usd = parseFloat((rollup.total_usd + amountUsd).toFixed(2));
+    rollup.tx_count += 1;
+    noteUniqueAgent(rollup, agentUa);
+    bumpTopAgent(rollup, agentUa, { purchased_usd: amountUsd });
+    await writeRollup(env, rollup);
   } catch (e) {
     console.error('logRevenue failed:', e);
   }
+}
+
+/**
+ * Record a successful premium endpoint call so we can see what's selling.
+ * Caller should wrap in ctx.waitUntil so this never blocks the response.
+ */
+export async function logPremiumUsage(
+  env: Env,
+  endpoint: string,
+  agentUa: string,
+  creditsCharged: number,
+): Promise<void> {
+  try {
+    const date = new Date().toISOString().slice(0, 10);
+    const now = new Date().toISOString();
+    const rollup = await readRollup(env, date);
+
+    rollup.call_count += 1;
+    rollup.total_credits_charged += creditsCharged;
+    noteUniqueAgent(rollup, agentUa);
+    bumpTopAgent(rollup, agentUa, { calls: 1, credits: creditsCharged });
+
+    const slot = rollup.by_endpoint[endpoint] || {
+      calls: 0,
+      credits_charged: 0,
+      first_seen: now,
+      last_seen: now,
+    };
+    slot.calls += 1;
+    slot.credits_charged += creditsCharged;
+    slot.last_seen = now;
+    rollup.by_endpoint[endpoint] = slot;
+
+    await writeRollup(env, rollup);
+  } catch (e) {
+    console.error('logPremiumUsage failed:', e);
+  }
+}
+
+/**
+ * Read a single day's rollup for the admin dashboard. Returns null if no
+ * data exists for that date.
+ */
+export async function getRollup(env: Env, date: string): Promise<DailyRollup | null> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  return (await env.TENSORFEED_CACHE.get(`pay:rollup:${date}`, 'json')) as DailyRollup | null;
+}
+
+/**
+ * List dates with rollup data available, newest first.
+ */
+export async function listRollupDates(env: Env): Promise<string[]> {
+  const list = await env.TENSORFEED_CACHE.list({ prefix: 'pay:rollup:' });
+  return list.keys
+    .map(k => k.name.replace('pay:rollup:', ''))
+    .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .sort()
+    .reverse();
 }
 
 // === Public API ===
