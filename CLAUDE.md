@@ -112,7 +112,7 @@ Defined in `worker/wrangler.toml`. All cron handlers dispatched from `worker/src
 - `*/5 * * * *`: Status page polling (every 5 min)
 - `*/10 * * * *`: RSS feed fetching (every 10 min)
 - `0 * * * *`: Hourly full refresh (RSS + status + podcasts)
-- `0 7 * * *`: Daily 7am UTC: models, benchmarks, agents catalog update (LiteLLM + HuggingFace)
+- `0 7 * * *`: Daily 7am UTC: models, benchmarks, agents catalog update (LiteLLM + HuggingFace), then daily history snapshot capture (`worker/src/history.ts`, Phase 0 of agent payments)
 - `30 8 * * *`: Daily 8:30am UTC: trending AI repos from GitHub
 - `30 14 * * *`: Daily 2:30pm UTC: X/Twitter post (1/day, see X posting rules below)
 

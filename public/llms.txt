@@ -24,6 +24,10 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [Health Check](https://tensorfeed.ai/api/health): Worker health and last update timestamps
 - [Endpoint Discovery](https://tensorfeed.ai/api/meta): Full endpoint map for automated integration
 
+## Historical Data
+- [History Index](https://tensorfeed.ai/api/history): List of available daily snapshot dates (pricing, models, benchmarks, status, agent activity)
+- [History Snapshot](https://tensorfeed.ai/api/history/YYYY-MM-DD/TYPE): Read a specific daily snapshot. Types: pricing, models, benchmarks, status, agent-activity
+
 ## Reference Guides
 - [What is AI?](https://tensorfeed.ai/what-is-ai): Comprehensive 2000+ word guide to artificial intelligence
 - [Best AI Tools 2026](https://tensorfeed.ai/best-ai-tools): 22 AI tools reviewed and compared
@@ -69,6 +73,7 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [GPT-5.5 vs Claude Opus 4.7](https://tensorfeed.ai/compare/gpt-5-5-vs-claude-opus-4-7): 2026 flagship showdown
 - [GPT-5.5 vs Gemini 2.5 Pro](https://tensorfeed.ai/compare/gpt-5-5-vs-gemini-2-5-pro): OpenAI vs Google 1M-context flagships
 - [DeepSeek V4 Pro vs Claude Opus 4.7](https://tensorfeed.ai/compare/deepseek-v4-pro-vs-claude-opus-4-7): Open source vs closed-source frontier
+- [DeepSeek V4 Pro vs GPT-5.5](https://tensorfeed.ai/compare/deepseek-v4-pro-vs-gpt-5-5): MIT-licensed open source vs OpenAI flagship, both 1M context
 
 ## AI Providers
 - [Anthropic](https://tensorfeed.ai/providers/anthropic): Claude models, pricing, benchmarks, and company overview
@@ -90,7 +95,8 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [AI Podcasts](https://tensorfeed.ai/podcasts): Stream AI podcast episodes from top shows
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
-- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (28 articles)
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (29 articles)
+- [OpenAI Workspace Agents](https://tensorfeed.ai/originals/openai-workspace-agents-chatgpt-enterprise): OpenAI turns ChatGPT Business, Enterprise, and Edu into an enterprise automation platform with long-running Codex-powered Workspace Agents
 - [Anthropic Project Deal Marketplace](https://tensorfeed.ai/originals/anthropic-project-deal-agent-marketplace): Anthropic ran a real-money agent-to-agent marketplace and a hidden A/B test exposed a model-tier inequality
 - [AI Money Gap](https://tensorfeed.ai/originals/ai-money-gap-pwc): PwC found 74% of AI economic value goes to 20% of companies
 - [DeepSeek V4 Open Source Frontier](https://tensorfeed.ai/originals/deepseek-v4-open-source-frontier): Why DeepSeek V4 is the first open source frontier model and what its architecture and pricing mean for closed labs

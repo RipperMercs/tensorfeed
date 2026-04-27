@@ -7,6 +7,7 @@ import { postTopStories } from './twitter';
 import { pollPodcastFeeds } from './podcasts';
 import { pollTrendingRepos } from './trending';
 import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatestSnapshot } from './snapshots';
+import { captureHistory, listHistory, readHistory } from './history';
 import { recordPollRun, checkNewsStaleness, alertStaleNews, sendDailySummary, getAlertsStatus } from './alerts';
 
 const CORS_HEADERS = {
@@ -409,6 +410,8 @@ export default {
           podcasts: '/api/podcasts',
           trendingRepos: '/api/trending-repos',
           health: '/api/health',
+          history: '/api/history',
+          historySnapshot: '/api/history/{YYYY-MM-DD}/{type}',
         },
         news: newsMeta,
       }, 200, 60);
@@ -436,6 +439,23 @@ export default {
       return jsonResponse({ ok: true, now: new Date().toISOString(), snapshots: summary }, 200, 60);
     }
 
+    // === HISTORICAL SNAPSHOTS (Phase 0 of agent payments) ===
+
+    if (path === '/api/history') {
+      const list = await listHistory(env);
+      return jsonResponse({ ok: true, ...list }, 200, 3600);
+    }
+
+    const historyMatch = path.match(/^\/api\/history\/(\d{4}-\d{2}-\d{2})\/([a-z-]+)$/);
+    if (historyMatch) {
+      const [, date, type] = historyMatch;
+      const snapshot = await readHistory(env, date, type);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'not_found', date, type }, 404);
+      }
+      return jsonResponse({ ok: true, ...snapshot }, 200, 86400);
+    }
+
     if (path === '/api/alerts-status') {
       const status = await getAlertsStatus(env);
       return jsonResponse({ ok: true, now: new Date().toISOString(), ...status }, 200, 60);
@@ -444,6 +464,11 @@ export default {
     // === FORCE REFRESH (protected) ===
 
     if (path === '/api/refresh' && url.searchParams.get('key') === env.ENVIRONMENT) {
+      const task = url.searchParams.get('task');
+      if (task === 'history') {
+        const result = await captureHistory(env);
+        return jsonResponse({ ok: true, message: 'History snapshot captured', ...result });
+      }
       await Promise.all([pollRSSFeeds(env), pollStatusPages(env), updateCatalog(env), pollPodcastFeeds(env), pollTrendingRepos(env)]);
 
       return jsonResponse({ ok: true, message: 'Refreshed all feeds, status, and catalog' });
@@ -581,6 +606,10 @@ export default {
     } else if (cron === '0 7 * * *') {
       // Daily (7 AM UTC): update models, benchmarks, agents staleness
       await run('updateDailyData', () => updateDailyData(env));
+      // Phase 0 of agent payments: capture daily historical snapshot of
+      // pricing, models, benchmarks, status, agent activity. Runs after
+      // updateDailyData so the snapshot reflects freshly-updated data.
+      await run('captureHistory', () => captureHistory(env));
     // X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
     // Hold at 1/day until 2026-05-04; do not increase cadence without 30 clean days.
     } else if (cron === '30 14 * * *') {

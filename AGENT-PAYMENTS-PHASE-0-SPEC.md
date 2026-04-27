@@ -1,5 +1,15 @@
 # TensorFeed Phase 0: Daily Data Snapshots
 
+> **Implementation note (2026-04-27):** This spec was written before the Worker code was reviewed. The shipped implementation uses different names to avoid conflicts with existing code:
+>
+> - **Module:** `worker/src/history.ts` (not `snapshots-daily.ts`)
+> - **KV prefix:** `history:` (not `snapshot:`, which is already used by the rolling-snapshot fallback module at `worker/src/snapshots.ts`)
+> - **Endpoints:** `/api/history` and `/api/history/:date/:type` (not `/api/snapshots`, which already exists for the rolling-snapshot summary)
+> - **Cron:** appended to the existing `0 7 * * *` handler after `updateDailyData()` (no new cron slot needed)
+> - **Snapshot types:** pricing, models, benchmarks, status, agent-activity (5 types; models is kept separate from pricing because they live in different KV keys with different shapes)
+>
+> The strategy and acceptance criteria below remain accurate; substitute the new names where you see references to the old ones. Implementation lives in the commit that follows the original spec commit.
+
 ## What This Is
 
 A self-contained spec for adding daily data snapshots to the TensorFeed Worker. No payment infrastructure, no premium endpoints. Just start capturing historical data every day so it exists when the premium tier launches.
