@@ -8,6 +8,7 @@ import { pollPodcastFeeds } from './podcasts';
 import { pollTrendingRepos } from './trending';
 import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatestSnapshot } from './snapshots';
 import { captureHistory, listHistory, readHistory } from './history';
+import { computeRouting, checkRoutingPreviewRateLimit, hoursUntilUTCRollover, RoutingTask } from './routing';
 import { recordPollRun, checkNewsStaleness, alertStaleNews, sendDailySummary, getAlertsStatus } from './alerts';
 
 const CORS_HEADERS = {
@@ -412,6 +413,7 @@ export default {
           health: '/api/health',
           history: '/api/history',
           historySnapshot: '/api/history/{YYYY-MM-DD}/{type}',
+          routingPreview: '/api/preview/routing',
         },
         news: newsMeta,
       }, 200, 60);
@@ -454,6 +456,71 @@ export default {
         return jsonResponse({ ok: false, error: 'not_found', date, type }, 404);
       }
       return jsonResponse({ ok: true, ...snapshot }, 200, 86400);
+    }
+
+    // === ROUTING PREVIEW (free, rate-limited; Phase 1 of agent payments) ===
+    // Tier 2 routing engine, exposed as a free preview while the paid
+    // /api/premium/routing path is built. Returns top 1 model only with
+    // no score breakdown. 5 calls/day per IP.
+
+    if (path === '/api/preview/routing') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const limit = await checkRoutingPreviewRateLimit(env, ip, 5);
+      if (!limit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: limit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/routing',
+            message:
+              'Free preview limited to 5 calls/day per IP. The paid /api/premium/routing endpoint (top 5 models, full score detail, no rate limit) ships in Phase 1 of agent payments.',
+          },
+          429,
+        );
+      }
+
+      const taskParam = url.searchParams.get('task');
+      const task: RoutingTask | undefined =
+        taskParam === 'code' || taskParam === 'reasoning' || taskParam === 'creative' || taskParam === 'general'
+          ? taskParam
+          : undefined;
+      const budget = parseFloat(url.searchParams.get('budget') ?? '');
+      const minQuality = parseFloat(url.searchParams.get('min_quality') ?? '');
+
+      const result = await computeRouting(env, {
+        task,
+        budget: Number.isFinite(budget) ? budget : undefined,
+        minQuality: Number.isFinite(minQuality) ? minQuality : undefined,
+        topN: 1,
+      });
+
+      const top = result.recommendations[0];
+      return jsonResponse(
+        {
+          ok: true,
+          preview: true,
+          task: result.task,
+          computed_at: result.computed_at,
+          rate_limit: { limit: limit.limit, remaining: limit.remaining, scope: 'per IP per UTC day' },
+          recommendation: top
+            ? {
+                model: top.model.name,
+                provider: top.model.provider,
+              }
+            : null,
+          upgrade: {
+            message:
+              'The premium endpoint returns the top 5 models with full score breakdown, pricing, status, and component-level detail. No rate limit. Ships in Phase 1 of agent payments.',
+            premium_endpoint: '/api/premium/routing',
+            preview_limits: { top_n: 1, includes_score_breakdown: false, includes_pricing: false, rate_limit_per_ip_per_day: 5 },
+          },
+        },
+        200,
+        0, // do not Cache-API the response; rate limiting is per-IP
+      );
     }
 
     if (path === '/api/alerts-status') {

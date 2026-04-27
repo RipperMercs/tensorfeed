@@ -28,6 +28,9 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [History Index](https://tensorfeed.ai/api/history): List of available daily snapshot dates (pricing, models, benchmarks, status, agent activity)
 - [History Snapshot](https://tensorfeed.ai/api/history/YYYY-MM-DD/TYPE): Read a specific daily snapshot. Types: pricing, models, benchmarks, status, agent-activity
 
+## Premium API Preview (free, rate-limited)
+- [Routing Preview](https://tensorfeed.ai/api/preview/routing): Top model recommendation for a task. Query params: ?task=code|reasoning|creative|general (default general), optional ?budget=X (max blended $/1M tokens) and ?min_quality=0-1. Free, 5 calls/day per IP, top-1 only with no score breakdown. The paid `/api/premium/routing` (top 5 with full detail, no rate limit) ships in Phase 1 of agent payments.
+
 ## Reference Guides
 - [What is AI?](https://tensorfeed.ai/what-is-ai): Comprehensive 2000+ word guide to artificial intelligence
 - [Best AI Tools 2026](https://tensorfeed.ai/best-ai-tools): 22 AI tools reviewed and compared
