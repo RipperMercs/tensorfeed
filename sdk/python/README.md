@@ -79,6 +79,37 @@ rec = tf.routing(
 print(tf.balance())
 ```
 
+## Auto-Send (optional, web3 extra)
+
+The base SDK keeps you dependency-free, but if you want to skip the manual tx step, install with the `web3` extra:
+
+```bash
+pip install 'tensorfeed[web3]'
+```
+
+Then `tf.purchase_credits()` quotes, signs, broadcasts, and confirms in one call:
+
+```python
+import os
+from tensorfeed import TensorFeed
+
+tf = TensorFeed()
+
+result = tf.purchase_credits(
+    amount_usd=1.00,
+    private_key=os.environ["TENSORFEED_PRIVATE_KEY"],  # NEVER hardcode
+    # rpc_url="https://base-mainnet.g.alchemy.com/v2/<key>",  # optional
+)
+print(result["token"])      # auto-stored on tf
+print(result["tx_hash"])    # for your records
+print(result["credits"])    # how many credits were minted
+
+# Token already on tf, so:
+rec = tf.routing(task="code")
+```
+
+Security: read the key from a secret manager or env var. Never commit it. The raw key is held in memory only for the duration of one signing call.
+
 ## Reusing a Token Across Sessions
 
 Save the token after `confirm()`. Reuse it next time:
@@ -140,6 +171,12 @@ except TensorFeedError as e:
 |--------|------|-------------|
 | `tf.balance()` | Free | Check remaining credits |
 | `tf.routing(task=, budget=, top_n=, weights=)` | 1 credit | Top-N ranked routing with full detail |
+
+### Auto-send (requires `tensorfeed[web3]`)
+
+| Method | Description |
+|--------|-------------|
+| `tf.purchase_credits(amount_usd=, private_key=, rpc_url=)` | One-call quote + sign + broadcast + confirm. Returns token, credits, tx_hash, block_number. |
 
 ## Wallet & Trust
 

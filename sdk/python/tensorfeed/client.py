@@ -14,7 +14,7 @@ import json
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any
+from typing import Any  # noqa: F401  (re-exported by purchase_credits return type)
 
 
 DEFAULT_BASE_URL = "https://tensorfeed.ai/api"
@@ -303,6 +303,55 @@ class TensorFeed:
                 "or call confirm() first."
             )
         return self._request("GET", "/payment/balance", require_token=True)
+
+    # ── Auto-purchase via web3 (optional dependency) ───────────────
+
+    def purchase_credits(
+        self,
+        *,
+        amount_usd: float,
+        private_key: str,
+        rpc_url: str | None = None,
+        wait_seconds: int = 90,
+    ) -> dict[str, Any]:
+        """Buy credits end-to-end: quote, sign USDC tx, broadcast, confirm.
+
+        Convenience wrapper around buy_credits() + raw signing + confirm()
+        that handles the whole flow in one call. The token is auto-stored
+        on this client on success, so subsequent ``routing()`` calls work
+        immediately.
+
+        Requires the optional ``web3`` extra:
+            pip install 'tensorfeed[web3]'
+
+        Args:
+            amount_usd: USD value of credits to buy (0.5 to 10000)
+            private_key: 0x-prefixed Ethereum private key. DO NOT
+                hardcode; read from an env var or secret manager.
+            rpc_url: Base mainnet RPC. Defaults to public Base RPC,
+                which is fine for occasional use. For production use
+                Alchemy or QuickNode.
+            wait_seconds: Max seconds to wait for tx confirmation
+                (default 90)
+
+        Returns:
+            Dict with token, credits, balance, tx_hash, tx_amount_usd,
+            rate, block_number.
+
+        Raises:
+            Web3NotInstalled: if pip install 'tensorfeed[web3]' was not run
+            TimeoutError: if the tx doesn't confirm in wait_seconds
+            RuntimeError: on RPC failure, on-chain revert, or
+                TensorFeed-side rejection
+        """
+        from .web3_signer import auto_purchase_credits  # lazy import
+        return auto_purchase_credits(
+            self,
+            amount_usd=amount_usd,
+            private_key=private_key,
+            rpc_url=rpc_url,
+            wait_seconds=wait_seconds,
+        )
 
     # ── Paid: routing (Tier 2, 1 credit/call) ──────────────────────
 
