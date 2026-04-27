@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'alibaba-happy-horse-video-crown',
+    title: "Alibaba's Happy Horse Just Took the AI Video Crown. China Now Owns Two Frontiers.",
+    author: 'Marcus Chen',
+    date: 'Apr 27, 2026',
+    readTime: '7 min read',
+    description:
+      "Alibaba opened public beta for HappyHorse 1.0 today, a 15B parameter joint audio-video model that already sits at the top of the Artificial Analysis Video Arena. With DeepSeek V4 last week and Happy Horse this week, the open frontier is leaving the West.",
+  },
+  {
     slug: 'openai-workspace-agents-chatgpt-enterprise',
     title: 'OpenAI Just Turned ChatGPT Into an Enterprise Automation Platform',
     author: 'Ripper',

@@ -123,7 +123,8 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [AI Podcasts](https://tensorfeed.ai/podcasts): Stream AI podcast episodes from top shows
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
-- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (29 articles)
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (30 articles)
+- [Alibaba Happy Horse Video Crown](https://tensorfeed.ai/originals/alibaba-happy-horse-video-crown): Alibaba opened HappyHorse 1.0 to public beta and a 15B parameter Chinese model now leads the Artificial Analysis Video Arena by 115 Elo
 - [OpenAI Workspace Agents](https://tensorfeed.ai/originals/openai-workspace-agents-chatgpt-enterprise): OpenAI turns ChatGPT Business, Enterprise, and Edu into an enterprise automation platform with long-running Codex-powered Workspace Agents
 - [Anthropic Project Deal Marketplace](https://tensorfeed.ai/originals/anthropic-project-deal-agent-marketplace): Anthropic ran a real-money agent-to-agent marketplace and a hidden A/B test exposed a model-tier inequality
 - [AI Money Gap](https://tensorfeed.ai/originals/ai-money-gap-pwc): PwC found 74% of AI economic value goes to 20% of companies
