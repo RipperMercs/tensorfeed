@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: '15-paid-endpoints-24-hours',
+    title: '15 Paid AI Agent API Endpoints in 24 Hours: What Made It Possible',
+    author: 'Ripper',
+    date: 'Apr 27, 2026',
+    readTime: '8 min read',
+    description:
+      'A first-person retrospective on shipping 15 pay-per-call premium endpoints, full SDKs in two languages, an MCP server expansion, and a human dashboard in a single 24-hour build session. Every endpoint is live, every commit is on main, every test passes.',
+  },
+  {
     slug: 'validating-agent-payments-mainnet',
     title: 'We Validated Agent Payments End-to-End on Base Mainnet',
     author: 'Ripper',
