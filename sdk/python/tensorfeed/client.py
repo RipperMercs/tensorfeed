@@ -18,7 +18,7 @@ from typing import Any  # noqa: F401  (re-exported by purchase_credits return ty
 
 
 DEFAULT_BASE_URL = "https://tensorfeed.ai/api"
-DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.7"
+DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.8"
 
 
 class TensorFeedError(Exception):
@@ -767,4 +767,52 @@ class TensorFeed:
             params["limit"] = limit
         return self._request(
             "GET", "/premium/news/search", params=params, require_token=True,
+        )
+
+    # ── Paid: cost projection (Tier 1, 1 credit) ──────────────────
+
+    def cost_projection(
+        self,
+        *,
+        models: list[str] | str,
+        input_tokens_per_day: float,
+        output_tokens_per_day: float,
+        horizon: str | None = None,
+    ) -> dict[str, Any]:
+        """Project cost of a token-usage workload across one or more models.
+
+        Costs 1 credit per call. Returns daily/weekly/monthly/yearly cost
+        for each model plus a ranking by cheapest monthly. Pure compute on
+        live /api/models pricing data.
+
+        Args:
+            models: One model name/id or a list of up to 10. Display
+                names and ids are both accepted, case-insensitive.
+            input_tokens_per_day: Expected daily input volume.
+            output_tokens_per_day: Expected daily output volume.
+            horizon: Default 'monthly'. One of 'daily', 'weekly',
+                'monthly', 'yearly'. Used for the primary_horizon field
+                in the response; all four horizons are always computed.
+
+        Returns:
+            Dict with ``workload``, ``projections`` (per-model with
+            rates and per-horizon totals), ``ranked_cheapest_monthly``,
+            and ``billing``.
+
+        Raises:
+            ValueError: if no token is set on the client
+            PaymentRequired: if the token has insufficient credits
+            TensorFeedError: 400 on validation failure (e.g. >10 models)
+        """
+        self._require_token("cost_projection")
+        models_csv = ",".join(models) if isinstance(models, list) else str(models)
+        params: dict[str, Any] = {
+            "model": models_csv,
+            "input_tokens_per_day": input_tokens_per_day,
+            "output_tokens_per_day": output_tokens_per_day,
+        }
+        if horizon is not None:
+            params["horizon"] = horizon
+        return self._request(
+            "GET", "/premium/cost/projection", params=params, require_token=True,
         )

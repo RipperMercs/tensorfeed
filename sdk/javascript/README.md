@@ -200,6 +200,7 @@ try {
 | `tf.deleteWatch(id)` | Free | Remove an owned watch |
 | `tf.premiumAgentsDirectory({ category?, status?, sort?, limit?, ... })` | 1 credit | Enriched directory: status, news, traffic, pricing, trending_score per agent |
 | `tf.newsSearch({ q?, from?, to?, provider?, category?, limit? })` | 1 credit | Full-text news search with date/provider filters, relevance scoring, recency boost |
+| `tf.costProjection({ models, inputTokensPerDay, outputTokensPerDay, horizon? })` | 1 credit | Project workload cost across 1-10 models, 4 horizons, cheapest-monthly ranking |
 
 ## Wallet & Trust
 

@@ -10,7 +10,7 @@
  */
 
 const DEFAULT_BASE_URL = 'https://tensorfeed.ai/api';
-const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.6';
+const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.7';
 
 // ── Error types ─────────────────────────────────────────────────────
 
@@ -431,6 +431,42 @@ export interface NewsSearchResultItem {
   published_at: string;
   relevance: number;
   matched_terms: string[];
+}
+
+export type CostHorizon = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+export interface MatchedCostProjection {
+  model: string;
+  provider: string;
+  matched: true;
+  rates: { input_per_1m: number; output_per_1m: number; blended_per_1m: number };
+  daily: { input_cost: number; output_cost: number; total: number };
+  weekly_total: number;
+  monthly_total: number;
+  yearly_total: number;
+}
+
+export interface UnmatchedCostProjection {
+  model: string;
+  matched: false;
+  reason: 'model_not_found';
+}
+
+export type CostProjectionEntry = MatchedCostProjection | UnmatchedCostProjection;
+
+export interface CostProjectionResponse {
+  ok: boolean;
+  workload: {
+    input_tokens_per_day: number;
+    output_tokens_per_day: number;
+    total_tokens_per_day: number;
+  };
+  primary_horizon: CostHorizon;
+  computed_at: string;
+  projections: CostProjectionEntry[];
+  ranked_cheapest_monthly: { model: string; provider: string; monthly_total: number }[];
+  notes: string[];
+  billing?: { credits_charged: number; credits_remaining?: number };
 }
 
 export interface NewsSearchResponse {
@@ -1008,6 +1044,37 @@ export class TensorFeed {
         provider: options?.provider,
         category: options?.category,
         limit: options?.limit,
+      },
+      requireToken: true,
+    });
+  }
+
+  // ── Paid: cost projection (1 credit per call) ──────────────────
+
+  /**
+   * Project cost of a token-usage workload across one or more models.
+   * Returns daily/weekly/monthly/yearly cost per model plus a ranking
+   * by cheapest monthly. Up to 10 models per call. Costs 1 credit.
+   *
+   * @throws Error if no token is set
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async costProjection(options: {
+    models: string | string[];
+    inputTokensPerDay: number;
+    outputTokensPerDay: number;
+    horizon?: CostHorizon;
+  }): Promise<CostProjectionResponse> {
+    this.requireToken('costProjection');
+    const modelsCsv = Array.isArray(options.models)
+      ? options.models.join(',')
+      : options.models;
+    return this.request<CostProjectionResponse>('GET', '/premium/cost/projection', {
+      params: {
+        model: modelsCsv,
+        input_tokens_per_day: options.inputTokensPerDay,
+        output_tokens_per_day: options.outputTokensPerDay,
+        horizon: options.horizon,
       },
       requireToken: true,
     });

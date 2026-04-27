@@ -5,7 +5,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 
 const API_BASE = 'https://tensorfeed.ai/api';
-const SDK_VERSION = '1.2.0';
+const SDK_VERSION = '1.3.0';
 
 // ── API helpers ─────────────────────────────────────────────────────
 
@@ -544,6 +544,55 @@ server.tool(
         {
           type: 'text' as const,
           text: `Agents (sort: ${data.sort}, ${data.returned} of ${data.total}):\n\n${list}\n\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+        },
+      ],
+    };
+  },
+);
+
+// ── Tool: cost_projection (1 credit) ────────────────────────────────
+
+server.tool(
+  'cost_projection',
+  'Project the cost of a token-usage workload across 1-10 AI models. Returns daily/weekly/monthly/yearly totals per model and a ranking by cheapest monthly. Costs 1 credit.',
+  {
+    models: z.string().describe('One model or comma-separated list of up to 10 (e.g. "Claude Opus 4.7,GPT-5.5,Gemini 3"). Names or ids both work.'),
+    input_tokens_per_day: z.number().min(0).describe('Expected daily input token volume'),
+    output_tokens_per_day: z.number().min(0).describe('Expected daily output token volume'),
+    horizon: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional().describe('Primary horizon to highlight (default monthly). All four are always computed.'),
+  },
+  async ({ models, input_tokens_per_day, output_tokens_per_day, horizon }) => {
+    const params = new URLSearchParams({
+      model: models,
+      input_tokens_per_day: String(input_tokens_per_day),
+      output_tokens_per_day: String(output_tokens_per_day),
+    });
+    if (horizon) params.set('horizon', horizon);
+    const data = (await fetchJSON(`/premium/cost/projection?${params}`, { auth: true })) as {
+      workload: { input_tokens_per_day: number; output_tokens_per_day: number };
+      projections: (
+        | { model: string; provider: string; matched: true; daily: { total: number }; weekly_total: number; monthly_total: number; yearly_total: number; rates: { input_per_1m: number; output_per_1m: number } }
+        | { model: string; matched: false; reason: string }
+      )[];
+      ranked_cheapest_monthly: { model: string; provider: string; monthly_total: number }[];
+      billing?: { credits_remaining?: number };
+    };
+    const lines = data.projections.map(p => {
+      if (!p.matched) return `  ${p.model}: not found in pricing catalog`;
+      return `  ${p.model} (${p.provider}): $${p.daily.total}/day, $${p.weekly_total}/wk, $${p.monthly_total}/mo, $${p.yearly_total}/yr (in $${p.rates.input_per_1m}/1M, out $${p.rates.output_per_1m}/1M)`;
+    }).join('\n');
+    const ranked = data.ranked_cheapest_monthly.length
+      ? '\n\nCheapest monthly:\n' +
+        data.ranked_cheapest_monthly
+          .map((r, i) => `  #${i + 1} ${r.model} (${r.provider}): $${r.monthly_total}/mo`)
+          .join('\n')
+      : '';
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text:
+            `Workload: ${data.workload.input_tokens_per_day} input + ${data.workload.output_tokens_per_day} output tokens/day\n\n${lines}${ranked}\n\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
         },
       ],
     };

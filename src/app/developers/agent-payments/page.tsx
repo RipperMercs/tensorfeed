@@ -361,6 +361,34 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/cost/projection',
+    description:
+      'Project the cost of a token-usage workload across 1-10 AI models. Returns daily/weekly/monthly/yearly totals per model plus a ranking by cheapest monthly. Pure compute on live /api/models pricing.',
+    cost: '1 credit per call',
+    example: `// Query: ?model=opus-4-7,gpt-5-5,gemini-3&input_tokens_per_day=1000000&output_tokens_per_day=500000&horizon=monthly
+{
+  "ok": true,
+  "workload": { "input_tokens_per_day": 1000000, "output_tokens_per_day": 500000, "total_tokens_per_day": 1500000 },
+  "primary_horizon": "monthly",
+  "projections": [
+    {
+      "model": "Claude Opus 4.7", "provider": "Anthropic",
+      "matched": true,
+      "rates": { "input_per_1m": 15, "output_per_1m": 75, "blended_per_1m": 45 },
+      "daily": { "input_cost": 15, "output_cost": 37.5, "total": 52.5 },
+      "weekly_total": 367.5, "monthly_total": 1575, "yearly_total": 19162.5
+    }
+  ],
+  "ranked_cheapest_monthly": [
+    { "model": "Gemini 3", "provider": "Google", "monthly_total": 525 },
+    { "model": "GPT-5.5", "provider": "OpenAI", "monthly_total": 750 },
+    { "model": "Claude Opus 4.7", "provider": "Anthropic", "monthly_total": 1575 }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 46 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/news/search',
     description:
       'Full-text search over the TensorFeed news corpus with relevance scoring (term hits in title weighted 3, snippet weighted 1, plus recency boost). Filter by date range, provider, and category. Omit q to browse the latest filtered articles. Default limit=25, max 100.',

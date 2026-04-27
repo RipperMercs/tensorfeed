@@ -30,6 +30,7 @@ import {
   SortKey,
 } from './agents-enriched';
 import { searchNews, NewsSearchOptions } from './news-search';
+import { computeCostProjection, CostProjectionOptions } from './cost-projection';
 import { computeRouting, checkRoutingPreviewRateLimit, hoursUntilUTCRollover, RoutingTask } from './routing';
 import {
   requirePayment,
@@ -490,6 +491,7 @@ export default {
           premiumWatchesItem: 'GET|DELETE /api/premium/watches/{id}',
           premiumAgentsDirectory: '/api/premium/agents/directory?category=&status=&open_source=&capability=&sort=&limit=',
           premiumNewsSearch: '/api/premium/news/search?q=&from=&to=&provider=&category=&limit=',
+          premiumCostProjection: '/api/premium/cost/projection?model=opus-4-7,gpt-5-5&input_tokens_per_day=&output_tokens_per_day=&horizon=monthly',
           paymentInfo: '/api/payment/info',
           paymentBuyCredits: '/api/payment/buy-credits',
           paymentConfirm: '/api/payment/confirm',
@@ -888,6 +890,45 @@ export default {
       const result = await compareHistory(env, fromDate, toDate, typeParam);
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/history/compare', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return premiumResponse(result, payment, 1);
+    }
+
+    // === PAID PREMIUM: COST PROJECTION (Tier 1, 1 credit) ===
+    // Project total cost of a token-usage workload across 1-10 models
+    // and four time horizons. Pure compute on live /models pricing,
+    // but agents pay 1 credit for the canonical abstraction so they
+    // don't have to maintain pricing tables in their own code.
+
+    if (path === '/api/premium/cost/projection') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const modelsParam = url.searchParams.get('model') || url.searchParams.get('models');
+      const models = (modelsParam ?? '')
+        .split(',')
+        .map(m => m.trim())
+        .filter(m => m.length > 0);
+      const inputTokensPerDay = parseFloat(url.searchParams.get('input_tokens_per_day') ?? '');
+      const outputTokensPerDay = parseFloat(url.searchParams.get('output_tokens_per_day') ?? '');
+      const horizonParam = url.searchParams.get('horizon');
+      const primaryHorizon: CostProjectionOptions['primaryHorizon'] =
+        horizonParam === 'daily' || horizonParam === 'weekly' ||
+        horizonParam === 'monthly' || horizonParam === 'yearly'
+          ? horizonParam
+          : undefined;
+
+      const result = await computeCostProjection(env, {
+        models,
+        inputTokensPerDay,
+        outputTokensPerDay,
+        ...(primaryHorizon ? { primaryHorizon } : {}),
+      });
+      if (!result.ok) {
+        return jsonResponse(result, 400);
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/cost/projection', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return premiumResponse(result, payment, 1);
     }

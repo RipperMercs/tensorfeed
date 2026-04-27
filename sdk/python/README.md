@@ -222,6 +222,7 @@ except TensorFeedError as e:
 | `tf.delete_watch(watch_id)` | Free | Remove an owned watch |
 | `tf.premium_agents_directory(category=, status=, sort=, limit=, ...)` | 1 credit | Enriched directory: status, news, traffic, pricing, trending_score per agent |
 | `tf.news_search(q=, from_date=, to_date=, provider=, category=, limit=)` | 1 credit | Full-text news search with date/provider filters, relevance scoring, recency boost |
+| `tf.cost_projection(models=, input_tokens_per_day=, output_tokens_per_day=, horizon=)` | 1 credit | Project workload cost across 1-10 models, 4 horizons, cheapest-monthly ranking |
 
 ### Auto-send (requires `tensorfeed[web3]`)
 
