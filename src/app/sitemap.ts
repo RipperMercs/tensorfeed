@@ -117,6 +117,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/microsoft-openai-partnership-reset`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${baseUrl}/originals/validating-agent-payments-mainnet`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/originals/15-paid-endpoints-24-hours`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/originals/why-usdc-over-stripe`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
 
     // Info pages
     { url: `${baseUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },

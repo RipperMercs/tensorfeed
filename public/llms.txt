@@ -137,7 +137,8 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [AI Podcasts](https://tensorfeed.ai/podcasts): Stream AI podcast episodes from top shows
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
-- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (33 articles)
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (34 articles)
+- [Why We Picked USDC on Base Over Stripe](https://tensorfeed.ai/originals/why-usdc-over-stripe): First-person breakdown of the architectural choice. Stripe works fine for humans, doesn't work for AI agents in a loop. What we gave up (smaller short-term TAM), what we got (simpler architecture, lower fees, no platform risk, public auditability). Reversible decision; today's call holds.
 - [15 Paid Agent API Endpoints in 24 Hours](https://tensorfeed.ai/originals/15-paid-endpoints-24-hours): A first-person retrospective on shipping 15 pay-per-call premium endpoints, two-language SDKs, an MCP server expansion, and a human dashboard in a single 24-hour build session. The compounding effects of a real platform foundation.
 - [Validating Agent Payments on Base Mainnet](https://tensorfeed.ai/originals/validating-agent-payments-mainnet): First-person walkthrough of the five-step USDC payment loop that proved TensorFeed agent payments work in production. Real tx hash on Base mainnet, no bugs surfaced.
 - [Microsoft OpenAI Partnership Reset](https://tensorfeed.ai/originals/microsoft-openai-partnership-reset): Microsoft and OpenAI restructured their partnership on April 27, 2026, ending exclusivity, removing the AGI clause, capping the revenue share through 2030, and freeing OpenAI to sell on any cloud

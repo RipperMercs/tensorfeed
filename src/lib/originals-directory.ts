@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'why-usdc-over-stripe',
+    title: 'Why We Picked USDC on Base Over Stripe for Agent Payments',
+    author: 'Ripper',
+    date: 'Apr 27, 2026',
+    readTime: '7 min read',
+    description:
+      'Stripe works fine for humans. It does not work for AI agents making decisions in a loop. A first-person breakdown of the architectural choice, what we gave up, and what we got in return: simpler architecture, lower fees, no platform risk, public auditability.',
+  },
+  {
     slug: '15-paid-endpoints-24-hours',
     title: '15 Paid AI Agent API Endpoints in 24 Hours: What Made It Possible',
     author: 'Ripper',
