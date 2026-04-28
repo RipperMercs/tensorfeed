@@ -87,6 +87,18 @@ function constantTimeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+// OFAC comprehensively-sanctioned country list (ISO 3166-1 alpha-2).
+// Wallet-level Chainalysis screening on /api/payment/confirm catches the
+// rest. Russia is sectorally sanctioned, not comprehensive, so we do not
+// include it here; only specific occupied regions are comprehensive, and
+// Cloudflare's country code is the country alone.
+const OFAC_BLOCKED_COUNTRIES = ['CU', 'IR', 'KP', 'SY'];
+
+function isOFACBlockedCountry(countryCode: string | null | undefined): boolean {
+  if (!countryCode || typeof countryCode !== 'string') return false;
+  return OFAC_BLOCKED_COUNTRIES.indexOf(countryCode.toUpperCase()) !== -1;
+}
+
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -646,6 +658,22 @@ export default {
     }
 
     if (path === '/api/payment/buy-credits' && request.method === 'POST') {
+      // Geo-IP block for comprehensively sanctioned jurisdictions. Refuse
+      // to even quote a credit purchase. Wallet-level screening on
+      // /api/payment/confirm catches anything that slips past via VPN.
+      const country = (request as unknown as { cf?: { country?: string } }).cf?.country;
+      if (isOFACBlockedCountry(country)) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'jurisdiction_blocked',
+            message: 'TensorFeed cannot accept Premium API credit purchases from this jurisdiction due to applicable sanctions law.',
+            country,
+            reference: 'https://tensorfeed.ai/terms#premium',
+          },
+          403,
+        );
+      }
       try {
         const body = await request.json() as { amount_usd?: number };
         const amountUsd = typeof body.amount_usd === 'number' ? body.amount_usd : NaN;
