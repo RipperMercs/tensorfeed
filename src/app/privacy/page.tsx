@@ -29,7 +29,7 @@ export default function PrivacyPage() {
           <Shield className="w-7 h-7 text-accent-primary" />
           <h1 className="text-3xl font-bold text-text-primary">Privacy Policy</h1>
         </div>
-        <p className="text-text-muted text-sm">Last updated: April 6, 2026</p>
+        <p className="text-text-muted text-sm">Last updated: April 28, 2026</p>
       </div>
 
       <div className="space-y-8 text-text-secondary leading-relaxed">
@@ -186,6 +186,130 @@ export default function PrivacyPage() {
               </a>.
             </p>
           </div>
+        </section>
+
+        {/* Premium API Tier: Data Practices */}
+        <section id="premium-api">
+          <h2 className="text-lg font-semibold text-text-primary mb-3">4B. Premium API Tier: Data Practices</h2>
+          <p className="mb-3">
+            The Premium API tier described in Section 17 of our{' '}
+            <Link href="/terms#premium" className="text-accent-primary hover:underline">
+              Terms of Service
+            </Link>{' '}
+            involves collecting and processing additional data beyond the core dashboard. This
+            section explains what we collect, why, and how long we keep it.
+          </p>
+
+          <p className="text-text-primary font-medium mb-2">What we collect for the Premium API:</p>
+          <ul className="list-disc list-inside space-y-2 pl-2 mb-4">
+            <li>
+              <span className="text-text-primary font-medium">Sender wallet address.</span> When
+              you, or an autonomous agent acting on your behalf, send USDC to our published Base
+              mainnet wallet to purchase credits, we record the sender wallet address as part of
+              the payment confirmation flow. Wallet addresses are pseudonymous but, under EU GDPR,
+              UK GDPR, the California Consumer Privacy Act, and similar laws, may constitute
+              personal data because they uniquely identify a transacting party. We use this data
+              to credit the correct bearer token, prevent replay of the same transaction hash,
+              screen for sanctions and anti-money-laundering concerns where appropriate, and
+              respond to lawful requests from regulators or law enforcement.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Transaction hash.</span> The Base
+              mainnet transaction hash is recorded server-side and used to enforce one-time credit
+              issuance under the replay-protection rule in Section 17.4 of the Terms.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Bearer token (hashed).</span> We do
+              not store the raw bearer token. We store a one-way cryptographic hash of the token
+              together with the associated credit balance, issuance timestamp, and, where
+              applicable, revocation status.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Per-call telemetry.</span> For each
+              Premium API call, we record the bearer-token hash, the endpoint called, the response
+              status, the credits decremented, and a timestamp. Request payloads and response
+              bodies are not stored in plaintext beyond the short-lived in-memory cache used for
+              performance.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Email correspondence.</span> If you
+              email support@tensorfeed.ai, hello@tensorfeed.ai, legal@tensorfeed.ai, or any other
+              Service mailbox in connection with a payment, token, billing, or account matter, we
+              receive your email address and the contents of your message and may retain them for
+              support, audit, and anti-abuse purposes.
+            </li>
+          </ul>
+
+          <p className="text-text-primary font-medium mb-2">What we do not collect for the Premium API:</p>
+          <ul className="list-disc list-inside space-y-2 pl-2 mb-4">
+            <li>
+              We do not collect names, government IDs, KYC documents, postal addresses, phone
+              numbers, dates of birth, or fiat payment-card details. The Premium API has no human
+              registration flow.
+            </li>
+            <li>
+              We do not collect, store, or sell the contents of Premium API responses on a per-user
+              basis beyond the short-lived in-memory cache used to amortize upstream calls.
+            </li>
+            <li>
+              We do not embed third-party analytics, advertising, or tracking pixels in Premium
+              API responses.
+            </li>
+          </ul>
+
+          <p className="mb-3">
+            <span className="text-text-primary font-medium">Cross-site sharing with TerminalFeed.</span>{' '}
+            Premium credits and bearer tokens are jointly redeemable on tensorfeed.ai and
+            terminalfeed.io under Section 17.8 of the Terms. The TensorFeed payment Worker, also
+            operated by Pizza Robot Studios LLC, is the system of record for credit balances.
+            Wallet addresses, transaction hashes, bearer-token hashes, and per-call telemetry
+            generated on either site are processed by the same operating entity for the unified
+            credit-accounting system. No third-party data processor outside Pizza Robot Studios
+            LLC and our infrastructure providers (currently Cloudflare, Chainalysis sanctions
+            screening, and the Base mainnet network itself) receives this data for the cross-site
+            bundle.
+          </p>
+
+          <p className="mb-3">
+            <span className="text-text-primary font-medium">Blockchain analysis and sanctions screening.</span>{' '}
+            The Base mainnet ledger is a public blockchain, and any party, including us, can
+            inspect on-chain transactions involving the published wallet. We screen every inbound
+            credit-purchase transaction against the Chainalysis public sanctions API, which checks
+            the sender wallet against the United States OFAC SDN list and other major sanctions
+            regimes. Where such screening identifies a sanctioned address, an address with
+            material exposure to known illicit activity, or another concern under Section 17.9 of
+            the Terms, we may decline the credit grant and freeze any associated bearer token
+            under Section 17.11 of the Terms. The Chainalysis service receives only the wallet
+            address being screened; it does not receive any personal information that we do not
+            already hold on-chain.
+          </p>
+
+          <p className="mb-3">
+            <span className="text-text-primary font-medium">Retention for Premium API data.</span>{' '}
+            Wallet addresses, transaction hashes, bearer-token hashes, per-call telemetry, and
+            related billing records are retained for so long as the associated credit balance
+            remains active and for a further period of seven (7) years thereafter, consistent with
+            general United States tax and financial-record retention guidance and applicable state
+            law. Email correspondence is retained for up to twenty-four (24) months unless a
+            specific ongoing reason justifies longer retention (for example, an unresolved
+            dispute, a pending support matter, or a law-enforcement preservation request). After
+            the applicable retention period elapses, records are deleted or anonymized, except
+            where applicable law requires longer retention.
+          </p>
+
+          <p>
+            <span className="text-text-primary font-medium">Your rights for Premium API data.</span>{' '}
+            Because the Premium API is wallet-authenticated rather than identity-authenticated, we
+            cannot, in most cases, link a wallet address back to a specific natural person without
+            information that you provide. To exercise GDPR, UK GDPR, CCPA, CPRA, or analogous
+            rights with respect to Premium API data, you may need to demonstrate control of the
+            wallet address in question, for example by signing a challenge message we provide.
+            Verifiable requests should be sent to{' '}
+            <a href="mailto:legal@tensorfeed.ai" className="text-accent-primary hover:underline">
+              legal@tensorfeed.ai
+            </a>{' '}
+            and will be handled within the timeframes required by applicable law.
+          </p>
         </section>
 
         {/* How We Use Data */}
