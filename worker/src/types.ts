@@ -19,6 +19,8 @@ export interface Env {
   BASE_RPC_URL?: string;
   // Cross-Worker validate-and-charge (sister-site integration)
   SHARED_INTERNAL_SECRET?: string;
+  // Pages Functions middleware -> Worker bot-hit ingest auth
+  PAGES_TRACK_SECRET?: string;
 }
 
 export interface Article {

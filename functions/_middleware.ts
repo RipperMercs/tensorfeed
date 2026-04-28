@@ -12,10 +12,10 @@ import { detectBot } from './_bot-detection';
  * invisible to bot tracking because Cloudflare Pages serves them, not
  * the Worker.
  *
- * Setup: TENSORFEED_INTERNAL_SECRET must be set as a Pages environment
- * variable in the Cloudflare dashboard (Pages → tensorfeed → Settings →
+ * Setup: PAGES_TRACK_SECRET must be set as a Pages environment variable
+ * in the Cloudflare dashboard (Pages → tensorfeed → Settings →
  * Environment variables, encrypted) to the same value as the Worker's
- * SHARED_INTERNAL_SECRET. Without it, the middleware no-ops and serves
+ * PAGES_TRACK_SECRET. Without it, the middleware no-ops and serves
  * pages normally.
  *
  * Cost: zero KV ops (the Worker buffers in-memory and flushes in
@@ -24,7 +24,7 @@ import { detectBot } from './_bot-detection';
  */
 
 interface Env {
-  TENSORFEED_INTERNAL_SECRET?: string;
+  PAGES_TRACK_SECRET?: string;
 }
 
 const TRACK_URL = 'https://tensorfeed.ai/api/internal/track-bot';
@@ -36,7 +36,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const ua = request.headers.get('user-agent') || '';
     const bot = detectBot(ua);
 
-    if (bot && env.TENSORFEED_INTERNAL_SECRET) {
+    if (bot && env.PAGES_TRACK_SECRET) {
       const url = new URL(request.url);
       // Skip api/feed paths: those go to the Worker which already tracks
       // them. We only care about the static Pages routes here.
@@ -54,7 +54,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'X-Internal-Auth': env.TENSORFEED_INTERNAL_SECRET,
+              'X-Internal-Auth': env.PAGES_TRACK_SECRET,
               // Use a recognizable UA on the internal hop so it never
               // matches a bot pattern itself, preventing self-counting
               // if the Worker later starts logging this internal route.

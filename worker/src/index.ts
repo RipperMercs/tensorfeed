@@ -1282,14 +1282,16 @@ export default {
     // /api-reference/*, etc) and forwards the {bot, path} pair here so the
     // hit lands in the same in-memory buffer as Worker-route hits. This
     // closes the coverage gap where SEO routes were invisible to /agent-traffic.
-    // Auth: SHARED_INTERNAL_SECRET via X-Internal-Auth.
+    // Auth: dedicated PAGES_TRACK_SECRET (separate from SHARED_INTERNAL_SECRET
+    // which is shared with sister-site Workers, so its rotation cadence is
+    // independent of cross-site coordination).
 
     if (path === '/api/internal/track-bot') {
       if (request.method !== 'POST') {
         return jsonResponse({ error: 'method_not_allowed' }, 405, 0);
       }
       const auth = request.headers.get('X-Internal-Auth') ?? '';
-      const secret = env.SHARED_INTERNAL_SECRET ?? '';
+      const secret = env.PAGES_TRACK_SECRET ?? '';
       if (!secret || !constantTimeEqual(auth, secret)) {
         return jsonResponse({ error: 'unauthorized' }, 401, 0);
       }
