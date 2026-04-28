@@ -41,6 +41,7 @@ const FOOTER_LINKS = [
   { label: 'About', href: '/about' },
   { label: 'Editorial', href: '/about' },
   { label: 'Privacy', href: '/privacy' },
+  { label: 'Terms', href: '/terms' },
   { label: 'Contact', href: '/contact' },
   { label: 'Sitemap', href: '/sitemap.xml', external: true },
 ];
