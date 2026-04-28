@@ -38,6 +38,13 @@ id = "68eec8e4d37349a6adc1278c9280f653"
 binding = "TENSORFEED_CACHE"
 id = "4de30d8becd24b3bba9556b98bad8e69"
 
+# Persistent OFAC sanctions-block audit log. Written to by screenWalletOFAC
+# when a sanctioned wallet attempts to mint credits. 7-year TTL per the
+# Privacy Policy s4B retention statement (April 28, 2026 legal hardening).
+[[kv_namespaces]]
+binding = "OFAC_AUDIT_LOG"
+id = "432951e9eeea420bafc8a5184a50b872"
+
 [vars]
 ENVIRONMENT = "production"
 SITE_URL = "https://tensorfeed.ai"
