@@ -47,6 +47,7 @@ import {
   getRollup,
   listRollupDates,
   getTokenUsage,
+  getPaymentHistory,
   validateAndCharge,
 } from './payments';
 import { recordPollRun, checkNewsStaleness, alertStaleNews, sendDailySummary, getAlertsStatus } from './alerts';
@@ -523,6 +524,7 @@ export default {
           paymentConfirm: '/api/payment/confirm',
           paymentBalance: '/api/payment/balance',
           paymentUsage: '/api/payment/usage',
+          paymentHistory: '/api/payment/history',
         },
         admin: {
           usage: '/api/admin/usage?date=YYYY-MM-DD&key=<env>',
@@ -715,6 +717,29 @@ export default {
         );
       }
       const result = await getTokenUsage(env, token);
+      if (!result) {
+        return jsonResponse({ ok: false, error: 'token_not_found' }, 404);
+      }
+      return jsonResponse(result, 200, 0);
+    }
+
+    // Per-token payment history. Audit log of credit purchases scoped
+    // to the requesting bearer: which on-chain txs added how many
+    // credits and when. Free, no credit cost. Backwards-compatible
+    // with tokens minted before this ledger existed (returns empty
+    // purchases array). Paired with /api/payment/usage which logs the
+    // spend side; together they cover the full token lifecycle.
+
+    if (path === '/api/payment/history') {
+      const authHeader = request.headers.get('Authorization');
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+      if (!token) {
+        return jsonResponse(
+          { ok: false, error: 'token_required', message: 'Send the bearer token via Authorization: Bearer <token>' },
+          401,
+        );
+      }
+      const result = await getPaymentHistory(env, token);
       if (!result) {
         return jsonResponse({ ok: false, error: 'token_not_found' }, 404);
       }

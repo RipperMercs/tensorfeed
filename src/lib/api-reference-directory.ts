@@ -576,7 +576,7 @@ const tf = new TensorFeed({ token: 'tf_live_...' });
 const usage = await tf.usage();
 console.log(\`\${usage.total_calls} calls, \${usage.total_credits_spent} credits\`);`,
     mcpTool: 'get_account_usage',
-    relatedSlugs: ['payment-balance', 'payment-info'],
+    relatedSlugs: ['payment-balance', 'payment-history', 'payment-info'],
     faqs: [
       {
         q: 'How far back does the usage history go?',
@@ -585,6 +585,69 @@ console.log(\`\${usage.total_calls} calls, \${usage.total_credits_spent} credits
       {
         q: 'Is there a UI for the usage data?',
         a: 'Yes. /account is a noindex private dashboard where humans can paste their token to see balance + usage history. Token is stored in sessionStorage only, never localStorage.',
+      },
+    ],
+  },
+
+  // ── Free with token: payment history ─────────────────────────────
+  {
+    slug: 'payment-history',
+    name: 'Token Payment History',
+    path: '/api/payment/history',
+    method: 'GET',
+    tier: 'free-with-token',
+    cost: 'Free with bearer token',
+    category: 'payment',
+    seoTitle: 'TensorFeed Payment History API: Per-Token Credit Purchase Audit Log',
+    seoDescription:
+      'TensorFeed /api/payment/history returns the bearer\'s credit-purchase audit log: which on-chain txs added how many credits and when. Free with bearer token.',
+    intro:
+      'The /api/payment/history endpoint returns your token\'s purchase audit trail: every USDC tx that funded credits on this bearer, with amount, credits added, block number, and confirmation timestamp. Pairs with /api/payment/usage (spend side) so an agent can reconcile its full token lifecycle.',
+    whenToUse:
+      'When an agent needs to audit how its credits were funded, reconcile on-chain spend against credit additions, or render a deposit history alongside spend history in an internal dashboard.',
+    params: [],
+    exampleResponse: `{
+  "ok": true,
+  "token_short": "tf_live_eb0d0155...",
+  "current_balance": 49,
+  "total_purchased_usd": 1.0,
+  "total_credits_added": 50,
+  "purchase_count": 1,
+  "purchases": [
+    {
+      "tx_hash": "0xabc...",
+      "amount_usd": 1.0,
+      "credits_added": 50,
+      "block_number": 12345678,
+      "confirmed_at": "2026-04-27T17:49:32.918Z"
+    }
+  ]
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+
+tf = TensorFeed(token="tf_live_...")
+history = tf.payment_history()
+for p in history["purchases"]:
+    print(f"+{p['credits_added']} credits via {p['tx_hash'][:12]}...")`,
+    typescriptExample: `import { TensorFeed } from 'tensorfeed';
+
+const tf = new TensorFeed({ token: 'tf_live_...' });
+const history = await tf.paymentHistory();
+console.log(\`\${history.purchase_count} purchases totaling $\${history.total_purchased_usd}\`);`,
+    mcpTool: null,
+    relatedSlugs: ['payment-usage', 'payment-balance', 'payment-confirm'],
+    faqs: [
+      {
+        q: 'How far back does the purchase history go?',
+        a: 'The ring buffer holds the last 100 purchases per token. At one purchase per token in typical agent usage, that is effectively unbounded; only an agent that repeatedly tops up the same bearer rather than minting fresh tokens would ever roll off the buffer.',
+      },
+      {
+        q: 'What about tokens minted before this ledger existed?',
+        a: 'Older tokens still authenticate cleanly and return current_balance, but the purchases array will be empty until a new top-up is recorded. The replay-protection ledger at pay:tx:{txHash} is the authoritative cross-reference if you need to audit a pre-ledger purchase.',
+      },
+      {
+        q: 'Does this cost a credit?',
+        a: 'No. /api/payment/history is free for the holder of the bearer token, same as /api/payment/balance and /api/payment/usage.',
       },
     ],
   },

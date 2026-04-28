@@ -204,6 +204,7 @@ All mounted under `https://tensorfeed.ai/api/*` via the Worker.
 - `/api/payment/confirm` (POST): Verify USDC tx on-chain, mint a bearer token
 - `/api/payment/balance`: Read remaining credits for the current bearer token
 - `/api/payment/usage`: Per-token call history (last 100 calls aggregated by endpoint). Auth required, no credit cost. Powers the human /account dashboard.
+- `/api/payment/history`: Per-token credit-purchase audit log (which on-chain txs added how many credits and when). Auth required (`Authorization: Bearer <token>`), no credit cost. Pairs with `/api/payment/usage` (spend side) to give the bearer's full token lifecycle. Backed by `pay:purchases:{token}` ring buffer (cap 100); tokens minted before this ledger existed return an empty `purchases` array but still expose `current_balance` and `token_short`.
 - `/api/alerts/subscribe`: Outage alert email signup
 - `/api/refresh?key=production[&task=history]`: Manual data refresh / history capture trigger
 

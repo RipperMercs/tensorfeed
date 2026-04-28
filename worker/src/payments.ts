@@ -387,6 +387,111 @@ export interface TokenUsageSummary {
   recent: TokenUsageEntry[];
 }
 
+// ── Per-token payment history (purchases) ───────────────────────────
+//
+// pay:purchases:{token} holds an append-only list of credit purchases
+// scoped to one bearer token. Used by /api/payment/history so an
+// agent can audit how its credits were funded (which on-chain txs
+// added how many credits and when), independent of /api/payment/usage
+// which logs how those credits were *spent*.
+//
+// Backward compat: tokens that confirmed before this field was added
+// will read an empty list. Existing pay:tx:{txHash} records remain the
+// authoritative replay-protection ledger; this is purely a per-token
+// view layered on top.
+
+interface PurchaseEntry {
+  tx_hash: string;
+  amount_usd: number;
+  credits_added: number;
+  block_number?: number;
+  confirmed_at: string;
+}
+
+interface PurchaseRecord {
+  entries: PurchaseEntry[];
+}
+
+const PURCHASES_CAP = 100;
+
+export async function appendTokenPurchase(
+  env: Env,
+  token: string,
+  purchase: PurchaseEntry,
+): Promise<void> {
+  try {
+    const existing = (await env.TENSORFEED_CACHE.get(
+      `pay:purchases:${token}`,
+      'json',
+    )) as PurchaseRecord | null;
+    const entries = existing?.entries ?? [];
+    entries.push(purchase);
+    if (entries.length > PURCHASES_CAP) {
+      entries.splice(0, entries.length - PURCHASES_CAP);
+    }
+    await env.TENSORFEED_CACHE.put(
+      `pay:purchases:${token}`,
+      JSON.stringify({ entries }),
+    );
+  } catch (e) {
+    console.error('appendTokenPurchase failed:', e);
+  }
+}
+
+export interface PaymentHistorySummary {
+  ok: true;
+  token_short: string;
+  current_balance: number;
+  total_purchased_usd: number;
+  total_credits_added: number;
+  purchase_count: number;
+  purchases: PurchaseEntry[];
+}
+
+/**
+ * Read the per-token purchase ledger. Auth-bound: caller must already
+ * have validated the bearer token. Returns null if the token is not
+ * recognized so the route handler can return 404 without leaking
+ * existence to a wrong-secret guess.
+ */
+export async function getPaymentHistory(
+  env: Env,
+  token: string,
+): Promise<PaymentHistorySummary | null> {
+  if (!token.startsWith('tf_live_')) return null;
+  const credits = (await env.TENSORFEED_CACHE.get(
+    `pay:credits:${token}`,
+    'json',
+  )) as CreditsRecord | null;
+  if (!credits) return null;
+
+  const ledger = (await env.TENSORFEED_CACHE.get(
+    `pay:purchases:${token}`,
+    'json',
+  )) as PurchaseRecord | null;
+  const entries = ledger?.entries ?? [];
+
+  let totalUsd = 0;
+  let totalCredits = 0;
+  for (const e of entries) {
+    totalUsd += e.amount_usd;
+    totalCredits += e.credits_added;
+  }
+
+  // Newest first for caller convenience.
+  const sorted = entries.slice().sort((a, b) => (a.confirmed_at < b.confirmed_at ? 1 : -1));
+
+  return {
+    ok: true,
+    token_short: token.slice(0, 16) + '...',
+    current_balance: credits.balance,
+    total_purchased_usd: Number(totalUsd.toFixed(6)),
+    total_credits_added: totalCredits,
+    purchase_count: entries.length,
+    purchases: sorted,
+  };
+}
+
 /**
  * Read the per-token usage ring buffer and aggregate it for the dashboard.
  * Returns null if the token isn't recognized.
@@ -601,6 +706,13 @@ export async function confirmPayment(
     env.TENSORFEED_CACHE.put(`pay:tx:${txHash}`, JSON.stringify(txRec)),
     nonce ? env.TENSORFEED_CACHE.delete(`pay:quote:${nonce}`) : Promise.resolve(),
     logRevenue(env, verified.amountUsd, request.headers.get('User-Agent') || 'unknown'),
+    appendTokenPurchase(env, token, {
+      tx_hash: txHash,
+      amount_usd: verified.amountUsd,
+      credits_added: credits,
+      block_number: verified.blockNumber,
+      confirmed_at: now,
+    }),
   ]);
 
   return {
@@ -836,6 +948,13 @@ export async function requirePayment(
       env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(tokenRecord)),
       env.TENSORFEED_CACHE.put(`pay:tx:${txHash}`, JSON.stringify(txRec)),
       logRevenue(env, verified.amountUsd, request.headers.get('User-Agent') || 'unknown'),
+      appendTokenPurchase(env, token, {
+        tx_hash: txHash,
+        amount_usd: verified.amountUsd,
+        credits_added: credits,
+        block_number: verified.blockNumber,
+        confirmed_at: now,
+      }),
     ]);
 
     return {
