@@ -350,7 +350,7 @@ SDKs:
 - Python: `sdk/python/` (1.2.0). `pip install tensorfeed[web3]` enables `tf.purchase_credits()` for one-call sign-and-send. See `sdk/python/PUBLISHING.md` for the PyPI release flow.
 - TypeScript: `sdk/javascript/` (1.1.0). Mirrors the Python surface, uses native fetch.
 
-Frontend docs: `/developers/agent-payments` (Next.js page) covers the wallet, pricing, both flows, all endpoints, and code examples. `/terms` includes the Premium API and Agent Payments section with the no-training license, refund policy, and replay protection.
+Frontend docs: `/developers/agent-payments` (Next.js page) covers the wallet, pricing, both flows, all endpoints, and code examples. `/terms` Premium API and Agent Payments section is structured into numbered subsections 17.1 through 17.15 covering the inference-only license, no-refunds policy, replay protection, cross-site applicability, sanctions warranty, autonomous-agent acknowledgment, suspension/revocation, AUP, liability cap, chargeback handling, and no-MSB representation. Premium API data practices are in `/privacy` Section 4B.
 
 ## Pending Work
 

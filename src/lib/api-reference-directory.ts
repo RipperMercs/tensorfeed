@@ -381,7 +381,7 @@ console.log('Wallet:', info.wallet.address);`,
       },
       {
         q: 'What is the operator legal entity?',
-        a: 'Pizza Robot Studios LLC, a California limited liability company. They are the legal counterparty for premium-tier purchases, refunds, and disputes per the Terms of Service at /terms.',
+        a: 'Pizza Robot Studios LLC, a California limited liability company. They are the legal counterparty for premium-tier purchases and disputes per the Terms of Service at /terms. Credit purchases are non-refundable per Section 17.5.',
       },
     ],
   },

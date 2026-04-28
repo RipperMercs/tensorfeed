@@ -97,7 +97,7 @@ const FAQ_JSONLD = {
       name: 'What happens if my payment fails or the API rejects the transaction?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'On-chain verification reads the USDC Transfer event from eth_getTransactionReceipt on the Base RPC. If the tx is invalid, the wrong recipient, or already used, /api/payment/confirm returns an error and no credits are minted. Replay protection means every successful tx hash is permanently recorded so the same payment cannot be claimed twice. For genuine refunds, email evan@tensorfeed.ai with the tx hash within 24 hours of the charge.',
+        text: 'On-chain verification reads the USDC Transfer event from eth_getTransactionReceipt on the Base RPC. If the tx is invalid, the wrong recipient, or already used, /api/payment/confirm returns an error and no credits are minted. Replay protection means every successful tx hash is permanently recorded so the same payment cannot be claimed twice. Note that confirmed credit purchases are non-refundable per Section 17.5 of the Terms; credits do not expire, so the recommended pattern is to buy small at first and top up as call volume is calibrated.',
       },
     },
     {
@@ -105,7 +105,7 @@ const FAQ_JSONLD = {
       name: 'Are TensorFeed premium APIs covered by an SLA?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'No SLA in the MVP phase. Premium credits do not expire and there is no scheduled downtime, but if a premium endpoint is down we will not credit your account automatically. Refunds for prolonged outages are handled manually within 24 hours via email. As the product matures we may introduce paid SLA tiers.',
+        text: 'No SLA in the MVP phase. Premium credits do not expire and there is no scheduled downtime, but if a premium endpoint is down we will not credit your account automatically. Credit purchases are non-refundable; the practical mitigation is the small-purchase pattern (start at $1 USDC for 50 credits, top up after calibration). As the product matures we may introduce paid SLA tiers.',
       },
     },
     {
@@ -1014,43 +1014,63 @@ export default function AgentPaymentsPage() {
         </div>
       </section>
 
-      {/* ToS + refunds */}
+      {/* Terms summary */}
       <section className="mb-10">
         <div className="bg-bg-secondary border border-border rounded-xl p-5">
-          <h2 className="text-lg font-semibold text-text-primary mb-3">Terms and Refunds</h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-3">Terms summary</h2>
           <ul className="text-text-secondary text-sm space-y-2">
             <li>
-              <span className="text-text-primary font-medium">No-training license:</span>{' '}
+              <span className="text-text-primary font-medium">No-training license (17.1):</span>{' '}
               Premium API responses are licensed for inference use only. Use for training,
               fine-tuning, evaluation, or distillation of ML models is prohibited.
             </li>
             <li>
-              <span className="text-text-primary font-medium">Refunds:</span> Email{' '}
-              <a
-                href="mailto:evan@tensorfeed.ai"
-                className="text-accent-primary hover:underline"
-              >
-                evan@tensorfeed.ai
-              </a>{' '}
-              with the tx hash within 24 hours of the charge. Manual USDC refund to the
-              originating address within 5 business days.
+              <span className="text-text-primary font-medium">No refunds (17.5):</span> All
+              credit purchases are final and non-refundable. Credits do not expire and remain
+              redeemable across tensorfeed.ai and terminalfeed.io. Buy small (for example, $1
+              USDC for 50 credits), calibrate, then top up as needed.
             </li>
             <li>
-              <span className="text-text-primary font-medium">Best-effort, no SLA:</span> We
-              aim for high uptime but offer no service guarantee. Credits do not expire but
-              specific premium endpoints may be modified or discontinued with reasonable
-              notice.
+              <span className="text-text-primary font-medium">Best-effort, no SLA (17.6):</span>{' '}
+              We aim for high uptime but offer no service guarantee. Specific premium
+              endpoints may be modified or discontinued with reasonable notice.
             </li>
             <li>
-              <span className="text-text-primary font-medium">Replay protection:</span> Each
-              USDC tx can be used to mint credits exactly once. Re-submitting the same tx
-              hash is rejected.
+              <span className="text-text-primary font-medium">Replay protection (17.4):</span>{' '}
+              Each USDC tx can be used to mint credits exactly once. Re-submitting the same
+              tx hash is rejected.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Cross-site bundle (17.8):</span>{' '}
+              Bearer tokens and credits are jointly redeemable on tensorfeed.ai and
+              terminalfeed.io. TensorFeed is the system of record for credit balances.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Sanctions and jurisdiction (17.9):</span>{' '}
+              Premium API access is unavailable to OFAC-, EU-, UK-, or UN-sanctioned persons
+              and to residents of comprehensively sanctioned jurisdictions (Cuba, Iran, North
+              Korea, Syria, Crimea, Donetsk, Luhansk). Inbound credit-purchase transactions
+              are screened against the Chainalysis public sanctions API.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Acceptable use (17.12):</span>{' '}
+              No reselling of bearer tokens, no proxy APIs that materially reproduce the
+              Premium API surface, no use of premium responses to train or evaluate competing
+              models.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Governing law and venue:</span>{' '}
+              California law, exclusive venue Los Angeles County, California.
             </li>
           </ul>
           <p className="text-text-muted text-xs mt-3">
-            Full legal terms are in the{' '}
-            <Link href="/terms" className="text-accent-primary hover:underline">
+            This is a summary, not the full agreement. Full legal terms are in the{' '}
+            <Link href="/terms#premium" className="text-accent-primary hover:underline">
               Terms of Service
+            </Link>
+            . Premium API data practices are in the{' '}
+            <Link href="/privacy#premium-api" className="text-accent-primary hover:underline">
+              Privacy Policy
             </Link>
             .
           </p>

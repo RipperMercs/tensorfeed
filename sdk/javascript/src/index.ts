@@ -697,7 +697,14 @@ export interface PaymentInfo {
     address_published_at: string[];
     note: string;
   };
-  terms: { no_training: string; refund: string; kill_switch: string };
+  terms: {
+    no_training: string;
+    refund: string;
+    sanctions?: string;
+    acceptable_use?: string;
+    governing_law?: string;
+    kill_switch: string;
+  };
 }
 
 export interface QuoteResponse {

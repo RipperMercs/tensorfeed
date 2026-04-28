@@ -57,7 +57,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 
 **Live AI bot traffic dashboard:** `https://tensorfeed.ai/agent-traffic` surfaces the bot crawl data from `/api/agents/activity` as a public dashboard with per-bot breakdown (ClaudeBot, GPTBot, PerplexityBot, Googlebot, Bytespider, etc), top hit endpoints, a live tail of the most recent 50 hits, and a daily counter. JSON-LD Dataset + FAQPage schema. Refreshes every 30s. Most sites hide this; we publish it because TensorFeed was built for AI agents.
 
-**Terms:** Premium data is licensed for inference use only. Use of TensorFeed premium data for training, fine-tuning, evaluation, or distillation of ML models is prohibited.
+**Terms:** Premium data is licensed for inference use only. Use of TensorFeed premium data for training, fine-tuning, evaluation, or distillation of ML models is prohibited (Section 17.1). All credit purchases are final and non-refundable (Section 17.5); credits do not expire and are jointly redeemable on tensorfeed.ai and terminalfeed.io. Premium API access is unavailable to OFAC-, EU-, UK-, or UN-sanctioned persons and to residents of comprehensively sanctioned jurisdictions (Cuba, Iran, North Korea, Syria, Crimea, Donetsk, Luhansk); inbound credit-purchase transactions are screened against the Chainalysis public sanctions API (Section 17.9). California law, exclusive venue Los Angeles County. Full text at https://tensorfeed.ai/terms#premium.
 
 **Endpoints:**
 - [Payment Info](https://tensorfeed.ai/api/payment/info): Wallet address, pricing, volume bundles, full flow documentation
@@ -153,7 +153,8 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [AI Podcasts](https://tensorfeed.ai/podcasts): Stream AI podcast episodes from top shows
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
-- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (36 articles)
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (37 articles)
+- [The AI Talent War's New Price Tag: $1.5 Billion Per Engineer](https://tensorfeed.ai/originals/ai-talent-war-billion-dollar-engineers): Meta paid one engineer a reported $1.5B over six years. VCs poured $18.8B into AI startups founded since 2025. Three OpenAI execs walked out in 10 days. The numbers behind the AI talent flight and what it means for the model release pipeline.
 - [The 100,000 KV Ops Daily Budget and What Fits in It](https://tensorfeed.ai/originals/kv-ops-budget-edge-architecture): Engineering deep-dive on Cloudflare KV's 100k/day free-tier limit and the architectural moves that fit a real-time AI news API + agent payments tier into it. Cache API for reads, batched writes, cron-only writers, in-memory buffers, per-type index keys. Concrete code samples.
 - [An MCP Server Is a 50-Line File](https://tensorfeed.ai/originals/mcp-server-fifty-line-file): Argument piece showing the actual reference implementation. Why every paid API should ship an MCP server, why most teams overthink it, and the one-engineer-day path to npm + registry + awesome-lists. Includes a complete working example.
 - [Why We Picked USDC on Base Over Stripe](https://tensorfeed.ai/originals/why-usdc-over-stripe): First-person breakdown of the architectural choice. Stripe works fine for humans, doesn't work for AI agents in a loop. What we gave up (smaller short-term TAM), what we got (simpler architecture, lower fees, no platform risk, public auditability). Reversible decision; today's call holds.

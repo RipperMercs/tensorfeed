@@ -288,7 +288,7 @@ This is now standard for paid AI data sources (Reddit, Stack Overflow, Getty). W
 Every USDC payment received is taxable income at received-date USD value. Daily cron logs USD value at receipt time. A `revenue:daily:{date}` KV entry captures total USD, tx count, and unique agents. Hand the annual export to an accountant in January.
 
 ### Kill Switch and Refund
-`PAYMENT_ENABLED` flag in wrangler.toml vars disables all premium endpoints instantly. Document a refund process: unused credits are refundable within 30 days by emailing support@tensorfeed.ai. Credit a public incident page if data quality breaks (e.g., routing scores go stale for >1 hour).
+`PAYMENT_ENABLED` flag in wrangler.toml vars disables all premium endpoints instantly. Refund posture (current as of 2026-04-28 legal hardening): credit purchases are final and non-refundable per Terms Section 17.5. Credits do not expire and remain spendable across tensorfeed.ai and terminalfeed.io. The recommended pattern for new agents is to buy small (for example, $1 USDC for 50 credits), calibrate, then top up. Credit a public incident page if data quality breaks (e.g., routing scores go stale for >1 hour); this is a transparency commitment, not a refund commitment.
 
 ## Operational Requirements
 

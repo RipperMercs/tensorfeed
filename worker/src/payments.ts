@@ -563,7 +563,7 @@ export async function getPaymentInfo(env: Env): Promise<unknown> {
       legal_entity: 'Pizza Robot Studios LLC',
       jurisdiction: 'California, USA',
       contact: 'evan@tensorfeed.ai',
-      note: 'The legal entity behind the payment wallet, responsible for refunds and disputes per the Terms of Service at https://tensorfeed.ai/terms.',
+      note: 'The legal entity behind the payment wallet. Premium credits are non-refundable per Section 17.5 of the Terms of Service at https://tensorfeed.ai/terms.',
     },
     wallet: {
       address: env.PAYMENT_WALLET,
@@ -606,7 +606,10 @@ export async function getPaymentInfo(env: Env): Promise<unknown> {
     },
     terms: {
       no_training: 'Premium data is licensed for inference use only. Use of TensorFeed premium data for training, fine-tuning, evaluation, or distillation of ML models is prohibited.',
-      refund: 'Email evan@tensorfeed.ai with the tx hash within 24h of the charge for a manual refund.',
+      refund: 'All credit purchases are final and non-refundable per Section 17.5 of the Terms. Credits do not expire and remain redeemable across tensorfeed.ai and terminalfeed.io. Buy small, top up as needed.',
+      sanctions: 'Premium API access is unavailable to persons or entities subject to OFAC, EU, UK, or UN sanctions, and to residents of comprehensively sanctioned jurisdictions (Cuba, Iran, North Korea, Syria, Crimea, Donetsk, Luhansk). See https://tensorfeed.ai/terms#premium Section 17.9. Inbound credit-purchase transactions are screened against the Chainalysis public sanctions API.',
+      acceptable_use: 'No reselling of bearer tokens or proxy APIs that reproduce the Premium API surface. No use of premium responses to train or evaluate competing models. See Section 17.12.',
+      governing_law: 'California law, exclusive venue Los Angeles County, California. See Section 15 Governing Law and Venue.',
       kill_switch: env.PAYMENT_ENABLED === 'true' ? 'enabled' : 'disabled',
     },
   };

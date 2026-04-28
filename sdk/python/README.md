@@ -250,11 +250,15 @@ If any source disagrees, do not send.
 
 ## Premium Data Terms
 
-Premium API responses are licensed for inference use only. Use of TensorFeed premium data for training, fine-tuning, evaluation, or distillation of ML models is prohibited.
+Premium API responses are licensed for inference use only. Use of TensorFeed premium data for training, fine-tuning, evaluation, or distillation of ML models is prohibited (Section 17.1 of the [Terms](https://tensorfeed.ai/terms#premium)).
 
-## Refunds
+## No refunds; credits do not expire
 
-Email `evan@tensorfeed.ai` with the tx hash within 24 hours of the charge for a manual USDC refund.
+All credit purchases are final and non-refundable per Section 17.5 of the [Terms](https://tensorfeed.ai/terms#premium). Credits never expire and are jointly redeemable on tensorfeed.ai and terminalfeed.io. The recommended pattern is to buy in small increments (for example, $1 USDC for 50 credits) until call volume is calibrated, then top up as needed.
+
+## Sanctions
+
+Premium API access is unavailable to persons or entities subject to OFAC, EU, UK, or UN sanctions, and to residents of comprehensively sanctioned jurisdictions (Cuba, Iran, North Korea, Syria, Crimea, Donetsk, Luhansk). Inbound credit-purchase transactions are screened against the Chainalysis public sanctions API. See Section 17.9 of the [Terms](https://tensorfeed.ai/terms#premium).
 
 ## Links
 

@@ -43,8 +43,9 @@ export default function TermsPage() {
             limited liability company (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). Pizza
             Robot Studios LLC is the legal entity responsible for the payment wallet at
             <code className="bg-bg-tertiary px-1 py-0.5 rounded text-xs font-mono mx-1">0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1</code>
-            on Base mainnet and is the counterparty for all premium-tier purchases, refunds, and
-            disputes per the Premium API and Agent Payments section below.
+            on Base mainnet and is the counterparty for all premium-tier purchases and disputes
+            per the Premium API and Agent Payments section below. Premium credits are
+            non-refundable; see Section 17.5.
           </p>
         </section>
 

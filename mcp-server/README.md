@@ -104,7 +104,7 @@ Premium tier (with `TENSORFEED_TOKEN` set):
 
 Premium tools cost 1 credit per call. Credits are 50 per $1 USDC at base rate, with volume discounts at $5 (10%), $30 (25%), and $200 (40%). See [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments) for the full payment flow and trust attestation.
 
-Refunds: email evan@tensorfeed.ai with the tx hash within 24h of the charge.
+No refunds: all credit purchases are final per Section 17.5 of the [Terms](https://tensorfeed.ai/terms#premium). Credits do not expire and are jointly redeemable on tensorfeed.ai and terminalfeed.io, so the safe pattern is to buy small ($1 USDC for 50 credits) and top up as call volume is calibrated. Premium access is unavailable in OFAC-sanctioned jurisdictions; see Section 17.9.
 
 ## Data Source
 

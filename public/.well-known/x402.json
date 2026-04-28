@@ -13,7 +13,7 @@
       "jurisdiction": "California, USA",
       "terms": "https://tensorfeed.ai/terms",
       "privacy": "https://tensorfeed.ai/privacy",
-      "note": "Pizza Robot Studios LLC is the legal entity behind the payment wallet, responsible for refunds and disputes per the Terms of Service."
+      "note": "Pizza Robot Studios LLC is the legal entity behind the payment wallet. Premium credits are non-refundable per Section 17.5 of the Terms of Service."
     },
     "validation": {
       "method": "TLS + multi-publication",
@@ -59,8 +59,11 @@
     },
     "terms": {
       "noTraining": "Premium data is licensed for inference use only. Use of TensorFeed premium endpoint responses for training, fine-tuning, evaluation, or distillation of machine learning models is prohibited.",
-      "refund": "Email evan@tensorfeed.ai with the tx hash within 24 hours of the charge for a manual refund.",
-      "sla": "No SLA in MVP phase. Credits do not expire."
+      "refund": "All credit purchases are final and non-refundable per Section 17.5 of the Terms. Credits do not expire and remain redeemable across tensorfeed.ai and terminalfeed.io. Recommended pattern: buy small (for example, $1 USDC for 50 credits), calibrate, top up as needed.",
+      "sla": "No SLA in MVP phase. Credits do not expire.",
+      "sanctions": "Premium API access is unavailable to persons or entities subject to OFAC, EU, UK, or UN sanctions, and to residents of comprehensively sanctioned jurisdictions (Cuba, Iran, North Korea, Syria, Crimea, Donetsk, Luhansk). Inbound credit-purchase transactions are screened against the Chainalysis public sanctions API. See https://tensorfeed.ai/terms#premium Section 17.9.",
+      "acceptableUse": "No reselling of bearer tokens or proxy APIs that materially reproduce the Premium API surface. No use of premium responses to train or evaluate competing models. See Section 17.12.",
+      "governingLaw": "California law. Exclusive venue: Los Angeles County, California. See Section 15 Governing Law and Venue."
     }
   },
   "items": [

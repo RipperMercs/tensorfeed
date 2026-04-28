@@ -21,6 +21,18 @@ export const metadata: Metadata = {
 
 const CHANGELOG = [
   {
+    date: 'April 28, 2026',
+    entries: [
+      'Premium API legal hardening pass (mirrors the TerminalFeed sister-site pass on the same day). Restructured /terms Premium API and Agent Payments into numbered subsections 17.1 through 17.15: sanctions warranty (17.9), autonomous-agent acknowledgment (17.10), suspension and revocation for abuse (17.11), Premium API acceptable use (17.12), liability cap (17.13), chargeback and fraudulent purchase handling (17.14), and no-money-services-business representation (17.15). Replaced the 24-hour refund window with a no-refunds policy (17.5); credits do not expire and remain jointly redeemable across tensorfeed.ai and terminalfeed.io. Added cross-site applicability clause (17.8) naming TensorFeed as the system of record for credit balances.',
+      'Expanded Governing Law into Governing Law and Venue with explicit California law, exclusive venue Los Angeles County, and a CISG disclaimer.',
+      'New Privacy Policy section 4B (Premium API Tier: Data Practices) discloses what we collect for the paid tier (sender wallet address, transaction hash, hashed bearer token, per-call telemetry), what we do not collect (no names, no KYC, no fiat payment cards), cross-site processing with TerminalFeed, the Chainalysis sanctions screen on every inbound credit-purchase transaction, and 7-year retention of billing records.',
+      'New geo-IP block on /api/payment/buy-credits refuses credit-purchase quotes from comprehensively sanctioned jurisdictions (CU, IR, KP, SY) before any KV write, returning 403 jurisdiction_blocked. Wallet-level Chainalysis screening on /api/payment/confirm is in flight pending API key approval.',
+      '/api/payment/info now exposes terms.sanctions, terms.acceptable_use, and terms.governing_law fields so agents can read the cross-jurisdictional restrictions and AUP without parsing the human Terms page. terms.refund updated to the no-refunds language. /.well-known/x402.json mirrors the same fields.',
+      '/developers/agent-payments docs page rebuilt the Terms summary card around the new numbered subsections and links into both /terms#premium and /privacy#premium-api.',
+      'Python SDK README, TypeScript SDK README, and MCP server README updated with no-refunds language and the OFAC sanctions notice.',
+    ],
+  },
+  {
     date: 'April 27, 2026',
     entries: [
       'Validated the full agent payments loop end-to-end on Base mainnet with real USDC. tf.buy_credits, send tx, tf.confirm, tf.routing, tf.balance: all five steps worked first try, no bugs surfaced.',
