@@ -337,7 +337,7 @@ Subreddits where MCP and agent-payment tooling actually gets discussed. Don't po
 | 5b | appcypher/awesome-mcp-servers | PR | ⛔ blocked | Issues + PRs disabled at repo level. Branch ready in `RipperMercs/awesome-mcp-servers-2@add-tensorfeed`. Requires direct contact with appcypher to submit. |
 | 5c | TensorBlock/awesome-mcp-servers | PR | 🟡 open | 2026-04-28 ([#465](https://github.com/TensorBlock/awesome-mcp-servers/pull/465)) |
 | 6 | mcpservers.org | Web form | ⛔ blocked | No public submit path. Site is the frontend for wong2/awesome-mcp-servers (issues + PRs disabled). Direct outreach to wong2 is the only route. |
-| 7 | mcp.so | Web form | 📝 manual | https://mcp.so/submit. PRs to chatmcp/mcpso README do not get merged in practice (recent #2178/#2020/#1832 sit unmerged); the web form is the real path. Values prepared below. |
+| 7 | mcp.so | Web form | 🟡 submitted | 2026-04-28 via mcp.so/submit (signed in as RipperMercs via GitHub). Pending moderator review. |
 | 8 | smithery.ai | Web form | 🟠 blocked | UI only offers hosted-HTTP-URL form; no GitHub-import path visible from /new or dashboard. `smithery.yaml` + `Dockerfile` already in repo for any future scanner. Revisit when their UI changes. |
 | 9 | e2b-dev/awesome-sdks-for-ai-agents | Form/PR | ☐ | |
 | 10 | Hacker News (Show HN) | Post | ☐ | |
