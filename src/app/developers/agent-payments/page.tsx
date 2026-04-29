@@ -1016,6 +1016,63 @@ export default function AgentPaymentsPage() {
         </div>
       </section>
 
+      {/* Rate limit */}
+      <section className="mb-10" id="rate-limits">
+        <div className="bg-bg-secondary border border-border rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Rate Limits (Free Tier)</h2>
+          <p className="text-text-secondary text-sm mb-3">
+            Free public endpoints (everything outside <code className="text-accent-primary font-mono">/api/premium/*</code>)
+            are rate-limited to <span className="text-text-primary font-mono">120 requests per minute per IP</span>.
+            Premium bearer tokens skip this limit entirely (they are gated by credits and the per-token circuit
+            breaker instead).
+          </p>
+          <p className="text-text-secondary text-sm mb-3">
+            Every response broadcasts standard headers so a well-behaved agent can pace itself without trial and
+            error:
+          </p>
+          <ul className="text-text-secondary text-sm space-y-2 mb-3">
+            <li>
+              <code className="text-accent-primary font-mono">RateLimit-Limit</code> total requests allowed per
+              window.
+            </li>
+            <li>
+              <code className="text-accent-primary font-mono">RateLimit-Remaining</code> requests left in the
+              current window.
+            </li>
+            <li>
+              <code className="text-accent-primary font-mono">RateLimit-Reset</code> seconds until the window
+              resets.
+            </li>
+          </ul>
+          <p className="text-text-muted text-sm">
+            Equivalent <code className="font-mono">X-RateLimit-*</code> headers are also sent for older clients.
+            On a 429, <code className="font-mono">Retry-After</code> tells you exactly how long to wait.
+          </p>
+        </div>
+      </section>
+
+      {/* Prompt injection sanitization */}
+      <section className="mb-10" id="prompt-injection-sanitization">
+        <div className="bg-bg-secondary border border-border rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Prompt-Injection Sanitization</h2>
+          <p className="text-text-secondary text-sm mb-3">
+            Aggregated text on the agent endpoints (<code className="text-accent-primary font-mono">/api/news</code>,
+            <code className="text-accent-primary font-mono">/api/agents/news</code>,{' '}
+            <code className="text-accent-primary font-mono">/feed.xml</code>,{' '}
+            <code className="text-accent-primary font-mono">/feed.json</code>) is scrubbed at read time before it
+            reaches your agent. We strip ASCII control chars, bidi/zero-width spoofing chars, and neutralize
+            role-confusion tokens like <code className="font-mono">&lt;|im_start|&gt;</code>,{' '}
+            <code className="font-mono">[INST]</code>, and lines that try to fake a system or assistant turn. Title
+            and snippet are also length-capped so a single feed item cannot fill your context window.
+          </p>
+          <p className="text-text-muted text-sm">
+            URLs, source attribution, dates, and categories are passed through untouched. The endpoint advertises{' '}
+            <code className="font-mono">sanitization: &quot;enabled&quot;</code> in the JSON response so you can
+            verify the layer is on.
+          </p>
+        </div>
+      </section>
+
       {/* Chaos engineering */}
       <section className="mb-10" id="chaos-engineering">
         <div className="bg-bg-secondary border border-border rounded-xl p-5">

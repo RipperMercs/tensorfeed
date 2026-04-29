@@ -52,11 +52,41 @@ import {
 } from './payments';
 import { recordPollRun, checkNewsStaleness, alertStaleNews, sendDailySummary, getAlertsStatus } from './alerts';
 import { maybeSimulatedErrorResponse, applySimulatedLatency } from './chaos';
+import {
+  applyRateLimitHeaders,
+  checkIPRateLimit,
+  getClientIP,
+  isRateLimitExempt,
+  rateLimitedResponse,
+} from './rate-limit';
+import { sanitizeArticleForAgents } from './sanitize';
 
+/**
+ * CORS posture for the public API.
+ *
+ * Wildcard `Access-Control-Allow-Origin: *` is intentional. Free
+ * endpoints are public read-only data and have no auth. Premium
+ * endpoints require an `Authorization: Bearer` header that the agent
+ * holds in its own runtime, not in browser cookies, and we never set
+ * `Access-Control-Allow-Credentials: true`. So even a malicious origin
+ * loaded in a victim's browser cannot make an authenticated cross-
+ * origin request on the user's behalf because there is no ambient
+ * credential to ride.
+ *
+ * `Access-Control-Allow-Headers` admits the headers an agent may send
+ * (Authorization for credits, X-Payment-Tx for x402 fallback, the
+ * chaos-engineering and internal-auth headers). `Expose-Headers`
+ * surfaces the response headers that an agent in a browser context
+ * needs to read (rate-limit info, premium token issuance metadata).
+ */
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers':
+    'Content-Type, Authorization, X-Payment-Tx, X-TensorFeed-Simulate-Error, X-TensorFeed-Simulate-Latency, X-Internal-Auth',
+  'Access-Control-Expose-Headers':
+    'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Payment-Token, X-Payment-Token-Balance, X-Payment-Token-Note, X-TensorFeed-Simulated, X-TensorFeed-Simulated-Latency-Ms',
+  'Access-Control-Max-Age': '86400',
 };
 
 function jsonResponse(data: unknown, status = 200, maxAge = 60): Response {
@@ -269,6 +299,30 @@ export default {
     if (simulatedError) return simulatedError;
     await applySimulatedLatency(request);
 
+    // App-level IP rate limit (free public API only). Premium endpoints
+    // are gated by per-token credits + circuit breaker; admin/internal
+    // endpoints are server-to-server and exempt. Non-API paths get
+    // limited too so a misbehaving agent hammering /feed.xml gets paced.
+    let rateInfo: ReturnType<typeof checkIPRateLimit> | null = null;
+    if (!isRateLimitExempt(path)) {
+      const ip = getClientIP(request);
+      rateInfo = checkIPRateLimit(ip);
+      if (!rateInfo.allowed) {
+        return rateLimitedResponse(rateInfo);
+      }
+    }
+
+    const response = await this._handleRoute(request, env, ctx, url, path);
+    return rateInfo ? applyRateLimitHeaders(response, rateInfo) : response;
+  },
+
+  async _handleRoute(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext,
+    url: URL,
+    path: string,
+  ): Promise<Response> {
     // Track agent/bot activity (non-blocking, batched in memory)
     ctx.waitUntil(trackAgentActivity(request, env, path));
 
@@ -343,19 +397,27 @@ export default {
         );
       }
 
+      // Strip prompt-injection tokens, control chars, and zero-width
+      // chars from feed-author-controlled fields before serving to
+      // agents. Source URL, provider, dates, and categories pass
+      // through untouched. See worker/src/sanitize.ts for the rules.
+      const sanitized = articles.slice(0, limit).map(sanitizeArticleForAgents);
+
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
         updated: new Date().toISOString(),
-        count: Math.min(articles.length, limit),
-        articles: articles.slice(0, limit),
+        count: sanitized.length,
+        articles: sanitized,
+        sanitization: 'enabled',
       });
     }
 
     // RSS feed (cached 300s). Served at both /feed.xml and /api/feed.xml.
     if (path === '/feed.xml' || path === '/api/feed.xml' || path === '/api/feed/all.xml' || path === '/feed/all.xml') {
       const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 300) as Article[] | null;
-      return xmlResponse(articlesToRSS(articles || [], 'TensorFeed.ai', 'https://tensorfeed.ai/feed.xml'));
+      const safe = (articles || []).map(sanitizeArticleForAgents);
+      return xmlResponse(articlesToRSS(safe, 'TensorFeed.ai', 'https://tensorfeed.ai/feed.xml'));
     }
 
     // Category RSS feeds. Served at both /feed/<cat>.xml and /api/feed/<cat>.xml.
@@ -374,9 +436,9 @@ export default {
       };
 
       const filterCats = categoryMap[category.toLowerCase()] || [category];
-      const filtered = articles.filter(a =>
-        a.categories.some(c => filterCats.some(fc => c.toLowerCase().includes(fc.toLowerCase())))
-      );
+      const filtered = articles
+        .filter(a => a.categories.some(c => filterCats.some(fc => c.toLowerCase().includes(fc.toLowerCase()))))
+        .map(sanitizeArticleForAgents);
 
       return xmlResponse(articlesToRSS(filtered, `TensorFeed.ai - ${category}`, `https://tensorfeed.ai${path}`));
     }
@@ -384,7 +446,8 @@ export default {
     // JSON Feed (cached 60s). Served at both /feed.json and /api/feed.json.
     if (path === '/feed.json' || path === '/api/feed.json') {
       const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60) as Article[] | null;
-      return jsonResponse(articlesToJsonFeed(articles || []), 200, 60);
+      const safe = (articles || []).map(sanitizeArticleForAgents);
+      return jsonResponse(articlesToJsonFeed(safe), 200, 60);
     }
 
     // === STATUS ENDPOINTS (cached 120s) ===
@@ -563,6 +626,18 @@ export default {
           threshold: 20,
           window_seconds: 60,
           cooldown_seconds: 120,
+        },
+        rate_limit: {
+          description: 'Free public endpoints are limited to 120 requests per minute per IP. Premium bearer tokens are exempt. Every response includes RateLimit-Limit, RateLimit-Remaining, and RateLimit-Reset headers so well-behaved agents can back off programmatically.',
+          per_ip_per_minute: 120,
+          headers: ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Retry-After'],
+          exempt_paths: ['/api/premium/*', '/api/payment/*', '/api/internal/*', '/api/admin/*', '/api/refresh'],
+          doc: 'https://tensorfeed.ai/developers/agent-payments#rate-limits',
+        },
+        prompt_injection_sanitization: {
+          description: 'Aggregated text on the agent-facing endpoints is scrubbed at read time. Strips ASCII control chars, bidi/zero-width spoofing, and neutralizes role-confusion tokens (<|im_start|>, [INST], "system:" line prefixes, "ignore previous instructions"). Title/snippet are length-capped.',
+          enabled_on: ['/api/news', '/api/agents/news', '/feed.xml', '/feed.json', '/feed/*.xml'],
+          doc: 'https://tensorfeed.ai/developers/agent-payments#prompt-injection-sanitization',
         },
         news: newsMeta,
       }, 200, 60);
