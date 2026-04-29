@@ -36,6 +36,14 @@ const DEFAULT_BASE_RPC = 'https://mainnet.base.org';
 const QUOTE_TTL_SECONDS = 30 * 60;
 const TIER_COSTS: Record<1 | 2 | 3, number> = { 1: 1, 2: 1, 3: 5 };
 
+// First-payment welcome bonus. Granted once per sender wallet, on the
+// first successful USDC payment from that address (credits flow OR
+// x402 fallback). Redeemed by writing a `pay:wallet-seen:{address}`
+// marker in TENSORFEED_CACHE; race conditions across simultaneous
+// payments from the same wallet are accepted (worst case: one extra
+// bonus, capped at $1 of value).
+const WELCOME_BONUS_CREDITS = 50;
+
 // Volume tiers (credits per USD): higher tiers are cheaper per credit
 function creditsPerUsd(amountUsd: number): { rate: number; tier: string } {
   if (amountUsd >= 200) return { rate: 80, tier: '40% volume discount' };
@@ -699,6 +707,11 @@ export async function getPaymentInfo(env: Env): Promise<unknown> {
         '2_computed_intelligence': '1 credit per call (routing)',
         '3_bulk_streaming': '5 credits per call',
       },
+      welcome_bonus: {
+        credits: WELCOME_BONUS_CREDITS,
+        usd_value: (WELCOME_BONUS_CREDITS * 0.02).toFixed(2),
+        description: `${WELCOME_BONUS_CREDITS} bonus credits ($${(WELCOME_BONUS_CREDITS * 0.02).toFixed(2)} of value) on the first successful USDC payment from a new sender wallet, on top of the base rate. Granted automatically; the response from /api/payment/confirm includes welcome_bonus_credits and is_first_payment fields when applied.`,
+      },
     },
     flow: {
       with_quote: [
@@ -754,8 +767,41 @@ export async function createQuote(
 }
 
 export type ConfirmResult =
-  | { ok: true; token: string; credits: number; balance: number; tx_amount_usd: number; rate: string }
+  | {
+      ok: true;
+      token: string;
+      credits: number;
+      balance: number;
+      tx_amount_usd: number;
+      rate: string;
+      welcome_bonus_credits: number;
+      is_first_payment: boolean;
+    }
   | { ok: false; error: string; reason?: string; status?: number };
+
+export async function checkAndMarkFirstPayment(
+  env: Env,
+  walletAddress: string | undefined,
+): Promise<{ isFirstPayment: boolean; bonusCredits: number }> {
+  if (!walletAddress) {
+    return { isFirstPayment: false, bonusCredits: 0 };
+  }
+  const key = `pay:wallet-seen:${walletAddress.toLowerCase()}`;
+  const seen = await env.TENSORFEED_CACHE.get(key);
+  if (seen) {
+    return { isFirstPayment: false, bonusCredits: 0 };
+  }
+  return { isFirstPayment: true, bonusCredits: WELCOME_BONUS_CREDITS };
+}
+
+export function markWalletSeen(env: Env, walletAddress: string): Promise<void> {
+  return env.TENSORFEED_CACHE.put(
+    `pay:wallet-seen:${walletAddress.toLowerCase()}`,
+    new Date().toISOString(),
+  );
+}
+
+export const WELCOME_BONUS_CREDITS_VALUE = WELCOME_BONUS_CREDITS;
 
 export async function confirmPayment(
   env: Env,
@@ -833,15 +879,18 @@ export async function confirmPayment(
     }
   }
 
-  let credits: number;
+  let baseCredits: number;
   let rate: string;
   if (quote && Math.abs(verified.amountUsd - quote.amount_usd) < 0.01) {
-    credits = quote.credits;
+    baseCredits = quote.credits;
     rate = creditsPerUsd(quote.amount_usd).tier;
   } else {
-    credits = calculateCredits(verified.amountUsd);
+    baseCredits = calculateCredits(verified.amountUsd);
     rate = creditsPerUsd(verified.amountUsd).tier;
   }
+
+  const welcome = await checkAndMarkFirstPayment(env, verified.senderAddress);
+  const credits = baseCredits + welcome.bonusCredits;
 
   const token = generateToken();
   const now = new Date().toISOString();
@@ -872,6 +921,9 @@ export async function confirmPayment(
       block_number: verified.blockNumber,
       confirmed_at: now,
     }),
+    welcome.isFirstPayment && verified.senderAddress
+      ? markWalletSeen(env, verified.senderAddress)
+      : Promise.resolve(),
   ]);
 
   return {
@@ -881,6 +933,8 @@ export async function confirmPayment(
     balance: credits,
     tx_amount_usd: verified.amountUsd,
     rate,
+    welcome_bonus_credits: welcome.bonusCredits,
+    is_first_payment: welcome.isFirstPayment,
   };
 }
 
@@ -1140,7 +1194,9 @@ export async function requirePayment(
       }
     }
 
-    const credits = calculateCredits(verified.amountUsd);
+    const baseCredits = calculateCredits(verified.amountUsd);
+    const welcome = await checkAndMarkFirstPayment(env, verified.senderAddress);
+    const credits = baseCredits + welcome.bonusCredits;
     if (credits < cost) {
       return {
         paid: false,
@@ -1186,6 +1242,9 @@ export async function requirePayment(
         block_number: verified.blockNumber,
         confirmed_at: now,
       }),
+      welcome.isFirstPayment && verified.senderAddress
+        ? markWalletSeen(env, verified.senderAddress)
+        : Promise.resolve(),
     ]);
 
     return {

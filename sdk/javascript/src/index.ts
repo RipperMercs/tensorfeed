@@ -294,48 +294,6 @@ export interface StatusUptimeResponse {
   billing?: { credits_charged: number; credits_remaining?: number };
 }
 
-export interface PricingChangeEntry {
-  model: string;
-  provider: string;
-  field: 'inputPrice' | 'outputPrice';
-  from: number;
-  to: number;
-  delta_pct: number | null;
-}
-
-export interface PricingCompareResponse {
-  ok: true;
-  type: 'pricing';
-  from_date: string;
-  to_date: string;
-  added: { model: string; provider: string; inputPrice: number; outputPrice: number }[];
-  removed: { model: string; provider: string; inputPrice: number; outputPrice: number }[];
-  changed: PricingChangeEntry[];
-  unchanged_count: number;
-  billing?: { credits_charged: number; credits_remaining?: number };
-}
-
-export interface BenchmarkChangeEntry {
-  model: string;
-  benchmark: string;
-  from: number;
-  to: number;
-  delta_pp: number;
-}
-
-export interface BenchmarkCompareResponse {
-  ok: true;
-  type: 'benchmarks';
-  from_date: string;
-  to_date: string;
-  added_models: string[];
-  removed_models: string[];
-  changed: BenchmarkChangeEntry[];
-  billing?: { credits_charged: number; credits_remaining?: number };
-}
-
-export type CompareResponse = PricingCompareResponse | BenchmarkCompareResponse;
-
 // ── Premium: webhook watches ───────────────────────────────────────
 
 export interface PriceWatchSpec {
@@ -584,33 +542,6 @@ export interface ProviderDeepDiveResponse {
     news: string | null;
     activity: string | null;
   };
-  notes: string[];
-  billing?: { credits_charged: number; credits_remaining?: number };
-}
-
-export type ForecastTarget = 'price' | 'benchmark';
-export type ForecastField = 'inputPrice' | 'outputPrice' | 'blended';
-export type ConfidenceLabel = 'low' | 'medium' | 'high';
-
-export interface ForecastPoint {
-  date: string;
-  predicted: number;
-  lower: number;
-  upper: number;
-}
-
-export interface ForecastResponse {
-  ok: boolean;
-  target: ForecastTarget;
-  model: string;
-  field?: ForecastField;
-  benchmark?: string;
-  fitted_on: { from: string; to: string; days: number; data_points: number };
-  horizon_days: number;
-  current_value: number;
-  trend: { slope_per_day: number; r_squared: number };
-  confidence: { score: number; label: ConfidenceLabel };
-  forecast: ForecastPoint[];
   notes: string[];
   billing?: { credits_charged: number; credits_remaining?: number };
 }
@@ -1092,26 +1023,6 @@ export class TensorFeed {
     });
   }
 
-  /**
-   * Diff two daily snapshots: added, removed, and changed entries with
-   * deltas. Useful for detecting price wars and benchmark regressions.
-   * Costs 1 credit per call.
-   *
-   * @throws Error if no token is set on the client
-   * @throws PaymentRequired if the token has insufficient credits
-   */
-  async historyCompare(options: {
-    from: string;
-    to: string;
-    type?: 'pricing' | 'benchmarks';
-  }): Promise<CompareResponse> {
-    this.requireToken('historyCompare');
-    return this.request<CompareResponse>('GET', '/premium/history/compare', {
-      params: { from: options.from, to: options.to, type: options.type ?? 'pricing' },
-      requireToken: true,
-    });
-  }
-
   // ── Paid: webhook watches (1 credit per registration) ─────────
 
   /**
@@ -1330,40 +1241,6 @@ export class TensorFeed {
         model: modelsCsv,
         input_tokens_per_day: options.inputTokensPerDay,
         output_tokens_per_day: options.outputTokensPerDay,
-        horizon: options.horizon,
-      },
-      requireToken: true,
-    });
-  }
-
-  // ── Paid: forecast (1 credit per call) ─────────────────────────
-
-  /**
-   * Conservative statistical forecast for a price or benchmark series.
-   * Linear least-squares fit on 7-90 days of history projected forward
-   * 1-30 days with a 95% prediction interval. Includes confidence
-   * label so you can ignore low-signal forecasts. Costs 1 credit.
-   *
-   * @throws Error if no token is set
-   * @throws PaymentRequired if the token has insufficient credits
-   * @throws TensorFeedError on invalid params or insufficient history
-   */
-  async forecast(options: {
-    target: ForecastTarget;
-    model: string;
-    field?: ForecastField;
-    benchmark?: string;
-    lookback?: number;
-    horizon?: number;
-  }): Promise<ForecastResponse> {
-    this.requireToken('forecast');
-    return this.request<ForecastResponse>('GET', '/premium/forecast', {
-      params: {
-        target: options.target,
-        model: options.model,
-        field: options.field,
-        benchmark: options.benchmark,
-        lookback: options.lookback,
         horizon: options.horizon,
       },
       requireToken: true,

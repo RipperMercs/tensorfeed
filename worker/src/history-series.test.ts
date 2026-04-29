@@ -11,7 +11,6 @@ import {
   getPricingSeries,
   getBenchmarkSeries,
   getStatusUptime,
-  compareHistory,
   MAX_RANGE_DAYS,
   DEFAULT_RANGE_DAYS,
 } from './history-series';
@@ -332,51 +331,3 @@ describe('getStatusUptime', () => {
   });
 });
 
-// ── compareHistory ──────────────────────────────────────────────────
-
-describe('compareHistory', () => {
-  it('detects added, removed, and changed pricing', async () => {
-    const env = makeEnv({
-      'history:2026-04-01:models': pricingSnapshot('2026-04-01', [
-        { id: 'opus-4-6', name: 'Opus 4.6', provider: 'Anthropic', inputPrice: 18, outputPrice: 75 },
-        { id: 'gpt-5-5', name: 'GPT-5.5', provider: 'OpenAI', inputPrice: 10, outputPrice: 30 },
-      ]),
-      'history:2026-04-27:models': pricingSnapshot('2026-04-27', [
-        { id: 'opus-4-7', name: 'Opus 4.7', provider: 'Anthropic', inputPrice: 12, outputPrice: 60 },
-        { id: 'gpt-5-5', name: 'GPT-5.5', provider: 'OpenAI', inputPrice: 10, outputPrice: 30 },
-      ]),
-    });
-
-    const result = await compareHistory(env, '2026-04-01', '2026-04-27', 'pricing');
-    expect(result.ok).toBe(true);
-    if (!result.ok || result.type !== 'pricing') return;
-    expect(result.added.map(a => a.model)).toContain('Opus 4.7');
-    expect(result.removed.map(r => r.model)).toContain('Opus 4.6');
-    expect(result.unchanged_count).toBe(1); // GPT-5.5
-    expect(result.changed).toHaveLength(0);
-  });
-
-  it('reports missing snapshots', async () => {
-    const env = makeEnv({});
-    const result = await compareHistory(env, '2026-04-01', '2026-04-27', 'pricing');
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.missing).toEqual(['2026-04-01', '2026-04-27']);
-  });
-
-  it('detects benchmark score changes between snapshots', async () => {
-    const env = makeEnv({
-      'history:2026-04-01:benchmarks': benchmarkSnapshot('2026-04-01', [
-        { model: 'Opus 4.7', provider: 'Anthropic', scores: { swe_bench: 70.0 } },
-      ]),
-      'history:2026-04-27:benchmarks': benchmarkSnapshot('2026-04-27', [
-        { model: 'Opus 4.7', provider: 'Anthropic', scores: { swe_bench: 73.4 } },
-      ]),
-    });
-    const result = await compareHistory(env, '2026-04-01', '2026-04-27', 'benchmarks');
-    expect(result.ok).toBe(true);
-    if (!result.ok || result.type !== 'benchmarks') return;
-    expect(result.changed).toHaveLength(1);
-    expect(result.changed[0].delta_pp).toBeCloseTo(3.4, 4);
-  });
-});

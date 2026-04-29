@@ -1,40 +1,40 @@
 {
   "ok": true,
   "source": "tensorfeed.ai",
-  "checked": "2026-04-18T05:45:27.369Z",
+  "checked": "2026-04-28T23:41:05.563Z",
   "services": [
     {
       "name": "Claude API",
       "provider": "Anthropic",
-      "status": "operational",
+      "status": "degraded",
       "statusPageUrl": "https://status.anthropic.com",
       "components": [
         {
           "name": "claude.ai",
-          "status": "operational"
+          "status": "degraded"
         },
         {
-          "name": "platform.claude.com (formerly console.anthropic.com)",
+          "name": "Claude Console (platform.claude.com)",
           "status": "operational"
         },
         {
           "name": "Claude API (api.anthropic.com)",
-          "status": "operational"
+          "status": "degraded"
         },
         {
           "name": "Claude Code",
-          "status": "operational"
+          "status": "degraded"
         },
         {
           "name": "Claude Cowork",
-          "status": "operational"
+          "status": "degraded"
         },
         {
           "name": "Claude for Government",
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-18T05:40:35.022Z"
+      "lastChecked": "2026-04-28T23:40:27.675Z"
     },
     {
       "name": "OpenAI API",
@@ -43,15 +43,11 @@
       "statusPageUrl": "https://status.openai.com",
       "components": [
         {
-          "name": "Login",
-          "status": "operational"
-        },
-        {
-          "name": "Login",
-          "status": "operational"
-        },
-        {
           "name": "Responses",
+          "status": "operational"
+        },
+        {
+          "name": "VS Code extension",
           "status": "operational"
         },
         {
@@ -65,9 +61,13 @@
         {
           "name": "Batch",
           "status": "operational"
+        },
+        {
+          "name": "Audio",
+          "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-18T05:40:34.739Z"
+      "lastChecked": "2026-04-28T23:40:27.729Z"
     },
     {
       "name": "Hugging Face",
@@ -75,7 +75,7 @@
       "status": "operational",
       "statusPageUrl": "https://status.huggingface.co",
       "components": [],
-      "lastChecked": "2026-04-18T05:40:34.879Z"
+      "lastChecked": "2026-04-28T23:40:28.270Z"
     },
     {
       "name": "Replicate",
@@ -108,7 +108,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-18T05:40:34.764Z"
+      "lastChecked": "2026-04-28T23:40:27.899Z"
     },
     {
       "name": "Cohere",
@@ -116,6 +116,10 @@
       "status": "operational",
       "statusPageUrl": "https://status.cohere.com",
       "components": [
+        {
+          "name": "Docs",
+          "status": "operational"
+        },
         {
           "name": "Website",
           "status": "operational"
@@ -135,13 +139,9 @@
         {
           "name": "command-a-03-2025",
           "status": "operational"
-        },
-        {
-          "name": "embed-multilingual-light-v3.0",
-          "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-18T05:40:34.766Z"
+      "lastChecked": "2026-04-28T23:40:27.696Z"
     },
     {
       "name": "Mistral",
@@ -149,7 +149,7 @@
       "status": "operational",
       "statusPageUrl": "https://status.mistral.ai",
       "components": [],
-      "lastChecked": "2026-04-18T05:40:34.770Z"
+      "lastChecked": "2026-04-28T23:40:27.518Z"
     }
   ]
 }

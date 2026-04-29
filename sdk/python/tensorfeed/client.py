@@ -541,36 +541,6 @@ class TensorFeed:
             require_token=True,
         )
 
-    def history_compare(
-        self,
-        *,
-        from_date: str,
-        to_date: str,
-        snapshot_type: str = "pricing",
-    ) -> dict[str, Any]:
-        """Diff two daily snapshots: added, removed, and changed entries.
-
-        Costs 1 credit per call.
-
-        Args:
-            from_date: Earlier snapshot date in YYYY-MM-DD UTC.
-            to_date: Later snapshot date in YYYY-MM-DD UTC.
-            snapshot_type: "pricing" (default) or "benchmarks".
-
-        Returns:
-            For pricing: ``added``, ``removed``, ``changed`` (with
-            field/from/to/delta_pct), and ``unchanged_count``.
-            For benchmarks: ``added_models``, ``removed_models``, and
-            ``changed`` (with model/benchmark/from/to/delta_pp).
-        """
-        self._require_token("history_compare")
-        return self._request(
-            "GET",
-            "/premium/history/compare",
-            params={"from": from_date, "to": to_date, "type": snapshot_type},
-            require_token=True,
-        )
-
     # ── Paid: webhook watches (Tier 1, 1 credit per registration) ──
 
     def create_watch(
@@ -973,58 +943,3 @@ class TensorFeed:
             "GET", "/premium/cost/projection", params=params, require_token=True,
         )
 
-    # ── Paid: forecast (Tier 1, 1 credit) ──────────────────────────
-
-    def forecast(
-        self,
-        *,
-        target: str,
-        model: str,
-        field: str | None = None,
-        benchmark: str | None = None,
-        lookback: int | None = None,
-        horizon: int | None = None,
-    ) -> dict[str, Any]:
-        """Conservative statistical forecast for a price or benchmark series.
-
-        Costs 1 credit per call. Linear least-squares fit on the last
-        7-90 days of daily snapshots, projected forward 1-30 days with a
-        95% prediction interval. Includes a confidence score so you can
-        ignore low-signal forecasts.
-
-        Args:
-            target: 'price' or 'benchmark'.
-            model: Model id or display name. Case-insensitive.
-            field: Required when target='price'. One of 'inputPrice',
-                'outputPrice', 'blended'.
-            benchmark: Required when target='benchmark'. e.g. 'swe_bench'.
-            lookback: Days of history to fit on (7-90, default 30).
-            horizon: Days into the future to project (1-30, default 7).
-
-        Returns:
-            Dict with ``current_value``, ``trend`` (slope_per_day,
-            r_squared), ``confidence`` (score, label),
-            ``forecast`` (list of {date, predicted, lower, upper}),
-            ``notes`` with explicit "not a guarantee" disclaimers,
-            and ``billing``.
-
-        Raises:
-            ValueError: if no token is set on the client
-            PaymentRequired: if the token has insufficient credits
-            TensorFeedError: 400 on invalid target/field/benchmark or
-                if the model has fewer than 4 historical data points in
-                the requested window (try a longer lookback).
-        """
-        self._require_token("forecast")
-        params: dict[str, Any] = {"target": target, "model": model}
-        if field is not None:
-            params["field"] = field
-        if benchmark is not None:
-            params["benchmark"] = benchmark
-        if lookback is not None:
-            params["lookback"] = lookback
-        if horizon is not None:
-            params["horizon"] = horizon
-        return self._request(
-            "GET", "/premium/forecast", params=params, require_token=True,
-        )

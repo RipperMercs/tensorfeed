@@ -234,19 +234,6 @@
         ]
       }
     },
-    "/premium/history/compare": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Diff two daily snapshots",
-        "description": "1 credit. Returns added, removed, and changed entries with deltas.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["pricing", "benchmarks"] } }
-        ]
-      }
-    },
     "/premium/cost/projection": {
       "get": {
         "tags": ["Premium"],
@@ -258,22 +245,6 @@
           { "name": "input_tokens_per_day", "in": "query", "required": true, "schema": { "type": "number", "minimum": 0 } },
           { "name": "output_tokens_per_day", "in": "query", "required": true, "schema": { "type": "number", "minimum": 0 } },
           { "name": "horizon", "in": "query", "schema": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] } }
-        ]
-      }
-    },
-    "/premium/forecast": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Linear-regression forecast for a price field or benchmark",
-        "description": "1 credit. 95% prediction interval and confidence label so agents can ignore low-signal forecasts.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "target", "in": "query", "required": true, "schema": { "type": "string", "enum": ["price", "benchmark"] } },
-          { "name": "model", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "field", "in": "query", "schema": { "type": "string", "enum": ["inputPrice", "outputPrice", "blended"] } },
-          { "name": "benchmark", "in": "query", "schema": { "type": "string" } },
-          { "name": "lookback", "in": "query", "schema": { "type": "integer", "minimum": 7, "maximum": 90 } },
-          { "name": "horizon", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 30 } }
         ]
       }
     },

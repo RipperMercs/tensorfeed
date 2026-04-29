@@ -44,14 +44,6 @@ const FAQ_JSONLD = {
         text: 'Call GET /api/payment/usage with the bearer token. Returns the last 100 calls aggregated by endpoint with per-endpoint counts and total credits spent. The /account dashboard renders the same data in a table for human review. Both are free for the owning bearer token.',
       },
     },
-    {
-      '@type': 'Question',
-      name: 'How do I forecast where AI prices are headed?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Call /api/premium/forecast with target=price, model=..., field=blended. The endpoint runs a linear least-squares fit on 7-90 days of history and projects 1-30 days forward with a 95% prediction interval and a confidence label (low/medium/high). The notes block includes explicit "statistical inference, not a guarantee" disclaimers. 1 credit per call.',
-      },
-    },
   ],
 };
 
@@ -145,24 +137,6 @@ for r in projection["ranked_cheapest_monthly"]:
 # Fires every 7 days with a curated summary of pricing changes,
 # new/removed models, regardless of whether anything dramatic happened.`}</code></pre>
 
-        <p>
-          <strong className="text-text-primary">Forecast:</strong>
-        </p>
-        <pre className="bg-bg-secondary border border-border rounded-lg p-4 text-sm overflow-x-auto"><code className="text-text-primary font-mono">{`forecast = tf.forecast(
-    target="price",
-    model="Claude Opus 4.7",
-    field="blended",
-    lookback=60,
-    horizon=14,
-)
-# forecast["confidence"]["label"]  - low / medium / high
-# forecast["forecast"]              - day-by-day predicted with 95% CI`}</code></pre>
-        <p>
-          The forecast is a conservative linear-regression projection with explicit
-          &quot;statistical inference, not a guarantee&quot; disclaimers. Treat low-confidence
-          forecasts as no signal rather than a directional call.
-        </p>
-
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Job 3: Audit historical spend</h2>
         <p>
           For every TensorFeed bearer token your agents use, the per-token usage history is
@@ -203,7 +177,6 @@ for r in projection["ranked_cheapest_monthly"]:
         <ul className="space-y-2 list-disc list-inside ml-4">
           <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/cost/projection</code></Link> — workload cost across 1-10 models, 4 horizons</li>
           <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/watches</code></Link> — realtime price-drop notifications</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/forecast</code></Link> — linear-regression price forecasting with CI</li>
           <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/payment/usage</code></Link> — per-token audit log (free with bearer token)</li>
           <li><Link href="/account" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/account</code></Link> — human-facing dashboard for the same data</li>
         </ul>

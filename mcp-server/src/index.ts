@@ -473,74 +473,6 @@ server.tool(
   },
 );
 
-// ── Tool: history_compare (1 credit) ────────────────────────────────
-
-server.tool(
-  'history_compare',
-  'Diff two daily snapshots: returns added, removed, and changed entries with deltas. Costs 1 credit.',
-  {
-    from: z.string().describe('Earlier snapshot date YYYY-MM-DD'),
-    to: z.string().describe('Later snapshot date YYYY-MM-DD'),
-    type: z.enum(['pricing', 'benchmarks']).optional().describe('Snapshot type (default: pricing)'),
-  },
-  async ({ from, to, type }) => {
-    const params = new URLSearchParams({ from, to, type: type ?? 'pricing' });
-    const data = (await fetchJSON(`/premium/history/compare?${params}`, { auth: true })) as
-      | {
-          ok: true;
-          type: 'pricing';
-          added: { model: string; provider: string }[];
-          removed: { model: string; provider: string }[];
-          changed: { model: string; field: string; from: number; to: number; delta_pct: number | null }[];
-          unchanged_count: number;
-          billing?: { credits_remaining?: number };
-        }
-      | {
-          ok: true;
-          type: 'benchmarks';
-          added_models: string[];
-          removed_models: string[];
-          changed: { model: string; benchmark: string; from: number; to: number; delta_pp: number }[];
-          billing?: { credits_remaining?: number };
-        };
-    if (data.type === 'pricing') {
-      const changes = data.changed
-        .map(c => `  ${c.model} ${c.field}: ${c.from} -> ${c.to} (${c.delta_pct ?? 'n/a'}%)`)
-        .join('\n');
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text:
-              `Pricing diff ${from} -> ${to}\n` +
-              `  added: ${data.added.length} (${data.added.map(a => a.model).join(', ') || 'none'})\n` +
-              `  removed: ${data.removed.length} (${data.removed.map(r => r.model).join(', ') || 'none'})\n` +
-              `  unchanged: ${data.unchanged_count}\n\n` +
-              (changes || '  no field changes') +
-              `\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-          },
-        ],
-      };
-    }
-    const changes = data.changed
-      .map(c => `  ${c.model} ${c.benchmark}: ${c.from} -> ${c.to} (delta ${c.delta_pp} pp)`)
-      .join('\n');
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `Benchmark diff ${from} -> ${to}\n` +
-            `  added: ${data.added_models.length} (${data.added_models.join(', ') || 'none'})\n` +
-            `  removed: ${data.removed_models.length} (${data.removed_models.join(', ') || 'none'})\n\n` +
-            (changes || '  no score changes') +
-            `\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-        },
-      ],
-    };
-  },
-);
-
 // ── Tool: premium_agents_directory (1 credit) ───────────────────────
 
 server.tool(
@@ -735,53 +667,6 @@ server.tool(
             `Models (${data.models.length}):\n${modelLines}\n\n` +
             `Recent news (${data.recent_news_count} matched, top 5 shown):\n${newsLines || '  none'}\n\n` +
             `Credits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: forecast (1 credit) ───────────────────────────────────────
-
-server.tool(
-  'forecast',
-  'Conservative statistical forecast for an AI model price or benchmark series. Linear least-squares fit on 7-90 days of history projected forward 1-30 days with a 95% prediction interval and confidence label. Costs 1 credit.',
-  {
-    target: z.enum(['price', 'benchmark']).describe('Forecast a price field or a benchmark score'),
-    model: z.string().describe('Model id or display name'),
-    field: z.enum(['inputPrice', 'outputPrice', 'blended']).optional().describe('Required when target=price'),
-    benchmark: z.string().optional().describe('Required when target=benchmark (e.g. swe_bench, mmlu_pro)'),
-    lookback: z.number().min(7).max(90).optional().describe('Days of history to fit on (default 30)'),
-    horizon: z.number().min(1).max(30).optional().describe('Days into the future to project (default 7)'),
-  },
-  async ({ target, model, field, benchmark, lookback, horizon }) => {
-    const params = new URLSearchParams({ target, model });
-    if (field) params.set('field', field);
-    if (benchmark) params.set('benchmark', benchmark);
-    if (typeof lookback === 'number') params.set('lookback', String(lookback));
-    if (typeof horizon === 'number') params.set('horizon', String(horizon));
-    const data = (await fetchJSON(`/premium/forecast?${params}`, { auth: true })) as {
-      target: string;
-      model: string;
-      field?: string;
-      benchmark?: string;
-      current_value: number;
-      trend: { slope_per_day: number; r_squared: number };
-      confidence: { score: number; label: string };
-      forecast: { date: string; predicted: number; lower: number; upper: number }[];
-      notes: string[];
-      billing?: { credits_remaining?: number };
-    };
-    const what = target === 'price' ? `${data.model} ${data.field}` : `${data.model} ${data.benchmark}`;
-    const trendLine = `current=${data.current_value}, slope=${data.trend.slope_per_day}/day, r2=${data.trend.r_squared}, confidence=${data.confidence.label} (${data.confidence.score})`;
-    const forecastLines = data.forecast
-      .map(p => `  ${p.date}: ${p.predicted} (95% CI [${p.lower}, ${p.upper}])`)
-      .join('\n');
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: `Forecast: ${what}\n${trendLine}\n\n${forecastLines}\n\nNotes: ${data.notes.join(' ')}\n\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
         },
       ],
     };

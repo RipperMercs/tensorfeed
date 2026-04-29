@@ -40,6 +40,14 @@
       { "minUsd": 30, "creditsPerUsd": 65, "label": "25% off" },
       { "minUsd": 200, "creditsPerUsd": 80, "label": "40% off" }
     ],
+    "welcomeBonus": {
+      "credits": 50,
+      "usdValue": "1.00",
+      "trigger": "first successful USDC payment from a new sender wallet",
+      "appliesTo": ["credits flow (/api/payment/confirm)", "x402 fallback"],
+      "stackableWithVolumeDiscounts": true,
+      "responseFields": ["welcome_bonus_credits", "is_first_payment"]
+    },
     "flows": {
       "credits": {
         "description": "Recommended for repeat use. Buy a bearer token once, decrement credits per call.",
@@ -174,23 +182,6 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/history/compare",
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
-      ],
-      "lastUpdated": "2026-04-27T00:00:00Z",
-      "metadata": {
-        "name": "Snapshot diff",
-        "description": "Diff two daily snapshots: returns added, removed, and changed entries with deltas. Supported types: pricing, benchmarks.",
-        "tier": 1,
-        "credits": 1,
-        "category": "ai-snapshot-diff"
-      }
-    },
-    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",
@@ -273,23 +264,6 @@
         "tier": 1,
         "credits": 1,
         "category": "ai-provider-deepdive"
-      }
-    },
-    {
-      "resource": "https://tensorfeed.ai/api/premium/forecast",
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
-      ],
-      "lastUpdated": "2026-04-27T00:00:00Z",
-      "metadata": {
-        "name": "Forecast",
-        "description": "Conservative linear-regression forecast for an AI model price field or benchmark score, projected 1-30 days forward with a 95% prediction interval and confidence label.",
-        "tier": 1,
-        "credits": 1,
-        "category": "ai-forecast"
       }
     },
     {

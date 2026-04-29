@@ -260,12 +260,6 @@ export default function BenchmarkLeaderboardPage({ params }: { params: { name: s
             </Link>{' '}
             — daily score evolution for one model on this benchmark, 1 credit per call
           </li>
-          <li>
-            <Link href="/developers/agent-payments" className="text-accent-primary hover:underline">
-              <code className="font-mono text-sm">/api/premium/forecast?target=benchmark&benchmark={meta.slug}</code>
-            </Link>{' '}
-            — 1-30 day projection with 95% prediction interval
-          </li>
         </ul>
       </section>
 

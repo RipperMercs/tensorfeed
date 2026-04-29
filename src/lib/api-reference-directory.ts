@@ -18,7 +18,6 @@ export type EndpointCategory =
   | 'models'
   | 'routing'
   | 'history'
-  | 'forecast'
   | 'agents'
   | 'watches'
   | 'payment'
@@ -766,7 +765,7 @@ print(f"Price moved {series['summary']['delta_pct_blended']}%")`,
 const tf = new TensorFeed({ token: 'tf_live_...' });
 const s = await tf.pricingSeries({ model: 'Claude Opus 4.7' });`,
     mcpTool: 'pricing_series',
-    relatedSlugs: ['premium-history-compare', 'premium-forecast', 'premium-watches'],
+    relatedSlugs: ['premium-watches'],
     faqs: [
       {
         q: 'How far back can I query?',
@@ -819,7 +818,7 @@ print(f"SWE-bench moved {s['summary']['delta_pp']} pp")`,
 const tf = new TensorFeed({ token: 'tf_live_...' });
 const s = await tf.benchmarkSeries({ model: 'Claude Opus 4.7', benchmark: 'swe_bench' });`,
     mcpTool: 'benchmark_series',
-    relatedSlugs: ['benchmarks', 'premium-forecast', 'premium-history-compare'],
+    relatedSlugs: ['benchmarks'],
     faqs: [
       {
         q: 'Why would a benchmark score change over time on the same model?',
@@ -879,51 +878,6 @@ const u = await tf.statusUptime({ provider: 'anthropic' });`,
       },
     ],
   },
-  {
-    slug: 'premium-history-compare',
-    name: 'Snapshot Diff',
-    path: '/api/premium/history/compare',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'history',
-    seoTitle: 'TensorFeed History Compare API: Diff Two Snapshots',
-    seoDescription:
-      'TensorFeed /api/premium/history/compare diffs two daily snapshots: added, removed, and changed entries with deltas. Type pricing or benchmarks. 1 credit.',
-    intro:
-      'The snapshot diff endpoint compares two daily history snapshots and returns the added, removed, and changed entries with deltas. Useful for "what changed in the AI pricing market between March 1 and April 1" or "which model benchmark scores moved" queries that would otherwise require multiple calls and client-side joining.',
-    whenToUse:
-      'When you need a structured diff between two specific dates rather than a continuous time series. For continuous evolution use the series endpoints.',
-    params: [
-      { name: 'from', in: 'query', required: true, type: 'string', description: 'Earlier snapshot date YYYY-MM-DD' },
-      { name: 'to', in: 'query', required: true, type: 'string', description: 'Later snapshot date YYYY-MM-DD' },
-      { name: 'type', in: 'query', type: 'string', description: 'pricing or benchmarks (default pricing)' },
-    ],
-    exampleResponse: `{
-  "ok": true,
-  "type": "pricing",
-  "from_date": "2026-04-01", "to_date": "2026-04-27",
-  "added": [{ "model": "Opus 4.7", "provider": "Anthropic", "inputPrice": 15, "outputPrice": 75 }],
-  "removed": [],
-  "changed": [
-    { "model": "GPT-5.5", "field": "inputPrice", "from": 12, "to": 10, "delta_pct": -16.67 }
-  ],
-  "unchanged_count": 8
-}`,
-    pythonExample: `from tensorfeed import TensorFeed
-
-tf = TensorFeed(token="tf_live_...")
-diff = tf.history_compare(from_date="2026-04-01", to_date="2026-04-27")
-print(f"{len(diff['changed'])} changes, {len(diff['added'])} new models")`,
-    typescriptExample: `import { TensorFeed } from 'tensorfeed';
-
-const tf = new TensorFeed({ token: 'tf_live_...' });
-const diff = await tf.historyCompare({ from: '2026-04-01', to: '2026-04-27' });`,
-    mcpTool: 'history_compare',
-    relatedSlugs: ['premium-pricing-series', 'premium-benchmark-series', 'whats-new'],
-    faqs: [],
-  },
-
   // ── Premium: agents ──────────────────────────────────────────────
   {
     slug: 'premium-agents-directory',
@@ -1069,7 +1023,7 @@ const c = await tf.compareModels({ ids: ['Claude Opus 4.7', 'GPT-5.5'] });`,
     ],
   },
 
-  // ── Premium: news / brief / forecast / cost ──────────────────────
+  // ── Premium: news / brief / cost ─────────────────────────────────
   {
     slug: 'premium-news-search',
     name: 'News Search',
@@ -1114,7 +1068,7 @@ r = tf.news_search(q="agent payments", from_date="2026-04-01")`,
 const tf = new TensorFeed({ token: 'tf_live_...' });
 const r = await tf.newsSearch({ q: 'agent payments' });`,
     mcpTool: 'news_search',
-    relatedSlugs: ['news', 'whats-new', 'premium-history-compare'],
+    relatedSlugs: ['news', 'whats-new'],
     faqs: [
       {
         q: 'How does the relevance score work?',
@@ -1162,7 +1116,7 @@ for c in brief["pricing"]["changes"]:
 const tf = new TensorFeed({ token: 'tf_live_...' });
 const brief = await tf.whatsNew({ days: 1 });`,
     mcpTool: 'whats_new',
-    relatedSlugs: ['premium-history-compare', 'premium-news-search', 'premium-watches'],
+    relatedSlugs: ['premium-news-search', 'premium-watches'],
     faqs: [],
   },
   {
@@ -1221,54 +1175,6 @@ const p = await tf.costProjection({
     relatedSlugs: ['premium-routing', 'premium-compare-models', 'models'],
     faqs: [],
   },
-  {
-    slug: 'premium-forecast',
-    name: 'Forecast',
-    path: '/api/premium/forecast',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'forecast',
-    seoTitle: 'TensorFeed Forecast API: Price and Benchmark Projection',
-    seoDescription:
-      'TensorFeed /api/premium/forecast: linear-regression forecast for AI model price or benchmark with 95% prediction interval and confidence label. 1 credit.',
-    intro:
-      'The forecast endpoint runs a linear least-squares fit over 7-90 days of historical price or benchmark data and projects 1-30 days forward with a 95% prediction interval. The response includes a confidence score and label (low/medium/high) so agents can ignore low-signal forecasts. Includes explicit "statistical inference, not a guarantee" disclaimers.',
-    whenToUse:
-      'When you need a planning estimate for where a price or benchmark is headed. Treat low-confidence forecasts as no signal rather than a directional call.',
-    params: [
-      { name: 'target', in: 'query', required: true, type: 'string', description: 'price or benchmark' },
-      { name: 'model', in: 'query', required: true, type: 'string', description: 'Model id or display name' },
-      { name: 'field', in: 'query', type: 'string', description: 'For price target: inputPrice, outputPrice, blended' },
-      { name: 'benchmark', in: 'query', type: 'string', description: 'For benchmark target: swe_bench, mmlu_pro, etc.' },
-      { name: 'lookback', in: 'query', type: 'integer', description: 'Days of history to fit on (7-90, default 30)' },
-      { name: 'horizon', in: 'query', type: 'integer', description: 'Days to project forward (1-30, default 7)' },
-    ],
-    exampleResponse: `{
-  "ok": true,
-  "target": "price", "model": "Claude Opus 4.7", "field": "blended",
-  "current_value": 36,
-  "trend": { "slope_per_day": -0.31, "r_squared": 0.78 },
-  "confidence": { "score": 0.7, "label": "high" },
-  "forecast": [
-    { "date": "2026-04-28", "predicted": 35.69, "lower": 34.2, "upper": 37.18 }
-  ],
-  "notes": ["Statistical inference, not a guarantee..."]
-}`,
-    pythonExample: `from tensorfeed import TensorFeed
-
-tf = TensorFeed(token="tf_live_...")
-f = tf.forecast(target="price", model="Claude Opus 4.7", field="blended")
-print(f"Confidence: {f['confidence']['label']}")`,
-    typescriptExample: `import { TensorFeed } from 'tensorfeed';
-
-const tf = new TensorFeed({ token: 'tf_live_...' });
-const f = await tf.forecast({ target: 'price', model: 'Claude Opus 4.7', field: 'blended' });`,
-    mcpTool: 'forecast',
-    relatedSlugs: ['premium-pricing-series', 'premium-benchmark-series'],
-    faqs: [],
-  },
-
   // ── Premium: watches ─────────────────────────────────────────────
   {
     slug: 'premium-watches',

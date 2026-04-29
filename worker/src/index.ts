@@ -13,7 +13,6 @@ import {
   getPricingSeries,
   getBenchmarkSeries,
   getStatusUptime,
-  compareHistory,
   MAX_RANGE_DAYS,
   DEFAULT_RANGE_DAYS,
 } from './history-series';
@@ -32,7 +31,6 @@ import {
 } from './agents-enriched';
 import { searchNews, NewsSearchOptions } from './news-search';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
-import { computeForecast, ForecastOptions, PriceField } from './forecast';
 import { computeProviderDeepDive } from './provider-deepdive';
 import { compareModels } from './compare-models';
 import { computeWhatsNew } from './whats-new';
@@ -591,14 +589,12 @@ export default {
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
           premiumBenchmarkSeries: '/api/premium/history/benchmarks/series?model=&benchmark=&from=&to=',
           premiumStatusUptime: '/api/premium/history/status/uptime?provider=&from=&to=',
-          premiumHistoryCompare: '/api/premium/history/compare?from=&to=&type=pricing|benchmarks',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
           premiumWatchesItem: 'GET|DELETE /api/premium/watches/{id}',
           premiumAgentsDirectory: '/api/premium/agents/directory?category=&status=&open_source=&capability=&sort=&limit=',
           premiumNewsSearch: '/api/premium/news/search?q=&from=&to=&provider=&category=&limit=',
           premiumCostProjection: '/api/premium/cost/projection?model=opus-4-7,gpt-5-5&input_tokens_per_day=&output_tokens_per_day=&horizon=monthly',
-          premiumForecast: '/api/premium/forecast?target=price|benchmark&model=&field=inputPrice|outputPrice|blended&benchmark=&lookback=30&horizon=7',
           premiumProviderDeepDive: '/api/premium/providers/{name}',
           premiumCompareModels: '/api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3',
           premiumWhatsNew: '/api/premium/whats-new?days=1&news_limit=10',
@@ -1039,76 +1035,6 @@ export default {
       const result = await getStatusUptime(env, provider, range.from, range.to);
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/history/status/uptime', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
-      );
-      return premiumResponse(result, payment, 1);
-    }
-
-    if (path === '/api/premium/history/compare') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const fromDate = url.searchParams.get('from')?.trim();
-      const toDate = url.searchParams.get('to')?.trim();
-      const typeParam = url.searchParams.get('type')?.trim() ?? 'pricing';
-      if (!fromDate || !toDate) {
-        return jsonResponse(
-          { ok: false, error: 'from_and_to_required', hint: 'Pass ?from=YYYY-MM-DD&to=YYYY-MM-DD&type=pricing|benchmarks' },
-          400,
-        );
-      }
-      if (typeParam !== 'pricing' && typeParam !== 'benchmarks') {
-        return jsonResponse(
-          { ok: false, error: 'invalid_type', hint: 'type must be pricing or benchmarks' },
-          400,
-        );
-      }
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(fromDate) || !/^\d{4}-\d{2}-\d{2}$/.test(toDate)) {
-        return jsonResponse({ ok: false, error: 'invalid_date_format' }, 400);
-      }
-
-      const result = await compareHistory(env, fromDate, toDate, typeParam);
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/history/compare', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
-      );
-      return premiumResponse(result, payment, 1);
-    }
-
-    // === PAID PREMIUM: FORECAST (Tier 1, 1 credit) ===
-    // Conservative statistical forecast (linear least-squares with a
-    // 95% prediction interval) over the last 7-90 days of price or
-    // benchmark history, projected forward 1-30 days. Includes
-    // confidence score so agents can ignore low-signal forecasts.
-
-    if (path === '/api/premium/forecast') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const targetParam = url.searchParams.get('target') ?? 'price';
-      const target: 'price' | 'benchmark' =
-        targetParam === 'price' || targetParam === 'benchmark' ? targetParam : 'price';
-      const fieldParam = url.searchParams.get('field');
-      const field: PriceField | undefined =
-        fieldParam === 'inputPrice' || fieldParam === 'outputPrice' || fieldParam === 'blended'
-          ? fieldParam
-          : undefined;
-      const lookback = parseInt(url.searchParams.get('lookback') ?? '', 10);
-      const horizon = parseInt(url.searchParams.get('horizon') ?? '', 10);
-
-      const opts: ForecastOptions = {
-        target,
-        model: url.searchParams.get('model')?.trim() ?? '',
-        ...(field ? { field } : {}),
-        ...(url.searchParams.get('benchmark') ? { benchmark: url.searchParams.get('benchmark')! } : {}),
-        ...(Number.isFinite(lookback) ? { lookback } : {}),
-        ...(Number.isFinite(horizon) ? { horizon } : {}),
-      };
-
-      const result = await computeForecast(env, opts);
-      if (!result.ok) {
-        return jsonResponse(result, 400);
-      }
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/forecast', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return premiumResponse(result, payment, 1);
     }

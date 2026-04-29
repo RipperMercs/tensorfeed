@@ -47,8 +47,6 @@ tensorfeed/
       news-search.test.ts  Vitest coverage for query mode, filters, browse mode, validation
       cost-projection.ts  Premium cost projection: workload-to-spend math across 1-10 models, four horizons, cheapest-monthly ranking
       cost-projection.test.ts  Vitest coverage for math, ranking, validation
-      forecast.ts  Premium forecast: linear least-squares fit on 7-90 days of price/benchmark history, 1-30 day projection with 95% prediction interval and confidence scoring
-      forecast.test.ts  Vitest coverage for fit accuracy, confidence weighting, validation, insufficient-data handling
       provider-deepdive.ts  Premium provider deep-dive: aggregates pricing/benchmarks/status/news/activity for one provider in a single response
       provider-deepdive.test.ts  Vitest coverage for join logic, sort order, fuzzy match, fallbacks, news cap
       compare-models.ts  Premium model comparison: 2-5 models side-by-side with pricing, benchmarks normalized to union-of-keys, status, news, plus rankings
@@ -237,14 +235,12 @@ All mounted under `https://tensorfeed.ai/api/*` via the Worker.
 - `/api/premium/history/pricing/series?model=&from=&to=`: Tier 1, 1 credit. Daily input/output/blended price points for one model with min/max/delta summary. Range capped at 90 days.
 - `/api/premium/history/benchmarks/series?model=&benchmark=&from=&to=`: Tier 1, 1 credit. Score evolution for a single benchmark on one model. Returns delta in percentage points.
 - `/api/premium/history/status/uptime?provider=&from=&to=`: Tier 1, 1 credit. Daily uptime % for one provider (degraded counts as half) with incident-day list. Missing-data days excluded from denominator.
-- `/api/premium/history/compare?from=&to=&type=pricing|benchmarks`: Tier 1, 1 credit. Diff two daily snapshots: added, removed, changed entries with deltas.
 - `/api/premium/watches` (POST): Tier 1, 1 credit per registration. Body `{ spec, callback_url, secret?, fire_cap? }`. Spec is `{ type: "price"|"status"|"digest", ... }`. Price/status fire on transitions; digest fires on a daily/weekly cadence with a pricing-changes summary. Watch lives 90 days, default fire cap 100. Fires deliver HMAC-signed POST to callback URL.
 - `/api/premium/watches` (GET): List watches owned by the bearer token. Free.
 - `/api/premium/watches/{id}` (GET|DELETE): Read or remove an owned watch. Free.
 - `/api/premium/agents/directory?category=&status=&open_source=&capability=&sort=&limit=`: Tier 1, 1 credit. Enriched agents catalog joined with live status, recent news (count + top 3), agent traffic, flagship pricing, and a derived trending_score. Sort options: trending, alphabetical, status, price_low, price_high, news_count.
 - `/api/premium/news/search?q=&from=&to=&provider=&category=&limit=`: Tier 1, 1 credit. Full-text search over the article corpus with relevance scoring (term hits weighted 3 in title, 1 in snippet, plus recency boost) and date/provider/category filters. Default limit 25, max 100.
 - `/api/premium/cost/projection?model=&input_tokens_per_day=&output_tokens_per_day=&horizon=`: Tier 1, 1 credit. Project the cost of a token-usage workload across 1-10 models (CSV in `model`). Returns daily/weekly/monthly/yearly totals per model and a ranking by cheapest monthly. Pure compute on live pricing.
-- `/api/premium/forecast?target=price|benchmark&model=&field=&benchmark=&lookback=&horizon=`: Tier 1, 1 credit. Conservative linear-regression forecast (95% prediction interval) for one model price field or benchmark score, projected 1-30 days forward. Confidence label (low/medium/high) reflects fit quality and sample size. Returns explicit "not a guarantee" disclaimers.
 - `/api/premium/providers/{name}`: Tier 1, 1 credit. One provider's complete profile in one call: live status + components, all models with pricing + tier + benchmark scores joined, recent news (top 8), agent traffic. Aggregation over 4 free endpoints; agents pay 1 credit instead of stitching client-side.
 - `/api/premium/compare/models?ids=`: Tier 1, 1 credit. Side-by-side comparison of 2-5 models with pricing, benchmarks (union-of-keys normalized to null for missing), status, news. Plus rankings (cheapest_blended, most_context, by_benchmark leaderboard).
 - `/api/premium/whats-new?days=&news_limit=`: Tier 1, 1 credit. Agent morning brief: pricing changes, new/removed models, status incidents, top news headlines from last 1-7 days. Single call instead of stitching free endpoints client-side.
@@ -355,6 +351,8 @@ TensorFeed sells premium API access to AI agents via USDC on Base mainnet. No ac
 **Wallet:** `0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1` (Rabby on Base, self-custodied)
 **USDC contract on Base:** `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
 **Pricing:** 50 credits per $1 USDC base rate. Volume discounts at $5 (10%), $30 (25%), $200 (40%). Tier 2 routing currently 1 credit per call.
+
+**Welcome bonus (shipped 2026-04-29):** Brand-new sender wallets get 50 free credits ($1.00 of value) on their first successful USDC payment, on top of the base rate. Applied automatically on both `/api/payment/confirm` and the x402 fallback. Backed by `pay:wallet-seen:{address}` (no TTL) marker in `TENSORFEED_CACHE`. The `confirmPayment` response surfaces `welcome_bonus_credits` and `is_first_payment` so SDKs can show the bonus to users. Helper functions `checkAndMarkFirstPayment` and `markWalletSeen` are exported from `worker/src/payments.ts` for unit testing. Race condition (two simultaneous first payments from the same wallet both seeing null marker) is accepted; worst case is one extra $1 of credits, capped per wallet.
 
 Architecture (full detail in `AGENT-PAYMENTS-SPEC.md`):
 - Credits-first flow primary, x402 per-call as fallback for one-off discovery

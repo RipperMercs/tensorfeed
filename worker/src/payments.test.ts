@@ -8,7 +8,15 @@
  */
 
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { logPremiumUsage, getTokenUsage, validateAndCharge, screenWalletOFAC } from './payments';
+import {
+  logPremiumUsage,
+  getTokenUsage,
+  validateAndCharge,
+  screenWalletOFAC,
+  checkAndMarkFirstPayment,
+  markWalletSeen,
+  WELCOME_BONUS_CREDITS_VALUE,
+} from './payments';
 import type { Env } from './types';
 
 interface MockKV {
@@ -271,5 +279,52 @@ describe('screenWalletOFAC', () => {
     const r = await screenWalletOFAC('', envWithKey('test_key'));
     expect(r.error).toBe('invalid_address');
     expect(r.sanctioned).toBe(false);
+  });
+});
+
+// ── Welcome bonus (first-payment-from-new-wallet) ────────────────────
+
+describe('welcome bonus', () => {
+  const WALLET_A = '0xAbCdEf0123456789abcdef0123456789ABCDEF01';
+  const WALLET_B = '0x1111111111111111111111111111111111111111';
+
+  it('grants 50 bonus credits to a brand-new wallet', async () => {
+    const env = makeEnv();
+    const r = await checkAndMarkFirstPayment(env, WALLET_A);
+    expect(r.isFirstPayment).toBe(true);
+    expect(r.bonusCredits).toBe(WELCOME_BONUS_CREDITS_VALUE);
+    expect(WELCOME_BONUS_CREDITS_VALUE).toBe(50);
+  });
+
+  it('does not grant a bonus to a wallet already marked as seen', async () => {
+    const env = makeEnv();
+    await markWalletSeen(env, WALLET_A);
+    const r = await checkAndMarkFirstPayment(env, WALLET_A);
+    expect(r.isFirstPayment).toBe(false);
+    expect(r.bonusCredits).toBe(0);
+  });
+
+  it('treats the wallet address case-insensitively (mixed-case write, lowercase read both find the marker)', async () => {
+    const env = makeEnv();
+    await markWalletSeen(env, WALLET_A);
+    const r1 = await checkAndMarkFirstPayment(env, WALLET_A.toLowerCase());
+    const r2 = await checkAndMarkFirstPayment(env, WALLET_A.toUpperCase());
+    expect(r1.isFirstPayment).toBe(false);
+    expect(r2.isFirstPayment).toBe(false);
+  });
+
+  it('isolates bonus eligibility per wallet (marking A does not affect B)', async () => {
+    const env = makeEnv();
+    await markWalletSeen(env, WALLET_A);
+    const r = await checkAndMarkFirstPayment(env, WALLET_B);
+    expect(r.isFirstPayment).toBe(true);
+    expect(r.bonusCredits).toBe(WELCOME_BONUS_CREDITS_VALUE);
+  });
+
+  it('returns no bonus when sender wallet is undefined (defensive: x402 verify path with missing sender)', async () => {
+    const env = makeEnv();
+    const r = await checkAndMarkFirstPayment(env, undefined);
+    expect(r.isFirstPayment).toBe(false);
+    expect(r.bonusCredits).toBe(0);
   });
 });

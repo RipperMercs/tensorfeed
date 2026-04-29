@@ -346,27 +346,9 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
-    path: '/api/premium/history/compare',
-    description: 'Diff two daily snapshots: returns added, removed, and changed entries with deltas. Supported types: pricing, benchmarks. Useful for detecting price wars and benchmark regressions.',
-    cost: '1 credit per call',
-    example: `// Query: ?from=2026-04-01&to=2026-04-27&type=pricing
-{
-  "ok": true,
-  "type": "pricing",
-  "from_date": "2026-04-01", "to_date": "2026-04-27",
-  "added": [{ "model": "Opus 4.7", "provider": "Anthropic", ... }],
-  "removed": [{ "model": "Opus 4.6", "provider": "Anthropic", ... }],
-  "changed": [
-    { "model": "GPT-5.5", "field": "inputPrice", "from": 12, "to": 10, "delta_pct": -16.67 }
-  ],
-  "unchanged_count": 8
-}`,
-  },
-  {
-    method: 'GET',
     path: '/api/premium/whats-new',
     description:
-      "Agent morning brief: pricing changes, new/removed models, status incidents, and top news headlines from the last 1-7 days. The single endpoint to call when an agent boots up, instead of stitching news + status + history-compare client-side.",
+      "Agent morning brief: pricing changes, new/removed models, status incidents, and top news headlines from the last 1-7 days. The single endpoint to call when an agent boots up.",
     cost: '1 credit per call',
     example: `// Query: ?days=1&news_limit=10
 {
@@ -460,32 +442,6 @@ const ENDPOINTS: PremiumEndpoint[] = [
   "recent_news_count": 12,
   "agent_traffic_24h": 124,
   "billing": { "credits_charged": 1, "credits_remaining": 44 }
-}`,
-  },
-  {
-    method: 'GET',
-    path: '/api/premium/forecast',
-    description:
-      'Conservative statistical forecast for a price field or benchmark score. Linear least-squares fit on 7-90 days of history, projected forward 1-30 days with a 95% prediction interval and a confidence score (low/medium/high) so you can ignore low-signal forecasts. Includes explicit "not a guarantee" disclaimers.',
-    cost: '1 credit per call',
-    example: `// Query: ?target=price&model=Claude+Opus+4.7&field=blended&lookback=30&horizon=7
-{
-  "ok": true,
-  "target": "price",
-  "model": "Claude Opus 4.7",
-  "field": "blended",
-  "fitted_on": { "from": "2026-03-29", "to": "2026-04-27", "days": 30, "data_points": 27 },
-  "horizon_days": 7,
-  "current_value": 36,
-  "trend": { "slope_per_day": -0.31, "r_squared": 0.78 },
-  "confidence": { "score": 0.7, "label": "high" },
-  "forecast": [
-    { "date": "2026-04-28", "predicted": 35.69, "lower": 34.2, "upper": 37.18 }
-  ],
-  "notes": [
-    "Statistical inference, not a guarantee. The forecast assumes the underlying trend continues..."
-  ],
-  "billing": { "credits_charged": 1, "credits_remaining": 45 }
 }`,
   },
   {
@@ -839,6 +795,25 @@ export default function AgentPaymentsPage() {
               tier. Tier 2 routing is currently 1 credit per call.
             </p>
           </div>
+        </div>
+        <div className="mt-4 bg-bg-secondary border border-accent-green/40 rounded-xl px-5 py-4">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-accent-green font-semibold text-sm">
+              First-payment welcome bonus
+            </span>
+            <span className="text-text-muted text-xs">($1.00 of value)</span>
+          </div>
+          <p className="text-text-secondary text-sm">
+            The first successful USDC payment from a new sender wallet receives an
+            extra <span className="font-mono text-text-primary">50 credits</span> on top
+            of the base rate. Granted automatically; the response from{' '}
+            <code className="font-mono text-accent-primary">/api/payment/confirm</code>{' '}
+            includes <code className="font-mono">welcome_bonus_credits</code> and{' '}
+            <code className="font-mono">is_first_payment</code> when applied. Same gate
+            applies on the x402 fallback. Stacks with volume discounts: a $1 first
+            payment yields 100 credits ($2.00 of value), a $5 first payment yields 325
+            credits.
+          </p>
         </div>
       </section>
 

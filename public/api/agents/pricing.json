@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "lastUpdated": "2026-04-17",
+  "lastUpdated": "2026-04-24",
   "providers": [
     {
       "id": "anthropic",
@@ -20,7 +20,8 @@
             "vision",
             "tool-use",
             "code"
-          ]
+          ],
+          "tier": "flagship"
         },
         {
           "id": "claude-opus-4-6",
@@ -34,7 +35,8 @@
             "vision",
             "tool-use",
             "code"
-          ]
+          ],
+          "tier": "mid"
         },
         {
           "id": "claude-sonnet-4-6",
@@ -48,7 +50,8 @@
             "vision",
             "tool-use",
             "code"
-          ]
+          ],
+          "tier": "mid"
         },
         {
           "id": "claude-haiku-4-5",
@@ -62,7 +65,8 @@
             "vision",
             "tool-use",
             "code"
-          ]
+          ],
+          "tier": "budget"
         }
       ]
     },
@@ -72,6 +76,22 @@
       "logo": "/images/providers/openai.png",
       "url": "https://openai.com",
       "models": [
+        {
+          "id": "gpt-5-5",
+          "name": "GPT-5.5",
+          "inputPrice": 5,
+          "outputPrice": 30,
+          "contextWindow": 1000000,
+          "released": "2026-04",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
+          "tier": "flagship"
+        },
         {
           "id": "gpt-4o",
           "name": "GPT-4o",
@@ -84,7 +104,8 @@
             "vision",
             "tool-use",
             "code"
-          ]
+          ],
+          "tier": "flagship"
         },
         {
           "id": "gpt-4o-mini",
@@ -98,7 +119,8 @@
             "vision",
             "tool-use",
             "code"
-          ]
+          ],
+          "tier": "budget"
         },
         {
           "id": "o1",
@@ -111,7 +133,8 @@
             "text",
             "reasoning",
             "code"
-          ]
+          ],
+          "tier": "flagship"
         },
         {
           "id": "o3-mini",
@@ -124,7 +147,8 @@
             "text",
             "reasoning",
             "code"
-          ]
+          ],
+          "tier": "mid"
         }
       ]
     },
@@ -147,7 +171,8 @@
             "tool-use",
             "code",
             "reasoning"
-          ]
+          ],
+          "tier": "flagship"
         },
         {
           "id": "gemini-2-0-flash",
@@ -161,7 +186,8 @@
             "vision",
             "tool-use",
             "code"
-          ]
+          ],
+          "tier": "budget"
         }
       ]
     },
@@ -184,7 +210,8 @@
             "text",
             "vision",
             "code"
-          ]
+          ],
+          "tier": "mid"
         },
         {
           "id": "llama-4-maverick",
@@ -199,7 +226,8 @@
             "text",
             "vision",
             "code"
-          ]
+          ],
+          "tier": "flagship"
         }
       ]
     },
@@ -221,7 +249,8 @@
             "vision",
             "tool-use",
             "code"
-          ]
+          ],
+          "tier": "flagship"
         },
         {
           "id": "mistral-small",
@@ -234,7 +263,8 @@
             "text",
             "tool-use",
             "code"
-          ]
+          ],
+          "tier": "budget"
         }
       ]
     },
@@ -255,7 +285,8 @@
             "text",
             "tool-use",
             "RAG"
-          ]
+          ],
+          "tier": "flagship"
         },
         {
           "id": "command-r",
@@ -268,7 +299,49 @@
             "text",
             "tool-use",
             "RAG"
-          ]
+          ],
+          "tier": "mid"
+        }
+      ]
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "logo": "/images/providers/deepseek.png",
+      "url": "https://www.deepseek.com",
+      "models": [
+        {
+          "id": "deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "inputPrice": 1.74,
+          "outputPrice": 3.48,
+          "contextWindow": 1000000,
+          "released": "2026-04",
+          "openSource": true,
+          "license": "MIT",
+          "capabilities": [
+            "text",
+            "vision",
+            "code",
+            "reasoning"
+          ],
+          "tier": "flagship"
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "inputPrice": 0.14,
+          "outputPrice": 0.28,
+          "contextWindow": 1000000,
+          "released": "2026-04",
+          "openSource": true,
+          "license": "MIT",
+          "capabilities": [
+            "text",
+            "vision",
+            "code"
+          ],
+          "tier": "budget"
         }
       ]
     }

@@ -67,7 +67,7 @@ describe('circuit breaker', () => {
     expect(otherToken.tripped).toBe(false);
 
     // Same token, different path, should not trip
-    const otherPath = checkCircuitBreaker('tf_live_aaaaaaaa', '/api/premium/forecast', 'task=code', now + CIRCUIT_BREAKER_LIMITS.THRESHOLD);
+    const otherPath = checkCircuitBreaker('tf_live_aaaaaaaa', '/api/premium/news/search', 'task=code', now + CIRCUIT_BREAKER_LIMITS.THRESHOLD);
     expect(otherPath.tripped).toBe(false);
 
     // Same token, same path, different query, should not trip
