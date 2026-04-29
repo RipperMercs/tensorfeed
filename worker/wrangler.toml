@@ -56,6 +56,11 @@ INDEXNOW_KEY = "5903913788b6a62e3d10e63e3319020a"
 ALERT_EMAIL_TO = "evan@tensorfeed.ai"
 ALERT_EMAIL_FROM = "alerts@tensorfeed.ai"
 # RESEND_API_KEY is a secret. Set with: wrangler secret put RESEND_API_KEY
+# ADMIN_KEY is a secret guarding /api/admin/* and /api/refresh.
+# REQUIRED in production; admin endpoints default-deny if unset.
+# Set with: wrangler secret put ADMIN_KEY
+# Replaces the prior ?key=<ENVIRONMENT> auth, which became unsafe once
+# the repo went public (ENVIRONMENT="production" is in this file).
 
 # Agent payments (Phase 1). USDC on Base, credits-first with x402 fallback.
 PAYMENT_WALLET = "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1"

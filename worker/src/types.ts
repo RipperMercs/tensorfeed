@@ -25,6 +25,12 @@ export interface Env {
   CHAINALYSIS_API_KEY?: string;
   // Persistent OFAC block audit log (optional, 7-year retention per privacy policy)
   OFAC_AUDIT_LOG?: KVNamespace;
+  // Admin-only routes auth. REQUIRED in production. Set via:
+  //   wrangler secret put ADMIN_KEY
+  // Used by /api/admin/* and /api/refresh. Replaces the previous
+  // ?key=ENVIRONMENT pattern, which was unsafe once the repo went
+  // public (ENVIRONMENT="production" lives in wrangler.toml).
+  ADMIN_KEY?: string;
 }
 
 export interface Article {

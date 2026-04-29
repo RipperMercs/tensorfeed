@@ -110,9 +110,9 @@ wrangler secret put RESEND_API_KEY       # set secret
 wrangler tail                            # live log stream
 ```
 
-Manual data refresh (triggers all polls immediately):
+Manual data refresh (triggers all polls immediately, requires the ADMIN_KEY Worker secret):
 ```
-GET https://tensorfeed.ai/api/refresh?key=production
+GET https://tensorfeed.ai/api/refresh?key=<ADMIN_KEY>
 ```
 
 ## Cloudflare Workers KV Namespaces
@@ -235,7 +235,6 @@ All mounted under `https://tensorfeed.ai/api/*` via the Worker.
 - `/api/payment/usage`: Per-token call history (last 100 calls aggregated by endpoint). Auth required, no credit cost. Powers the human /account dashboard.
 - `/api/payment/history`: Per-token credit-purchase audit log (which on-chain txs added how many credits and when). Auth required (`Authorization: Bearer <token>`), no credit cost. Pairs with `/api/payment/usage` (spend side) to give the bearer's full token lifecycle. Backed by `pay:purchases:{token}` ring buffer (cap 100); tokens minted before this ledger existed return an empty `purchases` array but still expose `current_balance` and `token_short`.
 - `/api/alerts/subscribe`: Outage alert email signup
-- `/api/refresh?key=production[&task=history]`: Manual data refresh / history capture trigger
 
 **Paid (USDC on Base, credits-first):**
 - `/api/premium/routing`: Tier 2 routing engine, 1 credit per call. Top-N ranked recommendations with full composite score breakdown.
@@ -253,9 +252,11 @@ All mounted under `https://tensorfeed.ai/api/*` via the Worker.
 - `/api/premium/whats-new?days=&news_limit=`: Tier 1, 1 credit. Agent morning brief: pricing changes, new/removed models, status incidents, top news headlines from last 1-7 days. Single call instead of stitching free endpoints client-side.
 - `/api/premium/mcp/registry/series?from=&to=`: Tier 1, 1 credit. Multi-day time series of the official MCP server registry: total servers, active count, daily added/removed. Range capped at 90 days. The registry itself is open data; the 30/90-day trend requires daily capture started weeks ago and cannot be backfilled.
 
-**Admin (auth-gated via `?key=ENVIRONMENT`):**
+**Admin (auth-gated via `?key=<ADMIN_KEY>`, where `ADMIN_KEY` is a Worker secret set via `wrangler secret put ADMIN_KEY`. Constant-time compare. Default-denies if the secret is unset. Replaces the earlier `?key=ENVIRONMENT` pattern, which was unsafe once the repo went public since `ENVIRONMENT = "production"` lives in `wrangler.toml`):**
 - `/api/admin/usage?date=YYYY-MM-DD`: Daily revenue + usage rollup
 - `/api/admin/usage/dates`: List of dates with rollup data
+- `/api/admin/burn-token?token=tf_live_...`: Invalidate a bearer token (deletes the credits record)
+- `/api/refresh[?task=history]`: Manual data refresh / history capture trigger
 
 **Internal (server-to-server only, NOT in `/api/meta` or `/llms.txt`):**
 - `/api/internal/validate-and-charge` (POST): Sister-site Workers (TerminalFeed and any future Pizza Robot Studios sister site like VR.org) call this with `X-Internal-Auth: ${SHARED_INTERNAL_SECRET}` to validate a TensorFeed bearer token and atomically debit credits. Body: `{ token, cost, endpoint }`. Always returns HTTP 200 with `{ok: true, credits_remaining}` or `{ok: false, reason}`; only 401/405/400 for auth/method/body failures. Auth check runs BEFORE body parsing so 401 does not leak endpoint existence. Constant-time secret compare. Backed by `validateAndCharge` helper in `worker/src/payments.ts` which is the same atomic-charge logic that `requirePayment` uses internally for in-process callers.

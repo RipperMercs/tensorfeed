@@ -124,6 +124,17 @@ function constantTimeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+// Admin-route auth. Returns true only if env.ADMIN_KEY is configured
+// (non-empty) AND the supplied key matches it in constant time. Returns
+// false if the secret is unset (so admin routes default-deny when the
+// secret has not been provisioned yet, rather than silently accepting
+// anything).
+function isAuthorizedAdmin(env: Env, supplied: string | null): boolean {
+  if (!env.ADMIN_KEY || env.ADMIN_KEY.length === 0) return false;
+  if (!supplied) return false;
+  return constantTimeEqual(supplied, env.ADMIN_KEY);
+}
+
 // OFAC comprehensively-sanctioned country list (ISO 3166-1 alpha-2).
 // Wallet-level Chainalysis screening on /api/payment/confirm catches the
 // rest. Russia is sectorally sanctioned, not comprehensive, so we do not
@@ -616,8 +627,10 @@ export default {
           paymentHistory: '/api/payment/history',
         },
         admin: {
-          usage: '/api/admin/usage?date=YYYY-MM-DD&key=<env>',
-          usageDates: '/api/admin/usage/dates?key=<env>',
+          usage: '/api/admin/usage?date=YYYY-MM-DD&key=<ADMIN_KEY>',
+          usageDates: '/api/admin/usage/dates?key=<ADMIN_KEY>',
+          burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -1446,11 +1459,14 @@ export default {
     }
 
     // === ADMIN: usage and revenue rollup (auth-gated) ===
-    // Same key pattern as /api/refresh: ?key=<ENVIRONMENT>. At MVP scale
-    // this is sufficient; if/when revenue is real, swap to a dedicated
-    // ADMIN_KEY secret.
+    // Auth: ?key=<ADMIN_KEY> where ADMIN_KEY is a Worker secret set via
+    // `wrangler secret put ADMIN_KEY`. Constant-time compare via
+    // isAuthorizedAdmin(). Default-denies if ADMIN_KEY is unset.
+    // This replaces the earlier ?key=<ENVIRONMENT> pattern, which was
+    // unsafe once the repo went public (ENVIRONMENT="production" lives
+    // in wrangler.toml).
 
-    if (path === '/api/admin/usage' && url.searchParams.get('key') === env.ENVIRONMENT) {
+    if (path === '/api/admin/usage' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
       const rollup = await getRollup(env, date);
       if (!rollup) {
@@ -1459,12 +1475,12 @@ export default {
       return jsonResponse({ ok: true, ...rollup }, 200, 0);
     }
 
-    if (path === '/api/admin/usage/dates' && url.searchParams.get('key') === env.ENVIRONMENT) {
+    if (path === '/api/admin/usage/dates' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const dates = await listRollupDates(env);
       return jsonResponse({ ok: true, count: dates.length, dates }, 200, 0);
     }
 
-    if (path === '/api/admin/burn-token' && url.searchParams.get('key') === env.ENVIRONMENT) {
+    if (path === '/api/admin/burn-token' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const token = url.searchParams.get('token');
       if (!token || !token.startsWith('tf_live_')) {
         return jsonResponse({ ok: false, error: 'missing_or_invalid_token_param' }, 400);
@@ -1487,7 +1503,7 @@ export default {
 
     // === FORCE REFRESH (protected) ===
 
-    if (path === '/api/refresh' && url.searchParams.get('key') === env.ENVIRONMENT) {
+    if (path === '/api/refresh' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const task = url.searchParams.get('task');
       if (task === 'history') {
         const result = await captureHistory(env);
@@ -1572,7 +1588,8 @@ export default {
     // Manual tweet trigger (protected)
     // DISABLED 2026-04-04: X account flagged as spam from 5x/day posting.
     // When re-enabling, limit to 1-2 posts/day max. See wrangler.toml for schedule notes.
-    // if (path === '/api/tweet' && url.searchParams.get('key') === env.ENVIRONMENT) {
+    // Auth pattern when re-enabled: isAuthorizedAdmin(env, url.searchParams.get('key'))
+    // if (path === '/api/tweet' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
     //   await postTopStories(env);
     //   return jsonResponse({ ok: true, message: 'Posted top stories to X' });
     // }
