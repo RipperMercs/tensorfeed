@@ -26,12 +26,6 @@ const SISTER_SITES = [
     description:
       'Real-time financial data and market news aggregation for traders and developers. Live tickers, economic calendars, and API access for building trading tools.',
   },
-  {
-    name: 'Phreak.fm',
-    url: 'https://phreak.fm',
-    description:
-      'Signals, frequencies, and the people who bend them. Hacker culture, electronic music, and technology through a retro lens.',
-  },
 ];
 
 export default function AboutPage() {

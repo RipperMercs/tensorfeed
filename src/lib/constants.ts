@@ -33,7 +33,6 @@ export const CATEGORIES = [
 
 export const SISTER_SITES = [
   { name: 'TerminalFeed.io', url: 'https://terminalfeed.io', description: 'Real-Time Data Dashboard', icon: '📺' },
-  { name: 'Phreak.fm', url: 'https://phreak.fm', description: 'Signals, Frequencies, Culture', icon: '📡' },
 ] as const;
 
 export const STATUS_COLORS: Record<string, string> = {
