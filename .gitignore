@@ -35,3 +35,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# mcp-publisher binary (downloaded from github releases, not source)
+mcp-server/.bin/
+
+# DNS auth private keys for the MCP registry
+mcp-server/.secrets/
+**/.secrets/
+
+# Cloned MCP registry repo (used to build the publisher CLI; not source)
+mcp-server/registry/

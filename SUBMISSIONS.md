@@ -2,14 +2,14 @@
 
 Copy-paste-ready submissions for the directories, registries, and awesome-lists where AI agent and MCP developers go to find tools. Work top to bottom; the early ones have the highest ceiling.
 
-**Prerequisite for most submissions:** the npm package `@tensorfeed/mcp-server` (now at 1.7.0 locally) must be published so `npx -y @tensorfeed/mcp-server` works for whoever clicks through. Publish first, then submit.
+**Prerequisite for most submissions:** the npm package `@tensorfeed/mcp-server` must be published so `npx -y @tensorfeed/mcp-server` works for whoever clicks through. As of 2026-04-28, 1.9.0 is live on npm (matches local), so submissions are unblocked. The TypeScript SDK `tensorfeed` and the latest Python SDK still need a publish before any link to `npm install tensorfeed` or `pip install tensorfeed[web3]>=1.4.0` works end-to-end.
 
 ```
-# TypeScript SDK (1.1.0 on npm, 1.11.0 local)
+# TypeScript SDK (not on npm yet, 1.11.0 local)
 cd sdk/javascript && npm publish
 
-# MCP server (1.0.0 on npm, 1.7.0 local)
-cd ../../mcp-server && npm publish --access public
+# MCP server (1.9.0 on npm, 1.9.0 local — already in sync, no publish needed)
+# cd ../../mcp-server && npm publish --access public
 
 # Python SDK (1.3.0 on PyPI, 1.12.0 local)
 cd ../sdk/python && python -m build && twine upload dist/tensorfeed-1.4.0* dist/tensorfeed-1.5.0* dist/tensorfeed-1.6.0* dist/tensorfeed-1.7.0* dist/tensorfeed-1.8.0* dist/tensorfeed-1.9.0* dist/tensorfeed-1.10.0* dist/tensorfeed-1.11.0* dist/tensorfeed-1.12.0*
@@ -220,14 +220,25 @@ Another web directory. Same metadata as mcpservers.org. Often has a "Submit your
 
 ### 8. Smithery.ai
 
-CLI-based registry (~6,000 servers indexed). One command:
+Web-based registry (~6,000 servers indexed). There is no public `smithery` CLI for publishing externally-distributed servers, so the flow is the web UI at https://smithery.ai/new:
 
-```bash
-cd mcp-server
-smithery mcp publish "https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server" -n RipperMercs/tensorfeed-mcp
-```
+1. Sign in with GitHub
+2. Choose **stdio** as the release type (we are not asking Smithery to host the runtime)
+3. Connect `RipperMercs/tensorfeed`, point at the `mcp-server/` subfolder
+4. Smithery scans the server to extract tool/prompt/resource metadata for the listing
 
-Or use the web flow at smithery.ai. Heads up: a path-traversal vuln was disclosed October 2025; their team patched it but treat it as a "discoverability" target rather than a primary install path. Don't ship secrets through their config.
+Smithery does not have a "just index my npm package" flow. The three release types are `hosted` (they host), `external` (you give them a URL), and `stdio` (MCPB bundle wrapping the npx command). For us, stdio is the right choice; the bundle ends up running `npx -y @tensorfeed/mcp-server` on the user's machine.
+
+If Smithery's scanner cannot introspect tools (this happens with stdio servers in some flows), serve a `/.well-known/mcp/server-card.json` from tensorfeed.ai with the tool catalog to bypass the scan. Tool metadata can be lifted directly from `mcp-server/src/index.ts`.
+
+Optional: author a `mcp-server/smithery.yaml` declaring the config schema for `TENSORFEED_TOKEN` (Zod or JSON schema, optional, secret). Not required for the listing to land, but it gives users a clean form to enter their bearer token in the Smithery UI instead of editing JSON config by hand.
+
+Heads up: a path-traversal vuln was disclosed October 2025; their team patched it but treat Smithery as a "discoverability" target rather than a primary install path. Don't ship secrets through their config.
+
+References:
+- Publish guide: https://smithery.ai/docs/build/publish
+- Publish API: https://smithery.ai/docs/api-reference/servers/publish-a-server.md
+- TypeScript deploy guide: https://smithery.ai/docs/build/deployments/typescript
 
 ---
 
@@ -318,7 +329,7 @@ Subreddits where MCP and agent-payment tooling actually gets discussed. Don't po
 
 | # | Target | Action | Status | Posted |
 |---|--------|--------|--------|--------|
-| 1 | registry.modelcontextprotocol.io | `mcp-publisher publish` | ☐ | |
+| 1 | registry.modelcontextprotocol.io | `mcp-publisher publish` | ✅ | 2026-04-28 (`ai.tensorfeed/mcp-server` v1.9.1, DNS-verified) |
 | 2 | modelcontextprotocol/servers | PR | ☐ | |
 | 3 | punkpeye/awesome-mcp-servers | PR | ☐ | |
 | 4 | xpaysh/awesome-x402 | PR | ☐ | |

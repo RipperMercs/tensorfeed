@@ -1,6 +1,7 @@
 {
   "name": "@tensorfeed/mcp-server",
-  "version": "1.9.0",
+  "version": "1.9.1",
+  "mcpName": "ai.tensorfeed/mcp-server",
   "description": "MCP server for TensorFeed.ai - AI news, status, model data, and premium endpoints (routing, cost projection, forecast, history series, news search, webhook watches with digest tier, enriched directory) for AI agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,6 +9,12 @@
   "bin": {
     "tensorfeed-mcp": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "server.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js"
