@@ -137,7 +137,7 @@ const PROVIDERS: ProviderConfig[] = [
     key: 'google',
     envVar: 'PROBE_GOOGLE_KEY',
     // gemini key goes in query param per Google's REST convention
-    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
     buildHeaders: () => ({ 'content-type': 'application/json' }),
     buildBody: () => JSON.stringify({
       contents: [{ parts: [{ text: SAMPLE_PROMPT }] }],
