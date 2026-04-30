@@ -10,7 +10,7 @@
       "live": [{ "method": "exact", "network": "eip155:8453", "asset_symbol": "USDC", "note": "USDC on Base mainnet, verified via Base RPC" }],
       "evaluating": [{ "method": "stripe", "credential_type": "shared_payment_token", "spec": "https://link.com/agents", "note": "Stripe Link Shared Payment Tokens via x402 with method=stripe in www-authenticate. Under evaluation; not yet accepted." }]
     },
-    "contact": "evan@tensorfeed.ai",
+    "contact": "contact@tensorfeed.ai",
     "docs": "https://tensorfeed.ai/developers/agent-payments",
     "llmsTxt": "https://tensorfeed.ai/llms.txt",
     "operator": {

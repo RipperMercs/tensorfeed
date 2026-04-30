@@ -357,10 +357,10 @@ export default function AgentFairTradePage() {
           </Link>
           . If you adopt and want to be listed in the canonical adopters list, email{' '}
           <a
-            href="mailto:evan@tensorfeed.ai"
+            href="mailto:contact@tensorfeed.ai"
             className="text-accent-primary hover:underline"
           >
-            evan@tensorfeed.ai
+            contact@tensorfeed.ai
           </a>
           .
         </p>
