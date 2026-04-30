@@ -257,6 +257,14 @@ export default function AboutPage() {
           <Globe className="w-5 h-5 text-accent-cyan" />
           <h2 className="text-xl font-semibold text-text-primary">Sister Sites</h2>
         </div>
+        <p className="text-text-secondary text-sm leading-relaxed mb-4">
+          TensorFeed and TerminalFeed share a payment rail and an{' '}
+          <a href="/agent-fair-trade" className="text-accent-primary hover:underline">
+            Agent Fair-Trade Agreement
+          </a>{' '}
+          federation. A bearer token bought on TensorFeed works on TerminalFeed and vice versa.
+          Single ledger, two sites, two independent receipt keypairs, one open standard.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           {SISTER_SITES.map((site) => (
             <a

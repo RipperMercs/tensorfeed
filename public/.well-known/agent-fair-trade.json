@@ -95,7 +95,16 @@
     "current_adopters": [
       {
         "site": "tensorfeed.ai",
-        "adopted_at": "2026-04-30"
+        "adopted_at": "2026-04-30",
+        "manifest": "https://tensorfeed.ai/.well-known/agent-fair-trade.json",
+        "receipt_key": "https://tensorfeed.ai/.well-known/tensorfeed-receipt-key.json"
+      },
+      {
+        "site": "terminalfeed.io",
+        "adopted_at": "2026-04-30",
+        "manifest": "https://terminalfeed.io/.well-known/agent-fair-trade.json",
+        "receipt_key": "https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json",
+        "note": "Federated under tensorfeed.ai's credit ledger. A single bearer token works on both sites."
       }
     ],
     "network_federation": {
@@ -109,8 +118,9 @@
       "current_federation": [
         {
           "host": "tensorfeed.ai",
-          "members": ["tensorfeed.ai"],
-          "note": "TerminalFeed.io is queued to join. When it does, a single bearer token will work across both sites."
+          "members": ["tensorfeed.ai", "terminalfeed.io"],
+          "established": "2026-04-30",
+          "note": "First AFTA federation. TerminalFeed accepts TensorFeed bearer tokens via the cross-Worker validate + commit rail. Single ledger on tensorfeed.ai. Each site signs its own receipts with its own keypair."
         }
       ]
     }

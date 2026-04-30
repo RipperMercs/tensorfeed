@@ -97,6 +97,22 @@ export default function Footer() {
                 </a>
               ))}
             </div>
+            <p className="text-xs text-text-muted mt-2">
+              Your bearer token works on{' '}
+              <a
+                href="https://terminalfeed.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent-primary hover:underline"
+              >
+                terminalfeed.io
+              </a>
+              .{' '}
+              <Link href="/agent-fair-trade" className="text-accent-primary hover:underline">
+                AFTA federation
+              </Link>
+              .
+            </p>
           </div>
         </div>
 

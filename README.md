@@ -2,6 +2,8 @@
 
 > TensorFeed.ai is agent fair-trade certified: open pricing, automatic no-charge on 5xx, breaker, schema fail, and stale data, Ed25519-signed receipts on every paid call, inference-only license. Built with Claude (Anthropic). Standard at [/.well-known/agent-fair-trade.json](https://tensorfeed.ai/.well-known/agent-fair-trade.json).
 
+> **Network of two.** TensorFeed.ai and [TerminalFeed.io](https://terminalfeed.io) are AFTA-federated as of 2026-04-30. A single bearer token works on both sites via the cross-Worker validate + commit rail. Two independent Ed25519 receipt keypairs, single credit ledger, one open standard. Other publishers can self-adopt by publishing a conforming manifest.
+
 Real-time AI industry intelligence for humans and AI agents. News from 15+ sources, live service status for every major LLM provider, model pricing and benchmark history, an AI agents directory, and a pay-per-call premium API settled in USDC on Base mainnet (no accounts, no API keys).
 
 Site: **https://tensorfeed.ai**

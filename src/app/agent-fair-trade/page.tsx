@@ -291,6 +291,55 @@ export default function AgentFairTradePage() {
       </section>
 
       <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-text-primary mb-4">Network of two</h2>
+        <p className="text-text-secondary mb-3 max-w-3xl leading-relaxed">
+          As of 2026-04-30, the AFTA standard has two adopters:{' '}
+          <a
+            href="https://tensorfeed.ai"
+            className="text-accent-primary hover:underline"
+          >
+            tensorfeed.ai
+          </a>{' '}
+          (this site) and{' '}
+          <a
+            href="https://terminalfeed.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-primary hover:underline"
+          >
+            terminalfeed.io
+          </a>
+          . The two sites are federated under TensorFeed&apos;s credit ledger via the
+          cross-Worker validate + commit rail. A bearer token bought on either site works on
+          the other. Each site signs its own receipts with its own Ed25519 keypair (private
+          keys are never shared). The federation does not require the host site to be in
+          control of the receipt rail; it just hosts the credits.
+        </p>
+        <p className="text-text-secondary mb-3 max-w-3xl leading-relaxed">
+          Verify:{' '}
+          <a
+            href="https://terminalfeed.io/.well-known/agent-fair-trade.json"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-primary hover:underline"
+          >
+            terminalfeed.io manifest
+          </a>{' '}
+          and{' '}
+          <a
+            href="https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-primary hover:underline"
+          >
+            their public key
+          </a>
+          . Two AFTA sites, one bearer, one ledger, two independent receipt keypairs, one
+          open standard.
+        </p>
+      </section>
+
+      <section className="mb-10">
         <h2 className="text-2xl font-semibold text-text-primary mb-4">Adopt the standard</h2>
         <p className="text-text-secondary mb-3 max-w-3xl leading-relaxed">
           There is no certification authority, no fee, no submission process. Self-publish a{' '}
