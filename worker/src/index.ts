@@ -79,6 +79,8 @@ import {
   getTokenUsage,
   getPaymentHistory,
   validateAndCharge,
+  validateOnly,
+  commitInternal,
 } from './payments';
 import {
   signReceipt,
@@ -1894,6 +1896,104 @@ export default {
       }
       // Always 200 on this endpoint (per spec) so the caller can read
       // the body cleanly regardless of outcome. Not cached.
+      return jsonResponse(result, 200, 0);
+    }
+
+    // === INTERNAL: federated AFTA validate + commit (split flow) ===
+    // Sister sites that want to honor their own AFTA no-charge guarantees
+    // call /validate up front (read-only check), run their handler, then
+    // call /commit either to debit on success or to log a no-charge event.
+    // Both authenticated by SHARED_INTERNAL_SECRET. NOT in /api/meta or
+    // any agent-facing surface.
+    //
+    // Why split: the legacy validate-and-charge above is atomic and good
+    // for callers without no-charge logic. Sister sites need the deferred
+    // model so a 5xx, breaker trip, schema fail, or stale data on their
+    // side does not result in a debit. The split lets them gate their
+    // commit on the outcome of their own handler.
+    //
+    // Body shapes:
+    //   POST /api/internal/validate
+    //     { token, cost }
+    //     -> { ok: true, credits_remaining, sufficient }
+    //     -> { ok: false, reason: "invalid_token" | "insufficient_credits" }
+    //
+    //   POST /api/internal/commit
+    //     { token, cost, endpoint, no_charge_reason?: "5xx"|"circuit_breaker"|"schema_validation_failure"|"stale_data" }
+    //     -> { ok: true, credits_charged, balance_after, no_charge_reason }
+    //     -> { ok: false, reason: "invalid_token" }
+    // No-charge events log to pay:no-charge:{date} with the sister-site
+    // endpoint string, so the AFTA public ledger reflects the network.
+
+    if (path === '/api/internal/validate') {
+      if (request.method !== 'POST') {
+        return jsonResponse({ error: 'method_not_allowed' }, 405, 0);
+      }
+      const auth = request.headers.get('X-Internal-Auth') ?? '';
+      const secret = env.SHARED_INTERNAL_SECRET ?? '';
+      if (!secret || !constantTimeEqual(auth, secret)) {
+        return jsonResponse({ error: 'unauthorized' }, 401, 0);
+      }
+      let body: { token?: unknown; cost?: unknown };
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ error: 'bad_json' }, 400, 0);
+      }
+      const token = typeof body?.token === 'string' ? body.token : '';
+      const costRaw = typeof body?.cost === 'number' ? body.cost : NaN;
+      if (!token || !Number.isFinite(costRaw) || costRaw < 0) {
+        return jsonResponse({ error: 'bad_request' }, 400, 0);
+      }
+      const result = await validateOnly(env, { token, cost: Math.floor(costRaw) });
+      return jsonResponse(result, 200, 0);
+    }
+
+    if (path === '/api/internal/commit') {
+      if (request.method !== 'POST') {
+        return jsonResponse({ error: 'method_not_allowed' }, 405, 0);
+      }
+      const auth = request.headers.get('X-Internal-Auth') ?? '';
+      const secret = env.SHARED_INTERNAL_SECRET ?? '';
+      if (!secret || !constantTimeEqual(auth, secret)) {
+        return jsonResponse({ error: 'unauthorized' }, 401, 0);
+      }
+      let body: { token?: unknown; cost?: unknown; endpoint?: unknown; no_charge_reason?: unknown };
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ error: 'bad_json' }, 400, 0);
+      }
+      const token = typeof body?.token === 'string' ? body.token : '';
+      const costRaw = typeof body?.cost === 'number' ? body.cost : NaN;
+      const endpoint = typeof body?.endpoint === 'string' ? body.endpoint : '';
+      const reasonRaw = typeof body?.no_charge_reason === 'string' ? body.no_charge_reason : null;
+      const validReasons: Array<NonNullable<NoChargeReason>> = ['5xx', 'circuit_breaker', 'schema_validation_failure', 'stale_data'];
+      const noChargeReason: NoChargeReason =
+        reasonRaw && (validReasons as string[]).includes(reasonRaw)
+          ? (reasonRaw as NonNullable<NoChargeReason>)
+          : null;
+      if (!token || !endpoint || !Number.isFinite(costRaw) || costRaw < 0) {
+        return jsonResponse({ error: 'bad_request' }, 400, 0);
+      }
+      const cost = Math.floor(costRaw);
+      const result = await commitInternal(env, { token, cost, endpoint, noChargeReason });
+
+      // Fire-and-forget usage logging so the sister-site call appears
+      // in the daily revenue + per-token usage history. Mirrors the
+      // legacy validate-and-charge behavior. Only log on actual debit
+      // (no-charge events are tracked separately in the AFTA ledger).
+      if (result.ok && result.credits_charged > 0) {
+        ctx.waitUntil(
+          logPremiumUsage(
+            env,
+            endpoint,
+            request.headers.get('User-Agent') || 'sister-site',
+            cost,
+            token,
+          ),
+        );
+      }
       return jsonResponse(result, 200, 0);
     }
 

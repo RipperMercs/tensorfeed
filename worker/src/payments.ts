@@ -1020,6 +1020,120 @@ export async function validateAndCharge(
   return { ok: true, credits_remaining: record.balance };
 }
 
+// === Federated AFTA rail: validate + commit (split flow for sister sites) ===
+//
+// The `validateAndCharge` helper above is atomic and good for callers who
+// don't need to honor AFTA no-charge guarantees themselves. Sister sites
+// (TerminalFeed.io, future VR.org) need the deferred-debit model: validate
+// up front, run the handler, then either commit the debit or log a
+// no-charge event. These two helpers expose that flow over the wire.
+
+export type ValidateOnlyResult =
+  | { ok: true; credits_remaining: number; sufficient: boolean }
+  | { ok: false; reason: 'invalid_token' | 'insufficient_credits' };
+
+export async function validateOnly(
+  env: Env,
+  args: { token: string; cost: number },
+): Promise<ValidateOnlyResult> {
+  const { token, cost } = args;
+  if (
+    typeof token !== 'string' ||
+    !token ||
+    !token.startsWith('tf_live_')
+  ) {
+    return { ok: false, reason: 'invalid_token' };
+  }
+  if (!Number.isFinite(cost) || cost < 0) {
+    return { ok: false, reason: 'invalid_token' };
+  }
+  const record = (await env.TENSORFEED_CACHE.get(
+    `pay:credits:${token}`,
+    'json',
+  )) as CreditsRecord | null;
+  if (!record) {
+    return { ok: false, reason: 'invalid_token' };
+  }
+  if (record.balance < cost) {
+    return { ok: false, reason: 'insufficient_credits' };
+  }
+  return {
+    ok: true,
+    credits_remaining: record.balance,
+    sufficient: true,
+  };
+}
+
+export type CommitInternalResult =
+  | { ok: true; credits_charged: number; balance_after: number; no_charge_reason: NoChargeReason }
+  | { ok: false; reason: 'invalid_token' };
+
+/**
+ * Internal commit. Sister sites call this after their handler runs.
+ * If `noChargeReason` is set, no debit happens; the event is logged to
+ * the AFTA public ledger (`pay:no-charge:{date}`) with the sister-site
+ * endpoint path so the network ledger reflects the failure. If null,
+ * the debit is committed atomically.
+ *
+ * The `endpoint` arg should be the sister-site path (e.g.
+ * `/api/premium/quotes/series` on TerminalFeed) so the public no-charge
+ * ledger groups events correctly across the network.
+ */
+export async function commitInternal(
+  env: Env,
+  args: {
+    token: string;
+    cost: number;
+    endpoint: string;
+    noChargeReason: NoChargeReason;
+  },
+): Promise<CommitInternalResult> {
+  const { token, cost, endpoint, noChargeReason } = args;
+  if (
+    typeof token !== 'string' ||
+    !token ||
+    !token.startsWith('tf_live_')
+  ) {
+    return { ok: false, reason: 'invalid_token' };
+  }
+
+  // No-charge path: log the event without touching the credit balance.
+  // This requires reading the record only to surface balance_after; if
+  // the record is gone, treat balance as 0 (admin burn or race).
+  if (noChargeReason !== null) {
+    const record = (await env.TENSORFEED_CACHE.get(
+      `pay:credits:${token}`,
+      'json',
+    )) as CreditsRecord | null;
+    await logNoChargeEvent(env, noChargeReason, endpoint, cost, token);
+    return {
+      ok: true,
+      credits_charged: 0,
+      balance_after: record?.balance ?? 0,
+      no_charge_reason: noChargeReason,
+    };
+  }
+
+  // Charge path: atomic debit.
+  const record = (await env.TENSORFEED_CACHE.get(
+    `pay:credits:${token}`,
+    'json',
+  )) as CreditsRecord | null;
+  if (!record) {
+    return { ok: false, reason: 'invalid_token' };
+  }
+  const balanceAfter = Math.max(0, record.balance - cost);
+  record.balance = balanceAfter;
+  record.last_used = new Date().toISOString();
+  await env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(record));
+  return {
+    ok: true,
+    credits_charged: cost,
+    balance_after: balanceAfter,
+    no_charge_reason: null,
+  };
+}
+
 // === Middleware: requirePayment + commitPayment (deferred-debit model) ===
 
 /**

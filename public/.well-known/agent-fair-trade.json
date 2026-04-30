@@ -97,7 +97,23 @@
         "site": "tensorfeed.ai",
         "adopted_at": "2026-04-30"
       }
-    ]
+    ],
+    "network_federation": {
+      "description": "AFTA adopters that share a payment rail can federate trust at the credit level. Sister sites in a federation accept each other's bearer tokens via a server-to-server validate + commit handshake, so the user experience is reciprocal access on a single token. Each site signs its own receipts with its own keypair; the federation does not share private keys.",
+      "rail_endpoints": {
+        "validate": "POST /api/internal/validate { token, cost } -> { ok, credits_remaining, sufficient }",
+        "commit": "POST /api/internal/commit { token, cost, endpoint, no_charge_reason? } -> { ok, credits_charged, balance_after, no_charge_reason }",
+        "auth_header": "X-Internal-Auth (constant-time check against shared secret)",
+        "ledger": "No-charge events from federated sites land in the host's pay:no-charge:{date} ledger with the sister-site endpoint path, so the public no-charge record reflects the network."
+      },
+      "current_federation": [
+        {
+          "host": "tensorfeed.ai",
+          "members": ["tensorfeed.ai"],
+          "note": "TerminalFeed.io is queued to join. When it does, a single bearer token will work across both sites."
+        }
+      ]
+    }
   },
   "lastUpdated": "2026-04-30"
 }

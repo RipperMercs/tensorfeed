@@ -16,6 +16,8 @@ import {
   checkAndMarkFirstPayment,
   markWalletSeen,
   WELCOME_BONUS_CREDITS_VALUE,
+  validateOnly,
+  commitInternal,
 } from './payments';
 import type { Env } from './types';
 
@@ -326,5 +328,143 @@ describe('welcome bonus', () => {
     const r = await checkAndMarkFirstPayment(env, undefined);
     expect(r.isFirstPayment).toBe(false);
     expect(r.bonusCredits).toBe(0);
+  });
+});
+
+describe('validateOnly (federated AFTA: read-only check)', () => {
+  it('returns sufficient=true when balance covers cost, no debit', async () => {
+    const env = makeEnv();
+    seedCredits(env, 50);
+    const r = await validateOnly(env, { token: FIXTURE, cost: 1 });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.credits_remaining).toBe(50);
+      expect(r.sufficient).toBe(true);
+    }
+    // Confirm no debit happened
+    const r2 = await validateOnly(env, { token: FIXTURE, cost: 1 });
+    if (r2.ok) expect(r2.credits_remaining).toBe(50);
+  });
+
+  it('returns insufficient_credits when balance < cost', async () => {
+    const env = makeEnv();
+    seedCredits(env, 0);
+    const r = await validateOnly(env, { token: FIXTURE, cost: 1 });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('insufficient_credits');
+  });
+
+  it('rejects malformed tokens', async () => {
+    const env = makeEnv();
+    const r = await validateOnly(env, { token: 'wrong_prefix', cost: 1 });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('invalid_token');
+  });
+
+  it('rejects negative cost', async () => {
+    const env = makeEnv();
+    seedCredits(env, 50);
+    const r = await validateOnly(env, { token: FIXTURE, cost: -1 });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('invalid_token');
+  });
+
+  it('rejects unknown tokens', async () => {
+    const env = makeEnv();
+    const r = await validateOnly(env, { token: FIXTURE, cost: 1 });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('invalid_token');
+  });
+});
+
+describe('commitInternal (federated AFTA: atomic commit OR no-charge)', () => {
+  it('debits balance on the charge path', async () => {
+    const env = makeEnv();
+    seedCredits(env, 50);
+    const r = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 1,
+      endpoint: '/api/premium/test',
+      noChargeReason: null,
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.credits_charged).toBe(1);
+      expect(r.balance_after).toBe(49);
+      expect(r.no_charge_reason).toBeNull();
+    }
+  });
+
+  it('does not debit on the no-charge path and logs the event', async () => {
+    const env = makeEnv();
+    seedCredits(env, 50);
+    const r = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 1,
+      endpoint: '/api/premium/quotes/series',
+      noChargeReason: 'stale_data',
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.credits_charged).toBe(0);
+      expect(r.balance_after).toBe(50);
+      expect(r.no_charge_reason).toBe('stale_data');
+    }
+    // Re-validate to confirm balance is untouched
+    const v = await validateOnly(env, { token: FIXTURE, cost: 1 });
+    if (v.ok) expect(v.credits_remaining).toBe(50);
+  });
+
+  it('clamps overdraft to zero on the charge path (race defense)', async () => {
+    const env = makeEnv();
+    seedCredits(env, 0);
+    const r = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 1,
+      endpoint: '/api/premium/test',
+      noChargeReason: null,
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.balance_after).toBe(0);
+  });
+
+  it('rejects malformed tokens', async () => {
+    const env = makeEnv();
+    const r = await commitInternal(env, {
+      token: 'bad',
+      cost: 1,
+      endpoint: '/api/premium/test',
+      noChargeReason: null,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('invalid_token');
+  });
+
+  it('returns invalid_token on charge path when token record is missing', async () => {
+    const env = makeEnv();
+    const r = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 1,
+      endpoint: '/api/premium/test',
+      noChargeReason: null,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('invalid_token');
+  });
+
+  it('honors no-charge logging even when token record is missing (defensive)', async () => {
+    const env = makeEnv();
+    const r = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 1,
+      endpoint: '/api/premium/test',
+      noChargeReason: '5xx',
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.credits_charged).toBe(0);
+      expect(r.balance_after).toBe(0);
+      expect(r.no_charge_reason).toBe('5xx');
+    }
   });
 });
