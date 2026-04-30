@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'measuring-llm-api-latency-from-the-edge',
+    title: 'Provider Status Pages Are Marketing. We Built Our Own LLM Probes.',
+    author: 'Ripper',
+    date: 'Apr 29, 2026',
+    readTime: '6 min read',
+    description:
+      'Every fifteen minutes, our Worker now fires a small prompt at Anthropic, Google, Mistral, and Cohere from Cloudflare\'s edge and records the result. Status pages are politically managed; this is what we measure. The first hour of data already produced one finding I did not expect: Cohere is faster than Anthropic by an order of magnitude on first-token latency. The methodology, why this dataset compounds, and what is on the runway.',
+  },
+  {
     slug: 'openai-aws-bedrock-24-hours',
     title: 'OpenAI Hit AWS Bedrock in 24 Hours. The Infrastructure Was Already Built.',
     author: 'Marcus Chen',
