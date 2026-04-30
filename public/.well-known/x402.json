@@ -6,6 +6,10 @@
     "url": "https://tensorfeed.ai",
     "description": "Real-time AI news, model pricing, service status, and machine-payable premium intelligence for AI agents.",
     "agent_fair_trade": "TensorFeed.ai is agent fair-trade certified: open pricing, automatic no-charge on 5xx, breaker, schema fail, and stale data, Ed25519-signed receipts on every paid call, inference-only license. Built with Claude (Anthropic). Standard at /.well-known/agent-fair-trade.json.",
+    "method_support": {
+      "live": [{ "method": "exact", "network": "eip155:8453", "asset_symbol": "USDC", "note": "USDC on Base mainnet, verified via Base RPC" }],
+      "evaluating": [{ "method": "stripe", "credential_type": "shared_payment_token", "spec": "https://link.com/agents", "note": "Stripe Link Shared Payment Tokens via x402 with method=stripe in www-authenticate. Under evaluation; not yet accepted." }]
+    },
     "contact": "evan@tensorfeed.ai",
     "docs": "https://tensorfeed.ai/developers/agent-payments",
     "llmsTxt": "https://tensorfeed.ai/llms.txt",

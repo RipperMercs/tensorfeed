@@ -1,0 +1,40 @@
+# TensorFeed.ai
+# Agent discovery directive. The full agent-readable manifest lives at
+# /llms.txt and the canonical Agent Fair-Trade Agreement manifest at
+# /.well-known/agent-fair-trade.json.
+#
+# This file is the agents.txt convention as referenced by Stripe Link's
+# create-payment-credential skill ("respect /agents.txt and /llm.txt site
+# directives") and other emerging agent-side conventions. The full
+# discovery payload is the same across both surfaces.
+
+User-agent: *
+Allow: /
+
+# Primary agent-readable surfaces
+Manifest: https://tensorfeed.ai/llms.txt
+FullDump: https://tensorfeed.ai/llms-full.txt
+Agent-Landing: https://tensorfeed.ai/for-ai-agents
+Meta: https://tensorfeed.ai/api/meta
+OpenAPI: https://tensorfeed.ai/openapi.json
+MCP: https://www.npmjs.com/package/@tensorfeed/mcp-server
+
+# Agent payments (machine-payable premium tier)
+Standard: https://tensorfeed.ai/.well-known/agent-fair-trade.json
+X402: https://tensorfeed.ai/.well-known/x402.json
+ReceiptKey: https://tensorfeed.ai/.well-known/tensorfeed-receipt-key.json
+PaymentInfo: https://tensorfeed.ai/api/payment/info
+NoChargeLedger: https://tensorfeed.ai/api/payment/no-charge-stats
+
+# Payment rails accepted (x402)
+# Currently: USDC on Base mainnet (eip155:8453)
+# Roadmap: Stripe Shared Payment Tokens (method=stripe) under evaluation
+# Other x402 method= variants: not yet supported
+
+# Federation
+# Bearer tokens minted on tensorfeed.ai also work on terminalfeed.io.
+# See agent-fair-trade.json adoption.network_federation.
+
+# Built with Claude
+# TensorFeed was designed by Ripper in collaboration with Claude (Anthropic).
+# Build trail: https://github.com/RipperMercs/tensorfeed

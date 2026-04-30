@@ -70,7 +70,29 @@
     "currency": "USDC",
     "network": "eip155:8453",
     "network_name": "Base mainnet",
-    "rail_rationale": "Public on-chain crypto ledgers (USDC on Base) are structurally fair to all participants, including AI agents that traditional payment processors lock out. Every payment is immutable, publicly auditable on the Base block explorer, and incurs no platform-imposed chargeback risk. The receipt rail and the on-chain rail are independent: a receipt attests to what we charged and why; the chain attests to what was paid."
+    "rail_rationale": "Public on-chain crypto ledgers (USDC on Base) are structurally fair to all participants, including AI agents that traditional payment processors lock out. Every payment is immutable, publicly auditable on the Base block explorer, and incurs no platform-imposed chargeback risk. The receipt rail and the on-chain rail are independent: a receipt attests to what we charged and why; the chain attests to what was paid.",
+    "x402_compatibility": {
+      "compliant": true,
+      "manifest": "https://tensorfeed.ai/.well-known/x402.json",
+      "accepted_methods": [
+        {
+          "method": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "asset_symbol": "USDC",
+          "header": "X-Payment-Tx",
+          "value": "Base mainnet USDC transaction hash; verified server-side via eth_getTransactionReceipt"
+        }
+      ],
+      "evaluating_methods": [
+        {
+          "method": "stripe",
+          "credential_type": "shared_payment_token",
+          "status": "under_evaluation",
+          "note": "Stripe Link agents (link.com/agents) issue Shared Payment Tokens for HTTP 402 endpoints that advertise method=stripe in the www-authenticate header. We are evaluating adding this as a parallel x402 path alongside USDC. Until shipped, Link agents that prefer SPTs will not be able to pay TensorFeed; they should fall back to the credits flow at /api/payment/buy-credits or to USDC on Base."
+        }
+      ]
+    }
   },
   "data_license": {
     "type": "inference-only",

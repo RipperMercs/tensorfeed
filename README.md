@@ -4,6 +4,8 @@
 
 > **Network of two.** TensorFeed.ai and [TerminalFeed.io](https://terminalfeed.io) are AFTA-federated as of 2026-04-30. A single bearer token works on both sites via the cross-Worker validate + commit rail. Two independent Ed25519 receipt keypairs, single credit ledger, one open standard. Other publishers can self-adopt by publishing a conforming manifest.
 
+> **x402 + Stripe Link.** TensorFeed has been x402-compliant since the agent payments rail shipped. Today we accept the `exact` scheme with USDC on Base mainnet. [Stripe Link](https://link.com/agents) (released April 2026) uses x402 with `method=stripe` for Shared Payment Tokens; supporting that method as a parallel x402 path is under evaluation. The protocol is the same; we already speak it.
+
 Real-time AI industry intelligence for humans and AI agents. News from 15+ sources, live service status for every major LLM provider, model pricing and benchmark history, an AI agents directory, and a pay-per-call premium API settled in USDC on Base mainnet (no accounts, no API keys).
 
 Site: **https://tensorfeed.ai**
