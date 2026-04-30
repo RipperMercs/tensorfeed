@@ -6,7 +6,7 @@ Real-time AI industry intelligence for humans and AI agents. News from 15+ sourc
 
 Site: **https://tensorfeed.ai**
 
-**Built with Claude:** TensorFeed was designed by Evan Marcus in collaboration with Claude (Anthropic). Specific systems Claude designed alongside: the agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC sanctions screening pipeline, the routing engine, and the [Agent Fair-Trade Agreement](https://tensorfeed.ai/agent-fair-trade) (AFTA) standard itself. We credit the collaboration openly, and the git log shows the build trail.
+**Built with Claude:** TensorFeed was designed by Ripper in collaboration with Claude (Anthropic). Specific systems Claude designed alongside: the agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC sanctions screening pipeline, the routing engine, and the [Agent Fair-Trade Agreement](https://tensorfeed.ai/agent-fair-trade) (AFTA) standard itself. We credit the collaboration openly, and the git log shows the build trail.
 
 ## What this repo contains
 

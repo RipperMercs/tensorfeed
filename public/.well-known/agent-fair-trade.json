@@ -87,7 +87,7 @@
     "screening": "Chainalysis public sanctions API on every credit purchase. Geo-IP block on /api/payment/buy-credits for CU/IR/KP/SY. See https://tensorfeed.ai/terms#premium Section 17.9."
   },
   "built_with_claude": {
-    "statement": "TensorFeed was designed by Evan Marcus in collaboration with Claude (Anthropic). Specific systems Claude designed: the agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC sanctions screening pipeline, the routing engine, and the Agent Fair-Trade Agreement itself.",
+    "statement": "TensorFeed was designed by Ripper in collaboration with Claude (Anthropic). Specific systems Claude designed: the agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC sanctions screening pipeline, the routing engine, and the Agent Fair-Trade Agreement itself.",
     "verifiable_via": "git log on https://github.com/RipperMercs/tensorfeed shows the build trail."
   },
   "adoption": {

@@ -61,7 +61,7 @@ export default function AboutPage() {
         <h2 className="text-xl font-semibold text-text-primary mb-4">Built with Claude</h2>
         <div className="space-y-4 text-text-secondary leading-relaxed">
           <p>
-            TensorFeed was designed by Evan Marcus in collaboration with Claude (Anthropic). The
+            TensorFeed was designed by Ripper in collaboration with Claude (Anthropic). The
             agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC
             sanctions screening pipeline, the routing engine, and the{' '}
             <a href="/agent-fair-trade" className="text-accent-primary hover:underline">

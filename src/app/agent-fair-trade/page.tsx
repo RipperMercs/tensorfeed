@@ -49,7 +49,7 @@ const FAQS = [
   {
     question: 'What does "Built with Claude" mean?',
     answer:
-      'TensorFeed was designed by Evan Marcus in collaboration with Claude (Anthropic). Specific systems Claude designed: the agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC sanctions screening pipeline, the routing engine, and the AFTA standard itself. The git log on github.com/RipperMercs/tensorfeed shows the build trail.',
+      'TensorFeed was designed by Ripper in collaboration with Claude (Anthropic). Specific systems Claude designed: the agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC sanctions screening pipeline, the routing engine, and the AFTA standard itself. The git log on github.com/RipperMercs/tensorfeed shows the build trail.',
   },
   {
     question: 'Can my API be agent fair-trade certified?',
@@ -270,7 +270,7 @@ export default function AgentFairTradePage() {
           <h2 className="text-2xl font-semibold text-text-primary">Built with Claude</h2>
         </div>
         <p className="text-text-secondary mb-3 max-w-3xl leading-relaxed">
-          TensorFeed was designed by Evan Marcus in collaboration with Claude (Anthropic).
+          TensorFeed was designed by Ripper in collaboration with Claude (Anthropic).
           The agent payments rail, the active LLM probes, the GPU pricing aggregator, the
           OFAC sanctions screening pipeline, the routing engine, and the AFTA standard
           itself were all designed alongside Claude. The git log at{' '}
