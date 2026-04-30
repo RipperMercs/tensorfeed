@@ -147,6 +147,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/ai-talent-war-billion-dollar-engineers`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${baseUrl}/originals/openai-aws-bedrock-24-hours`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${baseUrl}/originals/measuring-llm-api-latency-from-the-edge`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/originals/bounce-between-claudes`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
 
     // Agent-acquisition surface
     { url: `${baseUrl}/for-ai-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },

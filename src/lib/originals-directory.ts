@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'bounce-between-claudes',
+    title: 'One Claude Is a Conversation. Two Claudes Is a Workflow.',
+    author: 'Ripper',
+    date: 'Apr 30, 2026',
+    readTime: '7 min read',
+    description:
+      'The default mental model is one user, one chat, one Claude. The pattern that actually changes the productivity ceiling is triangulated: human plus Claude A plus Claude B, bouncing between each other through you. Five concrete benefits, the token-economics objection answered, and the proof from the federated AFTA shipped today by two Claudes on two repos in parallel.',
+  },
+  {
     slug: 'measuring-llm-api-latency-from-the-edge',
     title: 'Provider Status Pages Are Marketing. We Built Our Own LLM Probes.',
     author: 'Ripper',
