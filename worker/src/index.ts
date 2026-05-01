@@ -814,6 +814,53 @@ export default {
       }
     }
 
+    // === VOICE LEADERBOARDS (cached 1800s) ===
+
+    if (path === '/api/voice-leaderboards') {
+      const { VOICE_LEADERBOARDS } = await import('./voice-leaderboards');
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        ...VOICE_LEADERBOARDS,
+      }, 200, 1800);
+    }
+
+    // === AI MARKETPLACES (cached 600s) ===
+
+    if (path === '/api/marketplaces') {
+      const { MARKETPLACE_CATALOG, MARKETPLACES_LAST_UPDATED } = await import('./marketplaces');
+      const categoryFilter = url.searchParams.get('category');
+      let marketplaces = MARKETPLACE_CATALOG;
+      if (categoryFilter) {
+        marketplaces = marketplaces.filter(m => m.category === categoryFilter);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: MARKETPLACES_LAST_UPDATED,
+        count: marketplaces.length,
+        marketplaces,
+      }, 200, 600);
+    }
+
+    // === PUBLIC LEADERBOARDS AGGREGATOR (cached 600s) ===
+
+    if (path === '/api/public-leaderboards') {
+      const { PUBLIC_LEADERBOARDS, PUBLIC_LEADERBOARDS_LAST_UPDATED } = await import('./public-leaderboards');
+      const domainFilter = url.searchParams.get('domain');
+      let leaderboards = PUBLIC_LEADERBOARDS;
+      if (domainFilter) {
+        leaderboards = leaderboards.filter(l => l.domain === domainFilter);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: PUBLIC_LEADERBOARDS_LAST_UPDATED,
+        count: leaderboards.length,
+        leaderboards,
+      }, 200, 600);
+    }
+
     // === FINE-TUNING PROVIDER CATALOG (cached 600s) ===
 
     if (path === '/api/fine-tuning') {
@@ -1270,6 +1317,9 @@ export default {
           fineTuning: '/api/fine-tuning?type=first-party|hosted&method=lora|qlora|full|dpo|rlhf',
           specializedModels: '/api/specialized-models?domain=code|medical|legal|finance|music|3d|retrieval|science&open_weights=true',
           modelCards: '/api/model-cards?lab=Anthropic|OpenAI|Google|Meta|DeepSeek',
+          voiceLeaderboards: '/api/voice-leaderboards',
+          marketplaces: '/api/marketplaces?category=gpts|agents|skills|models|spaces|mcp|workflows|plugins',
+          publicLeaderboards: '/api/public-leaderboards?domain=general|code|math|reasoning|multimodal|agent|safety|voice|image|video|long-context|open-models',
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',
