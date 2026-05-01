@@ -326,6 +326,75 @@ const top = models
       },
     ],
   },
+  {
+    slug: 'harnesses',
+    name: 'Harnesses',
+    path: '/api/harnesses',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'models',
+    seoTitle: 'TensorFeed Harnesses API: Coding Agent Leaderboard, Free',
+    seoDescription:
+      'TensorFeed /api/harnesses returns a cross-harness benchmark leaderboard: Claude Code, Cursor, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf, Amp on SWE-bench Verified, Terminal-Bench, Aider Polyglot, SWE-Lancer.',
+    intro:
+      'The /api/harnesses endpoint returns the full cross-harness coding agent leaderboard: every tracked harness (Claude Code, Cursor Agent, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf Cascade, Amp, Continue, Roo Code) cross-joined against every base model that vendor has published a score for, on SWE-bench Verified, Terminal-Bench, Aider Polyglot, and SWE-Lancer. Each harness object also has metadata: vendor, type (cli, ide, agent-platform), open-source status, and model lock-in.',
+    whenToUse:
+      'When your agent needs to know which coding harness leads which agentic benchmark, or to surface "the harness gap" (same model, different harness, different score). The response also includes a `rollups` field with each harness\'s best base-model score per benchmark for quick "who wins SWE-bench" queries.',
+    params: [],
+    exampleResponse: `{
+  "ok": true,
+  "lastUpdated": "2026-04-30",
+  "benchmarks": [
+    { "id": "swe_bench_verified", "name": "SWE-bench Verified", "maxScore": 100, "unit": "% resolved", "sourceUrl": "https://www.swebench.com/" }
+  ],
+  "harnesses": [
+    { "id": "claude-code", "name": "Claude Code", "vendor": "Anthropic", "type": "cli", "openSource": false, "modelLockIn": "Anthropic models only" }
+  ],
+  "results": [
+    { "harness": "claude-code", "model": "Claude Opus 4.7", "scores": { "swe_bench_verified": 74.5, "terminal_bench": 52.3, "aider_polyglot": 84.2, "swe_lancer": 41.8 } }
+  ],
+  "rollups": [
+    { "harness": "claude-code", "best": { "swe_bench_verified": { "model": "Claude Opus 4.7", "score": 74.5 } } }
+  ]
+}`,
+    pythonExample: `import urllib.request, json
+
+with urllib.request.urlopen("https://tensorfeed.ai/api/harnesses") as r:
+    data = json.loads(r.read())
+
+# Top harness on SWE-bench Verified
+ranked = sorted(
+    [r for r in data["results"] if r["scores"].get("swe_bench_verified") is not None],
+    key=lambda r: r["scores"]["swe_bench_verified"],
+    reverse=True,
+)
+print(ranked[0]["harness"], ranked[0]["model"], ranked[0]["scores"]["swe_bench_verified"])`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/harnesses");
+const data = await res.json();
+
+const ranked = data.results
+  .filter((r: { scores: Record<string, number | null> }) => typeof r.scores.swe_bench_verified === "number")
+  .sort((a: { scores: Record<string, number> }, b: { scores: Record<string, number> }) => b.scores.swe_bench_verified - a.scores.swe_bench_verified);
+
+console.log(ranked[0]);`,
+    mcpTool: null,
+    relatedSlugs: ['benchmarks', 'models', 'premium-routing', 'premium-compare-models'],
+    faqs: [
+      {
+        q: 'What is a coding harness?',
+        a: 'The agent scaffolding around a base LLM: tool-use loop, file-edit primitives, shell sandbox, planning logic, retrieval, and approval gating. The same model can score 5-15 percentage points apart on the same benchmark depending on which harness wraps it.',
+      },
+      {
+        q: 'Are these scores measured by TensorFeed?',
+        a: 'No. Each row is the harness vendor\'s best published score for the named base model on the named benchmark. We aggregate, normalize, and link back to the upstream report. The exception is our LLM Probe data (provider latency and availability) which we measure independently at /api/probe/latest.',
+      },
+      {
+        q: 'How often does the harness data update?',
+        a: 'Refreshed on each redeploy. Vendor publish cadences vary, so a daily cron does not match the data; editorial cadence is roughly weekly.',
+      },
+    ],
+  },
 
   // ── Free with token: payment / usage ─────────────────────────────
   {

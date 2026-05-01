@@ -4,6 +4,7 @@ import { getAllComparisonSlugs } from '@/lib/comparison-directory';
 import { getAllProviderSlugs } from '@/lib/provider-directory';
 import { getAllBenchmarkSlugs } from '@/lib/benchmark-directory';
 import { getAllApiRefSlugs } from '@/lib/api-reference-directory';
+import { getAllHarnessSlugs } from '@/lib/harness-directory';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://tensorfeed.ai';
@@ -49,6 +50,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  // Per-harness detail pages (Claude Code, Cursor, Codex CLI, Aider, etc)
+  const harnessPages: MetadataRoute.Sitemap = getAllHarnessSlugs().map(slug => ({
+    url: `${baseUrl}/harnesses/${slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly' as const,
+    priority: 0.75,
+  }));
+
   return [
     // Core pages (update frequently)
     { url: baseUrl, lastModified: now, changeFrequency: 'always', priority: 1.0 },
@@ -60,6 +69,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...comparisonPages,
     ...providerPages,
     ...benchmarkPages,
+    ...harnessPages,
     ...apiRefPages,
     { url: `${baseUrl}/api-reference`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
@@ -94,6 +104,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Tools & features
     { url: `${baseUrl}/compare`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/benchmarks`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/harnesses`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/timeline`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/tools/cost-calculator`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/tools/trending`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
@@ -147,6 +158,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/ai-talent-war-billion-dollar-engineers`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${baseUrl}/originals/openai-aws-bedrock-24-hours`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${baseUrl}/originals/measuring-llm-api-latency-from-the-edge`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/originals/guard-act-senate-judiciary-22-0`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/harness-gap-not-the-model`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
 
     // Agent-acquisition surface
     { url: `${baseUrl}/for-ai-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },

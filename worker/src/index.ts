@@ -742,6 +742,23 @@ export default {
       }, 200, 300);
     }
 
+    // === HARNESSES ENDPOINT (cached 300s) ===
+    // Cross-harness leaderboard for agentic-coding harnesses (Claude Code,
+    // Cursor, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf, Amp,
+    // Continue, Roo Code) on SWE-bench Verified, Terminal-Bench, Aider
+    // Polyglot, and SWE-Lancer. Editorial snapshot served from baked-in
+    // module data; refreshed on redeploy.
+
+    if (path === '/api/harnesses') {
+      const { HARNESSES_DATA, harnessRollups } = await import('./harnesses');
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        ...HARNESSES_DATA,
+        rollups: harnessRollups(),
+      }, 200, 300);
+    }
+
     // === AGENTS DIRECTORY ENDPOINT (cached 300s) ===
 
     if (path === '/api/agents/directory') {
@@ -805,6 +822,7 @@ export default {
           pricing: '/api/agents/pricing',
           models: '/api/models',
           benchmarks: '/api/benchmarks',
+          harnesses: '/api/harnesses',
           agentsDirectory: '/api/agents/directory',
           agentActivity: '/api/agents/activity',
           podcasts: '/api/podcasts',
@@ -2198,7 +2216,7 @@ export default {
     //   return jsonResponse({ ok: true, message: 'Posted top stories to X' });
     // }
 
-    return jsonResponse({ error: 'Not found', endpoints: ['/api/health', '/api/news', '/api/status', '/api/models', '/api/benchmarks', '/api/podcasts', '/api/trending-repos', '/api/feed.xml', '/api/feed.json', '/api/meta'] }, 404);
+    return jsonResponse({ error: 'Not found', endpoints: ['/api/health', '/api/news', '/api/status', '/api/models', '/api/benchmarks', '/api/harnesses', '/api/podcasts', '/api/trending-repos', '/api/feed.xml', '/api/feed.json', '/api/meta'] }, 404);
   },
 
   async scheduled(event: ScheduledEvent, env: Env): Promise<void> {
