@@ -814,6 +814,68 @@ export default {
       }
     }
 
+    // === TRAINING DATASETS REGISTRY (cached 600s) ===
+
+    if (path === '/api/training-datasets') {
+      const { TRAINING_DATASETS, TRAINING_DATASETS_LAST_UPDATED } = await import('./training-datasets');
+      const stageFilter = url.searchParams.get('stage');
+      let datasets = TRAINING_DATASETS;
+      if (stageFilter) {
+        datasets = datasets.filter(d => d.stage === stageFilter);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: TRAINING_DATASETS_LAST_UPDATED,
+        count: datasets.length,
+        datasets,
+      }, 200, 600);
+    }
+
+    // === AGENT APIS REGISTRY (cached 600s) ===
+
+    if (path === '/api/agent-apis') {
+      const { AGENT_API_CATALOG, AGENT_APIS_LAST_UPDATED } = await import('./agent-apis');
+      const categoryFilter = url.searchParams.get('category');
+      const hasMcpFilter = url.searchParams.get('has_mcp') === 'true';
+      let apis = AGENT_API_CATALOG;
+      if (categoryFilter) {
+        apis = apis.filter(a => a.category === categoryFilter);
+      }
+      if (hasMcpFilter) {
+        apis = apis.filter(a => a.hasMCP);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: AGENT_APIS_LAST_UPDATED,
+        count: apis.length,
+        apis,
+      }, 200, 600);
+    }
+
+    // === TRAINING RUNS / COMPUTE ECONOMICS (cached 600s) ===
+
+    if (path === '/api/training-runs') {
+      const { TRAINING_RUNS, TRAINING_RUNS_LAST_UPDATED } = await import('./training-runs');
+      const publisherFilter = url.searchParams.get('publisher');
+      const openOnly = url.searchParams.get('open_weights') === 'true';
+      let runs = TRAINING_RUNS;
+      if (publisherFilter) {
+        runs = runs.filter(r => r.publisher.toLowerCase() === publisherFilter.toLowerCase());
+      }
+      if (openOnly) {
+        runs = runs.filter(r => r.openWeights);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: TRAINING_RUNS_LAST_UPDATED,
+        count: runs.length,
+        runs,
+      }, 200, 600);
+    }
+
     // === OPEN-WEIGHTS DEPLOYMENT REGISTRY (cached 600s) ===
 
     if (path === '/api/open-weights') {
@@ -1139,6 +1201,9 @@ export default {
           openWeights: '/api/open-weights?family=Meta|DeepSeek|Mistral|Alibaba|Google|Microsoft',
           aiHardware: '/api/ai-hardware?manufacturer=NVIDIA|AMD|Google|AWS|Apple|Cerebras|Groq',
           mcpServers: '/api/mcp-servers?capability=filesystem|web-search|browser|github|slack|database&first_party=true',
+          trainingDatasets: '/api/training-datasets?stage=pretraining|instruction-tuning|dpo|rlhf|multimodal',
+          agentApis: '/api/agent-apis?category=search|web-scraping|weather|finance|maps|email|sms|payments|code-execution|ocr&has_mcp=true',
+          trainingRuns: '/api/training-runs?publisher=OpenAI|Anthropic|Meta|Google|DeepSeek&open_weights=true',
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',
