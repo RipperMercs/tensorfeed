@@ -188,6 +188,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/measuring-llm-api-latency-from-the-edge`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/originals/guard-act-senate-judiciary-22-0`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/harness-gap-not-the-model`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/palo-alto-portkey-mcp-gateway`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/stripe-link-vs-usdc-agent-payments`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
 
     // Agent-acquisition surface
     { url: `${baseUrl}/for-ai-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },

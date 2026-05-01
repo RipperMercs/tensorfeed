@@ -17,6 +17,24 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'stripe-link-vs-usdc-agent-payments',
+    title: 'Stripe Just Validated Agent Payments. We Already Shipped Ours Without Them.',
+    author: 'Evan Ripper',
+    date: 'May 1, 2026',
+    readTime: '7 min read',
+    description:
+      'Stripe announced Link for AI agents and x402 for USDC micropayments on Base. We shipped 15 paid endpoints on direct USDC transfers four days earlier. Here is how both approaches compare after real production use, why we skipped the middleman, and where each model wins.',
+  },
+  {
+    slug: 'palo-alto-portkey-mcp-gateway',
+    title: 'Palo Alto Just Bought the MCP Gateway. Enterprise Security Has Entered the Agent Stack.',
+    author: 'Marcus Chen',
+    date: 'May 1, 2026',
+    readTime: '7 min read',
+    description:
+      'Palo Alto Networks announced its intent to acquire Portkey on April 30, 2026, plugging an AI gateway that routes to 1,600 plus LLMs and an MCP gateway processing trillions of tokens per month into Prisma AIRS. The agent infrastructure layer just got its first big enterprise security exit. We break down the deal, the numbers, and what it signals for MCP, AI gateways, and the future of agent governance.',
+  },
+  {
     slug: 'harness-gap-not-the-model',
     title: 'It Is Not the Model. It Is the Harness.',
     author: 'Ripper',

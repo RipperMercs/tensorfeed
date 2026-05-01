@@ -1,17 +1,17 @@
 {
   "ok": true,
   "source": "tensorfeed.ai",
-  "checked": "2026-04-28T23:41:05.563Z",
+  "checked": "2026-04-29T20:19:50.292Z",
   "services": [
     {
       "name": "Claude API",
       "provider": "Anthropic",
-      "status": "degraded",
+      "status": "operational",
       "statusPageUrl": "https://status.anthropic.com",
       "components": [
         {
           "name": "claude.ai",
-          "status": "degraded"
+          "status": "operational"
         },
         {
           "name": "Claude Console (platform.claude.com)",
@@ -19,22 +19,22 @@
         },
         {
           "name": "Claude API (api.anthropic.com)",
-          "status": "degraded"
+          "status": "operational"
         },
         {
           "name": "Claude Code",
-          "status": "degraded"
+          "status": "operational"
         },
         {
           "name": "Claude Cowork",
-          "status": "degraded"
+          "status": "operational"
         },
         {
           "name": "Claude for Government",
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-28T23:40:27.675Z"
+      "lastChecked": "2026-04-29T20:15:53.320Z"
     },
     {
       "name": "OpenAI API",
@@ -42,6 +42,10 @@
       "status": "operational",
       "statusPageUrl": "https://status.openai.com",
       "components": [
+        {
+          "name": "Chat Completions",
+          "status": "operational"
+        },
         {
           "name": "Responses",
           "status": "operational"
@@ -61,13 +65,9 @@
         {
           "name": "Batch",
           "status": "operational"
-        },
-        {
-          "name": "Audio",
-          "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-28T23:40:27.729Z"
+      "lastChecked": "2026-04-29T20:15:53.253Z"
     },
     {
       "name": "Hugging Face",
@@ -75,7 +75,7 @@
       "status": "operational",
       "statusPageUrl": "https://status.huggingface.co",
       "components": [],
-      "lastChecked": "2026-04-28T23:40:28.270Z"
+      "lastChecked": "2026-04-29T20:15:54.213Z"
     },
     {
       "name": "Replicate",
@@ -108,7 +108,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-28T23:40:27.899Z"
+      "lastChecked": "2026-04-29T20:15:53.321Z"
     },
     {
       "name": "Cohere",
@@ -141,7 +141,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-04-28T23:40:27.696Z"
+      "lastChecked": "2026-04-29T20:15:53.263Z"
     },
     {
       "name": "Mistral",
@@ -149,7 +149,7 @@
       "status": "operational",
       "statusPageUrl": "https://status.mistral.ai",
       "components": [],
-      "lastChecked": "2026-04-28T23:40:27.518Z"
+      "lastChecked": "2026-04-29T20:15:53.732Z"
     }
   ]
 }
