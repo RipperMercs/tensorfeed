@@ -814,6 +814,66 @@ export default {
       }
     }
 
+    // === FUNDING ROUNDS TRACKER (cached 600s) ===
+
+    if (path === '/api/funding') {
+      const { FUNDING_ROUNDS, FUNDING_LAST_UPDATED } = await import('./funding');
+      const categoryFilter = url.searchParams.get('category');
+      const stageFilter = url.searchParams.get('stage');
+      let rounds = FUNDING_ROUNDS;
+      if (categoryFilter) rounds = rounds.filter(r => r.category === categoryFilter);
+      if (stageFilter) rounds = rounds.filter(r => r.stage === stageFilter);
+      return jsonResponse({ ok: true, source: 'tensorfeed.ai', lastUpdated: FUNDING_LAST_UPDATED, count: rounds.length, rounds }, 200, 600);
+    }
+
+    // === OSS TOOLS REGISTRY (cached 600s) ===
+
+    if (path === '/api/oss-tools') {
+      const { OSS_TOOLS, OSS_TOOLS_LAST_UPDATED } = await import('./oss-tools');
+      const categoryFilter = url.searchParams.get('category');
+      let tools = OSS_TOOLS;
+      if (categoryFilter) tools = tools.filter(t => t.category === categoryFilter);
+      return jsonResponse({ ok: true, source: 'tensorfeed.ai', lastUpdated: OSS_TOOLS_LAST_UPDATED, count: tools.length, tools }, 200, 600);
+    }
+
+    // === AI POLICY TRACKER (cached 600s) ===
+
+    if (path === '/api/ai-policy') {
+      const { POLICY_ITEMS, POLICY_LAST_UPDATED } = await import('./ai-policy');
+      const statusFilter = url.searchParams.get('status');
+      const jurisdictionFilter = url.searchParams.get('jurisdiction');
+      let items = POLICY_ITEMS;
+      if (statusFilter) items = items.filter(i => i.status === statusFilter);
+      if (jurisdictionFilter) items = items.filter(i => i.jurisdiction.toLowerCase().includes(jurisdictionFilter.toLowerCase()));
+      return jsonResponse({ ok: true, source: 'tensorfeed.ai', lastUpdated: POLICY_LAST_UPDATED, count: items.length, items }, 200, 600);
+    }
+
+    // === AI CONFERENCES (cached 600s) ===
+
+    if (path === '/api/conferences') {
+      const { CONFERENCES, CONFERENCES_LAST_UPDATED } = await import('./conferences');
+      const categoryFilter = url.searchParams.get('category');
+      const upcomingOnly = url.searchParams.get('upcoming') === 'true';
+      let conferences = CONFERENCES;
+      if (categoryFilter) conferences = conferences.filter(c => c.category === categoryFilter);
+      if (upcomingOnly) {
+        const today = new Date().toISOString().slice(0, 10);
+        conferences = conferences.filter(c => c.endDate >= today);
+      }
+      conferences = [...conferences].sort((a, b) => a.startDate.localeCompare(b.startDate));
+      return jsonResponse({ ok: true, source: 'tensorfeed.ai', lastUpdated: CONFERENCES_LAST_UPDATED, count: conferences.length, conferences }, 200, 600);
+    }
+
+    // === COMPUTE PROVIDERS (cached 600s) ===
+
+    if (path === '/api/compute-providers') {
+      const { COMPUTE_PROVIDERS, COMPUTE_PROVIDERS_LAST_UPDATED } = await import('./compute-providers');
+      const typeFilter = url.searchParams.get('type');
+      let providers = COMPUTE_PROVIDERS;
+      if (typeFilter) providers = providers.filter(p => p.type === typeFilter);
+      return jsonResponse({ ok: true, source: 'tensorfeed.ai', lastUpdated: COMPUTE_PROVIDERS_LAST_UPDATED, count: providers.length, providers }, 200, 600);
+    }
+
     // === VOICE LEADERBOARDS (cached 1800s) ===
 
     if (path === '/api/voice-leaderboards') {
@@ -1320,6 +1380,11 @@ export default {
           voiceLeaderboards: '/api/voice-leaderboards',
           marketplaces: '/api/marketplaces?category=gpts|agents|skills|models|spaces|mcp|workflows|plugins',
           publicLeaderboards: '/api/public-leaderboards?domain=general|code|math|reasoning|multimodal|agent|safety|voice|image|video|long-context|open-models',
+          funding: '/api/funding?category=frontier-lab|inference|agent|coding|infra|enterprise|creative|voice|video|data&stage=seed|series-a|series-b|series-c|series-d|series-e|growth',
+          ossTools: '/api/oss-tools?category=runtime|inference-server|fine-tuning|ui|eval|training|observability|edge',
+          aiPolicy: '/api/ai-policy?status=active|pending|proposed|stalled&jurisdiction=EU|US|UK|China|Korea',
+          conferences: '/api/conferences?category=research|industry|developer|community&upcoming=true',
+          computeProviders: '/api/compute-providers?type=gpu-cloud|hyperscaler|ai-serverless|marketplace|specialized',
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',
