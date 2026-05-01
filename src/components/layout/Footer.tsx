@@ -52,6 +52,12 @@ export default function Footer() {
               Agent Payments
             </Link>
             <Link
+              href="/catalogs"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors"
+            >
+              Catalogs
+            </Link>
+            <Link
               href="/api-reference"
               className="text-sm text-text-muted hover:text-text-primary transition-colors"
             >
