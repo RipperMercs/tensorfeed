@@ -341,6 +341,28 @@ export default function DevelopersPage() {
         </Link>
       </section>
 
+      {/* Quick links: playground + frameworks */}
+      <section className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Link
+          href="/playground"
+          className="block bg-bg-secondary border border-border rounded-xl p-4 hover:border-accent-primary transition-colors"
+        >
+          <div className="font-semibold text-text-primary mb-1">API Playground</div>
+          <p className="text-sm text-text-secondary">
+            Run live queries against every free endpoint in your browser. No login, no key. See the JSON, copy the curl.
+          </p>
+        </Link>
+        <Link
+          href="/developers/frameworks"
+          className="block bg-bg-secondary border border-border rounded-xl p-4 hover:border-accent-primary transition-colors"
+        >
+          <div className="font-semibold text-text-primary mb-1">LangChain, LlamaIndex, CrewAI</div>
+          <p className="text-sm text-text-secondary">
+            Drop-in tools and document loaders for the three major Python agent frameworks. <code className="font-mono text-xs text-accent-primary">pip install tensorfeed[langchain]</code>.
+          </p>
+        </Link>
+      </section>
+
       {/* Endpoints */}
       <section className="mb-14">
         <h2 className="text-2xl font-semibold text-text-primary mb-6">Endpoints</h2>

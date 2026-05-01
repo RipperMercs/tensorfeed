@@ -21,6 +21,20 @@ export const metadata: Metadata = {
 
 const CHANGELOG = [
   {
+    date: 'April 30, 2026',
+    entries: [
+      'Shipped /harnesses, the cross-harness coding-agent leaderboard. Tracks Claude Code, Cursor Agent, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf Cascade, Amp, Continue, and Roo Code on SWE-bench Verified, Terminal-Bench, Aider Polyglot, and SWE-Lancer. Per-harness detail pages at /harnesses/{slug} cover distribution, model lock-in, pricing, and notable features. Same data as JSON at /api/harnesses (free, cached 5 min) with per-harness rollups for fast "who wins X" queries.',
+      'New /originals piece: "It Is Not the Model. It Is the Harness." (Ripper). The harness gap is bigger than the model gap on agentic benchmarks; this is why we now track it.',
+      'Scheduled a weekly refresh agent that pulls upstream leaderboards (SWE-bench Verified, Terminal-Bench, Aider Polyglot, SWE-Lancer) into both data/harnesses.json and worker/src/harnesses.ts and opens a PR. Runs Mondays at 9 AM PT.',
+      'Shipped /playground, an in-browser no-auth query tool against every free TensorFeed endpoint. Sidebar groups endpoints by category, form fields adapt to each endpoint\'s parameter schema, Run executes the request, JSON renders inline with timing and copy-curl/copy-URL/copy-JSON.',
+      'Shipped the AI Attention Index at /attention and /api/attention. Live 0-100 score per AI provider derived from news volume in 24h and 7d, GitHub trending repos matching the provider, and bot/agent traffic to provider-related endpoints. Recomputed on every request from existing free endpoints; no new ingestion. Cached 5 minutes.',
+      'Shipped daily attention snapshots and a paid time series. Free /api/attention/history returns the list of dates with a captured snapshot; free /api/attention/history/{date} returns one day. New paid endpoint /api/premium/attention/series (1 credit) returns daily attention_score and raw signal counts for one provider over the requested range, plus first/last/delta/min/max/avg summary. 90-day max range, default 30 days back.',
+      'Shipped framework integrations as optional extras on the main tensorfeed PyPI package (v1.16.0). pip install tensorfeed[langchain] gets 5 StructuredTools (news, status, routing, attention, harnesses) plus a TensorFeedNewsLoader; tensorfeed_tools() returns the full list ready to drop into a LangGraph create_react_agent. pip install tensorfeed[llamaindex] gets TensorFeedNewsReader and TensorFeedAttentionReader. pip install tensorfeed[crewai] gets 5 BaseTools and a tensorfeed_tools() helper. Base install remains stdlib-only. Documented at /developers/frameworks.',
+      'Python SDK 1.16.0 published to PyPI. New methods: harnesses(), attention(), attention_history(), attention_snapshot(date), attention_series(provider, from, to). Tagged py-sdk-v1.16.0 in git.',
+      '/api/meta now lists harnesses, attention, attentionHistory, attentionHistorySnapshot, and premiumAttentionSeries in the endpoint catalog. Same in /openapi.json once the static export rebuilds.',
+    ],
+  },
+  {
     date: 'April 28, 2026',
     entries: [
       'Premium API legal hardening pass (mirrors the TerminalFeed sister-site pass on the same day). Restructured /terms Premium API and Agent Payments into numbered subsections 17.1 through 17.15: sanctions warranty (17.9), autonomous-agent acknowledgment (17.10), suspension and revocation for abuse (17.11), Premium API acceptable use (17.12), liability cap (17.13), chargeback and fraudulent purchase handling (17.14), and no-money-services-business representation (17.15). Replaced the 24-hour refund window with a no-refunds policy (17.5); credits do not expire and remain jointly redeemable across tensorfeed.ai and terminalfeed.io. Added cross-site applicability clause (17.8) naming TensorFeed as the system of record for credit balances.',
