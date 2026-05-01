@@ -814,6 +814,64 @@ export default {
       }
     }
 
+    // === OPEN-WEIGHTS DEPLOYMENT REGISTRY (cached 600s) ===
+
+    if (path === '/api/open-weights') {
+      const { OPEN_WEIGHTS_CATALOG, OPEN_WEIGHTS_LAST_UPDATED } = await import('./open-weights');
+      const familyFilter = url.searchParams.get('family');
+      let models = OPEN_WEIGHTS_CATALOG;
+      if (familyFilter) {
+        models = models.filter(m => m.family.toLowerCase() === familyFilter.toLowerCase());
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: OPEN_WEIGHTS_LAST_UPDATED,
+        count: models.length,
+        models,
+      }, 200, 600);
+    }
+
+    // === AI HARDWARE SPEC CATALOG (cached 600s) ===
+
+    if (path === '/api/ai-hardware') {
+      const { AI_HARDWARE_CATALOG, AI_HARDWARE_LAST_UPDATED } = await import('./ai-hardware');
+      const manufacturerFilter = url.searchParams.get('manufacturer');
+      let hardware = AI_HARDWARE_CATALOG;
+      if (manufacturerFilter) {
+        hardware = hardware.filter(h => h.manufacturer.toLowerCase() === manufacturerFilter.toLowerCase());
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: AI_HARDWARE_LAST_UPDATED,
+        count: hardware.length,
+        hardware,
+      }, 200, 600);
+    }
+
+    // === MCP SERVER CATALOG (cached 600s) ===
+
+    if (path === '/api/mcp-servers') {
+      const { MCP_SERVER_CATALOG, MCP_SERVERS_LAST_UPDATED } = await import('./mcp-servers');
+      const capabilityFilter = url.searchParams.get('capability');
+      const firstPartyFilter = url.searchParams.get('first_party');
+      let servers = MCP_SERVER_CATALOG;
+      if (capabilityFilter) {
+        servers = servers.filter(s => s.capabilities.includes(capabilityFilter as 'filesystem'));
+      }
+      if (firstPartyFilter === 'true') {
+        servers = servers.filter(s => s.firstParty);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: MCP_SERVERS_LAST_UPDATED,
+        count: servers.length,
+        servers,
+      }, 200, 600);
+    }
+
     // === USAGE RANKINGS (cached 1800s) ===
     // Real production-traffic rankings sourced from OpenRouter. Editorial
     // snapshot for now; weekly refresh routine pulls upstream.
@@ -1078,6 +1136,9 @@ export default {
           usageRankings: '/api/usage-rankings',
           frameworks: '/api/frameworks?language=python|typescript&category=agent-orchestration|rag|multi-agent|sdk|workflow|voice-agent|browser-agent',
           benchmarkRegistry: '/api/benchmark-registry?category=knowledge|math|code|multimodal|agents|long-context&status=active|saturated',
+          openWeights: '/api/open-weights?family=Meta|DeepSeek|Mistral|Alibaba|Google|Microsoft',
+          aiHardware: '/api/ai-hardware?manufacturer=NVIDIA|AMD|Google|AWS|Apple|Cerebras|Groq',
+          mcpServers: '/api/mcp-servers?capability=filesystem|web-search|browser|github|slack|database&first_party=true',
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',
