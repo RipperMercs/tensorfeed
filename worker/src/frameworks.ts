@@ -1,0 +1,280 @@
+/**
+ * AI agent framework catalog.
+ *
+ * Production agent frameworks and SDKs for building custom AI agents:
+ * LangChain, LlamaIndex, AutoGen, CrewAI, Pydantic AI, Mastra, the
+ * OpenAI Agents SDK, the Anthropic Agent SDK, Vercel AI SDK, etc.
+ *
+ * Editorial; refreshed on redeploy with version + popularity bumps.
+ *
+ * Served at /api/frameworks (free, cached 600s).
+ */
+
+export interface AgentFramework {
+  id: string;
+  name: string;
+  vendor: string;
+  /** Primary languages: 'python', 'typescript', 'javascript', 'multi'. */
+  languages: ('python' | 'typescript' | 'javascript' | 'multi')[];
+  /** Latest stable version (best-effort). */
+  version: string;
+  released: string;
+  license: string;
+  /** GitHub stars (k = thousand). */
+  githubStarsK: number;
+  /** PyPI/NPM weekly install volume (k = thousand). */
+  weeklyInstallsK: number | null;
+  /** What category of work this framework targets. */
+  category: 'agent-orchestration' | 'rag' | 'multi-agent' | 'sdk' | 'workflow' | 'voice-agent' | 'browser-agent';
+  /** Key features. */
+  features: string[];
+  url: string;
+  github: string;
+  /** One-paragraph editorial description. */
+  notes: string;
+}
+
+export const FRAMEWORK_CATALOG: AgentFramework[] = [
+  {
+    id: 'langchain',
+    name: 'LangChain',
+    vendor: 'LangChain Inc.',
+    languages: ['python', 'typescript'],
+    version: '0.3.x',
+    released: '2022-10-22',
+    license: 'MIT',
+    githubStarsK: 95,
+    weeklyInstallsK: 4200,
+    category: 'agent-orchestration',
+    features: ['chains', 'tools', 'memory', 'tracing (LangSmith)', 'document loaders', '500+ integrations'],
+    url: 'https://www.langchain.com',
+    github: 'https://github.com/langchain-ai/langchain',
+    notes: 'The most-installed Python agent framework. Reorganized in v0.3 around langchain-core + provider packages to reduce churn. Pairs tightly with LangGraph for multi-step workflows and LangSmith for tracing.',
+  },
+  {
+    id: 'langgraph',
+    name: 'LangGraph',
+    vendor: 'LangChain Inc.',
+    languages: ['python', 'typescript'],
+    version: '0.2.x',
+    released: '2024-01-17',
+    license: 'MIT',
+    githubStarsK: 18,
+    weeklyInstallsK: 1100,
+    category: 'agent-orchestration',
+    features: ['stateful graphs', 'checkpointing', 'human-in-the-loop', 'streaming', 'time-travel'],
+    url: 'https://langchain-ai.github.io/langgraph/',
+    github: 'https://github.com/langchain-ai/langgraph',
+    notes: 'Stateful agent graphs on top of LangChain. The framework most production agents have moved to since 2024 because of its first-class checkpointing and time-travel debugging. create_react_agent is the most-used helper.',
+  },
+  {
+    id: 'llamaindex',
+    name: 'LlamaIndex',
+    vendor: 'LlamaIndex Inc.',
+    languages: ['python', 'typescript'],
+    version: '0.12.x',
+    released: '2022-11-22',
+    license: 'MIT',
+    githubStarsK: 42,
+    weeklyInstallsK: 1900,
+    category: 'rag',
+    features: ['document loaders', 'indexes', 'query engines', 'agents', 'workflows', 'observability'],
+    url: 'https://www.llamaindex.ai',
+    github: 'https://github.com/run-llama/llama_index',
+    notes: 'RAG-first framework. Strong on document ingestion, indexing strategies, and query rewriting. Workflows API (introduced 2024) is the agent-orchestration layer; competitive with LangGraph for retrieval-heavy use cases.',
+  },
+  {
+    id: 'autogen',
+    name: 'AutoGen',
+    vendor: 'Microsoft',
+    languages: ['python'],
+    version: '0.4.x',
+    released: '2023-09-25',
+    license: 'CC-BY-4.0',
+    githubStarsK: 38,
+    weeklyInstallsK: 350,
+    category: 'multi-agent',
+    features: ['conversable agents', 'group chat', 'code execution', 'human approval', 'event-driven'],
+    url: 'https://microsoft.github.io/autogen/',
+    github: 'https://github.com/microsoft/autogen',
+    notes: 'Microsoft Research multi-agent framework. v0.4 is the redesign: event-driven, async, and split into core/agentchat/extensions. Strong for agent-to-agent simulation and conversational multi-agent setups.',
+  },
+  {
+    id: 'crewai',
+    name: 'CrewAI',
+    vendor: 'crewAI Inc.',
+    languages: ['python'],
+    version: '0.86.x',
+    released: '2023-12-12',
+    license: 'MIT',
+    githubStarsK: 25,
+    weeklyInstallsK: 480,
+    category: 'multi-agent',
+    features: ['roles', 'tasks', 'crews', 'flows', 'tool registry'],
+    url: 'https://www.crewai.com',
+    github: 'https://github.com/crewAIInc/crewAI',
+    notes: 'Role-based multi-agent framework. The "Agent + Task + Crew" abstraction maps cleanly onto how teams actually think about delegation. Hugely popular for marketing/research/sales agent setups.',
+  },
+  {
+    id: 'pydantic-ai',
+    name: 'Pydantic AI',
+    vendor: 'Pydantic',
+    languages: ['python'],
+    version: '0.0.x',
+    released: '2024-12-02',
+    license: 'MIT',
+    githubStarsK: 8.5,
+    weeklyInstallsK: 220,
+    category: 'agent-orchestration',
+    features: ['type-safe agents', 'pydantic models', 'streaming', 'logfire integration', 'function calling'],
+    url: 'https://ai.pydantic.dev',
+    github: 'https://github.com/pydantic/pydantic-ai',
+    notes: 'Type-safe agent framework from the Pydantic team. Strong fit for Python codebases that already use Pydantic for data validation. Light, opinionated, and fast-growing in 2025-2026.',
+  },
+  {
+    id: 'mastra',
+    name: 'Mastra',
+    vendor: 'Mastra',
+    languages: ['typescript'],
+    version: '0.4.x',
+    released: '2024-09-12',
+    license: 'Elastic License v2',
+    githubStarsK: 12,
+    weeklyInstallsK: 95,
+    category: 'agent-orchestration',
+    features: ['workflows', 'agents', 'rag', 'evals', 'memory', 'voice'],
+    url: 'https://mastra.ai',
+    github: 'https://github.com/mastra-ai/mastra',
+    notes: 'TypeScript-first agent framework, built by the team behind Gatsby. Targets Node.js/Next.js stacks where most agent libraries are Python-only. Strong DX with first-class evals.',
+  },
+  {
+    id: 'openai-agents-sdk',
+    name: 'OpenAI Agents SDK',
+    vendor: 'OpenAI',
+    languages: ['python', 'typescript'],
+    version: '0.1.x',
+    released: '2025-03-12',
+    license: 'MIT',
+    githubStarsK: 16,
+    weeklyInstallsK: 750,
+    category: 'sdk',
+    features: ['handoffs', 'guardrails', 'tracing', 'sessions', 'voice agents'],
+    url: 'https://openai.github.io/openai-agents-python/',
+    github: 'https://github.com/openai/openai-agents-python',
+    notes: 'OpenAI\'s official agent SDK. Handoffs are first-class for multi-agent. Tightly integrates with OpenAI tracing. Use this if you are OpenAI-only; otherwise LangGraph or Pydantic AI are usually a better fit.',
+  },
+  {
+    id: 'claude-agent-sdk',
+    name: 'Claude Agent SDK',
+    vendor: 'Anthropic',
+    languages: ['python', 'typescript'],
+    version: '0.2.x',
+    released: '2025-09-29',
+    license: 'MIT',
+    githubStarsK: 6.5,
+    weeklyInstallsK: 280,
+    category: 'sdk',
+    features: ['claude code core', 'mcp servers', 'hooks', 'subagents', 'slash commands'],
+    url: 'https://docs.anthropic.com/en/docs/claude-code/sdk/sdk-overview',
+    github: 'https://github.com/anthropics/claude-agent-sdk-python',
+    notes: 'The Claude Code core, repackaged as a programmable SDK. Native MCP, hooks, and subagent orchestration. Best fit if your agent needs the same surface area as Claude Code.',
+  },
+  {
+    id: 'vercel-ai-sdk',
+    name: 'Vercel AI SDK',
+    vendor: 'Vercel',
+    languages: ['typescript', 'javascript'],
+    version: '4.x',
+    released: '2023-04-21',
+    license: 'Apache-2.0',
+    githubStarsK: 12,
+    weeklyInstallsK: 1300,
+    category: 'sdk',
+    features: ['streaming UI', 'tool calling', 'structured output', 'multi-provider', 'react/svelte/vue hooks'],
+    url: 'https://sdk.vercel.ai',
+    github: 'https://github.com/vercel/ai',
+    notes: 'TypeScript-first AI SDK. Best in class for streaming UI in Next.js/React apps. v4 added agent tools and multi-step generation. Most-used AI library in JS-land.',
+  },
+  {
+    id: 'agno',
+    name: 'Agno',
+    vendor: 'Agno',
+    languages: ['python'],
+    version: '1.x',
+    released: '2024-08-15',
+    license: 'MPL-2.0',
+    githubStarsK: 22,
+    weeklyInstallsK: 165,
+    category: 'agent-orchestration',
+    features: ['multi-modal agents', 'memory', 'knowledge bases', 'workflows', 'monitoring'],
+    url: 'https://www.agno.com',
+    github: 'https://github.com/agno-agi/agno',
+    notes: 'Phidata rebranded. Lightweight Python framework with first-class multimodal (image, audio, video) agents. Strong observability (Agno Platform). Faster cold-start than LangChain.',
+  },
+  {
+    id: 'smolagents',
+    name: 'smolagents',
+    vendor: 'Hugging Face',
+    languages: ['python'],
+    version: '1.x',
+    released: '2024-12-31',
+    license: 'Apache-2.0',
+    githubStarsK: 17,
+    weeklyInstallsK: 130,
+    category: 'agent-orchestration',
+    features: ['code agents', 'hub integration', 'multi-step', 'minimal abstractions'],
+    url: 'https://huggingface.co/docs/smolagents',
+    github: 'https://github.com/huggingface/smolagents',
+    notes: 'Minimal agent framework from Hugging Face. CodeAgent expresses tool use as Python code (instead of JSON), which often produces better trajectories on agentic-coding benchmarks. ~1k LOC core.',
+  },
+  {
+    id: 'haystack',
+    name: 'Haystack',
+    vendor: 'deepset',
+    languages: ['python'],
+    version: '2.x',
+    released: '2020-04-13',
+    license: 'Apache-2.0',
+    githubStarsK: 19,
+    weeklyInstallsK: 200,
+    category: 'rag',
+    features: ['pipelines', 'document stores', 'agents', 'evaluation', 'hybrid retrieval'],
+    url: 'https://haystack.deepset.ai',
+    github: 'https://github.com/deepset-ai/haystack',
+    notes: 'One of the original RAG frameworks (predates LLM era). v2 is a clean redesign. Strong for enterprise RAG; agents API now competitive with LangGraph for retrieval-heavy workflows.',
+  },
+  {
+    id: 'browser-use',
+    name: 'browser-use',
+    vendor: 'Browser Use',
+    languages: ['python'],
+    version: '0.2.x',
+    released: '2024-11-15',
+    license: 'MIT',
+    githubStarsK: 60,
+    weeklyInstallsK: 420,
+    category: 'browser-agent',
+    features: ['playwright', 'vision', 'click/type/scroll', 'multi-tab', 'file download'],
+    url: 'https://browser-use.com',
+    github: 'https://github.com/browser-use/browser-use',
+    notes: 'Open-source browser automation framework for AI agents. Passes web pages as DOM + screenshots to vision LLMs that decide actions. Top WebArena performance for an OSS framework.',
+  },
+  {
+    id: 'pipecat',
+    name: 'Pipecat',
+    vendor: 'Daily',
+    languages: ['python'],
+    version: '0.0.x',
+    released: '2024-04-01',
+    license: 'BSD-2-Clause',
+    githubStarsK: 6.5,
+    weeklyInstallsK: 85,
+    category: 'voice-agent',
+    features: ['STT', 'TTS', 'WebRTC', 'turn detection', 'multi-modal'],
+    url: 'https://www.pipecat.ai',
+    github: 'https://github.com/pipecat-ai/pipecat',
+    notes: 'Real-time voice agent framework. Pipelines connect STT (Deepgram, Whisper), LLMs, and TTS (Cartesia, ElevenLabs) over WebRTC with sub-second turn-taking. The default OSS stack for production voice agents.',
+  },
+];
+
+export const FRAMEWORKS_LAST_UPDATED = '2026-04-30';

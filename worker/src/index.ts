@@ -814,6 +814,67 @@ export default {
       }
     }
 
+    // === USAGE RANKINGS (cached 1800s) ===
+    // Real production-traffic rankings sourced from OpenRouter. Editorial
+    // snapshot for now; weekly refresh routine pulls upstream.
+
+    if (path === '/api/usage-rankings') {
+      const { USAGE_RANKINGS, USAGE_RANKINGS_LAST_UPDATED, USAGE_RANKINGS_SOURCE, USAGE_RANKINGS_WINDOW } = await import('./usage-rankings');
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        upstream: USAGE_RANKINGS_SOURCE,
+        window: USAGE_RANKINGS_WINDOW,
+        lastUpdated: USAGE_RANKINGS_LAST_UPDATED,
+        count: USAGE_RANKINGS.length,
+        rankings: USAGE_RANKINGS,
+      }, 200, 1800);
+    }
+
+    // === FRAMEWORKS CATALOG (cached 600s) ===
+
+    if (path === '/api/frameworks') {
+      const { FRAMEWORK_CATALOG, FRAMEWORKS_LAST_UPDATED } = await import('./frameworks');
+      const langFilter = url.searchParams.get('language');
+      const categoryFilter = url.searchParams.get('category');
+      let frameworks = FRAMEWORK_CATALOG;
+      if (langFilter) {
+        frameworks = frameworks.filter(f => f.languages.includes(langFilter as 'python' | 'typescript' | 'javascript' | 'multi'));
+      }
+      if (categoryFilter) {
+        frameworks = frameworks.filter(f => f.category === categoryFilter);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: FRAMEWORKS_LAST_UPDATED,
+        count: frameworks.length,
+        frameworks,
+      }, 200, 600);
+    }
+
+    // === BENCHMARK REGISTRY (cached 600s) ===
+
+    if (path === '/api/benchmark-registry') {
+      const { BENCHMARK_REGISTRY, BENCHMARK_REGISTRY_LAST_UPDATED } = await import('./benchmark-registry');
+      const categoryFilter = url.searchParams.get('category');
+      const statusFilter = url.searchParams.get('status');
+      let benchmarks = BENCHMARK_REGISTRY;
+      if (categoryFilter) {
+        benchmarks = benchmarks.filter(b => b.category === categoryFilter);
+      }
+      if (statusFilter) {
+        benchmarks = benchmarks.filter(b => b.status === statusFilter);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: BENCHMARK_REGISTRY_LAST_UPDATED,
+        count: benchmarks.length,
+        benchmarks,
+      }, 200, 600);
+    }
+
     // === MULTIMODAL CATALOG (cached 600s) ===
     // Image / video / TTS / STT model catalog with modality-native pricing
     // (per image, per second of video, per 1k chars, per minute of audio).
@@ -1014,6 +1075,9 @@ export default {
           embeddings: '/api/embeddings?type=embedding|reranker',
           multimodal: '/api/multimodal?modality=image|video|tts|stt',
           vectorDbs: '/api/vector-dbs?type=managed|oss|hybrid&open_source=true',
+          usageRankings: '/api/usage-rankings',
+          frameworks: '/api/frameworks?language=python|typescript&category=agent-orchestration|rag|multi-agent|sdk|workflow|voice-agent|browser-agent',
+          benchmarkRegistry: '/api/benchmark-registry?category=knowledge|math|code|multimodal|agents|long-context&status=active|saturated',
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',
