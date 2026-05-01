@@ -783,6 +783,37 @@ export default {
       return response;
     }
 
+    // === ATTENTION HISTORY: list of dates (free) ===
+
+    if (path === '/api/attention/history') {
+      const { listAttentionDates } = await import('./attention-history');
+      const dates = await listAttentionDates(env);
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        count: dates.length,
+        dates,
+      }, 200, 60);
+    }
+
+    // === ATTENTION HISTORY: single-date snapshot (free) ===
+
+    {
+      const m = path.match(/^\/api\/attention\/history\/(\d{4}-\d{2}-\d{2})$/);
+      if (m) {
+        const { readAttentionSnapshot } = await import('./attention-history');
+        const snap = await readAttentionSnapshot(env, m[1]);
+        if (!snap) {
+          return jsonResponse({ ok: false, error: 'snapshot_not_found', date: m[1] }, 404);
+        }
+        return jsonResponse({
+          ok: true,
+          source: 'tensorfeed.ai',
+          ...snap,
+        }, 200, 600);
+      }
+    }
+
     // === HARNESSES ENDPOINT (cached 300s) ===
     // Cross-harness leaderboard for agentic-coding harnesses (Claude Code,
     // Cursor, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf, Amp,
@@ -865,6 +896,8 @@ export default {
           benchmarks: '/api/benchmarks',
           harnesses: '/api/harnesses',
           attention: '/api/attention',
+          attentionHistory: '/api/attention/history',
+          attentionHistorySnapshot: '/api/attention/history/{YYYY-MM-DD}',
           agentsDirectory: '/api/agents/directory',
           agentActivity: '/api/agents/activity',
           podcasts: '/api/podcasts',
@@ -893,6 +926,7 @@ export default {
           premiumMcpRegistrySeries: '/api/premium/mcp/registry/series?from=&to=',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
           premiumGpuPricingSeries: '/api/premium/gpu/pricing/series?gpu=&from=&to=',
+          premiumAttentionSeries: '/api/premium/attention/series?provider=&from=&to=',
           paymentInfo: '/api/payment/info',
           paymentBuyCredits: '/api/payment/buy-credits',
           paymentConfirm: '/api/payment/confirm',
@@ -1533,6 +1567,49 @@ export default {
       const result = await getStatusUptime(env, provider, range.from, range.to);
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/history/status/uptime', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: ATTENTION INDEX TIME SERIES (Tier 1, 1 credit) ===
+    // Per-provider daily attention score over the requested range, with
+    // first/last/delta/min/max/avg summary. Backed by the daily snapshot
+    // captured on 0 7 * * *. The historical series compounds with time and
+    // cannot be backfilled, so it is the moat behind the free /api/attention.
+    // 90-day max range, default 30 days back.
+
+    if (path === '/api/premium/attention/series') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const provider = url.searchParams.get('provider')?.trim();
+      if (!provider) {
+        return jsonResponse(
+          { ok: false, error: 'provider_required', hint: 'Pass ?provider=<id> (e.g. anthropic, openai, google, meta, mistral, cohere, deepseek, xai, perplexity, nvidia, huggingface, cursor)' },
+          400,
+        );
+      }
+      const {
+        resolveRange: resolveAttentionRange,
+        getAttentionSeries,
+        MAX_RANGE_DAYS: ATT_MAX,
+        DEFAULT_RANGE_DAYS: ATT_DEFAULT,
+      } = await import('./attention-history');
+      const range = resolveAttentionRange(url.searchParams.get('from'), url.searchParams.get('to'));
+      if (!range.ok) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: range.error,
+            limits: { max_range_days: ATT_MAX, default_range_days: ATT_DEFAULT },
+          },
+          400,
+        );
+      }
+
+      const result = await getAttentionSeries(env, provider, range.from, range.to);
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/attention/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -2315,6 +2392,11 @@ export default {
       // pricing, models, benchmarks, status, agent activity. Runs after
       // updateDailyData so the snapshot reflects freshly-updated data.
       await run('captureHistory', () => captureHistory(env));
+      // Daily AI Attention Index snapshot. Compounds into a multi-month
+      // series of per-provider attention. Backs /api/attention/history
+      // (free) and /api/premium/attention/series (1 credit).
+      const { captureAttentionSnapshot } = await import('./attention-history');
+      await run('captureAttentionSnapshot', () => captureAttentionSnapshot(env));
       // Premium webhook watches: fire price-change webhooks based on the
       // diff between the last seen pricing and the freshly-updated payload.
       await run('runPriceWatchCycle', () => runPriceWatchCycle(env));

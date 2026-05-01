@@ -185,6 +185,44 @@ class TensorFeed:
         """
         return self._get("/attention")
 
+    def attention_history(self) -> dict[str, Any]:
+        """List dates with a captured AI Attention Index snapshot. Free."""
+        return self._get("/attention/history")
+
+    def attention_snapshot(self, date: str) -> dict[str, Any]:
+        """Read a specific date's AI Attention Index snapshot. Free.
+
+        Args:
+            date: Date as YYYY-MM-DD (UTC)
+        """
+        return self._get(f"/attention/history/{date}")
+
+    def attention_series(
+        self,
+        provider: str,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Get the per-provider attention time series. 1 credit. Premium.
+
+        Returns daily attention_score and raw signal counts for one
+        provider over the requested range, plus first/last/delta/min/max/avg
+        summary. Range capped at 90 days, default 30 days back.
+
+        Args:
+            provider: Provider id (anthropic, openai, google, meta, mistral,
+                cohere, deepseek, xai, perplexity, nvidia, huggingface, cursor)
+            from_date: Start YYYY-MM-DD (default: 30 days ago)
+            to_date: End YYYY-MM-DD (default: today)
+        """
+        kwargs = {"provider": provider}
+        if from_date is not None:
+            kwargs["from"] = from_date
+        if to_date is not None:
+            kwargs["to"] = to_date
+        return self._get("/premium/attention/series", **kwargs)
+
     def agent_activity(self) -> dict[str, Any]:
         """Get agent traffic metrics. Free."""
         return self._get("/agents/activity")

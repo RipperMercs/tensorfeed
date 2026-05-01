@@ -463,6 +463,109 @@ for (const p of data.providers.slice(0, 5)) {
       },
     ],
   },
+  {
+    slug: 'attention-history',
+    name: 'Attention History (Index)',
+    path: '/api/attention/history',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'history',
+    seoTitle: 'TensorFeed Attention History API: Available Snapshot Dates',
+    seoDescription:
+      'TensorFeed /api/attention/history returns the list of dates that have a captured AI Attention Index snapshot. Pair with /api/attention/history/{date} to read one day. Free.',
+    intro:
+      'The /api/attention/history endpoint returns the list of dates for which we have captured an AI Attention Index snapshot. Snapshots are captured once per day at 7 AM UTC; the dataset compounds and cannot be backfilled, so this list grows monotonically. Pair with /api/attention/history/{date} to read a specific day, or with the paid /api/premium/attention/series for a per-provider time series.',
+    whenToUse:
+      'When your agent wants to know how far back the historical attention data goes before requesting a series. Free, lightweight discovery endpoint.',
+    params: [],
+    exampleResponse: `{
+  "ok": true,
+  "count": 14,
+  "dates": ["2026-04-30", "2026-04-29", "2026-04-28", "..."]
+}`,
+    pythonExample: `import urllib.request, json
+
+with urllib.request.urlopen("https://tensorfeed.ai/api/attention/history") as r:
+    data = json.loads(r.read())
+print(f"{data['count']} snapshot dates available, oldest: {data['dates'][-1]}")`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/attention/history");
+const data = await res.json();
+console.log(\`\${data.count} dates, oldest: \${data.dates[data.dates.length - 1]}\`);`,
+    mcpTool: null,
+    relatedSlugs: ['attention', 'premium-attention-series'],
+    faqs: [
+      {
+        q: 'How far back does the attention history go?',
+        a: 'It started capturing in late April 2026 and grows by one date per day. The dataset compounds; it cannot be backfilled because the live attention signals depend on news/trending/activity data that we do not retain at high resolution beyond the rolling caches.',
+      },
+    ],
+  },
+  {
+    slug: 'premium-attention-series',
+    name: 'Premium Attention Series',
+    path: '/api/premium/attention/series',
+    method: 'GET',
+    tier: 'premium',
+    cost: '1 credit',
+    category: 'history',
+    seoTitle: 'TensorFeed Premium Attention Series API: Per-Provider History',
+    seoDescription:
+      'TensorFeed /api/premium/attention/series returns daily AI Attention Index per provider over a requested date range, with first/last/delta/min/max/avg summary. 1 credit per call.',
+    intro:
+      'The /api/premium/attention/series endpoint returns the daily attention score for one provider over the requested date range, plus first/last/delta/min/max/avg summary. Backed by the daily snapshot at 7 AM UTC. Range capped at 90 days, default 30 days back. The historical series compounds with time and cannot be backfilled, so this is the natural premium tier for the free attention index.',
+    whenToUse:
+      'When your agent wants to know whether attention on a specific provider is trending up or down over time, not just the live snapshot. The summary block makes "is it growing or shrinking" a one-field check.',
+    params: [
+      { name: 'provider', in: 'query', required: true, type: 'string', description: 'Provider id (anthropic, openai, google, meta, mistral, cohere, deepseek, xai, perplexity, nvidia, huggingface, cursor)', example: 'anthropic' },
+      { name: 'from', in: 'query', type: 'string', description: 'Start date YYYY-MM-DD (default: 30 days ago)', example: '2026-04-01' },
+      { name: 'to', in: 'query', type: 'string', description: 'End date YYYY-MM-DD (default: today)', example: '2026-04-30' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "provider": "anthropic",
+  "range": { "from": "2026-04-01", "to": "2026-04-30", "days": 30 },
+  "summary": {
+    "first": 87.3, "last": 100, "delta": 12.7,
+    "min": 71.2, "max": 100, "avg": 88.1, "captured_days": 30
+  },
+  "series": [
+    { "date": "2026-04-01", "attention_score": 87.3, "rank": 2, "news_24h": 4, "news_7d": 18, "trending_repos": 2, "agent_hits": 11 }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+
+tf = TensorFeed(token="tf_live_...")
+series = tf._get(
+    "/premium/attention/series",
+    provider="anthropic",
+    **{"from": "2026-04-01", "to": "2026-04-30"},
+)
+print(f"Anthropic attention: {series['summary']['first']} -> {series['summary']['last']} ({series['summary']['delta']:+.1f})")`,
+    typescriptExample: `const res = await fetch(
+  "https://tensorfeed.ai/api/premium/attention/series?provider=anthropic&from=2026-04-01&to=2026-04-30",
+  { headers: { Authorization: "Bearer tf_live_..." } }
+);
+const series = await res.json();
+console.log(series.summary);`,
+    mcpTool: null,
+    relatedSlugs: ['attention', 'attention-history', 'premium-whats-new'],
+    faqs: [
+      {
+        q: 'Can I get a series across multiple providers in one call?',
+        a: 'Not in v1. Issue parallel requests per provider id. Each call is one credit.',
+      },
+      {
+        q: 'How far back can I query?',
+        a: 'The system enforces a 90-day max range per request. The earliest available date is the day daily capture started in late April 2026; query /api/attention/history first to discover the oldest captured date.',
+      },
+      {
+        q: 'What is the delta field?',
+        a: 'The change between the first non-null attention_score in the range and the last non-null score. Positive means growing attention, negative means shrinking.',
+      },
+    ],
+  },
 
   // ── Free with token: payment / usage ─────────────────────────────
   {
