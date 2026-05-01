@@ -35,15 +35,6 @@ export const ORIGINALS: OriginalArticle[] = [
       'Palo Alto Networks announced its intent to acquire Portkey on April 30, 2026, plugging an AI gateway that routes to 1,600 plus LLMs and an MCP gateway processing trillions of tokens per month into Prisma AIRS. The agent infrastructure layer just got its first big enterprise security exit. We break down the deal, the numbers, and what it signals for MCP, AI gateways, and the future of agent governance.',
   },
   {
-    slug: 'harness-gap-not-the-model',
-    title: 'It Is Not the Model. It Is the Harness.',
-    author: 'Ripper',
-    date: 'Apr 30, 2026',
-    readTime: '6 min read',
-    description:
-      'Claude Sonnet 4.6 in Claude Code scores about 71 on SWE-bench Verified. The same Sonnet 4.6 in Continue scores about 52. Same model. The harness is doing the other 19 points. The harness gap, why it is bigger than the model gap, and the new TensorFeed harness leaderboard tracking 11 coding agents across 4 agentic benchmarks.',
-  },
-  {
     slug: 'guard-act-senate-judiciary-22-0',
     title: 'The Senate Just Voted 22-0 to Regulate AI Chatbots. Here Is What Is Actually in the GUARD Act.',
     author: 'Kira Nolan',
@@ -51,6 +42,15 @@ export const ORIGINALS: OriginalArticle[] = [
     readTime: '7 min read',
     description:
       'The Senate Judiciary Committee unanimously advanced the GUARD Act on April 30, 2026. Government ID-based age verification, a flat ban on AI companions for minors, mandatory non-human disclosures every 30 minutes, and criminal penalties. We read the bill so you do not have to, and lay out the engineering shape of compliance for any consumer AI product.',
+  },
+  {
+    slug: 'harness-gap-not-the-model',
+    title: 'It Is Not the Model. It Is the Harness.',
+    author: 'Ripper',
+    date: 'Apr 30, 2026',
+    readTime: '6 min read',
+    description:
+      'Claude Sonnet 4.6 in Claude Code scores about 71 on SWE-bench Verified. The same Sonnet 4.6 in Continue scores about 52. Same model. The harness is doing the other 19 points. The harness gap, why it is bigger than the model gap, and the new TensorFeed harness leaderboard tracking 11 coding agents across 4 agentic benchmarks.',
   },
   {
     slug: 'measuring-llm-api-latency-from-the-edge',
