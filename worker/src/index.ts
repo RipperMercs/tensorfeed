@@ -814,6 +814,50 @@ export default {
       }
     }
 
+    // === MULTIMODAL CATALOG (cached 600s) ===
+    // Image / video / TTS / STT model catalog with modality-native pricing
+    // (per image, per second of video, per 1k chars, per minute of audio).
+
+    if (path === '/api/multimodal') {
+      const { MULTIMODAL_CATALOG, MULTIMODAL_LAST_UPDATED } = await import('./multimodal');
+      const modalityFilter = url.searchParams.get('modality');
+      let models = MULTIMODAL_CATALOG;
+      if (modalityFilter && ['image', 'video', 'tts', 'stt'].includes(modalityFilter)) {
+        models = models.filter(m => m.modality === modalityFilter);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: MULTIMODAL_LAST_UPDATED,
+        count: models.length,
+        models,
+      }, 200, 600);
+    }
+
+    // === VECTOR DB CATALOG (cached 600s) ===
+    // Hosted vector databases and self-hostable engines with pricing,
+    // tier limits, hybrid search support, and operational details.
+
+    if (path === '/api/vector-dbs') {
+      const { VECTOR_DB_CATALOG, VECTOR_DBS_LAST_UPDATED } = await import('./vector-dbs');
+      const typeFilter = url.searchParams.get('type');
+      const ossOnly = url.searchParams.get('open_source') === 'true';
+      let dbs = VECTOR_DB_CATALOG;
+      if (typeFilter && ['managed', 'oss', 'hybrid'].includes(typeFilter)) {
+        dbs = dbs.filter(d => d.type === typeFilter);
+      }
+      if (ossOnly) {
+        dbs = dbs.filter(d => d.openSource);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: VECTOR_DBS_LAST_UPDATED,
+        count: dbs.length,
+        databases: dbs,
+      }, 200, 600);
+    }
+
     // === EMBEDDING & RERANKER CATALOG (cached 600s) ===
     // Curated list of production-ready embedding and reranker models with
     // pricing, dimensions, max input tokens, hosted vs open-source status.
@@ -968,6 +1012,8 @@ export default {
           attentionHistory: '/api/attention/history',
           attentionHistorySnapshot: '/api/attention/history/{YYYY-MM-DD}',
           embeddings: '/api/embeddings?type=embedding|reranker',
+          multimodal: '/api/multimodal?modality=image|video|tts|stt',
+          vectorDbs: '/api/vector-dbs?type=managed|oss|hybrid&open_source=true',
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',

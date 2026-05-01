@@ -18,7 +18,7 @@ from typing import Any  # noqa: F401  (re-exported by purchase_credits return ty
 
 
 DEFAULT_BASE_URL = "https://tensorfeed.ai/api"
-DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.17"
+DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.18"
 
 
 class TensorFeedError(Exception):
@@ -162,6 +162,30 @@ class TensorFeed:
     def benchmarks(self) -> dict[str, Any]:
         """Get AI model benchmark scores. Free."""
         return self._get("/benchmarks")
+
+    def multimodal(self, *, modality: str | None = None) -> dict[str, Any]:
+        """Get the multimodal model catalog. Free.
+
+        Args:
+            modality: Filter to "image", "video", "tts", or "stt"
+        """
+        return self._get("/multimodal", modality=modality)
+
+    def vector_dbs(
+        self, *, type: str | None = None, open_source: bool | None = None
+    ) -> dict[str, Any]:
+        """Get the vector database catalog. Free.
+
+        Args:
+            type: "managed", "oss", or "hybrid"
+            open_source: Restrict to open-source databases only
+        """
+        kwargs: dict[str, Any] = {}
+        if type is not None:
+            kwargs["type"] = type
+        if open_source is not None:
+            kwargs["open_source"] = "true" if open_source else "false"
+        return self._get("/vector-dbs", **kwargs)
 
     def embeddings(self, *, type: str | None = None) -> dict[str, Any]:
         """Get the embedding & reranker model catalog. Free.

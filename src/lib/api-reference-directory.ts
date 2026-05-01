@@ -396,6 +396,112 @@ console.log(ranked[0]);`,
     ],
   },
   {
+    slug: 'multimodal',
+    name: 'Multimodal Models',
+    path: '/api/multimodal',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'models',
+    seoTitle: 'TensorFeed Multimodal API: Image, Video, TTS, STT Catalog',
+    seoDescription:
+      'TensorFeed /api/multimodal returns image generation, video generation, TTS, and STT models with pricing in modality-native units. Sora, Veo, FLUX, ElevenLabs, Whisper, Deepgram. Free.',
+    intro:
+      'The /api/multimodal endpoint returns the catalog of production image generation, video generation, text-to-speech, and speech-to-text models. Pricing is in modality-native units (per image, per second of video, per 1k characters, per minute of audio) so cross-modality comparison is not meaningful, but within-modality sorting by price is the primary use.',
+    whenToUse:
+      'When your agent needs to pick a multimodal model for image, video, TTS, or STT work. The /api/models endpoint covers chat models; this is the missing peer for the other modalities.',
+    params: [
+      { name: 'modality', in: 'query', type: 'string', description: 'Filter to "image", "video", "tts", or "stt"', example: 'video' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "lastUpdated": "2026-04-30",
+  "count": 6,
+  "models": [
+    {
+      "id": "veo-3",
+      "name": "Veo 3",
+      "provider": "Google",
+      "modality": "video",
+      "pricingUnit": "per_second_video",
+      "pricingAmount": 0.50,
+      "maxOutput": "8s @ 1080p with audio",
+      "features": ["native audio", "lip-sync", "image-to-video"]
+    }
+  ]
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+tf = TensorFeed()
+data = tf.multimodal(modality="video")
+for m in sorted(data["models"], key=lambda x: x["pricingAmount"] or 0):
+    print(f"{m['name']:<24} {m['pricingAmount']}/sec  ({m['provider']})")`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/multimodal?modality=video");
+const { models } = await res.json();
+for (const m of models) console.log(\`\${m.name}: \${m.pricingAmount}/sec\`);`,
+    mcpTool: null,
+    relatedSlugs: ['embeddings', 'inference-providers', 'models'],
+    faqs: [
+      {
+        q: 'How are different modalities priced?',
+        a: 'Image: per image. Video: per second of generated video. TTS: per 1k characters of input text. STT: per minute of input audio. The pricingUnit field on each entry says exactly which unit applies. Cross-modality price comparison is not meaningful; sort within a modality.',
+      },
+    ],
+  },
+  {
+    slug: 'vector-dbs',
+    name: 'Vector Databases',
+    path: '/api/vector-dbs',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'agents',
+    seoTitle: 'TensorFeed Vector DBs API: RAG Infrastructure Catalog',
+    seoDescription:
+      'TensorFeed /api/vector-dbs returns the production vector database catalog: Pinecone, Turbopuffer, Qdrant, Weaviate, Milvus, Chroma, pgvector, LanceDB, MongoDB Atlas, Vespa, Elasticsearch, OpenSearch. Free.',
+    intro:
+      'The /api/vector-dbs endpoint returns the production vector database and RAG-infrastructure catalog. Each entry includes starting price USD/month (or null for usage-based-only or open-source-only), free tier description, hybrid search support, metadata filtering, multi-tenancy, serverless tier availability, license, and hosting options.',
+    whenToUse:
+      'When your agent is picking a vector database. Filter with ?type=managed for SaaS-only, ?type=oss for open-source-only, ?type=hybrid for the both-SaaS-and-self-host options. ?open_source=true returns only open-source entries regardless of type.',
+    params: [
+      { name: 'type', in: 'query', type: 'string', description: '"managed", "oss", or "hybrid"', example: 'hybrid' },
+      { name: 'open_source', in: 'query', type: 'boolean', description: 'Restrict to open-source databases only', example: 'true' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "lastUpdated": "2026-04-30",
+  "count": 12,
+  "databases": [
+    {
+      "id": "turbopuffer",
+      "name": "Turbopuffer",
+      "type": "managed",
+      "hostingOptions": ["cloud"],
+      "freeTier": "1k namespaces, 10M vectors",
+      "startingPriceUSDMonth": 0,
+      "hybridSearch": true,
+      "openSource": false,
+      "license": "Proprietary"
+    }
+  ]
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+tf = TensorFeed()
+dbs = tf.vector_dbs(type="hybrid")
+for d in dbs["databases"]:
+    print(d["name"], d["startingPriceUSDMonth"], d["license"])`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/vector-dbs?open_source=true");
+const { databases } = await res.json();
+for (const d of databases) console.log(d.name, d.license);`,
+    mcpTool: null,
+    relatedSlugs: ['embeddings', 'multimodal', 'agents-directory'],
+    faqs: [
+      {
+        q: 'What is the type field?',
+        a: 'managed = SaaS only (Pinecone, Turbopuffer). oss = open-source self-host only (pgvector, OpenSearch). hybrid = both SaaS and self-host with feature parity (Qdrant, Weaviate, Milvus, Chroma, LanceDB, Vespa).',
+      },
+    ],
+  },
+  {
     slug: 'embeddings',
     name: 'Embedding Models',
     path: '/api/embeddings',

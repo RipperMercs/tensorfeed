@@ -21,4 +21,4 @@ __all__ = [
     "PaymentRequired",
     "RateLimited",
 ]
-__version__ = "1.17.0"
+__version__ = "1.18.0"
