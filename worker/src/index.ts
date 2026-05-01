@@ -814,6 +814,69 @@ export default {
       }
     }
 
+    // === FINE-TUNING PROVIDER CATALOG (cached 600s) ===
+
+    if (path === '/api/fine-tuning') {
+      const { FINE_TUNING_PROVIDERS, FINE_TUNING_LAST_UPDATED } = await import('./fine-tuning');
+      const typeFilter = url.searchParams.get('type');
+      const methodFilter = url.searchParams.get('method');
+      let providers = FINE_TUNING_PROVIDERS;
+      if (typeFilter) {
+        providers = providers.filter(p => p.type === typeFilter);
+      }
+      if (methodFilter) {
+        providers = providers.filter(p => p.methods.includes(methodFilter as 'lora'));
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: FINE_TUNING_LAST_UPDATED,
+        count: providers.length,
+        providers,
+      }, 200, 600);
+    }
+
+    // === SPECIALIZED MODELS CATALOG (cached 600s) ===
+
+    if (path === '/api/specialized-models') {
+      const { SPECIALIZED_MODELS, SPECIALIZED_MODELS_LAST_UPDATED } = await import('./specialized-models');
+      const domainFilter = url.searchParams.get('domain');
+      const openOnly = url.searchParams.get('open_weights') === 'true';
+      let models = SPECIALIZED_MODELS;
+      if (domainFilter) {
+        models = models.filter(m => m.domain === domainFilter);
+      }
+      if (openOnly) {
+        models = models.filter(m => m.openWeights);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: SPECIALIZED_MODELS_LAST_UPDATED,
+        count: models.length,
+        models,
+      }, 200, 600);
+    }
+
+    // === MODEL CARDS / SAFETY AGGREGATOR (cached 600s) ===
+
+    if (path === '/api/model-cards') {
+      const { MODEL_CARDS, SAFETY_DOCS, MODEL_CARDS_LAST_UPDATED } = await import('./model-cards');
+      const labFilter = url.searchParams.get('lab');
+      let cards = MODEL_CARDS;
+      if (labFilter) {
+        cards = cards.filter(c => c.lab.toLowerCase() === labFilter.toLowerCase());
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: MODEL_CARDS_LAST_UPDATED,
+        modelCount: cards.length,
+        modelCards: cards,
+        crossModelSafetyDocs: SAFETY_DOCS,
+      }, 200, 600);
+    }
+
     // === TRAINING DATASETS REGISTRY (cached 600s) ===
 
     if (path === '/api/training-datasets') {
@@ -1204,6 +1267,9 @@ export default {
           trainingDatasets: '/api/training-datasets?stage=pretraining|instruction-tuning|dpo|rlhf|multimodal',
           agentApis: '/api/agent-apis?category=search|web-scraping|weather|finance|maps|email|sms|payments|code-execution|ocr&has_mcp=true',
           trainingRuns: '/api/training-runs?publisher=OpenAI|Anthropic|Meta|Google|DeepSeek&open_weights=true',
+          fineTuning: '/api/fine-tuning?type=first-party|hosted&method=lora|qlora|full|dpo|rlhf',
+          specializedModels: '/api/specialized-models?domain=code|medical|legal|finance|music|3d|retrieval|science&open_weights=true',
+          modelCards: '/api/model-cards?lab=Anthropic|OpenAI|Google|Meta|DeepSeek',
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',
