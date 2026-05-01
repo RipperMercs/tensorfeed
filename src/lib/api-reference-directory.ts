@@ -396,6 +396,185 @@ console.log(ranked[0]);`,
     ],
   },
   {
+    slug: 'embeddings',
+    name: 'Embedding Models',
+    path: '/api/embeddings',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'models',
+    seoTitle: 'TensorFeed Embeddings API: AI Embedding Catalog, Free',
+    seoDescription:
+      'TensorFeed /api/embeddings returns the catalog of production embedding and reranker models: OpenAI, Voyage, Cohere, Google, Mistral, Jina, Nomic, Mixedbread, BAAI. Pricing, dimensions, MTEB. Free.',
+    intro:
+      'The /api/embeddings endpoint returns the curated catalog of production-ready embedding and reranker models. Each entry includes provider, dimensions (null for rerankers), max input tokens, $/1M tokens, MTEB average score, multilingual flag, license, and a one-line note. Filter with ?type=embedding or ?type=reranker.',
+    whenToUse:
+      'When your agent needs to pick or compare embeddings for a RAG pipeline. The /api/models endpoint covers chat/completion models; this is the missing peer for embeddings + rerankers.',
+    params: [
+      { name: 'type', in: 'query', type: 'string', description: 'Filter to "embedding" or "reranker" only', example: 'embedding' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "lastUpdated": "2026-04-30",
+  "count": 18,
+  "models": [
+    {
+      "id": "voyage-3-large",
+      "name": "voyage-3-large",
+      "provider": "Voyage AI",
+      "type": "embedding",
+      "dimensions": 1024,
+      "maxInputTokens": 32000,
+      "pricePer1MTokens": 0.18,
+      "openSource": false,
+      "license": "Proprietary",
+      "multilingual": true,
+      "mtebAvg": 67.0
+    }
+  ]
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+tf = TensorFeed()
+emb = tf.embeddings(type="embedding")
+# Cheapest production embedding
+ranked = sorted(
+    [m for m in emb["models"] if m["pricePer1MTokens"] is not None],
+    key=lambda m: m["pricePer1MTokens"]
+)
+print(ranked[0]["name"], ranked[0]["pricePer1MTokens"])`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/embeddings?type=embedding");
+const { models } = await res.json();
+const cheapest = models
+  .filter(m => m.pricePer1MTokens !== null)
+  .sort((a, b) => a.pricePer1MTokens - b.pricePer1MTokens)[0];
+console.log(cheapest.name);`,
+    mcpTool: null,
+    relatedSlugs: ['models', 'inference-providers', 'inference-providers-cheapest'],
+    faqs: [
+      {
+        q: 'How current is the embedding catalog?',
+        a: 'Editorial. Refreshed on redeploy when providers ship a new version or change pricing. Embedding-model pricing changes rarely (months, not days), so a daily cron does not match the data.',
+      },
+      {
+        q: 'Why is rerank-v3.5 listed at $0?',
+        a: 'Because Cohere prices rerank by search (each search = up to 100 documents reranked), not by token. The pricingNote field on each entry has the actual pricing model.',
+      },
+    ],
+  },
+  {
+    slug: 'inference-providers',
+    name: 'Inference Provider Matrix',
+    path: '/api/inference-providers',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'models',
+    seoTitle: 'TensorFeed Inference Providers API: Cross-Provider Pricing',
+    seoDescription:
+      'TensorFeed /api/inference-providers returns the cross-provider pricing matrix for open-weight models. Llama 4, DeepSeek V4, Mixtral, Qwen across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate. Free.',
+    intro:
+      'The /api/inference-providers endpoint returns the cross-provider pricing matrix for open-weight models. Same Llama 4 Maverick / Scout / DeepSeek V4 / Mixtral / Qwen 2.5 weights, different price across 8 hosted providers. Each offer carries input price, output price, blended price, output TPS, context window the provider serves at, feature flags (function calling, json mode, vision), and the provider docs URL.',
+    whenToUse:
+      'When your agent is picking the cheapest hosted inference path for an open-weight model. For a single-model lookup use /api/inference-providers/cheapest instead so you do not need the full matrix.',
+    params: [
+      { name: 'family', in: 'query', type: 'string', description: 'Filter by origin lab (Meta, DeepSeek, Mistral, Alibaba)', example: 'Meta' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "lastUpdated": "2026-04-30",
+  "tracked_providers": ["Together AI", "Fireworks", "DeepInfra", "Groq", "OpenRouter", "Replicate", "Anyscale", "DeepSeek"],
+  "models": [
+    {
+      "modelId": "llama-4-scout",
+      "modelName": "Llama 4 Scout",
+      "family": "Meta",
+      "paramsB": 109,
+      "license": "Llama 4 Community License",
+      "openWeights": true,
+      "offers": [
+        { "provider": "DeepInfra", "inputPrice": 0.16, "outputPrice": 0.55, "blendedPrice": 0.355, "contextWindow": 10000000, "outputTPS": 170, "features": ["function-calling", "vision"] }
+      ]
+    }
+  ]
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+tf = TensorFeed()
+matrix = tf.inference_providers(family="Meta")
+for m in matrix["models"]:
+    cheapest = min(m["offers"], key=lambda o: o["blendedPrice"])
+    print(f"{m['modelName']:<28} {cheapest['provider']:<14} \${cheapest['blendedPrice']:.3f}")`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/inference-providers?family=Meta");
+const { models } = await res.json();
+for (const m of models) {
+  const cheapest = m.offers.reduce((a, b) => a.blendedPrice < b.blendedPrice ? a : b);
+  console.log(\`\${m.modelName}: \${cheapest.provider} @ $\${cheapest.blendedPrice}\`);
+}`,
+    mcpTool: null,
+    relatedSlugs: ['inference-providers-cheapest', 'embeddings', 'models', 'gpu-pricing'],
+    faqs: [
+      {
+        q: 'Why is the same model priced differently across providers?',
+        a: 'Each inference provider runs its own GPU fleet, quantization strategy, and batching policy. Together and Fireworks anchor on FP8 Turbo variants for speed. DeepInfra optimizes for raw cost. Groq runs custom LPU silicon at very high throughput with a context-window trade-off. The price spread on a single model is routinely 3-10x.',
+      },
+      {
+        q: 'How fresh is this data?',
+        a: 'Editorial weekly refresh. Provider pricing changes more often than embedding pricing but less often than spot-priced compute, so a weekly cadence is the right granularity.',
+      },
+    ],
+  },
+  {
+    slug: 'inference-providers-cheapest',
+    name: 'Inference Cheapest',
+    path: '/api/inference-providers/cheapest',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'models',
+    seoTitle: 'TensorFeed Inference Cheapest API: Lowest Price Per Model',
+    seoDescription:
+      'TensorFeed /api/inference-providers/cheapest returns the top 3 cheapest hosted inference offers for one open-weight model. Sort by blended, input, output, or output TPS. Free.',
+    intro:
+      'Agent-friendly entry point into the inference provider matrix. Pass a canonical model id and get back the top 3 cheapest offers (default sort is blended price). Skips the full matrix payload, which is useful when an agent is just picking the cheapest path and does not need every column.',
+    whenToUse:
+      'When your agent needs the cheapest inference path for a specific open-weight model in a single call. For a different sort, pass ?sort=input|output|tps_desc.',
+    params: [
+      { name: 'model', in: 'query', required: true, type: 'string', description: 'Canonical model id (llama-4-maverick, llama-4-scout, llama-3.1-70b, llama-3.1-405b, deepseek-v4-pro, deepseek-v4-flash, mixtral-8x22b, qwen-2.5-72b)', example: 'llama-4-scout' },
+      { name: 'sort', in: 'query', type: 'string', description: 'Sort order: blended (default), input, output, tps_desc', example: 'tps_desc' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "modelId": "llama-4-scout",
+  "modelName": "Llama 4 Scout",
+  "family": "Meta",
+  "sortBy": "blended",
+  "cheapest": { "provider": "DeepInfra", "blendedPrice": 0.355, "inputPrice": 0.16, "outputPrice": 0.55, "contextWindow": 10000000, "outputTPS": 170 },
+  "top3": [
+    { "provider": "DeepInfra", "blendedPrice": 0.355 },
+    { "provider": "OpenRouter", "blendedPrice": 0.385 },
+    { "provider": "Groq", "blendedPrice": 0.385 }
+  ]
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+tf = TensorFeed()
+result = tf.inference_cheapest("llama-4-scout")
+print(f"Cheapest: {result['cheapest']['provider']} at \${result['cheapest']['blendedPrice']:.3f}/1M blended")`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/inference-providers/cheapest?model=llama-4-scout");
+const result = await res.json();
+console.log(\`Cheapest: \${result.cheapest.provider} @ $\${result.cheapest.blendedPrice}\`);`,
+    mcpTool: null,
+    relatedSlugs: ['inference-providers', 'embeddings', 'models', 'premium-routing'],
+    faqs: [
+      {
+        q: 'What if my model is not in the matrix?',
+        a: 'Returns 404 model_not_found. List available models at /api/inference-providers. We track the most-served open-weight models; if you need one we do not cover, the catalog is editorial and we add new models on demand.',
+      },
+      {
+        q: 'Why is the sort default blended and not input?',
+        a: 'Because real workloads have non-zero output usage. Blended at 1:1 input:output ratio is a better proxy for actual cost than input-only. If your workload is heavy-input or heavy-output, pass ?sort=input or ?sort=output.',
+      },
+    ],
+  },
+  {
     slug: 'attention',
     name: 'Attention Index',
     path: '/api/attention',

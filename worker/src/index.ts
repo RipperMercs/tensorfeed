@@ -814,6 +814,75 @@ export default {
       }
     }
 
+    // === EMBEDDING & RERANKER CATALOG (cached 600s) ===
+    // Curated list of production-ready embedding and reranker models with
+    // pricing, dimensions, max input tokens, hosted vs open-source status.
+    // Editorial data; refreshed on redeploy.
+
+    if (path === '/api/embeddings') {
+      const { EMBEDDING_CATALOG, EMBEDDINGS_LAST_UPDATED } = await import('./embeddings');
+      const typeFilter = url.searchParams.get('type');
+      let models = EMBEDDING_CATALOG;
+      if (typeFilter === 'embedding' || typeFilter === 'reranker') {
+        models = models.filter(m => m.type === typeFilter);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: EMBEDDINGS_LAST_UPDATED,
+        count: models.length,
+        models,
+      }, 200, 600);
+    }
+
+    // === INFERENCE PROVIDER PRICING MATRIX (cached 600s) ===
+    // Same open-weight model x multiple hosted inference providers.
+    // Agents picking the cheapest path for Llama 4 / DeepSeek V4 etc.
+    // call /api/inference-providers/cheapest?model=... and skip the matrix.
+
+    if (path === '/api/inference-providers') {
+      const { INFERENCE_MATRIX, INFERENCE_LAST_UPDATED, TRACKED_PROVIDERS } = await import('./inference-providers');
+      const familyFilter = url.searchParams.get('family');
+      let models = INFERENCE_MATRIX;
+      if (familyFilter) {
+        models = models.filter(m => m.family.toLowerCase() === familyFilter.toLowerCase());
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: INFERENCE_LAST_UPDATED,
+        tracked_providers: TRACKED_PROVIDERS,
+        count: models.length,
+        models,
+      }, 200, 600);
+    }
+
+    if (path === '/api/inference-providers/cheapest') {
+      const modelId = url.searchParams.get('model')?.trim();
+      const sortBy = (url.searchParams.get('sort') || 'blended') as 'blended' | 'input' | 'output' | 'tps_desc';
+      if (!modelId) {
+        return jsonResponse({
+          ok: false,
+          error: 'model_required',
+          hint: 'Pass ?model=<canonical> (e.g. llama-4-scout, deepseek-v4-pro). Full list at /api/inference-providers.',
+        }, 400);
+      }
+      const { cheapestForModel } = await import('./inference-providers');
+      const result = cheapestForModel(modelId, sortBy);
+      if (!result) {
+        return jsonResponse({
+          ok: false,
+          error: 'model_not_found',
+          hint: 'Model id not in the matrix. List models at /api/inference-providers.',
+        }, 404);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        ...result,
+      }, 200, 600);
+    }
+
     // === HARNESSES ENDPOINT (cached 300s) ===
     // Cross-harness leaderboard for agentic-coding harnesses (Claude Code,
     // Cursor, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf, Amp,
@@ -898,6 +967,9 @@ export default {
           attention: '/api/attention',
           attentionHistory: '/api/attention/history',
           attentionHistorySnapshot: '/api/attention/history/{YYYY-MM-DD}',
+          embeddings: '/api/embeddings?type=embedding|reranker',
+          inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
+          inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',
           agentActivity: '/api/agents/activity',
           podcasts: '/api/podcasts',

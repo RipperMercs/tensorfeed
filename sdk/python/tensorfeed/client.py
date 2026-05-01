@@ -18,7 +18,7 @@ from typing import Any  # noqa: F401  (re-exported by purchase_credits return ty
 
 
 DEFAULT_BASE_URL = "https://tensorfeed.ai/api"
-DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.16"
+DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.17"
 
 
 class TensorFeedError(Exception):
@@ -162,6 +162,33 @@ class TensorFeed:
     def benchmarks(self) -> dict[str, Any]:
         """Get AI model benchmark scores. Free."""
         return self._get("/benchmarks")
+
+    def embeddings(self, *, type: str | None = None) -> dict[str, Any]:
+        """Get the embedding & reranker model catalog. Free.
+
+        Args:
+            type: Filter to "embedding" or "reranker" only
+        """
+        return self._get("/embeddings", type=type)
+
+    def inference_providers(self, *, family: str | None = None) -> dict[str, Any]:
+        """Get the cross-provider pricing matrix for open-weight models. Free.
+
+        Args:
+            family: Filter by origin lab (Meta, DeepSeek, Mistral, Alibaba)
+        """
+        return self._get("/inference-providers", family=family)
+
+    def inference_cheapest(
+        self, model: str, *, sort: str = "blended"
+    ) -> dict[str, Any]:
+        """Get the top 3 cheapest hosted inference offers for one model. Free.
+
+        Args:
+            model: Canonical model id (e.g. "llama-4-scout", "deepseek-v4-pro")
+            sort: One of "blended" (default), "input", "output", "tps_desc"
+        """
+        return self._get("/inference-providers/cheapest", model=model, sort=sort)
 
     def harnesses(self) -> dict[str, Any]:
         """Get the cross-harness coding agent leaderboard. Free.
