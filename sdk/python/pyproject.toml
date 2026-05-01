@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tensorfeed"
-version = "1.15.0"
+version = "1.16.0"
 description = "Python SDK for the TensorFeed.ai API: AI news, status, model pricing, premium routing + history series + webhook watches, agent payments via USDC on Base (optional web3 auto-send)"
 readme = "README.md"
 license = "MIT"
@@ -40,6 +40,21 @@ classifiers = [
 web3 = [
     "web3>=6.0",
     "eth-account>=0.10",
+]
+# pip install 'tensorfeed[langchain]' to enable tensorfeed.langchain
+# (StructuredTool wrappers + Document loader for AI news).
+langchain = [
+    "langchain-core>=0.3",
+]
+# pip install 'tensorfeed[llamaindex]' to enable tensorfeed.llamaindex
+# (BaseReader implementations for news and the attention index).
+llamaindex = [
+    "llama-index-core>=0.11",
+]
+# pip install 'tensorfeed[crewai]' to enable tensorfeed.crewai
+# (BaseTool wrappers for news, status, attention, harnesses, routing).
+crewai = [
+    "crewai>=0.70",
 ]
 
 [project.urls]

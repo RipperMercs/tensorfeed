@@ -395,6 +395,74 @@ console.log(ranked[0]);`,
       },
     ],
   },
+  {
+    slug: 'attention',
+    name: 'Attention Index',
+    path: '/api/attention',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'agent-brief',
+    seoTitle: 'TensorFeed Attention API: Live AI Provider Hype Score',
+    seoDescription:
+      'TensorFeed /api/attention returns a derived 0-100 attention score per AI provider, computed from news volume, GitHub trending, and agent traffic. Updated every 5 minutes. Free, no auth.',
+    intro:
+      'The /api/attention endpoint returns a live attention score per AI provider (Anthropic, OpenAI, Google, Meta, Mistral, Cohere, DeepSeek, xAI, Perplexity, NVIDIA, Hugging Face, Cursor). The score combines four signals we already collect: news article volume in 24h, news volume in 7d, GitHub trending repos matching the provider, and bot/agent traffic to provider-related endpoints. Normalized to 0-100 within each response.',
+    whenToUse:
+      'When your agent wants a single number to answer "which AI provider is in the news right now." The raw signal counts are also returned so you can apply your own weighting if our defaults do not suit your use case. Cached 5 minutes.',
+    params: [],
+    exampleResponse: `{
+  "ok": true,
+  "computed_at": "2026-04-30T22:14:00Z",
+  "window": { "recent_hours": 24, "full_hours": 168 },
+  "weights": { "NEWS_24H": 4, "NEWS_7D": 1, "TRENDING_REPO": 2, "AGENT_HIT": 0.05 },
+  "providers": [
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "rank": 1,
+      "attention_score": 100,
+      "news_24h": 6,
+      "news_7d": 22,
+      "trending_repos": 3,
+      "agent_hits": 12,
+      "raw_score": 52.6,
+      "top_articles": [
+        { "title": "Anthropic ships Claude Opus 4.7", "source": "Anthropic Blog", "published_at": "2026-04-17T15:00:00Z" }
+      ]
+    }
+  ]
+}`,
+    pythonExample: `import urllib.request, json
+
+with urllib.request.urlopen("https://tensorfeed.ai/api/attention") as r:
+    data = json.loads(r.read())
+
+for p in data["providers"][:5]:
+    print(f"#{p['rank']:>2} {p['name']:<14} {p['attention_score']:>5.1f}  ({p['news_24h']} news/24h)")`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/attention");
+const data = await res.json();
+
+for (const p of data.providers.slice(0, 5)) {
+  console.log(\`#\${p.rank} \${p.name}: \${p.attention_score} (\${p.news_24h} news/24h)\`);
+}`,
+    mcpTool: null,
+    relatedSlugs: ['news', 'agent-activity', 'whats-new'],
+    faqs: [
+      {
+        q: 'How is the attention score computed?',
+        a: 'Sum of four weighted signals per provider: news_24h * 4.0 + news_7d * 1.0 + trending_repos * 2.0 + agent_hits * 0.05. Then normalize so the highest-attention provider in the response is 100.0 and the others scale relative to it. We recompute on every request from the existing free endpoints; no new ingestion.',
+      },
+      {
+        q: 'Why is the score relative, not absolute?',
+        a: 'Absolute counts depend on news volume that day. Anthropic with 6 articles in 24h on a quiet day looks the same as Anthropic with 12 on a busy day if every other provider also doubles. Normalizing to the top of each response surfaces the gap, which is the actual signal.',
+      },
+      {
+        q: 'Can I apply my own weighting?',
+        a: 'Yes. Each provider entry returns the raw signal counts (news_24h, news_7d, trending_repos, agent_hits) alongside our derived attention_score. Recompute with your own coefficients if the defaults do not suit your use case.',
+      },
+    ],
+  },
 
   // ── Free with token: payment / usage ─────────────────────────────
   {

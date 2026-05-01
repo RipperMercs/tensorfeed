@@ -742,6 +742,47 @@ export default {
       }, 200, 300);
     }
 
+    // === ATTENTION INDEX ENDPOINT (cached 300s) ===
+    // Derived per-provider attention score from the existing news + trending
+    // + activity caches. Computed on demand. No new ingestion, no new KV
+    // writes. Cached 300s in the Cache API layer to bound recompute cost.
+
+    if (path === '/api/attention') {
+      const cacheKey = new Request(`https://tensorfeed.ai/__cache/attention/v1`);
+      const cache = caches.default;
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+
+      const [articles, trending, activityHits] = await Promise.all([
+        env.TENSORFEED_NEWS.get('articles', 'json') as Promise<unknown[] | null>,
+        env.TENSORFEED_CACHE.get('trending-repos', 'json') as Promise<unknown[] | null>,
+        env.TENSORFEED_CACHE.get('agent-activity', 'json') as Promise<{ endpoint?: string }[] | null>,
+      ]);
+
+      const { computeAttention } = await import('./attention');
+      const result = computeAttention(
+        (articles || []) as Parameters<typeof computeAttention>[0],
+        (trending || []) as Parameters<typeof computeAttention>[1],
+        activityHits ? { recent: activityHits } : null,
+      );
+
+      const body = JSON.stringify({
+        ok: true,
+        source: 'tensorfeed.ai',
+        ...result,
+      });
+      const response = new Response(body, {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+          'access-control-allow-origin': '*',
+          'cache-control': 'public, max-age=300',
+        },
+      });
+      ctx.waitUntil(cache.put(cacheKey, response.clone()));
+      return response;
+    }
+
     // === HARNESSES ENDPOINT (cached 300s) ===
     // Cross-harness leaderboard for agentic-coding harnesses (Claude Code,
     // Cursor, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf, Amp,
@@ -823,6 +864,7 @@ export default {
           models: '/api/models',
           benchmarks: '/api/benchmarks',
           harnesses: '/api/harnesses',
+          attention: '/api/attention',
           agentsDirectory: '/api/agents/directory',
           agentActivity: '/api/agents/activity',
           podcasts: '/api/podcasts',

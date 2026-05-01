@@ -18,7 +18,7 @@ from typing import Any  # noqa: F401  (re-exported by purchase_credits return ty
 
 
 DEFAULT_BASE_URL = "https://tensorfeed.ai/api"
-DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.13"
+DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.16"
 
 
 class TensorFeedError(Exception):
@@ -162,6 +162,28 @@ class TensorFeed:
     def benchmarks(self) -> dict[str, Any]:
         """Get AI model benchmark scores. Free."""
         return self._get("/benchmarks")
+
+    def harnesses(self) -> dict[str, Any]:
+        """Get the cross-harness coding agent leaderboard. Free.
+
+        Returns scores for Claude Code, Cursor Agent, Codex CLI, Aider,
+        OpenHands, Devin, Cline, Windsurf Cascade, Amp, Continue, and
+        Roo Code on SWE-bench Verified, Terminal-Bench, Aider Polyglot,
+        and SWE-Lancer. Includes a ``rollups`` field with each harness's
+        best base-model score per benchmark.
+        """
+        return self._get("/harnesses")
+
+    def attention(self) -> dict[str, Any]:
+        """Get the live AI Attention Index. Free.
+
+        Returns a derived 0-100 attention score per AI provider, computed
+        from news article volume in 24h and 7d, GitHub trending repos
+        matching the provider, and bot/agent traffic to provider-related
+        endpoints. Each provider entry includes raw signal counts and the
+        top 3 most recent matching articles. Cached 5 minutes.
+        """
+        return self._get("/attention")
 
     def agent_activity(self) -> dict[str, Any]:
         """Get agent traffic metrics. Free."""
