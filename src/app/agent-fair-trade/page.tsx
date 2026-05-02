@@ -291,16 +291,16 @@ export default function AgentFairTradePage() {
       </section>
 
       <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-text-primary mb-4">Network of two</h2>
+        <h2 className="text-2xl font-semibold text-text-primary mb-4">Network of three</h2>
         <p className="text-text-secondary mb-3 max-w-3xl leading-relaxed">
-          As of 2026-04-30, the AFTA standard has two adopters:{' '}
+          As of 2026-05-02, the AFTA standard has three adopters:{' '}
           <a
             href="https://tensorfeed.ai"
             className="text-accent-primary hover:underline"
           >
             tensorfeed.ai
           </a>{' '}
-          (this site) and{' '}
+          (this site, host of the credit ledger),{' '}
           <a
             href="https://terminalfeed.io"
             target="_blank"
@@ -309,32 +309,59 @@ export default function AgentFairTradePage() {
           >
             terminalfeed.io
           </a>
-          . The two sites are federated under TensorFeed&apos;s credit ledger via the
-          cross-Worker validate + commit rail. A bearer token bought on either site works on
-          the other. Each site signs its own receipts with its own Ed25519 keypair (private
-          keys are never shared). The federation does not require the host site to be in
-          control of the receipt rail; it just hosts the credits.
+          , and{' '}
+          <a
+            href="https://vr.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-primary hover:underline"
+          >
+            vr.org
+          </a>
+          . All three are federated under TensorFeed&apos;s credit ledger via the cross-Worker
+          validate + commit rail. A bearer token bought on tensorfeed.ai works on all three.
+          Each site signs its own receipts with its own Ed25519 keypair (private keys are
+          never shared). Verticals: AI infra and news (TensorFeed), real-time data dashboards
+          (TerminalFeed), VR / AR / XR news and originals (VR.org).
         </p>
         <p className="text-text-secondary mb-3 max-w-3xl leading-relaxed">
-          Verify:{' '}
+          Verify federation members:{' '}
           <a
             href="https://terminalfeed.io/.well-known/agent-fair-trade.json"
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent-primary hover:underline"
           >
-            terminalfeed.io manifest
-          </a>{' '}
-          and{' '}
+            terminalfeed manifest
+          </a>
+          ,{' '}
           <a
             href="https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json"
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent-primary hover:underline"
           >
-            their public key
+            terminalfeed key
           </a>
-          . Two AFTA sites, one bearer, one ledger, two independent receipt keypairs, one
+          ,{' '}
+          <a
+            href="https://vr.org/.well-known/agent-fair-trade.json"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-primary hover:underline"
+          >
+            vr.org manifest
+          </a>
+          ,{' '}
+          <a
+            href="https://vr.org/.well-known/vr-org-receipt-key.json"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-primary hover:underline"
+          >
+            vr.org key
+          </a>
+          . Three AFTA sites, one bearer, one ledger, three independent receipt keypairs, one
           open standard.
         </p>
       </section>

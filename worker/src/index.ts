@@ -1466,7 +1466,7 @@ export default {
           public_record: '/api/payment/no-charge-stats',
           doc: 'https://tensorfeed.ai/agent-fair-trade',
           network: {
-            description: 'TensorFeed and TerminalFeed share a single bearer-token + credit ledger. A token minted on either site works on both. Each site signs receipts with its own keypair.',
+            description: 'TensorFeed, TerminalFeed, and VR.org share a single bearer-token + credit ledger. A token minted on tensorfeed.ai works on all three. Each site signs receipts with its own keypair.',
             established: '2026-04-30',
             host_ledger: 'tensorfeed.ai',
             sister_sites: [
@@ -1481,6 +1481,12 @@ export default {
                 manifest: 'https://terminalfeed.io/.well-known/agent-fair-trade.json',
                 manifesto: 'https://terminalfeed.io/agent-fair-trade',
                 receipt_key: 'https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json',
+              },
+              {
+                site: 'vr.org',
+                manifest: 'https://vr.org/.well-known/agent-fair-trade.json',
+                manifesto: 'https://vr.org/agent-fair-trade',
+                receipt_key: 'https://vr.org/.well-known/vr-org-receipt-key.json',
               },
             ],
           },

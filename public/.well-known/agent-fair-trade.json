@@ -127,6 +127,13 @@
         "manifest": "https://terminalfeed.io/.well-known/agent-fair-trade.json",
         "receipt_key": "https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json",
         "note": "Federated under tensorfeed.ai's credit ledger. A single bearer token works on both sites."
+      },
+      {
+        "site": "vr.org",
+        "adopted_at": "2026-05-02",
+        "manifest": "https://vr.org/.well-known/agent-fair-trade.json",
+        "receipt_key": "https://vr.org/.well-known/vr-org-receipt-key.json",
+        "note": "Federation member sharing the host credit ledger. VR/AR/XR vertical: aggregated news + original editorial."
       }
     ],
     "network_federation": {
@@ -140,12 +147,12 @@
       "current_federation": [
         {
           "host": "tensorfeed.ai",
-          "members": ["tensorfeed.ai", "terminalfeed.io"],
+          "members": ["tensorfeed.ai", "terminalfeed.io", "vr.org"],
           "established": "2026-04-30",
-          "note": "First AFTA federation. TerminalFeed accepts TensorFeed bearer tokens via the cross-Worker validate + commit rail. Single ledger on tensorfeed.ai. Each site signs its own receipts with its own keypair."
+          "note": "First AFTA federation. TerminalFeed and VR.org accept TensorFeed bearer tokens via the cross-Worker validate + commit rail. Single ledger on tensorfeed.ai. Each site signs its own receipts with its own keypair. Verticals: tensorfeed.ai (AI infra + news), terminalfeed.io (real-time data dashboards), vr.org (VR/AR/XR news + originals)."
         }
       ]
     }
   },
-  "lastUpdated": "2026-04-30"
+  "lastUpdated": "2026-05-02"
 }
