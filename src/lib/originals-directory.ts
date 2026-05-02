@@ -28,7 +28,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'stripe-link-vs-usdc-agent-payments',
     title: 'Stripe Just Validated Agent Payments. We Already Shipped Ours Without Them.',
-    author: 'Evan Ripper',
+    author: 'Ripper',
     date: 'May 1, 2026',
     readTime: '7 min read',
     description:

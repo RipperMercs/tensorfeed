@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'Stripe Link, x402, and USDC on Base are all live. We chose direct transfers over Stripe. Here is why.',
     type: 'article',
     publishedTime: '2026-05-01T14:00:00Z',
-    authors: ['Evan Ripper'],
+    authors: ['Ripper'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,7 +32,7 @@ export default function StripeLinkVsUsdcPage() {
         title="Stripe Just Validated Agent Payments. We Already Shipped Ours Without Them."
         description="Stripe announced Link for AI agents and x402 for USDC micropayments. We built TensorFeed premium on direct USDC transfers with no middleman. Here is how the two approaches compare after real production use."
         datePublished="2026-05-01"
-        author="Evan Ripper"
+        author="Ripper"
       />
 
       {/* Back link */}
@@ -50,7 +50,7 @@ export default function StripeLinkVsUsdcPage() {
           Stripe Just Validated Agent Payments. We Already Shipped Ours Without Them.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Evan Ripper</span>
+          <span className="text-text-secondary font-medium">Ripper</span>
           <span>&middot;</span>
           <time dateTime="2026-05-01">May 1, 2026</time>
           <span>&middot;</span>
