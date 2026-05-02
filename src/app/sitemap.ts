@@ -190,6 +190,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/harness-gap-not-the-model`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/palo-alto-portkey-mcp-gateway`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/stripe-link-vs-usdc-agent-payments`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/pentagon-blacklists-anthropic-defense-deals`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
 
     // Agent-acquisition surface
     { url: `${baseUrl}/for-ai-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },

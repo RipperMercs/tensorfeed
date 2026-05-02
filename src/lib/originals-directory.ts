@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'pentagon-blacklists-anthropic-defense-deals',
+    title: 'The Pentagon Skipped Anthropic. Seven Other AI Companies Got the Contracts.',
+    author: 'Kira Nolan',
+    date: 'May 2, 2026',
+    readTime: '7 min read',
+    description:
+      'On May 1, 2026, the DoD signed classified-network AI deals with OpenAI, Google, Microsoft, AWS, NVIDIA, SpaceX, and Reflection. Anthropic, the only frontier lab with a public no-weapons usage policy, was left out. The first frontier lab to be punished for enforcing its own safety terms, the Google compute deal that made it possible, and what it signals for safety-as-product across the rest of the industry.',
+  },
+  {
     slug: 'stripe-link-vs-usdc-agent-payments',
     title: 'Stripe Just Validated Agent Payments. We Already Shipped Ours Without Them.',
     author: 'Evan Ripper',
