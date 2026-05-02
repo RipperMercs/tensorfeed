@@ -340,6 +340,61 @@ export default function AgentFairTradePage() {
       </section>
 
       <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-text-primary mb-4">Supportive sites</h2>
+        <p className="text-text-secondary mb-3 max-w-3xl leading-relaxed">
+          Some sites in our network contribute upstream data without running an AFTA-compliant
+          payment rail of their own. TensorFeed pulls from their public APIs on a cron and
+          re-exposes the data through TF-side AFTA-compliant endpoints. Payments and credits
+          flow through this host ledger; the upstream site is credited as the original
+          publisher in every response.
+        </p>
+        <div className="border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50 max-w-3xl">
+          <div className="flex items-baseline gap-2 mb-2">
+            <a
+              href="https://vr.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-lg font-semibold text-accent-primary hover:underline"
+            >
+              vr.org
+            </a>
+            <span className="text-sm text-text-secondary">
+              VR / AR / XR news + original editorial
+            </span>
+          </div>
+          <p className="text-sm text-text-secondary mb-2">
+            Real-time news aggregator covering virtual, augmented, and extended reality, plus
+            in-house editorial from a five-writer team. Co-founded by Evan Marcus and Mark
+            Mahle.
+          </p>
+          <p className="text-sm text-text-secondary mb-2">
+            Sourced via:{' '}
+            <code className="text-xs text-accent-primary">https://vr.org/api/feed</code>,{' '}
+            <code className="text-xs text-accent-primary">https://vr.org/api/articles</code>.
+            Refreshed hourly.
+          </p>
+          <p className="text-sm text-text-secondary">
+            TensorFeed endpoints:{' '}
+            <Link href="/api/vr/news" className="text-accent-primary hover:underline">
+              /api/vr/news
+            </Link>{' '}
+            (free),{' '}
+            <Link href="/api/vr/originals" className="text-accent-primary hover:underline">
+              /api/vr/originals
+            </Link>{' '}
+            (free),{' '}
+            <Link
+              href="/api-reference/api-premium-vr-news-search"
+              className="text-accent-primary hover:underline"
+            >
+              /api/premium/vr/news/search
+            </Link>{' '}
+            (3 credits).
+          </p>
+        </div>
+      </section>
+
+      <section className="mb-10">
         <h2 className="text-2xl font-semibold text-text-primary mb-4">Adopt the standard</h2>
         <p className="text-text-secondary mb-3 max-w-3xl leading-relaxed">
           There is no certification authority, no fee, no submission process. Self-publish a{' '}

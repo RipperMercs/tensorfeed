@@ -30,6 +30,7 @@ import {
   SortKey,
 } from './agents-enriched';
 import { searchNews, NewsSearchOptions } from './news-search';
+import { refreshVrData, readVrFeed, readVrOriginals, searchVrNews } from './vr-aggregator';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
 import { computeProviderDeepDive } from './provider-deepdive';
 import { compareModels } from './compare-models';
@@ -635,6 +636,76 @@ export default {
         articles: sanitized,
         sanitization: 'enabled',
       });
+    }
+
+    // === VR / AR / XR endpoints (supportive site: vr.org) ===
+    // vr.org runs no payment rail of its own. TensorFeed pulls vr.org's
+    // existing free public APIs on a cron and re-exposes the data through
+    // these TF-side endpoints. vr.org is credited as the upstream publisher
+    // of all content; article links resolve back to vr.org.
+
+    if (path === '/api/vr/news') {
+      const limitParam = parseInt(url.searchParams.get('limit') || '50', 10);
+      const limit = Math.min(Number.isFinite(limitParam) ? limitParam : 50, 200);
+      const category = url.searchParams.get('category');
+
+      const cache = await readVrFeed(env);
+      if (!cache) {
+        return jsonResponse({
+          ok: false,
+          error: 'vr_data_not_yet_aggregated',
+          message: 'VR feed not yet pulled. Refreshes hourly via cron.',
+          upstream_source: 'https://vr.org',
+        }, 503, 30);
+      }
+
+      let articles = cache.articles;
+      if (category) {
+        const c = category.toLowerCase();
+        articles = articles.filter(a =>
+          a.category.toLowerCase() === c || a.tags.some(t => t.toLowerCase() === c)
+        );
+      }
+
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        upstream_source: cache.upstream_source,
+        upstream_endpoint: cache.upstream_endpoint,
+        upstream_lastUpdated: cache.upstream_lastUpdated,
+        captured_at: cache.capturedAt,
+        attribution: cache.attribution,
+        count: Math.min(articles.length, limit),
+        total: articles.length,
+        articles: articles.slice(0, limit),
+      }, 200, 60);
+    }
+
+    if (path === '/api/vr/originals') {
+      const limitParam = parseInt(url.searchParams.get('limit') || '50', 10);
+      const limit = Math.min(Number.isFinite(limitParam) ? limitParam : 50, 200);
+
+      const cache = await readVrOriginals(env);
+      if (!cache) {
+        return jsonResponse({
+          ok: false,
+          error: 'vr_data_not_yet_aggregated',
+          message: 'VR.org Originals not yet pulled. Refreshes hourly via cron.',
+          upstream_source: 'https://vr.org',
+        }, 503, 30);
+      }
+
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        upstream_source: cache.upstream_source,
+        upstream_endpoint: cache.upstream_endpoint,
+        captured_at: cache.capturedAt,
+        attribution: cache.attribution,
+        count: Math.min(cache.articles.length, limit),
+        total: cache.articles.length,
+        articles: cache.articles.slice(0, limit),
+      }, 200, 60);
     }
 
     // RSS feed (cached 300s). Served at both /feed.xml and /api/feed.xml.
@@ -1408,6 +1479,9 @@ export default {
           premiumWatchesItem: 'GET|DELETE /api/premium/watches/{id}',
           premiumAgentsDirectory: '/api/premium/agents/directory?category=&status=&open_source=&capability=&sort=&limit=',
           premiumNewsSearch: '/api/premium/news/search?q=&from=&to=&provider=&category=&limit=',
+          vrNews: '/api/vr/news?category=&limit= (free; sourced from vr.org)',
+          vrOriginals: '/api/vr/originals?limit= (free; VR.org Original editorial)',
+          premiumVrNewsSearch: '/api/premium/vr/news/search?q=&category=&source=&origin=rss|original|all&since=&limit= (3 credits)',
           premiumCostProjection: '/api/premium/cost/projection?model=opus-4-7,gpt-5-5&input_tokens_per_day=&output_tokens_per_day=&horizon=monthly',
           premiumProviderDeepDive: '/api/premium/providers/{name}',
           premiumCompareModels: '/api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3',
@@ -1481,6 +1555,26 @@ export default {
                 manifest: 'https://terminalfeed.io/.well-known/agent-fair-trade.json',
                 manifesto: 'https://terminalfeed.io/agent-fair-trade',
                 receipt_key: 'https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json',
+              },
+            ],
+          },
+          supportive_sites: {
+            description: 'Sites that contribute upstream data to the network without running an AFTA-compliant API of their own. TensorFeed pulls from their public endpoints and re-exposes the data through TF-side AFTA-compliant endpoints; payments and credits flow through TF\'s host ledger.',
+            sites: [
+              {
+                site: 'vr.org',
+                role: 'data_partner',
+                vertical: 'VR / AR / XR news + original editorial',
+                contributes_to: [
+                  '/api/vr/news',
+                  '/api/vr/originals',
+                  '/api/premium/vr/news/search',
+                ],
+                upstream_endpoints: [
+                  'https://vr.org/api/feed',
+                  'https://vr.org/api/articles',
+                ],
+                refresh_cadence: 'TF pulls hourly via cron; vr.org refreshes every 15 min upstream',
               },
             ],
           },
@@ -2367,6 +2461,66 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: VR / AR / XR NEWS SEARCH (Tier 3, 3 credits) ===
+    // Searchable archive over vr.org's RSS aggregator + VR.org Originals,
+    // pulled to TF KV every hour. Tier 3 (3 credits) because the index is
+    // niche and value-dense for agents covering the spatial computing beat.
+    // 90-min freshness SLA covers the hourly cron with headroom; if vr.org
+    // is lagging, the call goes no-charge automatically.
+
+    if (path === '/api/premium/vr/news/search') {
+      const payment = await requirePayment(request, env, 3);
+      if (!payment.paid) return payment.response!;
+
+      const q = (url.searchParams.get('q') || '').trim();
+      if (!q || q.length < 2 || q.length > 200) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'invalid_query',
+            message: 'q is required, 2-200 chars.',
+          },
+          payment, request, env,
+        );
+      }
+
+      const limitParam = parseInt(url.searchParams.get('limit') || '25', 10);
+      const limit = Math.min(Math.max(Number.isFinite(limitParam) ? limitParam : 25, 1), 100);
+      const sinceRaw = url.searchParams.get('since') || undefined;
+      if (sinceRaw && !Number.isFinite(Date.parse(sinceRaw))) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'invalid_since',
+            message: 'since must be a parseable ISO 8601 date.',
+          },
+          payment, request, env,
+        );
+      }
+      const originParam = (url.searchParams.get('origin') || 'all').toLowerCase();
+      const origin: 'rss' | 'original' | 'all' =
+        originParam === 'rss' || originParam === 'original' ? originParam : 'all';
+
+      const result = await searchVrNews(env, {
+        q,
+        limit,
+        ...(url.searchParams.get('category') ? { category: url.searchParams.get('category')! } : {}),
+        ...(url.searchParams.get('source') ? { source: url.searchParams.get('source')! } : {}),
+        origin,
+        ...(sinceRaw ? { since: sinceRaw } : {}),
+      });
+      if ('error' in result) {
+        return await premiumValidationFailure(
+          { ok: false, ...result } as unknown as Record<string, unknown>,
+          payment, request, env,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/vr/news/search', request.headers.get('User-Agent') || 'unknown', 3, payment.token),
+      );
+      return await premiumResponse(result, payment, 3, request, env);
+    }
+
     // === PAID PREMIUM: ENRICHED AGENTS DIRECTORY (Tier 1, 1 credit) ===
     // Static directory joined with live status, recent news count,
     // recent news (top 3), agent traffic, flagship pricing, and a
@@ -2871,6 +3025,9 @@ export default {
       rssResult = await run('pollRSSFeeds', () => pollRSSFeeds(env));
       await run('pollStatusPages', () => pollStatusPages(env));
       await run('captureAllSnapshots', () => captureAllSnapshots(env));
+      // Pull VR/AR/XR data from vr.org (supportive site in the network).
+      // vr.org refreshes every 15 min; hourly downstream is plenty.
+      await run('refreshVrData', () => refreshVrData(env));
     } else if (cron === '0 */2 * * *') {
       // Every 2 hours: podcast feeds (10 sources, weekly release cadence)
       await run('pollPodcastFeeds', () => pollPodcastFeeds(env));

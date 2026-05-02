@@ -300,9 +300,17 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [Is Replicate Down?](https://tensorfeed.ai/is-replicate-down): Live Replicate status
 - [Is Cohere Down?](https://tensorfeed.ai/is-cohere-down): Live Cohere status
 
+## VR / AR / XR (sourced from vr.org)
+
+TensorFeed surfaces a VR/AR/XR data lane sourced from vr.org, an independent VR news publication co-founded by Evan Marcus and Mark Mahle. vr.org is a supportive site in the network: TF pulls from its public APIs hourly and re-exposes the data through TF-side AFTA-compliant endpoints. vr.org is credited as the original publisher; article links resolve to vr.org.
+
+- [VR News Feed](https://tensorfeed.ai/api/vr/news): Free VR/AR/XR aggregated news feed with category filter
+- [VR Originals](https://tensorfeed.ai/api/vr/originals): Free VR.org Original editorial articles
+- [VR News Search (premium, 3 credits)](https://tensorfeed.ai/api/premium/vr/news/search): Searchable archive across the RSS aggregator and originals (params: q, category, source, origin=rss|original|all, since, limit; 90-min freshness SLA)
+
 ## About
 TensorFeed.ai is an independent project built by Ripper.
-Sister site: [TerminalFeed.io](https://terminalfeed.io) (real-time data dashboard)
+Sister site: [TerminalFeed.io](https://terminalfeed.io) (real-time data dashboard, AFTA federation member). Supportive site: [VR.org](https://vr.org) (VR/AR/XR news + originals, data partner).
 Contact: feedback@tensorfeed.ai | Press: press@tensorfeed.ai
 
 ## Optional
