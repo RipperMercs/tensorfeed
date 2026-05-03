@@ -144,6 +144,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/developers/agent-payments`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${baseUrl}/developers/frameworks`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${baseUrl}/agent-fair-trade`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/afta-network`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/originals/claude-opus-4-7-release`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
@@ -191,6 +192,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/palo-alto-portkey-mcp-gateway`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/stripe-link-vs-usdc-agent-payments`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/pentagon-blacklists-anthropic-defense-deals`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/cloudflare-stripe-agent-provisioning-protocol`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
 
     // Agent-acquisition surface
     { url: `${baseUrl}/for-ai-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },

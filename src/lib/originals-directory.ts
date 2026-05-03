@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'cloudflare-stripe-agent-provisioning-protocol',
+    title: 'Agents Just Got the Keys to Production. The Cloudflare-Stripe Protocol Is Live.',
+    author: 'Marcus Chen',
+    date: 'May 2, 2026',
+    readTime: '7 min read',
+    description:
+      'On April 30, 2026, Cloudflare and Stripe shipped a co-designed agent provisioning protocol. AI agents can now create accounts, register domains, start paid subscriptions on 32 providers (Vercel, Supabase, Clerk, PlanetScale, Sentry, PostHog, Inngest, Hugging Face, and more), and deploy applications to production with no human in the loop beyond accepting terms. Default cap is $100 per month per provider. Inside the spec, the partner list, and what it changes for the agent stack.',
+  },
+  {
     slug: 'pentagon-blacklists-anthropic-defense-deals',
     title: 'The Pentagon Skipped Anthropic. Seven Other AI Companies Got the Contracts.',
     author: 'Kira Nolan',
