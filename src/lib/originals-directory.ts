@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'afta-is-bilateral-both-sides-win',
+    title: 'AFTA Is Bilateral. Here Is Why Both Sides Win.',
+    author: 'Ripper',
+    date: 'May 3, 2026',
+    readTime: '6 min read',
+    description:
+      'AFTA shipped as a code-enforced fair-trade standard for AI agents, but the framing undersold what the standard does. The same primitives protect publishers too. Cryptographic dispute defense, predictable revenue, open distribution. At agent velocity (1000x in 24 months), vague billing is a security issue, not a UX issue. Inside the bilateral case for AFTA.',
+  },
+  {
     slug: 'mistral-medium-3-5-open-weights-frontier-coder',
     title: 'Mistral Just Shipped a 128B Open-Weight Frontier Coder. The Numbers Make Sonnet Sweat.',
     author: 'Marcus Chen',
