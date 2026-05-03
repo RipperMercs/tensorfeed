@@ -6,14 +6,14 @@ import { FAQPageJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: 'Agent Fair-Trade Agreement (AFTA), TensorFeed',
   description:
-    'TensorFeed is agent fair-trade certified. Code-enforced no-charge guarantees, Ed25519-signed receipts on every paid call, public on-chain payment rail (USDC on Base). Built with Claude (Anthropic). Open standard at /.well-known/agent-fair-trade.json.',
+    'AFTA is the open standard for API trade between humans, businesses, and AI agents. TensorFeed is the first adopter. Code-enforced no-charge guarantees, Ed25519-signed receipts on every paid call, public on-chain payment rail (USDC on Base). Both sides of every paid call are protected. Open standard at /.well-known/agent-fair-trade.json.',
   alternates: { canonical: 'https://tensorfeed.ai/agent-fair-trade' },
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/agent-fair-trade',
     title: 'Agent Fair-Trade Agreement (AFTA)',
     description:
-      'Code-enforced no-charge guarantees, signed receipts, public on-chain payment rail. An open standard for API publishers fair to AI agents.',
+      'The open standard for API trade between humans, businesses, and AI agents. Code-enforced no-charge guarantees, signed receipts, public on-chain payment rail. Both sides protected.',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
@@ -29,7 +29,7 @@ const FAQS = [
   {
     question: 'What is the Agent Fair-Trade Agreement (AFTA)?',
     answer:
-      'An open standard for API publishers that are fair to AI agents. Three pillars: code-enforced no-charge guarantees you can verify by sending malformed input, Ed25519-signed receipts on every paid call, and a public on-chain payment rail where every transaction is immutable and auditable. Self-publish your own /.well-known/agent-fair-trade.json to adopt.',
+      'AFTA is the open standard for API trade between humans, businesses, and AI agents. As autonomous agents move trillions of micropayments per day across the internet of money, both sides of every paid call need a clear, code-enforceable contract. Three pillars: code-enforced no-charge guarantees you can verify by sending malformed input, Ed25519-signed receipts on every paid call, and a public on-chain payment rail where every transaction is immutable and auditable. Same primitives protect agents (verifiable charges, bounded loss) and publishers (dispute defense, predictable revenue). Self-publish your own /.well-known/agent-fair-trade.json to adopt.',
   },
   {
     question: 'How is "no charge on stale data" enforced?',
@@ -71,10 +71,12 @@ export default function AgentFairTradePage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">Agent Fair-Trade Agreement</h1>
         </div>
         <p className="text-text-secondary text-lg max-w-3xl">
-          An open standard for API publishers that are fair to AI agents. Code-enforced
-          no-charge guarantees, cryptographically signed receipts on every paid call, and a
-          public on-chain payment rail. TensorFeed is the first adopter, and the invitation
-          to other publishers is open.
+          The open standard for API trade between humans, businesses, and AI agents. As
+          autonomous agents move trillions of micropayments per day across the internet of
+          money, both sides of every paid call need a clear, code-enforceable contract.
+          Same primitives protect agents (verifiable charges, bounded loss) and publishers
+          (dispute defense, predictable revenue). TensorFeed is the first adopter; the
+          invitation to other publishers is open.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
           <Link
