@@ -1122,6 +1122,36 @@ export default {
       }, 200, 600);
     }
 
+    // === AGENT PROVISIONING SUPPORT (cached 600s) ===
+    //
+    // Tracks who has shipped support for the Cloudflare-Stripe agent
+    // provisioning protocol (April 30, 2026). Filters: ?status=live|pending|unknown
+    // and ?category=hosting|database|auth|observability|background-jobs|
+    // ai-infrastructure|cdn-edge|email.
+
+    if (path === '/api/agent-provisioning') {
+      const { PROVISIONING_CATALOG, PROVISIONING_LAST_UPDATED, provisioningSummary } = await import('./agent-provisioning');
+      const statusFilter = url.searchParams.get('status');
+      const categoryFilter = url.searchParams.get('category');
+      let entries = PROVISIONING_CATALOG;
+      if (statusFilter) {
+        entries = entries.filter(p => p.status === statusFilter);
+      }
+      if (categoryFilter) {
+        entries = entries.filter(p => p.category === categoryFilter);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        protocol: 'cloudflare-stripe-agent-provisioning',
+        protocol_launched: '2026-04-30',
+        lastUpdated: PROVISIONING_LAST_UPDATED,
+        summary: provisioningSummary(),
+        count: entries.length,
+        providers: entries,
+      }, 200, 600);
+    }
+
     // === TRAINING RUNS / COMPUTE ECONOMICS (cached 600s) ===
 
     if (path === '/api/training-runs') {
@@ -1471,6 +1501,7 @@ export default {
           mcpServers: '/api/mcp-servers?capability=filesystem|web-search|browser|github|slack|database&first_party=true',
           trainingDatasets: '/api/training-datasets?stage=pretraining|instruction-tuning|dpo|rlhf|multimodal',
           agentApis: '/api/agent-apis?category=search|web-scraping|weather|finance|maps|email|sms|payments|code-execution|ocr&has_mcp=true',
+          agentProvisioning: '/api/agent-provisioning?status=live|pending|unknown&category=hosting|database|auth|observability|background-jobs|ai-infrastructure|cdn-edge|email',
           trainingRuns: '/api/training-runs?publisher=OpenAI|Anthropic|Meta|Google|DeepSeek&open_weights=true',
           fineTuning: '/api/fine-tuning?type=first-party|hosted&method=lora|qlora|full|dpo|rlhf',
           specializedModels: '/api/specialized-models?domain=code|medical|legal|finance|music|3d|retrieval|science&open_weights=true',

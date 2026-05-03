@@ -125,6 +125,8 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 
 **Agent APIs registry:** `https://tensorfeed.ai/agent-apis` is the catalog of non-LLM APIs that agents wire in for everything that is not text generation. Categories: web search (Tavily, Brave, Exa, SerpAPI, Bing), web scraping (Firecrawl, Jina Reader, Apify, ScrapingBee), weather (OpenWeather, NWS, Tomorrow.io), finance (Alpha Vantage, Polygon, CoinGecko), maps (Google, Mapbox, OSRM), email (Resend, Postmark), SMS (Twilio), payments (Stripe, Lemon Squeezy), code execution (E2B, Modal, Replit Agent), OCR (Unstructured, LlamaParse, Reducto). Each entry has pricing, free tier, capabilities, and a flag for MCP server availability. JSON at `/api/agent-apis`.
 
+**Agent provisioning support tracker:** `https://tensorfeed.ai/agent-provisioning` is the live status of providers on the Cloudflare-Stripe agent provisioning protocol shipped April 30, 2026. Live launch partners (Cloudflare, Vercel, Supabase, PlanetScale, Clerk, Sentry, PostHog, Inngest, Hugging Face) vs. conspicuously absent providers agents will route around (Neon, Turso, Auth0, WorkOS, Stytch, Netlify, Fly). Each entry has status, role, default monthly cap, and integration notes. Filterable by status (live, pending, unknown) and category (hosting, database, auth, observability, background-jobs, ai-infrastructure, cdn-edge, email). JSON at `/api/agent-provisioning` (free, cached 10 min).
+
 **Training run economics:** `https://tensorfeed.ai/training-runs` is the catalog of disclosed and estimated AI training-run costs across frontier and notable open models. Covers GPT-5.5, Claude Opus 4.7, DeepSeek V4 Pro, Llama 4 Maverick, Gemini 2.5 Pro plus historical reference points (GPT-4, Llama 3.1 405B, DeepSeek V3, OLMo 2 32B, Mistral Large 2, Qwen 2.5 72B). Each entry has parameter count, training tokens, hardware, GPU hours, USD millions, and costSource (disclosed vs estimated). Sorted by cost desc; filterable by publisher or open-weights. JSON at `/api/training-runs`.
 
 **Open-weights deployment registry:** `https://tensorfeed.ai/open-weights` is the catalog every self-hosting agent needs. For each model (Llama 4 Maverick, Llama 4 Scout, DeepSeek V4 Pro/Flash, Qwen 2.5 72B, Mixtral 8x22B, Gemma 3 27B, Llama 3.3 70B, Phi-4) it lists every common quantization (FP16, FP8, AWQ INT4, GGUF Q4_K_M, etc) with VRAM requirement, quality vs FP16 baseline, and recommended GPU class. JSON at `/api/open-weights` (free, cached 10 min). Companion to `/inference-providers` which is hosted-inference pricing.
@@ -210,7 +212,9 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [GPT-4o Mini](https://tensorfeed.ai/models/gpt-4o-mini): Pricing, benchmarks, specs for OpenAI's budget model
 - [OpenAI o1](https://tensorfeed.ai/models/o1): Pricing, benchmarks, specs for OpenAI's reasoning model
 - [OpenAI o3-mini](https://tensorfeed.ai/models/o3-mini): Pricing, benchmarks, specs for OpenAI's affordable reasoning model
-- [Gemini 2.5 Pro](https://tensorfeed.ai/models/gemini-2-5-pro): Pricing, benchmarks, specs for Google's flagship with 1M context
+- [Gemini 3.1 Pro](https://tensorfeed.ai/models/gemini-3-1-pro): Pricing, benchmarks, specs for Google's current flagship (1M context, omnimodal)
+- [Gemini 3.1 Flash-Lite](https://tensorfeed.ai/models/gemini-3-1-flash-lite): Pricing, benchmarks, specs for Google's $0.25 budget model
+- [Gemini 2.5 Pro](https://tensorfeed.ai/models/gemini-2-5-pro): Pricing, benchmarks, specs for Google's previous-generation flagship with 1M context
 - [Gemini 2.0 Flash](https://tensorfeed.ai/models/gemini-2-0-flash): Pricing, benchmarks, specs for Google's speed model
 - [Llama 4 Scout](https://tensorfeed.ai/models/llama-4-scout): Benchmarks, specs for Meta's 10M context open source model
 - [Llama 4 Maverick](https://tensorfeed.ai/models/llama-4-maverick): Benchmarks, specs for Meta's high-performance open source model
@@ -234,6 +238,9 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [GPT-5.5 vs Gemini 2.5 Pro](https://tensorfeed.ai/compare/gpt-5-5-vs-gemini-2-5-pro): OpenAI vs Google 1M-context flagships
 - [DeepSeek V4 Pro vs Claude Opus 4.7](https://tensorfeed.ai/compare/deepseek-v4-pro-vs-claude-opus-4-7): Open source vs closed-source frontier
 - [DeepSeek V4 Pro vs GPT-5.5](https://tensorfeed.ai/compare/deepseek-v4-pro-vs-gpt-5-5): MIT-licensed open source vs OpenAI flagship, both 1M context
+- [Gemini 3.1 Pro vs Claude Opus 4.7](https://tensorfeed.ai/compare/gemini-3-1-pro-vs-claude-opus-4-7): Two 1M-context flagships compared, with multimodal and pricing breakdown
+- [Gemini 3.1 Pro vs GPT-5.5](https://tensorfeed.ai/compare/gemini-3-1-pro-vs-gpt-5-5): Google vs OpenAI omnimodal frontier comparison
+- [Gemini 3.1 Flash-Lite vs DeepSeek V4 Flash](https://tensorfeed.ai/compare/gemini-3-1-flash-lite-vs-deepseek-v4-flash): Closed multimodal vs open-weight budget tier
 
 ## AI Providers
 - [Anthropic](https://tensorfeed.ai/providers/anthropic): Claude models, pricing, benchmarks, and company overview
@@ -256,7 +263,8 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [GPU Rental Pricing](https://tensorfeed.ai/gpu-pricing): Live cheapest hourly rates across cloud GPU marketplaces, refreshed every 4 hours
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
-- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (47 articles)
+- [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (48 articles)
+- [Mistral Just Shipped a 128B Open-Weight Frontier Coder](https://tensorfeed.ai/originals/mistral-medium-3-5-open-weights-frontier-coder): Mistral Medium 3.5 went into public preview on May 2, 2026 with 77.6% on SWE-Bench Verified, 256K context, $1.50/$7.50 pricing, and a modified MIT license. Cloud-based Vibe coding agents and a Le Chat Work mode shipped alongside. Comparison to Claude Sonnet 4.6, GPT-5.5, Gemini 3.1 Pro, and DeepSeek V4, plus what open weights at this tier means for self-hosted AI infrastructure.
 - [Agents Just Got the Keys to Production. The Cloudflare-Stripe Protocol Is Live.](https://tensorfeed.ai/originals/cloudflare-stripe-agent-provisioning-protocol): On April 30, 2026, Cloudflare and Stripe shipped a co-designed agent provisioning protocol. AI agents can now create accounts, register domains, start paid subscriptions on 32 providers (Vercel, Supabase, Clerk, PlanetScale, Sentry, PostHog, Inngest, Hugging Face, and more), and deploy applications to production with no human in the loop beyond accepting terms. Default cap is $100 per month per provider. Inside the spec, the partner list, and what it changes for the agent stack.
 - [The Pentagon Skipped Anthropic. Seven Other AI Companies Got the Contracts.](https://tensorfeed.ai/originals/pentagon-blacklists-anthropic-defense-deals): On May 1, 2026, the DoD signed classified-network AI deals with OpenAI, Google, Microsoft, AWS, NVIDIA, SpaceX, and Reflection. Anthropic, the only frontier lab with a public no-weapons usage policy, was left out. The first frontier lab punished for enforcing its own safety terms, the $40B Google compute deal that made the refusal financially viable, and what it signals for safety-as-product across the rest of the industry.
 - [Stripe Just Validated Agent Payments](https://tensorfeed.ai/originals/stripe-link-vs-usdc-agent-payments): Stripe announced Link for AI agents and x402 for USDC micropayments on Base. TensorFeed shipped 15 paid endpoints on direct USDC four days earlier. Side-by-side comparison of Stripe Card, Stripe x402, and direct USDC approaches with real production data. Fee structures, platform risk, settlement times, and where each model wins.

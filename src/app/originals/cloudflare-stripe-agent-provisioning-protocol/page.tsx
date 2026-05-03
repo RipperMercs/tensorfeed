@@ -315,15 +315,11 @@ export default function CloudflareStripeAgentProvisioningProtocolPage() {
         </p>
 
         <p>
-          We are adding the protocol to our{' '}
-          <Link href="/agent-apis" className="text-accent-primary hover:underline">
-            agent APIs registry
-          </Link>{' '}
-          this week, and tracking partner adoption on{' '}
-          <Link href="/marketplaces" className="text-accent-primary hover:underline">
-            the marketplaces page
+          We shipped a dedicated tracker for this:{' '}
+          <Link href="/agent-provisioning" className="text-accent-primary hover:underline">
+            /agent-provisioning
           </Link>
-          . The list of 32 will be 60 by summer.
+          {' '}lists every named launch partner with status, role, and default cap, plus the conspicuously absent providers (Neon, Turso, Auth0, WorkOS, Stytch, Netlify, Fly) that agents will route around until they ship. The list of 32 will be 60 by summer.
         </p>
       </div>
 
