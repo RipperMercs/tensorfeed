@@ -31,6 +31,7 @@ import {
 } from './agents-enriched';
 import { searchNews, NewsSearchOptions } from './news-search';
 import { refreshVrData, readVrFeed, readVrOriginals, searchVrNews } from './vr-aggregator';
+import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
 import { computeProviderDeepDive } from './provider-deepdive';
 import { compareModels } from './compare-models';
@@ -706,6 +707,31 @@ export default {
         total: cache.articles.length,
         articles: cache.articles.slice(0, limit),
       }, 200, 60);
+    }
+
+    // === AFTA Adopter Directory (machine-readable) ===
+    // Agent-facing JSON listing of known AFTA adopters. Informational, not
+    // authoritative. Each adopter's own /.well-known/agent-fair-trade.json
+    // is the source of truth (per AFTA GOVERNANCE.md). Anyone can run a
+    // competing directory.
+
+    if (path === '/api/afta/adopters') {
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        view_type: 'directory',
+        authoritative: false,
+        note: "TensorFeed's view of the AFTA adopter network. Not authoritative. Each adopter's own /.well-known/agent-fair-trade.json manifest is the source of truth. Per AFTA GOVERNANCE.md, adoption is the certification; removal from this list does not revoke status, inclusion does not confer it.",
+        standard_repo: 'https://github.com/RipperMercs/afta',
+        governance: 'https://github.com/RipperMercs/afta/blob/main/GOVERNANCE.md',
+        schema: 'https://tensorfeed.ai/.well-known/agent-fair-trade-schema.json',
+        human_directory: 'https://tensorfeed.ai/afta-network',
+        submission_pr: 'https://github.com/RipperMercs/tensorfeed/blob/main/src/lib/afta-adopters.ts',
+        run_your_own: 'Multiple non-authoritative directories are welcomed. Lift this JSON, render it elsewhere, host your own list. The MIT license guarantees the right; the no-central-registry principle guarantees the freedom.',
+        count: AFTA_ADOPTERS.length,
+        adopters: AFTA_ADOPTERS,
+        generated_at: new Date().toISOString(),
+      }, 200, 300);
     }
 
     // RSS feed (cached 300s). Served at both /feed.xml and /api/feed.xml.
@@ -1482,6 +1508,7 @@ export default {
           vrNews: '/api/vr/news?category=&limit= (free; sourced from vr.org)',
           vrOriginals: '/api/vr/originals?limit= (free; VR.org Original editorial)',
           premiumVrNewsSearch: '/api/premium/vr/news/search?q=&category=&source=&origin=rss|original|all&since=&limit= (3 credits)',
+          aftaAdopters: '/api/afta/adopters (free; machine-readable AFTA adopter directory; not authoritative)',
           premiumCostProjection: '/api/premium/cost/projection?model=opus-4-7,gpt-5-5&input_tokens_per_day=&output_tokens_per_day=&horizon=monthly',
           premiumProviderDeepDive: '/api/premium/providers/{name}',
           premiumCompareModels: '/api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3',
