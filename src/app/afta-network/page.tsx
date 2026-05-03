@@ -205,7 +205,7 @@ export default function AftaNetworkPage() {
         </p>
         <div className="rounded-lg border border-bg-tertiary bg-bg-secondary/40 p-4">
           <p className="text-xs text-text-secondary mb-2 font-mono">
-            // src/lib/afta-adopters.ts entry shape:
+            {'// src/lib/afta-adopters.ts entry shape:'}
           </p>
           <pre className="text-xs text-text-primary overflow-x-auto"><code>{`{
   site: 'yoursite.example',
@@ -256,7 +256,7 @@ export default function AftaNetworkPage() {
           >
             the TensorFeed repo
           </a>
-          . The standard's canonical home is{' '}
+          . The standard&apos;s canonical home is{' '}
           <a
             href="https://afta.dev"
             target="_blank"

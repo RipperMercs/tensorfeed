@@ -85,7 +85,7 @@ export default function SpecializedModelsPage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">Specialized Models</h1>
         </div>
         <p className="text-text-secondary text-lg max-w-3xl">
-          Production AI models built for a vertical domain. Code (Codestral, DeepSeek Coder, Qwen Coder, StarCoder 2), medical (Med-Gemini, Meditron, BioMistral), legal (SaulLM), finance (FinGPT, BloombergGPT), music (Suno, Udio, MusicGen, Stable Audio), 3D (TRELLIS, Hunyuan3D), retrieval (ColPali, SPLADE). The "I need a model good at X" surface beyond the general-chat catalog. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
+          Production AI models built for a vertical domain. Code (Codestral, DeepSeek Coder, Qwen Coder, StarCoder 2), medical (Med-Gemini, Meditron, BioMistral), legal (SaulLM), finance (FinGPT, BloombergGPT), music (Suno, Udio, MusicGen, Stable Audio), 3D (TRELLIS, Hunyuan3D), retrieval (ColPali, SPLADE). The &ldquo;I need a model good at X&rdquo; surface beyond the general-chat catalog. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
       </div>
 

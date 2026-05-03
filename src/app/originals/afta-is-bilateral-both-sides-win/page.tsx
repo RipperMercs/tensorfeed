@@ -119,7 +119,7 @@ export default function AftaIsBilateralBothSidesWinPage() {
           <strong className="text-text-primary">Predictable, defensible revenue.</strong>{' '}
           The four no-charge rules look like a constraint on the publisher, and they are.
           They are also a public commitment that bounds bad-faith disputes. An agent cannot
-          credibly claim "your handler crashed and you charged me" when the publisher has a
+          credibly claim &ldquo;your handler crashed and you charged me&rdquo; when the publisher has a
           signed receipt with{' '}
           <code className="font-mono text-xs">no_charge_reason: &quot;5xx&quot;</code> and{' '}
           <code className="font-mono text-xs">credits_charged: 0</code>. Predictability cuts

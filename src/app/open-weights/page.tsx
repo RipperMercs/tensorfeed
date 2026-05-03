@@ -75,7 +75,7 @@ export default function OpenWeightsPage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">Open-Weights Deployment</h1>
         </div>
         <p className="text-text-secondary text-lg max-w-3xl">
-          What you actually need to self-host the major open-weights models. VRAM per quantization (FP16, FP8, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, capabilities. The "I want to run this myself" companion to <Link href="/inference-providers" className="text-accent-primary hover:underline">/inference-providers</Link> (hosted pricing). {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
+          What you actually need to self-host the major open-weights models. VRAM per quantization (FP16, FP8, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, capabilities. The &ldquo;I want to run this myself&rdquo; companion to <Link href="/inference-providers" className="text-accent-primary hover:underline">/inference-providers</Link> (hosted pricing). {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
       </div>
 

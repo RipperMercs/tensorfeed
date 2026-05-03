@@ -100,7 +100,7 @@ export default function ModelCardsPage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">Model Cards & Safety</h1>
         </div>
         <p className="text-text-secondary text-lg max-w-3xl">
-          Published system cards, model cards, safety evaluations, and independent red-team reports for frontier AI models. Plus the cross-model frameworks (Anthropic RSP, OpenAI Preparedness, DeepMind Frontier Safety) and incident databases. The "what does the lab and third-party evaluators publicly say about this model" surface. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
+          Published system cards, model cards, safety evaluations, and independent red-team reports for frontier AI models. Plus the cross-model frameworks (Anthropic RSP, OpenAI Preparedness, DeepMind Frontier Safety) and incident databases. The &ldquo;what does the lab and third-party evaluators publicly say about this model&rdquo; surface. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
       </div>
 
