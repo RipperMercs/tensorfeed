@@ -380,8 +380,7 @@ export default function AgentFairTradePage() {
           </div>
           <p className="text-sm text-text-secondary mb-2">
             Real-time news aggregator covering virtual, augmented, and extended reality, plus
-            in-house editorial from a five-writer team. Co-founded by Evan Marcus and Mark
-            Mahle.
+            in-house editorial from a five-writer team.
           </p>
           <p className="text-sm text-text-secondary mb-2">
             Sourced via:{' '}

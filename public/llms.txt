@@ -314,7 +314,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 
 ## VR / AR / XR (sourced from vr.org)
 
-TensorFeed surfaces a VR/AR/XR data lane sourced from vr.org, an independent VR news publication co-founded by Evan Marcus and Mark Mahle. vr.org is a supportive site in the network: TF pulls from its public APIs hourly and re-exposes the data through TF-side AFTA-compliant endpoints. vr.org is credited as the original publisher; article links resolve to vr.org.
+TensorFeed surfaces a VR/AR/XR data lane sourced from vr.org, an independent VR news publication. vr.org is a supportive site in the network: TF pulls from its public APIs hourly and re-exposes the data through TF-side AFTA-compliant endpoints. vr.org is credited as the original publisher; article links resolve to vr.org.
 
 - [VR News Feed](https://tensorfeed.ai/api/vr/news): Free VR/AR/XR aggregated news feed with category filter
 - [VR Originals](https://tensorfeed.ai/api/vr/originals): Free VR.org Original editorial articles
