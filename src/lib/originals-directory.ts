@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'mistral-medium-3-5-open-weights-frontier-coder',
+    title: 'Mistral Just Shipped a 128B Open-Weight Frontier Coder. The Numbers Make Sonnet Sweat.',
+    author: 'Marcus Chen',
+    date: 'May 3, 2026',
+    readTime: '7 min read',
+    description:
+      'Mistral Medium 3.5 went into public preview with 77.6% on SWE-Bench Verified, 256K context, $1.50/$7.50 pricing, and a modified MIT license. Cloud-based Vibe coding agents and a Le Chat Work mode shipped alongside. Inside the benchmarks, the comparison to Claude Sonnet 4.6, GPT-5.5, and Gemini 3.1 Pro, and why open weights at this tier resets the frontier conversation.',
+  },
+  {
     slug: 'cloudflare-stripe-agent-provisioning-protocol',
     title: 'Agents Just Got the Keys to Production. The Cloudflare-Stripe Protocol Is Live.',
     author: 'Marcus Chen',
