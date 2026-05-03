@@ -101,6 +101,14 @@ export default function AgentFairTradePage() {
           >
             adopter directory
           </Link>
+          <a
+            href="https://afta.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded bg-bg-tertiary text-accent-primary hover:underline"
+          >
+            afta.dev
+          </a>
         </div>
       </header>
 

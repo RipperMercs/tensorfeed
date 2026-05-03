@@ -722,6 +722,7 @@ export default {
         view_type: 'directory',
         authoritative: false,
         note: "TensorFeed's view of the AFTA adopter network. Not authoritative. Each adopter's own /.well-known/agent-fair-trade.json manifest is the source of truth. Per AFTA GOVERNANCE.md, adoption is the certification; removal from this list does not revoke status, inclusion does not confer it.",
+        standard_home: 'https://afta.dev',
         standard_repo: 'https://github.com/RipperMercs/afta',
         governance: 'https://github.com/RipperMercs/afta/blob/main/GOVERNANCE.md',
         schema: 'https://tensorfeed.ai/.well-known/agent-fair-trade-schema.json',

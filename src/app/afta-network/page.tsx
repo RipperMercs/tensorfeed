@@ -61,12 +61,20 @@ export default function AftaNetworkPage() {
             What is AFTA?
           </Link>
           <a
+            href="https://afta.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded bg-bg-tertiary text-accent-primary hover:underline"
+          >
+            afta.dev
+          </a>
+          <a
             href="https://github.com/RipperMercs/afta"
             target="_blank"
             rel="noopener noreferrer"
             className="px-3 py-1.5 rounded bg-bg-tertiary text-accent-primary hover:underline"
           >
-            github.com/RipperMercs/afta
+            source repo
           </a>
           <a
             href="https://github.com/RipperMercs/afta/blob/main/GOVERNANCE.md"
@@ -248,7 +256,16 @@ export default function AftaNetworkPage() {
           >
             the TensorFeed repo
           </a>
-          . The standard, schema, and reference implementations live at{' '}
+          . The standard's canonical home is{' '}
+          <a
+            href="https://afta.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-primary hover:underline"
+          >
+            afta.dev
+          </a>
+          . Source repo:{' '}
           <a
             href="https://github.com/RipperMercs/afta"
             target="_blank"
