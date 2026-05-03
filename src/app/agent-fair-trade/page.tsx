@@ -95,6 +95,12 @@ export default function AgentFairTradePage() {
           >
             public no-charge ledger
           </Link>
+          <Link
+            href="/afta-network"
+            className="px-3 py-1.5 rounded bg-bg-tertiary text-accent-primary hover:underline"
+          >
+            adopter directory
+          </Link>
         </div>
       </header>
 
