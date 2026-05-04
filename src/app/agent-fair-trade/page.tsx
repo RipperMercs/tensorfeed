@@ -434,6 +434,44 @@ export default function AgentFairTradePage() {
           </a>
           .
         </p>
+
+        <div className="mt-6 mb-2">
+          <h3 className="text-base font-semibold text-text-primary mb-2">Embed a badge</h3>
+          <p className="text-text-secondary mb-4 max-w-3xl leading-relaxed text-sm">
+            Adopters can embed an AFTA badge on their site, README, or docs. Free to use, no
+            attribution required, links back to this page.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 items-start mb-4">
+            <div className="flex flex-col gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/badges/afta.svg"
+                alt="AFTA certified"
+                width={146}
+                height={20}
+              />
+              <code className="text-xs text-text-muted bg-bg-tertiary px-2 py-1 rounded">
+                /badges/afta.svg
+              </code>
+            </div>
+            <div className="flex flex-col gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/badges/afta-compliant.svg"
+                alt="AFTA compliant"
+                width={156}
+                height={20}
+              />
+              <code className="text-xs text-text-muted bg-bg-tertiary px-2 py-1 rounded">
+                /badges/afta-compliant.svg
+              </code>
+            </div>
+          </div>
+          <p className="text-text-muted text-xs mb-2">Markdown:</p>
+          <pre className="bg-bg-secondary border border-border rounded-lg p-3 text-xs overflow-x-auto"><code className="text-text-primary font-mono">{`[![AFTA certified](https://tensorfeed.ai/badges/afta.svg)](https://tensorfeed.ai/agent-fair-trade)`}</code></pre>
+          <p className="text-text-muted text-xs mb-2 mt-3">HTML:</p>
+          <pre className="bg-bg-secondary border border-border rounded-lg p-3 text-xs overflow-x-auto"><code className="text-text-primary font-mono">{`<a href="https://tensorfeed.ai/agent-fair-trade"><img src="https://tensorfeed.ai/badges/afta.svg" alt="AFTA certified"></a>`}</code></pre>
+        </div>
       </section>
 
       <section className="border-t border-bg-tertiary pt-6">
