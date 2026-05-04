@@ -806,7 +806,7 @@
         ],
         "summary": "Currently-hot GitHub issues across AI repos",
         "operationId": "getHotIssues",
-        "description": "Five fan-out searches on AI topics (llm, ai-agents, large-language-models, machine-learning, transformer), is:issue is:open archived:false comments>=10 updated within the last 7 days. Deduped by URL, top 30 by comment count. Refreshed daily at 12:30 UTC. Companion to /api/trending-repos: that one shows which AI repos are gaining stars; this one shows where the active conversations are.",
+        "description": "Five fan-out keyword-phrase searches (\"large language model\", \"AI agent\", transformer, \"machine learning\", LLM), is:issue is:open archived:false comments>=10 updated within the last 7 days. Deduped by URL, top 30 by comment count. Refreshed daily at 12:30 UTC. Companion to /api/trending-repos: that one shows which AI repos are gaining stars; this one shows where the active conversations are.",
         "responses": {
           "200": {
             "description": "Hot AI issues snapshot",

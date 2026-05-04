@@ -3,15 +3,22 @@ import { Env } from './types';
 /**
  * Daily snapshot of currently-hot issues across the AI ecosystem on
  * GitHub. Companion to /api/trending-repos: that one shows which AI
- * repos are gaining stars; this one shows which AI repos have active
- * discussion happening right now (open issues with high comment counts
- * and recent activity).
+ * repos are gaining stars; this one shows where active discussion is
+ * happening right now (open issues with high comment counts and recent
+ * activity).
  *
- * Sources via GitHub Search API: five fan-out queries across AI-relevant
- * topics (llm, ai-agents, large-language-models, machine-learning,
- * transformer). Filters: is:issue, is:open, archived:false, comments>=N,
- * updated within the last 7 days. Sort by comment count descending.
- * Dedup by html_url across the fanout, keep top 30.
+ * Sources via GitHub Search API: five fan-out queries on AI-relevant
+ * keyword phrases. Filters: is:issue, is:open, archived:false,
+ * comments>=N, updated within the last 7 days. Sort by comment count
+ * descending. Dedup by html_url across the fanout, keep top 30.
+ *
+ * Note on the search syntax: GitHub's `/search/issues` does NOT support
+ * a `topic:` qualifier (that exists only on `/search/repositories`).
+ * Issues themselves have no topics; topics live on the repo. We
+ * therefore query by keyword phrase (matched against the issue's title
+ * and body), which is what `gh issue search` itself does under the hood.
+ * The original implementation used `topic:` and silently returned zero
+ * matches; this is the corrected version.
  *
  * Free tier of GitHub Search API: 10 req/min unauthenticated, 30 req/min
  * authenticated. We use the existing GITHUB_TOKEN secret when present so
@@ -25,12 +32,16 @@ import { Env } from './types';
 
 const SEARCH_BASE = 'https://api.github.com/search/issues';
 
+// Keyword phrases for GitHub's /search/issues. Quoted strings become
+// phrase matches; bare words become free-text matches across title +
+// body. The label remains used as the `matched_topic` field for the
+// rendered snapshot so callers can see which query found which issue.
 const TOPICS = [
-  'llm',
-  'ai-agents',
-  'large-language-models',
-  'machine-learning',
+  '"large language model"',
+  '"AI agent"',
   'transformer',
+  '"machine learning"',
+  'LLM',
 ];
 
 const PER_QUERY_LIMIT = 15;
@@ -186,7 +197,9 @@ export function summarize(issues: HotIssue[]): HotIssuesSnapshot['summary'] {
 const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
 
 async function fetchOneTopic(topic: string, since: string, token: string | undefined): Promise<HotIssue[]> {
-  const q = `is:issue is:open archived:false comments:>=${COMMENT_THRESHOLD} updated:>=${since} topic:${topic}`;
+  // The keyword phrase already includes its own quoting if multi-word,
+  // and goes in unmodified. GitHub treats it as title+body free-text.
+  const q = `is:issue is:open archived:false comments:>=${COMMENT_THRESHOLD} updated:>=${since} ${topic}`;
   const url = new URL(SEARCH_BASE);
   url.searchParams.set('q', q);
   url.searchParams.set('sort', 'comments');

@@ -220,21 +220,28 @@ export function buildTodayBrief(inputs: TodayInputs, opts: BuildOptions = {}): T
   }
 
   // Hugging Face
+  // Defensive against schema drift: an older cached snapshot (captured
+  // before the spaces extension shipped) will be missing snap.spaces.
+  // We optional-chain every field so an out-of-date snapshot still
+  // renders its available subset rather than crashing /api/today.
   let hf: TodayBrief['hf'] = emptySection();
   if (sections.includes('hf')) {
     const snap = inputs.hfTrending;
     if (snap) {
+      const modelItems = snap.models?.items ?? [];
+      const datasetItems = snap.datasets?.items ?? [];
+      const spaceItems = snap.spaces?.items ?? [];
       hf = {
         available: true,
         captured_at: snap.capturedAt,
         data: {
-          models: snap.models.items.slice(0, N).map(m => ({
+          models: modelItems.slice(0, N).map(m => ({
             id: m.id, downloads: m.downloads, likes: m.likes, pipeline_tag: m.pipeline_tag,
           })),
-          datasets: snap.datasets.items.slice(0, N).map(d => ({
+          datasets: datasetItems.slice(0, N).map(d => ({
             id: d.id, downloads: d.downloads, likes: d.likes,
           })),
-          spaces: snap.spaces.items.slice(0, N).map(s => ({
+          spaces: spaceItems.slice(0, N).map(s => ({
             id: s.id, sdk: s.sdk, likes: s.likes, runtime_stage: s.runtime_stage,
           })),
         },

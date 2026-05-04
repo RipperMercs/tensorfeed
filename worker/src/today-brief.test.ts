@@ -153,4 +153,24 @@ describe('buildTodayBrief', () => {
     const brief = buildTodayBrief(emptyInputs);
     expect(brief.generated_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
+
+  it('does not crash on hf snapshots missing the spaces field (schema drift)', () => {
+    // Older cached snapshots predate the Spaces extension; they have
+    // models + datasets but no spaces. The builder must not throw.
+    const inputs: TodayInputs = {
+      ...emptyInputs,
+      hfTrending: {
+        date: '2026-05-04',
+        capturedAt: '2026-05-04T21:00:00Z',
+        models: { sort: 'downloads', count: 1, items: [{ id: 'a/m', downloads: 100, likes: 5, pipeline_tag: null, tags: [], lastModified: null, private: false, gated: false }] },
+        datasets: { sort: 'downloads', count: 0, items: [] },
+        // Note: spaces is intentionally absent - simulates an old snapshot.
+        summary: { top_pipeline_tags: [], top_namespaces: [], top_space_sdks: [] },
+      } as unknown as Parameters<typeof buildTodayBrief>[0]['hfTrending'],
+    };
+    const brief = buildTodayBrief(inputs);
+    expect(brief.hf.available).toBe(true);
+    expect(brief.hf.data!.models).toHaveLength(1);
+    expect(brief.hf.data!.spaces).toEqual([]);
+  });
 });
