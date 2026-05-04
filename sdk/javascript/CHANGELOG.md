@@ -2,6 +2,11 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.18.0 - 2026-05-04
+
+### Changed
+- `HFTrendingResponse` now includes a third section, `snapshot.spaces`: top 30 most-liked Hugging Face Spaces (hosted apps and demos) ranked by likes (the dominant popularity signal for non-downloadable assets). Each entry includes id, author, sdk (gradio / streamlit / static / docker), likes, tags, lastModified, private, runtime_stage (RUNNING / SLEEPING / BUILDING etc when surfaced), and hardware (cpu-basic / t4-small / a10g-large etc when surfaced). Also adds `summary.top_space_sdks`. New `HFSpaceEntry` type. Worker captures all three asset classes in a single 12:00 UTC cron.
+
 ## 1.17.0 - 2026-05-04
 
 ### Added

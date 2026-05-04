@@ -581,6 +581,18 @@ export interface HFDatasetEntry {
   gated: boolean | string;
 }
 
+export interface HFSpaceEntry {
+  id: string;
+  author: string | null;
+  sdk: string | null;
+  likes: number;
+  tags: string[];
+  lastModified: string | null;
+  private: boolean;
+  runtime_stage: string | null;
+  hardware: string | null;
+}
+
 export interface HFTrendingResponse {
   ok: boolean;
   snapshot: {
@@ -588,9 +600,11 @@ export interface HFTrendingResponse {
     capturedAt: string;
     models: { sort: 'downloads'; count: number; items: HFModelEntry[] };
     datasets: { sort: 'downloads'; count: number; items: HFDatasetEntry[] };
+    spaces: { sort: 'likes'; count: number; items: HFSpaceEntry[] };
     summary: {
       top_pipeline_tags: Array<{ tag: string; count: number }>;
       top_namespaces: Array<{ namespace: string; count: number }>;
+      top_space_sdks: Array<{ sdk: string; count: number }>;
     };
   };
 }

@@ -395,9 +395,9 @@ paths:
   /api/hf/trending:
     get:
       tags: [Hugging Face]
-      summary: Top 30 most-downloaded HF models and top 30 datasets
+      summary: Top HF models, datasets, and Spaces
       operationId: getHFTrending
-      description: Daily snapshot against the public HF API. Day-over-day deltas across the dated keys yield a true trending signal once multiple snapshots accumulate. Refreshed daily at 12:00 UTC.
+      description: Daily snapshot against the public HF API. Models + datasets ranked by downloads (top 30 each); Spaces ranked by likes (top 30). Day-over-day deltas across the dated keys yield a true trending signal once multiple snapshots accumulate. Refreshed daily at 12:00 UTC.
       responses:
         '200':
           description: Top-downloaded models and datasets snapshot

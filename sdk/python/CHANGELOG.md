@@ -2,6 +2,11 @@
 
 All notable changes to the Python SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.22.0 - 2026-05-04
+
+### Changed
+- `tf.get_hf_trending()` response now includes a third section, `snapshot.spaces`: top 30 most-liked Hugging Face Spaces (hosted apps and demos) ranked by likes. Each entry includes id, author, sdk (gradio / streamlit / static / docker), likes, tags, lastModified, private, runtime_stage, and hardware. Also adds `summary.top_space_sdks`. The wire endpoint shape changed; the Python method signature did not.
+
 ## 1.21.0 - 2026-05-04
 
 ### Added

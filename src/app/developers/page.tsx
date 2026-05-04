@@ -302,7 +302,7 @@ const ENDPOINTS: Endpoint[] = [
   {
     method: 'GET',
     path: '/api/hf/trending',
-    description: 'Top 30 most-downloaded models and top 30 most-downloaded datasets on Hugging Face. Captured daily at 12:00 UTC against the public HF API (no auth). Each model entry includes id, downloads, likes, pipeline_tag, tags, lastModified, private, and gated. Once we have multiple days of snapshots, day-over-day download deltas become a real "trending" signal. Pairs with the existing TensorFeed HF dataset (tensorfeed/ai-ecosystem-daily) which we publish back into the HF community.',
+    description: 'Top Hugging Face models, datasets, and Spaces (the three asset classes). Models and datasets ranked by downloads (top 30 each); Spaces ranked by likes (top 30, since downloads is meaningless for hosted apps). Captured daily at 12:00 UTC against the public HF API (no auth). Once we have multiple days of snapshots, day-over-day deltas become a real "trending" signal. Pairs with the existing TensorFeed HF dataset (tensorfeed/ai-ecosystem-daily) which we publish back into the HF community.',
     cache: 'Cache for 10 minutes',
     example: `{
   "ok": true,
@@ -310,8 +310,7 @@ const ENDPOINTS: Endpoint[] = [
     "date": "2026-05-04",
     "capturedAt": "2026-05-04T12:00:00Z",
     "models": {
-      "sort": "downloads",
-      "count": 30,
+      "sort": "downloads", "count": 30,
       "items": [
         { "id": "sentence-transformers/all-MiniLM-L6-v2",
           "downloads": 12000000, "likes": 1800,
@@ -320,9 +319,19 @@ const ENDPOINTS: Endpoint[] = [
       ]
     },
     "datasets": { "sort": "downloads", "count": 30, "items": [...] },
+    "spaces": {
+      "sort": "likes", "count": 30,
+      "items": [
+        { "id": "huggingface-projects/llama-3-8b-demo",
+          "author": "huggingface-projects", "sdk": "gradio",
+          "likes": 4200, "tags": ["chat","llm"],
+          "runtime_stage": "RUNNING", "hardware": "a10g-large" }
+      ]
+    },
     "summary": {
       "top_pipeline_tags": [{ "tag": "text-generation", "count": 12 }],
-      "top_namespaces": [{ "namespace": "meta-llama", "count": 4 }]
+      "top_namespaces": [{ "namespace": "meta-llama", "count": 4 }],
+      "top_space_sdks": [{ "sdk": "gradio", "count": 21 }]
     }
   }
 }`,

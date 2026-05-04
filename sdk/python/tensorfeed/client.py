@@ -1054,19 +1054,26 @@ class TensorFeed:
     # ── Free: Hugging Face top-downloaded ───────────────────────────
 
     def get_hf_trending(self) -> dict[str, Any]:
-        """Top 30 most-downloaded Hugging Face models and top 30 datasets.
+        """Top Hugging Face models, datasets, and Spaces.
 
         Free, no auth. Snapshotted daily at 12:00 UTC against the public
-        HF API. Once enough daily snapshots accumulate, day-over-day
-        download deltas become a real trending signal computed over the
-        dated keys.
+        HF API. Three sections in one response:
+          - ``models``: top 30 by downloads
+          - ``datasets``: top 30 by downloads
+          - ``spaces``: top 30 by likes (the right signal for hosted
+            apps; downloads is meaningless for Spaces)
+
+        Once enough daily snapshots accumulate, day-over-day deltas
+        become a real trending signal computed over the dated keys.
 
         Returns:
             Dict with ``ok`` and ``snapshot`` keys. Snapshot includes
-            ``models`` (top 30 by downloads, each with id, downloads,
-            likes, pipeline_tag, tags, lastModified, private, gated),
-            ``datasets`` (same shape minus pipeline_tag), and
-            ``summary`` (top_pipeline_tags, top_namespaces).
+            ``models`` (each entry: id, downloads, likes, pipeline_tag,
+            tags, lastModified, private, gated), ``datasets`` (same
+            shape minus pipeline_tag), ``spaces`` (id, author, sdk,
+            likes, tags, lastModified, private, runtime_stage, hardware),
+            and ``summary`` (top_pipeline_tags, top_namespaces,
+            top_space_sdks).
         """
         return self._request("GET", "/hf/trending")
 

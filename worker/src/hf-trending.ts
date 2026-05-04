@@ -1,13 +1,16 @@
 import { Env } from './types';
 
 /**
- * Daily snapshot of the most-downloaded models and datasets on Hugging
- * Face. The HF public API is unauthenticated for read-only listing
- * (https://huggingface.co/api/models, /api/datasets).
+ * Daily snapshot of the top Hugging Face models, datasets, AND Spaces.
+ * The HF public API is unauthenticated for read-only listing
+ * (https://huggingface.co/api/models, /api/datasets, /api/spaces).
  *
- * We snapshot the top N of each by downloads. Once we have multiple days
- * of snapshots, day-over-day download deltas effectively become a
- * "trending" measure that we compute, regardless of HF's own sort order.
+ * Models + datasets ranked by downloads (the dominant popularity signal
+ * for downloadable assets). Spaces ranked by likes (Spaces are hosted
+ * apps, not downloads, so likes is the right signal). Once multiple
+ * days of snapshots accumulate, day-over-day deltas on each become a
+ * true "trending" measure we compute over the dated keys, regardless
+ * of HF's own sort order.
  *
  * Backs free `/api/hf/trending`. Daily snapshot at 12:00 UTC stored under
  * `hf:*`. Dated keys compound into a future premium time series.
@@ -15,6 +18,7 @@ import { Env } from './types';
 
 const HF_MODELS_BASE = 'https://huggingface.co/api/models';
 const HF_DATASETS_BASE = 'https://huggingface.co/api/datasets';
+const HF_SPACES_BASE = 'https://huggingface.co/api/spaces';
 
 const TOP_N = 30;
 
@@ -44,6 +48,18 @@ export interface HFDatasetEntry {
   gated: boolean | string;
 }
 
+export interface HFSpaceEntry {
+  id: string;                  // e.g. "huggingface-projects/llama-3-8b-demo"
+  author: string | null;
+  sdk: string | null;          // gradio | streamlit | static | docker
+  likes: number;
+  tags: string[];
+  lastModified: string | null;
+  private: boolean;
+  runtime_stage: string | null; // RUNNING | SLEEPING | BUILDING | etc, when surfaced
+  hardware: string | null;      // cpu-basic | t4-small | a10g-large | etc, when surfaced
+}
+
 export interface HFSnapshot {
   date: string;
   capturedAt: string;
@@ -57,9 +73,15 @@ export interface HFSnapshot {
     count: number;
     items: HFDatasetEntry[];
   };
+  spaces: {
+    sort: 'likes';
+    count: number;
+    items: HFSpaceEntry[];
+  };
   summary: {
     top_pipeline_tags: Array<{ tag: string; count: number }>;
     top_namespaces: Array<{ namespace: string; count: number }>;
+    top_space_sdks: Array<{ sdk: string; count: number }>;
   };
 }
 
@@ -93,6 +115,17 @@ interface RawHFDataset {
   gated?: boolean | string;
 }
 
+interface RawHFSpace {
+  id?: string;
+  author?: string;
+  sdk?: string | null;
+  likes?: number;
+  tags?: string[];
+  lastModified?: string;
+  private?: boolean;
+  runtime?: { stage?: string; hardware?: { current?: string; requested?: string } | string };
+}
+
 export function normalizeModel(raw: RawHFModel): HFModelEntry | null {
   const id = (raw.id || raw.modelId || '').trim();
   if (!id) return null;
@@ -122,7 +155,34 @@ export function normalizeDataset(raw: RawHFDataset): HFDatasetEntry | null {
   };
 }
 
-export function summarize(models: HFModelEntry[], datasets: HFDatasetEntry[]): HFSnapshot['summary'] {
+export function normalizeSpace(raw: RawHFSpace): HFSpaceEntry | null {
+  const id = (raw.id || '').trim();
+  if (!id) return null;
+  let hardware: string | null = null;
+  const hw = raw.runtime?.hardware;
+  if (typeof hw === 'string') {
+    hardware = hw;
+  } else if (hw && typeof hw === 'object') {
+    hardware = hw.current?.trim() || hw.requested?.trim() || null;
+  }
+  return {
+    id,
+    author: raw.author?.trim() || (id.includes('/') ? id.split('/')[0] : null),
+    sdk: raw.sdk?.trim() || null,
+    likes: typeof raw.likes === 'number' ? raw.likes : 0,
+    tags: Array.isArray(raw.tags) ? raw.tags.filter(t => typeof t === 'string') : [],
+    lastModified: raw.lastModified || null,
+    private: raw.private === true,
+    runtime_stage: raw.runtime?.stage?.trim() || null,
+    hardware,
+  };
+}
+
+export function summarize(
+  models: HFModelEntry[],
+  datasets: HFDatasetEntry[],
+  spaces: HFSpaceEntry[],
+): HFSnapshot['summary'] {
   const byTag = new Map<string, number>();
   for (const m of models) {
     if (m.pipeline_tag) byTag.set(m.pipeline_tag, (byTag.get(m.pipeline_tag) || 0) + 1);
@@ -135,12 +195,22 @@ export function summarize(models: HFModelEntry[], datasets: HFDatasetEntry[]): H
   const byNs = new Map<string, number>();
   for (const m of models) byNs.set(namespaceOf(m.id), (byNs.get(namespaceOf(m.id)) || 0) + 1);
   for (const d of datasets) byNs.set(namespaceOf(d.id), (byNs.get(namespaceOf(d.id)) || 0) + 1);
+  for (const s of spaces) byNs.set(namespaceOf(s.id), (byNs.get(namespaceOf(s.id)) || 0) + 1);
   const top_namespaces = Array.from(byNs.entries())
     .map(([namespace, count]) => ({ namespace, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  return { top_pipeline_tags, top_namespaces };
+  const bySdk = new Map<string, number>();
+  for (const s of spaces) {
+    if (s.sdk) bySdk.set(s.sdk, (bySdk.get(s.sdk) || 0) + 1);
+  }
+  const top_space_sdks = Array.from(bySdk.entries())
+    .map(([sdk, count]) => ({ sdk, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  return { top_pipeline_tags, top_namespaces, top_space_sdks };
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -160,6 +230,7 @@ export interface CaptureResult {
   date: string;
   model_count?: number;
   dataset_count?: number;
+  space_count?: number;
   error?: string;
 }
 
@@ -169,10 +240,16 @@ export async function captureHFSnapshot(env: Env): Promise<CaptureResult> {
 
   const modelsUrl = `${HF_MODELS_BASE}?sort=downloads&direction=-1&limit=${TOP_N}`;
   const datasetsUrl = `${HF_DATASETS_BASE}?sort=downloads&direction=-1&limit=${TOP_N}`;
+  const spacesUrl = `${HF_SPACES_BASE}?sort=likes&direction=-1&limit=${TOP_N}`;
 
   let rawModels: RawHFModel[] = [];
   let rawDatasets: RawHFDataset[] = [];
+  let rawSpaces: RawHFSpace[] = [];
 
+  // Spaces fetch is allowed to fail independently of models/datasets;
+  // we fall back to an empty array rather than failing the whole capture.
+  // Models + datasets failures are still hard errors because they were
+  // the original endpoint contract before Spaces was added.
   try {
     const [m, d] = await Promise.all([
       fetchJson<RawHFModel[]>(modelsUrl),
@@ -184,8 +261,17 @@ export async function captureHFSnapshot(env: Env): Promise<CaptureResult> {
     return { ok: false, date, error: (err as Error).message };
   }
 
+  try {
+    const s = await fetchJson<RawHFSpace[]>(spacesUrl);
+    rawSpaces = Array.isArray(s) ? s : [];
+  } catch (err) {
+    console.error('hf-trending: spaces fetch failed:', (err as Error).message);
+    rawSpaces = [];
+  }
+
   const models = rawModels.map(normalizeModel).filter((x): x is HFModelEntry => x !== null);
   const datasets = rawDatasets.map(normalizeDataset).filter((x): x is HFDatasetEntry => x !== null);
+  const spaces = rawSpaces.map(normalizeSpace).filter((x): x is HFSpaceEntry => x !== null);
 
   if (models.length === 0 && datasets.length === 0) {
     return { ok: false, date, error: 'no_entries_returned' };
@@ -196,7 +282,8 @@ export async function captureHFSnapshot(env: Env): Promise<CaptureResult> {
     capturedAt,
     models: { sort: 'downloads', count: models.length, items: models },
     datasets: { sort: 'downloads', count: datasets.length, items: datasets },
-    summary: summarize(models, datasets),
+    spaces: { sort: 'likes', count: spaces.length, items: spaces },
+    summary: summarize(models, datasets, spaces),
   };
 
   const json = JSON.stringify(snapshot);
@@ -206,7 +293,13 @@ export async function captureHFSnapshot(env: Env): Promise<CaptureResult> {
   ]);
   await pushIndexDate(env, date);
 
-  return { ok: true, date, model_count: models.length, dataset_count: datasets.length };
+  return {
+    ok: true,
+    date,
+    model_count: models.length,
+    dataset_count: datasets.length,
+    space_count: spaces.length,
+  };
 }
 
 async function readIndex(env: Env): Promise<string[]> {

@@ -860,9 +860,9 @@
         "tags": [
           "Hugging Face"
         ],
-        "summary": "Top 30 most-downloaded HF models and top 30 datasets",
+        "summary": "Top HF models, datasets, and Spaces",
         "operationId": "getHFTrending",
-        "description": "Daily snapshot against the public Hugging Face API. Day-over-day deltas across the dated keys yield a true trending signal once multiple snapshots accumulate. Refreshed daily at 12:00 UTC.",
+        "description": "Daily snapshot against the public Hugging Face API. Models + datasets ranked by downloads (top 30 each); Spaces ranked by likes (top 30, since downloads is meaningless for hosted apps). Day-over-day deltas across the dated keys yield a true trending signal once multiple snapshots accumulate. Refreshed daily at 12:00 UTC.",
         "responses": {
           "200": {
             "description": "Top-downloaded models and datasets snapshot",
@@ -917,6 +917,30 @@
                                   "lastModified": { "type": "string", "nullable": true },
                                   "private": { "type": "boolean" },
                                   "gated": {}
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "spaces": {
+                          "type": "object",
+                          "properties": {
+                            "sort": { "type": "string", "enum": ["likes"] },
+                            "count": { "type": "integer" },
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": { "type": "string" },
+                                  "author": { "type": "string", "nullable": true },
+                                  "sdk": { "type": "string", "nullable": true },
+                                  "likes": { "type": "integer" },
+                                  "tags": { "type": "array", "items": { "type": "string" } },
+                                  "lastModified": { "type": "string", "nullable": true },
+                                  "private": { "type": "boolean" },
+                                  "runtime_stage": { "type": "string", "nullable": true },
+                                  "hardware": { "type": "string", "nullable": true }
                                 }
                               }
                             }
