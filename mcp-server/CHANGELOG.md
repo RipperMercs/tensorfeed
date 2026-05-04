@@ -1,6 +1,11 @@
 # Changelog
 
-All notable changes to the [TensorFeed.ai MCP server](https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server). Free tools work without configuration; premium tools require a bearer token via the `TENSORFEED_TOKEN` env var. Buy credits at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
+All notable changes to the [TensorFeed.ai MCP server](https://github.com/RipperMercs/tensorfeed-mcp). Free tools work without configuration; premium tools require a bearer token via the `TENSORFEED_TOKEN` env var. Buy credits at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
+
+## 1.11.1 - 2026-05-04
+
+### Changed
+- Repository URL updated to point at the dedicated [`RipperMercs/tensorfeed-mcp`](https://github.com/RipperMercs/tensorfeed-mcp) repo. The MCP server now has its own GitHub home for issues, stars, and discoverability. Source-of-truth for builds remains in the main `tensorfeed` monorepo's `mcp-server/` folder; the standalone repo is mirrored on release. No code changes; no behavior changes; npm install / npx unaffected.
 
 ## 1.11.0 - 2026-04-29
 
