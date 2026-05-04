@@ -1087,17 +1087,78 @@ export default function AgentPaymentsPage() {
         <div className="bg-bg-secondary border border-border rounded-xl p-5">
           <h2 className="text-lg font-semibold text-text-primary mb-2">Circuit Breaker (Loop Protection)</h2>
           <p className="text-text-secondary text-sm mb-3">
-            If a single bearer token issues more than <span className="text-text-primary font-mono">20</span> identical
-            requests inside a <span className="text-text-primary font-mono">60-second</span> rolling window, the
-            premium API returns <span className="text-text-primary font-mono">HTTP 429</span> with{' '}
-            <code className="text-accent-primary font-mono">error: &quot;infinite_loop_detected&quot;</code> and a{' '}
-            <span className="text-text-primary font-mono">120-second</span> cooldown. No credits are charged when the
-            breaker is tripped. Identical means same path and same sorted query string.
+            Two independent layers run on every premium call. Both return{' '}
+            <span className="text-text-primary font-mono">HTTP 429</span> with no credits charged.
           </p>
+          <ul className="text-text-secondary text-sm space-y-3 mb-3">
+            <li>
+              <span className="text-text-primary">Identical-request layer</span>{' '}
+              (<code className="text-accent-primary font-mono">trip_kind: &quot;identical_request&quot;</code>): more
+              than <span className="text-text-primary font-mono">20</span> requests with the same path and sorted
+              query string from one bearer token inside a <span className="text-text-primary font-mono">60s</span>{' '}
+              rolling window trips a <span className="text-text-primary font-mono">120s</span> cooldown. The error
+              code is{' '}
+              <code className="text-accent-primary font-mono">infinite_loop_detected</code>. Catches naive
+              while-loops.
+            </li>
+            <li>
+              <span className="text-text-primary">Burn-rate layer</span>{' '}
+              (<code className="text-accent-primary font-mono">trip_kind: &quot;burn_rate&quot;</code>): more than{' '}
+              <span className="text-text-primary font-mono">100</span> requests from one bearer token inside the
+              same <span className="text-text-primary font-mono">60s</span> window, regardless of path or query,
+              trips a <span className="text-text-primary font-mono">300s</span> cooldown. The error code is{' '}
+              <code className="text-accent-primary font-mono">burn_rate_exceeded</code>. Catches loops that vary the
+              URL on each call (for example, appending a random nonce parameter) and would otherwise slip past the
+              identical-request layer.
+            </li>
+          </ul>
           <p className="text-text-muted text-sm">
-            This is a safety net for naive while-loops in agent code. If you hit it, fix the planning logic before
-            retrying. Different tokens, different paths, and different query strings are tracked independently, so
-            normal high-volume traffic is unaffected.
+            Different tokens are tracked independently, so normal high-volume traffic across multiple agents is
+            unaffected. If you legitimately need more than 100 RPM on one token, split traffic across multiple
+            tokens or email <code className="font-mono">evan@tensorfeed.ai</code>.
+          </p>
+        </div>
+      </section>
+
+      {/* Signed receipts + agent nonce */}
+      <section className="mb-10" id="signed-receipts">
+        <div className="bg-bg-secondary border border-border rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Signed Receipts &amp; Agent Nonce</h2>
+          <p className="text-text-secondary text-sm mb-3">
+            Every premium response (paid OR no-charge) carries an Ed25519-signed receipt your agent can verify
+            against the public key at{' '}
+            <code className="text-accent-primary font-mono">/.well-known/tensorfeed-receipt-key.json</code> with no
+            shared secret. The signature covers a canonical-JSON form of the receipt fields, so any tampering with
+            the body, the credit charge, or the no-charge reason invalidates the signature.
+          </p>
+          <p className="text-text-secondary text-sm mb-3">
+            Send an optional <code className="text-accent-primary font-mono">X-Agent-Nonce</code> header with any
+            premium request and the value is echoed verbatim into the signed receipt&apos;s{' '}
+            <code className="text-accent-primary font-mono">agent_nonce</code> field. This binds the signature to{' '}
+            <span className="text-text-primary">your specific request</span>, so a server cannot return a previously
+            signed receipt from a cached identical call. The nonce is also returned in the{' '}
+            <code className="text-accent-primary font-mono">X-Agent-Nonce-Echo</code> response header for log
+            correlation.
+          </p>
+          <ul className="text-text-secondary text-sm space-y-2 mb-3">
+            <li>
+              Allowed characters: <code className="font-mono">[A-Za-z0-9._-]</code>. Length:{' '}
+              <span className="text-text-primary font-mono">8 to 128</span> characters.
+            </li>
+            <li>
+              Recommended: a UUIDv4 (with dashes stripped) or a base64url-encoded random 32-byte value. Generate a
+              fresh nonce on every call.
+            </li>
+            <li>
+              Receipts are versioned: <code className="font-mono">v: 2</code> includes{' '}
+              <code className="font-mono">agent_nonce</code> (null when no nonce was supplied);{' '}
+              <code className="font-mono">v: 1</code> receipts (issued before 2026-05-03) omit the field and verify
+              under the v1 canonical form.
+            </li>
+          </ul>
+          <p className="text-text-muted text-sm">
+            Verification reference: <code className="font-mono">/api/receipt/verify</code>. The full canonical-JSON
+            spec is at <code className="font-mono">/agent-fair-trade#receipts</code>.
           </p>
         </div>
       </section>

@@ -5,6 +5,8 @@ import {
   hashResponse,
   tokenShort,
   generateReceiptId,
+  validateAgentNonce,
+  AGENT_NONCE_LIMITS,
 } from './receipts';
 
 describe('canonicalJSON', () => {
@@ -125,5 +127,81 @@ describe('generateReceiptId', () => {
     const ids = new Set<string>();
     for (let i = 0; i < 100; i++) ids.add(generateReceiptId());
     expect(ids.size).toBe(100);
+  });
+});
+
+describe('validateAgentNonce', () => {
+  it('returns null when missing or empty', () => {
+    expect(validateAgentNonce(null)).toBeNull();
+    expect(validateAgentNonce(undefined)).toBeNull();
+    expect(validateAgentNonce('')).toBeNull();
+    expect(validateAgentNonce('   ')).toBeNull();
+  });
+
+  it('accepts a typical UUID-style nonce', () => {
+    const nonce = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6';
+    expect(validateAgentNonce(nonce)).toBe(nonce);
+  });
+
+  it('accepts hyphens, underscores, and dots in the nonce', () => {
+    const nonce = 'agent.task-42_v3';
+    expect(validateAgentNonce(nonce)).toBe(nonce);
+  });
+
+  it('trims surrounding whitespace before validation', () => {
+    expect(validateAgentNonce('  abcdefgh  ')).toBe('abcdefgh');
+  });
+
+  it('rejects nonces shorter than the floor', () => {
+    expect(validateAgentNonce('a'.repeat(AGENT_NONCE_LIMITS.MIN - 1))).toBeNull();
+  });
+
+  it('rejects nonces longer than the ceiling', () => {
+    expect(validateAgentNonce('a'.repeat(AGENT_NONCE_LIMITS.MAX + 1))).toBeNull();
+  });
+
+  it('rejects characters outside the allowlist', () => {
+    expect(validateAgentNonce('abcdefgh!')).toBeNull();        // bang
+    expect(validateAgentNonce('abcd efgh')).toBeNull();        // space
+    expect(validateAgentNonce('abc/defgh')).toBeNull();        // slash
+    expect(validateAgentNonce('abc"defgh')).toBeNull();        // quote (injection guard)
+    expect(validateAgentNonce('abc\ndefgh')).toBeNull();       // newline (header smuggling guard)
+  });
+
+  it('exposes its limits for documentation surfaces', () => {
+    expect(AGENT_NONCE_LIMITS.MIN).toBeGreaterThanOrEqual(8);
+    expect(AGENT_NONCE_LIMITS.MAX).toBeLessThanOrEqual(256);
+    expect(AGENT_NONCE_LIMITS.PATTERN_DESCRIPTION).toMatch(/A-Za-z0-9/);
+  });
+});
+
+describe('agent_nonce in canonical form', () => {
+  // The canonical-JSON serializer is what the signer hashes, so the
+  // sort order of agent_nonce relative to the other receipt fields
+  // matters for verifier compatibility. Lock it in.
+  it('places agent_nonce in alphabetical order alongside other fields', () => {
+    const canon = canonicalJSON({
+      v: 2,
+      id: 'rcpt_abc',
+      agent_nonce: 'task-001',
+      endpoint: '/api/test',
+    });
+    // Keys must appear in lex order: agent_nonce, endpoint, id, v
+    expect(canon).toBe('{"agent_nonce":"task-001","endpoint":"/api/test","id":"rcpt_abc","v":2}');
+  });
+
+  it('serializes a null agent_nonce as JSON null', () => {
+    const canon = canonicalJSON({ agent_nonce: null, v: 2 });
+    expect(canon).toBe('{"agent_nonce":null,"v":2}');
+  });
+
+  it('produces a different hash when only agent_nonce changes', async () => {
+    // request_hash deliberately does NOT include agent_nonce (per the
+    // hashRequest contract), but the receipt's overall canonical form
+    // does, so two receipts identical except for agent_nonce sign to
+    // different signatures. Verify via response_hash-style hashing.
+    const a = await hashResponse({ v: 2, id: 'x', agent_nonce: 'aaaaaaaa' });
+    const b = await hashResponse({ v: 2, id: 'x', agent_nonce: 'bbbbbbbb' });
+    expect(a).not.toBe(b);
   });
 });

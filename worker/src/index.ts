@@ -92,6 +92,8 @@ import {
   generateReceiptId,
   receiptStatus,
   verifyReceiptSignature,
+  validateAgentNonce,
+  RECEIPT_VERSION_CURRENT,
   ReceiptCore,
   NoChargeReason,
 } from './receipts';
@@ -388,10 +390,15 @@ async function premiumResponse(
   }
 
   // Receipt: build core, sign with Ed25519, embed in response.
+  // X-Agent-Nonce (optional): if the agent supplies a valid nonce, it
+  // is echoed verbatim into the signed payload so the agent has
+  // cryptographic proof the receipt was made for ITS request rather
+  // than a server-cached prior call.
+  const agentNonce = validateAgentNonce(request.headers.get('X-Agent-Nonce'));
   const requestHash = await hashRequest(request.method, url);
   const responseHash = await hashResponse(bodyResult);
   const core: ReceiptCore = {
-    v: 1,
+    v: RECEIPT_VERSION_CURRENT,
     id: generateReceiptId(),
     endpoint,
     method: request.method,
@@ -404,6 +411,7 @@ async function premiumResponse(
     server_time: new Date().toISOString(),
     no_charge_reason: commit.noChargeReason,
     freshness_sla_seconds: staleness.slaSeconds,
+    agent_nonce: agentNonce,
   };
   const signed = await signReceipt(env, core);
   const responseBody: Record<string, unknown> = {
@@ -413,6 +421,7 @@ async function premiumResponse(
   if (signed) {
     responseBody.receipt = signed;
     headers['X-TensorFeed-Receipt-Id'] = signed.id;
+    if (agentNonce) headers['X-Agent-Nonce-Echo'] = agentNonce;
   } else {
     responseBody.receipt_status = 'pending_key_bootstrap';
   }
@@ -474,11 +483,13 @@ async function premiumValidationFailure(
 
   // Receipt: same shape as premiumResponse, but credits_charged is 0,
   // captured_at is null (handler bailed before computing), and
-  // no_charge_reason is fixed.
+  // no_charge_reason is fixed. X-Agent-Nonce still folds in so the
+  // agent can prove this no-charge receipt was for ITS request.
+  const agentNonce = validateAgentNonce(request.headers.get('X-Agent-Nonce'));
   const requestHash = await hashRequest(request.method, url);
   const responseHash = await hashResponse(bodyResult);
   const core: ReceiptCore = {
-    v: 1,
+    v: RECEIPT_VERSION_CURRENT,
     id: generateReceiptId(),
     endpoint,
     method: request.method,
@@ -491,6 +502,7 @@ async function premiumValidationFailure(
     server_time: new Date().toISOString(),
     no_charge_reason: 'schema_validation_failure',
     freshness_sla_seconds: null,
+    agent_nonce: agentNonce,
   };
   const signed = await signReceipt(env, core);
   const responseBody: Record<string, unknown> = {
@@ -500,6 +512,7 @@ async function premiumValidationFailure(
   if (signed) {
     responseBody.receipt = signed;
     headers['X-TensorFeed-Receipt-Id'] = signed.id;
+    if (agentNonce) headers['X-Agent-Nonce-Echo'] = agentNonce;
   } else {
     responseBody.receipt_status = 'pending_key_bootstrap';
   }

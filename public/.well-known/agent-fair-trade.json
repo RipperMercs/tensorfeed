@@ -21,7 +21,7 @@
     },
     {
       "id": "circuit_breaker",
-      "description": "If the circuit breaker trips on an identical-request loop, no credit is charged.",
+      "description": "Two breaker layers run on every premium call. The identical-request layer trips at 20 same-fingerprint calls / 60s (trip_kind: \"identical_request\"). The burn-rate layer trips at 100 calls / 60s on a single bearer token regardless of path or query (trip_kind: \"burn_rate\"), so loops that randomize the URL cannot drain credits. Either trip returns HTTP 429 with no charge.",
       "code": "worker/src/circuit-breaker.ts + worker/src/payments.ts (requirePayment)",
       "verifiable_via": "/api/payment/no-charge-stats and /developers/agent-payments#circuit-breaker"
     },
@@ -44,6 +44,8 @@
     "algorithm": "EdDSA",
     "curve": "Ed25519",
     "canonical_form": "tensorfeed-canonical-json-v1",
+    "schema_version_current": 2,
+    "schema_versions_supported": [1, 2],
     "public_key_url": "https://tensorfeed.ai/.well-known/tensorfeed-receipt-key.json",
     "verify_endpoint": "https://tensorfeed.ai/api/receipt/verify",
     "verify_doc": "https://tensorfeed.ai/agent-fair-trade#receipts",
@@ -60,8 +62,17 @@
       "captured_at",
       "server_time",
       "no_charge_reason",
-      "freshness_sla_seconds"
+      "freshness_sla_seconds",
+      "agent_nonce"
     ],
+    "agent_nonce": {
+      "header": "X-Agent-Nonce",
+      "field": "agent_nonce",
+      "since_version": 2,
+      "purpose": "Optional client-supplied nonce echoed verbatim into the signed receipt. Binds the signature to the agent's specific request so a server cannot return a previously signed receipt from a cached identical call.",
+      "format": "[A-Za-z0-9._-]{8,128}",
+      "echo_header": "X-Agent-Nonce-Echo"
+    },
     "rotation_policy": "Single-key in v1. Key rotations announced 30 days in advance with both old and new keys served during the rotation window."
   },
   "pricing": {

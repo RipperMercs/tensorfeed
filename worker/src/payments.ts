@@ -1202,19 +1202,28 @@ export async function requirePayment(
       return { paid: false, response: jsonResponse({ ok: false, error: 'token_not_found' }, 401) };
     }
 
-    // Circuit breaker: refuse to charge credits if this same token has
-    // already issued THRESHOLD identical requests inside the rolling
-    // 60s window. Catches naive while(true) loops in agent code.
+    // Circuit breaker: refuse to charge credits if this token is hammering
+    // the API. Two layers run in checkRequestCircuit:
+    //   - identical-request: same path+query repeated > TUPLE_THRESHOLD
+    //   - burn-rate: any requests > BURN_RATE_THRESHOLD in the window
+    // Burn-rate catches loops that randomize the URL (e.g. ?nonce=...)
+    // and would otherwise sail past the per-tuple breaker.
     const breaker = checkRequestCircuit(request, token);
     if (breaker.tripped) {
-      const retryAfterSeconds = breaker.cooldown_seconds ?? 120;
+      const isBurnRate = breaker.trip_kind === 'burn_rate';
+      const retryAfterSeconds = breaker.cooldown_seconds ?? (isBurnRate ? 300 : 120);
+      const errorCode = isBurnRate ? 'burn_rate_exceeded' : 'infinite_loop_detected';
+      const message = isBurnRate
+        ? `Burn-rate breaker tripped. This token issued ${breaker.count} requests in the last minute across all endpoints. Slow the agent's request rate or split traffic across multiple tokens.`
+        : `Circuit breaker tripped. The same request was issued ${breaker.count} times in the last minute. Re-evaluate the agent's planning logic before retrying.`;
       return {
         paid: false,
         response: jsonResponse(
           {
             ok: false,
-            error: 'infinite_loop_detected',
-            message: `Circuit breaker tripped. The same request was issued ${breaker.count} times in the last minute. Re-evaluate the agent's planning logic before retrying.`,
+            error: errorCode,
+            trip_kind: breaker.trip_kind,
+            message,
             cooldown_seconds: retryAfterSeconds,
             retry_after_unix_ms: breaker.retry_after_unix_ms,
             balance: record.balance,

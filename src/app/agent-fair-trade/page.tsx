@@ -152,10 +152,11 @@ export default function AgentFairTradePage() {
             </code>
           </article>
           <article className="border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50">
-            <h3 className="font-semibold text-text-primary mb-1">Circuit breaker</h3>
+            <h3 className="font-semibold text-text-primary mb-1">Circuit breaker (two layers)</h3>
             <p className="text-sm text-text-secondary mb-2">
-              Identical-request loops trip the breaker (20 calls / 60s same fingerprint).
-              Tripped calls return 429 with no charge.
+              Identical-request loops trip the per-tuple breaker (20 calls / 60s same path+query).
+              Loops that randomize the URL trip the burn-rate breaker (100 calls / 60s same token,
+              any path). Tripped calls return 429 with no charge.
             </p>
             <code className="text-xs text-text-secondary block">
               code: worker/src/circuit-breaker.ts
@@ -205,7 +206,7 @@ export default function AgentFairTradePage() {
 
         <pre className="bg-bg-secondary border border-bg-tertiary rounded p-4 text-sm overflow-x-auto font-mono">
 {`{
-  "v": 1,
+  "v": 2,
   "id": "rcpt_8f3a4b...",
   "endpoint": "/api/premium/gpu/pricing/series",
   "method": "GET",
@@ -218,6 +219,7 @@ export default function AgentFairTradePage() {
   "server_time": "2026-04-30T05:30:01.000Z",
   "no_charge_reason": null,
   "freshness_sla_seconds": null,
+  "agent_nonce": "task-001-a1b2c3d4",
   "signature": "<base64url Ed25519>",
   "key_id": "<JWK kid>",
   "signing_alg": "EdDSA",
@@ -225,6 +227,18 @@ export default function AgentFairTradePage() {
   "canonical_form": "tensorfeed-canonical-json-v1"
 }`}
         </pre>
+
+        <div className="mt-4 border border-bg-tertiary rounded p-4 bg-bg-secondary/50">
+          <h3 className="font-semibold text-text-primary mb-1">Agent nonce (v2)</h3>
+          <p className="text-sm text-text-secondary mb-2">
+            Send <code className="font-mono text-accent-primary">X-Agent-Nonce</code> on any premium request and the
+            value is echoed verbatim into <code className="font-mono">agent_nonce</code> on the signed receipt.
+            That binds the signature to your specific call so a server cannot return a previously signed receipt
+            from a cached identical request. Allowed characters{' '}
+            <code className="font-mono">[A-Za-z0-9._-]</code>, length 8 to 128. Receipts issued before 2026-05-03
+            are <code className="font-mono">v: 1</code> and omit the field.
+          </p>
+        </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2 text-sm">
           <div>

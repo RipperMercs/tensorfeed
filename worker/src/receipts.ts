@@ -30,8 +30,19 @@ export type NoChargeReason =
   | 'stale_data'
   | null;
 
+/**
+ * Receipt schema version. v2 adds the agent_nonce field so an agent
+ * can prove a receipt was signed for ITS specific request, not a
+ * server-side replay of an earlier identical call. v1 receipts (pre
+ * 2026-05-03) did not include this field and verify under the v1
+ * canonical form. New receipts are always v2 even when the agent
+ * supplies no nonce; the field is then null.
+ */
+export type ReceiptVersion = 1 | 2;
+export const RECEIPT_VERSION_CURRENT: ReceiptVersion = 2;
+
 export interface ReceiptCore {
-  v: 1;
+  v: ReceiptVersion;
   id: string;                     // rcpt_<16hex>
   endpoint: string;               // path
   method: string;                 // HTTP method
@@ -44,6 +55,13 @@ export interface ReceiptCore {
   server_time: string;            // ISO 8601 when the receipt was issued
   no_charge_reason: NoChargeReason;
   freshness_sla_seconds: number | null;  // SLA at time of issuance, null if endpoint is immutable / compute-only
+  // v2+: agent-supplied nonce echoed verbatim into the signed payload.
+  // When the agent submits X-Agent-Nonce: <value>, that value lands
+  // here and is covered by the Ed25519 signature, so the agent has
+  // cryptographic proof the response corresponds to ITS request and
+  // not a server-cached prior call. null when the agent supplied no
+  // nonce or when the receipt is v1 (pre 2026-05-03).
+  agent_nonce: string | null;
 }
 
 export interface SignedReceipt extends ReceiptCore {
@@ -104,7 +122,10 @@ async function sha256Hex(input: string): Promise<string> {
  * Hash a request to a stable key. We use METHOD + path + sorted query
  * params (no body, since premium endpoints are GET today). This means
  * two requests with the same observable shape produce the same hash,
- * which is fine for receipt-level traceability.
+ * which is fine for receipt-level traceability. Per-request uniqueness
+ * (and replay protection) is handled by the agent_nonce field on the
+ * signed receipt rather than by mixing the nonce into request_hash, so
+ * verifiers can match request shape and nonce independently.
  */
 export async function hashRequest(method: string, url: URL): Promise<string> {
   const params = Array.from(url.searchParams.entries()).sort(
@@ -114,6 +135,39 @@ export async function hashRequest(method: string, url: URL): Promise<string> {
   const stringForm = `${method.toUpperCase()} ${url.pathname}?${canonicalQuery}`;
   return 'sha256:' + (await sha256Hex(stringForm));
 }
+
+// === Agent nonce validation ===
+
+const AGENT_NONCE_PATTERN = /^[A-Za-z0-9._-]+$/;
+const AGENT_NONCE_MIN = 8;
+const AGENT_NONCE_MAX = 128;
+
+/**
+ * Validate an X-Agent-Nonce header value. Returns the trimmed nonce on
+ * success or null if the value is missing, empty, the wrong length, or
+ * contains characters outside [A-Za-z0-9._-]. The nonce travels into
+ * the signed receipt verbatim, so character allowlisting matters: it
+ * keeps verifiers safe against newline/quote injection when they show
+ * the nonce alongside the receipt body.
+ *
+ * Length floor of 8 prevents trivial brute-force collision; ceiling of
+ * 128 keeps receipt JSON bounded. Agents that need more entropy can
+ * use a UUIDv4 (32 chars sans dashes) or a base64url-encoded random
+ * 32-byte value (43 chars).
+ */
+export function validateAgentNonce(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (trimmed.length < AGENT_NONCE_MIN || trimmed.length > AGENT_NONCE_MAX) return null;
+  if (!AGENT_NONCE_PATTERN.test(trimmed)) return null;
+  return trimmed;
+}
+
+export const AGENT_NONCE_LIMITS = {
+  MIN: AGENT_NONCE_MIN,
+  MAX: AGENT_NONCE_MAX,
+  PATTERN_DESCRIPTION: '[A-Za-z0-9._-]+',
+};
 
 /**
  * Hash the response body (the result object the handler computed,
@@ -270,8 +324,10 @@ export async function verifyReceiptSignature(
   signed: SignedReceipt,
   publicJwk: PublicJWK,
 ): Promise<boolean> {
-  // Strip signing-related fields back down to ReceiptCore.
-  const core: ReceiptCore = {
+  // Strip signing-related fields back down to ReceiptCore. v2+ adds
+  // agent_nonce; v1 receipts (pre 2026-05-03) do not include it and
+  // we omit it from the canonical form so old signatures still verify.
+  const core: Record<string, unknown> = {
     v: signed.v,
     id: signed.id,
     endpoint: signed.endpoint,
@@ -286,6 +342,9 @@ export async function verifyReceiptSignature(
     no_charge_reason: signed.no_charge_reason,
     freshness_sla_seconds: signed.freshness_sla_seconds,
   };
+  if (signed.v >= 2) {
+    core.agent_nonce = signed.agent_nonce;
+  }
   let key: CryptoKey;
   try {
     key = await crypto.subtle.importKey(
