@@ -70,6 +70,32 @@ configs:
     data_files: '*/agent-apis.jsonl'
   - config_name: voice-leaderboards
     data_files: '*/voice-leaderboards.jsonl'
+  - config_name: embeddings
+    data_files: '*/embeddings.jsonl'
+  - config_name: multimodal
+    data_files: '*/multimodal.jsonl'
+  - config_name: vector-dbs
+    data_files: '*/vector-dbs.jsonl'
+  - config_name: frameworks
+    data_files: '*/frameworks.jsonl'
+  - config_name: benchmark-registry
+    data_files: '*/benchmark-registry.jsonl'
+  - config_name: public-leaderboards
+    data_files: '*/public-leaderboards.jsonl'
+  - config_name: conferences
+    data_files: '*/conferences.jsonl'
+  - config_name: funding
+    data_files: '*/funding.jsonl'
+  - config_name: model-cards
+    data_files: '*/model-cards.jsonl'
+  - config_name: ai-policy
+    data_files: '*/ai-policy.jsonl'
+  - config_name: compute-providers
+    data_files: '*/compute-providers.jsonl'
+  - config_name: usage-rankings
+    data_files: '*/usage-rankings.jsonl'
+  - config_name: agent-provisioning
+    data_files: '*/agent-provisioning.jsonl'
 ---
 
 # TensorFeed AI Ecosystem Daily
@@ -105,6 +131,19 @@ Each daily snapshot lives in a `YYYY-MM-DD/` subfolder with one JSONL file per f
 | `oss-tools.jsonl` | ~25 | Production OSS tools agents and developers actually install (Ollama, llama.cpp, vLLM, Open WebUI, etc). |
 | `agent-apis.jsonl` | ~29 | Non-LLM APIs agents commonly wire (Tavily, Brave, Exa, Firecrawl, OpenWeather, Stripe, Twilio, etc). |
 | `voice-leaderboards.jsonl` | 1 (summary) | TTS Arena Elo + Open ASR Leaderboard WER rankings. |
+| `embeddings.jsonl` | ~18 | Embedding + reranker model catalog. |
+| `multimodal.jsonl` | ~24 | Image, video, TTS, STT model catalog with pricing. |
+| `vector-dbs.jsonl` | ~12 | Vector database catalog (managed, OSS, hybrid). |
+| `frameworks.jsonl` | ~15 | Agent framework catalog (LangChain, CrewAI, AG2, etc) with language + category. |
+| `benchmark-registry.jsonl` | ~24 | Benchmark catalog with active/saturated status. |
+| `public-leaderboards.jsonl` | ~20 | Pointers to every live public AI leaderboard. |
+| `conferences.jsonl` | ~18 | AI conferences (research, industry, developer) with dates. |
+| `funding.jsonl` | ~21 | AI funding rounds catalog by stage and category. |
+| `model-cards.jsonl` | ~8 | Per-model system / safety / red-team document index. |
+| `ai-policy.jsonl` | ~10 | AI regulation tracker (EU AI Act, US executive orders, etc). |
+| `compute-providers.jsonl` | ~17 | GPU cloud, hyperscaler, AI-serverless, marketplace catalog. |
+| `usage-rankings.jsonl` | ~20 | Model usage rankings (which models are actually winning). |
+| `agent-provisioning.jsonl` | ~18 | Agent infrastructure providers (hosting, DB, auth, observability) by AFTA-style protocol status. |
 
 ## Quick start
 

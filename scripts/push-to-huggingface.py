@@ -70,6 +70,20 @@ FEEDS: list[tuple[str, str, str | None]] = [
     ("oss-tools", "/api/oss-tools", "tools"),
     ("agent-apis", "/api/agent-apis", "apis"),
     ("voice-leaderboards", "/api/voice-leaderboards", None),
+    # Tier 5: deep catalogs (added 2026-05-03 evening; rounds out coverage)
+    ("embeddings", "/api/embeddings", "models"),
+    ("multimodal", "/api/multimodal", "models"),
+    ("vector-dbs", "/api/vector-dbs", "databases"),
+    ("frameworks", "/api/frameworks", "frameworks"),
+    ("benchmark-registry", "/api/benchmark-registry", "benchmarks"),
+    ("public-leaderboards", "/api/public-leaderboards", "leaderboards"),
+    ("conferences", "/api/conferences", "conferences"),
+    ("funding", "/api/funding", "rounds"),
+    ("model-cards", "/api/model-cards", "modelCards"),
+    ("ai-policy", "/api/ai-policy", "items"),
+    ("compute-providers", "/api/compute-providers", "providers"),
+    ("usage-rankings", "/api/usage-rankings", "rankings"),
+    ("agent-provisioning", "/api/agent-provisioning", "providers"),
 ]
 
 
