@@ -17,7 +17,9 @@ cd mcp-server
 npm run build
 npm publish --access public
 
-# 3. Republish to the official MCP registry
+# 3. Republish to the official MCP registry. The script lives at
+#    repo-root/scripts/, not mcp-server/scripts/, so step back up first.
+cd ..
 .\scripts\mcp-publish.ps1
 
 # 4. Mirror the new version to the standalone repo
