@@ -1,0 +1,29 @@
+name: Push daily snapshot to Hugging Face
+
+on:
+  schedule:
+    # 08:00 UTC: 1h after the 07:00 UTC daily history capture cron in
+    # the Worker, so we always push the freshest snapshot.
+    - cron: '0 8 * * *'
+  workflow_dispatch:  # allow manual runs from the Actions tab
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install --quiet huggingface_hub requests
+
+      - name: Push snapshot to Hugging Face
+        run: python scripts/push-to-huggingface.py
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_DATASET_REPO: ${{ vars.HF_DATASET_REPO || 'tensorfeed/ai-ecosystem-daily' }}
+          TENSORFEED_BASE: https://tensorfeed.ai
