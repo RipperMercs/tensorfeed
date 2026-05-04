@@ -643,6 +643,38 @@ export interface HotIssuesResponse {
   };
 }
 
+export interface RedditPost {
+  id: string;
+  subreddit: string;
+  title: string;
+  author: string | null;
+  score: number;
+  upvote_ratio: number;
+  num_comments: number;
+  permalink: string;
+  url: string;
+  created_utc: number;
+  flair: string | null;
+  is_self: boolean;
+  is_video: boolean;
+}
+
+export interface RedditTrendingResponse {
+  ok: boolean;
+  snapshot: {
+    date: string;
+    capturedAt: string;
+    total_posts: number;
+    subreddits_queried: string[];
+    raw_count: number;
+    posts: RedditPost[];
+    summary: {
+      by_subreddit: Record<string, number>;
+      top_authors: Array<{ author: string; count: number }>;
+    };
+  };
+}
+
 export interface MCPRegistrySeriesPoint {
   date: string;
   total_servers: number | null;
@@ -1658,6 +1690,21 @@ export class TensorFeed {
    */
   async getHFTrending(): Promise<HFTrendingResponse> {
     return this.request<HFTrendingResponse>('GET', '/hf/trending');
+  }
+
+  /**
+   * Currently-hot Reddit threads in 7 AI-relevant subreddits.
+   *
+   * Free, no auth. Subreddits: LocalLLaMA, MachineLearning, ClaudeAI,
+   * OpenAI, singularity, artificial, AI_Agents. Stickied and NSFW
+   * posts filtered. Deduped by post id, top 30 by score. Refreshed
+   * daily at 13:00 UTC. Companion to getHotIssues(): that surfaces
+   * developer-side conversation on GitHub, this surfaces
+   * community-side conversation on Reddit. Titles are sanitized at
+   * capture time against prompt-injection markers.
+   */
+  async getRedditTrending(): Promise<RedditTrendingResponse> {
+    return this.request<RedditTrendingResponse>('GET', '/reddit/trending');
   }
 
   /**

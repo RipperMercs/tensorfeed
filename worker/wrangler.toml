@@ -44,6 +44,12 @@ crons = [
   # is:issue is:open archived:false comments:>=10 updated:>=7d ago,
   # deduped, ranked by comments. Powers free /api/issues/hot.
   "30 12 * * *",
+  # Daily 13:00 UTC: capture currently-hot threads from 7 AI-relevant
+  # subreddits (worker/src/reddit-trending.ts). LocalLLaMA,
+  # MachineLearning, ClaudeAI, OpenAI, singularity, artificial,
+  # AI_Agents. Deduped by post id, top 30 by score. Powers free
+  # /api/reddit/trending.
+  "0 13 * * *",
   # Active LLM endpoint probing (worker/src/probe.ts). Every 15 min:
   # POST a tiny prompt at each provider with an API key configured,
   # measure ttfb + total + status, append to a 24h ring buffer, and

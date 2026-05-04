@@ -1079,6 +1079,31 @@ class TensorFeed:
 
     # ── Free: Hot GitHub issues across AI repos ─────────────────────
 
+    def get_reddit_trending(self) -> dict[str, Any]:
+        """Currently-hot Reddit threads in 7 AI-relevant subreddits.
+
+        Free, no auth. Subreddits queried: LocalLLaMA, MachineLearning,
+        ClaudeAI, OpenAI, singularity, artificial, AI_Agents. Pulls each
+        subreddit's "hot" listing, dedups by post id, drops stickied and
+        NSFW posts, ranks by score, top 30. Refreshed daily at 13:00 UTC.
+        Companion to ``get_hot_issues()``: that surfaces developer-side
+        conversation on GitHub, this surfaces community-side conversation
+        on Reddit.
+
+        Titles pass through TensorFeed's prompt-injection sanitization at
+        capture time, so role-confusion tokens and bidi/zero-width
+        spoofing characters in Reddit posts cannot reach an agent.
+
+        Returns:
+            Dict with ``ok`` and ``snapshot`` keys. Snapshot includes
+            ``date``, ``capturedAt``, ``total_posts``, ``subreddits_queried``,
+            ``posts`` (each with id, subreddit, title, author, score,
+            upvote_ratio, num_comments, permalink, url, created_utc,
+            flair, is_self, is_video), and ``summary`` (by_subreddit,
+            top_authors).
+        """
+        return self._request("GET", "/reddit/trending")
+
     def get_hot_issues(self) -> dict[str, Any]:
         """Currently-hot GitHub issues across the AI ecosystem.
 

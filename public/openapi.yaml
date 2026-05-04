@@ -418,6 +418,19 @@ paths:
             application/json:
               schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
 
+  /api/reddit/trending:
+    get:
+      tags: [Reddit]
+      summary: Currently-hot AI threads on Reddit
+      operationId: getRedditTrending
+      description: Daily snapshot of hot threads from 7 AI-relevant subreddits (LocalLLaMA, MachineLearning, ClaudeAI, OpenAI, singularity, artificial, AI_Agents). Stickied and NSFW posts filtered, deduped by post id, top 30 by score. Titles sanitized at capture time. Refreshed daily at 13:00 UTC. Companion to /api/issues/hot.
+      responses:
+        '200':
+          description: Hot Reddit AI threads snapshot
+          content:
+            application/json:
+              schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
+
   /api/history:
     get:
       tags: [History]

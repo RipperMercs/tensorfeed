@@ -62,6 +62,10 @@ import {
   getLatestSnapshot as getHotIssuesLatest,
 } from './hot-issues';
 import {
+  captureRedditSnapshot,
+  getLatestSnapshot as getRedditLatest,
+} from './reddit-trending';
+import {
   runProbeCycle,
   rollupYesterday as rollupProbeYesterday,
   getLatestSummary as getProbeLatest,
@@ -1631,6 +1635,7 @@ export default {
           papersArxivRecent: '/api/papers/arxiv-recent',
           hfTrending: '/api/hf/trending',
           issuesHot: '/api/issues/hot',
+          redditTrending: '/api/reddit/trending',
           probeLatest: '/api/probe/latest',
           gpuPricing: '/api/gpu/pricing',
           gpuPricingCheapest: '/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot',
@@ -1851,6 +1856,20 @@ export default {
       const snapshot = await getHotIssuesLatest(env);
       if (!snapshot) {
         return jsonResponse({ ok: false, error: 'hot_issues_unavailable' }, 503);
+      }
+      return jsonResponse({ ok: true, snapshot }, 200, 600);
+    }
+
+    // === REDDIT AI COMMUNITY HOT THREADS (free) ===
+    // Daily snapshot of currently-hot threads in 7 AI-relevant subreddits
+    // (LocalLLaMA, MachineLearning, ClaudeAI, OpenAI, singularity,
+    // artificial, AI_Agents). Companion to /api/issues/hot on the
+    // community-discussion side. Captured by the 13:00 UTC cron.
+
+    if (path === '/api/reddit/trending') {
+      const snapshot = await getRedditLatest(env);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'reddit_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);
     }
@@ -3134,6 +3153,10 @@ export default {
         const result = await captureHotIssues(env);
         return jsonResponse({ message: 'Hot issues snapshot captured', ...result });
       }
+      if (task === 'reddit') {
+        const result = await captureRedditSnapshot(env);
+        return jsonResponse({ message: 'Reddit snapshot captured', ...result });
+      }
       if (task === 'probe') {
         const result = await runProbeCycle(env);
         return jsonResponse({ message: 'Probe cycle ran', ...result });
@@ -3335,6 +3358,13 @@ export default {
       // url, top 30 by comment count. Daily snapshot keyed under
       // issues:daily:{date}. Backs free /api/issues/hot.
       await run('captureHotIssues', () => captureHotIssues(env));
+    } else if (cron === '0 13 * * *') {
+      // Daily 13:00 UTC: capture currently-hot threads in 7
+      // AI-relevant subreddits (LocalLLaMA, MachineLearning, ClaudeAI,
+      // OpenAI, singularity, artificial, AI_Agents). 7 fan-out fetches
+      // throttled, deduped by post id, top 30 by score. Daily snapshot
+      // keyed under reddit:daily:{date}. Backs free /api/reddit/trending.
+      await run('captureRedditSnapshot', () => captureRedditSnapshot(env));
     } else if (cron === '*/15 * * * *') {
       // Every 15 min: probe each LLM provider with a configured key,
       // measure latency + status, write the latest 24h summary.

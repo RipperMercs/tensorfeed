@@ -2,6 +2,11 @@
 
 All notable changes to the Python SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.23.0 - 2026-05-04
+
+### Added
+- `tf.get_reddit_trending()`. Free, no-auth method returning currently-hot Reddit threads from 7 AI-relevant subreddits (LocalLLaMA, MachineLearning, ClaudeAI, OpenAI, singularity, artificial, AI_Agents). Stickied and NSFW posts filtered, deduped by post id, top 30 by score. Refreshed daily at 13:00 UTC. Companion to `tf.get_hot_issues()`: that returns GitHub developer conversation, this returns Reddit community conversation. Titles are sanitized at capture time against prompt-injection markers.
+
 ## 1.22.0 - 2026-05-04
 
 ### Changed

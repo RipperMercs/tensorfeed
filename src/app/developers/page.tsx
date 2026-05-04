@@ -375,6 +375,42 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/reddit/trending',
+    description: 'Currently-hot threads in 7 AI-relevant subreddits (LocalLLaMA, MachineLearning, ClaudeAI, OpenAI, singularity, artificial, AI_Agents). Each subreddit polled via the public Reddit JSON endpoint, stickied and NSFW posts filtered, deduped by post id, top 30 by score. Refreshed daily at 13:00 UTC. Companion to /api/issues/hot: GitHub developer conversation vs Reddit community conversation. Titles pass through TensorFeed prompt-injection sanitization at capture time.',
+    cache: 'Cache for 10 minutes',
+    example: `{
+  "ok": true,
+  "snapshot": {
+    "date": "2026-05-04",
+    "capturedAt": "2026-05-04T13:00:00Z",
+    "total_posts": 30,
+    "subreddits_queried": ["LocalLLaMA","MachineLearning","ClaudeAI","OpenAI","singularity","artificial","AI_Agents"],
+    "posts": [
+      {
+        "id": "t3_abc123",
+        "subreddit": "LocalLLaMA",
+        "title": "...",
+        "author": "someone",
+        "score": 1500,
+        "upvote_ratio": 0.94,
+        "num_comments": 230,
+        "permalink": "https://reddit.com/r/LocalLLaMA/comments/abc123/...",
+        "url": "https://huggingface.co/...",
+        "created_utc": 1714824000,
+        "flair": "New Model",
+        "is_self": false,
+        "is_video": false
+      }
+    ],
+    "summary": {
+      "by_subreddit": { "LocalLLaMA": 11, "MachineLearning": 6 },
+      "top_authors": [{ "author": "someone", "count": 2 }]
+    }
+  }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/agents/news.json',
     description: 'Alias for /api/news. Agent-friendly URL for news data.',
     cache: 'Cache for 5 minutes',

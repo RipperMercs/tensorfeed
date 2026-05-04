@@ -2,6 +2,12 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.19.0 - 2026-05-04
+
+### Added
+- `tf.getRedditTrending()`. Free, no-auth method returning currently-hot Reddit threads from 7 AI-relevant subreddits (LocalLLaMA, MachineLearning, ClaudeAI, OpenAI, singularity, artificial, AI_Agents). Stickied and NSFW posts filtered, deduped by post id, top 30 by score. Refreshed daily at 13:00 UTC. Companion to `tf.getHotIssues()`: GitHub developer conversation vs Reddit community conversation. Titles are sanitized at capture time against prompt-injection markers.
+- `RedditTrendingResponse` and `RedditPost` types.
+
 ## 1.18.0 - 2026-05-04
 
 ### Changed
