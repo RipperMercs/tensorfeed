@@ -405,6 +405,32 @@ export default function DevelopersPage() {
             Full machine-readable spec at <code className="font-mono text-xs text-accent-primary">/openapi.yaml</code> and <code className="font-mono text-xs text-accent-primary">/openapi.json</code>. Drop into Swagger UI, Postman, or any code generator.
           </p>
         </a>
+        <a
+          href="/postman-collection.json"
+          className="block bg-bg-secondary border border-border rounded-xl p-4 hover:border-accent-primary transition-colors"
+        >
+          <div className="font-semibold text-text-primary mb-1 flex items-center gap-1.5">
+            Postman Collection
+            <ExternalLink className="w-3.5 h-3.5 text-text-muted" />
+          </div>
+          <p className="text-sm text-text-secondary">
+            Pre-built collection (33 requests, 20 folders) at <code className="font-mono text-xs text-accent-primary">/postman-collection.json</code>. Import directly into Postman or any tool that speaks Collection v2.1.
+          </p>
+        </a>
+        <a
+          href="https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block bg-bg-secondary border border-border rounded-xl p-4 hover:border-accent-primary transition-colors"
+        >
+          <div className="font-semibold text-text-primary mb-1 flex items-center gap-1.5">
+            HF Dataset
+            <ExternalLink className="w-3.5 h-3.5 text-text-muted" />
+          </div>
+          <p className="text-sm text-text-secondary">
+            Daily JSONL mirror at <code className="font-mono text-xs text-accent-primary">tensorfeed/ai-ecosystem-daily</code>. 36 feeds, inference-only license. <code className="font-mono text-xs text-accent-primary">load_dataset(repo, &quot;news&quot;)</code>.
+          </p>
+        </a>
       </section>
 
       {/* Endpoints */}

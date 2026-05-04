@@ -1,0 +1,3294 @@
+{
+    "item": [
+        {
+            "name": "api",
+            "description": "",
+            "item": [
+                {
+                    "name": "meta",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "4aa0063a-a2ca-48dd-b63d-632475582b95",
+                            "name": "Canonical endpoint catalog and self-description",
+                            "request": {
+                                "name": "Canonical endpoint catalog and self-description",
+                                "description": {
+                                    "content": "The authoritative listing of every public endpoint, including AFTA self-description, freshness SLAs, rate limits, chaos-engineering headers, and the supportive-sites network. The first thing an agent should read.\n",
+                                    "type": "text/plain"
+                                },
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "meta"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "74a08c5f-787d-4cdf-9f5d-2923ad9a1f7b",
+                                    "name": "Site metadata and full endpoint catalog",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "meta"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{\n  \"ok\": \"<boolean>\",\n  \"site\": \"<string>\",\n  \"api\": {}\n}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "health",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "ed82aec7-3f51-4fcd-9899-4793b410e39f",
+                            "name": "Service health and freshness summary",
+                            "request": {
+                                "name": "Service health and freshness summary",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "health"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "5436fa18-8c81-4579-a43e-d0d7668fd8bd",
+                                    "name": "Counts and last-updated timestamps for every data subsystem",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "health"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{\n  \"ok\": \"<boolean>\",\n  \"timestamp\": \"<dateTime>\",\n  \"news\": {},\n  \"models\": {},\n  \"benchmarks\": {},\n  \"agents\": {}\n}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "news",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "2cb20a2b-bcbd-48e4-abec-b409cd4f3e92",
+                            "name": "Aggregated AI news articles",
+                            "request": {
+                                "name": "Aggregated AI news articles",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "news"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "Filter by source category (OpenAI, Anthropic, Google, etc.)",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "category",
+                                            "value": "<string>"
+                                        },
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "limit",
+                                            "value": "50"
+                                        }
+                                    ],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "6939bffa-a150-4638-8046-dbed005bacef",
+                                    "name": "Recent articles, snippets clipped to ~200 chars, prompt-injection sanitized.",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "news"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [
+                                                {
+                                                    "disabled": false,
+                                                    "description": {
+                                                        "content": "Filter by source category (OpenAI, Anthropic, Google, etc.)",
+                                                        "type": "text/plain"
+                                                    },
+                                                    "key": "category",
+                                                    "value": "<string>"
+                                                },
+                                                {
+                                                    "disabled": false,
+                                                    "description": {
+                                                        "content": "",
+                                                        "type": "text/plain"
+                                                    },
+                                                    "key": "limit",
+                                                    "value": "50"
+                                                }
+                                            ],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{\n  \"ok\": \"<boolean>\",\n  \"count\": \"<integer>\",\n  \"articles\": [\n    {\n      \"id\": \"<string>\",\n      \"title\": \"<string>\",\n      \"url\": \"<uri>\",\n      \"source\": \"<string>\",\n      \"sourceDomain\": \"<string>\",\n      \"snippet\": \"<string>\",\n      \"categories\": [\n        \"<string>\",\n        \"<string>\"\n      ],\n      \"publishedAt\": \"<dateTime>\",\n      \"fetchedAt\": \"<dateTime>\"\n    },\n    {\n      \"id\": \"<string>\",\n      \"title\": \"<string>\",\n      \"url\": \"<uri>\",\n      \"source\": \"<string>\",\n      \"sourceDomain\": \"<string>\",\n      \"snippet\": \"<string>\",\n      \"categories\": [\n        \"<string>\",\n        \"<string>\"\n      ],\n      \"publishedAt\": \"<dateTime>\",\n      \"fetchedAt\": \"<dateTime>\"\n    }\n  ],\n  \"sanitization\": \"<string>\"\n}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "agents",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "news",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "7c24f96e-5110-4e12-9bcf-e962f27b8e6b",
+                                    "name": "Agent-friendly compact news payload",
+                                    "request": {
+                                        "name": "Agent-friendly compact news payload",
+                                        "description": {
+                                            "content": "Lighter article payload tuned for LLM context windows. Same source data as /api/news.",
+                                            "type": "text/plain"
+                                        },
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "agents",
+                                                "news"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "41882a54-1d27-46da-902f-905dc3f83263",
+                                            "name": "Compact news objects.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "agents",
+                                                        "news"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "pricing",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "a445c51d-1a91-406b-b7ca-2b8bbdc82171",
+                                    "name": "Agent-friendly compact pricing payload",
+                                    "request": {
+                                        "name": "Agent-friendly compact pricing payload",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "agents",
+                                                "pricing"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "3f41383d-f4a7-44d9-b6e2-2b3193c251ca",
+                                            "name": "Compact pricing list",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "agents",
+                                                        "pricing"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "directory",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "aa43e689-c670-4dec-8771-92e488f32b19",
+                                    "name": "Curated directory of AI agents and frameworks",
+                                    "request": {
+                                        "name": "Curated directory of AI agents and frameworks",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "agents",
+                                                "directory"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "7c03cb34-e68f-4900-9028-44da864dcec1",
+                                            "name": "Categorized directory of production-grade agents.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "agents",
+                                                        "directory"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{\n  \"ok\": \"<boolean>\",\n  \"source\": \"<string>\"\n}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "activity",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "63c2b9fd-0f63-46db-b1fd-c90bc8d25c92",
+                                    "name": "Live AI bot traffic on TensorFeed",
+                                    "request": {
+                                        "name": "Live AI bot traffic on TensorFeed",
+                                        "description": {
+                                            "content": "Last hits per known AI bot user-agent (ClaudeBot, GPTBot, Applebot, etc). Useful for understanding crawler adoption.",
+                                            "type": "text/plain"
+                                        },
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "agents",
+                                                "activity"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "3d7362e7-a853-4ee2-94f0-a59c8f88bb1d",
+                                            "name": "Recent agent hits",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "agents",
+                                                        "activity"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{\n  \"today_count\": \"<integer>\",\n  \"last_updated\": \"<dateTime>\",\n  \"recent\": [\n    {\n      \"bot\": \"<string>\",\n      \"endpoint\": \"<string>\",\n      \"timestamp\": \"<dateTime>\"\n    },\n    {\n      \"bot\": \"<string>\",\n      \"endpoint\": \"<string>\",\n      \"timestamp\": \"<dateTime>\"\n    }\n  ]\n}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "feed.xml",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "95703647-37dc-45f2-92a4-1c11728a10b1",
+                            "name": "RSS 2.0 feed of all AI news",
+                            "request": {
+                                "name": "RSS 2.0 feed of all AI news",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "feed.xml"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/rss+xml"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "8464b958-11be-4d84-84e0-fb94ff89ebfe",
+                                    "name": "RSS XML",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "feed.xml"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/rss+xml"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/rss+xml"
+                                        }
+                                    ],
+                                    "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<element>(string)</element>",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "xml"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "feed.json",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "5a389487-18e6-4e7e-86b9-54af18224392",
+                            "name": "JSON Feed 1.1",
+                            "request": {
+                                "name": "JSON Feed 1.1",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "feed.json"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/feed+json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "413d1cba-29c0-43cc-94e8-586c22e7e709",
+                                    "name": "JSON Feed",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "feed.json"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/feed+json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/feed+json"
+                                        }
+                                    ],
+                                    "body": "{}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "status",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "4f284a20-6013-4495-a14a-5f6dfe9818d0",
+                            "name": "Operational status for major AI services",
+                            "request": {
+                                "name": "Operational status for major AI services",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "status"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "def238b1-b031-413e-a558-e5e1b564bec5",
+                                    "name": "Per-service status with components",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "status"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{\n  \"ok\": \"<boolean>\",\n  \"services\": [\n    {\n      \"name\": \"<string>\",\n      \"status\": \"degraded\",\n      \"provider\": \"<string>\",\n      \"components\": [\n        {\n          \"name\": \"<string>\",\n          \"status\": \"<string>\"\n        },\n        {\n          \"name\": \"<string>\",\n          \"status\": \"<string>\"\n        }\n      ],\n      \"lastChecked\": \"<dateTime>\"\n    },\n    {\n      \"name\": \"<string>\",\n      \"status\": \"partial_outage\",\n      \"provider\": \"<string>\",\n      \"components\": [\n        {\n          \"name\": \"<string>\",\n          \"status\": \"<string>\"\n        },\n        {\n          \"name\": \"<string>\",\n          \"status\": \"<string>\"\n        }\n      ],\n      \"lastChecked\": \"<dateTime>\"\n    }\n  ]\n}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        },
+                        {
+                            "name": "summary",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "459bfd33-2afc-477f-a4e9-15d7901d6aa3",
+                                    "name": "Lightweight status counts for dashboards",
+                                    "request": {
+                                        "name": "Lightweight status counts for dashboards",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "status",
+                                                "summary"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "31186f33-75e6-4046-bd77-9aea121d67a6",
+                                            "name": "Counts of operational, degraded, and down services",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "status",
+                                                        "summary"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{\n  \"ok\": \"<boolean>\",\n  \"summary\": {\n    \"total\": \"<integer>\",\n    \"operational\": \"<integer>\",\n    \"degraded\": \"<integer>\",\n    \"down\": \"<integer>\"\n  }\n}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "models",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "04ea37b7-627b-4c09-abcf-5647139bccc1",
+                            "name": "AI model pricing and specs",
+                            "request": {
+                                "name": "AI model pricing and specs",
+                                "description": {
+                                    "content": "Input/output cost per 1M tokens, context window, capabilities, across 200+ models from major labs.",
+                                    "type": "text/plain"
+                                },
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "models"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "ae56038e-2d8c-4007-8d96-8ec3916f57e2",
+                                    "name": "Provider-grouped model list",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "models"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{\n  \"ok\": \"<boolean>\",\n  \"lastUpdated\": \"<string>\"\n}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "benchmarks",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "3a4983a9-658b-4b7f-a75d-0494f9b8a5c6",
+                            "name": "Public benchmark scores for major models",
+                            "request": {
+                                "name": "Public benchmark scores for major models",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "benchmarks"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "0aa6b8e9-c3c9-4e8c-be82-9924684d0d06",
+                                    "name": "Benchmark catalog with per-model scores",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "benchmarks"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{\n  \"ok\": \"<boolean>\"\n}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "podcasts",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "b611de31-2a93-4b6a-9a5b-b7e007b7f458",
+                            "name": "Recent AI podcast episodes",
+                            "request": {
+                                "name": "Recent AI podcast episodes",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "podcasts"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "235a945d-e3f3-4744-97d8-fab404680fac",
+                                    "name": "Episode list with show, title, published date.",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "podcasts"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "trending-repos",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "b4c0584c-49f2-4cb4-aab9-151f431ffc5b",
+                            "name": "Trending GitHub repos in AI",
+                            "request": {
+                                "name": "Trending GitHub repos in AI",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "trending-repos"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "9da886f2-77fa-4148-b283-f7aae63ebab6",
+                                    "name": "Top repos by recent star velocity in AI/ML topics.",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "trending-repos"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "gpu",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "pricing",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "dce5b794-b40e-423d-bece-99bc44795e6a",
+                                    "name": "Current GPU rental pricing snapshot",
+                                    "request": {
+                                        "name": "Current GPU rental pricing snapshot",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "gpu",
+                                                "pricing"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "11af5f17-dd0d-4b80-a222-0f8f829004c2",
+                                            "name": "Aggregated pricing across cloud GPU marketplaces.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "gpu",
+                                                        "pricing"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                },
+                                {
+                                    "name": "cheapest",
+                                    "description": "",
+                                    "item": [
+                                        {
+                                            "id": "1b4652aa-9078-4946-8fa8-b43ee5bce484",
+                                            "name": "Cheapest current offer for a canonical GPU",
+                                            "request": {
+                                                "name": "Cheapest current offer for a canonical GPU",
+                                                "description": {},
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "gpu",
+                                                        "pricing",
+                                                        "cheapest"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "(Required) Canonical GPU id (H100, H200, A100-80GB, RTX-4090, etc.)",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "gpu",
+                                                            "value": "<string>"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": " (This can only be one of on_demand,spot)",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "type",
+                                                            "value": "on_demand"
+                                                        }
+                                                    ],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {},
+                                                "auth": null
+                                            },
+                                            "response": [
+                                                {
+                                                    "id": "72e57f02-595a-4b2c-ac04-cd5caad27921",
+                                                    "name": "Top 3 cheapest offers right now.",
+                                                    "originalRequest": {
+                                                        "url": {
+                                                            "path": [
+                                                                "api",
+                                                                "gpu",
+                                                                "pricing",
+                                                                "cheapest"
+                                                            ],
+                                                            "host": [
+                                                                "{{baseUrl}}"
+                                                            ],
+                                                            "query": [
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "(Required) Canonical GPU id (H100, H200, A100-80GB, RTX-4090, etc.)",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "gpu",
+                                                                    "value": "<string>"
+                                                                },
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": " (This can only be one of on_demand,spot)",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "type",
+                                                                    "value": "on_demand"
+                                                                }
+                                                            ],
+                                                            "variable": []
+                                                        },
+                                                        "header": [
+                                                            {
+                                                                "key": "Accept",
+                                                                "value": "application/json"
+                                                            }
+                                                        ],
+                                                        "method": "GET",
+                                                        "body": {}
+                                                    },
+                                                    "status": "OK",
+                                                    "code": 200,
+                                                    "header": [
+                                                        {
+                                                            "key": "Content-Type",
+                                                            "value": "application/json"
+                                                        }
+                                                    ],
+                                                    "body": "{}",
+                                                    "cookie": [],
+                                                    "_postman_previewlanguage": "json"
+                                                }
+                                            ],
+                                            "event": [],
+                                            "protocolProfileBehavior": {
+                                                "disableBodyPruning": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "mcp",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "registry",
+                            "description": "",
+                            "item": [
+                                {
+                                    "name": "snapshot",
+                                    "description": "",
+                                    "item": [
+                                        {
+                                            "id": "c968b956-2ce6-4242-9bb7-b8e1d7a6bbc1",
+                                            "name": "Daily MCP server registry summary",
+                                            "request": {
+                                                "name": "Daily MCP server registry summary",
+                                                "description": {
+                                                    "content": "Today's count + 1-day delta of the official MCP server registry. Refreshed daily.",
+                                                    "type": "text/plain"
+                                                },
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "mcp",
+                                                        "registry",
+                                                        "snapshot"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {},
+                                                "auth": null
+                                            },
+                                            "response": [
+                                                {
+                                                    "id": "bc85df71-76a4-4458-976c-260ce6906095",
+                                                    "name": "Latest registry summary",
+                                                    "originalRequest": {
+                                                        "url": {
+                                                            "path": [
+                                                                "api",
+                                                                "mcp",
+                                                                "registry",
+                                                                "snapshot"
+                                                            ],
+                                                            "host": [
+                                                                "{{baseUrl}}"
+                                                            ],
+                                                            "query": [],
+                                                            "variable": []
+                                                        },
+                                                        "header": [
+                                                            {
+                                                                "key": "Accept",
+                                                                "value": "application/json"
+                                                            }
+                                                        ],
+                                                        "method": "GET",
+                                                        "body": {}
+                                                    },
+                                                    "status": "OK",
+                                                    "code": 200,
+                                                    "header": [
+                                                        {
+                                                            "key": "Content-Type",
+                                                            "value": "application/json"
+                                                        }
+                                                    ],
+                                                    "body": "{\n  \"ok\": \"<boolean>\",\n  \"summary\": {}\n}",
+                                                    "cookie": [],
+                                                    "_postman_previewlanguage": "json"
+                                                }
+                                            ],
+                                            "event": [],
+                                            "protocolProfileBehavior": {
+                                                "disableBodyPruning": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "probe",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "latest",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "1e077b3b-af1c-427f-bae5-a11c20a486bb",
+                                    "name": "Last 24h of LLM endpoint latency probes",
+                                    "request": {
+                                        "name": "Last 24h of LLM endpoint latency probes",
+                                        "description": {
+                                            "content": "Active probe results (TTFB, total) per provider. Refreshed every 15 min.",
+                                            "type": "text/plain"
+                                        },
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "probe",
+                                                "latest"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "2d916881-4d1b-4ef1-82e0-188d3ee9bcaa",
+                                            "name": "Probe summary",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "probe",
+                                                        "latest"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "history",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "2c6e26ec-8e07-4052-84b2-e03c893da12d",
+                            "name": "Index of historical daily snapshots",
+                            "request": {
+                                "name": "Index of historical daily snapshots",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "history"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "5cba37ae-fb8c-4d84-97a4-7a4ff4a884f6",
+                                    "name": "Available date ranges per snapshot type.",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "history"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        },
+                        {
+                            "name": "{date}",
+                            "description": "",
+                            "item": [
+                                {
+                                    "name": "{type}",
+                                    "description": "",
+                                    "item": [
+                                        {
+                                            "id": "181c3a8b-ca62-4649-93b0-1b47dd88c2b3",
+                                            "name": "Read one historical snapshot",
+                                            "request": {
+                                                "name": "Read one historical snapshot",
+                                                "description": {},
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "history",
+                                                        ":date",
+                                                        ":type"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": [
+                                                        {
+                                                            "type": "any",
+                                                            "value": "8361-19-08",
+                                                            "key": "date",
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "(Required) ",
+                                                                "type": "text/plain"
+                                                            }
+                                                        },
+                                                        {
+                                                            "type": "any",
+                                                            "value": "benchmarks",
+                                                            "key": "type",
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "(Required)  (This can only be one of pricing,benchmarks,status,news,mcp-registry,probe,gpu-pricing)",
+                                                                "type": "text/plain"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {},
+                                                "auth": null
+                                            },
+                                            "response": [
+                                                {
+                                                    "id": "d96573e3-f832-4e99-921f-51f47422f38c",
+                                                    "name": "Snapshot payload",
+                                                    "originalRequest": {
+                                                        "url": {
+                                                            "path": [
+                                                                "api",
+                                                                "history",
+                                                                ":date",
+                                                                ":type"
+                                                            ],
+                                                            "host": [
+                                                                "{{baseUrl}}"
+                                                            ],
+                                                            "query": [],
+                                                            "variable": [
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "(Required) ",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "type": "any",
+                                                                    "value": "8361-19-08",
+                                                                    "key": "date"
+                                                                },
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "(Required)  (This can only be one of pricing,benchmarks,status,news,mcp-registry,probe,gpu-pricing)",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "type": "any",
+                                                                    "value": "benchmarks",
+                                                                    "key": "type"
+                                                                }
+                                                            ]
+                                                        },
+                                                        "header": [
+                                                            {
+                                                                "key": "Accept",
+                                                                "value": "application/json"
+                                                            }
+                                                        ],
+                                                        "method": "GET",
+                                                        "body": {}
+                                                    },
+                                                    "status": "OK",
+                                                    "code": 200,
+                                                    "header": [
+                                                        {
+                                                            "key": "Content-Type",
+                                                            "value": "application/json"
+                                                        }
+                                                    ],
+                                                    "body": "{}",
+                                                    "cookie": [],
+                                                    "_postman_previewlanguage": "json"
+                                                },
+                                                {
+                                                    "id": "4b9f816a-ba9a-42c0-a4a5-b3ca9578e708",
+                                                    "name": "Snapshot not found",
+                                                    "originalRequest": {
+                                                        "url": {
+                                                            "path": [
+                                                                "api",
+                                                                "history",
+                                                                ":date",
+                                                                ":type"
+                                                            ],
+                                                            "host": [
+                                                                "{{baseUrl}}"
+                                                            ],
+                                                            "query": [],
+                                                            "variable": [
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "(Required) ",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "type": "any",
+                                                                    "value": "8361-19-08",
+                                                                    "key": "date"
+                                                                },
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "(Required)  (This can only be one of pricing,benchmarks,status,news,mcp-registry,probe,gpu-pricing)",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "type": "any",
+                                                                    "value": "benchmarks",
+                                                                    "key": "type"
+                                                                }
+                                                            ]
+                                                        },
+                                                        "method": "GET",
+                                                        "body": {}
+                                                    },
+                                                    "status": "Not Found",
+                                                    "code": 404,
+                                                    "header": [],
+                                                    "cookie": [],
+                                                    "_postman_previewlanguage": "text"
+                                                }
+                                            ],
+                                            "event": [],
+                                            "protocolProfileBehavior": {
+                                                "disableBodyPruning": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "afta",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "adopters",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "e5026995-6343-479d-9d93-153c85b54b85",
+                                    "name": "Machine-readable AFTA adopter directory",
+                                    "request": {
+                                        "name": "Machine-readable AFTA adopter directory",
+                                        "description": {
+                                            "content": "Public list of sites that publish a /.well-known/agent-fair-trade.json manifest. Not authoritative; agents should verify each manifest directly.",
+                                            "type": "text/plain"
+                                        },
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "afta",
+                                                "adopters"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "9f822a38-fb03-4082-a6ec-46e9f9b904d3",
+                                            "name": "Adopter list",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "afta",
+                                                        "adopters"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "payment",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "info",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "73675e0a-ed89-4642-a3f8-d662c50d99e3",
+                                    "name": "Wallet, pricing, and operator info",
+                                    "request": {
+                                        "name": "Wallet, pricing, and operator info",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "payment",
+                                                "info"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "e5b9db7b-90ee-4a9b-9cc4-087e4cb4ca09",
+                                            "name": "Payment metadata for buying credits.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "payment",
+                                                        "info"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "buy-credits",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "1f9498c2-0b17-4d63-855a-a47612b7796a",
+                                    "name": "Initiate a credit purchase",
+                                    "request": {
+                                        "name": "Initiate a credit purchase",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "payment",
+                                                "buy-credits"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                            },
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "POST",
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"amount_usd\": \"<number>\",\n  \"sender_wallet\": \"<string>\"\n}",
+                                            "options": {
+                                                "raw": {
+                                                    "headerFamily": "json",
+                                                    "language": "json"
+                                                }
+                                            }
+                                        },
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "0039ba18-cefd-4cf9-a4c2-739021d46b50",
+                                            "name": "Quote with credits and instructions to send USDC on Base.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "payment",
+                                                        "buy-credits"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Content-Type",
+                                                        "value": "application/json"
+                                                    },
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "POST",
+                                                "body": {
+                                                    "mode": "raw",
+                                                    "raw": "{\n  \"amount_usd\": \"<number>\",\n  \"sender_wallet\": \"<string>\"\n}",
+                                                    "options": {
+                                                        "raw": {
+                                                            "headerFamily": "json",
+                                                            "language": "json"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "confirm",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "b3f5c25e-0790-49fa-856b-f27a6caf3a31",
+                                    "name": "Confirm a USDC payment and receive bearer token",
+                                    "request": {
+                                        "name": "Confirm a USDC payment and receive bearer token",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "payment",
+                                                "confirm"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                            },
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "POST",
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"tx_hash\": \"<string>\"\n}",
+                                            "options": {
+                                                "raw": {
+                                                    "headerFamily": "json",
+                                                    "language": "json"
+                                                }
+                                            }
+                                        },
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "a382a728-d34d-4e22-a030-f7903d6a5a31",
+                                            "name": "Bearer token + credit balance.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "payment",
+                                                        "confirm"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Content-Type",
+                                                        "value": "application/json"
+                                                    },
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "POST",
+                                                "body": {
+                                                    "mode": "raw",
+                                                    "raw": "{\n  \"tx_hash\": \"<string>\"\n}",
+                                                    "options": {
+                                                        "raw": {
+                                                            "headerFamily": "json",
+                                                            "language": "json"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "balance",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "bb2094a4-3c25-4ae4-8e65-1f368a4a2fb7",
+                                    "name": "Token balance and usage",
+                                    "request": {
+                                        "name": "Token balance and usage",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "payment",
+                                                "balance"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "d6486e8a-223c-4c09-b03c-25ca627855fb",
+                                            "name": "Credits remaining, total spent, recent calls.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "payment",
+                                                        "balance"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    },
+                                                    {
+                                                        "description": {
+                                                            "content": "Added as a part of security scheme: bearer",
+                                                            "type": "text/plain"
+                                                        },
+                                                        "key": "Authorization",
+                                                        "value": "Bearer <token>"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "no-charge-stats",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "b43182fb-43c1-4742-9e36-d96510f61071",
+                                    "name": "Public no-charge counter (AFTA evidence)",
+                                    "request": {
+                                        "name": "Public no-charge counter (AFTA evidence)",
+                                        "description": {
+                                            "content": "Aggregate count of paid calls that were waived under AFTA guarantees (5xx, breaker, schema fail, stale data).",
+                                            "type": "text/plain"
+                                        },
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "payment",
+                                                "no-charge-stats"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "b1a2e7c5-b39e-49e5-be2e-d87b2de84790",
+                                            "name": "No-charge counter",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "payment",
+                                                        "no-charge-stats"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "receipt",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "verify",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "2e77765e-fbee-4ce9-bf25-ceb021eff74a",
+                                    "name": "Verify an Ed25519-signed receipt",
+                                    "request": {
+                                        "name": "Verify an Ed25519-signed receipt",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "receipt",
+                                                "verify"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                            },
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "POST",
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"receipt\": \"<string>\"\n}",
+                                            "options": {
+                                                "raw": {
+                                                    "headerFamily": "json",
+                                                    "language": "json"
+                                                }
+                                            }
+                                        },
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "56e560f0-2f4f-4945-811a-e9bd9227fbb3",
+                                            "name": "Verification result",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "receipt",
+                                                        "verify"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Content-Type",
+                                                        "value": "application/json"
+                                                    },
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "POST",
+                                                "body": {
+                                                    "mode": "raw",
+                                                    "raw": "{\n  \"receipt\": \"<string>\"\n}",
+                                                    "options": {
+                                                        "raw": {
+                                                            "headerFamily": "json",
+                                                            "language": "json"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{\n  \"ok\": \"<boolean>\",\n  \"valid\": \"<boolean>\",\n  \"signed_at\": \"<string>\"\n}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "preview",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "routing",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "8240fd74-85d7-4cf8-987f-b25ebe832124",
+                                    "name": "Public preview of premium model routing",
+                                    "request": {
+                                        "name": "Public preview of premium model routing",
+                                        "description": {
+                                            "content": "Free preview of the premium routing endpoint. Returns top-1 recommendation only. Use /api/premium/routing for ranked top-N with full reasoning.",
+                                            "type": "text/plain"
+                                        },
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "preview",
+                                                "routing"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "530ce14d-71ca-4019-957c-1b284ea4472c",
+                                            "name": "Recommended model id and one-line rationale.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "preview",
+                                                        "routing"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "premium",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "routing",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "adba270c-0d69-45ed-b2d0-6fdb7394336c",
+                                    "name": "Ranked model routing recommendations",
+                                    "request": {
+                                        "name": "Ranked model routing recommendations",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "premium",
+                                                "routing"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [
+                                                {
+                                                    "disabled": false,
+                                                    "description": {
+                                                        "content": "",
+                                                        "type": "text/plain"
+                                                    },
+                                                    "key": "prompt",
+                                                    "value": "<string>"
+                                                },
+                                                {
+                                                    "disabled": false,
+                                                    "description": {
+                                                        "content": " (This can only be one of cost,speed,quality,balanced)",
+                                                        "type": "text/plain"
+                                                    },
+                                                    "key": "optimize",
+                                                    "value": "balanced"
+                                                }
+                                            ],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "7e2d4c68-5a95-4f60-babd-9d139d5caf9a",
+                                            "name": "Ranked top-N model recommendations with rationale and signed receipt.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "premium",
+                                                        "routing"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "prompt",
+                                                            "value": "<string>"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": " (This can only be one of cost,speed,quality,balanced)",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "optimize",
+                                                            "value": "balanced"
+                                                        }
+                                                    ],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    },
+                                                    {
+                                                        "description": {
+                                                            "content": "Added as a part of security scheme: bearer",
+                                                            "type": "text/plain"
+                                                        },
+                                                        "key": "Authorization",
+                                                        "value": "Bearer <token>"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        },
+                                        {
+                                            "id": "e1111d0e-a16e-4cdd-a1b9-1b3802c5b608",
+                                            "name": "Insufficient credits or no token (x402-compatible)",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "premium",
+                                                        "routing"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "prompt",
+                                                            "value": "<string>"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": " (This can only be one of cost,speed,quality,balanced)",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "optimize",
+                                                            "value": "balanced"
+                                                        }
+                                                    ],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "description": {
+                                                            "content": "Added as a part of security scheme: bearer",
+                                                            "type": "text/plain"
+                                                        },
+                                                        "key": "Authorization",
+                                                        "value": "Bearer <token>"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "Payment Required",
+                                            "code": 402,
+                                            "header": [],
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "text"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "news",
+                            "description": "",
+                            "item": [
+                                {
+                                    "name": "search",
+                                    "description": "",
+                                    "item": [
+                                        {
+                                            "id": "e4c37bed-7520-456d-befa-6f02a6b7433d",
+                                            "name": "Full-text search across AI news archive",
+                                            "request": {
+                                                "name": "Full-text search across AI news archive",
+                                                "description": {},
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "premium",
+                                                        "news",
+                                                        "search"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "(Required) ",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "q",
+                                                            "value": "<string>"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "from",
+                                                            "value": "<date>"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "to",
+                                                            "value": "<date>"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "limit",
+                                                            "value": "25"
+                                                        }
+                                                    ],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {},
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "response": [
+                                                {
+                                                    "id": "95df8467-7a32-42e5-9c29-89c0dd16afa0",
+                                                    "name": "Matching articles, ranked.",
+                                                    "originalRequest": {
+                                                        "url": {
+                                                            "path": [
+                                                                "api",
+                                                                "premium",
+                                                                "news",
+                                                                "search"
+                                                            ],
+                                                            "host": [
+                                                                "{{baseUrl}}"
+                                                            ],
+                                                            "query": [
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "(Required) ",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "q",
+                                                                    "value": "<string>"
+                                                                },
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "from",
+                                                                    "value": "<date>"
+                                                                },
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "to",
+                                                                    "value": "<date>"
+                                                                },
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "limit",
+                                                                    "value": "25"
+                                                                }
+                                                            ],
+                                                            "variable": []
+                                                        },
+                                                        "header": [
+                                                            {
+                                                                "key": "Accept",
+                                                                "value": "application/json"
+                                                            },
+                                                            {
+                                                                "description": {
+                                                                    "content": "Added as a part of security scheme: bearer",
+                                                                    "type": "text/plain"
+                                                                },
+                                                                "key": "Authorization",
+                                                                "value": "Bearer <token>"
+                                                            }
+                                                        ],
+                                                        "method": "GET",
+                                                        "body": {}
+                                                    },
+                                                    "status": "OK",
+                                                    "code": 200,
+                                                    "header": [
+                                                        {
+                                                            "key": "Content-Type",
+                                                            "value": "application/json"
+                                                        }
+                                                    ],
+                                                    "body": "{}",
+                                                    "cookie": [],
+                                                    "_postman_previewlanguage": "json"
+                                                }
+                                            ],
+                                            "event": [],
+                                            "protocolProfileBehavior": {
+                                                "disableBodyPruning": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "cost",
+                            "description": "",
+                            "item": [
+                                {
+                                    "name": "projection",
+                                    "description": "",
+                                    "item": [
+                                        {
+                                            "id": "7c04a03d-2295-4da2-b659-687d7c45ae0c",
+                                            "name": "Compute monthly cost across model candidates",
+                                            "request": {
+                                                "name": "Compute monthly cost across model candidates",
+                                                "description": {},
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "premium",
+                                                        "cost",
+                                                        "projection"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "(Required) ",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "model",
+                                                            "value": "<string>"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "input_tokens_per_day",
+                                                            "value": "<integer>"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "output_tokens_per_day",
+                                                            "value": "<integer>"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": " (This can only be one of daily,monthly,yearly)",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "horizon",
+                                                            "value": "monthly"
+                                                        }
+                                                    ],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {},
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "response": [
+                                                {
+                                                    "id": "fb68e0e6-1f46-4621-bc8f-c20d958bd3c3",
+                                                    "name": "Projected cost per model.",
+                                                    "originalRequest": {
+                                                        "url": {
+                                                            "path": [
+                                                                "api",
+                                                                "premium",
+                                                                "cost",
+                                                                "projection"
+                                                            ],
+                                                            "host": [
+                                                                "{{baseUrl}}"
+                                                            ],
+                                                            "query": [
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "(Required) ",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "model",
+                                                                    "value": "<string>"
+                                                                },
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "input_tokens_per_day",
+                                                                    "value": "<integer>"
+                                                                },
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": "",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "output_tokens_per_day",
+                                                                    "value": "<integer>"
+                                                                },
+                                                                {
+                                                                    "disabled": false,
+                                                                    "description": {
+                                                                        "content": " (This can only be one of daily,monthly,yearly)",
+                                                                        "type": "text/plain"
+                                                                    },
+                                                                    "key": "horizon",
+                                                                    "value": "monthly"
+                                                                }
+                                                            ],
+                                                            "variable": []
+                                                        },
+                                                        "header": [
+                                                            {
+                                                                "key": "Accept",
+                                                                "value": "application/json"
+                                                            },
+                                                            {
+                                                                "description": {
+                                                                    "content": "Added as a part of security scheme: bearer",
+                                                                    "type": "text/plain"
+                                                                },
+                                                                "key": "Authorization",
+                                                                "value": "Bearer <token>"
+                                                            }
+                                                        ],
+                                                        "method": "GET",
+                                                        "body": {}
+                                                    },
+                                                    "status": "OK",
+                                                    "code": 200,
+                                                    "header": [
+                                                        {
+                                                            "key": "Content-Type",
+                                                            "value": "application/json"
+                                                        }
+                                                    ],
+                                                    "body": "{}",
+                                                    "cookie": [],
+                                                    "_postman_previewlanguage": "json"
+                                                }
+                                            ],
+                                            "event": [],
+                                            "protocolProfileBehavior": {
+                                                "disableBodyPruning": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "whats-new",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "81cbb31b-e9d4-4fab-aa94-c68c623000f3",
+                                    "name": "Aggregated daily delta across the whole TensorFeed dataset",
+                                    "request": {
+                                        "name": "Aggregated daily delta across the whole TensorFeed dataset",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "premium",
+                                                "whats-new"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [
+                                                {
+                                                    "disabled": false,
+                                                    "description": {
+                                                        "content": "",
+                                                        "type": "text/plain"
+                                                    },
+                                                    "key": "days",
+                                                    "value": "1"
+                                                },
+                                                {
+                                                    "disabled": false,
+                                                    "description": {
+                                                        "content": "",
+                                                        "type": "text/plain"
+                                                    },
+                                                    "key": "news_limit",
+                                                    "value": "10"
+                                                }
+                                            ],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "27f37804-c215-4078-9879-218a612268fb",
+                                            "name": "New models, new pricing, new status incidents, top news.",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "premium",
+                                                        "whats-new"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "days",
+                                                            "value": "1"
+                                                        },
+                                                        {
+                                                            "disabled": false,
+                                                            "description": {
+                                                                "content": "",
+                                                                "type": "text/plain"
+                                                            },
+                                                            "key": "news_limit",
+                                                            "value": "10"
+                                                        }
+                                                    ],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    },
+                                                    {
+                                                        "description": {
+                                                            "content": "Added as a part of security scheme: bearer",
+                                                            "type": "text/plain"
+                                                        },
+                                                        "key": "Authorization",
+                                                        "value": "Bearer <token>"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "event": [],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "https://tensorfeed.ai"
+        }
+    ],
+    "info": {
+        "_postman_id": "69f02978-3618-41c1-80a7-4bc736e4a848",
+        "name": "TensorFeed API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": {
+            "content": "TensorFeed.ai is a free, no-auth JSON API for AI news, service status, model pricing, GPU pricing, agent directories, and AFTA (Agent Fair-Trade Agreement) data, plus a paid premium tier (USDC on Base, x402 compatible) for ranked model routing, search, history series, watches, and computed intelligence.\n\nHighlights for AI agents:\n- No API key on free endpoints. CORS enabled. Rate limit 120 req/min/IP.\n- AFTA-certified: code-enforced no-charge on 5xx, circuit breaker, schema failure, or stale data. Every paid response carries an Ed25519-signed receipt.\n- Premium tier accepts pay-per-call USDC on Base, no accounts, no traditional processors.\n- Machine-readable manifests at /.well-known/agent-fair-trade.json and /llms.txt.\n\nFull endpoint catalog at /api/meta. Standard at https://tensorfeed.ai/agent-fair-trade.\n\n\nContact Support:\n Name: TensorFeed Support\n Email: evan@tensorfeed.ai",
+            "type": "text/plain"
+        }
+    }
+}
