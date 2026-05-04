@@ -1,0 +1,77 @@
+name: Publish Python SDK
+
+# Auto-publish the tensorfeed Python package to PyPI when its version
+# field changes. Trigger:
+#   - push to main with sdk/python/pyproject.toml in the diff
+#   - manual workflow_dispatch (in case you bumped earlier and want to retry)
+#
+# Required secret: PYPI_TOKEN
+#   PyPI API token with upload rights on the `tensorfeed` project.
+#   Get one at https://pypi.org/manage/account/token/ scoped to that
+#   project, then save as a repo secret named PYPI_TOKEN.
+#
+# Behavior:
+#   - Reads the version field from pyproject.toml.
+#   - Skips publish if that exact version already exists on PyPI
+#     (so re-running the workflow on an unchanged version is a no-op
+#     rather than an error).
+#   - Builds with `python -m build` and uploads with twine.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sdk/python/pyproject.toml'
+      - 'sdk/python/tensorfeed/**'
+      - 'sdk/python/README.md'
+      - '.github/workflows/publish-python-sdk.yml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Read version from pyproject.toml
+        id: ver
+        working-directory: sdk/python
+        run: |
+          v=$(python -c "import tomllib; print(tomllib.loads(open('pyproject.toml','rb').read().decode())['project']['version'])")
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Detected version: $v"
+
+      - name: Skip if version is already on PyPI
+        id: check
+        run: |
+          v="${{ steps.ver.outputs.version }}"
+          status=$(curl -sS -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/tensorfeed/$v/json")
+          if [ "$status" = "200" ]; then
+            echo "tensorfeed==$v already on PyPI; skipping publish"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tensorfeed==$v not on PyPI yet (HTTP $status); will publish"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install build tooling
+        if: steps.check.outputs.skip == 'false'
+        run: pip install --quiet build twine
+
+      - name: Build distribution
+        if: steps.check.outputs.skip == 'false'
+        working-directory: sdk/python
+        run: python -m build
+
+      - name: Upload to PyPI
+        if: steps.check.outputs.skip == 'false'
+        working-directory: sdk/python
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: python -m twine upload dist/*

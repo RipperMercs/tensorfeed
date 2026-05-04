@@ -1,0 +1,137 @@
+name: Publish npm packages
+
+# Auto-publish the JS SDK (`tensorfeed`) and MCP server
+# (`@tensorfeed/mcp-server`) to npm when their package.json version
+# changes. Trigger:
+#   - push to main with sdk/javascript/** or mcp-server/** in the diff
+#   - manual workflow_dispatch
+#
+# Required secret: NPM_TOKEN
+#   npm "Granular Access Token" or classic Automation token with
+#   publish rights on both the `tensorfeed` package and the
+#   `@tensorfeed` scope. Get one at npmjs.com -> Access Tokens, then
+#   save as a repo secret named NPM_TOKEN.
+#
+# Behavior:
+#   - Each package is checked independently.
+#   - For each, reads the version from package.json. Skips publish if
+#     that version is already on the npm registry (idempotent re-run).
+#   - On first-time publish of a scoped package, --access public is
+#     passed automatically.
+#   - The mirror-mcp-server.yml workflow still pushes the source code
+#     to RipperMercs/tensorfeed-mcp on every push that touches
+#     mcp-server/**; THIS workflow handles the npm side. The two are
+#     independent.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sdk/javascript/package.json'
+      - 'sdk/javascript/src/**'
+      - 'sdk/javascript/README.md'
+      - 'mcp-server/package.json'
+      - 'mcp-server/src/**'
+      - 'mcp-server/README.md'
+      - 'mcp-server/server.json'
+      - '.github/workflows/publish-npm.yml'
+  workflow_dispatch:
+
+jobs:
+  publish-js-sdk:
+    name: Publish tensorfeed (JS SDK)
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Read version
+        id: ver
+        working-directory: sdk/javascript
+        run: |
+          v=$(node -p "require('./package.json').version")
+          name=$(node -p "require('./package.json').name")
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "Detected $name@$v"
+
+      - name: Check if already published
+        id: check
+        run: |
+          name="${{ steps.ver.outputs.name }}"
+          v="${{ steps.ver.outputs.version }}"
+          if npm view "$name@$v" version >/dev/null 2>&1; then
+            echo "$name@$v already on npm; skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$name@$v not yet published; will publish"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install + build
+        if: steps.check.outputs.skip == 'false'
+        working-directory: sdk/javascript
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: Publish
+        if: steps.check.outputs.skip == 'false'
+        working-directory: sdk/javascript
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+  publish-mcp-server:
+    name: Publish @tensorfeed/mcp-server
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Read version
+        id: ver
+        working-directory: mcp-server
+        run: |
+          v=$(node -p "require('./package.json').version")
+          name=$(node -p "require('./package.json').name")
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "Detected $name@$v"
+
+      - name: Check if already published
+        id: check
+        run: |
+          name="${{ steps.ver.outputs.name }}"
+          v="${{ steps.ver.outputs.version }}"
+          if npm view "$name@$v" version >/dev/null 2>&1; then
+            echo "$name@$v already on npm; skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$name@$v not yet published; will publish"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install + build
+        if: steps.check.outputs.skip == 'false'
+        working-directory: mcp-server
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: Publish
+        if: steps.check.outputs.skip == 'false'
+        working-directory: mcp-server
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public

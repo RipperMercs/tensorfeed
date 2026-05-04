@@ -297,6 +297,19 @@ Authoritative list lives in `src/app/sitemap.ts`. Major buckets:
 - **Agent acquisition**: `/for-ai-agents`, `/glossary` + `/glossary/{x402,mcp,agent-payments}`, `/openapi.json`, `/benchmarks/[name]` (per-benchmark leaderboards auto-generated from data/benchmarks.json via `getAllBenchmarkSlugs()` in `src/lib/benchmark-directory.ts`)
 - **Meta editorial**: `/claude-md-guide`, `/claude-md-generator`, `/claude-md-examples`
 
+## CI Workflows
+
+`.github/workflows/`:
+
+- `deploy-worker.yml`: pushes to main auto-deploy the Cloudflare Worker. Secret: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+- `huggingface-push.yml`: nightly push of the daily snapshot to the `tensorfeed/ai-ecosystem-daily` HF dataset. Secret: `HF_TOKEN`.
+- `mirror-mcp-server.yml`: copies the publishable subset of `mcp-server/` to the standalone `RipperMercs/tensorfeed-mcp` repo on every push touching the folder. Secret: `STANDALONE_REPO_TOKEN`.
+- `openapi-validate.yml`: lints `public/openapi.json` and `public/openapi.yaml` with Redocly CLI on every change. Catches schema-shape errors a plain `JSON.parse` cannot. No secret.
+- `publish-python-sdk.yml`: auto-publishes `tensorfeed` to PyPI when its `pyproject.toml` version field changes. Skips if the version already exists on PyPI (idempotent re-run). Secret: `PYPI_TOKEN`.
+- `publish-npm.yml`: auto-publishes `tensorfeed` (JS SDK) and `@tensorfeed/mcp-server` to npm when their `package.json` version fields change. Two parallel jobs, each idempotent. Secret: `NPM_TOKEN`.
+
+The MCP registry republish (`scripts/mcp-publish.ps1`) is still manual because it requires the Ed25519 private key (`.mcp-key`); not wired into CI to avoid putting a long-lived signing key in repo secrets.
+
 ## Feeds & Agent Discovery
 
 - `https://tensorfeed.ai/feed.xml`: main RSS
