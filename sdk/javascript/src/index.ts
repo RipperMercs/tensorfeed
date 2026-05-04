@@ -497,6 +497,104 @@ export interface MCPRegistrySnapshotResponse {
   };
 }
 
+export interface PapersAITrendingPaper {
+  paperId: string;
+  title: string;
+  abstract: string | null;
+  authors: string[];
+  year: number | null;
+  venue: string | null;
+  citationCount: number;
+  url: string | null;
+  publicationDate: string | null;
+  arxivId: string | null;
+  doi: string | null;
+  fieldsOfStudy: string[];
+}
+
+export interface PapersAITrendingResponse {
+  ok: boolean;
+  snapshot: {
+    date: string;
+    capturedAt: string;
+    total_papers: number;
+    queries: string[];
+    raw_count: number;
+    papers: PapersAITrendingPaper[];
+    summary: {
+      by_year: Record<string, number>;
+      top_venues: Array<{ venue: string; count: number }>;
+      top_authors: Array<{ author: string; count: number }>;
+    };
+  };
+}
+
+export interface ArxivPaper {
+  arxivId: string;
+  version: string | null;
+  title: string;
+  abstract: string | null;
+  authors: string[];
+  primaryCategory: string | null;
+  categories: string[];
+  publishedAt: string;
+  updatedAt: string;
+  htmlUrl: string;
+  pdfUrl: string;
+  doi: string | null;
+}
+
+export interface ArxivRecentResponse {
+  ok: boolean;
+  snapshot: {
+    date: string;
+    capturedAt: string;
+    total_papers: number;
+    categories_queried: string[];
+    raw_count: number;
+    papers: ArxivPaper[];
+    summary: {
+      by_primary_category: Record<string, number>;
+      top_authors: Array<{ author: string; count: number }>;
+    };
+  };
+}
+
+export interface HFModelEntry {
+  id: string;
+  downloads: number;
+  likes: number;
+  pipeline_tag: string | null;
+  tags: string[];
+  lastModified: string | null;
+  private: boolean;
+  gated: boolean | string;
+}
+
+export interface HFDatasetEntry {
+  id: string;
+  downloads: number;
+  likes: number;
+  tags: string[];
+  lastModified: string | null;
+  private: boolean;
+  gated: boolean | string;
+}
+
+export interface HFTrendingResponse {
+  ok: boolean;
+  snapshot: {
+    date: string;
+    capturedAt: string;
+    models: { sort: 'downloads'; count: number; items: HFModelEntry[] };
+    datasets: { sort: 'downloads'; count: number; items: HFDatasetEntry[] };
+    summary: {
+      top_pipeline_tags: Array<{ tag: string; count: number }>;
+      top_namespaces: Array<{ namespace: string; count: number }>;
+    };
+  };
+}
+
 export interface MCPRegistrySeriesPoint {
   date: string;
   total_servers: number | null;
@@ -1476,6 +1574,42 @@ export class TensorFeed {
       },
       requireToken: true,
     });
+  }
+
+  /**
+   * Daily curated AI/ML research papers ranked by citation count.
+   *
+   * Free, no auth. Five fan-out queries against the Semantic Scholar
+   * Graph API (large language model, transformer, RLHF, AI agents,
+   * diffusion model), deduped by paperId, top 30 returned. Refreshed
+   * daily at 11:00 UTC.
+   */
+  async getPapersAITrending(): Promise<PapersAITrendingResponse> {
+    return this.request<PapersAITrendingResponse>('GET', '/papers/ai-trending');
+  }
+
+  /**
+   * Most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV.
+   *
+   * Free, no auth. Single Atom API call to arXiv, deduped by arxivId,
+   * top 50 by submission date. The firehose pair to
+   * `getPapersAITrending`: this shows what just dropped, ai-trending
+   * ranks the field by citation count. Refreshed daily at 11:30 UTC.
+   */
+  async getPapersArxivRecent(): Promise<ArxivRecentResponse> {
+    return this.request<ArxivRecentResponse>('GET', '/papers/arxiv-recent');
+  }
+
+  /**
+   * Top 30 most-downloaded Hugging Face models and top 30 datasets.
+   *
+   * Free, no auth. Snapshotted daily at 12:00 UTC against the public
+   * HF API. Once enough daily snapshots accumulate, day-over-day
+   * download deltas become a real trending signal computed over the
+   * dated keys.
+   */
+  async getHFTrending(): Promise<HFTrendingResponse> {
+    return this.request<HFTrendingResponse>('GET', '/hf/trending');
   }
 
   /**

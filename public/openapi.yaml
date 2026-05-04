@@ -366,6 +366,45 @@ paths:
             application/json:
               schema: { type: object }
 
+  /api/papers/ai-trending:
+    get:
+      tags: [Papers]
+      summary: Daily citation-ranked AI/ML papers from Semantic Scholar
+      operationId: getPapersAITrending
+      description: Five fan-out queries (LLM, transformer, RLHF, AI agents, diffusion), deduped by paperId, top 30 by citation count. Refreshed daily at 11:00 UTC.
+      responses:
+        '200':
+          description: Curated papers snapshot
+          content:
+            application/json:
+              schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
+
+  /api/papers/arxiv-recent:
+    get:
+      tags: [Papers]
+      summary: Most recent arXiv submissions (cs.AI / cs.LG / cs.CL / cs.CV)
+      operationId: getPapersArxivRecent
+      description: Top 50 recent submissions by date, deduped by arxivId. Refreshed daily at 11:30 UTC.
+      responses:
+        '200':
+          description: Recent arXiv submissions snapshot
+          content:
+            application/json:
+              schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
+
+  /api/hf/trending:
+    get:
+      tags: [Hugging Face]
+      summary: Top 30 most-downloaded HF models and top 30 datasets
+      operationId: getHFTrending
+      description: Daily snapshot against the public HF API. Day-over-day deltas across the dated keys yield a true trending signal once multiple snapshots accumulate. Refreshed daily at 12:00 UTC.
+      responses:
+        '200':
+          description: Top-downloaded models and datasets snapshot
+          content:
+            application/json:
+              schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
+
   /api/history:
     get:
       tags: [History]

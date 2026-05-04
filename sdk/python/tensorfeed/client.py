@@ -1012,6 +1012,64 @@ class TensorFeed:
         """
         return self._request("GET", "/mcp/registry/snapshot")
 
+    # ── Free: AI papers, citation-ranked (Semantic Scholar) ─────────
+
+    def get_papers_ai_trending(self) -> dict[str, Any]:
+        """Daily curated AI/ML research papers ranked by citation count.
+
+        Free, no auth. Five fan-out queries against the Semantic Scholar
+        Graph API (large language model, transformer, RLHF, AI agents,
+        diffusion model), deduped by paperId, top 30 returned. Refreshed
+        daily at 11:00 UTC.
+
+        Returns:
+            Dict with ``ok`` and ``snapshot`` keys. The ``snapshot``
+            includes ``date``, ``capturedAt``, ``total_papers``,
+            ``papers`` (each with title, abstract, authors, year,
+            venue, citationCount, arxivId, doi, fieldsOfStudy), and
+            ``summary`` (by_year, top_venues, top_authors).
+        """
+        return self._request("GET", "/papers/ai-trending")
+
+    # ── Free: arXiv recent submissions ──────────────────────────────
+
+    def get_papers_arxiv_recent(self) -> dict[str, Any]:
+        """Most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV.
+
+        Free, no auth. Single Atom API call to arXiv, deduped by arxivId,
+        top 50 by submission date. The firehose pair to
+        ``get_papers_ai_trending``: this shows what just dropped,
+        ``ai_trending`` ranks the field by citation count. Refreshed
+        daily at 11:30 UTC.
+
+        Returns:
+            Dict with ``ok`` and ``snapshot`` keys. Each paper has
+            ``arxivId``, ``version``, ``title``, ``abstract``,
+            ``authors``, ``primaryCategory``, ``categories``,
+            ``publishedAt``, ``updatedAt``, ``htmlUrl``, ``pdfUrl``,
+            and ``doi`` (when present).
+        """
+        return self._request("GET", "/papers/arxiv-recent")
+
+    # ── Free: Hugging Face top-downloaded ───────────────────────────
+
+    def get_hf_trending(self) -> dict[str, Any]:
+        """Top 30 most-downloaded Hugging Face models and top 30 datasets.
+
+        Free, no auth. Snapshotted daily at 12:00 UTC against the public
+        HF API. Once enough daily snapshots accumulate, day-over-day
+        download deltas become a real trending signal computed over the
+        dated keys.
+
+        Returns:
+            Dict with ``ok`` and ``snapshot`` keys. Snapshot includes
+            ``models`` (top 30 by downloads, each with id, downloads,
+            likes, pipeline_tag, tags, lastModified, private, gated),
+            ``datasets`` (same shape minus pipeline_tag), and
+            ``summary`` (top_pipeline_tags, top_namespaces).
+        """
+        return self._request("GET", "/hf/trending")
+
     # ── Free: LLM endpoint probing (last 24h) ───────────────────────
 
     def get_probe_latest(self) -> dict[str, Any]:

@@ -2,6 +2,12 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.16.0 - 2026-05-04
+
+### Added
+- `tf.getPapersAITrending()`, `tf.getPapersArxivRecent()`, `tf.getHFTrending()`. Three new free, no-auth methods covering daily AI/ML data feeds. `getPapersAITrending` returns Semantic Scholar's citation-ranked top 30 across five fan-out queries (LLM, transformer, RLHF, AI agents, diffusion). `getPapersArxivRecent` returns the 50 most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV. `getHFTrending` returns the top 30 most-downloaded Hugging Face models and top 30 datasets. Refreshed daily at 11:00, 11:30, and 12:00 UTC respectively.
+- `PapersAITrendingResponse`, `PapersAITrendingPaper`, `ArxivRecentResponse`, `ArxivPaper`, `HFTrendingResponse`, `HFModelEntry`, `HFDatasetEntry` types.
+
 ## 1.11.0 - 2026-04-27
 
 ### Added

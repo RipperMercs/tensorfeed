@@ -692,6 +692,190 @@
         }
       }
     },
+    "/api/papers/ai-trending": {
+      "get": {
+        "tags": [
+          "Papers"
+        ],
+        "summary": "Daily citation-ranked AI/ML papers from Semantic Scholar",
+        "operationId": "getPapersAITrending",
+        "description": "Five fan-out queries (LLM, transformer, RLHF, AI agents, diffusion model), deduped by paperId, top 30 ranked by citation count. Refreshed daily at 11:00 UTC.",
+        "responses": {
+          "200": {
+            "description": "Curated papers snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "snapshot": {
+                      "type": "object",
+                      "properties": {
+                        "date": { "type": "string", "format": "date" },
+                        "capturedAt": { "type": "string", "format": "date-time" },
+                        "total_papers": { "type": "integer" },
+                        "papers": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "paperId": { "type": "string" },
+                              "title": { "type": "string" },
+                              "abstract": { "type": "string", "nullable": true },
+                              "authors": { "type": "array", "items": { "type": "string" } },
+                              "year": { "type": "integer", "nullable": true },
+                              "venue": { "type": "string", "nullable": true },
+                              "citationCount": { "type": "integer" },
+                              "url": { "type": "string", "nullable": true },
+                              "publicationDate": { "type": "string", "nullable": true },
+                              "arxivId": { "type": "string", "nullable": true },
+                              "doi": { "type": "string", "nullable": true },
+                              "fieldsOfStudy": { "type": "array", "items": { "type": "string" } }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/papers/arxiv-recent": {
+      "get": {
+        "tags": [
+          "Papers"
+        ],
+        "summary": "Most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV",
+        "operationId": "getPapersArxivRecent",
+        "description": "Top 50 by submission date, deduped by arxivId. Refreshed daily at 11:30 UTC.",
+        "responses": {
+          "200": {
+            "description": "Recent arXiv submissions snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "snapshot": {
+                      "type": "object",
+                      "properties": {
+                        "date": { "type": "string", "format": "date" },
+                        "capturedAt": { "type": "string", "format": "date-time" },
+                        "total_papers": { "type": "integer" },
+                        "categories_queried": { "type": "array", "items": { "type": "string" } },
+                        "papers": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "arxivId": { "type": "string" },
+                              "version": { "type": "string", "nullable": true },
+                              "title": { "type": "string" },
+                              "abstract": { "type": "string", "nullable": true },
+                              "authors": { "type": "array", "items": { "type": "string" } },
+                              "primaryCategory": { "type": "string", "nullable": true },
+                              "categories": { "type": "array", "items": { "type": "string" } },
+                              "publishedAt": { "type": "string", "format": "date-time" },
+                              "updatedAt": { "type": "string", "format": "date-time" },
+                              "htmlUrl": { "type": "string" },
+                              "pdfUrl": { "type": "string" },
+                              "doi": { "type": "string", "nullable": true }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/hf/trending": {
+      "get": {
+        "tags": [
+          "Hugging Face"
+        ],
+        "summary": "Top 30 most-downloaded HF models and top 30 datasets",
+        "operationId": "getHFTrending",
+        "description": "Daily snapshot against the public Hugging Face API. Day-over-day deltas across the dated keys yield a true trending signal once multiple snapshots accumulate. Refreshed daily at 12:00 UTC.",
+        "responses": {
+          "200": {
+            "description": "Top-downloaded models and datasets snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "snapshot": {
+                      "type": "object",
+                      "properties": {
+                        "date": { "type": "string", "format": "date" },
+                        "capturedAt": { "type": "string", "format": "date-time" },
+                        "models": {
+                          "type": "object",
+                          "properties": {
+                            "sort": { "type": "string", "enum": ["downloads"] },
+                            "count": { "type": "integer" },
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": { "type": "string" },
+                                  "downloads": { "type": "integer" },
+                                  "likes": { "type": "integer" },
+                                  "pipeline_tag": { "type": "string", "nullable": true },
+                                  "tags": { "type": "array", "items": { "type": "string" } },
+                                  "lastModified": { "type": "string", "nullable": true },
+                                  "private": { "type": "boolean" },
+                                  "gated": {}
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "datasets": {
+                          "type": "object",
+                          "properties": {
+                            "sort": { "type": "string", "enum": ["downloads"] },
+                            "count": { "type": "integer" },
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": { "type": "string" },
+                                  "downloads": { "type": "integer" },
+                                  "likes": { "type": "integer" },
+                                  "tags": { "type": "array", "items": { "type": "string" } },
+                                  "lastModified": { "type": "string", "nullable": true },
+                                  "private": { "type": "boolean" },
+                                  "gated": {}
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/history": {
       "get": {
         "tags": [
