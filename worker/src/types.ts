@@ -53,6 +53,12 @@ export interface Env {
   // works with no secret. RunPod requires an API key. Set with:
   //   wrangler secret put RUNPOD_API_KEY
   RUNPOD_API_KEY?: string;
+  // Semantic Scholar Graph API key (optional). The free tier is
+  // unauthenticated and rate-limited to ~1 req/sec, which is plenty for the
+  // daily cron. If you have a registered API key, set it for higher limits:
+  //   wrangler secret put SEMANTIC_SCHOLAR_API_KEY
+  // Powers the daily AI papers capture in worker/src/papers.ts.
+  SEMANTIC_SCHOLAR_API_KEY?: string;
   // Agent Fair-Trade Agreement: Ed25519 private key used to sign every
   // premium response receipt. Stored as a JWK string (kty=OKP, crv=Ed25519).
   // Generate with `node worker/scripts/generate-receipt-key.mjs` and set

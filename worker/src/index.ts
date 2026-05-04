@@ -46,6 +46,10 @@ import {
   DEFAULT_RANGE_DAYS as MCP_REG_DEFAULT_RANGE_DAYS,
 } from './mcp-registry';
 import {
+  captureDailyPapers,
+  getLatestSnapshot as getPapersLatest,
+} from './papers';
+import {
   runProbeCycle,
   rollupYesterday as rollupProbeYesterday,
   getLatestSummary as getProbeLatest,
@@ -1608,6 +1612,7 @@ export default {
           history: '/api/history',
           historySnapshot: '/api/history/{YYYY-MM-DD}/{type}',
           mcpRegistrySnapshot: '/api/mcp/registry/snapshot',
+          papersAiTrending: '/api/papers/ai-trending',
           probeLatest: '/api/probe/latest',
           gpuPricing: '/api/gpu/pricing',
           gpuPricingCheapest: '/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot',
@@ -1775,6 +1780,19 @@ export default {
         return jsonResponse({ ok: false, error: 'registry_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, summary }, 200, 600);
+    }
+
+    // === AI PAPERS, TRENDING (free) ===
+    // Daily curated AI/ML papers from Semantic Scholar, ranked by citation
+    // count. Captured by the 11:00 UTC cron. First request after deploy
+    // bootstraps a live capture so it never returns empty.
+
+    if (path === '/api/papers/ai-trending') {
+      const snapshot = await getPapersLatest(env);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'papers_unavailable' }, 503);
+      }
+      return jsonResponse({ ok: true, snapshot }, 200, 600);
     }
 
     // === ACTIVE LLM PROBE: LATEST SUMMARY (free) ===
@@ -2979,6 +2997,10 @@ export default {
         const result = await captureRegistrySnapshot(env);
         return jsonResponse({ message: 'MCP registry snapshot captured', ...result });
       }
+      if (task === 'papers') {
+        const result = await captureDailyPapers(env);
+        return jsonResponse({ message: 'AI papers snapshot captured', ...result });
+      }
       if (task === 'probe') {
         const result = await runProbeCycle(env);
         return jsonResponse({ message: 'Probe cycle ran', ...result });
@@ -3157,6 +3179,12 @@ export default {
       // status transitions. Backs /api/mcp/registry/snapshot (free) and
       // /api/premium/mcp/registry/series (1 credit).
       await run('captureMCPRegistry', () => captureRegistrySnapshot(env));
+    } else if (cron === '0 11 * * *') {
+      // Daily 11:00 AM UTC: capture top AI/ML papers from Semantic Scholar.
+      // Five fan-out queries with throttling, dedup by paperId, rank by
+      // citation count. Daily snapshot keyed under papers:daily:{date}
+      // compounds into a future premium time series.
+      await run('captureDailyPapers', () => captureDailyPapers(env));
     } else if (cron === '*/15 * * * *') {
       // Every 15 min: probe each LLM provider with a configured key,
       // measure latency + status, write the latest 24h summary.

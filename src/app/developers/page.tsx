@@ -239,6 +239,40 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/papers/ai-trending',
+    description: 'Daily curated AI/ML research papers, sourced from Semantic Scholar and ranked by citation count. Five fan-out queries (large language model, transformer, RLHF, AI agents, diffusion model) merged and deduped by paperId. Each paper carries title, abstract, authors, year, venue, citation count, arxivId, doi, and fieldsOfStudy. Refreshed daily at 11:00 UTC.',
+    cache: 'Cache for 10 minutes',
+    example: `{
+  "ok": true,
+  "snapshot": {
+    "date": "2026-05-04",
+    "capturedAt": "2026-05-04T11:00:00Z",
+    "total_papers": 30,
+    "papers": [
+      {
+        "paperId": "...",
+        "title": "Attention Is All You Need",
+        "abstract": "...",
+        "authors": ["Vaswani", "Shazeer"],
+        "year": 2017,
+        "venue": "NeurIPS",
+        "citationCount": 100000,
+        "arxivId": "1706.03762",
+        "doi": "10.x/y",
+        "url": "https://...",
+        "fieldsOfStudy": ["Computer Science"]
+      }
+    ],
+    "summary": {
+      "by_year": { "2025": 12, "2024": 9 },
+      "top_venues": [{ "venue": "NeurIPS", "count": 4 }],
+      "top_authors": [{ "author": "...", "count": 2 }]
+    }
+  }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/agents/news.json',
     description: 'Alias for /api/news. Agent-friendly URL for news data.',
     cache: 'Cache for 5 minutes',

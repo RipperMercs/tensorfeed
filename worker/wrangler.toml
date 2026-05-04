@@ -25,6 +25,11 @@ crons = [
   # registry.modelcontextprotocol.io. Powers /api/mcp/registry/snapshot
   # (free) and /api/premium/mcp/registry/series (1 credit).
   "30 9 * * *",
+  # Daily 11:00 AM UTC: capture top AI/ML papers from Semantic Scholar
+  # (worker/src/papers.ts). Five fan-out queries, dedup, rank by citation
+  # count. Powers free /api/papers/ai-trending plus a future premium
+  # time-series endpoint over the daily papers:daily:{date} keys.
+  "0 11 * * *",
   # Active LLM endpoint probing (worker/src/probe.ts). Every 15 min:
   # POST a tiny prompt at each provider with an API key configured,
   # measure ttfb + total + status, append to a 24h ring buffer, and
