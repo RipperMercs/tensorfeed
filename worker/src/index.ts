@@ -92,6 +92,9 @@ import {
   listRollupDates,
   getTokenUsage,
   getPaymentHistory,
+  getSpendCapStatus,
+  setSpendCap,
+  revokeOwnToken,
   validateAndCharge,
   validateOnly,
   commitInternal,
@@ -1653,6 +1656,8 @@ export default {
           paymentBalance: '/api/payment/balance',
           paymentUsage: '/api/payment/usage',
           paymentHistory: '/api/payment/history',
+          paymentSpendCap: '/api/payment/spend-cap (GET reads, POST sets)',
+          paymentRevoke: 'POST /api/payment/revoke',
           paymentNoChargeStats: '/api/payment/no-charge-stats',
           receiptVerify: '/api/receipt/verify',
         },
@@ -2096,6 +2101,67 @@ export default {
       const result = await getPaymentHistory(env, token);
       if (!result) {
         return jsonResponse({ ok: false, error: 'token_not_found' }, 404);
+      }
+      return jsonResponse(result, 200, 0);
+    }
+
+    // === SELF-SERVICE: PER-TOKEN DAILY SPEND CAP ===
+    // GET reads the current cap + today's spend + remaining + reset_at.
+    // POST sets a new cap. Body: { daily_cap: number | null }. Send null
+    // or 0 to clear. Authenticated by the token itself; no credit cost.
+
+    if (path === '/api/payment/spend-cap') {
+      const authHeader = request.headers.get('Authorization');
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+      if (!token) {
+        return jsonResponse(
+          { ok: false, error: 'token_required', message: 'Send the bearer token via Authorization: Bearer <token>' },
+          401,
+        );
+      }
+      if (request.method === 'GET') {
+        const result = await getSpendCapStatus(env, token);
+        if (!result.ok) return jsonResponse(result, 404);
+        return jsonResponse(result, 200, 0);
+      }
+      if (request.method === 'POST') {
+        let body: { daily_cap?: unknown };
+        try {
+          body = (await request.json()) as { daily_cap?: unknown };
+        } catch {
+          return jsonResponse({ ok: false, error: 'invalid_request_body' }, 400);
+        }
+        const result = await setSpendCap(env, token, body.daily_cap ?? null);
+        if (!result.ok) {
+          const status = result.error === 'token_not_found' ? 404 : 400;
+          return jsonResponse(result, status);
+        }
+        return jsonResponse(result, 200, 0);
+      }
+      return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
+    }
+
+    // === SELF-SERVICE: TOKEN REVOCATION ===
+    // POST burns the caller's own bearer token immediately. Use this if
+    // a token is suspected to be leaked. Mirrors /api/admin/burn-token
+    // but authenticated by the token itself rather than an admin key.
+
+    if (path === '/api/payment/revoke') {
+      if (request.method !== 'POST') {
+        return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
+      }
+      const authHeader = request.headers.get('Authorization');
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+      if (!token) {
+        return jsonResponse(
+          { ok: false, error: 'token_required', message: 'Send the bearer token via Authorization: Bearer <token>' },
+          401,
+        );
+      }
+      const result = await revokeOwnToken(env, token);
+      if (!result.ok) {
+        const status = result.error === 'token_not_found' ? 404 : 400;
+        return jsonResponse(result, status);
       }
       return jsonResponse(result, 200, 0);
     }

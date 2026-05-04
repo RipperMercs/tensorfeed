@@ -1,6 +1,7 @@
 import { Env } from './types';
 import { checkCircuitBreaker } from './circuit-breaker';
 import type { NoChargeReason } from './receipts';
+import { checkSpendCap, incrementDailySpent, validateSpendCap } from './spend-cap';
 
 /**
  * Payment middleware for premium endpoints.
@@ -65,6 +66,13 @@ interface CreditsRecord {
   last_used: string;
   agent_ua: string;
   total_purchased: number;
+  /**
+   * Optional per-token daily credit-spend cap. null/undefined means
+   * unlimited daily spend (bounded only by balance). When set, the cap
+   * is enforced in requirePayment and the daily spend is tracked in
+   * `pay:spend:{token}:{YYYY-MM-DD}` (TTL 48h). See spend-cap.ts.
+   */
+  daily_cap?: number | null;
 }
 
 interface QuoteRecord {
@@ -962,6 +970,115 @@ export async function getBalance(env: Env, token: string): Promise<BalanceResult
   };
 }
 
+// === Per-token daily spend cap (self-service) ===
+
+export interface SpendCapStatus {
+  ok: true;
+  token_short: string;
+  daily_cap: number | null;
+  daily_spent: number;
+  remaining: number | null;
+  reset_at: string;
+  balance: number;
+}
+
+export type SpendCapResult =
+  | SpendCapStatus
+  | { ok: false; error: string; message?: string };
+
+export async function getSpendCapStatus(env: Env, token: string): Promise<SpendCapResult> {
+  if (!token.startsWith('tf_live_')) {
+    return { ok: false, error: 'invalid_token_format' };
+  }
+  const record = (await env.TENSORFEED_CACHE.get(`pay:credits:${token}`, 'json')) as CreditsRecord | null;
+  if (!record) {
+    return { ok: false, error: 'token_not_found' };
+  }
+  const cap = record.daily_cap ?? null;
+  const status = await checkSpendCap(env, token, cap, 0);
+  return {
+    ok: true,
+    token_short: token.slice(0, 16) + '...',
+    daily_cap: status.daily_cap,
+    daily_spent: status.daily_spent,
+    remaining: status.remaining,
+    reset_at: status.reset_at,
+    balance: record.balance,
+  };
+}
+
+export async function setSpendCap(
+  env: Env,
+  token: string,
+  rawCap: unknown,
+): Promise<SpendCapResult> {
+  if (!token.startsWith('tf_live_')) {
+    return { ok: false, error: 'invalid_token_format' };
+  }
+  const validation = validateSpendCap(rawCap);
+  if (!validation.ok) {
+    return {
+      ok: false,
+      error: validation.error || 'invalid_cap',
+      message: 'Cap must be null, 0 (clear), or an integer between 1 and 1,000,000.',
+    };
+  }
+  const record = (await env.TENSORFEED_CACHE.get(`pay:credits:${token}`, 'json')) as CreditsRecord | null;
+  if (!record) {
+    return { ok: false, error: 'token_not_found' };
+  }
+  record.daily_cap = validation.value ?? null;
+  await env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(record));
+  return getSpendCapStatus(env, token);
+}
+
+// === Self-service token revocation ===
+//
+// A token owner who suspects a leak can call /api/payment/revoke and
+// burn the bearer immediately. Mirrors the admin/burn-token logic but
+// authenticated by the token itself (proof-of-possession). The
+// remaining balance is preserved on the burned record so the owner has
+// a paper trail; the token simply stops working for premium calls
+// because it disappears from pay:credits:{token}.
+//
+// We move (not delete) the record under `pay:revoked:{token}` so a
+// future support request can audit it. TTL of 90 days bounds storage.
+
+const REVOKED_TTL_SECONDS = 90 * 24 * 60 * 60;
+
+export interface RevokeResult {
+  ok: boolean;
+  error?: string;
+  message?: string;
+  token_short?: string;
+  balance_at_revoke?: number;
+  revoked_at?: string;
+}
+
+export async function revokeOwnToken(env: Env, token: string): Promise<RevokeResult> {
+  if (!token.startsWith('tf_live_')) {
+    return { ok: false, error: 'invalid_token_format' };
+  }
+  const record = (await env.TENSORFEED_CACHE.get(`pay:credits:${token}`, 'json')) as CreditsRecord | null;
+  if (!record) {
+    return { ok: false, error: 'token_not_found' };
+  }
+  const revokedAt = new Date().toISOString();
+  await env.TENSORFEED_CACHE.put(
+    `pay:revoked:${token}`,
+    JSON.stringify({ ...record, revoked_at: revokedAt }),
+    { expirationTtl: REVOKED_TTL_SECONDS },
+  );
+  await env.TENSORFEED_CACHE.delete(`pay:credits:${token}`);
+  return {
+    ok: true,
+    message: 'Token revoked. Any further premium call with this token will be rejected. Buy new credits at /api/payment/buy-credits to mint a fresh token.',
+    token_short: token.slice(0, 16) + '...',
+    balance_at_revoke: record.balance,
+    revoked_at: revokedAt,
+  };
+}
+
 // === Cross-Worker validate-and-charge ===
 //
 // Same atomic credit-charge logic that requirePayment runs internally,
@@ -1250,6 +1367,37 @@ export async function requirePayment(
         ),
       };
     }
+
+    // Per-token daily spend cap (defense-in-depth, optional). Tokens
+    // without a configured cap pass through. Tokens with a cap that
+    // would be exceeded by this call return 429 daily_cap_exceeded
+    // BEFORE the deferred debit, so no credits are charged.
+    const capCheck = await checkSpendCap(env, token, record.daily_cap, cost);
+    if (!capCheck.allowed) {
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.ceil((new Date(capCheck.reset_at).getTime() - Date.now()) / 1000),
+      );
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            ok: false,
+            error: 'daily_cap_exceeded',
+            message: `This token has a per-day spend cap of ${capCheck.daily_cap} credits and has already spent ${capCheck.daily_spent} today. The pending call would exceed the cap by ${capCheck.would_exceed_by} credits. The cap resets at ${capCheck.reset_at}. Adjust at /api/payment/spend-cap.`,
+            daily_spent: capCheck.daily_spent,
+            daily_cap: capCheck.daily_cap,
+            would_exceed_by: capCheck.would_exceed_by,
+            reset_at: capCheck.reset_at,
+            balance: record.balance,
+            doc: '/developers/agent-payments#daily-spend-cap',
+          },
+          429,
+          { 'Retry-After': String(retryAfterSeconds) },
+        ),
+      };
+    }
+
     // AFTA deferred-debit: do NOT decrement here. commitPayment will
     // run after the handler resolves and either debit or record a
     // no-charge event under the published guarantees.
@@ -1595,6 +1743,16 @@ export async function commitPayment(
   record.balance = balanceAfter;
   record.last_used = new Date().toISOString();
   await env.TENSORFEED_CACHE.put(`pay:credits:${payment.token}`, JSON.stringify(record));
+  // Track today's spend so the per-token daily cap (if any) sees the
+  // actual debit. Always increment, even when the token has no cap, so
+  // the counter is ready the moment a cap is added later in the day.
+  if (cost > 0) {
+    try {
+      await incrementDailySpent(env, payment.token, cost);
+    } catch (err) {
+      console.error('incrementDailySpent failed:', err);
+    }
+  }
   return { creditsCharged: cost, balanceAfter, noChargeReason: null };
 }
 

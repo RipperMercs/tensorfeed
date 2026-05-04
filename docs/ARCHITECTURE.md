@@ -32,6 +32,7 @@ Detailed reference for the Worker, KV layout, endpoints, cron schedule, and subs
 - `gpu-pricing.ts`: GPU rental price aggregation across cloud GPU marketplaces. Phase 1 sources: Vast.ai (unauthenticated) and RunPod (GraphQL, requires `RUNPOD_API_KEY`). Normalizes heterogeneous GPU naming into a canonical taxonomy (H200, H100, B200, A100-80GB, etc), refreshes every 4h, daily snapshot for the historical series. Backs free `/api/gpu/pricing`, `/api/gpu/pricing/cheapest`, premium `/api/premium/gpu/pricing/series`.
 - `receipts.ts`: AFTA Ed25519 signing rail. Loads `RECEIPT_PRIVATE_KEY_JWK` Worker secret, signs canonical-JSON receipts on every premium response. Public key at `/.well-known/tensorfeed-receipt-key.json`. If secret is unset, premium responses ship without receipts (graceful, surfaced in `/api/meta`).
 - `freshness.ts`: Per-endpoint freshness SLA registry. Each premium endpoint declares max data age. The premiumResponse() wrapper checks captured_at against the SLA; if stale, the deferred debit is skipped (no-charge), response is flagged with stale: true, and the no-charge event is logged.
+- `spend-cap.ts`: Optional per-token daily credit-spend ceiling. Defense-in-depth on top of the circuit breaker (which limits request rate). A leaked token attached to a clever multi-isolate agent could otherwise drain a 1000-credit balance under the burn-rate threshold; the spend cap bounds damage to N credits per UTC day. Self-service via `/api/payment/spend-cap`. Daily counter at `pay:spend:{token}:{YYYY-MM-DD}` (TTL 48h). Cap is null/unset by default (back-compat). Race posture: read-inc-write across isolates can leak `~isolates*cost` credits over the cap, same tradeoff as the rate limiter and circuit breaker.
 - `podcasts.ts`: Podcast feed polling
 - `trending.ts`: Trending GitHub repos
 - `twitter.ts`: X/Twitter auto-posting
@@ -82,6 +83,8 @@ Each `*.ts` has a sibling `*.test.ts` Vitest file where applicable.
   - `gpu:index`: ordered list of dates with GPU pricing snapshot data
   - `pay:no-charge:{YYYY-MM-DD}`: AFTA daily rollup of no-charge events (5xx, breaker, schema fail, stale data) with per-reason and per-endpoint counts plus the most-recent 200 events. Public via `/api/payment/no-charge-stats`.
   - `pay:no-charge:index`: ordered list of dates with no-charge data
+  - `pay:spend:{token}:{YYYY-MM-DD}`: per-token daily credit-spend counter (TTL 48h). Backs the optional self-service spend cap.
+  - `pay:revoked:{token}`: archive of credits records for self-revoked tokens (TTL 90 days). Audit trail for the token owner.
 
 Optional: `OFAC_AUDIT_LOG` namespace for compliance audit trail beyond Workers' default ~3-day log retention. Screening helper writes conditionally so the unbound case is a no-op.
 
@@ -208,6 +211,8 @@ All mounted under `https://tensorfeed.ai/api/*` via the Worker. Authoritative ma
 - `/api/payment/balance`: Read remaining credits for the current bearer token
 - `/api/payment/usage`: Per-token call history (last 100 calls aggregated by endpoint). Auth required, no credit cost. Powers the human /account dashboard.
 - `/api/payment/history`: Per-token credit-purchase audit log. Auth required, no credit cost. Backed by `pay:purchases:{token}` ring buffer (cap 100); tokens minted before this ledger existed return an empty `purchases` array but still expose `current_balance` and `token_short`.
+- `/api/payment/spend-cap` (GET / POST): Self-service per-token daily credit-spend cap. GET reads current cap, today's spend, remaining, reset_at, and balance. POST body `{ daily_cap: number | null }` sets the cap; `null` or `0` clears. Auth required, no credit cost.
+- `/api/payment/revoke` (POST): Self-service token revocation. Burns the caller's own bearer token immediately; the credits record is archived under `pay:revoked:{token}` for 90 days. Auth required, no credit cost. Use this if a token is suspected leaked.
 - `/api/alerts/subscribe`: Outage alert email signup
 
 **Paid (USDC on Base, credits-first), all 1 credit unless noted:**
