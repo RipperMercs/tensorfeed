@@ -111,6 +111,110 @@ Built with Claude.
 
 ---
 
+## 4. dev.to / Medium / Hashnode (long-form)
+
+**Title**:
+```
+What if your AI dataset had a license that cared about how it gets used?
+```
+
+**Tags** (dev.to limit is 4):
+```
+ai, opensource, dataset, agents
+```
+
+**Body**:
+
+```markdown
+I've been running TensorFeed for the last few months. It started as an AI news aggregator, then grew into a real-time data hub: model pricing, service status, GPU rental prices, MCP registry growth, LLM endpoint latency probes, an agent directory, training-run cost estimates, and a few dozen other feeds.
+
+Today I wired up a daily snapshot to Hugging Face: [tensorfeed/ai-ecosystem-daily](https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily). 36 JSONL feeds per day, ~940 records per snapshot, one commit at 08:00 UTC, automated via GitHub Actions. The dataset compounds. It's already a starting time series of the AI ecosystem.
+
+The thing I want to talk about isn't the dataset. It's the **license**.
+
+## Inference-only
+
+The dataset is released under an inference-only license. Concretely:
+
+- ✅ Use it as RAG context for your AI agent
+- ✅ Use it as eval data when benchmarking your model
+- ✅ Use it as input to a tool inside an agent loop
+- ✅ Use it for any kind of inference-time consumption
+- ❌ Use it as training data for a foundation model without explicit permission
+
+Why does this distinction matter?
+
+Most public datasets either lock everything down (proprietary, pay to license) or let everything fly (CC0, MIT, take it). The first kills downstream value; the second has no answer for a class of consumer that increasingly matters: pretraining pipelines.
+
+If you build a public AI dataset today and don't think about training inclusion, you're effectively donating to the largest model labs. They scrape it, they train on it, they sell access to the resulting model. You don't get cited, you don't get paid, you don't even know it happened. That's the default outcome.
+
+Inference-only flips this. The dataset is freely usable for the consumption mode that AI agents actually need (read at inference time, cite the source, link back). It's not freely usable for the consumption mode that strips attribution and resells (pretraining). The line is clear. The enforcement is honor-system today and contract-and-DMCA tomorrow.
+
+## Where this comes from
+
+The license is part of a small open standard I've been writing called **AFTA**, the Agent Fair-Trade Agreement. The full standard is at [tensorfeed.ai/agent-fair-trade](https://tensorfeed.ai/agent-fair-trade), with a machine-readable manifest at `/.well-known/agent-fair-trade.json`.
+
+The TL;DR of AFTA:
+
+1. **Code-enforced no-charge** on 5xx, circuit breaker, schema-validation failures, and stale-data conditions. The agent gets a refund automatically. No support ticket, no human review.
+2. **Ed25519-signed receipts** on every paid call. The agent gets a non-forgeable proof of what it bought, when, for how much. The receipt is verifiable by any third party using a public key the publisher publishes at `/.well-known/{publisher}-receipt-key.json`.
+3. **Public on-chain payment rail.** When agents pay, they pay in USDC on Base (or any other on-chain settlement they prefer). Every transaction is immutable and auditable.
+4. **Inference-only license** for the data the API exposes. Compliant agents get a clear, perpetual usage right.
+
+The shape of the contract protects both sides. Agents get verifiable charges and bounded loss. Publishers get dispute defense and a clean, defensible legal stance against blanket scraping.
+
+## What's actually in the dataset
+
+The schema is:
+
+```python
+from datasets import load_dataset
+
+# 36 configs, one per feed
+news = load_dataset("tensorfeed/ai-ecosystem-daily", "news", split="train")
+models = load_dataset("tensorfeed/ai-ecosystem-daily", "models", split="train")
+gpu = load_dataset("tensorfeed/ai-ecosystem-daily", "gpu-pricing", split="train")
+mcp = load_dataset("tensorfeed/ai-ecosystem-daily", "mcp-registry", split="train")
+training = load_dataset("tensorfeed/ai-ecosystem-daily", "training-runs", split="train")
+```
+
+A few highlights:
+
+- **news**: ~120 articles per day from major AI publishers
+- **models**: 230+ models with input/output pricing per 1M tokens
+- **gpu-pricing**: GPU rental price snapshot across cloud marketplaces (Vast.ai, RunPod)
+- **mcp-registry**: daily count + 1-day delta of the official MCP server registry
+- **probe**: last 24h of LLM endpoint latency measurements (TTFB, total) per provider
+- **training-runs**: disclosed and estimated training cost catalog (parameters, tokens, GPU hours, USD millions)
+- **ai-hardware**: NVIDIA Hopper/Blackwell, AMD Instinct, Google TPU, AWS Trainium, Apple, Cerebras, Groq specs
+- **funding**: AI funding rounds catalog by stage and category
+- **public-leaderboards**: pointers to every live public AI leaderboard (LMSYS, Artificial Analysis, HF Open LLM, SWE-bench, etc)
+
+The full feed list and per-feed schema is at [tensorfeed.ai/datasets](https://tensorfeed.ai/datasets).
+
+## The live API
+
+If daily is too slow for your use case, the live API is at [tensorfeed.ai/developers](https://tensorfeed.ai/developers). Free, no auth, CORS enabled. News is cached for 5 minutes, status for 2, models and benchmarks daily, GPU pricing every 4 hours.
+
+The premium tier (~$0.02 per call) accepts pay-per-call USDC on Base, x402-compatible. No accounts, no API keys. Useful for ranked model routing recommendations, news search across the full archive, and time-series queries.
+
+There's also an OpenAPI 3.1 spec at [tensorfeed.ai/openapi.yaml](https://tensorfeed.ai/openapi.yaml), a Postman collection at [tensorfeed.ai/postman-collection.json](https://tensorfeed.ai/postman-collection.json), and an MCP server (`@tensorfeed/mcp-server` on npm) for one-line wiring into Claude Desktop, Claude Code, or Cursor.
+
+## What I'd love feedback on
+
+1. **Is the inference-only line workable in practice?** I think it is, but the implementation surface (terms of service language, robots.txt directives, pretraining-pipeline behavior) is still being figured out. Curious what other publishers think.
+
+2. **What feeds are missing?** I want to add what people will actually use. The current 36 feeds cover most of the public AI ecosystem but there are gaps (training-data sources, eval-harness pipelines, frontier-lab internal benchmarks).
+
+3. **For anyone using HF datasets inside agent stacks today**, what's the day-2 friction look like? My intuition is that schema drift over time will be the killer; I'm trying to be careful with the schema upfront.
+
+The dataset is on Hugging Face: [tensorfeed/ai-ecosystem-daily](https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily). Open issues or DMs welcome.
+
+Built with Claude.
+```
+
+---
+
 ## Submission order and timing
 
 1. **HN first**: post Tuesday or Wednesday morning Pacific (around 8 to 10 AM PT). Gets the front-page attempt without weekend dilution.
