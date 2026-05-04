@@ -329,6 +329,43 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/issues/hot',
+    description: 'Currently-hot GitHub issues across the AI ecosystem, ranked by comment count. Five fan-out search queries on AI topics (llm, ai-agents, large-language-models, machine-learning, transformer), filtered to is:issue is:open archived:false with comments>=10 and activity within the last 7 days. Deduped by URL, top 30 returned. Refreshed daily at 12:30 UTC. Companion to /api/trending-repos: that one shows which AI repos are gaining stars; this one shows where the active conversations are.',
+    cache: 'Cache for 10 minutes',
+    example: `{
+  "ok": true,
+  "snapshot": {
+    "date": "2026-05-04",
+    "capturedAt": "2026-05-04T12:30:00Z",
+    "total_issues": 30,
+    "topics_queried": ["llm", "ai-agents", "large-language-models", "machine-learning", "transformer"],
+    "recent_window_days": 7,
+    "comments_threshold": 10,
+    "issues": [
+      {
+        "url": "https://github.com/foo/bar/issues/42",
+        "repo": "foo/bar",
+        "number": 42,
+        "title": "...",
+        "author": "alice",
+        "state": "open",
+        "comments": 87,
+        "reactions_total": 42,
+        "labels": ["bug", "help wanted"],
+        "created_at": "2026-04-30T09:00:00Z",
+        "updated_at": "2026-05-04T11:15:00Z",
+        "matched_topic": "llm"
+      }
+    ],
+    "summary": {
+      "by_topic": { "llm": 12, "ai-agents": 6 },
+      "top_repos": [{ "repo": "foo/bar", "count": 3 }]
+    }
+  }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/agents/news.json',
     description: 'Alias for /api/news. Agent-friendly URL for news data.',
     cache: 'Cache for 5 minutes',

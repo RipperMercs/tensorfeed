@@ -405,6 +405,19 @@ paths:
             application/json:
               schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
 
+  /api/issues/hot:
+    get:
+      tags: [GitHub]
+      summary: Currently-hot GitHub issues across AI repos
+      operationId: getHotIssues
+      description: Five fan-out searches on AI topics (llm, ai-agents, large-language-models, machine-learning, transformer), is:issue is:open comments>=10 updated within the last 7 days, deduped by URL, top 30 by comment count. Refreshed daily at 12:30 UTC. Companion to /api/trending-repos.
+      responses:
+        '200':
+          description: Hot AI issues snapshot
+          content:
+            application/json:
+              schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
+
   /api/history:
     get:
       tags: [History]

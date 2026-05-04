@@ -2,6 +2,11 @@
 
 All notable changes to the Python SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.21.0 - 2026-05-04
+
+### Added
+- `tf.get_hot_issues()`. Free, no-auth method returning currently-hot GitHub issues across the AI ecosystem (five fan-out search queries on llm / ai-agents / large-language-models / machine-learning / transformer topics, is:issue is:open comments>=10 updated within the last 7 days, deduped by URL, top 30 by comment count). Refreshed daily at 12:30 UTC. Companion to `tf.trending_repos()`: that returns repos gaining stars, this returns repos where active conversations are happening.
+
 ## 1.20.0 - 2026-05-04
 
 ### Added

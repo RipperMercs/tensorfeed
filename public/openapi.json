@@ -799,6 +799,62 @@
         }
       }
     },
+    "/api/issues/hot": {
+      "get": {
+        "tags": [
+          "GitHub"
+        ],
+        "summary": "Currently-hot GitHub issues across AI repos",
+        "operationId": "getHotIssues",
+        "description": "Five fan-out searches on AI topics (llm, ai-agents, large-language-models, machine-learning, transformer), is:issue is:open archived:false comments>=10 updated within the last 7 days. Deduped by URL, top 30 by comment count. Refreshed daily at 12:30 UTC. Companion to /api/trending-repos: that one shows which AI repos are gaining stars; this one shows where the active conversations are.",
+        "responses": {
+          "200": {
+            "description": "Hot AI issues snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "snapshot": {
+                      "type": "object",
+                      "properties": {
+                        "date": { "type": "string", "format": "date" },
+                        "capturedAt": { "type": "string", "format": "date-time" },
+                        "total_issues": { "type": "integer" },
+                        "topics_queried": { "type": "array", "items": { "type": "string" } },
+                        "recent_window_days": { "type": "integer" },
+                        "comments_threshold": { "type": "integer" },
+                        "issues": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "url": { "type": "string" },
+                              "repo": { "type": "string" },
+                              "number": { "type": "integer" },
+                              "title": { "type": "string" },
+                              "author": { "type": "string", "nullable": true },
+                              "state": { "type": "string", "enum": ["open", "closed"] },
+                              "comments": { "type": "integer" },
+                              "reactions_total": { "type": "integer" },
+                              "labels": { "type": "array", "items": { "type": "string" } },
+                              "created_at": { "type": "string", "format": "date-time" },
+                              "updated_at": { "type": "string", "format": "date-time" },
+                              "matched_topic": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/hf/trending": {
       "get": {
         "tags": [

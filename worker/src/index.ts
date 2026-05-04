@@ -58,6 +58,10 @@ import {
   getLatestSnapshot as getHFLatest,
 } from './hf-trending';
 import {
+  captureHotIssues,
+  getLatestSnapshot as getHotIssuesLatest,
+} from './hot-issues';
+import {
   runProbeCycle,
   rollupYesterday as rollupProbeYesterday,
   getLatestSummary as getProbeLatest,
@@ -1626,6 +1630,7 @@ export default {
           papersAiTrending: '/api/papers/ai-trending',
           papersArxivRecent: '/api/papers/arxiv-recent',
           hfTrending: '/api/hf/trending',
+          issuesHot: '/api/issues/hot',
           probeLatest: '/api/probe/latest',
           gpuPricing: '/api/gpu/pricing',
           gpuPricingCheapest: '/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot',
@@ -1833,6 +1838,19 @@ export default {
       const snapshot = await getHFLatest(env);
       if (!snapshot) {
         return jsonResponse({ ok: false, error: 'hf_unavailable' }, 503);
+      }
+      return jsonResponse({ ok: true, snapshot }, 200, 600);
+    }
+
+    // === GITHUB HOT AI ISSUES (free) ===
+    // Daily snapshot of currently-active GitHub issues across AI-relevant
+    // topics, ranked by comment count. Captured by the 12:30 UTC cron.
+    // Cold-start bootstrap mirrors the other data feeds.
+
+    if (path === '/api/issues/hot') {
+      const snapshot = await getHotIssuesLatest(env);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'hot_issues_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);
     }
@@ -3112,6 +3130,10 @@ export default {
         const result = await captureHFSnapshot(env);
         return jsonResponse({ message: 'HF trending snapshot captured', ...result });
       }
+      if (task === 'hot-issues') {
+        const result = await captureHotIssues(env);
+        return jsonResponse({ message: 'Hot issues snapshot captured', ...result });
+      }
       if (task === 'probe') {
         const result = await runProbeCycle(env);
         return jsonResponse({ message: 'Probe cycle ran', ...result });
@@ -3306,6 +3328,13 @@ export default {
       // on Hugging Face. Daily snapshot keyed under hf:daily:{date} so we
       // can compute day-over-day download deltas as a true trending signal.
       await run('captureHFSnapshot', () => captureHFSnapshot(env));
+    } else if (cron === '30 12 * * *') {
+      // Daily 12:30 UTC: capture currently-hot GitHub issues across
+      // AI topics (llm, ai-agents, large-language-models, machine-learning,
+      // transformer). 5 fan-out search queries throttled, deduped by
+      // url, top 30 by comment count. Daily snapshot keyed under
+      // issues:daily:{date}. Backs free /api/issues/hot.
+      await run('captureHotIssues', () => captureHotIssues(env));
     } else if (cron === '*/15 * * * *') {
       // Every 15 min: probe each LLM provider with a configured key,
       // measure latency + status, write the latest 24h summary.

@@ -39,6 +39,11 @@ crons = [
   # against hf:daily:{date} become a real trending signal once we have
   # multiple days. Powers free /api/hf/trending.
   "0 12 * * *",
+  # Daily 12:30 UTC: capture currently-hot GitHub issues across AI
+  # topics (worker/src/hot-issues.ts). 5 fan-out search queries on
+  # is:issue is:open archived:false comments:>=10 updated:>=7d ago,
+  # deduped, ranked by comments. Powers free /api/issues/hot.
+  "30 12 * * *",
   # Active LLM endpoint probing (worker/src/probe.ts). Every 15 min:
   # POST a tiny prompt at each provider with an API key configured,
   # measure ttfb + total + status, append to a 24h ring buffer, and

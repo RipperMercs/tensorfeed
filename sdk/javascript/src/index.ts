@@ -595,6 +595,40 @@ export interface HFTrendingResponse {
   };
 }
 
+export interface HotIssue {
+  url: string;
+  api_url: string;
+  repo: string;
+  number: number;
+  title: string;
+  author: string | null;
+  state: 'open' | 'closed';
+  comments: number;
+  reactions_total: number;
+  labels: string[];
+  created_at: string;
+  updated_at: string;
+  matched_topic: string;
+}
+
+export interface HotIssuesResponse {
+  ok: boolean;
+  snapshot: {
+    date: string;
+    capturedAt: string;
+    total_issues: number;
+    topics_queried: string[];
+    raw_count: number;
+    recent_window_days: number;
+    comments_threshold: number;
+    issues: HotIssue[];
+    summary: {
+      by_topic: Record<string, number>;
+      top_repos: Array<{ repo: string; count: number }>;
+    };
+  };
+}
+
 export interface MCPRegistrySeriesPoint {
   date: string;
   total_servers: number | null;
@@ -1610,6 +1644,21 @@ export class TensorFeed {
    */
   async getHFTrending(): Promise<HFTrendingResponse> {
     return this.request<HFTrendingResponse>('GET', '/hf/trending');
+  }
+
+  /**
+   * Currently-hot GitHub issues across the AI ecosystem.
+   *
+   * Free, no auth. Five fan-out searches on AI-relevant topics
+   * (llm, ai-agents, large-language-models, machine-learning,
+   * transformer) for is:issue is:open archived:false comments>=10
+   * updated within the last 7 days. Deduped by URL, top 30 by
+   * comment count. Refreshed daily at 12:30 UTC. Companion to
+   * /api/trending-repos: that one shows which AI repos are gaining
+   * stars; this one shows where the active conversations are.
+   */
+  async getHotIssues(): Promise<HotIssuesResponse> {
+    return this.request<HotIssuesResponse>('GET', '/issues/hot');
   }
 
   /**

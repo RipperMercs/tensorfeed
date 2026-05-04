@@ -1070,6 +1070,29 @@ class TensorFeed:
         """
         return self._request("GET", "/hf/trending")
 
+    # ── Free: Hot GitHub issues across AI repos ─────────────────────
+
+    def get_hot_issues(self) -> dict[str, Any]:
+        """Currently-hot GitHub issues across the AI ecosystem.
+
+        Free, no auth. Five fan-out searches on AI-relevant topics
+        (llm, ai-agents, large-language-models, machine-learning,
+        transformer) for is:issue is:open archived:false comments>=10
+        updated within the last 7 days. Deduped by URL, ranked by
+        comment count, top 30. Refreshed daily at 12:30 UTC. Companion
+        to /api/trending-repos: that one shows which AI repos are gaining
+        stars; this one shows where the active conversations are.
+
+        Returns:
+            Dict with ``ok`` and ``snapshot`` keys. Snapshot includes
+            ``date``, ``capturedAt``, ``total_issues``, ``topics_queried``,
+            ``recent_window_days``, ``comments_threshold``, and ``issues``
+            (each with url, repo, number, title, author, state, comments,
+            reactions_total, labels, created_at, updated_at, matched_topic),
+            plus ``summary`` (by_topic, top_repos).
+        """
+        return self._request("GET", "/issues/hot")
+
     # ── Free: LLM endpoint probing (last 24h) ───────────────────────
 
     def get_probe_latest(self) -> dict[str, Any]:
