@@ -373,8 +373,8 @@ export default function DevelopersPage() {
         </Link>
       </section>
 
-      {/* Quick links: playground + frameworks */}
-      <section className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Quick links: playground + frameworks + openapi */}
+      <section className="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Link
           href="/playground"
           className="block bg-bg-secondary border border-border rounded-xl p-4 hover:border-accent-primary transition-colors"
@@ -393,6 +393,18 @@ export default function DevelopersPage() {
             Drop-in tools and document loaders for the three major Python agent frameworks. <code className="font-mono text-xs text-accent-primary">pip install tensorfeed[langchain]</code>.
           </p>
         </Link>
+        <a
+          href="/openapi.yaml"
+          className="block bg-bg-secondary border border-border rounded-xl p-4 hover:border-accent-primary transition-colors"
+        >
+          <div className="font-semibold text-text-primary mb-1 flex items-center gap-1.5">
+            OpenAPI 3.1 Spec
+            <ExternalLink className="w-3.5 h-3.5 text-text-muted" />
+          </div>
+          <p className="text-sm text-text-secondary">
+            Full machine-readable spec at <code className="font-mono text-xs text-accent-primary">/openapi.yaml</code> and <code className="font-mono text-xs text-accent-primary">/openapi.json</code>. Drop into Swagger UI, Postman, or any code generator.
+          </p>
+        </a>
       </section>
 
       {/* Endpoints */}

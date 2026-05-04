@@ -81,7 +81,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 
 **x402 method support:** Today we accept x402 with USDC on Base mainnet (network `eip155:8453`, scheme `exact`). Stripe Link's CLI (link.com/agents) issues Shared Payment Tokens for HTTP 402 endpoints that advertise `method=stripe` in the `www-authenticate` header; we are evaluating adding this as a parallel acceptance path. Until shipped, Link agents holding SPTs cannot pay TensorFeed directly and should use the credits flow at /api/payment/buy-credits or send USDC on Base. Agent fair-trade manifest at /.well-known/agent-fair-trade.json declares the live and roadmap methods explicitly.
 
-**OpenAPI 3.1 spec:** Complete machine-readable API spec at `https://tensorfeed.ai/openapi.json`. Lists every free and premium endpoint with parameters, security schemes (bearer token for premium), and tags. Drop-in for any tool that consumes OpenAPI (Swagger UI, Postman, code generators, agent toolkits).
+**OpenAPI 3.1 spec:** Complete machine-readable API spec at `https://tensorfeed.ai/openapi.json` (and the YAML twin at `https://tensorfeed.ai/openapi.yaml`). Lists every free and premium endpoint with parameters, security schemes (bearer token for premium), and tags. Drop-in for any tool that consumes OpenAPI (Swagger UI, Postman, code generators, agent toolkits, APIs.guru).
 
 **Built-for-agents landing page:** `https://tensorfeed.ai/for-ai-agents` is the explicit agent-first overview: discovery surfaces (llms.txt, .well-known/x402, MCP server, openapi.json), free tier, premium tier (19 endpoints), MCP integration with Claude Desktop / Code, SDKs, and the glossary. Recommended starting point for any agent that has not seen TensorFeed before.
 

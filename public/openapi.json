@@ -1,414 +1,1346 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "TensorFeed.ai API",
-    "description": "TensorFeed.ai is agent fair-trade certified: open pricing, automatic no-charge on 5xx, breaker, schema fail, and stale data, Ed25519-signed receipts on every paid call, inference-only license. Built with Claude (Anthropic). Standard at /.well-known/agent-fair-trade.json.\n\nReal-time AI news, model pricing, service status, and machine-payable premium intelligence for AI agents. Free tier requires no auth. Premium tier is pay-per-call in USDC on Base mainnet (no accounts, no API keys, no Stripe). Discovery manifest at /.well-known/x402.\n\nOperated by Pizza Robot Studios LLC, California, USA.",
-    "version": "2026.04.30",
+    "title": "TensorFeed API",
+    "version": "1.0.0",
+    "summary": "Real-time AI ecosystem data for humans and agents",
+    "description": "TensorFeed.ai is a free, no-auth JSON API for AI news, service status, model pricing, GPU pricing, agent directories, and AFTA (Agent Fair-Trade Agreement) data, plus a paid premium tier (USDC on Base, x402 compatible) for ranked model routing, search, history series, watches, and computed intelligence.\n\nHighlights for AI agents:\n- No API key on free endpoints. CORS enabled. Rate limit 120 req/min/IP.\n- AFTA-certified: code-enforced no-charge on 5xx, circuit breaker, schema failure, or stale data. Every paid response carries an Ed25519-signed receipt.\n- Premium tier accepts pay-per-call USDC on Base, no accounts, no traditional processors.\n- Machine-readable manifests at /.well-known/agent-fair-trade.json and /llms.txt.\n\nFull endpoint catalog at /api/meta. Standard at https://tensorfeed.ai/agent-fair-trade.\n",
+    "termsOfService": "https://tensorfeed.ai/terms",
     "contact": {
-      "name": "TensorFeed support",
+      "name": "TensorFeed Support",
       "email": "evan@tensorfeed.ai",
-      "url": "https://tensorfeed.ai/developers/agent-payments"
+      "url": "https://tensorfeed.ai/developers"
     },
-    "license": { "name": "Inference-only, no training", "url": "https://tensorfeed.ai/terms" }
+    "license": {
+      "name": "API content licensed for inference-only use",
+      "url": "https://tensorfeed.ai/agent-fair-trade"
+    },
+    "x-logo": {
+      "url": "https://tensorfeed.ai/tensorfeed-logo.png",
+      "altText": "TensorFeed.ai"
+    }
   },
   "servers": [
-    { "url": "https://tensorfeed.ai/api", "description": "Production" }
+    {
+      "url": "https://tensorfeed.ai",
+      "description": "Production"
+    }
   ],
+  "security": [],
   "tags": [
-    { "name": "Free", "description": "No auth required. Open for AI agents and humans." },
-    { "name": "Payment", "description": "Buy credits, confirm USDC transactions, check balance and usage. Public flow." },
-    { "name": "Premium", "description": "Pay-per-call in USDC on Base. 1 credit per call (~$0.02). Bearer token via /api/payment/buy-credits." }
+    {
+      "name": "Discovery",
+      "description": "Service metadata, health, and the canonical endpoint catalog."
+    },
+    {
+      "name": "News",
+      "description": "AI news aggregated from all major sources."
+    },
+    {
+      "name": "Status",
+      "description": "Real-time operational status for major AI services."
+    },
+    {
+      "name": "Models",
+      "description": "Model specs, pricing, and benchmarks."
+    },
+    {
+      "name": "Agents",
+      "description": "Agent directory and live agent traffic on TensorFeed itself."
+    },
+    {
+      "name": "GPU",
+      "description": "GPU rental marketplace pricing."
+    },
+    {
+      "name": "MCP",
+      "description": "Model Context Protocol registry telemetry."
+    },
+    {
+      "name": "History",
+      "description": "Daily snapshots for time-series analysis."
+    },
+    {
+      "name": "Probe",
+      "description": "Active LLM endpoint latency probes."
+    },
+    {
+      "name": "AFTA",
+      "description": "Agent Fair-Trade Agreement: standard, adopters, receipts."
+    },
+    {
+      "name": "Payment",
+      "description": "x402-compatible USDC-on-Base credit purchase + balance."
+    },
+    {
+      "name": "Premium",
+      "description": "Pay-per-call computed intelligence (requires bearer token)."
+    }
   ],
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "tf_live_<256-bit hex>",
-        "description": "TensorFeed bearer token. Obtained via POST /api/payment/buy-credits + POST /api/payment/confirm. Each premium API call decrements credits."
+  "paths": {
+    "/api/meta": {
+      "get": {
+        "tags": [
+          "Discovery"
+        ],
+        "summary": "Canonical endpoint catalog and self-description",
+        "operationId": "getMeta",
+        "description": "The authoritative listing of every public endpoint, including AFTA self-description, freshness SLAs, rate limits, chaos-engineering headers, and the supportive-sites network. The first thing an agent should read.\n",
+        "responses": {
+          "200": {
+            "description": "Site metadata and full endpoint catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "site": {
+                      "type": "string"
+                    },
+                    "api": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Discovery"
+        ],
+        "summary": "Service health and freshness summary",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Counts and last-updated timestamps for every data subsystem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "news": {
+                      "type": "object"
+                    },
+                    "models": {
+                      "type": "object"
+                    },
+                    "benchmarks": {
+                      "type": "object"
+                    },
+                    "agents": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/news": {
+      "get": {
+        "tags": [
+          "News"
+        ],
+        "summary": "Aggregated AI news articles",
+        "operationId": "getNews",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "schema": {
+              "type": "string",
+              "example": "OpenAI"
+            },
+            "description": "Filter by source category (OpenAI, Anthropic, Google, etc.)"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent articles, snippets clipped to ~200 chars, prompt-injection sanitized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "articles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/NewsArticle"
+                      }
+                    },
+                    "sanitization": {
+                      "type": "string",
+                      "example": "enabled"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agents/news": {
+      "get": {
+        "tags": [
+          "News",
+          "Agents"
+        ],
+        "summary": "Agent-friendly compact news payload",
+        "operationId": "getAgentsNews",
+        "description": "Lighter article payload tuned for LLM context windows. Same source data as /api/news.",
+        "responses": {
+          "200": {
+            "description": "Compact news objects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feed.xml": {
+      "get": {
+        "tags": [
+          "News"
+        ],
+        "summary": "RSS 2.0 feed of all AI news",
+        "operationId": "getFeedRss",
+        "responses": {
+          "200": {
+            "description": "RSS XML",
+            "content": {
+              "application/rss+xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feed.json": {
+      "get": {
+        "tags": [
+          "News"
+        ],
+        "summary": "JSON Feed 1.1",
+        "operationId": "getFeedJson",
+        "responses": {
+          "200": {
+            "description": "JSON Feed",
+            "content": {
+              "application/feed+json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/status": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Operational status for major AI services",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "Per-service status with components",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "services": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/StatusService"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/status/summary": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Lightweight status counts for dashboards",
+        "operationId": "getStatusSummary",
+        "responses": {
+          "200": {
+            "description": "Counts of operational, degraded, and down services",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer"
+                        },
+                        "operational": {
+                          "type": "integer"
+                        },
+                        "degraded": {
+                          "type": "integer"
+                        },
+                        "down": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models": {
+      "get": {
+        "tags": [
+          "Models"
+        ],
+        "summary": "AI model pricing and specs",
+        "operationId": "getModels",
+        "description": "Input/output cost per 1M tokens, context window, capabilities, across 200+ models from major labs.",
+        "responses": {
+          "200": {
+            "description": "Provider-grouped model list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "lastUpdated": {
+                      "type": "string"
+                    },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agents/pricing": {
+      "get": {
+        "tags": [
+          "Models"
+        ],
+        "summary": "Agent-friendly compact pricing payload",
+        "operationId": "getAgentsPricing",
+        "responses": {
+          "200": {
+            "description": "Compact pricing list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/benchmarks": {
+      "get": {
+        "tags": [
+          "Models"
+        ],
+        "summary": "Public benchmark scores for major models",
+        "operationId": "getBenchmarks",
+        "responses": {
+          "200": {
+            "description": "Benchmark catalog with per-model scores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "benchmarks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agents/directory": {
+      "get": {
+        "tags": [
+          "Agents"
+        ],
+        "summary": "Curated directory of AI agents and frameworks",
+        "operationId": "getAgentsDirectory",
+        "responses": {
+          "200": {
+            "description": "Categorized directory of production-grade agents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "categories": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "agents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agents/activity": {
+      "get": {
+        "tags": [
+          "Agents"
+        ],
+        "summary": "Live AI bot traffic on TensorFeed",
+        "operationId": "getAgentActivity",
+        "description": "Last hits per known AI bot user-agent (ClaudeBot, GPTBot, Applebot, etc). Useful for understanding crawler adoption.",
+        "responses": {
+          "200": {
+            "description": "Recent agent hits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "today_count": {
+                      "type": "integer"
+                    },
+                    "last_updated": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "recent": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "bot": {
+                            "type": "string"
+                          },
+                          "endpoint": {
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/podcasts": {
+      "get": {
+        "tags": [
+          "News"
+        ],
+        "summary": "Recent AI podcast episodes",
+        "operationId": "getPodcasts",
+        "responses": {
+          "200": {
+            "description": "Episode list with show, title, published date.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trending-repos": {
+      "get": {
+        "tags": [
+          "News"
+        ],
+        "summary": "Trending GitHub repos in AI",
+        "operationId": "getTrendingRepos",
+        "responses": {
+          "200": {
+            "description": "Top repos by recent star velocity in AI/ML topics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gpu/pricing": {
+      "get": {
+        "tags": [
+          "GPU"
+        ],
+        "summary": "Current GPU rental pricing snapshot",
+        "operationId": "getGpuPricing",
+        "responses": {
+          "200": {
+            "description": "Aggregated pricing across cloud GPU marketplaces.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gpu/pricing/cheapest": {
+      "get": {
+        "tags": [
+          "GPU"
+        ],
+        "summary": "Cheapest current offer for a canonical GPU",
+        "operationId": "getGpuPricingCheapest",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "gpu",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "H100"
+            },
+            "description": "Canonical GPU id (H100, H200, A100-80GB, RTX-4090, etc.)"
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "on_demand",
+                "spot"
+              ],
+              "default": "on_demand"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top 3 cheapest offers right now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mcp/registry/snapshot": {
+      "get": {
+        "tags": [
+          "MCP"
+        ],
+        "summary": "Daily MCP server registry summary",
+        "operationId": "getMcpRegistrySnapshot",
+        "description": "Today's count + 1-day delta of the official MCP server registry. Refreshed daily.",
+        "responses": {
+          "200": {
+            "description": "Latest registry summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "summary": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/probe/latest": {
+      "get": {
+        "tags": [
+          "Probe"
+        ],
+        "summary": "Last 24h of LLM endpoint latency probes",
+        "operationId": "getProbeLatest",
+        "description": "Active probe results (TTFB, total) per provider. Refreshed every 15 min.",
+        "responses": {
+          "200": {
+            "description": "Probe summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/history": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "Index of historical daily snapshots",
+        "operationId": "getHistoryIndex",
+        "responses": {
+          "200": {
+            "description": "Available date ranges per snapshot type.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/history/{date}/{type}": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "Read one historical snapshot",
+        "operationId": "getHistorySnapshot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "example": "2026-05-01"
+            }
+          },
+          {
+            "in": "path",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pricing",
+                "benchmarks",
+                "status",
+                "news",
+                "mcp-registry",
+                "probe",
+                "gpu-pricing"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Snapshot payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Snapshot not found"
+          }
+        }
+      }
+    },
+    "/api/afta/adopters": {
+      "get": {
+        "tags": [
+          "AFTA"
+        ],
+        "summary": "Machine-readable AFTA adopter directory",
+        "operationId": "getAftaAdopters",
+        "description": "Public list of sites that publish a /.well-known/agent-fair-trade.json manifest. Not authoritative; agents should verify each manifest directly.",
+        "responses": {
+          "200": {
+            "description": "Adopter list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/info": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Wallet, pricing, and operator info",
+        "operationId": "getPaymentInfo",
+        "responses": {
+          "200": {
+            "description": "Payment metadata for buying credits.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/buy-credits": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Initiate a credit purchase",
+        "operationId": "postBuyCredits",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount_usd"
+                ],
+                "properties": {
+                  "amount_usd": {
+                    "type": "number",
+                    "minimum": 1,
+                    "example": 5
+                  },
+                  "sender_wallet": {
+                    "type": "string",
+                    "example": "0x..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Quote with credits and instructions to send USDC on Base.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/confirm": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Confirm a USDC payment and receive bearer token",
+        "operationId": "postPaymentConfirm",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "tx_hash"
+                ],
+                "properties": {
+                  "tx_hash": {
+                    "type": "string",
+                    "example": "0xabc..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bearer token + credit balance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/balance": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Token balance and usage",
+        "operationId": "getPaymentBalance",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credits remaining, total spent, recent calls.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/no-charge-stats": {
+      "get": {
+        "tags": [
+          "AFTA",
+          "Payment"
+        ],
+        "summary": "Public no-charge counter (AFTA evidence)",
+        "operationId": "getNoChargeStats",
+        "description": "Aggregate count of paid calls that were waived under AFTA guarantees (5xx, breaker, schema fail, stale data).",
+        "responses": {
+          "200": {
+            "description": "No-charge counter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipt/verify": {
+      "post": {
+        "tags": [
+          "AFTA"
+        ],
+        "summary": "Verify an Ed25519-signed receipt",
+        "operationId": "postReceiptVerify",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "receipt"
+                ],
+                "properties": {
+                  "receipt": {
+                    "type": "string",
+                    "description": "Receipt blob from a previous paid response"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "valid": {
+                      "type": "boolean"
+                    },
+                    "signed_at": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/preview/routing": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Public preview of premium model routing",
+        "operationId": "getRoutingPreview",
+        "description": "Free preview of the premium routing endpoint. Returns top-1 recommendation only. Use /api/premium/routing for ranked top-N with full reasoning.",
+        "responses": {
+          "200": {
+            "description": "Recommended model id and one-line rationale.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/premium/routing": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Ranked model routing recommendations",
+        "operationId": "getPremiumRouting",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "prompt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "optimize",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cost",
+                "speed",
+                "quality",
+                "balanced"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ranked top-N model recommendations with rationale and signed receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient credits or no token (x402-compatible)"
+          }
+        }
+      }
+    },
+    "/api/premium/news/search": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Full-text search across AI news archive",
+        "operationId": "getPremiumNewsSearch",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching articles, ranked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/premium/cost/projection": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Compute monthly cost across model candidates",
+        "operationId": "getPremiumCostProjection",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "model",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "opus-4-7,gpt-5-5"
+            }
+          },
+          {
+            "in": "query",
+            "name": "input_tokens_per_day",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "output_tokens_per_day",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "horizon",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "daily",
+                "monthly",
+                "yearly"
+              ],
+              "default": "monthly"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Projected cost per model.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/premium/whats-new": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Aggregated daily delta across the whole TensorFeed dataset",
+        "operationId": "getPremiumWhatsNew",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1,
+              "maximum": 7
+            }
+          },
+          {
+            "in": "query",
+            "name": "news_limit",
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "maximum": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New models, new pricing, new status incidents, top news.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
-  "security": [],
-  "paths": {
-    "/news": {
-      "get": {
-        "tags": ["Free"],
-        "summary": "Latest AI news articles",
-        "description": "Aggregated from 15+ RSS sources. Updated every 10 minutes.",
-        "parameters": [
-          { "name": "category", "in": "query", "schema": { "type": "string" }, "description": "Filter by category" },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200 } }
-        ]
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "tf_live_*",
+        "description": "Bearer token from POST /api/payment/confirm. Required for premium endpoints. Each call decrements credits.\nOn insufficient credits, the server returns HTTP 402 Payment Required with a body that points to /api/payment/buy-credits (x402-compatible).\n"
       }
     },
-    "/status": {
-      "get": {
-        "tags": ["Free"],
-        "summary": "Real-time AI service status",
-        "description": "Operational status of major AI APIs (Claude, OpenAI, Gemini, Mistral, Cohere, Replicate, HuggingFace, Perplexity, Midjourney). Polled every 5 minutes."
-      }
-    },
-    "/models": {
-      "get": {
-        "tags": ["Free"],
-        "summary": "AI model pricing and specs",
-        "description": "Per-model input/output prices, context windows, capabilities, tiers."
-      }
-    },
-    "/benchmarks": {
-      "get": {
-        "tags": ["Free"],
-        "summary": "AI model benchmark scores",
-        "description": "Scores across SWE-bench, MMLU-Pro, GPQA-Diamond, MATH, HumanEval, and others."
-      }
-    },
-    "/history": {
-      "get": {
-        "tags": ["Free"],
-        "summary": "Available daily history snapshot dates",
-        "description": "Lists dates with snapshots and the snapshot types available (pricing, models, benchmarks, status, agent-activity)."
-      }
-    },
-    "/history/{date}/{type}": {
-      "get": {
-        "tags": ["Free"],
-        "summary": "Read a specific historical snapshot",
-        "parameters": [
-          { "name": "date", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" } },
-          { "name": "type", "in": "path", "required": true, "schema": { "type": "string", "enum": ["pricing", "models", "benchmarks", "status", "agent-activity"] } }
-        ]
-      }
-    },
-    "/preview/routing": {
-      "get": {
-        "tags": ["Free"],
-        "summary": "Free routing preview (top-1 model, rate-limited)",
-        "description": "5 calls per UTC day per IP. The paid /api/premium/routing has no rate limit and returns top-N with full breakdown.",
-        "parameters": [
-          { "name": "task", "in": "query", "schema": { "type": "string", "enum": ["code", "reasoning", "creative", "general"] } },
-          { "name": "budget", "in": "query", "schema": { "type": "number" } },
-          { "name": "min_quality", "in": "query", "schema": { "type": "number", "minimum": 0, "maximum": 1 } }
-        ]
-      }
-    },
-    "/payment/info": {
-      "get": {
-        "tags": ["Payment"],
-        "summary": "Wallet, pricing tiers, supported flows, verification metadata",
-        "description": "Cross-check the wallet address before sending funds. Includes operator (Pizza Robot Studios LLC, California, USA), wallet (USDC on Base), pricing (50 credits per $1 USDC, volume discounts at $5/$30/$200), both flows (credits and x402 fallback), and trust attestation."
-      }
-    },
-    "/payment/buy-credits": {
-      "post": {
-        "tags": ["Payment"],
-        "summary": "Quote a credit purchase (30-min TTL)",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["amount_usd"],
-                "properties": {
-                  "amount_usd": { "type": "number", "minimum": 0.5, "maximum": 10000 }
-                }
-              }
+    "schemas": {
+      "NewsArticle": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "source": {
+            "type": "string"
+          },
+          "sourceDomain": {
+            "type": "string"
+          },
+          "snippet": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
-          }
-        }
-      }
-    },
-    "/payment/confirm": {
-      "post": {
-        "tags": ["Payment"],
-        "summary": "Verify USDC tx on-chain and mint a bearer token",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["tx_hash"],
-                "properties": {
-                  "tx_hash": { "type": "string", "pattern": "^0x[a-fA-F0-9]{64}$" },
-                  "nonce": { "type": "string", "description": "Optional memo from buy-credits to apply volume discount" }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/payment/balance": {
-      "get": {
-        "tags": ["Payment"],
-        "summary": "Check remaining credits for the current bearer token",
-        "security": [{ "bearerAuth": [] }]
-      }
-    },
-    "/payment/usage": {
-      "get": {
-        "tags": ["Payment"],
-        "summary": "Per-token call history (last 100 calls aggregated by endpoint)",
-        "security": [{ "bearerAuth": [] }]
-      }
-    },
-    "/premium/routing": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Top-N ranked model recommendations with composite score",
-        "description": "1 credit. Synthesizes live pricing, benchmarks, and provider status into a ranked list.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "task", "in": "query", "schema": { "type": "string", "enum": ["code", "reasoning", "creative", "general"] } },
-          { "name": "budget", "in": "query", "schema": { "type": "number" } },
-          { "name": "min_quality", "in": "query", "schema": { "type": "number", "minimum": 0, "maximum": 1 } },
-          { "name": "top_n", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 10 } }
-        ]
-      }
-    },
-    "/premium/whats-new": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Agent morning brief",
-        "description": "1 credit. Pricing changes, new/removed models, status incidents, top news headlines from last 1-7 days.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "days", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 7 } },
-          { "name": "news_limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 25 } }
-        ]
-      }
-    },
-    "/premium/news/search": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Full-text news search",
-        "description": "1 credit. Relevance-scored search over the article corpus with date/provider/category filters.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "q", "in": "query", "schema": { "type": "string" } },
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "provider", "in": "query", "schema": { "type": "string" } },
-          { "name": "category", "in": "query", "schema": { "type": "string" } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }
-        ]
-      }
-    },
-    "/premium/history/pricing/series": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Daily price points for one model with min/max/delta",
-        "description": "1 credit. Range capped at 90 days, default 30 days back.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "model", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
-        ]
-      }
-    },
-    "/premium/history/benchmarks/series": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Score evolution for one benchmark on one model",
-        "description": "1 credit.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "model", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "benchmark", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
-        ]
-      }
-    },
-    "/mcp/registry/snapshot": {
-      "get": {
-        "tags": ["Free"],
-        "summary": "Today's MCP server registry summary with 1-day deltas",
-        "description": "Free. Total servers, by-status breakdown, top namespaces, newly added/reactivated/deprecated counts. Captured daily at 9:30 AM UTC from registry.modelcontextprotocol.io."
-      }
-    },
-    "/probe/latest": {
-      "get": {
-        "tags": ["Free"],
-        "summary": "Last 24h of measured LLM endpoint latency and availability",
-        "description": "Free. Per-provider aggregates over the last 24 hours of probe results: count, ok_pct, ttfb p50/p95/p99, total latency p50/p95/p99, status code distribution, last error. Probe cycles run every 15 min; data is unique because we measure it ourselves."
-      }
-    },
-    "/premium/probe/series": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Daily SLA series for one LLM provider",
-        "description": "1 credit. Per-day count, success rate, ttfb p50/p95/p99, total p50/p95/p99, incident-hour count. Range capped at 90 days, default 30 days back. The data is unique because we capture it ourselves; no public source publishes per-day measured SLA per LLM provider.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "provider", "in": "query", "required": true, "schema": { "type": "string", "enum": ["anthropic", "openai", "google", "mistral", "cohere"] } },
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
-        ]
-      }
-    },
-    "/premium/mcp/registry/series": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Multi-day MCP registry growth and churn series",
-        "description": "1 credit. Per-day total servers, active count, daily added/removed. 90-day max range, default 30 days back. The registry is open data; a 90-day trend requires daily capture started weeks ago.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
-        ]
-      }
-    },
-    "/premium/history/status/uptime": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Daily uptime rollup for one provider",
-        "description": "1 credit. Operational/degraded/down day counts plus uptime % (degraded = half-credit).",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "provider", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
-        ]
-      }
-    },
-    "/premium/cost/projection": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Project workload cost across 1-10 models",
-        "description": "1 credit. Daily/weekly/monthly/yearly totals plus cheapest-monthly ranking.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "model", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Comma-separated list of 1-10 models" },
-          { "name": "input_tokens_per_day", "in": "query", "required": true, "schema": { "type": "number", "minimum": 0 } },
-          { "name": "output_tokens_per_day", "in": "query", "required": true, "schema": { "type": "number", "minimum": 0 } },
-          { "name": "horizon", "in": "query", "schema": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] } }
-        ]
-      }
-    },
-    "/premium/providers/{name}": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Provider deep-dive in one paid call",
-        "description": "1 credit. Live status + components, all models with pricing + tier + benchmarks joined, recent news, agent traffic.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "name", "in": "path", "required": true, "schema": { "type": "string" } }
-        ]
-      }
-    },
-    "/premium/compare/models": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Side-by-side comparison of 2-5 AI models",
-        "description": "1 credit. Pricing, benchmarks (normalized), status, news. Plus rankings.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "ids", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Comma-separated list of 2-5 model ids/names" }
-        ]
-      }
-    },
-    "/premium/agents/directory": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Enriched AI agents directory",
-        "description": "1 credit. Catalog joined with status, news, traffic, flagship pricing, and a 0-100 trending score.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "category", "in": "query", "schema": { "type": "string" } },
-          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["operational", "degraded", "down", "unknown"] } },
-          { "name": "open_source", "in": "query", "schema": { "type": "boolean" } },
-          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["trending", "alphabetical", "status", "price_low", "price_high", "news_count"] } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }
-        ]
-      }
-    },
-    "/premium/watches": {
-      "post": {
-        "tags": ["Premium"],
-        "summary": "Register a webhook watch (price, status, or digest)",
-        "description": "1 credit per registration. HMAC-SHA256 signed POST delivery. 90-day TTL, default fire cap 100, per-token cap 25.",
-        "security": [{ "bearerAuth": [] }],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["spec", "callback_url"],
-                "properties": {
-                  "spec": {
-                    "oneOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": { "const": "price" },
-                          "model": { "type": "string" },
-                          "field": { "type": "string", "enum": ["inputPrice", "outputPrice", "blended"] },
-                          "op": { "type": "string", "enum": ["lt", "gt", "changes"] },
-                          "threshold": { "type": "number" }
-                        },
-                        "required": ["type", "model", "field", "op"]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": { "const": "status" },
-                          "provider": { "type": "string" },
-                          "op": { "type": "string", "enum": ["becomes", "changes"] },
-                          "value": { "type": "string", "enum": ["operational", "degraded", "down"] }
-                        },
-                        "required": ["type", "provider", "op"]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": { "const": "digest" },
-                          "cadence": { "type": "string", "enum": ["daily", "weekly"] }
-                        },
-                        "required": ["type", "cadence"]
-                      }
-                    ]
-                  },
-                  "callback_url": { "type": "string", "format": "uri" },
-                  "secret": { "type": "string" },
-                  "fire_cap": { "type": "integer", "minimum": 1, "maximum": 1000 }
-                }
-              }
-            }
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
-      "get": {
-        "tags": ["Premium"],
-        "summary": "List active watches owned by the current bearer token",
-        "description": "Free for the owning bearer token (no credits charged).",
-        "security": [{ "bearerAuth": [] }]
-      }
-    },
-    "/premium/watches/{id}": {
-      "get": {
-        "tags": ["Premium"],
-        "summary": "Read one watch (must be owned by the current token)",
-        "description": "Free.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^wat_[a-f0-9]{24}$" } }
-        ]
-      },
-      "delete": {
-        "tags": ["Premium"],
-        "summary": "Delete an owned watch",
-        "description": "Free.",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^wat_[a-f0-9]{24}$" } }
-        ]
+      "StatusService": {
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "operational",
+              "degraded",
+              "partial_outage",
+              "major_outage",
+              "maintenance",
+              "unknown"
+            ]
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "lastChecked": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       }
     }
   },
   "externalDocs": {
-    "description": "Full agent payments documentation",
-    "url": "https://tensorfeed.ai/developers/agent-payments"
+    "description": "Full developer documentation, SDKs, and machine-readable manifests",
+    "url": "https://tensorfeed.ai/developers"
   }
 }
