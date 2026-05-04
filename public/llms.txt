@@ -335,6 +335,10 @@ TensorFeed.ai is an independent project built by Ripper.
 Sister site: [TerminalFeed.io](https://terminalfeed.io) (real-time data dashboard, AFTA federation member). Supportive site: [VR.org](https://vr.org) (VR/AR/XR news + originals, data partner).
 Contact: feedback@tensorfeed.ai | Press: press@tensorfeed.ai
 
+## Security & Compliance
+- [Security Policy](https://tensorfeed.ai/security): Vulnerability reporting, scope, response time commitment, safe harbor, and the list of defenses currently in place across the worker, MCP server, SDKs, and agent payments rail
+- [security.txt](https://tensorfeed.ai/.well-known/security.txt): RFC 9116 machine-readable companion to the security policy
+
 ## Optional
 - [Full Content Bundle](https://tensorfeed.ai/llms-full.txt): Complete text of all guide pages for full-context ingestion
 - [Sitemap](https://tensorfeed.ai/sitemap.xml): Full XML sitemap of all pages
