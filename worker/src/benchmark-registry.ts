@@ -5,7 +5,13 @@
  * (which has model x score data for the 5 we ingest) and /harnesses
  * (which has harness x score data for 4 agentic benchmarks). This is
  * the broader registry of which benchmarks exist, what they test, who
- * leads them, where to find them.
+ * leads them, where to find them, and the current state-of-the-art
+ * holder per benchmark.
+ *
+ * SOTA fields (frontierScore, frontierModel, frontierDate,
+ * frontierSource) are best-effort editorial snapshots that move fast.
+ * Consumers should treat leaderboardUrl as the source of truth for
+ * freshness; this catalog refreshes on redeploy.
  *
  * Editorial; refreshed on redeploy.
  *
@@ -26,6 +32,12 @@ export interface BenchmarkMeta {
   scoreRange: string;
   /** Approx current frontier (best published score) at lastUpdated. */
   frontierScore: string;
+  /** Model holding the current frontier score. null when saturated, contested, or fast-moving (check leaderboardUrl). */
+  frontierModel: string | null;
+  /** When the current frontier score was reported (YYYY-MM). null if frontierModel is null. */
+  frontierDate: string | null;
+  /** Citation URL for the current frontier score (model release post, paper, or leaderboard snapshot). null if frontierModel is null. */
+  frontierSource: string | null;
   /** Active vs deprecated/saturated. */
   status: 'active' | 'saturated' | 'deprecated';
   /** Whether scores are gameable (training contamination concern). */
@@ -53,6 +65,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '15,908 questions',
     scoreRange: '0-100% accuracy',
     frontierScore: '~92%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'saturated',
     contaminationRisk: 'high',
     maintainer: 'Hendrycks et al.',
@@ -70,6 +85,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '12,032 questions',
     scoreRange: '0-100% accuracy',
     frontierScore: '~94%',
+    frontierModel: 'GPT-5 (high reasoning)',
+    frontierDate: '2025-08',
+    frontierSource: 'https://huggingface.co/spaces/TIGER-Lab/MMLU-Pro',
     status: 'active',
     contaminationRisk: 'medium',
     maintainer: 'TIGER Lab',
@@ -86,7 +104,10 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     released: '2023',
     size: '198 questions',
     scoreRange: '0-100% accuracy',
-    frontierScore: '~80%',
+    frontierScore: '~88%',
+    frontierModel: 'o3 (high compute)',
+    frontierDate: '2024-12',
+    frontierSource: 'https://openai.com/index/learning-to-reason-with-llms/',
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'Rein et al.',
@@ -104,13 +125,16 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '3,000 questions',
     scoreRange: '0-100% accuracy',
     frontierScore: '~30%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'CAIS + Scale AI',
     paperUrl: 'https://lastexam.ai',
     repoUrl: 'https://github.com/centerforaisafety/hle',
     leaderboardUrl: 'https://lastexam.ai',
-    whoCares: 'Frontier-model evaluators. The benchmark every model release in 2026 reports against.',
+    whoCares: 'Frontier-model evaluators. The benchmark every model release in 2026 reports against. Leaderboard is the freshness anchor.',
   },
   {
     id: 'arc-agi-2',
@@ -121,13 +145,16 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '~400 tasks public, more private',
     scoreRange: '0-100% accuracy',
     frontierScore: '~25%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'ARC Prize Foundation',
     paperUrl: 'https://arxiv.org/abs/2412.04604',
     repoUrl: 'https://github.com/arcprize/ARC-AGI-2',
     leaderboardUrl: 'https://arcprize.org/leaderboard',
-    whoCares: 'AGI researchers. The least-saturated frontier benchmark; current models lag far behind humans.',
+    whoCares: 'AGI researchers. The least-saturated frontier benchmark; current models lag far behind humans. Leaderboard updates frequently.',
   },
 
   // ── Math ──────────────────────────────────────────────────
@@ -140,6 +167,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '12,500 problems',
     scoreRange: '0-100% accuracy',
     frontierScore: '~96%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'saturated',
     contaminationRisk: 'high',
     maintainer: 'Hendrycks et al.',
@@ -157,6 +187,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '30 problems',
     scoreRange: '0-30 correct',
     frontierScore: '~28/30',
+    frontierModel: 'o3 (high compute)',
+    frontierDate: '2025-02',
+    frontierSource: 'https://artificialanalysis.ai',
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'MAA',
@@ -174,6 +207,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '8,500 problems',
     scoreRange: '0-100% accuracy',
     frontierScore: '~97%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'saturated',
     contaminationRisk: 'high',
     maintainer: 'OpenAI',
@@ -193,6 +229,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '164 problems',
     scoreRange: '0-100% pass@1',
     frontierScore: '~97%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'saturated',
     contaminationRisk: 'high',
     maintainer: 'OpenAI',
@@ -210,6 +249,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '974 problems',
     scoreRange: '0-100% pass@1',
     frontierScore: '~92%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'saturated',
     contaminationRisk: 'high',
     maintainer: 'Google Research',
@@ -227,13 +269,16 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '1k+ problems, growing',
     scoreRange: '0-100% pass@1',
     frontierScore: '~75%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'UC Berkeley + UW',
     paperUrl: 'https://arxiv.org/abs/2403.07974',
     repoUrl: 'https://github.com/LiveCodeBench/LiveCodeBench',
     leaderboardUrl: 'https://livecodebench.github.io/leaderboard.html',
-    whoCares: 'Coding agents. The contamination-resistant alternative to HumanEval.',
+    whoCares: 'Coding agents. The contamination-resistant alternative to HumanEval. Leaderboard rotates fast as the problem set grows.',
   },
   {
     id: 'swe-bench-verified',
@@ -244,6 +289,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '500 instances',
     scoreRange: '0-100% resolved',
     frontierScore: '~75%',
+    frontierModel: 'Claude Sonnet 4.6',
+    frontierDate: '2025-09',
+    frontierSource: 'https://www.swebench.com/',
     status: 'active',
     contaminationRisk: 'medium',
     maintainer: 'OpenAI / Princeton',
@@ -261,6 +309,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '225 problems',
     scoreRange: '0-100% pass@2',
     frontierScore: '~85%',
+    frontierModel: 'Claude Sonnet 4.6',
+    frontierDate: '2025-09',
+    frontierSource: 'https://aider.chat/docs/leaderboards/',
     status: 'active',
     contaminationRisk: 'medium',
     maintainer: 'Aider',
@@ -278,6 +329,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '~80 tasks',
     scoreRange: '0-100% solved',
     frontierScore: '~52%',
+    frontierModel: 'Claude Sonnet 4.6',
+    frontierDate: '2025-09',
+    frontierSource: 'https://www.tbench.ai/',
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'Stanford + Anthropic',
@@ -295,6 +349,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '1,488 tasks',
     scoreRange: '0-100% earned',
     frontierScore: '~42%',
+    frontierModel: 'GPT-5',
+    frontierDate: '2025-08',
+    frontierSource: 'https://arxiv.org/abs/2502.12115',
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'OpenAI',
@@ -314,6 +371,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '~3,500 questions',
     scoreRange: '0-100% accuracy',
     frontierScore: '~78%',
+    frontierModel: 'Gemini 2.5 Pro',
+    frontierDate: '2025-06',
+    frontierSource: 'https://mmmu-benchmark.github.io',
     status: 'active',
     contaminationRisk: 'medium',
     maintainer: 'TIGER Lab + IN.AI',
@@ -331,6 +391,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '6,141 problems',
     scoreRange: '0-100% accuracy',
     frontierScore: '~80%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'active',
     contaminationRisk: 'medium',
     maintainer: 'UCLA',
@@ -350,6 +413,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '~250 tasks',
     scoreRange: '0-100% pass@1',
     frontierScore: '~70%',
+    frontierModel: 'Claude Sonnet 4.6',
+    frontierDate: '2025-09',
+    frontierSource: 'https://www.anthropic.com/news/claude-sonnet-4-5',
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'Sierra',
@@ -367,13 +433,16 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '466 tasks',
     scoreRange: '0-100% accuracy',
     frontierScore: '~75% (level 1), ~50% (level 3)',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'HF + Meta',
     paperUrl: 'https://arxiv.org/abs/2311.12983',
     repoUrl: 'https://huggingface.co/datasets/gaia-benchmark/GAIA',
     leaderboardUrl: 'https://huggingface.co/spaces/gaia-benchmark/leaderboard',
-    whoCares: 'Generalist autonomous agents. Tests the full agent loop, not isolated capabilities.',
+    whoCares: 'Generalist autonomous agents. Tests the full agent loop, not isolated capabilities. HF Space leaderboard rotates frequently.',
   },
   {
     id: 'webarena',
@@ -384,6 +453,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '812 tasks',
     scoreRange: '0-100% solved',
     frontierScore: '~58%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'CMU + UW',
@@ -401,6 +473,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '369 tasks',
     scoreRange: '0-100% solved',
     frontierScore: '~28%',
+    frontierModel: 'Claude Sonnet 4.6 (Computer Use)',
+    frontierDate: '2025-09',
+    frontierSource: 'https://os-world.github.io',
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'HKU + Salesforce',
@@ -418,6 +493,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '4,400+ test cases',
     scoreRange: '0-100% accuracy',
     frontierScore: '~85%',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'active',
     contaminationRisk: 'medium',
     maintainer: 'UC Berkeley',
@@ -435,13 +513,16 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '~70 tasks',
     scoreRange: 'minutes-of-human-work',
     frontierScore: '~30 min equivalent',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'METR',
     paperUrl: 'https://metr.github.io/autonomy-evals-guide/',
     repoUrl: null,
     leaderboardUrl: null,
-    whoCares: 'Frontier autonomy evaluators. The benchmark behind the "AI does 50% of tasks under N minutes" framing.',
+    whoCares: 'Frontier autonomy evaluators. The benchmark behind the "AI does 50% of tasks under N minutes" framing. METR site is the freshness anchor.',
   },
 
   // ── Long context ──────────────────────────────────────────
@@ -454,6 +535,9 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
     size: '~13 task categories',
     scoreRange: '0-100% accuracy',
     frontierScore: 'effective ~256k for 1M-claimed models',
+    frontierModel: null,
+    frontierDate: null,
+    frontierSource: null,
     status: 'active',
     contaminationRisk: 'low',
     maintainer: 'NVIDIA',
@@ -464,4 +548,4 @@ export const BENCHMARK_REGISTRY: BenchmarkMeta[] = [
   },
 ];
 
-export const BENCHMARK_REGISTRY_LAST_UPDATED = '2026-04-30';
+export const BENCHMARK_REGISTRY_LAST_UPDATED = '2026-05-03';

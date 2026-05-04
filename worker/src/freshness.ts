@@ -38,9 +38,6 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/agents/directory': { maxAgeSeconds: 24 * 60 * 60 },
   // News search: news refreshes every 10 min, give ourselves headroom.
   '/api/premium/news/search': { maxAgeSeconds: 30 * 60 },
-  // VR news search: vr.org refreshes every 15 min, TF cron pulls hourly.
-  // 90-min SLA covers the hourly cron + headroom for upstream lag.
-  '/api/premium/vr/news/search': { maxAgeSeconds: 90 * 60 },
   // What's new morning brief: rolls forward as news + status arrive, 1h.
   '/api/premium/whats-new': { maxAgeSeconds: 60 * 60 },
   // Historical series queries: immutable.
@@ -149,7 +146,6 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/providers': 'live aggregation, ~24h freshness on cataloged data',
     '/api/premium/agents/directory': 'cataloged data, refreshed ~24h',
     '/api/premium/news/search': 'news refreshes every 10 min',
-    '/api/premium/vr/news/search': 'vr.org RSS aggregator refreshes every 15 min upstream; TF pulls hourly',
     '/api/premium/whats-new': 'aggregates last 1-7 days of news + status',
     '/api/premium/history/pricing/series': 'historical immutable',
     '/api/premium/history/benchmarks/series': 'historical immutable',

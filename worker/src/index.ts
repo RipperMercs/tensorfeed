@@ -30,7 +30,7 @@ import {
   SortKey,
 } from './agents-enriched';
 import { searchNews, NewsSearchOptions } from './news-search';
-import { refreshVrData, readVrFeed, readVrOriginals, searchVrNews } from './vr-aggregator';
+import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
 import { computeProviderDeepDive } from './provider-deepdive';
@@ -1573,7 +1573,6 @@ export default {
           premiumNewsSearch: '/api/premium/news/search?q=&from=&to=&provider=&category=&limit=',
           vrNews: '/api/vr/news?category=&limit= (free; sourced from vr.org)',
           vrOriginals: '/api/vr/originals?limit= (free; VR.org Original editorial)',
-          premiumVrNewsSearch: '/api/premium/vr/news/search?q=&category=&source=&origin=rss|original|all&since=&limit= (3 credits)',
           aftaAdopters: '/api/afta/adopters (free; machine-readable AFTA adopter directory; not authoritative)',
           premiumCostProjection: '/api/premium/cost/projection?model=opus-4-7,gpt-5-5&input_tokens_per_day=&output_tokens_per_day=&horizon=monthly',
           premiumProviderDeepDive: '/api/premium/providers/{name}',
@@ -1661,7 +1660,6 @@ export default {
                 contributes_to: [
                   '/api/vr/news',
                   '/api/vr/originals',
-                  '/api/premium/vr/news/search',
                 ],
                 upstream_endpoints: [
                   'https://vr.org/api/feed',
@@ -2561,58 +2559,11 @@ export default {
     // 90-min freshness SLA covers the hourly cron with headroom; if vr.org
     // is lagging, the call goes no-charge automatically.
 
-    if (path === '/api/premium/vr/news/search') {
-      const payment = await requirePayment(request, env, 3);
-      if (!payment.paid) return payment.response!;
-
-      const q = (url.searchParams.get('q') || '').trim();
-      if (!q || q.length < 2 || q.length > 200) {
-        return await premiumValidationFailure(
-          {
-            ok: false,
-            error: 'invalid_query',
-            message: 'q is required, 2-200 chars.',
-          },
-          payment, request, env,
-        );
-      }
-
-      const limitParam = parseInt(url.searchParams.get('limit') || '25', 10);
-      const limit = Math.min(Math.max(Number.isFinite(limitParam) ? limitParam : 25, 1), 100);
-      const sinceRaw = url.searchParams.get('since') || undefined;
-      if (sinceRaw && !Number.isFinite(Date.parse(sinceRaw))) {
-        return await premiumValidationFailure(
-          {
-            ok: false,
-            error: 'invalid_since',
-            message: 'since must be a parseable ISO 8601 date.',
-          },
-          payment, request, env,
-        );
-      }
-      const originParam = (url.searchParams.get('origin') || 'all').toLowerCase();
-      const origin: 'rss' | 'original' | 'all' =
-        originParam === 'rss' || originParam === 'original' ? originParam : 'all';
-
-      const result = await searchVrNews(env, {
-        q,
-        limit,
-        ...(url.searchParams.get('category') ? { category: url.searchParams.get('category')! } : {}),
-        ...(url.searchParams.get('source') ? { source: url.searchParams.get('source')! } : {}),
-        origin,
-        ...(sinceRaw ? { since: sinceRaw } : {}),
-      });
-      if ('error' in result) {
-        return await premiumValidationFailure(
-          { ok: false, ...result } as unknown as Record<string, unknown>,
-          payment, request, env,
-        );
-      }
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/vr/news/search', request.headers.get('User-Agent') || 'unknown', 3, payment.token),
-      );
-      return await premiumResponse(result, payment, 3, request, env);
-    }
+    // /api/premium/vr/news/search was deprecated 2026-05-03 (premium quality
+    // audit). Niche audience and the only Tier-3 endpoint at 3 credits.
+    // Underlying searchVrNews() helper remains in vr-aggregator.ts in case
+    // we want to re-expose it as free later. Free /api/vr/news and
+    // /api/vr/originals continue to serve VR data.
 
     // === PAID PREMIUM: ENRICHED AGENTS DIRECTORY (Tier 1, 1 credit) ===
     // Static directory joined with live status, recent news count,

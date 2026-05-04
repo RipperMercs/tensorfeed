@@ -411,14 +411,7 @@ export default function AgentFairTradePage() {
             <Link href="/api/vr/originals" className="text-accent-primary hover:underline">
               /api/vr/originals
             </Link>{' '}
-            (free),{' '}
-            <Link
-              href="/api-reference/api-premium-vr-news-search"
-              className="text-accent-primary hover:underline"
-            >
-              /api/premium/vr/news/search
-            </Link>{' '}
-            (3 credits).
+            (free).
           </p>
         </div>
       </section>

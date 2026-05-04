@@ -14,7 +14,11 @@
  * Downstream readers:
  *   /api/vr/news                      (free, mirror of the aggregated feed)
  *   /api/vr/originals                 (free, VR.org Original editorial)
- *   /api/premium/vr/news/search       (5 credits, searchable archive)
+ *
+ * The searchVrNews() helper below is exported but no longer wired to a
+ * route. /api/premium/vr/news/search was deprecated 2026-05-03 in the
+ * premium-quality audit (niche audience, only Tier-3 endpoint at 3
+ * credits). Helper retained in case we want to re-expose it as free.
  *
  * Notes:
  *   - vr.org's RSS engine refreshes every 15 minutes; hourly downstream is

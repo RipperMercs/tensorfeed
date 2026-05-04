@@ -13,6 +13,9 @@ interface Benchmark {
   size: string;
   scoreRange: string;
   frontierScore: string;
+  frontierModel: string | null;
+  frontierDate: string | null;
+  frontierSource: string | null;
   status: 'active' | 'saturated' | 'deprecated';
   contaminationRisk: 'low' | 'medium' | 'high';
   maintainer: string;
@@ -176,6 +179,17 @@ export default function BenchmarkRegistryPage() {
                 <div className="text-right text-sm">
                   <div className="text-xs text-text-muted">Frontier</div>
                   <div className="font-mono text-text-primary font-semibold">{b.frontierScore}</div>
+                  {b.frontierModel && (
+                    <div className="text-xs text-text-muted mt-0.5">
+                      {b.frontierSource ? (
+                        <a href={b.frontierSource} target="_blank" rel="noopener noreferrer" className="hover:text-accent-primary inline-flex items-center gap-0.5">
+                          {b.frontierModel}{b.frontierDate ? ` · ${b.frontierDate}` : ''} <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      ) : (
+                        <span>{b.frontierModel}{b.frontierDate ? ` · ${b.frontierDate}` : ''}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               <p className="text-sm text-text-secondary leading-relaxed mb-2">{b.description}</p>
