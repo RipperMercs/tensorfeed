@@ -1834,7 +1834,7 @@ export class TensorFeed {
    * papers, layered with community upvotes and discussion counts.
    * Different signal from getPapersArxivRecent (firehose) and
    * getPapersAITrending (citation-ranked all-time): this is editor
-   * picks. Refreshed daily at 14:30 UTC. Titles sanitized at capture
+   * picks. Refreshed daily at 14:15 UTC. Titles sanitized at capture
    * time.
    */
   async getPapersHFDaily(): Promise<HFDailyPapersResponse> {

@@ -1078,7 +1078,7 @@ class TensorFeed:
           - ``get_papers_hf_daily()`` (this): editor-curated picks
             with community signal
 
-        Refreshed daily at 14:30 UTC. Titles are sanitized at capture
+        Refreshed daily at 14:15 UTC. Titles are sanitized at capture
         time against prompt-injection markers.
 
         Returns:

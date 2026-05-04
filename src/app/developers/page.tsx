@@ -292,7 +292,7 @@ const ENDPOINTS: Endpoint[] = [
   {
     method: 'GET',
     path: '/api/papers/hf-daily',
-    description: 'Hugging Face\'s editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from /api/papers/arxiv-recent (firehose of recent submissions) and /api/papers/ai-trending (citation-ranked all-time): this is editor picks of-the-day with HF community engagement on top. Each paper carries paperId, title (sanitized at capture time), summary, authors, upvotes, num_comments, hf_url, arxiv_url (when arxiv-style), github_repo, github_stars, ai_keywords. Refreshed daily at 14:30 UTC.',
+    description: 'Hugging Face\'s editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from /api/papers/arxiv-recent (firehose of recent submissions) and /api/papers/ai-trending (citation-ranked all-time): this is editor picks of-the-day with HF community engagement on top. Each paper carries paperId, title (sanitized at capture time), summary, authors, upvotes, num_comments, hf_url, arxiv_url (when arxiv-style), github_repo, github_stars, ai_keywords. Refreshed daily at 14:15 UTC.',
     cache: 'Cache for 10 minutes',
     example: `{
   "ok": true,

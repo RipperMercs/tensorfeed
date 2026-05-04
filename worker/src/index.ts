@@ -1911,7 +1911,7 @@ export default {
     // Editor-curated daily set of AI papers from huggingface.co/papers
     // with HF community upvotes + discussion counts. Different signal
     // from /api/papers/arxiv-recent (firehose) and /api/papers/ai-trending
-    // (citation-ranked all-time). Captured by the 14:30 UTC cron.
+    // (citation-ranked all-time). Captured by the 14:15 UTC cron.
 
     if (path === '/api/papers/hf-daily') {
       const snapshot = await getHFDailyPapersLatest(env);
@@ -3512,8 +3512,8 @@ export default {
       // metadata). Single API call, no auth. Daily snapshot keyed
       // under or:daily:{date}. Backs free /api/openrouter/models.
       await run('captureORSnapshot', () => captureORSnapshot(env));
-    } else if (cron === '30 14 * * *') {
-      // Daily 14:30 UTC: capture HF Daily Papers (editor-curated set of
+    } else if (cron === '15 14 * * *') {
+      // Daily 14:15 UTC: capture HF Daily Papers (editor-curated set of
       // AI papers worth reading + community upvotes/comments). Single
       // API call to huggingface.co/api/daily_papers. Daily snapshot
       // keyed under hf-papers:daily:{date}. Backs free

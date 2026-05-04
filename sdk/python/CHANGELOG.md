@@ -10,7 +10,7 @@ All notable changes to the Python SDK for [TensorFeed.ai](https://tensorfeed.ai)
 ## 1.25.0 - 2026-05-04
 
 ### Added
-- `tf.get_papers_hf_daily()`. Free, no-auth method returning Hugging Face's editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from the other paper feeds: arxiv-recent is the firehose, ai-trending is citation-ranked all-time, this is editor picks with community engagement. Refreshed daily at 14:30 UTC. Titles sanitized at capture time.
+- `tf.get_papers_hf_daily()`. Free, no-auth method returning Hugging Face's editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from the other paper feeds: arxiv-recent is the firehose, ai-trending is citation-ranked all-time, this is editor picks with community engagement. Refreshed daily at 14:15 UTC. Titles sanitized at capture time.
 
 ## 1.24.0 - 2026-05-04
 
