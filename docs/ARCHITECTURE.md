@@ -36,6 +36,7 @@ Detailed reference for the Worker, KV layout, endpoints, cron schedule, and subs
 - `receipts.ts`: AFTA Ed25519 signing rail. Loads `RECEIPT_PRIVATE_KEY_JWK` Worker secret, signs canonical-JSON receipts on every premium response. Public key at `/.well-known/tensorfeed-receipt-key.json`. If secret is unset, premium responses ship without receipts (graceful, surfaced in `/api/meta`).
 - `freshness.ts`: Per-endpoint freshness SLA registry. Each premium endpoint declares max data age. The premiumResponse() wrapper checks captured_at against the SLA; if stale, the deferred debit is skipped (no-charge), response is flagged with stale: true, and the no-charge event is logged.
 - `spend-cap.ts`: Optional per-token daily credit-spend ceiling. Defense-in-depth on top of the circuit breaker (which limits request rate). A leaked token attached to a clever multi-isolate agent could otherwise drain a 1000-credit balance under the burn-rate threshold; the spend cap bounds damage to N credits per UTC day. Self-service via `/api/payment/spend-cap`. Daily counter at `pay:spend:{token}:{YYYY-MM-DD}` (TTL 48h). Cap is null/unset by default (back-compat). Race posture: read-inc-write across isolates can leak `~isolates*cost` credits over the cap, same tradeoff as the rate limiter and circuit breaker.
+- `anomaly.ts`: Passive baseline-relative spend anomaly detector. Fills the gap between the per-minute circuit breaker (catches obvious abuse) and the per-day spend cap (only protects opted-in tokens). Maintains a rolling 7-day hourly spend buffer per token (`pay:hourly:{token}`, 168 entries cap). On every successful debit in `commitPayment`, increments the current-hour bucket and runs an assessment: median of all earlier buckets is the baseline; flag warning if current >= 5x baseline AND >= 20 credits; flag critical if current >= 10x baseline AND >= 50 credits. Both gates required so a token with a tiny baseline does not constantly false-positive on small spends. Tokens with <24h of buffer history are exempt (no_baseline). On flag, appends to `pay:anomaly:events` ring buffer (cap 200), deduped on (token, hour) so a single anomalous hour fires exactly one event. Surfaced via admin endpoint `/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical`. Privacy: events log a 16-char prefix of the bearer, never the full token.
 - `podcasts.ts`: Podcast feed polling
 - `trending.ts`: Trending GitHub repos
 - `twitter.ts`: X/Twitter auto-posting
@@ -97,6 +98,8 @@ Each `*.ts` has a sibling `*.test.ts` Vitest file where applicable.
   - `pay:no-charge:index`: ordered list of dates with no-charge data
   - `pay:spend:{token}:{YYYY-MM-DD}`: per-token daily credit-spend counter (TTL 48h). Backs the optional self-service spend cap.
   - `pay:revoked:{token}`: archive of credits records for self-revoked tokens (TTL 90 days). Audit trail for the token owner.
+  - `pay:hourly:{token}`: rolling 7-day per-token spend buffer (cap 168 hourly buckets, no TTL). Backs the spend anomaly detector.
+  - `pay:anomaly:events`: global ring buffer of detected anomaly events (cap 200, no TTL). Read-only via admin endpoint.
 
 Optional: `OFAC_AUDIT_LOG` namespace for compliance audit trail beyond Workers' default ~3-day log retention. Screening helper writes conditionally so the unbound case is a no-op.
 
@@ -255,6 +258,7 @@ All mounted under `https://tensorfeed.ai/api/*` via the Worker. Authoritative ma
 - `/api/admin/usage?date=YYYY-MM-DD`: Daily revenue + usage rollup
 - `/api/admin/usage/dates`: List of dates with rollup data
 - `/api/admin/burn-token?token=tf_live_...`: Invalidate a bearer token
+- `/api/admin/anomalies[&severity=warning|critical]`: Read-only event log of detected per-token spend anomalies (cap 200, newest first). Each event records a 16-char token prefix, hour, severity, observed multiplier, and the baseline median that was exceeded. See `anomaly.ts`.
 - `/api/refresh[?task=history]`: Manual data refresh / history capture trigger
 
 **Internal (server-to-server only, NOT in `/api/meta` or `/llms.txt`):**

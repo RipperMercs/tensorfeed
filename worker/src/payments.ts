@@ -2,6 +2,7 @@ import { Env } from './types';
 import { checkCircuitBreaker } from './circuit-breaker';
 import type { NoChargeReason } from './receipts';
 import { checkSpendCap, incrementDailySpent, validateSpendCap } from './spend-cap';
+import { recordAndAssess as recordAnomalySpend, listAnomalyEvents, AnomalyEvent } from './anomaly';
 
 /**
  * Payment middleware for premium endpoints.
@@ -1752,8 +1753,22 @@ export async function commitPayment(
     } catch (err) {
       console.error('incrementDailySpent failed:', err);
     }
+    // Anomaly detection: record into the rolling 7-day hourly buffer
+    // and append to the anomaly event log on first detection per hour.
+    // Always wrapped: anomaly machinery must never fail a paid request.
+    try {
+      await recordAnomalySpend(env, payment.token, cost);
+    } catch (err) {
+      console.error('recordAnomalySpend failed:', err);
+    }
   }
   return { creditsCharged: cost, balanceAfter, noChargeReason: null };
+}
+
+// === Anomaly events surfacing (admin-only) ===
+
+export async function getAnomalyEvents(env: Env): Promise<AnomalyEvent[]> {
+  return listAnomalyEvents(env);
 }
 
 export async function getNoChargeRollup(env: Env, date?: string): Promise<DailyNoChargeRollup | null> {

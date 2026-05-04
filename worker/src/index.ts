@@ -107,6 +107,7 @@ import {
   getSpendCapStatus,
   setSpendCap,
   revokeOwnToken,
+  getAnomalyEvents,
   validateAndCharge,
   validateOnly,
   commitInternal,
@@ -1680,6 +1681,7 @@ export default {
           usage: '/api/admin/usage?date=YYYY-MM-DD&key=<ADMIN_KEY>',
           usageDates: '/api/admin/usage/dates?key=<ADMIN_KEY>',
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
+          anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history]',
         },
         chaos_engineering: {
@@ -3122,6 +3124,31 @@ export default {
     if (path === '/api/admin/usage/dates' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const dates = await listRollupDates(env);
       return jsonResponse({ ok: true, count: dates.length, dates }, 200, 0);
+    }
+
+    // Admin: anomaly event log. Read-only view of the most recent 200
+    // detected per-token spend anomalies (rolling 7-day hourly buffer
+    // + median baseline + multiplier threshold + credit floor). Each
+    // event records a 16-char token prefix, the hour, severity
+    // (warning|critical), the observed multiplier, and the baseline
+    // median that was exceeded. Use this to spot leaked tokens whose
+    // burn rate is well above their own historical pace, even when
+    // pacing under the circuit breaker.
+
+    if (path === '/api/admin/anomalies' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      const events = await getAnomalyEvents(env);
+      const severityFilter = url.searchParams.get('severity');
+      const filtered = severityFilter
+        ? events.filter(e => e.severity === severityFilter)
+        : events;
+      // Newest first for human reading.
+      const sorted = [...filtered].sort((a, b) => b.detected_at.localeCompare(a.detected_at));
+      return jsonResponse({
+        ok: true,
+        count: sorted.length,
+        events: sorted,
+        filters: { severity: severityFilter },
+      }, 200, 0);
     }
 
     if (path === '/api/admin/burn-token' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
