@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { Code, Zap, Bot, FileText, Globe, ExternalLink, Wallet, ArrowRight } from 'lucide-react';
+import { Code, Zap, Bot, FileText, Globe, ExternalLink, Wallet, ArrowRight, Handshake } from 'lucide-react';
 import { WebApplicationJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
@@ -298,6 +298,38 @@ export default function DevelopersPage() {
           Free, no-auth JSON API for AI news, status, and model data.
         </p>
       </div>
+
+      {/* AFTA Callout */}
+      <Link
+        href="/agent-fair-trade"
+        className="block mb-10 group"
+        aria-label="Learn about the Agent Fair-Trade Agreement"
+      >
+        <div className="bg-gradient-to-r from-accent-primary/10 via-accent-cyan/10 to-accent-primary/10 border border-accent-primary/30 rounded-xl p-5 sm:p-6 hover:border-accent-primary/60 transition-colors">
+          <div className="flex items-start sm:items-center gap-4 flex-col sm:flex-row">
+            <div className="p-2.5 rounded-lg bg-accent-primary/15 shrink-0">
+              <Handshake className="w-6 h-6 text-accent-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <h2 className="text-text-primary font-semibold text-base sm:text-lg">
+                  This API is Agent Fair-Trade certified.
+                </h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-primary/15 text-accent-primary font-mono uppercase tracking-wide">
+                  AFTA
+                </span>
+              </div>
+              <p className="text-text-secondary text-sm">
+                Open pricing, code-enforced no-charge on 5xx, breaker, schema fail, or stale data. Ed25519-signed receipts on every paid call. Read the full standard and machine-readable manifest at <code className="font-mono text-xs text-accent-primary">/.well-known/agent-fair-trade.json</code>.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 text-accent-primary text-sm font-medium shrink-0 group-hover:gap-2.5 transition-all">
+              Read the standard
+              <ArrowRight className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+      </Link>
 
       {/* Rate Limits */}
       <div className="bg-bg-secondary border border-border rounded-xl p-5 mb-10">
