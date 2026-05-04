@@ -24,12 +24,13 @@ from pathlib import Path
 from typing import Any
 
 import requests
-from huggingface_hub import HfApi, upload_folder
+from huggingface_hub import HfApi, upload_file, upload_folder
 
 
 BASE = os.environ.get("TENSORFEED_BASE", "https://tensorfeed.ai").rstrip("/")
 TOKEN = os.environ.get("HF_TOKEN")
 REPO = os.environ.get("HF_DATASET_REPO", "tensorfeed/ai-ecosystem-daily")
+README_SOURCE = Path(__file__).parent.parent / "data" / "huggingface-dataset-readme.md"
 
 if not TOKEN:
     print("ERROR: HF_TOKEN not set", file=sys.stderr)
@@ -121,6 +122,17 @@ def main() -> int:
 
         api = HfApi(token=TOKEN)
         api.create_repo(repo_id=REPO, repo_type="dataset", exist_ok=True, private=False)
+
+        if README_SOURCE.exists():
+            upload_file(
+                path_or_fileobj=str(README_SOURCE),
+                path_in_repo="README.md",
+                repo_id=REPO,
+                repo_type="dataset",
+                commit_message="Update dataset card",
+                token=TOKEN,
+            )
+            print(f"  pushed README.md")
 
         commit_msg = f"Daily snapshot {today}"
         upload_folder(
