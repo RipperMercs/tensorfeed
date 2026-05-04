@@ -26,6 +26,8 @@ Detailed reference for the Worker, KV layout, endpoints, cron schedule, and subs
 - `whats-new.ts`: Premium morning brief (1-7 day window, pricing diff, status incidents, top news, in one paid call)
 - `mcp-registry.ts`: Daily MCP server registry telemetry (paginate registry.modelcontextprotocol.io, dedup by name keeping latest version, compute summary plus day-over-day deltas, store under mcp-reg:* prefix, expose range queries)
 - `papers.ts`: Daily curated AI/ML research papers from the Semantic Scholar Graph API. Five broad fan-out queries (large language model, transformer, RLHF, AI agents, diffusion model), throttled at ~1 req/sec (free tier) or higher with optional `SEMANTIC_SCHOLAR_API_KEY`, deduped by paperId, ranked by citation count, top 30. Stores under `papers:*` prefix. Backs free `/api/papers/ai-trending`. Daily dated key `papers:daily:{YYYY-MM-DD}` compounds into a future premium time series.
+- `arxiv.ts`: Daily snapshot of recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV. Single Atom API call (`https://export.arxiv.org/api/query`), entries parsed via regex (matches the rss.ts pattern), deduped by arxivId (versions stripped), sorted by publication date, top 50. Stores under `arxiv:*` prefix. Backs free `/api/papers/arxiv-recent`.
+- `hf-trending.ts`: Daily snapshot of the top 30 most-downloaded Hugging Face models and top 30 datasets via the public HF JSON API (no auth). Stores under `hf:*` prefix. Backs free `/api/hf/trending`. Once multiple daily snapshots accumulate, day-over-day download deltas become a true trending signal that we compute ourselves over the dated keys.
 - `probe.ts`: Active LLM endpoint probing (every 15 min POST a tiny prompt at each configured provider [Anthropic/OpenAI/Google/Mistral/Cohere], measure ttfb + total + status, append to 24h ring buffer, rewrite latest summary, daily roll-up to dated aggregate, per-provider daily call cap)
 - `gpu-pricing.ts`: GPU rental price aggregation across cloud GPU marketplaces. Phase 1 sources: Vast.ai (unauthenticated) and RunPod (GraphQL, requires `RUNPOD_API_KEY`). Normalizes heterogeneous GPU naming into a canonical taxonomy (H200, H100, B200, A100-80GB, etc), refreshes every 4h, daily snapshot for the historical series. Backs free `/api/gpu/pricing`, `/api/gpu/pricing/cheapest`, premium `/api/premium/gpu/pricing/series`.
 - `receipts.ts`: AFTA Ed25519 signing rail. Loads `RECEIPT_PRIVATE_KEY_JWK` Worker secret, signs canonical-JSON receipts on every premium response. Public key at `/.well-known/tensorfeed-receipt-key.json`. If secret is unset, premium responses ship without receipts (graceful, surfaced in `/api/meta`).
@@ -64,6 +66,12 @@ Each `*.ts` has a sibling `*.test.ts` Vitest file where applicable.
   - `papers:latest`: most recent curated AI/ML papers snapshot, served by `/api/papers/ai-trending`
   - `papers:daily:{YYYY-MM-DD}`: dated copy of the same snapshot for future premium time series
   - `papers:index`: ordered list of dates with AI papers snapshot data
+  - `arxiv:latest`: most recent arXiv recent-submissions snapshot, served by `/api/papers/arxiv-recent`
+  - `arxiv:daily:{YYYY-MM-DD}`: dated copy of the arXiv snapshot
+  - `arxiv:index`: ordered list of dates with arXiv snapshot data
+  - `hf:latest`: most recent Hugging Face top-models + top-datasets snapshot, served by `/api/hf/trending`
+  - `hf:daily:{YYYY-MM-DD}`: dated copy of the HF snapshot, used for day-over-day download delta computation
+  - `hf:index`: ordered list of dates with HF snapshot data
   - `probe:buf:{provider}`: rolling 24h buffer of last 96 probe results per LLM provider (capped, so storage is bounded)
   - `probe:latest`: pre-computed last-24h summary across all providers, served by /api/probe/latest
   - `probe:daily:{YYYY-MM-DD}:{provider}`: daily aggregate per provider, served by /api/premium/probe/series
@@ -89,6 +97,8 @@ Defined in `worker/wrangler.toml`. All cron handlers dispatched from `worker/src
 - `30 8 * * *`: Daily 8:30am UTC, trending AI repos from GitHub
 - `30 9 * * *`: Daily 9:30am UTC, MCP server registry telemetry capture (`mcp-registry.ts`). Paginates registry.modelcontextprotocol.io, dedups by name keeping isLatest, computes day-over-day deltas, stores under `mcp-reg:` prefix. Backs free `/api/mcp/registry/snapshot` and premium `/api/premium/mcp/registry/series`.
 - `0 11 * * *`: Daily 11:00am UTC, AI/ML papers capture from Semantic Scholar (`papers.ts`). Five fan-out queries throttled at ~1 req/sec, deduped by paperId, ranked by citation count, top 30 stored under `papers:latest` and `papers:daily:{date}`. Backs free `/api/papers/ai-trending`.
+- `30 11 * * *`: Daily 11:30am UTC, arXiv recent submissions capture (`arxiv.ts`). Single Atom API call across cs.AI/cs.LG/cs.CL/cs.CV, parsed and deduped by arxivId, top 50 stored under `arxiv:latest` and `arxiv:daily:{date}`. Backs free `/api/papers/arxiv-recent`.
+- `0 12 * * *`: Daily 12:00 UTC, Hugging Face trending capture (`hf-trending.ts`). Top 30 most-downloaded models + top 30 most-downloaded datasets stored under `hf:latest` and `hf:daily:{date}`. Backs free `/api/hf/trending`.
 - `5 0 * * *`: Daily 12:05am UTC, roll yesterday's per-provider 24h probe buffer into a dated daily aggregate (`probe:daily:{date}:{provider}`) for the premium probe series endpoint.
 - `15 */4 * * *`: GPU pricing refresh (`gpu-pricing.ts`). Polls Vast.ai (public) and RunPod (when `RUNPOD_API_KEY` is set), normalizes GPU names into the canonical taxonomy, writes the unified snapshot to `gpu:current`. Backs free `/api/gpu/pricing` and `/api/gpu/pricing/cheapest`.
 - `45 0 * * *`: Daily 12:45am UTC, capture daily GPU pricing snapshot for the historical series. Backs premium `/api/premium/gpu/pricing/series`. Cannot be backfilled.
@@ -186,6 +196,8 @@ All mounted under `https://tensorfeed.ai/api/*` via the Worker. Authoritative ma
 - `/api/history`, `/api/history/{YYYY-MM-DD}/{type}`: Daily historical snapshots (Phase 0 of agent payments)
 - `/api/mcp/registry/snapshot`: Today's summary of the official MCP server registry. Captured daily at 9:30 AM UTC. Bootstraps a live capture on cold start so it never returns empty.
 - `/api/papers/ai-trending`: Daily curated AI/ML papers from Semantic Scholar, ranked by citation count. Five fan-out queries (LLM, transformer, RLHF, AI agents, diffusion). Captured daily at 11:00 AM UTC. Bootstraps a live capture on cold start so it never returns empty.
+- `/api/papers/arxiv-recent`: 50 most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV from the Atom API, parsed and deduped by arxivId. Captured daily at 11:30 AM UTC. Bootstraps a live capture on cold start.
+- `/api/hf/trending`: Top 30 most-downloaded Hugging Face models + top 30 most-downloaded datasets. Captured daily at 12:00 UTC against the public HF API. Bootstraps a live capture on cold start.
 - `/api/probe/latest`: Last 24h of measured LLM endpoint latency and availability per provider. Refreshed every 15 min by the probe cron. Returns 503 with explanatory body if no PROBE_*_KEY secrets are configured.
 - `/api/gpu/pricing`: Aggregated GPU rental pricing across cloud GPU marketplaces (Vast.ai + RunPod). Cheapest on-demand and spot per canonical GPU class. Refreshed every 4 hours.
 - `/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot`: Top 3 cheapest current offers for one canonical GPU. Agent-friendly entry point.

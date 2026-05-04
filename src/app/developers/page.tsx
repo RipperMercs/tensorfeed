@@ -273,6 +273,62 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/papers/arxiv-recent',
+    description: 'Most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV. Single call to the arXiv Atom API, parsed, deduped by arxivId, sorted by publication date. Each entry carries title, abstract, authors, primary category, all categories, publishedAt, updatedAt, htmlUrl, pdfUrl, and doi. Refreshed daily at 11:30 UTC. Pairs with /api/papers/ai-trending: arxiv-recent is the firehose of brand-new submissions, ai-trending is the citation-ranked top of the field.',
+    cache: 'Cache for 10 minutes',
+    example: `{
+  "ok": true,
+  "snapshot": {
+    "date": "2026-05-04",
+    "capturedAt": "2026-05-04T11:30:00Z",
+    "total_papers": 50,
+    "categories_queried": ["cs.AI", "cs.LG", "cs.CL", "cs.CV"],
+    "papers": [
+      {
+        "arxivId": "2401.12345",
+        "version": "v2",
+        "title": "...",
+        "abstract": "...",
+        "authors": ["Alice", "Bob"],
+        "primaryCategory": "cs.AI",
+        "publishedAt": "2026-05-04T09:00:00Z",
+        "htmlUrl": "https://arxiv.org/abs/2401.12345v2",
+        "pdfUrl": "https://arxiv.org/pdf/2401.12345v2"
+      }
+    ]
+  }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/hf/trending',
+    description: 'Top 30 most-downloaded models and top 30 most-downloaded datasets on Hugging Face. Captured daily at 12:00 UTC against the public HF API (no auth). Each model entry includes id, downloads, likes, pipeline_tag, tags, lastModified, private, and gated. Once we have multiple days of snapshots, day-over-day download deltas become a real "trending" signal. Pairs with the existing TensorFeed HF dataset (tensorfeed/ai-ecosystem-daily) which we publish back into the HF community.',
+    cache: 'Cache for 10 minutes',
+    example: `{
+  "ok": true,
+  "snapshot": {
+    "date": "2026-05-04",
+    "capturedAt": "2026-05-04T12:00:00Z",
+    "models": {
+      "sort": "downloads",
+      "count": 30,
+      "items": [
+        { "id": "sentence-transformers/all-MiniLM-L6-v2",
+          "downloads": 12000000, "likes": 1800,
+          "pipeline_tag": "sentence-similarity",
+          "tags": ["sentence-transformers"], "lastModified": "..." }
+      ]
+    },
+    "datasets": { "sort": "downloads", "count": 30, "items": [...] },
+    "summary": {
+      "top_pipeline_tags": [{ "tag": "text-generation", "count": 12 }],
+      "top_namespaces": [{ "namespace": "meta-llama", "count": 4 }]
+    }
+  }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/agents/news.json',
     description: 'Alias for /api/news. Agent-friendly URL for news data.',
     cache: 'Cache for 5 minutes',

@@ -50,6 +50,14 @@ import {
   getLatestSnapshot as getPapersLatest,
 } from './papers';
 import {
+  captureArxivSnapshot,
+  getLatestSnapshot as getArxivLatest,
+} from './arxiv';
+import {
+  captureHFSnapshot,
+  getLatestSnapshot as getHFLatest,
+} from './hf-trending';
+import {
   runProbeCycle,
   rollupYesterday as rollupProbeYesterday,
   getLatestSummary as getProbeLatest,
@@ -1613,6 +1621,8 @@ export default {
           historySnapshot: '/api/history/{YYYY-MM-DD}/{type}',
           mcpRegistrySnapshot: '/api/mcp/registry/snapshot',
           papersAiTrending: '/api/papers/ai-trending',
+          papersArxivRecent: '/api/papers/arxiv-recent',
+          hfTrending: '/api/hf/trending',
           probeLatest: '/api/probe/latest',
           gpuPricing: '/api/gpu/pricing',
           gpuPricingCheapest: '/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot',
@@ -1791,6 +1801,33 @@ export default {
       const snapshot = await getPapersLatest(env);
       if (!snapshot) {
         return jsonResponse({ ok: false, error: 'papers_unavailable' }, 503);
+      }
+      return jsonResponse({ ok: true, snapshot }, 200, 600);
+    }
+
+    // === ARXIV RECENT SUBMISSIONS (free) ===
+    // Most recent submissions in cs.AI / cs.LG / cs.CL / cs.CV from the
+    // arXiv Atom API, parsed and deduped. Captured daily at 11:30 UTC.
+    // First request bootstraps a live capture so it never returns empty.
+
+    if (path === '/api/papers/arxiv-recent') {
+      const snapshot = await getArxivLatest(env);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'arxiv_unavailable' }, 503);
+      }
+      return jsonResponse({ ok: true, snapshot }, 200, 600);
+    }
+
+    // === HUGGING FACE TRENDING (free) ===
+    // Top 30 most-downloaded models and datasets on Hugging Face, captured
+    // once per day at 12:00 UTC. Day-over-day deltas (computed against the
+    // dated keys) become a true "trending" signal. First request bootstraps
+    // a live capture so it never returns empty.
+
+    if (path === '/api/hf/trending') {
+      const snapshot = await getHFLatest(env);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'hf_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);
     }
@@ -3001,6 +3038,14 @@ export default {
         const result = await captureDailyPapers(env);
         return jsonResponse({ message: 'AI papers snapshot captured', ...result });
       }
+      if (task === 'arxiv') {
+        const result = await captureArxivSnapshot(env);
+        return jsonResponse({ message: 'arXiv snapshot captured', ...result });
+      }
+      if (task === 'hf') {
+        const result = await captureHFSnapshot(env);
+        return jsonResponse({ message: 'HF trending snapshot captured', ...result });
+      }
       if (task === 'probe') {
         const result = await runProbeCycle(env);
         return jsonResponse({ message: 'Probe cycle ran', ...result });
@@ -3185,6 +3230,16 @@ export default {
       // citation count. Daily snapshot keyed under papers:daily:{date}
       // compounds into a future premium time series.
       await run('captureDailyPapers', () => captureDailyPapers(env));
+    } else if (cron === '30 11 * * *') {
+      // Daily 11:30 AM UTC: capture recent arXiv submissions in
+      // cs.AI/cs.LG/cs.CL/cs.CV. Single Atom API call, parsed and deduped
+      // by arxivId. Daily snapshot keyed under arxiv:daily:{date}.
+      await run('captureArxivSnapshot', () => captureArxivSnapshot(env));
+    } else if (cron === '0 12 * * *') {
+      // Daily 12:00 UTC: capture top 30 most-downloaded models + datasets
+      // on Hugging Face. Daily snapshot keyed under hf:daily:{date} so we
+      // can compute day-over-day download deltas as a true trending signal.
+      await run('captureHFSnapshot', () => captureHFSnapshot(env));
     } else if (cron === '*/15 * * * *') {
       // Every 15 min: probe each LLM provider with a configured key,
       // measure latency + status, write the latest 24h summary.

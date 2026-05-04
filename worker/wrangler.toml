@@ -30,6 +30,15 @@ crons = [
   # count. Powers free /api/papers/ai-trending plus a future premium
   # time-series endpoint over the daily papers:daily:{date} keys.
   "0 11 * * *",
+  # Daily 11:30 AM UTC: capture recent arXiv submissions in
+  # cs.AI/cs.LG/cs.CL/cs.CV (worker/src/arxiv.ts). Atom API, single call,
+  # dedup by arxivId. Powers free /api/papers/arxiv-recent.
+  "30 11 * * *",
+  # Daily 12:00 UTC: capture top 30 most-downloaded models + datasets
+  # from Hugging Face (worker/src/hf-trending.ts). Day-over-day deltas
+  # against hf:daily:{date} become a real trending signal once we have
+  # multiple days. Powers free /api/hf/trending.
+  "0 12 * * *",
   # Active LLM endpoint probing (worker/src/probe.ts). Every 15 min:
   # POST a tiny prompt at each provider with an API key configured,
   # measure ttfb + total + status, append to a 24h ring buffer, and
