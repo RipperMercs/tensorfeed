@@ -19,6 +19,7 @@ Site: **https://tensorfeed.ai**
 - **MCP server** (`mcp-server/`): [Model Context Protocol](https://modelcontextprotocol.io) server published as `@tensorfeed/mcp-server` on npm. Exposes 19 tools (6 free, 13 paid) for use in Claude Desktop, Claude Code, Cursor, Cline, and any other MCP client. See `mcp-server/README.md` for the full tool list and setup
 - **Python SDK** (`sdk/python/`): `pip install tensorfeed`. Full coverage of free + premium endpoints, optional `[web3]` extra for one-call USDC sign-and-send
 - **JavaScript SDK** (`sdk/javascript/`): `npm install tensorfeed`. Same surface as the Python client
+- **Hugging Face dataset**: [tensorfeed/ai-ecosystem-daily](https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily). Daily JSONL snapshots of the public API committed at 08:00 UTC by `.github/workflows/huggingface-push.yml`. Inference-only license per AFTA
 
 ## MCP server quick start
 

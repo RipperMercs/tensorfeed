@@ -76,6 +76,14 @@ export default function Footer() {
               Account
             </Link>
             <a
+              href="https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors"
+            >
+              HF Dataset
+            </a>
+            <a
               href="https://x.com/tensorfeed"
               target="_blank"
               rel="noopener noreferrer"
