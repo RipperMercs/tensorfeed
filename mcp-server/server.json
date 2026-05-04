@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "ai.tensorfeed/mcp-server",
   "title": "TensorFeed",
-  "description": "Real-time AI news, status, model pricing, and pay-per-call premium tools (USDC on Base). TensorFeed.ai is agent fair-trade certified: open pricing, automatic no-charge on 5xx, breaker, schema fail, and stale data, Ed25519-signed receipts on every paid call. Built with Claude (Anthropic). Standard at https://tensorfeed.ai/.well-known/agent-fair-trade.json.",
+  "description": "AI news, model pricing, service status, and machine-payable premium tools. AFTA-certified.",
   "version": "1.11.0",
   "websiteUrl": "https://tensorfeed.ai/developers/agent-payments",
   "repository": {
