@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bot, Wrench, Palette, Search, Code, ExternalLink } from 'lucide-react';
+import { Bot, Wrench, Palette, Search, Code, ExternalLink, Handshake, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import fallbackAgentsData from '@/../data/agents-directory.json';
 // Metadata must be in a separate file for client components, but we keep
@@ -84,6 +84,38 @@ export default function AgentsPage() {
           Discover AI agents, frameworks, and tools shaping the ecosystem.
         </p>
       </div>
+
+      {/* AFTA Callout */}
+      <Link
+        href="/agent-fair-trade"
+        className="block mb-10 group"
+        aria-label="Learn about the Agent Fair-Trade Agreement"
+      >
+        <div className="bg-gradient-to-r from-accent-primary/10 via-accent-cyan/10 to-accent-primary/10 border border-accent-primary/30 rounded-xl p-5 sm:p-6 hover:border-accent-primary/60 transition-colors">
+          <div className="flex items-start sm:items-center gap-4 flex-col sm:flex-row">
+            <div className="p-2.5 rounded-lg bg-accent-primary/15 shrink-0">
+              <Handshake className="w-6 h-6 text-accent-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <h2 className="text-text-primary font-semibold text-base sm:text-lg">
+                  Building agents? Read the Agent Fair-Trade Agreement.
+                </h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-primary/15 text-accent-primary font-mono uppercase tracking-wide">
+                  Live
+                </span>
+              </div>
+              <p className="text-text-secondary text-sm">
+                AFTA is an open standard for how websites and AI agents work together: code-enforced no-charge for compliant agents, signed receipts, on-chain settlement when agents pay. Built on TensorFeed, free for anyone to adopt.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 text-accent-primary text-sm font-medium shrink-0 group-hover:gap-2.5 transition-all">
+              Read the agreement
+              <ArrowRight className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+      </Link>
 
       {/* Editorial Intro */}
       <div className="max-w-4xl mb-10 text-text-secondary leading-relaxed space-y-4">
