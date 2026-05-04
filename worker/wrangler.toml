@@ -50,6 +50,12 @@ crons = [
   # AI_Agents. Deduped by post id, top 30 by score. Powers free
   # /api/reddit/trending.
   "0 13 * * *",
+  # Daily 14:00 UTC: capture the OpenRouter cross-provider model
+  # catalog (worker/src/openrouter-catalog.ts). 200+ models normalized
+  # across 50+ inference providers with per-token pricing, context
+  # window, modality, and provider metadata. Powers free
+  # /api/openrouter/models.
+  "0 14 * * *",
   # Active LLM endpoint probing (worker/src/probe.ts). Every 15 min:
   # POST a tiny prompt at each provider with an API key configured,
   # measure ttfb + total + status, append to a 24h ring buffer, and

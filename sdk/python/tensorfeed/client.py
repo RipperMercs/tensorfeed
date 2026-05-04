@@ -1079,6 +1079,29 @@ class TensorFeed:
 
     # ── Free: Hot GitHub issues across AI repos ─────────────────────
 
+    def get_openrouter_models(self) -> dict[str, Any]:
+        """Cross-provider AI model catalog from OpenRouter.
+
+        Free, no auth. Daily snapshot of every model OpenRouter routes
+        to (200+), normalized with comparable per-token pricing
+        (prompt / completion / image / request), context window,
+        modality, top provider metadata (max_completion_tokens,
+        moderation flag), and supported_parameters. Pairs with
+        ``client.models()`` (TensorFeed's curated frontier-lab catalog)
+        by adding the long tail of OSS models on cloud inference.
+        Refreshed daily at 14:00 UTC.
+
+        Returns:
+            Dict with ``ok`` and ``snapshot`` keys. Snapshot includes
+            ``date``, ``capturedAt``, ``total_models``, ``models``
+            (each entry: id, name, description, created, context_length,
+            modality, instruct_type, tokenizer, pricing, top_provider,
+            supported_parameters), and ``summary`` (by_namespace,
+            by_modality, cheapest_input, cheapest_output, largest_context,
+            free_tier_count).
+        """
+        return self._request("GET", "/openrouter/models")
+
     def get_reddit_trending(self) -> dict[str, Any]:
         """Currently-hot Reddit threads in 7 AI-relevant subreddits.
 

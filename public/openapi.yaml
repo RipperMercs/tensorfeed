@@ -431,6 +431,19 @@ paths:
             application/json:
               schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
 
+  /api/openrouter/models:
+    get:
+      tags: [OpenRouter]
+      summary: Cross-provider AI model catalog snapshot
+      operationId: getOpenRouterModels
+      description: Daily snapshot of OpenRouter's normalized cross-provider model catalog. 200+ models across 50+ inference providers with comparable per-token pricing, context window, modality, and provider metadata. Pairs with /api/models (curated frontier-lab catalog) by surfacing the long tail of OSS models on cloud inference. Refreshed daily at 14:00 UTC.
+      responses:
+        '200':
+          description: OpenRouter catalog snapshot
+          content:
+            application/json:
+              schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
+
   /api/history:
     get:
       tags: [History]

@@ -659,6 +659,48 @@ export interface RedditPost {
   is_video: boolean;
 }
 
+export interface ORPricing {
+  prompt: number | null;
+  completion: number | null;
+  image: number | null;
+  request: number | null;
+}
+
+export interface ORModel {
+  id: string;
+  name: string;
+  description: string | null;
+  created: number | null;
+  context_length: number | null;
+  modality: string | null;
+  instruct_type: string | null;
+  tokenizer: string | null;
+  pricing: ORPricing;
+  top_provider: {
+    max_completion_tokens: number | null;
+    is_moderated: boolean | null;
+  };
+  supported_parameters: string[];
+}
+
+export interface OpenRouterModelsResponse {
+  ok: boolean;
+  snapshot: {
+    date: string;
+    capturedAt: string;
+    total_models: number;
+    models: ORModel[];
+    summary: {
+      by_namespace: Array<{ namespace: string; count: number }>;
+      by_modality: Record<string, number>;
+      cheapest_input: { id: string; usd_per_million: number } | null;
+      cheapest_output: { id: string; usd_per_million: number } | null;
+      largest_context: { id: string; tokens: number } | null;
+      free_tier_count: number;
+    };
+  };
+}
+
 export interface RedditTrendingResponse {
   ok: boolean;
   snapshot: {
@@ -1690,6 +1732,19 @@ export class TensorFeed {
    */
   async getHFTrending(): Promise<HFTrendingResponse> {
     return this.request<HFTrendingResponse>('GET', '/hf/trending');
+  }
+
+  /**
+   * OpenRouter cross-provider model catalog snapshot.
+   *
+   * Free, no auth. 200+ models normalized across 50+ inference
+   * providers with comparable per-token pricing, context window,
+   * modality, and provider metadata. Pairs with the curated
+   * /api/models by adding the long tail of OSS models on cloud
+   * inference. Refreshed daily at 14:00 UTC.
+   */
+  async getOpenRouterModels(): Promise<OpenRouterModelsResponse> {
+    return this.request<OpenRouterModelsResponse>('GET', '/openrouter/models');
   }
 
   /**

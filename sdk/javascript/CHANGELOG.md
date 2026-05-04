@@ -2,6 +2,12 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.20.0 - 2026-05-04
+
+### Added
+- `tf.getOpenRouterModels()`. Free, no-auth method returning the daily OpenRouter cross-provider model catalog: 200+ models normalized across 50+ inference providers with comparable per-token pricing, context window, modality, and provider metadata. Pairs with the curated `/api/models` by surfacing the long tail of OSS models on cloud inference. Refreshed daily at 14:00 UTC.
+- `OpenRouterModelsResponse`, `ORModel`, `ORPricing` types.
+
 ## 1.19.0 - 2026-05-04
 
 ### Added

@@ -66,6 +66,10 @@ import {
   getLatestSnapshot as getRedditLatest,
 } from './reddit-trending';
 import {
+  captureORSnapshot,
+  getLatestSnapshot as getORLatest,
+} from './openrouter-catalog';
+import {
   runProbeCycle,
   rollupYesterday as rollupProbeYesterday,
   getLatestSummary as getProbeLatest,
@@ -1636,6 +1640,7 @@ export default {
           hfTrending: '/api/hf/trending',
           issuesHot: '/api/issues/hot',
           redditTrending: '/api/reddit/trending',
+          openrouterModels: '/api/openrouter/models',
           probeLatest: '/api/probe/latest',
           gpuPricing: '/api/gpu/pricing',
           gpuPricingCheapest: '/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot',
@@ -1870,6 +1875,21 @@ export default {
       const snapshot = await getRedditLatest(env);
       if (!snapshot) {
         return jsonResponse({ ok: false, error: 'reddit_unavailable' }, 503);
+      }
+      return jsonResponse({ ok: true, snapshot }, 200, 600);
+    }
+
+    // === OPENROUTER CROSS-PROVIDER MODEL CATALOG (free) ===
+    // Daily snapshot of every model OpenRouter routes to (200+),
+    // normalized with comparable per-token pricing, context window,
+    // modality, and provider metadata. Pairs with /api/models (the
+    // curated frontier-lab catalog) by adding the long tail of OSS
+    // models on cloud inference. Captured by the 14:00 UTC cron.
+
+    if (path === '/api/openrouter/models') {
+      const snapshot = await getORLatest(env);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'openrouter_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);
     }
@@ -3157,6 +3177,10 @@ export default {
         const result = await captureRedditSnapshot(env);
         return jsonResponse({ message: 'Reddit snapshot captured', ...result });
       }
+      if (task === 'openrouter') {
+        const result = await captureORSnapshot(env);
+        return jsonResponse({ message: 'OpenRouter catalog snapshot captured', ...result });
+      }
       if (task === 'probe') {
         const result = await runProbeCycle(env);
         return jsonResponse({ message: 'Probe cycle ran', ...result });
@@ -3365,6 +3389,13 @@ export default {
       // throttled, deduped by post id, top 30 by score. Daily snapshot
       // keyed under reddit:daily:{date}. Backs free /api/reddit/trending.
       await run('captureRedditSnapshot', () => captureRedditSnapshot(env));
+    } else if (cron === '0 14 * * *') {
+      // Daily 14:00 UTC: capture the OpenRouter cross-provider model
+      // catalog (200+ models normalized across 50+ inference providers
+      // with per-token pricing, context window, modality, and provider
+      // metadata). Single API call, no auth. Daily snapshot keyed
+      // under or:daily:{date}. Backs free /api/openrouter/models.
+      await run('captureORSnapshot', () => captureORSnapshot(env));
     } else if (cron === '*/15 * * * *') {
       // Every 15 min: probe each LLM provider with a configured key,
       // measure latency + status, write the latest 24h summary.

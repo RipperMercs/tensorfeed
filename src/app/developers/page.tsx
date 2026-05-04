@@ -375,6 +375,40 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/openrouter/models',
+    description: 'Daily snapshot of OpenRouter\'s normalized cross-provider model catalog. 200+ models across 50+ inference providers (Anthropic, OpenAI, Google, Meta, Mistral, DeepSeek, Together, Fireworks, Groq, etc) with comparable per-token pricing (prompt, completion, image, request), context window, modality (e.g. text+image->text), instruct_type, tokenizer, top provider metadata (max_completion_tokens, is_moderated), and supported_parameters. Snapshot summary surfaces by_namespace, by_modality, cheapest_input/output (excluding free tier), largest_context, and free_tier_count. Pairs with /api/models: curated frontier-lab catalog there, OSS-on-cloud long tail here. Refreshed daily at 14:00 UTC.',
+    cache: 'Cache for 10 minutes',
+    example: `{
+  "ok": true,
+  "snapshot": {
+    "date": "2026-05-04",
+    "capturedAt": "2026-05-04T14:00:00Z",
+    "total_models": 240,
+    "models": [
+      {
+        "id": "anthropic/claude-3.5-sonnet",
+        "name": "Claude 3.5 Sonnet",
+        "context_length": 200000,
+        "modality": "text+image->text",
+        "instruct_type": "claude",
+        "pricing": { "prompt": 0.000003, "completion": 0.000015, "image": 0.0048, "request": 0 },
+        "top_provider": { "max_completion_tokens": 8192, "is_moderated": true },
+        "supported_parameters": ["temperature", "top_p", "tools"]
+      }
+    ],
+    "summary": {
+      "by_namespace": [{ "namespace": "anthropic", "count": 4 }, { "namespace": "openai", "count": 12 }],
+      "by_modality": { "text->text": 180, "text+image->text": 35 },
+      "cheapest_input": { "id": "...", "usd_per_million": 0.07 },
+      "cheapest_output": { "id": "...", "usd_per_million": 0.21 },
+      "largest_context": { "id": "...", "tokens": 2000000 },
+      "free_tier_count": 8
+    }
+  }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/reddit/trending',
     description: 'Currently-hot threads in 7 AI-relevant subreddits (LocalLLaMA, MachineLearning, ClaudeAI, OpenAI, singularity, artificial, AI_Agents). Each subreddit polled via the public Reddit JSON endpoint, stickied and NSFW posts filtered, deduped by post id, top 30 by score. Refreshed daily at 13:00 UTC. Companion to /api/issues/hot: GitHub developer conversation vs Reddit community conversation. Titles pass through TensorFeed prompt-injection sanitization at capture time.',
     cache: 'Cache for 10 minutes',

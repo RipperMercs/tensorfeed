@@ -910,6 +910,72 @@
         }
       }
     },
+    "/api/openrouter/models": {
+      "get": {
+        "tags": [
+          "OpenRouter"
+        ],
+        "summary": "Cross-provider AI model catalog snapshot",
+        "operationId": "getOpenRouterModels",
+        "description": "Daily snapshot of OpenRouter's normalized cross-provider model catalog. 200+ models across 50+ inference providers with comparable per-token pricing (prompt, completion, image, request), context window, modality, instruct_type, tokenizer, top provider metadata, and supported_parameters. Pairs with /api/models (curated frontier-lab catalog) by surfacing the long tail of OSS models on cloud inference. Refreshed daily at 14:00 UTC.",
+        "responses": {
+          "200": {
+            "description": "OpenRouter catalog snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "snapshot": {
+                      "type": "object",
+                      "properties": {
+                        "date": { "type": "string", "format": "date" },
+                        "capturedAt": { "type": "string", "format": "date-time" },
+                        "total_models": { "type": "integer" },
+                        "models": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" },
+                              "name": { "type": "string" },
+                              "description": { "type": "string", "nullable": true },
+                              "created": { "type": "integer", "nullable": true },
+                              "context_length": { "type": "integer", "nullable": true },
+                              "modality": { "type": "string", "nullable": true },
+                              "instruct_type": { "type": "string", "nullable": true },
+                              "tokenizer": { "type": "string", "nullable": true },
+                              "pricing": {
+                                "type": "object",
+                                "properties": {
+                                  "prompt": { "type": "number", "nullable": true },
+                                  "completion": { "type": "number", "nullable": true },
+                                  "image": { "type": "number", "nullable": true },
+                                  "request": { "type": "number", "nullable": true }
+                                }
+                              },
+                              "top_provider": {
+                                "type": "object",
+                                "properties": {
+                                  "max_completion_tokens": { "type": "integer", "nullable": true },
+                                  "is_moderated": { "type": "boolean", "nullable": true }
+                                }
+                              },
+                              "supported_parameters": { "type": "array", "items": { "type": "string" } }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/hf/trending": {
       "get": {
         "tags": [

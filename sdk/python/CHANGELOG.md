@@ -2,6 +2,11 @@
 
 All notable changes to the Python SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.24.0 - 2026-05-04
+
+### Added
+- `tf.get_openrouter_models()`. Free, no-auth method returning the daily OpenRouter cross-provider model catalog: 200+ models normalized across 50+ inference providers (Anthropic, OpenAI, Google, Meta, Mistral, DeepSeek, Together, Fireworks, Groq, etc) with comparable per-token pricing (prompt / completion / image / request), context window, modality, and provider metadata. Pairs with `tf.models()` (curated frontier-lab catalog) by surfacing the long tail of OSS models on cloud inference. Refreshed daily at 14:00 UTC.
+
 ## 1.23.0 - 2026-05-04
 
 ### Added
