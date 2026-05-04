@@ -43,19 +43,33 @@ if not TOKEN:
 # as a single JSON record. The `models` feed has a nested provider[].models[]
 # shape and is flattened with a custom path inside `to_jsonl`.
 FEEDS: list[tuple[str, str, str | None]] = [
+    # Tier 1: high-velocity feeds (news, pricing, status)
     ("news", "/api/news?limit=200", "articles"),
     ("models", "/api/models", None),
     ("pricing", "/api/agents/pricing", None),
     ("status", "/api/status", "services"),
     ("benchmarks", "/api/benchmarks", "benchmarks"),
+    # Tier 2: directories the data community wants
     ("agents-directory", "/api/agents/directory", "agents"),
     ("agents-activity", "/api/agents/activity", "recent"),
     ("podcasts", "/api/podcasts", "episodes"),
     ("trending-repos", "/api/trending-repos", "repos"),
+    # Tier 3: registries + telemetry
     ("mcp-registry", "/api/mcp/registry/snapshot", None),
     ("probe", "/api/probe/latest", None),
     ("gpu-pricing", "/api/gpu/pricing", None),
     ("afta-adopters", "/api/afta/adopters", "adopters"),
+    # Tier 4: structured catalogs (added 2026-05-03; high signal for LLM training)
+    ("ai-hardware", "/api/ai-hardware", "hardware"),
+    ("open-weights", "/api/open-weights", "models"),
+    ("inference-providers", "/api/inference-providers", "models"),
+    ("training-runs", "/api/training-runs", "runs"),
+    ("marketplaces", "/api/marketplaces", "marketplaces"),
+    ("specialized-models", "/api/specialized-models", "models"),
+    ("fine-tuning", "/api/fine-tuning", "providers"),
+    ("oss-tools", "/api/oss-tools", "tools"),
+    ("agent-apis", "/api/agent-apis", "apis"),
+    ("voice-leaderboards", "/api/voice-leaderboards", None),
 ]
 
 

@@ -50,6 +50,26 @@ configs:
     data_files: '*/gpu-pricing.jsonl'
   - config_name: afta-adopters
     data_files: '*/afta-adopters.jsonl'
+  - config_name: ai-hardware
+    data_files: '*/ai-hardware.jsonl'
+  - config_name: open-weights
+    data_files: '*/open-weights.jsonl'
+  - config_name: inference-providers
+    data_files: '*/inference-providers.jsonl'
+  - config_name: training-runs
+    data_files: '*/training-runs.jsonl'
+  - config_name: marketplaces
+    data_files: '*/marketplaces.jsonl'
+  - config_name: specialized-models
+    data_files: '*/specialized-models.jsonl'
+  - config_name: fine-tuning
+    data_files: '*/fine-tuning.jsonl'
+  - config_name: oss-tools
+    data_files: '*/oss-tools.jsonl'
+  - config_name: agent-apis
+    data_files: '*/agent-apis.jsonl'
+  - config_name: voice-leaderboards
+    data_files: '*/voice-leaderboards.jsonl'
 ---
 
 # TensorFeed AI Ecosystem Daily
@@ -63,18 +83,28 @@ Each daily snapshot lives in a `YYYY-MM-DD/` subfolder with one JSONL file per f
 | File | Records | Description |
 |---|---|---|
 | `news.jsonl` | up to 200 | AI news articles aggregated from major sources, snippets clipped, prompt-injection sanitized. |
-| `models.jsonl` | ~230 | Model pricing and specs across all major labs. |
-| `pricing.jsonl` | ~230 | Compact pricing payload for agents. |
+| `models.jsonl` | ~230 | Model pricing and specs across all major labs, flattened with provider name on each row. |
+| `pricing.jsonl` | 1 (summary) | Compact pricing payload for agents. |
 | `status.jsonl` | ~12 | Real-time operational status of major AI services. |
-| `benchmarks.jsonl` | ~15 | Public benchmark scores. |
+| `benchmarks.jsonl` | ~5 | Public benchmark scores per model. |
 | `agents-directory.jsonl` | ~18 | Curated AI agent directory. |
 | `agents-activity.jsonl` | varies | Live AI bot traffic on tensorfeed.ai (ClaudeBot, GPTBot, Applebot, etc). |
-| `podcasts.jsonl` | ~100 | Recent AI podcast episodes. |
+| `podcasts.jsonl` | ~50 | Recent AI podcast episodes. |
 | `trending-repos.jsonl` | ~20 | Trending GitHub repos in AI/ML. |
 | `mcp-registry.jsonl` | 1 (summary) | Daily count + delta of the official MCP server registry. |
-| `probe.jsonl` | varies | Last 24h of LLM endpoint latency measurements. |
-| `gpu-pricing.jsonl` | varies | GPU rental price snapshot across cloud marketplaces. |
+| `probe.jsonl` | 1 (summary) | Last 24h of LLM endpoint latency measurements. |
+| `gpu-pricing.jsonl` | 1 (summary) | GPU rental price snapshot across cloud marketplaces (Vast.ai, RunPod). |
 | `afta-adopters.jsonl` | varies | Sites publishing an AFTA manifest. |
+| `ai-hardware.jsonl` | ~17 | AI accelerator specs: NVIDIA Hopper/Blackwell, AMD Instinct, Google TPU, AWS Trainium, Apple, Cerebras, Groq. FLOPS, VRAM, memory bandwidth, list price. |
+| `open-weights.jsonl` | ~9 | Production-ready open-weights models with quantization options (FP16/FP8/AWQ INT4/GGUF), VRAM requirement per quantization, recommended GPU class, license. |
+| `inference-providers.jsonl` | ~8 | Hosted inference providers for open-weights models (Together, Fireworks, etc) with per-model pricing. |
+| `training-runs.jsonl` | ~11 | Disclosed and estimated training cost catalog: parameters, training tokens, hardware, GPU hours, USD millions, costSource (disclosed vs estimated). |
+| `marketplaces.jsonl` | ~12 | AI marketplace catalog: GPT Store, Claude Skills, HF Spaces, HF Models, Replicate, MCP Registry, etc. |
+| `specialized-models.jsonl` | ~19 | Domain-specialized models (code, medical, legal, finance, music, 3D, retrieval). |
+| `fine-tuning.jsonl` | ~12 | Fine-tuning providers (first-party + hosted) with training pricing per 1M tokens, methods, base models supported. |
+| `oss-tools.jsonl` | ~25 | Production OSS tools agents and developers actually install (Ollama, llama.cpp, vLLM, Open WebUI, etc). |
+| `agent-apis.jsonl` | ~29 | Non-LLM APIs agents commonly wire (Tavily, Brave, Exa, Firecrawl, OpenWeather, Stripe, Twilio, etc). |
+| `voice-leaderboards.jsonl` | 1 (summary) | TTS Arena Elo + Open ASR Leaderboard WER rankings. |
 
 ## Quick start
 
