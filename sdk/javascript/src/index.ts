@@ -529,6 +529,39 @@ export interface PapersAITrendingResponse {
   };
 }
 
+export interface HFDailyPaper {
+  paperId: string;
+  title: string;
+  summary: string | null;
+  authors: string[];
+  publishedAt: string | null;
+  submittedAt: string | null;
+  upvotes: number;
+  num_comments: number;
+  thumbnail: string | null;
+  hf_url: string;
+  arxiv_url: string | null;
+  github_repo: string | null;
+  github_stars: number | null;
+  ai_keywords: string[];
+}
+
+export interface HFDailyPapersResponse {
+  ok: boolean;
+  snapshot: {
+    date: string;
+    capturedAt: string;
+    total_papers: number;
+    raw_count: number;
+    papers: HFDailyPaper[];
+    summary: {
+      by_keyword: Array<{ keyword: string; count: number }>;
+      most_upvoted: { paperId: string; title: string; upvotes: number } | null;
+      most_discussed: { paperId: string; title: string; comments: number } | null;
+    };
+  };
+}
+
 export interface ArxivPaper {
   arxivId: string;
   version: string | null;
@@ -1708,6 +1741,20 @@ export class TensorFeed {
    */
   async getPapersAITrending(): Promise<PapersAITrendingResponse> {
     return this.request<PapersAITrendingResponse>('GET', '/papers/ai-trending');
+  }
+
+  /**
+   * HF Daily Papers: editor-curated AI papers with community signal.
+   *
+   * Free, no auth. Hugging Face's editor-picked daily set of AI/ML
+   * papers, layered with community upvotes and discussion counts.
+   * Different signal from getPapersArxivRecent (firehose) and
+   * getPapersAITrending (citation-ranked all-time): this is editor
+   * picks. Refreshed daily at 14:30 UTC. Titles sanitized at capture
+   * time.
+   */
+  async getPapersHFDaily(): Promise<HFDailyPapersResponse> {
+    return this.request<HFDailyPapersResponse>('GET', '/papers/hf-daily');
   }
 
   /**

@@ -273,6 +273,40 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/papers/hf-daily',
+    description: 'Hugging Face\'s editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from /api/papers/arxiv-recent (firehose of recent submissions) and /api/papers/ai-trending (citation-ranked all-time): this is editor picks of-the-day with HF community engagement on top. Each paper carries paperId, title (sanitized at capture time), summary, authors, upvotes, num_comments, hf_url, arxiv_url (when arxiv-style), github_repo, github_stars, ai_keywords. Refreshed daily at 14:30 UTC.',
+    cache: 'Cache for 10 minutes',
+    example: `{
+  "ok": true,
+  "snapshot": {
+    "date": "2026-05-04",
+    "capturedAt": "2026-05-04T14:30:00Z",
+    "total_papers": 30,
+    "papers": [
+      {
+        "paperId": "2401.12345",
+        "title": "...",
+        "summary": "...",
+        "authors": ["Alice", "Bob"],
+        "upvotes": 142,
+        "num_comments": 12,
+        "hf_url": "https://huggingface.co/papers/2401.12345",
+        "arxiv_url": "https://arxiv.org/abs/2401.12345",
+        "github_repo": "https://github.com/foo/bar",
+        "github_stars": 1500,
+        "ai_keywords": ["llm","reasoning"]
+      }
+    ],
+    "summary": {
+      "by_keyword": [{ "keyword": "llm", "count": 12 }],
+      "most_upvoted": { "paperId": "...", "title": "...", "upvotes": 280 },
+      "most_discussed": { "paperId": "...", "title": "...", "comments": 45 }
+    }
+  }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/papers/arxiv-recent',
     description: 'Most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV. Single call to the arXiv Atom API, parsed, deduped by arxivId, sorted by publication date. Each entry carries title, abstract, authors, primary category, all categories, publishedAt, updatedAt, htmlUrl, pdfUrl, and doi. Refreshed daily at 11:30 UTC. Pairs with /api/papers/ai-trending: arxiv-recent is the firehose of brand-new submissions, ai-trending is the citation-ranked top of the field.',
     cache: 'Cache for 10 minutes',

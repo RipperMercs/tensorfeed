@@ -1033,6 +1033,30 @@ class TensorFeed:
 
     # ── Free: arXiv recent submissions ──────────────────────────────
 
+    def get_papers_hf_daily(self) -> dict[str, Any]:
+        """HF Daily Papers: editor-curated AI papers with community signal.
+
+        Free, no auth. Hugging Face's editor-picked daily set of AI/ML
+        papers, layered with community upvotes and discussion counts.
+        Different signal from the other paper feeds:
+          - ``get_papers_arxiv_recent()``: unfiltered firehose
+          - ``get_papers_ai_trending()``: citation-ranked all-time
+          - ``get_papers_hf_daily()`` (this): editor-curated picks
+            with community signal
+
+        Refreshed daily at 14:30 UTC. Titles are sanitized at capture
+        time against prompt-injection markers.
+
+        Returns:
+            Dict with ``ok`` and ``snapshot`` keys. Snapshot includes
+            ``date``, ``capturedAt``, ``total_papers``, ``papers``
+            (each with paperId, title, summary, authors, publishedAt,
+            submittedAt, upvotes, num_comments, thumbnail, hf_url,
+            arxiv_url, github_repo, github_stars, ai_keywords), and
+            ``summary`` (by_keyword, most_upvoted, most_discussed).
+        """
+        return self._request("GET", "/papers/hf-daily")
+
     def get_papers_arxiv_recent(self) -> dict[str, Any]:
         """Most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV.
 

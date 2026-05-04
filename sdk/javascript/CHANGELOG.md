@@ -2,6 +2,12 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.21.0 - 2026-05-04
+
+### Added
+- `tf.getPapersHFDaily()`. Free, no-auth method returning Hugging Face's editor-curated daily AI/ML papers feed with community upvotes and discussion counts. Different signal from `getPapersArxivRecent` (firehose) and `getPapersAITrending` (citation-ranked all-time). Refreshed daily at 14:30 UTC. Titles sanitized at capture time.
+- `HFDailyPapersResponse` and `HFDailyPaper` types.
+
 ## 1.20.0 - 2026-05-04
 
 ### Added

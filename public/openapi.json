@@ -910,6 +910,61 @@
         }
       }
     },
+    "/api/papers/hf-daily": {
+      "get": {
+        "tags": [
+          "Papers"
+        ],
+        "summary": "HF Daily Papers (editor-curated AI papers with community signal)",
+        "operationId": "getPapersHFDaily",
+        "description": "Hugging Face's editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from /api/papers/arxiv-recent (firehose) and /api/papers/ai-trending (citation-ranked all-time). Refreshed daily at 14:30 UTC. Titles sanitized at capture time.",
+        "responses": {
+          "200": {
+            "description": "HF Daily Papers snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "snapshot": {
+                      "type": "object",
+                      "properties": {
+                        "date": { "type": "string", "format": "date" },
+                        "capturedAt": { "type": "string", "format": "date-time" },
+                        "total_papers": { "type": "integer" },
+                        "papers": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "paperId": { "type": "string" },
+                              "title": { "type": "string" },
+                              "summary": { "type": ["string", "null"] },
+                              "authors": { "type": "array", "items": { "type": "string" } },
+                              "publishedAt": { "type": ["string", "null"] },
+                              "submittedAt": { "type": ["string", "null"] },
+                              "upvotes": { "type": "integer" },
+                              "num_comments": { "type": "integer" },
+                              "thumbnail": { "type": ["string", "null"] },
+                              "hf_url": { "type": "string" },
+                              "arxiv_url": { "type": ["string", "null"] },
+                              "github_repo": { "type": ["string", "null"] },
+                              "github_stars": { "type": ["integer", "null"] },
+                              "ai_keywords": { "type": "array", "items": { "type": "string" } }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/openrouter/models": {
       "get": {
         "tags": [

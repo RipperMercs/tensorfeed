@@ -70,6 +70,10 @@ import {
   getLatestSnapshot as getORLatest,
 } from './openrouter-catalog';
 import {
+  captureHFDailyPapers,
+  getLatestSnapshot as getHFDailyPapersLatest,
+} from './hf-daily-papers';
+import {
   runProbeCycle,
   rollupYesterday as rollupProbeYesterday,
   getLatestSummary as getProbeLatest,
@@ -1642,6 +1646,7 @@ export default {
           issuesHot: '/api/issues/hot',
           redditTrending: '/api/reddit/trending',
           openrouterModels: '/api/openrouter/models',
+          papersHFDaily: '/api/papers/hf-daily',
           probeLatest: '/api/probe/latest',
           gpuPricing: '/api/gpu/pricing',
           gpuPricingCheapest: '/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot',
@@ -1892,6 +1897,20 @@ export default {
       const snapshot = await getORLatest(env);
       if (!snapshot) {
         return jsonResponse({ ok: false, error: 'openrouter_unavailable' }, 503);
+      }
+      return jsonResponse({ ok: true, snapshot }, 200, 600);
+    }
+
+    // === HF DAILY PAPERS (free) ===
+    // Editor-curated daily set of AI papers from huggingface.co/papers
+    // with HF community upvotes + discussion counts. Different signal
+    // from /api/papers/arxiv-recent (firehose) and /api/papers/ai-trending
+    // (citation-ranked all-time). Captured by the 14:30 UTC cron.
+
+    if (path === '/api/papers/hf-daily') {
+      const snapshot = await getHFDailyPapersLatest(env);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'hf_daily_papers_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);
     }
@@ -3208,6 +3227,10 @@ export default {
         const result = await captureORSnapshot(env);
         return jsonResponse({ message: 'OpenRouter catalog snapshot captured', ...result });
       }
+      if (task === 'hf-daily-papers') {
+        const result = await captureHFDailyPapers(env);
+        return jsonResponse({ message: 'HF daily papers snapshot captured', ...result });
+      }
       if (task === 'probe') {
         const result = await runProbeCycle(env);
         return jsonResponse({ message: 'Probe cycle ran', ...result });
@@ -3423,6 +3446,13 @@ export default {
       // metadata). Single API call, no auth. Daily snapshot keyed
       // under or:daily:{date}. Backs free /api/openrouter/models.
       await run('captureORSnapshot', () => captureORSnapshot(env));
+    } else if (cron === '30 14 * * *') {
+      // Daily 14:30 UTC: capture HF Daily Papers (editor-curated set of
+      // AI papers worth reading + community upvotes/comments). Single
+      // API call to huggingface.co/api/daily_papers. Daily snapshot
+      // keyed under hf-papers:daily:{date}. Backs free
+      // /api/papers/hf-daily.
+      await run('captureHFDailyPapers', () => captureHFDailyPapers(env));
     } else if (cron === '*/15 * * * *') {
       // Every 15 min: probe each LLM provider with a configured key,
       // measure latency + status, write the latest 24h summary.

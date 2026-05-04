@@ -56,6 +56,11 @@ crons = [
   # window, modality, and provider metadata. Powers free
   # /api/openrouter/models.
   "0 14 * * *",
+  # Daily 14:30 UTC: capture HF Daily Papers feed
+  # (worker/src/hf-daily-papers.ts). Editor-curated AI papers from
+  # huggingface.co/papers with HF community upvotes + discussion
+  # counts. Powers free /api/papers/hf-daily.
+  "30 14 * * *",
   # Active LLM endpoint probing (worker/src/probe.ts). Every 15 min:
   # POST a tiny prompt at each provider with an API key configured,
   # measure ttfb + total + status, append to a 24h ring buffer, and

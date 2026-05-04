@@ -431,6 +431,19 @@ paths:
             application/json:
               schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
 
+  /api/papers/hf-daily:
+    get:
+      tags: [Papers]
+      summary: HF Daily Papers (editor-curated AI papers with community signal)
+      operationId: getPapersHFDaily
+      description: Hugging Face's editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from /api/papers/arxiv-recent (firehose) and /api/papers/ai-trending (citation-ranked). Refreshed daily at 14:30 UTC. Titles sanitized at capture time.
+      responses:
+        '200':
+          description: HF Daily Papers snapshot
+          content:
+            application/json:
+              schema: { type: object, properties: { ok: { type: boolean }, snapshot: { type: object } } }
+
   /api/openrouter/models:
     get:
       tags: [OpenRouter]
