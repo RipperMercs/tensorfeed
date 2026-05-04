@@ -6,9 +6,8 @@
   "version": "1.11.0",
   "websiteUrl": "https://tensorfeed.ai/developers/agent-payments",
   "repository": {
-    "url": "https://github.com/RipperMercs/tensorfeed",
-    "source": "github",
-    "subfolder": "mcp-server"
+    "url": "https://github.com/RipperMercs/tensorfeed-mcp",
+    "source": "github"
   },
   "packages": [
     {

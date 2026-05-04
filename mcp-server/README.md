@@ -1,118 +1,34 @@
 # TensorFeed MCP Server
 
-A [Model Context Protocol](https://modelcontextprotocol.io) server that gives AI agents access to real-time AI industry data and premium endpoints from [TensorFeed.ai](https://tensorfeed.ai).
+> **The MCP server has its own repo: https://github.com/RipperMercs/tensorfeed-mcp**
+>
+> User-facing docs, install instructions, and the full tool reference live there. Star and watch that repo to follow MCP server updates.
 
-## Free Tools
+This subfolder remains in the main `tensorfeed` repo as the **publishing source** for the npm package (`@tensorfeed/mcp-server`) and the [official MCP registry](https://registry.modelcontextprotocol.io/v0/servers/ai.tensorfeed/mcp-server) entry. Edits to `src/`, `server.json`, `package.json`, etc. happen here and get pushed to the standalone repo on release.
 
-| Tool | Description |
-|------|-------------|
-| `get_ai_news` | Latest AI news from 15+ sources (filterable by category) |
-| `get_ai_status` | Real-time status of Claude, OpenAI, Gemini, Mistral, and more |
-| `is_service_down` | Check if a specific AI service is down |
-| `get_model_pricing` | Compare pricing across all major AI model providers |
-| `get_ai_today` | Summary of top AI stories from the last 24 hours |
-| `get_agent_activity` | Live AI bot traffic on TensorFeed.ai with top-bot breakdown |
-| `mcp_registry_snapshot` | Today's summary of the official MCP server registry: total servers, top namespaces, newly added/reactivated/deprecated names |
-| `probe_latest` | Last 24h of measured LLM endpoint latency and availability per provider (ttfb/total p50/p95/p99). Unique because measured, not self-reported |
+## Publish a new version
 
-## Premium Tools (paid in USDC on Base)
+From the main tensorfeed repo:
 
-These tools require a `TENSORFEED_TOKEN` env var. Buy credits at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments) and pass the returned `tf_live_...` token to your MCP client.
+```powershell
+# 1. Bump the version in mcp-server/package.json + mcp-server/server.json
+# 2. Build + npm publish from the mcp-server/ folder
+cd mcp-server
+npm run build
+npm publish --access public
 
-| Tool | Cost | Description |
-|------|------|-------------|
-| `get_account_balance` | Free | Show credits remaining on the configured token |
-| `get_account_usage` | Free | Per-endpoint usage history for the configured token |
-| `premium_routing` | 1 credit | Top-N ranked AI model recommendations with full score breakdown |
-| `pricing_series` | 1 credit | Daily price points for one model with min/max/delta summary |
-| `benchmark_series` | 1 credit | Score evolution for a benchmark on one model |
-| `status_uptime` | 1 credit | Daily uptime % for one provider with incident-day list |
-| `premium_agents_directory` | 1 credit | Enriched agents catalog with live status, news, traffic, trending_score |
-| `news_search` | 1 credit | Full-text news search with date/provider/category filters and relevance scoring |
-| `cost_projection` | 1 credit | Project workload cost across 1-10 AI models with 4 time horizons and cheapest-monthly ranking |
-| `provider_deepdive` | 1 credit | One provider's full profile: status, all models with benchmarks joined, recent news, traffic |
-| `compare_models` | 1 credit | Side-by-side comparison of 2-5 models with normalized benchmarks and rankings |
-| `whats_new` | 1 credit | Agent morning brief: pricing changes, incidents, top news from last 1-7 days |
-| `mcp_registry_series` | 1 credit | Multi-day MCP registry growth and churn series, 90-day max range |
-| `probe_series` | 1 credit | Daily SLA series for one LLM provider with ttfb/total p50/p95/p99 and incident-hour count, 90-day max range |
-| `list_watches` | Free | List active webhook watches owned by the token |
-| `create_price_watch` | 1 credit | Register a webhook watch on a model price change |
-| `create_status_watch` | 1 credit | Register a webhook watch on a service status transition |
-| `create_digest_watch` | 1 credit | Register a daily/weekly digest webhook (pricing-changes summary, set-and-forget) |
-| `delete_watch` | Free | Remove an active watch |
+# 3. Republish to the official MCP registry
+.\scripts\mcp-publish.ps1
 
-## Setup with Claude Code
-
-Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "tensorfeed": {
-      "command": "npx",
-      "args": ["-y", "@tensorfeed/mcp-server"]
-    }
-  }
-}
+# 4. Mirror the new version to the standalone repo
+#    (manual until we wire it as a release-time GitHub Action)
 ```
 
-To enable premium tools, add the `env` block:
+## Quick links
 
-```json
-{
-  "mcpServers": {
-    "tensorfeed": {
-      "command": "npx",
-      "args": ["-y", "@tensorfeed/mcp-server"],
-      "env": {
-        "TENSORFEED_TOKEN": "tf_live_..."
-      }
-    }
-  }
-}
-```
-
-## Setup with Claude Desktop
-
-Add to Claude Desktop settings (same shape as above).
-
-## Run Locally
-
-```bash
-npx @tensorfeed/mcp-server
-# or with a token for premium endpoints
-TENSORFEED_TOKEN=tf_live_... npx @tensorfeed/mcp-server
-```
-
-## Example Queries
-
-Free tier:
-
-- "What's happening in AI today?"
-- "Is Claude down right now?"
-- "Compare pricing between Claude Opus and GPT-4o"
-- "Show me the latest AI research papers"
-- "What's the status of all AI services?"
-
-Premium tier (with `TENSORFEED_TOKEN` set):
-
-- "Recommend the best AI model for code under $5 per million tokens"
-- "Show the price history of Claude Opus 4.7 over the last 30 days"
-- "What's Anthropic's uptime this month?"
-- "Compare model pricing between April 1 and today"
-- "Set up a webhook to my server when Claude goes down"
-- "What's my credit balance?"
-
-## Pricing
-
-Premium tools cost 1 credit per call. Credits are 50 per $1 USDC at base rate, with volume discounts at $5 (10%), $30 (25%), and $200 (40%). See [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments) for the full payment flow and trust attestation.
-
-No refunds: all credit purchases are final per Section 17.5 of the [Terms](https://tensorfeed.ai/terms#premium). Credits do not expire and are jointly redeemable on tensorfeed.ai and terminalfeed.io, so the safe pattern is to buy small ($1 USDC for 50 credits) and top up as call volume is calibrated. Premium access is unavailable in OFAC-sanctioned jurisdictions; see Section 17.9.
-
-## Data Source
-
-All data comes from the [TensorFeed.ai API](https://tensorfeed.ai/developers), which aggregates from 15+ sources including Anthropic, OpenAI, Google AI, TechCrunch, The Verge, arXiv, Hacker News, and more. Updated every 10 minutes.
-
-## License
-
-MIT - Built by [TensorFeed.ai](https://tensorfeed.ai/about)
+- **User-facing repo (please star):** https://github.com/RipperMercs/tensorfeed-mcp
+- **npm package:** https://www.npmjs.com/package/@tensorfeed/mcp-server
+- **Official MCP registry:** https://registry.modelcontextprotocol.io/v0/servers/ai.tensorfeed/mcp-server
+- **TensorFeed.ai:** https://tensorfeed.ai
+- **Premium / payments:** https://tensorfeed.ai/developers/agent-payments
+- **AFTA standard:** https://tensorfeed.ai/agent-fair-trade
