@@ -302,22 +302,37 @@ function formatRate(ok: number, total: number): string {
   return `${Math.round((ok / total) * 100)}%`;
 }
 
+async function recentAnomalyEvents(env: Env, hoursBack: number = 24): Promise<import('./anomaly').AnomalyEvent[]> {
+  const { listAnomalyEvents } = await import('./anomaly');
+  const all = await listAnomalyEvents(env);
+  const cutoff = Date.now() - hoursBack * 60 * 60 * 1000;
+  return all
+    .filter((e) => new Date(e.detected_at).getTime() >= cutoff)
+    .sort((a, b) => b.detected_at.localeCompare(a.detected_at));
+}
+
 /**
- * Send a daily summary email of RSS source health. No-op if nothing failed
- * in the last 24 hours. Called from the scheduled handler once per day.
+ * Send a daily summary email covering RSS source health AND any
+ * detected per-token spend anomalies in the last 24 hours. No-op only
+ * when both buckets are empty. Called from the scheduled handler once
+ * per day at 8:30 UTC.
  */
 export async function sendDailySummary(env: Env): Promise<'sent' | 'clean' | 'skipped'> {
   const state = await getAlertState(env);
   const now = new Date();
 
-  const failures = await computeDailyFailureSummary(env);
-  if (failures.length === 0) {
-    console.log('daily summary: 24h clean, no email sent');
+  const [failures, anomalies] = await Promise.all([
+    computeDailyFailureSummary(env),
+    recentAnomalyEvents(env, 24),
+  ]);
+
+  if (failures.length === 0 && anomalies.length === 0) {
+    console.log('daily summary: 24h clean (no RSS failures, no anomalies), no email sent');
     await setAlertState(env, { ...state, lastDailySummaryAt: now.toISOString() });
     return 'clean';
   }
 
-  const rows = failures
+  const failureRows = failures
     .map(
       (f) => `
         <tr>
@@ -330,9 +345,24 @@ export async function sendDailySummary(env: Env): Promise<'sent' | 'clean' | 'sk
     )
     .join('');
 
-  const html = `
-    <h2 style="margin:0 0 12px">TensorFeed daily RSS summary</h2>
-    <p>Window: last 24 hours ending ${now.toISOString()}</p>
+  const anomalyRows = anomalies
+    .map((e) => {
+      const sevColor = e.severity === 'critical' ? '#dc2626' : '#d97706';
+      return `
+        <tr>
+          <td style="padding:6px 12px;border-top:1px solid #e2e8f0;font-family:ui-monospace,Menlo,monospace;font-size:12px">${e.detected_at.slice(11, 19)}Z</td>
+          <td style="padding:6px 12px;border-top:1px solid #e2e8f0;font-family:ui-monospace,Menlo,monospace;font-size:12px">${e.token_short}</td>
+          <td style="padding:6px 12px;border-top:1px solid #e2e8f0;text-align:center"><span style="color:${sevColor};font-weight:600;text-transform:uppercase;font-size:11px">${e.severity}</span></td>
+          <td style="padding:6px 12px;border-top:1px solid #e2e8f0;text-align:right">${e.current_credits}</td>
+          <td style="padding:6px 12px;border-top:1px solid #e2e8f0;text-align:right">${e.baseline_median.toFixed(1)}</td>
+          <td style="padding:6px 12px;border-top:1px solid #e2e8f0;text-align:right">${e.multiplier_observed.toFixed(1)}x</td>
+        </tr>
+      `;
+    })
+    .join('');
+
+  const failureSection = failures.length === 0 ? '' : `
+    <h3 style="margin:24px 0 8px">RSS source health</h3>
     <p><strong>${failures.length}</strong> source(s) had failures in the last 24 hours.</p>
     <table style="border-collapse:collapse;font-size:13px">
       <thead>
@@ -343,29 +373,74 @@ export async function sendDailySummary(env: Env): Promise<'sent' | 'clean' | 'sk
           <th style="padding:8px 12px;text-align:left">Last success</th>
         </tr>
       </thead>
-      <tbody>${rows}</tbody>
+      <tbody>${failureRows}</tbody>
     </table>
+  `;
+
+  const anomalySection = anomalies.length === 0 ? '' : `
+    <h3 style="margin:24px 0 8px">Token spend anomalies</h3>
+    <p><strong>${anomalies.length}</strong> per-token anomaly event(s) flagged in the last 24 hours. Review at <a href="https://tensorfeed.ai/api/admin/anomalies">/api/admin/anomalies</a>.</p>
+    <table style="border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="background:#f1f5f9">
+          <th style="padding:8px 12px;text-align:left">Time (UTC)</th>
+          <th style="padding:8px 12px;text-align:left">Token</th>
+          <th style="padding:8px 12px;text-align:center">Severity</th>
+          <th style="padding:8px 12px;text-align:right">Credits this hr</th>
+          <th style="padding:8px 12px;text-align:right">Baseline</th>
+          <th style="padding:8px 12px;text-align:right">Multiplier</th>
+        </tr>
+      </thead>
+      <tbody>${anomalyRows}</tbody>
+    </table>
+  `;
+
+  const html = `
+    <h2 style="margin:0 0 12px">TensorFeed daily ops summary</h2>
+    <p>Window: last 24 hours ending ${now.toISOString()}</p>
+    ${failureSection}
+    ${anomalySection}
     <p style="margin-top:16px;color:#64748b;font-size:12px">
-      Clean days produce no email. Alerts on stale data throttled to one per hour.
+      Clean days (no RSS failures, no anomalies) produce no email. Stale-data alerts throttled to one per hour.
       Debug: <a href="https://tensorfeed.ai/api/cron-status">/api/cron-status</a>
     </p>
   `;
 
-  const textRows = failures
+  const textFailureRows = failures
     .map(
       (f) =>
         `  ${f.name}: ${formatRate(f.ok, f.total)} success, ${f.failed + f.empty} failures, last ok ${f.lastSuccess || 'never'}`,
     )
     .join('\n');
-  const text = [
-    `TensorFeed daily RSS summary`,
+  const textAnomalyRows = anomalies
+    .map(
+      (e) =>
+        `  ${e.detected_at.slice(11, 19)}Z  ${e.token_short}  ${e.severity.toUpperCase()}  ${e.current_credits} credits / ${e.baseline_median.toFixed(1)} baseline = ${e.multiplier_observed.toFixed(1)}x`,
+    )
+    .join('\n');
+
+  const textParts: string[] = [
+    `TensorFeed daily ops summary`,
     `Window: last 24 hours ending ${now.toISOString()}`,
     ``,
-    `${failures.length} source(s) had failures in the last 24 hours:`,
-    textRows,
-  ].join('\n');
+  ];
+  if (failures.length > 0) {
+    textParts.push(`RSS source health: ${failures.length} source(s) had failures:`);
+    textParts.push(textFailureRows);
+    textParts.push(``);
+  }
+  if (anomalies.length > 0) {
+    textParts.push(`Token spend anomalies: ${anomalies.length} event(s) flagged. Review /api/admin/anomalies`);
+    textParts.push(textAnomalyRows);
+  }
+  const text = textParts.join('\n');
 
-  const ok = await sendEmail(env, `[TensorFeed] Daily RSS summary (${failures.length} source issue${failures.length === 1 ? '' : 's'})`, html, text);
+  const subjectParts: string[] = [];
+  if (failures.length > 0) subjectParts.push(`${failures.length} RSS issue${failures.length === 1 ? '' : 's'}`);
+  if (anomalies.length > 0) subjectParts.push(`${anomalies.length} anomal${anomalies.length === 1 ? 'y' : 'ies'}`);
+  const subject = `[TensorFeed] Daily ops summary (${subjectParts.join(', ')})`;
+
+  const ok = await sendEmail(env, subject, html, text);
   if (ok) {
     await setAlertState(env, { ...state, lastDailySummaryAt: now.toISOString() });
     return 'sent';
