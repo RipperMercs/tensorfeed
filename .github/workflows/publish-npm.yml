@@ -56,13 +56,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Node 24 ships npm 11.x by default, which has Trusted
+          # Publisher support (>=11.5.1). Switched off the previous
+          # node 22 because its toolcache image had a broken bundled
+          # npm (missing promise-retry transitive dep) that couldn't
+          # even self-upgrade.
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Upgrade npm to 11 (Trusted Publishers requires >= 11.5.1)
-        run: |
-          npm install -g npm@11 --force
-          npm --version
+      - name: Print npm version
+        run: npm --version
 
       - name: Read version
         id: ver
@@ -111,13 +114,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Node 24 ships npm 11.x by default, which has Trusted
+          # Publisher support (>=11.5.1). Switched off the previous
+          # node 22 because its toolcache image had a broken bundled
+          # npm (missing promise-retry transitive dep) that couldn't
+          # even self-upgrade.
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Upgrade npm to 11 (Trusted Publishers requires >= 11.5.1)
-        run: |
-          npm install -g npm@11 --force
-          npm --version
+      - name: Print npm version
+        run: npm --version
 
       - name: Read version
         id: ver
