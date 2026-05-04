@@ -33,6 +33,11 @@
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=3600
 
+/openapi.yaml
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600
+  Content-Type: application/yaml; charset=utf-8
+
 /.well-known/x402.json
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=3600
