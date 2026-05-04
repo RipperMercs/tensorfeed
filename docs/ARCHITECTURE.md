@@ -306,7 +306,7 @@ Authoritative list lives in `src/app/sitemap.ts`. Major buckets:
 - `mirror-mcp-server.yml`: copies the publishable subset of `mcp-server/` to the standalone `RipperMercs/tensorfeed-mcp` repo on every push touching the folder. Secret: `STANDALONE_REPO_TOKEN`.
 - `openapi-validate.yml`: lints `public/openapi.json` and `public/openapi.yaml` with Redocly CLI on every change. Catches schema-shape errors a plain `JSON.parse` cannot. No secret.
 - `publish-python-sdk.yml`: auto-publishes `tensorfeed` to PyPI when its `pyproject.toml` version field changes. Skips if the version already exists on PyPI (idempotent re-run). Secret: `PYPI_TOKEN`.
-- `publish-npm.yml`: auto-publishes `tensorfeed` (JS SDK) and `@tensorfeed/mcp-server` to npm when their `package.json` version fields change. Two parallel jobs, each idempotent. Secret: `NPM_TOKEN`.
+- `publish-npm.yml`: auto-publishes `tensorfeed` (JS SDK) and `@tensorfeed/mcp-server` to npm when their `package.json` version fields change. Two parallel jobs, each idempotent. Authenticates via npm OIDC Trusted Publishers (no long-lived token; each package on npm is configured to trust this exact workflow file in this repo, and npm CLI auto-detects the GitHub OIDC provider on the runner). Each publish carries a `--provenance` cryptographic attestation, surfaced as a "Verified provenance" badge on npm. To configure trust on a new package, see the package's npm settings page → Access → Trusted Publisher.
 
 The MCP registry republish (`scripts/mcp-publish.ps1`) is still manual because it requires the Ed25519 private key (`.mcp-key`); not wired into CI to avoid putting a long-lived signing key in repo secrets.
 

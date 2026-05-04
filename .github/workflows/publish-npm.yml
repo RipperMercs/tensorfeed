@@ -6,16 +6,22 @@ name: Publish npm packages
 #   - push to main with sdk/javascript/** or mcp-server/** in the diff
 #   - manual workflow_dispatch
 #
-# Required secret: NPM_TOKEN
-#   npm "Granular Access Token" or classic Automation token with
-#   publish rights on both the `tensorfeed` package and the
-#   `@tensorfeed` scope. Get one at npmjs.com -> Access Tokens, then
-#   save as a repo secret named NPM_TOKEN.
+# Auth: OIDC Trusted Publisher (no long-lived token).
+#   Each package on npm has a Trusted Publisher pointing at this
+#   workflow file in this repo. npm CLI auto-detects the GitHub OIDC
+#   provider on the runner and exchanges the OIDC token for a short-
+#   lived publish token. No NPM_TOKEN secret required.
+#   Configured at:
+#     https://www.npmjs.com/package/tensorfeed/access
+#     https://www.npmjs.com/package/@tensorfeed/mcp-server/access
 #
 # Behavior:
 #   - Each package is checked independently.
 #   - For each, reads the version from package.json. Skips publish if
 #     that version is already on the npm registry (idempotent re-run).
+#   - --provenance attaches a cryptographic attestation that the
+#     package was built and published from this specific workflow run,
+#     visible as a "Verified provenance" badge on npm.
 #   - On first-time publish of a scoped package, --access public is
 #     passed automatically.
 #   - The mirror-mcp-server.yml workflow still pushes the source code
@@ -42,6 +48,9 @@ jobs:
     name: Publish tensorfeed (JS SDK)
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
 
@@ -83,14 +92,15 @@ jobs:
       - name: Publish
         if: steps.check.outputs.skip == 'false'
         working-directory: sdk/javascript
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: npm publish --access public --provenance
 
   publish-mcp-server:
     name: Publish @tensorfeed/mcp-server
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
 
@@ -132,6 +142,4 @@ jobs:
       - name: Publish
         if: steps.check.outputs.skip == 'false'
         working-directory: mcp-server
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: npm publish --access public --provenance
