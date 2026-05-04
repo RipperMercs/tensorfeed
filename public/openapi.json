@@ -1340,7 +1340,15 @@
     }
   },
   "externalDocs": {
-    "description": "Full developer documentation, SDKs, and machine-readable manifests",
+    "description": "Full developer documentation, SDKs, machine-readable manifests, and the daily Hugging Face dataset mirror",
     "url": "https://tensorfeed.ai/developers"
+  },
+  "x-tensorfeed": {
+    "hugging_face_dataset": {
+      "repo": "tensorfeed/ai-ecosystem-daily",
+      "url": "https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily",
+      "description": "Daily JSONL snapshots of the entire public API. Inference-only license.",
+      "cadence": "daily at 08:00 UTC"
+    }
   }
 }

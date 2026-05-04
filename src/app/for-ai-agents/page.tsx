@@ -92,12 +92,47 @@ const FAQ_JSONLD = {
   ],
 };
 
+const DATASET_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: 'TensorFeed AI Ecosystem Daily',
+  description: 'Daily snapshots of the AI ecosystem: news, model pricing, service status, GPU rental prices, MCP registry telemetry, LLM endpoint latency probes, agent directory, and the AFTA adopter directory. JSONL per feed, one commit per day at 08:00 UTC, inference-only license.',
+  url: 'https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily',
+  sameAs: 'https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily',
+  creator: {
+    '@type': 'Organization',
+    name: 'TensorFeed.ai',
+    url: 'https://tensorfeed.ai',
+  },
+  license: 'https://tensorfeed.ai/agent-fair-trade',
+  keywords: ['AI', 'LLM', 'machine learning', 'model pricing', 'benchmarks', 'MCP', 'agents', 'GPU pricing', 'AFTA', 'time series'],
+  isAccessibleForFree: true,
+  datePublished: '2026-05-04',
+  encodingFormat: 'application/x-jsonlines',
+  distribution: [
+    {
+      '@type': 'DataDownload',
+      encodingFormat: 'application/x-jsonlines',
+      contentUrl: 'https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily',
+    },
+    {
+      '@type': 'DataDownload',
+      encodingFormat: 'application/json',
+      contentUrl: 'https://tensorfeed.ai/openapi.json',
+    },
+  ],
+};
+
 export default function ForAIAgentsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(DATASET_JSONLD) }}
       />
 
       <div className="mb-10">
@@ -194,6 +229,12 @@ export default function ForAIAgentsPage() {
             href="/openapi.json"
             title="/openapi.json"
             description="Complete OpenAPI 3.1 spec. Drop-in for Swagger UI, Postman, code generators, and agent toolkits."
+          />
+          <DiscoveryCard
+            href="https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily"
+            title="HF: tensorfeed/ai-ecosystem-daily"
+            description="Daily-snapshot mirror of the entire public API on Hugging Face. 13 JSONL files per day, one commit at 08:00 UTC, inference-only license. Load with the standard datasets library."
+            external
           />
           <DiscoveryCard
             href="/agent-traffic"
