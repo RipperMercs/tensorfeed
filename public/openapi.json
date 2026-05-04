@@ -910,6 +910,54 @@
         }
       }
     },
+    "/api/today": {
+      "get": {
+        "tags": [
+          "Composite"
+        ],
+        "summary": "AI ecosystem today (composite brief)",
+        "operationId": "getToday",
+        "description": "Single edge-cached endpoint that fans out across every daily TensorFeed feed (news, 3 paper feeds, HF models/datasets/Spaces, hot GitHub issues, Reddit threads, OpenRouter catalog summary, provider status) and returns a structured response. Saves a client from orchestrating 9 separate calls.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sections",
+            "schema": { "type": "string" },
+            "description": "Comma-separated subset of sections (news, papers, hf, community, inference, status). Default all six."
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "description": "Max items per subsection. Default 3, max 10."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Composite AI ecosystem brief",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "generated_at": { "type": "string", "format": "date-time" },
+                    "sections_included": { "type": "array", "items": { "type": "string" } },
+                    "limit_per_section": { "type": "integer" },
+                    "news": { "type": "object" },
+                    "papers": { "type": "object" },
+                    "hf": { "type": "object" },
+                    "community": { "type": "object" },
+                    "inference": { "type": "object" },
+                    "status": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/papers/hf-daily": {
       "get": {
         "tags": [

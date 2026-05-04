@@ -1,4 +1,4 @@
-import { Env, Article } from './types';
+import { Env, Article, ServiceStatus } from './types';
 import { pollRSSFeeds, RSSPollResult } from './rss';
 import { pollStatusPages } from './status';
 import { updateDailyData, updateCatalog } from './catalog';
@@ -73,6 +73,11 @@ import {
   captureHFDailyPapers,
   getLatestSnapshot as getHFDailyPapersLatest,
 } from './hf-daily-papers';
+import {
+  buildTodayBrief,
+  resolveSections as resolveTodaySections,
+  resolveLimit as resolveTodayLimit,
+} from './today-brief';
 import {
   runProbeCycle,
   rollupYesterday as rollupProbeYesterday,
@@ -1647,6 +1652,7 @@ export default {
           redditTrending: '/api/reddit/trending',
           openrouterModels: '/api/openrouter/models',
           papersHFDaily: '/api/papers/hf-daily',
+          today: '/api/today (composite morning brief, optional ?sections=news,papers,hf,community,inference,status&limit=1-10)',
           probeLatest: '/api/probe/latest',
           gpuPricing: '/api/gpu/pricing',
           gpuPricingCheapest: '/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot',
@@ -1913,6 +1919,66 @@ export default {
         return jsonResponse({ ok: false, error: 'hf_daily_papers_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);
+    }
+
+    // === COMPOSITE: AI ECOSYSTEM TODAY (free) ===
+    // One request fans out across every daily snapshot we have and
+    // returns a single structured "AI ecosystem today" brief. Useful
+    // for agents that want a fast snapshot without orchestrating 9
+    // separate calls. Optional ?sections=news,papers,hf,community,
+    // inference,status filter and ?limit=N (1-10, default 3). Edge
+    // cached so a thousand agents calling this per minute hit the
+    // worker once.
+
+    if (path === '/api/today') {
+      const sections = resolveTodaySections(url.searchParams.get('sections') ?? undefined);
+      const limit = resolveTodayLimit(url.searchParams.get('limit') ?? undefined);
+
+      const wantNews = sections.includes('news');
+      const wantPapers = sections.includes('papers');
+      const wantHf = sections.includes('hf');
+      const wantCommunity = sections.includes('community');
+      const wantInference = sections.includes('inference');
+      const wantStatus = sections.includes('status');
+
+      const safe = async <T>(p: Promise<T> | null): Promise<T | null> => {
+        if (!p) return null;
+        try { return await p; } catch (err) {
+          console.error('today-brief subfetch failed:', err);
+          return null;
+        }
+      };
+
+      const [
+        news, papersAITrending, papersArxivRecent, papersHFDaily,
+        hfTrending, hotIssues, redditTrending, openrouter, status,
+      ] = await Promise.all([
+        wantNews ? safe(cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60) as Promise<Article[] | null>) : Promise.resolve(null),
+        wantPapers ? safe(getPapersLatest(env)) : Promise.resolve(null),
+        wantPapers ? safe(getArxivLatest(env)) : Promise.resolve(null),
+        wantPapers ? safe(getHFDailyPapersLatest(env)) : Promise.resolve(null),
+        wantHf ? safe(getHFLatest(env)) : Promise.resolve(null),
+        wantCommunity ? safe(getHotIssuesLatest(env)) : Promise.resolve(null),
+        wantCommunity ? safe(getRedditLatest(env)) : Promise.resolve(null),
+        wantInference ? safe(getORLatest(env)) : Promise.resolve(null),
+        wantStatus ? safe(cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120) as Promise<ServiceStatus[] | null>) : Promise.resolve(null),
+      ]);
+
+      const brief = buildTodayBrief(
+        {
+          news: news ?? null,
+          papersAITrending: papersAITrending ?? null,
+          papersArxivRecent: papersArxivRecent ?? null,
+          papersHFDaily: papersHFDaily ?? null,
+          hfTrending: hfTrending ?? null,
+          hotIssues: hotIssues ?? null,
+          redditTrending: redditTrending ?? null,
+          openrouter: openrouter ?? null,
+          status: status ?? null,
+        },
+        { sections, limit_per_section: limit },
+      );
+      return jsonResponse(brief, 200, 300);
     }
 
     // === ACTIVE LLM PROBE: LATEST SUMMARY (free) ===

@@ -529,6 +529,66 @@ export interface PapersAITrendingResponse {
   };
 }
 
+export type TodaySection = 'news' | 'papers' | 'hf' | 'community' | 'inference' | 'status';
+
+export interface TodayBriefSection<T> {
+  available: boolean;
+  captured_at?: string;
+  data: T | null;
+}
+
+export interface TodayBriefNewsItem {
+  title: string;
+  source: string;
+  url: string;
+  publishedAt: string;
+}
+
+export interface TodayBriefPapers {
+  ai_trending: TodayBriefSection<{ items: Array<{ title: string; authors: string[]; year: number | null; venue: string | null; citationCount: number; arxivId: string | null; url: string | null }> }>;
+  arxiv_recent: TodayBriefSection<{ items: Array<{ arxivId: string; title: string; authors: string[]; primaryCategory: string | null; publishedAt: string; htmlUrl: string }> }>;
+  hf_daily: TodayBriefSection<{ items: Array<{ paperId: string; title: string; upvotes: number; num_comments: number; hf_url: string; arxiv_url: string | null; ai_keywords: string[] }> }>;
+}
+
+export interface TodayBriefHF {
+  models: Array<{ id: string; downloads: number; likes: number; pipeline_tag: string | null }>;
+  datasets: Array<{ id: string; downloads: number; likes: number }>;
+  spaces: Array<{ id: string; sdk: string | null; likes: number; runtime_stage: string | null }>;
+}
+
+export interface TodayBriefCommunity {
+  github_issues: Array<{ title: string; repo: string; comments: number; reactions_total: number; url: string; matched_topic: string }>;
+  reddit: Array<{ subreddit: string; title: string; score: number; num_comments: number; permalink: string; flair: string | null }>;
+}
+
+export interface TodayBriefInference {
+  total_models: number;
+  cheapest_input: { id: string; usd_per_million: number } | null;
+  cheapest_output: { id: string; usd_per_million: number } | null;
+  largest_context: { id: string; tokens: number } | null;
+  free_tier_count: number;
+  top_namespaces: Array<{ namespace: string; count: number }>;
+}
+
+export interface TodayBriefStatus {
+  all_operational: boolean;
+  service_count: number;
+  issues: Array<{ name: string; provider: string; status: string }>;
+}
+
+export interface TodayBriefResponse {
+  ok: true;
+  generated_at: string;
+  sections_included: TodaySection[];
+  limit_per_section: number;
+  news: TodayBriefSection<{ items: TodayBriefNewsItem[] }>;
+  papers: TodayBriefSection<TodayBriefPapers>;
+  hf: TodayBriefSection<TodayBriefHF>;
+  community: TodayBriefSection<TodayBriefCommunity>;
+  inference: TodayBriefSection<TodayBriefInference>;
+  status: TodayBriefSection<TodayBriefStatus>;
+}
+
 export interface HFDailyPaper {
   paperId: string;
   title: string;
@@ -1741,6 +1801,30 @@ export class TensorFeed {
    */
   async getPapersAITrending(): Promise<PapersAITrendingResponse> {
     return this.request<PapersAITrendingResponse>('GET', '/papers/ai-trending');
+  }
+
+  /**
+   * Composite "AI ecosystem today" brief in one call.
+   *
+   * Free, no auth. Single edge-cached endpoint that fans out across
+   * every daily TensorFeed feed (news, 3 paper feeds, HF
+   * models/datasets/Spaces, hot GitHub issues, Reddit threads,
+   * OpenRouter catalog summary, provider status) and returns a
+   * structured response. Saves a client from orchestrating 9 separate
+   * calls. Optional sections filter and per-section limit.
+   */
+  async getToday(options?: {
+    sections?: TodaySection[];
+    limit_per_section?: number;
+  }): Promise<TodayBriefResponse> {
+    const params: Record<string, string | undefined> = {};
+    if (options?.sections && options.sections.length > 0) {
+      params.sections = options.sections.join(',');
+    }
+    if (typeof options?.limit_per_section === 'number') {
+      params.limit = String(options.limit_per_section);
+    }
+    return this.request<TodayBriefResponse>('GET', '/today', { params });
   }
 
   /**

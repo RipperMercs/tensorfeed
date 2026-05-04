@@ -2,6 +2,12 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.22.0 - 2026-05-04
+
+### Added
+- `tf.getToday({ sections, limit_per_section })`. Composite "AI ecosystem today" brief in one call. Wraps the new free `/api/today` endpoint that fans out across every daily TensorFeed feed (news, 3 paper feeds, HF models/datasets/Spaces, hot GitHub issues, Reddit threads, OpenRouter catalog summary, provider status). Edge-cached for 5 min.
+- `TodayBriefResponse`, `TodaySection`, `TodayBriefSection`, `TodayBriefNewsItem`, `TodayBriefPapers`, `TodayBriefHF`, `TodayBriefCommunity`, `TodayBriefInference`, `TodayBriefStatus` types.
+
 ## 1.21.0 - 2026-05-04
 
 ### Added

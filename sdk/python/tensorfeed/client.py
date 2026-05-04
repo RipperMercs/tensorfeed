@@ -1033,6 +1033,40 @@ class TensorFeed:
 
     # ── Free: arXiv recent submissions ──────────────────────────────
 
+    def get_today(
+        self,
+        *,
+        sections: list[str] | None = None,
+        limit_per_section: int | None = None,
+    ) -> dict[str, Any]:
+        """Composite "AI ecosystem today" brief in one call.
+
+        Free, no auth. Single edge-cached endpoint that fans out across
+        every daily TensorFeed feed (news, 3 paper feeds, HF
+        models/datasets/Spaces, hot GitHub issues, Reddit threads,
+        OpenRouter catalog summary, provider status) and returns a
+        structured response. Saves an agent from orchestrating 9
+        separate calls.
+
+        Args:
+            sections: Subsections to include. Any subset of
+                ``news``, ``papers``, ``hf``, ``community``,
+                ``inference``, ``status``. Default is all six.
+            limit_per_section: Max items per subsection (1-10,
+                default 3).
+
+        Returns:
+            Dict with ``ok``, ``generated_at``, ``sections_included``,
+            ``limit_per_section``, and one entry per top-level section
+            (each shaped as ``{ available, captured_at, data }``).
+        """
+        params: dict[str, Any] = {}
+        if sections:
+            params["sections"] = ",".join(sections)
+        if limit_per_section is not None:
+            params["limit"] = limit_per_section
+        return self._get("/today", **params)
+
     def get_papers_hf_daily(self) -> dict[str, Any]:
         """HF Daily Papers: editor-curated AI papers with community signal.
 

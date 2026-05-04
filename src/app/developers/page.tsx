@@ -273,6 +273,24 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/today',
+    description: 'Composite "AI ecosystem today" brief. Single edge-cached endpoint that fans out across every daily TensorFeed feed (news, 3 paper feeds, HF models/datasets/Spaces, hot GitHub issues, Reddit threads, OpenRouter catalog summary, provider status) and returns a structured response. Saves a client from orchestrating 9 separate calls. Optional ?sections=news,papers,hf,community,inference,status filter and ?limit=1-10 (default 3 items per subsection).',
+    cache: 'Cache for 5 minutes',
+    example: `{
+  "ok": true,
+  "generated_at": "2026-05-04T15:00:00.000Z",
+  "sections_included": ["news","papers","hf","community","inference","status"],
+  "limit_per_section": 3,
+  "news": { "available": true, "captured_at": "...", "data": { "items": [...] } },
+  "papers": { "available": true, "data": { "ai_trending": {...}, "arxiv_recent": {...}, "hf_daily": {...} } },
+  "hf": { "available": true, "data": { "models": [...], "datasets": [...], "spaces": [...] } },
+  "community": { "available": true, "data": { "github_issues": [...], "reddit": [...] } },
+  "inference": { "available": true, "data": { "total_models": 240, "cheapest_input": {...}, "free_tier_count": 8, ... } },
+  "status": { "available": true, "data": { "all_operational": true, "service_count": 14, "issues": [] } }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/papers/hf-daily',
     description: 'Hugging Face\'s editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from /api/papers/arxiv-recent (firehose of recent submissions) and /api/papers/ai-trending (citation-ranked all-time): this is editor picks of-the-day with HF community engagement on top. Each paper carries paperId, title (sanitized at capture time), summary, authors, upvotes, num_comments, hf_url, arxiv_url (when arxiv-style), github_repo, github_stars, ai_keywords. Refreshed daily at 14:30 UTC.',
     cache: 'Cache for 10 minutes',

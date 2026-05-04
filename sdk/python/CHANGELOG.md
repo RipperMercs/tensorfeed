@@ -2,6 +2,11 @@
 
 All notable changes to the Python SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.26.0 - 2026-05-04
+
+### Added
+- `tf.get_today(sections=[...], limit_per_section=N)`. Composite "AI ecosystem today" brief in one call. Wraps the new free `/api/today` endpoint that fans out across every daily TensorFeed feed (news, 3 paper feeds, HF models/datasets/Spaces, hot GitHub issues, Reddit threads, OpenRouter catalog summary, provider status) and returns a structured response. Saves an agent from orchestrating 9 separate calls. Edge-cached for 5 min.
+
 ## 1.25.0 - 2026-05-04
 
 ### Added
