@@ -40,12 +40,12 @@ jobs:
     if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
     steps:
       - name: Checkout monorepo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: monorepo
 
       - name: Checkout standalone repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: RipperMercs/tensorfeed-mcp
           token: ${{ secrets.STANDALONE_REPO_TOKEN }}
