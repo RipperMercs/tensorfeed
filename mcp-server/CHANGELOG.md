@@ -2,6 +2,11 @@
 
 All notable changes to the [TensorFeed.ai MCP server](https://github.com/RipperMercs/tensorfeed-mcp). Free tools work without configuration; premium tools require a bearer token via the `TENSORFEED_TOKEN` env var. Buy credits at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.12.0 - 2026-05-04
+
+### Added
+- Defense-in-depth output sanitizer (`src/sanitize.ts`). Every tool's text output passes through a scrub pass before reaching the host LLM (Claude Desktop, Cursor, Cline, Roo, etc): strips ASCII control chars (preserves newline, carriage return, tab), strips bidi control + zero-width spoofing chars, and neutralizes role-confusion markers (ChatML / Llama / Mistral chat tokens, "ignore previous instructions", line-leading "system:" / "developer:" / "assistant:" preambles). Wired via a new `registerTool()` helper that wraps `server.tool()`. The TensorFeed worker already runs the same scrub on its agent-facing endpoints; this layer protects against any new endpoint that might forget it, plus drift between worker rules and what the MCP server should consider safe. No behavior change for legitimate text. No new dependencies.
+
 ## 1.11.1 - 2026-05-04
 
 ### Changed
