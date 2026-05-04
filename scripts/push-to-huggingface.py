@@ -39,21 +39,22 @@ if not TOKEN:
 # Each tuple: (filename stem, endpoint path, optional unwrap key)
 # unwrap_key tells us which top-level field on the response holds the
 # array we want to flatten into JSONL. None means write the whole body
-# as a single JSON record.
+# as a single JSON record. The `models` feed has a nested provider[].models[]
+# shape and is flattened with a custom path inside `to_jsonl`.
 FEEDS: list[tuple[str, str, str | None]] = [
     ("news", "/api/news?limit=200", "articles"),
     ("models", "/api/models", None),
     ("pricing", "/api/agents/pricing", None),
     ("status", "/api/status", "services"),
-    ("benchmarks", "/api/benchmarks", None),
+    ("benchmarks", "/api/benchmarks", "benchmarks"),
     ("agents-directory", "/api/agents/directory", "agents"),
     ("agents-activity", "/api/agents/activity", "recent"),
-    ("podcasts", "/api/podcasts", None),
-    ("trending-repos", "/api/trending-repos", None),
+    ("podcasts", "/api/podcasts", "episodes"),
+    ("trending-repos", "/api/trending-repos", "repos"),
     ("mcp-registry", "/api/mcp/registry/snapshot", None),
     ("probe", "/api/probe/latest", None),
     ("gpu-pricing", "/api/gpu/pricing", None),
-    ("afta-adopters", "/api/afta/adopters", None),
+    ("afta-adopters", "/api/afta/adopters", "adopters"),
 ]
 
 
@@ -64,9 +65,15 @@ def fetch(path: str) -> dict[str, Any]:
     return r.json()
 
 
-def to_jsonl(payload: dict[str, Any], unwrap: str | None) -> str:
+def to_jsonl(payload: dict[str, Any], unwrap: str | None, stem: str) -> str:
     """Convert an API payload into JSONL. Each line is a JSON object."""
-    if unwrap and isinstance(payload.get(unwrap), list):
+    if stem == "models":
+        records: list[Any] = []
+        for provider in payload.get("providers", []):
+            provider_name = provider.get("provider") or provider.get("name")
+            for model in provider.get("models", []):
+                records.append({"provider": provider_name, **model})
+    elif unwrap and isinstance(payload.get(unwrap), list):
         records = payload[unwrap]
     else:
         records = [payload]
@@ -96,7 +103,7 @@ def main() -> int:
                 manifest["feeds"][stem] = {"status": "error", "error": str(exc)}
                 continue
 
-            jsonl = to_jsonl(payload, unwrap)
+            jsonl = to_jsonl(payload, unwrap, stem)
             file_path = out_dir / f"{stem}.jsonl"
             file_path.write_text(jsonl, encoding="utf-8")
             manifest["feeds"][stem] = {
