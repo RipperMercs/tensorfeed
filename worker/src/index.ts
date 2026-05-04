@@ -1113,6 +1113,54 @@ export default {
       }, 200, 600);
     }
 
+    // === x402 ADOPTERS TRACKER (cached 600s) ===
+    // Curated catalog of publishers, SDKs, gateways, and reference impls
+    // that speak the x402 HTTP-payment protocol.
+
+    if (path === '/api/x402-adopters') {
+      const { X402_ADOPTERS, X402_ADOPTERS_LAST_UPDATED } = await import('./x402-adopters');
+      const categoryFilter = url.searchParams.get('category');
+      const statusFilter = url.searchParams.get('status');
+      let adopters = X402_ADOPTERS;
+      if (categoryFilter) adopters = adopters.filter(a => a.category === categoryFilter);
+      if (statusFilter) adopters = adopters.filter(a => a.status === statusFilter);
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        spec_url: 'https://x402.org',
+        lastUpdated: X402_ADOPTERS_LAST_UPDATED,
+        count: adopters.length,
+        adopters,
+      }, 200, 600);
+    }
+
+    // === AI LAWSUITS CATALOG (cached 600s) ===
+    // Active and notable disputes involving frontier AI labs, training-
+    // data providers, deployment platforms, and regulators. Editorial
+    // disclaimer in the source module: NOT legal advice.
+
+    if (path === '/api/ai-lawsuits') {
+      const { AI_LAWSUITS_CATALOG, AI_LAWSUITS_LAST_UPDATED } = await import('./ai-lawsuits');
+      const statusFilter = url.searchParams.get('status');
+      const claimFilter = url.searchParams.get('claim');
+      const jurisdictionFilter = url.searchParams.get('jurisdiction');
+      let lawsuits = AI_LAWSUITS_CATALOG;
+      if (statusFilter) lawsuits = lawsuits.filter(l => l.status === statusFilter);
+      if (claimFilter) lawsuits = lawsuits.filter(l => l.claims.includes(claimFilter as never));
+      if (jurisdictionFilter) {
+        const j = jurisdictionFilter.toLowerCase();
+        lawsuits = lawsuits.filter(l => l.jurisdiction.toLowerCase().includes(j));
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        disclaimer: 'Editorial summary based on public court filings and news coverage. Not legal advice. Verify against cited sources before acting.',
+        lastUpdated: AI_LAWSUITS_LAST_UPDATED,
+        count: lawsuits.length,
+        lawsuits,
+      }, 200, 600);
+    }
+
     // === EMBODIED AI REGISTRY (cached 600s) ===
     // VLA foundation models, humanoid platforms, robot training datasets,
     // and physics simulators. Optional ?category= filter narrows the slice.
@@ -1534,6 +1582,8 @@ export default {
           mcpServers: '/api/mcp-servers?capability=filesystem|web-search|browser|github|slack|database&first_party=true',
           trainingDatasets: '/api/training-datasets?stage=pretraining|instruction-tuning|dpo|rlhf|multimodal',
           embodiedAi: '/api/embodied-ai?category=foundation_model|humanoid|dataset|simulator',
+          aiLawsuits: '/api/ai-lawsuits?status=active|settled|dismissed|judgment|consolidated&claim=copyright-infringement|dmca-violation|antitrust|...&jurisdiction=US|UK|EU',
+          x402Adopters: '/api/x402-adopters?category=publisher|sdk|gateway|reference|spec&status=live|beta|reference-impl|announced|sdk|gateway|spec',
           agentApis: '/api/agent-apis?category=search|web-scraping|weather|finance|maps|email|sms|payments|code-execution|ocr&has_mcp=true',
           agentProvisioning: '/api/agent-provisioning?status=live|pending|unknown&category=hosting|database|auth|observability|background-jobs|ai-infrastructure|cdn-edge|email',
           trainingRuns: '/api/training-runs?publisher=OpenAI|Anthropic|Meta|Google|DeepSeek&open_weights=true',

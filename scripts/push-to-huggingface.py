@@ -92,6 +92,10 @@ FEEDS: list[tuple[str, str, str | None]] = [
     ("harnesses", "/api/harnesses", "benchmarks"),
     # Tier 7: new domain coverage (added 2026-05-03)
     ("embodied-ai", "/api/embodied-ai", "entries"),
+    # Tier 8: legal / regulatory tracking (added 2026-05-04)
+    ("ai-lawsuits", "/api/ai-lawsuits", "lawsuits"),
+    # Tier 9: agent-payment ecosystem (added 2026-05-04)
+    ("x402-adopters", "/api/x402-adopters", "adopters"),
 ]
 
 

@@ -108,6 +108,10 @@ configs:
     data_files: '*/harnesses.jsonl'
   - config_name: embodied-ai
     data_files: '*/embodied-ai.jsonl'
+  - config_name: ai-lawsuits
+    data_files: '*/ai-lawsuits.jsonl'
+  - config_name: x402-adopters
+    data_files: '*/x402-adopters.jsonl'
 ---
 
 # TensorFeed AI Ecosystem Daily
@@ -162,6 +166,8 @@ Each daily snapshot lives in a `YYYY-MM-DD/` subfolder with one JSONL file per f
 | `incidents.jsonl` | varies | Service incident history surfaced by TensorFeed status monitoring. |
 | `harnesses.jsonl` | ~4 | Agentic-coding harness leaderboard snapshot (SWE-bench, Aider, etc) with vendor self-reported best scores per base model. |
 | `embodied-ai.jsonl` | ~25 | Vision-language-action foundation models (pi-0, GR00T, OpenVLA), humanoid platforms (Figure 02, 1X NEO, Optimus), real-world training datasets (Open X-Embodiment, DROID), and physics simulators. |
+| `ai-lawsuits.jsonl` | ~20 | Structured catalog of active AI litigation: NYT v OpenAI, Authors Guild, Getty, Concord, RIAA v Suno + Udio, Doe v GitHub, Andersen v Stability AI, Garcia v Character.AI, FTC + EU inquiries. Each row: parties, court, case number, claims, status, stage, primary-source citations. Editorial summaries; not legal advice. |
+| `x402-adopters.jsonl` | ~10 | Catalog of publishers, SDKs, gateways, and references speaking the x402 HTTP-payment protocol. TensorFeed.ai, TerminalFeed.io (live), Stripe Link Agents (announced), @coinbase/x402 SDK, afta-gateway template, tensorfeed-mcp. |
 
 ## Quick start
 

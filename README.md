@@ -19,6 +19,8 @@ Real-time AI ecosystem intelligence built for humans **and** AI agents. News fro
 
 3. **x402 from day one.** No subscription, no signup, no email-me-the-API-key. Send USDC on Base, get a token, agent uses it. Compatible with [Stripe Link Agents](https://link.com/agents) (April 2026 release) — same x402 protocol, different scheme.
 
+> **Want to AFTA-ify your own API?** [`afta-gateway`](https://github.com/RipperMercs/afta-gateway) is a drop-in Cloudflare Worker template — fork, set 3 secrets, deploy. MIT, no protocol fee.
+
 ## Drop-in MCP server
 
 The fastest way to plug an AI agent into TensorFeed is the official MCP server. It works in Claude Desktop, Claude Code, Cursor, Cline, Continue, Zed, Goose, and anywhere else that takes a stdio MCP config.

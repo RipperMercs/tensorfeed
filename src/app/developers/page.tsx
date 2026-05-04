@@ -428,7 +428,7 @@ export default function DevelopersPage() {
             <ExternalLink className="w-3.5 h-3.5 text-text-muted" />
           </div>
           <p className="text-sm text-text-secondary">
-            Daily JSONL mirror at <code className="font-mono text-xs text-accent-primary">tensorfeed/ai-ecosystem-daily</code>. 42 feeds, inference-only license. <code className="font-mono text-xs text-accent-primary">load_dataset(repo, &quot;news&quot;)</code>.
+            Daily JSONL mirror at <code className="font-mono text-xs text-accent-primary">tensorfeed/ai-ecosystem-daily</code>. 44 feeds, inference-only license. <code className="font-mono text-xs text-accent-primary">load_dataset(repo, &quot;news&quot;)</code>.
           </p>
         </a>
       </section>
