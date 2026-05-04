@@ -158,14 +158,16 @@ jobs:
       - name: Publish
         if: steps.check.outputs.skip == 'false'
         working-directory: mcp-server
-        # No --provenance for the MCP server: npm provenance requires
-        # package.json repository.url to match the publishing repo, but
-        # mcp-server's repository.url intentionally points at the
-        # standalone user-facing repo (RipperMercs/tensorfeed-mcp) while
-        # the publish runs from this monorepo. Keeping --provenance off
-        # preserves the standalone-repo branding choice; OIDC Trusted
-        # Publisher auth still applies, so only the cryptographic
-        # attestation badge is missing. The JS SDK above keeps
-        # --provenance because its repository.url already matches the
-        # monorepo.
-        run: npm publish --access public
+        # Explicit --provenance=false: npm 11+ auto-enables provenance
+        # whenever it detects a GitHub Actions OIDC environment, even
+        # without the flag. Provenance requires package.json
+        # repository.url to match the publishing repo, but mcp-server's
+        # repository.url intentionally points at the standalone
+        # user-facing repo (RipperMercs/tensorfeed-mcp) while the
+        # publish runs from this monorepo. Disabling provenance
+        # explicitly preserves the standalone-repo branding choice;
+        # OIDC Trusted Publisher auth still applies, so only the
+        # cryptographic attestation badge is missing. The JS SDK above
+        # keeps provenance because its repository.url already matches
+        # the monorepo.
+        run: npm publish --access public --provenance=false
