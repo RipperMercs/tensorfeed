@@ -106,6 +106,8 @@ configs:
     data_files: '*/incidents.jsonl'
   - config_name: harnesses
     data_files: '*/harnesses.jsonl'
+  - config_name: embodied-ai
+    data_files: '*/embodied-ai.jsonl'
 ---
 
 # TensorFeed AI Ecosystem Daily
@@ -159,6 +161,7 @@ Each daily snapshot lives in a `YYYY-MM-DD/` subfolder with one JSONL file per f
 | `attention.jsonl` | ~12 | Per-provider attention index derived from news, trending repos, and bot traffic. One row per provider per day for time-series analysis of mindshare. |
 | `incidents.jsonl` | varies | Service incident history surfaced by TensorFeed status monitoring. |
 | `harnesses.jsonl` | ~4 | Agentic-coding harness leaderboard snapshot (SWE-bench, Aider, etc) with vendor self-reported best scores per base model. |
+| `embodied-ai.jsonl` | ~25 | Vision-language-action foundation models (pi-0, GR00T, OpenVLA), humanoid platforms (Figure 02, 1X NEO, Optimus), real-world training datasets (Open X-Embodiment, DROID), and physics simulators. |
 
 ## Quick start
 

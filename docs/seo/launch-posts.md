@@ -204,7 +204,7 @@ There's also an OpenAPI 3.1 spec at [tensorfeed.ai/openapi.yaml](https://tensorf
 
 1. **Is the inference-only line workable in practice?** I think it is, but the implementation surface (terms of service language, robots.txt directives, pretraining-pipeline behavior) is still being figured out. Curious what other publishers think.
 
-2. **What feeds are missing?** I want to add what people will actually use. The current 41 feeds cover most of the public AI ecosystem but there are gaps (frontier-lab internal benchmarks, robotics models, RLHF pipelines).
+2. **What feeds are missing?** I want to add what people will actually use. The current 42 feeds cover most of the public AI ecosystem but there are gaps (frontier-lab internal benchmarks, RLHF pipelines, image-gen pricing histories).
 
 3. **For anyone using HF datasets inside agent stacks today**, what's the day-2 friction look like? My intuition is that schema drift over time will be the killer; I'm trying to be careful with the schema upfront.
 

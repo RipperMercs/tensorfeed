@@ -1113,6 +1113,26 @@ export default {
       }, 200, 600);
     }
 
+    // === EMBODIED AI REGISTRY (cached 600s) ===
+    // VLA foundation models, humanoid platforms, robot training datasets,
+    // and physics simulators. Optional ?category= filter narrows the slice.
+
+    if (path === '/api/embodied-ai') {
+      const { EMBODIED_AI_CATALOG, EMBODIED_AI_LAST_UPDATED } = await import('./embodied-ai');
+      const categoryFilter = url.searchParams.get('category');
+      let entries = EMBODIED_AI_CATALOG;
+      if (categoryFilter) {
+        entries = entries.filter(e => e.category === categoryFilter);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai',
+        lastUpdated: EMBODIED_AI_LAST_UPDATED,
+        count: entries.length,
+        entries,
+      }, 200, 600);
+    }
+
     // === AGENT APIS REGISTRY (cached 600s) ===
 
     if (path === '/api/agent-apis') {
@@ -1513,6 +1533,7 @@ export default {
           aiHardware: '/api/ai-hardware?manufacturer=NVIDIA|AMD|Google|AWS|Apple|Cerebras|Groq',
           mcpServers: '/api/mcp-servers?capability=filesystem|web-search|browser|github|slack|database&first_party=true',
           trainingDatasets: '/api/training-datasets?stage=pretraining|instruction-tuning|dpo|rlhf|multimodal',
+          embodiedAi: '/api/embodied-ai?category=foundation_model|humanoid|dataset|simulator',
           agentApis: '/api/agent-apis?category=search|web-scraping|weather|finance|maps|email|sms|payments|code-execution|ocr&has_mcp=true',
           agentProvisioning: '/api/agent-provisioning?status=live|pending|unknown&category=hosting|database|auth|observability|background-jobs|ai-infrastructure|cdn-edge|email',
           trainingRuns: '/api/training-runs?publisher=OpenAI|Anthropic|Meta|Google|DeepSeek&open_weights=true',

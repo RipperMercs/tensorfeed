@@ -90,6 +90,8 @@ FEEDS: list[tuple[str, str, str | None]] = [
     ("attention", "/api/attention", "providers"),
     ("incidents", "/api/incidents", "incidents"),
     ("harnesses", "/api/harnesses", "benchmarks"),
+    # Tier 7: new domain coverage (added 2026-05-03)
+    ("embodied-ai", "/api/embodied-ai", "entries"),
 ]
 
 
