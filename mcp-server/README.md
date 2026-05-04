@@ -22,9 +22,25 @@ npm publish --access public
 cd ..
 .\scripts\mcp-publish.ps1
 
-# 4. Mirror the new version to the standalone repo
-#    (manual until we wire it as a release-time GitHub Action)
+# 4. Mirror to the standalone repo - automated. The
+#    .github/workflows/mirror-mcp-server.yml workflow runs on every
+#    push to main that touches mcp-server/. To trigger a manual sync,
+#    go to the Actions tab and run "Mirror MCP server to standalone
+#    repo" via workflow_dispatch.
 ```
+
+### Automated mirror setup (one-time)
+
+The mirror workflow needs a personal access token with `contents: write`
+permission on `RipperMercs/tensorfeed-mcp`. Set it once:
+
+1. Generate a fine-grained PAT at github.com/settings/personal-access-tokens
+   scoped to the standalone repo only, with Repository permissions
+   `Contents: Read and write` and `Metadata: Read-only`.
+2. Add it to this monorepo as a repository secret named
+   `STANDALONE_REPO_TOKEN` (Settings -> Secrets and variables -> Actions).
+3. The workflow will pick it up on the next push to main that changes
+   `mcp-server/**`, or via the manual "Run workflow" button.
 
 ## Quick links
 

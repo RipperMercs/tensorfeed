@@ -1,0 +1,85 @@
+name: Mirror MCP server to standalone repo
+
+# When mcp-server/ changes on main, copy the publishable subset of the
+# folder over to the user-facing standalone repo (RipperMercs/tensorfeed-mcp).
+# This is the last leg of the publish flow documented in mcp-server/README.md
+# and replaces the manual mirror step.
+#
+# Required secret: STANDALONE_REPO_TOKEN
+#   Fine-grained PAT or classic PAT with `contents: write` on
+#   RipperMercs/tensorfeed-mcp. Default GITHUB_TOKEN cannot push across
+#   repos so a separate token is required.
+#
+# Files synced (allowlist; everything else on the standalone side stays):
+#   src/, package.json, package-lock.json, server.json, tsconfig.json,
+#   CHANGELOG.md, Dockerfile, smithery.yaml, LICENSE
+#
+# Files NOT synced (deliberately):
+#   README.md  - standalone has its own user-facing README
+#   registry/  - upstream MCP registry source for local dev, monorepo only
+#   dist/, node_modules/, .bin/  - gitignored build artifacts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mcp-server/src/**'
+      - 'mcp-server/package.json'
+      - 'mcp-server/package-lock.json'
+      - 'mcp-server/server.json'
+      - 'mcp-server/tsconfig.json'
+      - 'mcp-server/CHANGELOG.md'
+      - 'mcp-server/Dockerfile'
+      - 'mcp-server/smithery.yaml'
+      - 'mcp-server/LICENSE'
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v4
+        with:
+          path: monorepo
+
+      - name: Checkout standalone repo
+        uses: actions/checkout@v4
+        with:
+          repository: RipperMercs/tensorfeed-mcp
+          token: ${{ secrets.STANDALONE_REPO_TOKEN }}
+          path: standalone
+
+      - name: Sync allowlisted files
+        run: |
+          set -euo pipefail
+          cd standalone
+          for f in CHANGELOG.md Dockerfile LICENSE package.json package-lock.json server.json smithery.yaml tsconfig.json; do
+            if [ -f "../monorepo/mcp-server/$f" ]; then
+              cp "../monorepo/mcp-server/$f" "$f"
+            fi
+          done
+          rm -rf src
+          cp -r ../monorepo/mcp-server/src src
+
+      - name: Read package version
+        id: version
+        working-directory: standalone
+        run: |
+          v=$(node -p "require('./package.json').version")
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push if changed
+        working-directory: standalone
+        run: |
+          set -euo pipefail
+          git config user.name "tensorfeed-mirror[bot]"
+          git config user.email "tensorfeed-mirror[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Standalone repo is already in sync. Nothing to push."
+            exit 0
+          fi
+          git commit -m "chore: mirror @tensorfeed/mcp-server@${{ steps.version.outputs.version }} from monorepo"
+          git push origin HEAD:main
