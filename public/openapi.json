@@ -722,15 +722,15 @@
                             "properties": {
                               "paperId": { "type": "string" },
                               "title": { "type": "string" },
-                              "abstract": { "type": "string", "nullable": true },
+                              "abstract": { "type": ["string", "null"] },
                               "authors": { "type": "array", "items": { "type": "string" } },
-                              "year": { "type": "integer", "nullable": true },
-                              "venue": { "type": "string", "nullable": true },
+                              "year": { "type": ["integer", "null"] },
+                              "venue": { "type": ["string", "null"] },
                               "citationCount": { "type": "integer" },
-                              "url": { "type": "string", "nullable": true },
-                              "publicationDate": { "type": "string", "nullable": true },
-                              "arxivId": { "type": "string", "nullable": true },
-                              "doi": { "type": "string", "nullable": true },
+                              "url": { "type": ["string", "null"] },
+                              "publicationDate": { "type": ["string", "null"] },
+                              "arxivId": { "type": ["string", "null"] },
+                              "doi": { "type": ["string", "null"] },
                               "fieldsOfStudy": { "type": "array", "items": { "type": "string" } }
                             }
                           }
@@ -775,17 +775,17 @@
                             "type": "object",
                             "properties": {
                               "arxivId": { "type": "string" },
-                              "version": { "type": "string", "nullable": true },
+                              "version": { "type": ["string", "null"] },
                               "title": { "type": "string" },
-                              "abstract": { "type": "string", "nullable": true },
+                              "abstract": { "type": ["string", "null"] },
                               "authors": { "type": "array", "items": { "type": "string" } },
-                              "primaryCategory": { "type": "string", "nullable": true },
+                              "primaryCategory": { "type": ["string", "null"] },
                               "categories": { "type": "array", "items": { "type": "string" } },
                               "publishedAt": { "type": "string", "format": "date-time" },
                               "updatedAt": { "type": "string", "format": "date-time" },
                               "htmlUrl": { "type": "string" },
                               "pdfUrl": { "type": "string" },
-                              "doi": { "type": "string", "nullable": true }
+                              "doi": { "type": ["string", "null"] }
                             }
                           }
                         }
@@ -834,7 +834,7 @@
                               "repo": { "type": "string" },
                               "number": { "type": "integer" },
                               "title": { "type": "string" },
-                              "author": { "type": "string", "nullable": true },
+                              "author": { "type": ["string", "null"] },
                               "state": { "type": "string", "enum": ["open", "closed"] },
                               "comments": { "type": "integer" },
                               "reactions_total": { "type": "integer" },
@@ -887,14 +887,14 @@
                               "id": { "type": "string" },
                               "subreddit": { "type": "string" },
                               "title": { "type": "string" },
-                              "author": { "type": "string", "nullable": true },
+                              "author": { "type": ["string", "null"] },
                               "score": { "type": "integer" },
                               "upvote_ratio": { "type": "number" },
                               "num_comments": { "type": "integer" },
                               "permalink": { "type": "string" },
                               "url": { "type": "string" },
                               "created_utc": { "type": "number" },
-                              "flair": { "type": "string", "nullable": true },
+                              "flair": { "type": ["string", "null"] },
                               "is_self": { "type": "boolean" },
                               "is_video": { "type": "boolean" }
                             }
@@ -940,26 +940,26 @@
                             "properties": {
                               "id": { "type": "string" },
                               "name": { "type": "string" },
-                              "description": { "type": "string", "nullable": true },
-                              "created": { "type": "integer", "nullable": true },
-                              "context_length": { "type": "integer", "nullable": true },
-                              "modality": { "type": "string", "nullable": true },
-                              "instruct_type": { "type": "string", "nullable": true },
-                              "tokenizer": { "type": "string", "nullable": true },
+                              "description": { "type": ["string", "null"] },
+                              "created": { "type": ["integer", "null"] },
+                              "context_length": { "type": ["integer", "null"] },
+                              "modality": { "type": ["string", "null"] },
+                              "instruct_type": { "type": ["string", "null"] },
+                              "tokenizer": { "type": ["string", "null"] },
                               "pricing": {
                                 "type": "object",
                                 "properties": {
-                                  "prompt": { "type": "number", "nullable": true },
-                                  "completion": { "type": "number", "nullable": true },
-                                  "image": { "type": "number", "nullable": true },
-                                  "request": { "type": "number", "nullable": true }
+                                  "prompt": { "type": ["number", "null"] },
+                                  "completion": { "type": ["number", "null"] },
+                                  "image": { "type": ["number", "null"] },
+                                  "request": { "type": ["number", "null"] }
                                 }
                               },
                               "top_provider": {
                                 "type": "object",
                                 "properties": {
-                                  "max_completion_tokens": { "type": "integer", "nullable": true },
-                                  "is_moderated": { "type": "boolean", "nullable": true }
+                                  "max_completion_tokens": { "type": ["integer", "null"] },
+                                  "is_moderated": { "type": ["boolean", "null"] }
                                 }
                               },
                               "supported_parameters": { "type": "array", "items": { "type": "string" } }
@@ -1011,9 +1011,9 @@
                                   "id": { "type": "string" },
                                   "downloads": { "type": "integer" },
                                   "likes": { "type": "integer" },
-                                  "pipeline_tag": { "type": "string", "nullable": true },
+                                  "pipeline_tag": { "type": ["string", "null"] },
                                   "tags": { "type": "array", "items": { "type": "string" } },
-                                  "lastModified": { "type": "string", "nullable": true },
+                                  "lastModified": { "type": ["string", "null"] },
                                   "private": { "type": "boolean" },
                                   "gated": {}
                                 }
@@ -1035,7 +1035,7 @@
                                   "downloads": { "type": "integer" },
                                   "likes": { "type": "integer" },
                                   "tags": { "type": "array", "items": { "type": "string" } },
-                                  "lastModified": { "type": "string", "nullable": true },
+                                  "lastModified": { "type": ["string", "null"] },
                                   "private": { "type": "boolean" },
                                   "gated": {}
                                 }
@@ -1054,14 +1054,14 @@
                                 "type": "object",
                                 "properties": {
                                   "id": { "type": "string" },
-                                  "author": { "type": "string", "nullable": true },
-                                  "sdk": { "type": "string", "nullable": true },
+                                  "author": { "type": ["string", "null"] },
+                                  "sdk": { "type": ["string", "null"] },
                                   "likes": { "type": "integer" },
                                   "tags": { "type": "array", "items": { "type": "string" } },
-                                  "lastModified": { "type": "string", "nullable": true },
+                                  "lastModified": { "type": ["string", "null"] },
                                   "private": { "type": "boolean" },
-                                  "runtime_stage": { "type": "string", "nullable": true },
-                                  "hardware": { "type": "string", "nullable": true }
+                                  "runtime_stage": { "type": ["string", "null"] },
+                                  "hardware": { "type": ["string", "null"] }
                                 }
                               }
                             }

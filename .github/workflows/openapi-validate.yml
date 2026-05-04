@@ -1,0 +1,41 @@
+name: Validate OpenAPI spec
+
+# Lint public/openapi.json and public/openapi.yaml on every push to main
+# (and on PRs) that touches either file. Catches schema-shape errors
+# (missing required fields, wrong types, broken refs) that a plain
+# JSON.parse cannot. Uses Redocly CLI which fully supports OpenAPI 3.1.
+#
+# Locally: npx @redocly/cli lint public/openapi.json
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/openapi.json'
+      - 'public/openapi.yaml'
+      - '.github/workflows/openapi-validate.yml'
+  pull_request:
+    paths:
+      - 'public/openapi.json'
+      - 'public/openapi.yaml'
+      - '.github/workflows/openapi-validate.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Lint openapi.json
+        run: npx --yes @redocly/cli@latest lint public/openapi.json --format=stylish
+
+      - name: Lint openapi.yaml
+        run: npx --yes @redocly/cli@latest lint public/openapi.yaml --format=stylish
