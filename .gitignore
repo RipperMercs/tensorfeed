@@ -50,6 +50,9 @@ next-env.d.ts
 # mcp-publisher binary (downloaded from github releases, not source)
 mcp-server/.bin/
 
+# mcp-publisher private key (NEVER commit)
+.mcp-key
+
 # DNS auth private keys for the MCP registry
 mcp-server/.secrets/
 **/.secrets/
