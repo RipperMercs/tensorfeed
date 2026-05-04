@@ -59,6 +59,12 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Upgrade npm to latest (Trusted Publishers requires >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Print npm version (diagnostic)
+        run: npm --version
+
       - name: Read version
         id: ver
         working-directory: sdk/javascript
@@ -108,6 +114,12 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm to latest (Trusted Publishers requires >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Print npm version (diagnostic)
+        run: npm --version
 
       - name: Read version
         id: ver
