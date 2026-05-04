@@ -84,6 +84,12 @@ FEEDS: list[tuple[str, str, str | None]] = [
     ("compute-providers", "/api/compute-providers", "providers"),
     ("usage-rankings", "/api/usage-rankings", "rankings"),
     ("agent-provisioning", "/api/agent-provisioning", "providers"),
+    # Tier 6: rounds out free-endpoint coverage (added 2026-05-03 late evening)
+    ("training-datasets", "/api/training-datasets", "datasets"),
+    ("mcp-servers", "/api/mcp-servers", "servers"),
+    ("attention", "/api/attention", "providers"),
+    ("incidents", "/api/incidents", "incidents"),
+    ("harnesses", "/api/harnesses", "benchmarks"),
 ]
 
 

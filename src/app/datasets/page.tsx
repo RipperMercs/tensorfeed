@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: 'https://tensorfeed.ai/datasets',
     title: 'TensorFeed Datasets: AI Ecosystem Daily on Hugging Face',
     description:
-      'Daily JSONL snapshots of the AI ecosystem on Hugging Face. 36 feeds, inference-only license, mirror of the live TensorFeed API.',
+      'Daily JSONL snapshots of the AI ecosystem on Hugging Face. 41 feeds, inference-only license, mirror of the live TensorFeed API.',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TensorFeed AI Ecosystem Daily',
     description:
-      'Daily JSONL snapshots of the AI ecosystem on Hugging Face. 36 feeds, inference-only license.',
+      'Daily JSONL snapshots of the AI ecosystem on Hugging Face. 41 feeds, inference-only license.',
   },
   keywords: [
     'AI dataset',
