@@ -18,7 +18,7 @@ from typing import Any  # noqa: F401  (re-exported by purchase_credits return ty
 
 
 DEFAULT_BASE_URL = "https://tensorfeed.ai/api"
-DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.18"
+DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.19"
 
 
 class TensorFeedError(Exception):
@@ -224,6 +224,114 @@ class TensorFeed:
         best base-model score per benchmark.
         """
         return self._get("/harnesses")
+
+    def embodied_ai(self, *, category: str | None = None) -> dict[str, Any]:
+        """Get the embodied AI catalog. Free.
+
+        Vision-language-action foundation models (pi-0, pi-0.5, GR00T N1,
+        OpenVLA, Octo, RDT-1B, Helix), humanoid platforms (Figure 02,
+        1X NEO, Tesla Optimus, Apptronik Apollo, Unitree G1/H1, Atlas
+        Electric, Agility Digit, Sanctuary Phoenix), real-world training
+        datasets (Open X-Embodiment, DROID, AgiBot World, Mobile ALOHA,
+        BridgeData V2), and physics simulators (Isaac Lab, MuJoCo
+        Playground, Genesis).
+
+        Args:
+            category: Filter to one of "foundation_model", "humanoid",
+                "dataset", or "simulator".
+        """
+        return self._get("/embodied-ai", category=category)
+
+    def training_datasets(self, *, stage: str | None = None) -> dict[str, Any]:
+        """Get the AI training datasets registry. Free.
+
+        Pretraining corpora (FineWeb, RedPajama v2, Common Crawl, Dolma,
+        The Pile, RefinedWeb), instruction-tuning sets (Tulu 3 SFT,
+        OpenHermes 2.5, OpenOrca, AgentInstruct), DPO/RLHF preference
+        sets (UltraFeedback, Tulu 3 Pref, HelpSteer 2), and multimodal
+        sets (LAION-5B, DataComp-1B). Each row: tokens, license,
+        languages, and the upstream URL.
+
+        Args:
+            stage: Filter to one of "pretraining", "instruction-tuning",
+                "dpo", "rlhf", "continued-pretraining", or "multimodal".
+        """
+        return self._get("/training-datasets", stage=stage)
+
+    def mcp_servers(
+        self,
+        *,
+        capability: str | None = None,
+        first_party: bool | None = None,
+    ) -> dict[str, Any]:
+        """Get the curated MCP server catalog. Free.
+
+        Distinct from /api/mcp/registry/snapshot (which is a daily
+        count + churn telemetry of the official registry); this returns
+        the curated production-server catalog with capabilities,
+        transport (stdio | sse | streamable-http), license, and
+        first-party flag.
+
+        Args:
+            capability: Filter to one of "filesystem", "web-search",
+                "browser", "github", "slack", "database", etc.
+            first_party: True to limit to first-party (vendor-published)
+                servers only.
+        """
+        kwargs: dict[str, Any] = {}
+        if capability is not None:
+            kwargs["capability"] = capability
+        if first_party is True:
+            kwargs["first_party"] = "true"
+        return self._get("/mcp-servers", **kwargs)
+
+    def benchmark_registry(
+        self,
+        *,
+        category: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        """Get the meta-catalog of AI evaluation benchmarks. Free.
+
+        Each entry: size, score range, current frontier score, current
+        SOTA holder model + date + citation URL, status (active vs
+        saturated vs deprecated), contamination risk, paper/repo/
+        leaderboard URLs. Covers MMLU-Pro, GPQA Diamond, HLE, ARC-AGI-2,
+        AIME 2025, SWE-bench Verified, LiveCodeBench, Aider Polyglot,
+        Terminal-Bench, SWE-Lancer, MMMU-Pro, MathVista, Tau-Bench,
+        GAIA, WebArena, OSWorld, BFCL v3, HCAST, RULER, and more.
+
+        Args:
+            category: Filter to "knowledge", "math", "code", "multimodal",
+                "agents", "long-context", or "safety".
+            status: Filter to "active", "saturated", or "deprecated".
+        """
+        kwargs: dict[str, Any] = {}
+        if category is not None:
+            kwargs["category"] = category
+        if status is not None:
+            kwargs["status"] = status
+        return self._get("/benchmark-registry", **kwargs)
+
+    def gpu_pricing(self) -> dict[str, Any]:
+        """Get GPU rental pricing across cloud marketplaces. Free.
+
+        Snapshot of GPU spot/on-demand pricing for H100, H200, A100,
+        L40S, B200, MI300X, etc across Vast.ai, RunPod, and other
+        marketplaces. Updated multiple times per day.
+        """
+        return self._get("/gpu/pricing")
+
+    def incidents(self) -> dict[str, Any]:
+        """Get the AI service incident history. Free.
+
+        Service incidents surfaced by TensorFeed status monitoring
+        (Anthropic, OpenAI, Google, Mistral, Cohere, others). Returns
+        the historical incident list with start/end timestamps and
+        severity. Pairs with /api/status (current state) and
+        /api/premium/history/status/uptime (per-provider uptime series).
+        """
+        return self._get("/incidents")
 
     def attention(self) -> dict[str, Any]:
         """Get the live AI Attention Index. Free.

@@ -10,7 +10,7 @@
  */
 
 const DEFAULT_BASE_URL = 'https://tensorfeed.ai/api';
-const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.12';
+const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.15';
 
 // ── Error types ─────────────────────────────────────────────────────
 
@@ -879,6 +879,129 @@ export class TensorFeed {
   /** Agent traffic metrics. Free. */
   async agentActivity(): Promise<AgentActivity> {
     return this.get<AgentActivity>('/agents/activity');
+  }
+
+  /**
+   * Embodied AI catalog. Free.
+   *
+   * Vision-language-action foundation models (pi-0, GR00T N1, OpenVLA,
+   * Octo, RDT-1B, Helix), humanoid platforms (Figure 02, 1X NEO, Tesla
+   * Optimus, Apptronik Apollo, Unitree G1/H1, Atlas Electric, Agility
+   * Digit, Sanctuary Phoenix), real-world training datasets (Open
+   * X-Embodiment, DROID, AgiBot World, Mobile ALOHA, BridgeData V2),
+   * and physics simulators (Isaac Lab, MuJoCo Playground, Genesis).
+   *
+   * @param options.category Filter to "foundation_model" | "humanoid" | "dataset" | "simulator".
+   */
+  async embodiedAi(options?: {
+    category?: 'foundation_model' | 'humanoid' | 'dataset' | 'simulator';
+  }): Promise<{
+    ok: boolean;
+    source: string;
+    lastUpdated: string;
+    count: number;
+    entries: Array<Record<string, unknown>>;
+  }> {
+    return this.get('/embodied-ai', { category: options?.category });
+  }
+
+  /**
+   * AI training datasets registry. Free.
+   *
+   * Pretraining corpora (FineWeb, RedPajama v2, Common Crawl, Dolma,
+   * The Pile), instruction-tuning sets (Tulu 3, OpenHermes, OpenOrca,
+   * AgentInstruct), DPO/RLHF preference sets (UltraFeedback, HelpSteer 2),
+   * and multimodal sets (LAION-5B, DataComp-1B). Each row: tokens,
+   * license, languages, and the upstream URL.
+   *
+   * @param options.stage Filter to one of "pretraining" | "instruction-tuning" | "dpo" | "rlhf" | "continued-pretraining" | "multimodal".
+   */
+  async trainingDatasets(options?: {
+    stage?: 'pretraining' | 'instruction-tuning' | 'dpo' | 'rlhf' | 'continued-pretraining' | 'multimodal';
+  }): Promise<{
+    ok: boolean;
+    source: string;
+    lastUpdated: string;
+    count: number;
+    datasets: Array<Record<string, unknown>>;
+  }> {
+    return this.get('/training-datasets', { stage: options?.stage });
+  }
+
+  /**
+   * Curated MCP server catalog. Free.
+   *
+   * Distinct from `/api/mcp/registry/snapshot` (which is a daily count
+   * + churn telemetry of the official registry); this returns the
+   * curated production-server catalog with capabilities, transport,
+   * license, and first-party flag.
+   */
+  async mcpServers(options?: {
+    capability?: string;
+    firstParty?: boolean;
+  }): Promise<{
+    ok: boolean;
+    source: string;
+    lastUpdated: string;
+    count: number;
+    servers: Array<Record<string, unknown>>;
+  }> {
+    const params: Record<string, string | undefined> = {};
+    if (options?.capability) params.capability = options.capability;
+    if (options?.firstParty === true) params.first_party = 'true';
+    return this.get('/mcp-servers', params);
+  }
+
+  /**
+   * Meta-catalog of AI evaluation benchmarks. Free.
+   *
+   * Each entry: size, score range, current frontier score, current SOTA
+   * holder model + date + citation URL, status (active vs saturated vs
+   * deprecated), contamination risk, paper/repo/leaderboard URLs.
+   * Covers MMLU-Pro, GPQA Diamond, HLE, ARC-AGI-2, AIME 2025, SWE-bench
+   * Verified, LiveCodeBench, Aider Polyglot, Terminal-Bench, SWE-Lancer,
+   * MMMU-Pro, MathVista, Tau-Bench, GAIA, WebArena, OSWorld, BFCL v3,
+   * HCAST, RULER, and more.
+   */
+  async benchmarkRegistry(options?: {
+    category?: 'knowledge' | 'math' | 'code' | 'multimodal' | 'agents' | 'long-context' | 'safety';
+    status?: 'active' | 'saturated' | 'deprecated';
+  }): Promise<{
+    ok: boolean;
+    source: string;
+    lastUpdated: string;
+    count: number;
+    benchmarks: Array<Record<string, unknown>>;
+  }> {
+    return this.get('/benchmark-registry', {
+      category: options?.category,
+      status: options?.status,
+    });
+  }
+
+  /**
+   * GPU rental pricing snapshot across cloud marketplaces. Free.
+   *
+   * H100, H200, A100, L40S, B200, MI300X, etc across Vast.ai, RunPod,
+   * and other marketplaces. Updated multiple times per day.
+   */
+  async gpuPricing(): Promise<Record<string, unknown>> {
+    return this.get('/gpu/pricing');
+  }
+
+  /**
+   * AI service incident history. Free.
+   *
+   * Incidents surfaced by TensorFeed status monitoring across major
+   * providers. Pairs with `status()` (current state) and the premium
+   * `statusUptime()` series for per-provider rollups.
+   */
+  async incidents(): Promise<{
+    ok: boolean;
+    source: string;
+    incidents: Array<Record<string, unknown>>;
+  }> {
+    return this.get('/incidents');
   }
 
   /** API health. Free. */
