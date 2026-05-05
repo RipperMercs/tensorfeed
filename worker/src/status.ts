@@ -31,6 +31,59 @@ function normalizeComponentStatus(status: string): string {
   }
 }
 
+// Components considered peripheral to the question "can I call this provider's
+// LLM/inference API right now?" Degradation in these surfaces should NOT bubble
+// up to the headline status, since users hitting our /is-X-down pages and the
+// homepage alert bar care about the inference path, not (e.g.) one ChatGPT
+// workspace connector. Anything not matched by these patterns is treated as
+// core (Chat Completions, Responses, Embeddings, Fine-tuning, Batch, etc).
+const PERIPHERAL_COMPONENT_PATTERNS: RegExp[] = [
+  /connector/i,
+  /workspace/i,
+  /\bapps?\b/i,
+  /atlas/i,
+  /\bgpts?\b/i,
+  /codex web/i,
+  /vs ?code/i,
+  /\bcli\b/i,
+  /fedramp/i,
+  /compliance/i,
+  /file upload/i,
+  /^login/i,
+  /^search$/i,
+  /^agent$/i,
+  /deep research/i,
+  /^sora/i,
+  /^conversations/i,
+  /image generation/i,
+  /voice mode/i,
+  /dashboard/i,
+  /console/i,
+  /billing/i,
+  /playground/i,
+];
+
+function isCoreComponent(name: string): boolean {
+  return !PERIPHERAL_COMPONENT_PATTERNS.some((p) => p.test(name));
+}
+
+// Returns the worst status across core inference components, or null if the
+// component list contains nothing identifiable as core (in which case callers
+// should fall back to the umbrella status.indicator from Statuspage).
+export function aggregateCoreStatus(
+  components: { name: string; status: string }[],
+): 'operational' | 'degraded' | 'down' | 'unknown' | null {
+  const core = components.filter((c) => isCoreComponent(c.name));
+  if (core.length === 0) return null;
+
+  if (core.some((c) => c.status === 'down')) return 'down';
+  if (core.some((c) => c.status === 'degraded')) return 'degraded';
+  if (core.every((c) => c.status === 'operational' || c.status === 'maintenance')) {
+    return 'operational';
+  }
+  return 'unknown';
+}
+
 function parseHtmlStatus(html: string): 'operational' | 'degraded' | 'down' | 'unknown' {
   const lower = html.toLowerCase();
   // Check for clear positive banner text first (most reliable)
@@ -86,20 +139,34 @@ async function fetchServiceStatus(
     // Atlassian Statuspage JSON API
     const data: StatusPageResponse = await response.json();
 
-    const components = (data.components || [])
+    const allComponents = (data.components || [])
       .filter((c: { name: string }) => !c.name.toLowerCase().includes('visit'))
-      .slice(0, 6)
       .map((c: { name: string; status: string }) => ({
         name: c.name,
         status: normalizeComponentStatus(c.status),
       }));
 
+    // Prefer the worst-of core inference components for the headline status.
+    // Statuspage's umbrella `indicator` flips to "minor" for any non-core
+    // component (e.g. "Connectors/Apps"), producing false alarms on our /is-X-
+    // down pages and homepage alert bar. Fall back to the umbrella only when
+    // we can't identify any core components (e.g. an oddly-named status page).
+    const componentDerived = aggregateCoreStatus(allComponents);
+    const headlineStatus = componentDerived ?? normalizeStatus(data.status?.indicator);
+
+    // Surface core components first so the truncated display shows the parts
+    // that matter (Chat Completions, Embeddings, etc) before peripheral ones.
+    const sortedComponents = [
+      ...allComponents.filter((c) => isCoreComponent(c.name)),
+      ...allComponents.filter((c) => !isCoreComponent(c.name)),
+    ].slice(0, 6);
+
     return {
       name: service.name,
       provider: service.provider,
-      status: normalizeStatus(data.status?.indicator),
+      status: headlineStatus,
       statusPageUrl: service.statusPageUrl,
-      components,
+      components: sortedComponents,
       lastChecked: new Date().toISOString(),
     };
   } catch (error) {
