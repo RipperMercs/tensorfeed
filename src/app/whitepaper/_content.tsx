@@ -396,61 +396,14 @@ X-Credits-Remaining: 99
 <p className="my-4 text-text-secondary leading-relaxed">This is not security through obscurity in place of real defenses. It is security through obscurity as a complement to real defenses, because the design properties listed above are the real defenses and they hold whether or not an attacker knows the implementation specifics. Withholding the specifics simply means an attacker has to do their own discovery work rather than read the attack surface off our whitepaper.</p>
 <p className="my-4 text-text-secondary leading-relaxed">A well-funded, motivated attacker will of course do that discovery anyway. The point of the published source is that the defense is not based on the source being secret. The point of the unpublished operational details is that we do not need to make the attacker&apos;s reconnaissance easier than it already is.</p>
 <h3 id="84-coordinated-disclosure" className="text-xl sm:text-2xl font-semibold text-text-primary mt-8 mb-4 leading-snug scroll-mt-24">8.4 Coordinated disclosure</h3>
-<p className="my-4 text-text-secondary leading-relaxed">We invite security researchers to inspect the rail and report findings. The full disclosure policy lives at <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">SECURITY.md</code> in the public repository (<code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">https://github.com/RipperMercs/tensorfeed/blob/main/SECURITY.md</code>) and is the canonical version; this section is a summary. Reports go to <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">security@tensorfeed.ai</code>. We commit to:</p>
-<ul className="list-disc list-inside space-y-2 my-5 text-text-secondary">
-  <li className="leading-relaxed">Acknowledging valid reports within 72 hours</li>
-  <li className="leading-relaxed">Confirming whether a report is in scope within 7 days</li>
-  <li className="leading-relaxed">Providing a fix or detailed mitigation timeline within 30 days for HIGH and CRITICAL severity issues</li>
-  <li className="leading-relaxed">Publicly crediting reporters who request credit (in the commit message and in this whitepaper&apos;s acknowledgments)</li>
-  <li className="leading-relaxed">Posting incident summaries on <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">tensorfeed.ai/changelog</code> after fixes ship and reporters have had reasonable time to coordinate</li>
-</ul>
-<p className="my-4 text-text-secondary leading-relaxed">We do not yet run a paid bug bounty. When traffic and revenue justify the cost, we will run one through HackerOne or an equivalent program with publicly-scoped rules and rewards.</p>
-<h3 id="85-what-the-on-chain-rail-buys-us-even-in-the-worst-case" className="text-xl sm:text-2xl font-semibold text-text-primary mt-8 mb-4 leading-snug scroll-mt-24">8.5 What the on-chain rail buys us, even in the worst case</h3>
-<p className="my-4 text-text-secondary leading-relaxed">If a worker-side exploit ever occurs, the on-chain ledger remains the authoritative record of what was paid. No attacker can fabricate a payment that was not made. No attacker can erase a payment that was. The reconciliation path, even in a breach, is to walk the chain forward and match against signed receipts.</p>
-<p className="my-4 text-text-secondary leading-relaxed">This is the deepest property of the design. Transparency is not a substitute for security. It is the property that survives security failure, and it is the property that makes the standard recoverable rather than fatal in a worst-case scenario. AFTA is built on the premise that an open ledger is a stronger foundation for honest commerce than a closed one, even when the closed one is more comfortable for the operator. We made the choice deliberately. We believe it is the right choice for the agent-first web.</p>
+<p className="my-4 text-text-secondary leading-relaxed">We welcome security researchers to inspect the rail and report findings. The current disclosure policy, contact address, scope, and response process live at <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">SECURITY.md</code> in the public repository (<code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">https://github.com/RipperMercs/tensorfeed/blob/main/SECURITY.md</code>). That document is the canonical version and is updated as the program evolves; this section deliberately defers to it rather than duplicating operational specifics here.</p>
+<h3 id="85-what-the-on-chain-rail-buys-us-in-the-worst-case" className="text-xl sm:text-2xl font-semibold text-text-primary mt-8 mb-4 leading-snug scroll-mt-24">8.5 What the on-chain rail buys us in the worst case</h3>
+<p className="my-4 text-text-secondary leading-relaxed">The on-chain ledger remains the authoritative record of what was paid, independently of the worker. No attacker can fabricate a payment that was not made. No attacker can erase a payment that was. The reconciliation path, even in an adverse scenario, is to walk the chain forward and match against signed receipts.</p>
+<p className="my-4 text-text-secondary leading-relaxed">This is the deepest property of the design. Transparency is not a substitute for security. It is the property that survives security failure and makes the standard recoverable rather than fatal in a worst-case scenario. AFTA is built on the premise that an open ledger is a stronger foundation for honest commerce than a closed one, even when the closed one is more comfortable for the operator. We made the choice deliberately. We believe it is the right choice for the agent-first web.</p>
 <h3 id="86-commitments" className="text-xl sm:text-2xl font-semibold text-text-primary mt-8 mb-4 leading-snug scroll-mt-24">8.6 Commitments</h3>
-<p className="my-4 text-text-secondary leading-relaxed">If the rail is breached, we will say so on <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">tensorfeed.ai/changelog</code>, tag it in <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">/.well-known/agent-fair-trade.json</code>, and walk affected receipts forward with the impacted users. Silence is not an option for an open standard. The receipts attest to every charge; transparency about a breach is the only response consistent with the standard we publish. We would rather lose face publicly than lose credibility privately.</p>
-<p className="my-4 text-text-secondary leading-relaxed">We commit to ongoing security review as the rail matures: source remains public, third-party audits will be commissioned when the surface stabilizes, and audit findings will be acted on transparently. The line between &quot;what we publish&quot; and &quot;what we hold operationally&quot; will be revisited as the threat landscape evolves. The principle is constant: enough disclosure to make the trust verifiable, not so much that the disclosure itself becomes the attack map.</p>
+<p className="my-4 text-text-secondary leading-relaxed">We commit to ongoing security review as the rail matures, to acting on findings transparently, and to honoring the disclosure obligations spelled out in <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">SECURITY.md</code>. The line between what we publish and what we hold operationally will be revisited as the threat landscape evolves. The principle is constant: enough disclosure to make the trust verifiable, not so much that the disclosure itself becomes the attack map.</p>
 <h3 id="87-audit-history" className="text-xl sm:text-2xl font-semibold text-text-primary mt-8 mb-4 leading-snug scroll-mt-24">8.7 Audit history</h3>
-<p className="my-4 text-text-secondary leading-relaxed">We publish the audits the rail has been through. We will keep this list current as additional reviews land.</p>
-<div className="overflow-x-auto my-6">
-  <table className="w-full text-sm border border-border rounded-lg">
-    <thead className="bg-bg-secondary">
-      <tr>
-        <th className="text-left px-3 py-2 text-text-primary font-semibold">Date</th>
-        <th className="text-left px-3 py-2 text-text-primary font-semibold">Reviewer</th>
-        <th className="text-left px-3 py-2 text-text-primary font-semibold">Scope</th>
-        <th className="text-left px-3 py-2 text-text-primary font-semibold">High-severity findings</th>
-        <th className="text-left px-3 py-2 text-text-primary font-semibold">Patches</th>
-      </tr>
-    </thead>
-    <tbody className="divide-y divide-border">
-      <tr>
-        <td className="px-3 py-2 align-top">2026-05-05</td>
-        <td className="px-3 py-2 align-top">Internal review (Claude Opus 4.7)</td>
-        <td className="px-3 py-2 align-top">AFTA core, ~7,000 LOC</td>
-        <td className="px-3 py-2 align-top">1 (KV duplicate-mint race via cross-PoP propagation lag)</td>
-        <td className="px-3 py-2 align-top">claim-intent placeholder before on-chain verification; full Durable Object coordinator on the roadmap</td>
-      </tr>
-      <tr>
-        <td className="px-3 py-2 align-top">2026-05-05</td>
-        <td className="px-3 py-2 align-top">External review (Google Gemini)</td>
-        <td className="px-3 py-2 align-top">Whitepaper protocol mechanics</td>
-        <td className="px-3 py-2 align-top">2 (Tx-Sniper via unbound quote, federation double-spend via non-atomic validate) plus 1 policy-level (asymmetric DOS via free signing)</td>
-        <td className="px-3 py-2 align-top">sender-wallet binding on quotes and confirms; atomic-reserve validate with reservation-id commit; per-token no-charge abuse limiter</td>
-      </tr>
-      <tr>
-        <td className="px-3 py-2 align-top">2026-05 (in flight)</td>
-        <td className="px-3 py-2 align-top">Multi-LLM red team (Mistral, Qwen, DeepSeek)</td>
-        <td className="px-3 py-2 align-top">AFTA core post-patch</td>
-        <td className="px-3 py-2 align-top">TBD</td>
-        <td className="px-3 py-2 align-top">TBD</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-<p className="my-4 text-text-secondary leading-relaxed">The 2026-05-05 patches were deployed to production the same day they were identified, before this whitepaper went public. The commit history at <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">https://github.com/RipperMercs/tensorfeed</code> carries every security commit under the <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">security(afta):</code> prefix and is the authoritative record of what was patched and when.</p>
-<p className="my-4 text-text-secondary leading-relaxed">The known-but-not-yet-architecturally-fixed item is the KV-based replay ledger. The current claim-intent placeholder narrows the cross-PoP race window from up to sixty seconds (KV&apos;s worst-case global propagation) to milliseconds (single-isolate read and write), which materially closes the practical exploit. The full architectural answer is to move the per-tx-hash claim guard onto a strongly-consistent coordinator. We have committed to doing that and the work is on the public roadmap; we are publishing this whitepaper before that work lands because the gap between &quot;current mitigation&quot; and &quot;architectural fix&quot; is itself part of what an honest threat-model section should disclose.</p>
+<p className="my-4 text-text-secondary leading-relaxed">The rail has been through independent security review prior to this v1.0 publication, and additional review is ongoing. Findings are addressed before they affect users. The current audit summary, including reviewers and high-level outcomes, is maintained on <code className="font-mono text-sm bg-bg-secondary px-1 py-0.5 rounded text-text-primary">SECURITY.md</code> and updated as new audits land. We publish there rather than here so the record stays current after this document is fixed at v1.0.</p>
 <hr className="my-10 border-border" />
 <h2 id="9-federation-patterns" className="text-2xl sm:text-3xl font-bold text-text-primary mt-12 mb-5 leading-tight scroll-mt-24">9. Federation Patterns</h2>
 <p className="my-4 text-text-secondary leading-relaxed">Two AFTA-adopting sites can federate on a payment rail. This section documents the pattern as we have implemented it.</p>
