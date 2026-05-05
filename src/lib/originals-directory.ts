@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'we-chose-usdc-on-base-for-afta',
+    title: "We Could Have Built AFTA on Anything. We Chose USDC on Base.",
+    author: 'Ripper',
+    date: 'May 6, 2026',
+    readTime: '8 min read',
+    description:
+      "The AFTA whitepaper is published; the rail underneath it is x402 + USDC on Base. Why that stack and not Stripe Link, Bitcoin Lightning, USDC on Solana, USDT on TRON, or any of the other plausible answers. Inside the bake-off, the four-property test (open, transparent, instantly final, sub-cent), the Coinbase + Circle layer the choice rests on, and why the early-mover bet on US-anchored stablecoin rails compounds rather than commodifies.",
+  },
+  {
     slug: 'coinbase-armstrong-14-percent-ai-native-pivot',
     title: "Coinbase Cuts 14%. Brian Armstrong's Memo Is the First Agent-Native Layoff at Scale.",
     author: 'Ripper',

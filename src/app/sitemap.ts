@@ -238,6 +238,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/anthropic-900-billion-valuation-tops-openai`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/anthropic-finance-agents-wall-street`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/coinbase-armstrong-14-percent-ai-native-pivot`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/we-chose-usdc-on-base-for-afta`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
 
     // Whitepaper (canonical AFTA spec document)
     { url: `${baseUrl}/whitepaper`, lastModified: now, changeFrequency: 'monthly', priority: 0.95 },
