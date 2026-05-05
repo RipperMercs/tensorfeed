@@ -495,6 +495,36 @@ class TensorFeed:
             params["to"] = to_date
         return self._get("/history/status/uptime", params=params)
 
+    def status_leaderboard_free(
+        self,
+        *,
+        days: int | None = None,
+    ) -> dict[str, Any]:
+        """Cross-provider uptime leaderboard. Free, 7-day cap.
+
+        Returns providers ranked by uptime % DESC. Each entry includes
+        ``polls``, per-bucket counts (operational/degraded/down/unknown),
+        ``downtime_minutes``, and ``hard_down_minutes`` (excludes degraded).
+        Computed from minute-resolution counters: at our 2-min poll cadence
+        a 7-day window aggregates ~5040 samples per provider.
+
+        For windows up to 90 days plus ``incident_count`` and
+        ``mttr_minutes`` per provider, use ``status_leaderboard()``
+        (premium, 1 credit).
+
+        Args:
+            days: 1 to 7 (default 7).
+
+        Returns:
+            Dict with ``entries`` (sorted), ``range``, ``poll_interval_minutes``,
+            and ``generated_at``. ``ok=False`` with ``error="no_data"`` if
+            the counter capture has not accumulated any data in the range.
+        """
+        params: dict[str, Any] = {}
+        if days is not None:
+            params["days"] = days
+        return self._get("/status/leaderboard", params=params)
+
     # ── Free: routing preview (rate-limited) ───────────────────────
 
     def routing_preview(
@@ -827,6 +857,43 @@ class TensorFeed:
             "GET",
             "/premium/history/status/uptime",
             params={"provider": provider, "from": from_date, "to": to_date},
+            require_token=True,
+        )
+
+    def status_leaderboard(
+        self,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Cross-provider uptime leaderboard. Costs 1 credit.
+
+        Same minute-resolution counter source as the free
+        ``status_leaderboard_free()`` but extends the window to the full
+        90-day retention horizon and adds ``incident_count`` and
+        ``mttr_minutes`` (mean time to recover from resolved incidents)
+        per provider.
+
+        Aimed at SRE/ops/procurement teams comparing AI vendor reliability
+        for vendor selection or post-incident reviews. The data series
+        compounds with time and cannot be backfilled, so it is part of the
+        moat behind the free 7-day endpoint.
+
+        Args:
+            from_date: Start date in YYYY-MM-DD UTC. Defaults to 30 days ago.
+            to_date: End date in YYYY-MM-DD UTC. Defaults to today.
+
+        Returns:
+            Dict with ``entries`` (sorted by uptime % DESC), each with
+            ``rank``, ``uptime_pct``, ``polls``, per-bucket counts,
+            ``downtime_minutes``, ``hard_down_minutes``, ``incident_count``,
+            and ``mttr_minutes``. Plus ``billing``.
+        """
+        self._require_token("status_leaderboard")
+        return self._request(
+            "GET",
+            "/premium/status/leaderboard",
+            params={"from": from_date, "to": to_date},
             require_token=True,
         )
 

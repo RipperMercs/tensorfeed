@@ -1,6 +1,7 @@
 import { Env, ServiceStatus, StatusPageResponse } from './types';
 import { STATUS_PAGES, StatusPageConfig } from './sources';
 import { dispatchStatusWatches, StatusTransition } from './watches';
+import { recordPollCycle } from './status-counters';
 
 function normalizeStatus(indicator: string): 'operational' | 'degraded' | 'down' | 'unknown' {
   switch (indicator?.toLowerCase()) {
@@ -414,6 +415,15 @@ export async function pollStatusPages(env: Env): Promise<void> {
   // Save current status snapshot for next comparison
   const snapshot = statuses.map(s => ({ name: s.name, status: s.status, provider: s.provider }));
   await env.TENSORFEED_STATUS.put('previous-status', JSON.stringify(snapshot));
+
+  // Record minute-resolution counters for the uptime leaderboard. One read +
+  // one write per cycle, ~1440 KV ops/day total. Powers /api/status/leaderboard
+  // and the premium /api/premium/status/leaderboard endpoint.
+  try {
+    await recordPollCycle(env, statuses.map(s => ({ name: s.name, status: s.status })));
+  } catch (e) {
+    console.error('recordPollCycle failed:', e instanceof Error ? e.message : e);
+  }
 
   const operational = statuses.filter(s => s.status === 'operational').length;
   const degraded = statuses.filter(s => s.status === 'degraded').length;

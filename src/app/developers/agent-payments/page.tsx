@@ -347,6 +347,51 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/status/leaderboard',
+    description:
+      'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',
+    cost: '1 credit per call',
+    example: `// Query: ?from=2026-04-01&to=2026-04-30
+{
+  "ok": true,
+  "range": { "from": "2026-04-01", "to": "2026-04-30", "days": 30 },
+  "generated_at": "2026-05-04T21:00:00Z",
+  "entry_count": 10,
+  "poll_interval_minutes": 2,
+  "entries": [
+    {
+      "provider": "Claude API",
+      "rank": 1,
+      "uptime_pct": 99.9722,
+      "polls": 21600,
+      "operational_polls": 21594,
+      "degraded_polls": 6,
+      "down_polls": 0,
+      "unknown_polls": 0,
+      "downtime_minutes": 12,
+      "hard_down_minutes": 0,
+      "incident_count": 1,
+      "mttr_minutes": 12
+    },
+    {
+      "provider": "OpenAI API",
+      "rank": 2,
+      "uptime_pct": 99.4444,
+      "polls": 21600,
+      "operational_polls": 21480,
+      "degraded_polls": 100,
+      "down_polls": 20,
+      "unknown_polls": 0,
+      "downtime_minutes": 240,
+      "hard_down_minutes": 40,
+      "incident_count": 4,
+      "mttr_minutes": 35.5
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/whats-new',
     description:
       "Agent morning brief: pricing changes, new/removed models, status incidents, and top news headlines from the last 1-7 days. The single endpoint to call when an agent boots up.",

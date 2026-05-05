@@ -2,6 +2,12 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.24.0 - 2026-05-04
+
+### Added
+- Cross-provider uptime leaderboard: `tf.statusLeaderboardFree({ days })` (free, 7-day cap) and `tf.statusLeaderboard({ from, to })` (premium, 1 credit, up to 90 days). Returns providers ranked by uptime % DESC computed from minute-resolution counters (~720 samples per provider per day at the 2-min poll cadence). Premium adds `incident_count` and `mttr_minutes` (mean time to recover) per provider. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.
+- 4 new monitored providers: Google Gemini (via Google Cloud incidents), GitHub Copilot, Perplexity (via Instatus), and Groq. Brings total monitored to 10 major LLM providers.
+
 ## 1.23.0 - 2026-05-04
 
 ### Added

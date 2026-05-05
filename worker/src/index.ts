@@ -19,6 +19,7 @@ import {
   FREE_MAX_RANGE_DAYS,
   FREE_DEFAULT_RANGE_DAYS,
 } from './history-series';
+import { computeLeaderboard, resolveLastNDays } from './status-leaderboard';
 import {
   createWatch,
   getWatch,
@@ -1650,6 +1651,7 @@ export default {
           historyPricingSeries: '/api/history/pricing/series?model=&days=1-7 (free, 7-day cap)',
           historyBenchmarksSeries: '/api/history/benchmarks/series?model=&benchmark=&days=1-7 (free, 7-day cap)',
           historyStatusUptime: '/api/history/status/uptime?provider=&days=1-7 (free, 7-day cap)',
+          statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
           mcpRegistrySnapshot: '/api/mcp/registry/snapshot',
           papersAiTrending: '/api/papers/ai-trending',
           papersArxivRecent: '/api/papers/arxiv-recent',
@@ -1667,6 +1669,7 @@ export default {
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
           premiumBenchmarkSeries: '/api/premium/history/benchmarks/series?model=&benchmark=&from=&to=',
           premiumStatusUptime: '/api/premium/history/status/uptime?provider=&from=&to=',
+          premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
           premiumWatchesItem: 'GET|DELETE /api/premium/watches/{id}',
@@ -1977,6 +1980,48 @@ export default {
         },
         200,
         3600,
+      );
+    }
+
+    // === STATUS LEADERBOARD (free, 7-day cap) ===
+    // Cross-provider uptime ranking computed from minute-resolution counters
+    // (every poll cycle increments per-provider counters, ~720 samples per
+    // provider per day at our 2-min cadence). Returns providers ranked by
+    // uptime % DESC with downtime_minutes derived from poll counts.
+    // Premium tier extends the window to 90 days and adds incident_count
+    // plus mttr_minutes per provider.
+    if (path === '/api/status/leaderboard') {
+      const daysRaw = url.searchParams.get('days');
+      const daysParsed = daysRaw ? parseInt(daysRaw, 10) : FREE_DEFAULT_RANGE_DAYS;
+      if (Number.isNaN(daysParsed) || daysParsed < 1) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'invalid_days',
+            hint: `Pass ?days=1..${FREE_MAX_RANGE_DAYS}. Default ${FREE_DEFAULT_RANGE_DAYS}.`,
+          },
+          400,
+        );
+      }
+      const days = Math.min(daysParsed, FREE_MAX_RANGE_DAYS);
+      const { from, to } = resolveLastNDays(days);
+      const result = await computeLeaderboard(env, from, to);
+      return jsonResponse(
+        {
+          ...result,
+          tier: 'free',
+          premium: {
+            endpoint: '/api/premium/status/leaderboard',
+            max_range_days: MAX_RANGE_DAYS,
+            credits_per_call: 1,
+            note: 'Premium extends the window from 7 to 90 days and adds incident_count + mttr_minutes (mean time to recover) per provider.',
+          },
+        },
+        200,
+        // 5-minute cache: leaderboard is stable on short timescales but we
+        // want it to reflect new poll cycles within a freshness window users
+        // would consider "live."
+        300,
       );
     }
 
@@ -2725,6 +2770,46 @@ export default {
       const result = await getStatusUptime(env, provider, range.from, range.to);
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/history/status/uptime', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: STATUS LEADERBOARD (Tier 1, 1 credit) ===
+    // Same minute-resolution counter source as the free leaderboard, but
+    // extends the window to the full 90-day retention horizon and includes
+    // incident_count and mttr_minutes (mean time to recover from resolved
+    // incidents) per provider. Aimed at SRE/ops teams comparing AI vendor
+    // reliability for procurement, vendor negotiations, or post-incident
+    // reviews. The data series compounds with time and cannot be backfilled,
+    // so it's part of the data moat behind the free endpoint.
+
+    if (path === '/api/premium/status/leaderboard') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const range = resolveRange(url.searchParams.get('from'), url.searchParams.get('to'));
+      if (!range.ok) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: range.error,
+            limits: { max_range_days: MAX_RANGE_DAYS, default_range_days: DEFAULT_RANGE_DAYS },
+          },
+          400,
+        );
+      }
+
+      const result = await computeLeaderboard(env, range.from, range.to, {
+        includeIncidents: true,
+      });
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/status/leaderboard',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }

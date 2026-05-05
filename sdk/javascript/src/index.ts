@@ -1408,6 +1408,20 @@ export class TensorFeed {
     });
   }
 
+  /**
+   * Cross-provider uptime leaderboard. Free, 7-day cap.
+   *
+   * Returns providers ranked by uptime % DESC computed from minute-resolution
+   * counters (~720 samples per provider per day at the 2-min poll cadence).
+   * Each entry includes per-bucket poll counts plus `downtime_minutes` and
+   * `hard_down_minutes` (excludes degraded). For windows up to 90 days plus
+   * `incident_count` and `mttr_minutes` per provider, use the premium
+   * `statusLeaderboard()` (1 credit).
+   */
+  async statusLeaderboardFree(options?: { days?: number }): Promise<unknown> {
+    return this.get('/status/leaderboard', { days: options?.days });
+  }
+
   // ── Free: routing preview (rate-limited) ───────────────────────
 
   /**
@@ -1595,6 +1609,30 @@ export class TensorFeed {
     this.requireToken('statusUptime');
     return this.request<StatusUptimeResponse>('GET', '/premium/history/status/uptime', {
       params: { provider: options.provider, from: options.from, to: options.to },
+      requireToken: true,
+    });
+  }
+
+  /**
+   * Cross-provider uptime leaderboard. Costs 1 credit.
+   *
+   * Same minute-resolution counter source as the free `statusLeaderboardFree()`
+   * but extends the window to the full 90-day retention horizon and adds
+   * `incident_count` and `mttr_minutes` (mean time to recover from resolved
+   * incidents) per provider. Returns providers ranked by uptime % DESC, with
+   * `hard_down_minutes` as tie-breaker. Aimed at SRE/ops/procurement teams
+   * comparing AI vendor reliability.
+   *
+   * @throws Error if no token is set on the client
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async statusLeaderboard(options?: {
+    from?: string;
+    to?: string;
+  }): Promise<unknown> {
+    this.requireToken('statusLeaderboard');
+    return this.request('GET', '/premium/status/leaderboard', {
+      params: { from: options?.from, to: options?.to },
       requireToken: true,
     });
   }

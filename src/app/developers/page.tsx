@@ -91,6 +91,35 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/status/leaderboard',
+    description:
+      'Cross-provider uptime ranking computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Returns providers ranked by uptime % DESC with downtime_minutes, hard_down_minutes, and per-bucket poll counts. Free tier capped at 7 days; the paid /api/premium/status/leaderboard extends to 90 days and adds incident_count + mttr_minutes per provider.',
+    cache: 'Cache for 5 minutes',
+    example: `// Query: ?days=7
+{
+  "ok": true,
+  "range": { "from": "2026-04-28", "to": "2026-05-04", "days": 7 },
+  "generated_at": "2026-05-04T21:00:00Z",
+  "entry_count": 10,
+  "poll_interval_minutes": 2,
+  "entries": [
+    {
+      "provider": "Claude API",
+      "rank": 1,
+      "uptime_pct": 99.9802,
+      "polls": 5040,
+      "operational_polls": 5038,
+      "degraded_polls": 2,
+      "down_polls": 0,
+      "unknown_polls": 0,
+      "downtime_minutes": 4,
+      "hard_down_minutes": 0
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/models',
     description: 'AI model pricing and specifications across all major providers. Input/output costs per 1M tokens, context windows.',
     cache: 'Cache for 1 hour',
