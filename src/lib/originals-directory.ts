@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-finance-agents-wall-street',
+    title: 'Anthropic Just Shipped 10 Wall Street Agents. The Frontier Lab Is Now a Vendor.',
+    author: 'Kira Nolan',
+    date: 'May 5, 2026',
+    readTime: '7 min read',
+    description:
+      "Anthropic shipped ten preconfigured Claude agents for banks, asset managers, and insurers today, plus general availability of a single Claude agent across Excel, PowerPoint, Word, and Outlook, a Moody's app embedded as a native Claude experience covering 600 million companies, and a co-engineered Financial Crimes Agent built with FIS. The day after the $1.5B Wall Street joint venture, the products that JV will sell are live. Why this is the moment a frontier lab stopped selling tokens and started selling workflows.",
+  },
+  {
     slug: 'ai-status-monitoring-real-talk',
     title: 'AI Status Monitoring: How We Actually Track Claude, ChatGPT, and Gemini',
     author: 'Ripper',
