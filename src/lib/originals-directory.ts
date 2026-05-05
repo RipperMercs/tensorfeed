@@ -35,6 +35,15 @@ export const ORIGINALS: OriginalArticle[] = [
       "Every coding agent I have tested in 2026 reads AGENTS.md before doing anything else in a fresh repo. The convention emerged informally and stuck. Here is why it works, what to put in a thirty-line example, and why every public repo should ship one this week.",
   },
   {
+    slug: 'anthropic-900-billion-valuation-tops-openai',
+    title: 'Anthropic at $900 Billion. The Valuation Just Lapped OpenAI.',
+    author: 'Marcus Chen',
+    date: 'May 4, 2026',
+    readTime: '7 min read',
+    description:
+      "Anthropic is closing a $50B round at a $900B valuation, more than 2x its February mark and ahead of OpenAI for the first time. ARR ran from $9B to a reported $44B in five months. The board meeting is this month, the IPO window opens in October, and the implied multiple is actually lower than OpenAI's. Inside the round, the revenue trajectory, the 10GW of contracted compute, and what it does to the frontier lab pecking order.",
+  },
+  {
     slug: 'afta-is-bilateral-both-sides-win',
     title: 'AFTA Is Bilateral. Here Is Why Both Sides Win.',
     author: 'Ripper',
