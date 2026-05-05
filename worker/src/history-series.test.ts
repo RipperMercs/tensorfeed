@@ -8,11 +8,14 @@
 import { describe, it, expect } from 'vitest';
 import {
   resolveRange,
+  resolveFreeRange,
   getPricingSeries,
   getBenchmarkSeries,
   getStatusUptime,
   MAX_RANGE_DAYS,
   DEFAULT_RANGE_DAYS,
+  FREE_MAX_RANGE_DAYS,
+  FREE_DEFAULT_RANGE_DAYS,
 } from './history-series';
 import type { Env } from './types';
 
@@ -167,6 +170,57 @@ describe('resolveRange', () => {
     d.setUTCDate(d.getUTCDate() + (MAX_RANGE_DAYS - 1));
     const to = d.toISOString().slice(0, 10);
     expect(resolveRange(from, to).ok).toBe(true);
+  });
+});
+
+// ── resolveFreeRange ────────────────────────────────────────────────
+
+describe('resolveFreeRange', () => {
+  it('honors ?days=N as the primary input', () => {
+    const r = resolveFreeRange('5', null, null);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const fromMs = new Date(`${r.from}T00:00:00Z`).getTime();
+    const toMs = new Date(`${r.to}T00:00:00Z`).getTime();
+    const span = Math.round((toMs - fromMs) / (1000 * 60 * 60 * 24)) + 1;
+    expect(span).toBe(5);
+  });
+
+  it('rejects ?days greater than the free cap', () => {
+    const r = resolveFreeRange(String(FREE_MAX_RANGE_DAYS + 1), null, null);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain(String(FREE_MAX_RANGE_DAYS));
+  });
+
+  it('rejects non-numeric ?days', () => {
+    expect(resolveFreeRange('abc', null, null).ok).toBe(false);
+  });
+
+  it('rejects ?days below 1', () => {
+    expect(resolveFreeRange('0', null, null).ok).toBe(false);
+    expect(resolveFreeRange('-3', null, null).ok).toBe(false);
+  });
+
+  it('falls back to from/to with the free cap enforced', () => {
+    // 14-day window must be rejected at the free tier
+    const r = resolveFreeRange(null, '2026-04-01', '2026-04-14');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain(String(FREE_MAX_RANGE_DAYS));
+  });
+
+  it('accepts a 7-day from/to window', () => {
+    const r = resolveFreeRange(null, '2026-04-01', '2026-04-07');
+    expect(r.ok).toBe(true);
+  });
+
+  it('defaults to FREE_DEFAULT_RANGE_DAYS when nothing is provided', () => {
+    const r = resolveFreeRange(null, null, null);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const fromMs = new Date(`${r.from}T00:00:00Z`).getTime();
+    const toMs = new Date(`${r.to}T00:00:00Z`).getTime();
+    const span = Math.round((toMs - fromMs) / (1000 * 60 * 60 * 24)) + 1;
+    expect(span).toBe(FREE_DEFAULT_RANGE_DAYS);
   });
 });
 

@@ -425,6 +425,76 @@ class TensorFeed:
         """
         return self._get(f"/history/{date}/{snapshot_type}")
 
+    def history_pricing_series(
+        self,
+        model: str,
+        *,
+        days: int | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Free pricing time series for a single model. 7-day cap.
+
+        For up to 90 days, use ``pricing_series()`` (premium, 1 credit).
+
+        Args:
+            model: model id or name (e.g. "claude-sonnet-4")
+            days: rolling window length in days (1 to 7). Wins over from/to.
+            from_date: optional YYYY-MM-DD start, used if ``days`` is None.
+            to_date: optional YYYY-MM-DD end, defaults to today UTC.
+        """
+        params: dict[str, Any] = {"model": model}
+        if days is not None:
+            params["days"] = days
+        if from_date is not None:
+            params["from"] = from_date
+        if to_date is not None:
+            params["to"] = to_date
+        return self._get("/history/pricing/series", params=params)
+
+    def history_benchmarks_series(
+        self,
+        model: str,
+        benchmark: str,
+        *,
+        days: int | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Free benchmark score time series for a model. 7-day cap.
+
+        For up to 90 days, use ``benchmark_series()`` (premium, 1 credit).
+        """
+        params: dict[str, Any] = {"model": model, "benchmark": benchmark}
+        if days is not None:
+            params["days"] = days
+        if from_date is not None:
+            params["from"] = from_date
+        if to_date is not None:
+            params["to"] = to_date
+        return self._get("/history/benchmarks/series", params=params)
+
+    def history_status_uptime(
+        self,
+        provider: str,
+        *,
+        days: int | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Free uptime rollup for a provider. 7-day cap.
+
+        For up to 90 days, use ``status_uptime()`` (premium, 1 credit).
+        """
+        params: dict[str, Any] = {"provider": provider}
+        if days is not None:
+            params["days"] = days
+        if from_date is not None:
+            params["from"] = from_date
+        if to_date is not None:
+            params["to"] = to_date
+        return self._get("/history/status/uptime", params=params)
+
     # ── Free: routing preview (rate-limited) ───────────────────────
 
     def routing_preview(

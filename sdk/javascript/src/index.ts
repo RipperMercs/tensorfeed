@@ -1352,6 +1352,62 @@ export class TensorFeed {
     return this.get<HistorySnapshot>(`/history/${date}/${snapshotType}`);
   }
 
+  /**
+   * Free pricing time series for a single model. 7-day cap.
+   * For up to 90 days, use the premium `/api/premium/history/pricing/series` (1 credit).
+   */
+  async historyPricingSeries(options: {
+    model: string;
+    days?: number;
+    from?: string;
+    to?: string;
+  }): Promise<unknown> {
+    return this.get('/history/pricing/series', {
+      model: options.model,
+      days: options.days,
+      from: options.from,
+      to: options.to,
+    });
+  }
+
+  /**
+   * Free benchmark score time series for a model. 7-day cap.
+   * For up to 90 days, use the premium `/api/premium/history/benchmarks/series` (1 credit).
+   */
+  async historyBenchmarksSeries(options: {
+    model: string;
+    benchmark: string;
+    days?: number;
+    from?: string;
+    to?: string;
+  }): Promise<unknown> {
+    return this.get('/history/benchmarks/series', {
+      model: options.model,
+      benchmark: options.benchmark,
+      days: options.days,
+      from: options.from,
+      to: options.to,
+    });
+  }
+
+  /**
+   * Free uptime rollup for a provider. 7-day cap.
+   * For up to 90 days, use the premium `/api/premium/history/status/uptime` (1 credit).
+   */
+  async historyStatusUptime(options: {
+    provider: string;
+    days?: number;
+    from?: string;
+    to?: string;
+  }): Promise<unknown> {
+    return this.get('/history/status/uptime', {
+      provider: options.provider,
+      days: options.days,
+      from: options.from,
+      to: options.to,
+    });
+  }
+
   // ── Free: routing preview (rate-limited) ───────────────────────
 
   /**

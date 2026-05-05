@@ -10,11 +10,14 @@ import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatest
 import { captureHistory, listHistory, readHistory } from './history';
 import {
   resolveRange,
+  resolveFreeRange,
   getPricingSeries,
   getBenchmarkSeries,
   getStatusUptime,
   MAX_RANGE_DAYS,
   DEFAULT_RANGE_DAYS,
+  FREE_MAX_RANGE_DAYS,
+  FREE_DEFAULT_RANGE_DAYS,
 } from './history-series';
 import {
   createWatch,
@@ -1644,6 +1647,9 @@ export default {
           health: '/api/health',
           history: '/api/history',
           historySnapshot: '/api/history/{YYYY-MM-DD}/{type}',
+          historyPricingSeries: '/api/history/pricing/series?model=&days=1-7 (free, 7-day cap)',
+          historyBenchmarksSeries: '/api/history/benchmarks/series?model=&benchmark=&days=1-7 (free, 7-day cap)',
+          historyStatusUptime: '/api/history/status/uptime?provider=&days=1-7 (free, 7-day cap)',
           mcpRegistrySnapshot: '/api/mcp/registry/snapshot',
           papersAiTrending: '/api/papers/ai-trending',
           papersArxivRecent: '/api/papers/arxiv-recent',
@@ -1809,6 +1815,169 @@ export default {
         return jsonResponse({ ok: false, error: 'not_found', date, type }, 404);
       }
       return jsonResponse({ ok: true, ...snapshot }, 200, 86400);
+    }
+
+    // === FREE HISTORY SERIES (7-day teaser) ===
+    // Free time-series view over the daily history:* snapshots so agents
+    // discover that TensorFeed has the data without paying first. The full
+    // 90-day window stays behind /api/premium/history/{...}/series.
+
+    if (path === '/api/history/pricing/series') {
+      const model = url.searchParams.get('model')?.trim();
+      if (!model) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'model_required',
+            hint: 'Pass ?model=<id-or-name>. Example: ?model=claude-sonnet-4&days=7',
+          },
+          400,
+        );
+      }
+      const range = resolveFreeRange(
+        url.searchParams.get('days'),
+        url.searchParams.get('from'),
+        url.searchParams.get('to'),
+      );
+      if (!range.ok) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: range.error,
+            limits: {
+              max_range_days: FREE_MAX_RANGE_DAYS,
+              default_range_days: FREE_DEFAULT_RANGE_DAYS,
+            },
+            premium: {
+              endpoint: '/api/premium/history/pricing/series',
+              max_range_days: MAX_RANGE_DAYS,
+              docs: 'https://tensorfeed.ai/developers/agent-payments',
+            },
+          },
+          400,
+        );
+      }
+      const result = await getPricingSeries(env, model, range.from, range.to);
+      return jsonResponse(
+        {
+          ...result,
+          tier: 'free',
+          premium: {
+            endpoint: '/api/premium/history/pricing/series',
+            max_range_days: MAX_RANGE_DAYS,
+            credits_per_call: 1,
+            note: 'Premium tier extends the window from 7 to 90 days and supports arbitrary from/to ranges.',
+          },
+        },
+        200,
+        3600,
+      );
+    }
+
+    if (path === '/api/history/benchmarks/series') {
+      const model = url.searchParams.get('model')?.trim();
+      const benchmark = url.searchParams.get('benchmark')?.trim();
+      if (!model || !benchmark) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'model_and_benchmark_required',
+            hint:
+              'Pass ?model=<name>&benchmark=<key>. Example: ?model=claude-sonnet-4&benchmark=swe_bench&days=7',
+          },
+          400,
+        );
+      }
+      const range = resolveFreeRange(
+        url.searchParams.get('days'),
+        url.searchParams.get('from'),
+        url.searchParams.get('to'),
+      );
+      if (!range.ok) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: range.error,
+            limits: {
+              max_range_days: FREE_MAX_RANGE_DAYS,
+              default_range_days: FREE_DEFAULT_RANGE_DAYS,
+            },
+            premium: {
+              endpoint: '/api/premium/history/benchmarks/series',
+              max_range_days: MAX_RANGE_DAYS,
+              docs: 'https://tensorfeed.ai/developers/agent-payments',
+            },
+          },
+          400,
+        );
+      }
+      const result = await getBenchmarkSeries(env, model, benchmark, range.from, range.to);
+      return jsonResponse(
+        {
+          ...result,
+          tier: 'free',
+          premium: {
+            endpoint: '/api/premium/history/benchmarks/series',
+            max_range_days: MAX_RANGE_DAYS,
+            credits_per_call: 1,
+            note: 'Premium tier extends the window from 7 to 90 days and supports arbitrary from/to ranges.',
+          },
+        },
+        200,
+        3600,
+      );
+    }
+
+    if (path === '/api/history/status/uptime') {
+      const provider = url.searchParams.get('provider')?.trim();
+      if (!provider) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'provider_required',
+            hint: 'Pass ?provider=<name>. Example: ?provider=anthropic&days=7',
+          },
+          400,
+        );
+      }
+      const range = resolveFreeRange(
+        url.searchParams.get('days'),
+        url.searchParams.get('from'),
+        url.searchParams.get('to'),
+      );
+      if (!range.ok) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: range.error,
+            limits: {
+              max_range_days: FREE_MAX_RANGE_DAYS,
+              default_range_days: FREE_DEFAULT_RANGE_DAYS,
+            },
+            premium: {
+              endpoint: '/api/premium/history/status/uptime',
+              max_range_days: MAX_RANGE_DAYS,
+              docs: 'https://tensorfeed.ai/developers/agent-payments',
+            },
+          },
+          400,
+        );
+      }
+      const result = await getStatusUptime(env, provider, range.from, range.to);
+      return jsonResponse(
+        {
+          ...result,
+          tier: 'free',
+          premium: {
+            endpoint: '/api/premium/history/status/uptime',
+            max_range_days: MAX_RANGE_DAYS,
+            credits_per_call: 1,
+            note: 'Premium tier extends the window from 7 to 90 days and supports arbitrary from/to ranges.',
+          },
+        },
+        200,
+        3600,
+      );
     }
 
     // === MCP REGISTRY TELEMETRY (free) ===

@@ -2,6 +2,11 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.23.0 - 2026-05-04
+
+### Added
+- Three free history-series methods: `tf.historyPricingSeries({ model, days })`, `tf.historyBenchmarksSeries({ model, benchmark, days })`, `tf.historyStatusUptime({ provider, days })`. Each returns up to 7 days of daily snapshots without a token. For the full 90-day window keep using the paid `tf.pricingSeries()`, `tf.benchmarkSeries()`, `tf.statusUptime()` (1 credit each). All three also accept `from` and `to` as alternates to `days`.
+
 ## 1.22.0 - 2026-05-04
 
 ### Added

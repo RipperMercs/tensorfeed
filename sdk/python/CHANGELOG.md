@@ -2,6 +2,11 @@
 
 All notable changes to the Python SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.27.0 - 2026-05-04
+
+### Added
+- Three free history-series methods: `tf.history_pricing_series(model, days=N)`, `tf.history_benchmarks_series(model, benchmark, days=N)`, `tf.history_status_uptime(provider, days=N)`. Each returns up to 7 days of daily snapshots without a token. For the full 90-day window keep using the paid `tf.pricing_series()`, `tf.benchmark_series()`, `tf.status_uptime()` (1 credit each). All three accept `from_date` and `to_date` as alternates to `days`.
+
 ## 1.26.0 - 2026-05-04
 
 ### Added

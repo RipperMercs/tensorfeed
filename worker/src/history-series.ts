@@ -17,6 +17,12 @@ import { Env } from './types';
 export const MAX_RANGE_DAYS = 90;
 export const DEFAULT_RANGE_DAYS = 30;
 
+// Free-tier cap on free history-series endpoints. The full 90-day window
+// is gated behind the 1-credit premium endpoint. This 7-day teaser still
+// surfaces "is the price moving" without giving away the long tail.
+export const FREE_MAX_RANGE_DAYS = 7;
+export const FREE_DEFAULT_RANGE_DAYS = 7;
+
 export type HistoryType = 'pricing' | 'models' | 'benchmarks' | 'status' | 'agent-activity';
 
 interface HistorySnapshot<T = unknown> {
@@ -64,15 +70,22 @@ export interface RangeResolution {
 
 /**
  * Resolve and validate `from`/`to` query params. Defaults to the last
- * DEFAULT_RANGE_DAYS ending today. Caps at MAX_RANGE_DAYS.
+ * DEFAULT_RANGE_DAYS ending today. Caps at MAX_RANGE_DAYS unless an
+ * explicit `maxDays` override is passed (used by free-tier endpoints
+ * to enforce a tighter cap).
  */
-export function resolveRange(fromParam?: string | null, toParam?: string | null): RangeResolution {
+export function resolveRange(
+  fromParam?: string | null,
+  toParam?: string | null,
+  maxDays: number = MAX_RANGE_DAYS,
+  defaultDays: number = DEFAULT_RANGE_DAYS,
+): RangeResolution {
   const today = todayUTC();
   let from = fromParam || '';
   let to = toParam || today;
 
   if (!from && !fromParam) {
-    from = addDays(today, -(DEFAULT_RANGE_DAYS - 1));
+    from = addDays(today, -(defaultDays - 1));
   }
   if (!ISO_DATE.test(from)) {
     return { ok: false, error: 'invalid_from_date_format', from, to };
@@ -84,10 +97,40 @@ export function resolveRange(fromParam?: string | null, toParam?: string | null)
     return { ok: false, error: 'from_after_to', from, to };
   }
   const span = daysBetween(from, to) + 1;
-  if (span > MAX_RANGE_DAYS) {
-    return { ok: false, error: `range_exceeds_${MAX_RANGE_DAYS}_days`, from, to };
+  if (span > maxDays) {
+    return { ok: false, error: `range_exceeds_${maxDays}_days`, from, to };
   }
   return { ok: true, from, to };
+}
+
+/**
+ * Resolve a free-tier range. Caller passes `?days=N` or `?from=&to=`.
+ * Caps at FREE_MAX_RANGE_DAYS. If the caller passes nothing, defaults
+ * to the last FREE_DEFAULT_RANGE_DAYS ending today.
+ */
+export function resolveFreeRange(
+  daysParam?: string | null,
+  fromParam?: string | null,
+  toParam?: string | null,
+): RangeResolution {
+  // `?days=N` shorthand wins over `?from=&to=` if both supplied.
+  if (daysParam) {
+    const n = parseInt(daysParam, 10);
+    if (!Number.isFinite(n) || n < 1) {
+      return { ok: false, error: 'invalid_days_param', from: '', to: '' };
+    }
+    if (n > FREE_MAX_RANGE_DAYS) {
+      return {
+        ok: false,
+        error: `range_exceeds_${FREE_MAX_RANGE_DAYS}_days`,
+        from: '',
+        to: '',
+      };
+    }
+    const today = todayUTC();
+    return { ok: true, from: addDays(today, -(n - 1)), to: today };
+  }
+  return resolveRange(fromParam, toParam, FREE_MAX_RANGE_DAYS, FREE_DEFAULT_RANGE_DAYS);
 }
 
 // === KV access ===
