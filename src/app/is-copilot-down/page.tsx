@@ -35,13 +35,13 @@ async function fetchCopilotStatus(): Promise<StatusService | null> {
 }
 
 export const metadata: Metadata = {
-  title: 'Is Copilot Down? Live Microsoft Copilot Status',
+  title: 'Copilot Status: Is GitHub Copilot Down? Live Microsoft AI Tracker',
   description:
     'Check if Microsoft Copilot is down right now. Real-time Copilot status monitoring with live updates. See current outages, degraded performance, and component status for Microsoft Copilot.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/is-copilot-down',
-    title: 'Is Copilot Down? Live Microsoft Copilot Status',
+    title: 'Copilot Status: Is GitHub Copilot Down? Live Microsoft AI Tracker',
     description:
       'Check if Microsoft Copilot is down right now. Real-time Copilot status monitoring with live updates. See current outages, degraded performance, and component status for Microsoft Copilot.',
     siteName: 'TensorFeed.ai',
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Is Copilot Down? Live Microsoft Copilot Status',
+    title: 'Copilot Status: Is GitHub Copilot Down? Live Microsoft AI Tracker',
     description:
       'Check if Microsoft Copilot is down right now. Real-time Copilot status monitoring with live updates. See current outages, degraded performance, and component status for Microsoft Copilot.',
   },

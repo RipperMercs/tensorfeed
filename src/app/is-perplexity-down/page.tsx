@@ -32,13 +32,13 @@ async function fetchPerplexityStatus(): Promise<StatusService | null> {
 }
 
 export const metadata: Metadata = {
-  title: 'Is Perplexity Down? Live Perplexity AI Status',
+  title: 'Perplexity Status: Is Perplexity Down? Live AI Search API Tracker',
   description:
     'Check if Perplexity is down right now. Real-time Perplexity AI status monitoring with live updates. See current outages, degraded performance, and component status for Perplexity.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/is-perplexity-down',
-    title: 'Is Perplexity Down? Live Perplexity AI Status',
+    title: 'Perplexity Status: Is Perplexity Down? Live AI Search API Tracker',
     description:
       'Check if Perplexity is down right now. Real-time Perplexity AI status monitoring with live updates. See current outages, degraded performance, and component status for Perplexity.',
     siteName: 'TensorFeed.ai',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Is Perplexity Down? Live Perplexity AI Status',
+    title: 'Perplexity Status: Is Perplexity Down? Live AI Search API Tracker',
     description:
       'Check if Perplexity is down right now. Real-time Perplexity AI status monitoring with live updates. See current outages, degraded performance, and component status for Perplexity.',
   },

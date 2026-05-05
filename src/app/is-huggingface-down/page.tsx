@@ -34,13 +34,13 @@ async function fetchHuggingFaceStatus(): Promise<StatusService | null> {
 }
 
 export const metadata: Metadata = {
-  title: 'Is Hugging Face Down? Live HF Status',
+  title: 'Hugging Face Status: Is Hugging Face Down? Live HF Inference & Hub Tracker',
   description:
     'Check if Hugging Face is down right now. Real-time Hugging Face status monitoring with live updates. See current outages, degraded performance, and component status for HF.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/is-huggingface-down',
-    title: 'Is Hugging Face Down? Live HF Status',
+    title: 'Hugging Face Status: Is Hugging Face Down? Live HF Inference & Hub Tracker',
     description:
       'Check if Hugging Face is down right now. Real-time Hugging Face status monitoring with live updates. See current outages, degraded performance, and component status for HF.',
     siteName: 'TensorFeed.ai',
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Is Hugging Face Down? Live HF Status',
+    title: 'Hugging Face Status: Is Hugging Face Down? Live HF Inference & Hub Tracker',
     description:
       'Check if Hugging Face is down right now. Real-time Hugging Face status monitoring with live updates. See current outages, degraded performance, and component status for HF.',
   },

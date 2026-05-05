@@ -32,13 +32,13 @@ async function fetchMidjourneyStatus(): Promise<StatusService | null> {
 }
 
 export const metadata: Metadata = {
-  title: 'Is Midjourney Down? Live Midjourney Status',
+  title: 'Midjourney Status: Is Midjourney Down? Live Image Generation Tracker',
   description:
     'Check if Midjourney is down right now. Real-time Midjourney status monitoring with live updates. See current outages, degraded performance, and component status for Midjourney.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/is-midjourney-down',
-    title: 'Is Midjourney Down? Live Midjourney Status',
+    title: 'Midjourney Status: Is Midjourney Down? Live Image Generation Tracker',
     description:
       'Check if Midjourney is down right now. Real-time Midjourney status monitoring with live updates. See current outages, degraded performance, and component status for Midjourney.',
     siteName: 'TensorFeed.ai',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Is Midjourney Down? Live Midjourney Status',
+    title: 'Midjourney Status: Is Midjourney Down? Live Image Generation Tracker',
     description:
       'Check if Midjourney is down right now. Real-time Midjourney status monitoring with live updates. See current outages, degraded performance, and component status for Midjourney.',
   },

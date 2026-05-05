@@ -32,13 +32,13 @@ async function fetchMistralStatus(): Promise<StatusService | null> {
 }
 
 export const metadata: Metadata = {
-  title: 'Is Mistral Down? Live Mistral AI Status',
+  title: 'Mistral Status: Is Mistral AI Down? Live La Plateforme API Tracker',
   description:
     'Check if Mistral is down right now. Real-time Mistral AI status monitoring with live updates. See current outages, degraded performance, and component status for Mistral.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/is-mistral-down',
-    title: 'Is Mistral Down? Live Mistral AI Status',
+    title: 'Mistral Status: Is Mistral AI Down? Live La Plateforme API Tracker',
     description:
       'Check if Mistral is down right now. Real-time Mistral AI status monitoring with live updates. See current outages, degraded performance, and component status for Mistral.',
     siteName: 'TensorFeed.ai',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Is Mistral Down? Live Mistral AI Status',
+    title: 'Mistral Status: Is Mistral AI Down? Live La Plateforme API Tracker',
     description:
       'Check if Mistral is down right now. Real-time Mistral AI status monitoring with live updates. See current outages, degraded performance, and component status for Mistral.',
   },

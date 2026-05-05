@@ -32,13 +32,13 @@ async function fetchReplicateStatus(): Promise<StatusService | null> {
 }
 
 export const metadata: Metadata = {
-  title: 'Is Replicate Down? Live Replicate Status',
+  title: 'Replicate Status: Is Replicate Down? Live Inference API Tracker',
   description:
     'Check if Replicate is down right now. Real-time Replicate status monitoring with live updates. See current outages, degraded performance, and component status for Replicate.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/is-replicate-down',
-    title: 'Is Replicate Down? Live Replicate Status',
+    title: 'Replicate Status: Is Replicate Down? Live Inference API Tracker',
     description:
       'Check if Replicate is down right now. Real-time Replicate status monitoring with live updates. See current outages, degraded performance, and component status for Replicate.',
     siteName: 'TensorFeed.ai',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Is Replicate Down? Live Replicate Status',
+    title: 'Replicate Status: Is Replicate Down? Live Inference API Tracker',
     description:
       'Check if Replicate is down right now. Real-time Replicate status monitoring with live updates. See current outages, degraded performance, and component status for Replicate.',
   },

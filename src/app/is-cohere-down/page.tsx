@@ -32,13 +32,13 @@ async function fetchCohereStatus(): Promise<StatusService | null> {
 }
 
 export const metadata: Metadata = {
-  title: 'Is Cohere Down? Live Cohere Status',
+  title: 'Cohere Status: Is Cohere Down? Live Cohere API Tracker',
   description:
     'Check if Cohere is down right now. Real-time Cohere status monitoring with live updates. See current outages, degraded performance, and component status for Cohere.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/is-cohere-down',
-    title: 'Is Cohere Down? Live Cohere Status',
+    title: 'Cohere Status: Is Cohere Down? Live Cohere API Tracker',
     description:
       'Check if Cohere is down right now. Real-time Cohere status monitoring with live updates. See current outages, degraded performance, and component status for Cohere.',
     siteName: 'TensorFeed.ai',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Is Cohere Down? Live Cohere Status',
+    title: 'Cohere Status: Is Cohere Down? Live Cohere API Tracker',
     description:
       'Check if Cohere is down right now. Real-time Cohere status monitoring with live updates. See current outages, degraded performance, and component status for Cohere.',
   },

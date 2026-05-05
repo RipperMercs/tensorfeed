@@ -27,13 +27,13 @@ async function fetchClaudeStatus(): Promise<StatusService | null> {
 }
 
 export const metadata: Metadata = {
-  title: 'Is Claude Down? Live Claude API Status',
+  title: 'Claude Status: Is Claude Down Right Now? Live Anthropic API Tracker',
   description:
     'Check if Claude is down right now. Real-time Claude API status monitoring with live updates. See current outages, degraded performance, and component status for Anthropic Claude.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/is-claude-down',
-    title: 'Is Claude Down? Live Claude API Status',
+    title: 'Claude Status: Is Claude Down Right Now? Live Anthropic API Tracker',
     description:
       'Check if Claude is down right now. Real-time Claude API status monitoring with live updates. See current outages, degraded performance, and component status for Anthropic Claude.',
     siteName: 'TensorFeed.ai',
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Is Claude Down? Live Claude API Status',
+    title: 'Claude Status: Is Claude Down Right Now? Live Anthropic API Tracker',
     description:
       'Check if Claude is down right now. Real-time Claude API status monitoring with live updates. See current outages, degraded performance, and component status for Anthropic Claude.',
   },

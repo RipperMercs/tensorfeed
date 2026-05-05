@@ -27,13 +27,13 @@ async function fetchChatGPTStatus(): Promise<StatusService | null> {
 }
 
 export const metadata: Metadata = {
-  title: 'Is ChatGPT Down? Live OpenAI API Status',
+  title: 'ChatGPT Status: Is ChatGPT Down Right Now? Live OpenAI API Tracker',
   description:
     'Check if ChatGPT is down right now. Real-time OpenAI API status monitoring with live updates. See current outages, degraded performance, and component status for ChatGPT and OpenAI.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/is-chatgpt-down',
-    title: 'Is ChatGPT Down? Live OpenAI API Status',
+    title: 'ChatGPT Status: Is ChatGPT Down Right Now? Live OpenAI API Tracker',
     description:
       'Check if ChatGPT is down right now. Real-time OpenAI API status monitoring with live updates. See current outages, degraded performance, and component status for ChatGPT and OpenAI.',
     siteName: 'TensorFeed.ai',
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Is ChatGPT Down? Live OpenAI API Status',
+    title: 'ChatGPT Status: Is ChatGPT Down Right Now? Live OpenAI API Tracker',
     description:
       'Check if ChatGPT is down right now. Real-time OpenAI API status monitoring with live updates. See current outages, degraded performance, and component status for ChatGPT and OpenAI.',
   },
