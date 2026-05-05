@@ -419,6 +419,45 @@ html[data-view-mode="agent"] {
   }
 }
 
+/* === Status-grid alert visuals ====================================
+ * When a service drops to degraded (warn) or down, its card lights up
+ * with a colored gradient (set inline) plus an outer glow added here.
+ * Down cards also slow-pulse so an outage is visually unmissable as
+ * the user scans the grid. Reduced-motion users see the static glow
+ * without the pulse.
+ */
+.tf-status-card-warn {
+  box-shadow:
+    0 0 0 1px rgba(245, 158, 11, 0.28) inset,
+    0 6px 18px rgba(245, 158, 11, 0.10);
+}
+
+@keyframes tf-status-down-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(239, 68, 68, 0.40) inset,
+      0 0 18px rgba(239, 68, 68, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(239, 68, 68, 0.65) inset,
+      0 0 32px rgba(239, 68, 68, 0.32);
+  }
+}
+
+.tf-status-card-down {
+  animation: tf-status-down-pulse 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-status-card-down {
+    animation: none;
+    box-shadow:
+      0 0 0 1px rgba(239, 68, 68, 0.50) inset,
+      0 0 24px rgba(239, 68, 68, 0.22);
+  }
+}
+
 /* === Whitepaper print stylesheet ====================================
  * Save-as-PDF support for /whitepaper. Forces black-on-white print
  * regardless of dark-mode toggle, drops chrome, normalizes typography

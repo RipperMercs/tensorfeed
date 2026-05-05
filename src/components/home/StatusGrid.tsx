@@ -151,12 +151,29 @@ export default function StatusGrid({ services }: StatusGridProps) {
       {safeServices.map((s, i) => {
         const status = normalizeStatus(s.status);
         const color = COLOR_BY_STATUS[status];
-        const className = `tf-status-card relative block transition-colors ${pulseIdx === i ? 'changed' : ''}`;
+        // Star-Trek-alert visual: WARN cards light up amber with a
+        // gradient and a hard left-edge accent. DOWN cards light up red,
+        // get a stronger glow, and pulse slowly via a globals.css
+        // keyframe (respects prefers-reduced-motion). OK stays calm.
+        const statusClass =
+          status === 'down'
+            ? 'tf-status-card-down'
+            : status === 'warn'
+              ? 'tf-status-card-warn'
+              : '';
+        const className = `tf-status-card relative block transition-colors ${statusClass} ${pulseIdx === i ? 'changed' : ''}`;
+        const cardBackground =
+          status === 'down'
+            ? 'linear-gradient(135deg, rgba(239,68,68,0.20), rgba(239,68,68,0.06))'
+            : status === 'warn'
+              ? 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(245,158,11,0.05))'
+              : 'var(--bg-secondary)';
         const cardStyle = {
-          background: 'var(--bg-secondary)',
-          padding: '16px 18px',
+          background: cardBackground,
+          padding: status !== 'ok' ? '16px 18px 16px 15px' : '16px 18px',
           textDecoration: 'none',
           color: 'inherit',
+          borderLeft: status !== 'ok' ? `3px solid ${color}` : undefined,
         } as const;
         const inner = (
           <>
