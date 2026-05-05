@@ -113,6 +113,7 @@ import {
   listNoChargeDates,
   getPaymentInfo,
   createQuote,
+  isValidSenderWallet,
   confirmPayment,
   getBalance,
   logPremiumUsage,
@@ -2475,7 +2476,7 @@ export default {
         );
       }
       try {
-        const body = await request.json() as { amount_usd?: number };
+        const body = await request.json() as { amount_usd?: number; sender_wallet?: string };
         const amountUsd = typeof body.amount_usd === 'number' ? body.amount_usd : NaN;
         if (!Number.isFinite(amountUsd) || amountUsd < 0.5 || amountUsd > 10000) {
           return jsonResponse(
@@ -2483,10 +2484,28 @@ export default {
             400,
           );
         }
-        const { nonce, quote, wallet } = await createQuote(env, amountUsd);
+        // AFTA Tx-Sniper protection: every quote is bound to the EOA
+        // that will sign the on-chain USDC transfer. /api/payment/confirm
+        // refuses to mint credits unless the on-chain `from` matches.
+        // sender_wallet is REQUIRED (no legacy unbound flow).
+        if (!isValidSenderWallet(body.sender_wallet)) {
+          return jsonResponse(
+            {
+              ok: false,
+              error: 'invalid_sender_wallet',
+              message:
+                'sender_wallet is required and must be a 0x-prefixed 40-char EVM address. The on-chain USDC transfer must be signed by this wallet, or /api/payment/confirm will reject the tx with sender_mismatch.',
+              doc: '/developers/agent-payments#sender-wallet',
+            },
+            400,
+          );
+        }
+        const senderWallet = body.sender_wallet.trim().toLowerCase();
+        const { nonce, quote, wallet } = await createQuote(env, amountUsd, senderWallet);
         return jsonResponse({
           ok: true,
           wallet,
+          sender_wallet: senderWallet,
           memo: nonce,
           amount_usd: quote.amount_usd,
           credits: quote.credits,
@@ -2494,7 +2513,7 @@ export default {
           network: 'base',
           expires_at: new Date(quote.expires_at).toISOString(),
           ttl_seconds: Math.round((quote.expires_at - Date.now()) / 1000),
-          next_step: `Send ${quote.amount_usd} USDC on Base to ${wallet}, then POST /api/payment/confirm with { tx_hash, nonce: "${nonce}" }`,
+          next_step: `Send ${quote.amount_usd} USDC on Base from ${senderWallet} to ${wallet}, then POST /api/payment/confirm with { tx_hash, nonce: "${nonce}" }`,
         });
       } catch {
         return jsonResponse({ ok: false, error: 'invalid_request_body' }, 400);

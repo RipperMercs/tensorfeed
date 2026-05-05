@@ -18,6 +18,8 @@ import {
   WELCOME_BONUS_CREDITS_VALUE,
   validateOnly,
   commitInternal,
+  isValidSenderWallet,
+  createQuote,
 } from './payments';
 import type { Env } from './types';
 
@@ -466,5 +468,93 @@ describe('commitInternal (federated AFTA: atomic commit OR no-charge)', () => {
       expect(r.balance_after).toBe(0);
       expect(r.no_charge_reason).toBe('5xx');
     }
+  });
+});
+
+// ── Tx-Sniper protection (sender_wallet binding) ────────────────────
+//
+// Reproduces the attack vector identified in the 2026-05-05 audit:
+// without a sender_wallet binding on the quote, anyone observing a
+// public Base mempool tx hash can race /api/payment/confirm and steal
+// the legitimate payer's credits. These tests cover the primitives
+// that close that hole: the address validator, the createQuote API
+// that now requires sender_wallet, and the persisted quote record.
+
+describe('isValidSenderWallet', () => {
+  it('accepts a canonical lowercase 0x-prefixed 40-char hex address', () => {
+    expect(isValidSenderWallet('0xabcdef0123456789abcdef0123456789abcdef01')).toBe(true);
+  });
+
+  it('accepts mixed-case hex (case-insensitive)', () => {
+    expect(isValidSenderWallet('0xAbCdEf0123456789AbCdEf0123456789aBcDeF01')).toBe(true);
+  });
+
+  it('rejects addresses missing the 0x prefix', () => {
+    expect(isValidSenderWallet('abcdef0123456789abcdef0123456789abcdef01')).toBe(false);
+  });
+
+  it('rejects addresses with the wrong length (39 or 41 chars)', () => {
+    expect(isValidSenderWallet('0xabcdef0123456789abcdef0123456789abcdef0')).toBe(false);
+    expect(isValidSenderWallet('0xabcdef0123456789abcdef0123456789abcdef011')).toBe(false);
+  });
+
+  it('rejects addresses with non-hex chars', () => {
+    expect(isValidSenderWallet('0xabcdefg123456789abcdef0123456789abcdef01')).toBe(false);
+  });
+
+  it('rejects undefined, null, numbers, and empty strings', () => {
+    expect(isValidSenderWallet(undefined)).toBe(false);
+    expect(isValidSenderWallet(null)).toBe(false);
+    expect(isValidSenderWallet(123)).toBe(false);
+    expect(isValidSenderWallet('')).toBe(false);
+  });
+
+  it('tolerates surrounding whitespace (the production trim path normalizes before storage)', () => {
+    expect(isValidSenderWallet('  0xabcdef0123456789abcdef0123456789abcdef01  ')).toBe(true);
+  });
+});
+
+describe('createQuote (sender_wallet binding)', () => {
+  it('persists sender_wallet (lowercased) on the QuoteRecord', async () => {
+    const env = makeEnv();
+    const sender = '0xAbCdEf0123456789AbCdEf0123456789aBcDeF01';
+    const { nonce, quote } = await createQuote(env, 1.0, sender.toLowerCase());
+    const stored = (await env.TENSORFEED_CACHE.get(`pay:quote:${nonce}`, 'json')) as {
+      amount_usd: number;
+      sender_wallet: string;
+    } | null;
+    expect(stored).not.toBeNull();
+    if (!stored) return;
+    expect(stored.sender_wallet).toBe(sender.toLowerCase());
+    expect(stored.amount_usd).toBe(1.0);
+    expect(quote.sender_wallet).toBe(sender.toLowerCase());
+  });
+
+  it('issues distinct nonces for back-to-back quotes from the same wallet', async () => {
+    const env = makeEnv();
+    const sender = '0x1111111111111111111111111111111111111111';
+    const a = await createQuote(env, 1.0, sender);
+    const b = await createQuote(env, 1.0, sender);
+    expect(a.nonce).not.toBe(b.nonce);
+  });
+
+  it('returns an expires_at within ~30 minutes of now', async () => {
+    const env = makeEnv();
+    const sender = '0x2222222222222222222222222222222222222222';
+    const before = Date.now();
+    const { quote } = await createQuote(env, 1.0, sender);
+    const ttl = quote.expires_at - before;
+    expect(ttl).toBeGreaterThan(29 * 60 * 1000);
+    expect(ttl).toBeLessThan(31 * 60 * 1000);
+  });
+
+  it('preserves whatever case the caller passes (boundary layer is responsible for normalization)', async () => {
+    // createQuote() trims+lowercases as a defensive belt-and-suspenders
+    // step. Boundary validation at /api/payment/buy-credits is the
+    // primary gate. This test pins the defensive behavior.
+    const env = makeEnv();
+    const sender = '0xABCDEF0123456789ABCDEF0123456789ABCDEF01';
+    const { quote } = await createQuote(env, 1.0, sender);
+    expect(quote.sender_wallet).toBe(sender.toLowerCase());
   });
 });

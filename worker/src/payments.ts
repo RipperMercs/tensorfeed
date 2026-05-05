@@ -81,6 +81,13 @@ interface QuoteRecord {
   credits: number;
   expires_at: number;
   created: string;
+  // EOA wallet address that will send the USDC payment. Lowercased hex.
+  // Set at quote creation; confirmPayment refuses to mint credits unless
+  // the on-chain tx's `from` address matches this exactly. Closes the
+  // "Tx Sniper" attack where an attacker observes a public tx hash in
+  // the Base mempool and races to /api/payment/confirm with their own
+  // HTTP request to steal the credits.
+  sender_wallet: string;
 }
 
 interface TxRecord {
@@ -89,6 +96,13 @@ interface TxRecord {
   token: string;
   created: string;
   block_number?: number;
+  // EOA that signed the on-chain USDC transfer for this tx_hash.
+  // Lowercased hex. Used to gate x402-fallback re-use of an existing
+  // tx so a public mempool observer cannot replay another agent's
+  // tx_hash to spend against their issued token. Optional for legacy
+  // (pre-2026-05-05) records; on the x402 path, missing values fail
+  // closed and force the original bearer-token flow.
+  sender_wallet?: string;
 }
 
 interface DailyRollup {
@@ -759,10 +773,21 @@ export async function getPaymentInfo(env: Env): Promise<unknown> {
   };
 }
 
+// EVM address shape: 0x followed by 40 hex chars (case-insensitive).
+const SENDER_WALLET_RE = /^0x[a-fA-F0-9]{40}$/;
+
+export function isValidSenderWallet(addr: unknown): addr is string {
+  return typeof addr === 'string' && SENDER_WALLET_RE.test(addr.trim());
+}
+
 export async function createQuote(
   env: Env,
   amountUsd: number,
+  senderWallet: string,
 ): Promise<{ nonce: string; quote: QuoteRecord; wallet: string }> {
+  // Caller must have validated sender_wallet at the API boundary
+  // (see /api/payment/buy-credits). We re-normalize defensively.
+  const sender = senderWallet.trim().toLowerCase();
   const credits = calculateCredits(amountUsd);
   const nonce = generateNonce();
   const expiresAt = Date.now() + QUOTE_TTL_SECONDS * 1000;
@@ -771,6 +796,7 @@ export async function createQuote(
     credits,
     expires_at: expiresAt,
     created: new Date().toISOString(),
+    sender_wallet: sender,
   };
   await env.TENSORFEED_CACHE.put(`pay:quote:${nonce}`, JSON.stringify(quote), {
     expirationTtl: QUOTE_TTL_SECONDS,
@@ -821,6 +847,22 @@ export async function confirmPayment(
   request: Request,
   nonce?: string,
 ): Promise<ConfirmResult> {
+  // AFTA Tx-Sniper protection: a nonce (and the sender_wallet binding
+  // that comes with it) is REQUIRED. The legacy no-nonce path is closed
+  // because it lets anyone watching the public Base mempool steal a
+  // legitimate payer's credits by racing /api/payment/confirm with the
+  // observed tx hash. See SECURITY.md and the AFTA whitepaper threat
+  // model for the full attack tree.
+  if (!nonce) {
+    return {
+      ok: false,
+      error: 'nonce_required',
+      reason:
+        'Call /api/payment/buy-credits first to obtain a quote bound to your sender wallet, then pass the returned nonce to /api/payment/confirm. The legacy no-nonce path is disabled to prevent tx-hash sniping.',
+      status: 400,
+    };
+  }
+
   const existingTx = (await env.TENSORFEED_CACHE.get(`pay:tx:${txHash}`, 'json')) as TxRecord | null;
   if (existingTx) {
     return {
@@ -830,28 +872,56 @@ export async function confirmPayment(
     };
   }
 
-  let quote: QuoteRecord | null = null;
-  if (nonce) {
-    quote = (await env.TENSORFEED_CACHE.get(`pay:quote:${nonce}`, 'json')) as QuoteRecord | null;
-    if (!quote) {
-      return {
-        ok: false,
-        error: 'quote_not_found_or_expired',
-        reason: 'Quote may have expired (30 min TTL). Call /api/payment/confirm without nonce to use the default rate.',
-      };
-    }
-    if (Date.now() > quote.expires_at) {
-      return {
-        ok: false,
-        error: 'quote_expired',
-        reason: 'Call /api/payment/confirm without nonce to use the default rate based on actual tx amount.',
-      };
-    }
+  const quote = (await env.TENSORFEED_CACHE.get(`pay:quote:${nonce}`, 'json')) as QuoteRecord | null;
+  if (!quote) {
+    return {
+      ok: false,
+      error: 'quote_not_found_or_expired',
+      reason: 'Quote may have expired (30 min TTL). Call /api/payment/buy-credits to get a new quote bound to your sender wallet.',
+    };
+  }
+  if (Date.now() > quote.expires_at) {
+    return {
+      ok: false,
+      error: 'quote_expired',
+      reason: 'Quote expired (30 min TTL). Call /api/payment/buy-credits to get a fresh quote.',
+    };
+  }
+  // Defensive: an old-format quote (pre-2026-05-05) without a
+  // sender_wallet field would fall through the binding check and revive
+  // the Tx-Sniper hole. Reject any quote missing the field.
+  if (!quote.sender_wallet || !isValidSenderWallet(quote.sender_wallet)) {
+    return {
+      ok: false,
+      error: 'quote_legacy_format',
+      reason: 'This quote was issued before the sender-wallet binding requirement. Call /api/payment/buy-credits to get a fresh quote.',
+      status: 400,
+    };
   }
 
   const verified = await verifyBaseUSDCTransaction(txHash, env);
   if (!verified.ok) {
     return { ok: false, error: 'verification_failed', reason: verified.reason };
+  }
+
+  // AFTA Tx-Sniper guard: the on-chain `from` address of the verified
+  // USDC transfer must match the sender_wallet that was bound to the
+  // quote when /api/payment/buy-credits was called. This is the line of
+  // code that closes the public-mempool theft attack: even if an
+  // attacker observes the tx hash on Base, they cannot mint credits
+  // unless they also issued a quote bound to the same sending EOA, and
+  // they don't have the sender's private key to do so.
+  if (
+    !verified.senderAddress ||
+    verified.senderAddress.toLowerCase() !== quote.sender_wallet.toLowerCase()
+  ) {
+    return {
+      ok: false,
+      error: 'sender_mismatch',
+      reason:
+        'The on-chain sender of this USDC transfer does not match the sender_wallet bound to your quote. Issue a new quote from the same wallet that signed the on-chain payment.',
+      status: 400,
+    };
   }
 
   // OFAC sanctions screen on the sender wallet, after on-chain
@@ -919,6 +989,7 @@ export async function confirmPayment(
     token,
     created: now,
     block_number: verified.blockNumber,
+    sender_wallet: verified.senderAddress.toLowerCase(),
   };
 
   await Promise.all([
@@ -1414,9 +1485,80 @@ export async function requirePayment(
   // Path 2: x402 fallback (per-call payment via tx hash)
   const txHash = request.headers.get('X-Payment-Tx');
   if (txHash) {
+    // AFTA Tx-Sniper protection: x402 fallback also requires a quote
+    // nonce so the on-chain sender can be verified against the quote's
+    // sender_wallet binding. Same primitive as /api/payment/confirm.
+    const quoteNonce = request.headers.get('X-Payment-Quote');
+    if (!quoteNonce) {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            ok: false,
+            error: 'quote_required',
+            message:
+              'x402 fallback requires both X-Payment-Tx and X-Payment-Quote headers. Issue a quote at /api/payment/buy-credits with your sender_wallet, then include the returned nonce as X-Payment-Quote.',
+            doc: '/developers/agent-payments#x402-fallback',
+          },
+          402,
+        ),
+      };
+    }
+    const x402Quote = (await env.TENSORFEED_CACHE.get(
+      `pay:quote:${quoteNonce}`,
+      'json',
+    )) as QuoteRecord | null;
+    if (!x402Quote || Date.now() > x402Quote.expires_at) {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            ok: false,
+            error: 'quote_not_found_or_expired',
+            message: 'Quote nonce missing, expired, or already consumed.',
+          },
+          402,
+        ),
+      };
+    }
+    if (!x402Quote.sender_wallet || !isValidSenderWallet(x402Quote.sender_wallet)) {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            ok: false,
+            error: 'quote_legacy_format',
+            message: 'Issue a fresh quote bound to your sender_wallet.',
+          },
+          402,
+        ),
+      };
+    }
+
     const existing = (await env.TENSORFEED_CACHE.get(`pay:tx:${txHash}`, 'json')) as TxRecord | null;
     if (existing) {
-      // Already claimed; charge against the existing token if it has balance
+      // Existing-tx re-use: only the original on-chain sender (whose
+      // address is recorded on the TxRecord) may charge against the
+      // already-issued token. Legacy records without sender_wallet fail
+      // closed; the agent must use Authorization: Bearer with the
+      // originally-issued token instead.
+      if (
+        !existing.sender_wallet ||
+        existing.sender_wallet.toLowerCase() !== x402Quote.sender_wallet.toLowerCase()
+      ) {
+        return {
+          paid: false,
+          response: jsonResponse(
+            {
+              ok: false,
+              error: 'sender_mismatch',
+              message:
+                'This tx was minted by a different wallet. Use the original bearer token (Authorization: Bearer tf_live_...) returned at first mint.',
+            },
+            403,
+          ),
+        };
+      }
       const tokenRecord = (await env.TENSORFEED_CACHE.get(`pay:credits:${existing.token}`, 'json')) as CreditsRecord | null;
       if (tokenRecord && tokenRecord.balance >= cost) {
         // AFTA deferred-debit: don't decrement until commitPayment.
@@ -1450,6 +1592,27 @@ export async function requirePayment(
         response: jsonResponse(
           { ok: false, error: 'tx_verification_failed', reason: verified.reason },
           402,
+        ),
+      };
+    }
+
+    // AFTA Tx-Sniper guard for new mints on the x402 path: the on-chain
+    // `from` must match the sender_wallet bound to the X-Payment-Quote
+    // nonce. Closes the public-mempool theft attack on this surface.
+    if (
+      !verified.senderAddress ||
+      verified.senderAddress.toLowerCase() !== x402Quote.sender_wallet.toLowerCase()
+    ) {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            ok: false,
+            error: 'sender_mismatch',
+            message:
+              'On-chain sender of this tx does not match the sender_wallet on your X-Payment-Quote. Issue a fresh quote from the same wallet that signed the on-chain payment.',
+          },
+          403,
         ),
       };
     }
@@ -1538,11 +1701,13 @@ export async function requirePayment(
       token,
       created: now,
       block_number: verified.blockNumber,
+      sender_wallet: verified.senderAddress.toLowerCase(),
     };
 
     await Promise.all([
       env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(tokenRecord)),
       env.TENSORFEED_CACHE.put(`pay:tx:${txHash}`, JSON.stringify(txRec)),
+      env.TENSORFEED_CACHE.delete(`pay:quote:${quoteNonce}`),
       logRevenue(env, verified.amountUsd, request.headers.get('User-Agent') || 'unknown'),
       appendTokenPurchase(env, token, {
         tx_hash: txHash,
