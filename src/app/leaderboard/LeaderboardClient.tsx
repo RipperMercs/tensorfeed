@@ -203,6 +203,13 @@ export default function LeaderboardClient({ initialData }: Props) {
             </thead>
             <tbody className="divide-y divide-border">
               {entries.map((e: LeaderboardEntry) => {
+                // A provider with polls but zero decisive samples (everything
+                // came back unknown) means our worker couldn't get a real
+                // status read — usually a fetch / parse bug for that source.
+                // Show "—" instead of misleading 0.00% so it's obviously a
+                // data gap, not a real outage.
+                const decisive = e.operational_polls + e.degraded_polls + e.down_polls;
+                const noData = decisive === 0;
                 const colors = uptimeColorClass(e.uptime_pct);
                 const href = SERVICE_HREFS[e.provider];
                 return (
@@ -227,12 +234,18 @@ export default function LeaderboardClient({ initialData }: Props) {
                       )}
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <div className="inline-flex items-center gap-2 justify-end">
-                        <span className={`inline-block w-2 h-2 rounded-full ${colors.dot}`} />
-                        <span className={`font-mono font-semibold ${colors.text}`}>
-                          {e.uptime_pct.toFixed(2)}%
+                      {noData ? (
+                        <span className="font-mono text-text-muted" title="No decisive status data captured yet for this window">
+                          —
                         </span>
-                      </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-2 justify-end">
+                          <span className={`inline-block w-2 h-2 rounded-full ${colors.dot}`} />
+                          <span className={`font-mono font-semibold ${colors.text}`}>
+                            {e.uptime_pct.toFixed(2)}%
+                          </span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3.5 text-right font-mono text-text-secondary hidden sm:table-cell">
                       {formatDuration(e.downtime_minutes)}
