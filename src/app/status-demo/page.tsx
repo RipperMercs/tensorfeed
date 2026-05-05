@@ -135,7 +135,7 @@ export default function StatusDemoPage() {
         prefers-reduced-motion enabled).
       </p>
 
-      <StatusGrid services={DEMO_SERVICES} />
+      <StatusGrid services={DEMO_SERVICES} livePolling={false} />
 
       <div className="mt-10 text-sm text-text-muted">
         <p>

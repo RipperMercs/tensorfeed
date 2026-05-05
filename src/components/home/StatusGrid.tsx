@@ -16,6 +16,14 @@ export interface StatusGridService {
 
 interface StatusGridProps {
   services: StatusGridService[];
+  /**
+   * When true (default), the grid polls /api/status/summary every 90s
+   * and overwrites the rendered statuses with live data. Set to false
+   * for fixed-data surfaces (e.g. /status-demo, snapshots, embeds)
+   * where the visual states are intentionally hardcoded and must not
+   * be overridden by what the live feed reports.
+   */
+  livePolling?: boolean;
 }
 
 const COLOR_BY_STATUS: Record<string, string> = {
@@ -54,7 +62,7 @@ function normalizeForGrid(s: string): 'ok' | 'warn' | 'down' {
   return 'ok';
 }
 
-export default function StatusGrid({ services }: StatusGridProps) {
+export default function StatusGrid({ services, livePolling = true }: StatusGridProps) {
   const [pulseIdx, setPulseIdx] = useState(-1);
   const [liveServices, setLiveServices] = useState<StatusGridService[]>(services);
 
@@ -66,8 +74,10 @@ export default function StatusGrid({ services }: StatusGridProps) {
 
   // Client-side status refresh. Pulls /api/status/summary every 90 seconds
   // and updates each service's status field while preserving latency and
-  // sparkline shape.
+  // sparkline shape. Skipped when livePolling=false (demo / snapshot
+  // surfaces where hardcoded statuses must not be overridden).
   useEffect(() => {
+    if (!livePolling) return;
     let cancelled = false;
     const fetchOnce = async () => {
       try {
@@ -107,7 +117,7 @@ export default function StatusGrid({ services }: StatusGridProps) {
       cancelled = true;
       clearInterval(t);
     };
-  }, []);
+  }, [livePolling]);
 
   const safeServices = useMemo(() => liveServices.slice(0, 12), [liveServices]);
 
