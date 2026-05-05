@@ -20,6 +20,7 @@ import {
   FREE_DEFAULT_RANGE_DAYS,
 } from './history-series';
 import { computeLeaderboard, resolveLastNDays } from './status-leaderboard';
+import { generateUptimeBadge, resolveProviderSlug } from './badges';
 import {
   createWatch,
   getWatch,
@@ -1652,6 +1653,7 @@ export default {
           historyBenchmarksSeries: '/api/history/benchmarks/series?model=&benchmark=&days=1-7 (free, 7-day cap)',
           historyStatusUptime: '/api/history/status/uptime?provider=&days=1-7 (free, 7-day cap)',
           statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
+          uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           mcpRegistrySnapshot: '/api/mcp/registry/snapshot',
           papersAiTrending: '/api/papers/ai-trending',
           papersArxivRecent: '/api/papers/arxiv-recent',
@@ -2023,6 +2025,55 @@ export default {
         // would consider "live."
         300,
       );
+    }
+
+    // === UPTIME BADGES (free, embeddable) ===
+    // SVG uptime badges per monitored provider. Free, edge-cached, designed
+    // to be embedded in third-party READMEs/docs as a permanent backlink and
+    // agent-discovery surface. Slugs map to STATUS_PAGES names with common
+    // search-term aliases (claude, openai, gemini, bedrock, azure, etc).
+    // Optional ?label= overrides the left-side label text.
+    //
+    //   <img src="https://tensorfeed.ai/api/badge/uptime/claude" alt="Claude uptime"/>
+    //
+    // 7-day uptime % from the leaderboard counters, with shields.io-style
+    // color thresholds (green >=99.9%, lighter green >=99%, yellow >=95%,
+    // orange >=90%, red below). Cached 5 min at the edge to match the
+    // leaderboard's natural data freshness.
+    if (path.startsWith('/api/badge/uptime/')) {
+      const slug = path.slice('/api/badge/uptime/'.length).replace(/\.svg$/, '');
+      if (!slug) {
+        return jsonResponse({ ok: false, error: 'provider_required' }, 400);
+      }
+      if (!resolveProviderSlug(slug)) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'unknown_provider',
+            hint: 'See /api/status for the list of monitored providers, or /badges for documented slugs.',
+          },
+          404,
+        );
+      }
+      const customLabel = url.searchParams.get('label') ?? undefined;
+      const badge = await generateUptimeBadge(env, slug, customLabel);
+      if (!badge) {
+        return jsonResponse({ ok: false, error: 'badge_unavailable' }, 503);
+      }
+      const ifNoneMatch = request.headers.get('If-None-Match');
+      if (ifNoneMatch && ifNoneMatch === badge.etag) {
+        return new Response(null, { status: 304 });
+      }
+      return new Response(badge.svg, {
+        status: badge.status,
+        headers: {
+          'Content-Type': 'image/svg+xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=300, s-maxage=300',
+          'CDN-Cache-Control': 'public, max-age=300',
+          ETag: badge.etag,
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     }
 
     // === MCP REGISTRY TELEMETRY (free) ===

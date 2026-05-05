@@ -207,15 +207,24 @@ export default async function LeaderboardPage() {
         </div>
       </section>
 
-      {/* Cross-link to status dashboard */}
-      <div className="mb-10">
+      {/* Cross-links */}
+      <div className="mb-10 flex flex-wrap gap-3">
         <Link
           href="/status"
           className="inline-flex items-center gap-2 bg-bg-secondary border border-border rounded-lg px-5 py-3 hover:border-accent-primary transition-colors group"
         >
           <Activity className="w-4 h-4 text-text-muted group-hover:text-accent-primary transition-colors" />
           <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-            See live status for every monitored provider
+            Live status for every monitored provider
+          </span>
+          <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-accent-primary transition-colors" />
+        </Link>
+        <Link
+          href="/badges"
+          className="inline-flex items-center gap-2 bg-bg-secondary border border-border rounded-lg px-5 py-3 hover:border-accent-primary transition-colors group"
+        >
+          <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+            Embed an uptime badge in your README
           </span>
           <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-accent-primary transition-colors" />
         </Link>

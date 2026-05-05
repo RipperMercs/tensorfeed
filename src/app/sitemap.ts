@@ -63,6 +63,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: baseUrl, lastModified: now, changeFrequency: 'always', priority: 1.0 },
     { url: `${baseUrl}/status`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/leaderboard`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
+    { url: `${baseUrl}/badges`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/today`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/live`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/models`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
