@@ -119,12 +119,32 @@ export default async function IsClaudeDownPage() {
     {
       question: 'How do I check if Claude is down?',
       answer:
-        'Visit TensorFeed.ai/is-claude-down for real-time Claude API status monitoring, or check status.anthropic.com directly.',
+        'Three options: (1) this page, which polls Anthropic every two minutes, (2) status.anthropic.com directly, (3) the @AnthropicAI account on X for incident commentary. Our page combines the official status feed with component-level detail (Claude API, Console, Workbench) and adds historical context the official page does not show.',
     },
     {
       question: 'What do I do when Claude is down?',
       answer:
-        'You can try alternative AI services like ChatGPT or Gemini while Claude is experiencing issues. Check TensorFeed.ai/status for the status of all major AI services.',
+        'Switch to ChatGPT or Gemini for chat-style work, or use the OpenRouter cross-provider catalog for API workloads since it routes around individual provider outages. For coding tasks specifically, Claude Code agents will retry automatically once the API recovers. Subscribe to outage alerts from TensorFeed if you want to be notified the moment status changes.',
+    },
+    {
+      question: 'How often does Claude go down?',
+      answer:
+        'Claude has historically maintained 99.5%+ uptime across the API and chat surface. Major outages (>30 min impact) happen roughly once per quarter; brief degradation events (a few minutes of elevated latency or partial Workbench unavailability) happen a few times per month. Most issues are resolved within 15 to 60 minutes.',
+    },
+    {
+      question: 'Is the Claude API the same as claude.ai?',
+      answer:
+        'No. The Claude API (api.anthropic.com) is the developer endpoint that powers Claude integrations and Claude Code. claude.ai is the consumer chat interface that runs on top of the API plus session/auth/billing layers. They share underlying model infrastructure but they have separate status surfaces. When the API goes down, claude.ai usually goes down too. When claude.ai goes down for auth or rate-limit reasons, the API may still be fine.',
+    },
+    {
+      question: 'Where can I see Claude incident history?',
+      answer:
+        'Anthropic publishes incident history at status.anthropic.com. Our incidents endpoint at tensorfeed.ai/incidents aggregates incidents across every tracked AI provider in one feed, so you can see Claude alongside ChatGPT, Gemini, and others to compare reliability.',
+    },
+    {
+      question: 'Does Claude Code work when Claude is down?',
+      answer:
+        'No. Claude Code calls the same Anthropic API as the chat app. When the API is down, Claude Code commands will fail with a network or 5xx error. Claude Code agents do automatically retry once the API recovers, so many short outages are invisible to in-progress workflows.',
     },
   ];
 
@@ -199,6 +219,65 @@ export default async function IsClaudeDownPage() {
           </div>
         </section>
       )}
+
+      {/* What to do when Claude is down */}
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-text-primary mb-4">What to do when Claude is down</h2>
+        <p className="text-text-secondary text-sm leading-relaxed mb-4">
+          Claude API outages typically resolve within 15 to 60 minutes. Three practical options
+          while you wait, ranked by quality of fallback for typical Claude use cases:
+        </p>
+        <div className="space-y-3">
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-text-primary mb-2">For chat and writing: ChatGPT or Gemini</h3>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              Both are at the top of our{' '}
+              <Link href="/best-ai-chatbots" className="text-accent-primary hover:underline">
+                AI chatbot comparison
+              </Link>{' '}
+              and are the closest substitutes for Claude on quality. Live status:{' '}
+              <Link href="/is-chatgpt-down" className="text-accent-primary hover:underline">
+                Is ChatGPT down?
+              </Link>{' '}
+              and{' '}
+              <Link href="/is-gemini-down" className="text-accent-primary hover:underline">
+                Is Gemini down?
+              </Link>
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-text-primary mb-2">For coding agents: keep retrying or fall back to GPT-5.5</h3>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              Claude Code retries automatically once the API recovers, so brief outages are often
+              invisible to in-progress work. For larger outages, switch your CLI agent to GPT-5.5
+              or Gemini 2.5 Pro temporarily; both produce strong code, just with slightly different
+              conventions than Claude.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-text-primary mb-2">For API workloads: route through OpenRouter</h3>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              OpenRouter automatically falls back across providers when any single one returns
+              errors. See the{' '}
+              <Link href="/api/openrouter/models" className="text-accent-primary hover:underline">
+                OpenRouter model catalog
+              </Link>{' '}
+              for the full list of available models, including Claude variants when they recover.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-text-primary mb-2">Get notified when status changes</h3>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              Subscribe to{' '}
+              <Link href="/alerts" className="text-accent-primary hover:underline">
+                TensorFeed outage alerts
+              </Link>{' '}
+              to get an email the moment Claude (or any tracked AI service) goes degraded or down,
+              and again when it recovers. Free, no account required.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Check Other Services */}
       <div className="mb-10">

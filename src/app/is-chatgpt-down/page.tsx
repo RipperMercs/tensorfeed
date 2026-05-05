@@ -119,12 +119,32 @@ export default async function IsChatGPTDownPage() {
     {
       question: 'How do I check if ChatGPT is down?',
       answer:
-        'Visit TensorFeed.ai/is-chatgpt-down for real-time OpenAI API status monitoring, or check status.openai.com directly.',
+        'Three options: (1) this page, which polls OpenAI every two minutes, (2) status.openai.com directly, (3) the @OpenAI account on X for incident commentary. Our page combines the official status feed with component-level detail (ChatGPT, GPT-4, GPT-5, DALL-E, Sora, Whisper) and adds historical context the official page does not show.',
     },
     {
       question: 'What do I do when ChatGPT is down?',
       answer:
-        'You can try alternative AI services like Claude or Gemini while ChatGPT is experiencing issues. Check TensorFeed.ai/status for the status of all major AI services.',
+        'Switch to Claude or Gemini for chat-style work. For developer API workloads, the OpenAI API and ChatGPT often go down together but not always: api.openai.com sometimes stays up while chat.openai.com is degraded. Check the component-level status above. Subscribe to outage alerts from TensorFeed if you want to be notified the moment status changes.',
+    },
+    {
+      question: 'How often does ChatGPT go down?',
+      answer:
+        'OpenAI has historically maintained 99.4 to 99.7% uptime across ChatGPT and the API. Major outages (>30 min impact) happen a few times per quarter, often correlated with the launch of new model variants. Brief degradation events (slow responses, intermittent failures) happen multiple times per month and usually clear within 15 minutes.',
+    },
+    {
+      question: 'Is the OpenAI API the same as ChatGPT?',
+      answer:
+        'No. The OpenAI API (api.openai.com) is the developer endpoint that powers ChatGPT and every third-party integration. ChatGPT (chat.openai.com) is the consumer chat interface that runs on top of the API plus session, billing, and feature layers. They share the same model infrastructure but have different status surfaces. When the API is down, ChatGPT is too. When ChatGPT is down for auth or rate-limit reasons, the API may still work fine.',
+    },
+    {
+      question: 'Where can I see ChatGPT incident history?',
+      answer:
+        'OpenAI publishes incident history at status.openai.com. Our incidents endpoint at tensorfeed.ai/incidents aggregates incidents across every tracked AI provider in one feed, so you can compare ChatGPT alongside Claude, Gemini, and others to evaluate reliability.',
+    },
+    {
+      question: 'Why does ChatGPT keep going down?',
+      answer:
+        'ChatGPT has the highest user load of any AI chatbot and historically gets hit hardest by major news events that drive a traffic spike. Outages also frequently coincide with new feature launches (new models, voice mode updates, image-generation capacity) where infrastructure capacity needs to ramp. Most outages are short and resolve within an hour.',
     },
   ];
 
@@ -199,6 +219,69 @@ export default async function IsChatGPTDownPage() {
           </div>
         </section>
       )}
+
+      {/* What to do when ChatGPT is down */}
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-text-primary mb-4">What to do when ChatGPT is down</h2>
+        <p className="text-text-secondary text-sm leading-relaxed mb-4">
+          ChatGPT outages typically resolve within 30 to 90 minutes. Major outages occasionally
+          last several hours during peak load events. Three practical alternatives while you wait:
+        </p>
+        <div className="space-y-3">
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-text-primary mb-2">For chat and writing: Claude or Gemini</h3>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              Both are at the top of our{' '}
+              <Link href="/best-ai-chatbots" className="text-accent-primary hover:underline">
+                AI chatbot comparison
+              </Link>{' '}
+              and produce comparable quality on most tasks. Claude leads on coding and careful
+              writing; Gemini wins on long-document analysis and Google Workspace integration.
+              Live status:{' '}
+              <Link href="/is-claude-down" className="text-accent-primary hover:underline">
+                Is Claude down?
+              </Link>{' '}
+              and{' '}
+              <Link href="/is-gemini-down" className="text-accent-primary hover:underline">
+                Is Gemini down?
+              </Link>
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-text-primary mb-2">For developers: try the API directly</h3>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              api.openai.com sometimes stays up while chat.openai.com is degraded. Check the
+              component-level status above. If the API is also affected, route through{' '}
+              <Link href="/api/openrouter/models" className="text-accent-primary hover:underline">
+                OpenRouter
+              </Link>{' '}
+              which automatically falls back across providers when any single one returns errors.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-text-primary mb-2">For image generation: DALL-E alternatives</h3>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              When DALL-E is degraded inside ChatGPT, alternatives include{' '}
+              <Link href="/is-midjourney-down" className="text-accent-primary hover:underline">
+                Midjourney
+              </Link>{' '}
+              (separate Discord bot, often unaffected when OpenAI is down), Stable Diffusion via
+              Replicate, or Gemini&apos;s image-generation feature inside Google AI Studio.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-text-primary mb-2">Get notified when status changes</h3>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              Subscribe to{' '}
+              <Link href="/alerts" className="text-accent-primary hover:underline">
+                TensorFeed outage alerts
+              </Link>{' '}
+              to get an email the moment ChatGPT (or any tracked AI service) goes degraded or down,
+              and again when it recovers. Free, no account required.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Check Other Services */}
       <div className="mb-10">
