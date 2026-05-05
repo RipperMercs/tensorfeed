@@ -254,4 +254,44 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     statusPageUrl: 'https://status.fireworks.ai',
     type: 'html',
   },
+  {
+    name: 'OpenRouter',
+    provider: 'OpenRouter',
+    // OpenRouter uses OnlineOrNot. The 'html' parser catches their
+    // "All Systems Operational" banner the same way it catches the
+    // Better Stack and Statuspage HTML fallbacks.
+    url: 'https://status.openrouter.ai',
+    statusPageUrl: 'https://status.openrouter.ai',
+    type: 'html',
+  },
+  {
+    name: 'ElevenLabs',
+    provider: 'ElevenLabs',
+    url: 'https://status.elevenlabs.io/api/v2/summary.json',
+    statusPageUrl: 'https://status.elevenlabs.io',
+    type: 'statuspage',
+  },
+  {
+    name: 'Stability AI',
+    provider: 'Stability AI',
+    url: 'https://status.stability.ai/api/v2/summary.json',
+    statusPageUrl: 'https://status.stability.ai',
+    type: 'statuspage',
+  },
+  {
+    name: 'Runway',
+    provider: 'Runway',
+    url: 'https://status.runwayml.com/api/v2/summary.json',
+    statusPageUrl: 'https://status.runwayml.com',
+    type: 'statuspage',
+  },
+  {
+    name: 'Luma',
+    provider: 'Luma AI',
+    // Better Stack HTML, same as Together AI / Fireworks AI. Banner text
+    // "All services are online" is matched by parseHtmlStatus.
+    url: 'https://status.lumalabs.ai',
+    statusPageUrl: 'https://status.lumalabs.ai',
+    type: 'html',
+  },
 ];

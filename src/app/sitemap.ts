@@ -94,6 +94,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/is-deepseek-down`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
     { url: `${baseUrl}/is-together-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
     { url: `${baseUrl}/is-fireworks-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
+    { url: `${baseUrl}/is-openrouter-down`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
+    { url: `${baseUrl}/is-elevenlabs-down`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
+    { url: `${baseUrl}/is-stability-ai-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
+    { url: `${baseUrl}/is-runway-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
+    { url: `${baseUrl}/is-luma-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
 
     // Pillar/guide pages
     { url: `${baseUrl}/what-is-ai`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },

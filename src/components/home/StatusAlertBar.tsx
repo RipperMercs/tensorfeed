@@ -43,6 +43,13 @@ const SERVICE_HREFS: Record<string, string> = {
   Together: '/is-together-down',
   'Fireworks AI': '/is-fireworks-down',
   Fireworks: '/is-fireworks-down',
+  OpenRouter: '/is-openrouter-down',
+  ElevenLabs: '/is-elevenlabs-down',
+  'Stability AI': '/is-stability-ai-down',
+  Stability: '/is-stability-ai-down',
+  Runway: '/is-runway-down',
+  Luma: '/is-luma-down',
+  'Luma AI': '/is-luma-down',
 };
 
 const POLL_INTERVAL_MS = 90_000;
