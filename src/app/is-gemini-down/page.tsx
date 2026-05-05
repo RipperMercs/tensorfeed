@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Activity, ArrowRight, HelpCircle } from 'lucide-react';
 import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
-import { WebApplicationJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import { WebApplicationJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
 
 interface StatusService {
   name: string;
@@ -161,6 +161,20 @@ export default async function IsGeminiDownPage() {
         name="Is Gemini Down? Live Google AI Status Monitor"
         description="Real-time Google Gemini API status monitoring. Check if Gemini is down, experiencing degraded performance, or fully operational."
         url="https://tensorfeed.ai/is-gemini-down"
+      />
+      <ServiceJsonLd
+        serviceName="Google Gemini"
+        providerName="Google"
+        providerUrl="https://ai.google"
+        url="https://tensorfeed.ai/is-gemini-down"
+        description="Google's Gemini family of large language model APIs (Gemini 2.5 Pro, Flash, and earlier variants), exposed through Vertex AI, Google AI Studio, and the gemini.google.com consumer chat interface."
+      />
+      <BreadcrumbListJsonLd
+        items={[
+          { name: 'Home', url: 'https://tensorfeed.ai' },
+          { name: 'AI Service Status', url: 'https://tensorfeed.ai/status' },
+          { name: 'Is Gemini Down?', url: 'https://tensorfeed.ai/is-gemini-down' },
+        ]}
       />
       <FAQPageJsonLd faqs={faqs} />
 

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Activity, ArrowRight, HelpCircle } from 'lucide-react';
 import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
-import { WebApplicationJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import { WebApplicationJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
 
 interface StatusService {
   name: string;
@@ -154,6 +154,20 @@ export default async function IsChatGPTDownPage() {
         name="Is ChatGPT Down? Live OpenAI API Status Monitor"
         description="Real-time OpenAI API status monitoring. Check if ChatGPT is down, experiencing degraded performance, or fully operational."
         url="https://tensorfeed.ai/is-chatgpt-down"
+      />
+      <ServiceJsonLd
+        serviceName="OpenAI ChatGPT"
+        providerName="OpenAI"
+        providerUrl="https://openai.com"
+        url="https://tensorfeed.ai/is-chatgpt-down"
+        description="OpenAI's ChatGPT consumer chat interface and the underlying OpenAI API (GPT-4o, GPT-5, o-series, DALL-E, Whisper, Sora). Used by AI agents and millions of consumer users worldwide."
+      />
+      <BreadcrumbListJsonLd
+        items={[
+          { name: 'Home', url: 'https://tensorfeed.ai' },
+          { name: 'AI Service Status', url: 'https://tensorfeed.ai/status' },
+          { name: 'Is ChatGPT Down?', url: 'https://tensorfeed.ai/is-chatgpt-down' },
+        ]}
       />
       <FAQPageJsonLd faqs={faqs} />
 

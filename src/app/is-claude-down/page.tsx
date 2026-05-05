@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Activity, ArrowRight, HelpCircle } from 'lucide-react';
 import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
-import { WebApplicationJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import { WebApplicationJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
 
 interface StatusService {
   name: string;
@@ -154,6 +154,20 @@ export default async function IsClaudeDownPage() {
         name="Is Claude Down? Live Claude API Status Monitor"
         description="Real-time Claude API status monitoring. Check if Claude is down, experiencing degraded performance, or fully operational."
         url="https://tensorfeed.ai/is-claude-down"
+      />
+      <ServiceJsonLd
+        serviceName="Claude API"
+        providerName="Anthropic"
+        providerUrl="https://www.anthropic.com"
+        url="https://tensorfeed.ai/is-claude-down"
+        description="Anthropic's Claude family of large language model APIs, including Opus, Sonnet, and Haiku. Used by AI agents, Claude Code, and the claude.ai consumer chat interface."
+      />
+      <BreadcrumbListJsonLd
+        items={[
+          { name: 'Home', url: 'https://tensorfeed.ai' },
+          { name: 'AI Service Status', url: 'https://tensorfeed.ai/status' },
+          { name: 'Is Claude Down?', url: 'https://tensorfeed.ai/is-claude-down' },
+        ]}
       />
       <FAQPageJsonLd faqs={faqs} />
 

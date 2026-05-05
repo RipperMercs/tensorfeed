@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import { ArticleJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
 const faqs = [
   {
     question: 'What is a CLAUDE.md file?',
@@ -48,6 +48,13 @@ export default function ClaudeMdGuidePage() {
         author="TensorFeed.ai"
       />
       <FAQPageJsonLd faqs={faqs} />
+      <BreadcrumbListJsonLd
+        items={[
+          { name: 'Home', url: 'https://tensorfeed.ai' },
+          { name: 'Guides', url: 'https://tensorfeed.ai/best-ai-tools' },
+          { name: 'CLAUDE.md File Guide', url: 'https://tensorfeed.ai/claude-md-guide' },
+        ]}
+      />
 
       <p className="text-text-muted text-sm mb-4">Published: March 30, 2026</p>
 

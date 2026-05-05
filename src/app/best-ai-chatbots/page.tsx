@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import { ArticleJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: 'AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini (Honest Review)',
   description:
@@ -164,6 +164,13 @@ export default function BestAIChatbotsPage() {
         description="Honest 2026 AI chatbot comparison across pricing, context window, benchmarks, free tier, and best use case. With live API status for each provider."
         datePublished="2025-08-01"
         dateModified="2026-05-04"
+      />
+      <BreadcrumbListJsonLd
+        items={[
+          { name: 'Home', url: 'https://tensorfeed.ai' },
+          { name: 'Guides', url: 'https://tensorfeed.ai/best-ai-tools' },
+          { name: 'AI Chatbot Comparison', url: 'https://tensorfeed.ai/best-ai-chatbots' },
+        ]}
       />
 
       <p className="text-text-muted text-sm mb-4">Last Updated: May 4, 2026</p>

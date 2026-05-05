@@ -209,3 +209,70 @@ export function ArticleJsonLd({
 
   return <JsonLd data={data} />;
 }
+
+/**
+ * BreadcrumbListJsonLd: emits the schema.org BreadcrumbList Google
+ * uses to render breadcrumb trails in search results. Pass an ordered
+ * list of { name, url } pairs from root to current page.
+ *
+ * Example:
+ *   <BreadcrumbListJsonLd items={[
+ *     { name: 'Home', url: 'https://tensorfeed.ai' },
+ *     { name: 'Status', url: 'https://tensorfeed.ai/status' },
+ *     { name: 'Is Claude Down?', url: 'https://tensorfeed.ai/is-claude-down' },
+ *   ]} />
+ */
+export function BreadcrumbListJsonLd({
+  items,
+}: {
+  items: { name: string; url: string }[];
+}) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+  return <JsonLd data={data} />;
+}
+
+/**
+ * ServiceJsonLd: emits schema.org Service for the /is-X-down pages.
+ * Lets Google understand "this page is monitoring a specific service
+ * provided by company X" rather than treating it as a generic
+ * WebApplication. Pairs cleanly with the existing WebApplicationJsonLd
+ * - both can be present on the same page.
+ */
+export function ServiceJsonLd({
+  serviceName,
+  providerName,
+  providerUrl,
+  url,
+  description,
+}: {
+  serviceName: string;
+  providerName: string;
+  providerUrl: string;
+  url: string;
+  description: string;
+}) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: serviceName,
+    description,
+    provider: {
+      '@type': 'Organization',
+      name: providerName,
+      url: providerUrl,
+    },
+    url,
+    serviceType: 'AI / Large Language Model API',
+    areaServed: 'Worldwide',
+  };
+  return <JsonLd data={data} />;
+}
