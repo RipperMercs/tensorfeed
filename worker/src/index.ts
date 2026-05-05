@@ -21,6 +21,7 @@ import {
 } from './history-series';
 import { computeLeaderboard, resolveLastNDays } from './status-leaderboard';
 import { generateUptimeBadge, resolveProviderSlug } from './badges';
+import { getProviderUptimeSeries } from './status-history';
 import {
   createWatch,
   getWatch,
@@ -1654,6 +1655,7 @@ export default {
           historyStatusUptime: '/api/history/status/uptime?provider=&days=1-7 (free, 7-day cap)',
           statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
+          uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
           mcpRegistrySnapshot: '/api/mcp/registry/snapshot',
           papersAiTrending: '/api/papers/ai-trending',
           papersArxivRecent: '/api/papers/arxiv-recent',
@@ -2023,6 +2025,66 @@ export default {
         // 5-minute cache: leaderboard is stable on short timescales but we
         // want it to reflect new poll cycles within a freshness window users
         // would consider "live."
+        300,
+      );
+    }
+
+    // === PER-PROVIDER UPTIME SERIES (free, 7-day cap) ===
+    // Daily breakdown of operational/degraded/down/unknown polls for one
+    // provider across a date range. Computed from the same minute-resolution
+    // counters that power the cross-provider leaderboard, but sliced
+    // single-provider-style for charting on /uptime/{slug} pages and
+    // direct API consumption.
+    if (path === '/api/uptime/series') {
+      const slug = url.searchParams.get('provider')?.trim();
+      if (!slug) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'provider_required',
+            hint: 'Pass ?provider=<slug>. Example: ?provider=claude&days=7',
+          },
+          400,
+        );
+      }
+      const provider = resolveProviderSlug(slug);
+      if (!provider) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'unknown_provider',
+            hint: 'See /badges for the list of valid slugs.',
+          },
+          404,
+        );
+      }
+      const daysRaw = url.searchParams.get('days');
+      const daysParsed = daysRaw ? parseInt(daysRaw, 10) : FREE_DEFAULT_RANGE_DAYS;
+      if (Number.isNaN(daysParsed) || daysParsed < 1) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'invalid_days',
+            hint: `Pass ?days=1..${FREE_MAX_RANGE_DAYS}. Default ${FREE_DEFAULT_RANGE_DAYS}.`,
+          },
+          400,
+        );
+      }
+      const days = Math.min(daysParsed, FREE_MAX_RANGE_DAYS);
+      const { from, to } = resolveLastNDays(days);
+      const result = await getProviderUptimeSeries(env, provider, from, to);
+      return jsonResponse(
+        {
+          ...result,
+          tier: 'free',
+          premium: {
+            endpoint: '/api/premium/status/leaderboard',
+            note:
+              'Premium leaderboard returns the same per-provider summary aggregated across all 20 providers, with up to 90-day windows + incident_count and mttr_minutes per provider.',
+            credits_per_call: 1,
+          },
+        },
+        200,
         300,
       );
     }

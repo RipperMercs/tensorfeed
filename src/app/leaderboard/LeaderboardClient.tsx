@@ -34,6 +34,32 @@ const SERVICE_HREFS: Record<string, string> = {
   Luma: '/is-luma-down',
 };
 
+// Per-provider trend page slugs. Mirrors the worker's SLUG_TO_PROVIDER map
+// in worker/src/badges.ts and the canonical PROVIDERS list in
+// src/app/uptime/[slug]/page.tsx.
+const UPTIME_HREFS: Record<string, string> = {
+  'Claude API': '/uptime/claude',
+  'OpenAI API': '/uptime/openai',
+  'Google Gemini': '/uptime/gemini',
+  'GitHub Copilot': '/uptime/copilot',
+  Perplexity: '/uptime/perplexity',
+  Groq: '/uptime/groq',
+  'Hugging Face': '/uptime/huggingface',
+  Replicate: '/uptime/replicate',
+  Cohere: '/uptime/cohere',
+  Mistral: '/uptime/mistral',
+  'AWS Bedrock': '/uptime/bedrock',
+  'Azure OpenAI': '/uptime/azure',
+  DeepSeek: '/uptime/deepseek',
+  'Together AI': '/uptime/together',
+  'Fireworks AI': '/uptime/fireworks',
+  OpenRouter: '/uptime/openrouter',
+  ElevenLabs: '/uptime/elevenlabs',
+  'Stability AI': '/uptime/stability',
+  Runway: '/uptime/runway',
+  Luma: '/uptime/luma',
+};
+
 const POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 min, matches worker /api cache TTL
 
 function uptimeColorClass(pct: number): { dot: string; text: string } {
@@ -212,6 +238,7 @@ export default function LeaderboardClient({ initialData }: Props) {
                 const noData = decisive === 0;
                 const colors = uptimeColorClass(e.uptime_pct);
                 const href = SERVICE_HREFS[e.provider];
+                const trendHref = UPTIME_HREFS[e.provider];
                 return (
                   <tr key={e.provider} className="hover:bg-bg-tertiary/30 transition-colors">
                     <td className="px-4 py-3.5">
@@ -222,16 +249,27 @@ export default function LeaderboardClient({ initialData }: Props) {
                       </span>
                     </td>
                     <td className="px-4 py-3.5">
-                      {href ? (
-                        <Link
-                          href={href}
-                          className="text-text-primary font-medium hover:text-accent-primary transition-colors"
-                        >
-                          {e.provider}
-                        </Link>
-                      ) : (
-                        <span className="text-text-primary font-medium">{e.provider}</span>
-                      )}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {href ? (
+                          <Link
+                            href={href}
+                            className="text-text-primary font-medium hover:text-accent-primary transition-colors"
+                          >
+                            {e.provider}
+                          </Link>
+                        ) : (
+                          <span className="text-text-primary font-medium">{e.provider}</span>
+                        )}
+                        {trendHref && (
+                          <Link
+                            href={trendHref}
+                            className="text-xs font-mono text-text-muted hover:text-accent-primary transition-colors"
+                            aria-label={`${e.provider} 7-day uptime trend`}
+                          >
+                            trend →
+                          </Link>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       {noData ? (
