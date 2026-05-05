@@ -233,4 +233,25 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     statusPageUrl: 'https://status.mistral.ai',
     type: 'html',
   },
+  {
+    name: 'DeepSeek',
+    provider: 'DeepSeek',
+    url: 'https://status.deepseek.com/api/v2/summary.json',
+    statusPageUrl: 'https://status.deepseek.com',
+    type: 'statuspage',
+  },
+  {
+    name: 'Together AI',
+    provider: 'Together AI',
+    url: 'https://status.together.ai',
+    statusPageUrl: 'https://status.together.ai',
+    type: 'html',
+  },
+  {
+    name: 'Fireworks AI',
+    provider: 'Fireworks AI',
+    url: 'https://status.fireworks.ai',
+    statusPageUrl: 'https://status.fireworks.ai',
+    type: 'html',
+  },
 ];

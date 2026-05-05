@@ -38,6 +38,11 @@ const SERVICE_HREFS: Record<string, string> = {
   'AWS Bedrock': '/is-bedrock-down',
   Bedrock: '/is-bedrock-down',
   'Azure OpenAI': '/is-azure-openai-down',
+  DeepSeek: '/is-deepseek-down',
+  'Together AI': '/is-together-down',
+  Together: '/is-together-down',
+  'Fireworks AI': '/is-fireworks-down',
+  Fireworks: '/is-fireworks-down',
 };
 
 const POLL_INTERVAL_MS = 90_000;

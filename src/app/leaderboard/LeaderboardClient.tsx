@@ -24,6 +24,9 @@ const SERVICE_HREFS: Record<string, string> = {
   Mistral: '/is-mistral-down',
   'AWS Bedrock': '/is-bedrock-down',
   'Azure OpenAI': '/is-azure-openai-down',
+  DeepSeek: '/is-deepseek-down',
+  'Together AI': '/is-together-down',
+  'Fireworks AI': '/is-fireworks-down',
 };
 
 const POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 min, matches worker /api cache TTL
