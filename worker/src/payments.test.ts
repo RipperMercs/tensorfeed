@@ -689,4 +689,29 @@ describe('createQuote (sender_wallet binding)', () => {
     const { quote } = await createQuote(env, 1.0, sender);
     expect(quote.sender_wallet).toBe(sender.toLowerCase());
   });
+
+  it('persists amount_base_units (10^6 USDC base units) for strict-integer match in confirm', async () => {
+    // Closes the 2026-05-05 multi-LLM-flagged float-tolerance window
+    // where an attacker could quote $200 then send $199.99 on-chain
+    // (abs diff ~0.00999... < 0.01 in IEEE 754) and still receive the
+    // tier-1 credit count. confirmPayment now compares the integer
+    // base units strictly, and createQuote must persist them.
+    const env = makeEnv();
+    const sender = '0x3333333333333333333333333333333333333333';
+
+    const { quote: q1 } = await createQuote(env, 5.0, sender);
+    expect(q1.amount_base_units).toBe(5_000_000);
+
+    const { quote: q2 } = await createQuote(env, 199.99, sender);
+    expect(q2.amount_base_units).toBe(199_990_000);
+
+    const { quote: q3 } = await createQuote(env, 1.0, sender);
+    expect(q3.amount_base_units).toBe(1_000_000);
+
+    // High end: 10000 USDC = 10^10 base units, well below 2^53 so the
+    // integer is representable exactly in JS Number.
+    const { quote: q4 } = await createQuote(env, 10000, sender);
+    expect(q4.amount_base_units).toBe(10_000_000_000);
+    expect(Number.isSafeInteger(q4.amount_base_units!)).toBe(true);
+  });
 });

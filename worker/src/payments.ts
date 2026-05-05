@@ -78,6 +78,15 @@ interface CreditsRecord {
 
 interface QuoteRecord {
   amount_usd: number;
+  // USDC base units (10^6 = 1 USDC) the quote was issued for. Used for
+  // strict integer comparison against the on-chain transfer amount so
+  // we cannot be tricked into issuing tier-bonus credits for an
+  // underpayment that lands inside a float-tolerance window. See
+  // confirmPayment's amount-match check below for the concrete
+  // comparison; closes the 2026-05-05 multi-LLM-flagged finding.
+  // Optional only for backwards-compat with quotes issued before this
+  // field existed (within the 30-min quote TTL window of deploy).
+  amount_base_units?: number;
   credits: number;
   expires_at: number;
   created: string;
@@ -191,6 +200,11 @@ interface VerifiedTx {
   ok: boolean;
   reason?: string;
   amountUsd: number;
+  // Exact integer base units transferred on-chain (1 USDC = 10^6 base
+  // units). Used for the strict-equality amount-match check against the
+  // quote, so a sub-cent underpayment cannot trick us into issuing
+  // tier-bonus credits via float-tolerance gaming.
+  amountBaseUnits?: number;
   blockNumber?: number;
   // Lowercased 0x-prefixed sender address pulled from Transfer event topics[1].
   // Used by the Chainalysis OFAC screen on /api/payment/confirm before any
@@ -267,10 +281,15 @@ export async function verifyBaseUSDCTransaction(
 
     const amountWei = BigInt(log.data);
     const amountUsd = Number(amountWei) / Math.pow(10, USDC_DECIMALS);
+    // amountBaseUnits is the exact integer USDC base-units transferred.
+    // Cap is 10000 USDC = 10^10 base units, well under JS Number's
+    // safe-integer limit (2^53), so Number() is lossless here.
+    const amountBaseUnits = Number(amountWei);
 
     return {
       ok: true,
       amountUsd,
+      amountBaseUnits,
       blockNumber: parseInt(receipt.blockNumber, 16),
       senderAddress: fromAddress,
     };
@@ -803,8 +822,15 @@ export async function createQuote(
   const credits = calculateCredits(amountUsd);
   const nonce = generateNonce();
   const expiresAt = Date.now() + QUOTE_TTL_SECONDS * 1000;
+  // Persist the integer USDC base units the quote was issued for so
+  // confirmPayment can do an exact-integer match against the on-chain
+  // transfer amount instead of a 0.01 USD float-tolerance window.
+  // Math.round handles tiny float-representation drift from amountUsd
+  // arriving as 4.99 / 199.99 / etc.
+  const amountBaseUnits = Math.round(amountUsd * 1_000_000);
   const quote: QuoteRecord = {
     amount_usd: amountUsd,
+    amount_base_units: amountBaseUnits,
     credits,
     expires_at: expiresAt,
     created: new Date().toISOString(),
@@ -1003,9 +1029,26 @@ export async function confirmPayment(
     }
   }
 
+  // Tier-bonus protection: only honor the quote's pre-priced credits
+  // (which include any volume-tier discount the agent earned at the
+  // time of quote) if the on-chain payment matches the quoted amount
+  // EXACTLY at the integer USDC base-unit level. The previous
+  // < 0.01 USD float-tolerance comparison let an agent quote $200 for
+  // 16,000 credits then send $199.99 on-chain (0.00999... < 0.01 in
+  // IEEE 754) and still receive the full tier-1 credit count, a
+  // sub-cent underpayment that compounded across calls. Strict integer
+  // equality removes the window.
+  // Backwards-compat: pre-2026-05-05 quotes lack amount_base_units;
+  // those fall through to compute credits from the actual on-chain
+  // amount, which is the safe (no-tier-bonus) path.
   let baseCredits: number;
   let rate: string;
-  if (quote && Math.abs(verified.amountUsd - quote.amount_usd) < 0.01) {
+  if (
+    quote &&
+    typeof quote.amount_base_units === 'number' &&
+    typeof verified.amountBaseUnits === 'number' &&
+    verified.amountBaseUnits === quote.amount_base_units
+  ) {
     baseCredits = quote.credits;
     rate = creditsPerUsd(quote.amount_usd).tier;
   } else {
