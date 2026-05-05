@@ -2,15 +2,16 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
-  title: 'Best AI Chatbots Compared (2026): ChatGPT vs Claude vs Gemini | TensorFeed',
+  title: 'AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini (Honest Review)',
   description:
-    'An in-depth comparison of the best AI chatbots in 2026: ChatGPT, Claude, Gemini, Perplexity, Copilot, Grok, and more. Features, pricing, strengths, and clear recommendations for every use case.',
+    'Honest 2026 AI chatbot comparison: Claude, ChatGPT, Gemini, Perplexity, Copilot, and Grok across pricing, context window, benchmarks, free tier, and best use case. Live status links for each. Updated May 2026.',
   openGraph: {
-    title: 'Best AI Chatbots Compared (2026)',
+    title: 'AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini',
     description:
-      'In-depth comparison of ChatGPT, Claude, Gemini, Perplexity, Copilot, Grok, and more.',
+      'Honest 2026 comparison: pricing, context, benchmarks, free tier, best use case. Plus live API status for each provider.',
     url: 'https://tensorfeed.ai/best-ai-chatbots',
   },
+  alternates: { canonical: 'https://tensorfeed.ai/best-ai-chatbots' },
 };
 
 const chatbots = [
@@ -159,16 +160,16 @@ export default function BestAIChatbotsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <ArticleJsonLd
-        title="Best AI Chatbots Compared (2026): ChatGPT vs Claude vs Gemini"
-        description="An in-depth comparison of the best AI chatbots in 2026 including features, pricing, strengths, and clear recommendations for every use case."
+        title="AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini"
+        description="Honest 2026 AI chatbot comparison across pricing, context window, benchmarks, free tier, and best use case. With live API status for each provider."
         datePublished="2025-08-01"
-        dateModified="2026-03-28"
+        dateModified="2026-05-04"
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: March 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: May 4, 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
-        Best AI Chatbots Compared (2026)
+        AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini
       </h1>
 
       <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-xl p-4 mb-8">
@@ -210,18 +211,38 @@ export default function BestAIChatbotsPage() {
                 <th className="text-left p-3 text-text-primary font-semibold">Paid Price</th>
                 <th className="text-left p-3 text-text-primary font-semibold">Context</th>
                 <th className="text-left p-3 text-text-primary font-semibold">Free Tier</th>
+                <th className="text-left p-3 text-text-primary font-semibold">Live Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {chatbots.map((bot) => (
-                <tr key={bot.name} className="bg-bg-secondary">
-                  <td className="p-3 text-text-primary font-medium">{bot.name}</td>
-                  <td className="p-3 text-text-secondary">{bot.company}</td>
-                  <td className="p-3 text-text-secondary">{bot.pricing.split(' / ').slice(1).join(', ')}</td>
-                  <td className="p-3 text-text-secondary">{bot.contextWindow}</td>
-                  <td className="p-3 text-accent-primary">Yes</td>
-                </tr>
-              ))}
+              {chatbots.map((bot) => {
+                const STATUS_LINKS: Record<string, string> = {
+                  ChatGPT: '/is-chatgpt-down',
+                  Claude: '/is-claude-down',
+                  Gemini: '/is-gemini-down',
+                  Perplexity: '/is-perplexity-down',
+                  'Microsoft Copilot': '/is-copilot-down',
+                };
+                const statusHref = STATUS_LINKS[bot.name];
+                return (
+                  <tr key={bot.name} className="bg-bg-secondary">
+                    <td className="p-3 text-text-primary font-medium">{bot.name}</td>
+                    <td className="p-3 text-text-secondary">{bot.company}</td>
+                    <td className="p-3 text-text-secondary">{bot.pricing.split(' / ').slice(1).join(', ')}</td>
+                    <td className="p-3 text-text-secondary">{bot.contextWindow}</td>
+                    <td className="p-3 text-accent-primary">Yes</td>
+                    <td className="p-3">
+                      {statusHref ? (
+                        <Link href={statusHref} className="text-accent-primary hover:underline">
+                          Check
+                        </Link>
+                      ) : (
+                        <span className="text-text-muted">n/a</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -454,31 +475,86 @@ export default function BestAIChatbotsPage() {
           <div className="bg-bg-secondary border border-border rounded-lg p-5">
             <h3 className="text-lg font-semibold text-text-primary mb-2">Which AI chatbot is the smartest?</h3>
             <p className="text-text-secondary leading-relaxed">
-              Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude leads on
-              coding tasks and instruction following, while ChatGPT excels at creative tasks and has
-              the broadest plugin ecosystem.
+              Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude Opus 4.7 leads on
+              coding and complex instruction following with a 1M token context window. GPT-5.5 leads on
+              creative tasks, multimodal input, and has the broadest plugin ecosystem.
             </p>
           </div>
           <div className="bg-bg-secondary border border-border rounded-lg p-5">
             <h3 className="text-lg font-semibold text-text-primary mb-2">Which AI chatbot is free?</h3>
             <p className="text-text-secondary leading-relaxed">
-              All major chatbots offer free tiers: ChatGPT Free, Claude Free, Gemini Free, and
-              Perplexity Free. Paid plans ($20/mo range) unlock more capable models and higher usage limits.
+              All major chatbots offer free tiers: ChatGPT Free (GPT-4o-mini and limited GPT-4o), Claude Free
+              (Sonnet, with daily message caps), Gemini Free (Flash with 1M context), and Perplexity Free
+              (mixed underlying models). Paid plans land around $20/month and unlock the flagship models plus
+              higher usage limits.
             </p>
           </div>
           <div className="bg-bg-secondary border border-border rounded-lg p-5">
             <h3 className="text-lg font-semibold text-text-primary mb-2">Is ChatGPT better than Claude?</h3>
             <p className="text-text-secondary leading-relaxed">
-              It depends on the task. ChatGPT has more integrations and plugins. Claude is generally
-              better at coding, reasoning, long documents, and following complex instructions. Both are
-              excellent general-purpose assistants.
+              It depends on the task. ChatGPT has more integrations, plugins, custom GPTs, and a built-in
+              image generator. Claude is generally better at coding, careful reasoning, long documents, and
+              following complex multi-step instructions. Both are excellent general-purpose assistants and
+              most power users keep tabs open for both.
             </p>
           </div>
           <div className="bg-bg-secondary border border-border rounded-lg p-5">
             <h3 className="text-lg font-semibold text-text-primary mb-2">What is the best AI chatbot for coding?</h3>
             <p className="text-text-secondary leading-relaxed">
               Claude is widely considered the best chatbot for coding, especially with Claude Code for
-              terminal-based development. ChatGPT and Gemini are also strong alternatives.
+              terminal-based development. It produces cleaner code, follows project conventions more
+              consistently, and is less likely to invent APIs that do not exist. ChatGPT and Gemini are
+              strong alternatives. For a deep look at coding-specific tools see our{' '}
+              <Link href="/best-ai-tools#coding" className="text-accent-primary hover:underline">
+                best AI coding tools
+              </Link>{' '}
+              guide.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Is Claude down right now?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              You can check live Claude API status on our{' '}
+              <Link href="/is-claude-down" className="text-accent-primary hover:underline">
+                Claude status page
+              </Link>{' '}
+              which polls Anthropic every two minutes. We track every major chatbot the same way:{' '}
+              <Link href="/is-chatgpt-down" className="text-accent-primary hover:underline">ChatGPT</Link>,{' '}
+              <Link href="/is-gemini-down" className="text-accent-primary hover:underline">Gemini</Link>,{' '}
+              <Link href="/is-perplexity-down" className="text-accent-primary hover:underline">Perplexity</Link>,{' '}
+              <Link href="/is-copilot-down" className="text-accent-primary hover:underline">Copilot</Link>.
+              When one chatbot goes down, you can switch to another from this comparison while the outage clears.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Which AI chatbot has the largest context window?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              As of May 2026, three chatbots support 1 million token context windows: Claude Opus 4.7,
+              GPT-5.5, and Gemini 2.5 Pro. One million tokens is roughly 750,000 words, enough to fit an
+              entire mid-sized codebase or several full books in a single conversation. Gemini was first to
+              ship 1M context; Claude was last to add it (Opus 4.7, April 2026), closing the long-context gap.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">What is the cheapest AI chatbot?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              For end users, every major chatbot has a free tier. Gemini&apos;s free tier is the most
+              capable. For developers calling APIs directly, the cheapest hosted models cost roughly{' '}
+              <Link href="/originals/ai-inference-floor-may-2026" className="text-accent-primary hover:underline">
+                $0.02 per million input tokens
+              </Link>{' '}
+              today, on the OpenRouter open shelf. Flagship chat models like Claude Opus 4.7 cost $15 per
+              million input tokens, which is roughly 880x the floor.
+            </p>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg p-5">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Should I pay for ChatGPT, Claude, or Gemini?</h3>
+            <p className="text-text-secondary leading-relaxed">
+              If you mostly want long-document analysis and Google Workspace integration, pay for Gemini
+              Advanced. If you mostly want creative work and an ecosystem of custom GPTs and plugins, pay
+              for ChatGPT Plus. If you mostly want careful coding, complex reasoning, and quality writing,
+              pay for Claude Pro. All three are $20 per month. Many serious users pay for two of the three
+              and rotate.
             </p>
           </div>
         </div>
@@ -486,10 +562,14 @@ export default function BestAIChatbotsPage() {
 
       <FAQPageJsonLd
         faqs={[
-          { question: 'Which AI chatbot is the smartest?', answer: 'Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude leads on coding tasks and instruction following, while ChatGPT excels at creative tasks and has the broadest plugin ecosystem.' },
-          { question: 'Which AI chatbot is free?', answer: 'All major chatbots offer free tiers: ChatGPT Free, Claude Free, Gemini Free, and Perplexity Free. Paid plans ($20/mo range) unlock more capable models and higher usage limits.' },
-          { question: 'Is ChatGPT better than Claude?', answer: 'It depends on the task. ChatGPT has more integrations and plugins. Claude is generally better at coding, reasoning, long documents, and following complex instructions. Both are excellent general-purpose assistants.' },
-          { question: 'What is the best AI chatbot for coding?', answer: 'Claude is widely considered the best chatbot for coding, especially with Claude Code for terminal-based development. ChatGPT and Gemini are also strong alternatives.' },
+          { question: 'Which AI chatbot is the smartest?', answer: 'Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude Opus 4.7 leads on coding and complex instruction following with a 1M token context window. GPT-5.5 leads on creative tasks, multimodal input, and has the broadest plugin ecosystem.' },
+          { question: 'Which AI chatbot is free?', answer: 'All major chatbots offer free tiers: ChatGPT Free (GPT-4o-mini and limited GPT-4o), Claude Free (Sonnet, with daily message caps), Gemini Free (Flash with 1M context), and Perplexity Free (mixed underlying models). Paid plans land around $20/month and unlock the flagship models plus higher usage limits.' },
+          { question: 'Is ChatGPT better than Claude?', answer: 'It depends on the task. ChatGPT has more integrations, plugins, custom GPTs, and a built-in image generator. Claude is generally better at coding, careful reasoning, long documents, and following complex multi-step instructions. Both are excellent general-purpose assistants and most power users keep tabs open for both.' },
+          { question: 'What is the best AI chatbot for coding?', answer: 'Claude is widely considered the best chatbot for coding, especially with Claude Code for terminal-based development. It produces cleaner code, follows project conventions more consistently, and is less likely to invent APIs that do not exist. ChatGPT and Gemini are strong alternatives.' },
+          { question: 'Is Claude down right now?', answer: 'You can check live Claude API status on our Claude status page which polls Anthropic every two minutes. We track every major chatbot the same way. When one chatbot goes down, you can switch to another from this comparison while the outage clears.' },
+          { question: 'Which AI chatbot has the largest context window?', answer: 'As of May 2026, three chatbots support 1 million token context windows: Claude Opus 4.7, GPT-5.5, and Gemini 2.5 Pro. One million tokens is roughly 750,000 words, enough to fit an entire mid-sized codebase or several full books in a single conversation. Gemini was first to ship 1M context; Claude was last to add it in April 2026.' },
+          { question: 'What is the cheapest AI chatbot?', answer: 'For end users, every major chatbot has a free tier. Gemini’s free tier is the most capable. For developers calling APIs directly, the cheapest hosted models cost roughly $0.02 per million input tokens today on the OpenRouter open shelf. Flagship chat models like Claude Opus 4.7 cost $15 per million input tokens, roughly 880x the floor.' },
+          { question: 'Should I pay for ChatGPT, Claude, or Gemini?', answer: 'If you mostly want long-document analysis and Google Workspace integration, pay for Gemini Advanced. If you mostly want creative work and an ecosystem of custom GPTs and plugins, pay for ChatGPT Plus. If you mostly want careful coding, complex reasoning, and quality writing, pay for Claude Pro. All three are $20 per month. Many serious users pay for two of the three and rotate.' },
         ]}
       />
 
