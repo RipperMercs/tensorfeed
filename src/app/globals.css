@@ -418,3 +418,43 @@ html[data-view-mode="agent"] {
     animation: tf-agent-fade-in 0.1s ease-out;
   }
 }
+
+/* === Whitepaper print stylesheet ====================================
+ * Save-as-PDF support for /whitepaper. Forces black-on-white print
+ * regardless of dark-mode toggle, drops chrome, normalizes typography
+ * for paper. The page itself uses Tailwind print: utilities for
+ * element-level hide/show; this block tightens type and tables.
+ */
+@media print {
+  body { background: white !important; color: black !important; }
+  .whitepaper-prose,
+  .whitepaper-prose * {
+    color: black !important;
+    background: transparent !important;
+    border-color: #ccc !important;
+  }
+  .whitepaper-prose h1,
+  .whitepaper-prose h2,
+  .whitepaper-prose h3,
+  .whitepaper-prose h4 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+  .whitepaper-prose pre,
+  .whitepaper-prose table {
+    page-break-inside: avoid;
+    border: 1px solid #ccc !important;
+  }
+  .whitepaper-prose code {
+    background: #f4f4f4 !important;
+    color: black !important;
+    border: 1px solid #ddd !important;
+  }
+  .whitepaper-prose a { color: black !important; text-decoration: underline; }
+  /* Show URL in parens for off-page references on paper */
+  .whitepaper-prose a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 90%;
+    color: #555;
+  }
+}

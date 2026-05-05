@@ -239,6 +239,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/anthropic-finance-agents-wall-street`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/coinbase-armstrong-14-percent-ai-native-pivot`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
 
+    // Whitepaper (canonical AFTA spec document)
+    { url: `${baseUrl}/whitepaper`, lastModified: now, changeFrequency: 'monthly', priority: 0.95 },
+
     // Agent-acquisition surface
     { url: `${baseUrl}/for-ai-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/datasets`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
