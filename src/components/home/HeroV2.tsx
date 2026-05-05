@@ -8,8 +8,15 @@ import Constellation from './HeroBackgrounds/Constellation';
 
 type HeroVariant = 'neural' | 'mesh' | 'waveform' | 'constellation';
 
+export interface HeroV2Service {
+  name: string;
+  status: string;
+  lastChecked?: string;
+}
+
 interface HeroV2Props {
   variant?: HeroVariant;
+  services?: HeroV2Service[];
 }
 
 const ENV_VARIANT = (process.env.NEXT_PUBLIC_HERO_VARIANT ?? '').toLowerCase() as HeroVariant | '';
@@ -58,10 +65,76 @@ function useTickingSeconds() {
   return v;
 }
 
-export default function HeroV2({ variant }: HeroV2Props) {
+function summarizeServices(services: HeroV2Service[] | undefined) {
+  if (!services || services.length === 0) {
+    return {
+      total: 10,
+      online: 10,
+      degraded: 0,
+      down: 0,
+      offendersLabel: 'all systems operational',
+      offenderTone: 'up' as const,
+    };
+  }
+  const total = services.length;
+  let degraded = 0;
+  let down = 0;
+  const offenders: string[] = [];
+  for (const s of services) {
+    const v = (s.status || '').toLowerCase();
+    if (v === 'down' || v === 'outage' || v === 'major') {
+      down++;
+      offenders.push(s.name);
+    } else if (v === 'degraded' || v === 'partial' || v === 'warn') {
+      degraded++;
+      offenders.push(s.name);
+    }
+  }
+  const online = total - degraded - down;
+
+  let offendersLabel: string;
+  let offenderTone: 'up' | 'warn' | 'down';
+  if (down > 0) {
+    offenderTone = 'down';
+    offendersLabel = down === 1 ? `${offenders[0]} down` : `${down} services down`;
+  } else if (degraded > 0) {
+    offenderTone = 'warn';
+    offendersLabel = degraded === 1 ? `${offenders[0]} degraded` : `${degraded} services degraded`;
+  } else {
+    offenderTone = 'up';
+    offendersLabel = 'all systems operational';
+  }
+  return { total, online, degraded, down, offendersLabel, offenderTone };
+}
+
+function lastCheckLabel(services: HeroV2Service[] | undefined): string | null {
+  if (!services || services.length === 0) return null;
+  let mostRecent: number | null = null;
+  for (const s of services) {
+    if (!s.lastChecked) continue;
+    const t = new Date(s.lastChecked).getTime();
+    if (Number.isFinite(t) && (mostRecent === null || t > mostRecent)) {
+      mostRecent = t;
+    }
+  }
+  if (mostRecent === null) return null;
+  const ageSec = Math.max(0, Math.round((Date.now() - mostRecent) / 1000));
+  if (ageSec < 60) return `${ageSec}s ago`;
+  const min = Math.round(ageSec / 60);
+  if (min < 60) return `${min}m ago`;
+  return `${Math.round(min / 60)}h ago`;
+}
+
+export default function HeroV2({ variant, services }: HeroV2Props) {
   const epm = useEventsPerMin();
-  const checked = useTickingSeconds();
+  const tickingChecked = useTickingSeconds();
   const Vis = VARIANTS[resolveVariant(variant)];
+
+  const summary = summarizeServices(services);
+  const realCheckLabel = lastCheckLabel(services);
+  // Prefer real "last checked" label; fall back to the ticking placeholder
+  // for the cosmetic case where services were not passed in.
+  const checked = realCheckLabel ?? tickingChecked;
 
   return (
     <section
@@ -156,9 +229,20 @@ export default function HeroV2({ variant }: HeroV2Props) {
         >
           {[
             { eyebrow: 'Events per min', value: String(epm), delta: 'up 14% vs. 24h avg', deltaTone: 'up' as const },
-            { eyebrow: 'Services monitored', value: '10', unit: '/10 online', delta: '1 degraded, Midjourney', deltaTone: 'warn' as const },
+            {
+              eyebrow: 'Services monitored',
+              value: String(summary.online),
+              unit: `/${summary.total} online`,
+              delta: summary.offendersLabel,
+              deltaTone: summary.offenderTone,
+            },
             { eyebrow: 'Last model release', value: '6', unit: 'm ago', delta: 'Mistral Medium 3', deltaTone: 'muted' as const },
-            { eyebrow: 'Last check', value: checked, delta: 'Midjourney status', deltaTone: 'muted' as const },
+            {
+              eyebrow: 'Last check',
+              value: checked,
+              delta: services && services.length > 0 ? `${services.length} providers` : 'live polling',
+              deltaTone: 'muted' as const,
+            },
           ].map((s, i, arr) => (
             <Stat key={s.eyebrow} {...s} isFirst={i === 0} isLast={i === arr.length - 1} />
           ))}

@@ -172,7 +172,7 @@ export default async function HomePage() {
   return (
     <div>
       <StatusAlertBar services={statuses} />
-      <HeroV2 />
+      <HeroV2 services={statuses} />
 
       <section
         id="status"
