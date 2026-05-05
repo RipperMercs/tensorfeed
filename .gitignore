@@ -63,3 +63,11 @@ mcp-server/registry/
 # Claude Code internal state (per-session, not source)
 .claude/scheduled_tasks.lock
 .claude/*.lock
+
+# Internal-only docs (Pizza Robot Studios public-repo policy).
+# Public-facing READMEs and CHANGELOGs are still tracked; these three
+# leak internal strategy / architecture / maintainer-only ops, so they
+# live locally only.
+CLAUDE.md
+docs/ARCHITECTURE.md
+sdk/python/PUBLISHING.md
