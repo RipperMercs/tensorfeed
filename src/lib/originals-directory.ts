@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'ai-status-monitoring-real-talk',
+    title: 'AI Status Monitoring: How We Actually Track Claude, ChatGPT, and Gemini',
+    author: 'Ripper',
+    date: 'May 4, 2026',
+    readTime: '7 min read',
+    description:
+      "Most \"is X down\" sites lag the actual outage by 5 to 15 minutes because they just mirror the official status page. We built TensorFeed to do better: 2-minute polling, component-level detail, an active LLM endpoint probe, incident history, and a single feed across every AI provider. Inside the stack and three real incidents it caught last quarter.",
+  },
+  {
     slug: 'ai-inference-floor-may-2026',
     title: 'The Cheapest AI Model on the Market Costs 1.7 Cents per Million Tokens',
     author: 'Ripper',
