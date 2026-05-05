@@ -106,8 +106,10 @@ def auto_purchase_credits(
     account = Account.from_key(private_key)
     sender = account.address
 
-    # Step 1: TensorFeed-side quote
-    quote = tf.buy_credits(amount_usd=amount_usd)
+    # Step 1: TensorFeed-side quote, bound to this sender wallet so the
+    # post-2026-05-05 Tx-Sniper guard accepts the confirm. Must pass the
+    # exact lowercased address that will sign the on-chain transfer.
+    quote = tf.buy_credits(amount_usd=amount_usd, sender_wallet=sender.lower())
     receiving_wallet = quote["wallet"]
     memo = quote["memo"]
 
@@ -135,7 +137,12 @@ def auto_purchase_credits(
     signed = Account.sign_transaction(tx, private_key=private_key)
     raw_tx = getattr(signed, "raw_transaction", None) or getattr(signed, "rawTransaction")
     tx_hash_bytes = w3.eth.send_raw_transaction(raw_tx)
-    tx_hash = "0x" + tx_hash_bytes.hex().lstrip("0x")
+    # Older fix used `.lstrip("0x")` which silently corrupts hashes that
+    # contain leading zero bytes (rare but real, ~0.4% of txs). Modern
+    # web3.py returns HexBytes whose .hex() may or may not include the
+    # 0x prefix depending on version, so check and prepend explicitly.
+    raw_hex = tx_hash_bytes.hex()
+    tx_hash = raw_hex if raw_hex.startswith("0x") else "0x" + raw_hex
 
     # Step 4: wait for confirmation
     deadline = time.time() + wait_seconds

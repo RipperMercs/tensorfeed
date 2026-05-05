@@ -565,26 +565,35 @@ class TensorFeed:
         """
         return self._get("/payment/info")
 
-    def buy_credits(self, *, amount_usd: float) -> dict[str, Any]:
-        """Generate a 30-min payment quote.
+    def buy_credits(self, *, amount_usd: float, sender_wallet: str) -> dict[str, Any]:
+        """Generate a 30-min payment quote bound to a sender wallet.
 
         Returns a dict with ``wallet``, ``memo``, ``amount_usd``, ``credits``,
-        ``expires_at``, ``ttl_seconds``, ``next_step``.
+        ``sender_wallet``, ``expires_at``, ``ttl_seconds``, ``next_step``.
 
-        Send the USDC on Base to ``wallet`` (memo is optional but recommended),
-        then call ``confirm()`` with the tx hash and the ``memo`` as nonce.
+        Send the USDC on Base FROM ``sender_wallet`` TO ``wallet``, then
+        call ``confirm()`` with the tx hash and the returned ``memo`` as
+        nonce. The on-chain sender must match ``sender_wallet`` exactly
+        or ``confirm()`` will reject with ``sender_mismatch``. This is
+        the post-2026-05-05 binding that closes the public-mempool tx
+        sniper attack.
 
         Args:
             amount_usd: USD value of credits to buy. Must be 0.5 to 10000.
                 Volume discounts apply at $5 (10%), $30 (25%), $200 (40%).
+            sender_wallet: 0x-prefixed 40-char EVM address that will sign
+                the on-chain USDC transfer. Required.
         """
-        return self._post("/payment/buy-credits", {"amount_usd": amount_usd})
+        return self._post(
+            "/payment/buy-credits",
+            {"amount_usd": amount_usd, "sender_wallet": sender_wallet},
+        )
 
     def confirm(
         self,
         *,
         tx_hash: str,
-        nonce: str | None = None,
+        nonce: str,
     ) -> dict[str, Any]:
         """Verify a USDC tx on-chain and mint a credit token.
 
@@ -597,14 +606,12 @@ class TensorFeed:
 
         Args:
             tx_hash: 0x-prefixed Base mainnet transaction hash
-            nonce: optional memo from ``buy_credits()``. If provided and
-                the tx amount matches the quote within $0.01, the quoted
-                credits (with volume discount) are applied. Otherwise
-                credits are calculated from the actual tx amount.
+            nonce: memo from ``buy_credits()``. Required as of 2026-05-05;
+                the legacy no-nonce path is closed because it allowed
+                public-mempool observers to steal credits by racing the
+                rightful payer.
         """
-        body: dict[str, Any] = {"tx_hash": tx_hash}
-        if nonce is not None:
-            body["nonce"] = nonce
+        body: dict[str, Any] = {"tx_hash": tx_hash, "nonce": nonce}
         result = self._post("/payment/confirm", body)
         if isinstance(result, dict) and result.get("ok") and result.get("token"):
             self.token = str(result["token"])

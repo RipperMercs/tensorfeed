@@ -1051,6 +1051,7 @@ export interface PaymentInfo {
 export interface QuoteResponse {
   ok: boolean;
   wallet: string;
+  sender_wallet: string;
   memo: string;
   amount_usd: number;
   credits: number;
@@ -1462,22 +1463,38 @@ export class TensorFeed {
   }
 
   /**
-   * Generate a 30-minute payment quote. Send USDC on Base to the returned
-   * wallet (memo optional), then call confirm() with the tx hash.
+   * Generate a 30-minute payment quote bound to a sender wallet. Send
+   * USDC on Base FROM `senderWallet` TO the returned wallet, then call
+   * confirm() with the tx hash and the returned memo as nonce.
+   *
+   * The on-chain sender must match `senderWallet` exactly or confirm()
+   * will reject with `sender_mismatch`. This binding (effective
+   * 2026-05-05) closes the public-mempool tx-sniper attack where an
+   * attacker observing the Base mempool could race confirm to steal
+   * the rightful payer's credits.
    */
-  async buyCredits(options: { amountUsd: number }): Promise<QuoteResponse> {
-    return this.post<QuoteResponse>('/payment/buy-credits', { amount_usd: options.amountUsd });
+  async buyCredits(options: {
+    amountUsd: number;
+    senderWallet: string;
+  }): Promise<QuoteResponse> {
+    return this.post<QuoteResponse>('/payment/buy-credits', {
+      amount_usd: options.amountUsd,
+      sender_wallet: options.senderWallet,
+    });
   }
 
   /**
    * Verify a USDC tx on-chain and mint a credit token.
    * On success the returned token is auto-stored on this client instance.
-   * Pass `nonce` (the memo from buyCredits) if you want quoted credits with
-   * volume discount; otherwise credits are calculated from the actual tx amount.
+   * `nonce` (the memo from buyCredits) is required as of 2026-05-05; the
+   * legacy no-nonce path is closed because it allowed public-mempool
+   * observers to steal credits by racing the rightful payer.
    */
-  async confirm(options: { txHash: string; nonce?: string }): Promise<ConfirmResponse> {
-    const body: Record<string, unknown> = { tx_hash: options.txHash };
-    if (options.nonce !== undefined) body.nonce = options.nonce;
+  async confirm(options: { txHash: string; nonce: string }): Promise<ConfirmResponse> {
+    const body: Record<string, unknown> = {
+      tx_hash: options.txHash,
+      nonce: options.nonce,
+    };
     const res = await this.post<ConfirmResponse>('/payment/confirm', body);
     if (res.ok && res.token) this.token = res.token;
     return res;
