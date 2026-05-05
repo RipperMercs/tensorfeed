@@ -1251,16 +1251,38 @@ export async function validateAndCharge(
   return { ok: true, credits_remaining: record.balance };
 }
 
-// === Federated AFTA rail: validate + commit (split flow for sister sites) ===
+// === Federated AFTA rail: reserve + commit (split flow for sister sites) ===
 //
 // The `validateAndCharge` helper above is atomic and good for callers who
 // don't need to honor AFTA no-charge guarantees themselves. Sister sites
 // (TerminalFeed.io, future VR.org) need the deferred-debit model: validate
 // up front, run the handler, then either commit the debit or log a
-// no-charge event. These two helpers expose that flow over the wire.
+// no-charge event. These helpers expose that flow over the wire.
+//
+// Race-safety: validateOnly now atomically decrements the credit balance
+// and writes a per-call reservation record (TTL=5 min). commitInternal
+// consumes the reservation, restoring credits on a no-charge result and
+// finalizing on a charge result. This closes the federation double-spend
+// vector identified in the 2026-05-05 Gemini audit, where parallel
+// validate calls could all see sufficient balance, all serve responses,
+// and only commit afterwards. Without the atomic reserve, an agent with
+// 100 credits could drain N x 50-credit calls by parallelizing.
+
+interface ReservationRecord {
+  token: string;
+  cost: number;
+  reserved_at: string;
+}
+
+const RESERVATION_TTL_SECONDS = 5 * 60;
 
 export type ValidateOnlyResult =
-  | { ok: true; credits_remaining: number; sufficient: boolean }
+  | {
+      ok: true;
+      credits_remaining: number;
+      sufficient: boolean;
+      reservation_id: string;
+    }
   | { ok: false; reason: 'invalid_token' | 'insufficient_credits' };
 
 export async function validateOnly(
@@ -1288,23 +1310,52 @@ export async function validateOnly(
   if (record.balance < cost) {
     return { ok: false, reason: 'insufficient_credits' };
   }
+  // Atomic-reserve: debit the balance up front, hold the value in a
+  // reservation record. commitInternal will either finalize (charge
+  // path: no-op, debit already happened) or restore (no-charge path:
+  // refund the reserved credits to balance). A 5-minute TTL bounds
+  // the worst-case "soft loss" if a sister-site handler crashes
+  // before commit.
+  const reservedFromBalance = record.balance - cost;
+  record.balance = reservedFromBalance;
+  record.last_used = new Date().toISOString();
+  const reservationId = generateNonce();
+  const reservation: ReservationRecord = {
+    token,
+    cost,
+    reserved_at: new Date().toISOString(),
+  };
+  await Promise.all([
+    env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(record)),
+    env.TENSORFEED_CACHE.put(
+      `pay:reservation:${reservationId}`,
+      JSON.stringify(reservation),
+      { expirationTtl: RESERVATION_TTL_SECONDS },
+    ),
+  ]);
   return {
     ok: true,
-    credits_remaining: record.balance,
+    credits_remaining: reservedFromBalance,
     sufficient: true,
+    reservation_id: reservationId,
   };
 }
 
 export type CommitInternalResult =
   | { ok: true; credits_charged: number; balance_after: number; no_charge_reason: NoChargeReason }
-  | { ok: false; reason: 'invalid_token' };
+  | { ok: false; reason: 'invalid_token' | 'reservation_not_found' | 'reservation_mismatch' };
 
 /**
  * Internal commit. Sister sites call this after their handler runs.
- * If `noChargeReason` is set, no debit happens; the event is logged to
- * the AFTA public ledger (`pay:no-charge:{date}`) with the sister-site
- * endpoint path so the network ledger reflects the failure. If null,
- * the debit is committed atomically.
+ * Pass the `reservationId` returned by validateOnly so we can release
+ * the reservation atomically and (if `noChargeReason` is set) restore
+ * the reserved credits to the token balance.
+ *
+ * Backwards-compatibility: callers that omit `reservationId` fall back
+ * to the legacy "decrement-on-commit" path. That path is race-y by
+ * construction (multiple parallel handlers can each commit a charge
+ * past the balance) and is retained only for clients that have not yet
+ * migrated. New federation deployments must thread reservationId.
  *
  * The `endpoint` arg should be the sister-site path (e.g.
  * `/api/premium/quotes/series` on TerminalFeed) so the public no-charge
@@ -1317,9 +1368,10 @@ export async function commitInternal(
     cost: number;
     endpoint: string;
     noChargeReason: NoChargeReason;
+    reservationId?: string;
   },
 ): Promise<CommitInternalResult> {
-  const { token, cost, endpoint, noChargeReason } = args;
+  const { token, cost, endpoint, noChargeReason, reservationId } = args;
   if (
     typeof token !== 'string' ||
     !token ||
@@ -1328,9 +1380,66 @@ export async function commitInternal(
     return { ok: false, reason: 'invalid_token' };
   }
 
+  // === Reservation-aware path (race-safe) ===
+  if (reservationId) {
+    const reservation = (await env.TENSORFEED_CACHE.get(
+      `pay:reservation:${reservationId}`,
+      'json',
+    )) as ReservationRecord | null;
+    if (!reservation) {
+      return { ok: false, reason: 'reservation_not_found' };
+    }
+    if (reservation.token !== token || reservation.cost !== cost) {
+      // Defensive: the reservation must match the call. A mismatch
+      // indicates a buggy or hostile caller; refuse to mutate state.
+      return { ok: false, reason: 'reservation_mismatch' };
+    }
+    // Consume the reservation regardless of outcome so it cannot be
+    // double-committed.
+    await env.TENSORFEED_CACHE.delete(`pay:reservation:${reservationId}`);
+
+    if (noChargeReason !== null) {
+      // Restore the reserved credits to the balance.
+      const record = (await env.TENSORFEED_CACHE.get(
+        `pay:credits:${reservation.token}`,
+        'json',
+      )) as CreditsRecord | null;
+      let balanceAfter = 0;
+      if (record) {
+        record.balance += reservation.cost;
+        record.last_used = new Date().toISOString();
+        balanceAfter = record.balance;
+        await env.TENSORFEED_CACHE.put(
+          `pay:credits:${reservation.token}`,
+          JSON.stringify(record),
+        );
+      }
+      await logNoChargeEvent(env, noChargeReason, endpoint, reservation.cost, reservation.token);
+      return {
+        ok: true,
+        credits_charged: 0,
+        balance_after: balanceAfter,
+        no_charge_reason: noChargeReason,
+      };
+    }
+
+    // Charge path: debit already happened in validateOnly. Just surface
+    // the current balance.
+    const record = (await env.TENSORFEED_CACHE.get(
+      `pay:credits:${reservation.token}`,
+      'json',
+    )) as CreditsRecord | null;
+    return {
+      ok: true,
+      credits_charged: reservation.cost,
+      balance_after: record?.balance ?? 0,
+      no_charge_reason: null,
+    };
+  }
+
+  // === Legacy path (deprecated; race-y) ===
+  // Retained for callers that haven't migrated to the reservation API.
   // No-charge path: log the event without touching the credit balance.
-  // This requires reading the record only to surface balance_after; if
-  // the record is gone, treat balance as 0 (admin burn or race).
   if (noChargeReason !== null) {
     const record = (await env.TENSORFEED_CACHE.get(
       `pay:credits:${token}`,

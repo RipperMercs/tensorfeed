@@ -3503,7 +3503,7 @@ export default {
       if (!secret || !constantTimeEqual(auth, secret)) {
         return jsonResponse({ error: 'unauthorized' }, 401, 0);
       }
-      let body: { token?: unknown; cost?: unknown; endpoint?: unknown; no_charge_reason?: unknown };
+      let body: { token?: unknown; cost?: unknown; endpoint?: unknown; no_charge_reason?: unknown; reservation_id?: unknown };
       try {
         body = await request.json();
       } catch {
@@ -3513,6 +3513,7 @@ export default {
       const costRaw = typeof body?.cost === 'number' ? body.cost : NaN;
       const endpoint = typeof body?.endpoint === 'string' ? body.endpoint : '';
       const reasonRaw = typeof body?.no_charge_reason === 'string' ? body.no_charge_reason : null;
+      const reservationId = typeof body?.reservation_id === 'string' && body.reservation_id ? body.reservation_id : undefined;
       const validReasons: Array<NonNullable<NoChargeReason>> = ['5xx', 'circuit_breaker', 'schema_validation_failure', 'stale_data'];
       const noChargeReason: NoChargeReason =
         reasonRaw && (validReasons as string[]).includes(reasonRaw)
@@ -3522,7 +3523,7 @@ export default {
         return jsonResponse({ error: 'bad_request' }, 400, 0);
       }
       const cost = Math.floor(costRaw);
-      const result = await commitInternal(env, { token, cost, endpoint, noChargeReason });
+      const result = await commitInternal(env, { token, cost, endpoint, noChargeReason, reservationId });
 
       // Fire-and-forget usage logging so the sister-site call appears
       // in the daily revenue + per-token usage history. Mirrors the

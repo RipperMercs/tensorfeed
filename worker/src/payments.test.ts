@@ -26,7 +26,7 @@ import type { Env } from './types';
 interface MockKV {
   get: (key: string, type?: string) => Promise<unknown>;
   put: (key: string, value: string) => Promise<void>;
-  delete: () => Promise<void>;
+  delete: (key: string) => Promise<void>;
   list: () => Promise<{ keys: { name: string }[] }>;
 }
 
@@ -41,7 +41,9 @@ function makeKV(initial: Record<string, unknown> = {}): MockKV {
         store.set(key, value);
       }
     },
-    delete: async () => undefined,
+    delete: async (key: string) => {
+      store.delete(key);
+    },
     list: async () => ({
       keys: Array.from(store.keys()).map(name => ({ name })),
     }),
@@ -333,19 +335,23 @@ describe('welcome bonus', () => {
   });
 });
 
-describe('validateOnly (federated AFTA: read-only check)', () => {
-  it('returns sufficient=true when balance covers cost, no debit', async () => {
+describe('validateOnly (federated AFTA: atomic-reserve)', () => {
+  it('atomically debits the balance and returns a reservation_id', async () => {
     const env = makeEnv();
     seedCredits(env, 50);
     const r = await validateOnly(env, { token: FIXTURE, cost: 1 });
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.credits_remaining).toBe(50);
+      // Balance is decremented atomically (post-2026-05-05 race fix)
+      expect(r.credits_remaining).toBe(49);
       expect(r.sufficient).toBe(true);
+      expect(typeof r.reservation_id).toBe('string');
+      expect(r.reservation_id.length).toBeGreaterThan(0);
     }
-    // Confirm no debit happened
+    // Second validate sees the already-debited balance, so it debits
+    // again. Two validates against a 50-credit token at cost=1 leave 48.
     const r2 = await validateOnly(env, { token: FIXTURE, cost: 1 });
-    if (r2.ok) expect(r2.credits_remaining).toBe(50);
+    if (r2.ok) expect(r2.credits_remaining).toBe(48);
   });
 
   it('returns insufficient_credits when balance < cost', async () => {
@@ -412,9 +418,10 @@ describe('commitInternal (federated AFTA: atomic commit OR no-charge)', () => {
       expect(r.balance_after).toBe(50);
       expect(r.no_charge_reason).toBe('stale_data');
     }
-    // Re-validate to confirm balance is untouched
-    const v = await validateOnly(env, { token: FIXTURE, cost: 1 });
-    if (v.ok) expect(v.credits_remaining).toBe(50);
+    // Read the credits record directly to confirm the balance KV write
+    // didn't actually fire on the no-charge legacy path.
+    const stored = (await env.TENSORFEED_CACHE.get(`pay:credits:${FIXTURE}`, 'json')) as { balance: number } | null;
+    expect(stored?.balance).toBe(50);
   });
 
   it('clamps overdraft to zero on the charge path (race defense)', async () => {
@@ -468,6 +475,131 @@ describe('commitInternal (federated AFTA: atomic commit OR no-charge)', () => {
       expect(r.balance_after).toBe(0);
       expect(r.no_charge_reason).toBe('5xx');
     }
+  });
+});
+
+// ── Federation race protection (reservation flow) ───────────────────
+//
+// Reproduces the attack vector identified in the 2026-05-05 Gemini
+// audit. Pre-fix: parallel validate calls all observed sufficient
+// balance, parallel handlers all served, parallel commits stacked
+// charges past the actual balance. Fix: validateOnly atomically
+// decrements and returns a reservation_id; commitInternal consumes
+// the reservation, restoring credits on no-charge.
+
+describe('reservation flow (validateOnly + commitInternal with reservation_id)', () => {
+  it('charge path: validateOnly debits, commitInternal finalizes without double-debit', async () => {
+    const env = makeEnv();
+    seedCredits(env, 50);
+    const v = await validateOnly(env, { token: FIXTURE, cost: 5 });
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+    expect(v.credits_remaining).toBe(45); // already debited
+
+    const c = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 5,
+      endpoint: '/api/premium/test',
+      noChargeReason: null,
+      reservationId: v.reservation_id,
+    });
+    expect(c.ok).toBe(true);
+    if (!c.ok) return;
+    expect(c.credits_charged).toBe(5);
+    expect(c.balance_after).toBe(45); // unchanged: validate already debited
+  });
+
+  it('no-charge path: validateOnly debits, commitInternal restores the reserved credits', async () => {
+    const env = makeEnv();
+    seedCredits(env, 50);
+    const v = await validateOnly(env, { token: FIXTURE, cost: 5 });
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+    expect(v.credits_remaining).toBe(45);
+
+    const c = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 5,
+      endpoint: '/api/premium/test',
+      noChargeReason: 'stale_data',
+      reservationId: v.reservation_id,
+    });
+    expect(c.ok).toBe(true);
+    if (!c.ok) return;
+    expect(c.credits_charged).toBe(0);
+    expect(c.balance_after).toBe(50); // restored to pre-validate level
+    expect(c.no_charge_reason).toBe('stale_data');
+  });
+
+  it('parallel-attack scenario: serialized validates correctly bottleneck on balance', async () => {
+    const env = makeEnv();
+    seedCredits(env, 100);
+    // Simulate 3 parallel validate calls of cost 50 each. Pre-fix this
+    // would all return sufficient=true. Post-fix only the first two
+    // succeed (50+50=100), the third is rejected for insufficient
+    // credits because the balance was already drawn down.
+    const r1 = await validateOnly(env, { token: FIXTURE, cost: 50 });
+    const r2 = await validateOnly(env, { token: FIXTURE, cost: 50 });
+    const r3 = await validateOnly(env, { token: FIXTURE, cost: 50 });
+    expect(r1.ok).toBe(true);
+    expect(r2.ok).toBe(true);
+    expect(r3.ok).toBe(false);
+    if (!r3.ok) expect(r3.reason).toBe('insufficient_credits');
+  });
+
+  it('rejects commit if reservation_id was never issued', async () => {
+    const env = makeEnv();
+    seedCredits(env, 50);
+    const c = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 5,
+      endpoint: '/api/premium/test',
+      noChargeReason: null,
+      reservationId: 'tf-deadbeef0000',
+    });
+    expect(c.ok).toBe(false);
+    if (!c.ok) expect(c.reason).toBe('reservation_not_found');
+  });
+
+  it('rejects commit if reservation_id was already consumed (no double-commit)', async () => {
+    const env = makeEnv();
+    seedCredits(env, 50);
+    const v = await validateOnly(env, { token: FIXTURE, cost: 5 });
+    if (!v.ok) return;
+    const first = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 5,
+      endpoint: '/api/premium/test',
+      noChargeReason: null,
+      reservationId: v.reservation_id,
+    });
+    expect(first.ok).toBe(true);
+    const second = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 5,
+      endpoint: '/api/premium/test',
+      noChargeReason: null,
+      reservationId: v.reservation_id,
+    });
+    expect(second.ok).toBe(false);
+    if (!second.ok) expect(second.reason).toBe('reservation_not_found');
+  });
+
+  it('rejects commit if reservation token or cost does not match (defense against forged ids)', async () => {
+    const env = makeEnv();
+    seedCredits(env, 50);
+    const v = await validateOnly(env, { token: FIXTURE, cost: 5 });
+    if (!v.ok) return;
+    // Caller tries to commit a different cost than was reserved
+    const c = await commitInternal(env, {
+      token: FIXTURE,
+      cost: 999,
+      endpoint: '/api/premium/test',
+      noChargeReason: null,
+      reservationId: v.reservation_id,
+    });
+    expect(c.ok).toBe(false);
+    if (!c.ok) expect(c.reason).toBe('reservation_mismatch');
   });
 });
 
