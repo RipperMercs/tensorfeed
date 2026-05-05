@@ -38,10 +38,78 @@ function normalizeStatus(s: string): 'ok' | 'warn' | 'down' {
   return 'ok';
 }
 
+// Poll /api/status/summary at the same cadence the alert bar uses, so the
+// homepage StatusGrid stays consistent with the live /status dashboard
+// even when the static export's build-time snapshot is stale (e.g. when
+// a transient Gemini degradation gets baked into the HTML and the next
+// Pages rebuild is 15 minutes away). See feedback memory:
+// inconsistent-display-bug. Latency / sparkline data stays seeded from
+// the initial render since those are synthetic anyway.
+const STATUS_POLL_INTERVAL_MS = 90_000;
+
+function normalizeForGrid(s: string): 'ok' | 'warn' | 'down' {
+  const v = s.toLowerCase();
+  if (v === 'down' || v === 'outage' || v === 'major') return 'down';
+  if (v === 'degraded' || v === 'partial' || v === 'warn') return 'warn';
+  return 'ok';
+}
+
 export default function StatusGrid({ services }: StatusGridProps) {
   const [pulseIdx, setPulseIdx] = useState(-1);
+  const [liveServices, setLiveServices] = useState<StatusGridService[]>(services);
 
-  const safeServices = useMemo(() => services.slice(0, 12), [services]);
+  // Re-sync local state when the prop changes (e.g. after a Pages rebuild
+  // ships a fresher build-time snapshot).
+  useEffect(() => {
+    setLiveServices(services);
+  }, [services]);
+
+  // Client-side status refresh. Pulls /api/status/summary every 90 seconds
+  // and updates each service's status field while preserving latency and
+  // sparkline shape.
+  useEffect(() => {
+    let cancelled = false;
+    const fetchOnce = async () => {
+      try {
+        const res = await fetch('/api/status/summary', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          ok?: boolean;
+          services?: { name: string; status: string }[];
+        };
+        if (!data.ok || !Array.isArray(data.services)) return;
+        const apiServices = data.services.map((s) => ({
+          name: s.name.toLowerCase(),
+          status: s.status,
+        }));
+        if (cancelled) return;
+        setLiveServices((current) =>
+          current.map((svc) => {
+            // The grid uses short names ("Claude") while the API uses full
+            // names ("Claude API"). Match by substring in either direction.
+            const lc = svc.name.toLowerCase();
+            const match = apiServices.find(
+              (a) => a.name === lc || a.name.includes(lc) || lc.includes(a.name),
+            );
+            if (!match) return svc;
+            const fresh = normalizeForGrid(match.status);
+            if (fresh === svc.status) return svc;
+            return { ...svc, status: fresh, lastCheck: 'just now' };
+          }),
+        );
+      } catch {
+        // Network blip; keep last-known-good state until the next poll.
+      }
+    };
+    fetchOnce();
+    const t = setInterval(fetchOnce, STATUS_POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, []);
+
+  const safeServices = useMemo(() => liveServices.slice(0, 12), [liveServices]);
 
   useEffect(() => {
     if (safeServices.length === 0) return;
