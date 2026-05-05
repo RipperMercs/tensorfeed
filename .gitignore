@@ -59,3 +59,7 @@ mcp-server/.secrets/
 
 # Cloned MCP registry repo (used to build the publisher CLI; not source)
 mcp-server/registry/
+
+# Claude Code internal state (per-session, not source)
+.claude/scheduled_tasks.lock
+.claude/*.lock

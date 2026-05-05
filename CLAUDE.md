@@ -19,9 +19,7 @@ scripts/         Prebuild: fetch-feeds.ts, generate-llms-full.ts
 mcp-server/      MCP server exposing TensorFeed data to Claude Desktop
 sdk/python/      Python SDK (pip install tensorfeed)
 sdk/javascript/  TypeScript SDK (npm install tensorfeed)
-docs/ARCHITECTURE.md         Detailed reference (Worker modules, KV layout, endpoints, subsystems, cron)
-AGENT-PAYMENTS-SPEC.md       Canonical agent payments architecture
-AGENT-PAYMENTS-PHASE-0-SPEC.md  Phase 0 snapshotting deliverable
+docs/ARCHITECTURE.md         Detailed reference (Worker modules, KV layout, endpoints, subsystems, cron, agent payments architecture, CI workflows)
 ```
 
 For details on the Worker modules, KV namespaces and prefixes, cron schedule, every API endpoint, design tokens, security subsystems (chaos, circuit breaker, rate limit, sanitize, OFAC), agent payments architecture, X posting cadence, and email addresses, read `docs/ARCHITECTURE.md`. The endpoint catalog is also live at `/api/meta` and `/developers`.

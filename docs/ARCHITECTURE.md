@@ -344,7 +344,7 @@ TensorFeed sells premium API access to AI agents via USDC on Base mainnet. No ac
 
 **Welcome bonus (shipped 2026-04-29):** Brand-new sender wallets get 50 free credits ($1.00 of value) on their first successful USDC payment, on top of the base rate. Applied automatically on both `/api/payment/confirm` and the x402 fallback. Backed by `pay:wallet-seen:{address}` (no TTL) marker in `TENSORFEED_CACHE`. The `confirmPayment` response surfaces `welcome_bonus_credits` and `is_first_payment` so SDKs can show the bonus to users. Helpers `checkAndMarkFirstPayment` and `markWalletSeen` are exported from `payments.ts` for unit testing. Race condition (two simultaneous first payments from the same wallet both seeing null marker) is accepted; worst case is one extra $1 of credits, capped per wallet.
 
-Architecture (full detail in `AGENT-PAYMENTS-SPEC.md`):
+Architecture:
 - Credits-first flow primary, x402 per-call as fallback for one-off discovery
 - Bearer token (`tf_live_<256-bit hex>`) is a debit account; each premium call decrements credits
 - On-chain verification reads the USDC Transfer event from `eth_getTransactionReceipt` on Base RPC
