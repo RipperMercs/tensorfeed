@@ -1040,6 +1040,29 @@ export default {
 
     // === AI CONFERENCES (cached 600s) ===
 
+    // === MODEL DEPRECATIONS (cached 600s) ===
+    //
+    // Provider-by-provider lifecycle calendar of model retirements and
+    // deprecation announcements. Curated from each provider's own
+    // notice page. Free tier; agents reading the AI ecosystem can pull
+    // this directly to know which models will stop accepting traffic
+    // and when, plus the recommended replacement.
+    if (path === '/api/model-deprecations') {
+      const { MODEL_DEPRECATIONS, MODEL_DEPRECATIONS_LAST_UPDATED } = await import('./model-deprecations');
+      const provider = url.searchParams.get('provider');
+      const status = url.searchParams.get('status');
+      let entries = MODEL_DEPRECATIONS;
+      if (provider) entries = entries.filter(d => d.provider.toLowerCase() === provider.toLowerCase());
+      if (status) entries = entries.filter(d => d.status === status);
+      // Sort by most recent activity first (sunset > deprecation > announce date).
+      entries = [...entries].sort((a, b) => {
+        const aDate = a.sunsetDate || a.deprecationDate || a.announcedDate || '';
+        const bDate = b.sunsetDate || b.deprecationDate || b.announcedDate || '';
+        return bDate.localeCompare(aDate);
+      });
+      return jsonResponse({ ok: true, source: 'tensorfeed.ai', lastUpdated: MODEL_DEPRECATIONS_LAST_UPDATED, count: entries.length, deprecations: entries }, 200, 600);
+    }
+
     if (path === '/api/conferences') {
       const { CONFERENCES, CONFERENCES_LAST_UPDATED } = await import('./conferences');
       const categoryFilter = url.searchParams.get('category');
@@ -1676,6 +1699,7 @@ export default {
           ossTools: '/api/oss-tools?category=runtime|inference-server|fine-tuning|ui|eval|training|observability|edge',
           aiPolicy: '/api/ai-policy?status=active|pending|proposed|stalled&jurisdiction=EU|US|UK|China|Korea',
           conferences: '/api/conferences?category=research|industry|developer|community&upcoming=true',
+          modelDeprecations: '/api/model-deprecations?provider=OpenAI|Anthropic|Google|Cohere|...&status=announced|deprecated|sunsetted',
           computeProviders: '/api/compute-providers?type=gpu-cloud|hyperscaler|ai-serverless|marketplace|specialized',
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
