@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'coinbase-armstrong-14-percent-ai-native-pivot',
+    title: "Coinbase Cuts 14%. Brian Armstrong's Memo Is the First Agent-Native Layoff at Scale.",
+    author: 'Ripper',
+    date: 'May 5, 2026',
+    readTime: '8 min read',
+    description:
+      "Brian Armstrong cut roughly 14% of Coinbase today and his all-hands memo named the reason: AI is changing how the company works, and the new Coinbase will be 'an intelligence, with humans around the edge aligning it.' The first major public-company CEO to reorganize the org around fleets of agents, with one-person teams, no pure managers, and 5 layers max. Inside the five operational claims, the timing, the severance, the honest counter, and what just changed for every other CEO.",
+  },
+  {
     slug: 'anthropic-finance-agents-wall-street',
     title: 'Anthropic Just Shipped 10 Wall Street Agents. The Frontier Lab Is Now a Vendor.',
     author: 'Kira Nolan',
