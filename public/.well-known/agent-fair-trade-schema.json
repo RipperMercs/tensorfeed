@@ -160,17 +160,18 @@
         },
         "network_federation": {
           "type": "object",
-          "description": "Adopters that share a payment rail can federate trust at the credit level. Sister sites in a federation accept each other's bearer tokens via a server-to-server validate + commit handshake, so the user experience is reciprocal access on a single token. Each site signs its own receipts with its own keypair; the federation does NOT share private keys.",
+          "description": "Adopters that share a payment rail can federate trust at the credit level. Sister sites in a federation accept each other's bearer tokens via a server-to-server reserve + commit handshake, so the user experience is reciprocal access on a single token. Each site signs its own receipts with its own keypair; the federation does NOT share private keys.",
           "properties": {
             "description": { "type": "string" },
             "rail_endpoints": {
               "type": "object",
-              "description": "Server-to-server endpoints each federation member exposes (or that one member hosts on behalf of the federation). Recommended shape: validate (read-only token + balance check), commit (atomic debit OR no-charge log).",
+              "description": "Server-to-server endpoints each federation member exposes (or that one member hosts on behalf of the federation). Required shape (post-2026-05-05): validate atomically debits and returns a per-call reservation_id; commit consumes the reservation, restoring credits on a no-charge result. The reservation_id binding closes the federation double-spend race identified in the 2026-05-05 AFTA security audit.",
               "properties": {
-                "validate": { "type": "string", "description": "Path or signature of the validate endpoint." },
-                "commit": { "type": "string", "description": "Path or signature of the commit endpoint." },
+                "validate": { "type": "string", "description": "Path or signature of the validate endpoint. MUST atomically debit the credit balance and return a reservation_id with a TTL of at least 5 minutes." },
+                "commit": { "type": "string", "description": "Path or signature of the commit endpoint. MUST accept the reservation_id from validate and consume it. On a no-charge result, MUST restore the reserved credits to the balance. SHOULD reject calls whose token or cost differ from the validated reservation as reservation_mismatch." },
                 "auth_header": { "type": "string", "description": "Auth scheme for the rail (typically a constant-time-compared shared secret)." },
-                "ledger": { "type": "string", "description": "Where no-charge events are recorded. Recommended pattern: each site keeps a local copy AND mirrors to the host's ledger via the no_charge_reason field on commit, so audit endpoints work without a round-trip and the network ledger stays correct." }
+                "ledger": { "type": "string", "description": "Where no-charge events are recorded. Recommended pattern: each site keeps a local copy AND mirrors to the host's ledger via the no_charge_reason field on commit, so audit endpoints work without a round-trip and the network ledger stays correct." },
+                "race_safety": { "type": "string", "description": "Optional: human-readable description of the race-safety properties of the rail." }
               }
             },
             "current_federation": {

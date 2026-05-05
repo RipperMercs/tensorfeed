@@ -141,12 +141,13 @@
       }
     ],
     "network_federation": {
-      "description": "AFTA adopters that share a payment rail can federate trust at the credit level. Sister sites in a federation accept each other's bearer tokens via a server-to-server validate + commit handshake, so the user experience is reciprocal access on a single token. Each site signs its own receipts with its own keypair; the federation does not share private keys.",
+      "description": "AFTA adopters that share a payment rail can federate trust at the credit level. Sister sites in a federation accept each other's bearer tokens via a server-to-server reserve + commit handshake, so the user experience is reciprocal access on a single token. Each site signs its own receipts with its own keypair; the federation does not share private keys.",
       "rail_endpoints": {
-        "validate": "POST /api/internal/validate { token, cost } -> { ok, credits_remaining, sufficient }",
-        "commit": "POST /api/internal/commit { token, cost, endpoint, no_charge_reason? } -> { ok, credits_charged, balance_after, no_charge_reason }",
+        "validate": "POST /api/internal/validate { token, cost } -> { ok, credits_remaining, sufficient, reservation_id }. Atomically debits the credit balance and writes a per-call reservation with a 5-minute TTL. The reservation_id MUST be threaded back to commit.",
+        "commit": "POST /api/internal/commit { token, cost, endpoint, no_charge_reason?, reservation_id? } -> { ok, credits_charged, balance_after, no_charge_reason }. With reservation_id: consumes the reservation atomically (charge: no-op since debit already happened; no-charge: restores reserved credits). Mismatched token/cost is rejected as reservation_mismatch. Calls without reservation_id fall back to the legacy (race-y) path for backwards-compat with pre-2026-05-05 callers.",
         "auth_header": "X-Internal-Auth (constant-time check against shared secret)",
-        "ledger": "No-charge events from federated sites land in the host's pay:no-charge:{date} ledger with the sister-site endpoint path, so the public no-charge record reflects the network."
+        "ledger": "No-charge events from federated sites land in the host's pay:no-charge:{date} ledger with the sister-site endpoint path, so the public no-charge record reflects the network.",
+        "race_safety": "The reserve + commit + reservation_id design closes the federation double-spend race identified in the 2026-05-05 AFTA security audit. See SECURITY.md and the whitepaper threat model for the full attack tree."
       },
       "current_federation": [
         {
@@ -158,5 +159,5 @@
       ]
     }
   },
-  "lastUpdated": "2026-04-30"
+  "lastUpdated": "2026-05-05"
 }
