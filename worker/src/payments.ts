@@ -103,7 +103,19 @@ interface TxRecord {
   // (pre-2026-05-05) records; on the x402 path, missing values fail
   // closed and force the original bearer-token flow.
   sender_wallet?: string;
+  // Short-lived claim-intent marker. Set true on the placeholder record
+  // written BEFORE on-chain verification; unset on the final record
+  // written AFTER verification succeeds. Closes the cross-PoP KV
+  // propagation race that previously allowed a single tx_hash to mint
+  // N independent tokens via concurrent /api/payment/confirm calls
+  // landing on different Cloudflare PoPs. Pending records carry a 60s
+  // TTL so a transient verification failure self-heals.
+  pending?: boolean;
 }
+
+// TTL for the in-flight claim placeholder. Sized to cover Cloudflare
+// KV's documented worst-case global propagation window (~60 seconds).
+const CLAIM_INTENT_TTL_SECONDS = 60;
 
 interface DailyRollup {
   date: string;
@@ -865,6 +877,15 @@ export async function confirmPayment(
 
   const existingTx = (await env.TENSORFEED_CACHE.get(`pay:tx:${txHash}`, 'json')) as TxRecord | null;
   if (existingTx) {
+    if (existingTx.pending) {
+      return {
+        ok: false,
+        error: 'tx_in_flight',
+        reason:
+          'This transaction is already being processed by another request. Wait up to 60 seconds and retry; if verification ultimately fails the pending record expires and a fresh confirm will succeed.',
+        status: 409,
+      };
+    }
     return {
       ok: false,
       error: 'tx_already_claimed',
@@ -899,8 +920,29 @@ export async function confirmPayment(
     };
   }
 
+  // Claim-intent: stake the tx_hash slot BEFORE the (slow) on-chain
+  // verification round-trip. Other PoPs reading pay:tx:${txHash} will
+  // see the pending record and bail with tx_in_flight, dramatically
+  // shrinking the cross-PoP race window that previously allowed N
+  // independent token mints from one on-chain payment. TTL=60s so a
+  // transient RPC failure auto-heals.
+  await env.TENSORFEED_CACHE.put(
+    `pay:tx:${txHash}`,
+    JSON.stringify({
+      amount_usd: 0,
+      credits: 0,
+      token: '',
+      created: new Date().toISOString(),
+      pending: true,
+    } as TxRecord),
+    { expirationTtl: CLAIM_INTENT_TTL_SECONDS },
+  );
+
   const verified = await verifyBaseUSDCTransaction(txHash, env);
   if (!verified.ok) {
+    // Leave the pending record to expire naturally; deleting it would
+    // re-open the race for the duration of the delete propagation. Caller
+    // can retry after the TTL.
     return { ok: false, error: 'verification_failed', reason: verified.reason };
   }
 
@@ -1537,6 +1579,23 @@ export async function requirePayment(
 
     const existing = (await env.TENSORFEED_CACHE.get(`pay:tx:${txHash}`, 'json')) as TxRecord | null;
     if (existing) {
+      // Pending claim-intent (a concurrent confirm is in flight): bail
+      // with tx_in_flight so the second request does not duplicate-mint
+      // off the same on-chain payment. TTL is 60s.
+      if (existing.pending) {
+        return {
+          paid: false,
+          response: jsonResponse(
+            {
+              ok: false,
+              error: 'tx_in_flight',
+              message:
+                'This tx is already being processed by another request. Retry in a few seconds.',
+            },
+            409,
+          ),
+        };
+      }
       // Existing-tx re-use: only the original on-chain sender (whose
       // address is recorded on the TxRecord) may charge against the
       // already-issued token. Legacy records without sender_wallet fail
@@ -1585,8 +1644,27 @@ export async function requirePayment(
       };
     }
 
+    // Claim-intent: stake the tx_hash slot BEFORE the on-chain
+    // verification round-trip. Same purpose as in confirmPayment:
+    // shrinks the cross-PoP KV race window that would otherwise let a
+    // single tx_hash mint multiple tokens from concurrent x402 calls.
+    await env.TENSORFEED_CACHE.put(
+      `pay:tx:${txHash}`,
+      JSON.stringify({
+        amount_usd: 0,
+        credits: 0,
+        token: '',
+        created: new Date().toISOString(),
+        pending: true,
+      } as TxRecord),
+      { expirationTtl: CLAIM_INTENT_TTL_SECONDS },
+    );
+
     const verified = await verifyBaseUSDCTransaction(txHash, env);
     if (!verified.ok) {
+      // Leave the pending record to expire (60s); avoiding delete sidesteps
+      // the propagation race that motivated the claim-intent in the first
+      // place.
       return {
         paid: false,
         response: jsonResponse(
