@@ -164,9 +164,9 @@ export default function StatusGrid({ services }: StatusGridProps) {
         const className = `tf-status-card relative block transition-colors ${statusClass} ${pulseIdx === i ? 'changed' : ''}`;
         const cardBackground =
           status === 'down'
-            ? 'linear-gradient(135deg, rgba(239,68,68,0.20), rgba(239,68,68,0.06))'
+            ? 'linear-gradient(135deg, rgba(239,68,68,0.55) 0%, rgba(239,68,68,0.28) 50%, rgba(239,68,68,0.14) 100%)'
             : status === 'warn'
-              ? 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(245,158,11,0.05))'
+              ? 'linear-gradient(135deg, rgba(245,158,11,0.50) 0%, rgba(245,158,11,0.24) 50%, rgba(245,158,11,0.10) 100%)'
               : 'var(--bg-secondary)';
         const cardStyle = {
           background: cardBackground,
