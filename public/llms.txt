@@ -333,6 +333,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [Is Replicate Down?](https://tensorfeed.ai/is-replicate-down): Live Replicate status
 - [Is Cohere Down?](https://tensorfeed.ai/is-cohere-down): Live Cohere status
 - [Is AWS Bedrock Down?](https://tensorfeed.ai/is-bedrock-down): Live AWS Bedrock status with per-region detail. Filtered from the AWS Health currentevents feed every 2 minutes so only events affecting Bedrock surface, not the rest of AWS.
+- [Is Azure OpenAI Down?](https://tensorfeed.ai/is-azure-openai-down): Live Azure OpenAI Service status. Filtered from Microsoft's Azure status RSS feed every 2 minutes against keywords (azure openai, openai service, cognitive services, ai foundry) so only items affecting OpenAI on Azure surface, not unrelated Azure components. Same monitoring covers all the Microsoft naming variants.
 
 ## VR / AR / XR (sourced from vr.org)
 

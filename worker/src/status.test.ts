@@ -18,6 +18,9 @@ const {
   aggregateAwsStatus,
   awsEventAffectsService,
   awsEventSeverity,
+  aggregateAzureStatus,
+  parseAzureRssItems,
+  azureItemSeverity,
 } = _internal;
 
 describe('aggregateCoreStatus', () => {
@@ -357,5 +360,151 @@ describe('AWS Health currentevents parser (Bedrock)', () => {
     expect(awsEventSeverity({ summary: 'Latency in InvokeModel' })).toBe('degraded');
     expect(awsEventSeverity({ summary: 'Service unavailable' })).toBe('down');
     expect(awsEventSeverity({ summary: 'Major service disruption in us-east-1' })).toBe('down');
+  });
+});
+
+describe('Azure status RSS parser (Azure OpenAI)', () => {
+  const KEYWORDS = ['azure openai', 'cognitive services', 'ai foundry'];
+
+  it('reports operational when feed has zero items (Azure all-clear state)', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <title>Azure Status</title>
+      <lastBuildDate>Tue, 05 May 2026 05:04:00 Z</lastBuildDate>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    expect(items).toEqual([]);
+    const r = aggregateAzureStatus(items, KEYWORDS);
+    expect(r.status).toBe('operational');
+    expect(r.affected).toEqual([]);
+  });
+
+  it('reports operational when items exist but none match the keyword filter', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <item>
+        <title>Storage Accounts - West Europe</title>
+        <description>Increased latency for Storage Blob</description>
+        <pubDate>Tue, 05 May 2026 04:00:00 Z</pubDate>
+      </item>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    expect(items).toHaveLength(1);
+    const r = aggregateAzureStatus(items, KEYWORDS);
+    expect(r.status).toBe('operational');
+  });
+
+  it('reports degraded when an item matches via title and severity is mild', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <item>
+        <title>Azure OpenAI - East US 2 - Increased error rates</title>
+        <description>Customers may experience elevated 429 responses for chat completions.</description>
+        <pubDate>Tue, 05 May 2026 04:00:00 Z</pubDate>
+      </item>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    const r = aggregateAzureStatus(items, KEYWORDS);
+    expect(r.status).toBe('degraded');
+    expect(r.affected[0].name).toContain('Azure OpenAI');
+  });
+
+  it('reports down when item text indicates a major outage', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <item>
+        <title>Azure OpenAI Service Disruption - Multiple regions</title>
+        <description>Service unavailable in East US, West US, and North Europe.</description>
+        <pubDate>Tue, 05 May 2026 04:00:00 Z</pubDate>
+      </item>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    const r = aggregateAzureStatus(items, KEYWORDS);
+    expect(r.status).toBe('down');
+    expect(r.affected[0].status).toBe('down');
+  });
+
+  it('matches via description when the title is generic', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <item>
+        <title>Cognitive Services - Multi-region issue</title>
+        <description>Several customers using cognitive services are reporting issues</description>
+        <pubDate>Tue, 05 May 2026 04:00:00 Z</pubDate>
+      </item>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    const r = aggregateAzureStatus(items, KEYWORDS);
+    expect(r.status).toBe('degraded');
+  });
+
+  it('escalates to down when ANY matching item is severe (worst-of)', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <item>
+        <title>Azure OpenAI - West US - Latency</title>
+        <description>Some customers experiencing elevated latency.</description>
+      </item>
+      <item>
+        <title>Azure OpenAI - East US - Service unavailable</title>
+        <description>Severe disruption affecting all chat completions.</description>
+      </item>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    expect(items).toHaveLength(2);
+    const r = aggregateAzureStatus(items, KEYWORDS);
+    expect(r.status).toBe('down');
+    expect(r.affected).toHaveLength(2);
+  });
+
+  it('strips CDATA wrappers and embedded HTML from descriptions', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <item>
+        <title><![CDATA[Azure OpenAI - <b>Brief</b> issue]]></title>
+        <description><![CDATA[<p>Some customers are seeing <strong>increased</strong> error rates.</p>]]></description>
+      </item>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    expect(items[0].title).toBe('Azure OpenAI - Brief issue');
+    expect(items[0].description).toContain('Some customers are seeing');
+    expect(items[0].description).not.toContain('<strong>');
+  });
+
+  it('handles RSS items with attributes on the opening tag', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <item rdf:about="urn:azure:1">
+        <title>Azure OpenAI issue</title>
+        <description>Issue text</description>
+      </item>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    expect(items).toHaveLength(1);
+    expect(items[0].title).toBe('Azure OpenAI issue');
+  });
+
+  it('truncates long titles in the affected list to fit small UI labels', () => {
+    const longTitle = 'Azure OpenAI - ' + 'A'.repeat(150);
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <item><title>${longTitle}</title><description>x</description></item>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    const r = aggregateAzureStatus(items, KEYWORDS);
+    expect(r.affected[0].name.length).toBeLessThanOrEqual(80);
+    expect(r.affected[0].name.endsWith('...')).toBe(true);
+  });
+
+  it('keyword match is case-insensitive', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <item><title>AZURE OPENAI degradation</title><description>x</description></item>
+    </channel></rss>`;
+    const items = parseAzureRssItems(xml);
+    const r = aggregateAzureStatus(items, KEYWORDS);
+    expect(r.status).toBe('degraded');
+  });
+
+  it('azureItemSeverity defaults to degraded when no severe keywords present', () => {
+    expect(
+      azureItemSeverity({ title: 'Azure OpenAI - East US', description: 'Increased latency', pubDate: '' }),
+    ).toBe('degraded');
+    expect(
+      azureItemSeverity({ title: 'Azure OpenAI - East US', description: 'Service unavailable', pubDate: '' }),
+    ).toBe('down');
+    expect(
+      azureItemSeverity({ title: 'Azure OpenAI - Major outage', description: '', pubDate: '' }),
+    ).toBe('down');
   });
 });

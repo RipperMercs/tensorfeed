@@ -242,6 +242,90 @@ export function aggregateAwsStatus(
   return { status: headline, affected };
 }
 
+// ── Azure status RSS parser (Azure OpenAI) ───────────────────────────
+// Azure publishes one global RSS feed across every Azure service. The
+// feed is empty when nothing's wrong (channel metadata only, no items),
+// and populates with one item per active issue when there is. We filter
+// items by keyword match against title + description, then derive
+// severity from the same text-keyword approach as the AWS parser.
+export interface AzureRssItem {
+  title: string;
+  description: string;
+  pubDate: string;
+}
+
+export function parseAzureRssItems(xml: string): AzureRssItem[] {
+  const items: AzureRssItem[] = [];
+  // Split on <item> opening tag (allow attributes on the tag)
+  const blocks = xml.split(/<item[\s>]/i).slice(1);
+  for (const block of blocks) {
+    items.push({
+      title: extractAndStripTag(block, 'title'),
+      description: extractAndStripTag(block, 'description'),
+      pubDate: extractAndStripTag(block, 'pubDate'),
+    });
+  }
+  return items;
+}
+
+function extractAndStripTag(xml: string, tag: string): string {
+  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'i');
+  const m = xml.match(re);
+  if (!m) return '';
+  let val = m[1];
+  // Strip CDATA wrappers
+  val = val.replace(/^\s*<!\[CDATA\[/, '').replace(/\]\]>\s*$/, '');
+  // Strip embedded HTML tags (Azure descriptions are HTML inside CDATA)
+  val = val.replace(/<[^>]+>/g, ' ');
+  // Decode common entities
+  val = val
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+  return val.replace(/\s+/g, ' ').trim();
+}
+
+function azureItemSeverity(item: AzureRssItem): 'down' | 'degraded' {
+  const haystack = `${item.title} ${item.description}`.toLowerCase();
+  if (
+    haystack.includes('unavailable') ||
+    haystack.includes('outage') ||
+    haystack.includes('service disruption') ||
+    haystack.includes('major')
+  ) {
+    return 'down';
+  }
+  return 'degraded';
+}
+
+export function aggregateAzureStatus(
+  items: AzureRssItem[],
+  keywords: string[],
+): { status: 'operational' | 'degraded' | 'down' | 'unknown'; affected: { name: string; status: string }[] } {
+  const lcKeywords = keywords.map((k) => k.toLowerCase());
+  const matching = items.filter((item) => {
+    const haystack = `${item.title} ${item.description}`.toLowerCase();
+    return lcKeywords.some((k) => haystack.includes(k));
+  });
+
+  if (matching.length === 0) {
+    return { status: 'operational', affected: [] };
+  }
+
+  const hasDown = matching.some((item) => azureItemSeverity(item) === 'down');
+  const headline: 'down' | 'degraded' = hasDown ? 'down' : 'degraded';
+
+  const affected = matching.map((item) => ({
+    // Truncate so we don't overflow a small UI label
+    name: item.title.length > 80 ? item.title.slice(0, 77) + '...' : item.title,
+    status: azureItemSeverity(item),
+  }));
+  return { status: headline, affected };
+}
+
 // Exported only for unit tests.
 export const _internal = {
   normalizeInstatusComponentStatus,
@@ -250,6 +334,9 @@ export const _internal = {
   aggregateAwsStatus,
   awsEventAffectsService,
   awsEventSeverity,
+  aggregateAzureStatus,
+  parseAzureRssItems,
+  azureItemSeverity,
 };
 
 function parseHtmlStatus(html: string): 'operational' | 'degraded' | 'down' | 'unknown' {
@@ -342,6 +429,22 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
       const events: AwsEvent[] = await response.json();
       const match = service.awsServiceMatch || '';
       const { status: headlineStatus, affected } = aggregateAwsStatus(events, match);
+      return {
+        name: service.name,
+        provider: service.provider,
+        status: headlineStatus,
+        statusPageUrl: service.statusPageUrl,
+        components: affected.slice(0, 6),
+        lastChecked: new Date().toISOString(),
+      };
+    }
+
+    // Azure status RSS (Azure OpenAI)
+    if (service.type === 'azure-rss') {
+      const xml = await response.text();
+      const items = parseAzureRssItems(xml);
+      const keywords = service.azureKeywords || [];
+      const { status: headlineStatus, affected } = aggregateAzureStatus(items, keywords);
       return {
         name: service.name,
         provider: service.provider,

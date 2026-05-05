@@ -37,6 +37,7 @@ const SERVICE_HREFS: Record<string, string> = {
   Midjourney: '/is-midjourney-down',
   'AWS Bedrock': '/is-bedrock-down',
   Bedrock: '/is-bedrock-down',
+  'Azure OpenAI': '/is-azure-openai-down',
 };
 
 const POLL_INTERVAL_MS = 90_000;

@@ -69,6 +69,7 @@ const SERVICE_SLUGS: Record<string, string> = {
   'Gemini': 'is-gemini-down',
   'AWS Bedrock': 'is-bedrock-down',
   'Bedrock': 'is-bedrock-down',
+  'Azure OpenAI': 'is-azure-openai-down',
   'Mistral Platform': 'is-mistral-down',
   'Mistral': 'is-mistral-down',
   'Cohere': 'is-cohere-down',

@@ -108,8 +108,9 @@ export interface StatusPageConfig {
   // instatus:      Instatus summary.json (Perplexity)
   // gcp-incidents: Google Cloud incidents.json (Vertex/Gemini)
   // aws-events:    AWS Health currentevents.json (Bedrock)
+  // azure-rss:     Azure status RSS feed, filtered by keyword (Azure OpenAI)
   // html:          fallback for status pages without a JSON API
-  type: 'statuspage' | 'instatus' | 'gcp-incidents' | 'aws-events' | 'html';
+  type: 'statuspage' | 'instatus' | 'gcp-incidents' | 'aws-events' | 'azure-rss' | 'html';
   // Optional component name patterns. When set, only matching components
   // are considered for headline status and display. Used for shared status
   // pages where most components are irrelevant (e.g. GitHub's status page
@@ -125,6 +126,11 @@ export interface StatusPageConfig {
   // events affecting this provider. AWS doesn't publish per-service
   // status feeds, only a global currentevents stream we filter.
   awsServiceMatch?: string;
+  // For azure-rss: list of substring keywords (case-insensitive) matched
+  // against item title + description to identify items affecting this
+  // provider. Azure publishes one global RSS feed across all of Azure;
+  // we filter to Azure OpenAI by matching common naming variants.
+  azureKeywords?: string[];
 }
 
 export const STATUS_PAGES: StatusPageConfig[] = [
@@ -182,6 +188,22 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     statusPageUrl: 'https://health.aws.amazon.com/health/status',
     type: 'aws-events',
     awsServiceMatch: 'bedrock',
+  },
+  {
+    name: 'Azure OpenAI',
+    provider: 'Microsoft Azure',
+    url: 'https://azure.status.microsoft/en-us/status/feed/',
+    statusPageUrl: 'https://azure.status.microsoft/en-us/status',
+    type: 'azure-rss',
+    // Azure has shipped these branding variants over time; match all.
+    // The "AI Foundry" rebrand is the newest umbrella name.
+    azureKeywords: [
+      'azure openai',
+      'openai service',
+      'cognitive services',
+      'ai foundry',
+      'ai services',
+    ],
   },
   {
     name: 'Hugging Face',

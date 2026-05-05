@@ -89,6 +89,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/is-replicate-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
     { url: `${baseUrl}/is-cohere-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
     { url: `${baseUrl}/is-bedrock-down`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
+    { url: `${baseUrl}/is-azure-openai-down`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
 
     // Pillar/guide pages
     { url: `${baseUrl}/what-is-ai`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
