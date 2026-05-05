@@ -332,6 +332,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [Is Mistral Down?](https://tensorfeed.ai/is-mistral-down): Live Mistral AI status
 - [Is Replicate Down?](https://tensorfeed.ai/is-replicate-down): Live Replicate status
 - [Is Cohere Down?](https://tensorfeed.ai/is-cohere-down): Live Cohere status
+- [Is AWS Bedrock Down?](https://tensorfeed.ai/is-bedrock-down): Live AWS Bedrock status with per-region detail. Filtered from the AWS Health currentevents feed every 2 minutes so only events affecting Bedrock surface, not the rest of AWS.
 
 ## VR / AR / XR (sourced from vr.org)
 

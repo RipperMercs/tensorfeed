@@ -173,11 +173,83 @@ function aggregateGcpStatus(
   return { status: headline, affected };
 }
 
+// ── AWS Health currentevents.json parser (Bedrock) ───────────────────
+// AWS doesn't publish per-service status pages; instead currentevents.json
+// is a single stream of all active events across every AWS service and
+// region. We filter to events matching our service substring (e.g. "bedrock"
+// against event.service / event.service_name / impacted_services keys),
+// then take the worst severity. Conservative default: any matching event
+// in currentevents is treated as active, since AWS removes resolved events
+// from the stream after a window. Severity is derived from event text
+// since AWS doesn't expose a numeric severity we can rely on.
+interface AwsEvent {
+  date?: string;
+  region_name?: string;
+  status?: string;
+  service?: string;
+  service_name?: string;
+  summary?: string;
+  event_log?: { date?: string; status?: string; summary?: string }[];
+  impacted_services?: Record<string, unknown>;
+}
+
+function awsEventAffectsService(event: AwsEvent, match: string): boolean {
+  const m = match.toLowerCase();
+  if ((event.service || '').toLowerCase().includes(m)) return true;
+  if ((event.service_name || '').toLowerCase().includes(m)) return true;
+  for (const key of Object.keys(event.impacted_services || {})) {
+    if (key.toLowerCase().includes(m)) return true;
+  }
+  return false;
+}
+
+function awsEventSeverity(event: AwsEvent): 'down' | 'degraded' {
+  // AWS rarely calls things outright "down" in titles; words like
+  // "unavailable", "service disruption", "outage", "major" are the
+  // strong signals. Anything softer (errors, latency, increased) is
+  // graded as degraded. Default biases toward degraded since AWS often
+  // ships partial-region issues that don't merit a full down headline.
+  const haystack = `${event.summary || ''} ${(event.event_log || [])
+    .map((l) => l?.summary || '')
+    .join(' ')}`.toLowerCase();
+  if (
+    haystack.includes('unavailable') ||
+    haystack.includes('outage') ||
+    haystack.includes('service disruption') ||
+    haystack.includes('major')
+  ) {
+    return 'down';
+  }
+  return 'degraded';
+}
+
+export function aggregateAwsStatus(
+  events: AwsEvent[],
+  serviceMatch: string,
+): { status: 'operational' | 'degraded' | 'down' | 'unknown'; affected: { name: string; status: string }[] } {
+  const matching = events.filter((e) => awsEventAffectsService(e, serviceMatch));
+  if (matching.length === 0) {
+    return { status: 'operational', affected: [] };
+  }
+
+  const hasDown = matching.some((e) => awsEventSeverity(e) === 'down');
+  const headline: 'down' | 'degraded' = hasDown ? 'down' : 'degraded';
+
+  const affected = matching.map((e) => ({
+    name: `${e.service_name || e.service || 'AWS'} (${e.region_name || 'global'})`,
+    status: awsEventSeverity(e),
+  }));
+  return { status: headline, affected };
+}
+
 // Exported only for unit tests.
 export const _internal = {
   normalizeInstatusComponentStatus,
   normalizeInstatusPageStatus,
   aggregateGcpStatus,
+  aggregateAwsStatus,
+  awsEventAffectsService,
+  awsEventSeverity,
 };
 
 function parseHtmlStatus(html: string): 'operational' | 'degraded' | 'down' | 'unknown' {
@@ -255,6 +327,21 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
       const incidents: GcpIncident[] = await response.json();
       const productIds = service.gcpProductIds || [];
       const { status: headlineStatus, affected } = aggregateGcpStatus(incidents, productIds);
+      return {
+        name: service.name,
+        provider: service.provider,
+        status: headlineStatus,
+        statusPageUrl: service.statusPageUrl,
+        components: affected.slice(0, 6),
+        lastChecked: new Date().toISOString(),
+      };
+    }
+
+    // AWS Health currentevents.json (Bedrock)
+    if (service.type === 'aws-events') {
+      const events: AwsEvent[] = await response.json();
+      const match = service.awsServiceMatch || '';
+      const { status: headlineStatus, affected } = aggregateAwsStatus(events, match);
       return {
         name: service.name,
         provider: service.provider,

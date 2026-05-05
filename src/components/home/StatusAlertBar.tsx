@@ -35,6 +35,8 @@ const SERVICE_HREFS: Record<string, string> = {
   'Hugging Face': '/is-huggingface-down',
   Replicate: '/is-replicate-down',
   Midjourney: '/is-midjourney-down',
+  'AWS Bedrock': '/is-bedrock-down',
+  Bedrock: '/is-bedrock-down',
 };
 
 const POLL_INTERVAL_MS = 90_000;

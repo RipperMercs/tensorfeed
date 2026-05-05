@@ -11,7 +11,14 @@
 import { describe, it, expect } from 'vitest';
 import { aggregateCoreStatus, _internal } from './status';
 
-const { normalizeInstatusComponentStatus, normalizeInstatusPageStatus, aggregateGcpStatus } = _internal;
+const {
+  normalizeInstatusComponentStatus,
+  normalizeInstatusPageStatus,
+  aggregateGcpStatus,
+  aggregateAwsStatus,
+  awsEventAffectsService,
+  awsEventSeverity,
+} = _internal;
 
 describe('aggregateCoreStatus', () => {
   it('returns null when no components are present so caller falls back to umbrella', () => {
@@ -219,5 +226,136 @@ describe('Google Cloud incidents parser (Vertex Gemini)', () => {
     );
     expect(result.status).toBe('down');
     expect(result.affected.find((a) => a.name === 'Vertex Gemini API')?.status).toBe('down');
+  });
+});
+
+describe('AWS Health currentevents parser (Bedrock)', () => {
+  it('reports operational when no events match the configured service substring', () => {
+    const r = aggregateAwsStatus(
+      [
+        { service: 'ec2-us-east-1', service_name: 'EC2', summary: 'Increased Error Rates', region_name: 'N. Virginia' },
+        { service: 's3-us-west-2', service_name: 'S3', summary: 'Latency increase', region_name: 'Oregon' },
+      ],
+      'bedrock',
+    );
+    expect(r.status).toBe('operational');
+    expect(r.affected).toEqual([]);
+  });
+
+  it('reports degraded when bedrock matches via service_name', () => {
+    const r = aggregateAwsStatus(
+      [
+        {
+          service: 'bedrock-us-east-1',
+          service_name: 'Amazon Bedrock',
+          summary: 'Increased error rates for InvokeModel',
+          region_name: 'N. Virginia',
+        },
+      ],
+      'bedrock',
+    );
+    expect(r.status).toBe('degraded');
+    expect(r.affected[0].name).toBe('Amazon Bedrock (N. Virginia)');
+  });
+
+  it('reports down when summary text indicates a major outage', () => {
+    const r = aggregateAwsStatus(
+      [
+        {
+          service: 'bedrock-us-east-1',
+          service_name: 'Amazon Bedrock',
+          summary: 'Service Disruption',
+          region_name: 'N. Virginia',
+        },
+      ],
+      'bedrock',
+    );
+    expect(r.status).toBe('down');
+    expect(r.affected[0].status).toBe('down');
+  });
+
+  it('matches via impacted_services keys when service field is generic', () => {
+    const r = aggregateAwsStatus(
+      [
+        {
+          service: 'multipleservices-us-east-1',
+          service_name: 'Multiple services',
+          summary: 'Connectivity issues',
+          region_name: 'N. Virginia',
+          impacted_services: { 'bedrock-us-east-1': {}, 'ec2-us-east-1': {} },
+        },
+      ],
+      'bedrock',
+    );
+    expect(r.status).toBe('degraded');
+  });
+
+  it('escalates to down when ANY matching event is severe (worst-of)', () => {
+    const r = aggregateAwsStatus(
+      [
+        {
+          service: 'bedrock-us-east-1',
+          service_name: 'Amazon Bedrock',
+          summary: 'Increased latency',
+          region_name: 'N. Virginia',
+        },
+        {
+          service: 'bedrock-eu-west-1',
+          service_name: 'Amazon Bedrock',
+          summary: 'Service unavailable',
+          region_name: 'Ireland',
+        },
+      ],
+      'bedrock',
+    );
+    expect(r.status).toBe('down');
+    expect(r.affected).toHaveLength(2);
+  });
+
+  it('checks event_log text for severity keywords (most recent updates often clearer)', () => {
+    const r = aggregateAwsStatus(
+      [
+        {
+          service: 'bedrock-us-east-1',
+          service_name: 'Amazon Bedrock',
+          summary: 'Investigating',
+          region_name: 'N. Virginia',
+          event_log: [
+            { date: '1', summary: 'We are investigating reports of unavailable models' },
+          ],
+        },
+      ],
+      'bedrock',
+    );
+    expect(r.status).toBe('down');
+  });
+
+  it('awsEventAffectsService is case-insensitive across service, service_name, impacted_services', () => {
+    expect(
+      awsEventAffectsService(
+        { service: 'BEDROCK-runtime-us-east-1', service_name: 'X' },
+        'bedrock',
+      ),
+    ).toBe(true);
+    expect(
+      awsEventAffectsService(
+        { service: 'x', service_name: 'Amazon BEDROCK Runtime' },
+        'bedrock',
+      ),
+    ).toBe(true);
+    expect(
+      awsEventAffectsService(
+        { service: 'x', service_name: 'y', impacted_services: { 'BEDROCK-eu': {} } },
+        'bedrock',
+      ),
+    ).toBe(true);
+    expect(awsEventAffectsService({ service: 'ec2', service_name: 'EC2' }, 'bedrock')).toBe(false);
+  });
+
+  it('awsEventSeverity defaults to degraded when text has no severe keywords', () => {
+    expect(awsEventSeverity({ summary: 'Increased error rates' })).toBe('degraded');
+    expect(awsEventSeverity({ summary: 'Latency in InvokeModel' })).toBe('degraded');
+    expect(awsEventSeverity({ summary: 'Service unavailable' })).toBe('down');
+    expect(awsEventSeverity({ summary: 'Major service disruption in us-east-1' })).toBe('down');
   });
 });

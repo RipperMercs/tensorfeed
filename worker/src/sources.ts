@@ -104,11 +104,12 @@ export interface StatusPageConfig {
   provider: string;
   url: string;
   statusPageUrl: string;
-  // statuspage: Atlassian Statuspage v2 JSON (most providers)
-  // instatus:   Instatus summary.json (Perplexity)
+  // statuspage:    Atlassian Statuspage v2 JSON (most providers)
+  // instatus:      Instatus summary.json (Perplexity)
   // gcp-incidents: Google Cloud incidents.json (Vertex/Gemini)
-  // html:       fallback for status pages without a JSON API
-  type: 'statuspage' | 'instatus' | 'gcp-incidents' | 'html';
+  // aws-events:    AWS Health currentevents.json (Bedrock)
+  // html:          fallback for status pages without a JSON API
+  type: 'statuspage' | 'instatus' | 'gcp-incidents' | 'aws-events' | 'html';
   // Optional component name patterns. When set, only matching components
   // are considered for headline status and display. Used for shared status
   // pages where most components are irrelevant (e.g. GitHub's status page
@@ -119,6 +120,11 @@ export interface StatusPageConfig {
   // status.cloud.google.com/products.json) whose active incidents should
   // bubble up to this service's status.
   gcpProductIds?: string[];
+  // For aws-events: substring (case-insensitive) matched against each
+  // event's service/service_name and impacted_services keys to identify
+  // events affecting this provider. AWS doesn't publish per-service
+  // status feeds, only a global currentevents stream we filter.
+  awsServiceMatch?: string;
 }
 
 export const STATUS_PAGES: StatusPageConfig[] = [
@@ -168,6 +174,14 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     statusPageUrl: 'https://groqstatus.com',
     type: 'statuspage',
     // Whole status page is model + API components, all in-scope.
+  },
+  {
+    name: 'AWS Bedrock',
+    provider: 'AWS',
+    url: 'https://health.aws.amazon.com/public/currentevents',
+    statusPageUrl: 'https://health.aws.amazon.com/health/status',
+    type: 'aws-events',
+    awsServiceMatch: 'bedrock',
   },
   {
     name: 'Hugging Face',
