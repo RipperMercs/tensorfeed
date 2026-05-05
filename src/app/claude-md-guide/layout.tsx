@@ -1,13 +1,13 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'The Complete Guide to CLAUDE.md: Best Practices, Examples & Templates',
+  title: 'CLAUDE.md File: The Complete Guide With Examples & Templates',
   description:
-    'Learn how to write the perfect CLAUDE.md file. Complete guide with examples, templates, best practices, and an interactive generator for Claude Code.',
+    'What a CLAUDE.md file is, where to put it, how long it should be, and copy-paste templates to start with. Plus the difference between CLAUDE.md and AGENTS.md, and how to ship one in fifteen minutes.',
   openGraph: {
-    title: 'The Complete Guide to CLAUDE.md: Best Practices, Examples & Templates',
+    title: 'CLAUDE.md File: The Complete Guide With Examples & Templates',
     description:
-      'Learn how to write the perfect CLAUDE.md file. Complete guide with examples, templates, best practices, and an interactive generator for Claude Code.',
+      'What a CLAUDE.md file is, where to put it, how long it should be, and copy-paste templates to start with. Plus the difference between CLAUDE.md and AGENTS.md, and how to ship one in fifteen minutes.',
     url: 'https://tensorfeed.ai/claude-md-guide',
   },
   alternates: {

@@ -436,7 +436,9 @@ Currently in production with 40+ pages and growing.`}</code>
           If you have explored AI coding tools beyond Claude Code, you may have seen AGENTS.md
           mentioned alongside tools like{' '}
           <Link href="/best-ai-tools#coding" className="text-accent-primary hover:underline">Cursor, Windsurf, Zed, and OpenCode</Link>.
-          Here is how the two files compare.
+          Here is how the two files compare. For a deeper dive on AGENTS.md specifically, including
+          a copy-paste example and why coding agents converged on the convention, see{' '}
+          <Link href="/originals/agents-md-new-robots-txt" className="text-accent-primary hover:underline">AGENTS.md Is the New robots.txt</Link>.
         </p>
         <div className="overflow-x-auto mb-4">
           <table className="w-full text-sm text-text-secondary border border-border rounded-lg">

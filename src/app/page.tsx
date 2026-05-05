@@ -5,6 +5,7 @@ import fallbackArticlesData from '../../data/articles.json';
 import { FAQPageJsonLd } from '@/components/seo/JsonLd';
 import { getLatestOriginals } from '@/lib/originals-directory';
 import HeroV2 from '@/components/home/HeroV2';
+import StatusAlertBar from '@/components/home/StatusAlertBar';
 import StatusGrid, { type StatusGridService } from '@/components/home/StatusGrid';
 import FeedSection from '@/components/home/FeedSection';
 import SourceLogosFooter from '@/components/home/SourceLogosFooter';
@@ -170,6 +171,7 @@ export default async function HomePage() {
 
   return (
     <div>
+      <StatusAlertBar services={statuses} />
       <HeroV2 />
 
       <section
