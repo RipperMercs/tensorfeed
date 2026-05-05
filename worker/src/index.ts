@@ -3599,7 +3599,11 @@ export default {
 
     if (cron === '*/10 * * * *') {
       rssResult = await run('pollRSSFeeds', () => pollRSSFeeds(env));
-    } else if (cron === '*/5 * * * *') {
+    } else if (cron === '*/2 * * * *') {
+      // Status polling cadence is the public promise behind every
+      // /is-X-down page and the homepage alert bar ("polled every
+      // 2 minutes"). Six providers × ~3 KV writes × 720 runs/day
+      // = ~13k writes/day, well under the 100k/day free-tier cap.
       await run('pollStatusPages', () => pollStatusPages(env));
     } else if (cron === '0 * * * *') {
       // Hourly: refresh RSS + status + rolling snapshot
