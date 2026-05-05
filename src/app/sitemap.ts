@@ -196,6 +196,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/palo-alto-portkey-mcp-gateway`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/stripe-link-vs-usdc-agent-payments`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/pentagon-blacklists-anthropic-defense-deals`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/agents-md-new-robots-txt`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/ai-inference-floor-may-2026`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/cloudflare-stripe-agent-provisioning-protocol`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/mistral-medium-3-5-open-weights-frontier-coder`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/afta-is-bilateral-both-sides-win`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },

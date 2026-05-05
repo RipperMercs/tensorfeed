@@ -17,6 +17,24 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'ai-inference-floor-may-2026',
+    title: 'The Cheapest AI Model on the Market Costs 1.7 Cents per Million Tokens',
+    author: 'Ripper',
+    date: 'May 4, 2026',
+    readTime: '5 min read',
+    description:
+      "I pulled the live OpenRouter catalog this afternoon. 372 models, 33 of them free, the cheapest paid input at $0.017 per million tokens. The proprietary frontier is a thin layer on top of a dense open-source middle, and the gap to the floor keeps widening. What the inference market looks like in May 2026, plus practical numbers worth remembering for your next routing decision.",
+  },
+  {
+    slug: 'agents-md-new-robots-txt',
+    title: 'AGENTS.md Is the New robots.txt',
+    author: 'Ripper',
+    date: 'May 4, 2026',
+    readTime: '6 min read',
+    description:
+      "Every coding agent I have tested in 2026 reads AGENTS.md before doing anything else in a fresh repo. The convention emerged informally and stuck. Here is why it works, what to put in a thirty-line example, and why every public repo should ship one this week.",
+  },
+  {
     slug: 'afta-is-bilateral-both-sides-win',
     title: 'AFTA Is Bilateral. Here Is Why Both Sides Win.',
     author: 'Ripper',
