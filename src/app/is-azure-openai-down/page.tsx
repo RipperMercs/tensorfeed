@@ -165,7 +165,7 @@ export default async function IsAzureOpenAIDownPage() {
           </span>
         </div>
         <p className="text-text-muted text-sm">
-          Live Azure OpenAI status from Microsoft's Azure status feed. Auto-refreshes every 2 minutes.
+          Live Azure OpenAI status from Microsoft&apos;s Azure status feed. Auto-refreshes every 2 minutes.
         </p>
       </div>
 

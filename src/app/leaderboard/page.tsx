@@ -150,17 +150,17 @@ export default async function LeaderboardPage() {
             Atlassian Statuspage v2 JSON for most vendors (Anthropic, OpenAI, GitHub, Replicate,
             Cohere, Groq), Instatus for Perplexity, Google Cloud incidents.json filtered by Vertex
             product IDs for Gemini, AWS Health currentevents.json filtered by service substring for
-            Bedrock, and Microsoft's Azure status RSS filtered by keyword for Azure OpenAI. HTML
+            Bedrock, and Microsoft&apos;s Azure status RSS filtered by keyword for Azure OpenAI. HTML
             parsing fallback for Hugging Face and Mistral.
           </p>
           <p className="text-text-secondary text-sm leading-relaxed">
-            Each poll's per-provider status (operational, degraded, down, unknown) is incremented in
+            Each poll&apos;s per-provider status (operational, degraded, down, unknown) is incremented in
             a per-day counter. Uptime % is{' '}
             <span className="font-mono text-text-primary">
               (operational + 0.5 * degraded) / decisive * 100
             </span>
             , where <span className="font-mono">decisive</span> excludes unknown so a worker outage
-            on our side doesn't penalize the provider. Tie-breaker is lower{' '}
+            on our side doesn&apos;t penalize the provider. Tie-breaker is lower{' '}
             <span className="font-mono">hard_down_minutes</span> (down samples * 2 min), so a clean
             degraded period beats actual downs at the same headline %.
           </p>
