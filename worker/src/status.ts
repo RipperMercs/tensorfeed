@@ -1,5 +1,5 @@
 import { Env, ServiceStatus, StatusPageResponse } from './types';
-import { STATUS_PAGES } from './sources';
+import { STATUS_PAGES, StatusPageConfig } from './sources';
 import { dispatchStatusWatches, StatusTransition } from './watches';
 
 function normalizeStatus(indicator: string): 'operational' | 'degraded' | 'down' | 'unknown' {
@@ -70,19 +70,114 @@ function isCoreComponent(name: string): boolean {
 // Returns the worst status across core inference components, or null if the
 // component list contains nothing identifiable as core (in which case callers
 // should fall back to the umbrella status.indicator from Statuspage).
+//
+// When `explicitFilter` is supplied (e.g. GitHub's status page where we only
+// care about Copilot components), every matching component is treated as core
+// and the default peripheral filter is bypassed.
 export function aggregateCoreStatus(
   components: { name: string; status: string }[],
+  explicitFilter?: RegExp[],
 ): 'operational' | 'degraded' | 'down' | 'unknown' | null {
-  const core = components.filter((c) => isCoreComponent(c.name));
-  if (core.length === 0) return null;
+  const candidates = explicitFilter
+    ? components.filter((c) => explicitFilter.some((p) => p.test(c.name)))
+    : components.filter((c) => isCoreComponent(c.name));
 
-  if (core.some((c) => c.status === 'down')) return 'down';
-  if (core.some((c) => c.status === 'degraded')) return 'degraded';
-  if (core.every((c) => c.status === 'operational' || c.status === 'maintenance')) {
+  if (candidates.length === 0) return null;
+
+  if (candidates.some((c) => c.status === 'down')) return 'down';
+  if (candidates.some((c) => c.status === 'degraded')) return 'degraded';
+  if (candidates.every((c) => c.status === 'operational' || c.status === 'maintenance')) {
     return 'operational';
   }
   return 'unknown';
 }
+
+// ── Instatus parser (Perplexity) ─────────────────────────────────────
+// Instatus components use the same status vocabulary as Statuspage but the
+// envelope differs and there's no umbrella indicator. We aggregate worst-of
+// across the components array directly.
+interface InstatusComponent {
+  name: string;
+  status: string; // OPERATIONAL | DEGRADEDPERFORMANCE | PARTIALOUTAGE | MAJOROUTAGE | UNDERMAINTENANCE
+}
+interface InstatusResponse {
+  page?: { status?: string };
+  components?: InstatusComponent[];
+}
+
+function normalizeInstatusComponentStatus(s: string): string {
+  switch (s?.toUpperCase()) {
+    case 'OPERATIONAL': return 'operational';
+    case 'DEGRADEDPERFORMANCE': return 'degraded';
+    case 'PARTIALOUTAGE': return 'degraded';
+    case 'MAJOROUTAGE': return 'down';
+    case 'UNDERMAINTENANCE': return 'maintenance';
+    default: return 'unknown';
+  }
+}
+
+function normalizeInstatusPageStatus(s: string): 'operational' | 'degraded' | 'down' | 'unknown' {
+  switch (s?.toUpperCase()) {
+    case 'UP':
+    case 'OPERATIONAL': return 'operational';
+    case 'HASISSUES':
+    case 'DEGRADED': return 'degraded';
+    case 'DOWN':
+    case 'MAJOROUTAGE': return 'down';
+    default: return 'unknown';
+  }
+}
+
+// ── Google Cloud incidents.json parser (Vertex/Gemini) ───────────────
+// GCP doesn't publish a Statuspage-style summary. We pull the incidents
+// feed and look for any incident that (a) is currently active and (b)
+// affects one of the configured product IDs (e.g. Vertex Gemini API).
+interface GcpIncident {
+  id: string;
+  begin: string;
+  end?: string | null;
+  severity: string; // "low" | "medium" | "high"
+  affected_products?: { id: string; title: string }[];
+  most_recent_update?: { status?: string };
+}
+
+function aggregateGcpStatus(
+  incidents: GcpIncident[],
+  productIds: string[],
+): { status: 'operational' | 'degraded' | 'down' | 'unknown'; affected: { name: string; status: string }[] } {
+  const productSet = new Set(productIds);
+  const active = incidents.filter((inc) => {
+    if (inc.end) return false; // resolved
+    return (inc.affected_products || []).some((p) => productSet.has(p.id));
+  });
+
+  if (active.length === 0) {
+    return { status: 'operational', affected: [] };
+  }
+
+  const hasHigh = active.some((inc) => inc.severity?.toLowerCase() === 'high');
+  const headline: 'down' | 'degraded' = hasHigh ? 'down' : 'degraded';
+
+  const affected: { name: string; status: string }[] = [];
+  for (const inc of active) {
+    for (const p of inc.affected_products || []) {
+      if (productSet.has(p.id)) {
+        affected.push({
+          name: p.title,
+          status: inc.severity?.toLowerCase() === 'high' ? 'down' : 'degraded',
+        });
+      }
+    }
+  }
+  return { status: headline, affected };
+}
+
+// Exported only for unit tests.
+export const _internal = {
+  normalizeInstatusComponentStatus,
+  normalizeInstatusPageStatus,
+  aggregateGcpStatus,
+};
 
 function parseHtmlStatus(html: string): 'operational' | 'degraded' | 'down' | 'unknown' {
   const lower = html.toLowerCase();
@@ -103,9 +198,7 @@ function parseHtmlStatus(html: string): 'operational' | 'degraded' | 'down' | 'u
   return 'unknown';
 }
 
-async function fetchServiceStatus(
-  service: typeof STATUS_PAGES[number]
-): Promise<ServiceStatus> {
+async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceStatus> {
   try {
     const response = await fetch(service.url, {
       headers: { 'User-Agent': 'TensorFeed/1.0 (https://tensorfeed.ai)' },
@@ -136,7 +229,42 @@ async function fetchServiceStatus(
       };
     }
 
-    // Atlassian Statuspage JSON API
+    // Instatus (Perplexity)
+    if (service.type === 'instatus') {
+      const data: InstatusResponse = await response.json();
+      const allComponents = (data.components || []).map((c) => ({
+        name: c.name,
+        status: normalizeInstatusComponentStatus(c.status),
+      }));
+      const componentDerived = aggregateCoreStatus(allComponents, service.componentFilter);
+      const headlineStatus =
+        componentDerived ?? normalizeInstatusPageStatus(data.page?.status || '');
+      return {
+        name: service.name,
+        provider: service.provider,
+        status: headlineStatus,
+        statusPageUrl: service.statusPageUrl,
+        components: allComponents.slice(0, 6),
+        lastChecked: new Date().toISOString(),
+      };
+    }
+
+    // Google Cloud incidents.json (Vertex Gemini API et al)
+    if (service.type === 'gcp-incidents') {
+      const incidents: GcpIncident[] = await response.json();
+      const productIds = service.gcpProductIds || [];
+      const { status: headlineStatus, affected } = aggregateGcpStatus(incidents, productIds);
+      return {
+        name: service.name,
+        provider: service.provider,
+        status: headlineStatus,
+        statusPageUrl: service.statusPageUrl,
+        components: affected.slice(0, 6),
+        lastChecked: new Date().toISOString(),
+      };
+    }
+
+    // Atlassian Statuspage JSON API (default)
     const data: StatusPageResponse = await response.json();
 
     const allComponents = (data.components || [])
@@ -151,14 +279,25 @@ async function fetchServiceStatus(
     // component (e.g. "Connectors/Apps"), producing false alarms on our /is-X-
     // down pages and homepage alert bar. Fall back to the umbrella only when
     // we can't identify any core components (e.g. an oddly-named status page).
-    const componentDerived = aggregateCoreStatus(allComponents);
-    const headlineStatus = componentDerived ?? normalizeStatus(data.status?.indicator);
+    //
+    // When the service config supplies an explicit componentFilter (e.g.
+    // GitHub's status page where we only care about Copilot rows), we ignore
+    // the umbrella entirely since it covers far more than our service.
+    const componentDerived = aggregateCoreStatus(allComponents, service.componentFilter);
+    const headlineStatus = service.componentFilter
+      ? componentDerived ?? 'unknown'
+      : componentDerived ?? normalizeStatus(data.status?.indicator);
 
-    // Surface core components first so the truncated display shows the parts
-    // that matter (Chat Completions, Embeddings, etc) before peripheral ones.
+    // Surface in-scope components first so the truncated display shows the
+    // parts that matter (Chat Completions, Embeddings, Copilot, etc) before
+    // peripheral ones.
+    const inScope = (c: { name: string }) =>
+      service.componentFilter
+        ? service.componentFilter.some((p) => p.test(c.name))
+        : isCoreComponent(c.name);
     const sortedComponents = [
-      ...allComponents.filter((c) => isCoreComponent(c.name)),
-      ...allComponents.filter((c) => !isCoreComponent(c.name)),
+      ...allComponents.filter(inScope),
+      ...allComponents.filter((c) => !inScope(c)),
     ].slice(0, 6);
 
     return {

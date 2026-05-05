@@ -99,7 +99,29 @@ export const RSS_SOURCES: RSSSource[] = [
   },
 ];
 
-export const STATUS_PAGES: { name: string; provider: string; url: string; statusPageUrl: string; type: 'statuspage' | 'html' }[] = [
+export interface StatusPageConfig {
+  name: string;
+  provider: string;
+  url: string;
+  statusPageUrl: string;
+  // statuspage: Atlassian Statuspage v2 JSON (most providers)
+  // instatus:   Instatus summary.json (Perplexity)
+  // gcp-incidents: Google Cloud incidents.json (Vertex/Gemini)
+  // html:       fallback for status pages without a JSON API
+  type: 'statuspage' | 'instatus' | 'gcp-incidents' | 'html';
+  // Optional component name patterns. When set, only matching components
+  // are considered for headline status and display. Used for shared status
+  // pages where most components are irrelevant (e.g. GitHub's status page
+  // covers all of GitHub but we only care about Copilot). When unset, the
+  // default core/peripheral filter in status.ts applies.
+  componentFilter?: RegExp[];
+  // For gcp-incidents: list of Google Cloud product IDs (from
+  // status.cloud.google.com/products.json) whose active incidents should
+  // bubble up to this service's status.
+  gcpProductIds?: string[];
+}
+
+export const STATUS_PAGES: StatusPageConfig[] = [
   {
     name: 'Claude API',
     provider: 'Anthropic',
@@ -113,6 +135,39 @@ export const STATUS_PAGES: { name: string; provider: string; url: string; status
     url: 'https://status.openai.com/api/v2/summary.json',
     statusPageUrl: 'https://status.openai.com',
     type: 'statuspage',
+  },
+  {
+    name: 'Google Gemini',
+    provider: 'Google',
+    url: 'https://status.cloud.google.com/incidents.json',
+    statusPageUrl: 'https://status.cloud.google.com',
+    type: 'gcp-incidents',
+    // Vertex Gemini API + Vertex AI Online Prediction (the inference path).
+    // Studio/Code Assist/Enterprise are downstream surfaces, not the LLM API.
+    gcpProductIds: ['Z0FZJAMvEB4j3NbCJs6B', 'sdXM79fz1FS6ekNpu37K'],
+  },
+  {
+    name: 'GitHub Copilot',
+    provider: 'GitHub',
+    url: 'https://www.githubstatus.com/api/v2/summary.json',
+    statusPageUrl: 'https://www.githubstatus.com',
+    type: 'statuspage',
+    componentFilter: [/copilot/i],
+  },
+  {
+    name: 'Perplexity',
+    provider: 'Perplexity AI',
+    url: 'https://status.perplexity.com/summary.json',
+    statusPageUrl: 'https://status.perplexity.com',
+    type: 'instatus',
+  },
+  {
+    name: 'Groq',
+    provider: 'Groq',
+    url: 'https://groqstatus.com/api/v2/summary.json',
+    statusPageUrl: 'https://groqstatus.com',
+    type: 'statuspage',
+    // Whole status page is model + API components, all in-scope.
   },
   {
     name: 'Hugging Face',

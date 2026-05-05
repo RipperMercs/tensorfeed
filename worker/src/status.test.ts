@@ -9,7 +9,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { aggregateCoreStatus } from './status';
+import { aggregateCoreStatus, _internal } from './status';
+
+const { normalizeInstatusComponentStatus, normalizeInstatusPageStatus, aggregateGcpStatus } = _internal;
 
 describe('aggregateCoreStatus', () => {
   it('returns null when no components are present so caller falls back to umbrella', () => {
@@ -87,5 +89,135 @@ describe('aggregateCoreStatus', () => {
       { name: 'Voice mode', status: 'degraded' },
     ];
     expect(aggregateCoreStatus(peripheralOnly)).toBeNull();
+  });
+
+  describe('with explicitFilter (e.g. GitHub Copilot)', () => {
+    it('only considers matching components and ignores peripheral patterns', () => {
+      // GitHub status page covers all of GitHub. We only care about Copilot.
+      // "Actions" being down should NOT make Copilot read down for us.
+      const result = aggregateCoreStatus(
+        [
+          { name: 'Copilot', status: 'operational' },
+          { name: 'Copilot AI Model Providers', status: 'operational' },
+          { name: 'Actions', status: 'down' },
+          { name: 'Pages', status: 'degraded' },
+        ],
+        [/copilot/i],
+      );
+      expect(result).toBe('operational');
+    });
+
+    it('returns degraded when a Copilot component is degraded even if rest of GitHub is fine', () => {
+      const result = aggregateCoreStatus(
+        [
+          { name: 'Copilot', status: 'degraded' },
+          { name: 'Actions', status: 'operational' },
+        ],
+        [/copilot/i],
+      );
+      expect(result).toBe('degraded');
+    });
+
+    it('returns null when no components match the explicit filter', () => {
+      const result = aggregateCoreStatus(
+        [
+          { name: 'Actions', status: 'operational' },
+          { name: 'Pages', status: 'operational' },
+        ],
+        [/copilot/i],
+      );
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe('Instatus parser (Perplexity)', () => {
+  it('normalizes component statuses from Instatus uppercase vocabulary', () => {
+    expect(normalizeInstatusComponentStatus('OPERATIONAL')).toBe('operational');
+    expect(normalizeInstatusComponentStatus('DEGRADEDPERFORMANCE')).toBe('degraded');
+    expect(normalizeInstatusComponentStatus('PARTIALOUTAGE')).toBe('degraded');
+    expect(normalizeInstatusComponentStatus('MAJOROUTAGE')).toBe('down');
+    expect(normalizeInstatusComponentStatus('UNDERMAINTENANCE')).toBe('maintenance');
+    expect(normalizeInstatusComponentStatus('weird')).toBe('unknown');
+  });
+
+  it('normalizes page-level Instatus status used as fallback when components missing', () => {
+    expect(normalizeInstatusPageStatus('UP')).toBe('operational');
+    expect(normalizeInstatusPageStatus('HASISSUES')).toBe('degraded');
+    expect(normalizeInstatusPageStatus('DOWN')).toBe('down');
+    expect(normalizeInstatusPageStatus('')).toBe('unknown');
+  });
+});
+
+describe('Google Cloud incidents parser (Vertex Gemini)', () => {
+  const VERTEX_GEMINI_ID = 'Z0FZJAMvEB4j3NbCJs6B';
+  const VERTEX_PREDICTION_ID = 'sdXM79fz1FS6ekNpu37K';
+  const SOMETHING_ELSE_ID = 'unrelated-product-id';
+
+  it('reports operational when there are no active incidents touching the configured products', () => {
+    const result = aggregateGcpStatus(
+      [
+        // Resolved incident (has end date) — ignored
+        {
+          id: '1',
+          begin: '2026-04-01T00:00:00Z',
+          end: '2026-04-01T01:00:00Z',
+          severity: 'high',
+          affected_products: [{ id: VERTEX_GEMINI_ID, title: 'Vertex Gemini API' }],
+        },
+        // Active incident affecting an unrelated product — ignored
+        {
+          id: '2',
+          begin: '2026-05-04T00:00:00Z',
+          end: null,
+          severity: 'medium',
+          affected_products: [{ id: SOMETHING_ELSE_ID, title: 'Compute Engine' }],
+        },
+      ],
+      [VERTEX_GEMINI_ID, VERTEX_PREDICTION_ID],
+    );
+    expect(result.status).toBe('operational');
+    expect(result.affected).toEqual([]);
+  });
+
+  it('reports degraded when an active medium-severity incident affects a tracked product', () => {
+    const result = aggregateGcpStatus(
+      [
+        {
+          id: '3',
+          begin: '2026-05-04T00:00:00Z',
+          end: null,
+          severity: 'medium',
+          affected_products: [{ id: VERTEX_GEMINI_ID, title: 'Vertex Gemini API' }],
+        },
+      ],
+      [VERTEX_GEMINI_ID, VERTEX_PREDICTION_ID],
+    );
+    expect(result.status).toBe('degraded');
+    expect(result.affected).toEqual([{ name: 'Vertex Gemini API', status: 'degraded' }]);
+  });
+
+  it('reports down when any active incident is high severity', () => {
+    const result = aggregateGcpStatus(
+      [
+        {
+          id: '4',
+          begin: '2026-05-04T00:00:00Z',
+          end: null,
+          severity: 'medium',
+          affected_products: [{ id: VERTEX_PREDICTION_ID, title: 'Vertex AI Online Prediction' }],
+        },
+        {
+          id: '5',
+          begin: '2026-05-04T00:30:00Z',
+          end: null,
+          severity: 'high',
+          affected_products: [{ id: VERTEX_GEMINI_ID, title: 'Vertex Gemini API' }],
+        },
+      ],
+      [VERTEX_GEMINI_ID, VERTEX_PREDICTION_ID],
+    );
+    expect(result.status).toBe('down');
+    expect(result.affected.find((a) => a.name === 'Vertex Gemini API')?.status).toBe('down');
   });
 });
