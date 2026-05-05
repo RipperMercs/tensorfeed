@@ -51,14 +51,11 @@ Out of scope:
 - We welcome pull requests for additional test coverage on the AFTA core. Coverage gaps are tracked in GitHub Issues with the `security` and `tests` labels.
 - We invite community red-team submissions on the AFTA codebase. Responsibly disclosed findings that lead to a patch will be credited in the commit message and in the AFTA whitepaper acknowledgments.
 
-## Audit History
+## Pre-publication review
 
-| Date | Auditor | Scope | Findings |
-|---|---|---|---|
-| 2026-05-05 | Internal review (Claude Opus 4.7) | AFTA core, ~7,000 LOC | 1 HIGH (KV race, patched in `a32ea97`) |
-| 2026-05-05 | External review (Google Gemini) | Whitepaper + protocol mechanics | 2 HIGH (Tx Sniper patched in `bcf0b57`, federation race patched in `a1883df`); 1 policy-level (asymmetric DOS, patched in `9bebbe6`) |
+Before publishing v1.0 of the AFTA standard, the worker-side reference implementation went through internal code review and AI-assisted multi-model code analysis. Findings identified during this process were patched before the whitepaper went live; the commit history in this repository carries every security-relevant change under the `security(afta):` prefix and is the authoritative record of what was patched and when.
 
-We will continue to publish audit results as they happen.
+A third-party human security audit will be commissioned when revenue and traffic justify the cost. Audit reports will be published here as they land.
 
 ## Supported Versions
 

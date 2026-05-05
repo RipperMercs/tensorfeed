@@ -186,44 +186,21 @@ export default function SecurityPage() {
         </section>
 
         <section id="acknowledgments">
-          <h2 className="text-lg font-semibold text-text-primary mb-3">Audit History</h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-3">Pre-publication review</h2>
           <p className="mb-3">
-            We publish the audits the rail has been through and update this list as new reviews land.
+            Before publishing v1.0 of the AFTA standard, the worker-side reference implementation
+            went through internal code review and AI-assisted multi-model code analysis. Findings
+            identified during this process were patched before the whitepaper went live; commit
+            history at the public repo carries every security-relevant change under the{' '}
+            <code className="text-text-primary">security(afta):</code> prefix and is the authoritative
+            record of what was patched and when.
           </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border border-border rounded-lg">
-              <thead className="bg-bg-secondary">
-                <tr>
-                  <th className="text-left px-3 py-2 text-text-primary font-semibold">Date</th>
-                  <th className="text-left px-3 py-2 text-text-primary font-semibold">Reviewer</th>
-                  <th className="text-left px-3 py-2 text-text-primary font-semibold">Scope</th>
-                  <th className="text-left px-3 py-2 text-text-primary font-semibold">High-severity findings + outcome</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                <tr>
-                  <td className="px-3 py-2">2026-05-05</td>
-                  <td className="px-3 py-2">Internal review (Claude Opus 4.7)</td>
-                  <td className="px-3 py-2">AFTA core, ~7,000 LOC</td>
-                  <td className="px-3 py-2">1 HIGH (KV duplicate-mint race). Patched same day in commit a32ea97.</td>
-                </tr>
-                <tr>
-                  <td className="px-3 py-2">2026-05-05</td>
-                  <td className="px-3 py-2">External review (Google Gemini)</td>
-                  <td className="px-3 py-2">Whitepaper protocol mechanics</td>
-                  <td className="px-3 py-2">2 HIGH (Tx-Sniper, federation double-spend) + 1 policy (asymmetric DOS). All patched same day in commits bcf0b57, a1883df, 9bebbe6.</td>
-                </tr>
-                <tr>
-                  <td className="px-3 py-2">2026-05 (in flight)</td>
-                  <td className="px-3 py-2">Multi-LLM red team (Mistral, Qwen, DeepSeek)</td>
-                  <td className="px-3 py-2">AFTA core post-patch</td>
-                  <td className="px-3 py-2">In progress.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <p className="mb-3">
+            A third-party human security audit will be commissioned when revenue and traffic justify
+            the cost. Audit reports will be published here as they land.
+          </p>
           <p className="mt-3 text-text-muted text-xs">
-            Every AFTA security commit lands on the public repo with a <code className="text-text-primary">security(afta):</code> prefix. The full disclosure policy lives at{' '}
+            Full disclosure policy at{' '}
             <a
               href="https://github.com/RipperMercs/tensorfeed/blob/main/SECURITY.md"
               target="_blank"
