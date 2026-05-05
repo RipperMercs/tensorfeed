@@ -2,6 +2,13 @@
 
 All notable changes to the Python SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.29.0 - 2026-05-05
+
+### Added
+- Cross-provider uptime endpoints derived from the new minute-resolution counter data: `tf.status_leaderboard_free()` and `tf.status_leaderboard()` (already shipped in 1.28.0); plus the additions in this release:
+  - `tf.create_leaderboard_rank_watch(provider, op, threshold, callback_url, ...)`. Premium webhook watch (1 credit at registration) that fires when a provider crosses a rank threshold on the cross-provider 7-day uptime leaderboard. Operations: `drops_below`, `rises_above`, `changes`. Use case: SRE / vendor-management teams alerted when their primary AI provider's relative reliability shifts.
+- 5 additional providers monitored (in service of all status methods): OpenRouter, ElevenLabs, Stability AI, Runway, Luma. Brings total monitored to 20.
+
 ## 1.28.0 - 2026-05-04
 
 ### Added

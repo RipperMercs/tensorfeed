@@ -29,6 +29,7 @@ import {
   deleteWatch,
   runPriceWatchCycle,
   runDigestWatchCycle,
+  runLeaderboardWatchCycle,
 } from './watches';
 import {
   getEnrichedDirectory,
@@ -3797,6 +3798,11 @@ export default {
 
     if (cron === '*/10 * * * *') {
       rssResult = await run('pollRSSFeeds', () => pollRSSFeeds(env));
+      // Premium leaderboard rank-change watches. Computed from the same
+      // counter data we already accumulate; firing every 10 min is fast
+      // enough for SRE-level alerting without overshooting the actual
+      // cadence at which the 7-day leaderboard meaningfully shifts.
+      await run('runLeaderboardWatchCycle', () => runLeaderboardWatchCycle(env));
     } else if (cron === '*/2 * * * *') {
       // Status polling cadence is the public promise behind every
       // /is-X-down page and the homepage alert bar ("polled every

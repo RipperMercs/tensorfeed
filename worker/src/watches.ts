@@ -65,7 +65,33 @@ export interface DigestWatchSpec {
   cadence: 'daily' | 'weekly';
 }
 
-export type WatchSpec = PriceWatchSpec | StatusWatchSpec | DigestWatchSpec;
+/**
+ * Leaderboard rank-change watch. Fires when a provider's rank in the
+ * 7-day uptime leaderboard crosses a threshold or changes. Useful for
+ * SRE/ops teams tracking which AI vendor is currently most reliable
+ * relative to the field.
+ *
+ * Rank semantics: rank 1 = best (highest uptime).
+ * - drops_below threshold=N: fires when provider was rank <= N and is now rank > N (got worse)
+ * - rises_above threshold=N: fires when provider was rank >= N and is now rank < N (got better)
+ * - changes: fires on any rank change
+ *
+ * The provider field accepts both display names ("Claude API") and
+ * slugs ("claude") — the worker normalizes via the same SLUG_TO_PROVIDER
+ * map used by the badges and uptime pages.
+ */
+export interface LeaderboardRankWatchSpec {
+  type: 'leaderboard_rank';
+  provider: string;
+  op: 'drops_below' | 'rises_above' | 'changes';
+  threshold?: number;
+}
+
+export type WatchSpec =
+  | PriceWatchSpec
+  | StatusWatchSpec
+  | DigestWatchSpec
+  | LeaderboardRankWatchSpec;
 
 export interface Watch {
   id: string;
@@ -184,6 +210,20 @@ export function validateSpec(spec: unknown): SpecValidation {
     }
     return { ok: true };
   }
+  if (s.type === 'leaderboard_rank') {
+    if (typeof s.provider !== 'string' || !s.provider.trim()) {
+      return { ok: false, error: 'leaderboard_watch_provider_required' };
+    }
+    if (s.op !== 'drops_below' && s.op !== 'rises_above' && s.op !== 'changes') {
+      return { ok: false, error: 'leaderboard_watch_op_invalid' };
+    }
+    if (s.op !== 'changes') {
+      if (typeof s.threshold !== 'number' || !Number.isInteger(s.threshold) || s.threshold < 1) {
+        return { ok: false, error: 'leaderboard_watch_threshold_required' };
+      }
+    }
+    return { ok: true };
+  }
   return { ok: false, error: 'unsupported_watch_type' };
 }
 
@@ -238,6 +278,48 @@ export function statusWatchFires(spec: StatusWatchSpec, t: StatusTransition): bo
   return false;
 }
 
+export interface LeaderboardRankTransition {
+  /** Display name from the leaderboard, e.g. "Claude API". */
+  provider: string;
+  /** 1-indexed rank (1 = best). */
+  from: number;
+  to: number;
+  /** Uptime % at the new rank, for inclusion in the fire payload. */
+  uptime_pct: number | null;
+}
+
+/**
+ * Returns true if a leaderboard rank transition crosses the watch's
+ * threshold. Only fires on EDGE transitions (e.g. drops_below=5 fires
+ * when crossing the boundary from rank<=5 to rank>5, not on every
+ * subsequent rank change while still below 5). Provider matching is
+ * case-insensitive substring on either direction so "Claude API" /
+ * "claude api" / "claude" all match a watch spec'd for any of those.
+ */
+export function leaderboardWatchFires(
+  spec: LeaderboardRankWatchSpec,
+  t: LeaderboardRankTransition,
+): boolean {
+  const providerKey = spec.provider.toLowerCase();
+  const tProvider = t.provider.toLowerCase();
+  const matchesProvider =
+    tProvider === providerKey ||
+    tProvider.includes(providerKey) ||
+    providerKey.includes(tProvider);
+  if (!matchesProvider) return false;
+  if (t.from === t.to) return false;
+  if (spec.op === 'changes') return true;
+  if (spec.op === 'drops_below') {
+    if (typeof spec.threshold !== 'number') return false;
+    return t.from <= spec.threshold && t.to > spec.threshold;
+  }
+  if (spec.op === 'rises_above') {
+    if (typeof spec.threshold !== 'number') return false;
+    return t.from >= spec.threshold && t.to < spec.threshold;
+  }
+  return false;
+}
+
 // === HMAC signing ===
 
 export async function signBody(body: string, secret: string): Promise<string> {
@@ -255,7 +337,7 @@ export async function signBody(body: string, secret: string): Promise<string> {
 
 // === Storage ===
 
-type WatchIndexType = 'price' | 'status' | 'digest';
+type WatchIndexType = 'price' | 'status' | 'digest' | 'leaderboard_rank';
 
 async function readIndex(env: Env, type: WatchIndexType): Promise<string[]> {
   const raw = (await env.TENSORFEED_CACHE.get(`watch:index:${type}`, 'json')) as string[] | null;
@@ -621,6 +703,121 @@ export async function dispatchStatusWatches(
   }
 
   return { watches_evaluated: watches.length, watches_fired: fired, delivery_failures: failures };
+}
+
+/**
+ * Dispatch leaderboard rank-change watches for a list of rank transitions.
+ * Caller computes transitions by diffing the current 7-day leaderboard
+ * against the previous one stored at `watch:prev:leaderboard`. Pure
+ * dispatch — does not read or write the previous state itself; that
+ * orchestration lives in runLeaderboardWatchCycle().
+ */
+export async function dispatchLeaderboardWatches(
+  env: Env,
+  transitions: LeaderboardRankTransition[],
+): Promise<DispatchSummary> {
+  if (transitions.length === 0) {
+    return { watches_evaluated: 0, watches_fired: 0, delivery_failures: 0 };
+  }
+
+  const ids = await readIndex(env, 'leaderboard_rank');
+  if (ids.length === 0) {
+    return { watches_evaluated: 0, watches_fired: 0, delivery_failures: 0 };
+  }
+
+  const watches = (await Promise.all(ids.map((id) => getWatch(env, id)))).filter(
+    (w): w is Watch => w !== null && w.spec.type === 'leaderboard_rank' && w.status === 'active',
+  );
+
+  let fired = 0;
+  let failures = 0;
+  for (const watch of watches) {
+    const spec = watch.spec as LeaderboardRankWatchSpec;
+    for (const t of transitions) {
+      if (!leaderboardWatchFires(spec, t)) continue;
+      const payload: FirePayload = {
+        event: 'watch.fire',
+        watch_id: watch.id,
+        fired_at: nowIso(),
+        spec,
+        match: {
+          type: 'leaderboard_rank',
+          provider: t.provider,
+          op: spec.op,
+          ...(spec.threshold !== undefined ? { threshold: spec.threshold } : {}),
+          from_rank: t.from,
+          to_rank: t.to,
+          uptime_pct: t.uptime_pct,
+        },
+      };
+      const deliveryStatus = await deliver(watch, payload);
+      if (deliveryStatus === null || deliveryStatus >= 400) failures += 1;
+      await recordFire(env, watch, deliveryStatus);
+      fired += 1;
+      break;
+    }
+  }
+
+  return { watches_evaluated: watches.length, watches_fired: fired, delivery_failures: failures };
+}
+
+/**
+ * Compute current leaderboard, diff against the saved previous baseline,
+ * fire matching watches, persist the new baseline. Cron-ready entry-point.
+ *
+ * Even when no watches are registered, this keeps the previous baseline
+ * fresh so the first registered watch does not fire on the entire
+ * historic rank delta when it's created.
+ */
+export async function runLeaderboardWatchCycle(env: Env): Promise<DispatchSummary> {
+  // Lazy import to avoid circular dependency: watches.ts is imported by
+  // status.ts (for dispatchStatusWatches), and status-leaderboard.ts also
+  // depends on the counter capture flow. Static import would form a cycle.
+  const { computeLeaderboard, resolveLastNDays } = await import('./status-leaderboard');
+
+  const { from, to } = resolveLastNDays(7);
+  const current = await computeLeaderboard(env, from, to);
+  if (!current.ok) {
+    return { watches_evaluated: 0, watches_fired: 0, delivery_failures: 0 };
+  }
+
+  const prev = (await env.TENSORFEED_CACHE.get(
+    'watch:prev:leaderboard',
+    'json',
+  )) as { provider: string; rank: number; uptime_pct: number | null }[] | null;
+
+  // Always persist the latest snapshot so the first watch registered after
+  // this point starts from a fresh baseline, not stale data.
+  const snapshot = current.entries.map((e) => ({
+    provider: e.provider,
+    rank: e.rank,
+    uptime_pct: e.uptime_pct,
+  }));
+  await env.TENSORFEED_CACHE.put('watch:prev:leaderboard', JSON.stringify(snapshot));
+
+  if (!prev) {
+    return { watches_evaluated: 0, watches_fired: 0, delivery_failures: 0 };
+  }
+
+  const prevByProvider = new Map(prev.map((p) => [p.provider, p]));
+  const transitions: LeaderboardRankTransition[] = [];
+  for (const cur of current.entries) {
+    const before = prevByProvider.get(cur.provider);
+    if (!before) continue; // newly-added provider, no transition
+    if (before.rank === cur.rank) continue;
+    transitions.push({
+      provider: cur.provider,
+      from: before.rank,
+      to: cur.rank,
+      uptime_pct: cur.uptime_pct,
+    });
+  }
+
+  if (transitions.length === 0) {
+    return { watches_evaluated: 0, watches_fired: 0, delivery_failures: 0 };
+  }
+
+  return dispatchLeaderboardWatches(env, transitions);
 }
 
 // === Dispatch entry-points used by scheduled() ===

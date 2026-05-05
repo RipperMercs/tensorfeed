@@ -2,6 +2,13 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 1.25.0 - 2026-05-05
+
+### Added
+- `tf.createLeaderboardRankWatch({ provider, op, threshold, callbackUrl, ... })`. Premium webhook watch (1 credit at registration) that fires when a provider crosses a rank threshold on the cross-provider 7-day uptime leaderboard. Operations: `drops_below`, `rises_above`, `changes`. Use case: SRE / vendor-management teams alerted when their primary AI provider's relative reliability shifts.
+- New exported type `LeaderboardRankWatchSpec` and updated `WatchSpec` discriminated union to include it.
+- 5 additional providers monitored (in service of all status methods): OpenRouter, ElevenLabs, Stability AI, Runway, Luma. Brings total monitored to 20.
+
 ## 1.24.0 - 2026-05-04
 
 ### Added

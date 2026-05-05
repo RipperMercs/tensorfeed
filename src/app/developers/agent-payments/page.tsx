@@ -659,7 +659,7 @@ const ENDPOINTS: PremiumEndpoint[] = [
     method: 'POST',
     path: '/api/premium/watches',
     description:
-      'Register a webhook watch. Three types: realtime price (fires when a model price crosses a threshold or any change), realtime status (fires on provider operational/degraded/down transitions), or scheduled digest (fires daily or weekly with a curated summary of pricing changes regardless of whether anything dramatic happened). Each watch lives 90 days and fires up to 100 times by default. Deliveries POST to your callback URL with an HMAC-SHA256 signature header (X-TensorFeed-Signature: sha256=...). Per-token cap of 25 active watches. Listing and per-watch read/delete are free for the owning bearer token.',
+      'Register a webhook watch. Four types: realtime price (fires when a model price crosses a threshold or any change), realtime status (fires on provider operational/degraded/down transitions), scheduled digest (fires daily or weekly with a curated summary of pricing changes regardless of whether anything dramatic happened), or leaderboard_rank (fires when a provider crosses a rank threshold on the cross-provider 7-day uptime leaderboard). Each watch lives 90 days and fires up to 100 times by default. Deliveries POST to your callback URL with an HMAC-SHA256 signature header (X-TensorFeed-Signature: sha256=...). Per-token cap of 25 active watches. Listing and per-watch read/delete are free for the owning bearer token.',
     cost: '1 credit per registration',
     example: `// Body: { spec, callback_url, secret?, fire_cap? }
 // Spec types:
@@ -668,6 +668,8 @@ const ENDPOINTS: PremiumEndpoint[] = [
 //   { type: "status", provider, op: "becomes"|"changes",
 //     value?: "operational"|"degraded"|"down" }
 //   { type: "digest", cadence: "daily"|"weekly" }
+//   { type: "leaderboard_rank", provider, op: "drops_below"|"rises_above"|"changes",
+//     threshold? }  // threshold = integer rank (1=best); required unless op=changes
 {
   "ok": true,
   "watch": {

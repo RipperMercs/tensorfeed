@@ -320,7 +320,20 @@ export interface DigestWatchSpec {
   cadence: 'daily' | 'weekly';
 }
 
-export type WatchSpec = PriceWatchSpec | StatusWatchSpec | DigestWatchSpec;
+export interface LeaderboardRankWatchSpec {
+  type: 'leaderboard_rank';
+  /** Provider name or slug (case-insensitive). */
+  provider: string;
+  op: 'drops_below' | 'rises_above' | 'changes';
+  /** Required when op is drops_below or rises_above; integer rank. */
+  threshold?: number;
+}
+
+export type WatchSpec =
+  | PriceWatchSpec
+  | StatusWatchSpec
+  | DigestWatchSpec
+  | LeaderboardRankWatchSpec;
 
 export interface Watch {
   id: string;
@@ -1712,6 +1725,42 @@ export class TensorFeed {
   }): Promise<WatchCreateResponse> {
     return this.createWatch({
       spec: { type: 'digest', cadence: options.cadence },
+      callbackUrl: options.callbackUrl,
+      secret: options.secret,
+      fireCap: options.fireCap,
+    });
+  }
+
+  /**
+   * Convenience: register a leaderboard rank-change watch.
+   *
+   * Costs 1 credit at registration. Fires when the provider's rank in
+   * the cross-provider 7-day uptime leaderboard crosses a threshold or
+   * changes. Rank 1 = best (highest uptime).
+   *
+   * - drops_below threshold=N: was rank<=N, now rank>N (got worse)
+   * - rises_above threshold=N: was rank>=N, now rank<N (got better)
+   * - changes: any rank movement
+   *
+   * @throws Error if no token is set
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async createLeaderboardRankWatch(options: {
+    provider: string;
+    op: 'drops_below' | 'rises_above' | 'changes';
+    threshold?: number;
+    callbackUrl: string;
+    secret?: string;
+    fireCap?: number;
+  }): Promise<WatchCreateResponse> {
+    const spec: LeaderboardRankWatchSpec = {
+      type: 'leaderboard_rank',
+      provider: options.provider,
+      op: options.op,
+      ...(options.threshold !== undefined ? { threshold: options.threshold } : {}),
+    };
+    return this.createWatch({
+      spec,
       callbackUrl: options.callbackUrl,
       secret: options.secret,
       fireCap: options.fireCap,

@@ -1026,6 +1026,54 @@ class TensorFeed:
             fire_cap=fire_cap,
         )
 
+    def create_leaderboard_rank_watch(
+        self,
+        *,
+        provider: str,
+        op: str,
+        threshold: int | None = None,
+        callback_url: str,
+        secret: str | None = None,
+        fire_cap: int | None = None,
+    ) -> dict[str, Any]:
+        """Convenience helper for leaderboard rank-change webhook watches.
+
+        Costs 1 credit at registration. Fires when the provider's rank in
+        the cross-provider 7-day uptime leaderboard crosses a threshold or
+        changes. Useful for SRE / vendor-management workflows tracking
+        which AI provider is currently most reliable relative to the field.
+
+        Rank semantics: rank 1 = best (highest uptime).
+
+        Args:
+            provider: Provider name or slug (case-insensitive). e.g.
+                'claude', 'OpenAI API', 'AWS Bedrock'.
+            op: 'drops_below', 'rises_above', or 'changes'.
+            threshold: Required for drops_below / rises_above; integer
+                rank position (e.g. 5 means "below #5"). Ignored for
+                'changes'.
+            callback_url: HTTPS URL to POST to on each fire.
+            secret: Optional HMAC shared secret.
+            fire_cap: Max fires before auto-disable (default 100).
+
+        Returns:
+            Same shape as ``create_watch``.
+
+        Raises:
+            ValueError: if no token is set on the client
+            PaymentRequired: if the token has insufficient credits
+            TensorFeedError: 400 on invalid spec or callback URL
+        """
+        spec: dict[str, Any] = {"type": "leaderboard_rank", "provider": provider, "op": op}
+        if threshold is not None:
+            spec["threshold"] = threshold
+        return self.create_watch(
+            spec=spec,
+            callback_url=callback_url,
+            secret=secret,
+            fire_cap=fire_cap,
+        )
+
     # ── Paid: provider deep-dive (Tier 1, 1 credit) ────────────────
 
     def provider_deepdive(self, provider: str) -> dict[str, Any]:

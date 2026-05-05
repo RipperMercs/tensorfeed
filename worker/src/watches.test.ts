@@ -12,6 +12,7 @@ import {
   validateSpec,
   priceWatchFires,
   statusWatchFires,
+  leaderboardWatchFires,
   computePriceTransitions,
   signBody,
   createWatch,
@@ -20,9 +21,11 @@ import {
   deleteWatch,
   dispatchPriceWatches,
   dispatchStatusWatches,
+  dispatchLeaderboardWatches,
   runDigestWatchCycle,
   PriceWatchSpec,
   StatusWatchSpec,
+  LeaderboardRankWatchSpec,
 } from './watches';
 import type { Env } from './types';
 
@@ -156,6 +159,58 @@ describe('validateSpec', () => {
     expect(r.ok).toBe(false);
     expect(r.error).toBe('digest_watch_cadence_invalid');
   });
+
+  it('accepts a leaderboard_rank watch with drops_below + threshold', () => {
+    expect(
+      validateSpec({
+        type: 'leaderboard_rank',
+        provider: 'claude',
+        op: 'drops_below',
+        threshold: 5,
+      }).ok,
+    ).toBe(true);
+  });
+
+  it('accepts a leaderboard_rank watch with op=changes (no threshold)', () => {
+    expect(
+      validateSpec({ type: 'leaderboard_rank', provider: 'claude', op: 'changes' }).ok,
+    ).toBe(true);
+  });
+
+  it('rejects leaderboard_rank without provider', () => {
+    const r = validateSpec({ type: 'leaderboard_rank', op: 'changes' });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('leaderboard_watch_provider_required');
+  });
+
+  it('rejects leaderboard_rank drops_below without threshold', () => {
+    const r = validateSpec({
+      type: 'leaderboard_rank',
+      provider: 'claude',
+      op: 'drops_below',
+    });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('leaderboard_watch_threshold_required');
+  });
+
+  it('rejects leaderboard_rank with non-integer or negative threshold', () => {
+    expect(
+      validateSpec({
+        type: 'leaderboard_rank',
+        provider: 'claude',
+        op: 'rises_above',
+        threshold: 1.5,
+      }).error,
+    ).toBe('leaderboard_watch_threshold_required');
+    expect(
+      validateSpec({
+        type: 'leaderboard_rank',
+        provider: 'claude',
+        op: 'rises_above',
+        threshold: 0,
+      }).error,
+    ).toBe('leaderboard_watch_threshold_required');
+  });
 });
 
 // ── priceWatchFires (predicate edge transitions) ────────────────────
@@ -272,6 +327,118 @@ describe('statusWatchFires', () => {
     expect(
       statusWatchFires(spec(), { provider: 'openai', name: 'OpenAI', from: 'operational', to: 'down' }),
     ).toBe(false);
+  });
+});
+
+// ── leaderboardWatchFires ───────────────────────────────────────────
+
+describe('leaderboardWatchFires', () => {
+  const spec = (over: Partial<LeaderboardRankWatchSpec> = {}): LeaderboardRankWatchSpec => ({
+    type: 'leaderboard_rank',
+    provider: 'Claude API',
+    op: 'drops_below',
+    threshold: 5,
+    ...over,
+  });
+
+  it('fires drops_below when crossing the threshold edge', () => {
+    expect(
+      leaderboardWatchFires(spec(), { provider: 'Claude API', from: 5, to: 6, uptime_pct: 99 }),
+    ).toBe(true);
+    expect(
+      leaderboardWatchFires(spec(), { provider: 'Claude API', from: 4, to: 7, uptime_pct: 99 }),
+    ).toBe(true);
+  });
+
+  it('does not fire drops_below when already below the threshold', () => {
+    expect(
+      leaderboardWatchFires(spec(), { provider: 'Claude API', from: 7, to: 9, uptime_pct: 99 }),
+    ).toBe(false);
+  });
+
+  it('fires rises_above when crossing back over the threshold edge', () => {
+    expect(
+      leaderboardWatchFires(spec({ op: 'rises_above', threshold: 5 }), {
+        provider: 'Claude API',
+        from: 7,
+        to: 4,
+        uptime_pct: 99.9,
+      }),
+    ).toBe(true);
+    expect(
+      leaderboardWatchFires(spec({ op: 'rises_above', threshold: 5 }), {
+        provider: 'Claude API',
+        from: 5,
+        to: 4,
+        uptime_pct: 99.9,
+      }),
+    ).toBe(true);
+  });
+
+  it('does not fire rises_above when already above the threshold', () => {
+    expect(
+      leaderboardWatchFires(spec({ op: 'rises_above', threshold: 5 }), {
+        provider: 'Claude API',
+        from: 3,
+        to: 2,
+        uptime_pct: 99.9,
+      }),
+    ).toBe(false);
+  });
+
+  it('fires changes on any rank movement', () => {
+    expect(
+      leaderboardWatchFires(spec({ op: 'changes', threshold: undefined }), {
+        provider: 'Claude API',
+        from: 3,
+        to: 4,
+        uptime_pct: 99.9,
+      }),
+    ).toBe(true);
+    expect(
+      leaderboardWatchFires(spec({ op: 'changes', threshold: undefined }), {
+        provider: 'Claude API',
+        from: 1,
+        to: 5,
+        uptime_pct: 99.9,
+      }),
+    ).toBe(true);
+  });
+
+  it('does not fire when rank is unchanged', () => {
+    expect(
+      leaderboardWatchFires(spec({ op: 'changes', threshold: undefined }), {
+        provider: 'Claude API',
+        from: 4,
+        to: 4,
+        uptime_pct: 99.9,
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects mismatched providers', () => {
+    expect(
+      leaderboardWatchFires(spec(), { provider: 'OpenAI API', from: 5, to: 6, uptime_pct: 99 }),
+    ).toBe(false);
+  });
+
+  it('matches case-insensitively across slug or display name', () => {
+    expect(
+      leaderboardWatchFires(spec({ provider: 'claude' }), {
+        provider: 'Claude API',
+        from: 5,
+        to: 6,
+        uptime_pct: 99,
+      }),
+    ).toBe(true);
+    expect(
+      leaderboardWatchFires(spec({ provider: 'CLAUDE API' }), {
+        provider: 'Claude API',
+        from: 5,
+        to: 6,
+        uptime_pct: 99,
+      }),
+    ).toBe(true);
   });
 });
 
