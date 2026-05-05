@@ -307,8 +307,21 @@ Authoritative list lives in `src/app/sitemap.ts`. Major buckets:
 - `openapi-validate.yml`: lints `public/openapi.json` and `public/openapi.yaml` with Redocly CLI on every change. Catches schema-shape errors a plain `JSON.parse` cannot. No secret.
 - `publish-python-sdk.yml`: auto-publishes `tensorfeed` to PyPI when its `pyproject.toml` version field changes. Skips if the version already exists on PyPI (idempotent re-run). Secret: `PYPI_TOKEN`.
 - `publish-npm.yml`: auto-publishes `tensorfeed` (JS SDK) and `@tensorfeed/mcp-server` to npm when their `package.json` version fields change. Two parallel jobs, each idempotent. Authenticates via npm OIDC Trusted Publishers (no long-lived token; each package on npm is configured to trust this exact workflow file in this repo, and npm CLI auto-detects the GitHub OIDC provider on the runner). Each publish carries a `--provenance` cryptographic attestation, surfaced as a "Verified provenance" badge on npm. To configure trust on a new package, see the package's npm settings page → Access → Trusted Publisher.
+- `pages-rebuild-cron.yml`: every 15 minutes POSTs to a Cloudflare Pages deploy hook to rebuild the static site so that build-time snapshots (status grid, hero stats, /is-X-down pages) stay fresh. Secret: `CLOUDFLARE_PAGES_DEPLOY_HOOK`. See "Hybrid freshness model" below.
 
 The MCP registry republish (`scripts/mcp-publish.ps1`) is still manual because it requires the Ed25519 private key (`.mcp-key`); not wired into CI to avoid putting a long-lived signing key in repo secrets.
+
+## Hybrid Freshness Model
+
+The site uses Next.js 14 with `output: 'export'`, which means every page is statically generated at build time. Server-component fetches with `next: { revalidate }` hints are silently ignored under static export, so without explicit refresh, build-time API snapshots stay frozen until the next git push.
+
+Three layers keep the user-visible site current:
+
+1. **Worker /api/* is always live.** Every endpoint under `tensorfeed.ai/api/*` is served by the Cloudflare Worker and runs against KV + Cache API on every request. Anything an agent or SDK fetches is real-time (subject to the Worker's own 30 to 60 second cache layer).
+2. **Client-side polling on the homepage alert bar.** `src/components/home/StatusAlertBar.tsx` is a client component that hydrates with the build-time snapshot, then polls `/api/status` every 90 seconds. Effect: a real outage flips the bar within 90 seconds even if the static build is hours old.
+3. **Periodic Pages rebuild (pages-rebuild-cron.yml).** A scheduled GitHub Action POSTs to a Cloudflare Pages deploy hook every 15 minutes. The deploy hook URL lives in the `CLOUDFLARE_PAGES_DEPLOY_HOOK` repo secret. Effect: the rest of the static surface (status grid latencies, hero KPI numbers, /is-X-down pages, /status pillar content) refreshes within ~15 minutes of truth.
+
+If the Pages plan ever caps build minutes, throttle the cron to `*/30` or `*/60` rather than disabling it; the alert bar still gives instant visual feedback during incidents, the cron primarily refreshes the long tail of static numbers.
 
 ## Feeds & Agent Discovery
 

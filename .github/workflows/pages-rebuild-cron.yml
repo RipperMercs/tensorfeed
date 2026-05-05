@@ -1,0 +1,63 @@
+name: Refresh static Pages build
+
+# Cloudflare Pages serves the homepage and all static routes from a
+# build that snapshots /api/status, /api/news, etc at build time.
+# Without an explicit trigger, those snapshots stay frozen until the
+# next git push to main.
+#
+# This workflow fires every 15 minutes and POSTs to a Cloudflare Pages
+# deploy hook, which kicks off a fresh production build that re-fetches
+# all static data. Combined with the client-side polling on
+# StatusAlertBar (90 second cadence), the homepage stays both visually
+# correct between builds (bar flips up live) and structurally fresh
+# across builds (status grid latencies, hero stats, /is-X-down pages
+# all refresh every 15 min).
+#
+# Required secret: CLOUDFLARE_PAGES_DEPLOY_HOOK
+#   The full deploy-hook URL from Cloudflare. Generate at:
+#     dash.cloudflare.com -> Workers & Pages -> tensorfeed
+#     -> Settings -> Builds & deployments -> Deploy hooks
+#     -> Add deploy hook (give it a name + branch=main)
+#   The result is a URL like:
+#     https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/<uuid>
+#   Copy the full URL and save it as a repo secret named
+#   CLOUDFLARE_PAGES_DEPLOY_HOOK.
+#
+# Cost note: Cloudflare Pages free tier allows 500 builds per month.
+# 96 rebuilds per day (every 15 min) = ~2900 per month, which exceeds
+# the free tier. If staying on free tier, change the cron to */30 or
+# */60 (1440 or 720 builds per month, both under the cap). For paid
+# Pages plans the cap goes much higher and 15 min is fine.
+
+on:
+  schedule:
+    # Every 15 minutes. Adjust based on Pages plan; see comment above.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - name: Trigger Cloudflare Pages rebuild
+        run: |
+          set -e
+          if [ -z "${HOOK}" ]; then
+            echo "::error::CLOUDFLARE_PAGES_DEPLOY_HOOK secret is not set."
+            echo "Configure at: github.com/RipperMercs/tensorfeed/settings/secrets/actions"
+            exit 1
+          fi
+          response=$(curl -sS -X POST -w "\nHTTP_STATUS:%{http_code}" "${HOOK}")
+          status=$(echo "$response" | tail -n1 | sed 's/HTTP_STATUS://')
+          body=$(echo "$response" | sed '$d')
+          echo "Status: $status"
+          echo "Body: $body"
+          # Cloudflare returns 200 with a JSON body containing the new
+          # deployment id. Anything else is a real failure.
+          if [ "$status" != "200" ]; then
+            echo "::error::Deploy hook returned HTTP $status"
+            exit 1
+          fi
+        env:
+          HOOK: ${{ secrets.CLOUDFLARE_PAGES_DEPLOY_HOOK }}

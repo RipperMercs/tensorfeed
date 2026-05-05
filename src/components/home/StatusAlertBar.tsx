@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, ArrowRight, CheckCircle2 } from 'lucide-react';
 
@@ -7,6 +10,12 @@ interface StatusAlertBarService {
 }
 
 interface StatusAlertBarProps {
+  /**
+   * Build-time snapshot of services from the static page render.
+   * Used as the initial state so the bar renders correctly on first
+   * paint (no flash, no layout shift). The client then polls
+   * /api/status every 90 seconds to refresh.
+   */
   services: StatusAlertBarService[];
 }
 
@@ -27,6 +36,8 @@ const SERVICE_HREFS: Record<string, string> = {
   Replicate: '/is-replicate-down',
   Midjourney: '/is-midjourney-down',
 };
+
+const POLL_INTERVAL_MS = 90_000;
 
 function classifySeverity(services: StatusAlertBarService[]): 'down' | 'degraded' | 'ok' {
   let worst: 'ok' | 'degraded' | 'down' = 'ok';
@@ -56,17 +67,54 @@ function affectedNames(services: StatusAlertBarService[]): string[] {
  * click-through to the corresponding /is-X-down detail page (or to
  * /status as a fallback).
  *
- * The "all green" branch is rendered as a thin, low-contrast confirmation
- * strip rather than completely hidden, because a) it gives returning
- * users instant reassurance during their bookmark visit, b) it makes
- * the conditional bar's appearance during incidents less of a layout
- * shift surprise, and c) "all systems operational" is itself a useful
- * SEO signal for status-anxious queries that land on the homepage.
+ * Hybrid freshness model: the page is statically exported, so the
+ * initial render reflects the build-time snapshot of services. This
+ * component then polls /api/status every 90 seconds on the client to
+ * keep the bar live during a session. That means a user who lands on
+ * the homepage during a real outage sees the bar flip up within
+ * 90 seconds even if the static build is hours old. The companion
+ * pages-rebuild-cron.yml workflow refreshes the rest of the static
+ * page (status grid, hero stats) every 15 minutes by triggering a
+ * Cloudflare Pages rebuild.
  *
- * Designed to be a server component (no 'use client'); reads the
- * services array passed in from the homepage server fetch.
+ * The "all green" branch renders a thin low-contrast confirmation
+ * strip rather than nothing, because a) it gives returning users
+ * instant reassurance during a bookmark visit, b) it makes the
+ * conditional bar's appearance during incidents less of a layout
+ * shift, and c) "all systems operational" is itself a useful SEO
+ * signal for status-anxious queries that land on the homepage.
  */
-export default function StatusAlertBar({ services }: StatusAlertBarProps) {
+export default function StatusAlertBar({ services: initialServices }: StatusAlertBarProps) {
+  const [services, setServices] = useState<StatusAlertBarService[]>(initialServices);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchOnce = async () => {
+      try {
+        const res = await fetch('/api/status', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as { ok?: boolean; services?: StatusAlertBarService[] };
+        if (!data.ok || !Array.isArray(data.services)) return;
+        if (!cancelled) {
+          setServices(data.services.map((s) => ({ name: s.name, status: s.status })));
+        }
+      } catch {
+        // Network blip; keep last-known-good state until next poll.
+      }
+    };
+
+    // First refresh fires immediately so the user does not have to wait
+    // a full poll interval for stale build-time data to clear if the
+    // static export is significantly old.
+    fetchOnce();
+    const t = setInterval(fetchOnce, POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, []);
+
   const severity = classifySeverity(services);
   const affected = affectedNames(services);
 
