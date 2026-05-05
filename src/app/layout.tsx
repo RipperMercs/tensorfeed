@@ -7,6 +7,7 @@ import ViewModeProvider from '@/components/ViewModeProvider';
 import AgentView from '@/components/AgentView';
 import CookieConsent from '@/components/CookieConsent';
 import LiveTicker from '@/components/home/LiveTicker';
+import StatusAlertBar from '@/components/home/StatusAlertBar';
 import JsonLd from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
@@ -118,6 +119,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ViewModeProvider>
             <LiveTicker />
+            <StatusAlertBar services={[]} />
             <Navbar />
             <main className="flex-1">{children}</main>
             <ConditionalFooter />

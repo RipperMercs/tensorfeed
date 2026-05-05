@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
 type TickerKind = 'news' | 'status' | 'price' | 'benchmark' | 'release';
 type TickerCls = 'up' | 'down' | 'warn' | 'info' | 'ok';
 
@@ -9,23 +13,71 @@ interface TickerItem {
   cls?: TickerCls;
 }
 
-const ITEMS: TickerItem[] = [
-  { kind: 'news', tag: 'ANTHROPIC', text: 'Opus 4.7 benchmarks published', mono: '2m ago' },
-  { kind: 'status', tag: 'CLAUDE', text: 'OK', mono: '142ms', cls: 'up' },
+interface FetchedService {
+  name: string;
+  status: string;
+}
+
+const STATUS_POLL_MS = 90_000;
+
+// Short-name aliases so the ticker reads cleanly. Falls back to the
+// service's own name if not listed here.
+const TICKER_NAME: Record<string, string> = {
+  'Claude API': 'CLAUDE',
+  'ChatGPT / OpenAI API': 'CHATGPT',
+  'OpenAI API': 'CHATGPT',
+  'Google Gemini': 'GEMINI',
+  'Gemini API': 'GEMINI',
+  'AWS Bedrock': 'BEDROCK',
+  'Azure OpenAI': 'AZURE',
+  'Mistral Platform': 'MISTRAL',
+  Mistral: 'MISTRAL',
+  'GitHub Copilot': 'COPILOT',
+  Perplexity: 'PERPLEXITY',
+  Cohere: 'COHERE',
+  HuggingFace: 'HUGGINGFACE',
+  Replicate: 'REPLICATE',
+  Midjourney: 'MIDJOURNEY',
+  DeepSeek: 'DEEPSEEK',
+  'Together AI': 'TOGETHER',
+  'Fireworks AI': 'FIREWORKS',
+  OpenRouter: 'OPENROUTER',
+  ElevenLabs: 'ELEVENLABS',
+  'Stability AI': 'STABILITY',
+  Runway: 'RUNWAY',
+  Luma: 'LUMA',
+  'Luma AI': 'LUMA',
+};
+
+// Evergreen items the ticker always shows. These are facts that change
+// infrequently enough to hardcode (and we update by editing this file
+// when they go stale), in contrast to the status items which are now
+// fetched live. No timestamps, no "X minutes ago" — those would be
+// dishonest in a static export.
+const EVERGREEN_ITEMS: TickerItem[] = [
   { kind: 'price', tag: 'OPUS 4.7', text: '$15 / $75', mono: 'per Mtok' },
-  { kind: 'status', tag: 'CHATGPT', text: 'OK', mono: '89ms', cls: 'up' },
-  { kind: 'news', tag: 'HACKERNEWS', text: 'Why has not AI improved design quality the way it improved dev speed?', mono: '14m ago' },
-  { kind: 'benchmark', tag: 'MMLU-PRO', text: 'leader Opus 4.7', mono: '88.4', cls: 'info' },
-  { kind: 'status', tag: 'GEMINI', text: 'DEGRADED', mono: '312ms', cls: 'warn' },
-  { kind: 'release', tag: 'MISTRAL', text: 'Mistral Medium 3 released', mono: '6m ago' },
-  { kind: 'price', tag: 'GPT-4o', text: '$5 / $15', mono: 'per Mtok' },
-  { kind: 'news', tag: 'ARXIV', text: 'Compositional reasoning in LRMs', mono: '22m ago' },
-  { kind: 'status', tag: 'BEDROCK', text: 'OK', mono: '178ms', cls: 'up' },
-  { kind: 'price', tag: 'GEMINI 2.5', text: '$3.50 / $10.50', mono: 'per Mtok' },
-  { kind: 'news', tag: 'THE VERGE', text: 'Frontier Model Forum expansion announced', mono: '38m ago' },
+  { kind: 'price', tag: 'SONNET 4.6', text: '$3 / $15', mono: 'per Mtok' },
+  { kind: 'price', tag: 'GPT-5.5', text: '$10 / $30', mono: 'per Mtok' },
+  { kind: 'price', tag: 'GEMINI 3.1', text: '$3.50 / $10.50', mono: 'per Mtok' },
   { kind: 'benchmark', tag: 'SWE-BENCH', text: 'leader Claude Opus 4.7', mono: '72.1%', cls: 'info' },
-  { kind: 'status', tag: 'MISTRAL', text: 'OK', mono: '104ms', cls: 'up' },
+  { kind: 'benchmark', tag: 'MMLU-PRO', text: 'leader Opus 4.7', mono: '88.4', cls: 'info' },
+  { kind: 'benchmark', tag: 'VALS FINANCE', text: 'leader Opus 4.7', mono: '64.4%', cls: 'info' },
+  { kind: 'release', tag: 'AFTA', text: 'v1.0 whitepaper live at /whitepaper' },
 ];
+
+function statusToCls(status: string): TickerCls {
+  const v = (status || '').toLowerCase();
+  if (v === 'down' || v === 'major' || v === 'outage') return 'down';
+  if (v === 'degraded' || v === 'partial' || v === 'warn') return 'warn';
+  return 'up';
+}
+
+function statusToText(status: string): string {
+  const v = (status || '').toLowerCase();
+  if (v === 'down' || v === 'major' || v === 'outage') return 'DOWN';
+  if (v === 'degraded' || v === 'partial' || v === 'warn') return 'DEGRADED';
+  return 'OK';
+}
 
 const VAL_COLOR: Record<TickerCls, string> = {
   up: 'var(--accent-green)',
@@ -42,8 +94,57 @@ const DOT_COLOR: Record<string, string> = {
   up: 'var(--accent-green)',
 };
 
+function buildStatusItems(services: FetchedService[]): TickerItem[] {
+  // Limit to a reasonable count so the ticker doesn't get cluttered.
+  // Show degraded/down first (more important for users to see) then
+  // a sample of operational services.
+  const named = services.filter((s) => TICKER_NAME[s.name]);
+  const bad = named.filter((s) => statusToCls(s.status) !== 'up');
+  const okPool = named.filter((s) => statusToCls(s.status) === 'up').slice(0, 6);
+  return [...bad, ...okPool].map((s) => ({
+    kind: 'status' as const,
+    tag: TICKER_NAME[s.name] ?? s.name.toUpperCase(),
+    text: statusToText(s.status),
+    cls: statusToCls(s.status),
+  }));
+}
+
 export default function LiveTicker() {
-  const loop = [...ITEMS, ...ITEMS];
+  // Server render shows evergreen-only ticker. Client hydrates with
+  // live status pulled from /api/status. This means SSR output is
+  // honest (no fake status claims) and clients see live data within
+  // a render tick after hydration.
+  const [statusItems, setStatusItems] = useState<TickerItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchOnce = async () => {
+      try {
+        const res = await fetch('/api/status', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as { ok?: boolean; services?: FetchedService[] };
+        if (!data.ok || !Array.isArray(data.services)) return;
+        if (cancelled) return;
+        setStatusItems(buildStatusItems(data.services));
+      } catch {
+        // Network blip; keep last-known items, don't replace with fake data.
+      }
+    };
+
+    fetchOnce();
+    const t = setInterval(fetchOnce, STATUS_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, []);
+
+  // Interleave: status items (live), then evergreen, then status again
+  // so the marquee sees both as it scrolls. If status fetch hasn't
+  // completed yet, the ticker shows evergreen-only — never fake status.
+  const items: TickerItem[] = [...statusItems, ...EVERGREEN_ITEMS];
+  const loop = items.length > 0 ? [...items, ...items] : EVERGREEN_ITEMS;
 
   return (
     <section
@@ -88,10 +189,7 @@ export default function LiveTicker() {
         LIVE
       </div>
 
-      <div
-        className="tf-ticker-track flex whitespace-nowrap"
-        style={{ paddingLeft: 130 }}
-      >
+      <div className="tf-ticker-track flex whitespace-nowrap" style={{ paddingLeft: 130 }}>
         {loop.map((item, i) => (
           <div
             key={i}
@@ -111,7 +209,8 @@ export default function LiveTicker() {
                   height: 7,
                   borderRadius: '50%',
                   background: DOT_COLOR[item.cls] ?? 'var(--accent-green)',
-                  boxShadow: item.cls === 'up' || item.cls === 'ok' ? '0 0 6px var(--accent-green)' : undefined,
+                  boxShadow:
+                    item.cls === 'up' || item.cls === 'ok' ? '0 0 6px var(--accent-green)' : undefined,
                 }}
               />
             )}
