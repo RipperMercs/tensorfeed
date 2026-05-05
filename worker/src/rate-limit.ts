@@ -180,4 +180,92 @@ export const RATE_LIMIT_DEFAULTS = {
 // Test-only: clear the in-memory state between unit tests.
 export function _resetRateLimitState(): void {
   buckets.clear();
+  noChargeBuckets.clear();
 }
+
+// === Per-token no-charge abuse limiter ============================
+//
+// Closes the asymmetric resource exhaustion vector identified in the
+// 2026-05-05 Gemini security audit. An attacker with a valid bearer
+// token could spam premium endpoints with requests that intentionally
+// fail schema validation (or trip the circuit breaker) to force the
+// worker to perform expensive Ed25519 receipt signing N times per
+// minute, with zero credit cost.
+//
+// Mitigation: track per-token no-charge events in an in-memory bucket
+// (same primitive as the IP rate limiter). When a token exceeds the
+// threshold, refuse to sign further no-charge receipts and short-
+// circuit with a cheap 429. Legitimate users will not hit this:
+// 20 no-charge events per minute is well above any honest agent's
+// error rate.
+//
+// Memory: bounded by MAX_TRACKED_TOKENS via the same soft-GC pattern.
+
+const NO_CHARGE_WINDOW_MS = 60_000;
+const NO_CHARGE_LIMIT_PER_MIN = 20;
+const MAX_TRACKED_TOKENS = 50_000;
+
+interface NoChargeState {
+  count: number;
+  windowStart: number;
+}
+
+const noChargeBuckets: Map<string, NoChargeState> = new Map();
+
+export interface NoChargeAbuseResult {
+  abusive: boolean;
+  count: number;
+  limit: number;
+  resetSeconds: number;
+}
+
+/**
+ * Check and increment the per-token no-charge counter. Returns
+ * `abusive: true` once the token exceeds NO_CHARGE_LIMIT_PER_MIN no-
+ * charge events in a single window. Callers should skip signReceipt
+ * (and the AFTA ledger write) when abusive=true to deny attackers
+ * the cryptographic-signing CPU spend.
+ *
+ * The token argument should be the full bearer token; we hash it
+ * implicitly via Map keying. No-op for empty strings.
+ */
+export function checkNoChargeAbuse(token: string): NoChargeAbuseResult {
+  if (!token) {
+    return {
+      abusive: false,
+      count: 0,
+      limit: NO_CHARGE_LIMIT_PER_MIN,
+      resetSeconds: NO_CHARGE_WINDOW_MS / 1000,
+    };
+  }
+  const now = Date.now();
+
+  if (noChargeBuckets.size > MAX_TRACKED_TOKENS) {
+    for (const [key, state] of noChargeBuckets) {
+      if (now - state.windowStart > NO_CHARGE_WINDOW_MS * 2) noChargeBuckets.delete(key);
+      if (noChargeBuckets.size <= MAX_TRACKED_TOKENS / 2) break;
+    }
+  }
+
+  let state = noChargeBuckets.get(token);
+  if (!state || now - state.windowStart >= NO_CHARGE_WINDOW_MS) {
+    state = { count: 0, windowStart: now };
+    noChargeBuckets.set(token, state);
+  }
+  state.count += 1;
+  const resetSeconds = Math.max(
+    1,
+    Math.ceil((state.windowStart + NO_CHARGE_WINDOW_MS - now) / 1000),
+  );
+  return {
+    abusive: state.count > NO_CHARGE_LIMIT_PER_MIN,
+    count: state.count,
+    limit: NO_CHARGE_LIMIT_PER_MIN,
+    resetSeconds,
+  };
+}
+
+export const NO_CHARGE_ABUSE_DEFAULTS = {
+  WINDOW_MS: NO_CHARGE_WINDOW_MS,
+  LIMIT_PER_MIN: NO_CHARGE_LIMIT_PER_MIN,
+};

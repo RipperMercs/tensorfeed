@@ -148,6 +148,7 @@ import { maybeSimulatedErrorResponse, applySimulatedLatency } from './chaos';
 import {
   applyRateLimitHeaders,
   checkIPRateLimit,
+  checkNoChargeAbuse,
   getClientIP,
   isRateLimitExempt,
   rateLimitedResponse,
@@ -496,6 +497,39 @@ async function premiumValidationFailure(
 ): Promise<Response> {
   const url = new URL(request.url);
   const endpoint = url.pathname;
+
+  // Asymmetric resource exhaustion guard (post-2026-05-05 audit fix):
+  // attackers with a valid bearer token could spam endpoints with
+  // intentionally-invalid bodies to force the worker to perform
+  // expensive Ed25519 signing per request, with zero credit cost
+  // because schema_validation_failure is a no-charge event. The
+  // per-token abuse limiter caps no-charge events at
+  // NO_CHARGE_LIMIT_PER_MIN per minute. Past the cap we short-circuit
+  // with a cheap 429 (no signReceipt) so the attacker burns their own
+  // bandwidth without burning ours.
+  const abuse = payment.token ? checkNoChargeAbuse(payment.token) : { abusive: false, count: 0, limit: 0, resetSeconds: 60 };
+  if (abuse.abusive) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: 'no_charge_abuse',
+        message:
+          'This bearer token has exceeded the no-charge event limit for the current minute. Receipt signing is throttled to prevent asymmetric resource exhaustion. Honest agents should never reach this limit; persistent triggering will result in token revocation.',
+        limit: abuse.limit,
+        count: abuse.count,
+        reset_seconds: abuse.resetSeconds,
+        doc: '/agent-fair-trade#abuse',
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(abuse.resetSeconds),
+          'Cache-Control': 'no-store',
+        },
+      },
+    );
+  }
 
   // Log the no-charge event and ensure no debit. commitPayment with
   // schema_validation_failure as the reason writes to the ledger and

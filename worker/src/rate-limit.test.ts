@@ -2,11 +2,13 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import {
   applyRateLimitHeaders,
   checkIPRateLimit,
+  checkNoChargeAbuse,
   getClientIP,
   isRateLimitExempt,
   rateLimitedResponse,
   _resetRateLimitState,
   RATE_LIMIT_DEFAULTS,
+  NO_CHARGE_ABUSE_DEFAULTS,
 } from './rate-limit';
 
 describe('rate-limit', () => {
@@ -120,6 +122,50 @@ describe('rate-limit', () => {
       const body = (await r.json()) as { error: string; reset_seconds: number };
       expect(body.error).toBe('rate_limit_exceeded');
       expect(body.reset_seconds).toBe(30);
+    });
+  });
+
+  // ── No-charge abuse limiter (asymmetric exhaustion fix) ─────────
+  describe('checkNoChargeAbuse', () => {
+    it('marks abusive=false until the threshold is exceeded', () => {
+      const token = 'tf_live_abusetest1';
+      // First N calls under threshold should report abusive=false
+      for (let i = 0; i < NO_CHARGE_ABUSE_DEFAULTS.LIMIT_PER_MIN; i++) {
+        const r = checkNoChargeAbuse(token);
+        expect(r.abusive).toBe(false);
+      }
+      // The (LIMIT+1)-th call exceeds the threshold
+      const over = checkNoChargeAbuse(token);
+      expect(over.abusive).toBe(true);
+      expect(over.count).toBe(NO_CHARGE_ABUSE_DEFAULTS.LIMIT_PER_MIN + 1);
+    });
+
+    it('isolates counters per token (one offender does not throttle another)', () => {
+      const a = 'tf_live_abusetest_a';
+      const b = 'tf_live_abusetest_b';
+      // Pump A to abusive
+      for (let i = 0; i < NO_CHARGE_ABUSE_DEFAULTS.LIMIT_PER_MIN + 5; i++) {
+        checkNoChargeAbuse(a);
+      }
+      const aResult = checkNoChargeAbuse(a);
+      expect(aResult.abusive).toBe(true);
+
+      // B should still be clean
+      const bResult = checkNoChargeAbuse(b);
+      expect(bResult.abusive).toBe(false);
+      expect(bResult.count).toBe(1);
+    });
+
+    it('returns non-abusive for empty token (defensive)', () => {
+      const r = checkNoChargeAbuse('');
+      expect(r.abusive).toBe(false);
+      expect(r.count).toBe(0);
+    });
+
+    it('exposes a reset_seconds value within the window', () => {
+      const r = checkNoChargeAbuse('tf_live_resetcheck');
+      expect(r.resetSeconds).toBeGreaterThan(0);
+      expect(r.resetSeconds).toBeLessThanOrEqual(NO_CHARGE_ABUSE_DEFAULTS.WINDOW_MS / 1000);
     });
   });
 });
