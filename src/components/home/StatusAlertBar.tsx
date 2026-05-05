@@ -144,7 +144,7 @@ export default function StatusAlertBar({ services: initialServices }: StatusAler
           borderColor: 'rgba(16,185,129,0.20)',
         }}
       >
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between flex-wrap gap-3 font-mono text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between flex-wrap gap-3 font-mono text-xs">
           <div className="inline-flex items-center gap-2" style={{ color: 'var(--accent-green)' }}>
             <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
             <span style={{ letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
@@ -191,7 +191,7 @@ export default function StatusAlertBar({ services: initialServices }: StatusAler
       }}
     >
       <div
-        className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between flex-wrap gap-3"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between flex-wrap gap-3"
       >
         <div className="inline-flex items-center gap-2.5 flex-wrap">
           <AlertTriangle
