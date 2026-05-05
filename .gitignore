@@ -71,3 +71,9 @@ mcp-server/registry/
 CLAUDE.md
 docs/ARCHITECTURE.md
 sdk/python/PUBLISHING.md
+
+# Local-only spec / planning files (public-repo policy)
+specs/
+
+# Stray build / prebuild stdout dumps (not source)
+build-output.txt
