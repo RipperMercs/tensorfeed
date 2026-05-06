@@ -59,6 +59,11 @@ export interface Env {
   //   wrangler secret put SEMANTIC_SCHOLAR_API_KEY
   // Powers the daily AI papers capture in worker/src/papers.ts.
   SEMANTIC_SCHOLAR_API_KEY?: string;
+  // FRED API key (free registration at fred.stlouisfed.org). Required
+  // for /api/economy/fred/indicators. If unset the endpoint returns
+  // 503 with a hint and the daily refresh is skipped gracefully. Set
+  // with: wrangler secret put FRED_API_KEY
+  FRED_API_KEY?: string;
   // Agent Fair-Trade Agreement: Ed25519 private key used to sign every
   // premium response receipt. Stored as a JWK string (kty=OKP, crv=Ed25519).
   // Generate with `node worker/scripts/generate-receipt-key.mjs` and set

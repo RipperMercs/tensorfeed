@@ -77,6 +77,11 @@ import {
   readPyPITrending,
   isValidCategory as isValidPyPICategory,
 } from './pypi-ai-packages';
+import {
+  refreshFREDIndicators,
+  readIndicators as readFREDIndicators,
+  isValidCategory as isValidFREDCategory,
+} from './fred-indicators';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1782,6 +1787,7 @@ export default {
           pypiAITrending: '/api/packages/pypi/ai-trending?category=llm-sdk|agent-framework|rag|inference|evals|observability|tooling|mcp&limit= (curated, monthly downloads via pypistats.org / Linehaul / PyPI BigQuery public dataset)',
           researchInstitutionsAI: '/api/research/institutions/ai?country=&type=&limit= (OpenAlex CC0; top institutions by AI-tagged publications, last 365 days)',
           economyBLSIndicators: '/api/economy/bls/indicators?category=inflation|employment|wages|labor-force|jolts (US Bureau of Labor Statistics, public domain; CPI, unemployment, payrolls, JOLTS, etc., 24-month history with MoM delta)',
+          economyFREDIndicators: '/api/economy/fred/indicators?category=rates|gdp|money|housing|fx|commodities (Federal Reserve Economic Data, public domain; fed funds, 10Y/2Y treasuries + spread, GDP, M2, mortgage rate, USD index, oil; native frequency per series)',
           policyAIRegistry: '/api/policy/ai/registry?jurisdiction=US-Federal|US-State|EU|UK|China|International&type=executive-order|statute|regulation|guidance|declaration|agency-action&status=active|phased|pending|rescinded|vetoed|proposed&scope=transparency|safety|high-risk|deepfakes|export-controls|...',
           routingPreview: '/api/preview/routing',
           premiumRouting: '/api/premium/routing',
@@ -2428,6 +2434,34 @@ export default {
         scope: url.searchParams.get('scope') ?? undefined,
       });
       return jsonResponse(result, 200, 3600);
+    }
+
+    // === FRED MACRO INDICATORS (free) ===
+    // Federal Reserve Economic Data: rates (DFF, DGS10, DGS2, T10Y2Y),
+    // GDP (GDP, GDPC1), money (M2SL), housing (MORTGAGE30US), FX
+    // (DTWEXBGS), commodities (DCOILWTICO). Public-domain data.
+    // Requires FRED_API_KEY Worker secret (free at fred.stlouisfed.org).
+    // Daily refresh at 05:30 UTC.
+
+    if (path === '/api/economy/fred/indicators') {
+      const categoryParam = url.searchParams.get('category');
+      if (categoryParam && !isValidFREDCategory(categoryParam)) {
+        return jsonResponse({
+          ok: false,
+          error: 'invalid_category',
+          valid: ['rates', 'gdp', 'money', 'housing', 'fx', 'commodities'],
+        }, 400);
+      }
+      const validCategory = categoryParam && isValidFREDCategory(categoryParam) ? categoryParam : undefined;
+      const result = await readFREDIndicators(env, { category: validCategory });
+      if (!result) {
+        return jsonResponse({
+          ok: false,
+          error: 'no_snapshot_yet',
+          hint: 'FRED_API_KEY may not be configured (free registration at fred.stlouisfed.org/docs/api/api_key.html), or the daily refresh has not yet run since deploy. Refresh runs at 05:30 UTC.',
+        }, 503);
+      }
+      return jsonResponse(result, 200, 1800);
     }
 
     // === BLS ECONOMIC INDICATORS (free) ===
@@ -4371,6 +4405,11 @@ export default {
       // we retain prior snapshot values for missing series so the
       // catalog never goes blank from a single bad fetch.
       await run('refreshBLSIndicators', () => refreshBLSIndicators(env));
+    } else if (cron === '30 5 * * *') {
+      // Daily 05:30 UTC: refresh FRED macro indicators. Public-domain
+      // data behind a free-registration API key; skips gracefully when
+      // FRED_API_KEY is unset. Same partial-failure pattern as BLS.
+      await run('refreshFREDIndicators', () => refreshFREDIndicators(env));
     }
 
     // Record RSS poll history for the daily summary digest

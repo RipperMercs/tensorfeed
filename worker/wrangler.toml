@@ -101,6 +101,12 @@ crons = [
   # via api.bls.gov V1 unregistered (25/day per IP). Powers
   # /api/economy/bls/indicators.
   "0 5 * * *",
+  # Daily 05:30 UTC: refresh FRED macro indicators (fed funds, 10Y/2Y
+  # treasuries + spread, GDP, M2, mortgage rate, USD index, oil).
+  # Public-domain data; requires FRED_API_KEY (free reg). Skips
+  # gracefully when the secret is unset. Powers
+  # /api/economy/fred/indicators.
+  "30 5 * * *",
   # X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
   # Hold at 1/day for 30 clean days before bumping to 2/day ("30 8,17 * * *").
   "30 14 * * *",
