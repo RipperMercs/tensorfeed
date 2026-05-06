@@ -406,12 +406,27 @@ export interface SeriesPoint {
   has_data: boolean;
 }
 
+export interface MCPAttribution {
+  source: string;
+  source_url: string;
+  license: string;
+  license_url: string;
+}
+
+export const MCP_REGISTRY_ATTRIBUTION: MCPAttribution = {
+  source: 'modelcontextprotocol/registry',
+  source_url: 'https://registry.modelcontextprotocol.io/',
+  license: 'Apache-2.0 / MIT',
+  license_url: 'https://github.com/modelcontextprotocol/registry/blob/main/LICENSE',
+};
+
 export interface SeriesResult {
   from: string;
   to: string;
   days: number;
   points: SeriesPoint[];
   delta_in_window: { start_total: number | null; end_total: number | null; net: number | null };
+  attribution: MCPAttribution;
   notes: string[];
 }
 
@@ -465,6 +480,7 @@ export async function getSeries(env: Env, from: string, to: string): Promise<Ser
     days: points.length,
     points,
     delta_in_window: { start_total: startTotal, end_total: endTotal, net },
+    attribution: MCP_REGISTRY_ATTRIBUTION,
     notes,
   };
 }

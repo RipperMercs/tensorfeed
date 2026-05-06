@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { NEWS_ATTRIBUTION, NewsAttribution } from './news-search';
 
 /**
  * Premium "what's new" digest summary.
@@ -150,6 +151,7 @@ export interface WhatsNewResult {
     currently_unknown: number;
   };
   news: NewsHeadline[];
+  news_attribution: NewsAttribution;
   data_freshness: {
     pricing: string | null;
     status: string | null;
@@ -366,6 +368,7 @@ export async function computeWhatsNew(
       currently_unknown: unkCount,
     },
     news: matchedNews,
+    news_attribution: NEWS_ATTRIBUTION,
     data_freshness: {
       pricing: pricingRaw?.lastUpdated ?? null,
       status: services[0]?.lastChecked ?? null,

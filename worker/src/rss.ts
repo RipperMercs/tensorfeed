@@ -144,8 +144,9 @@ async function fetchFeed(source: typeof RSS_SOURCES[number]): Promise<Article[]>
         continue;
       }
 
-      // Ensure every article has a snippet (fix empty HN descriptions)
-      let snippet = truncate(cleanDescription, 250);
+      // Snippet capped at 200 chars: matches CLAUDE.md policy and the
+      // RSS fair-use pattern (titles + ≤200-char snippets + mandatory link).
+      let snippet = truncate(cleanDescription, 200);
       if (!snippet && source.id === 'hackernews-ai') {
         snippet = `Hacker News discussion: ${item.title}`;
       } else if (!snippet) {

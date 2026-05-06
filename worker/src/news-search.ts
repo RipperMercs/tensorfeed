@@ -45,6 +45,21 @@ export interface ScoredArticle {
   matched_terms: string[];
 }
 
+export interface NewsAttribution {
+  policy: string;
+  snippet_max_chars: number;
+  link_required: true;
+  source_required: true;
+}
+
+export const NEWS_ATTRIBUTION: NewsAttribution = {
+  policy:
+    'RSS-syndicated headlines and snippets capped at 200 characters with mandatory link and source name. Title and snippet are syndicated under the publisher\'s RSS feed; full content and editorial control remain with the original publisher. Each result links to the canonical article on the source domain.',
+  snippet_max_chars: 200,
+  link_required: true,
+  source_required: true,
+};
+
 export interface NewsSearchResult {
   ok: true;
   query: string | null;
@@ -57,6 +72,7 @@ export interface NewsSearchResult {
   total_corpus: number;
   matched: number;
   returned: number;
+  attribution: NewsAttribution;
   results: {
     title: string;
     url: string;
@@ -230,6 +246,7 @@ export async function searchNews(
       total_corpus: totalCorpus,
       matched: pool.length,
       returned: sorted.length,
+      attribution: NEWS_ATTRIBUTION,
       results: sorted.map(a => ({
         title: a.title,
         url: a.url,
@@ -258,6 +275,7 @@ export async function searchNews(
       total_corpus: totalCorpus,
       matched: 0,
       returned: 0,
+      attribution: NEWS_ATTRIBUTION,
       results: [],
     };
   }
@@ -289,6 +307,7 @@ export async function searchNews(
     total_corpus: totalCorpus,
     matched: scored.length,
     returned: top.length,
+    attribution: NEWS_ATTRIBUTION,
     results: top.map(s => ({
       title: s.article.title,
       url: s.article.url,
