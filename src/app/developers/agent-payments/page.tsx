@@ -148,19 +148,19 @@ const HOWTO_JSONLD = {
       '@type': 'HowToStep',
       position: 1,
       name: 'Quote a credit purchase',
-      text: 'POST to /api/payment/buy-credits with { "amount_usd": 1.00 }. The response includes the wallet address, a memo nonce, the credit amount (50 credits at base rate), and a 30-minute expiry.',
+      text: 'POST to /api/payment/buy-credits with { "amount_usd": 1.00, "sender_wallet": "0xYOUR_EOA" }. sender_wallet is the EVM address that will sign the on-chain USDC transfer; it is bound to the quote and the confirm step rejects any tx whose on-chain from address does not match. The response includes the wallet address, a memo nonce, the credit amount (50 credits at base rate), and a 30-minute expiry.',
     },
     {
       '@type': 'HowToStep',
       position: 2,
       name: 'Send USDC on Base to the wallet',
-      text: 'From your Base wallet, transfer the quoted USDC amount to the address returned in step 1. The memo nonce is optional but recommended for traceability.',
+      text: 'From the same Base wallet listed as sender_wallet in step 1, transfer the quoted USDC amount to the address returned in step 1. The on-chain from must match sender_wallet exactly; the confirm step will reject with sender_mismatch otherwise.',
     },
     {
       '@type': 'HowToStep',
       position: 3,
       name: 'Confirm the transaction',
-      text: 'POST to /api/payment/confirm with { "tx_hash": "0x...", "nonce": "tf-..." }. The worker verifies the USDC Transfer event on-chain via the Base RPC and mints a tf_live_ bearer token tied to your credit balance.',
+      text: 'POST to /api/payment/confirm with { "tx_hash": "0x...", "nonce": "tf-..." }. nonce is required (the legacy no-nonce path is closed to prevent public-mempool tx-hash sniping). The worker verifies the USDC Transfer event on-chain via the Base RPC, confirms the sender matches the quote-bound sender_wallet, and mints a tf_live_ bearer token tied to your credit balance.',
     },
     {
       '@type': 'HowToStep',
@@ -201,12 +201,13 @@ const ENDPOINTS: PremiumEndpoint[] = [
   {
     method: 'POST',
     path: '/api/payment/buy-credits',
-    description: 'Generate a 30-minute payment quote. Returns wallet, memo (nonce), and credit count.',
+    description: 'Generate a 30-minute payment quote bound to a sender wallet. Returns wallet, memo (nonce), credit count, and the bound sender_wallet. Required body fields: amount_usd, sender_wallet.',
     cost: 'Free',
-    example: `// Body: { "amount_usd": 1.00 }
+    example: `// Body: { "amount_usd": 1.00, "sender_wallet": "0xYOUR_EOA" }
 {
   "ok": true,
   "wallet": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+  "sender_wallet": "0xyour_eoa",
   "memo": "tf-abc123",
   "amount_usd": 1.00,
   "credits": 50,
@@ -219,9 +220,12 @@ const ENDPOINTS: PremiumEndpoint[] = [
   {
     method: 'POST',
     path: '/api/payment/confirm',
-    description: 'Verify a USDC tx on Base and mint a bearer token. Idempotent: same tx submitted twice is rejected.',
+    description: 'Verify a USDC tx on Base and mint a bearer token. Requires nonce (legacy no-nonce path closed to prevent public-mempool tx sniping). The on-chain sender must match the quote-bound sender_wallet or the call returns sender_mismatch. Idempotent: same tx submitted twice is rejected.',
     cost: 'Free',
     example: `// Body: { "tx_hash": "0x...", "nonce": "tf-abc123" }
+// Note: nonce is REQUIRED. The on-chain tx.from MUST match the
+// sender_wallet that was bound to the quote, or this returns
+// { ok: false, error: "sender_mismatch" }.
 {
   "ok": true,
   "token": "tf_live_<64-hex-chars>",
@@ -709,13 +713,15 @@ const PYTHON_QUICKSTART = `from tensorfeed import TensorFeed
 
 tf = TensorFeed()
 
-# 1. Quote a credit purchase (30-minute TTL)
-quote = tf.buy_credits(amount_usd=1.00)
-print(f"Send {quote['amount_usd']} USDC on Base to {quote['wallet']}")
+# 1. Quote a credit purchase (30-minute TTL). sender_wallet is REQUIRED.
+quote = tf.buy_credits(amount_usd=1.00, sender_wallet="0xYOUR_EOA")
+print(f"Send {quote['amount_usd']} USDC on Base FROM {quote['sender_wallet']}")
+print(f"          TO {quote['wallet']}")
 print(f"Memo: {quote['memo']}")
 
-# 2. Send the USDC tx with your own wallet (Rabby, Coinbase, etc.)
-#    then confirm with the tx hash:
+# 2. Send the USDC tx FROM the same sender_wallet you bound to the
+#    quote (Rabby, Coinbase Wallet, etc.) then confirm with the tx
+#    hash. The on-chain from must match sender_wallet exactly.
 result = tf.confirm(tx_hash="0xYOUR_TX_HASH", nonce=quote["memo"])
 # The token is auto-stored on the client; routing() uses it automatically.
 
@@ -730,12 +736,16 @@ print(tf.balance())`;
 const CURL_QUICKSTART = `# Free preview (5 calls/day per IP)
 curl "https://tensorfeed.ai/api/preview/routing?task=code"
 
-# 1. Quote a purchase
+# 1. Quote a purchase. sender_wallet is REQUIRED and binds the quote
+#    to the EOA that will sign the on-chain USDC transfer. This closes
+#    the public-mempool tx sniping vector.
 curl -X POST https://tensorfeed.ai/api/payment/buy-credits \\
   -H "Content-Type: application/json" \\
-  -d '{"amount_usd": 1.00}'
+  -d '{"amount_usd": 1.00, "sender_wallet": "0xYOUR_EOA"}'
 
-# 2. Send USDC on Base to the wallet, then confirm
+# 2. Send USDC on Base from sender_wallet to the wallet returned in
+#    step 1, then confirm with the tx hash and nonce. Both fields are
+#    REQUIRED; legacy no-nonce confirm path is closed.
 curl -X POST https://tensorfeed.ai/api/payment/confirm \\
   -H "Content-Type: application/json" \\
   -d '{"tx_hash": "0xYOUR_TX", "nonce": "tf-abc123"}'
@@ -748,12 +758,24 @@ curl -H "Authorization: Bearer tf_live_..." \\
 curl -H "Authorization: Bearer tf_live_..." \\
   https://tensorfeed.ai/api/payment/balance`;
 
-const X402_FALLBACK_CURL = `# Single-retry x402 flow (no pre-flight)
+const X402_FALLBACK_CURL = `# x402 flow with sender-wallet binding (post-2026-05-05)
 curl https://tensorfeed.ai/api/premium/routing
 # 402 Payment Required + payment instructions in headers and body
 
-# Send USDC on Base to the wallet, then retry with the tx hash:
+# 1. Pre-flight quote bound to your sender wallet
+curl -X POST https://tensorfeed.ai/api/payment/buy-credits \\
+  -H "Content-Type: application/json" \\
+  -d '{"amount_usd": 1.00, "sender_wallet": "0xYOUR_EOA"}'
+# Response includes "memo": "tf-abc123"
+
+# 2. Send USDC on Base from sender_wallet to the publisher wallet.
+
+# 3. Retry the premium endpoint with BOTH X-Payment-Tx and
+#    X-Payment-Quote headers. Both are REQUIRED on the x402 fallback;
+#    the worker checks the on-chain sender against the quote-bound
+#    sender_wallet and rejects sender_mismatch otherwise.
 curl -H "X-Payment-Tx: 0xYOUR_TX" \\
+     -H "X-Payment-Quote: tf-abc123" \\
   "https://tensorfeed.ai/api/premium/routing?task=code"
 # Returns the data + a fresh token in X-Payment-Token header for future calls`;
 
@@ -994,13 +1016,18 @@ export default function AgentPaymentsPage() {
               <li>
                 POST{' '}
                 <code className="text-accent-primary font-mono">/api/payment/buy-credits</code>{' '}
-                with <code className="font-mono">amount_usd</code>
+                with <code className="font-mono">amount_usd</code> and{' '}
+                <code className="font-mono">sender_wallet</code>
               </li>
-              <li>Send USDC on Base to the returned wallet (memo optional)</li>
+              <li>
+                Send USDC on Base FROM your <code className="font-mono">sender_wallet</code> to the
+                returned wallet
+              </li>
               <li>
                 POST{' '}
                 <code className="text-accent-primary font-mono">/api/payment/confirm</code>{' '}
-                with the tx hash
+                with <code className="font-mono">tx_hash</code> and the returned{' '}
+                <code className="font-mono">nonce</code>
               </li>
               <li>
                 Receive a <code className="font-mono">tf_live_*</code> token; pass it as{' '}
@@ -1015,7 +1042,8 @@ export default function AgentPaymentsPage() {
             </div>
             <p className="text-text-secondary text-sm mb-3">
               For agents that want to discover and pay in a single retry. About 3 to 4 seconds
-              total latency on the first call.
+              total latency on the first call. Requires a pre-flight quote so the on-chain
+              sender can be bound and the public-mempool sniping vector is closed.
             </p>
             <ol className="text-sm space-y-2 list-decimal list-inside text-text-secondary">
               <li>
@@ -1023,10 +1051,17 @@ export default function AgentPaymentsPage() {
                 no auth
               </li>
               <li>Receive 402 with payment instructions in headers and body</li>
-              <li>Send USDC on Base to the wallet</li>
               <li>
-                Retry with <code className="font-mono">X-Payment-Tx</code> header; receive
-                data plus a token in <code className="font-mono">X-Payment-Token</code> header
+                POST <code className="text-accent-primary font-mono">/api/payment/buy-credits</code>{' '}
+                with <code className="font-mono">amount_usd</code> and{' '}
+                <code className="font-mono">sender_wallet</code> to bind a quote
+              </li>
+              <li>Send USDC on Base FROM your sender_wallet to the publisher wallet</li>
+              <li>
+                Retry with BOTH <code className="font-mono">X-Payment-Tx</code> and{' '}
+                <code className="font-mono">X-Payment-Quote</code> (the returned memo) headers;
+                receive data plus a token in{' '}
+                <code className="font-mono">X-Payment-Token</code> header
               </li>
             </ol>
           </div>

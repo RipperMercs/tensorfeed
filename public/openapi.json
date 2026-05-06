@@ -1276,6 +1276,93 @@
         }
       }
     },
+    "/api/model-deprecations": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "summary": "AI model deprecation calendar",
+        "operationId": "getModelDeprecations",
+        "description": "Provider-by-provider registry of model retirements and deprecation announcements (OpenAI, Anthropic, Google, Cohere, and others). Each entry carries `announcedDate`, `deprecationDate`, `sunsetDate`, the recommended replacement model id, and a `sourceUrl` pointing at the provider's own announcement page. Curated; updated as new deprecations land. Edge-cached 600s.",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "OpenAI"
+            },
+            "description": "Filter to a single provider (case-insensitive)."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "announced",
+                "deprecated",
+                "sunsetted"
+              ]
+            },
+            "description": "Filter by lifecycle stage."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of model deprecations sorted by most recent activity first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "source": { "type": "string" },
+                    "lastUpdated": { "type": "string", "format": "date" },
+                    "count": { "type": "integer" },
+                    "deprecations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "provider",
+                          "model",
+                          "status",
+                          "sourceUrl"
+                        ],
+                        "properties": {
+                          "id": { "type": "string" },
+                          "provider": { "type": "string" },
+                          "model": { "type": "string" },
+                          "modelDisplay": { "type": "string" },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "announced",
+                              "deprecated",
+                              "sunsetted"
+                            ]
+                          },
+                          "announcedDate": { "type": "string", "format": "date" },
+                          "deprecationDate": { "type": "string", "format": "date" },
+                          "sunsetDate": { "type": "string", "format": "date" },
+                          "replacement": { "type": "string" },
+                          "notes": { "type": "string" },
+                          "sourceUrl": { "type": "string", "format": "uri" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/payment/info": {
       "get": {
         "tags": [
@@ -1302,7 +1389,8 @@
         "tags": [
           "Payment"
         ],
-        "summary": "Initiate a credit purchase",
+        "summary": "Initiate a credit purchase (sender_wallet binding required)",
+        "description": "Issues a 30-minute payment quote bound to the EVM address that will sign the on-chain USDC transfer. Required body fields: `amount_usd` (0.5 to 10000) and `sender_wallet` (0x-prefixed 40-char EVM address). The `/api/payment/confirm` endpoint will reject any tx whose on-chain `from` does not match the sender_wallet bound here, which closes the public-mempool tx sniping vector.",
         "operationId": "postBuyCredits",
         "requestBody": {
           "required": true,
@@ -1311,17 +1399,20 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "amount_usd"
+                  "amount_usd",
+                  "sender_wallet"
                 ],
                 "properties": {
                   "amount_usd": {
                     "type": "number",
-                    "minimum": 1,
-                    "example": 5
+                    "minimum": 0.5,
+                    "maximum": 10000,
+                    "example": 1.0
                   },
                   "sender_wallet": {
                     "type": "string",
-                    "example": "0x..."
+                    "pattern": "^0x[a-fA-F0-9]{40}$",
+                    "example": "0xabcdef0123456789abcdef0123456789abcdef01"
                   }
                 }
               }
@@ -1330,7 +1421,7 @@
         },
         "responses": {
           "200": {
-            "description": "Quote with credits and instructions to send USDC on Base.",
+            "description": "Quote with credits, instructions to send USDC on Base, and the bound sender_wallet.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1338,6 +1429,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Returned if amount_usd is out of range or sender_wallet is missing/malformed."
           }
         }
       }
@@ -1347,7 +1441,8 @@
         "tags": [
           "Payment"
         ],
-        "summary": "Confirm a USDC payment and receive bearer token",
+        "summary": "Confirm a USDC payment and receive bearer token (nonce required)",
+        "description": "Verifies the USDC Transfer event on-chain via Base RPC and mints a tf_live_ bearer token tied to the credit balance. Both `tx_hash` and `nonce` are required (the legacy no-nonce path is closed to prevent public-mempool tx sniping). The on-chain sender of the verified tx MUST match the sender_wallet bound to the quote at /api/payment/buy-credits; a mismatch returns `{ ok: false, error: \"sender_mismatch\" }`.",
         "operationId": "postPaymentConfirm",
         "requestBody": {
           "required": true,
@@ -1356,12 +1451,19 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "tx_hash"
+                  "tx_hash",
+                  "nonce"
                 ],
                 "properties": {
                   "tx_hash": {
                     "type": "string",
+                    "pattern": "^0x[a-fA-F0-9]{64}$",
                     "example": "0xabc..."
+                  },
+                  "nonce": {
+                    "type": "string",
+                    "description": "The memo returned from /api/payment/buy-credits.",
+                    "example": "tf-abc123"
                   }
                 }
               }
@@ -1378,6 +1480,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Possible errors: nonce_required, quote_not_found_or_expired, quote_expired, sender_mismatch, tx_already_claimed, verification_failed."
           }
         }
       }
