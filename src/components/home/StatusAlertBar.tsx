@@ -156,7 +156,7 @@ export default function StatusAlertBar({ services: initialServices }: StatusAler
           </div>
           <Link
             href="/status"
-            className="inline-flex items-center gap-1 hover:underline"
+            className="inline-flex items-center gap-1 hover:underline -mr-3"
             style={{ color: 'var(--text-secondary)' }}
           >
             <span>Live status</span>
