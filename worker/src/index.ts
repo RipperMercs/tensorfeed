@@ -60,6 +60,11 @@ import {
   refreshOpenAlexAIInstitutions,
   readAIInstitutions,
 } from './openalex-research';
+import {
+  refreshBLSIndicators,
+  readIndicators as readBLSIndicators,
+  isValidCategory as isValidBLSCategory,
+} from './bls-indicators';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1760,6 +1765,7 @@ export default {
           sportsNflSchedule: '/api/sports/nfl/schedule?season=&week=&team=&limit= (nflverse CC-BY-4.0)',
           npmAITrending: '/api/packages/npm/ai-trending?category=llm-sdk|agent-framework|rag|inference|evals|tooling|mcp&limit= (curated, weekly downloads via api.npmjs.org)',
           researchInstitutionsAI: '/api/research/institutions/ai?country=&type=&limit= (OpenAlex CC0; top institutions by AI-tagged publications, last 365 days)',
+          economyBLSIndicators: '/api/economy/bls/indicators?category=inflation|employment|wages|labor-force|jolts (US Bureau of Labor Statistics, public domain; CPI, unemployment, payrolls, JOLTS, etc., 24-month history with MoM delta)',
           routingPreview: '/api/preview/routing',
           premiumRouting: '/api/premium/routing',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
@@ -2345,6 +2351,34 @@ export default {
     // npm packages, ranked globally and per-category. Source: documented
     // public npm downloads API (api.npmjs.org/downloads). Refresh runs at
     // 03:30 UTC; /api/packages/npm/ai-trending serves the snapshot.
+
+    // === BLS ECONOMIC INDICATORS (free) ===
+    // Curated set of high-signal US BLS series (CPI, core CPI, PPI,
+    // unemployment, payrolls, hourly earnings, weekly hours, labor
+    // force participation, JOLTS openings + hires). Public domain US
+    // government data. Daily refresh at 05:00 UTC, last 24 months
+    // per series, MoM delta computed. Source citation in attribution.
+
+    if (path === '/api/economy/bls/indicators') {
+      const categoryParam = url.searchParams.get('category');
+      if (categoryParam && !isValidBLSCategory(categoryParam)) {
+        return jsonResponse({
+          ok: false,
+          error: 'invalid_category',
+          valid: ['inflation', 'employment', 'wages', 'labor-force', 'jolts'],
+        }, 400);
+      }
+      const validCategory = categoryParam && isValidBLSCategory(categoryParam) ? categoryParam : undefined;
+      const result = await readBLSIndicators(env, { category: validCategory });
+      if (!result) {
+        return jsonResponse({
+          ok: false,
+          error: 'no_snapshot_yet',
+          hint: 'Daily refresh runs at 05:00 UTC. After deploy, the first snapshot lands within 24 hours.',
+        }, 503);
+      }
+      return jsonResponse(result, 200, 1800);
+    }
 
     // === OPENALEX AI RESEARCH INSTITUTIONS (free) ===
     // Top academic + industrial institutions ranked by AI-tagged
@@ -4208,6 +4242,13 @@ export default {
       // AI concept (C154945302), then enrich the top 100 institutions.
       // Powers /api/research/institutions/ai.
       await run('refreshOpenAlexAIInstitutions', () => refreshOpenAlexAIInstitutions(env));
+    } else if (cron === '0 5 * * *') {
+      // Daily 05:00 UTC: refresh BLS economic indicators (10 series via
+      // public V1 GET endpoint). Public domain. Sequential to stay
+      // polite within api.bls.gov's per-IP envelope; on partial failure
+      // we retain prior snapshot values for missing series so the
+      // catalog never goes blank from a single bad fetch.
+      await run('refreshBLSIndicators', () => refreshBLSIndicators(env));
     }
 
     // Record RSS poll history for the daily summary digest
