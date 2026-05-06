@@ -2469,7 +2469,7 @@ export default {
         return jsonResponse({
           ok: false,
           error: 'no_pricing_data',
-          hint: 'Source is RunPod (requires RUNPOD_API_KEY secret). If unreachable, this endpoint returns 503.',
+          hint: 'Sources are RunPod (requires RUNPOD_API_KEY secret) plus a Lambda Labs public-pricing snapshot. If both are unavailable, this endpoint returns 503.',
         }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);

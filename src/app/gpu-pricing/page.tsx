@@ -77,10 +77,10 @@ export default function GpuPricingPage() {
             cheapest on-demand and spot price for each GPU class.
           </p>
           <p>
-            Source: RunPod (when an API key is configured). Lambda Labs, CoreWeave public pricing,
-            Azure NC/ND, and AWS on-demand are planned next, contingent on per-source ToS review.
-            The data is captured daily into a historical snapshot. The 30 to 90 day price series is
-            exposed via{' '}
+            Sources: RunPod (when an API key is configured) plus a manual snapshot of Lambda Labs
+            on-demand pricing from lambda.ai/pricing. CoreWeave public pricing, Azure NC/ND, and AWS
+            on-demand are planned next, contingent on per-source ToS review. The data is captured
+            daily into a historical snapshot. The 30 to 90 day price series is exposed via{' '}
             <code className="bg-bg-tertiary px-1.5 py-0.5 rounded text-accent-primary text-xs">
               /api/gpu/pricing/series
             </code>

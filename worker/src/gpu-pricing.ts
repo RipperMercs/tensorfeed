@@ -10,14 +10,18 @@ import { Env } from './types';
  *
  * Sources:
  *   - RunPod: GraphQL, requires RUNPOD_API_KEY secret. Skipped if unset.
+ *   - Lambda Labs: public pricing snapshot from lambda.ai/pricing. Their
+ *     ToS allows rate-limited crawling and does not restrict redistribution
+ *     of public pricing data. Snapshot refreshed manually on redeploy
+ *     (Lambda's pricing is marketing-stable, monthly cadence at most).
  *
  * Vast.ai was removed 2026-05-06. Their ToS prohibits scraping,
  * systematic data extraction, and competing services even for
  * publicly accessible offers; ingest cleared the audit's RED.
  *
- * Future sources (not yet active): Lambda Labs, CoreWeave public pricing,
- * Azure Retail Prices, AWS on-demand. Each will require ToS review
- * before integration.
+ * Future sources (not yet active): CoreWeave public pricing, Azure
+ * Retail Prices, AWS on-demand. Each will require ToS review before
+ * integration.
  *
  * Free `/api/gpu/pricing`: full current snapshot.
  * Free `/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot`: top 3
@@ -173,6 +177,60 @@ function daysBetween(from: string, to: string): number {
   const a = new Date(`${from}T00:00:00Z`).getTime();
   const b = new Date(`${to}T00:00:00Z`).getTime();
   return Math.round((b - a) / (1000 * 60 * 60 * 24));
+}
+
+// === Provider adapter: Lambda Labs (public pricing snapshot) ===
+//
+// Lambda publishes per-GPU on-demand pricing on lambda.ai/pricing as
+// marketing content. Their pricing is stable (monthly cadence) so a
+// static snapshot mirrors what the live page shows. Snapshot date below
+// is the manual refresh anchor; bump it when you eyeball the page and
+// either confirm or correct.
+//
+// Source: https://lambda.ai/pricing
+// Last verified: 2026-05-06
+
+const LAMBDA_SNAPSHOT_DATE = '2026-05-06';
+
+interface LambdaStaticOffer {
+  gpu_raw: string;
+  on_demand_usd_hr: number;
+  vram_gb_hint?: number;
+}
+
+const LAMBDA_PRICING_SNAPSHOT: LambdaStaticOffer[] = [
+  { gpu_raw: 'B200 SXM6', on_demand_usd_hr: 6.69, vram_gb_hint: 192 },
+  { gpu_raw: 'H100 SXM', on_demand_usd_hr: 3.99, vram_gb_hint: 80 },
+  { gpu_raw: 'H100 PCIe', on_demand_usd_hr: 3.29, vram_gb_hint: 80 },
+  { gpu_raw: 'GH200', on_demand_usd_hr: 2.29, vram_gb_hint: 96 },
+  { gpu_raw: 'A100 SXM 80GB', on_demand_usd_hr: 2.79, vram_gb_hint: 80 },
+  { gpu_raw: 'A100 SXM 40GB', on_demand_usd_hr: 1.99, vram_gb_hint: 40 },
+  { gpu_raw: 'A100 PCIe 40GB', on_demand_usd_hr: 1.99, vram_gb_hint: 40 },
+  { gpu_raw: 'A10', on_demand_usd_hr: 1.29, vram_gb_hint: 24 },
+  { gpu_raw: 'A6000', on_demand_usd_hr: 1.09, vram_gb_hint: 48 },
+  { gpu_raw: 'V100', on_demand_usd_hr: 0.79, vram_gb_hint: 32 },
+  { gpu_raw: 'Quadro RTX 6000', on_demand_usd_hr: 0.69, vram_gb_hint: 24 },
+];
+
+function fetchLambda(): { ok: true; offers: GPUOffer[] } {
+  const now = new Date().toISOString();
+  const offers: GPUOffer[] = [];
+  for (const item of LAMBDA_PRICING_SNAPSHOT) {
+    const { canonical, vram_gb } = normalizeGPUName(item.gpu_raw, item.vram_gb_hint);
+    offers.push({
+      provider: 'lambda',
+      gpu_raw: item.gpu_raw,
+      gpu_canonical: canonical,
+      vram_gb: vram_gb ?? item.vram_gb_hint ?? null,
+      on_demand_usd_hr: round4(item.on_demand_usd_hr),
+      spot_usd_hr: null,
+      available_count: 1,
+      region: null,
+      source_url: 'https://lambda.ai/pricing',
+      last_seen: now,
+    });
+  }
+  return { ok: true, offers };
 }
 
 // === Provider adapter: RunPod GraphQL (requires RUNPOD_API_KEY) ===
@@ -341,6 +399,11 @@ export async function refreshCurrent(env: Env): Promise<PricingSnapshot> {
   } else {
     errors.push({ provider: 'runpod', error: runpodResult.error });
   }
+
+  const lambdaResult = fetchLambda();
+  allOffers.push(...lambdaResult.offers);
+  providersIncluded.push('lambda');
+  notes.push(`lambda pricing is a manual snapshot from ${LAMBDA_SNAPSHOT_DATE} (lambda.ai/pricing); bump the snapshot in code on redeploy when prices move`);
 
   const snapshot: PricingSnapshot = {
     capturedAt,

@@ -44,12 +44,14 @@ function formatPrice(n: number | null | undefined): string {
 function providerLabel(p: string): string {
   if (p === 'vast') return 'Vast.ai';
   if (p === 'runpod') return 'RunPod';
+  if (p === 'lambda') return 'Lambda Labs';
   return p;
 }
 
 function providerUrl(p: string): string {
   if (p === 'vast') return 'https://vast.ai';
   if (p === 'runpod') return 'https://runpod.io';
+  if (p === 'lambda') return 'https://lambda.ai';
   return '#';
 }
 
