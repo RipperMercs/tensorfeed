@@ -79,8 +79,12 @@ export default function TodayPage() {
   }
   const topSources = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
 
-  // Status incidents
-  const incidents = statuses.filter(s => s.status !== 'operational');
+  // Status incidents - only real incidents, not 'unknown' (means we couldn't poll)
+  const incidents = statuses.filter(s => {
+    const v = (s.status || '').toLowerCase();
+    return v === 'down' || v === 'outage' || v === 'major' ||
+           v === 'degraded' || v === 'partial' || v === 'warn';
+  });
 
   const todayStr = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
