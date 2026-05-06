@@ -7,74 +7,30 @@ type EventKind = 'news' | 'status' | 'release' | 'agent' | 'benchmark';
 
 interface ActivityEvent {
   time: string;
+  ts: number;
   kind: EventKind;
   type: string;
   msg: React.ReactNode;
   href?: string;
 }
 
+interface ApiArticle {
+  id: string;
+  title: string;
+  url: string;
+  source?: string;
+  publishedAt: string;
+}
+
+interface ApiService {
+  name: string;
+  status: string;
+  provider?: string;
+}
+
 const HL = (s: string) => (
   <span style={{ color: 'var(--accent-cyan)' }}>{s}</span>
 );
-
-const EVENTS: ActivityEvent[] = [
-  {
-    time: '14:32',
-    kind: 'news',
-    type: 'NEW ARTICLE',
-    msg: <>New article: {HL('Claude Opus 4.7 just dropped')}, here&apos;s what changed</>,
-    href: '/originals/claude-opus-4-7-release',
-  },
-  {
-    time: '14:30',
-    kind: 'status',
-    type: 'LATENCY',
-    msg: <>Gemini API {HL('latency spike')} detected, p95 at 312ms</>,
-    href: '/is-gemini-down',
-  },
-  {
-    time: '14:28',
-    kind: 'release',
-    type: 'MODEL RELEASE',
-    msg: <>Mistral published {HL('Mistral Medium 3')}</>,
-    href: '/models',
-  },
-  {
-    time: '14:25',
-    kind: 'agent',
-    type: 'AGENT CRAWL',
-    msg: <>ClaudeBot crawled {HL('/llms-full.txt')}</>,
-    href: '/llms-full.txt',
-  },
-  {
-    time: '14:22',
-    kind: 'benchmark',
-    type: 'BENCHMARK',
-    msg: <>MMLU-Pro leader updated: Opus 4.7 at {HL('88.4')}</>,
-    href: '/benchmarks',
-  },
-  {
-    time: '14:18',
-    kind: 'news',
-    type: 'NEW ARTICLE',
-    msg: <>{HL('AI pricing floor')}: how low can it actually go?</>,
-    href: '/originals/ai-pricing-floor',
-  },
-  {
-    time: '14:14',
-    kind: 'agent',
-    type: 'AGENT CRAWL',
-    msg: <>GPTBot pulled {HL('/feed.json')} (incremental)</>,
-    href: '/feed.json',
-  },
-  {
-    time: '14:11',
-    kind: 'news',
-    type: 'NEW ARTICLE',
-    msg: <>{HL('Why every developer needs an llms.txt file')}</>,
-    href: '/originals/llms-txt-every-developer',
-  },
-];
 
 const BULLET_COLORS: Record<EventKind, string> = {
   news: 'var(--accent-cyan)',
@@ -100,13 +56,102 @@ const KIND_COLORS: Record<EventKind, string> = {
   benchmark: 'var(--accent-primary)',
 };
 
+function fmtUtc(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '--:--';
+  return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+}
+
+function truncate(s: string, n: number): string {
+  if (s.length <= n) return s;
+  return s.slice(0, n - 1).trimEnd() + '…';
+}
+
+function relativeAgo(ms: number): string {
+  if (ms < 30_000) return 'just now';
+  if (ms < 60_000) return `${Math.floor(ms / 1000)}s ago`;
+  if (ms < 3600_000) return `${Math.floor(ms / 60_000)}m ago`;
+  return `${Math.floor(ms / 3600_000)}h ago`;
+}
+
+function buildEvents(articles: ApiArticle[], services: ApiService[]): ActivityEvent[] {
+  const events: ActivityEvent[] = [];
+
+  for (const a of articles) {
+    const ts = new Date(a.publishedAt).getTime();
+    if (!ts || isNaN(ts)) continue;
+    events.push({
+      time: fmtUtc(a.publishedAt),
+      ts,
+      kind: 'news',
+      type: 'NEW ARTICLE',
+      msg: <>{HL(truncate(a.title, 90))}</>,
+      href: a.url,
+    });
+  }
+
+  const now = Date.now();
+  for (const s of services) {
+    const status = (s.status || '').toLowerCase();
+    if (status === 'operational' || status === '' || status === 'unknown') continue;
+    const isDown = status === 'down' || status === 'major' || status === 'outage';
+    const isWarn = status === 'degraded' || status === 'partial' || status === 'warn';
+    if (!isDown && !isWarn) continue;
+    const offsetMs = (s.name.charCodeAt(0) % 7) * 60_000;
+    const ts = now - offsetMs;
+    events.push({
+      time: fmtUtc(new Date(ts).toISOString()),
+      ts,
+      kind: 'status',
+      type: isDown ? 'OUTAGE' : 'DEGRADED',
+      msg: (
+        <>
+          {s.name} {HL(isDown ? 'reporting outage' : 'reporting degraded performance')}
+        </>
+      ),
+    });
+  }
+
+  return events.sort((a, b) => b.ts - a.ts).slice(0, 8);
+}
+
 export default function ActivityStream() {
-  const [epm, setEpm] = useState(84);
+  const [events, setEvents] = useState<ActivityEvent[]>([]);
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
 
   useEffect(() => {
-    const t = setInterval(() => setEpm(70 + Math.floor(Math.random() * 32)), 2800);
-    return () => clearInterval(t);
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const [newsRes, statusRes] = await Promise.all([
+          fetch('/api/news?limit=8', { cache: 'no-store' }),
+          fetch('/api/status/summary', { cache: 'no-store' }),
+        ]);
+        const newsJson = newsRes.ok ? await newsRes.json() : null;
+        const statusJson = statusRes.ok ? await statusRes.json() : null;
+        if (cancelled) return;
+        const articles: ApiArticle[] = newsJson?.articles ?? [];
+        const services: ApiService[] = statusJson?.services ?? [];
+        setEvents(buildEvents(articles, services));
+        setUpdatedAt(Date.now());
+      } catch {
+        // leave existing state in place
+      }
+    }
+
+    load();
+    const refresh = setInterval(load, 60_000);
+    const tick = setInterval(() => setNow(Date.now()), 5_000);
+    return () => {
+      cancelled = true;
+      clearInterval(refresh);
+      clearInterval(tick);
+    };
   }, []);
+
+  const lastUpdatedLabel = updatedAt ? relativeAgo(now - updatedAt) : 'loading';
 
   return (
     <div
@@ -151,13 +196,20 @@ export default function ActivityStream() {
           Right now on TensorFeed
         </div>
         <div className="font-mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-          <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{epm}</span>{' '}
-          events/min &middot; last updated just now
+          last updated {lastUpdatedLabel}
         </div>
       </div>
 
       <div className="relative" style={{ padding: '6px 0', maxHeight: 360, overflow: 'hidden' }}>
-        {EVENTS.map((ev, i) => {
+        {events.length === 0 && (
+          <div
+            className="font-mono"
+            style={{ padding: '20px', fontSize: 12, color: 'var(--text-muted)' }}
+          >
+            Loading live activity…
+          </div>
+        )}
+        {events.map((ev, i) => {
           const inner = (
             <>
               <span
@@ -207,17 +259,21 @@ export default function ActivityStream() {
 
           if (!ev.href) {
             return (
-              <div key={`${ev.time}-${i}`} className={className} style={style}>
+              <div key={`${ev.ts}-${i}`} className={className} style={style}>
                 {inner}
               </div>
             );
           }
 
-          const isExternal = ev.href.startsWith('http') || ev.href.endsWith('.txt') || ev.href.endsWith('.json') || ev.href.endsWith('.xml');
+          const isExternal =
+            ev.href.startsWith('http') ||
+            ev.href.endsWith('.txt') ||
+            ev.href.endsWith('.json') ||
+            ev.href.endsWith('.xml');
           if (isExternal) {
             return (
               <a
-                key={`${ev.time}-${i}`}
+                key={`${ev.ts}-${i}`}
                 href={ev.href}
                 className={className}
                 style={style}
@@ -230,7 +286,7 @@ export default function ActivityStream() {
           }
 
           return (
-            <Link key={`${ev.time}-${i}`} href={ev.href} className={className} style={style}>
+            <Link key={`${ev.ts}-${i}`} href={ev.href} className={className} style={style}>
               {inner}
             </Link>
           );
