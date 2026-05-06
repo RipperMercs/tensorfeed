@@ -87,6 +87,10 @@ crons = [
   # npm package list via the documented public api.npmjs.org/downloads
   # endpoint. Powers /api/packages/npm/ai-trending.
   "30 3 * * *",
+  # Daily 04:00 UTC: refresh top AI research institutions (OpenAlex CC0).
+  # Two API calls: group_by works on the AI concept, enrich top-N. Powers
+  # /api/research/institutions/ai.
+  "0 4 * * *",
   # X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
   # Hold at 1/day for 30 clean days before bumping to 2/day ("30 8,17 * * *").
   "30 14 * * *",

@@ -56,6 +56,10 @@ import {
   readNpmTrending,
   isValidCategory as isValidNpmCategory,
 } from './npm-ai-packages';
+import {
+  refreshOpenAlexAIInstitutions,
+  readAIInstitutions,
+} from './openalex-research';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1755,6 +1759,7 @@ export default {
           sportsNflPlayerItem: '/api/sports/nfl/players/{gsis_id} (e.g. 00-0036971)',
           sportsNflSchedule: '/api/sports/nfl/schedule?season=&week=&team=&limit= (nflverse CC-BY-4.0)',
           npmAITrending: '/api/packages/npm/ai-trending?category=llm-sdk|agent-framework|rag|inference|evals|tooling|mcp&limit= (curated, weekly downloads via api.npmjs.org)',
+          researchInstitutionsAI: '/api/research/institutions/ai?country=&type=&limit= (OpenAlex CC0; top institutions by AI-tagged publications, last 365 days)',
           routingPreview: '/api/preview/routing',
           premiumRouting: '/api/premium/routing',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
@@ -2340,6 +2345,30 @@ export default {
     // npm packages, ranked globally and per-category. Source: documented
     // public npm downloads API (api.npmjs.org/downloads). Refresh runs at
     // 03:30 UTC; /api/packages/npm/ai-trending serves the snapshot.
+
+    // === OPENALEX AI RESEARCH INSTITUTIONS (free) ===
+    // Top academic + industrial institutions ranked by AI-tagged
+    // publications over the last 365 days. Source: OpenAlex (CC0
+    // public domain). Two API calls per cron tick (group_by works,
+    // then enrich top-N institutions). Refresh runs at 04:00 UTC.
+
+    if (path === '/api/research/institutions/ai') {
+      const limitParam = url.searchParams.get('limit');
+      const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+      const result = await readAIInstitutions(env, {
+        country: url.searchParams.get('country') || undefined,
+        type: url.searchParams.get('type') || undefined,
+        limit: Number.isFinite(limit as number) ? limit : undefined,
+      });
+      if (!result) {
+        return jsonResponse({
+          ok: false,
+          error: 'no_snapshot_yet',
+          hint: 'Daily refresh runs at 04:00 UTC. After deploy, the first snapshot lands within 24 hours.',
+        }, 503);
+      }
+      return jsonResponse(result, 200, 1800);
+    }
 
     if (path === '/api/packages/npm/ai-trending') {
       const categoryParam = url.searchParams.get('category');
@@ -4173,6 +4202,12 @@ export default {
       // for unscoped names plus per-package calls for scoped names.
       // Powers /api/packages/npm/ai-trending.
       await run('refreshNpmTrending', () => refreshNpmTrending(env));
+    } else if (cron === '0 4 * * *') {
+      // Daily 04:00 UTC: refresh top AI research institutions
+      // (OpenAlex CC0). Two API calls per tick: group_by works on the
+      // AI concept (C154945302), then enrich the top 100 institutions.
+      // Powers /api/research/institutions/ai.
+      await run('refreshOpenAlexAIInstitutions', () => refreshOpenAlexAIInstitutions(env));
     }
 
     // Record RSS poll history for the daily summary digest
