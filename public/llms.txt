@@ -288,6 +288,8 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [AI Podcasts](https://tensorfeed.ai/podcasts): Stream AI podcast episodes from top shows
 - [Status Dashboard](https://tensorfeed.ai/status): Real-time AI service status monitoring
 - [GPU Rental Pricing](https://tensorfeed.ai/gpu-pricing): Live cheapest hourly rates across cloud GPU marketplaces, refreshed every 4 hours
+- [Sports Data API](https://tensorfeed.ai/sports): Free agent-facing sports data hub. NFL is live (teams + news); NBA, MLB, NHL planned.
+- [NFL Teams + News](https://tensorfeed.ai/sports/nfl): All 32 NFL teams (city, conference, division, abbreviation) plus hourly aggregated news from ESPN, NFL.com, CBS Sports, Yahoo Sports.
 - [Model Deprecation Calendar](https://tensorfeed.ai/model-deprecations): Provider-by-provider registry of model retirements and deprecation announcements (OpenAI, Anthropic, Google, Cohere, and more). Each entry carries the announced/deprecation/sunset dates, recommended replacement, and a source link to the provider's own announcement. Free JSON at /api/model-deprecations with ?provider= and ?status= filters. Curated; PRs welcome.
 - [Live Data](https://tensorfeed.ai/live): Real-time data feeds (GitHub trending, predictions, cyber threats, pricing)
 - [Originals](https://tensorfeed.ai/originals): Original editorial articles by TensorFeed (54 articles)
