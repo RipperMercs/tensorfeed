@@ -223,6 +223,18 @@ function awsEventSeverity(event: AwsEvent): 'down' | 'degraded' {
   return 'degraded';
 }
 
+// AWS Health serves currentevents.json as UTF-16 Big-Endian with a
+// FE FF BOM, even though the Content-Type reads `charset=utf-16`. The
+// TextDecoder 'utf-16' label is a spec alias for utf-16le and does not
+// auto-detect endianness from the BOM, so decoding the BE stream as
+// 'utf-16' produces byte-swapped garbage that fails JSON.parse and
+// silently turns every Bedrock poll into status 'unknown'. This helper
+// pins the byte order explicitly so the decoder can never regress.
+export function decodeAwsEventsBuffer(buffer: ArrayBuffer): AwsEvent[] {
+  const decoded = new TextDecoder('utf-16be').decode(buffer);
+  return JSON.parse(decoded);
+}
+
 export function aggregateAwsStatus(
   events: AwsEvent[],
   serviceMatch: string,
@@ -332,6 +344,7 @@ export const _internal = {
   normalizeInstatusPageStatus,
   aggregateGcpStatus,
   aggregateAwsStatus,
+  decodeAwsEventsBuffer,
   awsEventAffectsService,
   awsEventSeverity,
   aggregateAzureStatus,
@@ -426,15 +439,8 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
 
     // AWS Health currentevents.json (Bedrock)
     if (service.type === 'aws-events') {
-      // AWS serves currentevents as UTF-16 with a BOM, not UTF-8. The
-      // Content-Type header reads `application/json;charset=utf-16`. Calling
-      // response.json() parses the bytes as UTF-8 and silently produces
-      // garbage; the resulting JSON.parse throws and we fall into the catch
-      // block returning 'unknown' for every poll. The 'utf-16' decoder
-      // auto-detects endianness from the BOM and strips it before decoding.
       const buffer = await response.arrayBuffer();
-      const decoded = new TextDecoder('utf-16').decode(buffer);
-      const events: AwsEvent[] = JSON.parse(decoded);
+      const events = decodeAwsEventsBuffer(buffer);
       const match = service.awsServiceMatch || '';
       const { status: headlineStatus, affected } = aggregateAwsStatus(events, match);
       return {

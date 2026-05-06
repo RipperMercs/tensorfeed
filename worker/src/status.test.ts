@@ -16,6 +16,7 @@ const {
   normalizeInstatusPageStatus,
   aggregateGcpStatus,
   aggregateAwsStatus,
+  decodeAwsEventsBuffer,
   awsEventAffectsService,
   awsEventSeverity,
   aggregateAzureStatus,
@@ -360,6 +361,27 @@ describe('AWS Health currentevents parser (Bedrock)', () => {
     expect(awsEventSeverity({ summary: 'Latency in InvokeModel' })).toBe('degraded');
     expect(awsEventSeverity({ summary: 'Service unavailable' })).toBe('down');
     expect(awsEventSeverity({ summary: 'Major service disruption in us-east-1' })).toBe('down');
+  });
+
+  // Regression: AWS Health currentevents.json is UTF-16 BE with a FE FF
+  // BOM. The previous decoder was 'utf-16' (alias for utf-16le), which
+  // produced byte-swapped garbage and silently turned every Bedrock poll
+  // into status 'unknown'. This test encodes a JSON payload as UTF-16 BE
+  // by hand and asserts the helper round-trips it.
+  it('decodeAwsEventsBuffer parses UTF-16 BE bytes with BOM (Bedrock unknown-status regression)', () => {
+    const json = '[{"service":"bedrock-us-east-1","service_name":"Amazon Bedrock"}]';
+    const bytes = new Uint8Array(2 + json.length * 2);
+    bytes[0] = 0xfe;
+    bytes[1] = 0xff;
+    for (let i = 0; i < json.length; i++) {
+      const code = json.charCodeAt(i);
+      bytes[2 + i * 2] = (code >> 8) & 0xff;
+      bytes[2 + i * 2 + 1] = code & 0xff;
+    }
+    const events = decodeAwsEventsBuffer(bytes.buffer);
+    expect(events).toEqual([
+      { service: 'bedrock-us-east-1', service_name: 'Amazon Bedrock' },
+    ]);
   });
 });
 
