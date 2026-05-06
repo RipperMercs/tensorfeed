@@ -78,6 +78,7 @@ FEEDS: list[tuple[str, str, str | None]] = [
     ("benchmark-registry", "/api/benchmark-registry", "benchmarks"),
     ("public-leaderboards", "/api/public-leaderboards", "leaderboards"),
     ("conferences", "/api/conferences", "conferences"),
+    ("model-deprecations", "/api/model-deprecations", "deprecations"),
     ("funding", "/api/funding", "rounds"),
     ("model-cards", "/api/model-cards", "modelCards"),
     ("ai-policy", "/api/ai-policy", "items"),
