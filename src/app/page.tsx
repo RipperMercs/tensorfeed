@@ -207,6 +207,22 @@ export default async function HomePage() {
 
       <section
         className="border-b border-border"
+        style={{ padding: '56px 0' }}
+        aria-labelledby="explore-h"
+      >
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionHead
+            id="explore-h"
+            eyebrow="/ Explore"
+            heading="Go deeper into the data"
+            sub="Six hand-built surfaces for browsing the AI ecosystem, each with its own open feed."
+          />
+          <ExploreGrid />
+        </div>
+      </section>
+
+      <section
+        className="border-b border-border"
         style={{
           padding: '56px 0',
           background: 'linear-gradient(180deg, transparent, rgba(18,18,26,0.4))',
@@ -301,18 +317,6 @@ export default async function HomePage() {
       </div>
 
       <ApiPromoStrip />
-
-      <section style={{ padding: '56px 0' }} aria-labelledby="explore-h">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionHead
-            id="explore-h"
-            eyebrow="/ Explore"
-            heading="Go deeper into the data"
-            sub="Six hand-built surfaces for browsing the AI ecosystem, each with its own open feed."
-          />
-          <ExploreGrid />
-        </div>
-      </section>
 
       <section style={{ padding: '56px 0' }} aria-labelledby="faq-h">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
