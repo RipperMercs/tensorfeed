@@ -1748,7 +1748,7 @@ export default {
           premiumWhatsNew: '/api/premium/whats-new?days=1&news_limit=10',
           premiumMcpRegistrySeries: '/api/premium/mcp/registry/series?from=&to=',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
-          premiumGpuPricingSeries: '/api/premium/gpu/pricing/series?gpu=&from=&to=',
+          gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
           premiumAttentionSeries: '/api/premium/attention/series?provider=&from=&to=',
           paymentInfo: '/api/payment/info',
           paymentBuyCredits: '/api/payment/buy-credits',
@@ -3120,48 +3120,41 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
-    // === PAID PREMIUM: GPU PRICING TIME SERIES (Tier 1, 1 credit) ===
-    // /api/premium/gpu/pricing/series?gpu=H100&from=&to=
+    // === FREE: GPU PRICING TIME SERIES ===
+    // /api/gpu/pricing/series?gpu=H100&from=&to=
     // Daily cheapest on-demand and spot for one canonical GPU across all
     // tracked providers, plus pct change start-to-end. Range capped at
     // 90 days. Snapshot is captured daily; cannot be backfilled, so the
-    // historical series compounds with time. The data is unique because
-    // we aggregate across multiple marketplaces day after day; no other
-    // source publishes a longitudinal price series joined this way.
+    // historical series compounds with time.
+    //
+    // Moved from /api/premium on 2026-05-06: factual price data is low
+    // legal optics on free, and after removing Vast.ai (ToS) only RunPod
+    // remains, which doesn't justify a paid gate by itself.
 
-    if (path === '/api/premium/gpu/pricing/series') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
+    if (path === '/api/gpu/pricing/series') {
       const gpuParam = url.searchParams.get('gpu')?.trim();
       if (!gpuParam) {
-        return await premiumValidationFailure(
-          { error: 'gpu_required', hint: 'Pass ?gpu=<canonical> (e.g. H100, A100-80GB)' },
-          payment, request, env,
-        );
+        return jsonResponse({
+          error: 'gpu_required',
+          hint: 'Pass ?gpu=<canonical> (e.g. H100, A100-80GB)',
+        }, 400);
       }
       if (!isCanonicalGPU(gpuParam)) {
-        return await premiumValidationFailure({ error: 'invalid_gpu' }, payment, request, env);
+        return jsonResponse({ error: 'invalid_gpu' }, 400);
       }
       const range = resolveGpuRange(url.searchParams.get('from'), url.searchParams.get('to'));
       if (!range.ok) {
-        return await premiumValidationFailure(
-          {
-            error: range.error,
-            limits: {
-              max_range_days: GPU_MAX_RANGE_DAYS,
-              default_range_days: GPU_DEFAULT_RANGE_DAYS,
-            },
+        return jsonResponse({
+          error: range.error,
+          limits: {
+            max_range_days: GPU_MAX_RANGE_DAYS,
+            default_range_days: GPU_DEFAULT_RANGE_DAYS,
           },
-          payment, request, env,
-        );
+        }, 400);
       }
 
       const result = await getGpuSeries(env, gpuParam as CanonicalGPU, range.from!, range.to!);
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/gpu/pricing/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
-      );
-      return await premiumResponse(result, payment, 1, request, env);
+      return jsonResponse(result);
     }
 
     // === PAID PREMIUM: WHATS-NEW SUMMARY (Tier 1, 1 credit) ===
@@ -3990,8 +3983,8 @@ export default {
       await run('refreshGpuPricing', () => refreshGpuPricing(env));
     } else if (cron === '45 0 * * *') {
       // Daily 00:45 UTC: capture a daily GPU pricing snapshot for the
-      // historical series. Compounds into the moat that backs
-      // /api/premium/gpu/pricing/series.
+      // historical series. Compounds into the data behind
+      // /api/gpu/pricing/series (free).
       await run('captureGpuDaily', () => captureGpuDaily(env));
     }
 

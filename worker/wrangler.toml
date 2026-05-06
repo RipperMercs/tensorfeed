@@ -72,12 +72,12 @@ crons = [
   # 24h buffer into a dated daily aggregate for premium time series.
   "5 0 * * *",
   # GPU pricing refresh (worker/src/gpu-pricing.ts): every 4 hours at :15
-  # past, poll Vast.ai (public) and RunPod (if RUNPOD_API_KEY set), write
-  # the unified snapshot to gpu:current. Powers /api/gpu/pricing and
-  # /api/gpu/pricing/cheapest.
+  # past, poll RunPod (if RUNPOD_API_KEY set) and write the unified
+  # snapshot to gpu:current. Powers /api/gpu/pricing and
+  # /api/gpu/pricing/cheapest. Vast.ai removed 2026-05-06 (ToS).
   "15 */4 * * *",
   # Daily 12:45 AM UTC: capture a daily GPU pricing snapshot for the
-  # historical series. Compounds into /api/premium/gpu/pricing/series.
+  # historical series. Compounds into /api/gpu/pricing/series.
   "45 0 * * *",
   # X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
   # Hold at 1/day for 30 clean days before bumping to 2/day ("30 8,17 * * *").

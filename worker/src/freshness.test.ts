@@ -10,7 +10,7 @@ describe('resolveSLA', () => {
   it('returns null for historical immutable endpoints', () => {
     expect(resolveSLA('/api/premium/history/pricing/series')).toBeNull();
     expect(resolveSLA('/api/premium/probe/series')).toBeNull();
-    expect(resolveSLA('/api/premium/gpu/pricing/series')).toBeNull();
+    expect(resolveSLA('/api/gpu/pricing/series')).toBeNull();
     expect(resolveSLA('/api/premium/mcp/registry/series')).toBeNull();
   });
 

@@ -454,36 +454,6 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
-    path: '/api/premium/gpu/pricing/series',
-    description:
-      "Daily price series for one canonical GPU class across all tracked marketplace providers (Vast.ai, RunPod). Returns per-day cheapest on-demand and spot rates, provider count, total offer count, plus pct change start-to-end. Phase 1 sources are GPU rental marketplaces; hyperscaler on-demand (Azure, AWS) and Lambda Labs are planned. The free /api/gpu/pricing serves the latest snapshot; this endpoint is the historical series and cannot be backfilled because a 30 to 90 day series depends on daily capture starting weeks ago. 90-day max range, default 30 days back.",
-    cost: '1 credit per call',
-    example: `// Query: ?gpu=H100&from=2026-04-01&to=2026-04-29
-{
-  "ok": true,
-  "gpu": "H100",
-  "vram_gb": 80,
-  "from": "2026-04-01",
-  "to": "2026-04-29",
-  "days": 29,
-  "points": [
-    {
-      "date": "2026-04-29",
-      "cheapest_on_demand_usd_hr": 1.99, "cheapest_on_demand_provider": "runpod",
-      "cheapest_spot_usd_hr": 1.45, "cheapest_spot_provider": "vast",
-      "provider_count": 2, "total_offers": 47, "has_data": true
-    }
-  ],
-  "delta_in_window": {
-    "on_demand": { "start": 2.49, "end": 1.99, "pct_change": -20.08 },
-    "spot": { "start": 1.85, "end": 1.45, "pct_change": -21.62 }
-  },
-  "notes": [],
-  "billing": { "credits_charged": 1, "credits_remaining": 41 }
-}`,
-  },
-  {
-    method: 'GET',
     path: '/api/premium/mcp/registry/series',
     description:
       "Multi-day time series of the official Model Context Protocol server registry: total server count, active/deprecated breakdown, daily added and removed counts. The registry is open data, but a 30/90-day trend requires daily capture started weeks ago. We capture every morning at 9:30 AM UTC. 90-day max range, default 30 days back. A free single-day snapshot lives at /api/mcp/registry/snapshot.",

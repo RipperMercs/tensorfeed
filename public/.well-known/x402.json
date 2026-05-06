@@ -272,23 +272,6 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/gpu/pricing/series",
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
-      ],
-      "lastUpdated": "2026-04-29T00:00:00Z",
-      "metadata": {
-        "name": "GPU pricing series",
-        "description": "Daily price series for one canonical GPU (H200, H100, A100-80GB, RTX-4090, MI300X, etc) across all tracked marketplace providers: cheapest on-demand and spot per day, provider count, total offers, plus pct change start-to-end. 90-day max range, default 30 days back. Cannot be backfilled.",
-        "tier": 1,
-        "credits": 1,
-        "category": "gpu-rental-pricing"
-      }
-    },
-    {
       "resource": "https://tensorfeed.ai/api/premium/compare/models",
       "type": "http",
       "method": "GET",

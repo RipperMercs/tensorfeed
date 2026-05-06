@@ -233,7 +233,7 @@ const ENDPOINTS: Endpoint[] = [
   {
     method: 'GET',
     path: '/api/gpu/pricing',
-    description: 'Aggregated GPU rental pricing across cloud GPU marketplaces (Vast.ai + RunPod when key configured). Cheapest on-demand and spot price per canonical GPU class (H200, H100, A100, RTX 4090, MI300X, etc), normalized from heterogeneous provider naming. Refreshed every 4 hours. Daily snapshot powers the premium /api/premium/gpu/pricing/series endpoint.',
+    description: 'Aggregated GPU rental pricing across cloud GPU marketplaces (RunPod when key configured; Lambda, CoreWeave, hyperscalers planned). Cheapest on-demand and spot price per canonical GPU class (H200, H100, A100, RTX 4090, MI300X, etc), normalized from heterogeneous provider naming. Refreshed every 4 hours. Daily snapshot powers the free /api/gpu/pricing/series endpoint.',
     cache: 'Cache for 10 minutes',
     example: `{
   "ok": true,

@@ -8,21 +8,27 @@ import { Env } from './types';
  * unified snapshot, and writes a daily snapshot for the historical
  * series. Mirrors the pattern from probe.ts and mcp-registry.ts.
  *
- * Phase 1 sources:
- *   - Vast.ai: unauthenticated REST. No secret required.
+ * Sources:
  *   - RunPod: GraphQL, requires RUNPOD_API_KEY secret. Skipped if unset.
  *
- * Phase 2 (not in v1): Lambda Labs, Azure Retail Prices, AWS on-demand.
+ * Vast.ai was removed 2026-05-06. Their ToS prohibits scraping,
+ * systematic data extraction, and competing services even for
+ * publicly accessible offers; ingest cleared the audit's RED.
+ *
+ * Future sources (not yet active): Lambda Labs, CoreWeave public pricing,
+ * Azure Retail Prices, AWS on-demand. Each will require ToS review
+ * before integration.
  *
  * Free `/api/gpu/pricing`: full current snapshot.
  * Free `/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot`: top 3
  *   cheapest right now for one canonical GPU. Agent-friendly entry point.
- * Premium `/api/premium/gpu/pricing/series?gpu=&from=&to=`: daily price
- *   series for one canonical GPU over a 90-day window for 1 credit.
+ * Free `/api/gpu/pricing/series?gpu=&from=&to=`: daily price series for
+ *   one canonical GPU over a 90-day window. Moved from /api/premium on
+ *   2026-05-06 since GPU pricing is factual price data with low optics
+ *   on a free tier and removing Vast left only RunPod, which doesn't
+ *   justify a paid gate alone.
  */
 
-const VAST_BUNDLES_URL = 'https://console.vast.ai/api/v0/bundles';
-const VAST_LIMIT = 1000;
 const RUNPOD_GRAPHQL_URL = 'https://api.runpod.io/graphql';
 
 const FETCH_TIMEOUT_MS = 15000;
@@ -167,83 +173,6 @@ function daysBetween(from: string, to: string): number {
   const a = new Date(`${from}T00:00:00Z`).getTime();
   const b = new Date(`${to}T00:00:00Z`).getTime();
   return Math.round((b - a) / (1000 * 60 * 60 * 24));
-}
-
-// === Provider adapter: Vast.ai (unauthenticated) ===
-
-interface VastOffer {
-  id?: number;
-  gpu_name?: string;
-  num_gpus?: number;
-  gpu_ram?: number;          // megabytes
-  dph_total?: number;        // dollars per hour for the whole machine
-  min_bid?: number;          // dollars per hour for interruptible bid
-  geolocation?: string;
-  rentable?: boolean;
-  verified?: boolean;
-}
-
-async function fetchVast(): Promise<{ ok: true; offers: GPUOffer[] } | { ok: false; error: string }> {
-  // Vast's public bundles endpoint accepts a JSON-encoded query in `q`.
-  // We ask for verified, rentable, non-external offers, sorted by price ascending.
-  const q = JSON.stringify({
-    verified: { eq: true },
-    rentable: { eq: true },
-    external: { eq: false },
-    order: [['dph_total', 'asc']],
-    limit: VAST_LIMIT,
-  });
-  const url = `${VAST_BUNDLES_URL}?q=${encodeURIComponent(q)}`;
-
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      headers: { Accept: 'application/json', 'User-Agent': 'tensorfeed-gpu-pricing/1.0 (+https://tensorfeed.ai)' },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
-  } catch (err) {
-    return { ok: false, error: `vast fetch failed: ${(err as Error).message}` };
-  }
-  if (!res.ok) return { ok: false, error: `vast returned HTTP ${res.status}` };
-
-  let data: { offers?: VastOffer[] };
-  try {
-    data = await res.json();
-  } catch (err) {
-    return { ok: false, error: `vast JSON parse failed: ${(err as Error).message}` };
-  }
-  const raw = Array.isArray(data.offers) ? data.offers : [];
-  const now = new Date().toISOString();
-
-  const offers: GPUOffer[] = [];
-  for (const o of raw) {
-    const gpuName = (o.gpu_name || '').trim();
-    const numGpus = typeof o.num_gpus === 'number' && o.num_gpus > 0 ? o.num_gpus : 1;
-    const dph = typeof o.dph_total === 'number' ? o.dph_total : null;
-    const minBid = typeof o.min_bid === 'number' ? o.min_bid : null;
-    const vramMb = typeof o.gpu_ram === 'number' ? o.gpu_ram : null;
-    const vramHintGb = vramMb ? Math.round(vramMb / 1024) : undefined;
-
-    if (!gpuName || dph === null) continue;
-
-    const { canonical, vram_gb } = normalizeGPUName(gpuName, vramHintGb);
-    const perGpuOnDemand = dph / numGpus;
-    const perGpuSpot = minBid !== null ? minBid / numGpus : null;
-
-    offers.push({
-      provider: 'vast',
-      gpu_raw: gpuName,
-      gpu_canonical: canonical,
-      vram_gb: vram_gb ?? vramHintGb ?? null,
-      on_demand_usd_hr: round4(perGpuOnDemand),
-      spot_usd_hr: perGpuSpot !== null ? round4(perGpuSpot) : null,
-      available_count: numGpus,
-      region: o.geolocation ?? null,
-      source_url: 'https://vast.ai',
-      last_seen: now,
-    });
-  }
-  return { ok: true, offers };
 }
 
 // === Provider adapter: RunPod GraphQL (requires RUNPOD_API_KEY) ===
@@ -400,14 +329,7 @@ export async function refreshCurrent(env: Env): Promise<PricingSnapshot> {
   const allOffers: GPUOffer[] = [];
   const providersIncluded: string[] = [];
 
-  const [vastResult, runpodResult] = await Promise.all([fetchVast(), fetchRunPod(env)]);
-
-  if (vastResult.ok) {
-    allOffers.push(...vastResult.offers);
-    providersIncluded.push('vast');
-  } else {
-    errors.push({ provider: 'vast', error: vastResult.error });
-  }
+  const runpodResult = await fetchRunPod(env);
 
   if (runpodResult.ok) {
     if (runpodResult.skipped) {

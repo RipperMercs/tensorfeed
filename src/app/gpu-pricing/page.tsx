@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
 import { Server } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 import GpuPricingTable from '@/components/gpu-pricing/GpuPricingTable';
@@ -45,7 +44,7 @@ const FAQS = [
   {
     question: 'Can I get a programmatic feed?',
     answer:
-      'Yes. /api/gpu/pricing returns the full snapshot. /api/gpu/pricing/cheapest?gpu=H100 returns the top 3 cheapest right now. Premium /api/premium/gpu/pricing/series returns the daily historical price series.',
+      'Yes. /api/gpu/pricing returns the full snapshot. /api/gpu/pricing/cheapest?gpu=H100 returns the top 3 cheapest right now. /api/gpu/pricing/series returns the daily historical price series for a canonical GPU. All three are free, no auth required.',
   },
 ];
 
@@ -78,45 +77,36 @@ export default function GpuPricingPage() {
             cheapest on-demand and spot price for each GPU class.
           </p>
           <p>
-            Phase 1 covers two marketplace sources: Vast.ai and RunPod. Lambda Labs, Azure NC/ND, and
-            AWS on-demand are planned for phase 2. The data is captured daily into a historical
-            snapshot. The 30 to 90 day price series is exposed via the{' '}
-            <Link href="/developers/agent-payments" className="text-accent-primary hover:underline">
-              premium API
-            </Link>{' '}
-            for 1 credit per call.
+            Source: RunPod (when an API key is configured). Lambda Labs, CoreWeave public pricing,
+            Azure NC/ND, and AWS on-demand are planned next, contingent on per-source ToS review.
+            The data is captured daily into a historical snapshot. The 30 to 90 day price series is
+            exposed via{' '}
+            <code className="bg-bg-tertiary px-1.5 py-0.5 rounded text-accent-primary text-xs">
+              /api/gpu/pricing/series
+            </code>
+            , free and agent-friendly.
           </p>
         </div>
       </div>
 
       <GpuPricingTable />
 
-      <div className="mt-10 grid gap-6 md:grid-cols-2">
-        <div className="border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50">
-          <h2 className="text-lg font-semibold text-text-primary mb-2">Free agent endpoints</h2>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/gpu/pricing</code>
-              <span className="text-text-secondary ml-2">Full current snapshot</span>
-            </li>
-            <li>
-              <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/gpu/pricing/cheapest?gpu=H100&type=on_demand</code>
-              <span className="text-text-secondary ml-2">Top 3 cheapest right now</span>
-            </li>
-          </ul>
-        </div>
-        <div className="border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50">
-          <h2 className="text-lg font-semibold text-text-primary mb-2">Premium (1 credit)</h2>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/premium/gpu/pricing/series?gpu=H100&from=&to=</code>
-              <span className="text-text-secondary ml-2 block mt-1">Daily price series, up to 90 days. Backfill is impossible. Every day matters.</span>
-            </li>
-          </ul>
-          <Link href="/developers/agent-payments" className="text-accent-primary text-sm hover:underline mt-3 inline-block">
-            Agent payments docs →
-          </Link>
-        </div>
+      <div className="mt-10 border border-bg-tertiary rounded-lg p-5 bg-bg-secondary/50">
+        <h2 className="text-lg font-semibold text-text-primary mb-2">Free agent endpoints</h2>
+        <ul className="space-y-2 text-sm">
+          <li>
+            <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/gpu/pricing</code>
+            <span className="text-text-secondary ml-2">Full current snapshot</span>
+          </li>
+          <li>
+            <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/gpu/pricing/cheapest?gpu=H100&type=on_demand</code>
+            <span className="text-text-secondary ml-2">Top 3 cheapest right now</span>
+          </li>
+          <li>
+            <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/gpu/pricing/series?gpu=H100&from=&to=</code>
+            <span className="text-text-secondary ml-2 block mt-1">Daily price series, up to 90 days. Backfill is impossible; every day matters.</span>
+          </li>
+        </ul>
       </div>
 
       <div className="mt-10 border-t border-bg-tertiary pt-6">

@@ -208,7 +208,7 @@ export default function AgentFairTradePage() {
 {`{
   "v": 2,
   "id": "rcpt_8f3a4b...",
-  "endpoint": "/api/premium/gpu/pricing/series",
+  "endpoint": "/api/premium/news/search",
   "method": "GET",
   "token_short": "tf_live_abcdef12...09876543",
   "credits_charged": 1,

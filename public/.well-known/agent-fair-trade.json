@@ -29,7 +29,7 @@
       "id": "schema_validation_failure",
       "description": "Requests that fail input validation (HTTP 400) are not charged, are logged to the public no-charge ledger, and carry a signed receipt with no_charge_reason: \"schema_validation_failure\" so the agent has cryptographic proof the failure was free. Lenient by default: extra fields are ignored.",
       "code": "premiumValidationFailure() helper in worker/src/index.ts; calls commitPayment with the schema_validation_failure reason, signs a receipt with credits_charged: 0, returns 400 + receipt.",
-      "verifiable_via": "Send a malformed request to /api/premium/cost/projection, /api/premium/news/search, /api/premium/compare/models, or /api/premium/gpu/pricing/series and inspect the receipt. The event will appear at /api/payment/no-charge-stats."
+      "verifiable_via": "Send a malformed request to /api/premium/cost/projection, /api/premium/news/search, /api/premium/compare/models, or /api/premium/whats-new and inspect the receipt. The event will appear at /api/payment/no-charge-stats."
     },
     {
       "id": "stale_data",

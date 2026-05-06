@@ -46,7 +46,7 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/history/status/uptime': NULL_SLA,
   '/api/premium/mcp/registry/series': NULL_SLA,
   '/api/premium/probe/series': NULL_SLA,
-  '/api/premium/gpu/pricing/series': NULL_SLA,
+  '/api/gpu/pricing/series': NULL_SLA,
   // Watch registration: pure write, no capture concept.
   '/api/premium/watches': NULL_SLA,
 };
@@ -152,7 +152,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/history/status/uptime': 'historical immutable',
     '/api/premium/mcp/registry/series': 'historical immutable',
     '/api/premium/probe/series': 'historical immutable',
-    '/api/premium/gpu/pricing/series': 'historical immutable',
+    '/api/gpu/pricing/series': 'historical immutable',
     '/api/premium/watches': 'registration write, no capture concept',
   };
   return Object.entries(ENDPOINT_FRESHNESS).map(([endpoint, sla]) => ({
