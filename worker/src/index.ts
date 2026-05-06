@@ -37,6 +37,14 @@ import {
   SortKey,
 } from './agents-enriched';
 import { searchNews, NewsSearchOptions } from './news-search';
+import {
+  NFL_TEAMS,
+  SUPPORTED_LEAGUES,
+  getNFLTeam,
+  pollNFLNews,
+  readNFLNews,
+  SPORTS_NEWS_ATTRIBUTION,
+} from './sports-nfl';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1728,6 +1736,10 @@ export default {
           probeLatest: '/api/probe/latest',
           gpuPricing: '/api/gpu/pricing',
           gpuPricingCheapest: '/api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot',
+          sports: '/api/sports (league directory; nfl live, nba/mlb/nhl planned)',
+          sportsNflTeams: '/api/sports/nfl/teams?conference=AFC|NFC&division=East|North|South|West',
+          sportsNflTeamItem: '/api/sports/nfl/teams/{id} (e.g. sf, kc, nyj)',
+          sportsNflNews: '/api/sports/nfl/news?limit=&team= (RSS-aggregated, 200-char snippet + link)',
           routingPreview: '/api/preview/routing',
           premiumRouting: '/api/premium/routing',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
@@ -2212,6 +2224,66 @@ export default {
       return jsonResponse({ ok: true, summary }, 200, 600);
     }
 
+    // === SPORTS / NFL (free) ===
+    // V1: league directory, 32-team factual catalog, RSS-aggregated news.
+    // Players, schedule, stats, and injuries land in V2 from nflverse-data
+    // (CC-BY-4.0). News follows the same fair-use pattern as the AI news
+    // layer: title + 200-char snippet + mandatory link to the source.
+
+    if (path === '/api/sports' || path === '/api/sports/leagues') {
+      return jsonResponse(
+        { ok: true, leagues: SUPPORTED_LEAGUES },
+        200,
+        3600,
+      );
+    }
+
+    if (path === '/api/sports/nfl/teams') {
+      const conference = url.searchParams.get('conference')?.toUpperCase();
+      const division = url.searchParams.get('division');
+      let teams = NFL_TEAMS;
+      if (conference === 'AFC' || conference === 'NFC') {
+        teams = teams.filter(t => t.conference === conference);
+      }
+      if (division) {
+        const divNorm = division.charAt(0).toUpperCase() + division.slice(1).toLowerCase();
+        teams = teams.filter(t => t.division === divNorm);
+      }
+      return jsonResponse(
+        { ok: true, count: teams.length, teams },
+        200,
+        86400,
+      );
+    }
+
+    {
+      const teamMatch = path.match(/^\/api\/sports\/nfl\/teams\/([^/]+)$/);
+      if (teamMatch) {
+        const team = getNFLTeam(decodeURIComponent(teamMatch[1]));
+        if (!team) {
+          return jsonResponse(
+            {
+              ok: false,
+              error: 'team_not_found',
+              hint: 'Use /api/sports/nfl/teams to list valid IDs (lowercase abbreviation, e.g. "sf", "kc", "nyj").',
+            },
+            404,
+          );
+        }
+        return jsonResponse({ ok: true, team }, 200, 86400);
+      }
+    }
+
+    if (path === '/api/sports/nfl/news') {
+      const limit = parseInt(url.searchParams.get('limit') || '25', 10);
+      const teamParam = url.searchParams.get('team') || undefined;
+      const result = await readNFLNews(env, {
+        limit: Number.isFinite(limit) ? limit : 25,
+        team: teamParam,
+      });
+      return jsonResponse(result, 200, 600);
+    }
+
     // === AI PAPERS, TRENDING (free) ===
     // Daily curated AI/ML papers from Semantic Scholar, ranked by citation
     // count. Captured by the 11:00 UTC cron. First request after deploy
@@ -2397,7 +2469,7 @@ export default {
         return jsonResponse({
           ok: false,
           error: 'no_pricing_data',
-          hint: 'Phase 1 sources are Vast.ai (public) and RunPod (requires RUNPOD_API_KEY secret). If both are unreachable, this endpoint returns 503.',
+          hint: 'Source is RunPod (requires RUNPOD_API_KEY secret). If unreachable, this endpoint returns 503.',
         }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);
@@ -3888,6 +3960,9 @@ export default {
       // Pull VR/AR/XR data from vr.org (supportive site in the network).
       // vr.org refreshes every 15 min; hourly downstream is plenty.
       await run('refreshVrData', () => refreshVrData(env));
+      // NFL news aggregation. Hourly during all seasons; sources publish
+      // year-round (free agency, draft, training camp, regular season).
+      await run('pollNFLNews', () => pollNFLNews(env));
     } else if (cron === '0 */2 * * *') {
       // Every 2 hours: podcast feeds (10 sources, weekly release cadence)
       await run('pollPodcastFeeds', () => pollPodcastFeeds(env));
