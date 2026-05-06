@@ -87,6 +87,10 @@ crons = [
   # npm package list via the documented public api.npmjs.org/downloads
   # endpoint. Powers /api/packages/npm/ai-trending.
   "30 3 * * *",
+  # Daily 03:45 UTC: refresh monthly download counts for the curated
+  # AI/ML PyPI package list via pypistats.org public JSON API. Sister
+  # to the npm endpoint. Powers /api/packages/pypi/ai-trending.
+  "45 3 * * *",
   # Daily 04:00 UTC: refresh top AI research institutions (OpenAlex CC0).
   # Two API calls: group_by works on the AI concept, enrich top-N. Powers
   # /api/research/institutions/ai.

@@ -72,6 +72,11 @@ import {
   readMLBNews,
 } from './sports-mlb';
 import { readPolicyRegistry } from './ai-policy-registry';
+import {
+  refreshPyPITrending,
+  readPyPITrending,
+  isValidCategory as isValidPyPICategory,
+} from './pypi-ai-packages';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1774,6 +1779,7 @@ export default {
           sportsNflPlayerItem: '/api/sports/nfl/players/{gsis_id} (e.g. 00-0036971)',
           sportsNflSchedule: '/api/sports/nfl/schedule?season=&week=&team=&limit= (nflverse CC-BY-4.0)',
           npmAITrending: '/api/packages/npm/ai-trending?category=llm-sdk|agent-framework|rag|inference|evals|tooling|mcp&limit= (curated, weekly downloads via api.npmjs.org)',
+          pypiAITrending: '/api/packages/pypi/ai-trending?category=llm-sdk|agent-framework|rag|inference|evals|observability|tooling|mcp&limit= (curated, monthly downloads via pypistats.org / Linehaul / PyPI BigQuery public dataset)',
           researchInstitutionsAI: '/api/research/institutions/ai?country=&type=&limit= (OpenAlex CC0; top institutions by AI-tagged publications, last 365 days)',
           economyBLSIndicators: '/api/economy/bls/indicators?category=inflation|employment|wages|labor-force|jolts (US Bureau of Labor Statistics, public domain; CPI, unemployment, payrolls, JOLTS, etc., 24-month history with MoM delta)',
           policyAIRegistry: '/api/policy/ai/registry?jurisdiction=US-Federal|US-State|EU|UK|China|International&type=executive-order|statute|regulation|guidance|declaration|agency-action&status=active|phased|pending|rescinded|vetoed|proposed&scope=transparency|safety|high-risk|deepfakes|export-controls|...',
@@ -2471,6 +2477,40 @@ export default {
           ok: false,
           error: 'no_snapshot_yet',
           hint: 'Daily refresh runs at 04:00 UTC. After deploy, the first snapshot lands within 24 hours.',
+        }, 503);
+      }
+      return jsonResponse(result, 200, 1800);
+    }
+
+    // === PYPI AI/ML PACKAGE TRENDING (free) ===
+    // Sister to the npm endpoint. Curated AI-relevant PyPI packages
+    // ranked by last-month downloads. Source: pypistats.org JSON API,
+    // which serves aggregates derived from the public PyPI BigQuery
+    // dataset (Linehaul project, PSF). Refresh runs at 03:45 UTC.
+
+    if (path === '/api/packages/pypi/ai-trending') {
+      const categoryParam = url.searchParams.get('category');
+      const limitParam = url.searchParams.get('limit');
+      const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+
+      if (categoryParam && !isValidPyPICategory(categoryParam)) {
+        return jsonResponse({
+          ok: false,
+          error: 'invalid_category',
+          valid: ['llm-sdk', 'agent-framework', 'rag', 'inference', 'evals', 'observability', 'tooling', 'mcp'],
+        }, 400);
+      }
+      const validCategory = categoryParam && isValidPyPICategory(categoryParam) ? categoryParam : undefined;
+
+      const result = await readPyPITrending(env, {
+        category: validCategory,
+        limit: Number.isFinite(limit as number) ? limit : undefined,
+      });
+      if (!result) {
+        return jsonResponse({
+          ok: false,
+          error: 'no_snapshot_yet',
+          hint: 'Daily refresh runs at 03:45 UTC. After deploy, the first snapshot may take up to 24 hours.',
         }, 503);
       }
       return jsonResponse(result, 200, 1800);
@@ -4312,6 +4352,12 @@ export default {
       // for unscoped names plus per-package calls for scoped names.
       // Powers /api/packages/npm/ai-trending.
       await run('refreshNpmTrending', () => refreshNpmTrending(env));
+    } else if (cron === '45 3 * * *') {
+      // Daily 03:45 UTC: refresh monthly download counts for the
+      // curated AI/ML PyPI package list via pypistats.org. Sequential
+      // per-package calls; small infrastructure upstream so we are
+      // deliberately polite. Powers /api/packages/pypi/ai-trending.
+      await run('refreshPyPITrending', () => refreshPyPITrending(env));
     } else if (cron === '0 4 * * *') {
       // Daily 04:00 UTC: refresh top AI research institutions
       // (OpenAlex CC0). Two API calls per tick: group_by works on the
