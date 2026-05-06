@@ -6,11 +6,11 @@ const TF_BRAND_MARK = '/tensorfeed-icon.png';
 /**
  * Discriminated-union hero. Two modes:
  *
- *   1. `photo` — real image asset under public/originals/{slug}/. Use
+ *   1. `photo`: real image asset under public/originals/{slug}/. Use
  *      when a real photo is available (preferred per the article-images
  *      policy).
  *
- *   2. `graphic` — gradient + Lucide icon + eyebrow tag. Used when no
+ *   2. `graphic`: gradient + Lucide icon + eyebrow tag. Used when no
  *      photo is available. Forward-compatible with photo mode: when
  *      a photo lands later, swap mode to `photo` and the rest of the
  *      page is unchanged. The article's full title still renders in

@@ -145,7 +145,7 @@ export default function WhitepaperPage() {
         </div>
       </header>
 
-      {/* Body — auto-generated from specs/AFTA-WHITEPAPER.md */}
+      {/* Body, auto-generated from specs/AFTA-WHITEPAPER.md */}
       <div className="whitepaper-prose" itemProp="articleBody">
         <WhitepaperBody />
       </div>

@@ -52,7 +52,7 @@ const TICKER_NAME: Record<string, string> = {
 // Evergreen items the ticker always shows. These are facts that change
 // infrequently enough to hardcode (and we update by editing this file
 // when they go stale), in contrast to the status items which are now
-// fetched live. No timestamps, no "X minutes ago" — those would be
+// fetched live. No timestamps, no "X minutes ago" claims; those would be
 // dishonest in a static export.
 const EVERGREEN_ITEMS: TickerItem[] = [
   { kind: 'price', tag: 'OPUS 4.7', text: '$15 / $75', mono: 'per Mtok' },
@@ -142,7 +142,7 @@ export default function LiveTicker() {
 
   // Interleave: status items (live), then evergreen, then status again
   // so the marquee sees both as it scrolls. If status fetch hasn't
-  // completed yet, the ticker shows evergreen-only — never fake status.
+  // completed yet, the ticker shows evergreen-only; never fake status.
   const items: TickerItem[] = [...statusItems, ...EVERGREEN_ITEMS];
   const loop = items.length > 0 ? [...items, ...items] : EVERGREEN_ITEMS;
 

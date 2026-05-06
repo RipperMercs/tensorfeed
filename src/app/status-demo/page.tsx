@@ -33,7 +33,7 @@ function spark(seed: number, base: number, variance: number, dropAt?: number): n
 }
 
 const DEMO_SERVICES: StatusGridService[] = [
-  // OK — calm green pill, neutral background, gentle sparkline
+  // OK: calm green pill, neutral background, gentle sparkline
   {
     id: 'demo-ok-1',
     name: 'Claude (demo OK)',
@@ -52,7 +52,7 @@ const DEMO_SERVICES: StatusGridService[] = [
     spark: spark(87, 92, 22),
     href: '/is-chatgpt-down',
   },
-  // WARN — amber gradient fill, soft glow, static (no pulse)
+  // WARN: amber gradient fill, soft glow, static (no pulse)
   {
     id: 'demo-warn-1',
     name: 'Gemini (demo DEGRADED)',
@@ -71,7 +71,7 @@ const DEMO_SERVICES: StatusGridService[] = [
     spark: spark(33, 350, 220),
     href: '/is-bedrock-down',
   },
-  // DOWN — red gradient fill, harder glow, slow 2.2s pulse loop
+  // DOWN: red gradient fill, harder glow, slow 2.2s pulse loop
   {
     id: 'demo-down-1',
     name: 'Mistral (demo DOWN)',
