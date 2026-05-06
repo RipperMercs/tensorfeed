@@ -209,6 +209,8 @@ export default function Navbar() {
 
             <Link
               href="/api/agents/news"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded border border-accent-primary/40 text-accent-primary hover:bg-accent-primary/10 transition-colors"
             >
               <Zap className="w-3 h-3" />
@@ -292,6 +294,8 @@ export default function Navbar() {
 
           <Link
             href="/api/agents/news"
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={() => setMobileOpen(false)}
             className="flex items-center gap-1.5 px-3 py-2 rounded text-sm font-mono text-accent-primary hover:bg-accent-primary/10 transition-colors"
           >
