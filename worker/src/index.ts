@@ -71,6 +71,7 @@ import {
   pollMLBNews,
   readMLBNews,
 } from './sports-mlb';
+import { readPolicyRegistry } from './ai-policy-registry';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1775,6 +1776,7 @@ export default {
           npmAITrending: '/api/packages/npm/ai-trending?category=llm-sdk|agent-framework|rag|inference|evals|tooling|mcp&limit= (curated, weekly downloads via api.npmjs.org)',
           researchInstitutionsAI: '/api/research/institutions/ai?country=&type=&limit= (OpenAlex CC0; top institutions by AI-tagged publications, last 365 days)',
           economyBLSIndicators: '/api/economy/bls/indicators?category=inflation|employment|wages|labor-force|jolts (US Bureau of Labor Statistics, public domain; CPI, unemployment, payrolls, JOLTS, etc., 24-month history with MoM delta)',
+          policyAIRegistry: '/api/policy/ai/registry?jurisdiction=US-Federal|US-State|EU|UK|China|International&type=executive-order|statute|regulation|guidance|declaration|agency-action&status=active|phased|pending|rescinded|vetoed|proposed&scope=transparency|safety|high-risk|deepfakes|export-controls|...',
           routingPreview: '/api/preview/routing',
           premiumRouting: '/api/premium/routing',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
@@ -2403,6 +2405,24 @@ export default {
     // npm packages, ranked globally and per-category. Source: documented
     // public npm downloads API (api.npmjs.org/downloads). Refresh runs at
     // 03:30 UTC; /api/packages/npm/ai-trending serves the snapshot.
+
+    // === AI POLICY REGISTRY (free) ===
+    // Editorial catalog of significant AI policy actions: executive
+    // orders, statutes, regulations, guidance, declarations across
+    // US Federal, US State, EU, UK, China, International. Underlying
+    // government publications are public-record / public-domain
+    // depending on jurisdiction. The catalog itself is TF editorial.
+    // Refreshed on redeploy (low cadence, hand-curated).
+
+    if (path === '/api/policy/ai/registry') {
+      const result = readPolicyRegistry({
+        jurisdiction: url.searchParams.get('jurisdiction') ?? undefined,
+        type: url.searchParams.get('type') ?? undefined,
+        status: url.searchParams.get('status') ?? undefined,
+        scope: url.searchParams.get('scope') ?? undefined,
+      });
+      return jsonResponse(result, 200, 3600);
+    }
 
     // === BLS ECONOMIC INDICATORS (free) ===
     // Curated set of high-signal US BLS series (CPI, core CPI, PPI,
