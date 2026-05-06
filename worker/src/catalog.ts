@@ -9,8 +9,12 @@ import { Env } from './types';
  *   3. API endpoints serve from KV via Cache API layer
  *
  * Public data sources:
- *   - LiteLLM community-maintained model pricing (GitHub)
- *   - HuggingFace Open LLM Leaderboard (for benchmark scores)
+ *   - LiteLLM community-maintained model pricing (GitHub, MIT license)
+ *
+ * Benchmark scores are editorial: hand-curated from vendor-published evals
+ * (OpenAI eval tables, Anthropic model cards, Google AI blog, Meta Llama
+ * benchmarks). HF Open LLM Leaderboard ingest was removed 2026-05-06 to
+ * eliminate redistribution-rights ambiguity in HF's compiled leaderboard ToS.
  *
  * KV optimization: one read to check current data, one write only if changed.
  */
@@ -101,6 +105,41 @@ interface DailyUpdateResult {
   agentCount: number;
 }
 
+export interface BenchmarkAttribution {
+  source: string;
+  policy: string;
+  vendor_sources: string[];
+}
+
+export const BENCHMARK_ATTRIBUTION: BenchmarkAttribution = {
+  source: 'TensorFeed editorial',
+  policy:
+    'Benchmark scores are hand-curated from vendor-published evaluation tables (model cards, release blog posts, technical reports). Scores are factual data points from primary publishers; this catalog is the editorial compilation. Citations live with each score in the model release artifact noted under the model entry. Snapshots refresh on redeploy.',
+  vendor_sources: [
+    'Anthropic model cards (anthropic.com/news, model-card PDFs)',
+    'OpenAI eval tables (openai.com release posts, openai/evals on GitHub)',
+    'Google AI blog and Gemini technical reports (deepmind.google)',
+    'Meta Llama eval tables (ai.meta.com/llama, llama-models repo)',
+    'Mistral model release pages (mistral.ai)',
+    'Vendor-published benchmark leaderboards (SWE-bench.com, lmarena.ai, livecodebench.github.io)',
+  ],
+};
+
+export interface PricingAttribution {
+  source: string;
+  source_url: string;
+  license: string;
+  license_url: string;
+}
+
+export const PRICING_ATTRIBUTION: PricingAttribution = {
+  source: 'BerriAI/litellm (model_prices_and_context_window.json)',
+  source_url:
+    'https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json',
+  license: 'MIT',
+  license_url: 'https://github.com/BerriAI/litellm/blob/main/LICENSE',
+};
+
 // ── LiteLLM pricing source mapping ─────────────────────────────────
 
 const LITELLM_PROVIDER_MAP: Record<string, string> = {
@@ -134,20 +173,6 @@ const TRACKED_MODELS: Record<string, { providerId: string; ourId: string; name: 
 const LITELLM_URL =
   'https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json';
 
-// HuggingFace Open LLM Leaderboard API
-const HF_LEADERBOARD_URL =
-  'https://huggingface.co/api/spaces/open-llm-leaderboard/open_llm_leaderboard';
-
-// Map HF model names to our provider/model names for matching
-const HF_MODEL_MAP: Record<string, { model: string; provider: string }> = {
-  'anthropic/claude': { model: 'Claude', provider: 'Anthropic' },
-  'openai/gpt': { model: 'GPT', provider: 'OpenAI' },
-  'google/gemini': { model: 'Gemini', provider: 'Google' },
-  'meta-llama': { model: 'Llama', provider: 'Meta' },
-  'mistralai': { model: 'Mistral', provider: 'Mistral' },
-  'deepseek': { model: 'DeepSeek', provider: 'DeepSeek' },
-};
-
 // ── Fetch helpers ──────────────────────────────────────────────────
 
 async function fetchLiteLLMPricing(): Promise<Record<string, unknown> | null> {
@@ -160,29 +185,6 @@ async function fetchLiteLLMPricing(): Promise<Record<string, unknown> | null> {
     return await res.json() as Record<string, unknown>;
   } catch (e) {
     console.warn('Failed to fetch LiteLLM pricing:', e);
-    return null;
-  }
-}
-
-async function fetchHFLeaderboard(): Promise<unknown[] | null> {
-  try {
-    const res = await fetch(HF_LEADERBOARD_URL, {
-      headers: { 'User-Agent': 'TensorFeed/1.0 (https://tensorfeed.ai)' },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!res.ok) {
-      console.warn(`HF leaderboard returned ${res.status}`);
-      return null;
-    }
-    const data = await res.json();
-    // The API may return an array directly or an object with a data field
-    if (Array.isArray(data)) return data;
-    if (data && typeof data === 'object' && Array.isArray((data as Record<string, unknown>).data)) {
-      return (data as Record<string, unknown>).data as unknown[];
-    }
-    return null;
-  } catch (e) {
-    console.warn('Failed to fetch HF leaderboard:', e);
     return null;
   }
 }
@@ -287,81 +289,6 @@ function mergePricing(current: PricingData, litellm: Record<string, unknown>): {
 
     console.log(`New model detected: ${provider.name} / ${newModel.name}`);
     provider.models.push(newModel);
-    changed = true;
-  }
-
-  if (changed) {
-    current.lastUpdated = new Date().toISOString().slice(0, 10);
-  }
-
-  return { data: current, changed };
-}
-
-function mergeBenchmarks(current: BenchmarksData, hfData: unknown[]): { data: BenchmarksData; changed: boolean } {
-  let changed = false;
-
-  // The HF leaderboard API structure can vary. We look for model entries with
-  // scores that match our tracked providers. Only merge top-performing models
-  // that we don't already track.
-  for (const raw of hfData) {
-    if (typeof raw !== 'object' || raw === null) continue;
-    const entry = raw as Record<string, unknown>;
-
-    const modelName = (entry['model_name'] || entry['model'] || entry['Model']) as string | undefined;
-    if (!modelName) continue;
-
-    // Try to match to a tracked provider
-    let matchedProvider: string | null = null;
-    for (const [prefix, info] of Object.entries(HF_MODEL_MAP)) {
-      if (modelName.toLowerCase().includes(prefix.toLowerCase())) {
-        matchedProvider = info.provider;
-        break;
-      }
-    }
-    if (!matchedProvider) continue;
-
-    // Check if we already have this exact model
-    const alreadyTracked = current.models.some(
-      m => m.model.toLowerCase() === modelName.toLowerCase() ||
-           modelName.toLowerCase().includes(m.model.toLowerCase())
-    );
-    if (alreadyTracked) continue;
-
-    // Extract scores from known benchmark fields
-    const scores: Record<string, number> = {};
-    const scoreMap: Record<string, string[]> = {
-      mmlu_pro: ['mmlu_pro', 'MMLU-Pro', 'mmlu'],
-      human_eval: ['humaneval', 'HumanEval', 'human_eval', 'coding'],
-      gpqa_diamond: ['gpqa', 'GPQA', 'gpqa_diamond'],
-      math: ['math', 'MATH', 'math_hard'],
-      swe_bench: ['swe_bench', 'SWE-bench', 'swe'],
-    };
-
-    for (const [benchId, keys] of Object.entries(scoreMap)) {
-      for (const key of keys) {
-        const val = entry[key] as number | undefined;
-        if (val !== undefined && typeof val === 'number' && val > 0 && val <= 100) {
-          scores[benchId] = parseFloat(val.toFixed(1));
-          break;
-        }
-      }
-    }
-
-    // Only add if we got at least 2 benchmark scores and model is competitive
-    const scoreValues = Object.values(scores);
-    if (scoreValues.length < 2) continue;
-    const avgScore = scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length;
-    if (avgScore < 70) continue; // Only top-performing models
-
-    const newEntry: BenchmarkModelEntry = {
-      model: modelName,
-      provider: matchedProvider,
-      released: new Date().toISOString().slice(0, 7),
-      scores,
-    };
-
-    console.log(`New benchmark model: ${modelName} (${matchedProvider}, avg ${avgScore.toFixed(1)})`);
-    current.models.push(newEntry);
     changed = true;
   }
 
@@ -613,16 +540,8 @@ export async function updateDailyData(env: Env): Promise<DailyUpdateResult> {
     }
   }
 
-  const hfData = await fetchHFLeaderboard();
-  if (hfData && hfData.length > 0) {
-    const merged = mergeBenchmarks(benchmarks, hfData);
-    benchmarks = merged.data;
-    result.benchmarksChanged = merged.changed;
-    console.log(`HF leaderboard merge: ${merged.changed ? 'changes detected' : 'no changes'}`);
-  } else {
-    console.log('HF leaderboard fetch returned no data, keeping existing benchmarks');
-  }
-
+  // Benchmark scores are editorial; updates land on redeploy via
+  // BASELINE_BENCHMARKS, not from a third-party leaderboard ingest.
   result.benchmarkModelCount = benchmarks.models.length;
 
   // Write only if changed or first seed

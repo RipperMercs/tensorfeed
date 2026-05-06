@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { PRICING_ATTRIBUTION } from './catalog';
 
 /**
  * Premium cost projection.
@@ -73,6 +74,7 @@ export interface CostProjectionResult {
   computed_at: string;
   projections: ProjectionEntry[];
   ranked_cheapest_monthly: { model: string; provider: string; monthly_total: number }[];
+  attribution: import('./catalog').PricingAttribution;
   notes: string[];
 }
 
@@ -208,6 +210,7 @@ export async function computeCostProjection(
     computed_at: new Date().toISOString(),
     projections,
     ranked_cheapest_monthly: ranked,
+    attribution: PRICING_ATTRIBUTION,
     notes,
   };
 }

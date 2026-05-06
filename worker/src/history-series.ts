@@ -1,4 +1,10 @@
 import { Env } from './types';
+import {
+  BENCHMARK_ATTRIBUTION,
+  BenchmarkAttribution,
+  PRICING_ATTRIBUTION,
+  PricingAttribution,
+} from './catalog';
 
 /**
  * Premium history series: derived/aggregated views over daily history:*
@@ -255,6 +261,7 @@ export interface PricingSeriesResult {
   range: { from: string; to: string; days: number };
   resolution: 'daily';
   points: PricingSeriesPoint[];
+  attribution: PricingAttribution;
   summary: {
     first: PricingSeriesPoint | null;
     latest: PricingSeriesPoint | null;
@@ -320,6 +327,7 @@ export async function getPricingSeries(
     range: { from, to, days: daysBetween(from, to) + 1 },
     resolution: 'daily',
     points,
+    attribution: PRICING_ATTRIBUTION,
     summary: {
       first,
       latest,
@@ -346,6 +354,7 @@ export interface BenchmarkSeriesResult {
   benchmark: string;
   range: { from: string; to: string; days: number };
   points: BenchmarkSeriesPoint[];
+  attribution: BenchmarkAttribution;
   summary: {
     first: BenchmarkSeriesPoint | null;
     latest: BenchmarkSeriesPoint | null;
@@ -406,6 +415,7 @@ export async function getBenchmarkSeries(
     benchmark,
     range: { from, to, days: daysBetween(from, to) + 1 },
     points,
+    attribution: BENCHMARK_ATTRIBUTION,
     summary: {
       first,
       latest,

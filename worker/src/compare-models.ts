@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { BENCHMARK_ATTRIBUTION, PRICING_ATTRIBUTION, BenchmarkAttribution, PricingAttribution } from './catalog';
 
 /**
  * Premium side-by-side model comparison.
@@ -106,6 +107,10 @@ export interface CompareModelsResult {
     cheapest_blended: { name: string; blended: number }[];
     most_context: { name: string; context_window: number }[];
     by_benchmark: Record<string, { name: string; score: number }[]>;
+  };
+  attribution: {
+    pricing: PricingAttribution;
+    benchmarks: BenchmarkAttribution;
   };
   data_freshness: {
     pricing: string | null;
@@ -301,6 +306,10 @@ export async function compareModels(
       cheapest_blended,
       most_context,
       by_benchmark,
+    },
+    attribution: {
+      pricing: PRICING_ATTRIBUTION,
+      benchmarks: BENCHMARK_ATTRIBUTION,
     },
     data_freshness: {
       pricing: pricingRaw?.lastUpdated ?? null,

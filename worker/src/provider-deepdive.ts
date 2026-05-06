@@ -1,5 +1,7 @@
 import { Env } from './types';
 import { getAgentActivity } from './activity';
+import { BENCHMARK_ATTRIBUTION, PRICING_ATTRIBUTION } from './catalog';
+import { NEWS_ATTRIBUTION } from './news-search';
 
 /**
  * Premium provider deep-dive.
@@ -134,6 +136,12 @@ export interface ProviderDeepDiveModelEntry {
   benchmark_scores: Record<string, number>;
 }
 
+export interface CompositeAttribution {
+  pricing: import('./catalog').PricingAttribution;
+  benchmarks: import('./catalog').BenchmarkAttribution;
+  news: import('./news-search').NewsAttribution;
+}
+
 export interface ProviderDeepDiveResult {
   ok: true;
   provider: {
@@ -152,6 +160,7 @@ export interface ProviderDeepDiveResult {
   recent_news: { title: string; url: string; source: string; published_at: string; snippet: string }[];
   recent_news_count: number;
   agent_traffic_24h: number;
+  attribution: CompositeAttribution;
   data_freshness: {
     pricing: string | null;
     benchmarks: string | null;
@@ -303,6 +312,11 @@ export async function computeProviderDeepDive(
     })),
     recent_news_count: matchedArticles.length,
     agent_traffic_24h: traffic,
+    attribution: {
+      pricing: PRICING_ATTRIBUTION,
+      benchmarks: BENCHMARK_ATTRIBUTION,
+      news: NEWS_ATTRIBUTION,
+    },
     data_freshness: {
       pricing: pricingRaw?.lastUpdated ?? null,
       benchmarks: benchmarksRaw?.lastUpdated ?? null,
