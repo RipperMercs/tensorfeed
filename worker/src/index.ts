@@ -1827,7 +1827,7 @@ export default {
           usageDates: '/api/admin/usage/dates?key=<ADMIN_KEY>',
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -4124,6 +4124,34 @@ export default {
       if (task === 'probe-rollup') {
         const result = await rollupProbeYesterday(env);
         return jsonResponse({ message: 'Probe daily rollup ran', ...result });
+      }
+      if (task === 'fred') {
+        const result = await refreshFREDIndicators(env);
+        return jsonResponse({ message: 'FRED indicators refreshed', ...result });
+      }
+      if (task === 'bls') {
+        const result = await refreshBLSIndicators(env);
+        return jsonResponse({ message: 'BLS indicators refreshed', ...result });
+      }
+      if (task === 'npm-ai') {
+        const result = await refreshNpmTrending(env);
+        return jsonResponse({ message: 'npm AI trending refreshed', ...result });
+      }
+      if (task === 'pypi-ai') {
+        const result = await refreshPyPITrending(env);
+        return jsonResponse({ message: 'PyPI AI trending refreshed', ...result });
+      }
+      if (task === 'openalex') {
+        const result = await refreshOpenAlexAIInstitutions(env);
+        return jsonResponse({ message: 'OpenAlex AI institutions refreshed', ...result });
+      }
+      if (task === 'nflverse') {
+        const result = await captureNFLverseDaily(env);
+        return jsonResponse({ message: 'nflverse players + schedule captured', ...result });
+      }
+      if (task === 'sports-news') {
+        const [nfl, mlb] = await Promise.all([pollNFLNews(env), pollMLBNews(env)]);
+        return jsonResponse({ message: 'Sports news polled', nfl, mlb });
       }
       await Promise.all([pollRSSFeeds(env), pollStatusPages(env), updateCatalog(env), pollPodcastFeeds(env), pollTrendingRepos(env)]);
 
