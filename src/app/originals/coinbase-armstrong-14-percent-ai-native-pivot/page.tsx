@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Building2, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
+import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
   title: "Coinbase Cuts 14%. Brian Armstrong's Memo Is the First Agent-Native Layoff at Scale.",
@@ -42,6 +43,15 @@ export default function CoinbaseArmstrongAiNativePivotPage() {
         <ArrowLeft className="w-4 h-4" />
         Back to Originals
       </Link>
+
+      {/* Hero (graphic mode: Coinbase blue gradient + Building2 icon) */}
+      <ArticleHero
+        mode="graphic"
+        icon={Building2}
+        gradientFrom="#0052FF"
+        gradientTo="#001033"
+        eyebrow="Analysis · Wall Street"
+      />
 
       {/* Header */}
       <header className="mb-10">
