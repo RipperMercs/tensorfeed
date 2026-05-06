@@ -51,6 +51,11 @@ import {
   readPlayer as readNFLPlayer,
   readSchedule as readNFLSchedule,
 } from './sports-nfl-data';
+import {
+  refreshNpmTrending,
+  readNpmTrending,
+  isValidCategory as isValidNpmCategory,
+} from './npm-ai-packages';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1749,6 +1754,7 @@ export default {
           sportsNflPlayers: '/api/sports/nfl/players?team=&position=&status=&q=&limit= (nflverse CC-BY-4.0)',
           sportsNflPlayerItem: '/api/sports/nfl/players/{gsis_id} (e.g. 00-0036971)',
           sportsNflSchedule: '/api/sports/nfl/schedule?season=&week=&team=&limit= (nflverse CC-BY-4.0)',
+          npmAITrending: '/api/packages/npm/ai-trending?category=llm-sdk|agent-framework|rag|inference|evals|tooling|mcp&limit= (curated, weekly downloads via api.npmjs.org)',
           routingPreview: '/api/preview/routing',
           premiumRouting: '/api/premium/routing',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
@@ -2327,6 +2333,40 @@ export default {
         }
         return jsonResponse(result, 200, 3600);
       }
+    }
+
+    // === NPM AI/ML PACKAGE TRENDING (free) ===
+    // Daily snapshot of weekly downloads for a curated list of AI-relevant
+    // npm packages, ranked globally and per-category. Source: documented
+    // public npm downloads API (api.npmjs.org/downloads). Refresh runs at
+    // 03:30 UTC; /api/packages/npm/ai-trending serves the snapshot.
+
+    if (path === '/api/packages/npm/ai-trending') {
+      const categoryParam = url.searchParams.get('category');
+      const limitParam = url.searchParams.get('limit');
+      const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+
+      if (categoryParam && !isValidNpmCategory(categoryParam)) {
+        return jsonResponse({
+          ok: false,
+          error: 'invalid_category',
+          valid: ['llm-sdk', 'agent-framework', 'rag', 'inference', 'evals', 'tooling', 'mcp'],
+        }, 400);
+      }
+      const validCategory = categoryParam && isValidNpmCategory(categoryParam) ? categoryParam : undefined;
+
+      const result = await readNpmTrending(env, {
+        category: validCategory,
+        limit: Number.isFinite(limit as number) ? limit : undefined,
+      });
+      if (!result) {
+        return jsonResponse({
+          ok: false,
+          error: 'no_snapshot_yet',
+          hint: 'Daily refresh runs at 03:30 UTC. After deploy, the first snapshot may take up to 24 hours unless triggered via the admin refresh hook.',
+        }, 503);
+      }
+      return jsonResponse(result, 200, 1800);
     }
 
     if (path === '/api/sports/nfl/schedule') {
@@ -4127,6 +4167,12 @@ export default {
       // response. Powers /api/sports/nfl/players and
       // /api/sports/nfl/schedule.
       await run('captureNFLverseDaily', () => captureNFLverseDaily(env));
+    } else if (cron === '30 3 * * *') {
+      // Daily 03:30 UTC: refresh weekly download counts for the
+      // curated AI/ML npm package list. One bulk call to api.npmjs.org
+      // for unscoped names plus per-package calls for scoped names.
+      // Powers /api/packages/npm/ai-trending.
+      await run('refreshNpmTrending', () => refreshNpmTrending(env));
     }
 
     // Record RSS poll history for the daily summary digest

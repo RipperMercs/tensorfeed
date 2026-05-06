@@ -83,6 +83,10 @@ crons = [
   # and write to KV. CC-BY-4.0 source, attribution shipped on every
   # response. Powers /api/sports/nfl/players and /api/sports/nfl/schedule.
   "0 6 * * *",
+  # Daily 03:30 UTC: refresh weekly download counts for the curated AI/ML
+  # npm package list via the documented public api.npmjs.org/downloads
+  # endpoint. Powers /api/packages/npm/ai-trending.
+  "30 3 * * *",
   # X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
   # Hold at 1/day for 30 clean days before bumping to 2/day ("30 8,17 * * *").
   "30 14 * * *",
