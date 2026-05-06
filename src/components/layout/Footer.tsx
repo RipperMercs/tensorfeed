@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { SISTER_SITES, CONTACT_EMAIL } from '@/lib/constants';
 
@@ -130,8 +131,18 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom tagline */}
-        <div className="mt-4 pt-4 border-t border-border text-center">
+        {/* Bottom tagline with brand mark */}
+        <div className="mt-4 pt-6 border-t border-border flex flex-col items-center gap-3">
+          <Link href="/" aria-label="TensorFeed home" className="inline-block opacity-80 hover:opacity-100 transition-opacity">
+            <Image
+              src="/tensorfeed-logo.png"
+              alt="TensorFeed"
+              width={140}
+              height={32}
+              className="h-7 w-auto"
+              priority={false}
+            />
+          </Link>
           <p className="text-xs text-text-muted">
             Designed for humans and AI agents
           </p>
