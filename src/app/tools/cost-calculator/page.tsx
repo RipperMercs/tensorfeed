@@ -95,6 +95,29 @@ function formatCost(cost: number): string {
   return `$${cost.toFixed(2)}`;
 }
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatReleased(released: string): string {
+  if (!released) return '—';
+  const parts = released.split('-');
+  if (parts.length < 2) return released;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  if (isNaN(year) || isNaN(month) || month < 1 || month > 12) return released;
+  return `${MONTH_NAMES[month - 1]} ${year}`;
+}
+
+function releasedToTs(released: string): number {
+  if (!released) return 0;
+  const parts = released.split('-');
+  if (parts.length < 2) return 0;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) || 1;
+  const day = parts[2] ? parseInt(parts[2], 10) || 1 : 1;
+  if (isNaN(year)) return 0;
+  return Date.UTC(year, month - 1, day);
+}
+
 export default function CostCalculatorPage() {
   const [pricingData, setPricingData] = useState<PricingData>(fallbackPricingData as PricingData);
   const [monthlyTokens, setMonthlyTokens] = useState(1_000_000);
@@ -136,10 +159,25 @@ export default function CostCalculatorPage() {
         const totalCost = inputCost + outputCost;
         return { ...model, inputCost, outputCost, totalCost };
       })
-      .sort((a, b) => a.totalCost - b.totalCost);
+      .sort((a, b) => releasedToTs(b.released) - releasedToTs(a.released));
   }, [allModels, inputTokens, outputTokens]);
 
-  const cheapestPaidModel = results.find((r) => r.totalCost > 0);
+  const cheapestId = useMemo(() => {
+    let cheapest: typeof results[number] | undefined;
+    for (const r of results) {
+      if (!cheapest || r.totalCost < cheapest.totalCost) cheapest = r;
+    }
+    return cheapest?.id;
+  }, [results]);
+
+  const cheapestPaidModel = useMemo(() => {
+    let cheapest: typeof results[number] | undefined;
+    for (const r of results) {
+      if (r.totalCost > 0 && (!cheapest || r.totalCost < cheapest.totalCost)) cheapest = r;
+    }
+    return cheapest;
+  }, [results]);
+
   const mostCapableIds = ['claude-opus-4-6', 'gpt-4o', 'gemini-2-5-pro'];
 
   function handleTokenInput(value: string) {
@@ -273,6 +311,9 @@ export default function CostCalculatorPage() {
                 <th className="px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   Model
                 </th>
+                <th className="px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Released
+                </th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
                   Monthly Cost
                 </th>
@@ -285,8 +326,8 @@ export default function CostCalculatorPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {results.map((model, index) => {
-                const isCheapest = index === 0;
+              {results.map((model) => {
+                const isCheapest = model.id === cheapestId;
                 const isBestValue =
                   cheapestPaidModel && model.id === cheapestPaidModel.id && !isCheapest;
                 const isMostCapable = mostCapableIds.includes(model.id);
@@ -323,6 +364,9 @@ export default function CostCalculatorPage() {
                           </span>
                         )}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-text-muted whitespace-nowrap font-mono">
+                      {formatReleased(model.released)}
                     </td>
                     <td
                       className={`px-4 py-3 text-sm text-right font-semibold ${
