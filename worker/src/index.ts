@@ -65,6 +65,12 @@ import {
   readIndicators as readBLSIndicators,
   isValidCategory as isValidBLSCategory,
 } from './bls-indicators';
+import {
+  MLB_TEAMS,
+  getMLBTeam,
+  pollMLBNews,
+  readMLBNews,
+} from './sports-mlb';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1760,6 +1766,9 @@ export default {
           sportsNflTeams: '/api/sports/nfl/teams?conference=AFC|NFC&division=East|North|South|West',
           sportsNflTeamItem: '/api/sports/nfl/teams/{id} (e.g. sf, kc, nyj)',
           sportsNflNews: '/api/sports/nfl/news?limit=&team= (RSS-aggregated, 200-char snippet + link)',
+          sportsMlbTeams: '/api/sports/mlb/teams?league=AL|NL&division=East|Central|West',
+          sportsMlbTeamItem: '/api/sports/mlb/teams/{id} (e.g. nyy, lad, sf)',
+          sportsMlbNews: '/api/sports/mlb/news?limit=&team= (RSS-aggregated, 200-char snippet + link)',
           sportsNflPlayers: '/api/sports/nfl/players?team=&position=&status=&q=&limit= (nflverse CC-BY-4.0)',
           sportsNflPlayerItem: '/api/sports/nfl/players/{gsis_id} (e.g. 00-0036971)',
           sportsNflSchedule: '/api/sports/nfl/schedule?season=&week=&team=&limit= (nflverse CC-BY-4.0)',
@@ -2298,6 +2307,49 @@ export default {
         }
         return jsonResponse({ ok: true, team }, 200, 86400);
       }
+    }
+
+    // === SPORTS / MLB (free, V1) ===
+    // 30-team factual catalog plus hourly RSS news. Mirrors the NFL V1
+    // pattern. Lahman + Retrosheet integration (V2) is on the roadmap.
+
+    if (path === '/api/sports/mlb/teams') {
+      const league = url.searchParams.get('league')?.toUpperCase();
+      const division = url.searchParams.get('division');
+      let teams = MLB_TEAMS;
+      if (league === 'AL' || league === 'NL') {
+        teams = teams.filter(t => t.league === league);
+      }
+      if (division) {
+        const divNorm = division.charAt(0).toUpperCase() + division.slice(1).toLowerCase();
+        teams = teams.filter(t => t.division === divNorm);
+      }
+      return jsonResponse({ ok: true, count: teams.length, teams }, 200, 86400);
+    }
+
+    {
+      const teamMatch = path.match(/^\/api\/sports\/mlb\/teams\/([^/]+)$/);
+      if (teamMatch) {
+        const team = getMLBTeam(decodeURIComponent(teamMatch[1]));
+        if (!team) {
+          return jsonResponse({
+            ok: false,
+            error: 'team_not_found',
+            hint: 'Use /api/sports/mlb/teams to list valid IDs (lowercase abbreviation, e.g. "sf", "nyy", "lad").',
+          }, 404);
+        }
+        return jsonResponse({ ok: true, team }, 200, 86400);
+      }
+    }
+
+    if (path === '/api/sports/mlb/news') {
+      const limit = parseInt(url.searchParams.get('limit') || '25', 10);
+      const teamParam = url.searchParams.get('team') || undefined;
+      const result = await readMLBNews(env, {
+        limit: Number.isFinite(limit) ? limit : 25,
+        team: teamParam,
+      });
+      return jsonResponse(result, 200, 600);
     }
 
     if (path === '/api/sports/nfl/news') {
@@ -4126,6 +4178,10 @@ export default {
       // NFL news aggregation. Hourly during all seasons; sources publish
       // year-round (free agency, draft, training camp, regular season).
       await run('pollNFLNews', () => pollNFLNews(env));
+      // MLB news aggregation. Same hourly cadence; sources publish
+      // year-round (offseason moves, spring training, regular season,
+      // playoffs).
+      await run('pollMLBNews', () => pollMLBNews(env));
     } else if (cron === '0 */2 * * *') {
       // Every 2 hours: podcast feeds (10 sources, weekly release cadence)
       await run('pollPodcastFeeds', () => pollPodcastFeeds(env));

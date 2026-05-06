@@ -406,8 +406,8 @@ export const SUPPORTED_LEAGUES: SportsLeague[] = [
     id: 'mlb',
     name: 'Major League Baseball',
     endpoint_prefix: '/api/sports/mlb',
-    status: 'planned',
-    description: 'Roadmapped. Source candidates: Lahman, Retrosheet (open public-domain compilations).',
+    status: 'live',
+    description: 'Live as of 2026-05-06 (V1: 30-team factual catalog plus hourly RSS news from ESPN, MLB.com, CBS Sports, Yahoo Sports). V2 candidates: Lahman seasonal stats (CC-BY-SA) and Retrosheet game logs.',
   },
   {
     id: 'nhl',

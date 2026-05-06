@@ -59,11 +59,11 @@ const LEAGUES: LeagueCard[] = [
     id: 'mlb',
     name: 'Major League Baseball',
     short: 'MLB',
-    status: 'planned',
+    status: 'live',
     href: '/sports',
     description:
-      'Roadmapped. Source candidates: Lahman, Retrosheet (open public-domain compilations).',
-    source: 'TBD',
+      '30-team factual catalog plus hourly aggregated news from ESPN, MLB.com, CBS Sports, and Yahoo Sports. Lahman seasonal data and Retrosheet game logs are V2 candidates.',
+    source: 'Editorial catalog + RSS aggregation (Lahman / Retrosheet for V2)',
   },
   {
     id: 'nhl',
@@ -135,13 +135,18 @@ export default function SportsPage() {
               {league.description}
             </p>
             <div className="text-xs text-text-tertiary mt-3">Source: {league.source}</div>
-            {league.status === 'live' && (
+            {league.status === 'live' && league.href !== '/sports' && (
               <Link
                 href={league.href}
                 className="mt-4 inline-flex items-center gap-1 text-accent-primary text-sm hover:underline"
               >
                 Open {league.short} <ArrowRight className="w-4 h-4" />
               </Link>
+            )}
+            {league.status === 'live' && league.href === '/sports' && (
+              <div className="mt-4 text-xs text-text-tertiary">
+                API live; dedicated page coming soon.
+              </div>
             )}
           </div>
         ))}

@@ -134,8 +134,14 @@ describe('SUPPORTED_LEAGUES', () => {
     expect(nfl?.endpoint_prefix).toBe('/api/sports/nfl');
   });
 
-  it('lists nba/mlb/nhl as planned', () => {
-    for (const id of ['nba', 'mlb', 'nhl']) {
+  it('declares MLB as live', () => {
+    const mlb = SUPPORTED_LEAGUES.find(l => l.id === 'mlb');
+    expect(mlb?.status).toBe('live');
+    expect(mlb?.endpoint_prefix).toBe('/api/sports/mlb');
+  });
+
+  it('lists nba/nhl as planned', () => {
+    for (const id of ['nba', 'nhl']) {
       const league = SUPPORTED_LEAGUES.find(l => l.id === id);
       expect(league?.status).toBe('planned');
     }
