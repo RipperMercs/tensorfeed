@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import type { LucideIcon } from 'lucide-react';
 
+const TF_BRAND_MARK = '/tensorfeed-icon.png';
+
 /**
  * Discriminated-union hero. Two modes:
  *
@@ -84,18 +86,34 @@ export default function ArticleHero(props: ArticleHeroProps) {
             </div>
           )}
 
-          {/* Brand stamp, bottom-left, very small, builds visual identity */}
+          {/* Brand mark, bottom-left, low opacity, official identity
+              without being dominant. Uses the actual TensorFeed icon
+              asset so the hero reads as a published-article cover
+              rather than a generic placeholder. */}
           <div
-            className="absolute bottom-5 left-5 sm:bottom-8 sm:left-10 font-mono"
-            style={{
-              fontSize: 10.5,
-              letterSpacing: '0.16em',
-              color: 'rgba(255,255,255,0.55)',
-              textTransform: 'uppercase',
-            }}
+            className="absolute bottom-5 left-5 sm:bottom-8 sm:left-10 flex items-center gap-2"
+            style={{ opacity: 0.6 }}
             aria-hidden="true"
           >
-            tensorfeed.ai
+            <Image
+              src={TF_BRAND_MARK}
+              alt=""
+              width={28}
+              height={28}
+              className="block"
+            />
+            <span
+              className="font-mono"
+              style={{
+                fontSize: 10.5,
+                letterSpacing: '0.16em',
+                color: 'rgba(255,255,255,0.85)',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+              }}
+            >
+              tensorfeed.ai
+            </span>
           </div>
         </div>
         {(caption || credit) && (
