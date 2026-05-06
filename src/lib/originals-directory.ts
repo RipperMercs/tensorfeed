@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'sap-prior-labs-europe-frontier-lab',
+    title: 'SAP Just Bought Prior Labs. Europe Has a Frontier AI Lab Now.',
+    author: 'Marcus Chen',
+    date: 'May 6, 2026',
+    readTime: '7 min read',
+    description:
+      "SAP signed a definitive agreement to acquire Prior Labs on May 4, 2026, and committed more than 1 billion euros over four years to scale it into a globally leading frontier AI lab in Europe. The play is not LLMs. It is tabular foundation models, the category that fits 80% of enterprise data, and the bet only Europe's most valuable listed company could make. Inside the deal numbers, the TabPFN research, why structured data is the unsexy huge market LLMs cannot touch, and what this pressures across Salesforce, Oracle, and Databricks.",
+  },
+  {
     slug: 'we-chose-usdc-on-base-for-afta',
     title: "We Could Have Built AFTA on Anything. We Chose USDC on Base.",
     author: 'Ripper',
