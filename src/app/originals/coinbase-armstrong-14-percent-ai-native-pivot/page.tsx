@@ -4,6 +4,7 @@ import { ArrowLeft, Building2, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import ArticleHero from '@/components/originals/ArticleHero';
+import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
   title: "Coinbase Cuts 14%. Brian Armstrong's Memo Is the First Agent-Native Layoff at Scale.",
@@ -54,7 +55,7 @@ export default function CoinbaseArmstrongAiNativePivotPage() {
       />
 
       {/* Header */}
-      <header className="mb-10">
+      <header className="mb-6">
         <h1 className="text-3xl sm:text-4xl font-bold text-text-primary mb-4 leading-tight">
           Coinbase Cuts 14%. Brian Armstrong&apos;s Memo Is the First Agent-Native Layoff at Scale.
         </h1>
@@ -69,6 +70,11 @@ export default function CoinbaseArmstrongAiNativePivotPage() {
           </span>
         </div>
       </header>
+
+      <ShareBar
+        path="/originals/coinbase-armstrong-14-percent-ai-native-pivot"
+        title="Coinbase Cuts 14%. Brian Armstrong's Memo Is the First Agent-Native Layoff at Scale."
+      />
 
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
