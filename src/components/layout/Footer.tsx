@@ -133,13 +133,13 @@ export default function Footer() {
 
         {/* Bottom tagline with brand mark */}
         <div className="mt-4 pt-6 border-t border-border flex flex-col items-center gap-3">
-          <Link href="/" aria-label="TensorFeed home" className="inline-block opacity-80 hover:opacity-100 transition-opacity">
+          <Link href="/" aria-label="TensorFeed home" className="inline-block opacity-90 hover:opacity-100 transition-opacity">
             <Image
-              src="/tensorfeed-logo.png"
+              src="/tensorfeed-icon-trans.png"
               alt="TensorFeed"
-              width={140}
-              height={32}
-              className="h-7 w-auto"
+              width={64}
+              height={64}
+              className="h-16 w-16"
               priority={false}
             />
           </Link>
