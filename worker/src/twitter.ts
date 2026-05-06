@@ -89,6 +89,10 @@ async function postTweet(text: string, env: Env): Promise<boolean> {
         'User-Agent': 'TensorFeed/1.0',
       },
       body: JSON.stringify({ text }),
+      // 10s upper bound on the X API call. Without this, a hung X
+      // upstream would let the worker's CPU time tick toward the
+      // platform timeout and surface as 504 in our analytics.
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!res.ok) {
