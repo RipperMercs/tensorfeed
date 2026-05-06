@@ -45,6 +45,12 @@ import {
   readNFLNews,
   SPORTS_NEWS_ATTRIBUTION,
 } from './sports-nfl';
+import {
+  captureNFLverseDaily,
+  readPlayers as readNFLPlayers,
+  readPlayer as readNFLPlayer,
+  readSchedule as readNFLSchedule,
+} from './sports-nfl-data';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1740,6 +1746,9 @@ export default {
           sportsNflTeams: '/api/sports/nfl/teams?conference=AFC|NFC&division=East|North|South|West',
           sportsNflTeamItem: '/api/sports/nfl/teams/{id} (e.g. sf, kc, nyj)',
           sportsNflNews: '/api/sports/nfl/news?limit=&team= (RSS-aggregated, 200-char snippet + link)',
+          sportsNflPlayers: '/api/sports/nfl/players?team=&position=&status=&q=&limit= (nflverse CC-BY-4.0)',
+          sportsNflPlayerItem: '/api/sports/nfl/players/{gsis_id} (e.g. 00-0036971)',
+          sportsNflSchedule: '/api/sports/nfl/schedule?season=&week=&team=&limit= (nflverse CC-BY-4.0)',
           routingPreview: '/api/preview/routing',
           premiumRouting: '/api/premium/routing',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
@@ -2282,6 +2291,57 @@ export default {
         team: teamParam,
       });
       return jsonResponse(result, 200, 600);
+    }
+
+    // === SPORTS / NFL: nflverse-derived endpoints (free, V2) ===
+    // Players + schedule sourced from nflverse-data (CC-BY-4.0). Daily
+    // ingest at 06:00 UTC parses CSV releases, downsamples, and writes
+    // to KV. Attribution shipped on every response shape.
+
+    if (path === '/api/sports/nfl/players') {
+      const limit = parseInt(url.searchParams.get('limit') || '100', 10);
+      const result = await readNFLPlayers(env, {
+        team: url.searchParams.get('team') || undefined,
+        position: url.searchParams.get('position') || undefined,
+        status: url.searchParams.get('status') || undefined,
+        q: url.searchParams.get('q') || undefined,
+        limit: Number.isFinite(limit) ? limit : 100,
+      });
+      return jsonResponse(result, 200, 3600);
+    }
+
+    {
+      const playerMatch = path.match(/^\/api\/sports\/nfl\/players\/([^/]+)$/);
+      if (playerMatch) {
+        const result = await readNFLPlayer(env, decodeURIComponent(playerMatch[1]));
+        if (!result.ok) {
+          return jsonResponse(
+            {
+              ok: false,
+              error: result.error,
+              hint:
+                'Pass the gsis_id (NFL player identifier, e.g. 00-0036971). Use /api/sports/nfl/players?q=mahomes to search by name.',
+            },
+            404,
+          );
+        }
+        return jsonResponse(result, 200, 3600);
+      }
+    }
+
+    if (path === '/api/sports/nfl/schedule') {
+      const seasonParam = url.searchParams.get('season');
+      const weekParam = url.searchParams.get('week');
+      const limit = parseInt(url.searchParams.get('limit') || '100', 10);
+      const season = seasonParam ? parseInt(seasonParam, 10) : undefined;
+      const week = weekParam ? parseInt(weekParam, 10) : undefined;
+      const result = await readNFLSchedule(env, {
+        season: Number.isFinite(season as number) ? season : undefined,
+        week: Number.isFinite(week as number) ? week : undefined,
+        team: url.searchParams.get('team') || undefined,
+        limit: Number.isFinite(limit) ? limit : 100,
+      });
+      return jsonResponse(result, 200, 3600);
     }
 
     // === AI PAPERS, TRENDING (free) ===
@@ -4061,6 +4121,12 @@ export default {
       // historical series. Compounds into the data behind
       // /api/gpu/pricing/series (free).
       await run('captureGpuDaily', () => captureGpuDaily(env));
+    } else if (cron === '0 6 * * *') {
+      // Daily 06:00 UTC: ingest nflverse-data CSV releases (players,
+      // schedule). CC-BY-4.0 source, attribution shipped on every
+      // response. Powers /api/sports/nfl/players and
+      // /api/sports/nfl/schedule.
+      await run('captureNFLverseDaily', () => captureNFLverseDaily(env));
     }
 
     // Record RSS poll history for the daily summary digest

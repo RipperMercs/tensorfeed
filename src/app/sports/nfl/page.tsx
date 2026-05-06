@@ -43,9 +43,9 @@ const FAQS = [
       'Yes. The teams catalog is factual data and not copyrightable per Feist. News is syndicated under the publisher RSS license and links back to the canonical source. Future nflverse-derived endpoints will require a one-line attribution per the CC-BY-4.0 license. Vendor scraping is not in our pipeline anywhere.',
   },
   {
-    question: 'Why no players or stats yet?',
+    question: 'What about players and schedule?',
     answer:
-      'Because doing it right takes care. The plan is nflverse-data (CC-BY-4.0) for rosters, schedule, weekly stats, snap counts, and injuries. Pulling parquet/CSV in a Cloudflare Worker has constraints we want to test before shipping. V2 is on the roadmap.',
+      'Live as of 2026-05-06. /api/sports/nfl/players returns the active-roster catalog from nflverse-data (CC-BY-4.0) with team / position / status / name-search filters. /api/sports/nfl/schedule returns the games schedule (2024+) with season / week / team filters. Daily refresh at 06:00 UTC. Weekly stats, snap counts, and injuries are next on the V2.1 list.',
   },
 ];
 
@@ -140,6 +140,26 @@ export default function NFLPage() {
           <li>
             <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/sports/nfl/teams/{'{id}'}</code>
             <span className="text-text-secondary ml-2">One team by id (e.g. sf, kc, nyj) or abbreviation</span>
+          </li>
+          <li>
+            <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/sports/nfl/players</code>
+            <span className="text-text-secondary ml-2 block mt-1">
+              Active-roster catalog from nflverse-data. Filters:{' '}
+              <code className="bg-bg-tertiary px-1 rounded">?team=&position=&status=&q=</code>. Each entry
+              carries gsis_id, position, team, jersey, height/weight, draft, college, and headshot URL.
+            </span>
+          </li>
+          <li>
+            <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/sports/nfl/players/{'{gsis_id}'}</code>
+            <span className="text-text-secondary ml-2">One player by NFL identifier (e.g. 00-0036971)</span>
+          </li>
+          <li>
+            <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/sports/nfl/schedule</code>
+            <span className="text-text-secondary ml-2 block mt-1">
+              Games schedule from 2024 onward. Filters:{' '}
+              <code className="bg-bg-tertiary px-1 rounded">?season=&week=&team=</code>. Each game carries
+              date, weekday, kickoff, stadium, surface, scores when final.
+            </span>
           </li>
           <li>
             <code className="bg-bg-tertiary px-2 py-0.5 rounded text-accent-primary">/api/sports/nfl/news</code>

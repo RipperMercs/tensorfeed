@@ -79,6 +79,10 @@ crons = [
   # Daily 12:45 AM UTC: capture a daily GPU pricing snapshot for the
   # historical series. Compounds into /api/gpu/pricing/series.
   "45 0 * * *",
+  # Daily 6 AM UTC: ingest nflverse-data CSV releases (players, schedule)
+  # and write to KV. CC-BY-4.0 source, attribution shipped on every
+  # response. Powers /api/sports/nfl/players and /api/sports/nfl/schedule.
+  "0 6 * * *",
   # X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
   # Hold at 1/day for 30 clean days before bumping to 2/day ("30 8,17 * * *").
   "30 14 * * *",
