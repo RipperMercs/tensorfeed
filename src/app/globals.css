@@ -337,16 +337,17 @@ a.tf-activity-row:hover {
 .tf-explore-card:hover::before { opacity: 0.25; }
 .tf-explore-card .tf-explore-vis {
   position: absolute;
-  right: -14px;
-  bottom: -14px;
-  width: 76px;
-  height: 76px;
+  right: -22px;
+  bottom: -22px;
+  width: 96px;
+  height: 96px;
   opacity: 0.14;
   transition: opacity 0.3s;
   pointer-events: none;
   z-index: 0;
   color: var(--explore-color, var(--accent-primary));
 }
+.tf-explore-card svg { width: 100%; height: 100%; display: block; }
 .tf-explore-card:hover .tf-explore-vis { opacity: 0.45; }
 .tf-explore-card .tf-explore-arrow {
   color: var(--explore-color, var(--accent-primary));
