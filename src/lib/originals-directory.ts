@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'audited-our-paid-api-killed-two-endpoints',
+    title: 'I Audited Our Own Paid API. Two Endpoints Had to Die.',
+    author: 'Ripper',
+    date: 'May 6, 2026',
+    readTime: '7 min read',
+    description:
+      "AFTA promised fair-trade agent commerce six days ago. Today I ran the audit I should have run before the whitepaper went live: redistribution-rights review of every premium endpoint TensorFeed sells. Sixteen endpoints, eight green, six yellow, two red. Vast.ai-derived GPU pricing failed (their ToS prohibits redistribution outright). HuggingFace-compiled benchmarks failed (we were redistributing their compilation under a paid gate). Both got cut today. Inside the audit, the cleanup commits, why we shipped this before anyone called us out, and why fair-trade has to be bilateral or it is just marketing.",
+  },
+  {
     slug: 'sap-prior-labs-europe-frontier-lab',
     title: 'SAP Just Bought Prior Labs. Europe Has a Frontier AI Lab Now.',
     author: 'Marcus Chen',
