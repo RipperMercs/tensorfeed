@@ -26,6 +26,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# MCP bundle build output (`mcpb pack`). Large binary, not source.
+mcp-server/*.mcpb
+
 # env files (NONE of these may ever be committed)
 .env
 .env.*
