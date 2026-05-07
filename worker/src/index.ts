@@ -3570,6 +3570,15 @@ export default {
       if (!payment.paid) return payment.response!;
 
       const result = await computeMacroDigest(env);
+      if (!result.ok) {
+        // Route empty-snapshot errors through the no-charge path so
+        // agents are not billed for a "data not ready yet" response.
+        // Mirrors the pattern in the other six derived-premium handlers.
+        return await premiumValidationFailure(
+          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+          payment, request, env,
+        );
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/macro/digest', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
