@@ -297,14 +297,16 @@ describe('AWS Health currentevents parser (Bedrock)', () => {
     expect(r.affected[0].status).toBe('down');
   });
 
-  it('regional bundle event populates affected list but does not drive headline', () => {
+  it('regional bundle event does not drive headline AND is suppressed from affected list', () => {
     // Production bug 2026-05-07: a localized power issue in mec1-az2 (UAE)
     // was published as a `multipleservices-me-central-1` bundle event with
     // bedrock listed in impacted_services. That projected as "AWS Bedrock
     // degraded" globally for >24h, even though Bedrock in primary regions
     // (us-east-1, us-west-2, eu-west-1, ap-northeast-1) was healthy.
-    // Bundle events should provide regional context in components but must
-    // not paint the global headline yellow on their own.
+    // Bundle events must not surface as components either, since the
+    // /is-X-down page renders any non-empty components list as an "Active
+    // Events" section with yellow chips, which would contradict the
+    // operational headline.
     const r = aggregateAwsStatus(
       [
         {
@@ -318,14 +320,14 @@ describe('AWS Health currentevents parser (Bedrock)', () => {
       'bedrock',
     );
     expect(r.status).toBe('operational');
-    expect(r.affected).toHaveLength(1);
-    expect(r.affected[0].name).toContain('UAE');
+    expect(r.affected).toHaveLength(0);
   });
 
-  it('service-specific event still drives headline even when a bundle event is also active', () => {
+  it('service-specific event drives headline; co-occurring bundle event is suppressed', () => {
     // If AWS publishes both a bundle event AND a Bedrock-specific event,
-    // the service-specific one drives the headline. The bundle still shows
-    // as a component for context.
+    // the service-specific one drives the headline AND is the only one
+    // shown in components. Bundle events are always suppressed so headline
+    // and component list cannot disagree.
     const r = aggregateAwsStatus(
       [
         {
@@ -345,7 +347,8 @@ describe('AWS Health currentevents parser (Bedrock)', () => {
       'bedrock',
     );
     expect(r.status).toBe('degraded');
-    expect(r.affected).toHaveLength(2);
+    expect(r.affected).toHaveLength(1);
+    expect(r.affected[0].name).toContain('N. Virginia');
   });
 
   it('escalates to down when ANY matching event is severe (worst-of)', () => {

@@ -256,19 +256,21 @@ export function aggregateAwsStatus(
     return { status: 'operational', affected: [] };
   }
 
-  // Only service-specific events drive the headline. Bundle events still
-  // populate the affected list (so the regional context surfaces in the UI)
-  // but a regional AZ power outage in a non-primary region for the service
-  // shouldn't paint the global headline yellow.
+  // Only service-specific events drive the headline AND the affected list,
+  // so the per-service detail page stays consistent with the headline. If
+  // bundle events were surfaced as components, /is-X-down would render an
+  // "Active Events" section with yellow chips while the headline reads
+  // operational, which is the same contradiction in reverse.
   const headlineEvents = matching.filter((e) => !isAwsBundleEvent(e));
 
-  let headline: 'operational' | 'degraded' | 'down' = 'operational';
-  if (headlineEvents.length > 0) {
-    const hasDown = headlineEvents.some((e) => awsEventSeverity(e) === 'down');
-    headline = hasDown ? 'down' : 'degraded';
+  if (headlineEvents.length === 0) {
+    return { status: 'operational', affected: [] };
   }
 
-  const affected = matching.map((e) => ({
+  const hasDown = headlineEvents.some((e) => awsEventSeverity(e) === 'down');
+  const headline: 'down' | 'degraded' = hasDown ? 'down' : 'degraded';
+
+  const affected = headlineEvents.map((e) => ({
     name: `${e.service_name || e.service || 'AWS'} (${e.region_name || 'global'})`,
     status: awsEventSeverity(e),
   }));
