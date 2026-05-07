@@ -82,6 +82,7 @@ import {
   readIndicators as readFREDIndicators,
   isValidCategory as isValidFREDCategory,
 } from './fred-indicators';
+import { computeMacroDigest } from './premium-macro-digest';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1807,6 +1808,7 @@ export default {
           premiumProviderDeepDive: '/api/premium/providers/{name}',
           premiumCompareModels: '/api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3',
           premiumWhatsNew: '/api/premium/whats-new?days=1&news_limit=10',
+          premiumMacroDigest: '/api/premium/macro/digest (1 credit; BLS + FRED joined morning brief with yield-curve, inflation, employment regime classification + headlines)',
           premiumMcpRegistrySeries: '/api/premium/mcp/registry/series?from=&to=',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
@@ -3536,6 +3538,28 @@ export default {
 
       const result = await getGpuSeries(env, gpuParam as CanonicalGPU, range.from!, range.to!);
       return jsonResponse(result);
+    }
+
+    // === PAID PREMIUM: MACRO DIGEST (Tier 1, 1 credit) ===
+    // /api/premium/macro/digest
+    // First derived-premium endpoint on the May 2026 free-data foundation.
+    // Joins BLS + FRED snapshots into a single agent-shaped morning brief:
+    // rates section (with yield-curve regime classification), inflation
+    // section (with regime classification), employment section (with
+    // regime classification), growth + money, FX + commodities, and a
+    // 2-3 sentence overall brief. Underlying data is public domain;
+    // the gate is on the synthesis (YoY computation, regime
+    // classifiers, templated narratives), not on the raw data.
+
+    if (path === '/api/premium/macro/digest') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const result = await computeMacroDigest(env);
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/macro/digest', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === PAID PREMIUM: WHATS-NEW SUMMARY (Tier 1, 1 credit) ===

@@ -40,6 +40,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/news/search': { maxAgeSeconds: 30 * 60 },
   // What's new morning brief: rolls forward as news + status arrive, 1h.
   '/api/premium/whats-new': { maxAgeSeconds: 60 * 60 },
+  // Macro digest: synthesis over BLS + FRED daily snapshots. 24h matches
+  // the cadence of underlying data (BLS daily 05:00 UTC, FRED 05:30 UTC).
+  '/api/premium/macro/digest': { maxAgeSeconds: 24 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,
@@ -147,6 +150,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/agents/directory': 'cataloged data, refreshed ~24h',
     '/api/premium/news/search': 'news refreshes every 10 min',
     '/api/premium/whats-new': 'aggregates last 1-7 days of news + status',
+    '/api/premium/macro/digest': 'synthesis over BLS + FRED daily snapshots',
     '/api/premium/history/pricing/series': 'historical immutable',
     '/api/premium/history/benchmarks/series': 'historical immutable',
     '/api/premium/history/status/uptime': 'historical immutable',
