@@ -47,6 +47,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // on redeploy. No staleness signal applies; classified as historical
   // immutable (the relative-to-now math runs at request time).
   '/api/premium/policy/timeline': NULL_SLA,
+  // Economy series history: per-request live fetch with 6h KV cache.
+  // 6h matches the cache TTL so the staleness check never fires false
+  // positives during normal operation.
+  '/api/premium/economy/series': { maxAgeSeconds: 6 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,
@@ -156,6 +160,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/whats-new': 'aggregates last 1-7 days of news + status',
     '/api/premium/macro/digest': 'synthesis over BLS + FRED daily snapshots',
     '/api/premium/policy/timeline': 'compute over editorial registry, no staleness signal',
+    '/api/premium/economy/series': 'per-request live fetch with 6h KV cache',
     '/api/premium/history/pricing/series': 'historical immutable',
     '/api/premium/history/benchmarks/series': 'historical immutable',
     '/api/premium/history/status/uptime': 'historical immutable',

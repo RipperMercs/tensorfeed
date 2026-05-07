@@ -84,6 +84,10 @@ import {
 } from './fred-indicators';
 import { computeMacroDigest } from './premium-macro-digest';
 import { computePolicyTimeline, parseTimelineParams } from './premium-policy-timeline';
+import {
+  getEconomySeriesHistory,
+  isValidSource as isValidEconomySource,
+} from './premium-economy-history';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1811,6 +1815,7 @@ export default {
           premiumWhatsNew: '/api/premium/whats-new?days=1&news_limit=10',
           premiumMacroDigest: '/api/premium/macro/digest (1 credit; BLS + FRED joined morning brief with yield-curve, inflation, employment regime classification + headlines)',
           premiumPolicyTimeline: '/api/premium/policy/timeline?days_back=&days_forward=&jurisdiction= (1 credit; forward + backward calendar over the AI policy registry with relative-to-now classification, next-3-milestones, days-until-effective per entry)',
+          premiumEconomySeriesHistory: '/api/premium/economy/series/{bls|fred}/{series_id} (1 credit; full upstream history with YoY paired series, 3-month and 12-month moving averages, min/max, trend direction. Free /api/economy/* caps at 24 or 90 obs; this is the full archive plus compute.)',
           premiumMcpRegistrySeries: '/api/premium/mcp/registry/series?from=&to=',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
@@ -3571,6 +3576,49 @@ export default {
     // days-until-effective per entry, windowed view (default 12 months
     // total), and a next-3-milestones extraction. Pure compute on
     // editorial registry; raw catalog remains free.
+
+    // === PAID PREMIUM: ECONOMY SERIES FULL HISTORY (Tier 1, 1 credit) ===
+    // /api/premium/economy/series/{source}/{series_id}
+    // Full upstream history for any BLS or FRED series, normalized
+    // into a canonical observation shape with TF-computed YoY series,
+    // 3-month and 12-month moving averages, min/max identification,
+    // and 3-observation trend direction. Free-tier /api/economy/* caps
+    // at 24 (BLS) or 90 (FRED) observations; this is the full archive
+    // plus compute. KV-cached at 6h to amortize upstream calls.
+
+    {
+      const seriesMatch = path.match(/^\/api\/premium\/economy\/series\/([^/]+)\/([^/]+)$/);
+      if (seriesMatch) {
+        const sourceParam = decodeURIComponent(seriesMatch[1]).toLowerCase();
+        const seriesIdParam = decodeURIComponent(seriesMatch[2]);
+
+        const payment = await requirePayment(request, env, 1);
+        if (!payment.paid) return payment.response!;
+
+        if (!isValidEconomySource(sourceParam)) {
+          return await premiumValidationFailure(
+            { error: 'invalid_source', valid: ['bls', 'fred'] },
+            payment, request, env,
+          );
+        }
+
+        const result = await getEconomySeriesHistory(env, sourceParam, seriesIdParam);
+        if (!result.ok) {
+          // Validation-class errors get the no-charge schema_validation_failure path;
+          // upstream-fetch failures use the same path because the agent did not get
+          // the data and should not be billed for it.
+          return await premiumValidationFailure(
+            { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+            payment, request, env,
+          );
+        }
+
+        ctx.waitUntil(
+          logPremiumUsage(env, '/api/premium/economy/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        );
+        return await premiumResponse(result, payment, 1, request, env);
+      }
+    }
 
     if (path === '/api/premium/policy/timeline') {
       const payment = await requirePayment(request, env, 1);

@@ -272,6 +272,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/economy/series/{source}/{series_id}",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+      ],
+      "lastUpdated": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "name": "Economy series full history",
+        "description": "Full upstream observation history for any BLS (10y) or FRED series, normalized into one canonical shape across both sources. Each observation paired with its YoY change, 3-month and 12-month moving averages, plus summary min/max and 3-observation trend direction. Free /api/economy/bls/indicators caps at 24 monthly observations and /api/economy/fred/indicators at 90; this is the full archive plus the compute layer.",
+        "tier": 1,
+        "credits": 1,
+        "category": "macro-series-history"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/mcp/registry/series",
       "type": "http",
       "method": "GET",
