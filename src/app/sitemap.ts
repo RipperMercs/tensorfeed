@@ -178,6 +178,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/economy`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
     { url: `${baseUrl}/research/institutions`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/packages`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
+    { url: `${baseUrl}/policy`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/alerts`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/incidents`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
 
