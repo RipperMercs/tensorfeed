@@ -255,6 +255,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/policy/timeline",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+      ],
+      "lastUpdated": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "name": "AI policy timeline",
+        "description": "Forward + backward calendar over the free /api/policy/ai/registry catalog. Each entry classified relative to now (past / today / upcoming / far-future), with days-until-effective. Configurable window (default 12 months: 6 back, 6 forward, 5-year cap). Surfaces next 3 upcoming milestones, aggregates by jurisdiction, and ships every entry with its source URL preserved. Compute is the gate; raw registry remains free.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-policy-temporal"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/mcp/registry/series",
       "type": "http",
       "method": "GET",

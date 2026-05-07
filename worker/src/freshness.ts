@@ -43,6 +43,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // Macro digest: synthesis over BLS + FRED daily snapshots. 24h matches
   // the cadence of underlying data (BLS daily 05:00 UTC, FRED 05:30 UTC).
   '/api/premium/macro/digest': { maxAgeSeconds: 24 * 60 * 60 },
+  // Policy timeline: pure compute over an editorial registry that updates
+  // on redeploy. No staleness signal applies; classified as historical
+  // immutable (the relative-to-now math runs at request time).
+  '/api/premium/policy/timeline': NULL_SLA,
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,
@@ -151,6 +155,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/news/search': 'news refreshes every 10 min',
     '/api/premium/whats-new': 'aggregates last 1-7 days of news + status',
     '/api/premium/macro/digest': 'synthesis over BLS + FRED daily snapshots',
+    '/api/premium/policy/timeline': 'compute over editorial registry, no staleness signal',
     '/api/premium/history/pricing/series': 'historical immutable',
     '/api/premium/history/benchmarks/series': 'historical immutable',
     '/api/premium/history/status/uptime': 'historical immutable',

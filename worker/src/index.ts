@@ -83,6 +83,7 @@ import {
   isValidCategory as isValidFREDCategory,
 } from './fred-indicators';
 import { computeMacroDigest } from './premium-macro-digest';
+import { computePolicyTimeline, parseTimelineParams } from './premium-policy-timeline';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1809,6 +1810,7 @@ export default {
           premiumCompareModels: '/api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3',
           premiumWhatsNew: '/api/premium/whats-new?days=1&news_limit=10',
           premiumMacroDigest: '/api/premium/macro/digest (1 credit; BLS + FRED joined morning brief with yield-curve, inflation, employment regime classification + headlines)',
+          premiumPolicyTimeline: '/api/premium/policy/timeline?days_back=&days_forward=&jurisdiction= (1 credit; forward + backward calendar over the AI policy registry with relative-to-now classification, next-3-milestones, days-until-effective per entry)',
           premiumMcpRegistrySeries: '/api/premium/mcp/registry/series?from=&to=',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
@@ -3558,6 +3560,48 @@ export default {
       const result = await computeMacroDigest(env);
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/macro/digest', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: AI POLICY TIMELINE (Tier 1, 1 credit) ===
+    // /api/premium/policy/timeline
+    // Forward + backward calendar over the free /api/policy/ai/registry
+    // catalog. Adds temporal layer: relative-to-now classification,
+    // days-until-effective per entry, windowed view (default 12 months
+    // total), and a next-3-milestones extraction. Pure compute on
+    // editorial registry; raw catalog remains free.
+
+    if (path === '/api/premium/policy/timeline') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const parsed = parseTimelineParams(url.searchParams);
+      if (parsed.error) {
+        return await premiumValidationFailure(
+          {
+            error: parsed.error,
+            limits: { max_days_back: 365 * 5, max_days_forward: 365 * 5 },
+          },
+          payment, request, env,
+        );
+      }
+
+      const result = computePolicyTimeline({
+        daysBack: parsed.daysBack,
+        daysForward: parsed.daysForward,
+        jurisdiction: parsed.jurisdiction,
+      });
+
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+          payment, request, env,
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/policy/timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
