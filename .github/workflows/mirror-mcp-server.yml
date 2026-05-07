@@ -12,7 +12,9 @@ name: Mirror MCP server to standalone repo
 #
 # Files synced (allowlist; everything else on the standalone side stays):
 #   src/, package.json, package-lock.json, server.json, tsconfig.json,
-#   CHANGELOG.md, Dockerfile, smithery.yaml, LICENSE
+#   CHANGELOG.md, Dockerfile, smithery.yaml, LICENSE,
+#   manifest.json (MCPB / Anthropic Connectors Directory), icon.png,
+#   .mcpbignore
 #
 # Files NOT synced (deliberately):
 #   README.md  - standalone has its own user-facing README
@@ -32,6 +34,9 @@ on:
       - 'mcp-server/Dockerfile'
       - 'mcp-server/smithery.yaml'
       - 'mcp-server/LICENSE'
+      - 'mcp-server/manifest.json'
+      - 'mcp-server/icon.png'
+      - 'mcp-server/.mcpbignore'
   workflow_dispatch:
 
 jobs:
@@ -55,7 +60,7 @@ jobs:
         run: |
           set -euo pipefail
           cd standalone
-          for f in CHANGELOG.md Dockerfile LICENSE package.json package-lock.json server.json smithery.yaml tsconfig.json; do
+          for f in CHANGELOG.md Dockerfile LICENSE package.json package-lock.json server.json smithery.yaml tsconfig.json manifest.json icon.png .mcpbignore; do
             if [ -f "../monorepo/mcp-server/$f" ]; then
               cp "../monorepo/mcp-server/$f" "$f"
             fi
