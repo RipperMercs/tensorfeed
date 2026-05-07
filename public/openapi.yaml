@@ -14,6 +14,8 @@ info:
 
     Full endpoint catalog at /api/meta. Standard at https://tensorfeed.ai/agent-fair-trade.
 
+  x-guidance: |
+    For agents discovering this API: most endpoints are free and require no auth. Hit /api/meta to see every endpoint with parameters. The MCP server `@tensorfeed/mcp-server` exposes 42 tools (8 free, 14 premium); install with `npx -y @tensorfeed/mcp-server`. Premium endpoints under /api/premium/* cost 1-3 credits each ($0.02 each at base rate, USDC on Base mainnet). Buy a bearer token via POST /api/payment/buy-credits + /api/payment/confirm, OR pay per call via x402 by retrying with X-Payment-Tx header. Every paid call returns an Ed25519-signed receipt verifiable at /api/receipt/verify. AFTA-certified: no charge on 5xx, breaker, schema failure, or stale data; standard at /.well-known/agent-fair-trade.json.
   termsOfService: https://tensorfeed.ai/terms
   contact:
     name: TensorFeed Support
@@ -744,10 +746,6 @@ paths:
           amount: "0.02"
         protocols:
           - x402: {}
-          - mpp:
-              method: ""
-              intent: ""
-              currency: ""
       parameters:
         - in: query
           name: prompt
@@ -777,10 +775,6 @@ paths:
           amount: "0.02"
         protocols:
           - x402: {}
-          - mpp:
-              method: ""
-              intent: ""
-              currency: ""
       parameters:
         - in: query
           name: q
@@ -817,10 +811,6 @@ paths:
           amount: "0.02"
         protocols:
           - x402: {}
-          - mpp:
-              method: ""
-              intent: ""
-              currency: ""
       parameters:
         - in: query
           name: model
@@ -857,10 +847,6 @@ paths:
           amount: "0.02"
         protocols:
           - x402: {}
-          - mpp:
-              method: ""
-              intent: ""
-              currency: ""
       parameters:
         - in: query
           name: days
