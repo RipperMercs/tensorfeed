@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'GPT-5.5 Just Landed. OpenAI Doubled the Price and Raised the Bar.',
   description:
@@ -58,6 +59,10 @@ export default function GPT55OpenAIFlagshipPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/gpt-5-5-openai-flagship"
+        title="GPT-5.5 Just Landed. OpenAI Doubled the Price and Raised the Bar."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

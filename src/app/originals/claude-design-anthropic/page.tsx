@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: "Anthropic Just Shipped Claude Design. The Loop from Idea to Code Is Now Closed.",
   description:
@@ -59,6 +60,10 @@ export default function ClaudeDesignAnthropicPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/claude-design-anthropic"
+        title="Anthropic Just Shipped Claude Design. The Loop from Idea to Code Is Now Closed."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

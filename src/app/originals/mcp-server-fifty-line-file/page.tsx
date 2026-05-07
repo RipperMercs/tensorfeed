@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
+import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
   title: 'An MCP Server Is a 50-Line File. Why Every Paid API Should Ship One.',
@@ -54,6 +55,10 @@ export default function MCP50LineFilePage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/mcp-server-fifty-line-file"
+        title="An MCP Server Is a 50-Line File. Why Every Paid API Should Ship One."
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Every conversation I have with an API team about adding a Model Context Protocol server

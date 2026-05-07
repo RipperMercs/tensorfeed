@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'OpenAI Hit AWS Bedrock in 24 Hours. The Infrastructure Was Already Built.',
   description:
@@ -59,6 +60,10 @@ export default function OpenAIAWSBedrock24HoursPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/openai-aws-bedrock-24-hours"
+        title="OpenAI Hit AWS Bedrock in 24 Hours. The Infrastructure Was Already Built."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

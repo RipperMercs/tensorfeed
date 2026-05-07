@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'Open Source LLMs Are Closing the Gap Faster Than Anyone Expected',
   description:
@@ -57,6 +58,10 @@ export default function OpenSourceLLMsPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/open-source-llms-closing-gap"
+        title="Open Source LLMs Are Closing the Gap Faster Than Anyone Expected"
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

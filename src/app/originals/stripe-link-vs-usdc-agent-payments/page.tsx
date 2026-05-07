@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title:
     'Stripe Just Validated Agent Payments. We Already Shipped Ours Without Them.',
@@ -61,6 +62,10 @@ export default function StripeLinkVsUsdcPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/stripe-link-vs-usdc-agent-payments"
+        title="Stripe Just Validated Agent Payments. We Already Shipped Ours Without Them."
+      />
       {/* Body */}
       <div className="prose prose-invert max-w-none space-y-6 text-text-secondary leading-relaxed">
         <p>

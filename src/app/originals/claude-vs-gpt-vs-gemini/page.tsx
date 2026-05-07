@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'Claude vs GPT vs Gemini: An Honest Comparison',
   description:
@@ -54,6 +55,10 @@ export default function ClaudeVsGptVsGeminiPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/claude-vs-gpt-vs-gemini"
+        title="Claude vs GPT vs Gemini: An Honest Comparison"
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

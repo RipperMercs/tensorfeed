@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: '4chan Users Discovered Chain-of-Thought Reasoning Before Google Did',
   description:
@@ -57,6 +58,10 @@ export default function FourchanChainOfThoughtPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/4chan-discovered-chain-of-thought"
+        title="4chan Users Discovered Chain-of-Thought Reasoning Before Google Did"
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

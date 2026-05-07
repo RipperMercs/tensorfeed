@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'MCP Just Hit 97 Million Installs. The Agent Era Is Here.',
   description:
@@ -57,6 +58,10 @@ export default function MCPInstallsPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/mcp-97-million-installs"
+        title="MCP Just Hit 97 Million Installs. The Agent Era Is Here."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

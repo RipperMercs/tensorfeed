@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: "Apple Just Opened Siri to Claude and Gemini. ChatGPT's Exclusivity Is Dead.",
   description:
@@ -60,6 +61,10 @@ export default function AppleIntelligenceExtensionsPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/apple-intelligence-extensions-ios-27"
+        title="Apple Just Opened Siri to Claude and Gemini. ChatGPT's Exclusivity Is Dead."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

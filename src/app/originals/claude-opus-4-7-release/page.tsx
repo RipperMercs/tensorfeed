@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: "Claude Opus 4.7 Just Dropped. Here's What Changed.",
   description:
@@ -59,6 +60,10 @@ export default function ClaudeOpus47ReleasePage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/claude-opus-4-7-release"
+        title="Claude Opus 4.7 Just Dropped. Here's What Changed."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

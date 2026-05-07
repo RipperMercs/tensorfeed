@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'Provider Status Pages Are Marketing. We Built Our Own LLM Probes.',
   description:
@@ -59,6 +60,10 @@ export default function MeasuringLlmApiLatencyPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/measuring-llm-api-latency-from-the-edge"
+        title="Provider Status Pages Are Marketing. We Built Our Own LLM Probes."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

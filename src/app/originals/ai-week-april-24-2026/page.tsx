@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'This Week in AI: GPT-5.5, DeepSeek V4, and a $250 Billion Acquisition',
   description:
@@ -58,6 +59,10 @@ export default function AIWeekApril242026Page() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/ai-week-april-24-2026"
+        title="This Week in AI: GPT-5.5, DeepSeek V4, and a $250 Billion Acquisition"
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'OpenAI, Anthropic, and Google Just Teamed Up Against Chinese AI Theft',
   description:
@@ -56,6 +57,10 @@ export default function FrontierModelForumVsChinaPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/frontier-model-forum-vs-china"
+        title="OpenAI, Anthropic, and Google Just Teamed Up Against Chinese AI Theft"
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

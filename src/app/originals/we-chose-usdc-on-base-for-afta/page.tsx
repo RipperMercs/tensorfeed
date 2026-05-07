@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: "We Could Have Built AFTA on Anything. We Chose USDC on Base.",
   description:
@@ -58,6 +59,10 @@ export default function WeChoseUsdcOnBaseForAftaPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/we-chose-usdc-on-base-for-afta"
+        title="We Could Have Built AFTA on Anything. We Chose USDC on Base."
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The{' '}

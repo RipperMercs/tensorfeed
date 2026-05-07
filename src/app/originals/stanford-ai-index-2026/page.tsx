@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'Stanford&apos;s 2026 AI Index Says We Can&apos;t Keep Up. They&apos;re Right.',
   description:
@@ -57,6 +58,10 @@ export default function StanfordAiIndex2026Page() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/stanford-ai-index-2026"
+        title="Stanford&apos;s 2026 AI Index Says We Can&apos;t Keep Up. They&apos;re Right."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

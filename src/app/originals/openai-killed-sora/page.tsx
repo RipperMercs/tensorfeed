@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'OpenAI Killed Sora. Here\'s What That Tells Us About AI Economics.',
   description:
@@ -57,6 +58,10 @@ export default function OpenAIKilledSoraPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/openai-killed-sora"
+        title="OpenAI Killed Sora. Here's What That Tells Us About AI Economics."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

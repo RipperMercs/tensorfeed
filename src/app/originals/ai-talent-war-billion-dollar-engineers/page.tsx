@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: "The AI Talent War's New Price Tag: $1.5 Billion Per Engineer",
   description:
@@ -60,6 +61,10 @@ export default function AITalentWarBillionDollarEngineersPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/ai-talent-war-billion-dollar-engineers"
+        title="The AI Talent War's New Price Tag: $1.5 Billion Per Engineer"
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

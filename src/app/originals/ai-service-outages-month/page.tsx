@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'I Tracked AI Service Outages for a Month. Here\'s What I Found.',
   description:
@@ -56,6 +57,10 @@ export default function AIServiceOutagesPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/ai-service-outages-month"
+        title="I Tracked AI Service Outages for a Month. Here's What I Found."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

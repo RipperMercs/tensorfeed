@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'The State of AI APIs in 2026',
   description:
@@ -55,6 +56,10 @@ export default function StateOfAiApisPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/state-of-ai-apis-2026"
+        title="The State of AI APIs in 2026"
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

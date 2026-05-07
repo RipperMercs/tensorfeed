@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'The Pentagon Skipped Anthropic. Seven Other AI Companies Got the Contracts.',
   description:
@@ -58,6 +59,10 @@ export default function PentagonBlacklistsAnthropicPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/pentagon-blacklists-anthropic-defense-deals"
+        title="The Pentagon Skipped Anthropic. Seven Other AI Companies Got the Contracts."
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Yesterday the Department of Defense signed AI infrastructure deals with seven companies

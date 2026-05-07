@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'DeepSeek V4 Is The First Open Source Frontier Model. Closed Labs Should Be Worried.',
   description:
@@ -59,6 +60,10 @@ export default function DeepSeekV4OpenSourceFrontierPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/deepseek-v4-open-source-frontier"
+        title="DeepSeek V4 Is The First Open Source Frontier Model. Closed Labs Should Be Worried."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

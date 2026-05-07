@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'AI Adoption Is Outpacing the Internet. Stanford Has the Numbers to Prove It.',
   description:
@@ -56,6 +57,10 @@ export default function AiAdoptionFasterThanInternetPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/ai-adoption-faster-than-internet"
+        title="AI Adoption Is Outpacing the Internet. Stanford Has the Numbers to Prove It."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

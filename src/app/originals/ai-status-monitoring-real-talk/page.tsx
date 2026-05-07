@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd, BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'AI Status Monitoring: How We Actually Track Claude, ChatGPT, and Gemini',
   description:
@@ -67,6 +68,10 @@ export default function AiStatusMonitoringRealTalkPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/ai-status-monitoring-real-talk"
+        title="AI Status Monitoring: How We Actually Track Claude, ChatGPT, and Gemini"
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Every &quot;is Claude down&quot; site I have used over the past year has had the same problem: it lags the actual outage by 5 to 15 minutes. You hit the page, it says all systems operational, you go back to your terminal, the API is still throwing 500s. The site just mirrored the official status page, which is itself often the slowest source of truth, because incident response inside a frontier lab takes a few minutes to escalate before the public status page flips.

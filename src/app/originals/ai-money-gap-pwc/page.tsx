@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: '74% of AI&apos;s Economic Value Goes to 20% of Companies. Here&apos;s Why.',
   description:
@@ -60,6 +61,10 @@ export default function AiMoneyGapPwcPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/ai-money-gap-pwc"
+        title="74% of AI&apos;s Economic Value Goes to 20% of Companies. Here&apos;s Why."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

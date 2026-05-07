@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'Anthropic Just Shipped 10 Wall Street Agents. The Frontier Lab Is Now a Vendor.',
   description:
@@ -60,6 +61,10 @@ export default function AnthropicFinanceAgentsWallStreetPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/anthropic-finance-agents-wall-street"
+        title="Anthropic Just Shipped 10 Wall Street Agents. The Frontier Lab Is Now a Vendor."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

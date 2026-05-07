@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'Google Just Put NotebookLM Inside Gemini. Here&apos;s Why It Matters.',
   description:
@@ -56,6 +57,10 @@ export default function GoogleNotebookLmGeminiPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/google-notebooklm-gemini"
+        title="Google Just Put NotebookLM Inside Gemini. Here&apos;s Why It Matters."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

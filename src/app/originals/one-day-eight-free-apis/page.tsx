@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'One Day, Eight New Free APIs: The Free-Data-First Sprint',
   description:
@@ -58,6 +59,10 @@ export default function OneDayEightFreeApisPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/one-day-eight-free-apis"
+        title="One Day, Eight New Free APIs: The Free-Data-First Sprint"
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Today started with an audit that killed two paid endpoints. It ended with eight new

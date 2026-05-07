@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'Claude Mythos: Anthropic\'s Most Powerful Model Yet, and Why I\'m Not Afraid',
   description:
@@ -56,6 +57,10 @@ export default function ClaudeMythosNotAfraidPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/claude-mythos-not-afraid"
+        title="Claude Mythos: Anthropic's Most Powerful Model Yet, and Why I'm Not Afraid"
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

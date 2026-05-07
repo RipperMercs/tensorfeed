@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'SAP Just Bought Prior Labs. Europe Has a Frontier AI Lab Now.',
   description:
@@ -60,6 +61,10 @@ export default function SapPriorLabsEuropeFrontierLabPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/sap-prior-labs-europe-frontier-lab"
+        title="SAP Just Bought Prior Labs. Europe Has a Frontier AI Lab Now."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

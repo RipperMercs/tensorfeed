@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: "Why Every Developer Needs an llms.txt File",
   description:
@@ -57,6 +58,10 @@ export default function LlmsTxtEveryDeveloperPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/llms-txt-every-developer"
+        title="Why Every Developer Needs an llms.txt File"
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Your next most important visitor is not a human. It is an AI agent, and it is showing up at your site with a list of tasks and a 200ms patience budget. If your site is not legible to it, you are invisible. The way to become legible is a file called llms.txt.

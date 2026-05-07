@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: "We Made Our AI Bot Traffic Public. Here's What We're Seeing.",
   description:
@@ -58,6 +59,10 @@ export default function PublishingBotTrafficPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/publishing-bot-traffic"
+        title="We Made Our AI Bot Traffic Public. Here's What We're Seeing."
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Most sites hide their bot traffic. They treat it like a janitor problem, something to

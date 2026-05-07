@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'Google Just Committed $40 Billion to Anthropic Compute. The Stakes Just Got Real.',
   description:
@@ -55,6 +56,10 @@ export default function GoogleAnthropic40BCompute() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/google-anthropic-40b-compute"
+        title="Google Just Committed $40 Billion to Anthropic Compute. The Stakes Just Got Real."
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Google is putting $40 billion into Anthropic for compute. Not valuation. Not equity in the

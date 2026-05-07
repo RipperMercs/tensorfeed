@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'Why We Picked USDC on Base Over Stripe for Agent Payments',
   description:
@@ -56,6 +57,10 @@ export default function UsdcOverStripePage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/why-usdc-over-stripe"
+        title="Why We Picked USDC on Base Over Stripe for Agent Payments"
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Most paid APIs make their buying decision the same way. Open a Stripe account. Drop in

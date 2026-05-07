@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'We Validated Agent Payments End-to-End on Base Mainnet',
   description:
@@ -56,6 +57,10 @@ export default function MainnetValidationPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/validating-agent-payments-mainnet"
+        title="We Validated Agent Payments End-to-End on Base Mainnet"
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           This morning I sent one USDC from a wallet on my laptop to a wallet I had published in four

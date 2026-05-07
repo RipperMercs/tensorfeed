@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: "Alibaba's Happy Horse Just Took the AI Video Crown. China Now Owns Two Frontiers.",
   description:
@@ -60,6 +61,10 @@ export default function AlibabaHappyHorseVideoCrownPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/alibaba-happy-horse-video-crown"
+        title="Alibaba's Happy Horse Just Took the AI Video Crown. China Now Owns Two Frontiers."
+      />
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">

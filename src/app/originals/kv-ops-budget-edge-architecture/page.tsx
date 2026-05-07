@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'The 100,000 KV Ops Daily Budget and What Fits in It',
   description:
@@ -54,6 +55,10 @@ export default function KVOpsArticlePage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/kv-ops-budget-edge-architecture"
+        title="The 100,000 KV Ops Daily Budget and What Fits in It"
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Cloudflare Workers give you 100,000 KV operations per day on the free tier. That is the

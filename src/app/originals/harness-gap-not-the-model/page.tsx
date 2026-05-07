@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: "It Is Not the Model. It Is the Harness.",
   description:
@@ -58,6 +59,10 @@ export default function HarnessGapPage() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/harness-gap-not-the-model"
+        title="It Is Not the Model. It Is the Harness."
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Claude Sonnet 4.6 in Claude Code scores about 71 on SWE-bench Verified. The same Sonnet 4.6 in Continue scores about 52. Same model weights. Same context window. Same training. The harness is doing the other 19 points.

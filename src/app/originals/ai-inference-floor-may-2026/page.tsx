@@ -4,6 +4,7 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
+import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   title: 'The Cheapest AI Model on the Market Costs 1.7 Cents per Million Tokens',
   description:
@@ -57,6 +58,10 @@ export default function AiInferenceFloorMay2026Page() {
         </div>
       </header>
 
+      <ShareBar
+        path="/originals/ai-inference-floor-may-2026"
+        title="The Cheapest AI Model on the Market Costs 1.7 Cents per Million Tokens"
+      />
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           I pulled the live <Link href="/api/openrouter/models" className="text-accent-primary hover:underline">OpenRouter catalog</Link> this afternoon. 372 models routed across 50-plus providers, normalized to the same per-token pricing schema. The shape of the inference market in one snapshot. And the headline number is small: $0.017 per million input tokens for IBM&apos;s granite-4.0-h-micro, currently the cheapest paid model on OpenRouter.
