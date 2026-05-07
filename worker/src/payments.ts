@@ -1962,13 +1962,33 @@ export async function requirePayment(
   }
 
   // No payment provided -> return 402 with full payment instructions
-  return { paid: false, response: paymentRequiredResponse(env, cost, tier) };
+  return { paid: false, response: paymentRequiredResponse(env, cost, tier, request) };
 }
 
-function paymentRequiredResponse(env: Env, creditsRequired: number, tier: number): Response {
+function paymentRequiredResponse(env: Env, creditsRequired: number, tier: number, request: Request): Response {
   const minUsd = Math.max(1, creditsRequired * 0.02);
+  // Atomic USDC units (6 decimals): 1 credit = $0.02 = 20000 micro-USDC.
+  const maxAmountRequired = String(creditsRequired * 20000);
+  const url = new URL(request.url);
+  const resource = `${url.origin}${url.pathname}`;
   return jsonResponse(
     {
+      // Canonical x402 v1 fields (consumed by x402scan and other discovery
+      // scanners). Custom fields below remain for SDK back-compat.
+      x402Version: 1,
+      accepts: [
+        {
+          scheme: 'exact',
+          network: 'base-mainnet',
+          maxAmountRequired,
+          resource,
+          description: 'TensorFeed premium API',
+          mimeType: 'application/json',
+          payTo: env.PAYMENT_WALLET,
+          maxTimeoutSeconds: 60,
+          asset: USDC_BASE_CONTRACT,
+        },
+      ],
       ok: false,
       error: 'payment_required',
       message: 'This is a paid endpoint. Pay via USDC on Base or use a bearer token.',
