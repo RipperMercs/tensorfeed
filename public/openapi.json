@@ -1453,6 +1453,32 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "description": "Free-form task description used to rank candidate models"
+                  },
+                  "optimize": {
+                    "type": "string",
+                    "enum": [
+                      "cost",
+                      "speed",
+                      "quality",
+                      "balanced"
+                    ],
+                    "description": "Ranking objective"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Ranked top-N model recommendations with rationale and signed receipt.",
@@ -1529,6 +1555,41 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "q"
+                ],
+                "properties": {
+                  "q": {
+                    "type": "string",
+                    "description": "Search query string"
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Start of date range (inclusive)"
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "End of date range (inclusive)"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 25,
+                    "maximum": 100,
+                    "description": "Max number of articles to return"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Matching articles, ranked.",
@@ -1608,6 +1669,43 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "Comma-separated model ids (1-10), e.g. \"opus-4-7,gpt-5-5\""
+                  },
+                  "input_tokens_per_day": {
+                    "type": "integer",
+                    "description": "Projected daily input token volume"
+                  },
+                  "output_tokens_per_day": {
+                    "type": "integer",
+                    "description": "Projected daily output token volume"
+                  },
+                  "horizon": {
+                    "type": "string",
+                    "enum": [
+                      "daily",
+                      "monthly",
+                      "yearly"
+                    ],
+                    "default": "monthly",
+                    "description": "Time horizon for cost summary"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Projected cost per model.",
@@ -1670,6 +1768,31 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "days": {
+                    "type": "integer",
+                    "default": 1,
+                    "minimum": 1,
+                    "maximum": 7,
+                    "description": "Lookback window in days"
+                  },
+                  "news_limit": {
+                    "type": "integer",
+                    "default": 10,
+                    "maximum": 50,
+                    "description": "Max number of news headlines included"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "New models, new pricing, new status incidents, top news.",
