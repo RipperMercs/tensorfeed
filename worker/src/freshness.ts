@@ -51,6 +51,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // 6h matches the cache TTL so the staleness check never fires false
   // positives during normal operation.
   '/api/premium/economy/series': { maxAgeSeconds: 6 * 60 * 60 },
+  // Packages momentum: synthesis over the daily /api/packages/pypi
+  // snapshot. 24h matches the cron cadence.
+  '/api/premium/packages/pypi/momentum': { maxAgeSeconds: 24 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,
@@ -161,6 +164,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/macro/digest': 'synthesis over BLS + FRED daily snapshots',
     '/api/premium/policy/timeline': 'compute over editorial registry, no staleness signal',
     '/api/premium/economy/series': 'per-request live fetch with 6h KV cache',
+    '/api/premium/packages/pypi/momentum': 'synthesis over the daily PyPI trending snapshot',
     '/api/premium/history/pricing/series': 'historical immutable',
     '/api/premium/history/benchmarks/series': 'historical immutable',
     '/api/premium/history/status/uptime': 'historical immutable',

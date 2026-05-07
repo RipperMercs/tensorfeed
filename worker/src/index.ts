@@ -88,6 +88,7 @@ import {
   getEconomySeriesHistory,
   isValidSource as isValidEconomySource,
 } from './premium-economy-history';
+import { computePackagesMomentum } from './premium-packages-momentum';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1816,6 +1817,7 @@ export default {
           premiumMacroDigest: '/api/premium/macro/digest (1 credit; BLS + FRED joined morning brief with yield-curve, inflation, employment regime classification + headlines)',
           premiumPolicyTimeline: '/api/premium/policy/timeline?days_back=&days_forward=&jurisdiction= (1 credit; forward + backward calendar over the AI policy registry with relative-to-now classification, next-3-milestones, days-until-effective per entry)',
           premiumEconomySeriesHistory: '/api/premium/economy/series/{bls|fred}/{series_id} (1 credit; full upstream history with YoY paired series, 3-month and 12-month moving averages, min/max, trend direction. Free /api/economy/* caps at 24 or 90 obs; this is the full archive plus compute.)',
+          premiumPackagesPyPIMomentum: '/api/premium/packages/pypi/momentum (1 credit; momentum + velocity ratio per AI/ML PyPI package over the free trending snapshot, with direction classification, notable-movers, by-category counts. npm momentum follows once rolling snapshot history accumulates.)',
           premiumMcpRegistrySeries: '/api/premium/mcp/registry/series?from=&to=',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
@@ -3576,6 +3578,34 @@ export default {
     // days-until-effective per entry, windowed view (default 12 months
     // total), and a next-3-milestones extraction. Pure compute on
     // editorial registry; raw catalog remains free.
+
+    // === PAID PREMIUM: PYPI PACKAGES MOMENTUM (Tier 1, 1 credit) ===
+    // /api/premium/packages/pypi/momentum
+    // Adds a momentum layer over the free /api/packages/pypi/ai-trending:
+    // momentum_ratio per package (last_week vs weekly avg over last_month),
+    // velocity_ratio (today annualized vs last_week pace), direction
+    // classification (accelerating / steady / decelerating /
+    // insufficient_data), notable-movers extraction, by-category counts.
+    // npm momentum is deferred until snapshot history accumulates
+    // (npm's downloads endpoint only returns last_week per call).
+
+    if (path === '/api/premium/packages/pypi/momentum') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const result = await computePackagesMomentum(env);
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+          payment, request, env,
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/packages/pypi/momentum', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
 
     // === PAID PREMIUM: ECONOMY SERIES FULL HISTORY (Tier 1, 1 credit) ===
     // /api/premium/economy/series/{source}/{series_id}
