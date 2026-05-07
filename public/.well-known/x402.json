@@ -272,6 +272,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/research/velocity",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+      ],
+      "lastUpdated": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "name": "AI research velocity",
+        "description": "Per-institution velocity layer over the free /api/research/institutions/ai 365-day OpenAlex baseline. Joins it with a fresh 30-day OpenAlex group_by query (cached 24h) and computes velocity_ratio = annualized-30d-output / 365d-baseline. Returns direction classification (accelerating / steady / decelerating / insufficient_data), top-5 notable_movers in each direction, plus by-country and by-type breakdowns. CC0 underlying data; compute is the gate.",
+        "tier": 1,
+        "credits": 1,
+        "category": "research-momentum"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/packages/pypi/momentum",
       "type": "http",
       "method": "GET",
