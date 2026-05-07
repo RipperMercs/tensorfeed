@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'one-day-eight-free-apis',
+    title: 'One Day, Eight New Free APIs: The Free-Data-First Sprint',
+    author: 'Ripper',
+    date: 'May 6, 2026',
+    readTime: '7 min read',
+    description:
+      "Today TensorFeed shipped eight new free data endpoints across sports, packages, research, economy, and policy. Each on a verified clean license, each with structured attribution baked into the response shape, each on the same three-bucket grading rubric we built during this morning's audit cleanup. This is the post-mortem of why free-data-first is the play, what eight clean sources looked like in eighteen commits, and the pattern that scales to dozens more.",
+  },
+  {
     slug: 'audited-our-paid-api-killed-two-endpoints',
     title: 'I Audited Our Own Paid API. Two Endpoints Had to Die.',
     author: 'Ripper',
