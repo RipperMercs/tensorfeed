@@ -58,6 +58,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // with a fresh 30-day fetch cached 24h. SLA matches the longer of
   // the two windows.
   '/api/premium/research/velocity': { maxAgeSeconds: 24 * 60 * 60 },
+  // Recession watch: synthesis over BLS + FRED daily snapshots. 24h
+  // matches the cron cadence of underlying data.
+  '/api/premium/economy/recession-watch': { maxAgeSeconds: 24 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,
@@ -170,6 +173,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/economy/series': 'per-request live fetch with 6h KV cache',
     '/api/premium/packages/pypi/momentum': 'synthesis over the daily PyPI trending snapshot',
     '/api/premium/research/velocity': 'baseline + fresh 30-day OpenAlex fetch with 24h cache',
+    '/api/premium/economy/recession-watch': 'synthesis over BLS + FRED daily snapshots',
     '/api/premium/history/pricing/series': 'historical immutable',
     '/api/premium/history/benchmarks/series': 'historical immutable',
     '/api/premium/history/status/uptime': 'historical immutable',

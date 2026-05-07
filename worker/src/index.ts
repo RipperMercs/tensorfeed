@@ -90,6 +90,7 @@ import {
 } from './premium-economy-history';
 import { computePackagesMomentum } from './premium-packages-momentum';
 import { computeResearchVelocity } from './premium-research-velocity';
+import { computeRecessionWatch } from './premium-recession-watch';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
@@ -1820,6 +1821,7 @@ export default {
           premiumEconomySeriesHistory: '/api/premium/economy/series/{bls|fred}/{series_id} (1 credit; full upstream history with YoY paired series, 3-month and 12-month moving averages, min/max, trend direction. Free /api/economy/* caps at 24 or 90 obs; this is the full archive plus compute.)',
           premiumPackagesPyPIMomentum: '/api/premium/packages/pypi/momentum (1 credit; momentum + velocity ratio per AI/ML PyPI package over the free trending snapshot, with direction classification, notable-movers, by-category counts. npm momentum follows once rolling snapshot history accumulates.)',
           premiumResearchVelocity: '/api/premium/research/velocity (1 credit; per-institution velocity over the OpenAlex 365-day baseline + fresh 30-day window, with direction classification, notable-movers, by-country and by-type breakdowns)',
+          premiumRecessionWatch: '/api/premium/economy/recession-watch (1 credit; composite recession-risk signal across yield-curve inversion + Sahm rule, with red/yellow/green classification per signal and a composite verdict)',
           premiumMcpRegistrySeries: '/api/premium/mcp/registry/series?from=&to=',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
@@ -3580,6 +3582,32 @@ export default {
     // days-until-effective per entry, windowed view (default 12 months
     // total), and a next-3-milestones extraction. Pure compute on
     // editorial registry; raw catalog remains free.
+
+    // === PAID PREMIUM: RECESSION WATCH (Tier 1, 1 credit) ===
+    // /api/premium/economy/recession-watch
+    // Composite recession-risk signal across yield-curve inversion
+    // (FRED T10Y2Y) and the Sahm rule (current 3-month unemployment
+    // moving avg vs trailing-12-month low). Per-signal red/yellow/
+    // green classification with editorial explanation, plus a
+    // composite signal and brief synthesis.
+
+    if (path === '/api/premium/economy/recession-watch') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const result = await computeRecessionWatch(env);
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+          payment, request, env,
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/economy/recession-watch', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
 
     // === PAID PREMIUM: AI RESEARCH VELOCITY (Tier 1, 1 credit) ===
     // /api/premium/research/velocity

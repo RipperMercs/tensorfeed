@@ -272,6 +272,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/economy/recession-watch",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+      ],
+      "lastUpdated": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "name": "Recession watch",
+        "description": "Composite recession-risk signal across two well-known indicators: yield-curve inversion (FRED 10Y-2Y spread) and the Sahm rule (current 3-month unemployment moving avg vs trailing-12-month low). Per-signal red/yellow/green classification with editorial explanation, plus a composite signal (red if either is red, green only if both green, yellow otherwise) and a brief synthesis paragraph. Distinct from the macro digest: this endpoint takes a stance on recession risk rather than serving the broad snapshot.",
+        "tier": 1,
+        "credits": 1,
+        "category": "macro-recession-signal"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/research/velocity",
       "type": "http",
       "method": "GET",
