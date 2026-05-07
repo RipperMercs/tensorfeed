@@ -1,5 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { maybeSimulatedErrorResponse, applySimulatedLatency, CHAOS_LIMITS } from './chaos';
+import { describe, it, expect, beforeEach } from 'vitest';
+import {
+  maybeSimulatedErrorResponse,
+  applySimulatedLatency,
+  CHAOS_LIMITS,
+  noteSimulatedResponse,
+  maybeFlushChaos,
+  getChaosStats,
+  _resetChaosCounterForTests,
+} from './chaos';
 
 function req(headers: Record<string, string> = {}, url = 'https://tensorfeed.ai/api/news'): Request {
   return new Request(url, { headers });
@@ -85,5 +93,95 @@ describe('applySimulatedLatency', () => {
 
   it('ignores non-numeric values', async () => {
     expect(await applySimulatedLatency(req({ 'X-TensorFeed-Simulate-Latency': 'forever' }))).toBe(0);
+  });
+});
+
+describe('chaos counter', () => {
+  function makeKVStub(): { TENSORFEED_CACHE: KVNamespace; backing: Map<string, string> } {
+    const backing = new Map<string, string>();
+    const kv = {
+      get: async (key: string, type?: 'json') => {
+        const raw = backing.get(key);
+        if (raw === undefined) return null;
+        return type === 'json' ? JSON.parse(raw) : raw;
+      },
+      put: async (key: string, value: string) => {
+        backing.set(key, value);
+      },
+      delete: async (key: string) => {
+        backing.delete(key);
+      },
+      list: async () => ({ keys: [], list_complete: true, cursor: '' }),
+      getWithMetadata: async () => ({ value: null, metadata: null }),
+    } as unknown as KVNamespace;
+    return { TENSORFEED_CACHE: kv, backing };
+  }
+
+  beforeEach(() => {
+    _resetChaosCounterForTests();
+  });
+
+  it('reports zero state when nothing has been recorded', async () => {
+    const { TENSORFEED_CACHE } = makeKVStub();
+    const stats = await getChaosStats({ TENSORFEED_CACHE });
+    expect(stats.total).toBe(0);
+    expect(stats.by_status).toEqual({});
+    expect(stats.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('reflects in-memory pending counts even before flush', async () => {
+    const { TENSORFEED_CACHE, backing } = makeKVStub();
+    noteSimulatedResponse(504);
+    noteSimulatedResponse(504);
+    noteSimulatedResponse(503);
+
+    const stats = await getChaosStats({ TENSORFEED_CACHE });
+    expect(stats.total).toBe(3);
+    expect(stats.by_status['504']).toBe(2);
+    expect(stats.by_status['503']).toBe(1);
+    // No KV write yet because batch threshold (20) not hit
+    expect(backing.size).toBe(0);
+  });
+
+  it('flushes to KV when forced via direct flush', async () => {
+    const { TENSORFEED_CACHE, backing } = makeKVStub();
+    for (let i = 0; i < 25; i++) noteSimulatedResponse(504);
+
+    await maybeFlushChaos({ TENSORFEED_CACHE });
+
+    expect(backing.has('chaos:counter')).toBe(true);
+    const stored = JSON.parse(backing.get('chaos:counter')!);
+    expect(stored.total).toBe(25);
+    expect(stored.by_status['504']).toBe(25);
+  });
+
+  it('does not double-count after flush', async () => {
+    const { TENSORFEED_CACHE } = makeKVStub();
+    for (let i = 0; i < 25; i++) noteSimulatedResponse(504);
+    await maybeFlushChaos({ TENSORFEED_CACHE });
+
+    const stats = await getChaosStats({ TENSORFEED_CACHE });
+    expect(stats.total).toBe(25);
+    expect(stats.by_status['504']).toBe(25);
+  });
+
+  it('accumulates across flushes', async () => {
+    const { TENSORFEED_CACHE } = makeKVStub();
+    for (let i = 0; i < 20; i++) noteSimulatedResponse(504);
+    await maybeFlushChaos({ TENSORFEED_CACHE });
+
+    for (let i = 0; i < 20; i++) noteSimulatedResponse(503);
+    await maybeFlushChaos({ TENSORFEED_CACHE });
+
+    const stats = await getChaosStats({ TENSORFEED_CACHE });
+    expect(stats.total).toBe(40);
+    expect(stats.by_status['504']).toBe(20);
+    expect(stats.by_status['503']).toBe(20);
+  });
+
+  it('is a no-op when nothing is pending', async () => {
+    const { TENSORFEED_CACHE, backing } = makeKVStub();
+    await maybeFlushChaos({ TENSORFEED_CACHE });
+    expect(backing.size).toBe(0);
   });
 });

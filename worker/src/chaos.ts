@@ -154,3 +154,136 @@ export const CHAOS_LIMITS = {
   MIN_ERROR_CODE,
   MAX_ERROR_CODE,
 };
+
+// ── Simulated-response counter ────────────────────────────────────────
+//
+// Tracks how many simulated responses the chaos layer has handed back,
+// bucketed by status code. Powers /api/chaos/stats and lets external
+// analytics (traffic-tracker) subtract synthetic traffic from real 5xx
+// rates so the dashboard doesn't show 14% errors when the actual error
+// rate is well under 1%.
+//
+// Mirrors the activity.ts pattern: increment in-memory on every hit,
+// flush to KV in batches to stay well inside the free-tier KV budget.
+// Counter is per-UTC-day. Reset happens implicitly when the date rolls
+// over and the next flush sees a stale `date` field.
+
+interface ChaosCounter {
+  date: string; // YYYY-MM-DD UTC
+  total: number;
+  by_status: Record<string, number>;
+}
+
+const COUNTER_KEY = 'chaos:counter';
+const FLUSH_INTERVAL_MS = 60_000;
+const FLUSH_BATCH_SIZE = 20;
+const READ_CACHE_TTL_MS = 30_000;
+
+let pendingByStatus = new Map<number, number>();
+let pendingTotal = 0;
+let lastFlushTime = 0;
+
+let cachedStats: { data: ChaosCounter; expiresAt: number } | null = null;
+
+function todayUTC(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function emptyCounter(): ChaosCounter {
+  return { date: todayUTC(), total: 0, by_status: {} };
+}
+
+/**
+ * Synchronously record a simulated response. No env required, no KV
+ * write on the hot path. Caller should follow with maybeFlushChaos so
+ * the buffer eventually lands in KV.
+ */
+export function noteSimulatedResponse(status: number): void {
+  pendingByStatus.set(status, (pendingByStatus.get(status) ?? 0) + 1);
+  pendingTotal++;
+}
+
+/**
+ * Flush the in-memory counter to KV when the batch size or interval
+ * threshold is reached. Safe to call on every request: it's a no-op
+ * when nothing is pending or the threshold hasn't been hit. Caller is
+ * responsible for wrapping in ctx.waitUntil if they want fire-and-forget.
+ */
+export async function maybeFlushChaos(env: { TENSORFEED_CACHE: KVNamespace }): Promise<void> {
+  if (pendingTotal === 0) return;
+  const now = Date.now();
+  if (pendingTotal < FLUSH_BATCH_SIZE && now - lastFlushTime < FLUSH_INTERVAL_MS) return;
+  await flushChaosToKV(env);
+}
+
+async function flushChaosToKV(env: { TENSORFEED_CACHE: KVNamespace }): Promise<void> {
+  if (pendingTotal === 0) return;
+
+  const drainedByStatus = new Map(pendingByStatus);
+  const drainedTotal = pendingTotal;
+  pendingByStatus.clear();
+  pendingTotal = 0;
+  lastFlushTime = Date.now();
+
+  try {
+    const today = todayUTC();
+    const stored = (await env.TENSORFEED_CACHE.get(COUNTER_KEY, 'json')) as ChaosCounter | null;
+    const counter: ChaosCounter = stored && stored.date === today ? stored : emptyCounter();
+    counter.total += drainedTotal;
+    for (const [status, n] of drainedByStatus) {
+      const k = String(status);
+      counter.by_status[k] = (counter.by_status[k] ?? 0) + n;
+    }
+    await env.TENSORFEED_CACHE.put(COUNTER_KEY, JSON.stringify(counter));
+    cachedStats = null;
+  } catch (err) {
+    console.warn('chaos counter flush failed:', err);
+    // Re-add so we don't lose counts on transient KV errors
+    for (const [status, n] of drainedByStatus) {
+      pendingByStatus.set(status, (pendingByStatus.get(status) ?? 0) + n);
+    }
+    pendingTotal += drainedTotal;
+  }
+}
+
+/**
+ * Read the current counter snapshot, including any in-memory pending
+ * counts that haven't flushed yet. Caches the KV read for 30 seconds.
+ */
+export async function getChaosStats(env: { TENSORFEED_CACHE: KVNamespace }): Promise<ChaosCounter> {
+  const now = Date.now();
+  const today = todayUTC();
+
+  let base: ChaosCounter;
+  if (cachedStats && now < cachedStats.expiresAt && cachedStats.data.date === today) {
+    base = cachedStats.data;
+  } else {
+    const stored = (await env.TENSORFEED_CACHE.get(COUNTER_KEY, 'json')) as ChaosCounter | null;
+    base = stored && stored.date === today ? stored : emptyCounter();
+    cachedStats = { data: base, expiresAt: now + READ_CACHE_TTL_MS };
+  }
+
+  if (pendingTotal === 0) return base;
+
+  const merged: ChaosCounter = {
+    date: base.date,
+    total: base.total + pendingTotal,
+    by_status: { ...base.by_status },
+  };
+  for (const [status, n] of pendingByStatus) {
+    const k = String(status);
+    merged.by_status[k] = (merged.by_status[k] ?? 0) + n;
+  }
+  return merged;
+}
+
+/**
+ * Test-only reset. Wipes both the in-memory buffer and the cached read
+ * snapshot. Vitest tests share module state across cases otherwise.
+ */
+export function _resetChaosCounterForTests(): void {
+  pendingByStatus = new Map();
+  pendingTotal = 0;
+  lastFlushTime = 0;
+  cachedStats = null;
+}
