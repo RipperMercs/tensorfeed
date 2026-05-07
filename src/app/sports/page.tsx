@@ -60,7 +60,7 @@ const LEAGUES: LeagueCard[] = [
     name: 'Major League Baseball',
     short: 'MLB',
     status: 'live',
-    href: '/sports',
+    href: '/sports/mlb',
     description:
       '30-team factual catalog plus hourly aggregated news from ESPN, MLB.com, CBS Sports, and Yahoo Sports. Lahman seasonal data and Retrosheet game logs are V2 candidates.',
     source: 'Editorial catalog + RSS aggregation (Lahman / Retrosheet for V2)',

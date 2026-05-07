@@ -174,6 +174,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/gpu-pricing`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
     { url: `${baseUrl}/sports`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${baseUrl}/sports/nfl`, lastModified: now, changeFrequency: 'hourly', priority: 0.8 },
+    { url: `${baseUrl}/sports/mlb`, lastModified: now, changeFrequency: 'hourly', priority: 0.8 },
     { url: `${baseUrl}/alerts`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/incidents`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
 
