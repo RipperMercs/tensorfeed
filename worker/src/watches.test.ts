@@ -13,7 +13,9 @@ import {
   priceWatchFires,
   statusWatchFires,
   leaderboardWatchFires,
+  macroIndicatorWatchFires,
   computePriceTransitions,
+  computeMacroIndicatorTransitions,
   signBody,
   createWatch,
   getWatch,
@@ -26,6 +28,7 @@ import {
   PriceWatchSpec,
   StatusWatchSpec,
   LeaderboardRankWatchSpec,
+  MacroIndicatorWatchSpec,
 } from './watches';
 import type { Env } from './types';
 
@@ -767,5 +770,237 @@ describe('runDigestWatchCycle', () => {
     const summary = await runDigestWatchCycle(env);
     expect(summary).toEqual({ watches_evaluated: 0, watches_fired: 0, delivery_failures: 0 });
     expect(captured).toHaveLength(0);
+  });
+});
+
+// ── Macro indicator watches ────────────────────────────────────────
+
+describe('validateSpec: macro_indicator', () => {
+  it('accepts a well-formed BLS spec with gt threshold', () => {
+    const r = validateSpec({
+      type: 'macro_indicator',
+      source: 'bls',
+      series_id: 'CUUR0000SA0',
+      metric: 'delta_pct',
+      op: 'gt',
+      threshold: 0.5,
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it('accepts a FRED spec with crosses op', () => {
+    const r = validateSpec({
+      type: 'macro_indicator',
+      source: 'fred',
+      series_id: 'T10Y2Y',
+      metric: 'value',
+      op: 'crosses',
+      threshold: 0,
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it('rejects unknown source', () => {
+    const r = validateSpec({
+      type: 'macro_indicator',
+      source: 'cps',
+      series_id: 'X',
+      metric: 'value',
+      op: 'gt',
+      threshold: 1,
+    });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('macro_watch_source_invalid');
+  });
+
+  it('rejects malformed series id', () => {
+    const r = validateSpec({
+      type: 'macro_indicator',
+      source: 'bls',
+      series_id: 'drop tables;',
+      metric: 'value',
+      op: 'gt',
+      threshold: 1,
+    });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('macro_watch_series_id_format');
+  });
+
+  it('rejects unknown metric', () => {
+    const r = validateSpec({
+      type: 'macro_indicator',
+      source: 'bls',
+      series_id: 'CUUR0000SA0',
+      metric: 'lunar_phase',
+      op: 'gt',
+      threshold: 1,
+    });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('macro_watch_metric_invalid');
+  });
+
+  it('requires threshold for non-changes ops', () => {
+    const r = validateSpec({
+      type: 'macro_indicator',
+      source: 'bls',
+      series_id: 'CUUR0000SA0',
+      metric: 'value',
+      op: 'gt',
+    });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('macro_watch_threshold_required');
+  });
+
+  it('does not require threshold for changes', () => {
+    const r = validateSpec({
+      type: 'macro_indicator',
+      source: 'bls',
+      series_id: 'CUUR0000SA0',
+      metric: 'value',
+      op: 'changes',
+    });
+    expect(r.ok).toBe(true);
+  });
+});
+
+describe('macroIndicatorWatchFires', () => {
+  const baseSpec: MacroIndicatorWatchSpec = {
+    type: 'macro_indicator',
+    source: 'fred',
+    series_id: 'T10Y2Y',
+    metric: 'value',
+    op: 'lt',
+    threshold: 0,
+  };
+
+  it('does not fire when source mismatches', () => {
+    expect(
+      macroIndicatorWatchFires(baseSpec, {
+        source: 'bls', series_id: 'T10Y2Y', metric: 'value', from: 0.5, to: -0.1, period_label: '2026-05-05',
+      }),
+    ).toBe(false);
+  });
+
+  it('does not fire when series mismatches', () => {
+    expect(
+      macroIndicatorWatchFires(baseSpec, {
+        source: 'fred', series_id: 'DFF', metric: 'value', from: 0.5, to: -0.1, period_label: null,
+      }),
+    ).toBe(false);
+  });
+
+  it('lt fires only on edge crossing into satisfaction', () => {
+    expect(
+      macroIndicatorWatchFires(baseSpec, {
+        source: 'fred', series_id: 'T10Y2Y', metric: 'value', from: 0.5, to: -0.1, period_label: null,
+      }),
+    ).toBe(true);
+    // Already below threshold - should not fire again
+    expect(
+      macroIndicatorWatchFires(baseSpec, {
+        source: 'fred', series_id: 'T10Y2Y', metric: 'value', from: -0.05, to: -0.1, period_label: null,
+      }),
+    ).toBe(false);
+  });
+
+  it('crosses fires on either direction across threshold', () => {
+    const spec: MacroIndicatorWatchSpec = { ...baseSpec, op: 'crosses', threshold: 0 };
+    expect(
+      macroIndicatorWatchFires(spec, {
+        source: 'fred', series_id: 'T10Y2Y', metric: 'value', from: 0.2, to: -0.1, period_label: null,
+      }),
+    ).toBe(true);
+    expect(
+      macroIndicatorWatchFires(spec, {
+        source: 'fred', series_id: 'T10Y2Y', metric: 'value', from: -0.1, to: 0.2, period_label: null,
+      }),
+    ).toBe(true);
+  });
+
+  it('does not fire when from is null (first observation)', () => {
+    expect(
+      macroIndicatorWatchFires(baseSpec, {
+        source: 'fred', series_id: 'T10Y2Y', metric: 'value', from: null, to: -0.5, period_label: null,
+      }),
+    ).toBe(false);
+  });
+
+  it('changes fires on any change with prior observation', () => {
+    const spec: MacroIndicatorWatchSpec = { ...baseSpec, op: 'changes' };
+    expect(
+      macroIndicatorWatchFires(spec, {
+        source: 'fred', series_id: 'T10Y2Y', metric: 'value', from: 0.5, to: 0.6, period_label: null,
+      }),
+    ).toBe(true);
+  });
+
+  it('series id matching is case-insensitive', () => {
+    const spec: MacroIndicatorWatchSpec = { ...baseSpec, series_id: 't10y2y' };
+    expect(
+      macroIndicatorWatchFires(spec, {
+        source: 'fred', series_id: 'T10Y2Y', metric: 'value', from: 0.5, to: -0.1, period_label: null,
+      }),
+    ).toBe(true);
+  });
+});
+
+describe('computeMacroIndicatorTransitions', () => {
+  it('emits transitions for value, delta_absolute, delta_pct', () => {
+    const current = {
+      capturedAt: '2026-05-06T05:00:00Z',
+      indicators: [
+        {
+          series_id: 'CUUR0000SA0',
+          latest: { value: 313.0, period_label: 'May 2026' },
+          delta_absolute: 1.0,
+          delta_pct: 0.32,
+        },
+      ],
+    };
+    const prev = {
+      bls: {
+        CUUR0000SA0: { value: 312.0, delta_absolute: 0.8, delta_pct: 0.26, period_label: 'Apr 2026' },
+      },
+    };
+    const out = computeMacroIndicatorTransitions('bls', prev, current);
+    expect(out).toHaveLength(3);
+    const valueT = out.find(t => t.metric === 'value')!;
+    expect(valueT.from).toBe(312);
+    expect(valueT.to).toBe(313);
+    expect(valueT.period_label).toBe('May 2026');
+  });
+
+  it('emits null from when no prior snapshot', () => {
+    const current = {
+      capturedAt: '2026-05-06T05:00:00Z',
+      indicators: [
+        {
+          series_id: 'CUUR0000SA0',
+          latest: { value: 313.0, period_label: 'May 2026' },
+          delta_absolute: null,
+          delta_pct: null,
+        },
+      ],
+    };
+    const out = computeMacroIndicatorTransitions('bls', null, current);
+    expect(out).toHaveLength(1);
+    expect(out[0].from).toBeNull();
+    expect(out[0].to).toBe(313);
+  });
+
+  it('emits empty when current is null', () => {
+    expect(computeMacroIndicatorTransitions('bls', null, null)).toEqual([]);
+  });
+
+  it('skips delta metrics when not provided', () => {
+    const current = {
+      capturedAt: '2026-05-06',
+      indicators: [
+        { series_id: 'X', latest: { value: 1, period_label: 'a' }, delta_absolute: null, delta_pct: null },
+      ],
+    };
+    const out = computeMacroIndicatorTransitions('fred', null, current);
+    expect(out).toHaveLength(1);
+    expect(out[0].metric).toBe('value');
   });
 });

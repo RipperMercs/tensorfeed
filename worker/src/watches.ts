@@ -87,11 +87,41 @@ export interface LeaderboardRankWatchSpec {
   threshold?: number;
 }
 
+/**
+ * Macro indicator watch.
+ *
+ * Fires when a BLS or FRED series (from the curated /api/economy/*
+ * snapshots) crosses a threshold on its latest observation. Useful
+ * for agents that want to be notified when CPI MoM exceeds X%, when
+ * the yield curve inverts, when unemployment crosses Y%, etc.
+ *
+ * - source: 'bls' or 'fred', selects which snapshot to read.
+ * - series_id: BLS series id (e.g. 'CUUR0000SA0') or FRED series id
+ *   (e.g. 'DFF', 'T10Y2Y').
+ * - metric: 'value' compares the raw latest value; 'delta_absolute'
+ *   compares the period-over-period absolute delta (MoM for BLS,
+ *   day-over-day or report-over-report for FRED daily series);
+ *   'delta_pct' compares the percent delta the underlying snapshot
+ *   already computes.
+ * - op: 'lt' / 'gt' fire when the metric crosses the threshold from
+ *   the not-satisfying side. 'crosses' fires on either direction.
+ *   'changes' fires on any change to the metric value.
+ */
+export interface MacroIndicatorWatchSpec {
+  type: 'macro_indicator';
+  source: 'bls' | 'fred';
+  series_id: string;
+  metric: 'value' | 'delta_absolute' | 'delta_pct';
+  op: 'lt' | 'gt' | 'crosses' | 'changes';
+  threshold?: number;
+}
+
 export type WatchSpec =
   | PriceWatchSpec
   | StatusWatchSpec
   | DigestWatchSpec
-  | LeaderboardRankWatchSpec;
+  | LeaderboardRankWatchSpec
+  | MacroIndicatorWatchSpec;
 
 export interface Watch {
   id: string;
@@ -224,6 +254,27 @@ export function validateSpec(spec: unknown): SpecValidation {
     }
     return { ok: true };
   }
+  if (s.type === 'macro_indicator') {
+    if (s.source !== 'bls' && s.source !== 'fred') {
+      return { ok: false, error: 'macro_watch_source_invalid' };
+    }
+    if (typeof s.series_id !== 'string' || !s.series_id.trim()) {
+      return { ok: false, error: 'macro_watch_series_id_required' };
+    }
+    if (!/^[A-Z0-9_-]{2,40}$/i.test(s.series_id as string)) {
+      return { ok: false, error: 'macro_watch_series_id_format' };
+    }
+    if (s.metric !== 'value' && s.metric !== 'delta_absolute' && s.metric !== 'delta_pct') {
+      return { ok: false, error: 'macro_watch_metric_invalid' };
+    }
+    if (s.op !== 'lt' && s.op !== 'gt' && s.op !== 'crosses' && s.op !== 'changes') {
+      return { ok: false, error: 'macro_watch_op_invalid' };
+    }
+    if (s.op !== 'changes' && typeof s.threshold !== 'number') {
+      return { ok: false, error: 'macro_watch_threshold_required' };
+    }
+    return { ok: true };
+  }
   return { ok: false, error: 'unsupported_watch_type' };
 }
 
@@ -320,6 +371,53 @@ export function leaderboardWatchFires(
   return false;
 }
 
+// === Macro indicator watch evaluation ===
+
+export interface MacroIndicatorTransition {
+  source: 'bls' | 'fred';
+  series_id: string;
+  metric: 'value' | 'delta_absolute' | 'delta_pct';
+  /** Metric value on the prior snapshot (null if first observation). */
+  from: number | null;
+  /** Metric value on the current snapshot. */
+  to: number;
+  /** Period label of the current observation, for delivery payload context. */
+  period_label: string | null;
+}
+
+/**
+ * Returns true if the transition newly satisfies the watch. Edge-only:
+ * lt/gt fire ONLY when the metric crosses the threshold from the
+ * not-satisfying side; once below/above, subsequent observations on
+ * the same side do not fire again.
+ */
+export function macroIndicatorWatchFires(
+  spec: MacroIndicatorWatchSpec,
+  t: MacroIndicatorTransition,
+): boolean {
+  if (spec.source !== t.source) return false;
+  if (spec.series_id.toUpperCase() !== t.series_id.toUpperCase()) return false;
+  if (spec.metric !== t.metric) return false;
+  if (spec.op === 'changes') return t.from !== null && t.from !== t.to;
+  if (spec.op === 'crosses') {
+    if (typeof spec.threshold !== 'number' || t.from === null) return false;
+    const wasBelow = t.from < spec.threshold;
+    const wasAbove = t.from > spec.threshold;
+    const nowBelow = t.to < spec.threshold;
+    const nowAbove = t.to > spec.threshold;
+    return (wasBelow && nowAbove) || (wasAbove && nowBelow);
+  }
+  if (spec.op === 'lt') {
+    if (typeof spec.threshold !== 'number' || t.from === null) return false;
+    return t.from >= spec.threshold && t.to < spec.threshold;
+  }
+  if (spec.op === 'gt') {
+    if (typeof spec.threshold !== 'number' || t.from === null) return false;
+    return t.from <= spec.threshold && t.to > spec.threshold;
+  }
+  return false;
+}
+
 // === HMAC signing ===
 
 export async function signBody(body: string, secret: string): Promise<string> {
@@ -337,7 +435,7 @@ export async function signBody(body: string, secret: string): Promise<string> {
 
 // === Storage ===
 
-type WatchIndexType = 'price' | 'status' | 'digest' | 'leaderboard_rank';
+type WatchIndexType = 'price' | 'status' | 'digest' | 'leaderboard_rank' | 'macro_indicator';
 
 async function readIndex(env: Env, type: WatchIndexType): Promise<string[]> {
   const raw = (await env.TENSORFEED_CACHE.get(`watch:index:${type}`, 'json')) as string[] | null;
@@ -818,6 +916,187 @@ export async function runLeaderboardWatchCycle(env: Env): Promise<DispatchSummar
   }
 
   return dispatchLeaderboardWatches(env, transitions);
+}
+
+// === Dispatch: macro indicators ===
+
+/**
+ * Compute transitions by diffing the current BLS+FRED snapshots against
+ * the previously-stored macro snapshot. For each indicator:
+ *   - value transitions = latest.value (prior snapshot) vs latest.value (current)
+ *   - delta_absolute transitions = delta_absolute (prior) vs delta_absolute (current)
+ *   - delta_pct transitions = delta_pct (prior) vs delta_pct (current)
+ *
+ * The "from" side is null when this indicator wasn't in the prior
+ * snapshot (first observation; lt/gt/crosses cannot fire).
+ */
+interface MacroIndicatorSeries {
+  series_id: string;
+  latest: { value: number; period_label?: string; date?: string } | null;
+  delta_absolute: number | null;
+  delta_pct: number | null;
+}
+interface MacroIndicatorSnapshot {
+  capturedAt: string;
+  indicators: MacroIndicatorSeries[];
+}
+interface MacroPrevSnapshot {
+  bls?: Record<string, { value: number | null; delta_absolute: number | null; delta_pct: number | null; period_label: string | null }>;
+  fred?: Record<string, { value: number | null; delta_absolute: number | null; delta_pct: number | null; period_label: string | null }>;
+}
+
+function indicatorPeriodLabel(s: MacroIndicatorSeries): string | null {
+  if (!s.latest) return null;
+  return s.latest.period_label ?? s.latest.date ?? null;
+}
+
+export function computeMacroIndicatorTransitions(
+  source: 'bls' | 'fred',
+  prev: MacroPrevSnapshot | null,
+  current: MacroIndicatorSnapshot | null,
+): MacroIndicatorTransition[] {
+  if (!current) return [];
+  const prevForSource = prev?.[source] ?? {};
+  const out: MacroIndicatorTransition[] = [];
+  for (const s of current.indicators) {
+    const id = s.series_id;
+    const before = prevForSource[id];
+    const periodLabel = indicatorPeriodLabel(s);
+
+    // value
+    if (s.latest !== null) {
+      out.push({
+        source,
+        series_id: id,
+        metric: 'value',
+        from: before?.value ?? null,
+        to: s.latest.value,
+        period_label: periodLabel,
+      });
+    }
+    // delta_absolute
+    if (s.delta_absolute !== null) {
+      out.push({
+        source,
+        series_id: id,
+        metric: 'delta_absolute',
+        from: before?.delta_absolute ?? null,
+        to: s.delta_absolute,
+        period_label: periodLabel,
+      });
+    }
+    // delta_pct
+    if (s.delta_pct !== null) {
+      out.push({
+        source,
+        series_id: id,
+        metric: 'delta_pct',
+        from: before?.delta_pct ?? null,
+        to: s.delta_pct,
+        period_label: periodLabel,
+      });
+    }
+  }
+  return out;
+}
+
+export async function dispatchMacroIndicatorWatches(
+  env: Env,
+  transitions: MacroIndicatorTransition[],
+): Promise<DispatchSummary> {
+  if (transitions.length === 0) {
+    return { watches_evaluated: 0, watches_fired: 0, delivery_failures: 0 };
+  }
+  const ids = await readIndex(env, 'macro_indicator');
+  if (ids.length === 0) {
+    return { watches_evaluated: 0, watches_fired: 0, delivery_failures: 0 };
+  }
+  const watches = (await Promise.all(ids.map(id => getWatch(env, id)))).filter(
+    (w): w is Watch => w !== null && w.spec.type === 'macro_indicator' && w.status === 'active',
+  );
+
+  let fired = 0;
+  let failures = 0;
+  for (const watch of watches) {
+    const spec = watch.spec as MacroIndicatorWatchSpec;
+    for (const t of transitions) {
+      if (!macroIndicatorWatchFires(spec, t)) continue;
+      const payload: FirePayload = {
+        event: 'watch.fire',
+        watch_id: watch.id,
+        fired_at: nowIso(),
+        spec,
+        match: {
+          type: 'macro_indicator',
+          source: t.source,
+          series_id: t.series_id,
+          metric: t.metric,
+          op: spec.op,
+          ...(typeof spec.threshold === 'number' ? { threshold: spec.threshold } : {}),
+          from: t.from,
+          to: t.to,
+          ...(t.period_label ? { period_label: t.period_label } : {}),
+        },
+      };
+      const deliveryStatus = await deliver(watch, payload);
+      if (deliveryStatus === null || deliveryStatus >= 400) failures += 1;
+      await recordFire(env, watch, deliveryStatus);
+      fired += 1;
+      break;
+    }
+  }
+  return { watches_evaluated: watches.length, watches_fired: fired, delivery_failures: failures };
+}
+
+/**
+ * Cron entry for macro indicator watches. Reads the BLS + FRED current
+ * snapshots, diffs against the stored watch:prev:macro baseline, fires
+ * matching watches, and persists the new baseline. Always refreshes the
+ * baseline even when no watches exist (so first-registered watches
+ * start from a fresh baseline, not stale historical data).
+ */
+export async function runMacroIndicatorWatchCycle(env: Env): Promise<DispatchSummary> {
+  const [blsCurrent, fredCurrent, prev] = await Promise.all([
+    env.TENSORFEED_CACHE.get('bls-indicators:current', 'json') as Promise<MacroIndicatorSnapshot | null>,
+    env.TENSORFEED_CACHE.get('fred-indicators:current', 'json') as Promise<MacroIndicatorSnapshot | null>,
+    env.TENSORFEED_CACHE.get('watch:prev:macro', 'json') as Promise<MacroPrevSnapshot | null>,
+  ]);
+
+  // Always persist the new baseline.
+  const newPrev: MacroPrevSnapshot = {};
+  if (blsCurrent) {
+    newPrev.bls = {};
+    for (const s of blsCurrent.indicators) {
+      newPrev.bls[s.series_id] = {
+        value: s.latest?.value ?? null,
+        delta_absolute: s.delta_absolute,
+        delta_pct: s.delta_pct,
+        period_label: indicatorPeriodLabel(s),
+      };
+    }
+  }
+  if (fredCurrent) {
+    newPrev.fred = {};
+    for (const s of fredCurrent.indicators) {
+      newPrev.fred[s.series_id] = {
+        value: s.latest?.value ?? null,
+        delta_absolute: s.delta_absolute,
+        delta_pct: s.delta_pct,
+        period_label: indicatorPeriodLabel(s),
+      };
+    }
+  }
+  if (Object.keys(newPrev).length > 0) {
+    await env.TENSORFEED_CACHE.put('watch:prev:macro', JSON.stringify(newPrev));
+  }
+
+  if (!prev) {
+    return { watches_evaluated: 0, watches_fired: 0, delivery_failures: 0 };
+  }
+
+  const blsTransitions = computeMacroIndicatorTransitions('bls', prev, blsCurrent);
+  const fredTransitions = computeMacroIndicatorTransitions('fred', prev, fredCurrent);
+  return dispatchMacroIndicatorWatches(env, [...blsTransitions, ...fredTransitions]);
 }
 
 // === Dispatch entry-points used by scheduled() ===

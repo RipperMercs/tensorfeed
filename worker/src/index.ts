@@ -30,6 +30,7 @@ import {
   runPriceWatchCycle,
   runDigestWatchCycle,
   runLeaderboardWatchCycle,
+  runMacroIndicatorWatchCycle,
 } from './watches';
 import {
   getEnrichedDirectory,
@@ -4641,6 +4642,11 @@ export default {
       // data behind a free-registration API key; skips gracefully when
       // FRED_API_KEY is unset. Same partial-failure pattern as BLS.
       await run('refreshFREDIndicators', () => refreshFREDIndicators(env));
+      // After both BLS (05:00) and FRED (05:30) snapshots are fresh,
+      // run the macro indicator watch cycle. Diffs current snapshots
+      // against the stored baseline, fires matching watches, persists
+      // new baseline. Cheap when no watches registered.
+      await run('runMacroIndicatorWatchCycle', () => runMacroIndicatorWatchCycle(env));
     }
 
     // Record RSS poll history for the daily summary digest
