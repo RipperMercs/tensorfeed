@@ -191,6 +191,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/agent-provisioning`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/anthropic-dreaming-managed-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/apple-intelligence-extensions-ios-27`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/one-day-eight-free-apis`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/audited-our-paid-api-killed-two-endpoints`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/sap-prior-labs-europe-frontier-lab`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },

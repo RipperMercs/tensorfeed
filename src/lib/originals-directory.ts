@@ -17,6 +17,24 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-dreaming-managed-agents',
+    title: "Anthropic Just Taught Claude to Dream Between Tasks. Long-Running Agents Got Their Memory Layer.",
+    author: 'Ripper',
+    date: 'May 7, 2026',
+    readTime: '6 min read',
+    description:
+      "At Code with Claude in San Francisco on May 6, 2026, Anthropic shipped 'dreaming' as a research preview for Managed Agents: between-session offline reflection that re-reads transcripts, prunes dead memories, and writes named playbooks the agent will use next time. Outcomes (rubric-graded autonomous loops, +10pt success lift), multiagent orchestration (Commander/Detector/Navigator-style fleets), and webhooks all moved to public beta the same day, with rate limits doubled for Pro, Max, and Enterprise. Inside what each piece does, why offline reflection was the structurally missing layer for long-running agents, the architectural read on the bundle vs. OpenAI's stitched-together agent surface, and the open question on dreaming's pricing once it leaves preview.",
+  },
+  {
+    slug: 'apple-intelligence-extensions-ios-27',
+    title: "Apple Just Opened Siri to Claude and Gemini. ChatGPT's Exclusivity Is Dead.",
+    author: 'Kira Nolan',
+    date: 'May 7, 2026',
+    readTime: '7 min read',
+    description:
+      "Bloomberg confirmed that iOS 27, iPadOS 27, and macOS 27 will let users pick Claude, Gemini, or any other compatible model to power Apple Intelligence features through a new Extensions system. The OpenAI exclusive that defined the first year of Apple Intelligence is over. Inside the mechanism, the distinct-voice detail, the privacy disclaimer that signals Apple's real concern, and what a billion-device choice screen does to the model wars, the inference floor, and every other consumer AI surface.",
+  },
+  {
     slug: 'one-day-eight-free-apis',
     title: 'One Day, Eight New Free APIs: The Free-Data-First Sprint',
     author: 'Ripper',
