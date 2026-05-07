@@ -699,7 +699,7 @@
         ],
         "summary": "Daily citation-ranked AI/ML papers from Semantic Scholar",
         "operationId": "getPapersAITrending",
-        "description": "Five fan-out queries (LLM, transformer, RLHF, AI agents, diffusion model), deduped by paperId, top 30 ranked by citation count. Refreshed daily at 11:00 UTC.",
+        "description": "Five fan-out queries (LLM, transformer, RLHF, AI agents, diffusion), deduped by paperId, top 30 by citation count. Refreshed daily at 11:00 UTC.",
         "responses": {
           "200": {
             "description": "Curated papers snapshot",
@@ -708,34 +708,11 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
+                    "ok": {
+                      "type": "boolean"
+                    },
                     "snapshot": {
-                      "type": "object",
-                      "properties": {
-                        "date": { "type": "string", "format": "date" },
-                        "capturedAt": { "type": "string", "format": "date-time" },
-                        "total_papers": { "type": "integer" },
-                        "papers": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "paperId": { "type": "string" },
-                              "title": { "type": "string" },
-                              "abstract": { "type": ["string", "null"] },
-                              "authors": { "type": "array", "items": { "type": "string" } },
-                              "year": { "type": ["integer", "null"] },
-                              "venue": { "type": ["string", "null"] },
-                              "citationCount": { "type": "integer" },
-                              "url": { "type": ["string", "null"] },
-                              "publicationDate": { "type": ["string", "null"] },
-                              "arxivId": { "type": ["string", "null"] },
-                              "doi": { "type": ["string", "null"] },
-                              "fieldsOfStudy": { "type": "array", "items": { "type": "string" } }
-                            }
-                          }
-                        }
-                      }
+                      "type": "object"
                     }
                   }
                 }
@@ -750,9 +727,9 @@
         "tags": [
           "Papers"
         ],
-        "summary": "Most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV",
+        "summary": "Most recent arXiv submissions (cs.AI / cs.LG / cs.CL / cs.CV)",
         "operationId": "getPapersArxivRecent",
-        "description": "Top 50 by submission date, deduped by arxivId. Refreshed daily at 11:30 UTC.",
+        "description": "Top 50 recent submissions by date, deduped by arxivId. Refreshed daily at 11:30 UTC.",
         "responses": {
           "200": {
             "description": "Recent arXiv submissions snapshot",
@@ -761,35 +738,41 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
+                    "ok": {
+                      "type": "boolean"
+                    },
                     "snapshot": {
-                      "type": "object",
-                      "properties": {
-                        "date": { "type": "string", "format": "date" },
-                        "capturedAt": { "type": "string", "format": "date-time" },
-                        "total_papers": { "type": "integer" },
-                        "categories_queried": { "type": "array", "items": { "type": "string" } },
-                        "papers": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "arxivId": { "type": "string" },
-                              "version": { "type": ["string", "null"] },
-                              "title": { "type": "string" },
-                              "abstract": { "type": ["string", "null"] },
-                              "authors": { "type": "array", "items": { "type": "string" } },
-                              "primaryCategory": { "type": ["string", "null"] },
-                              "categories": { "type": "array", "items": { "type": "string" } },
-                              "publishedAt": { "type": "string", "format": "date-time" },
-                              "updatedAt": { "type": "string", "format": "date-time" },
-                              "htmlUrl": { "type": "string" },
-                              "pdfUrl": { "type": "string" },
-                              "doi": { "type": ["string", "null"] }
-                            }
-                          }
-                        }
-                      }
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/hf/trending": {
+      "get": {
+        "tags": [
+          "Hugging Face"
+        ],
+        "summary": "Top HF models, datasets, and Spaces",
+        "operationId": "getHFTrending",
+        "description": "Daily snapshot against the public HF API. Models + datasets ranked by downloads (top 30 each); Spaces ranked by likes (top 30). Day-over-day deltas across the dated keys yield a true trending signal once multiple snapshots accumulate. Refreshed daily at 12:00 UTC.",
+        "responses": {
+          "200": {
+            "description": "Top-downloaded models and datasets snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "snapshot": {
+                      "type": "object"
                     }
                   }
                 }
@@ -806,7 +789,7 @@
         ],
         "summary": "Currently-hot GitHub issues across AI repos",
         "operationId": "getHotIssues",
-        "description": "Five fan-out keyword-phrase searches (\"large language model\", \"AI agent\", transformer, \"machine learning\", LLM), is:issue is:open archived:false comments>=10 updated within the last 7 days. Deduped by URL, top 30 by comment count. Refreshed daily at 12:30 UTC. Companion to /api/trending-repos: that one shows which AI repos are gaining stars; this one shows where the active conversations are.",
+        "description": "Five fan-out keyword-phrase searches (\"large language model\", \"AI agent\", transformer, \"machine learning\", LLM), is:issue is:open comments>=10 updated within the last 7 days, deduped by URL, top 30 by comment count. Refreshed daily at 12:30 UTC. Companion to /api/trending-repos.",
         "responses": {
           "200": {
             "description": "Hot AI issues snapshot",
@@ -815,37 +798,11 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
+                    "ok": {
+                      "type": "boolean"
+                    },
                     "snapshot": {
-                      "type": "object",
-                      "properties": {
-                        "date": { "type": "string", "format": "date" },
-                        "capturedAt": { "type": "string", "format": "date-time" },
-                        "total_issues": { "type": "integer" },
-                        "topics_queried": { "type": "array", "items": { "type": "string" } },
-                        "recent_window_days": { "type": "integer" },
-                        "comments_threshold": { "type": "integer" },
-                        "issues": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "url": { "type": "string" },
-                              "repo": { "type": "string" },
-                              "number": { "type": "integer" },
-                              "title": { "type": "string" },
-                              "author": { "type": ["string", "null"] },
-                              "state": { "type": "string", "enum": ["open", "closed"] },
-                              "comments": { "type": "integer" },
-                              "reactions_total": { "type": "integer" },
-                              "labels": { "type": "array", "items": { "type": "string" } },
-                              "created_at": { "type": "string", "format": "date-time" },
-                              "updated_at": { "type": "string", "format": "date-time" },
-                              "matched_topic": { "type": "string" }
-                            }
-                          }
-                        }
-                      }
+                      "type": "object"
                     }
                   }
                 }
@@ -871,36 +828,11 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
+                    "ok": {
+                      "type": "boolean"
+                    },
                     "snapshot": {
-                      "type": "object",
-                      "properties": {
-                        "date": { "type": "string", "format": "date" },
-                        "capturedAt": { "type": "string", "format": "date-time" },
-                        "total_posts": { "type": "integer" },
-                        "subreddits_queried": { "type": "array", "items": { "type": "string" } },
-                        "posts": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": { "type": "string" },
-                              "subreddit": { "type": "string" },
-                              "title": { "type": "string" },
-                              "author": { "type": ["string", "null"] },
-                              "score": { "type": "integer" },
-                              "upvote_ratio": { "type": "number" },
-                              "num_comments": { "type": "integer" },
-                              "permalink": { "type": "string" },
-                              "url": { "type": "string" },
-                              "created_utc": { "type": "number" },
-                              "flair": { "type": ["string", "null"] },
-                              "is_self": { "type": "boolean" },
-                              "is_video": { "type": "boolean" }
-                            }
-                          }
-                        }
-                      }
+                      "type": "object"
                     }
                   }
                 }
@@ -917,18 +849,24 @@
         ],
         "summary": "AI ecosystem today (composite brief)",
         "operationId": "getToday",
-        "description": "Single edge-cached endpoint that fans out across every daily TensorFeed feed (news, 3 paper feeds, HF models/datasets/Spaces, hot GitHub issues, Reddit threads, OpenRouter catalog summary, provider status) and returns a structured response. Saves a client from orchestrating 9 separate calls.",
+        "description": "Single edge-cached endpoint that fans out across every daily TensorFeed feed (news, 3 paper feeds, HF models/datasets/Spaces, hot GitHub issues, Reddit threads, OpenRouter catalog summary, provider status) and returns a structured response. Saves a client from orchestrating 9 separate calls. Optional ?sections=news,papers,hf,community,inference,status and ?limit=1-10 (default 3 items per section).",
         "parameters": [
           {
             "in": "query",
             "name": "sections",
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Comma-separated subset of sections (news, papers, hf, community, inference, status). Default all six."
           },
           {
             "in": "query",
             "name": "limit",
-            "schema": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
             "description": "Max items per subsection. Default 3, max 10."
           }
         ],
@@ -938,19 +876,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": { "type": "boolean" },
-                    "generated_at": { "type": "string", "format": "date-time" },
-                    "sections_included": { "type": "array", "items": { "type": "string" } },
-                    "limit_per_section": { "type": "integer" },
-                    "news": { "type": "object" },
-                    "papers": { "type": "object" },
-                    "hf": { "type": "object" },
-                    "community": { "type": "object" },
-                    "inference": { "type": "object" },
-                    "status": { "type": "object" }
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -965,7 +891,7 @@
         ],
         "summary": "HF Daily Papers (editor-curated AI papers with community signal)",
         "operationId": "getPapersHFDaily",
-        "description": "Hugging Face's editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from /api/papers/arxiv-recent (firehose) and /api/papers/ai-trending (citation-ranked all-time). Refreshed daily at 14:30 UTC. Titles sanitized at capture time.",
+        "description": "Hugging Face's editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from /api/papers/arxiv-recent (firehose) and /api/papers/ai-trending (citation-ranked). Refreshed daily at 14:30 UTC. Titles sanitized at capture time.",
         "responses": {
           "200": {
             "description": "HF Daily Papers snapshot",
@@ -974,36 +900,11 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
+                    "ok": {
+                      "type": "boolean"
+                    },
                     "snapshot": {
-                      "type": "object",
-                      "properties": {
-                        "date": { "type": "string", "format": "date" },
-                        "capturedAt": { "type": "string", "format": "date-time" },
-                        "total_papers": { "type": "integer" },
-                        "papers": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "paperId": { "type": "string" },
-                              "title": { "type": "string" },
-                              "summary": { "type": ["string", "null"] },
-                              "authors": { "type": "array", "items": { "type": "string" } },
-                              "publishedAt": { "type": ["string", "null"] },
-                              "submittedAt": { "type": ["string", "null"] },
-                              "upvotes": { "type": "integer" },
-                              "num_comments": { "type": "integer" },
-                              "thumbnail": { "type": ["string", "null"] },
-                              "hf_url": { "type": "string" },
-                              "arxiv_url": { "type": ["string", "null"] },
-                              "github_repo": { "type": ["string", "null"] },
-                              "github_stars": { "type": ["integer", "null"] },
-                              "ai_keywords": { "type": "array", "items": { "type": "string" } }
-                            }
-                          }
-                        }
-                      }
+                      "type": "object"
                     }
                   }
                 }
@@ -1020,7 +921,7 @@
         ],
         "summary": "Cross-provider AI model catalog snapshot",
         "operationId": "getOpenRouterModels",
-        "description": "Daily snapshot of OpenRouter's normalized cross-provider model catalog. 200+ models across 50+ inference providers with comparable per-token pricing (prompt, completion, image, request), context window, modality, instruct_type, tokenizer, top provider metadata, and supported_parameters. Pairs with /api/models (curated frontier-lab catalog) by surfacing the long tail of OSS models on cloud inference. Refreshed daily at 14:00 UTC.",
+        "description": "Daily snapshot of OpenRouter's normalized cross-provider model catalog. 200+ models across 50+ inference providers with comparable per-token pricing, context window, modality, and provider metadata. Pairs with /api/models (curated frontier-lab catalog) by surfacing the long tail of OSS models on cloud inference. Refreshed daily at 14:00 UTC.",
         "responses": {
           "200": {
             "description": "OpenRouter catalog snapshot",
@@ -1029,148 +930,11 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
+                    "ok": {
+                      "type": "boolean"
+                    },
                     "snapshot": {
-                      "type": "object",
-                      "properties": {
-                        "date": { "type": "string", "format": "date" },
-                        "capturedAt": { "type": "string", "format": "date-time" },
-                        "total_models": { "type": "integer" },
-                        "models": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": { "type": "string" },
-                              "name": { "type": "string" },
-                              "description": { "type": ["string", "null"] },
-                              "created": { "type": ["integer", "null"] },
-                              "context_length": { "type": ["integer", "null"] },
-                              "modality": { "type": ["string", "null"] },
-                              "instruct_type": { "type": ["string", "null"] },
-                              "tokenizer": { "type": ["string", "null"] },
-                              "pricing": {
-                                "type": "object",
-                                "properties": {
-                                  "prompt": { "type": ["number", "null"] },
-                                  "completion": { "type": ["number", "null"] },
-                                  "image": { "type": ["number", "null"] },
-                                  "request": { "type": ["number", "null"] }
-                                }
-                              },
-                              "top_provider": {
-                                "type": "object",
-                                "properties": {
-                                  "max_completion_tokens": { "type": ["integer", "null"] },
-                                  "is_moderated": { "type": ["boolean", "null"] }
-                                }
-                              },
-                              "supported_parameters": { "type": "array", "items": { "type": "string" } }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/hf/trending": {
-      "get": {
-        "tags": [
-          "Hugging Face"
-        ],
-        "summary": "Top HF models, datasets, and Spaces",
-        "operationId": "getHFTrending",
-        "description": "Daily snapshot against the public Hugging Face API. Models + datasets ranked by downloads (top 30 each); Spaces ranked by likes (top 30, since downloads is meaningless for hosted apps). Day-over-day deltas across the dated keys yield a true trending signal once multiple snapshots accumulate. Refreshed daily at 12:00 UTC.",
-        "responses": {
-          "200": {
-            "description": "Top-downloaded models and datasets snapshot",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": { "type": "boolean" },
-                    "snapshot": {
-                      "type": "object",
-                      "properties": {
-                        "date": { "type": "string", "format": "date" },
-                        "capturedAt": { "type": "string", "format": "date-time" },
-                        "models": {
-                          "type": "object",
-                          "properties": {
-                            "sort": { "type": "string", "enum": ["downloads"] },
-                            "count": { "type": "integer" },
-                            "items": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "id": { "type": "string" },
-                                  "downloads": { "type": "integer" },
-                                  "likes": { "type": "integer" },
-                                  "pipeline_tag": { "type": ["string", "null"] },
-                                  "tags": { "type": "array", "items": { "type": "string" } },
-                                  "lastModified": { "type": ["string", "null"] },
-                                  "private": { "type": "boolean" },
-                                  "gated": {}
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "datasets": {
-                          "type": "object",
-                          "properties": {
-                            "sort": { "type": "string", "enum": ["downloads"] },
-                            "count": { "type": "integer" },
-                            "items": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "id": { "type": "string" },
-                                  "downloads": { "type": "integer" },
-                                  "likes": { "type": "integer" },
-                                  "tags": { "type": "array", "items": { "type": "string" } },
-                                  "lastModified": { "type": ["string", "null"] },
-                                  "private": { "type": "boolean" },
-                                  "gated": {}
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "spaces": {
-                          "type": "object",
-                          "properties": {
-                            "sort": { "type": "string", "enum": ["likes"] },
-                            "count": { "type": "integer" },
-                            "items": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "id": { "type": "string" },
-                                  "author": { "type": ["string", "null"] },
-                                  "sdk": { "type": ["string", "null"] },
-                                  "likes": { "type": "integer" },
-                                  "tags": { "type": "array", "items": { "type": "string" } },
-                                  "lastModified": { "type": ["string", "null"] },
-                                  "private": { "type": "boolean" },
-                                  "runtime_stage": { "type": ["string", "null"] },
-                                  "hardware": { "type": ["string", "null"] }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
+                      "type": "object"
                     }
                   }
                 }
@@ -1283,7 +1047,7 @@
         ],
         "summary": "AI model deprecation calendar",
         "operationId": "getModelDeprecations",
-        "description": "Provider-by-provider registry of model retirements and deprecation announcements (OpenAI, Anthropic, Google, Cohere, and others). Each entry carries `announcedDate`, `deprecationDate`, `sunsetDate`, the recommended replacement model id, and a `sourceUrl` pointing at the provider's own announcement page. Curated; updated as new deprecations land. Edge-cached 600s.",
+        "description": "Provider-by-provider registry of model retirements and\ndeprecation announcements (OpenAI, Anthropic, Google, Cohere,\nand others). Each entry carries `announcedDate`,\n`deprecationDate`, `sunsetDate`, the recommended replacement\nmodel id, and a `sourceUrl` pointing at the provider's own\nannouncement page. Curated; updated as new deprecations land.\nEdge-cached 600s.\n",
         "parameters": [
           {
             "name": "provider",
@@ -1293,7 +1057,7 @@
               "type": "string",
               "example": "OpenAI"
             },
-            "description": "Filter to a single provider (case-insensitive)."
+            "description": "Filter to a single provider (case-insensitive match on the provider field)."
           },
           {
             "name": "status",
@@ -1318,10 +1082,19 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
-                    "source": { "type": "string" },
-                    "lastUpdated": { "type": "string", "format": "date" },
-                    "count": { "type": "integer" },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "lastUpdated": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
                     "deprecations": {
                       "type": "array",
                       "items": {
@@ -1334,10 +1107,18 @@
                           "sourceUrl"
                         ],
                         "properties": {
-                          "id": { "type": "string" },
-                          "provider": { "type": "string" },
-                          "model": { "type": "string" },
-                          "modelDisplay": { "type": "string" },
+                          "id": {
+                            "type": "string"
+                          },
+                          "provider": {
+                            "type": "string"
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "modelDisplay": {
+                            "type": "string"
+                          },
                           "status": {
                             "type": "string",
                             "enum": [
@@ -1346,12 +1127,28 @@
                               "sunsetted"
                             ]
                           },
-                          "announcedDate": { "type": "string", "format": "date" },
-                          "deprecationDate": { "type": "string", "format": "date" },
-                          "sunsetDate": { "type": "string", "format": "date" },
-                          "replacement": { "type": "string" },
-                          "notes": { "type": "string" },
-                          "sourceUrl": { "type": "string", "format": "uri" }
+                          "announcedDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "deprecationDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "sunsetDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "replacement": {
+                            "type": "string"
+                          },
+                          "notes": {
+                            "type": "string"
+                          },
+                          "sourceUrl": {
+                            "type": "string",
+                            "format": "uri"
+                          }
                         }
                       }
                     }
@@ -1390,7 +1187,7 @@
           "Payment"
         ],
         "summary": "Initiate a credit purchase (sender_wallet binding required)",
-        "description": "Issues a 30-minute payment quote bound to the EVM address that will sign the on-chain USDC transfer. Required body fields: `amount_usd` (0.5 to 10000) and `sender_wallet` (0x-prefixed 40-char EVM address). The `/api/payment/confirm` endpoint will reject any tx whose on-chain `from` does not match the sender_wallet bound here, which closes the public-mempool tx sniping vector.",
+        "description": "Issues a 30-minute payment quote bound to the EVM address that\nwill sign the on-chain USDC transfer. Required body fields:\n`amount_usd` (0.5 to 10000) and `sender_wallet` (0x-prefixed\n40-char EVM address). The `/api/payment/confirm` endpoint will\nreject any tx whose on-chain `from` does not match the\nsender_wallet bound here, which closes the public-mempool tx\nsniping vector.\n",
         "operationId": "postBuyCredits",
         "requestBody": {
           "required": true,
@@ -1407,7 +1204,7 @@
                     "type": "number",
                     "minimum": 0.5,
                     "maximum": 10000,
-                    "example": 1.0
+                    "example": 1
                   },
                   "sender_wallet": {
                     "type": "string",
@@ -1442,7 +1239,7 @@
           "Payment"
         ],
         "summary": "Confirm a USDC payment and receive bearer token (nonce required)",
-        "description": "Verifies the USDC Transfer event on-chain via Base RPC and mints a tf_live_ bearer token tied to the credit balance. Both `tx_hash` and `nonce` are required (the legacy no-nonce path is closed to prevent public-mempool tx sniping). The on-chain sender of the verified tx MUST match the sender_wallet bound to the quote at /api/payment/buy-credits; a mismatch returns `{ ok: false, error: \"sender_mismatch\" }`.",
+        "description": "Verifies the USDC Transfer event on-chain via Base RPC and\nmints a tf_live_ bearer token tied to the credit balance.\nBoth `tx_hash` and `nonce` are required (the legacy no-nonce\npath is closed to prevent public-mempool tx sniping). The\non-chain sender of the verified tx MUST match the\nsender_wallet bound to the quote at /api/payment/buy-credits;\na mismatch returns `{ ok: false, error: \"sender_mismatch\" }`.\n",
         "operationId": "postPaymentConfirm",
         "requestBody": {
           "required": true,
@@ -1482,7 +1279,7 @@
             }
           },
           "400": {
-            "description": "Possible errors: nonce_required, quote_not_found_or_expired, quote_expired, sender_mismatch, tx_already_claimed, verification_failed."
+            "description": "Possible errors include `nonce_required`, `quote_not_found_or_expired`, `quote_expired`, `sender_mismatch`, `tx_already_claimed`, `verification_failed`."
           }
         }
       }
@@ -1621,6 +1418,25 @@
             "BearerAuth": []
           }
         ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            },
+            {
+              "mpp": {
+                "method": "",
+                "intent": "",
+                "currency": ""
+              }
+            }
+          ]
+        },
         "parameters": [
           {
             "in": "query",
@@ -1655,7 +1471,7 @@
             }
           },
           "402": {
-            "description": "Insufficient credits or no token (x402-compatible)"
+            "description": "Payment Required"
           }
         }
       }
@@ -1672,6 +1488,25 @@
             "BearerAuth": []
           }
         ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            },
+            {
+              "mpp": {
+                "method": "",
+                "intent": "",
+                "currency": ""
+              }
+            }
+          ]
+        },
         "parameters": [
           {
             "in": "query",
@@ -1717,6 +1552,9 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         }
       }
@@ -1733,6 +1571,25 @@
             "BearerAuth": []
           }
         ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            },
+            {
+              "mpp": {
+                "method": "",
+                "intent": "",
+                "currency": ""
+              }
+            }
+          ]
+        },
         "parameters": [
           {
             "in": "query",
@@ -1781,6 +1638,9 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         }
       }
@@ -1797,6 +1657,25 @@
             "BearerAuth": []
           }
         ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            },
+            {
+              "mpp": {
+                "method": "",
+                "intent": "",
+                "currency": ""
+              }
+            }
+          ]
+        },
         "parameters": [
           {
             "in": "query",
@@ -1828,6 +1707,9 @@
                 }
               }
             }
+          },
+          "402": {
+            "description": "Payment Required"
           }
         }
       }

@@ -737,6 +737,17 @@ paths:
       summary: Ranked model routing recommendations
       operationId: getPremiumRouting
       security: [{ BearerAuth: [] }]
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: "0.02"
+        protocols:
+          - x402: {}
+          - mpp:
+              method: ""
+              intent: ""
+              currency: ""
       parameters:
         - in: query
           name: prompt
@@ -750,7 +761,8 @@ paths:
           content:
             application/json:
               schema: { type: object }
-        '402': { description: Insufficient credits or no token (x402-compatible) }
+        '402':
+          description: Payment Required
 
   /api/premium/news/search:
     get:
@@ -758,6 +770,17 @@ paths:
       summary: Full-text search across AI news archive
       operationId: getPremiumNewsSearch
       security: [{ BearerAuth: [] }]
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: "0.02"
+        protocols:
+          - x402: {}
+          - mpp:
+              method: ""
+              intent: ""
+              currency: ""
       parameters:
         - in: query
           name: q
@@ -778,6 +801,8 @@ paths:
           content:
             application/json:
               schema: { type: object }
+        '402':
+          description: Payment Required
 
   /api/premium/cost/projection:
     get:
@@ -785,6 +810,17 @@ paths:
       summary: Compute monthly cost across model candidates
       operationId: getPremiumCostProjection
       security: [{ BearerAuth: [] }]
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: "0.02"
+        protocols:
+          - x402: {}
+          - mpp:
+              method: ""
+              intent: ""
+              currency: ""
       parameters:
         - in: query
           name: model
@@ -805,6 +841,8 @@ paths:
           content:
             application/json:
               schema: { type: object }
+        '402':
+          description: Payment Required
 
   /api/premium/whats-new:
     get:
@@ -812,6 +850,17 @@ paths:
       summary: Aggregated daily delta across the whole TensorFeed dataset
       operationId: getPremiumWhatsNew
       security: [{ BearerAuth: [] }]
+      x-payment-info:
+        price:
+          mode: fixed
+          currency: USD
+          amount: "0.02"
+        protocols:
+          - x402: {}
+          - mpp:
+              method: ""
+              intent: ""
+              currency: ""
       parameters:
         - in: query
           name: days
@@ -825,6 +874,8 @@ paths:
           content:
             application/json:
               schema: { type: object }
+        '402':
+          description: Payment Required
 
 components:
   securitySchemes:
