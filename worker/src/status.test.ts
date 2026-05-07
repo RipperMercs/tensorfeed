@@ -98,8 +98,27 @@ describe('aggregateCoreStatus', () => {
       { name: 'Conversations', status: 'degraded' },
       { name: 'Image Generation', status: 'degraded' },
       { name: 'Voice mode', status: 'degraded' },
+      { name: 'Codex Web', status: 'degraded' },
+      { name: 'Codex API', status: 'degraded' },
+      { name: 'Codex CLI', status: 'degraded' },
     ];
     expect(aggregateCoreStatus(peripheralOnly)).toBeNull();
+  });
+
+  it('treats every Codex surface as peripheral so a Codex outage does not flip the OpenAI headline', () => {
+    // Production bug 2026-05-07: Codex API was degraded for >24h while every
+    // core inference component (Chat Completions, Responses, etc.) was
+    // operational, but the homepage alert bar showed OpenAI as degraded.
+    // The original /codex web/i pattern only caught Codex Web; Codex API and
+    // Codex CLI slipped through and were treated as core.
+    const result = aggregateCoreStatus([
+      { name: 'Chat Completions', status: 'operational' },
+      { name: 'Responses', status: 'operational' },
+      { name: 'Codex Web', status: 'degraded' },
+      { name: 'Codex API', status: 'degraded' },
+      { name: 'Codex CLI', status: 'degraded' },
+    ]);
+    expect(result).toBe('operational');
   });
 
   describe('with explicitFilter (e.g. GitHub Copilot)', () => {
@@ -278,20 +297,55 @@ describe('AWS Health currentevents parser (Bedrock)', () => {
     expect(r.affected[0].status).toBe('down');
   });
 
-  it('matches via impacted_services keys when service field is generic', () => {
+  it('regional bundle event populates affected list but does not drive headline', () => {
+    // Production bug 2026-05-07: a localized power issue in mec1-az2 (UAE)
+    // was published as a `multipleservices-me-central-1` bundle event with
+    // bedrock listed in impacted_services. That projected as "AWS Bedrock
+    // degraded" globally for >24h, even though Bedrock in primary regions
+    // (us-east-1, us-west-2, eu-west-1, ap-northeast-1) was healthy.
+    // Bundle events should provide regional context in components but must
+    // not paint the global headline yellow on their own.
     const r = aggregateAwsStatus(
       [
         {
-          service: 'multipleservices-us-east-1',
+          service: 'multipleservices-me-central-1',
           service_name: 'Multiple services',
-          summary: 'Connectivity issues',
+          summary: 'Increased Error Rates',
+          region_name: 'UAE',
+          impacted_services: { 'bedrock-me-central-1': {}, 'ec2-me-central-1': {} },
+        },
+      ],
+      'bedrock',
+    );
+    expect(r.status).toBe('operational');
+    expect(r.affected).toHaveLength(1);
+    expect(r.affected[0].name).toContain('UAE');
+  });
+
+  it('service-specific event still drives headline even when a bundle event is also active', () => {
+    // If AWS publishes both a bundle event AND a Bedrock-specific event,
+    // the service-specific one drives the headline. The bundle still shows
+    // as a component for context.
+    const r = aggregateAwsStatus(
+      [
+        {
+          service: 'multipleservices-me-central-1',
+          service_name: 'Multiple services',
+          summary: 'Increased Error Rates',
+          region_name: 'UAE',
+          impacted_services: { 'bedrock-me-central-1': {} },
+        },
+        {
+          service: 'bedrock-us-east-1',
+          service_name: 'Amazon Bedrock',
+          summary: 'Increased Error Rates',
           region_name: 'N. Virginia',
-          impacted_services: { 'bedrock-us-east-1': {}, 'ec2-us-east-1': {} },
         },
       ],
       'bedrock',
     );
     expect(r.status).toBe('degraded');
+    expect(r.affected).toHaveLength(2);
   });
 
   it('escalates to down when ANY matching event is severe (worst-of)', () => {

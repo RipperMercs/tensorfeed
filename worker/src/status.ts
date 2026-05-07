@@ -44,7 +44,7 @@ const PERIPHERAL_COMPONENT_PATTERNS: RegExp[] = [
   /\bapps?\b/i,
   /atlas/i,
   /\bgpts?\b/i,
-  /codex web/i,
+  /codex/i,
   /vs ?code/i,
   /\bcli\b/i,
   /fedramp/i,
@@ -203,6 +203,18 @@ function awsEventAffectsService(event: AwsEvent, match: string): boolean {
   return false;
 }
 
+// Regional bundle events (service: "multipleservices-{region}") indicate a
+// regional incident affecting many services at once (e.g. an AZ power loss).
+// They typically list every service running in the impacted zone under
+// impacted_services. We surface them in the affected list so users still see
+// the regional context, but they should not drive a service-specific headline,
+// since most callers of e.g. Bedrock are running in a different region and
+// would read the headline as a global outage. Service-specific events
+// (matching service or service_name directly) still drive the headline.
+function isAwsBundleEvent(event: AwsEvent): boolean {
+  return (event.service || '').toLowerCase().startsWith('multipleservices');
+}
+
 function awsEventSeverity(event: AwsEvent): 'down' | 'degraded' {
   // AWS rarely calls things outright "down" in titles; words like
   // "unavailable", "service disruption", "outage", "major" are the
@@ -244,8 +256,17 @@ export function aggregateAwsStatus(
     return { status: 'operational', affected: [] };
   }
 
-  const hasDown = matching.some((e) => awsEventSeverity(e) === 'down');
-  const headline: 'down' | 'degraded' = hasDown ? 'down' : 'degraded';
+  // Only service-specific events drive the headline. Bundle events still
+  // populate the affected list (so the regional context surfaces in the UI)
+  // but a regional AZ power outage in a non-primary region for the service
+  // shouldn't paint the global headline yellow.
+  const headlineEvents = matching.filter((e) => !isAwsBundleEvent(e));
+
+  let headline: 'operational' | 'degraded' | 'down' = 'operational';
+  if (headlineEvents.length > 0) {
+    const hasDown = headlineEvents.some((e) => awsEventSeverity(e) === 'down');
+    headline = hasDown ? 'down' : 'degraded';
+  }
 
   const affected = matching.map((e) => ({
     name: `${e.service_name || e.service || 'AWS'} (${e.region_name || 'global'})`,
