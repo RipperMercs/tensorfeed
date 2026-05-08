@@ -1990,7 +1990,10 @@ export async function requirePayment(
       asset: x402Config.usdcAddress,
       payTo: env.PAYMENT_WALLET as `0x${string}`,
       maxTimeoutSeconds: 60,
-      extra: { name: 'USDC', version: '2' },
+      // Per-network domain name. Mainnet USDC.name() = "USD Coin";
+      // Sepolia USDC.name() = "USDC". The `extra` field is the spec-defined
+      // hint clients use to construct the EIP-712 domain.
+      extra: { name: x402Config.domain.name, version: x402Config.domain.version },
     };
 
     const payload = parseXPaymentHeader(xPaymentHeader);
@@ -2180,7 +2183,10 @@ function paymentRequiredResponse(env: Env, creditsRequired: number, tier: number
           asset: x402Config.usdcAddress,
           payTo: env.PAYMENT_WALLET,
           maxTimeoutSeconds: 60,
-          extra: { name: 'USDC', version: '2' },
+          // Per-network domain name. Base mainnet USDC = "USD Coin";
+          // Base Sepolia USDC = "USDC". Clients use this hint to build
+          // the EIP-712 domain for transferWithAuthorization signing.
+          extra: { name: x402Config.domain.name, version: x402Config.domain.version },
         },
       ],
       extensions: {},

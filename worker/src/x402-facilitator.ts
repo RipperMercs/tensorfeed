@@ -64,6 +64,16 @@ export interface X402Config {
   domain: { name: string; version: string; chainId: number; verifyingContract: Address };
 }
 
+// Domain `name` differs per chain on the actual deployed USDC contracts:
+//   - Base mainnet  USDC.name() = "USD Coin"
+//   - Base Sepolia  USDC.name() = "USDC"
+// EIP-712 domain separation hashes the name in, so a signature constructed
+// with the wrong name will be rejected by the contract with
+// "FiatTokenV2: invalid signature". The `extra` field on PaymentRequirements
+// is precisely the hint clients use to choose the right name per chain;
+// the spec example happens to show "USDC" (the Sepolia value) but mainnet
+// requires "USD Coin". Confirmed via on-chain name() reads 2026-05-08.
+
 const MAINNET_CONFIG: X402Config = {
   chainId: 8453,
   network: 'eip155:8453',
@@ -71,7 +81,7 @@ const MAINNET_CONFIG: X402Config = {
   chain: base,
   defaultRpc: 'https://mainnet.base.org',
   domain: {
-    name: 'USDC',
+    name: 'USD Coin',
     version: '2',
     chainId: 8453,
     verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
@@ -642,7 +652,10 @@ export function paymentRequiredV2(opts: {
         asset: cfg.usdcAddress,
         payTo: opts.payTo,
         maxTimeoutSeconds: opts.maxTimeoutSeconds ?? 60,
-        extra: { name: 'USDC', version: '2' },
+        // Per-network EIP-712 domain hint. Mainnet USDC reports name="USD Coin";
+        // Sepolia reports name="USDC". Clients should use these exact strings
+        // when constructing the TransferWithAuthorization signature.
+        extra: { name: cfg.domain.name, version: cfg.domain.version },
       },
     ],
     extensions: {},

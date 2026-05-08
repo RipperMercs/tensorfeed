@@ -37,7 +37,7 @@ const VALID_REQUIREMENTS: PaymentRequirements = {
   asset: X402_CONSTANTS.USDC_BASE_MAINNET,
   payTo: PAY_TO,
   maxTimeoutSeconds: 60,
-  extra: { name: 'USDC', version: '2' },
+  extra: { name: 'USD Coin', version: '2' },
 };
 
 async function signAuth(opts: {
@@ -308,7 +308,7 @@ describe('paymentRequiredV2', () => {
     );
     expect(body.accepts[0].payTo).toBe(PAY_TO);
     expect(body.accepts[0].maxTimeoutSeconds).toBe(60);
-    expect(body.accepts[0].extra).toEqual({ name: 'USDC', version: '2' });
+    expect(body.accepts[0].extra).toEqual({ name: 'USD Coin', version: '2' });
     expect(body.extensions).toEqual({});
   });
 

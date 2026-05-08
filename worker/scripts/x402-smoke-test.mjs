@@ -31,13 +31,18 @@
 import { privateKeyToAccount } from 'viem/accounts';
 import { randomBytes } from 'crypto';
 
+// Domain `name` differs per chain on the deployed Circle USDC contracts:
+//   - Base mainnet  USDC.name() = "USD Coin"
+//   - Base Sepolia  USDC.name() = "USDC"
+// EIP-712 hashes the name into the domain separator, so signing with the
+// wrong value yields "FiatTokenV2: invalid signature" on broadcast.
 const NETWORKS = {
   mainnet: {
     chainId: 8453,
     network: 'eip155:8453',
     usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
     domain: {
-      name: 'USDC',
+      name: 'USD Coin',
       version: '2',
       chainId: 8453,
       verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
