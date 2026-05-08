@@ -111,7 +111,7 @@ function buildStatusGridServices(services: RawService[]): StatusGridService[] {
       seen.add(s.name);
       return true;
     })
-    .slice(0, 10)
+    .slice(0, 12)
     .map((s, idx) => {
       const seedBase = s.name.charCodeAt(0) + s.name.charCodeAt(s.name.length - 1);
       const status = s.status.toLowerCase();
