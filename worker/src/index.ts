@@ -53,6 +53,11 @@ import {
   readSchedule as readNFLSchedule,
 } from './sports-nfl-data';
 import {
+  captureSECTickersDaily,
+  readSECTickers,
+  readSECTicker,
+} from './sec-tickers';
+import {
   refreshNpmTrending,
   readNpmTrending,
   isValidCategory as isValidNpmCategory,
@@ -1836,6 +1841,8 @@ export default {
           sportsNflPlayers: '/api/sports/nfl/players?team=&position=&status=&q=&limit= (nflverse CC-BY-4.0)',
           sportsNflPlayerItem: '/api/sports/nfl/players/{gsis_id} (e.g. 00-0036971)',
           sportsNflSchedule: '/api/sports/nfl/schedule?season=&week=&team=&limit= (nflverse CC-BY-4.0)',
+          secCompanyTickers: '/api/sec/company-tickers?q=&ticker=&limit= (US SEC EDGAR public-domain ticker -> CIK -> company-name mapping; ~10k entries)',
+          secCompanyTickerItem: '/api/sec/company-tickers/{ticker_or_cik} (e.g. AAPL, 320193, 0000320193, CIK0000320193)',
           npmAITrending: '/api/packages/npm/ai-trending?category=llm-sdk|agent-framework|rag|inference|evals|tooling|mcp&limit= (curated, weekly downloads via api.npmjs.org)',
           pypiAITrending: '/api/packages/pypi/ai-trending?category=llm-sdk|agent-framework|rag|inference|evals|observability|tooling|mcp&limit= (curated, monthly downloads via pypistats.org / Linehaul / PyPI BigQuery public dataset)',
           researchInstitutionsAI: '/api/research/institutions/ai?country=&type=&limit= (OpenAlex CC0; top institutions by AI-tagged publications, last 365 days)',
@@ -2469,6 +2476,42 @@ export default {
               error: result.error,
               hint:
                 'Pass the gsis_id (NFL player identifier, e.g. 00-0036971). Use /api/sports/nfl/players?q=mahomes to search by name.',
+            },
+            404,
+          );
+        }
+        return jsonResponse(result, 200, 3600);
+      }
+    }
+
+    // === SEC COMPANY TICKERS (free) ===
+    // Public-domain ticker -> CIK -> company-name mapping from
+    // data.sec.gov/files/company_tickers.json. ~10k entries covering all
+    // SEC-registered publicly-traded companies. Daily refresh at 04:15 UTC.
+    // Powers grounding lookups for finance agents (ticker -> CIK before
+    // hitting EDGAR filings or XBRL fundamentals).
+
+    if (path === '/api/sec/company-tickers') {
+      const limit = parseInt(url.searchParams.get('limit') || '100', 10);
+      const result = await readSECTickers(env, {
+        q: url.searchParams.get('q') || undefined,
+        ticker: url.searchParams.get('ticker') || undefined,
+        limit: Number.isFinite(limit) ? limit : 100,
+      });
+      return jsonResponse(result, 200, 3600);
+    }
+
+    {
+      const tickerMatch = path.match(/^\/api\/sec\/company-tickers\/([^/]+)$/);
+      if (tickerMatch) {
+        const result = await readSECTicker(env, decodeURIComponent(tickerMatch[1]));
+        if (!result.ok) {
+          return jsonResponse(
+            {
+              ok: false,
+              error: result.error,
+              hint:
+                'Pass a ticker symbol (e.g. AAPL) or CIK in any form (320193, 0000320193, CIK0000320193). Use /api/sec/company-tickers?q=apple to search by company name.',
             },
             404,
           );
@@ -4470,6 +4513,10 @@ export default {
         const result = await captureNFLverseDaily(env);
         return jsonResponse({ message: 'nflverse players + schedule captured', ...result });
       }
+      if (task === 'sec-tickers') {
+        const result = await captureSECTickersDaily(env);
+        return jsonResponse({ message: 'SEC company tickers captured', ...result });
+      }
       if (task === 'sports-news') {
         const [nfl, mlb] = await Promise.all([pollNFLNews(env), pollMLBNews(env)]);
         return jsonResponse({ message: 'Sports news polled', nfl, mlb });
@@ -4729,6 +4776,14 @@ export default {
       // response. Powers /api/sports/nfl/players and
       // /api/sports/nfl/schedule.
       await run('captureNFLverseDaily', () => captureNFLverseDaily(env));
+    } else if (cron === '15 4 * * *') {
+      // Daily 04:15 UTC: refresh SEC company tickers (single ~1 MB JSON
+      // file from data.sec.gov). Public-domain US Government work; no
+      // API key required. Powers /api/sec/company-tickers as the grounding
+      // lookup for finance agents (ticker -> CIK before hitting EDGAR
+      // filings or XBRL fundamentals). Slot chosen between OpenAlex
+      // (04:00) and BLS (05:00).
+      await run('captureSECTickersDaily', () => captureSECTickersDaily(env));
     } else if (cron === '30 3 * * *') {
       // Daily 03:30 UTC: refresh weekly download counts for the
       // curated AI/ML npm package list. One bulk call to api.npmjs.org

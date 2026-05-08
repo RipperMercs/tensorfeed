@@ -83,6 +83,13 @@ crons = [
   # and write to KV. CC-BY-4.0 source, attribution shipped on every
   # response. Powers /api/sports/nfl/players and /api/sports/nfl/schedule.
   "0 6 * * *",
+  # Daily 04:15 UTC: refresh SEC company tickers from data.sec.gov
+  # (worker/src/sec-tickers.ts). Single ~1 MB JSON; public-domain US
+  # Government work; no API key required. Powers /api/sec/company-tickers
+  # as the grounding lookup for finance agents (ticker -> CIK before
+  # hitting EDGAR filings or XBRL fundamentals). Slot picked to land
+  # between OpenAlex (04:00) and BLS (05:00).
+  "15 4 * * *",
   # Daily 03:30 UTC: refresh weekly download counts for the curated AI/ML
   # npm package list via the documented public api.npmjs.org/downloads
   # endpoint. Powers /api/packages/npm/ai-trending.
