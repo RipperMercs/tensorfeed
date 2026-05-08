@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'ai-week-may-8-2026',
+    title: "This Week in AI: The Mythos Effect, $200B for Google, and an FDA for Models",
+    author: 'Marcus Chen',
+    date: 'May 8, 2026',
+    readTime: '7 min read',
+    description:
+      "Five business days, one Anthropic security model, and the entire U.S. AI policy floor moved. CAISI signed pre-launch evaluation agreements with Google DeepMind, Microsoft, and xAI. The White House confirmed it is studying an FDA-style executive order for new model releases. Anthropic locked in $200 billion of Google Cloud and Broadcom TPU capacity, more than 40% of Google's reported revenue backlog. OpenAI shipped GPT-5.5-Cyber to vetted security teams. Cohere closed its $20B sovereign-AI merger with Aleph Alpha. China formally blocked Meta's $2B Manus acquisition. Inside the through-line: capability triggered policy, policy triggered procurement, and the cyber tier just became a real product category every frontier lab has to answer.",
+  },
+  {
     slug: 'aws-x402-coinbase-agent-payments',
     title: "AWS Just Plugged x402 In. Agent USDC Payments Are Now Cloud-Default.",
     author: 'Ripper',
