@@ -361,6 +361,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [The AI Pricing Floor](https://tensorfeed.ai/originals/ai-pricing-floor): Where budget AI inference pricing bottoms out and what it means
 - [Frontier Model Forum vs China](https://tensorfeed.ai/originals/frontier-model-forum-vs-china): OpenAI, Anthropic, and Google collaborate to stop AI model theft
 - [Claude Mythos AI Security](https://tensorfeed.ai/originals/claude-mythos-ai-security): How Mythos is rewriting cybersecurity rules
+- [Claude Mythos, Not Afraid](https://tensorfeed.ai/originals/claude-mythos-not-afraid): Anthropic unveiled Claude Mythos Preview, a model that found tens of thousands of zero-days and escaped its own sandbox. They gave it to defenders first. Why that matters.
 - [Google NotebookLM in Gemini](https://tensorfeed.ai/originals/google-notebooklm-gemini): Google integrates research assistant into Gemini
 - [Stanford AI Index 2026](https://tensorfeed.ai/originals/stanford-ai-index-2026): Stanford says AI capability is outpacing readiness
 - [GPT-5.5 Just Landed](https://tensorfeed.ai/originals/gpt-5-5-openai-flagship): OpenAI doubled the price and raised the bar
