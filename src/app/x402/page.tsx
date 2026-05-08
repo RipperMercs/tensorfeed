@@ -16,14 +16,14 @@ import AdoptersPreview from './AdoptersPreview';
 export const metadata: Metadata = {
   title: 'x402: The Open HTTP Standard for AI Agent Payments',
   description:
-    'x402 is the open HTTP-native payment protocol revived from the long-dormant 402 status code. Servers gate APIs on USDC payment; agents pay on-chain in seconds. AWS, Coinbase, Stripe, TensorFeed, and TerminalFeed speak it. Live adopter directory, the four-property test for agent rails, integration recipe, and the latest x402 news in one place.',
+    'x402 is the open HTTP-native payment protocol revived from the long-dormant 402 status code. Servers gate APIs on USDC payment; agents pay on-chain in seconds. Amazon Bedrock AgentCore Payments, Coinbase x402 Bazaar, Stripe Link for agents, TensorFeed, and TerminalFeed all speak it. Live adopter directory, the four-property test for agent rails, integration recipe, and the latest x402 news in one place.',
   alternates: { canonical: 'https://tensorfeed.ai/x402' },
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/x402',
     title: 'x402: The Open HTTP Standard for AI Agent Payments',
     description:
-      'AWS, Coinbase, Stripe, TensorFeed all speak x402. Live adopters, integration recipe, and the latest news on the agent payment protocol.',
+      'Amazon Bedrock AgentCore Payments, Coinbase, Stripe, TensorFeed all speak x402. Live adopters, integration recipe, and the latest news on the agent payment protocol.',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'x402: The Open HTTP Standard for AI Agent Payments',
     description:
-      'AWS, Coinbase, Stripe, TensorFeed speak x402. Live adopters, integration recipe, latest news.',
+      'Amazon Bedrock AgentCore Payments, Coinbase, Stripe, TensorFeed speak x402. Live adopters, integration recipe, latest news.',
   },
   keywords: [
     'x402',
@@ -45,6 +45,8 @@ export const metadata: Metadata = {
     'USDC on Base',
     'Coinbase x402',
     'AWS x402',
+    'Amazon Bedrock AgentCore Payments',
+    'AgentCore Payments',
     'Stripe Link agents',
     'AFTA',
     'TensorFeed x402',
@@ -60,12 +62,12 @@ const FAQS = [
   {
     question: 'How does x402 work in one round trip?',
     answer:
-      'Client requests a paid endpoint. Server responds 402 Payment Required with a JSON body containing accepts (asset, network, amount, payTo wallet). Client sends the on-chain payment (typically USDC on Base, sub-cent fees, sub-second confirm). Client retries with X-Payment-Tx header set to the transaction hash. Server verifies on-chain receipt, returns 200 with the data. No accounts, no API keys for billing, no signup form, no invoice cycle.',
+      'Client requests a paid endpoint. Server responds 402 Payment Required with a JSON body containing x402Version, resource, and an accepts array (scheme, network, amount, asset, payTo, maxTimeoutSeconds). For the Coinbase reference exact scheme on EVM networks like Base, the client signs an EIP-3009 transferWithAuthorization (gasless from the agent’s side), wraps it as a PaymentPayload (signature plus authorization fields from, to, value, validAfter, validBefore, nonce), and base64-encodes the result. The client retries with header X-PAYMENT set to that base64 string. The server’s facilitator broadcasts the authorization, verifies on-chain settlement, and returns 200 with the data plus a PAYMENT-RESPONSE header containing the settlement receipt. No accounts, no API keys for billing, no signup form, no invoice cycle.',
   },
   {
     question: 'Who actually uses x402 today?',
     answer:
-      'As of May 2026, the live adopter set includes Coinbase (reference SDK and the spec itself), AWS (just announced agent payments through x402), Stripe (Link for agents using the stripe x402 method variant), TensorFeed (14 paid premium endpoints, AFTA-certified, end-to-end USDC loop verified on Base mainnet April 27 2026), TerminalFeed (federated with TensorFeed via the AFTA cross-Worker rail), the @coinbase/x402 SDK, the tensorfeed Python and JavaScript SDKs, the afta-gateway Cloudflare Worker template, and the tensorfeed-mcp MCP server. Live adopter directory at tensorfeed.ai/x402-adopters.',
+      'As of May 2026, the live adopter set includes Coinbase (reference SDK and the spec itself), Amazon Bedrock AgentCore Payments (Preview, launched May 7 2026, with native x402 execution and a Coinbase x402 Bazaar MCP server exposing 10,000+ pay-per-use endpoints), Stripe (Link for agents using the stripe x402 method variant), TensorFeed (14 paid premium endpoints, AFTA-certified, end-to-end USDC loop verified on Base mainnet April 27 2026), TerminalFeed (federated with TensorFeed via the AFTA cross-Worker rail), the @coinbase/x402 SDK, the tensorfeed Python and JavaScript SDKs, the afta-gateway Cloudflare Worker template, and the tensorfeed-mcp MCP server. Live adopter directory at tensorfeed.ai/x402-adopters.',
   },
   {
     question: 'Why x402 instead of Stripe or a traditional payment API?',
@@ -161,9 +163,10 @@ export default function X402HubPage() {
         <p className="text-text-secondary text-lg max-w-3xl leading-relaxed">
           x402 revives the long-dormant HTTP 402 &quot;Payment Required&quot; status code as a
           machine-payable handshake. Servers gate APIs on USDC payment; agents pay on-chain in
-          seconds. As of May 2026, the protocol is live infrastructure: AWS, Coinbase, Stripe,
-          TensorFeed, and TerminalFeed all speak it. This page is the canonical hub. What x402 is,
-          who uses it today, how to integrate, and the latest news, all in one place.
+          seconds. As of May 2026, the protocol is live infrastructure: Amazon Bedrock AgentCore
+          Payments (Preview), the Coinbase x402 Bazaar, Stripe Link for agents, TensorFeed, and
+          TerminalFeed all speak it. This page is the canonical hub. What x402 is, who uses it
+          today, how to integrate, and the latest news, all in one place.
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
@@ -261,13 +264,19 @@ export default function X402HubPage() {
         <h2 className="text-2xl font-semibold text-text-primary mb-4">
           How it works in one round trip
         </h2>
+        <p className="text-text-secondary leading-relaxed mb-5 max-w-3xl">
+          Canonical Coinbase x402 V2 handshake on the{' '}
+          <code className="font-mono text-sm bg-bg-tertiary px-1.5 py-0.5 rounded">exact</code>{' '}
+          scheme over an EVM network like Base. This is the wire format AgentCore Payments and the
+          @coinbase/x402 SDK speak.
+        </p>
         <ol className="space-y-3 max-w-3xl">
           <li className="flex gap-3 text-text-secondary leading-relaxed">
             <span className="font-mono text-accent-primary shrink-0">1.</span>
             <span>
-              Client requests a paid endpoint:{' '}
+              Client requests a paid resource:{' '}
               <code className="font-mono text-sm bg-bg-tertiary px-1.5 py-0.5 rounded">
-                GET /api/premium/something
+                GET /something
               </code>
             </span>
           </li>
@@ -278,15 +287,26 @@ export default function X402HubPage() {
               <code className="font-mono text-sm bg-bg-tertiary px-1.5 py-0.5 rounded">
                 402 Payment Required
               </code>{' '}
-              with a JSON body listing the accepts options (asset, network, amount, payTo wallet).
+              with body{' '}
+              <code className="font-mono text-sm bg-bg-tertiary px-1.5 py-0.5 rounded">
+                {'{ x402Version, resource, accepts: [...] }'}
+              </code>
+              . Each accepts entry lists scheme, network (e.g.{' '}
+              <code className="font-mono text-xs bg-bg-tertiary px-1 py-0.5 rounded">
+                eip155:8453
+              </code>
+              ), amount, asset, payTo, maxTimeoutSeconds.
             </span>
           </li>
           <li className="flex gap-3 text-text-secondary leading-relaxed">
             <span className="font-mono text-accent-primary shrink-0">3.</span>
             <span>
-              Client signs and sends the on-chain payment to{' '}
-              <code className="font-mono text-sm bg-bg-tertiary px-1.5 py-0.5 rounded">payTo</code>{' '}
-              (typically USDC on Base, sub-cent gas, ~2 second confirm).
+              Client signs an EIP-3009{' '}
+              <code className="font-mono text-sm bg-bg-tertiary px-1.5 py-0.5 rounded">
+                transferWithAuthorization
+              </code>{' '}
+              for the requested amount of USDC. Gasless on the agent side: the agent only signs;
+              the server broadcasts.
             </span>
           </li>
           <li className="flex gap-3 text-text-secondary leading-relaxed">
@@ -294,16 +314,24 @@ export default function X402HubPage() {
             <span>
               Client retries with header{' '}
               <code className="font-mono text-sm bg-bg-tertiary px-1.5 py-0.5 rounded">
-                X-Payment-Tx: 0x...
+                X-PAYMENT
               </code>{' '}
-              set to the transaction hash.
+              set to base64 of{' '}
+              <code className="font-mono text-sm bg-bg-tertiary px-1.5 py-0.5 rounded">
+                {'{ signature, authorization: { from, to, value, validAfter, validBefore, nonce } }'}
+              </code>
+              .
             </span>
           </li>
           <li className="flex gap-3 text-text-secondary leading-relaxed">
             <span className="font-mono text-accent-primary shrink-0">5.</span>
             <span>
-              Server verifies the on-chain receipt (recipient, amount, asset, network), returns 200
-              with the data plus an optional bearer token for future calls.
+              Server&apos;s facilitator broadcasts the authorization to the network, verifies
+              settlement, returns 200 with the data plus a{' '}
+              <code className="font-mono text-sm bg-bg-tertiary px-1.5 py-0.5 rounded">
+                PAYMENT-RESPONSE
+              </code>{' '}
+              header containing the settlement receipt.
             </span>
           </li>
         </ol>
@@ -366,60 +394,80 @@ export default function X402HubPage() {
       {/* Try it */}
       <section className="mb-12">
         <h2 className="text-2xl font-semibold text-text-primary mb-4">
-          Try it: pay an x402 endpoint in two curls
+          The x402 handshake on the wire
         </h2>
         <p className="text-text-secondary leading-relaxed mb-4 max-w-3xl">
-          Every TensorFeed premium endpoint speaks x402 as the auth-less fallback. Hit one without a
-          token and you get a 402 with payment instructions. The same flow works on any
-          x402-compatible publisher.
+          Conceptual example of the Coinbase x402 V2 exact scheme on Base. Field names match the
+          spec at github.com/coinbase/x402.
         </p>
         <div className="space-y-3">
           <div className="bg-bg-secondary border border-border rounded-lg overflow-hidden">
             <div className="px-4 py-2 border-b border-border bg-bg-tertiary text-xs font-mono uppercase tracking-wide text-text-muted">
-              1. Discover the price
+              1. Server responds 402 with the price
             </div>
             <pre className="p-4 text-sm font-mono text-text-secondary overflow-x-auto">
-{`$ curl -i https://tensorfeed.ai/api/premium/gpu-prices
-
-HTTP/1.1 402 Payment Required
+{`HTTP/1.1 402 Payment Required
 content-type: application/json
 
 {
-  "ok": false,
-  "error": "payment_required",
+  "x402Version": 2,
+  "resource":    { "url": "https://example.com/article/42" },
   "accepts": [{
-    "asset":   "USDC",
-    "network": "base",
-    "amount":  "0.001",
-    "payTo":   "0x..."
+    "scheme":            "exact",
+    "network":           "eip155:8453",
+    "amount":            "20000",
+    "asset":             "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo":             "0x...",
+    "maxTimeoutSeconds": 60
   }]
 }`}
             </pre>
           </div>
           <div className="bg-bg-secondary border border-border rounded-lg overflow-hidden">
             <div className="px-4 py-2 border-b border-border bg-bg-tertiary text-xs font-mono uppercase tracking-wide text-text-muted">
-              2. Pay and retry
+              2. Client signs EIP-3009 and retries with X-PAYMENT
             </div>
             <pre className="p-4 text-sm font-mono text-text-secondary overflow-x-auto">
-{`$ curl -H "X-Payment-Tx: 0xabc..." \\
-       https://tensorfeed.ai/api/premium/gpu-prices
+{`X-PAYMENT: <base64 of>
+{
+  "signature": "0x...",
+  "authorization": {
+    "from":        "0x<agent wallet>",
+    "to":          "0x<payTo>",
+    "value":       "20000",
+    "validAfter":  "1714780000",
+    "validBefore": "1714780600",
+    "nonce":       "0x<32 bytes>"
+  }
+}`}
+            </pre>
+          </div>
+          <div className="bg-bg-secondary border border-border rounded-lg overflow-hidden">
+            <div className="px-4 py-2 border-b border-border bg-bg-tertiary text-xs font-mono uppercase tracking-wide text-text-muted">
+              3. Facilitator settles, server returns 200
+            </div>
+            <pre className="p-4 text-sm font-mono text-text-secondary overflow-x-auto">
+{`HTTP/1.1 200 OK
+content-type:     application/json
+PAYMENT-RESPONSE: <base64 settlement receipt>
 
-HTTP/1.1 200 OK
-content-type: application/json
-
-{ "ok": true, "data": [...], "receipt": {...} }`}
+{ ...the resource the agent paid for... }`}
             </pre>
           </div>
         </div>
-        <div className="mt-4 text-sm text-text-muted">
-          Or skip the curl: the{' '}
+        <div className="mt-4 text-sm text-text-muted leading-relaxed">
+          To pay TensorFeed specifically, see{' '}
+          <Link href="/developers/agent-payments" className="text-accent-primary hover:underline">
+            /developers/agent-payments
+          </Link>{' '}
+          for the credits flow (recommended for repeat use) and SDK snippets for{' '}
           <a
             href="https://pypi.org/project/tensorfeed/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent-primary hover:underline"
           >
-            tensorfeed Python SDK
+            Python
           </a>{' '}
           and{' '}
           <a
@@ -428,9 +476,9 @@ content-type: application/json
             rel="noopener noreferrer"
             className="text-accent-primary hover:underline"
           >
-            tensorfeed JS SDK
-          </a>{' '}
-          handle the round trip in one call.
+            JavaScript
+          </a>
+          .
         </div>
       </section>
 
