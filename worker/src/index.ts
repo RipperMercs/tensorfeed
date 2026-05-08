@@ -1872,6 +1872,7 @@ export default {
           premiumAttentionSeries: '/api/premium/attention/series?provider=&from=&to=',
           paymentInfo: '/api/payment/info',
           paymentPacks: '/api/payment/packs',
+          aftaCertifyCheck: '/api/afta-certify/check?domain=',
           paymentBuyCredits: '/api/payment/buy-credits',
           paymentConfirm: '/api/payment/confirm',
           paymentBalance: '/api/payment/balance',
@@ -2965,6 +2966,30 @@ export default {
     if (path === '/api/payment/packs') {
       const { paymentPacksPayload } = await import('./payment-packs');
       return jsonResponse(paymentPacksPayload(), 200, 600);
+    }
+
+    // AFTA Certification self-check. Publishers hit this to see if their
+    // public surfaces (manifest, agent-fair-trade.json, receipt key) meet
+    // the AFTA bar before applying for paid certification. Read-only;
+    // returns a deterministic scorecard. See worker/src/afta-certify.ts.
+    if (path === '/api/afta-certify/check' && request.method === 'GET') {
+      const domain = url.searchParams.get('domain');
+      if (!domain) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_domain',
+            message: 'Provide ?domain=example.com to check a publisher.',
+            example: '/api/afta-certify/check?domain=tensorfeed.ai',
+          },
+          400,
+        );
+      }
+      const { certifyDomain } = await import('./afta-certify');
+      const result = await certifyDomain(domain);
+      // Don't cache certification checks — publishers may re-run after
+      // shipping fixes and need fresh state.
+      return jsonResponse(result, result.ok ? 200 : 400, 0);
     }
 
     if (path === '/api/payment/buy-credits' && request.method === 'POST') {
