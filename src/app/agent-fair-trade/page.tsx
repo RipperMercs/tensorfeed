@@ -103,6 +103,18 @@ export default function AgentFairTradePage() {
           >
             adopter directory
           </Link>
+          <Link
+            href="/x402"
+            className="px-3 py-1.5 rounded bg-bg-tertiary text-accent-primary hover:underline"
+          >
+            x402 hub
+          </Link>
+          <Link
+            href="/mcp"
+            className="px-3 py-1.5 rounded bg-bg-tertiary text-accent-primary hover:underline"
+          >
+            MCP hub
+          </Link>
           <a
             href="https://afta.dev"
             target="_blank"

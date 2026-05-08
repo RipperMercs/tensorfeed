@@ -234,6 +234,15 @@ export default function AwsX402CoinbaseAgentPaymentsPage() {
           will publicize the receipt within a week. Save the tx hash. That artifact is going on
           slides for the next decade.
         </p>
+
+        <p>
+          For the protocol overview, the live adopter directory, the integration recipe, and the
+          rest of our x402 coverage in one place, see the{' '}
+          <Link href="/x402" className="text-accent-primary hover:underline">
+            TensorFeed x402 hub
+          </Link>
+          .
+        </p>
       </div>
 
       {/* Related */}

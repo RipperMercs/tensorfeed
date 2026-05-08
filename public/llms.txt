@@ -296,6 +296,8 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [DeepSeek](https://tensorfeed.ai/providers/deepseek): Open source V4 models, MIT license, pricing, and overview
 
 ## Content Hubs
+- [x402 Hub](https://tensorfeed.ai/x402): Canonical hub for the x402 HTTP-native agent payment protocol. What x402 is in one paragraph, the live adopter directory pulled from /api/x402-adopters (AWS, Coinbase, Stripe, TensorFeed, TerminalFeed, the @coinbase/x402 SDK, the tensorfeed Python and JS SDKs, the afta-gateway template, tensorfeed-mcp), the four-property test (open, transparent, instantly final, sub-cent), the 5-step protocol walkthrough, two-curl integration recipe against TensorFeed's premium API, V1/V2 format split notes, FAQ with FAQPage JSON-LD, and the recent x402 editorial coverage on TensorFeed.
+- [MCP Hub](https://tensorfeed.ai/mcp): Canonical hub for the Model Context Protocol. What MCP is, live registry snapshot pulled from /api/mcp/registry/snapshot (~8000 servers, daily growth, top namespaces), the three primitives (tools, resources, prompts), the major adopters (Anthropic, OpenAI, Google, Microsoft, Cursor, Cline, Continue, Palo Alto Portkey), the 50-line server pattern with TypeScript skeleton, MCP+x402 composability, FAQ with FAQPage JSON-LD, recent MCP coverage on TensorFeed, and integration links for tensorfeed-mcp.
 - [News Feed](https://tensorfeed.ai/): Aggregated AI news from 15+ sources, categorized and timestamped
 - [Today in AI](https://tensorfeed.ai/today): Daily digest of top AI stories, incidents, and releases
 - [Models](https://tensorfeed.ai/models): AI model release tracker, pricing comparison tables

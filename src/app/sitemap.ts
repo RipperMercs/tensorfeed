@@ -186,6 +186,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/developers`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/developers/agent-payments`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${baseUrl}/developers/frameworks`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
+    { url: `${baseUrl}/x402`, lastModified: now, changeFrequency: 'daily', priority: 0.95 },
+    { url: `${baseUrl}/mcp`, lastModified: now, changeFrequency: 'daily', priority: 0.95 },
     { url: `${baseUrl}/agent-fair-trade`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/afta-network`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/agent-provisioning`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },

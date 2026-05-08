@@ -179,6 +179,14 @@ export default function X402AdoptersPage() {
         </div>
       )}
 
+      <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-lg p-4 text-sm text-text-secondary mb-4">
+        Looking for the protocol overview, integration recipe, and FAQ? See the{' '}
+        <Link href="/x402" className="text-accent-primary hover:underline font-medium">
+          x402 hub
+        </Link>
+        . This page is the filterable adopter directory; the hub is the canonical landing page for the standard.
+      </div>
+
       <div className="bg-bg-secondary border border-border rounded-lg p-4 text-sm text-text-secondary">
         <p>For agents: same data at{' '}
           <Link href="/api-reference/x402-adopters" className="text-accent-primary hover:underline font-mono">/api/x402-adopters</Link>. Filter with <code className="font-mono">?category=publisher|sdk|gateway|reference|spec</code> or <code className="font-mono">?status=live|announced|sdk|gateway</code>. Free, no auth, cached 10 min. Spec at <a href="https://x402.org" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">x402.org</a>.

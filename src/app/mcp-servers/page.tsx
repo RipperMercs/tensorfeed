@@ -110,6 +110,14 @@ export default function MCPServersPage() {
         </p>
       </div>
 
+      <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-lg p-4 text-sm text-text-secondary mb-6">
+        Looking for the protocol overview, the 50-line server pattern, and the live registry snapshot? See the{' '}
+        <Link href="/mcp" className="text-accent-primary hover:underline font-medium">
+          MCP hub
+        </Link>
+        . This page is the curated capability-organized catalog; the hub is the canonical landing page for the standard.
+      </div>
+
       {/* Filters */}
       <div className="flex gap-2 mb-3 flex-wrap items-center">
         <span className="text-xs text-text-muted uppercase tracking-wide">Capability:</span>

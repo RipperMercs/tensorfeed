@@ -126,10 +126,11 @@ export default function X402GlossaryPage() {
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Further reading</h2>
         <ul className="space-y-1 list-disc list-inside ml-4">
-          <li><a href="https://x402.org" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">x402.org</a> — official spec and whitepaper</li>
-          <li><a href="https://github.com/coinbase/x402" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">github.com/coinbase/x402</a> — reference implementations</li>
-          <li><Link href="/originals/why-usdc-over-stripe" className="text-accent-primary hover:underline">Why we picked USDC on Base over Stripe</Link> — TensorFeed&apos;s rationale for adopting x402</li>
-          <li><Link href="/glossary/agent-payments" className="text-accent-primary hover:underline">Agent payments</Link> — the broader pattern x402 enables</li>
+          <li><Link href="/x402" className="text-accent-primary hover:underline">/x402 hub</Link> (canonical landing page: live adopters, integration recipe, FAQ)</li>
+          <li><a href="https://x402.org" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">x402.org</a> (official spec and whitepaper)</li>
+          <li><a href="https://github.com/coinbase/x402" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">github.com/coinbase/x402</a> (reference implementations)</li>
+          <li><Link href="/originals/why-usdc-over-stripe" className="text-accent-primary hover:underline">Why we picked USDC on Base over Stripe</Link> (TensorFeed&apos;s rationale for adopting x402)</li>
+          <li><Link href="/glossary/agent-payments" className="text-accent-primary hover:underline">Agent payments</Link> (the broader pattern x402 enables)</li>
         </ul>
       </div>
     </article>
