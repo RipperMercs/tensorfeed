@@ -181,8 +181,18 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
   const afta = await tryFetchJson(aftaUrl);
   const aftaData = (afta.data ?? {}) as Record<string, unknown>;
   const guarantees = Array.isArray(aftaData.no_charge_guarantees) ? aftaData.no_charge_guarantees : null;
+  // Canonical AFTA field is `receipts` (see TensorFeed's reference manifest);
+  // `signed_receipts` is accepted as an alias for adopters that named it
+  // differently. Either nested object satisfies the check.
+  const receiptsField = (aftaData.receipts ?? aftaData.signed_receipts) as
+    | Record<string, unknown>
+    | undefined;
   const hasReceiptDecl =
-    typeof aftaData.signed_receipts === 'object' && aftaData.signed_receipts !== null;
+    receiptsField != null &&
+    typeof receiptsField === 'object' &&
+    (receiptsField.signed === true ||
+      typeof receiptsField.algorithm === 'string' ||
+      typeof receiptsField.public_key_url === 'string');
   const aftaPassed = afta.ok && guarantees != null && guarantees.length > 0 && hasReceiptDecl;
   checks.push({
     id: 'wellknown_afta',
@@ -193,7 +203,7 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
       : !guarantees
         ? 'AFTA manifest is present but missing no_charge_guarantees array.'
         : !hasReceiptDecl
-          ? 'AFTA manifest is missing signed_receipts declaration.'
+          ? 'AFTA manifest is missing the receipts declaration (object with signed/algorithm/public_key_url).'
           : `AFTA manifest declares ${guarantees.length} no-charge guarantee(s) and a signed-receipts policy.`,
     fixUrl: 'https://tensorfeed.ai/agent-fair-trade',
   });
