@@ -1873,6 +1873,7 @@ export default {
           paymentInfo: '/api/payment/info',
           paymentPacks: '/api/payment/packs',
           aftaCertifyCheck: '/api/afta-certify/check?domain=',
+          dataLicensing: '/api/data-licensing',
           paymentBuyCredits: '/api/payment/buy-credits',
           paymentConfirm: '/api/payment/confirm',
           paymentBalance: '/api/payment/balance',
@@ -2966,6 +2967,15 @@ export default {
     if (path === '/api/payment/packs') {
       const { paymentPacksPayload } = await import('./payment-packs');
       return jsonResponse(paymentPacksPayload(), 200, 600);
+    }
+
+    // Institutional data licensing catalog. Bulk-data products for
+    // buyers that don't fit the per-call agent model (hedge funds, AI
+    // research firms, training-data buyers, news aggregators).
+    // Read-only; fulfillment is manual via contact@tensorfeed.ai for v1.
+    if (path === '/api/data-licensing') {
+      const { dataLicensingPayload } = await import('./data-licensing');
+      return jsonResponse(dataLicensingPayload(), 200, 600);
     }
 
     // AFTA Certification self-check. Publishers hit this to see if their
