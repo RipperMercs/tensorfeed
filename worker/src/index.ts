@@ -1875,6 +1875,7 @@ export default {
           aftaCertifyCheck: '/api/afta-certify/check?domain=',
           dataLicensing: '/api/data-licensing',
           professionalServices: '/api/services',
+          mcpProTier: '/api/mcp/pro-tier',
           paymentBuyCredits: '/api/payment/buy-credits',
           paymentConfirm: '/api/payment/confirm',
           paymentBalance: '/api/payment/balance',
@@ -2985,6 +2986,14 @@ export default {
     if (path === '/api/services') {
       const { servicesPayload } = await import('./professional-services');
       return jsonResponse(servicesPayload(), 200, 600);
+    }
+
+    // MCP Pro Tier offering — monthly subscription for unlimited
+    // premium-endpoint calls via the TensorFeed MCP server. Catalog
+    // surface; manual fulfillment via contact@tensorfeed.ai for v1.
+    if (path === '/api/mcp/pro-tier') {
+      const { mcpProTierPayload } = await import('./mcp-pro-tier');
+      return jsonResponse(mcpProTierPayload(), 200, 600);
     }
 
     // AFTA Certification self-check. Publishers hit this to see if their
