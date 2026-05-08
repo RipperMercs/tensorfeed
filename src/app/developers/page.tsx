@@ -864,11 +864,8 @@ export default function DevelopersPage() {
       {/* Footer */}
       <section className="mb-10">
         <div className="bg-bg-secondary border border-border rounded-xl p-6 text-center">
-          <p className="text-text-primary font-semibold mb-2">
-            Built by Ripper
-          </p>
           <p className="text-text-muted text-sm mb-4">
-            The team behind TensorFeed.ai and TerminalFeed.io.
+            TensorFeed.ai and TerminalFeed.io share an AFTA federation and a single bearer token.
           </p>
           <div className="flex items-center justify-center gap-4">
             <a

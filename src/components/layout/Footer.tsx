@@ -9,13 +9,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           {/* Left: Publisher info */}
           <div>
-            <p className="text-sm text-text-secondary">
-              Built by{' '}
-              <span className="text-text-primary font-medium">
-                Ripper
-              </span>
-            </p>
-            <p className="text-xs text-text-muted mt-1">
+            <p className="text-xs text-text-muted">
               &copy; 2026 TensorFeed.ai. All rights reserved.
             </p>
           </div>
