@@ -1874,6 +1874,7 @@ export default {
           paymentPacks: '/api/payment/packs',
           aftaCertifyCheck: '/api/afta-certify/check?domain=',
           dataLicensing: '/api/data-licensing',
+          professionalServices: '/api/services',
           paymentBuyCredits: '/api/payment/buy-credits',
           paymentConfirm: '/api/payment/confirm',
           paymentBalance: '/api/payment/balance',
@@ -2976,6 +2977,14 @@ export default {
     if (path === '/api/data-licensing') {
       const { dataLicensingPayload } = await import('./data-licensing');
       return jsonResponse(dataLicensingPayload(), 200, 600);
+    }
+
+    // Professional services catalog. Paid engagements for x402, AFTA,
+    // and agent-payments implementation work. Read-only catalog;
+    // intake via contact@tensorfeed.ai for v1.
+    if (path === '/api/services') {
+      const { servicesPayload } = await import('./professional-services');
+      return jsonResponse(servicesPayload(), 200, 600);
     }
 
     // AFTA Certification self-check. Publishers hit this to see if their
