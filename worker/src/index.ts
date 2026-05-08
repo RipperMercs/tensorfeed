@@ -1871,6 +1871,7 @@ export default {
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
           premiumAttentionSeries: '/api/premium/attention/series?provider=&from=&to=',
           paymentInfo: '/api/payment/info',
+          paymentPacks: '/api/payment/packs',
           paymentBuyCredits: '/api/payment/buy-credits',
           paymentConfirm: '/api/payment/confirm',
           paymentBalance: '/api/payment/balance',
@@ -2955,6 +2956,15 @@ export default {
     if (path === '/api/payment/info') {
       const info = await getPaymentInfo(env);
       return jsonResponse(info, 200, 60);
+    }
+
+    // Curated marketing bundles. Credits are fully fungible across all
+    // premium endpoints; packs just suggest USD amounts and highlight
+    // endpoint groupings to reduce decision friction for agent operators.
+    // Backed by worker/src/payment-packs.ts.
+    if (path === '/api/payment/packs') {
+      const { paymentPacksPayload } = await import('./payment-packs');
+      return jsonResponse(paymentPacksPayload(), 200, 600);
     }
 
     if (path === '/api/payment/buy-credits' && request.method === 'POST') {

@@ -777,6 +777,11 @@ export async function getPaymentInfo(env: Env): Promise<unknown> {
         usd_value: (WELCOME_BONUS_CREDITS * 0.02).toFixed(2),
         description: `${WELCOME_BONUS_CREDITS} bonus credits ($${(WELCOME_BONUS_CREDITS * 0.02).toFixed(2)} of value) on the first successful USDC payment from a new sender wallet, on top of the base rate. Granted automatically; the response from /api/payment/confirm includes welcome_bonus_credits and is_first_payment fields when applied.`,
       },
+      packs: {
+        description:
+          'Curated marketing bundles for common agent use cases. Credits remain fully fungible across all premium endpoints; packs just suggest USD amounts and highlight endpoint groupings to reduce decision friction. Volume tiers apply automatically.',
+        directory: '/api/payment/packs',
+      },
     },
     flow: {
       with_quote: [
