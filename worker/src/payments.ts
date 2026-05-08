@@ -8,6 +8,7 @@ import {
   verifyPayment as verifyX402Payment,
   settlePayment as settleX402Payment,
   encodeSettlementHeader,
+  getX402Config,
   type PaymentRequirements as X402PaymentRequirements,
 } from './x402-facilitator';
 
@@ -1981,11 +1982,12 @@ export async function requirePayment(
   if (xPaymentHeader) {
     const url = new URL(request.url);
     const resourceUrl = `${url.origin}${url.pathname}`;
+    const x402Config = getX402Config(env);
     const requirements: X402PaymentRequirements = {
       scheme: 'exact',
-      network: 'eip155:8453',
+      network: x402Config.network,
       amount: String(cost * 20000),
-      asset: USDC_BASE_CONTRACT,
+      asset: x402Config.usdcAddress,
       payTo: env.PAYMENT_WALLET as `0x${string}`,
       maxTimeoutSeconds: 60,
       extra: { name: 'USDC', version: '2' },
@@ -2009,7 +2011,7 @@ export async function requirePayment(
       };
     }
 
-    const verify = await verifyX402Payment(payload, requirements);
+    const verify = await verifyX402Payment(payload, requirements, undefined, x402Config);
     if (!verify.isValid) {
       return {
         paid: false,
@@ -2155,12 +2157,14 @@ function paymentRequiredResponse(env: Env, creditsRequired: number, tier: number
   const amount = String(creditsRequired * 20000);
   const url = new URL(request.url);
   const resourceUrl = `${url.origin}${url.pathname}`;
+  const x402Config = getX402Config(env);
   return jsonResponse(
     {
       // Canonical Coinbase x402 V2 PaymentRequired body. AgentCore Payments
       // and the @coinbase/x402 SDK read these fields to prepare the
       // EIP-3009 transferWithAuthorization signed payload, base64-encode it,
-      // and resubmit with the X-PAYMENT header.
+      // and resubmit with the X-PAYMENT header. Network selected via
+      // env.X402_NETWORK (defaults to Base mainnet).
       x402Version: 2,
       error: 'payment_required',
       resource: {
@@ -2171,9 +2175,9 @@ function paymentRequiredResponse(env: Env, creditsRequired: number, tier: number
       accepts: [
         {
           scheme: 'exact',
-          network: 'eip155:8453',
+          network: x402Config.network,
           amount,
-          asset: USDC_BASE_CONTRACT,
+          asset: x402Config.usdcAddress,
           payTo: env.PAYMENT_WALLET,
           maxTimeoutSeconds: 60,
           extra: { name: 'USDC', version: '2' },

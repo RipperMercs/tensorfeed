@@ -11,7 +11,10 @@ import {
   verifyPayment,
   paymentRequiredV2,
   encodeSettlementHeader,
+  getX402Config,
   X402_CONSTANTS,
+  MAINNET_CONFIG,
+  SEPOLIA_CONFIG,
   type PaymentPayload,
   type PaymentRequirements,
 } from './x402-facilitator';
@@ -360,5 +363,159 @@ describe('round-trip: parse then verify', () => {
     const result = await verifyPayment(parsed!, VALID_REQUIREMENTS);
     expect(result.isValid).toBe(true);
     expect(result.payer?.toLowerCase()).toBe(TEST_ADDR.toLowerCase());
+  });
+});
+
+describe('getX402Config', () => {
+  it('returns mainnet config by default when env is undefined', () => {
+    const cfg = getX402Config(undefined);
+    expect(cfg.chainId).toBe(8453);
+    expect(cfg.network).toBe('eip155:8453');
+  });
+
+  it('returns mainnet config when X402_NETWORK is unset', () => {
+    const cfg = getX402Config({ X402_NETWORK: undefined });
+    expect(cfg.chainId).toBe(8453);
+  });
+
+  it('returns mainnet config when X402_NETWORK is "mainnet"', () => {
+    const cfg = getX402Config({ X402_NETWORK: 'mainnet' });
+    expect(cfg.chainId).toBe(8453);
+    expect(cfg.network).toBe('eip155:8453');
+  });
+
+  it('returns sepolia config when X402_NETWORK is "sepolia"', () => {
+    const cfg = getX402Config({ X402_NETWORK: 'sepolia' });
+    expect(cfg.chainId).toBe(84532);
+    expect(cfg.network).toBe('eip155:84532');
+    expect(cfg.usdcAddress.toLowerCase()).toBe(
+      '0x036CbD53842c5426634e7929541eC2318f3dCF7e'.toLowerCase(),
+    );
+  });
+
+  it('case-insensitive on the X402_NETWORK value', () => {
+    expect(getX402Config({ X402_NETWORK: 'SEPOLIA' }).chainId).toBe(84532);
+    expect(getX402Config({ X402_NETWORK: 'Sepolia' }).chainId).toBe(84532);
+  });
+});
+
+describe('Sepolia network signature flow', () => {
+  const SEPOLIA_REQUIREMENTS: PaymentRequirements = {
+    scheme: 'exact',
+    network: SEPOLIA_CONFIG.network,
+    amount: VALID_AMOUNT,
+    asset: SEPOLIA_CONFIG.usdcAddress,
+    payTo: PAY_TO,
+    maxTimeoutSeconds: 60,
+    extra: { name: 'USDC', version: '2' },
+  };
+
+  async function signSepolia(opts: {
+    to: Address;
+    value: string;
+    validAfter: string;
+    validBefore: string;
+    nonce: Hex;
+  }): Promise<Hex> {
+    return TEST_ACCOUNT.signTypedData({
+      domain: SEPOLIA_CONFIG.domain,
+      types: X402_CONSTANTS.TRANSFER_WITH_AUTH_TYPES,
+      primaryType: 'TransferWithAuthorization',
+      message: {
+        from: TEST_ADDR,
+        to: opts.to,
+        value: BigInt(opts.value),
+        validAfter: BigInt(opts.validAfter),
+        validBefore: BigInt(opts.validBefore),
+        nonce: opts.nonce,
+      },
+    });
+  }
+
+  async function buildSepoliaPayload(): Promise<PaymentPayload> {
+    const now = nowSecs();
+    const auth = {
+      from: TEST_ADDR,
+      to: PAY_TO,
+      value: VALID_AMOUNT,
+      validAfter: String(now - 60),
+      validBefore: String(now + 600),
+      nonce: NONCE_B,
+    };
+    const signature = await signSepolia(auth);
+    return {
+      x402Version: 2,
+      accepted: SEPOLIA_REQUIREMENTS,
+      payload: { signature, authorization: auth },
+      extensions: {},
+    };
+  }
+
+  it('verifies a Sepolia-signed authorization under SEPOLIA_CONFIG', async () => {
+    const payload = await buildSepoliaPayload();
+    const result = await verifyPayment(
+      payload,
+      SEPOLIA_REQUIREMENTS,
+      undefined,
+      SEPOLIA_CONFIG,
+    );
+    expect(result.isValid).toBe(true);
+    expect(result.payer?.toLowerCase()).toBe(TEST_ADDR.toLowerCase());
+  });
+
+  it('rejects a Sepolia-signed authorization replayed under mainnet domain (signature recovery to wrong addr)', async () => {
+    // Security property: a Sepolia-signed authorization cannot be replayed
+    // against mainnet because EIP-712 domain separation makes the recovered
+    // signer differ from auth.from. The verifier (using MAINNET_CONFIG)
+    // recovers a non-matching address and rejects.
+    const payload = await buildSepoliaPayload();
+    const result = await verifyPayment(payload, VALID_REQUIREMENTS);
+    expect(result.isValid).toBe(false);
+    expect(result.invalidReason).toBe('invalid_exact_evm_payload_signature');
+  });
+
+  it('rejects a Sepolia-signed authorization under mainnet requirements (network mismatch when requirements are sepolia)', async () => {
+    // The verifier compares requirements.network against config.network.
+    // When config is mainnet but requirements are sepolia (mismatched
+    // requirements built incorrectly), the network check fires first.
+    const payload = await buildSepoliaPayload();
+    const result = await verifyPayment(payload, SEPOLIA_REQUIREMENTS);
+    expect(result.isValid).toBe(false);
+    expect(result.invalidReason).toBe('invalid_network');
+  });
+
+  it('rejects a mainnet-signed authorization under SEPOLIA_CONFIG (signature recovers to wrong addr)', async () => {
+    // Sign with mainnet domain, try to verify under Sepolia config + sepolia
+    // requirements. Signature recovery will succeed but recover to a
+    // different address than auth.from, because the domain hash differs.
+    const payload = await buildValidPayload({ nonce: NONCE_A });
+    const tampered: PaymentPayload = {
+      ...payload,
+      accepted: SEPOLIA_REQUIREMENTS,
+    };
+    const result = await verifyPayment(
+      tampered,
+      SEPOLIA_REQUIREMENTS,
+      undefined,
+      SEPOLIA_CONFIG,
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.invalidReason).toBe('invalid_exact_evm_payload_signature');
+  });
+});
+
+describe('paymentRequiredV2 with Sepolia config', () => {
+  it('emits a Sepolia-shaped PaymentRequired body', () => {
+    const body = paymentRequiredV2({
+      resourceUrl: 'https://test.tensorfeed.ai/api/premium/x',
+      description: 'Sepolia test',
+      amountAtomic: '20000',
+      payTo: PAY_TO,
+      config: SEPOLIA_CONFIG,
+    });
+    expect(body.accepts[0].network).toBe('eip155:84532');
+    expect(body.accepts[0].asset.toLowerCase()).toBe(
+      SEPOLIA_CONFIG.usdcAddress.toLowerCase(),
+    );
   });
 });

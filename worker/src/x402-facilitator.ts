@@ -43,20 +43,63 @@ import {
   type WalletClient,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { base } from 'viem/chains';
+import { base, baseSepolia } from 'viem/chains';
 import type { Env } from './types';
 
-const USDC_BASE_MAINNET: Address = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-const BASE_CHAIN_ID = 8453;
-const NETWORK_CAIP2 = 'eip155:8453';
+// ---------- network configuration ----------
+//
+// The facilitator supports Base mainnet (production) and Base Sepolia
+// (smoke test). Selected by env.X402_NETWORK ("mainnet" default, or
+// "sepolia"). All network-specific constants flow through X402Config so
+// that switching networks only requires the env var.
+
 const USDC_DECIMALS = 6;
 
-const USDC_DOMAIN = {
-  name: 'USDC',
-  version: '2',
-  chainId: BASE_CHAIN_ID,
-  verifyingContract: USDC_BASE_MAINNET,
-} as const;
+export interface X402Config {
+  chainId: number;
+  network: string; // CAIP-2 e.g. "eip155:8453"
+  usdcAddress: Address;
+  chain: typeof base | typeof baseSepolia;
+  defaultRpc: string;
+  domain: { name: string; version: string; chainId: number; verifyingContract: Address };
+}
+
+const MAINNET_CONFIG: X402Config = {
+  chainId: 8453,
+  network: 'eip155:8453',
+  usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  chain: base,
+  defaultRpc: 'https://mainnet.base.org',
+  domain: {
+    name: 'USDC',
+    version: '2',
+    chainId: 8453,
+    verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  },
+};
+
+const SEPOLIA_CONFIG: X402Config = {
+  chainId: 84532,
+  network: 'eip155:84532',
+  usdcAddress: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+  chain: baseSepolia,
+  defaultRpc: 'https://sepolia.base.org',
+  domain: {
+    name: 'USDC',
+    version: '2',
+    chainId: 84532,
+    verifyingContract: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+  },
+};
+
+/**
+ * Resolves the active facilitator config from env. Defaults to Base
+ * mainnet. Returns the Sepolia config when env.X402_NETWORK === "sepolia".
+ */
+export function getX402Config(env: Pick<Env, 'X402_NETWORK'> | undefined): X402Config {
+  if (env?.X402_NETWORK?.toLowerCase() === 'sepolia') return SEPOLIA_CONFIG;
+  return MAINNET_CONFIG;
+}
 
 const TRANSFER_WITH_AUTH_TYPES = {
   TransferWithAuthorization: [
@@ -221,12 +264,14 @@ export function parseXPaymentHeader(headerValue: string): PaymentPayload | null 
  * Verifies the signed authorization against the publisher's PaymentRequirements.
  * Performs spec-defined checks (signature, parameter matching, time window)
  * but NOT balance verification or transaction simulation; settlement attempt
- * surfaces those as errorReason.
+ * surfaces those as errorReason. Defaults to Base mainnet config; pass an
+ * X402Config explicitly for Sepolia or other networks.
  */
 export async function verifyPayment(
   payment: PaymentPayload,
   requirements: PaymentRequirements,
   nowUnixSecs: number = Math.floor(Date.now() / 1000),
+  config: X402Config = MAINNET_CONFIG,
 ): Promise<VerifyResult> {
   if (payment.x402Version !== 2) {
     return { isValid: false, invalidReason: 'invalid_x402_version' };
@@ -234,12 +279,12 @@ export async function verifyPayment(
   if (requirements.scheme !== 'exact') {
     return { isValid: false, invalidReason: 'unsupported_scheme' };
   }
-  if (requirements.network !== NETWORK_CAIP2) {
+  if (requirements.network !== config.network) {
     return { isValid: false, invalidReason: 'invalid_network' };
   }
   if (
     !requirements.asset ||
-    requirements.asset.toLowerCase() !== USDC_BASE_MAINNET.toLowerCase()
+    requirements.asset.toLowerCase() !== config.usdcAddress.toLowerCase()
   ) {
     return { isValid: false, invalidReason: 'invalid_payment_requirements' };
   }
@@ -290,11 +335,14 @@ export async function verifyPayment(
     };
   }
 
-  // Signature: recover the typed-data signer and require it to match auth.from.
+  // Signature: recover the typed-data signer against the active network's
+  // USDC EIP-712 domain. Mainnet and Sepolia have different chainIds and
+  // verifyingContract addresses, so a Sepolia-signed authorization will
+  // not recover correctly under the mainnet domain (intentionally).
   let recovered: Address;
   try {
     recovered = await recoverTypedDataAddress({
-      domain: USDC_DOMAIN,
+      domain: config.domain,
       types: TRANSFER_WITH_AUTH_TYPES,
       primaryType: 'TransferWithAuthorization',
       message: {
@@ -319,18 +367,18 @@ export async function verifyPayment(
 
 // ---------- on-chain helpers ----------
 
-function rpcUrl(env: Env): string {
-  return env.BASE_RPC_URL || 'https://mainnet.base.org';
+function rpcUrl(env: Env, config: X402Config): string {
+  return env.BASE_RPC_URL || config.defaultRpc;
 }
 
-function getPublicClient(env: Env): PublicClient {
+function getPublicClient(env: Env, config: X402Config): PublicClient {
   return createPublicClient({
-    chain: base,
-    transport: http(rpcUrl(env)),
+    chain: config.chain,
+    transport: http(rpcUrl(env, config)),
   }) as PublicClient;
 }
 
-function getWalletClient(env: Env): WalletClient | null {
+function getWalletClient(env: Env, config: X402Config): WalletClient | null {
   const key = env.X402_BROADCAST_KEY;
   if (!key) return null;
   const normalized = (key.startsWith('0x') ? key : `0x${key}`) as Hex;
@@ -338,8 +386,8 @@ function getWalletClient(env: Env): WalletClient | null {
   const account = privateKeyToAccount(normalized);
   return createWalletClient({
     account,
-    chain: base,
-    transport: http(rpcUrl(env)),
+    chain: config.chain,
+    transport: http(rpcUrl(env, config)),
   });
 }
 
@@ -348,11 +396,16 @@ function getWalletClient(env: Env): WalletClient | null {
  * pair has not been consumed yet on-chain. EIP-3009 prevents replay at the
  * contract layer; this read is a pre-broadcast cheap rejection.
  */
-async function isNonceUnused(env: Env, from: Address, nonce: Hex): Promise<boolean | null> {
+async function isNonceUnused(
+  env: Env,
+  config: X402Config,
+  from: Address,
+  nonce: Hex,
+): Promise<boolean | null> {
   try {
-    const client = getPublicClient(env);
+    const client = getPublicClient(env, config);
     const used = (await client.readContract({
-      address: USDC_BASE_MAINNET,
+      address: config.usdcAddress,
       abi: USDC_ABI,
       functionName: 'authorizationState',
       args: [from, nonce],
@@ -412,13 +465,15 @@ async function recordAuthSettled(
 /**
  * Submits the verified authorization on-chain via USDC.transferWithAuthorization.
  * Returns the broadcast tx hash on success. Idempotent at the KV layer to
- * avoid double-broadcast (wastes gas; second tx reverts on-chain).
+ * avoid double-broadcast (wastes gas; second tx reverts on-chain). The
+ * network (Base mainnet vs Sepolia) is selected via env.X402_NETWORK.
  */
 export async function settlePayment(
   payment: PaymentPayload,
   env: Env,
   waitForReceipt: boolean = true,
 ): Promise<SettleResult> {
+  const config = getX402Config(env);
   const auth = payment.payload.authorization;
 
   // Idempotency: if another request already settled this exact (from, nonce),
@@ -430,7 +485,7 @@ export async function settlePayment(
         success: true,
         payer: auth.from,
         transaction: existing.tx_hash,
-        network: NETWORK_CAIP2,
+        network: config.network,
         amount: auth.value,
       };
     }
@@ -443,7 +498,7 @@ export async function settlePayment(
     }
   }
 
-  const wallet = getWalletClient(env);
+  const wallet = getWalletClient(env, config);
   if (!wallet) {
     return {
       success: false,
@@ -453,7 +508,7 @@ export async function settlePayment(
   }
 
   // On-chain replay-state pre-check (cheap RPC read, saves gas on bad tx).
-  const unused = await isNonceUnused(env, auth.from, auth.nonce);
+  const unused = await isNonceUnused(env, config, auth.from, auth.nonce);
   if (unused === false) {
     return {
       success: false,
@@ -496,10 +551,10 @@ export async function settlePayment(
       ],
     });
     txHash = await wallet.sendTransaction({
-      to: USDC_BASE_MAINNET,
+      to: config.usdcAddress,
       data,
       account: wallet.account!,
-      chain: base,
+      chain: config.chain,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'broadcast failed';
@@ -512,7 +567,7 @@ export async function settlePayment(
 
   if (waitForReceipt) {
     try {
-      const client = getPublicClient(env);
+      const client = getPublicClient(env, config);
       const receipt = await client.waitForTransactionReceipt({ hash: txHash, timeout: 30_000 });
       if (receipt.status !== 'success') {
         return {
@@ -530,7 +585,7 @@ export async function settlePayment(
         success: true,
         payer: auth.from,
         transaction: txHash,
-        network: NETWORK_CAIP2,
+        network: config.network,
         amount: auth.value,
         message: 'broadcast succeeded; receipt pending',
       };
@@ -542,7 +597,7 @@ export async function settlePayment(
     success: true,
     payer: auth.from,
     transaction: txHash,
-    network: NETWORK_CAIP2,
+    network: config.network,
     amount: auth.value,
   };
 }
@@ -551,7 +606,8 @@ export async function settlePayment(
 
 /**
  * Builds the canonical PaymentRequired (402) body for the exact scheme on
- * Base mainnet USDC. Drop-in for the publisher's 402 response when no
+ * Base USDC. Defaults to mainnet config; pass an X402Config for Sepolia or
+ * other networks. Drop-in for the publisher's 402 response when no
  * authentication / payment is presented.
  */
 export function paymentRequiredV2(opts: {
@@ -561,6 +617,7 @@ export function paymentRequiredV2(opts: {
   payTo: Address;
   maxTimeoutSeconds?: number;
   error?: string;
+  config?: X402Config;
 }): {
   x402Version: 2;
   error: string;
@@ -568,6 +625,7 @@ export function paymentRequiredV2(opts: {
   accepts: PaymentRequirements[];
   extensions: Record<string, unknown>;
 } {
+  const cfg = opts.config ?? MAINNET_CONFIG;
   return {
     x402Version: 2,
     error: opts.error ?? 'X-PAYMENT header required',
@@ -579,9 +637,9 @@ export function paymentRequiredV2(opts: {
     accepts: [
       {
         scheme: 'exact',
-        network: NETWORK_CAIP2,
+        network: cfg.network,
         amount: opts.amountAtomic,
-        asset: USDC_BASE_MAINNET,
+        asset: cfg.usdcAddress,
         payTo: opts.payTo,
         maxTimeoutSeconds: opts.maxTimeoutSeconds ?? 60,
         extra: { name: 'USDC', version: '2' },
@@ -607,11 +665,18 @@ export function encodeSettlementHeader(result: SettleResult): string {
   return btoa(body);
 }
 
+// Backward-compatible export. Mainnet constants are exposed at the top level
+// so existing tests and callers continue to work; pass MAINNET_CONFIG or
+// SEPOLIA_CONFIG explicitly when network-aware behavior is needed.
 export const X402_CONSTANTS = {
-  USDC_BASE_MAINNET,
-  BASE_CHAIN_ID,
-  NETWORK_CAIP2,
+  USDC_BASE_MAINNET: MAINNET_CONFIG.usdcAddress,
+  BASE_CHAIN_ID: MAINNET_CONFIG.chainId,
+  NETWORK_CAIP2: MAINNET_CONFIG.network,
   USDC_DECIMALS,
-  USDC_DOMAIN,
+  USDC_DOMAIN: MAINNET_CONFIG.domain,
   TRANSFER_WITH_AUTH_TYPES,
+  MAINNET_CONFIG,
+  SEPOLIA_CONFIG,
 };
+
+export { MAINNET_CONFIG, SEPOLIA_CONFIG };

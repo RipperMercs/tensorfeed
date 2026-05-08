@@ -82,6 +82,14 @@ export interface Env {
   // the X-PAYMENT path returns unexpected_settle_error and the legacy
   // X-Payment-Tx + credits flows continue to work unchanged.
   X402_BROADCAST_KEY?: string;
+  // Network selector for the x402 facilitator. Defaults to "mainnet" (Base
+  // mainnet, chainId 8453). Set to "sepolia" for the smoke test against
+  // Base Sepolia (chainId 84532) before flipping back to mainnet for prod.
+  // Affects: USDC contract address, EIP-712 domain chainId used for
+  // signature recovery, advertised PaymentRequirements network, on-chain
+  // broadcast destination. Set via:
+  //   wrangler secret put X402_NETWORK   (or unset for mainnet default)
+  X402_NETWORK?: string;
 }
 
 export interface Article {
