@@ -72,6 +72,16 @@ export interface Env {
   // unset, premium responses ship without a receipt (graceful, with
   // /api/meta exposing the bootstrap status). See receipts.ts.
   RECEIPT_PRIVATE_KEY_JWK?: string;
+  // Standards-compliant Coinbase x402 V2 facilitator (worker/src/x402-facilitator.ts).
+  // Hot wallet private key used to broadcast EIP-3009 transferWithAuthorization
+  // calls submitted by clients via the X-PAYMENT header. Distinct from
+  // PAYMENT_WALLET (which receives the USDC). The broadcaster only pays Base
+  // ETH gas; it does not custody USDC. Set via:
+  //   wrangler secret put X402_BROADCAST_KEY
+  // Hex-encoded 32-byte private key (with or without 0x prefix). If unset,
+  // the X-PAYMENT path returns unexpected_settle_error and the legacy
+  // X-Payment-Tx + credits flows continue to work unchanged.
+  X402_BROADCAST_KEY?: string;
 }
 
 export interface Article {

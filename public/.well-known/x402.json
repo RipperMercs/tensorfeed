@@ -65,9 +65,17 @@
         }
       },
       "x402": {
-        "description": "One-shot fallback. Call any /api/premium/* endpoint without auth; the 402 response includes payment instructions. Retry with X-Payment-Tx header to receive data and a token.",
+        "description": "Canonical Coinbase x402 V2 exact scheme on Base mainnet. Call any /api/premium/* endpoint without auth to receive a 402 with PaymentRequired body. Sign an EIP-3009 transferWithAuthorization for the exact amount, base64-encode the PaymentPayload, retry with the X-PAYMENT header. The TensorFeed facilitator broadcasts on-chain and returns 200 with PAYMENT-RESPONSE settlement receipt and a credits token. Compatible with Amazon Bedrock AgentCore Payments and the @coinbase/x402 SDK out of the box.",
+        "header": "X-PAYMENT",
+        "scheme": "exact",
+        "spec": "https://github.com/coinbase/x402/blob/main/specs/x402-specification-v2.md",
+        "verification": "Facilitator verifies EIP-712 signature against USDC v2 domain on Base mainnet (chainId 8453, contract 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913), checks parameter alignment with PaymentRequirements, time window, and EIP-3009 nonce state, then broadcasts via USDC.transferWithAuthorization. Replay protection: USDC enforces (from, nonce) uniqueness on-chain; facilitator also stakes a KV claim before broadcast."
+      },
+      "x402_legacy": {
+        "description": "TensorFeed-specific legacy fallback. The agent pre-broadcasts USDC on Base, then submits the tx hash plus a quote nonce. Kept for back-compat with TensorFeed SDK clients shipped before the standards-compliant facilitator. Vanilla Coinbase x402 clients including AgentCore Payments should use the X-PAYMENT path above.",
         "header": "X-Payment-Tx",
-        "verification": "Worker reads the USDC Transfer event from eth_getTransactionReceipt on the Base mainnet RPC. Replay protection: every used tx hash is permanently recorded."
+        "auxiliary_header": "X-Payment-Quote",
+        "verification": "Worker reads the USDC Transfer event from eth_getTransactionReceipt on the Base mainnet RPC. Replay protection: every used tx hash is permanently recorded. AFTA Tx-Sniper guard binds the on-chain sender to the X-Payment-Quote nonce."
       }
     },
     "terms": {
@@ -92,7 +100,8 @@
           "amount": "20000",
           "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
           "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
-          "maxTimeoutSeconds": 60
+          "maxTimeoutSeconds": 60,
+          "extra": { "name": "USDC", "version": "2" }
         }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
@@ -141,7 +150,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -158,7 +167,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -175,7 +184,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -192,7 +201,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -209,7 +218,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -226,7 +235,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -243,7 +252,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-05-06T00:00:00Z",
       "metadata": {
@@ -260,7 +269,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-05-06T00:00:00Z",
       "metadata": {
@@ -277,7 +286,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-05-06T00:00:00Z",
       "metadata": {
@@ -294,7 +303,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-05-06T00:00:00Z",
       "metadata": {
@@ -311,7 +320,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-05-06T00:00:00Z",
       "metadata": {
@@ -328,7 +337,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-05-06T00:00:00Z",
       "metadata": {
@@ -345,7 +354,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-29T00:00:00Z",
       "metadata": {
@@ -362,7 +371,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-29T00:00:00Z",
       "metadata": {
@@ -379,7 +388,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -396,7 +405,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -413,7 +422,7 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -430,7 +439,7 @@
       "method": "POST",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60 }
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USDC", "version": "2" } }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {

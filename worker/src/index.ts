@@ -229,18 +229,20 @@ import { sanitizeArticleForAgents } from './sanitize';
  * credential to ride.
  *
  * `Access-Control-Allow-Headers` admits the headers an agent may send
- * (Authorization for credits, X-Payment-Tx for x402 fallback, the
- * chaos-engineering and internal-auth headers). `Expose-Headers`
- * surfaces the response headers that an agent in a browser context
- * needs to read (rate-limit info, premium token issuance metadata).
+ * (Authorization for credits, X-PAYMENT for the canonical Coinbase x402 V2
+ * exact scheme, X-Payment-Tx + X-Payment-Quote for the legacy TF fallback,
+ * the chaos-engineering and internal-auth headers). `Expose-Headers` surfaces
+ * the response headers that an agent in a browser context needs to read
+ * (rate-limit info, premium token issuance metadata, the canonical
+ * PAYMENT-RESPONSE settlement receipt).
  */
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers':
-    'Content-Type, Authorization, X-Payment-Tx, X-TensorFeed-Simulate-Error, X-TensorFeed-Simulate-Latency, X-Internal-Auth',
+    'Content-Type, Authorization, X-PAYMENT, X-Payment-Tx, X-Payment-Quote, X-TensorFeed-Simulate-Error, X-TensorFeed-Simulate-Latency, X-Internal-Auth',
   'Access-Control-Expose-Headers':
-    'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Payment-Token, X-Payment-Token-Balance, X-Payment-Token-Note, X-TensorFeed-Simulated, X-TensorFeed-Simulated-Latency-Ms',
+    'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Payment-Token, X-Payment-Token-Balance, X-Payment-Token-Note, PAYMENT-RESPONSE, X-TensorFeed-Simulated, X-TensorFeed-Simulated-Latency-Ms',
   'Access-Control-Max-Age': '86400',
 };
 
@@ -473,6 +475,7 @@ async function premiumResponse(
     headers['X-Payment-Token'] = payment.token;
     headers['X-Payment-Token-Note'] = 'Save this token; use Authorization: Bearer <token> for future calls.';
   }
+  if (payment.paymentResponseHeader) headers['PAYMENT-RESPONSE'] = payment.paymentResponseHeader;
 
   // Build the body. If staleness triggered no-charge, surface a stale
   // marker so the agent can decide to retry rather than trust the data.
@@ -607,6 +610,7 @@ async function premiumValidationFailure(
     headers['X-Payment-Token'] = payment.token;
     headers['X-Payment-Token-Note'] = 'Save this token; use Authorization: Bearer <token> for future calls.';
   }
+  if (payment.paymentResponseHeader) headers['PAYMENT-RESPONSE'] = payment.paymentResponseHeader;
 
   const billing: Record<string, unknown> = {
     credits_charged: 0,
@@ -3287,6 +3291,7 @@ export default {
         headers['X-Payment-Token'] = payment.token;
         headers['X-Payment-Token-Note'] = 'Save this token; use Authorization: Bearer <token> for future calls.';
       }
+      if (payment.paymentResponseHeader) headers['PAYMENT-RESPONSE'] = payment.paymentResponseHeader;
 
       return new Response(
         JSON.stringify({

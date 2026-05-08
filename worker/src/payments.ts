@@ -3,6 +3,13 @@ import { checkCircuitBreaker } from './circuit-breaker';
 import type { NoChargeReason } from './receipts';
 import { checkSpendCap, incrementDailySpent, validateSpendCap } from './spend-cap';
 import { recordAndAssess as recordAnomalySpend, listAnomalyEvents, AnomalyEvent } from './anomaly';
+import {
+  parseXPaymentHeader,
+  verifyPayment as verifyX402Payment,
+  settlePayment as settleX402Payment,
+  encodeSettlementHeader,
+  type PaymentRequirements as X402PaymentRequirements,
+} from './x402-facilitator';
 
 /**
  * Payment middleware for premium endpoints.
@@ -1547,6 +1554,9 @@ export interface PaymentResult {
   // X-Payment-Token-Balance header. commitPayment returns the real value.
   tokenRemaining?: number;
   newToken?: boolean;        // true if minted via x402 (caller should advertise)
+  // Set when the X-PAYMENT (canonical Coinbase x402 V2) path settles. Caller
+  // should attach as PAYMENT-RESPONSE on the eventual 200 response.
+  paymentResponseHeader?: string;
 }
 
 export async function requirePayment(
@@ -1961,6 +1971,180 @@ export async function requirePayment(
     };
   }
 
+  // Path 3: standard Coinbase x402 V2 (X-PAYMENT header, EIP-3009 signed
+  // transferWithAuthorization). This is the canonical wire format spoken
+  // by AgentCore Payments and the @coinbase/x402 SDK out of the box.
+  // Coexists additively with Paths 1 and 2; only triggers when X-PAYMENT
+  // is present and follows the spec's "exact" scheme: auth.value must
+  // equal requirements.amount.
+  const xPaymentHeader = request.headers.get('X-PAYMENT');
+  if (xPaymentHeader) {
+    const url = new URL(request.url);
+    const resourceUrl = `${url.origin}${url.pathname}`;
+    const requirements: X402PaymentRequirements = {
+      scheme: 'exact',
+      network: 'eip155:8453',
+      amount: String(cost * 20000),
+      asset: USDC_BASE_CONTRACT,
+      payTo: env.PAYMENT_WALLET as `0x${string}`,
+      maxTimeoutSeconds: 60,
+      extra: { name: 'USDC', version: '2' },
+    };
+
+    const payload = parseXPaymentHeader(xPaymentHeader);
+    if (!payload) {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            x402Version: 2,
+            success: false,
+            errorReason: 'invalid_payload',
+            message: 'X-PAYMENT header is not valid base64 JSON or is missing required fields.',
+            accepts: [requirements],
+            resource: { url: resourceUrl, mimeType: 'application/json' },
+          },
+          400,
+        ),
+      };
+    }
+
+    const verify = await verifyX402Payment(payload, requirements);
+    if (!verify.isValid) {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            x402Version: 2,
+            success: false,
+            errorReason: verify.invalidReason,
+            accepts: [requirements],
+            resource: { url: resourceUrl, mimeType: 'application/json' },
+          },
+          402,
+        ),
+      };
+    }
+
+    const payerAddress = verify.payer!;
+
+    // OFAC screen on the on-chain authorizer (auth.from). Same gate as
+    // /api/payment/confirm and the X-Payment-Tx fallback. Misconfig fails
+    // closed; sanctioned hits refuse and persist.
+    const screen = await screenWalletOFAC(payerAddress, env);
+    if (screen.error === 'screening_not_configured') {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            x402Version: 2,
+            success: false,
+            errorReason: 'unexpected_verify_error',
+            message: 'Sanctions screening is currently unavailable. Please retry shortly.',
+          },
+          503,
+        ),
+      };
+    }
+    if (screen.sanctioned) {
+      await persistOFACBlock(
+        env,
+        payerAddress,
+        `x402-auth:${payload.payload.authorization.nonce}`,
+        screen.identifications,
+      );
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            x402Version: 2,
+            success: false,
+            errorReason: 'unexpected_verify_error',
+            message:
+              'This wallet address cannot be credited due to applicable sanctions law. The authorization was not broadcast. See https://tensorfeed.ai/terms#premium Section 17.9 and 17.11.',
+          },
+          403,
+        ),
+      };
+    }
+
+    // Settle on-chain via USDC.transferWithAuthorization. The facilitator
+    // module pre-checks EIP-3009 nonce state, broadcasts via the configured
+    // X402_BROADCAST_KEY hot wallet, and waits for receipt.
+    const settle = await settleX402Payment(payload, env);
+    if (!settle.success) {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            x402Version: 2,
+            success: false,
+            errorReason: settle.errorReason,
+            message: settle.message,
+            accepts: [requirements],
+          },
+          402,
+        ),
+      };
+    }
+
+    // Mint a credits token from the settled amount. The "exact" scheme
+    // means auth.value === requirements.amount, so this token starts with
+    // exactly enough credits for THIS call (plus any first-payment
+    // welcome bonus). Repeat use should switch to the credits flow.
+    const amountUsd = Number(payload.payload.authorization.value) / 1e6;
+    const baseCredits = calculateCredits(amountUsd);
+    const welcome = await checkAndMarkFirstPayment(env, payerAddress);
+    const credits = baseCredits + welcome.bonusCredits;
+    if (credits < cost) {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            x402Version: 2,
+            success: false,
+            errorReason: 'insufficient_funds',
+            message: `Authorization for $${amountUsd.toFixed(2)} buys ${credits} credits, but this call requires ${cost}.`,
+          },
+          402,
+        ),
+      };
+    }
+
+    const token = generateToken();
+    const now = new Date().toISOString();
+    const tokenRecord: CreditsRecord = {
+      balance: credits,
+      created: now,
+      last_used: now,
+      agent_ua: request.headers.get('User-Agent') || 'unknown',
+      total_purchased: credits,
+    };
+
+    await Promise.all([
+      env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(tokenRecord)),
+      logRevenue(env, amountUsd, request.headers.get('User-Agent') || 'unknown'),
+      appendTokenPurchase(env, token, {
+        tx_hash: settle.transaction!,
+        amount_usd: amountUsd,
+        credits_added: credits,
+        block_number: 0,
+        confirmed_at: now,
+      }),
+      welcome.isFirstPayment ? markWalletSeen(env, payerAddress) : Promise.resolve(),
+    ]);
+
+    return {
+      paid: true,
+      token,
+      cost,
+      currentBalance: tokenRecord.balance,
+      tokenRemaining: tokenRecord.balance - cost,
+      newToken: true,
+      paymentResponseHeader: encodeSettlementHeader(settle),
+    };
+  }
+
   // No payment provided -> return 402 with full payment instructions
   return { paid: false, response: paymentRequiredResponse(env, cost, tier, request) };
 }
@@ -1968,30 +2152,40 @@ export async function requirePayment(
 function paymentRequiredResponse(env: Env, creditsRequired: number, tier: number, request: Request): Response {
   const minUsd = Math.max(1, creditsRequired * 0.02);
   // Atomic USDC units (6 decimals): 1 credit = $0.02 = 20000 micro-USDC.
-  const maxAmountRequired = String(creditsRequired * 20000);
+  const amount = String(creditsRequired * 20000);
   const url = new URL(request.url);
-  const resource = `${url.origin}${url.pathname}`;
+  const resourceUrl = `${url.origin}${url.pathname}`;
   return jsonResponse(
     {
-      // Canonical x402 v1 fields (consumed by x402scan and other discovery
-      // scanners). Custom fields below remain for SDK back-compat.
-      x402Version: 1,
+      // Canonical Coinbase x402 V2 PaymentRequired body. AgentCore Payments
+      // and the @coinbase/x402 SDK read these fields to prepare the
+      // EIP-3009 transferWithAuthorization signed payload, base64-encode it,
+      // and resubmit with the X-PAYMENT header.
+      x402Version: 2,
+      error: 'payment_required',
+      resource: {
+        url: resourceUrl,
+        description: 'TensorFeed premium API',
+        mimeType: 'application/json',
+      },
       accepts: [
         {
           scheme: 'exact',
-          network: 'base-mainnet',
-          maxAmountRequired,
-          resource,
-          description: 'TensorFeed premium API',
-          mimeType: 'application/json',
+          network: 'eip155:8453',
+          amount,
+          asset: USDC_BASE_CONTRACT,
           payTo: env.PAYMENT_WALLET,
           maxTimeoutSeconds: 60,
-          asset: USDC_BASE_CONTRACT,
+          extra: { name: 'USDC', version: '2' },
         },
       ],
+      extensions: {},
+      // TensorFeed-specific helpful fields (non-spec). The credits flow is
+      // recommended for repeat use; the X-Payment-Tx fallback is kept for
+      // back-compat with SDK clients that pre-broadcast the tx.
       ok: false,
-      error: 'payment_required',
-      message: 'This is a paid endpoint. Pay via USDC on Base or use a bearer token.',
+      message:
+        'This is a paid endpoint. Sign an EIP-3009 transferWithAuthorization and submit it via X-PAYMENT, or use the credits flow for repeat use.',
       payment: {
         wallet: env.PAYMENT_WALLET,
         currency: 'USDC',
@@ -2009,8 +2203,9 @@ function paymentRequiredResponse(env: Env, creditsRequired: number, tier: number
         balance: '/api/payment/balance',
       },
       flow_options: {
+        x402_v2: 'Sign an EIP-3009 transferWithAuthorization for the exact `amount` above against USDC on Base mainnet, base64-encode the PaymentPayload, retry with X-PAYMENT header. AgentCore Payments and @coinbase/x402 do this automatically.',
         recommended: 'Buy credits once via /api/payment/buy-credits, get a bearer token, use Authorization: Bearer <token> for all future calls (50ms latency).',
-        x402_fallback: 'Send USDC on Base, retry this request with X-Payment-Tx: <txHash> header. Slower but no pre-flight needed.',
+        x402_legacy: 'Pre-broadcast USDC on Base, retry this request with X-Payment-Tx + X-Payment-Quote headers. TensorFeed-specific fallback; agents on AgentCore Payments use X-PAYMENT instead.',
       },
     },
     402,
