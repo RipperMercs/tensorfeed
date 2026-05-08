@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'aws-x402-coinbase-agent-payments',
+    title: "AWS Just Plugged x402 In. Agent USDC Payments Are Now Cloud-Default.",
+    author: 'Ripper',
+    date: 'May 7, 2026',
+    readTime: '6 min read',
+    description:
+      "Coinbase announced that AI agents can now pay for AWS services in USDC over x402. The largest cloud provider on the planet just made a stablecoin micropayment standard a first-class way for autonomous software to buy compute, storage, and inference. Inside what x402 actually is, why AWS picking open instead of building proprietary is the inflection, what it does to Stripe Link's universal-layer thesis, the answer Azure and GCP now owe, and what it means for every API publisher still on the fence about shipping a paid agent tier. The cost of being early on x402 just got refunded.",
+  },
+  {
     slug: 'anthropic-dreaming-managed-agents',
     title: "Anthropic Just Taught Claude to Dream Between Tasks. Long-Running Agents Got Their Memory Layer.",
     author: 'Ripper',
