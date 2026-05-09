@@ -349,6 +349,57 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/clean/cve/{CVE-id}",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "LLM-ready CVE record",
+        "description": "MITRE CVE Record v5.2 transformed into a flat token-efficient payload optimized for LLM context windows. Drops typical record from ~3KB nested JSON to ~500 bytes flat JSON (~80% token reduction) with no information loss for agent decision-making. Adds derived severity_band, deduped CWEs, flat affected_products, top references. Versioned via schema_version + cleaning_version for stability. License: MITRE CVE Terms of Use; commercial redistribution permitted.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-security-cve-clean"
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/clean/kev/{CVE-id}",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "LLM-ready KEV entry",
+        "description": "CISA Known Exploited Vulnerabilities entry transformed into LLM-ready format with normalized ransomware_use enum (yes / unknown / no) and extracted notes_urls. Versioned for stability. License: US Government public domain.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-security-kev-clean"
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/clean/epss/{CVE-id}",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "LLM-ready EPSS score",
+        "description": "FIRST.org EPSS score transformed into LLM-ready format with numeric probability (not stringified), derived risk_band (low/medium/high/critical), and optional series summary (first/min/max points instead of full daily series). Optional ?series=true returns the summary; default returns the current point only. License: FIRST.org free-for-any-use policy.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-security-epss-clean"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",

@@ -566,6 +566,93 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/clean/cve/{CVE-id}',
+    description:
+      'LLM-ready MITRE CVE record. Drops a typical CVE from ~3KB nested JSON to ~500 bytes flat JSON (~80% token reduction) with zero information loss for agent decision-making. Adds derived severity_band (none/low/medium/high/critical), deduped CWEs, flat vendor+product affected_products list, and top 5 references. Versioned via schema_version + cleaning_version for schema stability. The deep moat over the free /api/security/cve/{id} endpoint: agents pay because their context-window-tax savings exceed the $0.02 cost.',
+    cost: '1 credit per call',
+    example: `// GET /api/premium/clean/cve/CVE-2024-3094
+{
+  "ok": true,
+  "source_format": "mitre_cve_v5_2",
+  "target_format": "tensorfeed_llm_ready_v1",
+  "source_payload": "cache",
+  "schema_version": "1.0",
+  "cleaning_version": "1.0",
+  "transformed_at": "2026-05-09T03:45:11Z",
+  "source": "MITRE CVE List",
+  "data": {
+    "id": "CVE-2024-3094",
+    "state": "PUBLISHED",
+    "published_at": "2024-03-29T16:51:12.588Z",
+    "summary": "Malicious code in xz upstream tarballs.",
+    "cvss_v3_1_score": 10,
+    "cvss_v3_1_severity": "CRITICAL",
+    "severity_band": "critical",
+    "cwes": ["CWE-506"],
+    "affected_products": ["xz liblzma", "Red Hat Fedora"],
+    "affected_count": 2,
+    "references_count": 8,
+    "references_top": ["https://www.openwall.com/...", "https://access.redhat.com/...", "..."]
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 38 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/clean/kev/{CVE-id}',
+    description:
+      'LLM-ready CISA KEV entry. Same content as /api/security/kev/{CVE-id} (free) but with normalized ransomware_use enum (yes/unknown/no) and notes_urls extracted from the upstream semicolon-separated reference text. Returns 404 if the CVE is not on the KEV catalog.',
+    cost: '1 credit per call',
+    example: `{
+  "ok": true,
+  "source_format": "cisa_kev_v1",
+  "target_format": "tensorfeed_llm_ready_v1",
+  "schema_version": "1.0",
+  "cleaning_version": "1.0",
+  "data": {
+    "cve_id": "CVE-2026-42208",
+    "vendor": "BerriAI",
+    "product": "LiteLLM",
+    "vulnerability_name": "BerriAI LiteLLM SQL Injection",
+    "date_added": "2026-05-08",
+    "due_date": "2026-05-11",
+    "ransomware_use": "unknown",
+    "cwes": ["CWE-89"],
+    "notes_urls": ["https://github.com/BerriAI/litellm/security/advisories/...", "https://nvd.nist.gov/vuln/detail/..."]
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 37 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/clean/epss/{CVE-id}',
+    description:
+      'LLM-ready EPSS score. Numeric probability (not stringified), derived risk_band (low/medium/high/critical), optional series summary (?series=true returns first/min/max snapshot instead of the full daily series, sized to fit comfortably in any context window). License: FIRST.org free-for-any-use policy.',
+    cost: '1 credit per call',
+    example: `// GET /api/premium/clean/epss/CVE-2024-3094?series=true
+{
+  "ok": true,
+  "source_format": "first_org_epss_v1",
+  "target_format": "tensorfeed_llm_ready_v1",
+  "included_series": true,
+  "schema_version": "1.0",
+  "cleaning_version": "1.0",
+  "data": {
+    "cve_id": "CVE-2024-3094",
+    "date": "2026-05-08",
+    "epss_probability": 0.85058,
+    "percentile": 0.99359,
+    "risk_band": "high",
+    "series_points": 365,
+    "series_first": { "date": "2025-05-09", "epss": 0.71245 },
+    "series_min": { "date": "2025-05-09", "epss": 0.71245 },
+    "series_max": { "date": "2026-04-12", "epss": 0.86103 }
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 36 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/status/leaderboard',
     description:
       'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',

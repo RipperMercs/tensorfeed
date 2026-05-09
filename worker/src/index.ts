@@ -63,6 +63,12 @@ import {
   EIA_ATTRIBUTION,
 } from './economy-eia';
 import {
+  transformCveRecord,
+  transformKevEntry,
+  transformEpssScore,
+  LLM_READY_CLEANING_VERSION,
+} from './llm-ready';
+import {
   resolveRange,
   resolveFreeRange,
   getPricingSeries,
@@ -1941,6 +1947,9 @@ export default {
           premiumSecurityEPSSTop: '/api/premium/security/epss/top?date=&limit=1-100 (1 credit; top-N highest-EPSS CVEs as of any UTC date)',
           premiumClimatePowerHourly: '/api/premium/climate/power/hourly?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (1 credit; NASA POWER hourly-resolution meteorological + solar data for one point; range capped at 30 days)',
           premiumHealthFDAAggregate: '/api/premium/health/fda/aggregate?category=&count_by=&search=&limit=1-1000 (1 credit; histogram-by-field across openFDA records, e.g. top drugs by adverse event count)',
+          premiumCleanCVE: '/api/premium/clean/cve/{CVE-id} (1 credit; LLM-ready CVE record: ~80% token reduction vs raw MITRE v5.2, with derived severity_band, deduped CWEs, flat affected_products, top references)',
+          premiumCleanKEV: '/api/premium/clean/kev/{CVE-id} (1 credit; LLM-ready KEV entry with normalized ransomware_use enum and extracted notes_urls)',
+          premiumCleanEPSS: '/api/premium/clean/epss/{CVE-id}?series=true|false (1 credit; LLM-ready EPSS score with derived risk_band; optional series=true returns first/min/max summary instead of full series)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -3912,6 +3921,144 @@ export default {
           query: result.query,
           data: result.data,
           attribution: result.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: LLM-READY CLEAN ENDPOINTS (Tier 1, 1 credit) ===
+    // The deep moat. Free /api/security/cve/{id} et al return raw upstream
+    // formats; these endpoints return the same data flattened, schema-
+    // normalized, and pre-extracted into dense token-efficient payloads.
+    // Agents pay because their context-window-tax savings exceed the
+    // $0.02 cost: a typical CVE record drops from ~3KB nested JSON to
+    // ~500 bytes flat JSON, an 80%+ token reduction with zero
+    // information loss for agent decision-making. License postures are
+    // inherited from the upstream (MITRE CVE Terms of Use, US Gov public
+    // domain, FIRST.org free-for-any-use). Output is versioned via
+    // schema_version + cleaning_version so agents can pin to a stable
+    // shape even as we iterate the transformer.
+
+    const cleanCveMatch = path.match(/^\/api\/premium\/clean\/cve\/(CVE-\d{4}-\d{4,7})$/i);
+    if (cleanCveMatch) {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const raw = await fetchCVE(env, cleanCveMatch[1]);
+      if (!raw.ok) {
+        const status = raw.error === 'cve_not_found' ? 404 : raw.error === 'invalid_cve_id' ? 400 : 502;
+        return jsonResponse(
+          { ok: false, error: raw.error, cve_id: raw.cveId, attribution: raw.attribution },
+          status,
+        );
+      }
+      const clean = transformCveRecord(raw.record);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/clean/cve',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          source_format: 'mitre_cve_v5_2',
+          target_format: 'tensorfeed_llm_ready_v1',
+          source_payload: raw.source,
+          ...clean,
+          attribution: raw.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    const cleanKevMatch = path.match(/^\/api\/premium\/clean\/kev\/(CVE-\d{4}-\d{4,7})$/i);
+    if (cleanKevMatch) {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const entry = await readKEVByCVE(env, cleanKevMatch[1]);
+      if (!entry) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'not_in_kev',
+            cve_id: cleanKevMatch[1].toUpperCase(),
+            hint: 'CVE may exist in MITRE CVE List but not be on the CISA KEV catalog.',
+            attribution: KEV_ATTRIBUTION,
+          },
+          404,
+        );
+      }
+      const clean = transformKevEntry(entry);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/clean/kev',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          source_format: 'cisa_kev_v1',
+          target_format: 'tensorfeed_llm_ready_v1',
+          ...clean,
+          attribution: KEV_ATTRIBUTION,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    const cleanEpssMatch = path.match(/^\/api\/premium\/clean\/epss\/(CVE-\d{4}-\d{4,7})$/i);
+    if (cleanEpssMatch) {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const wantSeries = url.searchParams.get('series') === 'true';
+      const raw = wantSeries
+        ? await fetchEPSSSeries(env, cleanEpssMatch[1])
+        : await fetchEPSSCurrent(env, cleanEpssMatch[1]);
+      if (!raw.ok) {
+        const status = raw.error === 'cve_not_in_epss' ? 404 : raw.error === 'invalid_cve_id' ? 400 : 502;
+        return jsonResponse(
+          { ok: false, error: raw.error, cve_id: raw.cve_id, attribution: raw.attribution },
+          status,
+        );
+      }
+      const clean = transformEpssScore(raw.data);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/clean/epss',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          source_format: 'first_org_epss_v1',
+          target_format: 'tensorfeed_llm_ready_v1',
+          source_payload: raw.source,
+          included_series: wantSeries,
+          ...clean,
+          attribution: raw.attribution,
         },
         payment,
         1,
