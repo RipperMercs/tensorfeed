@@ -454,6 +454,70 @@ for (const m of models) console.log(\`\${m.name}: \${m.pricingAmount}/sec\`);`,
     ],
   },
   {
+    slug: 'agents-opportunities',
+    name: 'Agent Ecosystem Opportunities (Daily Scan)',
+    path: '/api/agents/opportunities',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'agents',
+    seoTitle: 'TensorFeed Agent Opportunities API: Daily AI-Ecosystem Scan',
+    seoDescription:
+      "TensorFeed /api/agents/opportunities returns a daily-refreshed scan of new GitHub repos across the AI agent ecosystem (Anthropic, OpenAI, Microsoft, ModelContextProtocol, HuggingFace, LangChain, frontier labs) plus MCP, x402, skills keyword sweeps. Free.",
+    intro:
+      "Daily-refreshed scan of new GitHub repos that represent submission, integration, or distribution opportunities across the AI agent ecosystem. Eleven fan-out signals: Anthropic / OpenAI / Microsoft / ModelContextProtocol / HuggingFace / LangChain / frontier-lab orgs plus MCP, x402, and skill keyword sweeps plus the 'claude for X' / 'openai for X' vertical-pattern catch. Each result is deduped by full_name and ranked by signal_weight × log10(stars + 1) × recency decay. Cron 13:30 UTC daily. Per-signal MIN/MAX caps in the ranker so smaller signals are never starved by louder ones.",
+    whenToUse:
+      "When an agent or builder wants today's view of what's new across the agent ecosystem: vertical reference repos (anthropics/financial-services-style), generic skill catalogs (anthropics/skills, openai/skills), plugin marketplaces, MCP servers, x402-payable APIs, or anything matching the keyword sweep filters. Also useful for daily-digest agents and meta-discovery loops.",
+    params: [],
+    exampleResponse: `{
+  "ok": true,
+  "date": "2026-05-09",
+  "capturedAt": "2026-05-09T13:30:18Z",
+  "total_opportunities": 25,
+  "signals_queried": ["anthropic-org", "openai-org", "microsoft-org", "mcp-org", "huggingface-org", "langchain-org", "frontier-labs", "mcp-keyword", "x402-keyword", "skill-keyword", "vertical-pattern"],
+  "summary": {
+    "by_signal": { "anthropic-org": 5, "openai-org": 5, "mcp-org": 3, "huggingface-org": 3, "frontier-labs": 2, "mcp-keyword": 2, "x402-keyword": 2, "skill-keyword": 1, "langchain-org": 1, "vertical-pattern": 1 },
+    "top_orgs": [{ "org": "anthropics", "count": 5 }, { "org": "openai", "count": 5 }]
+  },
+  "opportunities": [
+    {
+      "full_name": "anthropics/some-new-repo",
+      "html_url": "https://github.com/anthropics/some-new-repo",
+      "description": "...",
+      "stars": 412,
+      "updated_at": "2026-05-08T22:14:51Z",
+      "signal": "anthropic-org",
+      "signal_weight": 10,
+      "composite_score": 28.4
+    }
+  ]
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+tf = TensorFeed()
+opps = tf._get("/agents/opportunities")
+for o in opps["opportunities"][:10]:
+    print(f"{o['signal']:<18} {o['full_name']:<40} {o['stars']:>6}★")`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/agents/opportunities");
+const { opportunities } = await res.json();
+for (const o of opportunities.slice(0, 10)) console.log(o.signal, o.full_name, o.stars);`,
+    mcpTool: 'get_agent_opportunities',
+    relatedSlugs: ['agents-directory', 'whats-new', 'news'],
+    faqs: [
+      {
+        q: 'How is the composite score computed?',
+        a: 'signal_weight (per-signal source weight; org-style signals weight higher than keyword sweeps) × log10(stars + 1) × recency decay (more recent updates score higher). The ranker also enforces per-signal MIN (every populated signal gets at least one slot) and MAX caps so the top-25 is diverse rather than dominated by one source.',
+      },
+      {
+        q: 'How can I filter to one signal?',
+        a: 'Filter client-side on the signal field. Or use the get_agent_opportunities MCP tool with the signal argument set to the source name (anthropic-org, openai-org, microsoft-org, mcp-org, huggingface-org, langchain-org, frontier-labs, mcp-keyword, x402-keyword, skill-keyword, vertical-pattern).',
+      },
+      {
+        q: 'License?',
+        a: 'Underlying repo metadata is GitHub-API-permitted. The TensorFeed-specific composite ranking is provided as-is for direct use; please attribute "TensorFeed daily agent-ecosystem scan" if redistributing the ranking output.',
+      },
+    ],
+  },
+  {
     slug: 'vector-dbs',
     name: 'Vector Databases',
     path: '/api/vector-dbs',
