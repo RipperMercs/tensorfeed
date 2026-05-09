@@ -434,6 +434,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/clean/fda/{category}",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "LLM-ready OpenFDA query",
+        "description": "OpenFDA query results transformed into LLM-ready format with per-category flat schemas. drug/events flattens FAERS adverse-event reports with patient demo + drugs + reactions + outcomes + seriousness flags. drug/labels surfaces brand/generic/manufacturer + section text. drug/recalls + food/recalls expose enforcement reports with classification + reason + voluntary flag. device/events extracts primary device + outcomes + truncated narrative from MAUDE. License: CC0 1.0 Universal Dedication.",
+        "tier": 1,
+        "credits": 1,
+        "category": "health-regulatory-clean"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",

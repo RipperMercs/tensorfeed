@@ -68,6 +68,7 @@ import {
   transformEpssScore,
   transformNasaPowerPoint,
   transformEiaSeries,
+  transformFdaQueryResults,
   LLM_READY_CLEANING_VERSION,
 } from './llm-ready';
 import {
@@ -1954,6 +1955,7 @@ export default {
           premiumCleanEPSS: '/api/premium/clean/epss/{CVE-id}?series=true|false (1 credit; LLM-ready EPSS score with derived risk_band; optional series=true returns first/min/max summary instead of full series)',
           premiumCleanPowerDaily: '/api/premium/clean/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (1 credit; NASA POWER pivoted into date-keyed rows with -999 fill values normalized to null and ISO-8601 dates)',
           premiumCleanEIASeries: '/api/premium/clean/eia/series?route=&frequency=&start=&end=&length=1-5000 (1 credit; EIA series flattened to numeric points with MoM and YoY delta percentages computed against valid observations)',
+          premiumCleanFDA: '/api/premium/clean/fda/{category}?search=&limit=1-100&skip=&sort= (1 credit; LLM-ready OpenFDA query results. Per-category flat schema for drug/events, drug/labels, drug/recalls, food/recalls, device/events)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -4063,6 +4065,67 @@ export default {
           included_series: wantSeries,
           ...clean,
           attribution: raw.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: LLM-READY OpenFDA (Tier 1, 1 credit) ===
+    // Same OpenFDA query as the free /api/health/fda/{category}, but
+    // with each result row transformed into a flat, dense, agent-friendly
+    // shape per category. Five category-specific transformers handle
+    // the per-domain field hierarchy:
+    //   drug/events   FAERS adverse events flattened with patient demo,
+    //                 drugs, reactions, outcomes, seriousness flags
+    //   drug/labels   SPL labels with brand/generic/manufacturer
+    //                 pulled out and section text joined for context
+    //   drug/recalls  enforcement reports with classification + reason
+    //   food/recalls  same shape as drug/recalls
+    //   device/events MAUDE events with primary device + outcomes
+    //                 + truncated narrative
+
+    const cleanFdaMatch = path.match(/^\/api\/premium\/clean\/fda\/(.+)$/);
+    if (cleanFdaMatch && isFDACategory(cleanFdaMatch[1])) {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const category = cleanFdaMatch[1];
+      const parsed = parseFDAQuery(category, url);
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchFDAQuery(env, parsed.query);
+      if (!result.ok) {
+        return jsonResponse(
+          { ok: false, error: result.error, attribution: result.attribution },
+          result.http_status === 429 ? 503 : 502,
+        );
+      }
+      const clean = transformFdaQueryResults(category, result.data);
+      if (!clean) {
+        return jsonResponse({ ok: false, error: 'transformer_unavailable' }, 500);
+      }
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/clean/fda',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          source_format: 'openfda_v1',
+          target_format: 'tensorfeed_llm_ready_v1',
+          source_payload: result.source,
+          query: result.query,
+          ...clean,
+          attribution: result.attribution,
         },
         payment,
         1,

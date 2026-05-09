@@ -525,6 +525,290 @@ export function transformEiaSeries(raw: unknown): LlmReadyEnvelope<LlmReadyEiaSe
   });
 }
 
+// ===== OpenFDA (5 categories) =====
+
+function joinFirstN(arr: unknown, max = 1): string | null {
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  const slice = arr.slice(0, max).map((s) => safeStr(s)).filter((s): s is string => Boolean(s));
+  return slice.length > 0 ? slice.join(' | ') : null;
+}
+
+function joinAll(arr: unknown): string | null {
+  if (!Array.isArray(arr)) return null;
+  const items = arr.map((s) => safeStr(s)).filter((s): s is string => Boolean(s));
+  return items.length > 0 ? items.join(' | ') : null;
+}
+
+function uniq(arr: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of arr) {
+    if (!item) continue;
+    const k = item.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(item);
+  }
+  return out;
+}
+
+function isoFromFdaDate(s: string | null): string | null {
+  if (!s) return null;
+  if (/^\d{8}$/.test(s)) return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  return s;
+}
+
+export interface LlmReadyFdaDrugEvent {
+  id: string | null;
+  country: string | null;
+  received_at: string | null;
+  occurred_at: string | null;
+  serious: boolean | null;
+  seriousness_flags: string[];
+  patient_age: number | null;
+  patient_sex: string | null;
+  drugs: string[];
+  reactions: string[];
+  outcomes: string[];
+  primary_drug: string | null;
+  primary_reaction: string | null;
+  drug_count: number;
+  reaction_count: number;
+}
+
+export function transformFdaDrugEvent(raw: unknown): LlmReadyFdaDrugEvent {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const patient = (r.patient ?? {}) as Record<string, unknown>;
+  const drugsRaw = Array.isArray(patient.drug) ? (patient.drug as Record<string, unknown>[]) : [];
+  const reactionsRaw = Array.isArray(patient.reaction) ? (patient.reaction as Record<string, unknown>[]) : [];
+
+  const drugs = uniq(drugsRaw.map((d) => safeStr(d.medicinalproduct) ?? '').filter(Boolean));
+  const reactions = uniq(
+    reactionsRaw.map((r2) => safeStr(r2.reactionmeddrapt) ?? '').filter(Boolean),
+  );
+  const outcomes = uniq(
+    reactionsRaw
+      .map((r2) => safeStr(r2.reactionoutcome))
+      .filter((s): s is string => Boolean(s)),
+  );
+
+  const seriousness_flags: string[] = [];
+  if (safeStr(r.seriousnessdeath) === '1') seriousness_flags.push('death');
+  if (safeStr(r.seriousnesshospitalization) === '1') seriousness_flags.push('hospitalization');
+  if (safeStr(r.seriousnesslifethreatening) === '1') seriousness_flags.push('life_threatening');
+  if (safeStr(r.seriousnessdisabling) === '1') seriousness_flags.push('disabling');
+  if (safeStr(r.seriousnesscongenitalanomali) === '1') seriousness_flags.push('congenital_anomaly');
+
+  const seriousRaw = safeStr(r.serious);
+  const serious = seriousRaw === '1' ? true : seriousRaw === '2' ? false : null;
+
+  const patient_sex = (() => {
+    const s = safeStr(patient.patientsex);
+    if (s === '1') return 'male';
+    if (s === '2') return 'female';
+    return null;
+  })();
+
+  return {
+    id: safeStr(r.safetyreportid),
+    country: safeStr(r.primarysourcecountry) ?? safeStr(r.occurcountry),
+    received_at: isoFromFdaDate(safeStr(r.receivedate)),
+    occurred_at: isoFromFdaDate(safeStr(r.transmissiondate)),
+    serious,
+    seriousness_flags,
+    patient_age: safeNum(patient.patientonsetage),
+    patient_sex,
+    drugs,
+    reactions,
+    outcomes,
+    primary_drug: drugs[0] ?? null,
+    primary_reaction: reactions[0] ?? null,
+    drug_count: drugs.length,
+    reaction_count: reactions.length,
+  };
+}
+
+export interface LlmReadyFdaDrugLabel {
+  id: string | null;
+  set_id: string | null;
+  brand_names: string[];
+  generic_names: string[];
+  manufacturer: string | null;
+  product_type: string | null;
+  route: string[];
+  indications: string | null;
+  dosage: string | null;
+  warnings: string | null;
+  adverse_reactions: string | null;
+  contraindications: string | null;
+  effective_time: string | null;
+}
+
+export function transformFdaDrugLabel(raw: unknown): LlmReadyFdaDrugLabel {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const openfda = (r.openfda ?? {}) as Record<string, unknown>;
+  const brandRaw = Array.isArray(openfda.brand_name) ? openfda.brand_name : [];
+  const genericRaw = Array.isArray(openfda.generic_name) ? openfda.generic_name : [];
+  const manufRaw = Array.isArray(openfda.manufacturer_name) ? openfda.manufacturer_name : [];
+  const routeRaw = Array.isArray(openfda.route) ? openfda.route : [];
+
+  return {
+    id: safeStr(r.id),
+    set_id: safeStr(r.set_id),
+    brand_names: uniq(brandRaw.map((s) => safeStr(s) ?? '').filter(Boolean)),
+    generic_names: uniq(genericRaw.map((s) => safeStr(s) ?? '').filter(Boolean)),
+    manufacturer: safeStr(manufRaw[0]),
+    product_type: safeStr((openfda.product_type as unknown[] | undefined)?.[0]),
+    route: uniq(routeRaw.map((s) => safeStr(s) ?? '').filter(Boolean)),
+    indications: joinAll(r.indications_and_usage),
+    dosage: joinAll(r.dosage_and_administration),
+    warnings: joinAll(r.warnings),
+    adverse_reactions: joinAll(r.adverse_reactions),
+    contraindications: joinAll(r.contraindications),
+    effective_time: isoFromFdaDate(safeStr(r.effective_time)),
+  };
+}
+
+export interface LlmReadyFdaRecall {
+  id: string | null;
+  status: string | null;
+  classification: string | null;
+  product: string | null;
+  reason: string | null;
+  distribution: string | null;
+  firm: string | null;
+  voluntary: boolean | null;
+  state: string | null;
+  country: string | null;
+  initiated_at: string | null;
+  reported_at: string | null;
+  termination_at: string | null;
+}
+
+export function transformFdaRecall(raw: unknown): LlmReadyFdaRecall {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const voluntaryRaw = safeStr(r.voluntary_mandated)?.toLowerCase() ?? '';
+  const voluntary = voluntaryRaw.includes('voluntary')
+    ? true
+    : voluntaryRaw.includes('mandated')
+      ? false
+      : null;
+  return {
+    id: safeStr(r.recall_number),
+    status: safeStr(r.status),
+    classification: safeStr(r.classification),
+    product: safeStr(r.product_description),
+    reason: safeStr(r.reason_for_recall),
+    distribution: safeStr(r.distribution_pattern),
+    firm: safeStr(r.recalling_firm),
+    voluntary,
+    state: safeStr(r.state),
+    country: safeStr(r.country),
+    initiated_at: isoFromFdaDate(safeStr(r.recall_initiation_date)),
+    reported_at: isoFromFdaDate(safeStr(r.report_date)),
+    termination_at: isoFromFdaDate(safeStr(r.termination_date)),
+  };
+}
+
+export interface LlmReadyFdaDeviceEvent {
+  id: string | null;
+  event_type: string | null;
+  date_of_event: string | null;
+  date_received: string | null;
+  device_name: string | null;
+  device_manufacturer: string | null;
+  product_problems: string[];
+  patient_outcomes: string[];
+  source_type: string | null;
+  narrative: string | null;
+}
+
+export function transformFdaDeviceEvent(raw: unknown): LlmReadyFdaDeviceEvent {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const devices = Array.isArray(r.device) ? (r.device as Record<string, unknown>[]) : [];
+  const patients = Array.isArray(r.patient) ? (r.patient as Record<string, unknown>[]) : [];
+  const mdrText = Array.isArray(r.mdr_text) ? (r.mdr_text as Record<string, unknown>[]) : [];
+
+  const patient_outcomes: string[] = [];
+  for (const p of patients) {
+    const arr = Array.isArray(p.patient_problems) ? p.patient_problems : [];
+    for (const o of arr) {
+      const s = safeStr(o);
+      if (s && !patient_outcomes.includes(s)) patient_outcomes.push(s);
+    }
+  }
+
+  const product_problems = Array.isArray(r.product_problems)
+    ? uniq((r.product_problems as unknown[]).map((s) => safeStr(s) ?? '').filter(Boolean))
+    : [];
+
+  const narrative = (() => {
+    if (mdrText.length === 0) return null;
+    const parts: string[] = [];
+    for (const m of mdrText) {
+      const txt = safeStr(m.text);
+      if (txt) parts.push(txt);
+    }
+    if (parts.length === 0) return null;
+    const joined = parts.join('\n\n');
+    return joined.length > 4000 ? joined.slice(0, 4000) + '...' : joined;
+  })();
+
+  return {
+    id: safeStr(r.report_number) ?? safeStr(r.mdr_report_key),
+    event_type: safeStr(r.event_type),
+    date_of_event: isoFromFdaDate(safeStr(r.date_of_event)),
+    date_received: isoFromFdaDate(safeStr(r.date_received)),
+    device_name: safeStr(devices[0]?.brand_name ?? devices[0]?.generic_name),
+    device_manufacturer: safeStr(devices[0]?.manufacturer_d_name),
+    product_problems,
+    patient_outcomes,
+    source_type: safeStr(r.source_type) ?? safeStr(r.type_of_report),
+    narrative,
+  };
+}
+
+export interface LlmReadyFdaResults<T> {
+  category: string;
+  upstream_total: number | null;
+  count: number;
+  results: T[];
+}
+
+type FdaTransformer =
+  | ((raw: unknown) => LlmReadyFdaDrugEvent)
+  | ((raw: unknown) => LlmReadyFdaDrugLabel)
+  | ((raw: unknown) => LlmReadyFdaRecall)
+  | ((raw: unknown) => LlmReadyFdaDeviceEvent);
+
+const FDA_TRANSFORMERS: Record<string, FdaTransformer> = {
+  'drug/events': transformFdaDrugEvent,
+  'drug/labels': transformFdaDrugLabel,
+  'drug/recalls': transformFdaRecall,
+  'food/recalls': transformFdaRecall,
+  'device/events': transformFdaDeviceEvent,
+};
+
+export function transformFdaQueryResults(
+  category: string,
+  raw: unknown,
+): LlmReadyEnvelope<LlmReadyFdaResults<unknown>> | null {
+  const transformer = FDA_TRANSFORMERS[category];
+  if (!transformer) return null;
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const meta = (r.meta ?? {}) as Record<string, unknown>;
+  const metaResults = (meta.results ?? {}) as Record<string, unknown>;
+  const results = Array.isArray(r.results) ? r.results : [];
+  const transformed = results.map((row) => transformer(row));
+  return envelope(`OpenFDA ${category}`, {
+    category,
+    upstream_total: safeNum(metaResults.total),
+    count: transformed.length,
+    results: transformed,
+  });
+}
+
 export const LLM_READY_CLEANING_VERSION = CLEANING_VERSION;
 
 // Exported for tests. Not part of the public surface.

@@ -5,6 +5,15 @@ import {
   transformEpssScore,
   transformNasaPowerPoint,
   transformEiaSeries,
+  transformFdaDrugEvent,
+  transformFdaDrugLabel,
+  transformFdaRecall,
+  transformFdaDeviceEvent,
+  transformFdaQueryResults,
+  type LlmReadyFdaDrugEvent,
+  type LlmReadyFdaDrugLabel,
+  type LlmReadyFdaRecall,
+  type LlmReadyFdaDeviceEvent,
   LLM_READY_CLEANING_VERSION,
   __test,
 } from './llm-ready';
@@ -398,6 +407,200 @@ describe('transformEiaSeries', () => {
     const out = transformEiaSeries({});
     expect(out.data.points).toEqual([]);
     expect(out.data.summary.count).toBe(0);
+  });
+});
+
+describe('transformFdaDrugEvent', () => {
+  const SAMPLE = {
+    safetyreportid: '10003304',
+    primarysourcecountry: 'US',
+    occurcountry: 'US',
+    transmissiondate: '20141212',
+    receivedate: '20140312',
+    serious: '1',
+    seriousnessdeath: '1',
+    seriousnesshospitalization: '1',
+    patient: {
+      patientonsetage: 65,
+      patientsex: '2',
+      drug: [
+        { medicinalproduct: 'ASPIRIN' },
+        { medicinalproduct: 'IBUPROFEN' },
+        { medicinalproduct: 'aspirin' },
+      ],
+      reaction: [
+        { reactionmeddrapt: 'NAUSEA', reactionoutcome: '1' },
+        { reactionmeddrapt: 'HEADACHE', reactionoutcome: '6' },
+      ],
+    },
+  };
+
+  it('flattens patient demographics and serious flags', () => {
+    const out = transformFdaDrugEvent(SAMPLE);
+    expect(out.id).toBe('10003304');
+    expect(out.country).toBe('US');
+    expect(out.patient_age).toBe(65);
+    expect(out.patient_sex).toBe('female');
+    expect(out.serious).toBe(true);
+    expect(out.seriousness_flags).toContain('death');
+    expect(out.seriousness_flags).toContain('hospitalization');
+  });
+
+  it('extracts drugs and reactions deduped + reports primaries', () => {
+    const out = transformFdaDrugEvent(SAMPLE);
+    expect(out.drugs).toEqual(['ASPIRIN', 'IBUPROFEN']);
+    expect(out.reactions).toEqual(['NAUSEA', 'HEADACHE']);
+    expect(out.primary_drug).toBe('ASPIRIN');
+    expect(out.primary_reaction).toBe('NAUSEA');
+    expect(out.drug_count).toBe(2);
+    expect(out.reaction_count).toBe(2);
+  });
+
+  it('normalizes the FDA date format', () => {
+    const out = transformFdaDrugEvent(SAMPLE);
+    expect(out.received_at).toBe('2014-03-12');
+    expect(out.occurred_at).toBe('2014-12-12');
+  });
+
+  it('handles missing fields gracefully', () => {
+    const out = transformFdaDrugEvent({});
+    expect(out.id).toBeNull();
+    expect(out.drugs).toEqual([]);
+    expect(out.serious).toBeNull();
+    expect(out.patient_sex).toBeNull();
+  });
+});
+
+describe('transformFdaDrugLabel', () => {
+  it('extracts brand/generic/manufacturer + section text', () => {
+    const out = transformFdaDrugLabel({
+      id: 'abc-123',
+      set_id: 'set-abc',
+      effective_time: '20240501',
+      openfda: {
+        brand_name: ['ASPIRIN', 'aspirin'],
+        generic_name: ['acetylsalicylic acid'],
+        manufacturer_name: ['Bayer Pharmaceuticals'],
+        product_type: ['HUMAN OTC DRUG'],
+        route: ['ORAL'],
+      },
+      indications_and_usage: ['For relief of minor aches.'],
+      warnings: ['Stop use if symptoms persist.', 'Do not use if pregnant.'],
+    });
+    expect(out.id).toBe('abc-123');
+    expect(out.brand_names).toEqual(['ASPIRIN']);
+    expect(out.generic_names).toEqual(['acetylsalicylic acid']);
+    expect(out.manufacturer).toBe('Bayer Pharmaceuticals');
+    expect(out.product_type).toBe('HUMAN OTC DRUG');
+    expect(out.route).toEqual(['ORAL']);
+    expect(out.warnings).toContain('Stop use if symptoms persist.');
+    expect(out.warnings).toContain('Do not use if pregnant.');
+    expect(out.effective_time).toBe('2024-05-01');
+  });
+});
+
+describe('transformFdaRecall', () => {
+  it('flattens enforcement report fields', () => {
+    const out = transformFdaRecall({
+      recall_number: 'D-1234-2024',
+      status: 'Ongoing',
+      classification: 'Class II',
+      product_description: 'Drug ABC tablets, 100mg',
+      reason_for_recall: 'Mislabeling',
+      distribution_pattern: 'Nationwide',
+      recalling_firm: 'Generic Pharma Co',
+      voluntary_mandated: 'Voluntary: Firm initiated',
+      state: 'NY',
+      country: 'United States',
+      recall_initiation_date: '20240515',
+      report_date: '20240601',
+    });
+    expect(out.id).toBe('D-1234-2024');
+    expect(out.classification).toBe('Class II');
+    expect(out.product).toBe('Drug ABC tablets, 100mg');
+    expect(out.voluntary).toBe(true);
+    expect(out.initiated_at).toBe('2024-05-15');
+    expect(out.reported_at).toBe('2024-06-01');
+  });
+
+  it('returns null for voluntary when neither voluntary nor mandated', () => {
+    const out = transformFdaRecall({ voluntary_mandated: '' });
+    expect(out.voluntary).toBeNull();
+  });
+});
+
+describe('transformFdaDeviceEvent', () => {
+  it('extracts primary device + outcomes + truncated narrative', () => {
+    const out = transformFdaDeviceEvent({
+      report_number: 'MAUDE-2024-1234',
+      event_type: 'Injury',
+      date_of_event: '20240515',
+      date_received: '20240601',
+      device: [
+        {
+          brand_name: 'CardioMonitor X1',
+          generic_name: 'cardiac monitor',
+          manufacturer_d_name: 'MedDevice Inc',
+        },
+      ],
+      patient: [{ patient_problems: ['Hypotension', 'Bradycardia'] }],
+      product_problems: ['Power Issue', 'Display Failure'],
+      mdr_text: [
+        { text: 'Device powered off during procedure.' },
+        { text: 'No patient harm reported.' },
+      ],
+      type_of_report: 'Initial Report',
+    });
+    expect(out.id).toBe('MAUDE-2024-1234');
+    expect(out.device_name).toBe('CardioMonitor X1');
+    expect(out.device_manufacturer).toBe('MedDevice Inc');
+    expect(out.product_problems).toEqual(['Power Issue', 'Display Failure']);
+    expect(out.patient_outcomes).toEqual(['Hypotension', 'Bradycardia']);
+    expect(out.narrative).toContain('Device powered off during procedure.');
+    expect(out.narrative).toContain('No patient harm reported.');
+  });
+
+  it('truncates very long narratives', () => {
+    const longText = 'a'.repeat(5000);
+    const out = transformFdaDeviceEvent({
+      mdr_text: [{ text: longText }],
+    });
+    expect(out.narrative).toBeTruthy();
+    expect(out.narrative!.length).toBeLessThanOrEqual(4010);
+    expect(out.narrative!.endsWith('...')).toBe(true);
+  });
+});
+
+describe('transformFdaQueryResults', () => {
+  it('dispatches to the right transformer per category', () => {
+    const out = transformFdaQueryResults('drug/events', {
+      meta: { results: { total: 12345 } },
+      results: [
+        {
+          safetyreportid: '99',
+          patient: { drug: [{ medicinalproduct: 'X' }], reaction: [{ reactionmeddrapt: 'Y' }] },
+        },
+      ],
+    });
+    expect(out).not.toBeNull();
+    expect(out!.data.category).toBe('drug/events');
+    expect(out!.data.count).toBe(1);
+    expect(out!.data.upstream_total).toBe(12345);
+    const r = out!.data.results[0] as LlmReadyFdaDrugEvent;
+    expect(r.id).toBe('99');
+    expect(r.primary_drug).toBe('X');
+  });
+
+  it('returns null for unknown category', () => {
+    const out = transformFdaQueryResults('totally/bogus', { results: [] });
+    expect(out).toBeNull();
+  });
+
+  it('handles empty result arrays cleanly', () => {
+    const out = transformFdaQueryResults('drug/labels', { results: [] });
+    expect(out).not.toBeNull();
+    expect(out!.data.count).toBe(0);
+    expect(out!.data.results).toEqual([]);
   });
 });
 
