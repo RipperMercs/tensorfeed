@@ -58,6 +58,7 @@ import {
   fetchEdgarSubmissions,
   EDGAR_ATTRIBUTION,
 } from './finance-sec-edgar';
+import { handleMcpHttpRequest, MCP_TOOLS_COUNT } from './mcp-http';
 import {
   parsePowerQuery,
   fetchPowerPoint,
@@ -841,6 +842,17 @@ export default {
     // Health check (1 KV read, cached 60s)
     if (path === '/api/ping') {
       return jsonResponse({ ok: true, deployed: 'auto', timestamp: new Date().toISOString() });
+    }
+
+    // === MCP (HTTP transport) ===
+    // Hosted Streamable HTTP MCP endpoint per the 2024-11-05 spec.
+    // Companion to the stdio @tensorfeed/mcp-server published on npm;
+    // this is the canonical server-hosted endpoint that fits the
+    // `type: "http"` MCP-server pattern Anthropic's vertical agent
+    // repos and other MCP marketplaces standardize on. POST a JSON-RPC
+    // 2.0 envelope; GET returns minimal discovery info.
+    if (path === '/api/mcp') {
+      return handleMcpHttpRequest(request, env);
     }
 
     if (path === '/api/health') {
@@ -1927,6 +1939,7 @@ export default {
           secEdgarSubmissions: '/api/sec/edgar/submissions/{cik} (free; recent filings + entity metadata for one CIK. Accepts numeric CIK in any zero-padding form, or CIK0000320193 prefixed form)',
           climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
           climatePowerParameters: '/api/climate/power/parameters (free; curated NASA POWER parameter catalog with units and longnames)',
+          mcpHttp: '/api/mcp (free; hosted MCP Streamable HTTP transport, JSON-RPC 2.0 over POST. Compatible with Anthropic Claude Code, vertical agent repos, claude.ai connectors, and other MCP-compliant clients. GET returns discovery info; POST expects JSON-RPC envelope. ~12 tools in V1: news, status, models, MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR search + submissions + ticker lookup, EIA series)',
           healthFDADrugEvents: '/api/health/fda/drug/events?search=&limit=1-100&skip=&sort= (free; FDA Adverse Event Reporting System (FAERS), 10M+ records. License: CC0)',
           healthFDADrugLabels: '/api/health/fda/drug/labels?search=&limit=1-100&skip=&sort= (free; structured drug labels in SPL format)',
           healthFDADrugRecalls: '/api/health/fda/drug/recalls?search=&limit=1-100&skip=&sort= (free; FDA drug enforcement reports / recalls)',
