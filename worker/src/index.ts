@@ -66,6 +66,8 @@ import {
   transformCveRecord,
   transformKevEntry,
   transformEpssScore,
+  transformNasaPowerPoint,
+  transformEiaSeries,
   LLM_READY_CLEANING_VERSION,
 } from './llm-ready';
 import {
@@ -1950,6 +1952,8 @@ export default {
           premiumCleanCVE: '/api/premium/clean/cve/{CVE-id} (1 credit; LLM-ready CVE record: ~80% token reduction vs raw MITRE v5.2, with derived severity_band, deduped CWEs, flat affected_products, top references)',
           premiumCleanKEV: '/api/premium/clean/kev/{CVE-id} (1 credit; LLM-ready KEV entry with normalized ransomware_use enum and extracted notes_urls)',
           premiumCleanEPSS: '/api/premium/clean/epss/{CVE-id}?series=true|false (1 credit; LLM-ready EPSS score with derived risk_band; optional series=true returns first/min/max summary instead of full series)',
+          premiumCleanPowerDaily: '/api/premium/clean/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (1 credit; NASA POWER pivoted into date-keyed rows with -999 fill values normalized to null and ISO-8601 dates)',
+          premiumCleanEIASeries: '/api/premium/clean/eia/series?route=&frequency=&start=&end=&length=1-5000 (1 credit; EIA series flattened to numeric points with MoM and YoY delta percentages computed against valid observations)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -4059,6 +4063,106 @@ export default {
           included_series: wantSeries,
           ...clean,
           attribution: raw.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: LLM-READY NASA POWER (Tier 1, 1 credit) ===
+    // Same NASA POWER data as the free /api/climate/power/daily but
+    // pivoted from parameter-keyed dicts into date-keyed rows
+    // (`[{date, T2M, PRECTOTCORR}, ...]`). NASA's `-999` fill value
+    // becomes null. Date strings normalized to ISO 8601. Token-efficient
+    // for any agent doing series analysis or RAG over historical climate
+    // and solar data.
+
+    if (path === '/api/premium/clean/power/daily') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const parsed = parsePowerQuery(url, 'daily', { community: 'AG', maxRangeDays: 365 });
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchPowerPoint(env, parsed.query);
+      if (!result.ok) {
+        return jsonResponse(
+          { ok: false, error: result.error, attribution: result.attribution },
+          result.http_status === 429 ? 503 : 502,
+        );
+      }
+      const clean = transformNasaPowerPoint(result.data);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/clean/power/daily',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          source_format: 'nasa_power_geojson_v1',
+          target_format: 'tensorfeed_llm_ready_v1',
+          source_payload: result.source,
+          query: result.query,
+          ...clean,
+          attribution: result.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: LLM-READY EIA (Tier 1, 1 credit) ===
+    // Same EIA Open Data series as free /api/economy/eia/series but
+    // with sorted-ascending numeric points, extracted primary_units, and
+    // derived MoM and YoY delta percentages computed against valid
+    // observations (missing points skipped on both sides). The deltas
+    // are the agent's whole reason for asking; we save them the
+    // arithmetic + the parsing.
+
+    if (path === '/api/premium/clean/eia/series') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const parsed = parseEIAQuery(url);
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchEIASeries(env, parsed.query);
+      if (!result.ok) {
+        return jsonResponse(
+          { ok: false, error: result.error, attribution: result.attribution },
+          result.http_status === 429 ? 503 : result.http_status === 503 ? 503 : 502,
+        );
+      }
+      const clean = transformEiaSeries(result.data);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/clean/eia/series',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          source_format: 'eia_v2_envelope',
+          target_format: 'tensorfeed_llm_ready_v1',
+          source_payload: result.source,
+          query: result.query,
+          ...clean,
+          attribution: result.attribution,
         },
         payment,
         1,

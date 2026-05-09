@@ -3,6 +3,8 @@ import {
   transformCveRecord,
   transformKevEntry,
   transformEpssScore,
+  transformNasaPowerPoint,
+  transformEiaSeries,
   LLM_READY_CLEANING_VERSION,
   __test,
 } from './llm-ready';
@@ -212,6 +214,190 @@ describe('transformEpssScore', () => {
     expect(out.data.epss_probability).toBeNull();
     expect(out.data.risk_band).toBe('low');
     expect(out.data.series_points).toBe(0);
+  });
+});
+
+describe('isoDateFromYYYYMMDD', () => {
+  it('converts YYYYMMDD to YYYY-MM-DD', () => {
+    expect(__test.isoDateFromYYYYMMDD('20260108')).toBe('2026-01-08');
+  });
+  it('converts YYYYMMDDHH to ISO timestamp', () => {
+    expect(__test.isoDateFromYYYYMMDD('2026010814')).toBe('2026-01-08T14:00:00Z');
+  });
+  it('passes other strings through', () => {
+    expect(__test.isoDateFromYYYYMMDD('not-a-date')).toBe('not-a-date');
+  });
+});
+
+describe('deltaPct', () => {
+  it('computes percent change rounded to 2 decimals', () => {
+    expect(__test.deltaPct(110, 100)).toBe(10);
+    expect(__test.deltaPct(95, 100)).toBe(-5);
+    expect(__test.deltaPct(78.42, 75.13)).toBeCloseTo(4.38, 1);
+  });
+  it('returns null for division by zero', () => {
+    expect(__test.deltaPct(10, 0)).toBeNull();
+  });
+  it('returns null for null inputs', () => {
+    expect(__test.deltaPct(null, 100)).toBeNull();
+    expect(__test.deltaPct(100, null)).toBeNull();
+  });
+});
+
+describe('transformNasaPowerPoint', () => {
+  const SAMPLE = {
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [-118.244, 34.052, 395.0] },
+    properties: {
+      parameter: {
+        T2M: { '20260101': 13.57, '20260102': 14.07, '20260103': 13.44 },
+        PRECTOTCORR: { '20260101': 21.84, '20260102': 5.71, '20260103': 15.77 },
+      },
+    },
+    header: { sources: ['MERRA2'] },
+    parameters: {
+      T2M: { units: 'C', longname: 'Temperature at 2 Meters' },
+      PRECTOTCORR: { units: 'mm/day', longname: 'Precipitation Corrected' },
+    },
+  };
+
+  it('pivots parameter-keyed data into date-keyed rows', () => {
+    const out = transformNasaPowerPoint(SAMPLE);
+    expect(out.data.rows).toHaveLength(3);
+    expect(out.data.rows[0]).toEqual({
+      date: '2026-01-01',
+      T2M: 13.57,
+      PRECTOTCORR: 21.84,
+    });
+    expect(out.data.rows[2].T2M).toBe(13.44);
+  });
+
+  it('extracts location and elevation', () => {
+    const out = transformNasaPowerPoint(SAMPLE);
+    expect(out.data.location).toEqual({
+      latitude: 34.052,
+      longitude: -118.244,
+      elevation_meters: 395,
+    });
+  });
+
+  it('preserves parameter metadata', () => {
+    const out = transformNasaPowerPoint(SAMPLE);
+    expect(out.data.parameters_meta.T2M.units).toBe('C');
+    expect(out.data.parameters_meta.PRECTOTCORR.longname).toBe('Precipitation Corrected');
+  });
+
+  it('coerces NASA fill values (-999) to null', () => {
+    const out = transformNasaPowerPoint({
+      ...SAMPLE,
+      properties: {
+        parameter: {
+          T2M: { '20260101': -999, '20260102': 14.07 },
+        },
+      },
+      parameters: { T2M: { units: 'C', longname: 'Temperature' } },
+    });
+    expect(out.data.rows[0].T2M).toBeNull();
+    expect(out.data.rows[1].T2M).toBe(14.07);
+  });
+
+  it('reports row count and date range in summary', () => {
+    const out = transformNasaPowerPoint(SAMPLE);
+    expect(out.data.summary.row_count).toBe(3);
+    expect(out.data.summary.date_start).toBe('2026-01-01');
+    expect(out.data.summary.date_end).toBe('2026-01-03');
+    expect(out.data.summary.parameter_count).toBe(2);
+    expect(out.data.summary.sources).toEqual(['MERRA2']);
+  });
+
+  it('handles empty input gracefully', () => {
+    const out = transformNasaPowerPoint({});
+    expect(out.data.rows).toEqual([]);
+    expect(out.data.summary.row_count).toBe(0);
+    expect(out.data.location.latitude).toBeNull();
+  });
+});
+
+describe('transformEiaSeries', () => {
+  const SAMPLE_MONTHLY = {
+    response: {
+      total: 1234,
+      dateFormat: 'YYYY-MM',
+      frequency: 'monthly',
+      description: 'WTI Crude Oil Spot Price',
+      data: [
+        { period: '2026-04', value: '78.42', unit: 'dollars per barrel' },
+        { period: '2026-03', value: '75.13', unit: 'dollars per barrel' },
+        { period: '2025-04', value: '82.05', unit: 'dollars per barrel' },
+        { period: '2025-03', value: '79.91', unit: 'dollars per barrel' },
+      ],
+    },
+  };
+
+  it('sorts points ascending and extracts numeric values', () => {
+    const out = transformEiaSeries(SAMPLE_MONTHLY);
+    expect(out.data.points).toHaveLength(4);
+    expect(out.data.points[0].period).toBe('2025-03');
+    expect(out.data.points[3].period).toBe('2026-04');
+    expect(out.data.points[3].value).toBe(78.42);
+  });
+
+  it('extracts primary_units from first point with a unit', () => {
+    const out = transformEiaSeries(SAMPLE_MONTHLY);
+    expect(out.data.primary_units).toBe('dollars per barrel');
+  });
+
+  it('computes MoM delta from the two most-recent points', () => {
+    const out = transformEiaSeries(SAMPLE_MONTHLY);
+    expect(out.data.summary.mom_delta_pct).toBeCloseTo(4.38, 1);
+  });
+
+  it('computes YoY delta from the same period one year prior', () => {
+    const out = transformEiaSeries(SAMPLE_MONTHLY);
+    expect(out.data.summary.yoy_delta_pct).toBeCloseTo(-4.42, 1);
+  });
+
+  it('reports first / latest / min / max points', () => {
+    const out = transformEiaSeries(SAMPLE_MONTHLY);
+    expect(out.data.summary.first?.period).toBe('2025-03');
+    expect(out.data.summary.latest?.period).toBe('2026-04');
+    expect(out.data.summary.min?.value).toBe(75.13);
+    expect(out.data.summary.max?.value).toBe(82.05);
+  });
+
+  it('handles annual periods (YYYY) for YoY math', () => {
+    const out = transformEiaSeries({
+      response: {
+        frequency: 'annual',
+        dateFormat: 'YYYY',
+        data: [
+          { period: '2026', value: '100', unit: 'units' },
+          { period: '2025', value: '95', unit: 'units' },
+        ],
+      },
+    });
+    expect(out.data.summary.yoy_delta_pct).toBeCloseTo(5.26, 1);
+  });
+
+  it('handles missing values cleanly', () => {
+    const out = transformEiaSeries({
+      response: {
+        frequency: 'monthly',
+        dateFormat: 'YYYY-MM',
+        data: [
+          { period: '2026-04', value: 'Not Available', unit: 'units' },
+          { period: '2026-03', value: '50', unit: 'units' },
+        ],
+      },
+    });
+    expect(out.data.summary.latest?.value).toBe(50);
+    expect(out.data.summary.mom_delta_pct).toBeNull();
+  });
+
+  it('handles entirely empty input', () => {
+    const out = transformEiaSeries({});
+    expect(out.data.points).toEqual([]);
+    expect(out.data.summary.count).toBe(0);
   });
 });
 

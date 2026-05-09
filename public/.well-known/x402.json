@@ -400,6 +400,40 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/clean/power/daily",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "LLM-ready NASA POWER daily",
+        "description": "NASA POWER point query transformed into LLM-ready format. Pivots NASA's parameter-keyed dicts into date-keyed rows for token-efficient agent consumption. NASA fill value (-999) becomes null; date strings normalized to ISO 8601. Same parameters and same data as free /api/climate/power/daily, just shaped for direct LLM ingestion. License: US Government public domain.",
+        "tier": 1,
+        "credits": 1,
+        "category": "climate-weather-clean"
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/clean/eia/series",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "LLM-ready EIA series",
+        "description": "EIA Open Data series transformed into LLM-ready format. Sorts ascending, extracts numeric values from stringified upstream, surfaces primary_units, and computes MoM and YoY delta percentages against valid (non-null) observations. The deltas are usually the agent's whole reason for asking; we save them the math and the parsing. License: US Government public domain.",
+        "tier": 1,
+        "credits": 1,
+        "category": "economy-energy-clean"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",

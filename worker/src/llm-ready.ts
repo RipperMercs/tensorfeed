@@ -303,7 +303,229 @@ export function transformEpssScore(raw: unknown): LlmReadyEnvelope<LlmReadyEpss>
   });
 }
 
+// ===== NASA POWER (daily or hourly point) =====
+
+export interface LlmReadyPowerRow {
+  date: string;
+  [parameter: string]: string | number | null;
+}
+
+export interface LlmReadyPowerDaily {
+  location: {
+    latitude: number | null;
+    longitude: number | null;
+    elevation_meters: number | null;
+  };
+  parameters_meta: Record<string, { units: string | null; longname: string | null }>;
+  rows: LlmReadyPowerRow[];
+  summary: {
+    row_count: number;
+    parameter_count: number;
+    date_start: string | null;
+    date_end: string | null;
+    sources: string[];
+  };
+}
+
+function isoDateFromYYYYMMDD(s: string): string {
+  if (/^\d{8}$/.test(s)) {
+    return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+  }
+  if (/^\d{10}$/.test(s)) {
+    // hourly format YYYYMMDDHH -> YYYY-MM-DD HH:00 UTC
+    return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}T${s.slice(8, 10)}:00:00Z`;
+  }
+  return s;
+}
+
+export function transformNasaPowerPoint(raw: unknown): LlmReadyEnvelope<LlmReadyPowerDaily> {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const geom = (r.geometry ?? {}) as Record<string, unknown>;
+  const coords = Array.isArray(geom.coordinates) ? geom.coordinates : [];
+  const longitude = safeNum(coords[0]);
+  const latitude = safeNum(coords[1]);
+  const elevation_meters = safeNum(coords[2]);
+
+  const properties = (r.properties ?? {}) as Record<string, unknown>;
+  const parameter = (properties.parameter ?? {}) as Record<string, Record<string, unknown>>;
+
+  const parameters_meta: Record<string, { units: string | null; longname: string | null }> = {};
+  const parametersMetaRaw = (r.parameters ?? {}) as Record<string, Record<string, unknown>>;
+  for (const [name, meta] of Object.entries(parametersMetaRaw)) {
+    parameters_meta[name] = {
+      units: safeStr(meta.units),
+      longname: safeStr(meta.longname),
+    };
+  }
+
+  // Pivot: NASA returns parameter-keyed dicts; we want date-keyed rows.
+  const dateSet = new Set<string>();
+  for (const param of Object.keys(parameter)) {
+    for (const date of Object.keys(parameter[param])) dateSet.add(date);
+  }
+  const dates = Array.from(dateSet).sort();
+  const rows: LlmReadyPowerRow[] = dates.map((rawDate) => {
+    const row: LlmReadyPowerRow = { date: isoDateFromYYYYMMDD(rawDate) };
+    for (const param of Object.keys(parameter)) {
+      const v = parameter[param][rawDate];
+      const num = safeNum(v);
+      // NASA POWER uses fill_value (typically -999) to signal missing
+      // observations. Surface as null instead of the magic value.
+      if (num !== null && num <= -999) row[param] = null;
+      else row[param] = num;
+    }
+    return row;
+  });
+
+  const header = (r.header ?? {}) as Record<string, unknown>;
+  const sources = Array.isArray(header.sources)
+    ? (header.sources as unknown[]).map((s) => safeStr(s)).filter((s): s is string => Boolean(s))
+    : [];
+
+  return envelope('NASA POWER', {
+    location: { latitude, longitude, elevation_meters },
+    parameters_meta,
+    rows,
+    summary: {
+      row_count: rows.length,
+      parameter_count: Object.keys(parameter).length,
+      date_start: rows.length > 0 ? rows[0].date : null,
+      date_end: rows.length > 0 ? rows[rows.length - 1].date : null,
+      sources,
+    },
+  });
+}
+
+// ===== EIA Open Data (time series) =====
+
+export interface LlmReadyEiaPoint {
+  period: string;
+  value: number | null;
+  units: string | null;
+}
+
+export interface LlmReadyEiaSeries {
+  frequency: string | null;
+  period_format: string | null;
+  description: string | null;
+  primary_units: string | null;
+  points: LlmReadyEiaPoint[];
+  summary: {
+    count: number;
+    first: { period: string; value: number | null } | null;
+    latest: { period: string; value: number | null } | null;
+    min: { period: string; value: number | null } | null;
+    max: { period: string; value: number | null } | null;
+    mom_delta_pct: number | null;
+    yoy_delta_pct: number | null;
+  };
+}
+
+function deltaPct(latest: number | null, prior: number | null): number | null {
+  if (latest === null || prior === null || prior === 0) return null;
+  return Math.round(((latest - prior) / prior) * 10000) / 100;
+}
+
+export function transformEiaSeries(raw: unknown): LlmReadyEnvelope<LlmReadyEiaSeries> {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const response = (r.response ?? {}) as Record<string, unknown>;
+  const data = Array.isArray(response.data) ? (response.data as Record<string, unknown>[]) : [];
+  const frequency = safeStr(response.frequency);
+  const period_format = safeStr(response.dateFormat);
+  const description = safeStr(response.description);
+
+  // EIA returns points in DESC order by period (most recent first). We
+  // sort ASC for deterministic delta math then re-extract latest/first.
+  const points: LlmReadyEiaPoint[] = data
+    .map((row) => ({
+      period: safeStr(row.period) ?? '',
+      value: safeNum(row.value),
+      units: safeStr(row.unit) ?? safeStr(row.units),
+    }))
+    .filter((p) => p.period.length > 0);
+  points.sort((a, b) => a.period.localeCompare(b.period));
+
+  let primary_units: string | null = null;
+  for (const p of points) {
+    if (p.units) {
+      primary_units = p.units;
+      break;
+    }
+  }
+
+  let firstPoint: { period: string; value: number | null } | null = null;
+  let latestPoint: { period: string; value: number | null } | null = null;
+  let minPoint: { period: string; value: number | null } | null = null;
+  let maxPoint: { period: string; value: number | null } | null = null;
+  for (const p of points) {
+    if (p.value === null) continue;
+    if (firstPoint === null) firstPoint = { period: p.period, value: p.value };
+    latestPoint = { period: p.period, value: p.value };
+    if (minPoint === null || (minPoint.value !== null && p.value < minPoint.value)) {
+      minPoint = { period: p.period, value: p.value };
+    }
+    if (maxPoint === null || (maxPoint.value !== null && p.value > maxPoint.value)) {
+      maxPoint = { period: p.period, value: p.value };
+    }
+  }
+
+  // Month-over-month and year-over-year deltas. EIA periods are ISO-8601
+  // prefixes (YYYY for annual, YYYY-MM for monthly, YYYY-MM-DD for daily).
+  // We compute MoM as latest valid point vs the immediate prior valid
+  // point (works for any frequency) and YoY as latest vs the same period
+  // one year prior (computed via period string surgery for monthly +
+  // daily). "valid" means value is not null; missing observations are
+  // skipped on both sides of the comparison.
+  let mom_delta_pct: number | null = null;
+  let yoy_delta_pct: number | null = null;
+  if (latestPoint) {
+    const validPoints = points.filter((p) => p.value !== null);
+    if (validPoints.length >= 2) {
+      const prev = validPoints[validPoints.length - 2];
+      mom_delta_pct = deltaPct(latestPoint.value, prev.value);
+    }
+  }
+  if (latestPoint) {
+    const yoyPeriod = (() => {
+      const m = latestPoint.period;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(m)) {
+        return `${parseInt(m.slice(0, 4), 10) - 1}${m.slice(4)}`;
+      }
+      if (/^\d{4}-\d{2}$/.test(m)) {
+        return `${parseInt(m.slice(0, 4), 10) - 1}${m.slice(4)}`;
+      }
+      if (/^\d{4}$/.test(m)) {
+        return String(parseInt(m, 10) - 1);
+      }
+      return null;
+    })();
+    if (yoyPeriod) {
+      const yoyPoint = points.find((p) => p.period === yoyPeriod);
+      if (yoyPoint && yoyPoint.value !== null) {
+        yoy_delta_pct = deltaPct(latestPoint.value, yoyPoint.value);
+      }
+    }
+  }
+
+  return envelope('EIA Open Data', {
+    frequency,
+    period_format,
+    description,
+    primary_units,
+    points,
+    summary: {
+      count: points.length,
+      first: firstPoint,
+      latest: latestPoint,
+      min: minPoint,
+      max: maxPoint,
+      mom_delta_pct,
+      yoy_delta_pct,
+    },
+  });
+}
+
 export const LLM_READY_CLEANING_VERSION = CLEANING_VERSION;
 
 // Exported for tests. Not part of the public surface.
-export const __test = { severityBand, epssRiskBand, safeStr, safeNum };
+export const __test = { severityBand, epssRiskBand, safeStr, safeNum, deltaPct, isoDateFromYYYYMMDD };

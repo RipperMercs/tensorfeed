@@ -653,6 +653,71 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/clean/power/daily',
+    description:
+      'LLM-ready NASA POWER point query. Pivots NASA\'s parameter-keyed dicts ({"T2M": {"20260101": 13.57}}) into agent-friendly date-keyed rows ([{"date": "2026-01-01", "T2M": 13.57}]). NASA fill value (-999) coerced to null. Same parameters as the free daily endpoint. License: US Government public domain.',
+    cost: '1 credit per call',
+    example: `// Query: ?latitude=34.0522&longitude=-118.2437&parameters=T2M,PRECTOTCORR&start=20260101&end=20260103
+{
+  "ok": true,
+  "source_format": "nasa_power_geojson_v1",
+  "target_format": "tensorfeed_llm_ready_v1",
+  "schema_version": "1.0",
+  "cleaning_version": "1.0",
+  "data": {
+    "location": { "latitude": 34.052, "longitude": -118.244, "elevation_meters": 395 },
+    "parameters_meta": {
+      "T2M": { "units": "C", "longname": "Temperature at 2 Meters" },
+      "PRECTOTCORR": { "units": "mm/day", "longname": "Precipitation Corrected" }
+    },
+    "rows": [
+      { "date": "2026-01-01", "T2M": 13.57, "PRECTOTCORR": 21.84 },
+      { "date": "2026-01-02", "T2M": 14.07, "PRECTOTCORR": 5.71 },
+      { "date": "2026-01-03", "T2M": 13.44, "PRECTOTCORR": 15.77 }
+    ],
+    "summary": { "row_count": 3, "parameter_count": 2, "date_start": "2026-01-01", "date_end": "2026-01-03", "sources": ["MERRA2"] }
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 35 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/clean/eia/series',
+    description:
+      'LLM-ready EIA Open Data series. Sorts ascending, parses numeric values from stringified upstream, extracts primary_units from the first valid point, and computes month-over-month + year-over-year delta percentages against valid observations. The deltas are usually the whole reason an agent is asking; we pre-compute them. License: US Government public domain.',
+    cost: '1 credit per call',
+    example: `// Query: ?route=petroleum/pri/spt&frequency=daily&length=400
+{
+  "ok": true,
+  "source_format": "eia_v2_envelope",
+  "target_format": "tensorfeed_llm_ready_v1",
+  "schema_version": "1.0",
+  "cleaning_version": "1.0",
+  "data": {
+    "frequency": "daily",
+    "period_format": "YYYY-MM-DD",
+    "description": "WTI Crude Oil Spot Price",
+    "primary_units": "dollars per barrel",
+    "points": [
+      { "period": "2025-04-09", "value": 79.91, "units": "dollars per barrel" },
+      { "period": "2026-04-09", "value": 75.13, "units": "dollars per barrel" },
+      { "period": "2026-05-08", "value": 78.42, "units": "dollars per barrel" }
+    ],
+    "summary": {
+      "count": 400,
+      "first": { "period": "2025-04-09", "value": 79.91 },
+      "latest": { "period": "2026-05-08", "value": 78.42 },
+      "min": { "period": "2026-01-15", "value": 70.21 },
+      "max": { "period": "2025-09-30", "value": 88.74 },
+      "mom_delta_pct": 4.38,
+      "yoy_delta_pct": -4.42
+    }
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 34 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/status/leaderboard',
     description:
       'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',

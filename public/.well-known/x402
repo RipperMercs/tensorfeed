@@ -23,6 +23,8 @@
     "GET /api/premium/clean/cve/{CVE-id}",
     "GET /api/premium/clean/kev/{CVE-id}",
     "GET /api/premium/clean/epss/{CVE-id}",
+    "GET /api/premium/clean/power/daily",
+    "GET /api/premium/clean/eia/series",
     "GET /api/premium/status/leaderboard",
     "GET /api/premium/mcp/registry/series",
     "GET /api/premium/probe/series",
