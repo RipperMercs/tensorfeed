@@ -32,6 +32,7 @@
 
 const WINDOW_MS = 60_000;
 const DEFAULT_LIMIT_PER_MIN = 120;
+const MCP_LIMIT_PER_MIN = 60;
 const MAX_TRACKED_IPS = 50_000;
 
 interface IPState {
@@ -40,6 +41,13 @@ interface IPState {
 }
 
 const buckets: Map<string, IPState> = new Map();
+
+// Separate bucket map for the MCP endpoint. JSON-RPC POST traffic is
+// heavier per-call than typical REST GETs (envelope + tool dispatch),
+// so /api/mcp gets a tighter cap on top of the general per-IP limit.
+// Defense in depth: the general limiter still applies; this is a
+// second tier specifically for the MCP surface.
+const mcpBuckets: Map<string, IPState> = new Map();
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -85,20 +93,40 @@ export function checkIPRateLimit(
   ip: string,
   limit: number = DEFAULT_LIMIT_PER_MIN,
 ): RateLimitResult {
+  return checkBucket(buckets, ip, limit);
+}
+
+/**
+ * Tighter per-IP cap specifically for the /api/mcp endpoint. JSON-RPC
+ * POST is heavier per-call than typical REST GETs (envelope parse +
+ * tool dispatch + sometimes upstream fetch), so the MCP surface gets
+ * a 60/min/IP cap on top of the general 120/min/IP limit. Both apply;
+ * a single misbehaving agent hitting /api/mcp burns through the MCP
+ * cap first and gets a 429 before saturating the general cap.
+ */
+export function checkMcpIPRateLimit(ip: string): RateLimitResult {
+  return checkBucket(mcpBuckets, ip, MCP_LIMIT_PER_MIN);
+}
+
+function checkBucket(
+  bucketMap: Map<string, IPState>,
+  ip: string,
+  limit: number,
+): RateLimitResult {
   const now = Date.now();
 
   // Soft GC to keep memory bounded if the isolate sees a flood of unique IPs.
-  if (buckets.size > MAX_TRACKED_IPS) {
-    for (const [key, state] of buckets) {
-      if (now - state.windowStart > WINDOW_MS * 2) buckets.delete(key);
-      if (buckets.size <= MAX_TRACKED_IPS / 2) break;
+  if (bucketMap.size > MAX_TRACKED_IPS) {
+    for (const [key, state] of bucketMap) {
+      if (now - state.windowStart > WINDOW_MS * 2) bucketMap.delete(key);
+      if (bucketMap.size <= MAX_TRACKED_IPS / 2) break;
     }
   }
 
-  let state = buckets.get(ip);
+  let state = bucketMap.get(ip);
   if (!state || now - state.windowStart >= WINDOW_MS) {
     state = { count: 0, windowStart: now };
-    buckets.set(ip, state);
+    bucketMap.set(ip, state);
   }
 
   state.count += 1;

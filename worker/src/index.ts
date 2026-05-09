@@ -302,6 +302,7 @@ import {
 import {
   applyRateLimitHeaders,
   checkIPRateLimit,
+  checkMcpIPRateLimit,
   checkNoChargeAbuse,
   getClientIP,
   isRateLimitExempt,
@@ -851,8 +852,20 @@ export default {
     // `type: "http"` MCP-server pattern Anthropic's vertical agent
     // repos and other MCP marketplaces standardize on. POST a JSON-RPC
     // 2.0 envelope; GET returns minimal discovery info.
+    //
+    // Tighter per-IP cap on /api/mcp on top of the general 120/min cap
+    // already applied above. JSON-RPC POST is heavier per-call than
+    // typical REST GETs (envelope parse + tool dispatch + sometimes
+    // upstream fetch), so the MCP surface gets a 60/min/IP cap. Both
+    // limiters apply; a misbehaving agent hits the MCP cap first.
     if (path === '/api/mcp') {
-      return handleMcpHttpRequest(request, env);
+      const mcpIp = getClientIP(request);
+      const mcpRate = checkMcpIPRateLimit(mcpIp);
+      if (!mcpRate.allowed) {
+        return rateLimitedResponse(mcpRate);
+      }
+      const mcpResp = await handleMcpHttpRequest(request, env);
+      return applyRateLimitHeaders(mcpResp, mcpRate);
     }
 
     if (path === '/api/health') {

@@ -202,7 +202,7 @@ const TOOLS: McpToolDef[] = [
     tier: 'free',
     handler: async (env, args) => {
       const id = getStringArg(args, 'cve_id');
-      if (!id) throw new Error('cve_id is required');
+      if (!id) throw new ValidationError('cve_id is required');
       const result = await fetchCVE(env, id);
       return result;
     },
@@ -241,7 +241,7 @@ const TOOLS: McpToolDef[] = [
     tier: 'free',
     handler: async (env, args) => {
       const id = getStringArg(args, 'cve_id');
-      if (!id) throw new Error('cve_id is required');
+      if (!id) throw new ValidationError('cve_id is required');
       return await fetchEPSSCurrent(env, id);
     },
   },
@@ -266,7 +266,7 @@ const TOOLS: McpToolDef[] = [
       const ecosystem = getStringArg(args, 'ecosystem');
       const name = getStringArg(args, 'name');
       const version = getStringArg(args, 'version');
-      if (!ecosystem || !name) throw new Error('ecosystem and name are required');
+      if (!ecosystem || !name) throw new ValidationError('ecosystem and name are required');
       return await fetchOSVForPackage(env, { ecosystem, name, version });
     },
   },
@@ -287,7 +287,7 @@ const TOOLS: McpToolDef[] = [
     tier: 'free',
     handler: async (env, args) => {
       const id = getStringArg(args, 'id');
-      if (!id) throw new Error('id is required');
+      if (!id) throw new ValidationError('id is required');
       return await fetchOSVById(env, id);
     },
   },
@@ -314,7 +314,7 @@ const TOOLS: McpToolDef[] = [
     tier: 'free',
     handler: async (env, args) => {
       const q = getStringArg(args, 'q');
-      if (!q) throw new Error('q is required');
+      if (!q) throw new ValidationError('q is required');
       const query: EdgarSearchQuery = {
         q,
         forms: getStringArg(args, 'forms'),
@@ -340,7 +340,7 @@ const TOOLS: McpToolDef[] = [
     tier: 'free',
     handler: async (env, args) => {
       const cik = getStringArg(args, 'cik');
-      if (!cik) throw new Error('cik is required');
+      if (!cik) throw new ValidationError('cik is required');
       return await fetchEdgarSubmissions(env, cik);
     },
   },
@@ -361,7 +361,7 @@ const TOOLS: McpToolDef[] = [
     tier: 'free',
     handler: async (env, args) => {
       const term = getStringArg(args, 'ticker_or_cik');
-      if (!term) throw new Error('ticker_or_cik is required');
+      if (!term) throw new ValidationError('ticker_or_cik is required');
       // Direct function call rather than worker-self-fetch (Cloudflare
       // workers can't reliably loop back through their own public URL).
       return await readSECTicker(env, term);
@@ -473,7 +473,15 @@ async function handleToolCall(
     const data = await tool.handler(ctx.env, args);
     return { result: mcpContent(data) };
   } catch (e) {
-    return mcpToolError(`tool_error: ${e instanceof Error ? e.message : String(e)}`);
+    if (e instanceof ValidationError) {
+      // Intentional validation error: message is safe to surface.
+      return mcpToolError(`validation_error: ${e.message}`);
+    }
+    const tag = newErrorTag();
+    const bucket = classifyException(e);
+    // Full exception goes to logs only, never to the client.
+    console.error(`mcp-http tool_error tag=${tag} tool=${tool.name} bucket=${bucket}:`, e);
+    return mcpToolError(`tool_error:${bucket} ref=${tag}`);
   }
 }
 
@@ -481,6 +489,47 @@ function mcpToolError(message: string): { result: unknown } {
   return {
     result: { content: [{ type: 'text', text: message }], isError: true },
   };
+}
+
+/**
+ * Distinguishes intentional validation errors raised by tool handlers
+ * (caller passed bad input — message is safe to surface verbatim) from
+ * unexpected runtime exceptions (KV errors, upstream timeouts, JSON
+ * parse failures — message may contain implementation detail). Tool
+ * handlers `throw new ValidationError(...)` for the safe path; the
+ * catch surface checks instanceof and routes accordingly.
+ */
+class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+// Short, opaque correlation ID for error responses. Logged server-side
+// alongside the full exception via console.error so an operator with
+// wrangler tail access can correlate a client-visible error code back
+// to the actual exception, without leaking internal details (paths,
+// stack frames, KV namespace IDs, secret tokens) to the client.
+function newErrorTag(): string {
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Bucket common upstream/runtime exceptions into a stable, opaque
+// machine-classifiable string. Anything unrecognized maps to
+// 'internal_error'. We never echo the exception's .message back to
+// the client; clients get the bucket plus the correlation tag.
+function classifyException(e: unknown): string {
+  if (e instanceof Error) {
+    const m = e.message ?? '';
+    if (e.name === 'TimeoutError' || /timeout|timed out|aborted/i.test(m)) return 'upstream_timeout';
+    if (/network|fetch failed|ECONNRESET|ENOTFOUND|EAI_AGAIN/i.test(m)) return 'upstream_unreachable';
+    if (/json|unexpected token/i.test(m)) return 'upstream_invalid_json';
+    if (/Authorization|TENSORFEED_TOKEN|bearer|credits/i.test(m)) return 'auth_or_credits';
+  }
+  return 'internal_error';
 }
 
 // ── Public entry point ──────────────────────────────────────────────
@@ -542,8 +591,11 @@ export async function handleMcpHttpRequest(request: Request, env: Env): Promise<
         return rpcResponse(rpcError(id, ERR_METHOD_NOT_FOUND, `method_not_found: ${body.method}`));
     }
   } catch (e) {
+    const tag = newErrorTag();
+    const bucket = classifyException(e);
+    console.error(`mcp-http rpc_error tag=${tag} method=${body.method} bucket=${bucket}:`, e);
     return rpcResponse(
-      rpcError(id, ERR_INTERNAL, `internal_error: ${e instanceof Error ? e.message : String(e)}`),
+      rpcError(id, ERR_INTERNAL, `${bucket} ref=${tag}`),
     );
   }
 }

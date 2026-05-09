@@ -27,6 +27,7 @@
 
 import type { Env } from './types';
 import type { NewsDailySnapshot } from './news-history';
+import { sanitizeTitle, sanitizeSnippet } from './sanitize';
 
 const EMBED_MODEL = '@cf/baai/bge-base-en-v1.5';
 const EMBED_BATCH_SIZE = 50;
@@ -247,6 +248,14 @@ export function buildClusters(input: BuildClustersInput): ClusterEntry[] {
     const hero = members[0];
     const cluster_id = clusterIdFromMembers(memberIds);
 
+    // Sanitize hero title before persisting. The cluster surface is
+    // agent-facing, and the source articles in news:daily are HTML-stripped
+    // but not role-confusion-sanitized (sanitize.ts is applied at /api/news
+    // read time, not at write time to news:daily). Apply the same
+    // sanitization here so cluster consumers get the same protection
+    // /api/news consumers get. Catches role-confusion tokens, bidi
+    // spoofing chars, and length-caps from one of our 12 sources that
+    // accepts arbitrary user submissions (Hacker News specifically).
     clusters.push({
       cluster_id,
       date,
@@ -256,7 +265,7 @@ export function buildClusters(input: BuildClustersInput): ClusterEntry[] {
       article_ids: members.map((m) => m.id),
       hero: {
         id: hero.id,
-        title: hero.title,
+        title: sanitizeTitle(hero.title),
         url: hero.url,
         source: hero.source,
         publishedAt: hero.publishedAt ?? null,

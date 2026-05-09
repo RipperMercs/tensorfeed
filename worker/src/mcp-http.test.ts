@@ -144,7 +144,7 @@ describe('tools/call', () => {
     expect(text).toContain('GPT-5.5');
   });
 
-  it('returns helpful error when arguments are invalid', async () => {
+  it('returns helpful validation_error when arguments are invalid', async () => {
     const env = makeEnv();
     const resp = await handleMcpHttpRequest(
       rpcRequest('tools/call', { name: 'get_cve_record', arguments: {} }),
@@ -154,7 +154,40 @@ describe('tools/call', () => {
       result: { content: { text: string }[]; isError: boolean };
     };
     expect(body.result.isError).toBe(true);
+    // Validation errors are intentional, safe to surface verbatim
+    expect(body.result.content[0].text).toMatch(/^validation_error: /);
     expect(body.result.content[0].text).toMatch(/cve_id is required/);
+  });
+
+  it('buckets runtime exceptions and never echoes raw .message to client', async () => {
+    // Force a runtime exception by making the KV.get throw with a message
+    // that, if echoed back, would represent information disclosure.
+    const env = makeEnv();
+    const news = env.TENSORFEED_NEWS as unknown as MockKV;
+    const leakage =
+      'ENOTFOUND /var/cloudflare/worker/internal/secret-namespace-id KV-binding-leaked';
+    news.get = async () => {
+      throw new Error(leakage);
+    };
+    const resp = await handleMcpHttpRequest(
+      rpcRequest('tools/call', {
+        name: 'get_news_articles',
+        arguments: { limit: 5 },
+      }),
+      env,
+    );
+
+    const body = (await resp.json()) as {
+      result: { content: { text: string }[]; isError: boolean };
+    };
+    const text = body.result.content[0].text;
+    expect(body.result.isError).toBe(true);
+    // Bucketed code + correlation tag, no raw exception message leaked
+    expect(text).toMatch(/^tool_error:/);
+    expect(text).toMatch(/ref=[a-f0-9]{12}$/);
+    // Critical: the original error message must NOT appear in the response
+    expect(text).not.toContain('/var/cloudflare/worker/internal/secret-namespace-id');
+    expect(text).not.toContain('KV-binding-leaked');
   });
 });
 
