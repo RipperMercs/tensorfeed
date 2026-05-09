@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'eight-prs-agent-distribution-day',
+    title: 'Eight Pull Requests Across the Agent Ecosystem in 24 Hours. Here Is What I Learned.',
+    author: 'Ripper',
+    date: 'May 9, 2026',
+    readTime: '8 min read',
+    description:
+      "I shipped eight PRs across Anthropic, OpenAI, and the canonical Model Context Protocol Registry in one day. None of it was a stunt. Each one fit into a slot the frontier labs had built and were waiting to be filled. Inside the recurring three-category pattern (vertical reference repos, generic skill catalogs, plugin marketplaces), the MCP Registry as the vendor-neutral routing layer most people are missing, what this means if you publish data, and the three signals that say more is coming.",
+  },
+  {
     slug: 'anthropic-spacexai-colossus-orbital',
     title: 'Anthropic Just Booked 220K GPUs on Colossus 1. The Orbital Footnote Is the Bigger Story.',
     author: 'Ripper',
