@@ -29,6 +29,10 @@ const CATEGORY_LABELS: Record<EndpointCategory, string> = {
   'agent-brief': 'Agent morning brief',
   security: 'Security: CVE, KEV, EPSS, verified',
   macro: 'Macro economic digest',
+  climate: 'Climate + meteorological data',
+  health: 'Health regulatory + safety',
+  policy: 'AI policy timeline',
+  research: 'Research velocity + papers',
 };
 
 const CATEGORY_ORDER: EndpointCategory[] = [
@@ -39,6 +43,10 @@ const CATEGORY_ORDER: EndpointCategory[] = [
   'history',
   'security',
   'macro',
+  'climate',
+  'health',
+  'policy',
+  'research',
   'agents',
   'watches',
   'agent-brief',
