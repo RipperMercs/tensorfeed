@@ -315,6 +315,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/climate/power/hourly",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-08T00:00:00Z",
+      "metadata": {
+        "name": "NASA POWER hourly meteorological + solar",
+        "description": "Hourly-resolution meteorological and solar data for one point, sourced from NASA Langley's POWER API. Same source as free /api/climate/power/daily; hourly bins produce ~24x payload so range is capped at 30 days. Parameters include T2M, RH2M, PRECTOTCORR, WS10M, ALLSKY_SFC_SW_DWN, and 100+ others. License: NASA POWER open access; US Government work in the public domain.",
+        "tier": 1,
+        "credits": 1,
+        "category": "climate-weather"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",

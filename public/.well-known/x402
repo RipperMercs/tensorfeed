@@ -18,6 +18,7 @@
     "GET /api/premium/security/kev/series",
     "GET /api/premium/security/epss/series",
     "GET /api/premium/security/epss/top",
+    "GET /api/premium/climate/power/hourly",
     "GET /api/premium/status/leaderboard",
     "GET /api/premium/mcp/registry/series",
     "GET /api/premium/probe/series",

@@ -521,6 +521,28 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/climate/power/hourly',
+    description:
+      'NASA POWER hourly-resolution meteorological and solar data for one point. Same parameter codes as the free daily endpoint, but at hourly bins. Range capped at 30 days due to upstream payload size. License: NASA POWER open access, US Government public domain.',
+    cost: '1 credit per call',
+    example: `// Query: ?latitude=34.0522&longitude=-118.2437&parameters=T2M,ALLSKY_SFC_SW_DWN&start=20260101&end=20260103&community=RE
+{
+  "ok": true,
+  "query": { "latitude": 34.0522, "longitude": -118.2437, "parameters": ["T2M", "ALLSKY_SFC_SW_DWN"], "start": "20260101", "end": "20260103", "community": "RE", "temporal": "hourly" },
+  "data": {
+    "type": "Feature",
+    "properties": {
+      "parameter": {
+        "T2M": { "2026010100": 12.4, "2026010101": 12.1, "2026010102": 11.9 },
+        "ALLSKY_SFC_SW_DWN": { "2026010100": 0.0, "2026010108": 0.31, "2026010113": 0.84 }
+      }
+    }
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 40 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/status/leaderboard',
     description:
       'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',

@@ -42,6 +42,12 @@ import {
   EPSS_ATTRIBUTION,
 } from './security-epss';
 import {
+  parsePowerQuery,
+  fetchPowerPoint,
+  POWER_PARAMETER_CATALOG,
+  POWER_ATTRIBUTION,
+} from './climate-nasa-power';
+import {
   resolveRange,
   resolveFreeRange,
   getPricingSeries,
@@ -1863,6 +1869,8 @@ export default {
           securityKEVDates: '/api/security/kev/dates (free; ordered list of UTC dates with KEV-added data)',
           securityEPSSById: '/api/security/epss/{CVE-id} (free; current EPSS exploitation-likelihood score for a CVE, lazy-fetched from FIRST.org with 24h cache. License: free for any use per FIRST.org policy)',
           securityEPSSTop: '/api/security/epss/top?limit=1-50 (free; top-N CVEs by current EPSS score)',
+          climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
+          climatePowerParameters: '/api/climate/power/parameters (free; curated NASA POWER parameter catalog with units and longnames)',
           statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
@@ -1908,6 +1916,7 @@ export default {
           premiumSecurityKEVSeries: '/api/premium/security/kev/series?from=&to= (1 credit; daily KEV catalog additions across a date range, max 90 days)',
           premiumSecurityEPSSSeries: '/api/premium/security/epss/series?cve_id= (1 credit; full historical EPSS time-series for one CVE)',
           premiumSecurityEPSSTop: '/api/premium/security/epss/top?date=&limit=1-100 (1 credit; top-N highest-EPSS CVEs as of any UTC date)',
+          premiumClimatePowerHourly: '/api/premium/climate/power/hourly?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (1 credit; NASA POWER hourly-resolution meteorological + solar data for one point; range capped at 30 days)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -3840,6 +3849,57 @@ export default {
       );
     }
 
+    // === PAID PREMIUM: NASA POWER HOURLY (Tier 1, 1 credit) ===
+    // Hourly-resolution meteorological and solar data for one point.
+    // Same NASA POWER source as the free /api/climate/power/daily, but
+    // hourly bins produce ~24x the payload, so range is capped at 30
+    // days. License: NASA POWER open access, US Government public
+    // domain.
+
+    if (path === '/api/premium/climate/power/hourly') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const parsed = parsePowerQuery(url, 'hourly', { community: 'AG', maxRangeDays: 30 });
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchPowerPoint(env, parsed.query);
+      if (!result.ok) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: result.error,
+            attribution: result.attribution,
+          },
+          result.http_status === 429 ? 503 : 502,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/climate/power/hourly',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          source: result.source,
+          fetched_at: result.fetched_at,
+          query: result.query,
+          data: result.data,
+          attribution: result.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
     // === PAID PREMIUM: EPSS SERIES (Tier 1, 1 credit) ===
     // Full historical time-series of EPSS scores for one CVE, sourced
     // from FIRST.org's `?cve={id}&scope=time-series` endpoint. The
@@ -4400,6 +4460,59 @@ export default {
         },
         result.ok ? 200 : 502,
         result.ok ? 1800 : 60,
+      );
+    }
+
+    // === CLIMATE: NASA POWER (meteorological + solar) ===
+    // Pure lazy-proxy to NASA Langley's POWER API with KV caching. License
+    // is open-access US Government work, public domain via 17 USC 105.
+    // NASA enforces 30 req/min per IP; we are calling from Cloudflare's
+    // shared IP space so caching is load-bearing. Cache TTL 7 days.
+
+    if (path === '/api/climate/power/parameters') {
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          count: POWER_PARAMETER_CATALOG.length,
+          parameters: POWER_PARAMETER_CATALOG,
+          attribution: POWER_ATTRIBUTION,
+          note: 'Curated subset of the most-requested NASA POWER parameters. NASA exposes 100+; pass any documented parameter code to /api/climate/power/daily even if not in this list.',
+        },
+        200,
+        86400,
+      );
+    }
+
+    if (path === '/api/climate/power/daily') {
+      const parsed = parsePowerQuery(url, 'daily', { community: 'AG', maxRangeDays: 365 });
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchPowerPoint(env, parsed.query);
+      const status = result.ok
+        ? 200
+        : result.http_status === 429
+          ? 503
+          : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          source: result.source,
+          fetched_at: result.fetched_at,
+          query: result.query,
+          data: result.data,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+          premium: {
+            hourly_endpoint: '/api/premium/climate/power/hourly',
+            credits_per_call: 1,
+            note: 'Premium /hourly returns 1-hour-resolution data for the same parameters. Range capped at 30 days due to upstream payload size.',
+          },
+        },
+        status,
+        result.ok ? 86400 : 60,
       );
     }
 

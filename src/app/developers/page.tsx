@@ -755,6 +755,43 @@ const ENDPOINTS: Endpoint[] = [
   ]
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/climate/power/daily',
+    description:
+      'NASA POWER global meteorological and solar energy data for one point, daily resolution. 40+ years of history at 0.5-degree spatial resolution, sourced from MERRA2 reanalysis. Range capped at 365 days. License: NASA POWER open access, US Government public domain (17 USC 105).',
+    cache: 'Cache for 24 hours',
+    example: `// Query: ?latitude=34.0522&longitude=-118.2437&parameters=T2M,PRECTOTCORR&start=20260101&end=20260105
+{
+  "ok": true,
+  "tier": "free",
+  "source": "live",
+  "query": { "latitude": 34.0522, "longitude": -118.2437, "parameters": ["T2M", "PRECTOTCORR"], "start": "20260101", "end": "20260105", "community": "AG", "temporal": "daily" },
+  "data": {
+    "type": "Feature",
+    "geometry": { "type": "Point", "coordinates": [-118.244, 34.052, 395.0] },
+    "properties": { "parameter": { "T2M": { "20260101": 13.57, "20260102": 14.07 }, "PRECTOTCORR": { "20260101": 21.84, "20260102": 5.71 } } },
+    "header": { "sources": ["MERRA2"] },
+    "parameters": { "T2M": { "units": "C", "longname": "Temperature at 2 Meters" } }
+  }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/climate/power/parameters',
+    description:
+      'Curated catalog of the most-requested NASA POWER parameter codes with units, longnames, and recommended community (AG=agriculture, RE=renewable energy, SB=sustainable buildings). NASA exposes 100+ parameters; this catalog covers the common cases. Pass any documented code to /api/climate/power/daily even if not in this list.',
+    cache: 'Cache for 24 hours',
+    example: `{
+  "ok": true,
+  "tier": "free",
+  "count": 16,
+  "parameters": [
+    { "code": "T2M", "units": "C", "longname": "Temperature at 2 Meters", "community": "AG" },
+    { "code": "ALLSKY_SFC_SW_DWN", "units": "kWh/m^2/day", "longname": "All Sky Surface Shortwave Downward Irradiance", "community": "RE" }
+  ]
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news
