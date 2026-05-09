@@ -13,6 +13,11 @@ const PODCAST_SOURCES: PodcastSource[] = [
   { id: 'lex-fridman', name: 'Lex Fridman Podcast', feedUrl: 'https://lexfridman.com/feed/podcast/', active: true },
   { id: 'gradient-dissent', name: 'Gradient Dissent', feedUrl: 'https://feeds.soundcloud.com/users/soundcloud:users:495005692/sounds.rss', active: true },
   { id: 'ai-breakdown', name: 'The AI Breakdown', feedUrl: 'https://feeds.libsyn.com/467386/rss', active: true },
+  // Added 2026-05-09: high-signal AI/tech podcasts
+  { id: 'hard-fork', name: 'Hard Fork', feedUrl: 'https://feeds.simplecast.com/l2i9YnTd', active: true },
+  { id: 'dwarkesh', name: 'Dwarkesh Podcast', feedUrl: 'https://api.substack.com/feed/podcast/115929.rss', active: true },
+  { id: 'all-in', name: 'All-In Podcast', feedUrl: 'https://allinchamathjason.libsyn.com/rss', active: true },
+  { id: 'mlst', name: 'Machine Learning Street Talk', feedUrl: 'https://anchor.fm/s/1e4a0eac/podcast/rss', active: true },
 ];
 
 function hashString(str: string): string {

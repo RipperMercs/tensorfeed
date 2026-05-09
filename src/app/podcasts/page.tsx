@@ -11,6 +11,10 @@ const PODCAST_COLORS: Record<string, { bg: string; border: string }> = {
   'Practical AI': { bg: 'bg-emerald-500/20', border: '#10b981' },
   'Latent Space': { bg: 'bg-violet-500/20', border: '#8b5cf6' },
   'Last Week in AI': { bg: 'bg-amber-500/20', border: '#f59e0b' },
+  'Hard Fork': { bg: 'bg-red-500/20', border: '#ef4444' },
+  'Dwarkesh Podcast': { bg: 'bg-pink-500/20', border: '#ec4899' },
+  'All-In Podcast': { bg: 'bg-teal-500/20', border: '#14b8a6' },
+  'Machine Learning Street Talk': { bg: 'bg-indigo-500/20', border: '#6366f1' },
 };
 
 function timeAgo(dateStr: string): string {
