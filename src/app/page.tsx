@@ -14,6 +14,7 @@ import ExploreGrid from '@/components/home/ExploreGrid';
 import ApiPromoStrip from '@/components/home/ApiPromoStrip';
 import WhitepaperPromoStrip from '@/components/home/WhitepaperPromoStrip';
 import BuildPulse from '@/components/home/BuildPulse';
+import AgentOpportunitiesWidget from '@/components/home/AgentOpportunitiesWidget';
 import { ArrowRight, HelpCircle } from 'lucide-react';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
@@ -248,6 +249,8 @@ export default async function HomePage() {
       </div>
 
       <BuildPulse />
+
+      <AgentOpportunitiesWidget />
 
       <section
         className="border-b border-border"
