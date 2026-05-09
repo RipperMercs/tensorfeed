@@ -196,6 +196,40 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/history/news/full",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-08T00:00:00Z",
+      "metadata": {
+        "name": "Full news history snapshot",
+        "description": "Untruncated TensorFeed daily news archive. Pass ?date=YYYY-MM-DD for one day, or ?from=&to= for a range up to 30 days. Each day returns up to 200 deduped articles captured from the most recent hourly RSS poll.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-news-history"
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/history/news/source-health",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-08T00:00:00Z",
+      "metadata": {
+        "name": "RSS source-health series",
+        "description": "Multi-day per-source RSS poll reliability series across all TensorFeed news sources. Daily polls/poll_ok/poll_empty/poll_error/articles_total per source, plus reliability_pct and last_status. Range capped at 90 days.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-news-history"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",

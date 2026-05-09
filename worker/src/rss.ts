@@ -1,5 +1,6 @@
 import { Article, Env } from './types';
 import { RSS_SOURCES } from './sources';
+import { recordRSSPoll } from './news-history';
 
 // Keywords that must appear in title or description for non-AI-focused sources
 const AI_KEYWORDS = /\b(ai|a\.i\.|artificial intelligence|machine learning|deep learning|neural net|llm|large language model|language model|gpt|chatgpt|openai|anthropic|claude|gemini|deepmind|meta ai|mistral|cohere|hugging\s?face|transformer|diffusion model|generative ai|gen\s?ai|computer vision|natural language|nlp|chatbot|copilot|ai agent|ai model|robotics|automation|deepseek|llama|stable diffusion|midjourney|dall-e|sora|grok|perplexity)\b/i;
@@ -274,10 +275,20 @@ export async function pollRSSFeeds(env: Env): Promise<RSSPollResult> {
 
   console.log(`RSS poll complete - ${final.length} articles from ${successCount}/${activeSources.length} sources`);
 
-  return {
+  const result: RSSPollResult = {
     articlesTotal: final.length,
     sourcesPolled: activeSources.length,
     sourcesSucceeded: successCount,
     sourceResults,
   };
+
+  // Record the daily news snapshot and roll the per-source health
+  // counters. Failure here must not break the live news flow.
+  try {
+    await recordRSSPoll(env, result, final);
+  } catch (e) {
+    console.warn('news-history record failed:', e);
+  }
+
+  return result;
 }

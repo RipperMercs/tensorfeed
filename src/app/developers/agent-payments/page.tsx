@@ -351,6 +351,60 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/history/news/full',
+    description: 'Untruncated daily news archive. Single-date mode (?date=YYYY-MM-DD) returns the complete deduped article list for one UTC day (up to 200 articles). Range mode (?from=&to=, max 30 days) returns one entry per UTC date in the window. The free /api/history/news endpoint is capped at 25 articles per day; this endpoint exposes the full snapshot. Captured by every hourly RSS poll, so each day reflects the last poll before midnight.',
+    cost: '1 credit per call',
+    example: `// Query: ?date=2026-05-07
+{
+  "ok": true,
+  "mode": "single",
+  "date": "2026-05-07",
+  "captured_at": "2026-05-07T23:00:14.812Z",
+  "articles_count": 187,
+  "articles": [
+    {
+      "id": "x9k2pq",
+      "title": "Anthropic Ships Mythos to Defenders First",
+      "url": "https://www.anthropic.com/news/mythos",
+      "source": "Anthropic Blog",
+      "sourceDomain": "anthropic.com",
+      "snippet": "Anthropic released Mythos Preview today...",
+      "categories": ["models", "security"],
+      "publishedAt": "2026-05-07T18:30:00Z",
+      "fetchedAt": "2026-05-07T19:00:11Z"
+    }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 47 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/history/news/source-health',
+    description:
+      'Multi-day per-source RSS poll reliability series. Each entry per day carries polls (total polls in the UTC day), polls_ok, polls_empty, polls_error, articles_total, reliability_pct, last_status, and last_error. Sources sorted by reliability_pct descending. Range capped at 90 days. Useful for trending source reliability, detecting feeds that went silent, or building a procurement-grade view of which AI publishers are most consistent.',
+    cost: '1 credit per call',
+    example: `// Query: ?from=2026-05-01&to=2026-05-07
+{
+  "ok": true,
+  "from": "2026-05-01",
+  "to": "2026-05-07",
+  "days_returned": 7,
+  "days": [
+    {
+      "date": "2026-05-07",
+      "total_polls": 24,
+      "updated_at": "2026-05-07T23:00:14.812Z",
+      "sources": [
+        { "id": "anthropic", "name": "Anthropic Blog", "polls": 24, "polls_ok": 24, "polls_empty": 0, "polls_error": 0, "articles_total": 32, "reliability_pct": 100, "last_status": "ok", "last_seen_at": "2026-05-07T23:00:11Z" },
+        { "id": "huggingface", "name": "HuggingFace Blog", "polls": 24, "polls_ok": 18, "polls_empty": 6, "polls_error": 0, "articles_total": 14, "reliability_pct": 75, "last_status": "ok", "last_seen_at": "2026-05-07T23:00:12Z" }
+      ]
+    }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 46 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/status/leaderboard',
     description:
       'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',

@@ -11,6 +11,8 @@
     "GET /api/premium/history/pricing/series",
     "GET /api/premium/history/benchmarks/series",
     "GET /api/premium/history/status/uptime",
+    "GET /api/premium/history/news/full",
+    "GET /api/premium/history/news/source-health",
     "GET /api/premium/status/leaderboard",
     "GET /api/premium/mcp/registry/series",
     "GET /api/premium/probe/series",

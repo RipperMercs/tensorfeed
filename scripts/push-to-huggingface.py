@@ -19,7 +19,7 @@ import json
 import os
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -97,6 +97,10 @@ FEEDS: list[tuple[str, str, str | None]] = [
     ("ai-lawsuits", "/api/ai-lawsuits", "lawsuits"),
     # Tier 9: agent-payment ecosystem (added 2026-05-04)
     ("x402-adopters", "/api/x402-adopters", "adopters"),
+    # Tier 10: news ingestion meta (added 2026-05-08). The endpoint path is
+    # rewritten to include yesterday's UTC date so the JSONL captures the
+    # complete previous-day rollup, not a partial today-so-far one.
+    ("news-source-health", "/api/history/news/sources?date={yesterday}", "sources"),
 ]
 
 
@@ -124,6 +128,7 @@ def to_jsonl(payload: dict[str, Any], unwrap: str | None, stem: str) -> str:
 
 def main() -> int:
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
     captured_at = datetime.now(timezone.utc).isoformat()
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -138,8 +143,9 @@ def main() -> int:
         }
 
         for stem, path, unwrap in FEEDS:
+            resolved_path = path.format(yesterday=yesterday, today=today)
             try:
-                payload = fetch(path)
+                payload = fetch(resolved_path)
             except Exception as exc:
                 print(f"  skip {stem}: {exc}", file=sys.stderr)
                 manifest["feeds"][stem] = {"status": "error", "error": str(exc)}
@@ -150,7 +156,7 @@ def main() -> int:
             file_path.write_text(jsonl, encoding="utf-8")
             manifest["feeds"][stem] = {
                 "status": "ok",
-                "endpoint": path,
+                "endpoint": resolved_path,
                 "records": jsonl.count("\n"),
                 "bytes": len(jsonl.encode("utf-8")),
             }

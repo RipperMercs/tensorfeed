@@ -9,6 +9,15 @@ import { pollTrendingRepos } from './trending';
 import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatestSnapshot } from './snapshots';
 import { captureHistory, listHistory, readHistory } from './history';
 import {
+  readNewsDaily,
+  readSourceHealth,
+  listNewsDailyDates,
+  listSourceHealthDates,
+  summarizeSourceHealth,
+  isISODate,
+  enumerateDates,
+} from './news-history';
+import {
   resolveRange,
   resolveFreeRange,
   getPricingSeries,
@@ -1816,6 +1825,10 @@ export default {
           historyPricingSeries: '/api/history/pricing/series?model=&days=1-7 (free, 7-day cap)',
           historyBenchmarksSeries: '/api/history/benchmarks/series?model=&benchmark=&days=1-7 (free, 7-day cap)',
           historyStatusUptime: '/api/history/status/uptime?provider=&days=1-7 (free, 7-day cap)',
+          historyNews: '/api/history/news?date=&limit=1-25 (free, capped at 25 articles per day; full daily snapshot at /api/premium/history/news/full)',
+          historyNewsSources: '/api/history/news/sources?date= (free; per-source RSS poll reliability rollup for one UTC day)',
+          historyNewsDates: '/api/history/news/dates (free; ordered list of UTC dates with a daily news snapshot)',
+          historyNewsSourcesDates: '/api/history/news/sources/dates (free; ordered list of UTC dates with a source-health rollup)',
           statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
@@ -1854,6 +1867,8 @@ export default {
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
           premiumBenchmarkSeries: '/api/premium/history/benchmarks/series?model=&benchmark=&from=&to=',
           premiumStatusUptime: '/api/premium/history/status/uptime?provider=&from=&to=',
+          premiumNewsHistoryFull: '/api/premium/history/news/full?date= or ?from=&to= (1 credit; full untruncated daily news snapshots, single-date or range up to 30 days)',
+          premiumNewsSourceHealth: '/api/premium/history/news/source-health?from=&to= (1 credit; per-source RSS reliability series up to 90 days)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -2015,6 +2030,96 @@ export default {
         return jsonResponse({ ok: false, error: 'not_found', date, type }, 404);
       }
       return jsonResponse({ ok: true, ...snapshot }, 200, 86400);
+    }
+
+    // === FREE NEWS HISTORY (single-day lookup, capped at 25 articles) ===
+    // Single-date archive of the deduped article array as of the most
+    // recent hourly RSS poll for that UTC day. Free tier surfaces a
+    // 25-article slice to drive agent discovery; the premium endpoint
+    // returns the full untruncated snapshot and supports date ranges.
+
+    if (path === '/api/history/news') {
+      const date = url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
+      if (!isISODate(date)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date', hint: 'date must be YYYY-MM-DD' },
+          400,
+        );
+      }
+      const snapshot = await readNewsDaily(env, date);
+      if (!snapshot) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'not_found',
+            date,
+            hint: 'Daily snapshots accumulate going forward from 2026-05-08. Older dates may be unavailable.',
+          },
+          404,
+        );
+      }
+      const requested = parseInt(url.searchParams.get('limit') ?? '25', 10);
+      const limit = Math.max(1, Math.min(Number.isFinite(requested) ? requested : 25, 25));
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          date: snapshot.date,
+          captured_at: snapshot.captured_at,
+          articles_count: snapshot.articles_count,
+          articles_returned: Math.min(snapshot.articles_count, limit),
+          articles: snapshot.articles.slice(0, limit),
+          premium: {
+            endpoint: '/api/premium/history/news/full',
+            credits_per_call: 1,
+            note: 'Premium returns the full untruncated daily snapshot and supports date ranges (?from=&to=, max 30 days).',
+          },
+        },
+        200,
+        86400,
+      );
+    }
+
+    // === FREE SOURCE HEALTH (single-day per-source reliability) ===
+
+    if (path === '/api/history/news/sources') {
+      const date = url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
+      if (!isISODate(date)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date', hint: 'date must be YYYY-MM-DD' },
+          400,
+        );
+      }
+      const day = await readSourceHealth(env, date);
+      if (!day) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'not_found',
+            date,
+            hint: 'Source health rollups accumulate going forward from 2026-05-08.',
+          },
+          404,
+        );
+      }
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          date: day.date,
+          updated_at: day.updated_at,
+          total_polls: day.total_polls,
+          sources_count: Object.keys(day.sources).length,
+          sources: summarizeSourceHealth(day),
+          premium: {
+            endpoint: '/api/premium/history/news/source-health',
+            credits_per_call: 1,
+            note: 'Premium returns the same shape as a multi-day series (?from=&to=, max 90 days) for reliability trending.',
+          },
+        },
+        200,
+        3600,
+      );
     }
 
     // === FREE HISTORY SERIES (7-day teaser) ===
@@ -3511,6 +3616,209 @@ export default {
         logPremiumUsage(env, '/api/premium/history/status/uptime', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: NEWS HISTORY FULL (Tier 1, 1 credit) ===
+    // Untruncated daily news archive. Single-date mode returns the full
+    // article list for one date; range mode returns one entry per UTC day
+    // in the [from,to] window with up to 200 articles per day.
+
+    if (path === '/api/premium/history/news/full') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const date = url.searchParams.get('date');
+      const fromParam = url.searchParams.get('from');
+      const toParam = url.searchParams.get('to');
+
+      if (date) {
+        if (!isISODate(date)) {
+          return jsonResponse(
+            { ok: false, error: 'invalid_date', hint: 'date must be YYYY-MM-DD' },
+            400,
+          );
+        }
+        const snapshot = await readNewsDaily(env, date);
+        if (!snapshot) {
+          return jsonResponse({ ok: false, error: 'not_found', date }, 404);
+        }
+        ctx.waitUntil(
+          logPremiumUsage(env, '/api/premium/history/news/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        );
+        return await premiumResponse(
+          { ok: true, mode: 'single', ...snapshot },
+          payment,
+          1,
+          request,
+          env,
+        );
+      }
+
+      if (!fromParam || !toParam) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'pass ?date=YYYY-MM-DD for a single day or ?from=YYYY-MM-DD&to=YYYY-MM-DD for a range',
+          },
+          400,
+        );
+      }
+      if (!isISODate(fromParam) || !isISODate(toParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' },
+          400,
+        );
+      }
+      const fromMs = Date.parse(fromParam + 'T00:00:00Z');
+      const toMs = Date.parse(toParam + 'T00:00:00Z');
+      if (!(toMs >= fromMs)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' },
+          400,
+        );
+      }
+      const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
+      const NEWS_FULL_MAX_DAYS = 30;
+      if (dayCount > NEWS_FULL_MAX_DAYS) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'range_too_large',
+            hint: `range must be at most ${NEWS_FULL_MAX_DAYS} days`,
+            limits: { max_range_days: NEWS_FULL_MAX_DAYS },
+          },
+          400,
+        );
+      }
+
+      const dates = enumerateDates(fromParam, toParam);
+      const days = await Promise.all(
+        dates.map(async (d) => {
+          const snap = await readNewsDaily(env, d);
+          return snap
+            ? { date: d, articles_count: snap.articles_count, captured_at: snap.captured_at, articles: snap.articles }
+            : { date: d, missing: true };
+        }),
+      );
+      const totalArticles = days.reduce(
+        (sum, day) => sum + ('articles_count' in day ? (day.articles_count ?? 0) : 0),
+        0,
+      );
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/history/news/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          mode: 'range',
+          from: fromParam,
+          to: toParam,
+          days_returned: days.length,
+          articles_total: totalArticles,
+          days,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: NEWS SOURCE-HEALTH SERIES (Tier 1, 1 credit) ===
+    // Multi-day series of per-source poll counters and reliability scores,
+    // up to 90 days. Companion to /api/history/news/sources for trending.
+
+    if (path === '/api/premium/history/news/source-health') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const fromParam = url.searchParams.get('from');
+      const toParam = url.searchParams.get('to');
+      if (!fromParam || !toParam) {
+        return jsonResponse(
+          { ok: false, error: 'missing_params', hint: 'pass ?from=YYYY-MM-DD&to=YYYY-MM-DD' },
+          400,
+        );
+      }
+      if (!isISODate(fromParam) || !isISODate(toParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' },
+          400,
+        );
+      }
+      const fromMs = Date.parse(fromParam + 'T00:00:00Z');
+      const toMs = Date.parse(toParam + 'T00:00:00Z');
+      if (!(toMs >= fromMs)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' },
+          400,
+        );
+      }
+      const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
+      const SOURCE_HEALTH_MAX_DAYS = 90;
+      if (dayCount > SOURCE_HEALTH_MAX_DAYS) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'range_too_large',
+            hint: `range must be at most ${SOURCE_HEALTH_MAX_DAYS} days`,
+            limits: { max_range_days: SOURCE_HEALTH_MAX_DAYS },
+          },
+          400,
+        );
+      }
+
+      const dates = enumerateDates(fromParam, toParam);
+      const days = await Promise.all(
+        dates.map(async (d) => {
+          const day = await readSourceHealth(env, d);
+          return day
+            ? {
+                date: d,
+                total_polls: day.total_polls,
+                updated_at: day.updated_at,
+                sources: summarizeSourceHealth(day),
+              }
+            : { date: d, missing: true };
+        }),
+      );
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/history/news/source-health', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          from: fromParam,
+          to: toParam,
+          days_returned: days.length,
+          days,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === FREE: NEWS HISTORY INDEX (list of available dates) ===
+
+    if (path === '/api/history/news/dates') {
+      const dates = await listNewsDailyDates(env);
+      return jsonResponse(
+        { ok: true, tier: 'free', count: dates.length, dates },
+        200,
+        3600,
+      );
+    }
+
+    if (path === '/api/history/news/sources/dates') {
+      const dates = await listSourceHealthDates(env);
+      return jsonResponse(
+        { ok: true, tier: 'free', count: dates.length, dates },
+        200,
+        3600,
+      );
     }
 
     // === PAID PREMIUM: STATUS LEADERBOARD (Tier 1, 1 credit) ===

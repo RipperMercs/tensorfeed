@@ -545,6 +545,57 @@ const ENDPOINTS: Endpoint[] = [
     cache: 'Cache for 1 hour',
     example: `{ "ok": true, "providers": [...] }`,
   },
+  {
+    method: 'GET',
+    path: '/api/history/news',
+    description:
+      'Daily archive of TensorFeed deduped news articles for one UTC date. Free tier capped at 25 articles per day. Each daily snapshot is captured by every hourly RSS poll, so the value at lookup is the last poll before the day ended (or the most recent poll for today). Full untruncated archive and date ranges live behind the premium /api/premium/history/news/full endpoint.',
+    cache: 'Cache for 24 hours',
+    example: `// Query: ?date=2026-05-08&limit=10
+{
+  "ok": true,
+  "tier": "free",
+  "date": "2026-05-08",
+  "captured_at": "2026-05-08T14:00:11Z",
+  "articles_count": 187,
+  "articles_returned": 10,
+  "articles": [{ "title": "...", "url": "...", "source": "..." }]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/history/news/sources',
+    description:
+      'Per-source RSS poll reliability rollup for one UTC date. Each entry carries polls (total polls in the UTC day), polls_ok, polls_empty, polls_error, articles_total, reliability_pct, last_status, and last_error. Free, no auth. Sorted by reliability_pct descending. Multi-day series at the premium /api/premium/history/news/source-health endpoint.',
+    cache: 'Cache for 1 hour',
+    example: `// Query: ?date=2026-05-08
+{
+  "ok": true,
+  "tier": "free",
+  "date": "2026-05-08",
+  "total_polls": 14,
+  "sources_count": 12,
+  "sources": [
+    { "id": "anthropic", "name": "Anthropic Blog", "polls": 14, "polls_ok": 14, "polls_empty": 0, "polls_error": 0, "articles_total": 18, "reliability_pct": 100, "last_status": "ok" }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/history/news/dates',
+    description:
+      'Ordered list of UTC dates with a daily news snapshot available. Free, no auth. Useful for paging the archive backward from today.',
+    cache: 'Cache for 1 hour',
+    example: `{ "ok": true, "tier": "free", "count": 3, "dates": ["2026-05-06", "2026-05-07", "2026-05-08"] }`,
+  },
+  {
+    method: 'GET',
+    path: '/api/history/news/sources/dates',
+    description:
+      'Ordered list of UTC dates with a source-health rollup available. Free, no auth.',
+    cache: 'Cache for 1 hour',
+    example: `{ "ok": true, "tier": "free", "count": 3, "dates": ["2026-05-06", "2026-05-07", "2026-05-08"] }`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news
