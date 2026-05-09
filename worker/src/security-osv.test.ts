@@ -54,10 +54,12 @@ function pkgUrl(extras: Record<string, string>): URL {
 }
 
 describe('normalizeOsvId', () => {
-  it('uppercases and validates known shapes', () => {
-    expect(normalizeOsvId('ghsa-r75f-5x8p-qvmc')).toBe('GHSA-R75F-5X8P-QVMC');
+  it('uppercases the prefix but preserves the hash-portion case (GHSA hashes are case-sensitive on OSV.dev)', () => {
+    expect(normalizeOsvId('ghsa-r75f-5x8p-qvmc')).toBe('GHSA-r75f-5x8p-qvmc');
+    expect(normalizeOsvId('GHSA-r75f-5x8p-qvmc')).toBe('GHSA-r75f-5x8p-qvmc');
     expect(normalizeOsvId('CVE-2024-3094')).toBe('CVE-2024-3094');
     expect(normalizeOsvId('PYSEC-2023-98')).toBe('PYSEC-2023-98');
+    expect(normalizeOsvId('cve-2024-3094')).toBe('CVE-2024-3094');
   });
   it('rejects empty / whitespace input', () => {
     expect(normalizeOsvId('')).toBeNull();
@@ -128,7 +130,7 @@ describe('fetchOSVById', () => {
 
   it('returns cached advisory without network', async () => {
     const cache = env.TENSORFEED_CACHE as unknown as MockKV;
-    cache.store.set('osv:id:GHSA-R75F-5X8P-QVMC', JSON.stringify(SAMPLE_ADVISORY));
+    cache.store.set('osv:id:GHSA-r75f-5x8p-qvmc', JSON.stringify(SAMPLE_ADVISORY));
     const fetchSpy = vi.fn();
     globalThis.fetch = fetchSpy as unknown as typeof globalThis.fetch;
     const result = await fetchOSVById(env, 'ghsa-r75f-5x8p-qvmc');
@@ -138,12 +140,18 @@ describe('fetchOSVById', () => {
   });
 
   it('fetches live and caches with the documented TTL', async () => {
-    globalThis.fetch = (async () => ({ ok: true, status: 200, json: async () => SAMPLE_ADVISORY })) as unknown as typeof globalThis.fetch;
-    const result = await fetchOSVById(env, 'GHSA-R75F-5X8P-QVMC');
+    let captured = '';
+    globalThis.fetch = (async (url: string) => {
+      captured = url;
+      return { ok: true, status: 200, json: async () => SAMPLE_ADVISORY };
+    }) as unknown as typeof globalThis.fetch;
+    const result = await fetchOSVById(env, 'GHSA-r75f-5x8p-qvmc');
     expect(result.ok).toBe(true);
     expect(result.source).toBe('live');
+    expect(captured).toContain('GHSA-r75f-5x8p-qvmc');
+    expect(captured).not.toContain('GHSA-R75F-5X8P-QVMC');
     const cache = env.TENSORFEED_CACHE as unknown as MockKV;
-    expect(cache.ttls.get('osv:id:GHSA-R75F-5X8P-QVMC')).toBe(24 * 60 * 60);
+    expect(cache.ttls.get('osv:id:GHSA-r75f-5x8p-qvmc')).toBe(24 * 60 * 60);
   });
 
   it('returns osv_not_found on 404', async () => {

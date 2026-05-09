@@ -38,7 +38,14 @@ const ATTRIBUTION = {
     'OSV.dev advisory data is licensed under Apache License 2.0. Per the license, redistribution must include attribution and a copy of the license. The TensorFeed response includes this attribution block on every payload to satisfy that requirement on the consuming agent\'s behalf.',
 };
 
-const ID_RE = /^[A-Z][A-Z0-9-]{2,80}$/;
+// OSV advisory IDs use mixed case in practice. The prefix portion is
+// uppercase by convention (GHSA, CVE, PYSEC, RUSTSEC, GO, OSV, DSA,
+// ALPINE, DEBIAN, UBUNTU) but the hash/serial portion can be lowercase
+// (e.g. GHSA-r75f-5x8p-qvmc). We validate structurally and preserve
+// the caller's case so OSV.dev's case-sensitive lookup hits the right
+// advisory.
+const ID_PREFIX_RE = /^[A-Z][A-Z0-9]{1,15}-/;
+const ID_FULL_RE = /^[A-Z][A-Z0-9]{1,15}-[A-Za-z0-9-]{2,80}$/;
 const ECOSYSTEM_RE = /^[A-Za-z][A-Za-z0-9.\-:]{1,40}$/;
 const PKG_NAME_RE = /^[@A-Za-z0-9_./\-]{1,200}$/;
 const VERSION_RE = /^[A-Za-z0-9_+.\-:~^>=<*]{1,100}$/;
@@ -65,8 +72,16 @@ const SUPPORTED_ECOSYSTEMS = [
 
 export function normalizeOsvId(input: string): string | null {
   if (!input) return null;
-  const trimmed = input.trim().toUpperCase();
-  return ID_RE.test(trimmed) ? trimmed : null;
+  const trimmed = input.trim();
+  // Uppercase only the prefix portion (everything up to the first dash);
+  // preserve the case of the hash/serial portion since OSV.dev lookup is
+  // case-sensitive on the suffix (GHSA-r75f-5x8p-qvmc != GHSA-R75F-5X8P-QVMC).
+  const dashIdx = trimmed.indexOf('-');
+  if (dashIdx < 0) return null;
+  const prefix = trimmed.slice(0, dashIdx).toUpperCase();
+  const suffix = trimmed.slice(dashIdx);
+  const normalized = `${prefix}${suffix}`;
+  return ID_FULL_RE.test(normalized) ? normalized : null;
 }
 
 export interface OsvSingleResult {
