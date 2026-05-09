@@ -53,6 +53,12 @@ import {
   VULNRICHMENT_ATTRIBUTION,
 } from './security-vulnrichment';
 import {
+  parseEdgarSearchQuery,
+  searchEdgar,
+  fetchEdgarSubmissions,
+  EDGAR_ATTRIBUTION,
+} from './finance-sec-edgar';
+import {
   parsePowerQuery,
   fetchPowerPoint,
   POWER_PARAMETER_CATALOG,
@@ -1917,6 +1923,8 @@ export default {
           securityOSVPackage: '/api/security/osv/package?ecosystem=&name=&version= (free; OSV.dev advisories affecting one package version. Ecosystems: PyPI, npm, Go, crates.io, Maven, NuGet, RubyGems, Packagist, Hex, Pub, Hackage, Linux, etc)',
           securityOSVEcosystems: '/api/security/osv/ecosystems (free; supported OSV ecosystem identifiers)',
           securityVulnrichment: '/api/security/vulnrichment/{CVE-id} (free; CISA Vulnrichment enrichment for one CVE - CWE mappings, CVSS, exploitation evidence, KEV cross-refs - lazy-fetched from cisagov/vulnrichment, cached 7d. License: US Gov public domain. Pair with /api/security/cve/{id} for the MITRE record)',
+          secEdgarSearch: '/api/sec/edgar/search?q=&forms=10-K,10-Q,8-K&from=YYYY-MM-DD&to=YYYY-MM-DD&limit=1-50&page=1-100 (free; SEC EDGAR full-text search across the entire filings corpus since 1990s. License: US Gov public domain. Pair with /api/sec/company-tickers for ticker-to-CIK lookup)',
+          secEdgarSubmissions: '/api/sec/edgar/submissions/{cik} (free; recent filings + entity metadata for one CIK. Accepts numeric CIK in any zero-padding form, or CIK0000320193 prefixed form)',
           climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
           climatePowerParameters: '/api/climate/power/parameters (free; curated NASA POWER parameter catalog with units and longnames)',
           healthFDADrugEvents: '/api/health/fda/drug/events?search=&limit=1-100&skip=&sort= (free; FDA Adverse Event Reporting System (FAERS), 10M+ records. License: CC0)',
@@ -5120,6 +5128,68 @@ export default {
                 },
               }
             : {}),
+        },
+        status,
+        result.ok ? 3600 : 60,
+      );
+    }
+
+    // === FINANCE: SEC EDGAR (full-text search + submissions) ===
+    // Two complementary endpoints proxying SEC EDGAR. License: US
+    // Government public domain (17 USC 105). Commercial redistribution
+    // explicitly permitted. SEC fair-access policy requires a contact-
+    // identifying User-Agent on every upstream call; we send TF's
+    // contact info inside the worker. Search results cache 1h (queries
+    // are computationally heavy on SEC's side and highly cacheable);
+    // submissions cache 6h (recent filings update intra-day).
+
+    if (path === '/api/sec/edgar/search') {
+      const parsed = parseEdgarSearchQuery(url);
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await searchEdgar(env, parsed.query);
+      const status = result.ok
+        ? 200
+        : result.http_status === 429
+          ? 503
+          : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          source: result.source,
+          fetched_at: result.fetched_at,
+          query: result.query,
+          data: result.data,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+        },
+        status,
+        result.ok ? 1800 : 60,
+      );
+    }
+
+    const edgarSubMatch = path.match(/^\/api\/sec\/edgar\/submissions\/(.+)$/);
+    if (edgarSubMatch) {
+      const result = await fetchEdgarSubmissions(env, edgarSubMatch[1]);
+      const status = result.ok
+        ? 200
+        : result.error === 'cik_not_found'
+          ? 404
+          : result.error === 'invalid_cik'
+            ? 400
+            : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          cik: result.cik,
+          source: result.source,
+          fetched_at: result.fetched_at,
+          data: result.data,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
         },
         status,
         result.ok ? 3600 : 60,
