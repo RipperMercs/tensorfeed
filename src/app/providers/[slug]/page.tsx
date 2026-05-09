@@ -5,6 +5,7 @@ import { ArrowLeft, ChevronRight, Building2, ExternalLink, Cpu, BookOpen } from 
 import { getProviderBySlug, getAllProviderSlugs, PROVIDERS } from '@/lib/provider-directory';
 import { MODEL_DIRECTORY } from '@/lib/model-directory';
 import { COMPARISONS } from '@/lib/comparison-directory';
+import ProviderLivePulse from '@/components/providers/ProviderLivePulse';
 import pricingData from '@/../data/pricing.json';
 import benchmarkData from '@/../data/benchmarks.json';
 
@@ -101,6 +102,9 @@ export default function ProviderPage({ params }: { params: { slug: string } }) {
           {meta.intro}
         </p>
       </header>
+
+      {/* Live pulse: status + news + recent GitHub activity (client-fetched) */}
+      <ProviderLivePulse slug={meta.slug} />
 
       {/* Quick Facts */}
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
