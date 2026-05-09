@@ -97,6 +97,15 @@ crons = [
   # MITRE CVE Terms of Use, commercial redistribution explicitly permitted.
   # Powers /api/security/cve/* and premium /api/premium/security/cve/range.
   "30 4 * * *",
+  # Daily 07:30 UTC: news-history Phase B clustering pass
+  # (worker/src/news-clustering.ts). Reads yesterday's news:daily snapshot,
+  # batch-embeds article titles + snippets via Workers AI
+  # (@cf/baai/bge-base-en-v1.5), runs single-link cosine clustering at
+  # threshold 0.82, writes news:cluster:{date}:{cid} entries with source
+  # corroboration counts. Foundation for the verified-feed product.
+  # Slot picked to fire 30 min after the 07:00 hourly RSS poll has
+  # completed, before the 08:00 UTC HF push.
+  "30 7 * * *",
   # Daily 06:30 UTC: refresh CISA Known Exploited Vulnerabilities catalog
   # (worker/src/security-kev.ts). Single ~3 MB JSON file. License: US
   # Government public domain (17 USC 105), commercial redistribution
@@ -152,6 +161,14 @@ id = "4de30d8becd24b3bba9556b98bad8e69"
 [[kv_namespaces]]
 binding = "OFAC_AUDIT_LOG"
 id = "432951e9eeea420bafc8a5184a50b872"
+
+# Workers AI binding for news-history Phase B clustering. Free tier
+# allots 10K neurons/day which comfortably covers our daily 200-
+# article embedding pass via @cf/baai/bge-base-en-v1.5. Used by
+# worker/src/news-clustering.ts on the 07:30 UTC cron only; no
+# request-path AI calls.
+[ai]
+binding = "AI"
 
 [vars]
 ENVIRONMENT = "production"

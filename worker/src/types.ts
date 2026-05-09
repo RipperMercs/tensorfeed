@@ -2,6 +2,12 @@ export interface Env {
   TENSORFEED_NEWS: KVNamespace;
   TENSORFEED_STATUS: KVNamespace;
   TENSORFEED_CACHE: KVNamespace;
+  // Workers AI binding for news-history Phase B clustering
+  // (worker/src/news-clustering.ts). Used to embed article titles +
+  // snippets via @cf/baai/bge-base-en-v1.5 on the daily clustering
+  // cron. Optional binding; module skips gracefully if unset (e.g.
+  // in unit-test environments).
+  AI?: { run: (model: string, input: { text: string[] }) => Promise<{ data: number[][] }> };
   ENVIRONMENT: string;
   SITE_URL: string;
   INDEXNOW_KEY: string;

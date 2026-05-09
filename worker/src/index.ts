@@ -74,6 +74,11 @@ import {
   LLM_READY_CLEANING_VERSION,
 } from './llm-ready';
 import {
+  runDailyClustering,
+  readClustersForDate,
+  listClusterDates,
+} from './news-clustering';
+import {
   resolveRange,
   resolveFreeRange,
   getPricingSeries,
@@ -1885,6 +1890,8 @@ export default {
           historyNewsSources: '/api/history/news/sources?date= (free; per-source RSS poll reliability rollup for one UTC day)',
           historyNewsDates: '/api/history/news/dates (free; ordered list of UTC dates with a daily news snapshot)',
           historyNewsSourcesDates: '/api/history/news/sources/dates (free; ordered list of UTC dates with a source-health rollup)',
+          historyNewsClusters: '/api/history/news/clusters?date=&min_sources=1-50 (free; story-level corroboration clusters for a UTC date with embedding-based grouping. Top 25 returned with optional source-count filter)',
+          historyNewsClustersDates: '/api/history/news/clusters/dates (free; ordered list of UTC dates with cluster data)',
           securityCVEById: '/api/security/cve/{CVE-id} (free; lazy-fetch a single CVE Record v5.2 from MITRE, 7-day cache. License: MITRE CVE Terms of Use, commercial redistribution permitted)',
           securityCVERecent: '/api/security/cve/recent?limit=1-100 (free; ring buffer of CVE IDs added in cvelistV5 commits over the last ~24h)',
           securityCVEByDate: '/api/security/cve/by-date/{YYYY-MM-DD} (free; CVE IDs added in cvelistV5 commits on one UTC day)',
@@ -4625,6 +4632,53 @@ export default {
       );
     }
 
+    // === FREE: NEWS CLUSTERS (Phase B verification preview) ===
+    // Story-level corroboration view for one UTC date. Each cluster
+    // includes the contributing article IDs, distinct source count,
+    // a corroboration_band tag (single / limited / broad), and a hero
+    // article (earliest publishedAt). Computed by the 07:30 UTC daily
+    // cron via embedding-based clustering. Free tier returns top 25
+    // clusters with optional ?min_sources= filter; premium endpoints
+    // and the verified feed land in Phase B.2.
+
+    if (path === '/api/history/news/clusters') {
+      const date = url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
+      if (!isISODate(date)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date', hint: 'date must be YYYY-MM-DD' },
+          400,
+        );
+      }
+      const minSourcesRaw = parseInt(url.searchParams.get('min_sources') ?? '1', 10);
+      const min_sources = Math.max(1, Math.min(Number.isFinite(minSourcesRaw) ? minSourcesRaw : 1, 50));
+      const all = await readClustersForDate(env, date);
+      const filtered = all.filter((c) => c.source_count >= min_sources);
+      const capped = filtered.slice(0, 25);
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          date,
+          total_clusters: all.length,
+          filtered_count: filtered.length,
+          returned: capped.length,
+          min_sources,
+          clusters: capped,
+        },
+        200,
+        3600,
+      );
+    }
+
+    if (path === '/api/history/news/clusters/dates') {
+      const dates = await listClusterDates(env);
+      return jsonResponse(
+        { ok: true, tier: 'free', count: dates.length, dates },
+        200,
+        3600,
+      );
+    }
+
     // === SECURITY: MITRE CVE LIST ===
     // Single-CVE lookup is lazy-fetched from MITRE's free single-CVE
     // endpoint and cached in KV for 7 days. The "recent" ring + dated
@@ -6310,6 +6364,15 @@ export default {
       // filings or XBRL fundamentals). Slot chosen between OpenAlex
       // (04:00) and BLS (05:00).
       await run('captureSECTickersDaily', () => captureSECTickersDaily(env));
+    } else if (cron === '30 7 * * *') {
+      // Daily 07:30 UTC: news-history Phase B clustering pass
+      // (worker/src/news-clustering.ts). Reads yesterday's news daily
+      // snapshot, embeds article titles + snippets via Workers AI
+      // (@cf/baai/bge-base-en-v1.5), runs single-link cosine clustering
+      // at threshold 0.82, and persists per-cluster source corroboration
+      // counts. Foundation for the verified-feed product. Slot picked
+      // to fire 30 min after the 07:00 hourly RSS poll has completed.
+      await run('runDailyClustering', () => runDailyClustering(env));
     } else if (cron === '30 4 * * *') {
       // Daily 04:30 UTC: walk the cvelistV5 GitHub repo's commit history
       // for the last 36h, harvest added/modified CVE-* file paths,
