@@ -12,11 +12,9 @@ import ActivityStream from '@/components/home/ActivityStream';
 import EditorialFeature from '@/components/home/EditorialFeature';
 import ExploreGrid from '@/components/home/ExploreGrid';
 import ApiPromoStrip from '@/components/home/ApiPromoStrip';
-import WhitepaperPromoStrip from '@/components/home/WhitepaperPromoStrip';
 import BuildPulse from '@/components/home/BuildPulse';
 import AgentOpportunitiesWidget from '@/components/home/AgentOpportunitiesWidget';
 import { ArrowRight, HelpCircle } from 'lucide-react';
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 export const metadata: Metadata = {
   title: 'TensorFeed: Real-time AI news, model tracking, and ecosystem data',
@@ -242,12 +240,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <WhitepaperPromoStrip />
-
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <AdPlaceholder format="horizontal" />
-      </div>
-
       <BuildPulse />
 
       <AgentOpportunitiesWidget />
@@ -314,10 +306,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <AdPlaceholder format="horizontal" />
-      </div>
 
       <ApiPromoStrip />
 

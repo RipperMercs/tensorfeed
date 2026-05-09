@@ -70,6 +70,12 @@ export default function Footer() {
             >
               Account
             </Link>
+            <Link
+              href="/whitepaper"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors"
+            >
+              Whitepaper
+            </Link>
             <a
               href="https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily"
               target="_blank"
