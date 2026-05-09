@@ -571,6 +571,57 @@ const TOOLS: McpToolDef[] = [
       return await fetchEIASeries(env, parsed.query);
     },
   },
+
+  // ─── Agent ecosystem opportunities ────────────────────────────────
+  {
+    name: 'get_agent_opportunities',
+    description:
+      "Get TensorFeed's daily scan of new repositories across the AI agent ecosystem (Anthropic, OpenAI, Microsoft, ModelContextProtocol, HuggingFace, LangChain, frontier labs) plus recent MCP/x402/skills keyword sweeps. Each opportunity includes the GitHub repo path, description, stars, last update, the source signal, and a composite score (signal weight × log10(stars+1) × recency decay). Refreshed daily at 13:30 UTC. Useful for surfacing distribution targets, integration ideas, or just a daily digest of what's launching across the agent space. License: GitHub data via the public Search API; output is TensorFeed's curated ranking.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: {
+          type: 'number',
+          description: 'Max opportunities to return (1-25)',
+          default: 10,
+        },
+        signal: {
+          type: 'string',
+          description:
+            'Optional filter to one signal source. One of: anthropic-org, openai-org, microsoft-org, mcp-org, huggingface-org, langchain-org, frontier-labs, mcp-keyword, x402-keyword, skill-keyword, vertical-pattern.',
+        },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const limit = Math.max(1, Math.min(getNumberArg(args, 'limit') ?? 10, 25));
+      const signal = getStringArg(args, 'signal');
+      const snapshot = await env.TENSORFEED_CACHE.get<unknown>('opps:latest', 'json');
+      if (!snapshot || typeof snapshot !== 'object') {
+        return { ok: false, error: 'opportunities_not_yet_captured' };
+      }
+      const snap = snapshot as {
+        date?: string;
+        capturedAt?: string;
+        opportunities?: Array<{ signal?: string }>;
+        summary?: unknown;
+      };
+      const all = Array.isArray(snap.opportunities) ? snap.opportunities : [];
+      const filtered = signal ? all.filter((o) => o.signal === signal) : all;
+      return {
+        ok: true,
+        date: snap.date ?? null,
+        capturedAt: snap.capturedAt ?? null,
+        signal_filter: signal ?? null,
+        total_in_snapshot: all.length,
+        returned: Math.min(filtered.length, limit),
+        summary: snap.summary ?? null,
+        opportunities: filtered.slice(0, limit),
+        attribution:
+          'TensorFeed daily agent-ecosystem scan. Source data: GitHub public Search API. License: TensorFeed-curated ranking; underlying repo metadata is GitHub-API-permitted.',
+      };
+    },
+  },
 ];
 
 // ── Method handlers ─────────────────────────────────────────────────
@@ -592,7 +643,9 @@ async function handleInitialize(): Promise<unknown> {
     },
     instructions:
       'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp. ' +
-      'Free tier: AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev / SEC EDGAR / EIA Open Data / NASA POWER. ' +
+      'Free tier (18 tools): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
+      'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
+      'EIA Open Data series, and the daily agent-ecosystem opportunities scan. ' +
       'Premium tools require an Authorization: Bearer tf_live_... token; buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
       'License posture: most data is US Government public domain; commercial redistribution permitted; attribution preserved on every response.',
   };

@@ -93,6 +93,7 @@ describe('tools/list', () => {
     expect(names).toContain('get_eia_series');
     expect(names).toContain('get_cve_record');
     expect(names).toContain('get_kev_catalog');
+    expect(names).toContain('get_agent_opportunities');
   });
 
   it('every tool has a description and inputSchema', () => {
