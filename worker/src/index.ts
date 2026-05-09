@@ -6538,6 +6538,12 @@ export default {
         const [nfl, mlb] = await Promise.all([pollNFLNews(env), pollMLBNews(env)]);
         return jsonResponse({ message: 'Sports news polled', nfl, mlb });
       }
+      if (task === 'cluster') {
+        const dateParam = url.searchParams.get('date');
+        const dateOverride = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : undefined;
+        const result = await runDailyClustering(env, new Date(), dateOverride);
+        return jsonResponse({ message: 'News clustering pass ran', ...result });
+      }
       await Promise.all([pollRSSFeeds(env), pollStatusPages(env), updateCatalog(env), pollPodcastFeeds(env), pollTrendingRepos(env)]);
 
       return jsonResponse({ ok: true, message: 'Refreshed all feeds, status, and catalog' });
