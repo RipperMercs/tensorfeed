@@ -42,6 +42,13 @@ import {
   EPSS_ATTRIBUTION,
 } from './security-epss';
 import {
+  fetchOSVById,
+  fetchOSVForPackage,
+  parseOsvPackageQuery,
+  OSV_ATTRIBUTION,
+  OSV_SUPPORTED_ECOSYSTEMS,
+} from './security-osv';
+import {
   parsePowerQuery,
   fetchPowerPoint,
   POWER_PARAMETER_CATALOG,
@@ -1902,6 +1909,9 @@ export default {
           securityKEVDates: '/api/security/kev/dates (free; ordered list of UTC dates with KEV-added data)',
           securityEPSSById: '/api/security/epss/{CVE-id} (free; current EPSS exploitation-likelihood score for a CVE, lazy-fetched from FIRST.org with 24h cache. License: free for any use per FIRST.org policy)',
           securityEPSSTop: '/api/security/epss/top?limit=1-50 (free; top-N CVEs by current EPSS score)',
+          securityOSVById: '/api/security/osv/{advisory-id} (free; lookup OSV.dev advisory by GHSA / CVE / PYSEC / RUSTSEC / etc id, lazy-fetched and cached 24h. License: Apache-2.0; attribution preserved on every response)',
+          securityOSVPackage: '/api/security/osv/package?ecosystem=&name=&version= (free; OSV.dev advisories affecting one package version. Ecosystems: PyPI, npm, Go, crates.io, Maven, NuGet, RubyGems, Packagist, Hex, Pub, Hackage, Linux, etc)',
+          securityOSVEcosystems: '/api/security/osv/ecosystems (free; supported OSV ecosystem identifiers)',
           climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
           climatePowerParameters: '/api/climate/power/parameters (free; curated NASA POWER parameter catalog with units and longnames)',
           healthFDADrugEvents: '/api/health/fda/drug/events?search=&limit=1-100&skip=&sort= (free; FDA Adverse Event Reporting System (FAERS), 10M+ records. License: CC0)',
@@ -5108,6 +5118,76 @@ export default {
         },
         status,
         result.ok ? 3600 : 60,
+      );
+    }
+
+    // === SECURITY: OSV.dev (Open Source Vulnerabilities) ===
+    // Lazy-proxy with KV cache to OSV.dev's hosted advisory database.
+    // License: Apache License 2.0; commercial redistribution permitted
+    // with attribution. Two query modes: by advisory ID (GHSA / CVE /
+    // PYSEC / RUSTSEC / etc) or by package descriptor (ecosystem +
+    // name + optional version).
+
+    const osvByIdMatch = path.match(/^\/api\/security\/osv\/([A-Z][A-Z0-9-]{2,80})$/i);
+    if (osvByIdMatch && osvByIdMatch[1] !== 'package' && osvByIdMatch[1] !== 'ecosystems') {
+      const result = await fetchOSVById(env, osvByIdMatch[1]);
+      const status = result.ok
+        ? 200
+        : result.error === 'osv_not_found'
+          ? 404
+          : result.error === 'invalid_osv_id'
+            ? 400
+            : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          id: result.id,
+          source: result.source,
+          fetched_at: result.fetched_at,
+          advisory: result.data,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+        },
+        status,
+        result.ok ? 3600 : 60,
+      );
+    }
+
+    if (path === '/api/security/osv/package') {
+      const parsed = parseOsvPackageQuery(url);
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchOSVForPackage(env, parsed.query);
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          source: result.source,
+          fetched_at: result.fetched_at,
+          query: result.query,
+          vulns_count: result.vulns_count,
+          data: result.data,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+        },
+        result.ok ? 200 : 502,
+        result.ok ? 1800 : 60,
+      );
+    }
+
+    if (path === '/api/security/osv/ecosystems') {
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          count: OSV_SUPPORTED_ECOSYSTEMS.length,
+          ecosystems: OSV_SUPPORTED_ECOSYSTEMS,
+          attribution: OSV_ATTRIBUTION,
+        },
+        200,
+        86400,
       );
     }
 
