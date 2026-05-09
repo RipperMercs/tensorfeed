@@ -26,6 +26,15 @@ export const ORIGINALS: OriginalArticle[] = [
       "I shipped eight PRs across Anthropic, OpenAI, and the canonical Model Context Protocol Registry in one day. None of it was a stunt. Each one fit into a slot the frontier labs had built and were waiting to be filled. Inside the recurring three-category pattern (vertical reference repos, generic skill catalogs, plugin marketplaces), the MCP Registry as the vendor-neutral routing layer most people are missing, what this means if you publish data, and the three signals that say more is coming.",
   },
   {
+    slug: 'openai-gpt-realtime-2-voice-stack',
+    title: "OpenAI Just Shipped Voice Models That Reason Mid-Sentence. ElevenLabs Has a Pricing Problem.",
+    author: 'Kira Nolan',
+    date: 'May 9, 2026',
+    readTime: '6 min read',
+    description:
+      "OpenAI shipped GPT-Realtime-2, GPT-Realtime-Translate, and GPT-Realtime-Whisper on May 7, 2026. The first OpenAI voice model with GPT-5-class reasoning, 128K context, and the ability to keep talking while it thinks. Translate at $0.034/min and streaming Whisper at $0.017/min round out a three-model stack priced to make most voice middleware repriceable. Inside the launch, the pricing math against ElevenLabs ($0.08/min) and Deepgram, the reasoning-mid-sentence detail, and what it does to the voice vendor middle.",
+  },
+  {
     slug: 'anthropic-spacexai-colossus-orbital',
     title: 'Anthropic Just Booked 220K GPUs on Colossus 1. The Orbital Footnote Is the Bigger Story.',
     author: 'Ripper',
