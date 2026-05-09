@@ -89,6 +89,7 @@ import {
   transformFdaQueryResults,
   attachCompressionStats,
   measureSourceBytes,
+  composeVerifiedCve,
   LLM_READY_CLEANING_VERSION,
 } from './llm-ready';
 import {
@@ -2014,6 +2015,7 @@ export default {
           premiumCleanPowerDaily: '/api/premium/clean/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (1 credit; NASA POWER pivoted into date-keyed rows with -999 fill values normalized to null and ISO-8601 dates)',
           premiumCleanEIASeries: '/api/premium/clean/eia/series?route=&frequency=&start=&end=&length=1-5000 (1 credit; EIA series flattened to numeric points with MoM and YoY delta percentages computed against valid observations)',
           premiumCleanFDA: '/api/premium/clean/fda/{category}?search=&limit=1-100&skip=&sort= (1 credit; LLM-ready OpenFDA query results. Per-category flat schema for drug/events, drug/labels, drug/recalls, food/recalls, device/events)',
+          premiumSecurityVerifiedCVE: '/api/premium/security/verified/{CVE-id} (1 credit; cross-database CVE verification: composes MITRE CVE + CISA KEV + FIRST.org EPSS + OSV.dev + CISA Vulnrichment into one fact card with confirmed_by array and corroboration_count. The single-call anti-hallucination lookup for security agents)',
           premiumHistoryNewsClustersFull: '/api/premium/history/news/clusters/full?date= or ?from=&to= (1 credit; full untruncated cross-source story clusters, single-date or 30-day range)',
           premiumHistoryNewsVerified: '/api/premium/history/news/verified?date= or ?from=&to=&min_sources=2-50 (1 credit; the verified feed - story clusters with N+ independent sources corroborating; default min_sources=4)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
@@ -4348,6 +4350,108 @@ export default {
           included_series: wantSeries,
           ...clean,
           attribution: raw.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: VERIFIED CVE (Tier 1, 1 credit) ===
+    // Cross-database CVE corroboration in a single call. Composes up to
+    // five independent security databases (MITRE CVE List, CISA KEV,
+    // FIRST.org EPSS, OSV.dev, CISA Vulnrichment) into one fact card
+    // with a `confirmed_by` array and `corroboration_count`. Sources
+    // that don't have the CVE just don't appear in confirmed_by; the
+    // call still succeeds with whatever sources do have it.
+    //
+    // The agent's pitch: instead of fanning out 5 API calls and parsing
+    // 5 different response formats to confirm a CVE is real and to
+    // gather severity + exploitation + ecosystem signals, hit one
+    // endpoint for one credit. The hallucination-reduction story is
+    // direct: corroboration_count is auditable per call.
+
+    const verifiedCveMatch = path.match(/^\/api\/premium\/security\/verified\/(CVE-\d{4}-\d{4,7})$/i);
+    if (verifiedCveMatch) {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const cveId = verifiedCveMatch[1].toUpperCase();
+      const [mitre, kev, epss, osv, vuln] = await Promise.all([
+        fetchCVE(env, cveId).catch(() => null),
+        readKEVByCVE(env, cveId).catch(() => null),
+        fetchEPSSCurrent(env, cveId).catch(() => null),
+        fetchOSVById(env, cveId).catch(() => null),
+        fetchVulnrichment(env, cveId).catch(() => null),
+      ]);
+
+      const mitreRecord = mitre && mitre.ok ? mitre.record : null;
+      const kevEntry = kev ?? null;
+      const epssCurrent = epss && epss.ok ? epss.data : null;
+      const osvRecord = osv && osv.ok ? osv.data : null;
+      const vulnRecord = vuln && vuln.ok ? vuln.record : null;
+
+      const confirmedCount =
+        Number(Boolean(mitreRecord)) +
+        Number(Boolean(kevEntry)) +
+        Number(Boolean(epssCurrent)) +
+        Number(Boolean(osvRecord)) +
+        Number(Boolean(vulnRecord));
+
+      if (confirmedCount === 0) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'cve_not_found_in_any_source',
+            cve_id: cveId,
+            checked: ['MITRE', 'KEV', 'EPSS', 'OSV', 'Vulnrichment'],
+            hint: 'No corroboration found across the 5 security databases. CVE id may be invalid, very recent (not yet propagated), or reserved/disputed.',
+          },
+          404,
+        );
+      }
+
+      const sourcePayloadBytes =
+        (mitreRecord ? measureSourceBytes(mitreRecord) : 0) +
+        (kevEntry ? measureSourceBytes(kevEntry) : 0) +
+        (epssCurrent ? measureSourceBytes(epssCurrent) : 0) +
+        (osvRecord ? measureSourceBytes(osvRecord) : 0) +
+        (vulnRecord ? measureSourceBytes(vulnRecord) : 0);
+
+      const composed = composeVerifiedCve({
+        cveId,
+        mitreRecord,
+        kevEntry,
+        epssCurrent,
+        osvRecord,
+        vulnrichmentRecord: vulnRecord,
+      });
+      const cleaned = attachCompressionStats(composed, sourcePayloadBytes);
+
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/security/verified',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+
+      return await premiumResponse(
+        {
+          ok: true,
+          source_format: 'mitre_cve_v5_2 + cisa_kev_v1 + first_epss_v3 + osv_v1 + cisa_vulnrichment_v1',
+          target_format: 'tensorfeed_llm_ready_v1',
+          ...cleaned,
+          attributions: [
+            mitre?.attribution,
+            { source: 'CISA Known Exploited Vulnerabilities', source_url: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog', license: 'US Government Public Domain (17 USC 105)', redistribution: 'commercial-permitted' },
+            epss?.attribution,
+            osv?.attribution,
+            vuln?.attribution,
+          ].filter(Boolean),
         },
         payment,
         1,

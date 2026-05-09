@@ -359,6 +359,191 @@ export function transformEpssScore(raw: unknown): LlmReadyEnvelope<LlmReadyEpss>
   });
 }
 
+// ===== Verified CVE (composes MITRE + KEV + EPSS + OSV + Vulnrichment) =====
+
+export type VerifiedCveSourceName = 'MITRE' | 'KEV' | 'EPSS' | 'OSV' | 'Vulnrichment';
+
+export interface LlmReadyVerifiedCve {
+  cve_id: string;
+  severity_band: 'none' | 'low' | 'medium' | 'high' | 'critical';
+  cvss_v3_1_score: number | null;
+  summary: string | null;
+  exploited_in_wild: boolean;
+  epss_probability: number | null;
+  epss_percentile: number | null;
+  exploit_likelihood_band: 'low' | 'medium' | 'high' | 'critical';
+  cwes: string[];
+  affected_products: string[];
+  affected_ecosystems: string[];
+  references_top: string[];
+  ssvc: {
+    exploitation: string | null;
+    automatable: string | null;
+    technical_impact: string | null;
+  } | null;
+  confirmed_by: VerifiedCveSourceName[];
+  corroboration_count: number;
+  per_source: {
+    mitre: { ok: boolean; cvss_score: number | null; cwes_count: number };
+    kev: { ok: boolean; date_added: string | null; ransomware_use: 'yes' | 'unknown' | 'no' | null };
+    epss: { ok: boolean; probability: number | null; percentile: number | null };
+    osv: { ok: boolean; ecosystems_count: number; aliases_count: number };
+    vulnrichment: { ok: boolean; has_ssvc: boolean };
+  };
+}
+
+export interface VerifiedCveSourceInputs {
+  cveId: string;
+  mitreRecord: unknown | null;
+  kevEntry: unknown | null;
+  epssCurrent: unknown | null;
+  osvRecord: unknown | null;
+  vulnrichmentRecord: unknown | null;
+}
+
+function extractOsvEcosystems(raw: unknown): string[] {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const affected = Array.isArray(r.affected) ? r.affected : [];
+  const ecosystems = new Set<string>();
+  for (const a of affected) {
+    const aObj = (a ?? {}) as Record<string, unknown>;
+    const pkg = (aObj.package ?? {}) as Record<string, unknown>;
+    const eco = safeStr(pkg.ecosystem);
+    if (eco) ecosystems.add(eco);
+  }
+  return Array.from(ecosystems);
+}
+
+function extractOsvAliasesCount(raw: unknown): number {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return Array.isArray(r.aliases) ? r.aliases.length : 0;
+}
+
+function extractOsvSummary(raw: unknown): string | null {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return safeStr(r.summary) ?? safeStr(r.details);
+}
+
+function extractVulnrichmentSsvc(raw: unknown): {
+  exploitation: string | null;
+  automatable: string | null;
+  technical_impact: string | null;
+} | null {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const containers = (r.containers ?? {}) as Record<string, unknown>;
+  const adp = Array.isArray(containers.adp) ? containers.adp : [];
+  for (const entry of adp) {
+    const e = (entry ?? {}) as Record<string, unknown>;
+    const metrics = Array.isArray(e.metrics) ? e.metrics : [];
+    for (const m of metrics) {
+      const mObj = (m ?? {}) as Record<string, unknown>;
+      const ssvc = (mObj.other ?? mObj.ssvc) as Record<string, unknown> | undefined;
+      if (ssvc) {
+        const content = (ssvc.content ?? ssvc) as Record<string, unknown>;
+        const options = (content.options ?? {}) as Record<string, unknown> | unknown[];
+        if (Array.isArray(options)) {
+          let exploitation: string | null = null;
+          let automatable: string | null = null;
+          let technical_impact: string | null = null;
+          for (const opt of options) {
+            const o = (opt ?? {}) as Record<string, unknown>;
+            if (typeof o.Exploitation === 'string') exploitation = o.Exploitation;
+            if (typeof o.Automatable === 'string') automatable = o.Automatable;
+            if (typeof o['Technical Impact'] === 'string') technical_impact = o['Technical Impact'] as string;
+          }
+          if (exploitation || automatable || technical_impact) {
+            return { exploitation, automatable, technical_impact };
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Compose a single verified-CVE fact card from up to 5 independent
+ * security databases. Each source contributes whatever it has; missing
+ * sources just don't appear in confirmed_by. The agent gets one call
+ * with cross-source corroboration instead of fanning out to 5 different
+ * APIs and parsing 5 different formats. This is the single biggest
+ * "save the agent time + reduce hallucination risk" lever in the
+ * security suite.
+ */
+export function composeVerifiedCve(
+  inputs: VerifiedCveSourceInputs,
+): LlmReadyEnvelope<LlmReadyVerifiedCve> {
+  const mitreClean = inputs.mitreRecord ? transformCveRecord(inputs.mitreRecord).data : null;
+  const kevClean = inputs.kevEntry ? transformKevEntry(inputs.kevEntry).data : null;
+  const epssClean = inputs.epssCurrent ? transformEpssScore(inputs.epssCurrent).data : null;
+
+  const confirmed_by: VerifiedCveSourceName[] = [];
+  if (inputs.mitreRecord) confirmed_by.push('MITRE');
+  if (inputs.kevEntry) confirmed_by.push('KEV');
+  if (inputs.epssCurrent) confirmed_by.push('EPSS');
+  if (inputs.osvRecord) confirmed_by.push('OSV');
+  if (inputs.vulnrichmentRecord) confirmed_by.push('Vulnrichment');
+
+  const summary =
+    mitreClean?.summary ??
+    kevClean?.short_description ??
+    extractOsvSummary(inputs.osvRecord) ??
+    null;
+
+  const cwes: string[] = [];
+  if (mitreClean) for (const c of mitreClean.cwes) if (!cwes.includes(c)) cwes.push(c);
+  if (kevClean) for (const c of kevClean.cwes) if (!cwes.includes(c)) cwes.push(c);
+
+  const affected_ecosystems = inputs.osvRecord ? extractOsvEcosystems(inputs.osvRecord) : [];
+  const ssvc = inputs.vulnrichmentRecord ? extractVulnrichmentSsvc(inputs.vulnrichmentRecord) : null;
+
+  const data: LlmReadyVerifiedCve = {
+    cve_id: inputs.cveId,
+    severity_band: mitreClean?.severity_band ?? 'none',
+    cvss_v3_1_score: mitreClean?.cvss_v3_1_score ?? null,
+    summary,
+    exploited_in_wild: Boolean(inputs.kevEntry),
+    epss_probability: epssClean?.epss_probability ?? null,
+    epss_percentile: epssClean?.percentile ?? null,
+    exploit_likelihood_band: epssRiskBand(epssClean?.epss_probability ?? null),
+    cwes,
+    affected_products: mitreClean?.affected_products ?? [],
+    affected_ecosystems,
+    references_top: mitreClean?.references_top ?? [],
+    ssvc,
+    confirmed_by,
+    corroboration_count: confirmed_by.length,
+    per_source: {
+      mitre: {
+        ok: Boolean(inputs.mitreRecord),
+        cvss_score: mitreClean?.cvss_v3_1_score ?? null,
+        cwes_count: mitreClean?.cwes.length ?? 0,
+      },
+      kev: {
+        ok: Boolean(inputs.kevEntry),
+        date_added: kevClean?.date_added ?? null,
+        ransomware_use: kevClean?.ransomware_use ?? null,
+      },
+      epss: {
+        ok: Boolean(inputs.epssCurrent),
+        probability: epssClean?.epss_probability ?? null,
+        percentile: epssClean?.percentile ?? null,
+      },
+      osv: {
+        ok: Boolean(inputs.osvRecord),
+        ecosystems_count: affected_ecosystems.length,
+        aliases_count: extractOsvAliasesCount(inputs.osvRecord),
+      },
+      vulnrichment: {
+        ok: Boolean(inputs.vulnrichmentRecord),
+        has_ssvc: ssvc !== null,
+      },
+    },
+  };
+
+  return envelope('TensorFeed Verified CVE (MITRE + KEV + EPSS + OSV + Vulnrichment)', data);
+}
+
 // ===== NASA POWER (daily or hourly point) =====
 
 export interface LlmReadyPowerRow {

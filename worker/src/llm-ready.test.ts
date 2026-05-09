@@ -12,6 +12,7 @@ import {
   transformFdaQueryResults,
   attachCompressionStats,
   measureSourceBytes,
+  composeVerifiedCve,
   type LlmReadyFdaDrugEvent,
   type LlmReadyFdaDrugLabel,
   type LlmReadyFdaRecall,
@@ -671,5 +672,196 @@ describe('attachCompressionStats', () => {
 describe('LLM_READY_CLEANING_VERSION', () => {
   it('is set to a stable value', () => {
     expect(LLM_READY_CLEANING_VERSION).toBe('1.0');
+  });
+});
+
+describe('composeVerifiedCve', () => {
+  const MITRE_RECORD: unknown = {
+    cveMetadata: {
+      cveId: 'CVE-2024-3094',
+      state: 'PUBLISHED',
+      datePublished: '2024-03-29T16:51:12.588Z',
+      dateUpdated: '2025-11-20T07:17:48.594Z',
+      assignerShortName: 'redhat',
+    },
+    containers: {
+      cna: {
+        descriptions: [{ lang: 'en', value: 'Malicious code in xz upstream tarballs.' }],
+        metrics: [{ cvssV3_1: { baseScore: 10, baseSeverity: 'CRITICAL', vectorString: 'CVSS:3.1/AV:N/AC:L' } }],
+        problemTypes: [{ descriptions: [{ cweId: 'CWE-506' }] }],
+        affected: [{ vendor: 'xz', product: 'liblzma' }],
+        references: [{ url: 'https://www.openwall.com/lists/oss-security/2024/03/29/4' }],
+      },
+    },
+  };
+
+  const KEV_ENTRY = {
+    cveID: 'CVE-2024-3094',
+    vendorProject: 'XZ',
+    product: 'liblzma',
+    vulnerabilityName: 'Backdoor in xz',
+    dateAdded: '2024-04-01',
+    dueDate: '2024-04-22',
+    shortDescription: 'XZ Utils backdoor.',
+    requiredAction: 'Apply mitigations.',
+    knownRansomwareCampaignUse: 'Unknown',
+    cwes: ['CWE-506'],
+    notes: '',
+  };
+
+  const EPSS_POINT = { cve: 'CVE-2024-3094', epss: '0.85', percentile: '0.99', date: '2026-05-08' };
+
+  const OSV_RECORD = {
+    id: 'CVE-2024-3094',
+    summary: 'Backdoor in xz utils.',
+    aliases: ['GHSA-rxjx-vqh4-25mm'],
+    affected: [
+      { package: { ecosystem: 'Alpine' } },
+      { package: { ecosystem: 'Debian' } },
+      { package: { ecosystem: 'Alpine' } },
+    ],
+  };
+
+  const VULN_RECORD = {
+    containers: {
+      adp: [
+        {
+          metrics: [
+            {
+              other: {
+                content: {
+                  options: [
+                    { Exploitation: 'active' },
+                    { Automatable: 'yes' },
+                    { 'Technical Impact': 'total' },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  it('reports corroboration_count=5 and confirmed_by lists every source when all present', () => {
+    const out = composeVerifiedCve({
+      cveId: 'CVE-2024-3094',
+      mitreRecord: MITRE_RECORD,
+      kevEntry: KEV_ENTRY,
+      epssCurrent: EPSS_POINT,
+      osvRecord: OSV_RECORD,
+      vulnrichmentRecord: VULN_RECORD,
+    });
+    expect(out.data.corroboration_count).toBe(5);
+    expect(out.data.confirmed_by).toEqual(['MITRE', 'KEV', 'EPSS', 'OSV', 'Vulnrichment']);
+    expect(out.data.cve_id).toBe('CVE-2024-3094');
+    expect(out.data.severity_band).toBe('critical');
+    expect(out.data.cvss_v3_1_score).toBe(10);
+    expect(out.data.exploited_in_wild).toBe(true);
+    expect(out.data.epss_probability).toBe(0.85);
+    expect(out.data.exploit_likelihood_band).toBe('high');
+    expect(out.data.cwes).toContain('CWE-506');
+    expect(out.data.affected_ecosystems).toEqual(expect.arrayContaining(['Alpine', 'Debian']));
+    expect(out.data.affected_ecosystems.length).toBe(2);
+    expect(out.data.ssvc?.exploitation).toBe('active');
+    expect(out.data.ssvc?.automatable).toBe('yes');
+    expect(out.data.ssvc?.technical_impact).toBe('total');
+    expect(out.data.summary).toBe('Malicious code in xz upstream tarballs.');
+    expect(out.source).toContain('TensorFeed Verified CVE');
+  });
+
+  it('falls back to KEV summary when MITRE missing', () => {
+    const out = composeVerifiedCve({
+      cveId: 'CVE-2024-3094',
+      mitreRecord: null,
+      kevEntry: KEV_ENTRY,
+      epssCurrent: null,
+      osvRecord: null,
+      vulnrichmentRecord: null,
+    });
+    expect(out.data.corroboration_count).toBe(1);
+    expect(out.data.confirmed_by).toEqual(['KEV']);
+    expect(out.data.summary).toBe('XZ Utils backdoor.');
+    expect(out.data.exploited_in_wild).toBe(true);
+    expect(out.data.severity_band).toBe('none');
+  });
+
+  it('falls back to OSV summary when only OSV present', () => {
+    const out = composeVerifiedCve({
+      cveId: 'CVE-2024-3094',
+      mitreRecord: null,
+      kevEntry: null,
+      epssCurrent: null,
+      osvRecord: OSV_RECORD,
+      vulnrichmentRecord: null,
+    });
+    expect(out.data.corroboration_count).toBe(1);
+    expect(out.data.confirmed_by).toEqual(['OSV']);
+    expect(out.data.summary).toBe('Backdoor in xz utils.');
+    expect(out.data.affected_ecosystems).toEqual(expect.arrayContaining(['Alpine', 'Debian']));
+  });
+
+  it('reports corroboration_count=0 when every source is null', () => {
+    const out = composeVerifiedCve({
+      cveId: 'CVE-9999-9999',
+      mitreRecord: null,
+      kevEntry: null,
+      epssCurrent: null,
+      osvRecord: null,
+      vulnrichmentRecord: null,
+    });
+    expect(out.data.corroboration_count).toBe(0);
+    expect(out.data.confirmed_by).toEqual([]);
+    expect(out.data.exploited_in_wild).toBe(false);
+    expect(out.data.summary).toBeNull();
+    expect(out.data.cwes).toEqual([]);
+    expect(out.data.affected_ecosystems).toEqual([]);
+    expect(out.data.ssvc).toBeNull();
+  });
+
+  it('per_source mirrors which sources had data', () => {
+    const out = composeVerifiedCve({
+      cveId: 'CVE-2024-3094',
+      mitreRecord: MITRE_RECORD,
+      kevEntry: null,
+      epssCurrent: EPSS_POINT,
+      osvRecord: OSV_RECORD,
+      vulnrichmentRecord: null,
+    });
+    expect(out.data.per_source.mitre.ok).toBe(true);
+    expect(out.data.per_source.mitre.cvss_score).toBe(10);
+    expect(out.data.per_source.kev.ok).toBe(false);
+    expect(out.data.per_source.kev.date_added).toBeNull();
+    expect(out.data.per_source.epss.ok).toBe(true);
+    expect(out.data.per_source.epss.probability).toBe(0.85);
+    expect(out.data.per_source.osv.ok).toBe(true);
+    expect(out.data.per_source.osv.ecosystems_count).toBe(2);
+    expect(out.data.per_source.osv.aliases_count).toBe(1);
+    expect(out.data.per_source.vulnrichment.ok).toBe(false);
+    expect(out.data.per_source.vulnrichment.has_ssvc).toBe(false);
+  });
+
+  it('attaches compression_stats correctly when wrapped', () => {
+    const composed = composeVerifiedCve({
+      cveId: 'CVE-2024-3094',
+      mitreRecord: MITRE_RECORD,
+      kevEntry: KEV_ENTRY,
+      epssCurrent: EPSS_POINT,
+      osvRecord: OSV_RECORD,
+      vulnrichmentRecord: VULN_RECORD,
+    });
+    const sourceBytes =
+      measureSourceBytes(MITRE_RECORD) +
+      measureSourceBytes(KEV_ENTRY) +
+      measureSourceBytes(EPSS_POINT) +
+      measureSourceBytes(OSV_RECORD) +
+      measureSourceBytes(VULN_RECORD);
+    const out = attachCompressionStats(composed, sourceBytes);
+    expect(out.compression_stats?.source_bytes).toBe(sourceBytes);
+    expect(out.compression_stats?.cleaned_bytes).toBeGreaterThan(0);
+    expect(out.compression_stats?.cleaned_bytes).toBeLessThan(sourceBytes);
+    expect(out.compression_stats?.reduction_pct).toBeGreaterThan(0);
+    expect(out.compression_stats?.approx_tokens_saved).toBeGreaterThan(0);
   });
 });

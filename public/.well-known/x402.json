@@ -400,6 +400,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/security/verified/{CVE-id}",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "Verified CVE (cross-database)",
+        "description": "Single-call cross-database CVE verification. Composes MITRE CVE Record + CISA Known Exploited Vulnerabilities + FIRST.org EPSS + OSV.dev advisory + CISA Vulnrichment SSVC into one LLM-ready fact card with confirmed_by array and corroboration_count. Reduces 5 fan-out calls and 5 different parsing schemas to one. The anti-hallucination lookup for security agents: corroboration_count is auditable per call. Sources missing the CVE just don't appear in confirmed_by; the call still returns whatever sources do have it. License terms inherited from each upstream source; attribution block per source included on every response.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-security-verified-cve"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/clean/power/daily",
       "type": "http",
       "method": "GET",
