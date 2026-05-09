@@ -6541,8 +6541,18 @@ export default {
       if (task === 'cluster') {
         const dateParam = url.searchParams.get('date');
         const dateOverride = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : undefined;
-        const result = await runDailyClustering(env, new Date(), dateOverride);
-        return jsonResponse({ message: 'News clustering pass ran', ...result });
+        const thresholdParam = url.searchParams.get('threshold');
+        const parsedThreshold = thresholdParam ? Number(thresholdParam) : NaN;
+        const thresholdOverride =
+          Number.isFinite(parsedThreshold) && parsedThreshold > 0 && parsedThreshold < 1
+            ? parsedThreshold
+            : undefined;
+        const result = await runDailyClustering(env, new Date(), dateOverride, thresholdOverride);
+        return jsonResponse({
+          message: 'News clustering pass ran',
+          ...result,
+          ...(thresholdOverride !== undefined ? { threshold_override: thresholdOverride } : {}),
+        });
       }
       await Promise.all([pollRSSFeeds(env), pollStatusPages(env), updateCatalog(env), pollPodcastFeeds(env), pollTrendingRepos(env)]);
 

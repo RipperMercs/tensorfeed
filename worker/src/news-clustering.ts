@@ -302,6 +302,7 @@ export async function runDailyClustering(
   env: Env,
   now: Date = new Date(),
   dateOverride?: string,
+  thresholdOverride?: number,
 ): Promise<ClusterRunResult> {
   const startedAt = Date.now();
   const date = dateOverride ?? previousUtcDate(now);
@@ -371,7 +372,7 @@ export async function runDailyClustering(
     expirationTtl: EMBED_TTL,
   });
 
-  const clusters = buildClusters({ date, articles, embeddings });
+  const clusters = buildClusters({ date, articles, embeddings, threshold: thresholdOverride });
 
   for (const cluster of clusters) {
     await env.TENSORFEED_CACHE.put(
