@@ -26,6 +26,8 @@
     "GET /api/premium/clean/power/daily",
     "GET /api/premium/clean/eia/series",
     "GET /api/premium/clean/fda/{category}",
+    "GET /api/premium/history/news/clusters/full",
+    "GET /api/premium/history/news/verified",
     "GET /api/premium/status/leaderboard",
     "GET /api/premium/mcp/registry/series",
     "GET /api/premium/probe/series",

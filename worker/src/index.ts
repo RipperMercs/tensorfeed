@@ -1965,6 +1965,8 @@ export default {
           premiumCleanPowerDaily: '/api/premium/clean/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (1 credit; NASA POWER pivoted into date-keyed rows with -999 fill values normalized to null and ISO-8601 dates)',
           premiumCleanEIASeries: '/api/premium/clean/eia/series?route=&frequency=&start=&end=&length=1-5000 (1 credit; EIA series flattened to numeric points with MoM and YoY delta percentages computed against valid observations)',
           premiumCleanFDA: '/api/premium/clean/fda/{category}?search=&limit=1-100&skip=&sort= (1 credit; LLM-ready OpenFDA query results. Per-category flat schema for drug/events, drug/labels, drug/recalls, food/recalls, device/events)',
+          premiumHistoryNewsClustersFull: '/api/premium/history/news/clusters/full?date= or ?from=&to= (1 credit; full untruncated cross-source story clusters, single-date or 30-day range)',
+          premiumHistoryNewsVerified: '/api/premium/history/news/verified?date= or ?from=&to=&min_sources=2-50 (1 credit; the verified feed - story clusters with N+ independent sources corroborating; default min_sources=4)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -3812,6 +3814,220 @@ export default {
           to: toParam,
           days_returned: days.length,
           articles_total: totalArticles,
+          days,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: NEWS CLUSTERS FULL (Tier 1, 1 credit) ===
+    // Untruncated cluster set per UTC date (free tier caps at 25 per
+    // day). Single-date mode returns the full cluster array; range
+    // mode returns one entry per UTC day in the [from,to] window with
+    // up to 30 days. The verification product's primary surface for
+    // agents that want to enumerate all corroborated stories without
+    // the discoverability cap.
+
+    if (path === '/api/premium/history/news/clusters/full') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const date = url.searchParams.get('date');
+      const fromParam = url.searchParams.get('from');
+      const toParam = url.searchParams.get('to');
+
+      if (date) {
+        if (!isISODate(date)) {
+          return jsonResponse({ ok: false, error: 'invalid_date', hint: 'date must be YYYY-MM-DD' }, 400);
+        }
+        const clusters = await readClustersForDate(env, date);
+        ctx.waitUntil(
+          logPremiumUsage(
+            env,
+            '/api/premium/history/news/clusters/full',
+            request.headers.get('User-Agent') || 'unknown',
+            1,
+            payment.token,
+          ),
+        );
+        return await premiumResponse(
+          { ok: true, mode: 'single', date, count: clusters.length, clusters },
+          payment,
+          1,
+          request,
+          env,
+        );
+      }
+
+      if (!fromParam || !toParam) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'pass ?date=YYYY-MM-DD or ?from=YYYY-MM-DD&to=YYYY-MM-DD',
+          },
+          400,
+        );
+      }
+      if (!isISODate(fromParam) || !isISODate(toParam)) {
+        return jsonResponse({ ok: false, error: 'invalid_date_range' }, 400);
+      }
+      const fromMs = Date.parse(fromParam + 'T00:00:00Z');
+      const toMs = Date.parse(toParam + 'T00:00:00Z');
+      if (!(toMs >= fromMs)) {
+        return jsonResponse({ ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' }, 400);
+      }
+      const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
+      if (dayCount > 30) {
+        return jsonResponse(
+          { ok: false, error: 'range_too_large', hint: 'range must be at most 30 days', limits: { max_range_days: 30 } },
+          400,
+        );
+      }
+      const dates = enumerateDates(fromParam, toParam);
+      const days = await Promise.all(
+        dates.map(async (d) => ({
+          date: d,
+          clusters: await readClustersForDate(env, d),
+        })),
+      );
+      const total_clusters = days.reduce((sum, day) => sum + day.clusters.length, 0);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/history/news/clusters/full',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          mode: 'range',
+          from: fromParam,
+          to: toParam,
+          days_returned: days.length,
+          total_clusters,
+          days,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: VERIFIED FEED (Tier 1, 1 credit) ===
+    // Story-level feed filtered to clusters with N+ independent sources
+    // corroborating. The agent's "do not act on a single source" gate.
+    // Default min_sources=4 (corroboration_band="broad"); agents can
+    // tune lower if they want limited corroboration too.
+
+    if (path === '/api/premium/history/news/verified') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const date = url.searchParams.get('date');
+      const fromParam = url.searchParams.get('from');
+      const toParam = url.searchParams.get('to');
+      const minRaw = parseInt(url.searchParams.get('min_sources') ?? '4', 10);
+      const min_sources = Math.max(2, Math.min(Number.isFinite(minRaw) ? minRaw : 4, 50));
+
+      const filter = (clusters: { source_count: number }[]) =>
+        clusters.filter((c) => c.source_count >= min_sources);
+
+      if (date) {
+        if (!isISODate(date)) {
+          return jsonResponse({ ok: false, error: 'invalid_date' }, 400);
+        }
+        const all = await readClustersForDate(env, date);
+        const verified = filter(all);
+        ctx.waitUntil(
+          logPremiumUsage(
+            env,
+            '/api/premium/history/news/verified',
+            request.headers.get('User-Agent') || 'unknown',
+            1,
+            payment.token,
+          ),
+        );
+        return await premiumResponse(
+          {
+            ok: true,
+            mode: 'single',
+            date,
+            min_sources,
+            total_clusters_for_day: all.length,
+            verified_count: verified.length,
+            clusters: verified,
+          },
+          payment,
+          1,
+          request,
+          env,
+        );
+      }
+
+      if (!fromParam || !toParam) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'pass ?date=YYYY-MM-DD or ?from=YYYY-MM-DD&to=YYYY-MM-DD with optional ?min_sources=2-50 (default 4)',
+          },
+          400,
+        );
+      }
+      if (!isISODate(fromParam) || !isISODate(toParam)) {
+        return jsonResponse({ ok: false, error: 'invalid_date_range' }, 400);
+      }
+      const fromMs = Date.parse(fromParam + 'T00:00:00Z');
+      const toMs = Date.parse(toParam + 'T00:00:00Z');
+      if (!(toMs >= fromMs)) {
+        return jsonResponse({ ok: false, error: 'invalid_date_range' }, 400);
+      }
+      const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
+      if (dayCount > 30) {
+        return jsonResponse(
+          { ok: false, error: 'range_too_large', hint: 'range must be at most 30 days', limits: { max_range_days: 30 } },
+          400,
+        );
+      }
+      const dates = enumerateDates(fromParam, toParam);
+      const days = await Promise.all(
+        dates.map(async (d) => {
+          const all = await readClustersForDate(env, d);
+          return {
+            date: d,
+            total_clusters_for_day: all.length,
+            verified_count: filter(all).length,
+            clusters: filter(all),
+          };
+        }),
+      );
+      const total_verified = days.reduce((sum, day) => sum + day.verified_count, 0);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/history/news/verified',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          mode: 'range',
+          from: fromParam,
+          to: toParam,
+          min_sources,
+          days_returned: days.length,
+          total_verified,
           days,
         },
         payment,

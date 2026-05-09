@@ -718,6 +718,62 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/history/news/clusters/full',
+    description:
+      'Full untruncated cross-source story clusters per UTC date. Each cluster groups TensorFeed news articles about the same story via embedding-based similarity and reports source_count, sources_list, hero article, corroboration_band (single / limited / broad), and contributing article_ids. The free /api/history/news/clusters caps at 25 clusters/day; this endpoint removes the cap and adds 30-day range support. Computed nightly at 07:30 UTC.',
+    cost: '1 credit per call',
+    example: `// GET /api/premium/history/news/clusters/full?date=2026-05-08
+{
+  "ok": true,
+  "mode": "single",
+  "date": "2026-05-08",
+  "count": 47,
+  "clusters": [
+    {
+      "cluster_id": "k3mn8q",
+      "date": "2026-05-08",
+      "article_count": 6,
+      "source_count": 5,
+      "sources": ["anthropic.com", "techcrunch.com", "theverge.com", "reuters.com", "bloomberg.com"],
+      "article_ids": ["a1", "a2", "a3", "a4", "a5", "a6"],
+      "hero": { "id": "a1", "title": "Anthropic Ships Mythos to Defenders First", "url": "https://www.anthropic.com/news/mythos", "source": "Anthropic Blog", "publishedAt": "2026-05-07T18:30:00Z" },
+      "first_seen_at": "2026-05-07T18:30:00Z",
+      "corroboration_band": "broad"
+    }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 32 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/history/news/verified',
+    description:
+      'Story-level feed filtered to clusters with N+ independent sources corroborating. Default min_sources=4 (broad corroboration). Agents asking "do not act on a single source" get a clean stream of stories that cleared the trust threshold. The verification product uniquely possible for TF because only TF has the cross-source view at scale.',
+    cost: '1 credit per call',
+    example: `// GET /api/premium/history/news/verified?from=2026-05-01&to=2026-05-08&min_sources=4
+{
+  "ok": true,
+  "mode": "range",
+  "from": "2026-05-01",
+  "to": "2026-05-08",
+  "min_sources": 4,
+  "days_returned": 8,
+  "total_verified": 23,
+  "days": [
+    {
+      "date": "2026-05-08",
+      "total_clusters_for_day": 47,
+      "verified_count": 4,
+      "clusters": [
+        { "cluster_id": "k3mn8q", "source_count": 5, "corroboration_band": "broad", "hero": { "title": "Anthropic Ships Mythos..." } }
+      ]
+    }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 31 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/clean/fda/{category}',
     description:
       'LLM-ready OpenFDA query results. Same five categories as the free /api/health/fda/{category} (drug/events, drug/labels, drug/recalls, food/recalls, device/events) with per-category flat schemas. Drug events flatten patient demo + drugs + reactions + outcomes + seriousness flags. Drug labels surface brand/generic/manufacturer + section text. Recalls expose classification + reason + voluntary flag. Device events extract primary device + outcomes + truncated narrative. License: CC0 1.0 Universal Dedication.',

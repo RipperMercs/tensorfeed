@@ -434,6 +434,40 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/history/news/clusters/full",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "News story clusters (full)",
+        "description": "Full untruncated story-level cross-source corroboration clusters per UTC date or range up to 30 days. Each cluster groups TensorFeed news articles about the same story via embedding-based similarity (Workers AI bge-base-en-v1.5 at threshold 0.82) and reports source_count, sources_list, hero article (earliest publishedAt), corroboration_band (single/limited/broad), and contributing article_ids. The free /api/history/news/clusters caps at 25 clusters/day; this endpoint returns all clusters with no cap.",
+        "tier": 1,
+        "credits": 1,
+        "category": "news-verification"
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/history/news/verified",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "Verified news feed",
+        "description": "Story-level news feed filtered to clusters with N or more independent sources corroborating. Default min_sources=4 (broad corroboration). Agents asking 'do not act on a single source' get a clean stream of stories that cleared the trust threshold. The trust play Gemini named: only TF can ship this because only TF has the cross-source view at scale. Single-date or 30-day range. Computed nightly via Workers AI bge-base-en-v1.5 embedding clustering.",
+        "tier": 1,
+        "credits": 1,
+        "category": "news-verification"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/clean/fda/{category}",
       "type": "http",
       "method": "GET",
