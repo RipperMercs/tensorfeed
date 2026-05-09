@@ -44,10 +44,20 @@ const QUERIES: QuerySpec[] = [
   { signal: 'anthropic-org', signal_weight: 10, q: 'org:anthropics', per_page: 10 },
   // OpenAI: same vertical-marketplace pattern (openai/skills for Codex).
   { signal: 'openai-org', signal_weight: 9, q: 'org:openai', per_page: 10 },
-  // Microsoft: MCP-relevant subset (skills, mcp catalog, agent-related).
-  { signal: 'microsoft-org', signal_weight: 7, q: 'org:microsoft mcp OR agent OR skill', per_page: 10 },
   // MCP foundation: protocol-level changes affect every MCP-aware client.
   { signal: 'mcp-org', signal_weight: 8, q: 'org:modelcontextprotocol', per_page: 10 },
+  // Microsoft: MCP-relevant subset (skills, mcp catalog, agent-related).
+  { signal: 'microsoft-org', signal_weight: 7, q: 'org:microsoft mcp OR agent OR skill', per_page: 10 },
+  // HuggingFace: ships agent-relevant tools and reference repos that fit the
+  // same data-layer pattern.
+  { signal: 'huggingface-org', signal_weight: 7, q: 'org:huggingface', per_page: 10 },
+  // LangChain ecosystem: orchestration layer; catches new templates, integrations,
+  // and the langgraph extensions agents commonly depend on.
+  { signal: 'langchain-org', signal_weight: 6, q: 'org:langchain-ai', per_page: 10 },
+  // Other frontier labs combined: Cohere, Mistral, DeepSeek, xAI, Groq. Smaller
+  // distribution surfaces individually but collectively meaningful, and any of
+  // them shipping their own vertical-repo pattern is a leading indicator.
+  { signal: 'frontier-labs', signal_weight: 7, q: 'org:cohere-ai OR org:mistralai OR org:deepseek-ai OR org:xai-org OR org:groq', per_page: 10 },
   // MCP server keyword: broader pool of new MCP servers across the ecosystem.
   { signal: 'mcp-keyword', signal_weight: 5, q: '"mcp server" stars:>=10', per_page: 10 },
   // x402 keyword: agent-payments protocol projects (TF is canonical V2 merchant).
@@ -55,6 +65,10 @@ const QUERIES: QuerySpec[] = [
   // Agent skills catalogs: cross-vendor pattern (anthropics/skills, openai/skills,
   // microsoft/skills all exist; this catches the next one when it lands).
   { signal: 'skill-keyword', signal_weight: 6, q: '"agent skills" OR "claude skills" stars:>=10', per_page: 10 },
+  // Vertical reference repo pattern: catches "claude-for-X" / "openai-for-X" /
+  // similar new vertical bundles before they show up under their parent org's
+  // daily updated list. The pattern that drove today's life-sciences submission.
+  { signal: 'vertical-pattern', signal_weight: 8, q: '"claude for" OR "openai for" OR "claude-for-" stars:>=20', per_page: 10 },
 ];
 
 const RECENT_WINDOW_DAYS = 30;
@@ -383,8 +397,12 @@ export async function getSnapshotForDate(
 const HIGH_VALUE_SIGNALS = new Set([
   'anthropic-org',
   'openai-org',
-  'microsoft-org',
   'mcp-org',
+  'microsoft-org',
+  'huggingface-org',
+  'frontier-labs',
+  'langchain-org',
+  'vertical-pattern',
 ]);
 const KEYWORD_STAR_THRESHOLD = 100;
 const ALERT_ITEM_CAP = 25;
