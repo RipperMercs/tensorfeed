@@ -826,6 +826,45 @@ const ENDPOINTS: Endpoint[] = [
   }
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/economy/eia/categories',
+    description:
+      'Curated catalog of high-demand EIA Open Data routes with descriptions, default frequencies, and example facet filters. Free, no auth. License: US Government public domain.',
+    cache: 'Cache for 24 hours',
+    example: `{
+  "ok": true,
+  "tier": "free",
+  "count": 6,
+  "routes": [
+    { "route": "petroleum/pri/spt", "description": "Crude oil spot prices (WTI Cushing, Brent). Daily.", "default_frequency": "daily" },
+    { "route": "electricity/retail-sales", "description": "Retail electricity sales by state and sector.", "default_frequency": "monthly" }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/economy/eia/series',
+    description:
+      'EIA Open Data time-series proxy. Curated route allowlist covering petroleum spot prices, retail gasoline, natural gas, electricity retail sales, electricity generation by fuel, and total US energy. License: US Government public domain (17 USC 105). Requires the operator to set the EIA_API_KEY worker secret.',
+    cache: 'Cache for 1 hour',
+    example: `// GET /api/economy/eia/series?route=petroleum/pri/spt&frequency=daily&length=5
+{
+  "ok": true,
+  "tier": "free",
+  "source": "live",
+  "data": {
+    "response": {
+      "frequency": "daily",
+      "total": 12345,
+      "data": [
+        { "period": "2026-05-08", "value": 78.42 },
+        { "period": "2026-05-07", "value": 78.19 }
+      ]
+    }
+  }
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news

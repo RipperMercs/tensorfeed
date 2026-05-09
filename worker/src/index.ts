@@ -57,6 +57,12 @@ import {
   FDA_ATTRIBUTION,
 } from './health-fda';
 import {
+  parseEIAQuery,
+  fetchEIASeries,
+  EIA_ROUTES,
+  EIA_ATTRIBUTION,
+} from './economy-eia';
+import {
   resolveRange,
   resolveFreeRange,
   getPricingSeries,
@@ -1886,6 +1892,8 @@ export default {
           healthFDAFoodRecalls: '/api/health/fda/food/recalls?search=&limit=1-100&skip=&sort= (free; FDA food enforcement reports / recalls)',
           healthFDADeviceEvents: '/api/health/fda/device/events?search=&limit=1-100&skip=&sort= (free; FDA MAUDE device adverse events)',
           healthFDACategories: '/api/health/fda/categories (free; directory of supported openFDA categories with descriptions)',
+          economyEIASeries: '/api/economy/eia/series?route=&frequency=&start=&end=&length=1-5000&data=value (free; EIA Open Data series. Routes: petroleum/pri/spt, petroleum/pri/gnd, natural-gas/pri/sum, electricity/retail-sales, electricity/electric-power-operational-data, total-energy. License: US Gov public domain)',
+          economyEIACategories: '/api/economy/eia/categories (free; curated EIA route catalog with descriptions and example filters)',
           statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
@@ -4544,6 +4552,66 @@ export default {
         },
         200,
         86400,
+      );
+    }
+
+    // === ECONOMY: EIA (US Energy Information Administration) ===
+    // Lazy-proxy with KV caching to a curated route allowlist on the EIA
+    // v2 API. License: US Government public domain (17 USC 105). Requires
+    // a free EIA_API_KEY worker secret; degrades gracefully to 503 if
+    // the secret is unset (mirrors FRED treatment).
+
+    if (path === '/api/economy/eia/categories') {
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          count: Object.keys(EIA_ROUTES).length,
+          routes: Object.entries(EIA_ROUTES).map(([key, cfg]) => ({
+            route: key,
+            description: cfg.description,
+            default_frequency: cfg.default_frequency,
+            example_filters: cfg.example_filters,
+            tf_endpoint: `/api/economy/eia/series?route=${encodeURIComponent(key)}`,
+          })),
+          attribution: EIA_ATTRIBUTION,
+        },
+        200,
+        86400,
+      );
+    }
+
+    if (path === '/api/economy/eia/series') {
+      const parsed = parseEIAQuery(url);
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchEIASeries(env, parsed.query);
+      const status = result.ok
+        ? 200
+        : result.http_status === 429
+          ? 503
+          : result.http_status === 503
+            ? 503
+            : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          source: result.source,
+          fetched_at: result.fetched_at,
+          query: result.query,
+          data: result.data,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+          ...(result.error === 'eia_key_unset'
+            ? {
+                hint: 'EIA_API_KEY worker secret is not set. Operator must register a free key at https://www.eia.gov/opendata/register.php and run `wrangler secret put EIA_API_KEY`.',
+              }
+            : {}),
+        },
+        status,
+        result.ok ? 3600 : 60,
       );
     }
 
