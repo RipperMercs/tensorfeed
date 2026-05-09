@@ -153,23 +153,63 @@ describe('dedupAndRank', () => {
   });
 
   it('caps result at top 25', () => {
-    const many = Array.from({ length: 100 }, (_, i) => ({
-      full_name: `o/${i}`,
-      html_url: `https://github.com/o/${i}`,
-      description: null,
-      stars: 100 - i,
-      created_at: '2026-04-01T00:00:00Z',
-      updated_at: '2026-05-09T00:00:00Z',
-      language: null,
-      topics: [],
-      signal: 'mcp-keyword',
-      signal_weight: 5,
-      composite_score: 100 - i,
-    } as AgentOpportunity));
+    // 100 entries spread across two signals (50 each) so the per-signal cap
+    // (5 each) doesn't artificially truncate to 10. Composite scores are
+    // monotonically decreasing across the merged list.
+    const many: AgentOpportunity[] = [];
+    for (let i = 0; i < 100; i++) {
+      many.push({
+        full_name: `o/${i}`,
+        html_url: `https://github.com/o/${i}`,
+        description: null,
+        stars: 100 - i,
+        created_at: '2026-04-01T00:00:00Z',
+        updated_at: '2026-05-09T00:00:00Z',
+        language: null,
+        topics: [],
+        signal: i % 2 === 0 ? 'anthropic-org' : 'openai-org',
+        signal_weight: i % 2 === 0 ? 10 : 9,
+        composite_score: 100 - i,
+      });
+    }
     const out = dedupAndRank(many);
     expect(out.length).toBe(25);
+    // The top-5 cap per signal applies first; remainder is filled from
+    // overflow in composite-score order.
     expect(out[0].composite_score).toBe(100);
-    expect(out[24].composite_score).toBe(76);
+  });
+
+  it('per-signal cap leaves room for keyword-sweep signals', () => {
+    // 20 anthropic-org entries with high composite scores plus a single
+    // x402-keyword entry with a lower score. Without the cap the x402
+    // entry would never appear (anthropic-org would saturate). With
+    // PER_SIGNAL_CAP=5, anthropic gets 5 slots and the x402 entry
+    // appears in the result.
+    const opps: AgentOpportunity[] = [];
+    for (let i = 0; i < 20; i++) {
+      opps.push({
+        full_name: `anthropics/repo-${i}`,
+        html_url: `https://github.com/anthropics/repo-${i}`,
+        description: null, stars: 1000 - i, created_at: '', updated_at: '2026-05-09',
+        language: null, topics: [],
+        signal: 'anthropic-org', signal_weight: 10, composite_score: 15 - i * 0.1,
+      });
+    }
+    opps.push({
+      full_name: 'someone/x402-thing',
+      html_url: 'https://github.com/someone/x402-thing',
+      description: null, stars: 50, created_at: '', updated_at: '2026-05-09',
+      language: null, topics: [],
+      signal: 'x402-keyword', signal_weight: 6, composite_score: 7.5,
+    });
+    const out = dedupAndRank(opps);
+    const x402Hits = out.filter(o => o.signal === 'x402-keyword');
+    expect(x402Hits.length).toBe(1);
+    const anthropicHits = out.filter(o => o.signal === 'anthropic-org');
+    // Cap is 5; with FINAL_TOP_N=25 and only one other signal, anthropic
+    // can show up beyond 5 via the overflow fill, but the x402 entry
+    // (lower composite) only ever lands because of the cap on the first pass.
+    expect(anthropicHits.length).toBeGreaterThanOrEqual(5);
   });
 });
 

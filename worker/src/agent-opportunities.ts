@@ -186,6 +186,15 @@ export function normalizeRepo(
   };
 }
 
+/**
+ * Per-signal cap on the final top-N. Without this the highest-weight
+ * signals (anthropic-org=10, openai-org=9) saturate the result, and
+ * keyword sweeps for x402, mcp servers, and agent skills never appear
+ * even when they surface meaningful new repos. Cap each signal at 5
+ * slots, fill the remainder by composite_score.
+ */
+const PER_SIGNAL_CAP = 5;
+
 export function dedupAndRank(opps: AgentOpportunity[]): AgentOpportunity[] {
   // Dedup by full_name; on collision keep the higher-weight signal,
   // then higher composite_score as tie-break.
@@ -207,7 +216,31 @@ export function dedupAndRank(opps: AgentOpportunity[]): AgentOpportunity[] {
     if (a.updated_at !== b.updated_at) return b.updated_at.localeCompare(a.updated_at);
     return a.full_name.localeCompare(b.full_name);
   });
-  return list.slice(0, FINAL_TOP_N);
+
+  // First pass: take up to PER_SIGNAL_CAP per signal, in composite-score
+  // order. Guarantees keyword-sweep signals get representation even when
+  // high-weight orgs have many fresh updates.
+  const perSignalCount: Record<string, number> = {};
+  const capped: AgentOpportunity[] = [];
+  const overflow: AgentOpportunity[] = [];
+  for (const o of list) {
+    const n = perSignalCount[o.signal] ?? 0;
+    if (n < PER_SIGNAL_CAP) {
+      capped.push(o);
+      perSignalCount[o.signal] = n + 1;
+    } else {
+      overflow.push(o);
+    }
+  }
+
+  // Second pass: if the cap-respecting set is shorter than FINAL_TOP_N,
+  // fill the remainder from overflow (already in composite-score order).
+  const result = capped.slice(0, FINAL_TOP_N);
+  if (result.length < FINAL_TOP_N) {
+    const remaining = FINAL_TOP_N - result.length;
+    result.push(...overflow.slice(0, remaining));
+  }
+  return result;
 }
 
 export function summarize(opps: AgentOpportunity[]): AgentOpportunitiesSnapshot['summary'] {
