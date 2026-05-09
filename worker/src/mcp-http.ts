@@ -39,8 +39,14 @@ import {
   fetchEdgarSubmissions,
   type EdgarSearchQuery,
 } from './finance-sec-edgar';
-import { fetchEIASeries, isEIARoute, EIA_ROUTES } from './economy-eia';
+import {
+  fetchEIASeries,
+  isEIARoute,
+  EIA_ROUTES,
+  parseEIAQuery,
+} from './economy-eia';
 import { readSECTicker } from './sec-tickers';
+import { parseOsvPackageQuery } from './security-osv';
 
 const PROTOCOL_VERSION = '2024-11-05';
 const SERVER_NAME = 'tensorfeed';
@@ -263,11 +269,18 @@ const TOOLS: McpToolDef[] = [
     },
     tier: 'free',
     handler: async (env, args) => {
+      // Reuse the REST endpoint's parser so the same regex validators
+      // (ECOSYSTEM_RE, PKG_NAME_RE, VERSION_RE) apply to MCP traffic.
+      const url = new URL('https://tensorfeed.ai/api/security/osv/package');
       const ecosystem = getStringArg(args, 'ecosystem');
       const name = getStringArg(args, 'name');
       const version = getStringArg(args, 'version');
-      if (!ecosystem || !name) throw new ValidationError('ecosystem and name are required');
-      return await fetchOSVForPackage(env, { ecosystem, name, version });
+      if (ecosystem !== null) url.searchParams.set('ecosystem', ecosystem);
+      if (name !== null) url.searchParams.set('name', name);
+      if (version !== null) url.searchParams.set('version', version);
+      const parsed = parseOsvPackageQuery(url);
+      if (!parsed.ok) throw new ValidationError(`${parsed.error}: ${parsed.hint}`);
+      return await fetchOSVForPackage(env, parsed.query);
     },
   },
   {
@@ -313,17 +326,24 @@ const TOOLS: McpToolDef[] = [
     },
     tier: 'free',
     handler: async (env, args) => {
+      // Reuse the same parser the REST endpoint uses so validation
+      // (regex on q, forms, dates) is identical across both surfaces.
+      // Build a synthetic URL so parseEdgarSearchQuery can pull from
+      // searchParams.
+      const url = new URL('https://tensorfeed.ai/api/sec/edgar/search');
       const q = getStringArg(args, 'q');
-      if (!q) throw new ValidationError('q is required');
-      const query: EdgarSearchQuery = {
-        q,
-        forms: getStringArg(args, 'forms'),
-        startdt: getStringArg(args, 'startdt'),
-        enddt: getStringArg(args, 'enddt'),
-        limit: Math.max(1, Math.min(getNumberArg(args, 'limit') ?? 10, 50)),
-        page: 1,
-      };
-      return await searchEdgar(env, query);
+      const forms = getStringArg(args, 'forms');
+      const startdt = getStringArg(args, 'startdt');
+      const enddt = getStringArg(args, 'enddt');
+      const limit = getNumberArg(args, 'limit');
+      if (q !== null) url.searchParams.set('q', q);
+      if (forms !== null) url.searchParams.set('forms', forms);
+      if (startdt !== null) url.searchParams.set('startdt', startdt);
+      if (enddt !== null) url.searchParams.set('enddt', enddt);
+      if (limit !== null) url.searchParams.set('limit', String(limit));
+      const parsed = parseEdgarSearchQuery(url);
+      if (!parsed.ok) throw new ValidationError(`${parsed.error}: ${parsed.hint}`);
+      return await searchEdgar(env, parsed.query);
     },
   },
   {
@@ -386,25 +406,22 @@ const TOOLS: McpToolDef[] = [
     },
     tier: 'free',
     handler: async (env, args) => {
+      // Reuse the REST endpoint's parser so date/frequency/facet
+      // validation matches across both surfaces.
+      const url = new URL('https://tensorfeed.ai/api/economy/eia/series');
       const route = getStringArg(args, 'route');
-      if (!route || !isEIARoute(route)) {
-        return {
-          ok: false,
-          error: 'invalid_route',
-          hint: `route must be one of: ${Object.keys(EIA_ROUTES).join(', ')}`,
-        };
+      const start = getStringArg(args, 'start');
+      const end = getStringArg(args, 'end');
+      const length = getNumberArg(args, 'length');
+      if (route !== null) url.searchParams.set('route', route);
+      if (start !== null) url.searchParams.set('start', start);
+      if (end !== null) url.searchParams.set('end', end);
+      if (length !== null) url.searchParams.set('length', String(length));
+      const parsed = parseEIAQuery(url);
+      if (!parsed.ok) {
+        return { ok: false, error: parsed.error, hint: parsed.hint };
       }
-      const length = Math.max(1, Math.min(getNumberArg(args, 'length') ?? 100, 5000));
-      return await fetchEIASeries(env, {
-        route,
-        frequency: EIA_ROUTES[route].default_frequency,
-        start: getStringArg(args, 'start'),
-        end: getStringArg(args, 'end'),
-        length,
-        offset: 0,
-        facets: {},
-        data_columns: ['value'],
-      });
+      return await fetchEIASeries(env, parsed.query);
     },
   },
 ];
