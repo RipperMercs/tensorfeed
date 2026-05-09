@@ -50,6 +50,16 @@ crons = [
   # AI_Agents. Deduped by post id, top 30 by score. Powers free
   # /api/reddit/trending.
   "0 13 * * *",
+  # Daily 13:30 UTC: scan GitHub for new submission/distribution
+  # opportunities (worker/src/agent-opportunities.ts). Seven fan-out
+  # queries: org:anthropics, org:openai, org:microsoft (mcp/agent/skill),
+  # org:modelcontextprotocol, "mcp server" stars>=10, x402 stars>=5,
+  # "agent skills" stars>=10. Deduped by full_name, scored by
+  # signal_weight * recency_factor + log10(stars+1), top 25.
+  # Powers free /api/agents/opportunities. Drives recurring discovery
+  # of vertical-marketplace repos like the financial-services + life-
+  # sciences submissions in early May 2026.
+  "30 13 * * *",
   # Daily 14:00 UTC: capture the OpenRouter cross-provider model
   # catalog (worker/src/openrouter-catalog.ts). 200+ models normalized
   # across 50+ inference providers with per-token pricing, context

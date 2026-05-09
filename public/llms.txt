@@ -57,6 +57,7 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [Pricing JSON](https://tensorfeed.ai/api/agents/pricing.json): AI API pricing comparison (alias)
 - [Agents Directory](https://tensorfeed.ai/api/agents/directory): AI agents and frameworks directory
 - [Agent Activity](https://tensorfeed.ai/api/agents/activity): Live agent traffic metrics
+- [Agent Opportunities](https://tensorfeed.ai/api/agents/opportunities): Daily-refreshed scan of new GitHub repos that represent submission/distribution opportunities for the agent ecosystem (Anthropic / OpenAI / Microsoft / ModelContextProtocol orgs + MCP servers + x402 projects + agent skill catalogs). Seven fan-out queries deduped by full_name and scored by signal_weight × recency × log10(stars). Cron 13:30 UTC daily. Useful for any meta-agent that's trying to surface "what's new in the agent ecosystem today."
 - [Podcasts API](https://tensorfeed.ai/api/podcasts): AI podcast episodes with audio URLs (?limit=)
 - [Health Check](https://tensorfeed.ai/api/health): Worker health and last update timestamps
 - [Endpoint Discovery](https://tensorfeed.ai/api/meta): Full endpoint map for automated integration

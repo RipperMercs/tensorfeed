@@ -219,6 +219,10 @@ import {
   getLatestSnapshot as getHotIssuesLatest,
 } from './hot-issues';
 import {
+  captureAgentOpportunities,
+  getLatestSnapshot as getAgentOpportunitiesLatest,
+} from './agent-opportunities';
+import {
   captureRedditSnapshot,
   getLatestSnapshot as getRedditLatest,
 } from './reddit-trending';
@@ -1857,6 +1861,26 @@ export default {
       }, 200, 300);
     }
 
+    // === AGENT OPPORTUNITIES (daily GitHub scan) ===
+    // Daily snapshot of new GitHub repos that are submission/distribution
+    // opportunities for TF: Anthropic/OpenAI/Microsoft/MCP-org repos created
+    // recently, plus broader keyword sweeps for MCP servers, x402 projects,
+    // agent skill catalogs. Powers automated discovery of new vertical
+    // marketplaces (the pattern that drove the financial-services + life-
+    // sciences + skills + knowledge-work-plugins submissions in 24h).
+    // Refreshed daily at 13:30 UTC. Free, no auth.
+    if (path === '/api/agents/opportunities') {
+      const snapshot = await getAgentOpportunitiesLatest(env);
+      if (!snapshot) {
+        return jsonResponse({
+          ok: false,
+          error: 'no_snapshot_yet',
+          hint: 'The daily 13:30 UTC scan has not yet produced a snapshot. Use /api/refresh?key=...&task=opportunities for an admin-triggered initial capture.',
+        }, 503);
+      }
+      return jsonResponse({ ok: true, ...snapshot }, 200, 300);
+    }
+
     // === PODCASTS ENDPOINT (cached 300s) ===
 
     if (path === '/api/podcasts') {
@@ -1944,6 +1968,7 @@ export default {
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',
+          agentsOpportunities: '/api/agents/opportunities (free; daily-refreshed scan of new GitHub repos that represent submission/distribution opportunities for TF: anthropics/openai/microsoft/modelcontextprotocol orgs + MCP/x402/skills keyword sweeps. Scored by signal_weight * recency + log10(stars). 13:30 UTC cron)',
           agentActivity: '/api/agents/activity',
           chaosStats: '/api/chaos/stats',
           podcasts: '/api/podcasts',
@@ -2088,7 +2113,7 @@ export default {
           usageDates: '/api/admin/usage/dates?key=<ADMIN_KEY>',
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -6697,6 +6722,10 @@ export default {
         const result = await captureHistory(env);
         return jsonResponse({ message: 'History snapshot captured', ...result });
       }
+      if (task === 'opportunities') {
+        const result = await captureAgentOpportunities(env);
+        return jsonResponse({ message: 'Agent opportunities scan ran', ...result });
+      }
       if (task === 'mcp-registry') {
         const result = await captureRegistrySnapshot(env);
         return jsonResponse({ message: 'MCP registry snapshot captured', ...result });
@@ -7001,6 +7030,15 @@ export default {
       // throttled, deduped by post id, top 30 by score. Daily snapshot
       // keyed under reddit:daily:{date}. Backs free /api/reddit/trending.
       await run('captureRedditSnapshot', () => captureRedditSnapshot(env));
+    } else if (cron === '30 13 * * *') {
+      // Daily 13:30 UTC: scan GitHub for new submission/distribution
+      // opportunities for TensorFeed. Seven fan-out queries on the
+      // anthropics, openai, microsoft, modelcontextprotocol orgs plus
+      // mcp/x402/agent-skill keyword sweeps. Throttled, deduped by
+      // full_name, scored by signal_weight * recency + log10(stars).
+      // Daily snapshot keyed under opps:daily:{date}. Backs free
+      // /api/agents/opportunities.
+      await run('captureAgentOpportunities', () => captureAgentOpportunities(env));
     } else if (cron === '0 14 * * *') {
       // Daily 14:00 UTC: capture the OpenRouter cross-provider model
       // catalog (200+ models normalized across 50+ inference providers
