@@ -77,7 +77,14 @@ export const EIA_ROUTES: Record<string, EIARoute> = {
 };
 
 const FREQUENCY_RE = /^[a-zA-Z][a-zA-Z0-9_-]{1,30}$/;
-const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+// EIA Open Data accepts dates in formats matched to the requested
+// frequency: YYYY (annual), YYYY-MM (monthly/quarterly), YYYY-MM-DD
+// (daily/hourly). We accept all three at the validator layer; if the
+// agent supplies a format that doesn't match the underlying frequency,
+// EIA upstream returns 400 and we proxy that error verbatim with our
+// attribution block. Single-digit month/day is still rejected so 2026-5
+// or 2026-5-8 fall to invalid_start.
+const ISO_DATE_RE = /^\d{4}(-\d{2}(-\d{2})?)?$/;
 const FACET_KEY_RE = /^facets\[[a-zA-Z0-9_]+\]\[\]$/;
 const FACET_VAL_RE = /^[A-Za-z0-9_.\-]{1,40}$/;
 
@@ -136,11 +143,11 @@ export function parseEIAQuery(url: URL): ParseOk | ParseError {
 
   const start = url.searchParams.get('start');
   if (start && !ISO_DATE_RE.test(start)) {
-    return { ok: false, error: 'invalid_start', hint: 'start must be YYYY-MM-DD' };
+    return { ok: false, error: 'invalid_start', hint: 'start must be YYYY, YYYY-MM, or YYYY-MM-DD (matched to frequency)' };
   }
   const end = url.searchParams.get('end');
   if (end && !ISO_DATE_RE.test(end)) {
-    return { ok: false, error: 'invalid_end', hint: 'end must be YYYY-MM-DD' };
+    return { ok: false, error: 'invalid_end', hint: 'end must be YYYY, YYYY-MM, or YYYY-MM-DD (matched to frequency)' };
   }
 
   const requestedLength = parseInt(url.searchParams.get('length') ?? '100', 10);

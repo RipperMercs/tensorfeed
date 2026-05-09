@@ -675,6 +675,7 @@ async function premiumValidationFailure(
   payment: import('./payments').PaymentResult,
   request: Request,
   env: Env,
+  noChargeReason: NoChargeReason = 'schema_validation_failure',
 ): Promise<Response> {
   const url = new URL(request.url);
   const endpoint = url.pathname;
@@ -712,10 +713,13 @@ async function premiumValidationFailure(
     );
   }
 
-  // Log the no-charge event and ensure no debit. commitPayment with
-  // schema_validation_failure as the reason writes to the ledger and
-  // does not touch the credit balance.
-  const commit = await commitPayment(env, payment, endpoint, 'schema_validation_failure');
+  // Log the no-charge event and ensure no debit. commitPayment writes
+  // the chosen reason to the ledger and does not touch the credit
+  // balance regardless of category. Default is schema_validation_failure
+  // (the original use case); upstream_failure is used when the handler
+  // detected an upstream API failure that shouldn't be billed to the
+  // agent. Both share the no-charge-abuse limiter.
+  const commit = await commitPayment(env, payment, endpoint, noChargeReason);
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -732,7 +736,7 @@ async function premiumValidationFailure(
   const billing: Record<string, unknown> = {
     credits_charged: 0,
     credits_remaining: commit.balanceAfter,
-    no_charge_reason: 'schema_validation_failure',
+    no_charge_reason: noChargeReason,
     afta_doc: 'https://tensorfeed.ai/agent-fair-trade',
   };
   if (payment.newToken) {
@@ -761,7 +765,7 @@ async function premiumValidationFailure(
     response_hash: responseHash,
     captured_at: null,
     server_time: new Date().toISOString(),
-    no_charge_reason: 'schema_validation_failure',
+    no_charge_reason: noChargeReason,
     freshness_sla_seconds: null,
     agent_nonce: agentNonce,
   };
@@ -2117,7 +2121,7 @@ export default {
         },
         agent_fair_trade: {
           description: 'Agent Fair-Trade Agreement (AFTA): code-enforced no-charge guarantees, Ed25519-signed receipts on every paid call, public on-chain payment rail (USDC on Base). Combined: every dollar that flows through TensorFeed has two independent attestations (the Base RPC tx record, immutable and public, and our signed receipt, verifiable and non-forgeable).',
-          no_charge_guarantees: ['5xx', 'circuit_breaker', 'schema_validation_failure', 'stale_data'],
+          no_charge_guarantees: ['5xx', 'circuit_breaker', 'schema_validation_failure', 'upstream_failure', 'stale_data'],
           receipts: receiptStatus(env),
           freshness_slas: describeSLAs(),
           standard_manifest: '/.well-known/agent-fair-trade.json',
@@ -6024,9 +6028,14 @@ export default {
 
       const result = await computeResearchVelocity(env);
       if (!result.ok) {
+        // research/velocity has no input schema; all non-ok cases are
+        // upstream failures (OpenAlex 429, network timeout, etc).
+        // Categorize accordingly so the AFTA receipt's no_charge_reason
+        // is accurate; agents can distinguish "I sent bad input" from
+        // "their upstream is down" from one signed receipt field.
         return await premiumValidationFailure(
           { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
-          payment, request, env,
+          payment, request, env, 'upstream_failure',
         );
       }
 
@@ -6052,9 +6061,11 @@ export default {
 
       const result = await computePackagesMomentum(env);
       if (!result.ok) {
+        // packages/pypi/momentum has no input schema; all non-ok cases
+        // are upstream failures (pypistats 429, snapshot KV miss, etc).
         return await premiumValidationFailure(
           { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
-          payment, request, env,
+          payment, request, env, 'upstream_failure',
         );
       }
 

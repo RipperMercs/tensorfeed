@@ -91,6 +91,42 @@ describe('parseEIAQuery', () => {
     if (!result.ok) expect(result.error).toBe('invalid_start');
   });
 
+  it('accepts YYYY annual format for start/end', () => {
+    const url = buildUrl({ route: 'total-energy', start: '2024', end: '2026' });
+    const result = parseEIAQuery(url);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.query.start).toBe('2024');
+      expect(result.query.end).toBe('2026');
+    }
+  });
+
+  it('accepts YYYY-MM monthly format for start/end', () => {
+    const url = buildUrl({ route: 'electricity/retail-sales', frequency: 'monthly', start: '2025-01', end: '2026-04' });
+    const result = parseEIAQuery(url);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.query.start).toBe('2025-01');
+      expect(result.query.end).toBe('2026-04');
+    }
+  });
+
+  it('still accepts YYYY-MM-DD daily format', () => {
+    const url = buildUrl({ route: 'petroleum/pri/spt', start: '2026-04-01', end: '2026-05-09' });
+    const result = parseEIAQuery(url);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.query.start).toBe('2026-04-01');
+      expect(result.query.end).toBe('2026-05-09');
+    }
+  });
+
+  it('rejects partial month/day strings', () => {
+    expect(parseEIAQuery(buildUrl({ route: 'petroleum/pri/spt', start: '2026-5' })).ok).toBe(false);
+    expect(parseEIAQuery(buildUrl({ route: 'petroleum/pri/spt', start: '202' })).ok).toBe(false);
+    expect(parseEIAQuery(buildUrl({ route: 'petroleum/pri/spt', start: '2026-04-1' })).ok).toBe(false);
+  });
+
   it('caps length at 5000', () => {
     const url = buildUrl({ route: 'total-energy', length: '999999' });
     const result = parseEIAQuery(url);

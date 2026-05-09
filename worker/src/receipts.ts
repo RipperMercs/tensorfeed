@@ -27,6 +27,7 @@ export type NoChargeReason =
   | '5xx'
   | 'circuit_breaker'
   | 'schema_validation_failure'
+  | 'upstream_failure'
   | 'stale_data'
   | null;
 
