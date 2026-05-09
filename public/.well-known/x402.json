@@ -417,6 +417,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/clean/openrouter/{model_id}",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-09T00:00:00Z",
+      "metadata": {
+        "name": "LLM-ready OpenRouter model card",
+        "description": "One model from the OpenRouter catalog (367+ entries) returned as an LLM-ready fact card. Pricing normalized to USD per million tokens with derived blended_5_to_1 input:output mix. Capability flags (tools, vision, structured_outputs, reasoning, response_format) extracted from supported_parameters + modality so agents can boolean-filter without parsing the raw parameter array. Free-tier detection (is_free_tier) and creation-date ISO normalization included. Compression typically 99%+ (270KB catalog -> ~500B card) since OpenRouter has no per-id filter on its public catalog endpoint. License: Public catalog data; pricing and capabilities owned by OpenRouter and the underlying inference providers.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-models-openrouter-clean"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/clean/power/daily",
       "type": "http",
       "method": "GET",

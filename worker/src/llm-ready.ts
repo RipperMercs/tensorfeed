@@ -544,6 +544,122 @@ export function composeVerifiedCve(
   return envelope('TensorFeed Verified CVE (MITRE + KEV + EPSS + OSV + Vulnrichment)', data);
 }
 
+// ===== OpenRouter model fact card (single model from catalog) =====
+
+export interface LlmReadyOpenRouterModel {
+  id: string;
+  name: string | null;
+  namespace: string | null;
+  description: string | null;
+  context_length: number | null;
+  modality: string | null;
+  tokenizer: string | null;
+  instruct_type: string | null;
+  created_iso: string | null;
+  pricing_per_million_tokens: {
+    prompt: number | null;
+    completion: number | null;
+    blended_5_to_1: number | null;
+    image_per_image: number | null;
+    request_per_call: number | null;
+  };
+  max_output_tokens: number | null;
+  is_moderated: boolean | null;
+  capabilities: {
+    tools: boolean;
+    vision: boolean;
+    structured_outputs: boolean;
+    reasoning: boolean;
+    response_format: boolean;
+  };
+  supported_parameters_count: number;
+  is_free_tier: boolean;
+}
+
+function isVisionModality(modality: string | null): boolean {
+  if (!modality) return false;
+  const lower = modality.toLowerCase();
+  return lower.includes('image') || lower.includes('vision') || lower.includes('multimodal');
+}
+
+function unixSecondsToIso(unixSeconds: number | null | undefined): string | null {
+  if (unixSeconds === null || unixSeconds === undefined) return null;
+  const n = Number(unixSeconds);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return new Date(n * 1000).toISOString().slice(0, 10);
+}
+
+/**
+ * Transform a single OpenRouter model row from the daily catalog
+ * snapshot into an LLM-ready fact card. Pricing is normalized to
+ * USD per million tokens (the universal convention agents reason in)
+ * with a blended_5_to_1 derived field that captures the 5:1
+ * input:output mix typical of agent workloads. Capability flags are
+ * extracted from supported_parameters + modality so the agent can
+ * boolean-filter without parsing the parameter array. Per-image and
+ * per-request pricing are surfaced when the model has them.
+ *
+ * The compression headline this enables: agents searching for one
+ * model would otherwise ingest the full ~270KB catalog (367 entries)
+ * to find it. This delivers one ~500-byte card.
+ */
+export function transformOpenRouterModel(raw: unknown): LlmReadyEnvelope<LlmReadyOpenRouterModel> {
+  const r = (raw ?? {}) as Record<string, unknown>;
+
+  const id = safeStr(r.id) ?? '';
+  const name = safeStr(r.name);
+  const slashIdx = id.indexOf('/');
+  const namespace = slashIdx > 0 ? id.slice(0, slashIdx) : null;
+  const modality = safeStr(r.modality);
+
+  const pricing = (r.pricing ?? {}) as Record<string, unknown>;
+  const promptPerToken = safeNum(pricing.prompt);
+  const completionPerToken = safeNum(pricing.completion);
+  const promptPerMillion = promptPerToken !== null ? promptPerToken * 1_000_000 : null;
+  const completionPerMillion = completionPerToken !== null ? completionPerToken * 1_000_000 : null;
+  const blended_5_to_1 =
+    promptPerMillion !== null && completionPerMillion !== null
+      ? promptPerMillion * (5 / 6) + completionPerMillion * (1 / 6)
+      : null;
+
+  const supported = Array.isArray(r.supported_parameters) ? (r.supported_parameters as string[]) : [];
+  const supportedSet = new Set(supported.map((s) => String(s).toLowerCase()));
+
+  const topProvider = (r.top_provider ?? {}) as Record<string, unknown>;
+
+  const data: LlmReadyOpenRouterModel = {
+    id,
+    name: name ?? id,
+    namespace,
+    description: safeStr(r.description),
+    context_length: safeNum(r.context_length),
+    modality,
+    tokenizer: safeStr(r.tokenizer),
+    instruct_type: safeStr(r.instruct_type),
+    created_iso: unixSecondsToIso(safeNum(r.created)),
+    pricing_per_million_tokens: {
+      prompt: promptPerMillion !== null ? Math.round(promptPerMillion * 100) / 100 : null,
+      completion: completionPerMillion !== null ? Math.round(completionPerMillion * 100) / 100 : null,
+      blended_5_to_1: blended_5_to_1 !== null ? Math.round(blended_5_to_1 * 100) / 100 : null,
+      image_per_image: safeNum(pricing.image),
+      request_per_call: safeNum(pricing.request),
+    },
+    max_output_tokens: safeNum(topProvider.max_completion_tokens),
+    is_moderated: typeof topProvider.is_moderated === 'boolean' ? topProvider.is_moderated : null,
+    capabilities: {
+      tools: supportedSet.has('tools') || supportedSet.has('tool_choice'),
+      vision: isVisionModality(modality),
+      structured_outputs: supportedSet.has('structured_outputs') || supportedSet.has('response_format'),
+      reasoning: supportedSet.has('reasoning') || supportedSet.has('include_reasoning'),
+      response_format: supportedSet.has('response_format'),
+    },
+    supported_parameters_count: supported.length,
+    is_free_tier: promptPerToken === 0 && completionPerToken === 0,
+  };
+
+  return envelope('OpenRouter Model Catalog', data);
+}
+
 // ===== NASA POWER (daily or hourly point) =====
 
 export interface LlmReadyPowerRow {

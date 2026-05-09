@@ -13,6 +13,7 @@ import {
   attachCompressionStats,
   measureSourceBytes,
   composeVerifiedCve,
+  transformOpenRouterModel,
   type LlmReadyFdaDrugEvent,
   type LlmReadyFdaDrugLabel,
   type LlmReadyFdaRecall,
@@ -863,5 +864,110 @@ describe('composeVerifiedCve', () => {
     expect(out.compression_stats?.cleaned_bytes).toBeLessThan(sourceBytes);
     expect(out.compression_stats?.reduction_pct).toBeGreaterThan(0);
     expect(out.compression_stats?.approx_tokens_saved).toBeGreaterThan(0);
+  });
+});
+
+describe('transformOpenRouterModel', () => {
+  const SAMPLE = {
+    id: 'anthropic/claude-3.5-sonnet',
+    name: 'Anthropic Claude 3.5 Sonnet',
+    description: 'High-performance frontier model.',
+    created: 1729123200, // 2024-10-17
+    context_length: 200000,
+    modality: 'text+image->text',
+    instruct_type: null,
+    tokenizer: 'Claude',
+    pricing: {
+      prompt: 0.000003,
+      completion: 0.000015,
+      image: null,
+      request: null,
+    },
+    top_provider: {
+      max_completion_tokens: 8192,
+      is_moderated: true,
+    },
+    supported_parameters: [
+      'tools',
+      'tool_choice',
+      'response_format',
+      'structured_outputs',
+      'temperature',
+      'top_p',
+      'max_tokens',
+      'stop',
+    ],
+  };
+
+  it('flattens core fields and normalizes pricing to per-million', () => {
+    const out = transformOpenRouterModel(SAMPLE);
+    expect(out.source).toBe('OpenRouter Model Catalog');
+    expect(out.data.id).toBe('anthropic/claude-3.5-sonnet');
+    expect(out.data.namespace).toBe('anthropic');
+    expect(out.data.name).toBe('Anthropic Claude 3.5 Sonnet');
+    expect(out.data.context_length).toBe(200000);
+    expect(out.data.pricing_per_million_tokens.prompt).toBe(3);
+    expect(out.data.pricing_per_million_tokens.completion).toBe(15);
+    // 5:1 mix => 3 * 5/6 + 15 * 1/6 = 2.5 + 2.5 = 5.0
+    expect(out.data.pricing_per_million_tokens.blended_5_to_1).toBe(5);
+    expect(out.data.created_iso).toBe('2024-10-17');
+  });
+
+  it('sets capability flags from supported_parameters and modality', () => {
+    const out = transformOpenRouterModel(SAMPLE);
+    expect(out.data.capabilities.tools).toBe(true);
+    expect(out.data.capabilities.vision).toBe(true); // modality has 'image'
+    expect(out.data.capabilities.structured_outputs).toBe(true);
+    expect(out.data.capabilities.response_format).toBe(true);
+    expect(out.data.capabilities.reasoning).toBe(false);
+    expect(out.data.supported_parameters_count).toBe(8);
+  });
+
+  it('detects free-tier when both prompt and completion are 0', () => {
+    const out = transformOpenRouterModel({
+      ...SAMPLE,
+      pricing: { prompt: 0, completion: 0, image: null, request: null },
+    });
+    expect(out.data.is_free_tier).toBe(true);
+    expect(out.data.pricing_per_million_tokens.prompt).toBe(0);
+    expect(out.data.pricing_per_million_tokens.completion).toBe(0);
+  });
+
+  it('handles missing pricing gracefully', () => {
+    const out = transformOpenRouterModel({
+      ...SAMPLE,
+      pricing: {},
+    });
+    expect(out.data.pricing_per_million_tokens.prompt).toBeNull();
+    expect(out.data.pricing_per_million_tokens.completion).toBeNull();
+    expect(out.data.pricing_per_million_tokens.blended_5_to_1).toBeNull();
+    expect(out.data.is_free_tier).toBe(false);
+  });
+
+  it('compression vs full catalog produces dramatic reduction_pct', () => {
+    const fakeCatalog = Array.from({ length: 367 }, (_, i) => ({ ...SAMPLE, id: `provider/model-${i}` }));
+    const fullCatalogBytes = measureSourceBytes(fakeCatalog);
+    const out = attachCompressionStats(transformOpenRouterModel(SAMPLE), fullCatalogBytes);
+    expect(out.compression_stats?.reduction_pct ?? 0).toBeGreaterThan(99);
+    expect(out.compression_stats?.approx_tokens_saved ?? 0).toBeGreaterThan(10000);
+  });
+
+  it('sets reasoning capability when model supports it', () => {
+    const reasoningModel = {
+      ...SAMPLE,
+      supported_parameters: ['tools', 'reasoning', 'include_reasoning', 'max_tokens'],
+    };
+    const out = transformOpenRouterModel(reasoningModel);
+    expect(out.data.capabilities.reasoning).toBe(true);
+  });
+
+  it('handles missing or malformed input safely', () => {
+    const out = transformOpenRouterModel({});
+    expect(out.data.id).toBe('');
+    expect(out.data.namespace).toBeNull();
+    expect(out.data.context_length).toBeNull();
+    expect(out.data.created_iso).toBeNull();
+    expect(out.data.is_moderated).toBeNull();
+    expect(out.data.capabilities.vision).toBe(false);
   });
 });

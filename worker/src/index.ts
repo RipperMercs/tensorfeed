@@ -90,6 +90,7 @@ import {
   attachCompressionStats,
   measureSourceBytes,
   composeVerifiedCve,
+  transformOpenRouterModel,
   LLM_READY_CLEANING_VERSION,
 } from './llm-ready';
 import {
@@ -2016,6 +2017,7 @@ export default {
           premiumCleanEIASeries: '/api/premium/clean/eia/series?route=&frequency=&start=&end=&length=1-5000 (1 credit; EIA series flattened to numeric points with MoM and YoY delta percentages computed against valid observations)',
           premiumCleanFDA: '/api/premium/clean/fda/{category}?search=&limit=1-100&skip=&sort= (1 credit; LLM-ready OpenFDA query results. Per-category flat schema for drug/events, drug/labels, drug/recalls, food/recalls, device/events)',
           premiumSecurityVerifiedCVE: '/api/premium/security/verified/{CVE-id} (1 credit; cross-database CVE verification: composes MITRE CVE + CISA KEV + FIRST.org EPSS + OSV.dev + CISA Vulnrichment into one fact card with confirmed_by array and corroboration_count. The single-call anti-hallucination lookup for security agents)',
+          premiumCleanOpenRouter: '/api/premium/clean/openrouter/{model_id} (1 credit; one model from the daily 367-entry OpenRouter catalog as an LLM-ready fact card. Pricing normalized to USD per million tokens with derived blended_5_to_1 mix. Capability flags (tools/vision/structured_outputs/reasoning) extracted from supported_parameters + modality. Compression headline: ~270KB catalog -> ~500B card)',
           premiumHistoryNewsClustersFull: '/api/premium/history/news/clusters/full?date= or ?from=&to= (1 credit; full untruncated cross-source story clusters, single-date or 30-day range)',
           premiumHistoryNewsVerified: '/api/premium/history/news/verified?date= or ?from=&to=&min_sources=2-50 (1 credit; the verified feed - story clusters with N+ independent sources corroborating; default min_sources=4)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
@@ -4452,6 +4454,100 @@ export default {
             osv?.attribution,
             vuln?.attribution,
           ].filter(Boolean),
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: LLM-READY OpenRouter Model (Tier 1, 1 credit) ===
+    // Pulls one model from the daily 367-entry OpenRouter catalog
+    // snapshot and returns an LLM-ready fact card. The compression
+    // headline this enables is the most dramatic in the suite: agents
+    // searching for one model would otherwise ingest the full ~270KB
+    // catalog to locate it (OpenRouter's /v1/models has no per-id filter).
+    // This delivers one ~500-byte card. Pricing is normalized to USD
+    // per million tokens (the universal agent convention) with a
+    // blended_5_to_1 mix derived for typical agent workloads.
+    // Capability flags (tools, vision, structured_outputs, reasoning)
+    // are extracted from supported_parameters + modality so agents can
+    // boolean-filter without parsing the parameter array.
+
+    const cleanORMatch = path.match(/^\/api\/premium\/clean\/openrouter\/(.+)$/);
+    if (cleanORMatch) {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const modelIdRaw = decodeURIComponent(cleanORMatch[1]);
+      if (!/^[A-Za-z0-9~_./@:-]{1,200}$/.test(modelIdRaw)) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'invalid_model_id',
+            hint: 'Model id must match the OpenRouter catalog id format (e.g. anthropic/claude-3.5-sonnet).',
+          },
+          400,
+        );
+      }
+
+      const snapshot = await getORLatest(env);
+      if (!snapshot) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'catalog_unavailable',
+            hint: 'OpenRouter daily snapshot has not been captured yet. The 14:00 UTC cron populates it.',
+          },
+          503,
+        );
+      }
+
+      const model = snapshot.models.find((m) => m.id === modelIdRaw);
+      if (!model) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'model_not_in_catalog',
+            requested_id: modelIdRaw,
+            catalog_size: snapshot.total_models,
+            captured_at: snapshot.capturedAt,
+            hint: 'Model id not present in the most recent OpenRouter catalog snapshot. List catalog at /api/openrouter/models.',
+          },
+          404,
+        );
+      }
+
+      const fullCatalogBytes = measureSourceBytes(snapshot.models);
+      const cleaned = attachCompressionStats(transformOpenRouterModel(model), fullCatalogBytes);
+
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/clean/openrouter',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+
+      return await premiumResponse(
+        {
+          ok: true,
+          source_format: 'openrouter_v1_models',
+          target_format: 'tensorfeed_llm_ready_v1',
+          ...cleaned,
+          catalog_meta: {
+            captured_at: snapshot.capturedAt,
+            total_models_in_catalog: snapshot.total_models,
+          },
+          attribution: {
+            source: 'OpenRouter Model Catalog',
+            source_url: 'https://openrouter.ai/api/v1/models',
+            license: 'Public catalog data; pricing and capabilities owned by OpenRouter and the underlying inference providers',
+            redistribution: 'attribution-included',
+          },
         },
         payment,
         1,
