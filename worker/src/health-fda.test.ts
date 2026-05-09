@@ -63,6 +63,21 @@ describe('isFDACategory', () => {
   it('exposes a non-empty catalog', () => {
     expect(Object.keys(FDA_CATEGORIES).length).toBeGreaterThanOrEqual(5);
   });
+  it('rejects prototype-chain keys (no method confusion)', () => {
+    // Regression: `c in FDA_CATEGORIES` evaluates true for these and
+    // would propagate to FDA_TRANSFORMERS[c] as Object.prototype, which
+    // crashes the worker when invoked as a function.
+    expect(isFDACategory('__proto__')).toBe(false);
+    expect(isFDACategory('toString')).toBe(false);
+    expect(isFDACategory('hasOwnProperty')).toBe(false);
+    expect(isFDACategory('constructor')).toBe(false);
+  });
+  it('rejects prototype-chain keys via parseFDAQuery', () => {
+    const url = new URL('https://tensorfeed.ai/api/health/fda/__proto__');
+    const result = parseFDAQuery('__proto__', url);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('unknown_category');
+  });
 });
 
 describe('parseFDAQuery', () => {

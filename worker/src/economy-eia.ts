@@ -21,6 +21,7 @@
  */
 
 import type { Env } from './types';
+import { sha256CacheKey } from './cache-key';
 
 const EIA_BASE = 'https://api.eia.gov/v2';
 
@@ -182,16 +183,7 @@ export function parseEIAQuery(url: URL): ParseOk | ParseError {
   };
 }
 
-function fnvHash(s: string): string {
-  let hash = 2166136261;
-  for (let i = 0; i < s.length; i += 1) {
-    hash ^= s.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(36);
-}
-
-function cacheKey(q: EIAQuery): string {
+async function cacheKey(q: EIAQuery): Promise<string> {
   const facetParts: string[] = [];
   for (const [k, vs] of Object.entries(q.facets)) {
     facetParts.push(`${k}=${vs.slice().sort().join(',')}`);
@@ -207,7 +199,7 @@ function cacheKey(q: EIAQuery): string {
     q.data_columns.slice().sort().join(','),
     facetParts.join('|'),
   ].join('||');
-  return `eia:q:${fnvHash(parts)}`;
+  return `eia:q:${await sha256CacheKey(parts)}`;
 }
 
 function buildEIAUrl(q: EIAQuery, apiKey: string): string {
@@ -247,7 +239,7 @@ export async function fetchEIASeries(env: Env, q: EIAQuery): Promise<EIAResult> 
     };
   }
 
-  const key = cacheKey(q);
+  const key = await cacheKey(q);
   const cached = await env.TENSORFEED_CACHE.get<unknown>(key, 'json');
   if (cached) {
     return {

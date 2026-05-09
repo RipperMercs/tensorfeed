@@ -598,6 +598,16 @@ describe('transformFdaQueryResults', () => {
     expect(out).toBeNull();
   });
 
+  it('returns null for prototype-chain keys without crashing', () => {
+    // Regression: FDA_TRANSFORMERS['__proto__'] used to resolve to
+    // Object.prototype and the dispatcher would invoke it on each
+    // result row, throwing TypeError and 500ing the worker.
+    expect(() => transformFdaQueryResults('__proto__', { results: [{}] })).not.toThrow();
+    expect(transformFdaQueryResults('__proto__', { results: [{}] })).toBeNull();
+    expect(transformFdaQueryResults('toString', { results: [{}] })).toBeNull();
+    expect(transformFdaQueryResults('constructor', { results: [{}] })).toBeNull();
+  });
+
   it('handles empty result arrays cleanly', () => {
     const out = transformFdaQueryResults('drug/labels', { results: [] });
     expect(out).not.toBeNull();

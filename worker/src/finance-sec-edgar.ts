@@ -27,6 +27,7 @@
  */
 
 import type { Env } from './types';
+import { sha256CacheKey } from './cache-key';
 
 const EDGAR_SEARCH = 'https://efts.sec.gov/LATEST/search-index';
 const EDGAR_SUBMISSIONS = 'https://data.sec.gov/submissions';
@@ -136,15 +137,6 @@ export function parseEdgarSearchQuery(url: URL): ParseOk<EdgarSearchQuery> | Par
   return { ok: true, query: { q, forms, startdt, enddt, limit, page } };
 }
 
-function fnvHash(s: string): string {
-  let hash = 2166136261;
-  for (let i = 0; i < s.length; i += 1) {
-    hash ^= s.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(36);
-}
-
 function buildSearchUrl(q: EdgarSearchQuery): string {
   const params = new URLSearchParams();
   params.set('q', q.q);
@@ -165,7 +157,7 @@ function buildSearchUrl(q: EdgarSearchQuery): string {
 
 export async function searchEdgar(env: Env, q: EdgarSearchQuery): Promise<EdgarSearchResult> {
   const fetched_at = new Date().toISOString();
-  const cacheKey = `edgar:search:${fnvHash(
+  const cacheKey = `edgar:search:${await sha256CacheKey(
     [q.q, q.forms ?? '', q.startdt ?? '', q.enddt ?? '', q.limit, q.page].join('|'),
   )}`;
 

@@ -850,8 +850,14 @@ export function transformFdaQueryResults(
   category: string,
   raw: unknown,
 ): LlmReadyEnvelope<LlmReadyFdaResults<unknown>> | null {
+  // hasOwnProperty.call guards against prototype-chain keys like
+  // `__proto__` resolving to Object.prototype and being invoked as a
+  // function on line 859, which would crash the worker.
+  if (!Object.prototype.hasOwnProperty.call(FDA_TRANSFORMERS, category)) {
+    return null;
+  }
   const transformer = FDA_TRANSFORMERS[category];
-  if (!transformer) return null;
+  if (typeof transformer !== 'function') return null;
   const r = (raw ?? {}) as Record<string, unknown>;
   const meta = (r.meta ?? {}) as Record<string, unknown>;
   const metaResults = (meta.results ?? {}) as Record<string, unknown>;

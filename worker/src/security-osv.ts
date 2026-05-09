@@ -23,6 +23,7 @@
  */
 
 import type { Env } from './types';
+import { sha256CacheKey } from './cache-key';
 
 const OSV_API = 'https://api.osv.dev/v1';
 
@@ -230,21 +231,12 @@ export function parseOsvPackageQuery(url: URL): ParseOk | ParseErr {
   return { ok: true, query: { ecosystem, name, version } };
 }
 
-function fnvHash(s: string): string {
-  let hash = 2166136261;
-  for (let i = 0; i < s.length; i += 1) {
-    hash ^= s.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(36);
-}
-
 export async function fetchOSVForPackage(
   env: Env,
   q: OsvPackageQuery,
 ): Promise<OsvPackageResult> {
   const fetched_at = new Date().toISOString();
-  const cacheKey = `osv:pkg:${fnvHash([q.ecosystem, q.name, q.version ?? ''].join('|'))}`;
+  const cacheKey = `osv:pkg:${await sha256CacheKey([q.ecosystem, q.name, q.version ?? ''].join('|'))}`;
 
   const cached = await env.TENSORFEED_CACHE.get<{ vulns?: unknown[] }>(cacheKey, 'json');
   if (cached) {

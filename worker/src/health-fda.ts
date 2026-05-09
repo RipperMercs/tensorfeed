@@ -34,6 +34,7 @@
  */
 
 import type { Env } from './types';
+import { sha256CacheKey } from './cache-key';
 
 const FDA_BASE = 'https://api.fda.gov';
 
@@ -119,7 +120,12 @@ export interface ParseError {
 }
 
 export function isFDACategory(c: string): c is keyof typeof FDA_CATEGORIES {
-  return c in FDA_CATEGORIES;
+  // Use hasOwnProperty.call to avoid the prototype-chain trap: `c in
+  // FDA_CATEGORIES` evaluates true for `__proto__`, `toString`, etc.,
+  // which would then propagate as a category string and crash the
+  // worker downstream when FDA_TRANSFORMERS[c] resolves to a non-
+  // callable prototype value.
+  return Object.prototype.hasOwnProperty.call(FDA_CATEGORIES, c);
 }
 
 export function parseFDAQuery(
@@ -195,15 +201,6 @@ export function parseFDAAggregateQuery(
   return { ok: true, query: { category, count_by, search, limit } };
 }
 
-function fnvHash(s: string): string {
-  let hash = 2166136261;
-  for (let i = 0; i < s.length; i += 1) {
-    hash ^= s.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(36);
-}
-
 function buildFDAUrl(q: FDAQuery): string {
   const params = new URLSearchParams();
   if (q.search) params.set('search', q.search);
@@ -221,14 +218,14 @@ function buildAggregateUrl(q: FDAAggregateQuery): string {
   return `${FDA_BASE}${FDA_CATEGORIES[q.category].upstream}?${params.toString()}`;
 }
 
-function cacheKeyForQuery(q: FDAQuery): string {
+async function cacheKeyForQuery(q: FDAQuery): Promise<string> {
   const parts = [q.category, q.search ?? '', q.limit, q.skip, q.sort ?? ''].join('|');
-  return `fda:q:${fnvHash(parts)}`;
+  return `fda:q:${await sha256CacheKey(parts)}`;
 }
 
-function cacheKeyForAggregate(q: FDAAggregateQuery): string {
+async function cacheKeyForAggregate(q: FDAAggregateQuery): Promise<string> {
   const parts = [q.category, q.count_by, q.search ?? '', q.limit].join('|');
-  return `fda:agg:${fnvHash(parts)}`;
+  return `fda:agg:${await sha256CacheKey(parts)}`;
 }
 
 async function fetchFDA(url: string): Promise<{
@@ -281,7 +278,7 @@ async function fetchFDA(url: string): Promise<{
 
 export async function fetchFDAQuery(env: Env, q: FDAQuery): Promise<FDAResult> {
   const fetched_at = new Date().toISOString();
-  const key = cacheKeyForQuery(q);
+  const key = await cacheKeyForQuery(q);
 
   const cached = await env.TENSORFEED_CACHE.get<unknown>(key, 'json');
   if (cached) {
@@ -337,7 +334,7 @@ export async function fetchFDAAggregate(
   q: FDAAggregateQuery,
 ): Promise<FDAAggregateResult> {
   const fetched_at = new Date().toISOString();
-  const key = cacheKeyForAggregate(q);
+  const key = await cacheKeyForAggregate(q);
 
   const cached = await env.TENSORFEED_CACHE.get<unknown>(key, 'json');
   if (cached) {
