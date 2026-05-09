@@ -48,6 +48,15 @@ import {
   POWER_ATTRIBUTION,
 } from './climate-nasa-power';
 import {
+  parseFDAQuery,
+  parseFDAAggregateQuery,
+  fetchFDAQuery,
+  fetchFDAAggregate,
+  isFDACategory,
+  FDA_CATEGORIES,
+  FDA_ATTRIBUTION,
+} from './health-fda';
+import {
   resolveRange,
   resolveFreeRange,
   getPricingSeries,
@@ -1871,6 +1880,12 @@ export default {
           securityEPSSTop: '/api/security/epss/top?limit=1-50 (free; top-N CVEs by current EPSS score)',
           climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
           climatePowerParameters: '/api/climate/power/parameters (free; curated NASA POWER parameter catalog with units and longnames)',
+          healthFDADrugEvents: '/api/health/fda/drug/events?search=&limit=1-100&skip=&sort= (free; FDA Adverse Event Reporting System (FAERS), 10M+ records. License: CC0)',
+          healthFDADrugLabels: '/api/health/fda/drug/labels?search=&limit=1-100&skip=&sort= (free; structured drug labels in SPL format)',
+          healthFDADrugRecalls: '/api/health/fda/drug/recalls?search=&limit=1-100&skip=&sort= (free; FDA drug enforcement reports / recalls)',
+          healthFDAFoodRecalls: '/api/health/fda/food/recalls?search=&limit=1-100&skip=&sort= (free; FDA food enforcement reports / recalls)',
+          healthFDADeviceEvents: '/api/health/fda/device/events?search=&limit=1-100&skip=&sort= (free; FDA MAUDE device adverse events)',
+          healthFDACategories: '/api/health/fda/categories (free; directory of supported openFDA categories with descriptions)',
           statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
@@ -1917,6 +1932,7 @@ export default {
           premiumSecurityEPSSSeries: '/api/premium/security/epss/series?cve_id= (1 credit; full historical EPSS time-series for one CVE)',
           premiumSecurityEPSSTop: '/api/premium/security/epss/top?date=&limit=1-100 (1 credit; top-N highest-EPSS CVEs as of any UTC date)',
           premiumClimatePowerHourly: '/api/premium/climate/power/hourly?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (1 credit; NASA POWER hourly-resolution meteorological + solar data for one point; range capped at 30 days)',
+          premiumHealthFDAAggregate: '/api/premium/health/fda/aggregate?category=&count_by=&search=&limit=1-1000 (1 credit; histogram-by-field across openFDA records, e.g. top drugs by adverse event count)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -3849,6 +3865,53 @@ export default {
       );
     }
 
+    // === PAID PREMIUM: OpenFDA AGGREGATE (Tier 1, 1 credit) ===
+    // Histogram-by-field across openFDA's millions of records. Uses
+    // openFDA's `count` parameter to return bucket counts in one call
+    // instead of N follow-up queries. Useful for "top N drugs by
+    // adverse event count" or "top reactions for one drug" without
+    // pagination through hundreds of thousands of individual records.
+
+    if (path === '/api/premium/health/fda/aggregate') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const parsed = parseFDAAggregateQuery(url);
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchFDAAggregate(env, parsed.query);
+      if (!result.ok) {
+        return jsonResponse(
+          { ok: false, error: result.error, attribution: result.attribution },
+          result.http_status === 429 ? 503 : 502,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/health/fda/aggregate',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          source: result.source,
+          fetched_at: result.fetched_at,
+          query: result.query,
+          data: result.data,
+          attribution: result.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
     // === PAID PREMIUM: NASA POWER HOURLY (Tier 1, 1 credit) ===
     // Hourly-resolution meteorological and solar data for one point.
     // Same NASA POWER source as the free /api/climate/power/daily, but
@@ -4481,6 +4544,66 @@ export default {
         },
         200,
         86400,
+      );
+    }
+
+    // === HEALTH: OpenFDA (drugs, devices, food) ===
+    // Lazy-proxy with KV caching. License: CC0 1.0 Universal Dedication
+    // (FDA waived all copyright); commercial redistribution explicitly
+    // permitted with no attribution requirement. Five category sub-paths
+    // exposed: drug/events, drug/labels, drug/recalls, food/recalls,
+    // device/events.
+
+    if (path === '/api/health/fda/categories') {
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          count: Object.keys(FDA_CATEGORIES).length,
+          categories: Object.entries(FDA_CATEGORIES).map(([key, cfg]) => ({
+            category: key,
+            upstream_path: cfg.upstream,
+            description: cfg.description,
+            tf_endpoint: `/api/health/fda/${key}`,
+          })),
+          attribution: FDA_ATTRIBUTION,
+        },
+        200,
+        86400,
+      );
+    }
+
+    const fdaMatch = path.match(/^\/api\/health\/fda\/(.+)$/);
+    if (fdaMatch && isFDACategory(fdaMatch[1])) {
+      const category = fdaMatch[1];
+      const parsed = parseFDAQuery(category, url);
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchFDAQuery(env, parsed.query);
+      const status = result.ok
+        ? 200
+        : result.http_status === 429
+          ? 503
+          : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          source: result.source,
+          fetched_at: result.fetched_at,
+          query: result.query,
+          data: result.data,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+          premium: {
+            aggregate_endpoint: '/api/premium/health/fda/aggregate?category=&count_by=',
+            credits_per_call: 1,
+            note: 'Premium /aggregate exposes openFDA\'s `count` parameter for histogram-by-field across millions of records in a single call (e.g. top 20 drugs with adverse events, top reactions for one drug).',
+          },
+        },
+        status,
+        result.ok ? 3600 : 60,
       );
     }
 

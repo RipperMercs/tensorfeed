@@ -543,6 +543,29 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/health/fda/aggregate',
+    description:
+      'Histogram-by-field across openFDA\'s millions of drug, food, and device records. Uses openFDA\'s `count` parameter to return bucket counts in one call instead of paging through individual records. Useful for top-N analyses (top drugs by adverse events, top reactions for one drug, top recalled food categories). License: CC0 1.0 Universal Dedication, FDA waiver of all copyright interests.',
+    cost: '1 credit per call',
+    example: `// Query: ?category=drug/events&count_by=patient.reaction.reactionmeddrapt.exact&limit=5
+{
+  "ok": true,
+  "query": { "category": "drug/events", "count_by": "patient.reaction.reactionmeddrapt.exact", "limit": 5 },
+  "data": {
+    "meta": { "last_updated": "2026-04-28" },
+    "results": [
+      { "term": "DRUG INEFFECTIVE", "count": 1842734 },
+      { "term": "NAUSEA", "count": 1234567 },
+      { "term": "FATIGUE", "count": 987654 },
+      { "term": "HEADACHE", "count": 876543 },
+      { "term": "DIZZINESS", "count": 654321 }
+    ]
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 39 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/status/leaderboard',
     description:
       'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',

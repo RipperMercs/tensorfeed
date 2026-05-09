@@ -332,6 +332,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/health/fda/aggregate",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-08T00:00:00Z",
+      "metadata": {
+        "name": "OpenFDA aggregate query",
+        "description": "Histogram-by-field across openFDA's drug, food, and device record sets (FAERS, MAUDE, structured product labels, enforcement reports). Uses openFDA's `count` parameter to return bucket counts in one call instead of paging through millions of individual records. Useful for top-N analyses (top drugs by adverse events, top reactions for one drug, top recalled food categories). License: CC0 1.0 Universal Dedication, FDA waiver of all copyright interests, commercial redistribution permitted.",
+        "tier": 1,
+        "credits": 1,
+        "category": "health-regulatory"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",

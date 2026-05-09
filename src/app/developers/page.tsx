@@ -792,6 +792,40 @@ const ENDPOINTS: Endpoint[] = [
   ]
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/health/fda/categories',
+    description:
+      'Directory of supported openFDA categories with descriptions and per-endpoint TF paths. Free, no auth. License: CC0 1.0 Universal Dedication; the FDA has waived all copyright interests, commercial redistribution permitted with no attribution requirement.',
+    cache: 'Cache for 24 hours',
+    example: `{
+  "ok": true,
+  "tier": "free",
+  "count": 5,
+  "categories": [
+    { "category": "drug/events", "tf_endpoint": "/api/health/fda/drug/events", "description": "FAERS adverse event reports..." }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/health/fda/{category}',
+    description:
+      'OpenFDA query proxy. Category is one of: drug/events (FAERS adverse events, ~10M records), drug/labels (structured drug labels), drug/recalls (drug enforcement reports), food/recalls (food enforcement reports), device/events (MAUDE device adverse events). Lucene-style search via ?search=field:value+AND+field:value, plus ?limit=1-100, ?skip=, ?sort=field:asc|desc.',
+    cache: 'Cache for 1 hour',
+    example: `// GET /api/health/fda/drug/events?search=patient.drug.medicinalproduct:aspirin&limit=5
+{
+  "ok": true,
+  "tier": "free",
+  "source": "live",
+  "data": {
+    "meta": { "last_updated": "2026-04-28", "results": { "skip": 0, "limit": 5, "total": 609465 } },
+    "results": [
+      { "safetyreportid": "10003304", "primarysourcecountry": "US", "patient": { "drug": [{ "medicinalproduct": "ASPIRIN" }] } }
+    ]
+  }
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news
