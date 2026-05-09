@@ -6,16 +6,18 @@ const PODCAST_SOURCES: PodcastSource[] = [
   { id: 'practical-ai', name: 'Practical AI', feedUrl: 'https://changelog.com/practicalai/feed', active: true },
   { id: 'latent-space', name: 'Latent Space', feedUrl: 'https://api.substack.com/feed/podcast/1084089.rss', active: true },
   { id: 'last-week-in-ai', name: 'Last Week in AI', feedUrl: 'https://rss.art19.com/last-week-in-ai', active: true },
-  // Added 2026-04-14
-  { id: 'no-priors', name: 'No Priors', feedUrl: 'https://feeds.transistor.fm/no-priors-ai-technology-culture-and-the-future', active: true },
+  // Added 2026-04-14, URLs refreshed 2026-05-09 after dead-feed audit
+  { id: 'no-priors', name: 'No Priors', feedUrl: 'https://feeds.megaphone.fm/nopriors', active: true },
   { id: 'twiml-ai', name: 'TWIML AI', feedUrl: 'https://twimlai.com/feed/', active: true },
-  { id: 'cognitive-revolution', name: 'Cognitive Revolution', feedUrl: 'https://feeds.buzzsprout.com/2136896.rss', active: true },
+  { id: 'cognitive-revolution', name: 'Cognitive Revolution', feedUrl: 'https://feeds.megaphone.fm/RINTP3108857801', active: true },
   { id: 'lex-fridman', name: 'Lex Fridman Podcast', feedUrl: 'https://lexfridman.com/feed/podcast/', active: true },
-  { id: 'gradient-dissent', name: 'Gradient Dissent', feedUrl: 'https://feeds.soundcloud.com/users/soundcloud:users:495005692/sounds.rss', active: true },
-  { id: 'ai-breakdown', name: 'The AI Breakdown', feedUrl: 'https://feeds.libsyn.com/467386/rss', active: true },
-  // Added 2026-05-09: high-signal AI/tech podcasts
+  { id: 'gradient-dissent', name: 'Gradient Dissent', feedUrl: 'https://feeds.captivate.fm/gradient-dissent/', active: true },
+  // 'The AI Breakdown' rebranded to 'The AI Daily Brief' and now feeds the
+  // same anchor.fm/s/f7cac464 URL we already pull as 'AI Daily Brief'. Removed
+  // 2026-05-09 to avoid full-duplicate episodes after the dedupe pass.
+  // Added 2026-05-09: high-signal AI/tech podcasts (Dwarkesh URL fixed)
   { id: 'hard-fork', name: 'Hard Fork', feedUrl: 'https://feeds.simplecast.com/l2i9YnTd', active: true },
-  { id: 'dwarkesh', name: 'Dwarkesh Podcast', feedUrl: 'https://api.substack.com/feed/podcast/115929.rss', active: true },
+  { id: 'dwarkesh', name: 'Dwarkesh Podcast', feedUrl: 'https://api.substack.com/feed/podcast/69345.rss', active: true },
   { id: 'all-in', name: 'All-In Podcast', feedUrl: 'https://allinchamathjason.libsyn.com/rss', active: true },
   { id: 'mlst', name: 'Machine Learning Street Talk', feedUrl: 'https://anchor.fm/s/1e4a0eac/podcast/rss', active: true },
 ];
@@ -47,8 +49,11 @@ function extractAttribute(xml: string, tag: string, attr: string): string {
 }
 
 function stripHtml(html: string): string {
+  // Decode entities first, then strip tags. Doing the strip first leaves
+  // escaped tags like &lt;p&gt; intact, which the entity-decode step then
+  // turns back into <p> in the output. Doing it the other way around lets
+  // the tag-strip catch both literal and previously-escaped tags.
   return html
-    .replace(/<[^>]*>/g, '')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -60,6 +65,7 @@ function stripHtml(html: string): string {
     .replace(/&hellip;/g, '...')
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
     .replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/<[^>]*>/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -183,10 +189,17 @@ export async function pollPodcastFeeds(env: Env): Promise<void> {
   const allEpisodes: PodcastEpisode[] = [];
   let successCount = 0;
 
-  for (const result of results) {
-    if (result.status === 'fulfilled' && result.value.length > 0) {
-      allEpisodes.push(...result.value);
-      successCount++;
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    const source = activeSources[i];
+    if (result.status === 'fulfilled') {
+      console.log(`Podcast ${source.name}: ${result.value.length} episodes`);
+      if (result.value.length > 0) {
+        allEpisodes.push(...result.value);
+        successCount++;
+      }
+    } else {
+      console.warn(`Podcast ${source.name}: rejected -`, result.reason);
     }
   }
 
