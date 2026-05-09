@@ -26,11 +26,19 @@
 
 const CLEANING_VERSION = '1.0';
 
+export interface LlmReadyCompressionStats {
+  source_bytes: number | null;
+  cleaned_bytes: number;
+  reduction_pct: number | null;
+  approx_tokens_saved: number | null;
+}
+
 export interface LlmReadyEnvelope<T> {
   schema_version: '1.0';
   cleaning_version: string;
   transformed_at: string;
   source: string;
+  compression_stats: LlmReadyCompressionStats | null;
   data: T;
 }
 
@@ -40,8 +48,56 @@ function envelope<T>(source: string, data: T): LlmReadyEnvelope<T> {
     cleaning_version: CLEANING_VERSION,
     transformed_at: new Date().toISOString(),
     source,
+    compression_stats: null,
     data,
   };
+}
+
+/**
+ * Augment a transform output with compression statistics so the agent
+ * sees the explicit ROI on every call. Token approximation uses the
+ * common 4-bytes-per-token rule of thumb for English JSON; agents that
+ * care about exact counts can run their own tokenizer over the raw +
+ * cleaned bytes, but this approximation is plenty good for cost
+ * justification at the request-decision level.
+ *
+ * Why a separate helper instead of folding into envelope(): we don't
+ * always have the source bytes at transform time. The route handler
+ * has them (just fetched from upstream) and adds them after; the
+ * transformer functions stay testable without needing the raw payload.
+ */
+export function attachCompressionStats<T>(
+  env: LlmReadyEnvelope<T>,
+  sourceBytes: number | null,
+): LlmReadyEnvelope<T> {
+  const cleanedJson = JSON.stringify(env.data);
+  const cleaned_bytes = new TextEncoder().encode(cleanedJson).length;
+  let reduction_pct: number | null = null;
+  let approx_tokens_saved: number | null = null;
+  if (sourceBytes !== null && sourceBytes > 0) {
+    const saved = Math.max(0, sourceBytes - cleaned_bytes);
+    reduction_pct = Math.round((saved / sourceBytes) * 1000) / 10;
+    approx_tokens_saved = Math.floor(saved / 4);
+  }
+  return {
+    ...env,
+    compression_stats: {
+      source_bytes: sourceBytes,
+      cleaned_bytes,
+      reduction_pct,
+      approx_tokens_saved,
+    },
+  };
+}
+
+/**
+ * Compute the byte length of an arbitrary upstream payload so the
+ * route handler can pass it to attachCompressionStats. Stable across
+ * worker isolate runs because we use the canonical JSON serialization
+ * we would have served if the agent had hit the free passthrough.
+ */
+export function measureSourceBytes(payload: unknown): number {
+  return new TextEncoder().encode(JSON.stringify(payload)).length;
 }
 
 function safeStr(v: unknown): string | null {

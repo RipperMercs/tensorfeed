@@ -10,6 +10,8 @@ import {
   transformFdaRecall,
   transformFdaDeviceEvent,
   transformFdaQueryResults,
+  attachCompressionStats,
+  measureSourceBytes,
   type LlmReadyFdaDrugEvent,
   type LlmReadyFdaDrugLabel,
   type LlmReadyFdaRecall,
@@ -601,6 +603,58 @@ describe('transformFdaQueryResults', () => {
     expect(out).not.toBeNull();
     expect(out!.data.count).toBe(0);
     expect(out!.data.results).toEqual([]);
+  });
+});
+
+describe('measureSourceBytes', () => {
+  it('returns the byte length of canonical JSON', () => {
+    expect(measureSourceBytes({ a: 1 })).toBe(7); // {"a":1}
+  });
+  it('handles null and arrays', () => {
+    expect(measureSourceBytes(null)).toBe(4); // null
+    expect(measureSourceBytes([])).toBe(2);   // []
+  });
+});
+
+describe('attachCompressionStats', () => {
+  const SAMPLE_ENVELOPE = transformCveRecord({
+    cveMetadata: { cveId: 'CVE-2026-0001' },
+  });
+
+  it('computes cleaned_bytes from the data field only', () => {
+    const out = attachCompressionStats(SAMPLE_ENVELOPE, null);
+    expect(out.compression_stats?.cleaned_bytes).toBeGreaterThan(0);
+    expect(out.compression_stats?.source_bytes).toBeNull();
+    expect(out.compression_stats?.reduction_pct).toBeNull();
+    expect(out.compression_stats?.approx_tokens_saved).toBeNull();
+  });
+
+  it('computes reduction_pct and approx_tokens_saved when source_bytes is provided', () => {
+    const out = attachCompressionStats(SAMPLE_ENVELOPE, 3000);
+    expect(out.compression_stats?.source_bytes).toBe(3000);
+    expect(out.compression_stats?.reduction_pct).toBeGreaterThan(0);
+    expect(out.compression_stats?.approx_tokens_saved).toBeGreaterThan(0);
+  });
+
+  it('clamps reduction_pct to non-negative when cleaned > source', () => {
+    const out = attachCompressionStats(SAMPLE_ENVELOPE, 1);
+    // cleaned will exceed 1 byte; saved is clamped to 0, so pct is 0
+    expect(out.compression_stats?.reduction_pct).toBe(0);
+    expect(out.compression_stats?.approx_tokens_saved).toBe(0);
+  });
+
+  it('preserves all other envelope fields', () => {
+    const out = attachCompressionStats(SAMPLE_ENVELOPE, 2000);
+    expect(out.schema_version).toBe('1.0');
+    expect(out.cleaning_version).toBe(LLM_READY_CLEANING_VERSION);
+    expect(out.source).toBe('MITRE CVE List');
+    expect(out.data).toEqual(SAMPLE_ENVELOPE.data);
+  });
+
+  it('rounds reduction_pct to one decimal place', () => {
+    const out = attachCompressionStats(SAMPLE_ENVELOPE, 2500);
+    const pct = out.compression_stats?.reduction_pct ?? 0;
+    expect(pct).toBe(Math.round(pct * 10) / 10);
   });
 });
 

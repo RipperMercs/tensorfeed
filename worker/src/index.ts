@@ -69,6 +69,8 @@ import {
   transformNasaPowerPoint,
   transformEiaSeries,
   transformFdaQueryResults,
+  attachCompressionStats,
+  measureSourceBytes,
   LLM_READY_CLEANING_VERSION,
 } from './llm-ready';
 import {
@@ -3961,7 +3963,10 @@ export default {
           status,
         );
       }
-      const clean = transformCveRecord(raw.record);
+      const clean = attachCompressionStats(
+        transformCveRecord(raw.record),
+        measureSourceBytes(raw.record),
+      );
       ctx.waitUntil(
         logPremiumUsage(
           env,
@@ -4005,7 +4010,10 @@ export default {
           404,
         );
       }
-      const clean = transformKevEntry(entry);
+      const clean = attachCompressionStats(
+        transformKevEntry(entry),
+        measureSourceBytes(entry),
+      );
       ctx.waitUntil(
         logPremiumUsage(
           env,
@@ -4046,7 +4054,10 @@ export default {
           status,
         );
       }
-      const clean = transformEpssScore(raw.data);
+      const clean = attachCompressionStats(
+        transformEpssScore(raw.data),
+        measureSourceBytes(raw.data),
+      );
       ctx.waitUntil(
         logPremiumUsage(
           env,
@@ -4104,10 +4115,11 @@ export default {
           result.http_status === 429 ? 503 : 502,
         );
       }
-      const clean = transformFdaQueryResults(category, result.data);
-      if (!clean) {
+      const cleanRaw = transformFdaQueryResults(category, result.data);
+      if (!cleanRaw) {
         return jsonResponse({ ok: false, error: 'transformer_unavailable' }, 500);
       }
+      const clean = attachCompressionStats(cleanRaw, measureSourceBytes(result.data));
       ctx.waitUntil(
         logPremiumUsage(
           env,
@@ -4157,7 +4169,10 @@ export default {
           result.http_status === 429 ? 503 : 502,
         );
       }
-      const clean = transformNasaPowerPoint(result.data);
+      const clean = attachCompressionStats(
+        transformNasaPowerPoint(result.data),
+        measureSourceBytes(result.data),
+      );
       ctx.waitUntil(
         logPremiumUsage(
           env,
@@ -4207,7 +4222,10 @@ export default {
           result.http_status === 429 ? 503 : result.http_status === 503 ? 503 : 502,
         );
       }
-      const clean = transformEiaSeries(result.data);
+      const clean = attachCompressionStats(
+        transformEiaSeries(result.data),
+        measureSourceBytes(result.data),
+      );
       ctx.waitUntil(
         logPremiumUsage(
           env,
