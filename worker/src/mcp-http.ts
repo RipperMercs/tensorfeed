@@ -40,6 +40,7 @@ import {
   type EdgarSearchQuery,
 } from './finance-sec-edgar';
 import { fetchEIASeries, isEIARoute, EIA_ROUTES } from './economy-eia';
+import { readSECTicker } from './sec-tickers';
 
 const PROTOCOL_VERSION = '2024-11-05';
 const SERVER_NAME = 'tensorfeed';
@@ -361,14 +362,9 @@ const TOOLS: McpToolDef[] = [
     handler: async (env, args) => {
       const term = getStringArg(args, 'ticker_or_cik');
       if (!term) throw new Error('ticker_or_cik is required');
-      // Hit the existing free /api/sec/company-tickers/{x} endpoint
-      const resp = await fetch(
-        `https://tensorfeed.ai/api/sec/company-tickers/${encodeURIComponent(term)}`,
-        { headers: { 'User-Agent': 'TensorFeed-MCP/1.0.0' }, signal: AbortSignal.timeout(8000) },
-      );
-      if (resp.status === 404) return { ok: false, error: 'ticker_or_cik_not_found' };
-      if (!resp.ok) return { ok: false, error: `lookup_http_${resp.status}` };
-      return await resp.json();
+      // Direct function call rather than worker-self-fetch (Cloudflare
+      // workers can't reliably loop back through their own public URL).
+      return await readSECTicker(env, term);
     },
   },
   {
