@@ -372,3 +372,199 @@ export async function getSnapshotForDate(
 ): Promise<AgentOpportunitiesSnapshot | null> {
   return (await env.TENSORFEED_CACHE.get<AgentOpportunitiesSnapshot>(dailyKey(date), 'json')) ?? null;
 }
+
+// === Proactive opportunity alerts ===
+//
+// After each daily scan, diff against yesterday's snapshot. If new repos
+// appear that meet the alert threshold, email evan@tensorfeed.ai via
+// Resend. Throttled implicitly because the cron is daily; first-run is a
+// no-op (no previous snapshot to diff against).
+
+const HIGH_VALUE_SIGNALS = new Set([
+  'anthropic-org',
+  'openai-org',
+  'microsoft-org',
+  'mcp-org',
+]);
+const KEYWORD_STAR_THRESHOLD = 100;
+const ALERT_ITEM_CAP = 25;
+
+function isoDaysAgoUTC(n: number, ref: Date = new Date()): string {
+  const d = new Date(ref);
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+export function findNewOpportunities(
+  current: AgentOpportunity[],
+  previous: AgentOpportunity[],
+): AgentOpportunity[] {
+  const previousNames = new Set(previous.map((o) => o.full_name));
+  return current.filter((o) => !previousNames.has(o.full_name));
+}
+
+export function filterAlertWorthy(newOpps: AgentOpportunity[]): AgentOpportunity[] {
+  return newOpps.filter((o) => {
+    if (HIGH_VALUE_SIGNALS.has(o.signal)) return true;
+    return o.stars >= KEYWORD_STAR_THRESHOLD;
+  });
+}
+
+interface AlertEnv {
+  RESEND_API_KEY?: string;
+  ALERT_EMAIL_TO?: string;
+  ALERT_EMAIL_FROM?: string;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildAlertEmail(
+  opps: AgentOpportunity[],
+  date: string,
+): { subject: string; html: string; text: string } {
+  const subject = `[TF] ${opps.length} new agent ecosystem repo${opps.length === 1 ? '' : 's'} on ${date}`;
+
+  const rows = opps
+    .slice(0, ALERT_ITEM_CAP)
+    .map((o) => {
+      const desc = o.description ? escapeHtml(o.description) : '<em>(no description)</em>';
+      const fn = escapeHtml(o.full_name);
+      const url = escapeHtml(o.html_url);
+      const sig = escapeHtml(o.signal);
+      return `<tr>
+  <td style="padding:8px 12px;border-bottom:1px solid #1f2937;font-family:ui-monospace,monospace;font-size:13px;"><a href="${url}" style="color:#6366f1;text-decoration:none;">${fn}</a></td>
+  <td style="padding:8px 12px;border-bottom:1px solid #1f2937;font-size:12px;color:#9ca3af;">${sig}</td>
+  <td style="padding:8px 12px;border-bottom:1px solid #1f2937;font-size:12px;text-align:right;color:#d1d5db;">${o.stars.toLocaleString()}★</td>
+  <td style="padding:8px 12px;border-bottom:1px solid #1f2937;font-size:13px;color:#9ca3af;">${desc}</td>
+</tr>`;
+    })
+    .join('\n');
+
+  const html = `<!doctype html>
+<html><body style="background:#0a0a0b;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin:0;padding:24px;">
+<div style="max-width:780px;margin:0 auto;">
+<h2 style="margin:0 0 6px 0;color:#fff;">New agent ecosystem opportunities</h2>
+<p style="margin:0 0 16px 0;color:#9ca3af;font-size:14px;">${date} · ${opps.length} new repo${opps.length === 1 ? '' : 's'} surfaced by the daily scan${opps.length > ALERT_ITEM_CAP ? ` (top ${ALERT_ITEM_CAP} shown)` : ''}.</p>
+<table style="width:100%;border-collapse:collapse;background:#111827;border:1px solid #1f2937;border-radius:8px;overflow:hidden;">
+<thead>
+<tr style="background:#1f2937;">
+<th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;">Repo</th>
+<th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;">Signal</th>
+<th style="padding:10px 12px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;">Stars</th>
+<th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;">Description</th>
+</tr>
+</thead>
+<tbody>
+${rows}
+</tbody>
+</table>
+<p style="margin:16px 0 0 0;color:#6b7280;font-size:12px;">Full snapshot: <a href="https://tensorfeed.ai/api/agents/opportunities" style="color:#6366f1;">/api/agents/opportunities</a> · Cron 13:30 UTC daily.</p>
+</div>
+</body></html>`;
+
+  const textRows = opps
+    .slice(0, ALERT_ITEM_CAP)
+    .map((o) => {
+      const desc = o.description || '(no description)';
+      return `[${o.signal}] ${o.full_name} (${o.stars.toLocaleString()} stars)\n  ${o.html_url}\n  ${desc}`;
+    })
+    .join('\n\n');
+  const text = `New agent ecosystem opportunities · ${date}\n\n${opps.length} new repo${opps.length === 1 ? '' : 's'} surfaced by the daily scan${opps.length > ALERT_ITEM_CAP ? ` (top ${ALERT_ITEM_CAP} shown)` : ''}.\n\n${textRows}\n\nFull snapshot: https://tensorfeed.ai/api/agents/opportunities`;
+
+  return { subject, html, text };
+}
+
+async function sendAlertEmail(
+  env: AlertEnv,
+  payload: { subject: string; html: string; text: string },
+): Promise<boolean> {
+  if (!env.RESEND_API_KEY) {
+    console.warn('opportunity alert skipped: RESEND_API_KEY not set');
+    return false;
+  }
+  const to = env.ALERT_EMAIL_TO || 'evan@tensorfeed.ai';
+  const from = env.ALERT_EMAIL_FROM || 'alerts@tensorfeed.ai';
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: `TensorFeed Opportunities <${from}>`,
+        to: [to],
+        subject: payload.subject,
+        html: payload.html,
+        text: payload.text,
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) {
+      console.error(`opportunity alert: Resend ${res.status}`);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('opportunity alert error:', err);
+    return false;
+  }
+}
+
+export interface AlertResult {
+  ok: boolean;
+  new_count: number;
+  alert_worthy_count: number;
+  emailed: boolean;
+  reason?: string;
+}
+
+export async function checkAndSendOpportunityAlerts(
+  env: Env,
+  current: AgentOpportunitiesSnapshot,
+): Promise<AlertResult> {
+  const yesterday = isoDaysAgoUTC(1, new Date(current.capturedAt));
+  const previous = await env.TENSORFEED_CACHE.get<AgentOpportunitiesSnapshot>(
+    dailyKey(yesterday),
+    'json',
+  );
+  if (!previous) {
+    return { ok: true, new_count: 0, alert_worthy_count: 0, emailed: false, reason: 'no_previous_snapshot' };
+  }
+  const newOpps = findNewOpportunities(current.opportunities, previous.opportunities);
+  const alertWorthy = filterAlertWorthy(newOpps);
+
+  if (alertWorthy.length === 0) {
+    return { ok: true, new_count: newOpps.length, alert_worthy_count: 0, emailed: false, reason: 'no_alert_worthy' };
+  }
+
+  const payload = buildAlertEmail(alertWorthy, current.date);
+  const emailed = await sendAlertEmail(env as AlertEnv, payload);
+
+  // Audit-log the alert run regardless of email send result. KV write
+  // is single, idempotent per date.
+  await env.TENSORFEED_CACHE.put(
+    `opps:alert:${current.date}`,
+    JSON.stringify({
+      date: current.date,
+      ranAt: new Date().toISOString(),
+      new_count: newOpps.length,
+      alert_worthy_count: alertWorthy.length,
+      emailed,
+      alert_worthy: alertWorthy.slice(0, ALERT_ITEM_CAP).map((o) => ({
+        full_name: o.full_name,
+        signal: o.signal,
+        stars: o.stars,
+      })),
+    }),
+  );
+
+  return { ok: true, new_count: newOpps.length, alert_worthy_count: alertWorthy.length, emailed };
+}

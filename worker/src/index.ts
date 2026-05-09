@@ -221,6 +221,7 @@ import {
 import {
   captureAgentOpportunities,
   getLatestSnapshot as getAgentOpportunitiesLatest,
+  checkAndSendOpportunityAlerts,
 } from './agent-opportunities';
 import {
   captureRedditSnapshot,
@@ -6724,7 +6725,16 @@ export default {
       }
       if (task === 'opportunities') {
         const result = await captureAgentOpportunities(env);
-        return jsonResponse({ message: 'Agent opportunities scan ran', ...result });
+        let alertResult = null;
+        if (result.ok && url.searchParams.get('with_alerts') === 'true') {
+          const snap = await getAgentOpportunitiesLatest(env);
+          if (snap) alertResult = await checkAndSendOpportunityAlerts(env, snap);
+        }
+        return jsonResponse({
+          message: 'Agent opportunities scan ran',
+          ...result,
+          ...(alertResult ? { alerts: alertResult } : {}),
+        });
       }
       if (task === 'mcp-registry') {
         const result = await captureRegistrySnapshot(env);
@@ -7037,8 +7047,20 @@ export default {
       // mcp/x402/agent-skill keyword sweeps. Throttled, deduped by
       // full_name, scored by signal_weight * recency + log10(stars).
       // Daily snapshot keyed under opps:daily:{date}. Backs free
-      // /api/agents/opportunities.
-      await run('captureAgentOpportunities', () => captureAgentOpportunities(env));
+      // /api/agents/opportunities. After capture, diff against
+      // yesterday's snapshot and email evan@tensorfeed.ai if any new
+      // alert-worthy repos showed up (high-value-signal orgs always,
+      // keyword sweeps gated at 100+ stars).
+      await run('captureAgentOpportunities', async () => {
+        const result = await captureAgentOpportunities(env);
+        if (result.ok) {
+          const snap = await getAgentOpportunitiesLatest(env);
+          if (snap) {
+            await checkAndSendOpportunityAlerts(env, snap);
+          }
+        }
+        return result;
+      });
     } else if (cron === '0 14 * * *') {
       // Daily 14:00 UTC: capture the OpenRouter cross-provider model
       // catalog (200+ models normalized across 50+ inference providers

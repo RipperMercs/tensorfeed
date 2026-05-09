@@ -4,8 +4,27 @@ import {
   dedupAndRank,
   summarize,
   compositeScore,
+  findNewOpportunities,
+  filterAlertWorthy,
   type AgentOpportunity,
 } from './agent-opportunities';
+
+function opp(over: Partial<AgentOpportunity> = {}): AgentOpportunity {
+  return {
+    full_name: 'a/a',
+    html_url: 'https://github.com/a/a',
+    description: null,
+    stars: 0,
+    created_at: '',
+    updated_at: '2026-05-09',
+    language: null,
+    topics: [],
+    signal: 'mcp-keyword',
+    signal_weight: 5,
+    composite_score: 0,
+    ...over,
+  };
+}
 
 const NOW = new Date('2026-05-09T18:00:00Z');
 
@@ -227,5 +246,59 @@ describe('summarize', () => {
     expect(s.by_signal['mcp-keyword']).toBe(1);
     expect(s.top_orgs[0]).toEqual({ org: 'anthropics', count: 2 });
     expect(s.top_orgs[1].count).toBe(1);
+  });
+});
+
+describe('findNewOpportunities', () => {
+  it('returns repos in current that are not in previous', () => {
+    const previous = [opp({ full_name: 'a/x' }), opp({ full_name: 'a/y' })];
+    const current = [opp({ full_name: 'a/x' }), opp({ full_name: 'a/z' })];
+    const out = findNewOpportunities(current, previous);
+    expect(out.length).toBe(1);
+    expect(out[0].full_name).toBe('a/z');
+  });
+
+  it('returns all current when previous is empty', () => {
+    const out = findNewOpportunities([opp({ full_name: 'a/b' }), opp({ full_name: 'c/d' })], []);
+    expect(out.length).toBe(2);
+  });
+
+  it('returns empty when nothing new', () => {
+    const set = [opp({ full_name: 'a/x' }), opp({ full_name: 'a/y' })];
+    const out = findNewOpportunities(set, set);
+    expect(out.length).toBe(0);
+  });
+});
+
+describe('filterAlertWorthy', () => {
+  it('keeps every high-value-signal repo regardless of stars', () => {
+    const opps = [
+      opp({ full_name: 'anthropics/r', signal: 'anthropic-org', signal_weight: 10, stars: 0 }),
+      opp({ full_name: 'openai/r', signal: 'openai-org', signal_weight: 9, stars: 5 }),
+      opp({ full_name: 'microsoft/r', signal: 'microsoft-org', signal_weight: 7, stars: 1 }),
+      opp({ full_name: 'modelcontextprotocol/r', signal: 'mcp-org', signal_weight: 8, stars: 2 }),
+    ];
+    expect(filterAlertWorthy(opps).length).toBe(4);
+  });
+
+  it('keeps keyword-sweep repos only when stars >= 100', () => {
+    const opps = [
+      opp({ full_name: 'a/low', signal: 'mcp-keyword', signal_weight: 5, stars: 50 }),
+      opp({ full_name: 'a/cusp', signal: 'mcp-keyword', signal_weight: 5, stars: 100 }),
+      opp({ full_name: 'a/high', signal: 'x402-keyword', signal_weight: 6, stars: 500 }),
+      opp({ full_name: 'a/skill', signal: 'skill-keyword', signal_weight: 6, stars: 5 }),
+    ];
+    const out = filterAlertWorthy(opps);
+    expect(out.map((o) => o.full_name).sort()).toEqual(['a/cusp', 'a/high']);
+  });
+
+  it('mixes high-value + keyword filters in one pass', () => {
+    const opps = [
+      opp({ full_name: 'anthropics/tiny', signal: 'anthropic-org', signal_weight: 10, stars: 0 }),
+      opp({ full_name: 'someone/big-mcp', signal: 'mcp-keyword', signal_weight: 5, stars: 1500 }),
+      opp({ full_name: 'someone/small-mcp', signal: 'mcp-keyword', signal_weight: 5, stars: 5 }),
+    ];
+    const out = filterAlertWorthy(opps);
+    expect(out.map((o) => o.full_name).sort()).toEqual(['anthropics/tiny', 'someone/big-mcp']);
   });
 });
