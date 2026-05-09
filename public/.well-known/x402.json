@@ -281,6 +281,40 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/security/epss/series",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-08T00:00:00Z",
+      "metadata": {
+        "name": "EPSS time series",
+        "description": "Full historical EPSS (Exploit Prediction Scoring System) time-series for one CVE, sourced from FIRST.org. EPSS estimates the daily probability of exploitation in the next 30 days. License: free for any use per FIRST.org policy; commercial redistribution permitted.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-security-epss"
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/security/epss/top",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-08T00:00:00Z",
+      "metadata": {
+        "name": "EPSS top-N",
+        "description": "Top-N CVEs ranked by current or historical EPSS exploitation-likelihood score. Optional ?date=YYYY-MM-DD returns the leaderboard as of any past date. License: FIRST.org free-for-any-use policy.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-security-epss"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",

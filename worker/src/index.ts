@@ -36,6 +36,12 @@ import {
   KEV_ATTRIBUTION,
 } from './security-kev';
 import {
+  fetchEPSSCurrent,
+  fetchEPSSSeries,
+  fetchEPSSTop,
+  EPSS_ATTRIBUTION,
+} from './security-epss';
+import {
   resolveRange,
   resolveFreeRange,
   getPricingSeries,
@@ -1855,6 +1861,8 @@ export default {
           securityKEVById: '/api/security/kev/{CVE-id} (free; single KEV entry by CVE ID, or 404 if the CVE is not in the catalog)',
           securityKEVAdded: '/api/security/kev/added/{YYYY-MM-DD} (free; KEV entries with dateAdded on one UTC day)',
           securityKEVDates: '/api/security/kev/dates (free; ordered list of UTC dates with KEV-added data)',
+          securityEPSSById: '/api/security/epss/{CVE-id} (free; current EPSS exploitation-likelihood score for a CVE, lazy-fetched from FIRST.org with 24h cache. License: free for any use per FIRST.org policy)',
+          securityEPSSTop: '/api/security/epss/top?limit=1-50 (free; top-N CVEs by current EPSS score)',
           statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
@@ -1898,6 +1906,8 @@ export default {
           premiumSecurityCVERange: '/api/premium/security/cve/range?from=&to= (1 credit; CVE IDs added across a UTC date range, max 30 days)',
           premiumSecurityKEVFull: '/api/premium/security/kev/full (1 credit; full untruncated CISA KEV catalog ~1500+ entries)',
           premiumSecurityKEVSeries: '/api/premium/security/kev/series?from=&to= (1 credit; daily KEV catalog additions across a date range, max 90 days)',
+          premiumSecurityEPSSSeries: '/api/premium/security/epss/series?cve_id= (1 credit; full historical EPSS time-series for one CVE)',
+          premiumSecurityEPSSTop: '/api/premium/security/epss/top?date=&limit=1-100 (1 credit; top-N highest-EPSS CVEs as of any UTC date)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -3830,6 +3840,108 @@ export default {
       );
     }
 
+    // === PAID PREMIUM: EPSS SERIES (Tier 1, 1 credit) ===
+    // Full historical time-series of EPSS scores for one CVE, sourced
+    // from FIRST.org's `?cve={id}&scope=time-series` endpoint. The
+    // series compounds with time as EPSS publishes daily. License:
+    // FIRST.org free-for-any-use policy.
+
+    if (path === '/api/premium/security/epss/series') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const cveIdParam = url.searchParams.get('cve_id') ?? url.searchParams.get('cve');
+      if (!cveIdParam) {
+        return jsonResponse(
+          { ok: false, error: 'cve_id_required', hint: 'pass ?cve_id=CVE-YYYY-NNNNN' },
+          400,
+        );
+      }
+      const result = await fetchEPSSSeries(env, cveIdParam);
+      if (!result.ok) {
+        const status = result.error === 'cve_not_in_epss' ? 404 : result.error === 'invalid_cve_id' ? 400 : 502;
+        return jsonResponse(
+          { ok: false, error: result.error, cve_id: result.cve_id, attribution: result.attribution },
+          status,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/security/epss/series',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          cve_id: result.cve_id,
+          fetched_at: result.fetched_at,
+          source: result.source,
+          score: result.data,
+          attribution: result.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: EPSS TOP (Tier 1, 1 credit) ===
+    // Top-N highest-EPSS CVEs, optionally as of any historical UTC date.
+    // Free /api/security/epss/top serves the current snapshot only;
+    // this endpoint adds the historical-date filter.
+
+    if (path === '/api/premium/security/epss/top') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const dateParam = url.searchParams.get('date');
+      if (dateParam && !isISODate(dateParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date', hint: 'date must be YYYY-MM-DD' },
+          400,
+        );
+      }
+      const requested = parseInt(url.searchParams.get('limit') ?? '50', 10);
+      const limit = Math.max(1, Math.min(Number.isFinite(requested) ? requested : 50, 100));
+
+      const result = await fetchEPSSTop(env, limit, dateParam);
+      if (!result.ok) {
+        return jsonResponse(
+          { ok: false, error: result.error ?? 'first_api_unavailable', attribution: result.attribution },
+          502,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/security/epss/top',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          date: dateParam,
+          fetched_at: result.fetched_at,
+          source: result.source,
+          count: result.count,
+          top: result.data,
+          attribution: result.attribution,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
     // === PAID PREMIUM: KEV FULL CATALOG (Tier 1, 1 credit) ===
     // Full untruncated CISA KEV catalog. Free tier returns top-50; this
     // endpoint returns the complete current catalog (~1500 entries).
@@ -4221,6 +4333,73 @@ export default {
         { ok: true, tier: 'free', count: dates.length, dates, attribution: KEV_ATTRIBUTION },
         200,
         3600,
+      );
+    }
+
+    // === SECURITY: EPSS (Exploit Prediction Scoring System) ===
+    // Pure lazy-proxy to FIRST.org's EPSS API with KV caching. License is
+    // FIRST.org's free-for-any-use policy; commercial redistribution
+    // explicitly permitted. EPSS scores update daily; cache TTLs match
+    // (24h for single-CVE current and series, 6h for top-N current,
+    // 7d for top-N historical since the past is immutable).
+
+    const epssByIdMatch = path.match(/^\/api\/security\/epss\/(CVE-\d{4}-\d{4,7})$/i);
+    if (epssByIdMatch) {
+      const result = await fetchEPSSCurrent(env, epssByIdMatch[1]);
+      const status = result.ok
+        ? 200
+        : result.error === 'cve_not_in_epss'
+          ? 404
+          : result.error === 'invalid_cve_id'
+            ? 400
+            : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          cve_id: result.cve_id,
+          source: result.source,
+          fetched_at: result.fetched_at,
+          score: result.data,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+          ...(result.ok
+            ? {
+                premium: {
+                  series_endpoint: '/api/premium/security/epss/series',
+                  credits_per_call: 1,
+                  note: 'Premium /series returns the full historical time-series of EPSS scores for one CVE.',
+                },
+              }
+            : {}),
+        },
+        status,
+        result.ok ? 3600 : 60,
+      );
+    }
+
+    if (path === '/api/security/epss/top') {
+      const requested = parseInt(url.searchParams.get('limit') ?? '20', 10);
+      const limit = Math.max(1, Math.min(Number.isFinite(requested) ? requested : 20, 50));
+      const result = await fetchEPSSTop(env, limit, null);
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          source: result.source,
+          fetched_at: result.fetched_at,
+          count: result.count,
+          top: result.data,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+          premium: {
+            historical_top: '/api/premium/security/epss/top?date=&limit=',
+            credits_per_call: 1,
+            note: 'Premium /top supports any historical UTC date and returns the top-N as of that date.',
+          },
+        },
+        result.ok ? 200 : 502,
+        result.ok ? 1800 : 60,
       );
     }
 

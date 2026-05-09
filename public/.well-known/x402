@@ -16,6 +16,8 @@
     "GET /api/premium/security/cve/range",
     "GET /api/premium/security/kev/full",
     "GET /api/premium/security/kev/series",
+    "GET /api/premium/security/epss/series",
+    "GET /api/premium/security/epss/top",
     "GET /api/premium/status/leaderboard",
     "GET /api/premium/mcp/registry/series",
     "GET /api/premium/probe/series",

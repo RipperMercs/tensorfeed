@@ -722,6 +722,39 @@ const ENDPOINTS: Endpoint[] = [
     cache: 'Cache for 1 hour',
     example: `{ "ok": true, "tier": "free", "count": 1, "dates": ["2026-05-08"] }`,
   },
+  {
+    method: 'GET',
+    path: '/api/security/epss/{CVE-id}',
+    description:
+      'EPSS (Exploit Prediction Scoring System) score for one CVE. Returns the daily probability (0 to 1) that the CVE will be exploited in the next 30 days plus a percentile rank within the EPSS corpus. Lazy-fetched from FIRST.org\'s API and cached 24 hours. License: FIRST.org\'s published policy permits free use, commercial redistribution permitted.',
+    cache: 'Cache for 1 hour',
+    example: `// GET /api/security/epss/CVE-2024-3094
+{
+  "ok": true,
+  "tier": "free",
+  "cve_id": "CVE-2024-3094",
+  "source": "live",
+  "score": { "cve": "CVE-2024-3094", "epss": "0.850580000", "percentile": "0.993590000", "date": "2026-05-08" }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/security/epss/top',
+    description:
+      'Top-N highest-EPSS CVEs as of the current daily snapshot. Free, no auth. Premium /api/premium/security/epss/top adds historical date filtering.',
+    cache: 'Cache for 30 minutes',
+    example: `// Query: ?limit=3
+{
+  "ok": true,
+  "tier": "free",
+  "count": 3,
+  "top": [
+    { "cve": "CVE-2023-23752", "epss": "0.945200000", "percentile": "1.000000000", "date": "2026-05-08" },
+    { "cve": "CVE-2017-8917",  "epss": "0.945130000", "percentile": "1.000000000", "date": "2026-05-08" },
+    { "cve": "CVE-2018-7600",  "epss": "0.944890000", "percentile": "1.000000000", "date": "2026-05-08" }
+  ]
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news

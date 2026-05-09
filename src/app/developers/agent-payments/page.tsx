@@ -481,6 +481,46 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/security/epss/series',
+    description:
+      'Full historical EPSS time-series for one CVE, sourced from FIRST.org. Each entry per date carries epss probability (0 to 1) and percentile rank. The series compounds with time as EPSS publishes daily. License: FIRST.org free-for-any-use policy.',
+    cost: '1 credit per call',
+    example: `// Query: ?cve_id=CVE-2024-3094
+{
+  "ok": true,
+  "cve_id": "CVE-2024-3094",
+  "score": {
+    "cve": "CVE-2024-3094",
+    "epss": "0.850580000",
+    "percentile": "0.993590000",
+    "date": "2026-05-08",
+    "time-series": [
+      { "epss": "0.850580000", "percentile": "0.993590000", "date": "2026-05-07" },
+      { "epss": "0.84588000",  "percentile": "0.99337000",  "date": "2026-05-06" }
+    ]
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 42 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/security/epss/top',
+    description:
+      'Top-N highest-EPSS CVEs, optionally as of any historical UTC date. Free /api/security/epss/top serves the current snapshot only; this endpoint adds the historical-date filter. License: FIRST.org free-for-any-use policy.',
+    cost: '1 credit per call',
+    example: `// Query: ?date=2026-04-01&limit=5
+{
+  "ok": true,
+  "date": "2026-04-01",
+  "count": 5,
+  "top": [
+    { "cve": "CVE-2023-23752", "epss": "0.943100000", "percentile": "1.000000000", "date": "2026-04-01" }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 41 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/status/leaderboard',
     description:
       'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',
