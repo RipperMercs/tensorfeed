@@ -278,6 +278,7 @@ import {
   validateAndCharge,
   validateOnly,
   commitInternal,
+  mintAdminCredits,
 } from './payments';
 import {
   signReceipt,
@@ -2083,6 +2084,7 @@ export default {
           usage: '/api/admin/usage?date=YYYY-MM-DD&key=<ADMIN_KEY>',
           usageDates: '/api/admin/usage/dates?key=<ADMIN_KEY>',
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
+          mint: 'POST /api/admin/mint?key=<ADMIN_KEY> with JSON { credits: 1-1000, label?: string }. Out-of-band credit issuance for internal smoke tests, support recoveries, and vetted partner trials. Caps at 1000 credits/call; every mint writes an admin:mint:<id> audit entry.',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news]',
         },
@@ -6671,6 +6673,40 @@ export default {
         previous_balance: before?.balance ?? 0,
         message: 'Token credits record deleted. Any further premium call with this token will be rejected.',
       }, 200, 0);
+    }
+
+    // === ADMIN MINT (protected, audit-logged) ===
+    // Out-of-band credit issuance for internal smoke tests, support
+    // recoveries, and vetted partner trials. Authenticated only by
+    // ADMIN_KEY (constant-time compare via isAuthorizedAdmin); the mint
+    // helper additionally caps credits at 1000/call as a defense-in-depth
+    // bound and writes an admin:mint:<id> KV audit entry on every
+    // success. There is no on-chain provenance for these tokens, so
+    // compliance reporting can grep admin:mint:* to enumerate them.
+    // See worker/src/payments.ts mintAdminCredits() for the cap and
+    // audit-trail logic.
+    if (path === '/api/admin/mint' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      if (request.method !== 'POST') {
+        return jsonResponse({ ok: false, error: 'method_not_allowed', hint: 'POST /api/admin/mint?key=... with JSON body { credits: 1-1000, label?: string }' }, 405);
+      }
+      let body: { credits?: unknown; label?: unknown };
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const credits = typeof body.credits === 'number' ? body.credits : NaN;
+      const label = typeof body.label === 'string' ? body.label : null;
+      const result = await mintAdminCredits(env, {
+        credits,
+        label,
+        agentUa: request.headers.get('User-Agent') || 'unknown',
+        clientIp: request.headers.get('CF-Connecting-IP'),
+      });
+      if (!result.ok) {
+        return jsonResponse(result, result.error === 'invalid_credits' || result.error === 'invalid_label' || result.error === 'label_too_long' ? 400 : result.error === 'credits_cap_exceeded' ? 400 : 500);
+      }
+      return jsonResponse(result, 200);
     }
 
     if (path === '/api/alerts-status') {
