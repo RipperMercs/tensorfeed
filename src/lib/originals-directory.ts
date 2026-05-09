@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'verified-feed-trust-layer',
+    title: 'The Verified Feed Is Live: Cross-Source Story Corroboration for AI Agents',
+    author: 'Marcus Chen',
+    date: 'May 9, 2026',
+    readTime: '6 min read',
+    description:
+      'Most discourse about AI safety in 2026 is focused on the wrong failure mode. Hallucinations are bounded; agents acting on a single source is the actual problem about to bite the autonomous economy. TensorFeed shipped the fix tonight: embedding-based story clustering across 12 RSS sources, premium "verified across N sources" feed, free preview at 25 clusters/day. Inside how it works, the threshold-tuning trade-off, why TF could ship it (only we have the cross-source view at scale), and how the AFTA federation makes the corroboration math compose across publishers.',
+  },
+  {
     slug: 'ai-cyber-tier-data-layer',
     title: 'The AI Cyber Tier Now Has a Data Layer. It Is Token-Optimized, Pay-Per-Call, and Live.',
     author: 'Marcus Chen',
