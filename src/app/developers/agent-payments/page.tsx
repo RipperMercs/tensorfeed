@@ -432,6 +432,55 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/security/kev/full',
+    description:
+      'Full untruncated CISA KEV catalog. Free /api/security/kev returns top-50 most-recent; this endpoint returns the entire current catalog with every field per entry. License: US Government public domain (17 USC 105), commercial redistribution explicitly permitted.',
+    cost: '1 credit per call',
+    example: `{
+  "ok": true,
+  "catalog_version": "2026.05.08",
+  "date_released": "2026-05-08T17:31:07Z",
+  "total_entries": 1590,
+  "vulnerabilities": [
+    {
+      "cveID": "CVE-2026-42208",
+      "vendorProject": "BerriAI",
+      "product": "LiteLLM",
+      "vulnerabilityName": "BerriAI LiteLLM SQL Injection",
+      "dateAdded": "2026-05-08",
+      "shortDescription": "...",
+      "requiredAction": "Apply mitigations.",
+      "dueDate": "2026-05-11",
+      "knownRansomwareCampaignUse": "Unknown",
+      "cwes": ["CWE-89"]
+    }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 44 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/security/kev/series',
+    description:
+      'Multi-day series of CISA KEV catalog additions across a UTC date range, capped at 90 days. Each day returns the full entry list whose dateAdded fell on that day. Useful for trending exploitation velocity, building anomaly detectors, or pulling weekly digest reports.',
+    cost: '1 credit per call',
+    example: `// Query: ?from=2026-05-01&to=2026-05-08
+{
+  "ok": true,
+  "from": "2026-05-01",
+  "to": "2026-05-08",
+  "days_returned": 8,
+  "total_added_in_range": 14,
+  "days": [
+    { "date": "2026-05-01", "count": 0, "entries": [] },
+    { "date": "2026-05-07", "count": 3, "entries": [...] },
+    { "date": "2026-05-08", "count": 11, "entries": [...] }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 43 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/status/leaderboard',
     description:
       'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',

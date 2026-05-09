@@ -247,6 +247,40 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/security/kev/full",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-08T00:00:00Z",
+      "metadata": {
+        "name": "CISA KEV full catalog",
+        "description": "Full untruncated CISA Known Exploited Vulnerabilities catalog. Free tier returns top-50 most recent entries; this endpoint returns the entire current catalog (~1500+ entries) with full entry detail. License: US Government public domain (17 USC 105), commercial redistribution explicitly permitted; attribution block on every response.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-security-kev"
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/security/kev/series",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-08T00:00:00Z",
+      "metadata": {
+        "name": "CISA KEV added series",
+        "description": "Multi-day series of CISA KEV catalog additions across a UTC date range, capped at 90 days. Each day returns the full entry list whose dateAdded fell on that day. License: US Government public domain (17 USC 105), commercial redistribution explicitly permitted.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-security-kev"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",

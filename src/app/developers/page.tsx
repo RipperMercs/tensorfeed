@@ -660,6 +660,68 @@ const ENDPOINTS: Endpoint[] = [
     cache: 'Cache for 1 hour',
     example: `{ "ok": true, "tier": "free", "count": 1, "dates": ["2026-05-08"] }`,
   },
+  {
+    method: 'GET',
+    path: '/api/security/kev',
+    description:
+      'CISA Known Exploited Vulnerabilities catalog (top 50 most recent). Each entry carries cveID, vendorProject, product, vulnerabilityName, dateAdded, shortDescription, requiredAction, dueDate, knownRansomwareCampaignUse, notes, and CWE list. Refreshed daily at 06:30 UTC. License: US Government public domain.',
+    cache: 'Cache for 30 minutes',
+    example: `{
+  "ok": true,
+  "tier": "free",
+  "catalog_version": "2026.05.08",
+  "date_released": "2026-05-08T17:31:07Z",
+  "total_entries": 1590,
+  "returned": 50,
+  "most_recent": [
+    {
+      "cveID": "CVE-2026-42208",
+      "vendorProject": "BerriAI",
+      "product": "LiteLLM",
+      "vulnerabilityName": "BerriAI LiteLLM SQL Injection",
+      "dateAdded": "2026-05-08",
+      "knownRansomwareCampaignUse": "Unknown",
+      "cwes": ["CWE-89"]
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/security/kev/{CVE-id}',
+    description:
+      'Single KEV entry by CVE ID. Returns 404 if the CVE is not on the KEV catalog (which is the common case; only ~1500 of ~270K CVEs are on KEV). Pair with /api/security/cve/{id} for the underlying CVE Record.',
+    cache: 'Cache for 1 hour',
+    example: `// GET /api/security/kev/CVE-2026-42208
+{
+  "ok": true,
+  "cve_id": "CVE-2026-42208",
+  "entry": {
+    "cveID": "CVE-2026-42208",
+    "vendorProject": "BerriAI",
+    "product": "LiteLLM",
+    "dateAdded": "2026-05-08",
+    "dueDate": "2026-05-11"
+  }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/security/kev/added/{YYYY-MM-DD}',
+    description:
+      'KEV entries with dateAdded == one UTC day. Free, no auth. The data moat compounds with each daily run.',
+    cache: 'Cache for 24 hours',
+    example: `// GET /api/security/kev/added/2026-05-08
+{ "ok": true, "tier": "free", "date": "2026-05-08", "count": 3, "entries": [...] }`,
+  },
+  {
+    method: 'GET',
+    path: '/api/security/kev/dates',
+    description:
+      'Ordered list of UTC dates with KEV-added entries captured. Free, no auth.',
+    cache: 'Cache for 1 hour',
+    example: `{ "ok": true, "tier": "free", "count": 1, "dates": ["2026-05-08"] }`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news

@@ -97,6 +97,14 @@ crons = [
   # MITRE CVE Terms of Use, commercial redistribution explicitly permitted.
   # Powers /api/security/cve/* and premium /api/premium/security/cve/range.
   "30 4 * * *",
+  # Daily 06:30 UTC: refresh CISA Known Exploited Vulnerabilities catalog
+  # (worker/src/security-kev.ts). Single ~3 MB JSON file. License: US
+  # Government public domain (17 USC 105), commercial redistribution
+  # explicitly permitted. Writes full catalog to kev:current, harvests
+  # entries with dateAdded == today into kev:added:{date} for the
+  # premium series endpoint. Slot picked between nflverse (06:00) and
+  # the morning UTC quiet zone.
+  "30 6 * * *",
   # Daily 03:30 UTC: refresh weekly download counts for the curated AI/ML
   # npm package list via the documented public api.npmjs.org/downloads
   # endpoint. Powers /api/packages/npm/ai-trending.

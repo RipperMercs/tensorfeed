@@ -26,6 +26,16 @@ import {
   CVE_ATTRIBUTION,
 } from './security-cve';
 import {
+  captureKEV,
+  readKEVCurrent,
+  readKEVByCVE,
+  readKEVAddedOnDate,
+  listKEVAddedDates,
+  readKEVMeta,
+  summarizeKEVForFreeTier,
+  KEV_ATTRIBUTION,
+} from './security-kev';
+import {
   resolveRange,
   resolveFreeRange,
   getPricingSeries,
@@ -1841,6 +1851,10 @@ export default {
           securityCVERecent: '/api/security/cve/recent?limit=1-100 (free; ring buffer of CVE IDs added in cvelistV5 commits over the last ~24h)',
           securityCVEByDate: '/api/security/cve/by-date/{YYYY-MM-DD} (free; CVE IDs added in cvelistV5 commits on one UTC day)',
           securityCVEDates: '/api/security/cve/dates (free; ordered list of UTC dates with CVE-by-date data)',
+          securityKEV: '/api/security/kev?limit=1-50 (free; CISA Known Exploited Vulnerabilities, 50 most-recent. Full catalog at /api/premium/security/kev/full. License: US Gov public domain)',
+          securityKEVById: '/api/security/kev/{CVE-id} (free; single KEV entry by CVE ID, or 404 if the CVE is not in the catalog)',
+          securityKEVAdded: '/api/security/kev/added/{YYYY-MM-DD} (free; KEV entries with dateAdded on one UTC day)',
+          securityKEVDates: '/api/security/kev/dates (free; ordered list of UTC dates with KEV-added data)',
           statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
@@ -1882,6 +1896,8 @@ export default {
           premiumNewsHistoryFull: '/api/premium/history/news/full?date= or ?from=&to= (1 credit; full untruncated daily news snapshots, single-date or range up to 30 days)',
           premiumNewsSourceHealth: '/api/premium/history/news/source-health?from=&to= (1 credit; per-source RSS reliability series up to 90 days)',
           premiumSecurityCVERange: '/api/premium/security/cve/range?from=&to= (1 credit; CVE IDs added across a UTC date range, max 30 days)',
+          premiumSecurityKEVFull: '/api/premium/security/kev/full (1 credit; full untruncated CISA KEV catalog ~1500+ entries)',
+          premiumSecurityKEVSeries: '/api/premium/security/kev/series?from=&to= (1 credit; daily KEV catalog additions across a date range, max 90 days)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -3814,6 +3830,127 @@ export default {
       );
     }
 
+    // === PAID PREMIUM: KEV FULL CATALOG (Tier 1, 1 credit) ===
+    // Full untruncated CISA KEV catalog. Free tier returns top-50; this
+    // endpoint returns the complete current catalog (~1500 entries).
+    // Same data, no truncation. Pure public-domain redistribution.
+
+    if (path === '/api/premium/security/kev/full') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      const catalog = await readKEVCurrent(env);
+      if (!catalog) {
+        return jsonResponse(
+          { ok: false, error: 'not_yet_captured' },
+          503,
+          60,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/security/kev/full',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          catalog_version: catalog.catalogVersion,
+          date_released: catalog.dateReleased,
+          total_entries: catalog.count ?? catalog.vulnerabilities.length,
+          vulnerabilities: catalog.vulnerabilities,
+          attribution: KEV_ATTRIBUTION,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: KEV ADDED SERIES (Tier 1, 1 credit) ===
+    // Multi-day series of CISA KEV catalog additions across a UTC date
+    // range, capped at 90 days. Each day returns the full set of entries
+    // whose dateAdded fell on that day. Useful for trending exploitation
+    // velocity, building anomaly detectors, or pulling weekly digests.
+
+    if (path === '/api/premium/security/kev/series') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const fromParam = url.searchParams.get('from');
+      const toParam = url.searchParams.get('to');
+      if (!fromParam || !toParam) {
+        return jsonResponse(
+          { ok: false, error: 'missing_params', hint: 'pass ?from=YYYY-MM-DD&to=YYYY-MM-DD' },
+          400,
+        );
+      }
+      if (!isISODate(fromParam) || !isISODate(toParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' },
+          400,
+        );
+      }
+      const fromMs = Date.parse(fromParam + 'T00:00:00Z');
+      const toMs = Date.parse(toParam + 'T00:00:00Z');
+      if (!(toMs >= fromMs)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' },
+          400,
+        );
+      }
+      const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
+      const KEV_SERIES_MAX_DAYS = 90;
+      if (dayCount > KEV_SERIES_MAX_DAYS) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'range_too_large',
+            hint: `range must be at most ${KEV_SERIES_MAX_DAYS} days`,
+            limits: { max_range_days: KEV_SERIES_MAX_DAYS },
+          },
+          400,
+        );
+      }
+
+      const dates = enumerateDates(fromParam, toParam);
+      const days = await Promise.all(
+        dates.map(async (d) => {
+          const entries = await readKEVAddedOnDate(env, d);
+          return { date: d, count: entries.length, entries };
+        }),
+      );
+      const totalAdded = days.reduce((sum, day) => sum + day.count, 0);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/security/kev/series',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          from: fromParam,
+          to: toParam,
+          days_returned: days.length,
+          total_added_in_range: totalAdded,
+          days,
+          attribution: KEV_ATTRIBUTION,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
     // === PAID PREMIUM: CVE RANGE (Tier 1, 1 credit) ===
     // Multi-day CVE-ID list across a UTC date range, up to 30 days. Each
     // day returns the full CVE-ID set indexed by the daily cron. Agents
@@ -3986,6 +4123,104 @@ export default {
         },
         200,
         86400,
+      );
+    }
+
+    // === SECURITY: CISA KEV (Known Exploited Vulnerabilities) ===
+    // Daily cron writes the full catalog to kev:current and harvests
+    // entries with dateAdded == today into kev:added:{date}. License is
+    // US Government public domain so commercial redistribution is
+    // explicitly permitted; attribution block on every response.
+
+    if (path === '/api/security/kev') {
+      const catalog = await readKEVCurrent(env);
+      const meta = await readKEVMeta(env);
+      if (!catalog) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'not_yet_captured',
+            hint: 'KEV catalog will be captured on the next daily cron run.',
+          },
+          503,
+          60,
+        );
+      }
+      const requested = parseInt(url.searchParams.get('limit') ?? '50', 10);
+      const limit = Math.max(1, Math.min(Number.isFinite(requested) ? requested : 50, 50));
+      const view = summarizeKEVForFreeTier(catalog, limit);
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          ...view,
+          last_capture: meta,
+          attribution: KEV_ATTRIBUTION,
+          premium: {
+            full_catalog: '/api/premium/security/kev/full',
+            added_series: '/api/premium/security/kev/series?from=&to=',
+            credits_per_call: 1,
+            note: 'Free tier returns 50 most-recent entries. Premium /full returns the full untruncated catalog; premium /series returns daily added-entries across a date range up to 90 days.',
+          },
+        },
+        200,
+        1800,
+      );
+    }
+
+    const kevByIdMatch = path.match(/^\/api\/security\/kev\/(CVE-\d{4}-\d{4,7})$/i);
+    if (kevByIdMatch) {
+      const entry = await readKEVByCVE(env, kevByIdMatch[1]);
+      if (!entry) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'not_in_kev',
+            cve_id: kevByIdMatch[1].toUpperCase(),
+            hint: 'CVE may exist in MITRE CVE List but not be on the CISA KEV catalog. Try /api/security/cve/{id} for the underlying record.',
+            attribution: KEV_ATTRIBUTION,
+          },
+          404,
+          300,
+        );
+      }
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          cve_id: entry.cveID,
+          entry,
+          attribution: KEV_ATTRIBUTION,
+        },
+        200,
+        3600,
+      );
+    }
+
+    const kevAddedMatch = path.match(/^\/api\/security\/kev\/added\/(\d{4}-\d{2}-\d{2})$/);
+    if (kevAddedMatch) {
+      const date = kevAddedMatch[1];
+      const entries = await readKEVAddedOnDate(env, date);
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          date,
+          count: entries.length,
+          entries,
+          attribution: KEV_ATTRIBUTION,
+        },
+        200,
+        86400,
+      );
+    }
+
+    if (path === '/api/security/kev/dates') {
+      const dates = await listKEVAddedDates(env);
+      return jsonResponse(
+        { ok: true, tier: 'free', count: dates.length, dates, attribution: KEV_ATTRIBUTION },
+        200,
+        3600,
       );
     }
 
@@ -5269,6 +5504,15 @@ export default {
       // Powers /api/security/cve/recent, /api/security/cve/by-date,
       // /api/security/cve/dates, and premium /api/premium/security/cve/range.
       await run('captureRecentCVEs', () => captureRecentCVEs(env));
+    } else if (cron === '30 6 * * *') {
+      // Daily 06:30 UTC: refresh the CISA KEV catalog (single ~3 MB JSON
+      // from cisa.gov). License: US Government public domain. Writes the
+      // full catalog to kev:current, harvests entries with dateAdded ==
+      // today into kev:added:{date}, updates the index. Powers
+      // /api/security/kev, /api/security/kev/{cve_id},
+      // /api/security/kev/added/{date}, /api/security/kev/dates, and
+      // premium /api/premium/security/kev/full + /series.
+      await run('captureKEV', () => captureKEV(env));
     } else if (cron === '30 3 * * *') {
       // Daily 03:30 UTC: refresh weekly download counts for the
       // curated AI/ML npm package list. One bulk call to api.npmjs.org
