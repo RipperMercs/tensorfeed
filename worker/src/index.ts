@@ -573,6 +573,26 @@ async function premiumResponse(
   }
   if (payment.paymentResponseHeader) headers['PAYMENT-RESPONSE'] = payment.paymentResponseHeader;
 
+  // Compression headers: every premium /clean/* response carries
+  // compression_stats at the top level (via the LlmReadyEnvelope spread).
+  // Surface the two numbers agents care about (tokens saved + reduction
+  // percentage) to response headers so an HTTP client can log savings
+  // without parsing the JSON body. Cheap, non-breaking, and applies
+  // uniformly to all 8 clean endpoints. Only set when the body actually
+  // carries compression_stats; non-clean premium responses skip both.
+  const compressionStats = r.compression_stats as
+    | { reduction_pct?: number | null; approx_tokens_saved?: number | null }
+    | null
+    | undefined;
+  if (compressionStats && typeof compressionStats === 'object') {
+    if (typeof compressionStats.approx_tokens_saved === 'number') {
+      headers['X-Tensorfeed-Tokens-Saved'] = String(compressionStats.approx_tokens_saved);
+    }
+    if (typeof compressionStats.reduction_pct === 'number') {
+      headers['X-Tensorfeed-Reduction-Pct'] = String(compressionStats.reduction_pct);
+    }
+  }
+
   // Build the body. If staleness triggered no-charge, surface a stale
   // marker so the agent can decide to retry rather than trust the data.
   const bodyResult: Record<string, unknown> = { ...(result as Record<string, unknown>) };
