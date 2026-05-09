@@ -1762,6 +1762,64 @@ curl -H "X-TensorFeed-Simulate-Latency: 2500" https://tensorfeed.ai/api/status`}
         </div>
       </section>
 
+      {/* MCP servers (stdio + HTTP) */}
+      <section className="mb-10" id="mcp-servers">
+        <div className="bg-bg-secondary border border-border rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Model Context Protocol (MCP)</h2>
+          <p className="text-text-secondary text-sm mb-4">
+            TensorFeed ships two MCP transports for two distinct deployment shapes. Same tool surface, different connection model.
+          </p>
+
+          <h3 className="text-sm font-semibold text-text-primary mb-2">Hosted HTTP MCP (Streamable HTTP, MCP 2024-11-05)</h3>
+          <p className="text-text-secondary text-sm mb-2">
+            The canonical entry for hosted-marketplace listings (Anthropic vertical agent repos, claude.ai connectors, third-party MCP catalogs).
+            POST a JSON-RPC 2.0 envelope to <code className="text-accent-primary font-mono">https://tensorfeed.ai/api/mcp</code>;
+            GET returns discovery info. CORS open for cross-origin agent fetches. 12 tools in V1 spanning AI news, model pricing, AI service status,
+            MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR (search + submissions + ticker lookup), and EIA Open Data.
+          </p>
+          <pre className="bg-bg-tertiary/50 border border-border rounded p-3 text-xs font-mono text-text-secondary overflow-x-auto whitespace-pre leading-relaxed mb-3">
+{`# Probe + initialize
+curl https://tensorfeed.ai/api/mcp
+
+# Tool list
+curl -X POST https://tensorfeed.ai/api/mcp \\
+  -H 'Content-Type: application/json' \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+
+# Tool call: ticker lookup
+curl -X POST https://tensorfeed.ai/api/mcp \\
+  -H 'Content-Type: application/json' \\
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
+       "params":{"name":"lookup_sec_company_ticker",
+                 "arguments":{"ticker_or_cik":"AAPL"}}}'`}
+          </pre>
+          <p className="text-text-muted text-xs mb-4">
+            To add as a Claude Code plugin or vertical-agent MCP entry, point the
+            client&apos;s <code className="font-mono">.mcp.json</code> at the URL with{' '}
+            <code className="font-mono">type: &quot;http&quot;</code>. No API key required for V1 free tools.
+          </p>
+
+          <h3 className="text-sm font-semibold text-text-primary mb-2">npm stdio MCP server (client-side install)</h3>
+          <p className="text-text-secondary text-sm mb-2">
+            For Claude Desktop, Claude Code CLI, Cursor, Cline, and any MCP client that prefers spawning a local subprocess.
+            Same tool surface, plus access to premium tools when you set the <code className="font-mono">TENSORFEED_TOKEN</code> environment variable.
+          </p>
+          <pre className="bg-bg-tertiary/50 border border-border rounded p-3 text-xs font-mono text-text-secondary overflow-x-auto whitespace-pre leading-relaxed mb-3">
+{`# One-shot install + run (no global install needed)
+npx -y @tensorfeed/mcp-server
+
+# Or, for premium tools, set the bearer token first:
+export TENSORFEED_TOKEN=tf_live_...
+npx -y @tensorfeed/mcp-server`}
+          </pre>
+          <p className="text-text-muted text-xs">
+            Buy a bearer token via <Link href="/account" className="text-accent-primary hover:underline">/account</Link>{' '}
+            or programmatically via <code className="font-mono">/api/payment/buy-credits</code> +{' '}
+            <code className="font-mono">/api/payment/confirm</code>. Both transports speak the same MCP spec; pick whichever matches how your agent connects.
+          </p>
+        </div>
+      </section>
+
       {/* Free preview */}
       <section className="mb-10">
         <div className="bg-bg-secondary border border-border rounded-xl p-5">
