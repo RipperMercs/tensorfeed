@@ -201,13 +201,21 @@ export function normalizeRepo(
 }
 
 /**
- * Per-signal cap on the final top-N. Without this the highest-weight
- * signals (anthropic-org=10, openai-org=9) saturate the result, and
- * keyword sweeps for x402, mcp servers, and agent skills never appear
- * even when they surface meaningful new repos. Cap each signal at 5
- * slots, fill the remainder by composite_score.
+ * Per-signal MAX cap and MIN quota on the final top-N.
+ *
+ * MAX prevents one signal saturating the result (e.g. 25 fresh
+ * anthropic-org updates would otherwise displace everything else).
+ *
+ * MIN guarantees every signal that returns at least N>=MIN results
+ * gets representation. Without it, lower-weight keyword sweeps
+ * (mcp-keyword, x402-keyword, skill-keyword) lose every composite-score
+ * tie-break against the high-weight org signals and never surface.
+ *
+ * 11 signals * MIN(1) = 11 reserved slots minimum + 14 ranked overflow,
+ * within FINAL_TOP_N=25.
  */
-const PER_SIGNAL_CAP = 5;
+const PER_SIGNAL_MAX = 5;
+const PER_SIGNAL_MIN = 1;
 
 export function dedupAndRank(opps: AgentOpportunity[]): AgentOpportunity[] {
   // Dedup by full_name; on collision keep the higher-weight signal,
@@ -231,29 +239,66 @@ export function dedupAndRank(opps: AgentOpportunity[]): AgentOpportunity[] {
     return a.full_name.localeCompare(b.full_name);
   });
 
-  // First pass: take up to PER_SIGNAL_CAP per signal, in composite-score
-  // order. Guarantees keyword-sweep signals get representation even when
-  // high-weight orgs have many fresh updates.
-  const perSignalCount: Record<string, number> = {};
-  const capped: AgentOpportunity[] = [];
-  const overflow: AgentOpportunity[] = [];
+  // Group by signal so we can fill MIN-quota first.
+  const bySignal = new Map<string, AgentOpportunity[]>();
   for (const o of list) {
-    const n = perSignalCount[o.signal] ?? 0;
-    if (n < PER_SIGNAL_CAP) {
-      capped.push(o);
-      perSignalCount[o.signal] = n + 1;
-    } else {
-      overflow.push(o);
+    if (!bySignal.has(o.signal)) bySignal.set(o.signal, []);
+    bySignal.get(o.signal)!.push(o);
+  }
+
+  const result: AgentOpportunity[] = [];
+  const usedNames = new Set<string>();
+
+  // Pass 1: MIN quota — take up to PER_SIGNAL_MIN per signal that has
+  // any results. Guarantees every populated signal appears in the
+  // output (subject to MIN <= MAX <= FINAL_TOP_N).
+  for (const [, sigList] of bySignal) {
+    for (let i = 0; i < Math.min(PER_SIGNAL_MIN, sigList.length); i++) {
+      const o = sigList[i];
+      if (!usedNames.has(o.full_name) && result.length < FINAL_TOP_N) {
+        result.push(o);
+        usedNames.add(o.full_name);
+      }
     }
   }
 
-  // Second pass: if the cap-respecting set is shorter than FINAL_TOP_N,
-  // fill the remainder from overflow (already in composite-score order).
-  const result = capped.slice(0, FINAL_TOP_N);
-  if (result.length < FINAL_TOP_N) {
-    const remaining = FINAL_TOP_N - result.length;
-    result.push(...overflow.slice(0, remaining));
+  // Pass 2: MAX cap — fill from the top of the global composite-score
+  // ranking, respecting both the MAX and the FINAL_TOP_N total.
+  const perSignalCount: Record<string, number> = {};
+  for (const o of result) {
+    perSignalCount[o.signal] = (perSignalCount[o.signal] ?? 0) + 1;
   }
+  for (const o of list) {
+    if (result.length >= FINAL_TOP_N) break;
+    if (usedNames.has(o.full_name)) continue;
+    const n = perSignalCount[o.signal] ?? 0;
+    if (n < PER_SIGNAL_MAX) {
+      result.push(o);
+      usedNames.add(o.full_name);
+      perSignalCount[o.signal] = n + 1;
+    }
+  }
+
+  // Pass 3: overflow — if MAX cap kept us under FINAL_TOP_N, fill the
+  // remainder from anything not yet used, ignoring the MAX cap.
+  if (result.length < FINAL_TOP_N) {
+    for (const o of list) {
+      if (result.length >= FINAL_TOP_N) break;
+      if (!usedNames.has(o.full_name)) {
+        result.push(o);
+        usedNames.add(o.full_name);
+      }
+    }
+  }
+
+  // Final sort by composite_score so the result is presented top-down
+  // even though we built it in three passes.
+  result.sort((a, b) => {
+    if (b.composite_score !== a.composite_score) return b.composite_score - a.composite_score;
+    if (b.stars !== a.stars) return b.stars - a.stars;
+    return a.full_name.localeCompare(b.full_name);
+  });
+
   return result;
 }
 

@@ -198,6 +198,38 @@ describe('dedupAndRank', () => {
     expect(out[0].composite_score).toBe(100);
   });
 
+  it('per-signal MIN quota guarantees every populated signal appears', () => {
+    // 30 anthropic-org entries (5 cap-fill + 14 overflow); plus single
+    // entries from 6 different keyword-style signals each. With MIN=1
+    // every signal appears at least once.
+    const opps: AgentOpportunity[] = [];
+    for (let i = 0; i < 30; i++) {
+      opps.push({
+        full_name: `anthropics/r${i}`, html_url: `https://github.com/anthropics/r${i}`,
+        description: null, stars: 1000 - i, created_at: '', updated_at: '2026-05-09',
+        language: null, topics: [],
+        signal: 'anthropic-org', signal_weight: 10, composite_score: 20 - i * 0.1,
+      });
+    }
+    for (const sig of ['mcp-keyword', 'x402-keyword', 'skill-keyword', 'frontier-labs', 'huggingface-org', 'langchain-org']) {
+      opps.push({
+        full_name: `someone/${sig}-thing`, html_url: `https://github.com/someone/${sig}-thing`,
+        description: null, stars: 500, created_at: '', updated_at: '2026-05-09',
+        language: null, topics: [],
+        signal: sig, signal_weight: 5, composite_score: 5,
+      });
+    }
+    const out = dedupAndRank(opps);
+    const distinctSignals = new Set(out.map(o => o.signal));
+    expect(distinctSignals.has('mcp-keyword')).toBe(true);
+    expect(distinctSignals.has('x402-keyword')).toBe(true);
+    expect(distinctSignals.has('skill-keyword')).toBe(true);
+    expect(distinctSignals.has('frontier-labs')).toBe(true);
+    expect(distinctSignals.has('huggingface-org')).toBe(true);
+    expect(distinctSignals.has('langchain-org')).toBe(true);
+    expect(distinctSignals.has('anthropic-org')).toBe(true);
+  });
+
   it('per-signal cap leaves room for keyword-sweep signals', () => {
     // 20 anthropic-org entries with high composite scores plus a single
     // x402-keyword entry with a lower score. Without the cap the x402
