@@ -49,6 +49,10 @@ import {
   OSV_SUPPORTED_ECOSYSTEMS,
 } from './security-osv';
 import {
+  fetchVulnrichment,
+  VULNRICHMENT_ATTRIBUTION,
+} from './security-vulnrichment';
+import {
   parsePowerQuery,
   fetchPowerPoint,
   POWER_PARAMETER_CATALOG,
@@ -1912,6 +1916,7 @@ export default {
           securityOSVById: '/api/security/osv/{advisory-id} (free; lookup OSV.dev advisory by GHSA / CVE / PYSEC / RUSTSEC / etc id, lazy-fetched and cached 24h. License: Apache-2.0; attribution preserved on every response)',
           securityOSVPackage: '/api/security/osv/package?ecosystem=&name=&version= (free; OSV.dev advisories affecting one package version. Ecosystems: PyPI, npm, Go, crates.io, Maven, NuGet, RubyGems, Packagist, Hex, Pub, Hackage, Linux, etc)',
           securityOSVEcosystems: '/api/security/osv/ecosystems (free; supported OSV ecosystem identifiers)',
+          securityVulnrichment: '/api/security/vulnrichment/{CVE-id} (free; CISA Vulnrichment enrichment for one CVE - CWE mappings, CVSS, exploitation evidence, KEV cross-refs - lazy-fetched from cisagov/vulnrichment, cached 7d. License: US Gov public domain. Pair with /api/security/cve/{id} for the MITRE record)',
           climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
           climatePowerParameters: '/api/climate/power/parameters (free; curated NASA POWER parameter catalog with units and longnames)',
           healthFDADrugEvents: '/api/health/fda/drug/events?search=&limit=1-100&skip=&sort= (free; FDA Adverse Event Reporting System (FAERS), 10M+ records. License: CC0)',
@@ -5113,6 +5118,46 @@ export default {
                   credits_per_call: 1,
                   note: 'Premium /series returns the full historical time-series of EPSS scores for one CVE.',
                 },
+              }
+            : {}),
+        },
+        status,
+        result.ok ? 3600 : 60,
+      );
+    }
+
+    // === SECURITY: CISA Vulnrichment ===
+    // CISA's authorized-data-publisher enrichment layer on top of MITRE
+    // CVE Records. Adds CWE mappings, CVSS v3.1 scoring (where MITRE
+    // has none), exploitation evidence, KEV cross-references, and
+    // additional vendor-specific advisory references. Lazy-fetched from
+    // the cisagov/vulnrichment GitHub repo (develop branch); cached 7d.
+    // License: US Government public domain (17 USC 105). Pair with
+    // /api/security/cve/{id} (MITRE record) for the most complete view.
+
+    const vulnrichmentMatch = path.match(/^\/api\/security\/vulnrichment\/(CVE-\d{4}-\d{4,7})$/i);
+    if (vulnrichmentMatch) {
+      const result = await fetchVulnrichment(env, vulnrichmentMatch[1]);
+      const status = result.ok
+        ? 200
+        : result.error === 'cve_not_in_vulnrichment'
+          ? 404
+          : result.error === 'invalid_cve_id'
+            ? 400
+            : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          cve_id: result.cveId,
+          source: result.source,
+          fetched_at: result.fetched_at,
+          record: result.record,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+          ...(result.ok
+            ? {
+                hint: 'Pair with /api/security/cve/{id} for the MITRE record. Vulnrichment provides CISA enrichment (CWE, CVSS, exploitation evidence) under containers.adp[].',
               }
             : {}),
         },
