@@ -21,7 +21,9 @@ export type EndpointCategory =
   | 'agents'
   | 'watches'
   | 'payment'
-  | 'agent-brief';
+  | 'agent-brief'
+  | 'security'
+  | 'macro';
 
 export interface ApiRefParam {
   name: string;
@@ -1758,6 +1760,450 @@ await tf.createWatch({
       {
         q: 'What if my callback URL is down when the watch fires?',
         a: 'The fire is logged with last_delivery_status reflecting the HTTP status (or null on network error) and fire_count is incremented. We do not retry. If reliability matters, point the callback URL at a queue or pub/sub.',
+      },
+    ],
+  },
+
+  // ── Phase 4 (2026-05-09): close the doc/impl drift on the strategic
+  //    new endpoints. Today's plays (verified-cve, clean/openrouter)
+  //    plus the 5 highest-traffic premium endpoints from the Phase 2
+  //    audit. The remaining 16 are tracked as a separate follow-up.
+
+  {
+    slug: 'premium-security-verified-cve',
+    name: 'Premium Verified CVE (cross-database)',
+    path: '/api/premium/security/verified/{cve_id}',
+    method: 'GET',
+    tier: 'premium',
+    cost: '1 credit',
+    category: 'security',
+    seoTitle: 'TensorFeed Verified CVE API: 5-Database Cross-Source Confirmation',
+    seoDescription:
+      'TensorFeed /api/premium/security/verified/{cve_id} composes MITRE CVE + CISA KEV + FIRST.org EPSS + OSV + Vulnrichment into one fact card with confirmed_by array and corroboration_count. 1 credit.',
+    intro:
+      'The /api/premium/security/verified/{cve_id} endpoint is a single-call cross-database CVE corroboration. It composes MITRE CVE Record + CISA Known Exploited Vulnerabilities + FIRST.org EPSS + OSV.dev advisory + CISA Vulnrichment SSVC into one LLM-ready fact card with a confirmed_by array (subset of MITRE/KEV/EPSS/OSV/Vulnrichment) and corroboration_count (0 to 5). Sources missing the CVE just do not appear in confirmed_by; the call still returns whatever sources do have it. Reduces 5 fan-out calls and 5 different parsing schemas to one. Returns 404 only when 0 sources have the CVE.',
+    whenToUse:
+      'When an agent needs to verify a CVE is real and gather severity + exploitation + ecosystem signals in one shot. The corroboration_count is auditable per call: agents asking "do not act on a single security database" get a clean stream of cross-confirmed records. Anti-hallucination by construction.',
+    params: [
+      { name: 'cve_id', in: 'path', required: true, type: 'string', description: 'CVE identifier in canonical CVE-YYYY-NNNN form', example: 'CVE-2024-3094' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "source_format": "mitre_cve_v5_2 + cisa_kev_v1 + first_epss_v3 + osv_v1 + cisa_vulnrichment_v1",
+  "target_format": "tensorfeed_llm_ready_v1",
+  "schema_version": "1.0",
+  "cleaning_version": "1.0",
+  "compression_stats": { "source_bytes": 24816, "cleaned_bytes": 1942, "reduction_pct": 92.2, "approx_tokens_saved": 6202 },
+  "data": {
+    "cve_id": "CVE-2024-3094",
+    "severity_band": "critical",
+    "cvss_v3_1_score": 10,
+    "summary": "Malicious code in xz upstream tarballs.",
+    "exploited_in_wild": false,
+    "epss_probability": 0.85,
+    "exploit_likelihood_band": "high",
+    "cwes": ["CWE-506"],
+    "affected_ecosystems": ["Alpine", "Debian"],
+    "ssvc": { "exploitation": "active", "automatable": "yes", "technical_impact": "total" },
+    "confirmed_by": ["MITRE", "EPSS", "OSV", "Vulnrichment"],
+    "corroboration_count": 4,
+    "per_source": { "mitre": { "ok": true, "cvss_score": 10, "cwes_count": 1 }, "kev": { "ok": false, "date_added": null }, "epss": { "ok": true, "probability": 0.85, "percentile": 0.99 }, "osv": { "ok": true, "ecosystems_count": 2, "aliases_count": 1 }, "vulnrichment": { "ok": true, "has_ssvc": true } }
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+
+tf = TensorFeed(token="tf_live_...")
+v = tf._get("/premium/security/verified/CVE-2024-3094")
+print(f"Confirmed by {v['data']['corroboration_count']} sources: {v['data']['confirmed_by']}")
+print(f"Severity: {v['data']['severity_band']}, exploited in wild: {v['data']['exploited_in_wild']}")`,
+    typescriptExample: `const res = await fetch(
+  "https://tensorfeed.ai/api/premium/security/verified/CVE-2024-3094",
+  { headers: { Authorization: "Bearer tf_live_..." } }
+);
+const v = await res.json();
+console.log(\`Confirmed by \${v.data.corroboration_count}/5 sources\`);`,
+    mcpTool: null,
+    relatedSlugs: ['premium-security-epss-top', 'premium-security-kev-full'],
+    faqs: [
+      {
+        q: 'What if a CVE is not in any of the 5 sources?',
+        a: 'The endpoint returns 404 with a checked array listing the 5 sources we attempted. CVE id may be invalid, very recent (not yet propagated to any database), or reserved/disputed.',
+      },
+      {
+        q: 'Why is exploited_in_wild a boolean instead of a probability?',
+        a: 'KEV (CISA Known Exploited Vulnerabilities) is a curated list of CVEs CISA has confirmed are being exploited in active campaigns. Presence on KEV is binary, so we surface it as a boolean. EPSS is the probability signal; epss_probability and exploit_likelihood_band are also returned.',
+      },
+      {
+        q: 'How does compression_stats compare with hitting all 5 sources directly?',
+        a: 'A typical 5-source fan-out is ~25KB across MITRE CVE Record (3KB) + KEV (1KB) + EPSS (0.5KB) + OSV (8KB) + Vulnrichment (12KB). The composed fact card is ~2KB. About 92% reduction with no information loss for agent decision-making.',
+      },
+    ],
+  },
+
+  {
+    slug: 'premium-clean-openrouter',
+    name: 'Premium LLM-Ready OpenRouter Model',
+    path: '/api/premium/clean/openrouter/{model_id}',
+    method: 'GET',
+    tier: 'premium',
+    cost: '1 credit',
+    category: 'models',
+    seoTitle: 'TensorFeed OpenRouter Model API: One Model, 99% Token Reduction',
+    seoDescription:
+      'TensorFeed /api/premium/clean/openrouter/{model_id} returns one model from the 367-entry OpenRouter catalog as an LLM-ready fact card. Pricing per million tokens, capability flags, ~99.8% token reduction. 1 credit.',
+    intro:
+      'The /api/premium/clean/openrouter/{model_id} endpoint pulls one model from the daily OpenRouter catalog snapshot and returns an LLM-ready fact card. Pricing is normalized to USD per million tokens (the universal agent convention) with a derived blended_5_to_1 mix capturing the typical 5:1 input:output ratio. Capability flags (tools, vision, structured_outputs, reasoning, response_format) are extracted from supported_parameters + modality so agents can boolean-filter. is_free_tier and created_iso are pre-computed.',
+    whenToUse:
+      'When an agent needs facts about one specific model from the OpenRouter catalog (367+ entries, no per-id filter on the upstream public endpoint). Saves the ~270KB ingestion required to find one entry; delivers ~500B per call. The compression headline is the most dramatic in the suite.',
+    params: [
+      { name: 'model_id', in: 'path', required: true, type: 'string', description: 'OpenRouter catalog id with namespace, URL-encoded slash (e.g. anthropic%2Fclaude-haiku-4.5)', example: 'anthropic/claude-haiku-4.5' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "source_format": "openrouter_v1_models",
+  "target_format": "tensorfeed_llm_ready_v1",
+  "compression_stats": { "source_bytes": 274816, "cleaned_bytes": 542, "reduction_pct": 99.8, "approx_tokens_saved": 67429 },
+  "data": {
+    "id": "anthropic/claude-haiku-4.5",
+    "name": "Anthropic Claude Haiku 4.5",
+    "namespace": "anthropic",
+    "context_length": 200000,
+    "modality": "text+image->text",
+    "pricing_per_million_tokens": { "prompt": 1, "completion": 5, "blended_5_to_1": 1.67, "image_per_image": null, "request_per_call": null },
+    "capabilities": { "tools": true, "vision": true, "structured_outputs": true, "reasoning": false, "response_format": true },
+    "max_output_tokens": 64000,
+    "is_moderated": true,
+    "is_free_tier": false,
+    "created_iso": "2026-04-15"
+  },
+  "catalog_meta": { "captured_at": "2026-05-09T14:00:00Z", "total_models_in_catalog": 367 },
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+
+tf = TensorFeed(token="tf_live_...")
+m = tf._get("/premium/clean/openrouter/anthropic/claude-haiku-4.5")
+p = m["data"]["pricing_per_million_tokens"]
+print(f"\${p['prompt']}/M input + \${p['completion']}/M output, {m['compression_stats']['approx_tokens_saved']} tokens saved")`,
+    typescriptExample: `const res = await fetch(
+  "https://tensorfeed.ai/api/premium/clean/openrouter/anthropic%2Fclaude-haiku-4.5",
+  { headers: { Authorization: "Bearer tf_live_..." } }
+);
+const m = await res.json();
+console.log(m.data.pricing_per_million_tokens.blended_5_to_1);`,
+    mcpTool: null,
+    relatedSlugs: ['premium-compare-models', 'premium-cost-projection'],
+    faqs: [
+      {
+        q: 'Why is blended_5_to_1 useful?',
+        a: 'Most agent workloads run a 5:1 input:output token ratio. Comparing models by prompt-only or completion-only price misses the real cost surface. blended_5_to_1 = prompt_per_million * (5/6) + completion_per_million * (1/6) and is what an agent should actually compare on.',
+      },
+      {
+        q: 'What if the model id is not in the catalog?',
+        a: 'Returns 404 with the requested id, the current catalog_size, and the captured_at timestamp echoed back so you can audit whether the model was removed in a recent snapshot or was never present. Use /api/openrouter/models to list the current catalog.',
+      },
+      {
+        q: 'How fresh is the snapshot?',
+        a: 'Captured daily at 14:00 UTC. The capturedAt field is included so agents can decide whether the freshness fits their use case. No staleness guarantee at the AFTA level (catalog moves slowly enough that 24h freshness is adequate).',
+      },
+    ],
+  },
+
+  {
+    slug: 'premium-history-news-verified',
+    name: 'Premium Verified News Feed',
+    path: '/api/premium/history/news/verified',
+    method: 'GET',
+    tier: 'premium',
+    cost: '1 credit',
+    category: 'news',
+    seoTitle: 'TensorFeed Verified News API: Cross-Source Story Corroboration',
+    seoDescription:
+      'TensorFeed /api/premium/history/news/verified returns story clusters with N+ independent sources corroborating. The trust layer agents need to stop acting on single-source news. 1 credit.',
+    intro:
+      'The /api/premium/history/news/verified endpoint is the verified feed: cross-source story clusters filtered to those that cleared a corroboration threshold. Default min_sources=4 returns the corroboration_band="broad" subset. Each cluster carries source_count, sources list, article_ids, hero article (earliest publishedAt), and a corroboration_band tag. Embedding-based clustering at cosine threshold 0.82 across 12+ AI-relevant news sources.',
+    whenToUse:
+      'When an agent should NOT act on a single source. Finance agents reading news for trade signals, research agents pulling stories for synthesis, briefing agents preparing reports. The agent specifies the minimum independent-source threshold and gets only stories that cleared it. Single-day or 30-day range.',
+    params: [
+      { name: 'date', in: 'query', type: 'string', description: 'Single UTC date (YYYY-MM-DD); pair with from/to for ranges', example: '2026-05-09' },
+      { name: 'from', in: 'query', type: 'string', description: 'Range start (YYYY-MM-DD), max 30-day window', example: '2026-05-01' },
+      { name: 'to', in: 'query', type: 'string', description: 'Range end (YYYY-MM-DD)', example: '2026-05-09' },
+      { name: 'min_sources', in: 'query', type: 'number', description: 'Minimum corroborating sources (2-50, default 4)', example: '4' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "date": "2026-05-09",
+  "min_sources_filter": 4,
+  "items": [
+    {
+      "cluster_id": "k3mn8q",
+      "date": "2026-05-09",
+      "source_count": 5,
+      "corroboration_band": "broad",
+      "sources": ["anthropic.com", "techcrunch.com", "theverge.com", "reuters.com", "bloomberg.com"],
+      "hero": { "title": "Anthropic Ships Mythos to Defenders First", "url": "https://www.anthropic.com/news/mythos", "source": "Anthropic Blog", "publishedAt": "2026-05-07T18:30:00Z" },
+      "first_seen_at": "2026-05-07T18:30:00Z"
+    }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+
+tf = TensorFeed(token="tf_live_...")
+feed = tf._get("/premium/history/news/verified", date="2026-05-09", min_sources=4)
+for cluster in feed["items"]:
+    print(f"[{cluster['source_count']} sources] {cluster['hero']['title']}")`,
+    typescriptExample: `const res = await fetch(
+  "https://tensorfeed.ai/api/premium/history/news/verified?date=2026-05-09&min_sources=4",
+  { headers: { Authorization: "Bearer tf_live_..." } }
+);
+const feed = await res.json();
+console.log(\`\${feed.items.length} broadly corroborated stories\`);`,
+    mcpTool: null,
+    relatedSlugs: ['premium-history-news-clusters-full', 'premium-history-news-full'],
+    faqs: [
+      {
+        q: 'How many sources are typically needed for "broad"?',
+        a: 'Default min_sources=4 maps to corroboration_band="broad". Lower values return broader coverage at the cost of weaker corroboration. For highest-trust signals on important stories, 4 is the right floor; for emerging stories, 2 catches early multi-source pickup.',
+      },
+      {
+        q: 'What is the news corpus?',
+        a: '12+ AI-relevant news sources polled hourly: Anthropic Blog, OpenAI Blog, Google AI Blog, Meta AI, HuggingFace, TechCrunch AI, The Verge AI, Ars Technica, VentureBeat AI, NVIDIA AI, ZDNet AI, Hacker News (AI-filtered).',
+      },
+      {
+        q: 'Is this a fact-check?',
+        a: 'No. We verify multiple sources reported the same story, not that the underlying claim is true. Five outlets repeating a misleading press release will all cluster together. Treat corroboration as a necessary but not sufficient signal.',
+      },
+    ],
+  },
+
+  {
+    slug: 'premium-security-epss-top',
+    name: 'Premium EPSS Top-N',
+    path: '/api/premium/security/epss/top',
+    method: 'GET',
+    tier: 'premium',
+    cost: '1 credit',
+    category: 'security',
+    seoTitle: 'TensorFeed EPSS Top-N API: Highest Exploitation-Likelihood CVEs',
+    seoDescription:
+      'TensorFeed /api/premium/security/epss/top returns the top-N CVEs by EPSS score (exploitation likelihood) as of any UTC date. License: FIRST.org free for any use. 1 credit.',
+    intro:
+      'The /api/premium/security/epss/top endpoint returns the highest-EPSS CVEs as of any UTC date with historical date filtering. EPSS (Exploit Prediction Scoring System) is FIRST.org\'s daily-updated probability that a CVE will be exploited in the next 30 days. The premium variant adds a date param the free version lacks. Free /api/security/epss/top serves the current snapshot only.',
+    whenToUse:
+      'When a security agent needs the current or historical "what should I patch first" list. EPSS percentile is more useful than CVSS severity for triage because it reflects actual exploitation likelihood rather than worst-case impact.',
+    params: [
+      { name: 'limit', in: 'query', type: 'number', description: 'Top-N limit (1 to 100, default 25)', example: '50' },
+      { name: 'date', in: 'query', type: 'string', description: 'Snapshot date YYYY-MM-DD (default: latest)', example: '2026-05-08' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "date": "2026-05-08",
+  "count": 50,
+  "top": [
+    { "cve_id": "CVE-2024-3094", "epss": 0.85, "percentile": 0.99, "rank": 1 }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+
+tf = TensorFeed(token="tf_live_...")
+top = tf._get("/premium/security/epss/top", limit=50, date="2026-05-08")
+for cve in top["top"]:
+    print(f"{cve['cve_id']}: EPSS {cve['epss']:.3f} (rank {cve['rank']})")`,
+    typescriptExample: `const res = await fetch(
+  "https://tensorfeed.ai/api/premium/security/epss/top?limit=50&date=2026-05-08",
+  { headers: { Authorization: "Bearer tf_live_..." } }
+);
+const top = await res.json();
+top.top.forEach(c => console.log(c.cve_id, c.epss));`,
+    mcpTool: null,
+    relatedSlugs: ['premium-security-verified-cve', 'premium-security-kev-full'],
+    faqs: [
+      {
+        q: 'EPSS vs CVSS: which should I use?',
+        a: 'CVSS scores worst-case severity (assumes exploitation). EPSS scores probability of exploitation in the next 30 days. For actual triage decisions ("what should I patch first"), EPSS is more decision-useful. Use CVSS for "how bad is this if it does get exploited."',
+      },
+      {
+        q: 'How often does EPSS update?',
+        a: 'Daily. FIRST.org publishes a fresh snapshot each UTC day; we cache 24h.',
+      },
+      {
+        q: 'What is the date range available?',
+        a: 'Backfill begins from the day TensorFeed started capturing snapshots (early May 2026). Hit /api/security/epss/dates for the available date list.',
+      },
+    ],
+  },
+
+  {
+    slug: 'premium-security-kev-full',
+    name: 'Premium KEV Full Catalog',
+    path: '/api/premium/security/kev/full',
+    method: 'GET',
+    tier: 'premium',
+    cost: '1 credit',
+    category: 'security',
+    seoTitle: 'TensorFeed KEV Full Catalog API: Every CISA Known-Exploited CVE',
+    seoDescription:
+      'TensorFeed /api/premium/security/kev/full returns the complete CISA Known Exploited Vulnerabilities catalog (~1500 entries). License: US Gov public domain. 1 credit.',
+    intro:
+      'The /api/premium/security/kev/full endpoint returns the full CISA Known Exploited Vulnerabilities catalog (~1500+ entries). The free /api/security/kev returns only the most recent additions; the premium variant gives the complete list with vendorProject, product, vulnerabilityName, dateAdded, dueDate, requiredAction, knownRansomwareCampaignUse, notes, and CWEs for every entry.',
+    whenToUse:
+      'When an agent needs to enumerate every CVE actively exploited in the wild (per CISA), not just recent additions. Ideal for compliance scans, software-bill-of-materials checks against the full KEV, or training a triage agent on the complete corpus of confirmed-exploited CVEs.',
+    params: [],
+    exampleResponse: `{
+  "ok": true,
+  "total_entries": 1573,
+  "catalogVersion": "2026.05.08",
+  "dateReleased": "2026-05-08T15:00:00Z",
+  "vulnerabilities": [
+    { "cveID": "CVE-2026-42208", "vendorProject": "Cisco", "product": "ASA", "dateAdded": "2026-05-08", "knownRansomwareCampaignUse": "Unknown" }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+
+tf = TensorFeed(token="tf_live_...")
+kev = tf._get("/premium/security/kev/full")
+ransomware = [e for e in kev["vulnerabilities"] if e["knownRansomwareCampaignUse"] == "Known"]
+print(f"{len(ransomware)} of {kev['total_entries']} KEV entries linked to ransomware")`,
+    typescriptExample: `const res = await fetch(
+  "https://tensorfeed.ai/api/premium/security/kev/full",
+  { headers: { Authorization: "Bearer tf_live_..." } }
+);
+const kev = await res.json();
+console.log(\`KEV catalog: \${kev.total_entries} CVEs\`);`,
+    mcpTool: null,
+    relatedSlugs: ['premium-security-verified-cve', 'premium-security-epss-top'],
+    faqs: [
+      {
+        q: 'How is this different from the free /api/security/kev?',
+        a: 'Free returns the most recent additions (top-N capped). Premium returns the complete catalog (~1500 entries). The free variant is for "what was added recently"; premium is for "I need to scan the full corpus."',
+      },
+      {
+        q: 'What is the cadence?',
+        a: 'CISA updates KEV multiple times per week. We refresh the catalog daily at 06:30 UTC and serve from the most recent snapshot.',
+      },
+      {
+        q: 'License?',
+        a: 'KEV catalog is US Government public domain (17 USC §105). Commercial redistribution is explicitly permitted; the response includes the attribution block.',
+      },
+    ],
+  },
+
+  {
+    slug: 'premium-status-leaderboard',
+    name: 'Premium Status Leaderboard',
+    path: '/api/premium/status/leaderboard',
+    method: 'GET',
+    tier: 'premium',
+    cost: '1 credit',
+    category: 'status',
+    seoTitle: 'TensorFeed Premium Status Leaderboard: Cross-Provider Uptime',
+    seoDescription:
+      'TensorFeed /api/premium/status/leaderboard ranks AI providers by uptime over a custom range. Includes incident_count and mttr_minutes. 1 credit.',
+    intro:
+      'The /api/premium/status/leaderboard endpoint ranks AI providers by uptime percentage over a custom date range (up to 90 days). Each entry includes uptime_pct, polls, operational/degraded/down/unknown bucket counts, downtime_minutes, hard_down_minutes, incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime_pct desc with hard_down_minutes as tie-breaker.',
+    whenToUse:
+      'For SRE/ops/procurement teams comparing AI vendor reliability for vendor selection or post-incident reviews. The mttr_minutes column captures recovery speed (a 99.9% provider with 4-hour MTTR is materially worse than a 99.9% provider with 10-minute MTTR).',
+    params: [
+      { name: 'from', in: 'query', type: 'string', description: 'Start date YYYY-MM-DD', example: '2026-04-01' },
+      { name: 'to', in: 'query', type: 'string', description: 'End date YYYY-MM-DD (max 90-day range)', example: '2026-05-01' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "range": { "from": "2026-04-01", "to": "2026-05-01", "days": 30 },
+  "leaderboard": [
+    { "provider": "anthropic", "uptime_pct": 99.97, "polls": 8640, "downtime_minutes": 12, "hard_down_minutes": 0, "incident_count": 1, "mttr_minutes": 12 }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+
+tf = TensorFeed(token="tf_live_...")
+lb = tf._get("/premium/status/leaderboard", **{"from": "2026-04-01", "to": "2026-05-01"})
+for p in lb["leaderboard"][:5]:
+    print(f"{p['provider']}: {p['uptime_pct']}% (MTTR {p['mttr_minutes']}min, {p['incident_count']} incidents)")`,
+    typescriptExample: `const res = await fetch(
+  "https://tensorfeed.ai/api/premium/status/leaderboard?from=2026-04-01&to=2026-05-01",
+  { headers: { Authorization: "Bearer tf_live_..." } }
+);
+const lb = await res.json();
+console.log(lb.leaderboard.slice(0, 5));`,
+    mcpTool: null,
+    relatedSlugs: ['premium-history-status-uptime', 'status'],
+    faqs: [
+      {
+        q: 'How is uptime measured?',
+        a: 'We poll each provider\'s public status page every ~10 minutes. uptime_pct is the fraction of polls returning "operational." downtime_minutes converts non-operational poll runs into wall-clock minutes assuming the gap between polls is the relevant unit. Best-effort: the upstream status pages themselves are the ground truth.',
+      },
+      {
+        q: 'What is hard_down_minutes vs downtime_minutes?',
+        a: 'downtime_minutes counts any non-operational status (degraded + down + unknown). hard_down_minutes counts only "down" (excludes degraded). A provider with significant degraded time but no full outages will rank higher on hard_down_minutes than total downtime suggests.',
+      },
+      {
+        q: 'What does mttr_minutes mean?',
+        a: 'Mean Time To Recover, calculated only over incidents that resolved within the date range. Open incidents at the range end are excluded so MTTR is a real, finished-incident statistic.',
+      },
+    ],
+  },
+
+  {
+    slug: 'premium-macro-digest',
+    name: 'Premium Macro Digest',
+    path: '/api/premium/macro/digest',
+    method: 'GET',
+    tier: 'premium',
+    cost: '1 credit',
+    category: 'macro',
+    seoTitle: 'TensorFeed Macro Digest API: BLS + FRED Daily Snapshot',
+    seoDescription:
+      'TensorFeed /api/premium/macro/digest combines BLS labor + CPI + PPI + FRED rates + treasuries + GDP into one daily fact card with regime classification. 1 credit.',
+    intro:
+      'The /api/premium/macro/digest endpoint composes BLS economic indicators (CPI, core CPI, PPI, unemployment, payrolls, hourly earnings, weekly hours, labor force participation, JOLTS) with FRED macro indicators (fed funds, 10Y/2Y treasuries + spread, GDP, M2, mortgage rate, USD index, oil) into a single daily fact card with regime classification (inflation, employment, rates, growth) and headline summary.',
+    whenToUse:
+      'When an agent needs the macroeconomic backdrop in one call instead of 19 fan-outs across BLS and FRED. Ideal for daily morning briefings, regime-shift detection, or any decision that depends on "where are we in the cycle right now."',
+    params: [],
+    exampleResponse: `{
+  "ok": true,
+  "as_of": "2026-05-08",
+  "regimes": { "inflation": "moderate", "employment": "cooling", "rates": "tight", "growth": "expanding" },
+  "headline": "CPI 2.8% YoY, unemployment 4.2%, fed funds 4.50%, T10Y2Y +12bps.",
+  "data": {
+    "cpi_yoy_pct": 2.8,
+    "unemployment_pct": 4.2,
+    "fed_funds_pct": 4.50,
+    "treasury_10y2y_bps": 12
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+
+tf = TensorFeed(token="tf_live_...")
+d = tf._get("/premium/macro/digest")
+print(d["headline"])
+print(f"Regimes: {d['regimes']}")`,
+    typescriptExample: `const res = await fetch(
+  "https://tensorfeed.ai/api/premium/macro/digest",
+  { headers: { Authorization: "Bearer tf_live_..." } }
+);
+const d = await res.json();
+console.log(d.headline);`,
+    mcpTool: null,
+    relatedSlugs: ['premium-economy-recession-watch'],
+    faqs: [
+      {
+        q: 'Why use this over the free BLS/FRED endpoints?',
+        a: 'Free /api/economy/bls/indicators and /api/economy/fred/indicators return the raw 19 series. The digest pre-composes them into one fact card with regime classification and a one-sentence headline. Saves the agent the cross-reference work and the parsing of two different upstream formats.',
+      },
+      {
+        q: 'How current are the indicators?',
+        a: 'CPI/PPI publish monthly with a ~2-week lag. Unemployment publishes monthly. Treasuries and fed funds are daily. GDP is quarterly. The as_of date reflects the most recent publication date across all included series.',
+      },
+      {
+        q: 'Where does the regime classification come from?',
+        a: 'Heuristic banding on the underlying series (e.g. inflation: "low" if CPI YoY < 2%, "moderate" if 2-4%, "elevated" if 4-6%, "high" if >6%). The exact thresholds are stable across releases and documented in worker/src/macro-digest.ts. Treat regime tags as a glance-summary, not a model prediction.',
       },
     ],
   },

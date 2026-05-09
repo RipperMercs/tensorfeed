@@ -27,6 +27,8 @@ const CATEGORY_LABELS: Record<EndpointCategory, string> = {
   watches: 'Webhook watches',
   payment: 'Payment flow',
   'agent-brief': 'Agent morning brief',
+  security: 'Security: CVE, KEV, EPSS, verified',
+  macro: 'Macro economic digest',
 };
 
 const CATEGORY_ORDER: EndpointCategory[] = [
@@ -35,6 +37,8 @@ const CATEGORY_ORDER: EndpointCategory[] = [
   'models',
   'routing',
   'history',
+  'security',
+  'macro',
   'agents',
   'watches',
   'agent-brief',
