@@ -47,6 +47,7 @@ import {
 } from './economy-eia';
 import { readSECTicker } from './sec-tickers';
 import { parseOsvPackageQuery } from './security-osv';
+import { parseFDAQuery, fetchFDAQuery, FDA_CATEGORIES } from './health-fda';
 
 const PROTOCOL_VERSION = '2024-11-05';
 const SERVER_NAME = 'tensorfeed';
@@ -385,6 +386,152 @@ const TOOLS: McpToolDef[] = [
       // Direct function call rather than worker-self-fetch (Cloudflare
       // workers can't reliably loop back through their own public URL).
       return await readSECTicker(env, term);
+    },
+  },
+  // ─── FDA regulatory + safety (life-sciences focus) ────────────────
+  {
+    name: 'query_fda_drug_events',
+    description:
+      'Query the FDA FAERS adverse event reports database. Returns drug-event records with patient demographics, drug names, reaction terms (MedDRA-coded), outcomes, and seriousness flags. Uses openFDA Lucene-style search syntax (e.g. "patient.drug.medicinalproduct:aspirin"). License: openFDA CC0 1.0 Universal Dedication, FDA waiver of all copyright; commercial redistribution permitted.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        search: { type: 'string', description: 'openFDA Lucene-style search expression. Examples: patient.drug.medicinalproduct:aspirin, patient.reaction.reactionmeddrapt:headache+AND+receivedate:[20240101+TO+20251231]' },
+        limit: { type: 'number', description: 'Max records to return (1-100)', default: 10 },
+        skip: { type: 'number', description: 'Pagination offset (0-25000)', default: 0 },
+        sort: { type: 'string', description: 'Sort by field (e.g. receivedate:desc)' },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const url = new URL('https://tensorfeed.ai/api/health/fda/drug/events');
+      const search = getStringArg(args, 'search');
+      const sort = getStringArg(args, 'sort');
+      const limit = getNumberArg(args, 'limit');
+      const skip = getNumberArg(args, 'skip');
+      if (search !== null) url.searchParams.set('search', search);
+      if (sort !== null) url.searchParams.set('sort', sort);
+      if (limit !== null) url.searchParams.set('limit', String(limit));
+      if (skip !== null) url.searchParams.set('skip', String(skip));
+      const parsed = parseFDAQuery('drug/events', url);
+      if (!parsed.ok) return { ok: false, error: parsed.error, hint: parsed.hint };
+      return await fetchFDAQuery(env, parsed.query);
+    },
+  },
+  {
+    name: 'query_fda_drug_labels',
+    description:
+      'Query the FDA structured product labeling (SPL) database for prescription and OTC drugs. Returns indications, dosage, warnings, contraindications, adverse reactions, and pharmacology sections. License: openFDA CC0 1.0; commercial redistribution permitted.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        search: { type: 'string', description: 'openFDA Lucene-style search expression. Examples: openfda.brand_name:tylenol, openfda.generic_name:metformin' },
+        limit: { type: 'number', description: 'Max records to return (1-100)', default: 10 },
+        skip: { type: 'number', description: 'Pagination offset (0-25000)', default: 0 },
+        sort: { type: 'string', description: 'Sort by field' },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const url = new URL('https://tensorfeed.ai/api/health/fda/drug/labels');
+      const search = getStringArg(args, 'search');
+      const sort = getStringArg(args, 'sort');
+      const limit = getNumberArg(args, 'limit');
+      const skip = getNumberArg(args, 'skip');
+      if (search !== null) url.searchParams.set('search', search);
+      if (sort !== null) url.searchParams.set('sort', sort);
+      if (limit !== null) url.searchParams.set('limit', String(limit));
+      if (skip !== null) url.searchParams.set('skip', String(skip));
+      const parsed = parseFDAQuery('drug/labels', url);
+      if (!parsed.ok) return { ok: false, error: parsed.error, hint: parsed.hint };
+      return await fetchFDAQuery(env, parsed.query);
+    },
+  },
+  {
+    name: 'query_fda_drug_recalls',
+    description:
+      'Query the FDA drug enforcement (recall) database. Returns recall classification (Class I/II/III), reason, distribution, product description, and voluntary/mandatory flag. License: openFDA CC0 1.0; commercial redistribution permitted.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        search: { type: 'string', description: 'openFDA Lucene-style search expression. Examples: classification:"Class+I", reason_for_recall:contamination' },
+        limit: { type: 'number', description: 'Max records to return (1-100)', default: 10 },
+        skip: { type: 'number', description: 'Pagination offset (0-25000)', default: 0 },
+        sort: { type: 'string', description: 'Sort by field (e.g. report_date:desc)' },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const url = new URL('https://tensorfeed.ai/api/health/fda/drug/recalls');
+      const search = getStringArg(args, 'search');
+      const sort = getStringArg(args, 'sort');
+      const limit = getNumberArg(args, 'limit');
+      const skip = getNumberArg(args, 'skip');
+      if (search !== null) url.searchParams.set('search', search);
+      if (sort !== null) url.searchParams.set('sort', sort);
+      if (limit !== null) url.searchParams.set('limit', String(limit));
+      if (skip !== null) url.searchParams.set('skip', String(skip));
+      const parsed = parseFDAQuery('drug/recalls', url);
+      if (!parsed.ok) return { ok: false, error: parsed.error, hint: parsed.hint };
+      return await fetchFDAQuery(env, parsed.query);
+    },
+  },
+  {
+    name: 'query_fda_food_recalls',
+    description:
+      'Query the FDA food enforcement (recall) database covering food products distributed in the US. Same shape as drug recalls. License: openFDA CC0 1.0; commercial redistribution permitted.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        search: { type: 'string', description: 'openFDA Lucene-style search expression. Examples: reason_for_recall:listeria, classification:"Class+I"' },
+        limit: { type: 'number', description: 'Max records to return (1-100)', default: 10 },
+        skip: { type: 'number', description: 'Pagination offset (0-25000)', default: 0 },
+        sort: { type: 'string', description: 'Sort by field (e.g. report_date:desc)' },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const url = new URL('https://tensorfeed.ai/api/health/fda/food/recalls');
+      const search = getStringArg(args, 'search');
+      const sort = getStringArg(args, 'sort');
+      const limit = getNumberArg(args, 'limit');
+      const skip = getNumberArg(args, 'skip');
+      if (search !== null) url.searchParams.set('search', search);
+      if (sort !== null) url.searchParams.set('sort', sort);
+      if (limit !== null) url.searchParams.set('limit', String(limit));
+      if (skip !== null) url.searchParams.set('skip', String(skip));
+      const parsed = parseFDAQuery('food/recalls', url);
+      if (!parsed.ok) return { ok: false, error: parsed.error, hint: parsed.hint };
+      return await fetchFDAQuery(env, parsed.query);
+    },
+  },
+  {
+    name: 'query_fda_device_events',
+    description:
+      'Query the FDA MAUDE medical device adverse event reports database. Returns device identifiers, problem codes, event narratives, patient outcomes. Useful for safety signal detection on FDA-cleared devices. License: openFDA CC0 1.0; commercial redistribution permitted.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        search: { type: 'string', description: 'openFDA Lucene-style search expression. Examples: device.brand_name:medtronic, device.generic_name:pacemaker' },
+        limit: { type: 'number', description: 'Max records to return (1-100)', default: 10 },
+        skip: { type: 'number', description: 'Pagination offset (0-25000)', default: 0 },
+        sort: { type: 'string', description: 'Sort by field' },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const url = new URL('https://tensorfeed.ai/api/health/fda/device/events');
+      const search = getStringArg(args, 'search');
+      const sort = getStringArg(args, 'sort');
+      const limit = getNumberArg(args, 'limit');
+      const skip = getNumberArg(args, 'skip');
+      if (search !== null) url.searchParams.set('search', search);
+      if (sort !== null) url.searchParams.set('sort', sort);
+      if (limit !== null) url.searchParams.set('limit', String(limit));
+      if (skip !== null) url.searchParams.set('skip', String(skip));
+      const parsed = parseFDAQuery('device/events', url);
+      if (!parsed.ok) return { ok: false, error: parsed.error, hint: parsed.hint };
+      return await fetchFDAQuery(env, parsed.query);
     },
   },
   {
