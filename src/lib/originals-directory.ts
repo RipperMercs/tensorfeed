@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-spacexai-colossus-orbital',
+    title: 'Anthropic Just Booked 220K GPUs on Colossus 1. The Orbital Footnote Is the Bigger Story.',
+    author: 'Ripper',
+    date: 'May 9, 2026',
+    readTime: '7 min read',
+    description:
+      "SpaceXAI signed a compute partnership with Anthropic giving access to Colossus 1 (220,000+ NVIDIA H100, H200, and GB200 accelerators) routing capacity into Claude Pro and Claude Max. The buried lede in the announcement: Anthropic also expressed interest in partnering on multiple gigawatts of orbital AI compute capacity. Inside what Colossus 1 actually buys Anthropic, why orbital compute is now a near-term engineering program rather than a research concept, what this does to the cloud-AI duopoly thesis, and the three signposts to watch on whether the orbital piece is real.",
+  },
+  {
     slug: 'verified-feed-trust-layer',
     title: 'The Verified Feed Is Live: Cross-Source Story Corroboration for AI Agents',
     author: 'Marcus Chen',
