@@ -90,6 +90,13 @@ crons = [
   # hitting EDGAR filings or XBRL fundamentals). Slot picked to land
   # between OpenAlex (04:00) and BLS (05:00).
   "15 4 * * *",
+  # Daily 04:30 UTC: walk the cvelistV5 GitHub repo's commit history
+  # (worker/src/security-cve.ts) for the last 36h, harvest added or
+  # modified CVE-* file paths, populate cve:recent ring + cve:by-date
+  # index. Single-CVE record fetches are lazy from MITRE on read. License:
+  # MITRE CVE Terms of Use, commercial redistribution explicitly permitted.
+  # Powers /api/security/cve/* and premium /api/premium/security/cve/range.
+  "30 4 * * *",
   # Daily 03:30 UTC: refresh weekly download counts for the curated AI/ML
   # npm package list via the documented public api.npmjs.org/downloads
   # endpoint. Powers /api/packages/npm/ai-trending.

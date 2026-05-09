@@ -405,6 +405,33 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/security/cve/range',
+    description:
+      'MITRE CVE List range query. Returns CVE IDs added or modified across a UTC date range, capped at 30 days. Each day in the response carries the full CVE-ID set indexed by the daily cvelistV5 commit-history scan. Pair with /api/security/cve/{id} for the per-CVE Record v5.2 lookup. License: MITRE CVE Terms of Use, commercial redistribution explicitly permitted; attribution block included on every response.',
+    cost: '1 credit per call',
+    example: `// Query: ?from=2026-05-06&to=2026-05-08
+{
+  "ok": true,
+  "from": "2026-05-06",
+  "to": "2026-05-08",
+  "days_returned": 3,
+  "cves_total": 412,
+  "days": [
+    { "date": "2026-05-06", "count": 138, "cve_ids": ["CVE-2026-1801", "CVE-2026-1802", "..."] },
+    { "date": "2026-05-07", "count": 87,  "cve_ids": ["CVE-2026-1939", "CVE-2026-1940", "..."] },
+    { "date": "2026-05-08", "count": 187, "cve_ids": ["CVE-2026-2027", "CVE-2026-2028", "..."] }
+  ],
+  "attribution": {
+    "source": "MITRE CVE List",
+    "source_url": "https://www.cve.org",
+    "license": "MITRE CVE Terms of Use",
+    "redistribution": "commercial-permitted"
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 45 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/status/leaderboard',
     description:
       'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',

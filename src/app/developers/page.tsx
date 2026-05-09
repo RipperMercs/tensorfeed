@@ -596,6 +596,70 @@ const ENDPOINTS: Endpoint[] = [
     cache: 'Cache for 1 hour',
     example: `{ "ok": true, "tier": "free", "count": 3, "dates": ["2026-05-06", "2026-05-07", "2026-05-08"] }`,
   },
+  {
+    method: 'GET',
+    path: '/api/security/cve/{CVE-id}',
+    description:
+      'Single CVE Record v5.2 lookup, lazy-fetched from MITRE\'s open CVE Services API and cached 7 days. Path id is canonical CVE-YYYY-NNNNN form (case insensitive on input). License: MITRE CVE Terms of Use, commercial redistribution explicitly permitted; the response includes the standard attribution block.',
+    cache: 'Cache for 1 hour',
+    example: `// GET /api/security/cve/CVE-2024-3094
+{
+  "ok": true,
+  "cve_id": "CVE-2024-3094",
+  "source": "cache",
+  "fetched_at": "2026-05-08T19:00:00Z",
+  "record": {
+    "dataType": "CVE_RECORD",
+    "dataVersion": "5.2",
+    "cveMetadata": { "cveId": "CVE-2024-3094", "state": "PUBLISHED", "datePublished": "2024-03-29T16:51:12Z" },
+    "containers": { "cna": { "title": "xz: malicious code in distributed source" } }
+  },
+  "attribution": {
+    "source": "MITRE CVE List",
+    "source_url": "https://www.cve.org",
+    "license": "MITRE CVE Terms of Use",
+    "redistribution": "commercial-permitted"
+  }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/security/cve/recent',
+    description:
+      'Ring buffer of CVE IDs added or modified in the cvelistV5 GitHub repo over roughly the last 24 hours. Daily cron walks commit history and dedupes. Pair with /api/security/cve/{id} for the per-record body.',
+    cache: 'Cache for 5 minutes',
+    example: `// Query: ?limit=10
+{
+  "ok": true,
+  "tier": "free",
+  "count": 10,
+  "cve_ids": ["CVE-2026-2042", "CVE-2026-2041", "CVE-2026-2040", "..."],
+  "last_capture": { "last_run": "2026-05-08T04:30:11Z", "newly_seen": 187, "scanned_commits": 42 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/security/cve/by-date/{YYYY-MM-DD}',
+    description:
+      'CVE IDs added or modified in cvelistV5 commits on one UTC day. Free, no auth. The data moat compounds with each daily run; older dates predate this endpoint.',
+    cache: 'Cache for 24 hours',
+    example: `// GET /api/security/cve/by-date/2026-05-08
+{
+  "ok": true,
+  "tier": "free",
+  "date": "2026-05-08",
+  "count": 187,
+  "cve_ids": ["CVE-2026-1942", "CVE-2026-1943", "CVE-2026-1944", "..."]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/security/cve/dates',
+    description:
+      'Ordered list of UTC dates with CVE-by-date data captured. Free, no auth. Useful for paging the archive backward from today.',
+    cache: 'Cache for 1 hour',
+    example: `{ "ok": true, "tier": "free", "count": 1, "dates": ["2026-05-08"] }`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news

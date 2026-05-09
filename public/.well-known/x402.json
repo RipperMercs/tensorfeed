@@ -230,6 +230,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/security/cve/range",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-08T00:00:00Z",
+      "metadata": {
+        "name": "CVE range query",
+        "description": "MITRE CVE List range query: CVE IDs added or modified across a UTC date range, capped at 30 days. Each day in the response carries the full CVE-ID set indexed by the daily cvelistV5 commit-history scan. Pair with /api/security/cve/{id} for the per-CVE Record v5.2 lookup. License: MITRE CVE Terms of Use, commercial redistribution permitted; attribution block included on every response.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-security-cve"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/agents/directory",
       "type": "http",
       "method": "GET",

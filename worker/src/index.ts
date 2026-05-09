@@ -18,6 +18,14 @@ import {
   enumerateDates,
 } from './news-history';
 import {
+  fetchCVE,
+  captureRecentCVEs,
+  readRecentCVEs,
+  readCVEsByDate,
+  listCVEDates,
+  CVE_ATTRIBUTION,
+} from './security-cve';
+import {
   resolveRange,
   resolveFreeRange,
   getPricingSeries,
@@ -1829,6 +1837,10 @@ export default {
           historyNewsSources: '/api/history/news/sources?date= (free; per-source RSS poll reliability rollup for one UTC day)',
           historyNewsDates: '/api/history/news/dates (free; ordered list of UTC dates with a daily news snapshot)',
           historyNewsSourcesDates: '/api/history/news/sources/dates (free; ordered list of UTC dates with a source-health rollup)',
+          securityCVEById: '/api/security/cve/{CVE-id} (free; lazy-fetch a single CVE Record v5.2 from MITRE, 7-day cache. License: MITRE CVE Terms of Use, commercial redistribution permitted)',
+          securityCVERecent: '/api/security/cve/recent?limit=1-100 (free; ring buffer of CVE IDs added in cvelistV5 commits over the last ~24h)',
+          securityCVEByDate: '/api/security/cve/by-date/{YYYY-MM-DD} (free; CVE IDs added in cvelistV5 commits on one UTC day)',
+          securityCVEDates: '/api/security/cve/dates (free; ordered list of UTC dates with CVE-by-date data)',
           statusLeaderboard: '/api/status/leaderboard?days=1-7 (free, 7-day cap; cross-provider uptime ranking, minute-resolution counters)',
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
@@ -1869,6 +1881,7 @@ export default {
           premiumStatusUptime: '/api/premium/history/status/uptime?provider=&from=&to=',
           premiumNewsHistoryFull: '/api/premium/history/news/full?date= or ?from=&to= (1 credit; full untruncated daily news snapshots, single-date or range up to 30 days)',
           premiumNewsSourceHealth: '/api/premium/history/news/source-health?from=&to= (1 credit; per-source RSS reliability series up to 90 days)',
+          premiumSecurityCVERange: '/api/premium/security/cve/range?from=&to= (1 credit; CVE IDs added across a UTC date range, max 30 days)',
           premiumStatusLeaderboard: '/api/premium/status/leaderboard?from=&to= (1 credit; full date range, includes incident_count + mttr_minutes per provider)',
           premiumWatchesCreate: 'POST /api/premium/watches (1 credit per registration)',
           premiumWatchesList: 'GET /api/premium/watches',
@@ -3801,6 +3814,85 @@ export default {
       );
     }
 
+    // === PAID PREMIUM: CVE RANGE (Tier 1, 1 credit) ===
+    // Multi-day CVE-ID list across a UTC date range, up to 30 days. Each
+    // day returns the full CVE-ID set indexed by the daily cron. Agents
+    // hit /api/security/cve/{id} for the per-CVE record after.
+
+    if (path === '/api/premium/security/cve/range') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const fromParam = url.searchParams.get('from');
+      const toParam = url.searchParams.get('to');
+      if (!fromParam || !toParam) {
+        return jsonResponse(
+          { ok: false, error: 'missing_params', hint: 'pass ?from=YYYY-MM-DD&to=YYYY-MM-DD' },
+          400,
+        );
+      }
+      if (!isISODate(fromParam) || !isISODate(toParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' },
+          400,
+        );
+      }
+      const fromMs = Date.parse(fromParam + 'T00:00:00Z');
+      const toMs = Date.parse(toParam + 'T00:00:00Z');
+      if (!(toMs >= fromMs)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' },
+          400,
+        );
+      }
+      const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
+      const CVE_RANGE_MAX_DAYS = 30;
+      if (dayCount > CVE_RANGE_MAX_DAYS) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'range_too_large',
+            hint: `range must be at most ${CVE_RANGE_MAX_DAYS} days`,
+            limits: { max_range_days: CVE_RANGE_MAX_DAYS },
+          },
+          400,
+        );
+      }
+
+      const dates = enumerateDates(fromParam, toParam);
+      const days = await Promise.all(
+        dates.map(async (d) => {
+          const ids = await readCVEsByDate(env, d);
+          return { date: d, count: ids.length, cve_ids: ids };
+        }),
+      );
+      const totalCves = days.reduce((sum, day) => sum + day.count, 0);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/security/cve/range',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          from: fromParam,
+          to: toParam,
+          days_returned: days.length,
+          cves_total: totalCves,
+          days,
+          attribution: CVE_ATTRIBUTION,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
     // === FREE: NEWS HISTORY INDEX (list of available dates) ===
 
     if (path === '/api/history/news/dates') {
@@ -3818,6 +3910,82 @@ export default {
         { ok: true, tier: 'free', count: dates.length, dates },
         200,
         3600,
+      );
+    }
+
+    // === SECURITY: MITRE CVE LIST ===
+    // Single-CVE lookup is lazy-fetched from MITRE's free single-CVE
+    // endpoint and cached in KV for 7 days. The "recent" ring + dated
+    // index are populated by a daily cron that walks cvelistV5 commit
+    // history. Premium /range is a paid date-range query over the index.
+
+    const cveByIdMatch = path.match(/^\/api\/security\/cve\/(CVE-\d{4}-\d{4,7})$/i);
+    if (cveByIdMatch) {
+      const result = await fetchCVE(env, cveByIdMatch[1]);
+      const status = result.ok ? 200 : result.error === 'cve_not_found' ? 404 : result.error === 'invalid_cve_id' ? 400 : 502;
+      const cacheSec = result.ok ? 3600 : 60;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          cve_id: result.cveId,
+          source: result.source,
+          fetched_at: result.fetched_at,
+          record: result.record,
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+        },
+        status,
+        cacheSec,
+      );
+    }
+
+    if (path === '/api/security/cve/recent') {
+      const requested = parseInt(url.searchParams.get('limit') ?? '50', 10);
+      const limit = Math.max(1, Math.min(Number.isFinite(requested) ? requested : 50, 100));
+      const out = await readRecentCVEs(env, limit);
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          count: out.ids.length,
+          cve_ids: out.ids,
+          last_capture: out.meta,
+          attribution: CVE_ATTRIBUTION,
+          premium: {
+            endpoint: '/api/premium/security/cve/range',
+            credits_per_call: 1,
+            note: 'Premium /range returns CVE IDs across a date range up to 30 days.',
+          },
+        },
+        200,
+        300,
+      );
+    }
+
+    if (path === '/api/security/cve/dates') {
+      const dates = await listCVEDates(env);
+      return jsonResponse(
+        { ok: true, tier: 'free', count: dates.length, dates, attribution: CVE_ATTRIBUTION },
+        200,
+        3600,
+      );
+    }
+
+    const cveByDateMatch = path.match(/^\/api\/security\/cve\/by-date\/(\d{4}-\d{2}-\d{2})$/);
+    if (cveByDateMatch) {
+      const date = cveByDateMatch[1];
+      const ids = await readCVEsByDate(env, date);
+      return jsonResponse(
+        {
+          ok: true,
+          tier: 'free',
+          date,
+          count: ids.length,
+          cve_ids: ids,
+          attribution: CVE_ATTRIBUTION,
+        },
+        200,
+        86400,
       );
     }
 
@@ -5092,6 +5260,15 @@ export default {
       // filings or XBRL fundamentals). Slot chosen between OpenAlex
       // (04:00) and BLS (05:00).
       await run('captureSECTickersDaily', () => captureSECTickersDaily(env));
+    } else if (cron === '30 4 * * *') {
+      // Daily 04:30 UTC: walk the cvelistV5 GitHub repo's commit history
+      // for the last 36h, harvest added/modified CVE-* file paths,
+      // populate cve:recent ring + cve:by-date:{date} index. Lazy-fetch
+      // single records via /api/security/cve/{id} on demand. License:
+      // MITRE CVE Terms of Use, commercial redistribution permitted.
+      // Powers /api/security/cve/recent, /api/security/cve/by-date,
+      // /api/security/cve/dates, and premium /api/premium/security/cve/range.
+      await run('captureRecentCVEs', () => captureRecentCVEs(env));
     } else if (cron === '30 3 * * *') {
       // Daily 03:30 UTC: refresh weekly download counts for the
       // curated AI/ML npm package list. One bulk call to api.npmjs.org
