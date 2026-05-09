@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'ai-cyber-tier-data-layer',
+    title: 'The AI Cyber Tier Now Has a Data Layer. It Is Token-Optimized, Pay-Per-Call, and Live.',
+    author: 'Marcus Chen',
+    date: 'May 9, 2026',
+    readTime: '6 min read',
+    description:
+      "The week opened with Anthropic Mythos and the policy reaction. It closes with the data infrastructure agents need to do something useful with cyber-tier capability. Inside the agent-data layer TensorFeed shipped in 24 hours: MITRE CVE, CISA KEV, EPSS, NASA POWER, OpenFDA, and EIA Open Data as free + premium x402-billable endpoints with LLM-ready transforms that drop typical responses by 80% in tokens. Why $0.02 USDC settles a problem that $5K/month enterprise APIs cannot. Why the deep moat is the transform, not the data itself. Why TerminalFeed.io adopting AFTA last week is a signal more than a footnote.",
+  },
+  {
     slug: 'ai-week-may-8-2026',
     title: "This Week in AI: The Mythos Effect, $200B for Google, and an FDA for Models",
     author: 'Marcus Chen',

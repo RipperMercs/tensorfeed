@@ -198,6 +198,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/agent-provisioning`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/ai-cyber-tier-data-layer`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/ai-week-may-8-2026`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/aws-x402-coinbase-agent-payments`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/anthropic-dreaming-managed-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
