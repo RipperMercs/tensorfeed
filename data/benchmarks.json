@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-24",
+  "lastUpdated": "2026-05-10",
   "benchmarks": [
     { "id": "mmlu_pro", "name": "MMLU-Pro", "description": "General knowledge and reasoning across 57 subjects", "maxScore": 100 },
     { "id": "human_eval", "name": "HumanEval", "description": "Python code generation and problem solving", "maxScore": 100 },

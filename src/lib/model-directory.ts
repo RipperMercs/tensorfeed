@@ -228,6 +228,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     docsUrl: 'https://ai.google.dev/gemini-api/docs',
     tier: 'budget',
   },
+  {
+    slug: 'gemini-3-1-flash-lite',
+    pricingId: 'gemini-3-1-flash-lite',
+    benchmarkName: 'Gemini 3.1 Flash-Lite',
+    providerId: 'google',
+    providerName: 'Google',
+    providerUrl: 'https://ai.google.dev',
+    seoTitle: 'Gemini 3.1 Flash-Lite: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Gemini 3.1 Flash-Lite by Google. Cost-efficient preview model at $0.25 per million input tokens with a 1M context window. Pricing and specs on TensorFeed.',
+    intro:
+      'Gemini 3.1 Flash-Lite is Google\'s most cost-efficient model to date, released in preview on May 5, 2026. At $0.25 per million input tokens and $1.50 per million output tokens, it costs roughly half of Gemini 3 Flash while keeping a 1,048,576 token context window and reasoning support. Google positions it for high-volume developer workloads where latency, throughput, and price-per-task matter more than frontier reasoning.',
+    strengths: ['$0.25 per 1M input tokens', '1M token context window', '2.5x faster time-to-first-token vs 2.5 Flash', 'Reasoning, vision, and tool use included'],
+    useCases: ['High-volume classification and extraction', 'Customer support routing', 'RAG over very long contexts', 'Batch document processing'],
+    docsUrl: 'https://ai.google.dev/gemini-api/docs',
+    tier: 'budget',
+  },
 
   // ── Meta ───────────────────────────────────────────────────────────
   {

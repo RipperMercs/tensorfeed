@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'nvidia-40b-equity-customer-investor-loop',
+    title: 'Nvidia Just Crossed $40 Billion in AI Equity Bets. The Customer-Investor Loop Is the Real Moat.',
+    author: 'Kira Nolan',
+    date: 'May 10, 2026',
+    readTime: '7 min read',
+    description:
+      "Nvidia's 2026 equity commitments to AI companies just topped $40 billion, anchored by a $30B OpenAI stake and capped this week with $3.2B into Corning and $2.1B into IREN. Add roughly two dozen private startup rounds and seven multi-billion public-equity deals, and a chip vendor is running one of the largest active venture programs on the planet. Inside what each deal actually trades, the circular-investment critique (the Cisco 1999 ghost is real but the analogy is incomplete), what the loop locks in (perimeter defense against TPU, Trainium, MI400, and Maia), and the three risks worth tracking through the next two earnings cycles.",
+  },
+  {
     slug: 'anthropic-200b-google-tpu-math',
     title: "Anthropic's $200B Compute Bill Is Bigger Than Its Revenue. The Google TPU Deal in Numbers.",
     author: 'Marcus Chen',

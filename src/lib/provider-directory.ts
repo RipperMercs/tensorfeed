@@ -71,7 +71,7 @@ export const PROVIDERS: ProviderMeta[] = [
     founded: '1998 (Google); 2023 (Google DeepMind)',
     headquarters: 'Mountain View, CA',
     ceo: 'Sundar Pichai',
-    keyProducts: ['Gemini 2.5 Pro', 'Gemini 2.0 Flash', 'Gemini Enterprise Agent Platform', 'NotebookLM', 'Vertex AI', 'Google AI Studio'],
+    keyProducts: ['Gemini 2.5 Pro', 'Gemini 3.1 Flash-Lite', 'Gemini 2.0 Flash', 'Gemini Enterprise Agent Platform', 'NotebookLM', 'Vertex AI', 'Google AI Studio'],
     strengths: ['1M token context window', 'Lowest-cost budget models', 'Custom TPU infrastructure', 'Vertex AI enterprise platform', 'NotebookLM research integration'],
     statusSlug: 'is-gemini-down',
   },

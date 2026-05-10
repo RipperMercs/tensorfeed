@@ -1,6 +1,27 @@
 {
   "events": [
     {
+      "date": "2026-05-07",
+      "title": "OpenAI Launches GPT-5.5-Cyber Preview",
+      "provider": "OpenAI",
+      "category": "model-release",
+      "description": "OpenAI rolls out GPT-5.5-Cyber, a variant of GPT-5.5 tuned for cybersecurity workflows, in limited preview to vetted defenders. Launch partners include Cisco, CrowdStrike, Palo Alto Networks, Cloudflare, Intel, Snyk, and SentinelOne. The model offers reduced classifier-based refusals for authorized red team and vulnerability research."
+    },
+    {
+      "date": "2026-05-05",
+      "title": "OpenAI Releases GPT-5.5 Instant for ChatGPT",
+      "provider": "OpenAI",
+      "category": "product-launch",
+      "description": "OpenAI ships GPT-5.5 Instant as the new default ChatGPT model, replacing GPT-5.4 Instant. The update tightens accuracy, cuts gratuitous emoji output, and rolls out to free, Plus, Pro, Business, and Edu tiers."
+    },
+    {
+      "date": "2026-05-05",
+      "title": "Google Ships Gemini 3.1 Flash-Lite Preview",
+      "provider": "Google",
+      "category": "model-release",
+      "description": "Google releases Gemini 3.1 Flash-Lite in preview through the Gemini API and Vertex AI. Priced at $0.25 per million input and $1.50 per million output, with a 1M context window, the model targets high-volume workloads at half the cost of Gemini 3 Flash."
+    },
+    {
       "date": "2026-04-25",
       "title": "Amazon Commits $25B to Anthropic",
       "provider": "Anthropic",
