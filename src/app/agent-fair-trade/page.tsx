@@ -379,6 +379,21 @@ export default function AgentFairTradePage() {
           . Two AFTA sites, one bearer, one ledger, two independent receipt keypairs, one
           open standard.
         </p>
+        <p className="text-text-secondary mb-3 max-w-3xl leading-relaxed">
+          As of 2026-05-09 the federation also ships parallel free public-domain data feeds
+          on both members. Both sites serve USGS earthquakes via{' '}
+          <code className="text-xs bg-bg-tertiary px-1.5 py-0.5 rounded">
+            /api/climate/earthquakes
+          </code>{' '}
+          and NWS US weather alerts via{' '}
+          <code className="text-xs bg-bg-tertiary px-1.5 py-0.5 rounded">
+            /api/climate/weather-alerts
+          </code>
+          , each with the same parameter shape and the same commercial-redistribution
+          posture. Symmetry on foundational government-public-domain feeds is a deliberate
+          federation property: an agent that targets one member can fail over to the other
+          without reshaping the call.
+        </p>
       </section>
 
       <section className="mb-10">
