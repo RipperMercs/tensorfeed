@@ -181,6 +181,7 @@ import {
   readMLBNews,
 } from './sports-mlb';
 import { readPolicyRegistry } from './ai-policy-registry';
+import { readFundingRegistry } from './ai-funding-registry';
 import {
   refreshPyPITrending,
   readPyPITrending,
@@ -2068,6 +2069,7 @@ export default {
           economyBLSIndicators: '/api/economy/bls/indicators?category=inflation|employment|wages|labor-force|jolts (US Bureau of Labor Statistics, public domain; CPI, unemployment, payrolls, JOLTS, etc., 24-month history with MoM delta)',
           economyFREDIndicators: '/api/economy/fred/indicators?category=rates|gdp|money|housing|fx|commodities (Federal Reserve Economic Data, public domain; fed funds, 10Y/2Y treasuries + spread, GDP, M2, mortgage rate, USD index, oil; native frequency per series)',
           policyAIRegistry: '/api/policy/ai/registry?jurisdiction=US-Federal|US-State|EU|UK|China|International&type=executive-order|statute|regulation|guidance|declaration|agency-action&status=active|phased|pending|rescinded|vetoed|proposed&scope=transparency|safety|high-risk|deepfakes|export-controls|...',
+          fundingPortfolio: '/api/funding/portfolio?silicon_dependency=nvidia|tpu|trainium|mi400|maia|mixed&type=private-equity|public-equity|compute-commitment|capacity-partnership&from=&to=&since=&until= (free; hand-curated AI capital-commitment registry tagged with recipient silicon dependency. Sources: SEC filings, hyperscaler press releases, reputable trade reporting. Each entry carries source_urls. Returns summary aggregates by silicon dependency, type, and investor.)',
           routingPreview: '/api/preview/routing',
           premiumRouting: '/api/premium/routing',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
@@ -2871,6 +2873,25 @@ export default {
         type: url.searchParams.get('type') ?? undefined,
         status: url.searchParams.get('status') ?? undefined,
         scope: url.searchParams.get('scope') ?? undefined,
+      });
+      return jsonResponse(result, 200, 3600);
+    }
+
+    // === AI FUNDING PORTFOLIO REGISTRY (free) ===
+    // Hand-curated catalog of disclosed AI capital commitments: equity
+    // stakes, compute purchase commitments, capacity partnerships. Each
+    // entry tagged with the recipient's primary silicon dependency so
+    // an agent can analyze the customer-investor loop. Editorial; updated
+    // on redeploy as new commitments hit the public record.
+
+    if (path === '/api/funding/portfolio') {
+      const result = readFundingRegistry({
+        silicon_dependency: url.searchParams.get('silicon_dependency') ?? undefined,
+        type: url.searchParams.get('type') ?? undefined,
+        from: url.searchParams.get('from') ?? undefined,
+        to: url.searchParams.get('to') ?? undefined,
+        since: url.searchParams.get('since') ?? undefined,
+        until: url.searchParams.get('until') ?? undefined,
       });
       return jsonResponse(result, 200, 3600);
     }

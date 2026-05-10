@@ -77,6 +77,12 @@ export default function FundingPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Notable AI startup financing rounds with structured fields: date, stage, amount, post-money valuation, lead and notable investors. The machine-readable layer beneath the news. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <div className="mt-4 max-w-3xl">
+          <Link href="/funding/portfolio" className="inline-flex items-center gap-2 text-sm bg-bg-secondary border border-bg-tertiary hover:border-accent-primary/50 rounded-lg px-3 py-2 transition-colors">
+            <span className="text-text-secondary">Looking for corporate AI equity stakes (Nvidia&rarr;OpenAI, Google&rarr;Anthropic, etc.)?</span>
+            <span className="text-accent-primary font-medium">Funding Portfolio &rarr;</span>
+          </Link>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">

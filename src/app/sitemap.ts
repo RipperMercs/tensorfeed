@@ -164,6 +164,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/marketplaces`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/public-leaderboards`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/funding`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
+    { url: `${baseUrl}/funding/portfolio`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/oss-tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/ai-policy`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/conferences`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
