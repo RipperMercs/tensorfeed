@@ -57,6 +57,9 @@ import {
   NWS_VALID_URGENCIES,
   NWS_VALID_STATUSES,
 } from './climate-nws-alerts';
+import { getLatestSnapshot as getPapersLatest } from './papers';
+import { getLatestSnapshot as getArxivLatest } from './arxiv';
+import { getLatestSnapshot as getHFDailyPapersLatest } from './hf-daily-papers';
 import { readSECTicker } from './sec-tickers';
 import { parseOsvPackageQuery } from './security-osv';
 import { parseFDAQuery, fetchFDAQuery, FDA_CATEGORIES } from './health-fda';
@@ -584,6 +587,102 @@ const TOOLS: McpToolDef[] = [
     },
   },
 
+  // ─── AI Research: arXiv recent submissions ─────────────────────────
+  {
+    name: 'get_arxiv_recent',
+    description:
+      "Get the 50 most recent arXiv submissions in cs.AI / cs.LG / cs.CL / cs.CV, sorted by submission date. Each entry carries arxivId (no version suffix), version, title, abstract, authors, primary category, all categories, publishedAt, updatedAt, htmlUrl, pdfUrl, and doi. Refreshed daily at 11:30 UTC. The firehose pair to get_ai_trending_papers (which ranks by citation count). License: arXiv permits use of metadata; the standard attribution block ships on every response.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: {
+          type: 'number',
+          description: 'Max papers to return (1-50). Default 25.',
+          default: 25,
+        },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const limit = Math.max(1, Math.min(50, getNumberArg(args, 'limit') ?? 25));
+      const snap = await getArxivLatest(env);
+      if (!snap) return { ok: false, error: 'arxiv_unavailable' };
+      const papers = Array.isArray((snap as { papers?: unknown[] }).papers)
+        ? ((snap as { papers: unknown[] }).papers as unknown[])
+        : [];
+      return {
+        ok: true,
+        snapshot_date: (snap as { capturedAt?: string }).capturedAt ?? null,
+        count: Math.min(papers.length, limit),
+        papers: papers.slice(0, limit),
+      };
+    },
+  },
+
+  // ─── AI Research: AI trending papers (Semantic Scholar) ────────────
+  {
+    name: 'get_ai_trending_papers',
+    description:
+      "Get the daily curated AI/ML trending papers from Semantic Scholar, ranked by citation count. Five fan-out queries (large language model, transformer, RLHF, AI agents, diffusion model), deduped by paperId, top 30 returned. Each entry carries paperId, title, abstract, authors, year, venue, citationCount, arxivId, doi, and fieldsOfStudy. Refreshed daily at 11:00 UTC. Citation-ranked counterpart to get_arxiv_recent (firehose by submission date). License: Semantic Scholar API permits use; the standard attribution block ships on every response.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: {
+          type: 'number',
+          description: 'Max papers to return (1-30). Default 15.',
+          default: 15,
+        },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const limit = Math.max(1, Math.min(30, getNumberArg(args, 'limit') ?? 15));
+      const snap = await getPapersLatest(env);
+      if (!snap) return { ok: false, error: 'papers_unavailable' };
+      const papers = Array.isArray((snap as { papers?: unknown[] }).papers)
+        ? ((snap as { papers: unknown[] }).papers as unknown[])
+        : [];
+      return {
+        ok: true,
+        snapshot_date: (snap as { capturedAt?: string }).capturedAt ?? null,
+        count: Math.min(papers.length, limit),
+        papers: papers.slice(0, limit),
+      };
+    },
+  },
+
+  // ─── AI Research: Hugging Face daily papers ────────────────────────
+  {
+    name: 'get_hf_daily_papers',
+    description:
+      "Get Hugging Face's editor-curated daily AI/ML papers feed with community upvotes and discussion counts. Each entry carries paperId, title (sanitized), summary, authors, publishedAt, submittedAt, upvotes, num_comments, thumbnail, hf_url, arxiv_url (when arxiv-style), github_repo, github_stars, ai_keywords. Different signal from get_arxiv_recent (firehose) and get_ai_trending_papers (citation-ranked). Refreshed daily at 14:15 UTC.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: {
+          type: 'number',
+          description: 'Max papers to return (1-50). Default 20.',
+          default: 20,
+        },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const limit = Math.max(1, Math.min(50, getNumberArg(args, 'limit') ?? 20));
+      const snap = await getHFDailyPapersLatest(env);
+      if (!snap) return { ok: false, error: 'hf_daily_papers_unavailable' };
+      const papers = Array.isArray((snap as { papers?: unknown[] }).papers)
+        ? ((snap as { papers: unknown[] }).papers as unknown[])
+        : [];
+      return {
+        ok: true,
+        snapshot_date: (snap as { capturedAt?: string }).capturedAt ?? null,
+        count: Math.min(papers.length, limit),
+        papers: papers.slice(0, limit),
+      };
+    },
+  },
+
   // ─── Climate: NWS Active Weather Alerts ────────────────────────────
   {
     name: 'get_weather_alerts',
@@ -761,9 +860,10 @@ async function handleInitialize(): Promise<unknown> {
     },
     instructions:
       'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp. ' +
-      'Free tier (20 tools): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
+      'Free tier (23 tools): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
       'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
-      'EIA Open Data series, USGS recent earthquakes, NWS US weather alerts, and the daily agent-ecosystem opportunities scan. ' +
+      'EIA Open Data series, USGS recent earthquakes, NWS US weather alerts, AI papers (arXiv recent + AI trending + HF daily), ' +
+      'and the daily agent-ecosystem opportunities scan. ' +
       'Premium tools require an Authorization: Bearer tf_live_... token; buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
       'License posture: most data is US Government public domain; commercial redistribution permitted; attribution preserved on every response.',
   };
