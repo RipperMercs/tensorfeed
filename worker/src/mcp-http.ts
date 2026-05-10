@@ -45,6 +45,11 @@ import {
   EIA_ROUTES,
   parseEIAQuery,
 } from './economy-eia';
+import {
+  fetchUSGSEarthquakes,
+  USGS_VALID_MAGNITUDES,
+  USGS_VALID_PERIODS,
+} from './climate-usgs-earthquakes';
 import { readSECTicker } from './sec-tickers';
 import { parseOsvPackageQuery } from './security-osv';
 import { parseFDAQuery, fetchFDAQuery, FDA_CATEGORIES } from './health-fda';
@@ -572,6 +577,51 @@ const TOOLS: McpToolDef[] = [
     },
   },
 
+  // ─── Climate: USGS Earthquakes ─────────────────────────────────────
+  {
+    name: 'get_recent_earthquakes',
+    description:
+      "Get recent earthquakes from the US Geological Survey's pre-built summary feeds. Choose a magnitude bucket (significant | 4.5 | 2.5 | 1.0 | all) and a time window (hour | day | week | month). Returns a flattened list with id, magnitude, place, time (ISO 8601), depth_km, longitude, latitude, tsunami flag, USGS detail URL. Upstream feeds refresh every minute. License: US Government public domain (17 USC §105).",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        magnitude: {
+          type: 'string',
+          description: `Magnitude bucket. One of: ${USGS_VALID_MAGNITUDES.join(', ')}. Default 4.5.`,
+          default: '4.5',
+        },
+        period: {
+          type: 'string',
+          description: `Time window. One of: ${USGS_VALID_PERIODS.join(', ')}. Default day.`,
+          default: 'day',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max earthquakes to return (1-500). Default 50.',
+          default: 50,
+        },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const magRaw = getStringArg(args, 'magnitude') ?? '4.5';
+      const periodRaw = getStringArg(args, 'period') ?? 'day';
+      if (!USGS_VALID_MAGNITUDES.includes(magRaw)) {
+        throw new ValidationError(
+          `magnitude must be one of: ${USGS_VALID_MAGNITUDES.join(', ')}`,
+        );
+      }
+      if (!USGS_VALID_PERIODS.includes(periodRaw)) {
+        throw new ValidationError(
+          `period must be one of: ${USGS_VALID_PERIODS.join(', ')}`,
+        );
+      }
+      const limitInput = getNumberArg(args, 'limit') ?? 50;
+      const limit = Math.max(1, Math.min(500, Math.round(limitInput)));
+      return await fetchUSGSEarthquakes(env, { magnitude: magRaw, period: periodRaw, limit });
+    },
+  },
+
   // ─── Agent ecosystem opportunities ────────────────────────────────
   {
     name: 'get_agent_opportunities',
@@ -643,9 +693,9 @@ async function handleInitialize(): Promise<unknown> {
     },
     instructions:
       'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp. ' +
-      'Free tier (18 tools): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
+      'Free tier (19 tools): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
       'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
-      'EIA Open Data series, and the daily agent-ecosystem opportunities scan. ' +
+      'EIA Open Data series, USGS recent earthquakes, and the daily agent-ecosystem opportunities scan. ' +
       'Premium tools require an Authorization: Bearer tf_live_... token; buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
       'License posture: most data is US Government public domain; commercial redistribution permitted; attribution preserved on every response.',
   };

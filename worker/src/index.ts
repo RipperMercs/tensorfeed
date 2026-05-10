@@ -66,6 +66,12 @@ import {
   POWER_ATTRIBUTION,
 } from './climate-nasa-power';
 import {
+  parseEarthquakeQuery,
+  fetchUSGSEarthquakes,
+  USGS_VALID_MAGNITUDES,
+  USGS_VALID_PERIODS,
+} from './climate-usgs-earthquakes';
+import {
   parseFDAQuery,
   parseFDAAggregateQuery,
   fetchFDAQuery,
@@ -2004,6 +2010,7 @@ export default {
           secEdgarSubmissions: '/api/sec/edgar/submissions/{cik} (free; recent filings + entity metadata for one CIK. Accepts numeric CIK in any zero-padding form, or CIK0000320193 prefixed form)',
           climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
           climatePowerParameters: '/api/climate/power/parameters (free; curated NASA POWER parameter catalog with units and longnames)',
+          climateEarthquakes: '/api/climate/earthquakes?magnitude=significant|4.5|2.5|1.0|all&period=hour|day|week|month&limit=1-500 (free; USGS Earthquake Hazards Program pre-built summary feeds. License: US Gov public domain. Returns flattened earthquake list with id, magnitude, place, time, depth, lat/lon, tsunami flag, USGS detail URL. Cache TTL scales with feed window)',
           mcpHttp: '/api/mcp (free; hosted MCP Streamable HTTP transport, JSON-RPC 2.0 over POST. Compatible with Anthropic Claude Code, vertical agent repos, claude.ai connectors, and other MCP-compliant clients. GET returns discovery info; POST expects JSON-RPC envelope. ~12 tools in V1: news, status, models, MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR search + submissions + ticker lookup, EIA series)',
           healthFDADrugEvents: '/api/health/fda/drug/events?search=&limit=1-100&skip=&sort= (free; FDA Adverse Event Reporting System (FAERS), 10M+ records. License: CC0)',
           healthFDADrugLabels: '/api/health/fda/drug/labels?search=&limit=1-100&skip=&sort= (free; structured drug labels in SPL format)',
@@ -5625,6 +5632,48 @@ export default {
         },
         200,
         86400,
+      );
+    }
+
+    // === CLIMATE: USGS Earthquakes (free) ===
+    // Lazy-proxy to USGS pre-built GeoJSON summary feeds, refreshed every
+    // minute upstream. License: US Government public domain (17 USC §105).
+    // Each unique (magnitude, period) tuple is cached in KV; TTL scales
+    // with the feed window (60s for the hour feeds, 900s for the month
+    // feeds). Returns a flattened earthquake list rather than raw GeoJSON
+    // so most agents can read it without geometry-processing knowledge.
+
+    if (path === '/api/climate/earthquakes') {
+      const parsed = parseEarthquakeQuery(url);
+      if (!parsed.ok || !parsed.query) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchUSGSEarthquakes(env, parsed.query);
+      const status = result.ok
+        ? 200
+        : result.http_status === 429
+          ? 503
+          : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          source: result.source,
+          fetched_at: result.fetched_at,
+          query: result.query,
+          ...(result.feed_metadata ? { feed_metadata: result.feed_metadata } : {}),
+          ...(result.earthquakes
+            ? { count: result.earthquakes.length, earthquakes: result.earthquakes }
+            : {}),
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+          allowed: {
+            magnitudes: USGS_VALID_MAGNITUDES,
+            periods: USGS_VALID_PERIODS,
+          },
+        },
+        status,
+        result.ok ? 60 : 60,
       );
     }
 

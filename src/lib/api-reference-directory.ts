@@ -454,6 +454,98 @@ for (const m of models) console.log(\`\${m.name}: \${m.pricingAmount}/sec\`);`,
     ],
   },
   {
+    slug: 'climate-earthquakes',
+    name: 'USGS Recent Earthquakes',
+    path: '/api/climate/earthquakes',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'climate',
+    seoTitle: 'TensorFeed USGS Earthquakes API: Recent Seismic Events Feed',
+    seoDescription:
+      'TensorFeed /api/climate/earthquakes returns recent earthquakes from USGS pre-built summary feeds. Magnitude bucket + period bucket. Public domain. Free.',
+    intro:
+      "Recent earthquakes from the USGS Earthquake Hazards Program pre-built summary feeds. The upstream feeds refresh every minute. TensorFeed proxies them with a per-(magnitude, period) KV cache whose TTL scales with the feed window (60s for the hour feeds, 900s for the month feeds). The response flattens the upstream GeoJSON FeatureCollection into a plain earthquakes list so most agents can consume it without geometry-processing knowledge.",
+    whenToUse:
+      "When an agent needs the most recent earthquake activity globally — for situational-awareness briefs, climate/disaster reporting, alert routing for tsunami-flagged events, or pairing with population/news feeds. Choose the magnitude bucket (significant means 'noteworthy by USGS criteria,' the numeric buckets are M-or-above thresholds, 'all' returns every detected event) and the time window (hour, day, week, month).",
+    params: [
+      { name: 'magnitude', in: 'query', type: 'string', description: 'significant | 4.5 | 2.5 | 1.0 | all', example: '4.5' },
+      { name: 'period', in: 'query', type: 'string', description: 'hour | day | week | month', example: 'day' },
+      { name: 'limit', in: 'query', type: 'number', description: 'Max earthquakes to return (1-500)', example: '50' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "tier": "free",
+  "source": "live",
+  "fetched_at": "2026-05-09T17:08:00Z",
+  "query": { "magnitude": "4.5", "period": "day", "limit": 50 },
+  "feed_metadata": {
+    "title": "USGS Magnitude 4.5+ Earthquakes, Past Day",
+    "generated": "2026-05-09T17:07:42Z",
+    "api_version": "1.10.3",
+    "upstream_count": 12
+  },
+  "count": 12,
+  "earthquakes": [
+    {
+      "id": "us7000abc",
+      "magnitude": 5.1,
+      "magnitude_type": "mb",
+      "place": "47 km NE of Tinogasta, Argentina",
+      "title": "M 5.1 - 47 km NE of Tinogasta, Argentina",
+      "time": "2026-05-09T15:30:00Z",
+      "updated": "2026-05-09T15:31:40Z",
+      "depth_km": 165,
+      "longitude": -67.55,
+      "latitude": -28.06,
+      "tsunami": false,
+      "significance": 401,
+      "felt": 12,
+      "alert": "green",
+      "status": "reviewed",
+      "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000abc"
+    }
+  ],
+  "attribution": {
+    "source": "USGS Earthquake Hazards Program — Real-time Feed",
+    "license": "US Government work in the public domain (17 USC §105)",
+    "redistribution": "commercial-permitted"
+  },
+  "allowed": {
+    "magnitudes": ["significant", "4.5", "2.5", "1.0", "all"],
+    "periods": ["hour", "day", "week", "month"]
+  }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+tf = TensorFeed()
+data = tf._get("/climate/earthquakes", magnitude="4.5", period="day")
+for q in data["earthquakes"][:10]:
+    print(f"M{q['magnitude']:.1f}  {q['place']}  ({q['time']})")`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/climate/earthquakes?magnitude=significant&period=week");
+const { earthquakes } = await res.json();
+for (const q of earthquakes) console.log(\`M\${q.magnitude} \${q.place}\`);`,
+    mcpTool: 'get_recent_earthquakes',
+    relatedSlugs: ['premium-clean-power-daily', 'premium-climate-power-hourly'],
+    faqs: [
+      {
+        q: 'What does each magnitude bucket mean?',
+        a: '"significant" is USGS\'s curated stream of noteworthy events using internal criteria (large magnitude, populated area, tsunami flag, etc). The numeric buckets ("4.5", "2.5", "1.0") are simple magnitude-or-above thresholds. "all" returns every detected event in the window, including microquakes.',
+      },
+      {
+        q: 'How fresh is the data?',
+        a: 'USGS regenerates each summary feed once per minute. TensorFeed caches each (magnitude, period) tuple in KV with a TTL scaled to the feed window — 60 seconds for the hour feeds, 120 seconds for the day feeds, 300 seconds for the week feeds, 900 seconds for the month feeds.',
+      },
+      {
+        q: 'What is the tsunami flag?',
+        a: "USGS sets tsunami = true when an event meets the criteria for tsunami evaluation (typically large magnitude in or near oceanic regions). It does not mean a tsunami was observed; it means the event is in the queue to be evaluated. For confirmed tsunami status, follow the USGS detail URL for that event.",
+      },
+      {
+        q: 'License?',
+        a: 'USGS data is US Government work in the public domain (17 USC §105). Commercial redistribution is permitted; the standard attribution block ships on every TensorFeed response.',
+      },
+    ],
+  },
+  {
     slug: 'agents-opportunities',
     name: 'Agent Ecosystem Opportunities (Daily Scan)',
     path: '/api/agents/opportunities',
