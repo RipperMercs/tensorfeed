@@ -126,6 +126,13 @@ const tests = [
     happyKeys: ['query', 'total_matches', 'returned', 'papers', 'attribution'],
     okErrors: ['no_snapshot_yet'],
   },
+  {
+    id: 'funding-exposure',
+    name: 'Funding exposure analytics',
+    path: '/api/premium/funding/exposure',
+    happyKeys: ['silicon_concentration', 'circular_exposure', 'top_recipients', 'co_investor_pairs', 'attribution'],
+    okErrors: ['empty_registry'],
+  },
   // Existing premium endpoints that pre-date today (regression coverage)
   {
     id: 'whats-new',

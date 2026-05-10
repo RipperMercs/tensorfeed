@@ -182,6 +182,7 @@ import {
 } from './sports-mlb';
 import { readPolicyRegistry } from './ai-policy-registry';
 import { readFundingRegistry } from './ai-funding-registry';
+import { computeFundingExposure } from './premium-funding-exposure';
 import {
   refreshPyPITrending,
   readPyPITrending,
@@ -2070,6 +2071,7 @@ export default {
           economyFREDIndicators: '/api/economy/fred/indicators?category=rates|gdp|money|housing|fx|commodities (Federal Reserve Economic Data, public domain; fed funds, 10Y/2Y treasuries + spread, GDP, M2, mortgage rate, USD index, oil; native frequency per series)',
           policyAIRegistry: '/api/policy/ai/registry?jurisdiction=US-Federal|US-State|EU|UK|China|International&type=executive-order|statute|regulation|guidance|declaration|agency-action&status=active|phased|pending|rescinded|vetoed|proposed&scope=transparency|safety|high-risk|deepfakes|export-controls|...',
           fundingPortfolio: '/api/funding/portfolio?silicon_dependency=nvidia|tpu|trainium|mi400|maia|mixed&type=private-equity|public-equity|compute-commitment|capacity-partnership&from=&to=&since=&until= (free; hand-curated AI capital-commitment registry tagged with recipient silicon dependency. Sources: SEC filings, hyperscaler press releases, reputable trade reporting. Each entry carries source_urls. Returns summary aggregates by silicon dependency, type, and investor.)',
+          premiumFundingExposure: '/api/premium/funding/exposure (1 credit; derived metrics over the free /api/funding/portfolio: silicon-vendor concentration shares, per-investor circular-loop classification (fully-circular / partial-loop / agnostic) using investor->silicon mapping for Nvidia/Google/Amazon/Microsoft/AMD, top recipients by inbound capital, co-investor pairs that both hold stakes in the same recipient.)',
           routingPreview: '/api/preview/routing',
           premiumRouting: '/api/premium/routing',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
@@ -6195,6 +6197,31 @@ export default {
         logPremiumUsage(env, '/api/premium/research/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: FUNDING EXPOSURE (Tier 1, 1 credit) ===
+    // /api/premium/funding/exposure
+    // Derived metrics over the free /api/funding/portfolio registry:
+    // silicon concentration shares, per-investor circular exposure with
+    // loop classification, top recipients by inbound capital, co-investor
+    // pairs (investors that both hold stakes in the same recipient).
+
+    if (path === '/api/premium/funding/exposure') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const result = computeFundingExposure();
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/funding/exposure', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
 
     // === PAID PREMIUM: ARXIV MILESTONE DETECTOR (Tier 1, 1 credit) ===

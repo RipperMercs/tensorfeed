@@ -67,6 +67,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/research/emerging-keywords': { maxAgeSeconds: 7 * 24 * 60 * 60 },
   // arXiv topic search: weekly index rebuild.
   '/api/premium/research/topic-search': { maxAgeSeconds: 7 * 24 * 60 * 60 },
+  // Funding exposure: hand-curated registry, refreshed on redeploy when new
+  // entries land. 7-day SLA so a stale snapshot triggers no-charge.
+  '/api/premium/funding/exposure': { maxAgeSeconds: 7 * 24 * 60 * 60 },
   // Recession watch: synthesis over BLS + FRED daily snapshots. 24h
   // matches the cron cadence of underlying data.
   '/api/premium/economy/recession-watch': { maxAgeSeconds: 24 * 60 * 60 },

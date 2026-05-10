@@ -1192,6 +1192,43 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/funding/exposure',
+    description:
+      "Derived analytics over the free /api/funding/portfolio registry. Returns silicon_concentration (per-silicon commitment count, total $ committed, share % of total), circular_exposure per investor (with loop_classification: fully-circular >=85%, partial-loop 25-85%, agnostic below, insufficient-data for one-shot investors), top_recipients sorted by inbound capital with the investor list per recipient, and co_investor_pairs (pairs of investors that both hold stakes in the same recipient). Underlying registry is editorial; the analytical layer is the gate.",
+    cost: '1 credit per call',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-05-10",
+  "total_commitments": 8,
+  "total_amount_usd_max": 313300000000,
+  "silicon_concentration": [
+    { "silicon_dependency": "tpu", "commitment_count": 1, "total_amount_usd_max": 200000000000, "share_of_total_pct": 63.84 },
+    { "silicon_dependency": "nvidia", "commitment_count": 5, "total_amount_usd_max": 48300000000, "share_of_total_pct": 15.42 }
+  ],
+  "circular_exposure": [
+    {
+      "investor": "Nvidia",
+      "investor_silicon_brand": "nvidia",
+      "total_commitments": 3,
+      "total_amount_usd_max": 35300000000,
+      "commitments_to_own_silicon": 3,
+      "circular_ratio_by_count": 1,
+      "circular_ratio_by_amount": 1,
+      "loop_classification": "fully-circular"
+    }
+  ],
+  "top_recipients": [
+    { "recipient": "OpenAI", "inbound_commitments": 2, "inbound_amount_usd_max": 43000000000, "investors": ["Microsoft", "Nvidia"] }
+  ],
+  "co_investor_pairs": [
+    { "investor_a": "Microsoft", "investor_b": "Nvidia", "shared_recipients": ["OpenAI"] }
+  ],
+  "attribution": { ... },
+  "billing": { "credits_charged": 1, "credits_remaining": 40 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/research/topic-search',
     description:
       "Structured search over the arXiv preprint corpus using the TF derived taxonomy. Filters: subfield_tag, methodology_bucket, since (YYYY-MM-DD), until (YYYY-MM-DD), milestone_only (1 or 0), limit (1 to 100, default 25), offset (paginate). subfield_tag is one of llm-architecture, llm-training, llm-eval, llm-alignment, multimodal, vision, speech, robotics, rl, theory, optimization, efficiency, retrieval, agents, code-generation, scientific-ml, fairness-safety, dataset, survey, application, other. methodology_bucket is one of new-architecture, training-recipe, fine-tuning, eval-benchmark, theoretical-analysis, empirical-study, dataset-release, system-tooling, survey, position-paper, application, other. Returns matching papers sorted by date desc. arXiv's native search has no concept of methodology bucket or our subfield taxonomy; that's the gate.",
