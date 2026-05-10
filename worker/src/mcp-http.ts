@@ -50,6 +50,13 @@ import {
   USGS_VALID_MAGNITUDES,
   USGS_VALID_PERIODS,
 } from './climate-usgs-earthquakes';
+import {
+  parseNWSAlertsQuery,
+  fetchNWSAlerts,
+  NWS_VALID_SEVERITIES,
+  NWS_VALID_URGENCIES,
+  NWS_VALID_STATUSES,
+} from './climate-nws-alerts';
 import { readSECTicker } from './sec-tickers';
 import { parseOsvPackageQuery } from './security-osv';
 import { parseFDAQuery, fetchFDAQuery, FDA_CATEGORIES } from './health-fda';
@@ -577,6 +584,67 @@ const TOOLS: McpToolDef[] = [
     },
   },
 
+  // ─── Climate: NWS Active Weather Alerts ────────────────────────────
+  {
+    name: 'get_weather_alerts',
+    description:
+      "Get active US weather alerts from the National Weather Service. US-only coverage. Filter by 2-letter state code (area), exact event name (e.g. 'Tornado Warning', 'Heat Advisory'), severity (Extreme | Severe | Moderate | Minor | Unknown), urgency (Immediate | Expected | Future | Past | Unknown), and status (actual | exercise | system | test | draft). Returns a flattened alerts list with id, event, severity, urgency, headline, description, areaDesc, sent/effective/expires/ends, sender_name, web URL. Refreshed in real time upstream; cached 60s. License: US Government public domain (17 USC §105).",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        area: {
+          type: 'string',
+          description: '2-letter US state or territory code (CA, TX, PR, etc). Optional.',
+        },
+        event: {
+          type: 'string',
+          description: 'Exact NWS event name (e.g. "Tornado Warning", "Heat Advisory"). Optional.',
+        },
+        severity: {
+          type: 'string',
+          description: `One of: ${NWS_VALID_SEVERITIES.join(', ')}. Optional.`,
+        },
+        urgency: {
+          type: 'string',
+          description: `One of: ${NWS_VALID_URGENCIES.join(', ')}. Optional.`,
+        },
+        status: {
+          type: 'string',
+          description: `One of: ${NWS_VALID_STATUSES.join(', ')}. Optional.`,
+        },
+        limit: {
+          type: 'number',
+          description: 'Max alerts to return (1-500). Default 50.',
+          default: 50,
+        },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const areaRaw = getStringArg(args, 'area');
+      const eventRaw = getStringArg(args, 'event');
+      const severityRaw = getStringArg(args, 'severity');
+      const urgencyRaw = getStringArg(args, 'urgency');
+      const statusRaw = getStringArg(args, 'status');
+      const limitInput = getNumberArg(args, 'limit') ?? 50;
+      const limit = Math.max(1, Math.min(500, Math.round(limitInput)));
+
+      const url = new URL('https://tensorfeed.ai/api/climate/weather-alerts');
+      if (areaRaw) url.searchParams.set('area', areaRaw);
+      if (eventRaw) url.searchParams.set('event', eventRaw);
+      if (severityRaw) url.searchParams.set('severity', severityRaw);
+      if (urgencyRaw) url.searchParams.set('urgency', urgencyRaw);
+      if (statusRaw) url.searchParams.set('status', statusRaw);
+      url.searchParams.set('limit', String(limit));
+
+      const parsed = parseNWSAlertsQuery(url);
+      if (!parsed.ok || !parsed.query) {
+        throw new ValidationError(`${parsed.error}: ${parsed.hint}`);
+      }
+      return await fetchNWSAlerts(env, parsed.query);
+    },
+  },
+
   // ─── Climate: USGS Earthquakes ─────────────────────────────────────
   {
     name: 'get_recent_earthquakes',
@@ -693,9 +761,9 @@ async function handleInitialize(): Promise<unknown> {
     },
     instructions:
       'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp. ' +
-      'Free tier (19 tools): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
+      'Free tier (20 tools): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
       'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
-      'EIA Open Data series, USGS recent earthquakes, and the daily agent-ecosystem opportunities scan. ' +
+      'EIA Open Data series, USGS recent earthquakes, NWS US weather alerts, and the daily agent-ecosystem opportunities scan. ' +
       'Premium tools require an Authorization: Bearer tf_live_... token; buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
       'License posture: most data is US Government public domain; commercial redistribution permitted; attribution preserved on every response.',
   };

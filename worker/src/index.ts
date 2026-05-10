@@ -72,6 +72,13 @@ import {
   USGS_VALID_PERIODS,
 } from './climate-usgs-earthquakes';
 import {
+  parseNWSAlertsQuery,
+  fetchNWSAlerts,
+  NWS_VALID_SEVERITIES,
+  NWS_VALID_URGENCIES,
+  NWS_VALID_STATUSES,
+} from './climate-nws-alerts';
+import {
   parseFDAQuery,
   parseFDAAggregateQuery,
   fetchFDAQuery,
@@ -2011,6 +2018,7 @@ export default {
           climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
           climatePowerParameters: '/api/climate/power/parameters (free; curated NASA POWER parameter catalog with units and longnames)',
           climateEarthquakes: '/api/climate/earthquakes?magnitude=significant|4.5|2.5|1.0|all&period=hour|day|week|month&limit=1-500 (free; USGS Earthquake Hazards Program pre-built summary feeds. License: US Gov public domain. Returns flattened earthquake list with id, magnitude, place, time, depth, lat/lon, tsunami flag, USGS detail URL. Cache TTL scales with feed window)',
+          climateWeatherAlerts: '/api/climate/weather-alerts?area=US-state-code&event=NWS-event-name&severity=Extreme|Severe|Moderate|Minor|Unknown&urgency=Immediate|Expected|Future|Past|Unknown&status=actual|exercise|system|test|draft&limit=1-500 (free; NWS Active Weather Alerts. US-only coverage. License: US Gov public domain. Returns flattened alerts list with id, event, severity, urgency, headline, description, areaDesc, sent/effective/expires/ends, sender_name, web URL. 60s cache TTL since active-alert state changes minute by minute)',
           mcpHttp: '/api/mcp (free; hosted MCP Streamable HTTP transport, JSON-RPC 2.0 over POST. Compatible with Anthropic Claude Code, vertical agent repos, claude.ai connectors, and other MCP-compliant clients. GET returns discovery info; POST expects JSON-RPC envelope. ~12 tools in V1: news, status, models, MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR search + submissions + ticker lookup, EIA series)',
           healthFDADrugEvents: '/api/health/fda/drug/events?search=&limit=1-100&skip=&sort= (free; FDA Adverse Event Reporting System (FAERS), 10M+ records. License: CC0)',
           healthFDADrugLabels: '/api/health/fda/drug/labels?search=&limit=1-100&skip=&sort= (free; structured drug labels in SPL format)',
@@ -5642,6 +5650,46 @@ export default {
     // with the feed window (60s for the hour feeds, 900s for the month
     // feeds). Returns a flattened earthquake list rather than raw GeoJSON
     // so most agents can read it without geometry-processing knowledge.
+
+    // === CLIMATE: NWS Active Weather Alerts (free) ===
+    // Lazy-proxy to NWS active alerts endpoint, refreshed in real time
+    // upstream. License: US Government public domain (17 USC §105).
+    // Coverage is US states, territories, and marine zones — NWS is
+    // US-only. Each unique filter combo is cached in KV with a 60s TTL
+    // since active-alerts state changes minute by minute.
+
+    if (path === '/api/climate/weather-alerts') {
+      const parsed = parseNWSAlertsQuery(url);
+      if (!parsed.ok || !parsed.query) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+      const result = await fetchNWSAlerts(env, parsed.query);
+      const status = result.ok
+        ? 200
+        : result.http_status === 429
+          ? 503
+          : 502;
+      return jsonResponse(
+        {
+          ok: result.ok,
+          tier: 'free',
+          source: result.source,
+          fetched_at: result.fetched_at,
+          query: result.query,
+          ...(result.feed_metadata ? { feed_metadata: result.feed_metadata } : {}),
+          ...(result.alerts ? { count: result.alerts.length, alerts: result.alerts } : {}),
+          attribution: result.attribution,
+          ...(result.error ? { error: result.error } : {}),
+          allowed: {
+            severities: NWS_VALID_SEVERITIES,
+            urgencies: NWS_VALID_URGENCIES,
+            statuses: NWS_VALID_STATUSES,
+          },
+        },
+        status,
+        result.ok ? 60 : 60,
+      );
+    }
 
     if (path === '/api/climate/earthquakes') {
       const parsed = parseEarthquakeQuery(url);

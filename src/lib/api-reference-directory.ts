@@ -454,6 +454,103 @@ for (const m of models) console.log(\`\${m.name}: \${m.pricingAmount}/sec\`);`,
     ],
   },
   {
+    slug: 'climate-weather-alerts',
+    name: 'NWS US Weather Alerts',
+    path: '/api/climate/weather-alerts',
+    method: 'GET',
+    tier: 'free',
+    cost: 'Free',
+    category: 'climate',
+    seoTitle: 'TensorFeed NWS Weather Alerts API: Live US Severe-Weather Feed',
+    seoDescription:
+      'TensorFeed /api/climate/weather-alerts returns active US weather alerts from the National Weather Service. Public domain. Free.',
+    intro:
+      "Active US weather alerts from the National Weather Service: tornado warnings, severe thunderstorm warnings, flood warnings, winter storm warnings, heat advisories, fire weather watches, etc. The active-alerts endpoint always reflects the currently-in-effect set; expired alerts fall off automatically. TensorFeed proxies it with a 60-second KV cache since active-alert state changes minute by minute.",
+    whenToUse:
+      "When an agent needs to know what severe weather is currently in effect anywhere in the US — for travel decisions, location-aware briefings, alert routing, or pairing with population/news feeds. Filter by 2-letter state code (area), exact event name (e.g. 'Tornado Warning', 'Heat Advisory'), severity, urgency, or status. Coverage is US states, territories, and marine zones; NWS is US-only.",
+    params: [
+      { name: 'area', in: 'query', type: 'string', description: '2-letter US state or territory code (CA, TX, PR, etc)', example: 'CA' },
+      { name: 'event', in: 'query', type: 'string', description: 'Exact NWS event name', example: 'Tornado Warning' },
+      { name: 'severity', in: 'query', type: 'string', description: 'Extreme | Severe | Moderate | Minor | Unknown', example: 'Severe' },
+      { name: 'urgency', in: 'query', type: 'string', description: 'Immediate | Expected | Future | Past | Unknown', example: 'Immediate' },
+      { name: 'status', in: 'query', type: 'string', description: 'actual | exercise | system | test | draft', example: 'actual' },
+      { name: 'limit', in: 'query', type: 'number', description: 'Max alerts to return (1-500)', example: '50' },
+    ],
+    exampleResponse: `{
+  "ok": true,
+  "tier": "free",
+  "source": "live",
+  "fetched_at": "2026-05-09T17:14:00Z",
+  "query": { "area": "CA", "event": null, "severity": null, "urgency": null, "status": null, "limit": 50 },
+  "feed_metadata": {
+    "title": "Current Watches, Warnings and Advisories for California Issued by the National Weather Service",
+    "updated": "2026-05-09T17:13:42Z",
+    "upstream_count": 4
+  },
+  "count": 4,
+  "alerts": [
+    {
+      "id": "urn:oid:2.49.0.1.840.0.abc",
+      "event": "Heat Advisory",
+      "severity": "Moderate",
+      "urgency": "Expected",
+      "certainty": "Likely",
+      "headline": "Heat Advisory issued May 9 at 10:13AM PDT until May 10 at 8:00PM PDT",
+      "area_desc": "Los Angeles County Coast including Downtown Los Angeles; Santa Monica Mountains; San Fernando Valley",
+      "sent": "2026-05-09T17:13:00Z",
+      "effective": "2026-05-09T17:13:00Z",
+      "expires": "2026-05-11T03:00:00Z",
+      "ends": "2026-05-11T03:00:00Z",
+      "sender_name": "NWS Los Angeles/Oxnard CA",
+      "status": "Actual",
+      "web": "https://alerts.weather.gov/cap/wwacapget.php?x=CA126C39B7D1D4.HeatAdvisory"
+    }
+  ],
+  "attribution": {
+    "source": "NWS Active Weather Alerts (api.weather.gov)",
+    "license": "US Government work in the public domain (17 USC §105)",
+    "redistribution": "commercial-permitted"
+  },
+  "allowed": {
+    "severities": ["Extreme", "Severe", "Moderate", "Minor", "Unknown"],
+    "urgencies": ["Immediate", "Expected", "Future", "Past", "Unknown"],
+    "statuses": ["actual", "exercise", "system", "test", "draft"]
+  }
+}`,
+    pythonExample: `from tensorfeed import TensorFeed
+tf = TensorFeed()
+data = tf._get("/climate/weather-alerts", area="CA", severity="Severe")
+for a in data.get("alerts", []):
+    print(f"[{a['severity']}] {a['event']}: {a['area_desc']}")`,
+    typescriptExample: `const res = await fetch("https://tensorfeed.ai/api/climate/weather-alerts?area=TX&event=Tornado+Warning");
+const { alerts } = await res.json();
+for (const a of alerts) console.log(\`[\${a.severity}] \${a.event}: \${a.area_desc}\`);`,
+    mcpTool: 'get_weather_alerts',
+    relatedSlugs: ['climate-earthquakes', 'premium-clean-power-daily'],
+    faqs: [
+      {
+        q: 'What event names does NWS use?',
+        a: 'NWS uses canonical English event names like "Tornado Warning", "Severe Thunderstorm Warning", "Flood Watch", "Heat Advisory", "Winter Storm Warning", "Fire Weather Watch", "Special Marine Warning", "Tsunami Warning", and dozens more. The full list is on the NWS Common Alerting Protocol page; pass the exact string as the event filter.',
+      },
+      {
+        q: 'How fresh is the data?',
+        a: "Active-alert state at api.weather.gov reflects the currently-in-effect set in real time. TensorFeed adds a 60-second KV cache to absorb traffic spikes during severe weather events without hammering NWS. Expired alerts fall off the upstream feed automatically.",
+      },
+      {
+        q: 'What is the severity scale?',
+        a: 'Per the Common Alerting Protocol (CAP) standard NWS uses: Extreme = extraordinary threat to life/property; Severe = significant threat; Moderate = possible threat; Minor = minimal threat; Unknown = severity unknown. For routing decisions, treat Extreme + Severe as actionable.',
+      },
+      {
+        q: 'Coverage?',
+        a: 'US states, US territories (PR, GU, VI, AS, MP), and US marine zones. NWS is US-only; for international weather, use a different provider.',
+      },
+      {
+        q: 'License?',
+        a: 'NWS data is US Government work in the public domain (17 USC §105). Commercial redistribution is permitted; the standard attribution block ships on every TensorFeed response.',
+      },
+    ],
+  },
+  {
     slug: 'climate-earthquakes',
     name: 'USGS Recent Earthquakes',
     path: '/api/climate/earthquakes',
