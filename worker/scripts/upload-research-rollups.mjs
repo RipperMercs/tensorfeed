@@ -1,0 +1,285 @@
+#!/usr/bin/env node
+/**
+ * Upload arXiv research rollups to TENSORFEED_CACHE KV.
+ *
+ * Reads a directory of rollup JSON files produced by the offline pipeline
+ * (tensorfeed-research/pipelines/ai-research/rollup.py) and writes them to
+ * KV under three keys consumed by /api/premium/research/* endpoints:
+ *
+ *   arxiv-research:rollup_milestones           <- rollup_milestones.json verbatim
+ *   arxiv-research:rollup_keywords             <- rollup_keywords.json verbatim
+ *   arxiv-research:rollup_topic_search_index   <- projected from papers.json
+ *
+ * The topic-search index is built here, not by rollup.py, because KV has a
+ * 25 MB per-value cap and a full papers.json (potentially 100-200 MB) does
+ * not fit. The projection keeps the most-recent N papers (default 30,000)
+ * and a leaner shape (arxiv_id, date, title, subfield_tag, methodology_bucket,
+ * is_milestone_candidate, affiliations, summary).
+ *
+ * Usage:
+ *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path>
+ *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --max-papers 25000
+ *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --dry-run
+ *
+ * Pre-reqs:
+ *   - Wrangler v3+ installed (verified: 3.114.x at scaffold time)
+ *   - Run from worker/ directory OR pass --cwd (we re-cd to worker/ either way)
+ *   - Authenticated to Cloudflare (wrangler login)
+ *   - TENSORFEED_CACHE namespace defined in wrangler.toml (already is)
+ */
+
+import { existsSync, readFileSync, statSync, writeFileSync, mkdtempSync, unlinkSync, rmSync } from 'node:fs';
+import { join, resolve, dirname } from 'node:path';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+
+const __filename = fileURLToPath(import.meta.url);
+const WORKER_DIR = resolve(dirname(__filename), '..');
+
+const KV_BINDING = 'TENSORFEED_CACHE';
+const KEYS = {
+  milestones: 'arxiv-research:rollup_milestones',
+  keywords: 'arxiv-research:rollup_keywords',
+  topicIndex: 'arxiv-research:rollup_topic_search_index',
+};
+const SOURCE_FILES = {
+  milestones: 'rollup_milestones.json',
+  keywords: 'rollup_keywords.json',
+  papers: 'papers.json',
+};
+const DEFAULT_MAX_PAPERS = 30_000;
+const KV_VALUE_HARD_CAP = 24 * 1024 * 1024; // 24 MB to stay under the 25 MB KV cap
+
+// ── CLI parsing ─────────────────────────────────────────────────────
+
+function parseArgs(argv) {
+  const args = { rollupsDir: null, maxPapers: DEFAULT_MAX_PAPERS, dryRun: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--rollups-dir') args.rollupsDir = argv[++i];
+    else if (a === '--max-papers') args.maxPapers = parseInt(argv[++i], 10);
+    else if (a === '--dry-run') args.dryRun = true;
+    else if (a === '-h' || a === '--help') {
+      console.log('Usage: upload-research-rollups.mjs --rollups-dir <path> [--max-papers N] [--dry-run]');
+      process.exit(0);
+    } else {
+      console.error(`Unknown arg: ${a}`);
+      process.exit(1);
+    }
+  }
+  if (!args.rollupsDir) {
+    console.error('Missing required --rollups-dir');
+    process.exit(1);
+  }
+  if (!Number.isFinite(args.maxPapers) || args.maxPapers <= 0) {
+    console.error(`Invalid --max-papers: ${args.maxPapers}`);
+    process.exit(1);
+  }
+  return args;
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────
+
+function fmtBytes(n) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(2)} MB`;
+}
+
+function color(s, c) {
+  const codes = { red: 31, green: 32, yellow: 33, gray: 90, cyan: 36 };
+  return process.stdout.isTTY ? `\x1b[${codes[c] ?? 0}m${s}\x1b[0m` : s;
+}
+
+function loadJson(path) {
+  let buf = readFileSync(path, 'utf-8');
+  // Strip a UTF-8 BOM if present (some editors / PowerShell add one).
+  if (buf.charCodeAt(0) === 0xFEFF) buf = buf.slice(1);
+  try {
+    return JSON.parse(buf);
+  } catch (e) {
+    throw new Error(`Failed to parse ${path}: ${e.message}`);
+  }
+}
+
+// ── Topic-search index projection ───────────────────────────────────
+
+function buildTopicSearchIndex(papers, maxPapers) {
+  if (!Array.isArray(papers)) {
+    throw new Error('papers.json is not an array');
+  }
+
+  // Sort by date desc and cap. Skip records with missing/invalid dates first
+  // so they don't waste capacity.
+  const sorted = papers
+    .filter((p) => p && typeof p.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.date))
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+    .slice(0, maxPapers);
+
+  const subfieldSet = new Set();
+  const methodologySet = new Set();
+
+  const projected = sorted.map((p) => {
+    const subfield = typeof p.subfield_tag === 'string' ? p.subfield_tag : 'other';
+    const methodology = typeof p.methodology_bucket === 'string' ? p.methodology_bucket : 'other';
+    subfieldSet.add(subfield);
+    methodologySet.add(methodology);
+
+    const affiliations = Array.isArray(p.affiliations_normalized)
+      ? p.affiliations_normalized.map((a) => String(a)).filter(Boolean)
+      : [];
+
+    return {
+      arxiv_id: String(p.arxiv_id ?? ''),
+      date: p.date,
+      title: typeof p.title === 'string' ? p.title : '',
+      subfield_tag: subfield,
+      methodology_bucket: methodology,
+      is_milestone_candidate: !!p.is_milestone_candidate,
+      affiliations,
+      summary: typeof p.summary_one_sentence === 'string' ? p.summary_one_sentence : '',
+    };
+  });
+
+  return {
+    as_of: sorted[0]?.date ?? new Date().toISOString().slice(0, 10),
+    subfield_tags: [...subfieldSet].sort(),
+    methodology_buckets: [...methodologySet].sort(),
+    papers: projected,
+  };
+}
+
+// ── Wrangler invocation ─────────────────────────────────────────────
+
+function wranglerKvPut(key, payloadPath, dryRun) {
+  const args = [
+    'wrangler', 'kv', 'key', 'put',
+    '--binding', KV_BINDING,
+    '--remote',
+    key,
+    '--path', payloadPath,
+  ];
+  if (dryRun) {
+    console.log(`  ${color('[dry-run]', 'yellow')} npx ${args.join(' ')}`);
+    return { ok: true };
+  }
+  const r = spawnSync('npx', args, {
+    cwd: WORKER_DIR,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    encoding: 'utf-8',
+    shell: process.platform === 'win32', // npx on Windows needs shell:true
+  });
+  if (r.status !== 0) {
+    return { ok: false, stdout: r.stdout, stderr: r.stderr, status: r.status };
+  }
+  return { ok: true, stdout: r.stdout };
+}
+
+// ── Main ────────────────────────────────────────────────────────────
+
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const dir = resolve(args.rollupsDir);
+
+  console.log(color('[upload-research-rollups]', 'cyan'));
+  console.log(`  rollups dir: ${dir}`);
+  console.log(`  worker dir:  ${WORKER_DIR}`);
+  console.log(`  binding:     ${KV_BINDING}`);
+  console.log(`  max papers:  ${args.maxPapers}`);
+  if (args.dryRun) console.log(`  ${color('DRY RUN', 'yellow')}: no KV writes will happen`);
+  console.log();
+
+  // Validate inputs
+  for (const [name, fname] of Object.entries(SOURCE_FILES)) {
+    const p = join(dir, fname);
+    if (!existsSync(p)) {
+      console.error(color(`  missing: ${fname}`, 'red'));
+      console.error(`  expected at: ${p}`);
+      process.exit(1);
+    }
+    const sz = statSync(p).size;
+    console.log(`  found: ${fname.padEnd(28)} ${fmtBytes(sz)}`);
+  }
+  console.log();
+
+  // 1. Build topic-search index from papers.json
+  console.log(color('  building topic-search index...', 'gray'));
+  const papersPath = join(dir, SOURCE_FILES.papers);
+  const papers = loadJson(papersPath);
+  const index = buildTopicSearchIndex(papers, args.maxPapers);
+  console.log(`    papers loaded:        ${papers.length}`);
+  console.log(`    papers in index:      ${index.papers.length}`);
+  console.log(`    subfield tags:        ${index.subfield_tags.length} (${index.subfield_tags.slice(0, 5).join(', ')}${index.subfield_tags.length > 5 ? ', ...' : ''})`);
+  console.log(`    methodology buckets:  ${index.methodology_buckets.length}`);
+  console.log(`    as_of:                ${index.as_of}`);
+
+  const tmp = mkdtempSync(join(tmpdir(), 'tensorfeed-research-upload-'));
+  const indexPath = join(tmp, 'topic_search_index.json');
+  const indexJson = JSON.stringify(index);
+  writeFileSync(indexPath, indexJson, 'utf-8');
+  const indexSize = statSync(indexPath).size;
+  console.log(`    index file size:      ${fmtBytes(indexSize)}`);
+  if (indexSize > KV_VALUE_HARD_CAP) {
+    console.error(color(`    ERROR: index is ${fmtBytes(indexSize)}, exceeds 24 MB safety cap`, 'red'));
+    console.error('    rerun with a smaller --max-papers (e.g., --max-papers 20000)');
+    rmSync(tmp, { recursive: true, force: true });
+    process.exit(1);
+  }
+  console.log();
+
+  // 2. Verify other rollups fit too (lighter validation, they should)
+  const milestonesPath = join(dir, SOURCE_FILES.milestones);
+  const keywordsPath = join(dir, SOURCE_FILES.keywords);
+  for (const [label, path] of [['rollup_milestones.json', milestonesPath], ['rollup_keywords.json', keywordsPath]]) {
+    const sz = statSync(path).size;
+    if (sz > KV_VALUE_HARD_CAP) {
+      console.error(color(`  ERROR: ${label} is ${fmtBytes(sz)}, exceeds 24 MB safety cap`, 'red'));
+      rmSync(tmp, { recursive: true, force: true });
+      process.exit(1);
+    }
+  }
+
+  // 3. Upload all 3 keys via wrangler kv key put
+  console.log(color('  uploading to KV...', 'gray'));
+  const uploads = [
+    [KEYS.milestones, milestonesPath, 'rollup_milestones.json'],
+    [KEYS.keywords, keywordsPath, 'rollup_keywords.json'],
+    [KEYS.topicIndex, indexPath, 'topic_search_index.json (built)'],
+  ];
+
+  let failures = 0;
+  for (const [key, path, label] of uploads) {
+    process.stdout.write(`    ${key.padEnd(45)} <- ${label} ... `);
+    const r = wranglerKvPut(key, path, args.dryRun);
+    if (r.ok) {
+      console.log(color('ok', 'green'));
+    } else {
+      console.log(color('FAILED', 'red'));
+      console.error(color(`      stdout: ${(r.stdout || '').trim()}`, 'gray'));
+      console.error(color(`      stderr: ${(r.stderr || '').trim()}`, 'gray'));
+      failures += 1;
+    }
+  }
+
+  // Cleanup
+  rmSync(tmp, { recursive: true, force: true });
+
+  console.log();
+  if (failures > 0) {
+    console.error(color(`  ${failures}/${uploads.length} uploads failed`, 'red'));
+    process.exit(1);
+  }
+  if (args.dryRun) {
+    console.log(color(`  dry run complete. ${uploads.length} commands would have run.`, 'yellow'));
+  } else {
+    console.log(color(`  done. ${uploads.length} keys uploaded to ${KV_BINDING}.`, 'green'));
+    console.log();
+    console.log('  Verify with:');
+    console.log(`    curl https://tensorfeed.ai/api/premium/research/milestones -H "Authorization: Bearer <token>"`);
+    console.log(`    curl https://tensorfeed.ai/api/premium/research/emerging-keywords -H "Authorization: Bearer <token>"`);
+    console.log(`    curl "https://tensorfeed.ai/api/premium/research/topic-search?limit=5" -H "Authorization: Bearer <token>"`);
+  }
+}
+
+main();
