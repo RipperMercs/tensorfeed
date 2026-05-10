@@ -183,6 +183,7 @@ import {
 import { readPolicyRegistry } from './ai-policy-registry';
 import { readFundingRegistry } from './ai-funding-registry';
 import { computeFundingExposure } from './premium-funding-exposure';
+import { captureLeaderboard as captureHfLeaderboard, readLatest as readHfLeaderboardLatest } from './hf-leaderboard';
 import {
   refreshPyPITrending,
   readPyPITrending,
@@ -2044,6 +2045,7 @@ export default {
           papersAiTrending: '/api/papers/ai-trending',
           papersArxivRecent: '/api/papers/arxiv-recent',
           hfTrending: '/api/hf/trending',
+          hfLeaderboard: '/api/hf-leaderboard/latest?limit=50&min_average= (free; daily snapshot of the Hugging Face Open LLM Leaderboard v2: rank, model_id, params_b, precision, license, base_model, type, average, IFEval/BBH/MATH-Lvl-5/GPQA/MUSR/MMLU-PRO scores. Captured at 04:45 UTC from the open-llm-leaderboard/contents dataset, CC-BY-SA.)',
           issuesHot: '/api/issues/hot',
           redditTrending: '/api/reddit/trending',
           openrouterModels: '/api/openrouter/models',
@@ -2143,7 +2145,7 @@ export default {
           usageDates: '/api/admin/usage/dates?key=<ADMIN_KEY>',
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -3093,6 +3095,30 @@ export default {
         return jsonResponse({ ok: false, error: 'hf_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);
+    }
+
+    // === HF OPEN LLM LEADERBOARD (free) ===
+    // Daily snapshot of the Hugging Face Open LLM Leaderboard v2 captured
+    // at 04:45 UTC from the open-llm-leaderboard/contents dataset (CC-BY-SA).
+    // Six v2 tasks: IFEval, BBH, MATH Lvl 5, GPQA, MUSR, MMLU-PRO. Each entry
+    // carries rank, model_id, params_b, precision, license, base_model, type,
+    // average, and per-task scores. Query: ?limit=N (default 50, max 500)
+    // &min_average=X. Multi-day rank + score history compounds for the
+    // premium series endpoints (post-Phase 2).
+
+    if (path === '/api/hf-leaderboard/latest') {
+      const limitParam = url.searchParams.get('limit');
+      const minAvgParam = url.searchParams.get('min_average');
+      const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+      const minAvg = minAvgParam ? parseFloat(minAvgParam) : undefined;
+      const result = await readHfLeaderboardLatest(env, {
+        limit: Number.isFinite(limit as number) ? limit : undefined,
+        min_average: Number.isFinite(minAvg as number) ? minAvg : undefined,
+      });
+      if (!result.ok) {
+        return jsonResponse(result, 503);
+      }
+      return jsonResponse(result, 200, 1800);
     }
 
     // === GITHUB HOT AI ISSUES (free) ===
@@ -7055,6 +7081,10 @@ export default {
         const result = await refreshOpenAlexAIInstitutions(env);
         return jsonResponse({ message: 'OpenAlex AI institutions refreshed', ...result });
       }
+      if (task === 'hf-leaderboard') {
+        const result = await captureHfLeaderboard(env);
+        return jsonResponse({ message: 'HF Open LLM Leaderboard captured', ...result });
+      }
       if (task === 'nflverse') {
         const result = await captureNFLverseDaily(env);
         return jsonResponse({ message: 'nflverse players + schedule captured', ...result });
@@ -7385,6 +7415,24 @@ export default {
       // Powers /api/security/cve/recent, /api/security/cve/by-date,
       // /api/security/cve/dates, and premium /api/premium/security/cve/range.
       await run('captureRecentCVEs', () => captureRecentCVEs(env));
+    } else if (cron === '45 4 * * *') {
+      // Daily 04:45 UTC: capture Hugging Face Open LLM Leaderboard v2.
+      // Paginates the open-llm-leaderboard/contents dataset via the
+      // public datasets-server.huggingface.co API. Normalizes field
+      // names (HF uses emoji-prefixed column names that occasionally
+      // drift), validates >=50 models + per-task coverage before commit
+      // so a one-off upstream schema shift never corrupts the dated
+      // history. Writes hf-leaderboard:latest + hf-leaderboard:date:{date}
+      // + updates hf-leaderboard:dates index. Powers free
+      // /api/hf-leaderboard/latest and future premium series endpoints.
+      await run('captureHfLeaderboard', async () => {
+        const r = await captureHfLeaderboard(env);
+        if (!r.ok) {
+          console.error(`hf-leaderboard capture failed: ${r.reason}`);
+          return;
+        }
+        console.log(`hf-leaderboard captured ${r.total_models} models for ${r.capturedAt}`);
+      });
     } else if (cron === '30 6 * * *') {
       // Daily 06:30 UTC: refresh the CISA KEV catalog (single ~3 MB JSON
       // from cisa.gov). License: US Government public domain. Writes the

@@ -100,6 +100,14 @@ crons = [
   # hitting EDGAR filings or XBRL fundamentals). Slot picked to land
   # between OpenAlex (04:00) and BLS (05:00).
   "15 4 * * *",
+  # Daily 04:45 UTC: capture Hugging Face Open LLM Leaderboard v2
+  # (worker/src/hf-leaderboard.ts). Paginates the open-llm-leaderboard/contents
+  # dataset via the public datasets-server.huggingface.co API. Normalizes
+  # field names, validates >50 models + per-task coverage before commit,
+  # writes hf-leaderboard:latest + hf-leaderboard:date:YYYY-MM-DD. Powers
+  # free /api/hf-leaderboard/latest and the premium series endpoints once
+  # multiple days accumulate. Slot picked between CVE (04:30) and BLS (05:00).
+  "45 4 * * *",
   # Daily 04:30 UTC: walk the cvelistV5 GitHub repo's commit history
   # (worker/src/security-cve.ts) for the last 36h, harvest added or
   # modified CVE-* file paths, populate cve:recent ring + cve:by-date
