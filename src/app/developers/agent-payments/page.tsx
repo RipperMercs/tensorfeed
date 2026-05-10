@@ -1138,6 +1138,95 @@ const ENDPOINTS: PremiumEndpoint[] = [
   }
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/premium/research/milestones',
+    description:
+      "Last 30 days of arXiv preprints flagged is_milestone_candidate by an offline Qwen 3.6 27B per-paper extraction. Each paper carries arxiv_id, date, subfield_tag, methodology_bucket, title, normalized affiliations, milestone_reasoning (named benchmark plus quantified delta, model release, or novel architecture), and a one-sentence summary. Conservative by design: false positives are worse than false negatives. Refreshed weekly. arXiv data is CC-BY; the per-paper extraction and milestone classification are the gate.",
+    cost: '1 credit per call',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-05-10",
+  "window_days": 30,
+  "total": 12,
+  "papers": [
+    {
+      "arxiv_id": "2026.04001",
+      "date": "2026-04-15",
+      "subfield_tag": "llm-alignment",
+      "methodology_bucket": "empirical-study",
+      "title": "Constitutional AI for Multi-Turn Dialogue Safety",
+      "affiliations": ["Anthropic"],
+      "milestone_reasoning": "Established new SOTA on HHH-Eval at 87.4%, prior 81.2%.",
+      "summary": "Extended constitutional AI methodology to multi-turn dialogue with new SOTA on HHH-Eval."
+    }
+  ],
+  "attribution": { "source": "arXiv (preprint metadata) + TensorFeed Qwen-extracted analytical fields", ... },
+  "billing": { "credits_charged": 1, "credits_remaining": 41 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/research/emerging-keywords',
+    description:
+      "Top-50 multi-word keyphrases across recent arXiv abstracts, ranked by recent-vs-baseline lift. lift = (last 30d frequency) / (prior 90d frequency, smoothed). Each entry carries 2 to 5 example arxiv_ids so the agent can dive into a specific paper. Captures emerging research terminology before it shows up in citation counts. Refreshed weekly from the offline pipeline.",
+    cost: '1 credit per call',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-05-10",
+  "recent_window_days": 30,
+  "baseline_window_days": 90,
+  "total": 50,
+  "keywords": [
+    {
+      "keyword": "speculative decoding",
+      "recent_count": 18,
+      "baseline_count": 6,
+      "lift": 9.1,
+      "example_arxiv_ids": ["2026.04111", "2026.04222", "2026.04333"]
+    }
+  ],
+  "attribution": { ... },
+  "billing": { "credits_charged": 1, "credits_remaining": 40 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/research/topic-search',
+    description:
+      "Structured search over the arXiv preprint corpus using the TF derived taxonomy. Filters: subfield_tag, methodology_bucket, since (YYYY-MM-DD), until (YYYY-MM-DD), milestone_only (1 or 0), limit (1 to 100, default 25), offset (paginate). subfield_tag is one of llm-architecture, llm-training, llm-eval, llm-alignment, multimodal, vision, speech, robotics, rl, theory, optimization, efficiency, retrieval, agents, code-generation, scientific-ml, fairness-safety, dataset, survey, application, other. methodology_bucket is one of new-architecture, training-recipe, fine-tuning, eval-benchmark, theoretical-analysis, empirical-study, dataset-release, system-tooling, survey, position-paper, application, other. Returns matching papers sorted by date desc. arXiv's native search has no concept of methodology bucket or our subfield taxonomy; that's the gate.",
+    cost: '1 credit per call',
+    example: `// Query: ?subfield_tag=agents&methodology_bucket=system-tooling&since=2026-04-01&limit=5
+{
+  "ok": true,
+  "capturedAt": "2026-05-10",
+  "query": {
+    "subfield_tag": "agents",
+    "methodology_bucket": "system-tooling",
+    "since": "2026-04-01",
+    "until": null,
+    "milestone_only": false,
+    "limit": 5,
+    "offset": 0
+  },
+  "total_matches": 73,
+  "returned": 5,
+  "papers": [
+    {
+      "arxiv_id": "2026.05003",
+      "date": "2026-05-05",
+      "title": "Agent Memory via Retrieval Over Episodic Logs",
+      "subfield_tag": "agents",
+      "methodology_bucket": "system-tooling",
+      "is_milestone_candidate": false,
+      "affiliations": ["MIT", "OpenAI"],
+      "summary": "Introduced an episodic-log retrieval mechanism for long-running agent memory."
+    }
+  ],
+  "attribution": { ... },
+  "billing": { "credits_charged": 1, "credits_remaining": 39 }
+}`,
+  },
 ];
 
 const PYTHON_QUICKSTART = `from tensorfeed import TensorFeed
