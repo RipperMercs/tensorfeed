@@ -105,6 +105,27 @@ const tests = [
     happyKeys: ['totals_by_direction', 'packages', 'notable_movers', 'attribution'],
     okErrors: ['no_snapshot_yet'],
   },
+  {
+    id: 'arxiv-milestones',
+    name: 'arXiv milestone detector',
+    path: '/api/premium/research/milestones',
+    happyKeys: ['window_days', 'total', 'papers', 'attribution'],
+    okErrors: ['no_snapshot_yet'],
+  },
+  {
+    id: 'arxiv-emerging-keywords',
+    name: 'arXiv emerging keywords',
+    path: '/api/premium/research/emerging-keywords',
+    happyKeys: ['recent_window_days', 'baseline_window_days', 'total', 'keywords', 'attribution'],
+    okErrors: ['no_snapshot_yet'],
+  },
+  {
+    id: 'arxiv-topic-search',
+    name: 'arXiv topic search',
+    path: '/api/premium/research/topic-search?limit=5',
+    happyKeys: ['query', 'total_matches', 'returned', 'papers', 'attribution'],
+    okErrors: ['no_snapshot_yet'],
+  },
   // Existing premium endpoints that pre-date today (regression coverage)
   {
     id: 'whats-new',

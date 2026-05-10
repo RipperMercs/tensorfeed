@@ -58,6 +58,15 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // with a fresh 30-day fetch cached 24h. SLA matches the longer of
   // the two windows.
   '/api/premium/research/velocity': { maxAgeSeconds: 24 * 60 * 60 },
+  // arXiv milestones: rebuilt offline from a Qwen extraction round on
+  // the last 30 days of preprints. Refresh cadence is weekly. 7-day SLA
+  // so a delayed refresh (e.g. server outage on the dev rig) triggers
+  // no-charge rather than serving stale data silently.
+  '/api/premium/research/milestones': { maxAgeSeconds: 7 * 24 * 60 * 60 },
+  // arXiv emerging keywords: same offline pipeline, weekly refresh.
+  '/api/premium/research/emerging-keywords': { maxAgeSeconds: 7 * 24 * 60 * 60 },
+  // arXiv topic search: weekly index rebuild.
+  '/api/premium/research/topic-search': { maxAgeSeconds: 7 * 24 * 60 * 60 },
   // Recession watch: synthesis over BLS + FRED daily snapshots. 24h
   // matches the cron cadence of underlying data.
   '/api/premium/economy/recession-watch': { maxAgeSeconds: 24 * 60 * 60 },

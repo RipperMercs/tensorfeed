@@ -199,6 +199,13 @@ import {
 } from './premium-economy-history';
 import { computePackagesMomentum } from './premium-packages-momentum';
 import { computeResearchVelocity } from './premium-research-velocity';
+import {
+  computeMilestones as computeArxivMilestones,
+  computeEmergingKeywords as computeArxivEmergingKeywords,
+  computeTopicSearch as computeArxivTopicSearch,
+  loadTopicSearchTaxonomies as loadArxivTaxonomies,
+  validateTopicSearchInput as validateArxivTopicSearchInput,
+} from './premium-research-arxiv';
 import { computeRecessionWatch } from './premium-recession-watch';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
@@ -2103,6 +2110,9 @@ export default {
           premiumEconomySeriesHistory: '/api/premium/economy/series/{bls|fred}/{series_id} (1 credit; full upstream history with YoY paired series, 3-month and 12-month moving averages, min/max, trend direction. Free /api/economy/* caps at 24 or 90 obs; this is the full archive plus compute.)',
           premiumPackagesPyPIMomentum: '/api/premium/packages/pypi/momentum (1 credit; momentum + velocity ratio per AI/ML PyPI package over the free trending snapshot, with direction classification, notable-movers, by-category counts. npm momentum follows once rolling snapshot history accumulates.)',
           premiumResearchVelocity: '/api/premium/research/velocity (1 credit; per-institution velocity over the OpenAlex 365-day baseline + fresh 30-day window, with direction classification, notable-movers, by-country and by-type breakdowns)',
+          premiumResearchMilestones: '/api/premium/research/milestones (1 credit; last 30 days of arXiv preprints flagged is_milestone_candidate by an offline Qwen 3.6 27B per-paper extraction pass. Each paper carries structured reasoning stating the named benchmark + quantified delta, model release, or novel architecture justification. Conservative; false positives are worse than false negatives.)',
+          premiumResearchEmergingKeywords: '/api/premium/research/emerging-keywords (1 credit; top-50 multi-word keyphrases across recent arXiv abstracts ranked by recent-vs-baseline lift, last 30d frequency over prior 90d, smoothed. Each entry carries 2-5 example arxiv_ids.)',
+          premiumResearchTopicSearch: '/api/premium/research/topic-search?subfield_tag=&methodology_bucket=&since=&until=&milestone_only=&limit=&offset= (1 credit; structured search over the arXiv preprint corpus using TF derived taxonomy. Filters arXiv by subfield + methodology, dimensions arXiv\'s native search has no concept of.)',
           premiumRecessionWatch: '/api/premium/economy/recession-watch (1 credit; composite recession-risk signal across yield-curve inversion + Sahm rule, with red/yellow/green classification per signal and a composite verdict)',
           premiumMcpRegistrySeries: '/api/premium/mcp/registry/series?from=&to=',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
@@ -6164,6 +6174,110 @@ export default {
         logPremiumUsage(env, '/api/premium/research/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: ARXIV MILESTONE DETECTOR (Tier 1, 1 credit) ===
+    // /api/premium/research/milestones
+    // Returns the last 30 days of arXiv preprints flagged is_milestone_candidate
+    // by our offline Qwen 3.6 27B per-paper extraction pass. Each paper carries
+    // a structured reasoning field stating WHY it cleared the bar (named
+    // benchmark + quantified delta, major model release, or novel architecture).
+    // Conservative by design: false positives are worse than false negatives.
+
+    if (path === '/api/premium/research/milestones') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const result = await computeArxivMilestones(env);
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/research/milestones', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: ARXIV EMERGING KEYWORDS (Tier 1, 1 credit) ===
+    // /api/premium/research/emerging-keywords
+    // Top-50 multi-word keyphrases across recent arXiv abstracts ranked by
+    // recent-vs-baseline lift (last 30d frequency / prior 90d frequency,
+    // smoothed). Each entry carries 2-5 example arxiv_ids so the agent can
+    // dive in. Updated weekly from the offline Qwen extraction.
+
+    if (path === '/api/premium/research/emerging-keywords') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const result = await computeArxivEmergingKeywords(env);
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/research/emerging-keywords', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: ARXIV TOPIC SEARCH (Tier 1, 1 credit) ===
+    // /api/premium/research/topic-search
+    // Structured search over the arXiv preprint corpus using the TF derived
+    // taxonomy. Filters: subfield_tag, methodology_bucket, since, until,
+    // milestone_only. Returns up to 100 papers per call, sorted by date desc.
+    // arXiv's native search has no concept of methodology bucket or our
+    // subfield taxonomy, so this is the gate.
+
+    if (path === '/api/premium/research/topic-search') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const taxonomies = await loadArxivTaxonomies(env);
+      const subfieldList = taxonomies?.subfields ?? null;
+      const methodList = taxonomies?.methodologies ?? null;
+
+      const limitParam = url.searchParams.get('limit');
+      const offsetParam = url.searchParams.get('offset');
+      const milestoneOnlyParam = url.searchParams.get('milestone_only');
+      const limit = limitParam != null ? parseInt(limitParam, 10) : undefined;
+      const offset = offsetParam != null ? parseInt(offsetParam, 10) : undefined;
+      const input = {
+        subfield_tag: url.searchParams.get('subfield_tag') ?? undefined,
+        methodology_bucket: url.searchParams.get('methodology_bucket') ?? undefined,
+        since: url.searchParams.get('since') ?? undefined,
+        until: url.searchParams.get('until') ?? undefined,
+        milestone_only: milestoneOnlyParam === '1' || milestoneOnlyParam === 'true',
+        limit: Number.isFinite(limit as number) ? limit : undefined,
+        offset: Number.isFinite(offset as number) ? offset : undefined,
+      };
+
+      const validation = validateArxivTopicSearchInput(input, subfieldList, methodList);
+      if (validation) {
+        return await premiumValidationFailure(
+          { error: validation.error, ...(validation.hint ? { hint: validation.hint } : {}), ...(validation.valid ? { valid: validation.valid } : {}) },
+          payment, request, env,
+        );
+      }
+
+      const result = await computeArxivTopicSearch(env, input);
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/research/topic-search', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
 
     // === PAID PREMIUM: PYPI PACKAGES MOMENTUM (Tier 1, 1 credit) ===
