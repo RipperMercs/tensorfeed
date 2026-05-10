@@ -199,6 +199,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verified-feed`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/anthropic-200b-google-tpu-math`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/openai-gpt-realtime-2-voice-stack`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/anthropic-spacexai-colossus-orbital`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/verified-feed-trust-layer`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
