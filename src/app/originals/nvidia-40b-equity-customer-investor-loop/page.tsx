@@ -310,7 +310,7 @@ export default function Nvidia40BEquityCustomerInvestorLoopPage() {
 
         <p>
           We are adding the Nvidia portfolio to our{' '}
-          <Link href="/funding" className="text-accent-primary hover:underline">funding tracker</Link>{' '}
+          <Link href="/funding/portfolio" className="text-accent-primary hover:underline">funding portfolio tracker</Link>{' '}
           this week, with each commitment tagged by counterparty silicon dependency. The most useful
           single number for tracking whether the loop is working is going to be the share of frontier
           training compute (in FLOPs) that runs on Nvidia in any given quarter. We will start
