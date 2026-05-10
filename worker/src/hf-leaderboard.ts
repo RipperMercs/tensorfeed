@@ -152,7 +152,7 @@ interface DatasetsServerPage {
   num_rows_per_page?: number;
 }
 
-async function fetchPage(offset: number): Promise<DatasetsServerPage> {
+async function fetchPageOnce(offset: number): Promise<DatasetsServerPage> {
   const url = `${DATASETS_SERVER}/rows?dataset=${encodeURIComponent(DATASET)}&config=default&split=train&offset=${offset}&length=${PAGE_SIZE}`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
@@ -170,12 +170,41 @@ async function fetchPage(offset: number): Promise<DatasetsServerPage> {
   }
 }
 
+const FETCH_MAX_ATTEMPTS = 3;
+const FETCH_BACKOFF_MS = 4_000;
+
+async function fetchPage(offset: number): Promise<DatasetsServerPage> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= FETCH_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await fetchPageOnce(offset);
+    } catch (e) {
+      lastErr = e;
+      if (attempt < FETCH_MAX_ATTEMPTS) {
+        await new Promise((res) => setTimeout(res, FETCH_BACKOFF_MS * attempt));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 export async function fetchLeaderboard(): Promise<LeaderboardSnapshot> {
   const allRows: Record<string, unknown>[] = [];
   let offset = 0;
   let pages = 0;
+  let partial_page_failures: string[] = [];
   while (pages < MAX_PAGES) {
-    const page = await fetchPage(offset);
+    let page: DatasetsServerPage;
+    try {
+      page = await fetchPage(offset);
+    } catch (e) {
+      // After all retries exhausted: keep what we already have if it's
+      // enough to pass validation, log the failure point, and stop
+      // paginating. Partial captures beat losing the whole snapshot.
+      partial_page_failures.push(`offset=${offset}: ${(e as Error).message}`);
+      console.warn(`hf-leaderboard fetch gave up at offset=${offset}: ${(e as Error).message}`);
+      break;
+    }
     const rows = page.rows ?? [];
     if (rows.length === 0) break;
     for (const r of rows) {
@@ -185,6 +214,9 @@ export async function fetchLeaderboard(): Promise<LeaderboardSnapshot> {
     pages += 1;
     if (page.num_rows_total !== undefined && offset >= page.num_rows_total) break;
     if (rows.length < PAGE_SIZE) break;
+  }
+  if (partial_page_failures.length > 0) {
+    console.warn(`hf-leaderboard partial capture: ${allRows.length} rows fetched before pagination aborted (${partial_page_failures.join('; ')})`);
   }
 
   const normalized = allRows.map(normalizeRow).filter((r): r is LeaderboardEntry => r !== null);
