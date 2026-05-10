@@ -80,3 +80,18 @@ specs/
 
 # Stray build / prebuild stdout dumps (not source)
 build-output.txt
+
+# Local-only operator scripts (one-off helpers from PR-submission, audit,
+# token-mint, and notebook-builder workflows). These are internal tooling
+# that wraps live credentials and registry binaries; the canonical scripts
+# (fetch-feeds, generate-llms-full, push-to-huggingface, etc.) stay tracked.
+scripts/build-cookbook-notebook.py
+scripts/build-oai-cookbook-nb.py
+scripts/fetch-oai-mcp-nb.py
+scripts/inspect-cookbook.py
+scripts/oai-mcp-guide.ipynb
+scripts/validate-cookbook-nb.py
+scripts/push-via-gh-api.py
+scripts/mint-test-token.ps1
+scripts/phase-2-premium-audit.ps1
+scripts/mcp-registry/
