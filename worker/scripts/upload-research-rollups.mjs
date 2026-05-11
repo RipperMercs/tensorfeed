@@ -155,11 +155,12 @@ function buildTopicSearchIndex(papers, maxPapers) {
 // ── Wrangler invocation ─────────────────────────────────────────────
 
 function wranglerKvPut(key, payloadPath, dryRun) {
+  // Wrangler 3.x removed --remote (remote is default; --local is opt-in for
+  // local storage). The key must be the first positional after `put`.
   const args = [
     'wrangler', 'kv', 'key', 'put',
-    '--binding', KV_BINDING,
-    '--remote',
     key,
+    '--binding', KV_BINDING,
     '--path', payloadPath,
   ];
   if (dryRun) {
