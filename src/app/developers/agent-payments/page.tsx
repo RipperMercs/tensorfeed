@@ -19,7 +19,7 @@ const USDC_BASE_CONTRACT = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 export const metadata: Metadata = {
   title: 'Pay-Per-Call API for AI Agents: USDC on Base, x402 Compatible | TensorFeed',
   description:
-    'The first machine-payable API for AI agents. Pay per call in USDC on Base, no accounts, no API keys, no processors. x402 compatible, MCP ready, Python and TypeScript SDKs. Validated end-to-end on mainnet.',
+    'Machine-payable API for AI agents. Pay per call in USDC on Base, no accounts, no API keys, no processors. x402 V2 compatible, MCP ready, Python and TypeScript SDKs. Validated end-to-end on mainnet.',
   alternates: {
     canonical: 'https://tensorfeed.ai/developers/agent-payments',
   },
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     card: 'summary',
     title: 'Pay-Per-Call API for AI Agents: USDC on Base',
     description:
-      'The first machine-payable API for AI agents. x402 compatible, MCP ready, validated on Base mainnet.',
+      'Machine-payable API for AI agents. x402 V2 compatible, MCP ready, validated on Base mainnet.',
   },
   keywords: [
     'AI agent payment API',
