@@ -211,6 +211,7 @@ import {
   computeLabProductivity as computeArxivLabProductivity,
   validateLabProductivityInput as validateArxivLabProductivityInput,
 } from './premium-research-arxiv';
+import { refreshX402Registry, getLatestX402Registry } from './x402-registry';
 import { computeRecessionWatch } from './premium-recession-watch';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
@@ -2044,6 +2045,7 @@ export default {
           uptimeBadge: '/api/badge/uptime/{slug} (free SVG; embeddable shields.io-style uptime badge for any monitored provider; 7-day rolling)',
           uptimeSeries: '/api/uptime/series?provider={slug}&days=1-7 (free, 7-day cap; daily uptime breakdown for a single provider)',
           mcpRegistrySnapshot: '/api/mcp/registry/snapshot',
+          x402RegistrySnapshot: '/api/x402-registry/snapshot (free; live index of x402-compatible publishers, crawled daily from each domain\'s /.well-known/x402 manifest. Each entry carries status, x402 version, publisher metadata, paid + free endpoint counts, payment wallet, accepts summary, and an AFTA federation flag. Inclusion is not an endorsement; agents must verify wallets on-chain.)',
           papersAiTrending: '/api/papers/ai-trending',
           papersArxivRecent: '/api/papers/arxiv-recent',
           hfTrending: '/api/hf/trending',
@@ -2683,6 +2685,18 @@ export default {
         return jsonResponse({ ok: false, error: 'registry_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, summary }, 200, 600);
+    }
+
+    // === x402 PUBLISHER REGISTRY (free) ===
+    // Live index of x402-compatible publishers, crawled daily from each
+    // domain's /.well-known/x402 manifest. Free, no auth. Powers the
+    // /x402-registry web view.
+    if (path === '/api/x402-registry/snapshot') {
+      const snapshot = await getLatestX402Registry(env);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'registry_not_yet_populated', hint: 'Daily crawl runs at 02:15 UTC; check back after the next cycle.' }, 503);
+      }
+      return jsonResponse({ ok: true, ...snapshot }, 200, 1800);
     }
 
     // === SPORTS / NFL (free) ===
@@ -7522,6 +7536,11 @@ export default {
       // against the stored baseline, fires matching watches, persists
       // new baseline. Cheap when no watches registered.
       await run('runMacroIndicatorWatchCycle', () => runMacroIndicatorWatchCycle(env));
+    } else if (cron === '15 2 * * *') {
+      // Daily 02:15 UTC: crawl the x402 publisher seed list and refresh
+      // the registry snapshot. Politeness-paced (800ms between fetches);
+      // tiny seed list at MVP.
+      await run('refreshX402Registry', () => refreshX402Registry(env));
     }
 
     // Record RSS poll history for the daily summary digest

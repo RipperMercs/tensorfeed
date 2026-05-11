@@ -159,6 +159,13 @@ crons = [
   # X/Twitter: 1 post/day, re-enabled 2026-04-12 after spam flag on 2026-04-04.
   # Hold at 1/day for 30 clean days before bumping to 2/day ("30 8,17 * * *").
   "30 14 * * *",
+  # Daily 02:15 UTC: refresh the x402 publisher registry
+  # (worker/src/x402-registry.ts). Crawls /.well-known/x402 on a small
+  # seed list of domains (AFTA federation + future submissions), parses
+  # each manifest into a normalized entry, stores under x402-reg:* prefix.
+  # Powers free /api/x402-registry/snapshot and the /x402-registry web view.
+  # Slot picked in the early UTC quiet zone away from all other daily crons.
+  "15 2 * * *",
 ]
 
 [[kv_namespaces]]
