@@ -21,6 +21,7 @@
  */
 
 import type { Env } from './types';
+import { readEdgeCacheJSON, writeEdgeCacheJSON } from './edge-cache';
 import { sha256CacheKey } from './cache-key';
 
 const EIA_BASE = 'https://api.eia.gov/v2';
@@ -247,7 +248,7 @@ export async function fetchEIASeries(env: Env, q: EIAQuery): Promise<EIAResult> 
   }
 
   const key = await cacheKey(q);
-  const cached = await env.TENSORFEED_CACHE.get<unknown>(key, 'json');
+  const cached = await readEdgeCacheJSON<unknown>(key);
   if (cached) {
     return {
       ok: true,
@@ -320,7 +321,7 @@ export async function fetchEIASeries(env: Env, q: EIAQuery): Promise<EIAResult> 
     };
   }
 
-  await env.TENSORFEED_CACHE.put(key, JSON.stringify(payload), { expirationTtl: TTL_QUERY });
+  await writeEdgeCacheJSON(key, payload, TTL_QUERY);
 
   return {
     ok: true,

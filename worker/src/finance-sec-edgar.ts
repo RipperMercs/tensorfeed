@@ -27,6 +27,7 @@
  */
 
 import type { Env } from './types';
+import { readEdgeCacheJSON, writeEdgeCacheJSON } from './edge-cache';
 import { sha256CacheKey } from './cache-key';
 
 const EDGAR_SEARCH = 'https://efts.sec.gov/LATEST/search-index';
@@ -161,7 +162,7 @@ export async function searchEdgar(env: Env, q: EdgarSearchQuery): Promise<EdgarS
     [q.q, q.forms ?? '', q.startdt ?? '', q.enddt ?? '', q.limit, q.page].join('|'),
   )}`;
 
-  const cached = await env.TENSORFEED_CACHE.get<unknown>(cacheKey, 'json');
+  const cached = await readEdgeCacheJSON<unknown>(cacheKey);
   if (cached) {
     return {
       ok: true,
@@ -231,7 +232,7 @@ export async function searchEdgar(env: Env, q: EdgarSearchQuery): Promise<EdgarS
     };
   }
 
-  await env.TENSORFEED_CACHE.put(cacheKey, JSON.stringify(payload), { expirationTtl: TTL_SEARCH });
+  await writeEdgeCacheJSON(cacheKey, payload, TTL_SEARCH);
 
   return {
     ok: true,
@@ -269,7 +270,7 @@ export async function fetchEdgarSubmissions(env: Env, cikInput: string): Promise
   }
 
   const cacheKey = `edgar:submissions:${cik}`;
-  const cached = await env.TENSORFEED_CACHE.get<unknown>(cacheKey, 'json');
+  const cached = await readEdgeCacheJSON<unknown>(cacheKey);
   if (cached) {
     return { ok: true, cik, source: 'cache', fetched_at, data: cached, attribution: ATTRIBUTION };
   }
@@ -330,9 +331,7 @@ export async function fetchEdgarSubmissions(env: Env, cikInput: string): Promise
     };
   }
 
-  await env.TENSORFEED_CACHE.put(cacheKey, JSON.stringify(payload), {
-    expirationTtl: TTL_SUBMISSIONS,
-  });
+  await writeEdgeCacheJSON(cacheKey, payload, TTL_SUBMISSIONS);
 
   return { ok: true, cik, source: 'live', fetched_at, data: payload, attribution: ATTRIBUTION };
 }

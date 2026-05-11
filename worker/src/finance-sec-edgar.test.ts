@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { installFakeCache, InstalledCache } from './edge-cache-test-helpers';
 import {
   parseEdgarSearchQuery,
   searchEdgar,
@@ -121,14 +122,17 @@ describe('parseEdgarSearchQuery', () => {
 describe('searchEdgar', () => {
   let env: Env;
   let originalFetch: typeof globalThis.fetch;
+  let installedCache: InstalledCache;
 
   beforeEach(() => {
     env = makeEnv();
     originalFetch = globalThis.fetch;
+    installedCache = installFakeCache();
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    installedCache.uninstall();
   });
 
   const QUERY = {
@@ -155,8 +159,8 @@ describe('searchEdgar', () => {
     expect(captured).toContain('forms=10-K');
     expect(captured).toContain('startdt=2024-01-01');
 
-    const cache = env.TENSORFEED_CACHE as unknown as MockKV;
-    expect(Array.from(cache.ttls.values())[0]).toBe(60 * 60);
+    const stored = Array.from(installedCache.cache.store.values())[0];
+    expect(stored?.headers.get('cache-control')).toBe(`s-maxage=${60 * 60}`);
   });
 
   it('serves from cache on repeat call', async () => {
@@ -192,14 +196,17 @@ describe('searchEdgar', () => {
 describe('fetchEdgarSubmissions', () => {
   let env: Env;
   let originalFetch: typeof globalThis.fetch;
+  let installedCache: InstalledCache;
 
   beforeEach(() => {
     env = makeEnv();
     originalFetch = globalThis.fetch;
+    installedCache = installFakeCache();
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    installedCache.uninstall();
   });
 
   it('fetches by canonical CIK and caches', async () => {
@@ -214,8 +221,8 @@ describe('fetchEdgarSubmissions', () => {
     expect(result.cik).toBe('0000320193');
     expect(captured).toContain('CIK0000320193.json');
 
-    const cache = env.TENSORFEED_CACHE as unknown as MockKV;
-    expect(cache.ttls.get('edgar:submissions:0000320193')).toBe(6 * 60 * 60);
+    const stored = Array.from(installedCache.cache.store.values())[0];
+    expect(stored?.headers.get('cache-control')).toBe(`s-maxage=${6 * 60 * 60}`);
   });
 
   it('returns cik_not_found on 404', async () => {

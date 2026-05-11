@@ -6,21 +6,14 @@ import {
   USGS_VALID_PERIODS,
 } from './climate-usgs-earthquakes';
 import type { Env } from './types';
+import { installFakeCache, InstalledCache } from './edge-cache-test-helpers';
 
-function makeEnv(initial: Record<string, unknown> = {}): Env {
-  const store = new Map<string, string>(
-    Object.entries(initial).map(([k, v]) => [k, JSON.stringify(v)]),
-  );
-  const cache = {
-    get: vi.fn(async (key: string, _type?: 'json') => {
-      const raw = store.get(key);
-      return raw ? JSON.parse(raw) : null;
-    }),
-    put: vi.fn(async (key: string, value: string) => {
-      store.set(key, value);
-    }),
-  };
-  return { TENSORFEED_CACHE: cache } as unknown as Env;
+function makeEnv(): Env {
+  // Env's TENSORFEED_CACHE is still required by the type; the lazy-proxy
+  // code now reads/writes the Cache API instead, but we keep a no-op KV
+  // mock for type compatibility.
+  const noopKV = { get: async () => null, put: async () => undefined };
+  return { TENSORFEED_CACHE: noopKV } as unknown as Env;
 }
 
 describe('parseEarthquakeQuery', () => {
@@ -66,14 +59,20 @@ describe('parseEarthquakeQuery', () => {
 
 describe('fetchUSGSEarthquakes', () => {
   const fetchSpy = vi.spyOn(globalThis, 'fetch');
+  let installedCache: InstalledCache;
+
+  beforeEach(() => {
+    installedCache = installFakeCache();
+  });
 
   afterEach(() => {
     fetchSpy.mockReset();
+    installedCache.uninstall();
   });
 
   it('returns flattened earthquakes from the cache when present', async () => {
-    const env = makeEnv({
-      'usgs:eq:4.5_day': {
+    const env = makeEnv();
+    await installedCache.seed('usgs:eq:4.5_day', {
         metadata: {
           title: 'USGS Magnitude 4.5+ Earthquakes, Past Day',
           generated: 1715283000000,
@@ -100,8 +99,7 @@ describe('fetchUSGSEarthquakes', () => {
             geometry: { coordinates: [-67.55, -28.06, 165] },
           },
         ],
-      },
-    });
+      });
     const r = await fetchUSGSEarthquakes(env, { magnitude: '4.5', period: 'day', limit: 50 });
     expect(r.ok).toBe(true);
     expect(r.source).toBe('cache');
@@ -159,15 +157,14 @@ describe('fetchUSGSEarthquakes', () => {
   });
 
   it('respects the limit field by slicing the upstream feature list', async () => {
-    const env = makeEnv({
-      'usgs:eq:all_hour': {
-        metadata: { title: 'all hour', generated: 1, api: '1', count: 5 },
-        features: Array.from({ length: 5 }, (_, i) => ({
-          id: `evt-${i}`,
-          properties: { mag: 1.0, place: 'somewhere', time: 1, title: `M 1.0 - somewhere ${i}` },
-          geometry: { coordinates: [0, 0, 10] },
-        })),
-      },
+    const env = makeEnv();
+    await installedCache.seed('usgs:eq:all_hour', {
+      metadata: { title: 'all hour', generated: 1, api: '1', count: 5 },
+      features: Array.from({ length: 5 }, (_, i) => ({
+        id: `evt-${i}`,
+        properties: { mag: 1.0, place: 'somewhere', time: 1, title: `M 1.0 - somewhere ${i}` },
+        geometry: { coordinates: [0, 0, 10] },
+      })),
     });
     const r = await fetchUSGSEarthquakes(env, { magnitude: 'all', period: 'hour', limit: 2 });
     expect(r.earthquakes?.length).toBe(2);

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { installFakeCache, InstalledCache } from './edge-cache-test-helpers';
 import {
   parsePowerQuery,
   fetchPowerPoint,
@@ -163,14 +164,17 @@ describe('parsePowerQuery', () => {
 describe('fetchPowerPoint', () => {
   let env: Env;
   let originalFetch: typeof globalThis.fetch;
+  let installedCache: InstalledCache;
 
   beforeEach(() => {
     env = makeEnv();
     originalFetch = globalThis.fetch;
+    installedCache = installFakeCache();
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    installedCache.uninstall();
   });
 
   const QUERY = {
@@ -214,9 +218,8 @@ describe('fetchPowerPoint', () => {
   it('caches with the documented daily TTL', async () => {
     globalThis.fetch = (async () => ({ ok: true, status: 200, json: async () => SAMPLE_DAILY })) as unknown as typeof globalThis.fetch;
     await fetchPowerPoint(env, QUERY);
-    const cache = env.TENSORFEED_CACHE as unknown as MockKV;
-    const ttl = Array.from(cache.ttls.values())[0];
-    expect(ttl).toBe(7 * 24 * 60 * 60);
+    const stored = Array.from(installedCache.cache.store.values())[0];
+    expect(stored?.headers.get('cache-control')).toBe(`s-maxage=${7 * 24 * 60 * 60}`);
   });
 
   it('reports rate-limit upstream as power_upstream_rate_limited', async () => {

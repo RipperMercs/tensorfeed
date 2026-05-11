@@ -1,25 +1,18 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import {
   parseNWSAlertsQuery,
   fetchNWSAlerts,
   NWS_VALID_SEVERITIES,
 } from './climate-nws-alerts';
 import type { Env } from './types';
+import { installFakeCache, InstalledCache } from './edge-cache-test-helpers';
 
-function makeEnv(initial: Record<string, unknown> = {}): Env {
-  const store = new Map<string, string>(
-    Object.entries(initial).map(([k, v]) => [k, JSON.stringify(v)]),
-  );
-  const cache = {
-    get: vi.fn(async (key: string, _type?: 'json') => {
-      const raw = store.get(key);
-      return raw ? JSON.parse(raw) : null;
-    }),
-    put: vi.fn(async (key: string, value: string) => {
-      store.set(key, value);
-    }),
-  };
-  return { TENSORFEED_CACHE: cache } as unknown as Env;
+function makeEnv(): Env {
+  // Env's TENSORFEED_CACHE is still required by the type; the lazy-proxy
+  // code now reads/writes the Cache API instead, but we keep a no-op KV
+  // mock for type compatibility.
+  const noopKV = { get: async () => null, put: async () => undefined };
+  return { TENSORFEED_CACHE: noopKV } as unknown as Env;
 }
 
 describe('parseNWSAlertsQuery', () => {
@@ -74,14 +67,20 @@ describe('parseNWSAlertsQuery', () => {
 
 describe('fetchNWSAlerts', () => {
   const fetchSpy = vi.spyOn(globalThis, 'fetch');
+  let installedCache: InstalledCache;
+
+  beforeEach(() => {
+    installedCache = installFakeCache();
+  });
 
   afterEach(() => {
     fetchSpy.mockReset();
+    installedCache.uninstall();
   });
 
   it('serves a flattened alert from cache when present', async () => {
-    const env = makeEnv({
-      'nws:alerts:CA|_|_|_|_': {
+    const env = makeEnv();
+    await installedCache.seed('nws:alerts:CA|_|_|_|_', {
         title: 'NWS Active Alerts',
         updated: '2026-05-09T17:00:00Z',
         features: [
@@ -106,8 +105,7 @@ describe('fetchNWSAlerts', () => {
             },
           },
         ],
-      },
-    });
+      });
     const r = await fetchNWSAlerts(env, {
       area: 'CA',
       event: null,
@@ -188,19 +186,18 @@ describe('fetchNWSAlerts', () => {
   });
 
   it('respects the limit by slicing the upstream feature list', async () => {
-    const env = makeEnv({
-      'nws:alerts:_|_|_|_|_': {
-        title: 'all',
-        updated: '2026-05-09T17:00:00Z',
-        features: Array.from({ length: 5 }, (_, i) => ({
+    const env = makeEnv();
+    await installedCache.seed('nws:alerts:_|_|_|_|_', {
+      title: 'all',
+      updated: '2026-05-09T17:00:00Z',
+      features: Array.from({ length: 5 }, (_, i) => ({
+        id: `urn:oid:${i}`,
+        properties: {
           id: `urn:oid:${i}`,
-          properties: {
-            id: `urn:oid:${i}`,
-            event: 'Wind Advisory',
-            severity: 'Minor',
-          },
-        })),
-      },
+          event: 'Wind Advisory',
+          severity: 'Minor',
+        },
+      })),
     });
     const r = await fetchNWSAlerts(env, {
       area: null,

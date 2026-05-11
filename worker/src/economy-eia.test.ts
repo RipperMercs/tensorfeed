@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { installFakeCache, InstalledCache } from './edge-cache-test-helpers';
 import {
   parseEIAQuery,
   fetchEIASeries,
@@ -168,13 +169,16 @@ describe('parseEIAQuery', () => {
 
 describe('fetchEIASeries', () => {
   let originalFetch: typeof globalThis.fetch;
+  let installedCache: InstalledCache;
 
   beforeEach(() => {
     originalFetch = globalThis.fetch;
+    installedCache = installFakeCache();
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    installedCache.uninstall();
   });
 
   const QUERY = {
@@ -209,9 +213,8 @@ describe('fetchEIASeries', () => {
     const result = await fetchEIASeries(env, QUERY);
     expect(result.ok).toBe(true);
     expect(result.source).toBe('live');
-    const cache = env.TENSORFEED_CACHE as unknown as MockKV;
-    const ttl = Array.from(cache.ttls.values())[0];
-    expect(ttl).toBe(24 * 60 * 60);
+    const stored = Array.from(installedCache.cache.store.values())[0];
+    expect(stored?.headers.get('cache-control')).toBe(`s-maxage=${24 * 60 * 60}`);
   });
 
   it('serves from cache on the second call', async () => {

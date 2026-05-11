@@ -23,6 +23,7 @@
  */
 
 import type { Env } from './types';
+import { readEdgeCacheJSON, writeEdgeCacheJSON } from './edge-cache';
 
 const NWS_BASE = 'https://api.weather.gov/alerts/active';
 
@@ -276,7 +277,7 @@ export async function fetchNWSAlerts(env: Env, q: NWSAlertsQuery): Promise<NWSAl
   const fetched_at = new Date().toISOString();
   const key = cacheKey(q);
 
-  const cached = await env.TENSORFEED_CACHE.get<NWSFeed>(key, 'json');
+  const cached = await readEdgeCacheJSON<NWSFeed>(key);
   if (cached) {
     const features = cached.features ?? [];
     return {
@@ -340,7 +341,7 @@ export async function fetchNWSAlerts(env: Env, q: NWSAlertsQuery): Promise<NWSAl
     };
   }
 
-  await env.TENSORFEED_CACHE.put(key, JSON.stringify(payload), { expirationTtl: TTL_SECONDS });
+  await writeEdgeCacheJSON(key, payload, TTL_SECONDS);
 
   const features = payload.features ?? [];
   return {

@@ -19,6 +19,7 @@
  */
 
 import type { Env } from './types';
+import { readEdgeCacheJSON, writeEdgeCacheJSON } from './edge-cache';
 
 const FEED_BASE = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary';
 
@@ -196,7 +197,7 @@ export async function fetchUSGSEarthquakes(
   const fetched_at = new Date().toISOString();
   const key = cacheKey(q);
 
-  const cached = await env.TENSORFEED_CACHE.get<UsgsFeed>(key, 'json');
+  const cached = await readEdgeCacheJSON<UsgsFeed>(key);
   if (cached) {
     const features = cached.features ?? [];
     return {
@@ -264,7 +265,7 @@ export async function fetchUSGSEarthquakes(
   }
 
   const ttl = TTL_BY_PERIOD[q.period] ?? 120;
-  await env.TENSORFEED_CACHE.put(key, JSON.stringify(payload), { expirationTtl: ttl });
+  await writeEdgeCacheJSON(key, payload, ttl);
 
   const features = payload.features ?? [];
   return {

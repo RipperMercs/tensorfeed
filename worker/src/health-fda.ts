@@ -34,6 +34,7 @@
  */
 
 import type { Env } from './types';
+import { readEdgeCacheJSON, writeEdgeCacheJSON } from './edge-cache';
 import { sha256CacheKey } from './cache-key';
 
 const FDA_BASE = 'https://api.fda.gov';
@@ -280,7 +281,7 @@ export async function fetchFDAQuery(env: Env, q: FDAQuery): Promise<FDAResult> {
   const fetched_at = new Date().toISOString();
   const key = await cacheKeyForQuery(q);
 
-  const cached = await env.TENSORFEED_CACHE.get<unknown>(key, 'json');
+  const cached = await readEdgeCacheJSON<unknown>(key);
   if (cached) {
     return {
       ok: true,
@@ -306,7 +307,7 @@ export async function fetchFDAQuery(env: Env, q: FDAQuery): Promise<FDAResult> {
     };
   }
 
-  await env.TENSORFEED_CACHE.put(key, JSON.stringify(result.body), { expirationTtl: TTL_QUERY });
+  await writeEdgeCacheJSON(key, result.body, TTL_QUERY);
 
   return {
     ok: true,
@@ -336,7 +337,7 @@ export async function fetchFDAAggregate(
   const fetched_at = new Date().toISOString();
   const key = await cacheKeyForAggregate(q);
 
-  const cached = await env.TENSORFEED_CACHE.get<unknown>(key, 'json');
+  const cached = await readEdgeCacheJSON<unknown>(key);
   if (cached) {
     return {
       ok: true,
@@ -362,7 +363,7 @@ export async function fetchFDAAggregate(
     };
   }
 
-  await env.TENSORFEED_CACHE.put(key, JSON.stringify(result.body), { expirationTtl: TTL_QUERY });
+  await writeEdgeCacheJSON(key, result.body, TTL_QUERY);
 
   return {
     ok: true,

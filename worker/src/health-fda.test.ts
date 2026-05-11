@@ -9,6 +9,7 @@ import {
   FDA_ATTRIBUTION,
 } from './health-fda';
 import type { Env } from './types';
+import { installFakeCache, InstalledCache } from './edge-cache-test-helpers';
 
 class MockKV {
   store = new Map<string, string>();
@@ -167,14 +168,17 @@ describe('parseFDAAggregateQuery', () => {
 describe('fetchFDAQuery', () => {
   let env: Env;
   let originalFetch: typeof globalThis.fetch;
+  let installedCache: InstalledCache;
 
   beforeEach(() => {
     env = makeEnv();
     originalFetch = globalThis.fetch;
+    installedCache = installFakeCache();
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    installedCache.uninstall();
   });
 
   const QUERY = {
@@ -194,9 +198,8 @@ describe('fetchFDAQuery', () => {
     const result = await fetchFDAQuery(env, QUERY);
     expect(result.ok).toBe(true);
     expect(result.source).toBe('live');
-    const cache = env.TENSORFEED_CACHE as unknown as MockKV;
-    const ttl = Array.from(cache.ttls.values())[0];
-    expect(ttl).toBe(24 * 60 * 60);
+    const stored = Array.from(installedCache.cache.store.values())[0];
+    expect(stored?.headers.get('cache-control')).toBe(`s-maxage=${24 * 60 * 60}`);
   });
 
   it('serves from cache on the second call', async () => {
@@ -241,14 +244,17 @@ describe('fetchFDAQuery', () => {
 describe('fetchFDAAggregate', () => {
   let env: Env;
   let originalFetch: typeof globalThis.fetch;
+  let installedCache: InstalledCache;
 
   beforeEach(() => {
     env = makeEnv();
     originalFetch = globalThis.fetch;
+    installedCache = installFakeCache();
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    installedCache.uninstall();
   });
 
   it('returns aggregation results from upstream', async () => {

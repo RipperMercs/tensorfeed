@@ -32,6 +32,7 @@
  */
 
 import type { Env } from './types';
+import { readEdgeCacheJSON, writeEdgeCacheJSON } from './edge-cache';
 
 const POWER_BASE = 'https://power.larc.nasa.gov/api/temporal';
 
@@ -247,7 +248,7 @@ export async function fetchPowerPoint(env: Env, q: PowerQuery): Promise<PowerRes
   const fetched_at = new Date().toISOString();
   const key = cacheKey(q);
 
-  const cached = await env.TENSORFEED_CACHE.get<unknown>(key, 'json');
+  const cached = await readEdgeCacheJSON<unknown>(key);
   if (cached) {
     return {
       ok: true,
@@ -318,7 +319,7 @@ export async function fetchPowerPoint(env: Env, q: PowerQuery): Promise<PowerRes
   }
 
   const ttl = q.temporal === TEMPORAL_HOURLY ? TTL_HOURLY : TTL_DAILY;
-  await env.TENSORFEED_CACHE.put(key, JSON.stringify(payload), { expirationTtl: ttl });
+  await writeEdgeCacheJSON(key, payload, ttl);
 
   return {
     ok: true,
