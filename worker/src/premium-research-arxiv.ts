@@ -34,6 +34,16 @@ import { Env } from './types';
 const KV_KEY_MILESTONES = 'arxiv-research:rollup_milestones';
 const KV_KEY_KEYWORDS = 'arxiv-research:rollup_keywords';
 const KV_KEY_TOPIC_INDEX = 'arxiv-research:rollup_topic_search_index';
+const KV_KEY_LABS = 'arxiv-research:rollup_labs';
+
+const LABS_WINDOWS = ['30d', '90d', '365d'] as const;
+type LabsWindow = (typeof LABS_WINDOWS)[number];
+
+const VALID_AFFILIATION_TYPES = ['industry', 'academia', 'government', 'nonprofit', 'mixed', 'unknown'] as const;
+type AffiliationType = (typeof VALID_AFFILIATION_TYPES)[number];
+
+const LABS_MAX_LIMIT = 50;
+const LABS_DEFAULT_LIMIT = 25;
 
 // ── Attribution (shared across all 3 endpoints) ─────────────────────
 
@@ -105,6 +115,17 @@ interface TopicSearchIndexSnapshot {
   methodology_buckets: string[];
 }
 
+interface LabEntry {
+  affiliation: string;
+  papers: number;
+  type: string;
+}
+
+interface LabsSnapshot {
+  as_of: string;
+  windows: Record<string, LabEntry[]>;
+}
+
 // ── Public result types ─────────────────────────────────────────────
 
 export interface MilestonesResult {
@@ -151,6 +172,20 @@ export interface ResearchArxivError {
   error: string;
   hint?: string;
   valid?: string[];
+}
+
+export interface LabProductivityQuery {
+  window: LabsWindow | null;
+  affiliation_type: AffiliationType | null;
+  limit: number;
+}
+
+export interface LabProductivityResult {
+  ok: true;
+  capturedAt: string;
+  query: LabProductivityQuery;
+  windows: Record<string, LabEntry[]>;
+  attribution: ArxivResearchAttribution;
 }
 
 // ── Snapshot loading ─────────────────────────────────────────────────
@@ -329,5 +364,72 @@ export async function loadTopicSearchTaxonomies(env: Env): Promise<{ subfields: 
   return {
     subfields: snap.subfield_tags || [],
     methodologies: snap.methodology_buckets || [],
+  };
+}
+
+// ── computeLabProductivity ──────────────────────────────────────────
+
+export interface LabProductivityInput {
+  window?: string;
+  affiliation_type?: string;
+  limit?: number;
+}
+
+export function validateLabProductivityInput(input: LabProductivityInput): ResearchArxivError | null {
+  if (input.window != null && !LABS_WINDOWS.includes(input.window as LabsWindow)) {
+    return {
+      ok: false,
+      error: 'invalid_window',
+      valid: [...LABS_WINDOWS],
+    };
+  }
+  if (input.affiliation_type != null && !VALID_AFFILIATION_TYPES.includes(input.affiliation_type as AffiliationType)) {
+    return {
+      ok: false,
+      error: 'invalid_affiliation_type',
+      valid: [...VALID_AFFILIATION_TYPES],
+    };
+  }
+  if (input.limit != null && (!Number.isFinite(input.limit) || input.limit < 1 || input.limit > LABS_MAX_LIMIT)) {
+    return { ok: false, error: 'invalid_limit', hint: `limit must be an integer between 1 and ${LABS_MAX_LIMIT}` };
+  }
+  return null;
+}
+
+export async function computeLabProductivity(
+  env: Env,
+  input: LabProductivityInput,
+): Promise<LabProductivityResult | ResearchArxivError> {
+  const snap = await loadSnapshot<LabsSnapshot>(env, KV_KEY_LABS);
+  if (!snap) {
+    return {
+      ok: false,
+      error: 'no_snapshot_yet',
+      hint: 'arXiv research rollups have not been uploaded yet. After the next Qwen extraction round wraps and the upload script runs, this endpoint will populate.',
+    };
+  }
+
+  const windowFilter = (input.window ?? null) as LabsWindow | null;
+  const typeFilter = (input.affiliation_type ?? null) as AffiliationType | null;
+  const limit = input.limit ?? LABS_DEFAULT_LIMIT;
+
+  const requestedWindows: LabsWindow[] = windowFilter ? [windowFilter] : [...LABS_WINDOWS];
+  const out: Record<string, LabEntry[]> = {};
+  for (const w of requestedWindows) {
+    const entries = snap.windows[w] || [];
+    const filtered = typeFilter ? entries.filter((e) => e.type === typeFilter) : entries;
+    out[w] = filtered.slice(0, limit);
+  }
+
+  return {
+    ok: true,
+    capturedAt: snap.as_of,
+    query: {
+      window: windowFilter,
+      affiliation_type: typeFilter,
+      limit,
+    },
+    windows: out,
+    attribution: ARXIV_RESEARCH_ATTRIBUTION,
   };
 }

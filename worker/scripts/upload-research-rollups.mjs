@@ -42,11 +42,13 @@ const KEYS = {
   milestones: 'arxiv-research:rollup_milestones',
   keywords: 'arxiv-research:rollup_keywords',
   topicIndex: 'arxiv-research:rollup_topic_search_index',
+  labs: 'arxiv-research:rollup_labs',
 };
 const SOURCE_FILES = {
   milestones: 'rollup_milestones.json',
   keywords: 'rollup_keywords.json',
   papers: 'papers.json',
+  labs: 'rollup_labs.json',
 };
 const DEFAULT_MAX_PAPERS = 30_000;
 const KV_VALUE_HARD_CAP = 24 * 1024 * 1024; // 24 MB to stay under the 25 MB KV cap
@@ -231,7 +233,8 @@ function main() {
   // 2. Verify other rollups fit too (lighter validation, they should)
   const milestonesPath = join(dir, SOURCE_FILES.milestones);
   const keywordsPath = join(dir, SOURCE_FILES.keywords);
-  for (const [label, path] of [['rollup_milestones.json', milestonesPath], ['rollup_keywords.json', keywordsPath]]) {
+  const labsPath = join(dir, SOURCE_FILES.labs);
+  for (const [label, path] of [['rollup_milestones.json', milestonesPath], ['rollup_keywords.json', keywordsPath], ['rollup_labs.json', labsPath]]) {
     const sz = statSync(path).size;
     if (sz > KV_VALUE_HARD_CAP) {
       console.error(color(`  ERROR: ${label} is ${fmtBytes(sz)}, exceeds 24 MB safety cap`, 'red'));
@@ -240,12 +243,13 @@ function main() {
     }
   }
 
-  // 3. Upload all 3 keys via wrangler kv key put
+  // 3. Upload all 4 keys via wrangler kv key put
   console.log(color('  uploading to KV...', 'gray'));
   const uploads = [
     [KEYS.milestones, milestonesPath, 'rollup_milestones.json'],
     [KEYS.keywords, keywordsPath, 'rollup_keywords.json'],
     [KEYS.topicIndex, indexPath, 'topic_search_index.json (built)'],
+    [KEYS.labs, labsPath, 'rollup_labs.json'],
   ];
 
   let failures = 0;
@@ -279,6 +283,7 @@ function main() {
     console.log(`    curl https://tensorfeed.ai/api/premium/research/milestones -H "Authorization: Bearer <token>"`);
     console.log(`    curl https://tensorfeed.ai/api/premium/research/emerging-keywords -H "Authorization: Bearer <token>"`);
     console.log(`    curl "https://tensorfeed.ai/api/premium/research/topic-search?limit=5" -H "Authorization: Bearer <token>"`);
+    console.log(`    curl "https://tensorfeed.ai/api/premium/research/lab-productivity?window=90d&limit=10" -H "Authorization: Bearer <token>"`);
   }
 }
 

@@ -208,6 +208,8 @@ import {
   computeTopicSearch as computeArxivTopicSearch,
   loadTopicSearchTaxonomies as loadArxivTaxonomies,
   validateTopicSearchInput as validateArxivTopicSearchInput,
+  computeLabProductivity as computeArxivLabProductivity,
+  validateLabProductivityInput as validateArxivLabProductivityInput,
 } from './premium-research-arxiv';
 import { computeRecessionWatch } from './premium-recession-watch';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
@@ -2119,6 +2121,7 @@ export default {
           premiumResearchMilestones: '/api/premium/research/milestones (1 credit; last 30 days of arXiv preprints flagged is_milestone_candidate by an offline Qwen 3.6 27B per-paper extraction pass. Each paper carries structured reasoning stating the named benchmark + quantified delta, model release, or novel architecture justification. Conservative; false positives are worse than false negatives.)',
           premiumResearchEmergingKeywords: '/api/premium/research/emerging-keywords (1 credit; top-50 multi-word keyphrases across recent arXiv abstracts ranked by recent-vs-baseline lift, last 30d frequency over prior 90d, smoothed. Each entry carries 2-5 example arxiv_ids.)',
           premiumResearchTopicSearch: '/api/premium/research/topic-search?subfield_tag=&methodology_bucket=&since=&until=&milestone_only=&limit=&offset= (1 credit; structured search over the arXiv preprint corpus using TF derived taxonomy. Filters arXiv by subfield + methodology, dimensions arXiv\'s native search has no concept of.)',
+          premiumResearchLabProductivity: '/api/premium/research/lab-productivity?window=&affiliation_type=&limit= (1 credit; top labs by paper count over 30d/90d/365d windows, derived from TF normalized affiliations on the offline Qwen extraction. Filter by window (30d|90d|365d, default returns all three) and affiliation_type (industry|academia|government|nonprofit|mixed). arXiv has no native concept of normalized lab attribution.)',
           premiumRecessionWatch: '/api/premium/economy/recession-watch (1 credit; composite recession-risk signal across yield-curve inversion + Sahm rule, with red/yellow/green classification per signal and a composite verdict)',
           premiumMcpRegistrySeries: '/api/premium/mcp/registry/series?from=&to=',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
@@ -6350,6 +6353,48 @@ export default {
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/research/topic-search', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: ARXIV LAB PRODUCTIVITY (Tier 1, 1 credit) ===
+    // /api/premium/research/lab-productivity
+    // Top labs by paper count over rolling 30/90/365-day windows from the
+    // offline Qwen extraction. Filterable by window and affiliation_type
+    // (industry / academia / government / nonprofit / mixed / unknown).
+    // arXiv has no native concept of normalized lab attribution; this lives
+    // entirely on TF derivations from the abstract header.
+
+    if (path === '/api/premium/research/lab-productivity') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const limitParam = url.searchParams.get('limit');
+      const limit = limitParam != null ? parseInt(limitParam, 10) : undefined;
+      const input = {
+        window: url.searchParams.get('window') ?? undefined,
+        affiliation_type: url.searchParams.get('affiliation_type') ?? undefined,
+        limit: Number.isFinite(limit as number) ? limit : undefined,
+      };
+
+      const validation = validateArxivLabProductivityInput(input);
+      if (validation) {
+        return await premiumValidationFailure(
+          { error: validation.error, ...(validation.hint ? { hint: validation.hint } : {}), ...(validation.valid ? { valid: validation.valid } : {}) },
+          payment, request, env,
+        );
+      }
+
+      const result = await computeArxivLabProductivity(env, input);
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/research/lab-productivity', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }

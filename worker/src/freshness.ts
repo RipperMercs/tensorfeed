@@ -67,6 +67,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/research/emerging-keywords': { maxAgeSeconds: 7 * 24 * 60 * 60 },
   // arXiv topic search: weekly index rebuild.
   '/api/premium/research/topic-search': { maxAgeSeconds: 7 * 24 * 60 * 60 },
+  // arXiv lab productivity: weekly rebuild, top labs by paper count over
+  // rolling 30/90/365-day windows. Same upload cadence as the other arXiv
+  // research rollups; 7-day SLA mirrors the rest of the family.
+  '/api/premium/research/lab-productivity': { maxAgeSeconds: 7 * 24 * 60 * 60 },
   // Funding exposure: hand-curated registry, refreshed on redeploy when new
   // entries land. 7-day SLA so a stale snapshot triggers no-charge.
   '/api/premium/funding/exposure': { maxAgeSeconds: 7 * 24 * 60 * 60 },
@@ -202,6 +206,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/economy/series': 'per-request live fetch with 6h KV cache',
     '/api/premium/packages/pypi/momentum': 'synthesis over the daily PyPI trending snapshot',
     '/api/premium/research/velocity': 'baseline + fresh 30-day OpenAlex fetch with 24h cache',
+    '/api/premium/research/lab-productivity': 'offline Qwen extraction rolled up into 30/90/365-day lab counts; uploaded weekly',
     '/api/premium/economy/recession-watch': 'synthesis over BLS + FRED daily snapshots',
     '/api/premium/history/pricing/series': 'historical immutable',
     '/api/premium/history/benchmarks/series': 'historical immutable',

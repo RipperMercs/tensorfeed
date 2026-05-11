@@ -5,6 +5,8 @@ import {
   computeTopicSearch,
   validateTopicSearchInput,
   loadTopicSearchTaxonomies,
+  computeLabProductivity,
+  validateLabProductivityInput,
   ARXIV_RESEARCH_ATTRIBUTION,
 } from './premium-research-arxiv';
 import type { Env } from './types';
@@ -316,5 +318,120 @@ describe('loadTopicSearchTaxonomies', () => {
     expect(r).not.toBeNull();
     expect(r?.subfields).toContain('llm-alignment');
     expect(r?.methodologies).toContain('training-recipe');
+  });
+});
+
+// ── computeLabProductivity ──────────────────────────────────────────
+
+const SAMPLE_LABS = {
+  as_of: '2026-05-10',
+  windows: {
+    '30d': [
+      { affiliation: 'Google DeepMind', papers: 14, type: 'industry' },
+      { affiliation: 'MIT', papers: 10, type: 'academia' },
+      { affiliation: 'Anthropic', papers: 6, type: 'industry' },
+    ],
+    '90d': [
+      { affiliation: 'Google DeepMind', papers: 42, type: 'industry' },
+      { affiliation: 'Stanford University', papers: 30, type: 'academia' },
+      { affiliation: 'Meta AI', papers: 25, type: 'industry' },
+      { affiliation: 'NIST', papers: 4, type: 'government' },
+    ],
+    '365d': [
+      { affiliation: 'Google DeepMind', papers: 180, type: 'industry' },
+      { affiliation: 'Stanford University', papers: 130, type: 'academia' },
+    ],
+  },
+};
+
+describe('computeLabProductivity', () => {
+  it('returns no_snapshot_yet when KV is empty', async () => {
+    const env = makeEnv({});
+    const r = await computeLabProductivity(env, {});
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe('no_snapshot_yet');
+  });
+
+  it('returns all three windows when window param omitted', async () => {
+    const env = makeEnv({ 'arxiv-research:rollup_labs': SAMPLE_LABS });
+    const r = await computeLabProductivity(env, {});
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(Object.keys(r.windows).sort()).toEqual(['30d', '365d', '90d']);
+      expect(r.query.window).toBeNull();
+      expect(r.capturedAt).toBe('2026-05-10');
+      expect(r.attribution).toBe(ARXIV_RESEARCH_ATTRIBUTION);
+    }
+  });
+
+  it('returns only the requested window', async () => {
+    const env = makeEnv({ 'arxiv-research:rollup_labs': SAMPLE_LABS });
+    const r = await computeLabProductivity(env, { window: '90d' });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(Object.keys(r.windows)).toEqual(['90d']);
+      expect(r.windows['90d']).toHaveLength(4);
+    }
+  });
+
+  it('filters by affiliation_type', async () => {
+    const env = makeEnv({ 'arxiv-research:rollup_labs': SAMPLE_LABS });
+    const r = await computeLabProductivity(env, { window: '90d', affiliation_type: 'industry' });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.windows['90d']).toHaveLength(2);
+      expect(r.windows['90d'].every((e) => e.type === 'industry')).toBe(true);
+    }
+  });
+
+  it('honors limit per window', async () => {
+    const env = makeEnv({ 'arxiv-research:rollup_labs': SAMPLE_LABS });
+    const r = await computeLabProductivity(env, { limit: 1 });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.windows['30d']).toHaveLength(1);
+      expect(r.windows['30d'][0].affiliation).toBe('Google DeepMind');
+      expect(r.windows['90d']).toHaveLength(1);
+      expect(r.windows['365d']).toHaveLength(1);
+    }
+  });
+
+  it('returns empty array for window with no rows after type filter', async () => {
+    const env = makeEnv({ 'arxiv-research:rollup_labs': SAMPLE_LABS });
+    const r = await computeLabProductivity(env, { window: '365d', affiliation_type: 'government' });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.windows['365d']).toEqual([]);
+  });
+});
+
+describe('validateLabProductivityInput', () => {
+  it('accepts empty input', () => {
+    expect(validateLabProductivityInput({})).toBeNull();
+  });
+
+  it('accepts valid window + affiliation_type + limit', () => {
+    expect(validateLabProductivityInput({ window: '30d', affiliation_type: 'academia', limit: 10 })).toBeNull();
+    expect(validateLabProductivityInput({ window: '365d', affiliation_type: 'industry', limit: 50 })).toBeNull();
+  });
+
+  it('rejects invalid window with valid list', () => {
+    const v = validateLabProductivityInput({ window: '7d' });
+    expect(v?.ok).toBe(false);
+    expect(v?.error).toBe('invalid_window');
+    expect(v?.valid).toEqual(['30d', '90d', '365d']);
+  });
+
+  it('rejects invalid affiliation_type with valid list', () => {
+    const v = validateLabProductivityInput({ affiliation_type: 'corporate' });
+    expect(v?.ok).toBe(false);
+    expect(v?.error).toBe('invalid_affiliation_type');
+    expect(v?.valid).toContain('industry');
+    expect(v?.valid).toContain('academia');
+  });
+
+  it('rejects out-of-range limit', () => {
+    expect(validateLabProductivityInput({ limit: 0 })?.error).toBe('invalid_limit');
+    expect(validateLabProductivityInput({ limit: 51 })?.error).toBe('invalid_limit');
+    expect(validateLabProductivityInput({ limit: -5 })?.error).toBe('invalid_limit');
   });
 });

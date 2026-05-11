@@ -1264,6 +1264,34 @@ const ENDPOINTS: PremiumEndpoint[] = [
   "billing": { "credits_charged": 1, "credits_remaining": 39 }
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/premium/research/lab-productivity',
+    description:
+      "Top labs by paper count over rolling 30d / 90d / 365d windows on the offline Qwen-extracted arXiv corpus. Each entry carries affiliation, papers (count), and type (industry, academia, government, nonprofit, mixed, unknown). Filters: window (30d|90d|365d, default returns all three), affiliation_type (one of the type values), limit per window (1 to 50, default 25). arXiv has no native concept of normalized lab attribution; the per-paper extraction and affiliation normalization are the gate.",
+    cost: '1 credit per call',
+    example: `// Query: ?window=90d&affiliation_type=industry&limit=5
+{
+  "ok": true,
+  "capturedAt": "2026-05-10",
+  "query": {
+    "window": "90d",
+    "affiliation_type": "industry",
+    "limit": 5
+  },
+  "windows": {
+    "90d": [
+      { "affiliation": "Google DeepMind", "papers": 142, "type": "industry" },
+      { "affiliation": "Meta AI", "papers": 98, "type": "industry" },
+      { "affiliation": "Microsoft Research", "papers": 81, "type": "industry" },
+      { "affiliation": "OpenAI", "papers": 47, "type": "industry" },
+      { "affiliation": "Anthropic", "papers": 31, "type": "industry" }
+    ]
+  },
+  "attribution": { ... },
+  "billing": { "credits_charged": 1, "credits_remaining": 38 }
+}`,
+  },
 ];
 
 const PYTHON_QUICKSTART = `from tensorfeed import TensorFeed

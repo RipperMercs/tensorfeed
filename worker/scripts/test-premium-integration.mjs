@@ -127,6 +127,13 @@ const tests = [
     okErrors: ['no_snapshot_yet'],
   },
   {
+    id: 'arxiv-lab-productivity',
+    name: 'arXiv lab productivity',
+    path: '/api/premium/research/lab-productivity?window=90d&limit=5',
+    happyKeys: ['query', 'windows', 'attribution'],
+    okErrors: ['no_snapshot_yet'],
+  },
+  {
     id: 'funding-exposure',
     name: 'Funding exposure analytics',
     path: '/api/premium/funding/exposure',
