@@ -37,6 +37,13 @@ export interface Env {
   // ?key=ENVIRONMENT pattern, which was unsafe once the repo went
   // public (ENVIRONMENT="production" lives in wrangler.toml).
   ADMIN_KEY?: string;
+  // Kill switch for non-critical KV writes. Persistent env-secret side
+  // of the dual control surface implemented in kill-switch.ts. Set to
+  // "true" via `wrangler secret put KILL_SWITCH_KV_WRITES` to no-op
+  // every wrapped write until unset. Requires deploy to flip; the KV-
+  // flag side (admin:kill-switch:kv-writes) supports runtime flipping
+  // via /api/admin/kill-switch. EITHER set means kill switch is active.
+  KILL_SWITCH_KV_WRITES?: string;
   // Active LLM endpoint probing. Each is independently optional;
   // probe.ts gracefully skips any provider whose key is unset, so the
   // module degrades to whichever providers you have keys for. Set with:

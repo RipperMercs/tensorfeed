@@ -212,6 +212,7 @@ import {
   validateLabProductivityInput as validateArxivLabProductivityInput,
 } from './premium-research-arxiv';
 import { refreshX402Registry, getLatestX402Registry } from './x402-registry';
+import { getKillSwitchState, setKillSwitch, getKillSwitchAuditLog } from './kill-switch';
 import { computeRecessionWatch } from './premium-recession-watch';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
@@ -2150,6 +2151,7 @@ export default {
           usageDates: '/api/admin/usage/dates?key=<ADMIN_KEY>',
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
+          killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
           refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities]',
         },
         chaos_engineering: {
@@ -7021,6 +7023,34 @@ export default {
     // median that was exceeded. Use this to spot leaked tokens whose
     // burn rate is well above their own historical pace, even when
     // pacing under the circuit breaker.
+
+    // /api/admin/kill-switch
+    //   GET ?key=<ADMIN_KEY>                         status + audit log
+    //   POST ?key=<ADMIN_KEY>&action=on|off          flip the KV-flag side
+    // The env-secret side (KILL_SWITCH_KV_WRITES) is independently controlled
+    // via `wrangler secret put` and OR-combined with this flag.
+    if (path === '/api/admin/kill-switch' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      if (request.method === 'POST') {
+        const action = url.searchParams.get('action');
+        if (action !== 'on' && action !== 'off') {
+          return jsonResponse({ ok: false, error: 'invalid_action', valid: ['on', 'off'] }, 400);
+        }
+        const actor = url.searchParams.get('actor') || 'admin endpoint';
+        const newState = await setKillSwitch(env, action === 'on', actor);
+        return jsonResponse({ ok: true, action, state: newState }, 200, 0);
+      }
+      const state = await getKillSwitchState(env);
+      const audit = await getKillSwitchAuditLog(env);
+      return jsonResponse({
+        ok: true,
+        state,
+        audit_recent: audit.slice(-10).reverse(),
+        env_secret_set: !!env.KILL_SWITCH_KV_WRITES,
+        hint: state.active
+          ? 'Kill switch ACTIVE. Non-critical KV writes are no-ops. Critical writes (pay:credits, pay:tx, pay:quote) still fire.'
+          : 'Kill switch inactive. All writes operate normally.',
+      }, 200, 0);
+    }
 
     if (path === '/api/admin/anomalies' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const events = await getAnomalyEvents(env);

@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { safePut } from './kill-switch';
 
 /**
  * Per-token daily credit-spend cap (defense-in-depth).
@@ -63,7 +64,12 @@ export async function incrementDailySpent(
   const key = dailySpentKey(token, d);
   const existing = (await env.TENSORFEED_CACHE.get(key, 'json')) as DailySpendRecord | null;
   const next = (existing?.credits ?? 0) + credits;
-  await env.TENSORFEED_CACHE.put(
+  // Non-critical: spend-cap accumulator. If kill switch is active, we
+  // skip and accept a brief window where a leaked token can bypass the
+  // per-day cap (still bounded by anomaly + breaker upstream).
+  await safePut(
+    env,
+    env.TENSORFEED_CACHE,
     key,
     JSON.stringify({ credits: next } satisfies DailySpendRecord),
     { expirationTtl: SPEND_TTL_SECONDS },

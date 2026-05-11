@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { safePut } from './kill-switch';
 
 /**
  * Active LLM endpoint probing.
@@ -325,8 +326,9 @@ async function recordSpend(env: Env, providerKey: string, today: string): Promis
   const k = `${BUDGET_PREFIX}${today}:${providerKey}`;
   const v = await env.TENSORFEED_CACHE.get(k, 'json') as { count?: number } | null;
   const next = (v?.count || 0) + 1;
-  // 36-hour TTL so the key naturally expires after the day rolls
-  await env.TENSORFEED_CACHE.put(k, JSON.stringify({ count: next }), { expirationTtl: 36 * 60 * 60 });
+  // 36-hour TTL so the key naturally expires after the day rolls.
+  // Non-critical: probe spending counter. Kill switch skips silently.
+  await safePut(env, env.TENSORFEED_CACHE, k, JSON.stringify({ count: next }), { expirationTtl: 36 * 60 * 60 });
 }
 
 // === Buffer + aggregate persistence ===
@@ -335,7 +337,7 @@ async function appendToBuffer(env: Env, providerKey: string, result: ProbeResult
   const k = `${HOURLY_BUFFER_PREFIX}${providerKey}`;
   const buf = (await env.TENSORFEED_CACHE.get(k, 'json')) as ProbeResult[] | null;
   const next = [...(buf || []), result].slice(-RESULTS_PER_PROVIDER_BUFFER);
-  await env.TENSORFEED_CACHE.put(k, JSON.stringify(next));
+  await safePut(env, env.TENSORFEED_CACHE, k, JSON.stringify(next));
   return next;
 }
 
@@ -345,7 +347,7 @@ async function readBuffer(env: Env, providerKey: string): Promise<ProbeResult[]>
 }
 
 async function writeLatestSummary(env: Env, summary: LatestSummary): Promise<void> {
-  await env.TENSORFEED_CACHE.put(LATEST_KEY, JSON.stringify(summary));
+  await safePut(env, env.TENSORFEED_CACHE, LATEST_KEY, JSON.stringify(summary));
 }
 
 async function readDaily(env: Env, date: string, providerKey: string): Promise<DailyAggregate | null> {
@@ -355,7 +357,7 @@ async function readDaily(env: Env, date: string, providerKey: string): Promise<D
 
 async function writeDaily(env: Env, date: string, providerKey: string, agg: DailyAggregate): Promise<void> {
   const k = `${DAILY_PREFIX}${date}:${providerKey}`;
-  await env.TENSORFEED_CACHE.put(k, JSON.stringify(agg));
+  await safePut(env, env.TENSORFEED_CACHE, k, JSON.stringify(agg));
 }
 
 async function pushIndexDate(env: Env, date: string): Promise<void> {
@@ -363,7 +365,7 @@ async function pushIndexDate(env: Env, date: string): Promise<void> {
   if (!dates.includes(date)) {
     dates.unshift(date);
     if (dates.length > MAX_INDEX_DATES) dates.length = MAX_INDEX_DATES;
-    await env.TENSORFEED_CACHE.put(INDEX_KEY, JSON.stringify(dates));
+    await safePut(env, env.TENSORFEED_CACHE, INDEX_KEY, JSON.stringify(dates));
   }
 }
 

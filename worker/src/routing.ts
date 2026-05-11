@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { safePut } from './kill-switch';
 
 /**
  * Real-time model routing recommendation engine.
@@ -377,10 +378,15 @@ export async function checkRoutingPreviewRateLimit(
   const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
   const count = current?.count ?? 0;
   if (count >= max) return { allowed: false, remaining: 0, limit: max };
-  await env.TENSORFEED_CACHE.put(
+  // Non-critical: free-preview rate counter. When kill switch is on, we
+  // skip the write; agents on the free preview can briefly exceed the
+  // documented limit. The trade vs. unbounded KV bills is correct.
+  await safePut(
+    env,
+    env.TENSORFEED_CACHE,
     key,
     JSON.stringify({ count: count + 1 }),
-    { expirationTtl: 60 * 60 * 48 }, // 2 days, auto-cleanup
+    { expirationTtl: 60 * 60 * 48 },
   );
   return { allowed: true, remaining: max - count - 1, limit: max };
 }

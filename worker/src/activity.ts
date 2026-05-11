@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { safePut } from './kill-switch';
 
 /**
  * Agent activity tracking with in-memory batching.
@@ -131,19 +132,20 @@ async function flushToKV(env: Env): Promise<void> {
   try {
     const todayStr = new Date().toISOString().slice(0, 10);
 
-    // Single KV read + write for recent hits
+    // Single KV read + write for recent hits. Non-critical: agent traffic
+    // observability. Kill switch skips; counters resume when unflipped.
     const recentRaw = await env.TENSORFEED_CACHE.get('agent-activity', 'json') as AgentHit[] | null;
     const recent = [...hitsToFlush, ...(recentRaw || [])].slice(0, 50);
-    await env.TENSORFEED_CACHE.put('agent-activity', JSON.stringify(recent));
+    await safePut(env, env.TENSORFEED_CACHE, 'agent-activity', JSON.stringify(recent));
 
-    // Single KV read + write for counter
+    // Single KV read + write for counter. Same non-critical posture.
     const counterRaw = await env.TENSORFEED_CACHE.get('agent-counter-daily', 'json') as DailyCounter | null;
     let counter = counterRaw || { count: 0, date: todayStr };
     if (counter.date !== todayStr) {
       counter = { count: 0, date: todayStr };
     }
     counter.count += countToFlush;
-    await env.TENSORFEED_CACHE.put('agent-counter-daily', JSON.stringify(counter));
+    await safePut(env, env.TENSORFEED_CACHE, 'agent-counter-daily', JSON.stringify(counter));
 
     // Invalidate read cache
     cachedActivity = null;

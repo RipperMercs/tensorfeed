@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { safePut } from './kill-switch';
 
 /**
  * Per-token spend anomaly detection.
@@ -209,7 +210,10 @@ async function readBuffer(env: Env, token: string): Promise<HourlyBuffer> {
 }
 
 async function writeBuffer(env: Env, token: string, buffer: HourlyBuffer): Promise<void> {
-  await env.TENSORFEED_CACHE.put(hourlyKey(token), JSON.stringify(buffer));
+  // Non-critical: anomaly bookkeeping. If the kill switch is active we
+  // skip; the circuit breaker + spend cap remain in force and we accept
+  // a temporary gap in baseline-relative detection.
+  await safePut(env, env.TENSORFEED_CACHE, hourlyKey(token), JSON.stringify(buffer));
 }
 
 async function readEvents(env: Env): Promise<AnomalyEvent[]> {
@@ -223,7 +227,8 @@ async function appendEvent(env: Env, event: AnomalyEvent): Promise<void> {
   if (events.length > EVENTS_CAP) {
     events.splice(0, events.length - EVENTS_CAP);
   }
-  await env.TENSORFEED_CACHE.put(EVENTS_KEY, JSON.stringify(events));
+  // Non-critical: anomaly event log. Same rationale as the buffer write.
+  await safePut(env, env.TENSORFEED_CACHE, EVENTS_KEY, JSON.stringify(events));
 }
 
 /**
