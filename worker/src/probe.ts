@@ -332,35 +332,194 @@ async function recordSpend(env: Env, providerKey: string, today: string): Promis
 }
 
 // === Buffer + aggregate persistence ===
+//
+// Storage backend: R2 via SNAPSHOTS_R2 binding (migrated off KV on
+// 2026-05-12). The probe cycle was writing ~1,000 KV ops/day across the
+// 24h buffer + latest summary + daily rollups; that pressure has been
+// removed from the shared 1M KV write/month bundle. INDEX_KEY stays in
+// KV because it's a tiny daily-touched list with hot reads.
+//
+// Reads are fronted by the Cloudflare edge Cache API so steady-state
+// load never hits R2. Buffer + latest summary use a 5-minute TTL
+// (matches the 15-min probe cycle freshness). Daily aggregates are
+// immutable once written, so they get a 24h cache TTL.
+
+const PROBE_R2_PREFIX = 'probe/';
+const PROBE_BUFFER_TTL_S = 300; // 5 min, matches probe cycle freshness
+const PROBE_DAILY_TTL_S = 24 * 60 * 60; // 24h, daily aggregates are immutable
+
+function bufferR2Key(providerKey: string): string {
+  return `${PROBE_R2_PREFIX}buffer/${providerKey}.json`;
+}
+function latestR2Key(): string {
+  return `${PROBE_R2_PREFIX}latest.json`;
+}
+function dailyR2Key(date: string, providerKey: string): string {
+  return `${PROBE_R2_PREFIX}daily/${date}/${providerKey}.json`;
+}
+
+function probeCacheRequest(suffix: string): Request {
+  return new Request(`https://tf-probe.internal/v1/${suffix}`, { method: 'GET' });
+}
+
+function getProbeCache(): Cache | null {
+  try {
+    if (typeof caches === 'undefined') return null;
+    return caches.default ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function r2ReadJson<T>(env: Env, key: string): Promise<T | null> {
+  if (!env.SNAPSHOTS_R2) return null;
+  try {
+    const obj = await env.SNAPSHOTS_R2.get(key);
+    if (!obj) return null;
+    const text = await obj.text();
+    return JSON.parse(text) as T;
+  } catch (err) {
+    console.warn(`probe: R2 read failed for ${key}:`, err);
+    return null;
+  }
+}
+
+async function r2WriteJson(env: Env, key: string, value: unknown): Promise<void> {
+  if (!env.SNAPSHOTS_R2) {
+    console.warn(`probe: SNAPSHOTS_R2 binding missing, skipping write for ${key}`);
+    return;
+  }
+  await env.SNAPSHOTS_R2.put(key, JSON.stringify(value), {
+    httpMetadata: { contentType: 'application/json' },
+  });
+}
+
+async function cachedRead<T>(
+  suffix: string,
+  ttlSeconds: number,
+  loader: () => Promise<T | null>,
+): Promise<T | null> {
+  const cache = getProbeCache();
+  const req = probeCacheRequest(suffix);
+  if (cache) {
+    try {
+      const hit = await cache.match(req);
+      if (hit) {
+        const text = await hit.text();
+        return JSON.parse(text) as T;
+      }
+    } catch {
+      // Fall through to R2 fetch.
+    }
+  }
+  const value = await loader();
+  if (cache && value !== null) {
+    try {
+      const res = new Response(JSON.stringify(value), {
+        headers: {
+          'content-type': 'application/json',
+          'cache-control': `s-maxage=${ttlSeconds}`,
+        },
+      });
+      await cache.put(req, res);
+    } catch {
+      // Cache populate failure is non-blocking.
+    }
+  }
+  return value;
+}
+
+async function invalidateProbeCache(suffix: string): Promise<void> {
+  const cache = getProbeCache();
+  if (!cache) return;
+  try {
+    await cache.delete(probeCacheRequest(suffix));
+  } catch {
+    // Invalidation failure is non-blocking; entry ages out via TTL.
+  }
+}
+
+/**
+ * Transitional KV fallback. Until the first probe cycle after deploy
+ * has populated R2, the existing KV-stored buffer + latest summary +
+ * daily aggregates are still authoritative. Drop these fallbacks in a
+ * follow-up commit after 24h of healthy R2 writes.
+ */
+async function readBufferKVFallback(env: Env, providerKey: string): Promise<ProbeResult[]> {
+  try {
+    const k = `${HOURLY_BUFFER_PREFIX}${providerKey}`;
+    return ((await env.TENSORFEED_CACHE.get(k, 'json')) as ProbeResult[] | null) || [];
+  } catch {
+    return [];
+  }
+}
+async function readLatestSummaryKVFallback(env: Env): Promise<LatestSummary | null> {
+  try {
+    return (await env.TENSORFEED_CACHE.get(LATEST_KEY, 'json')) as LatestSummary | null;
+  } catch {
+    return null;
+  }
+}
+async function readDailyKVFallback(
+  env: Env,
+  date: string,
+  providerKey: string,
+): Promise<DailyAggregate | null> {
+  try {
+    const k = `${DAILY_PREFIX}${date}:${providerKey}`;
+    return (await env.TENSORFEED_CACHE.get(k, 'json')) as DailyAggregate | null;
+  } catch {
+    return null;
+  }
+}
 
 async function appendToBuffer(env: Env, providerKey: string, result: ProbeResult): Promise<ProbeResult[]> {
-  const k = `${HOURLY_BUFFER_PREFIX}${providerKey}`;
-  const buf = (await env.TENSORFEED_CACHE.get(k, 'json')) as ProbeResult[] | null;
+  let buf = await r2ReadJson<ProbeResult[]>(env, bufferR2Key(providerKey));
+  if (!buf || buf.length === 0) {
+    // Transitional fallback: pick up the existing KV ring buffer the
+    // first time we run after deploy so we don't lose the 24h history.
+    buf = await readBufferKVFallback(env, providerKey);
+  }
   const next = [...(buf || []), result].slice(-RESULTS_PER_PROVIDER_BUFFER);
-  await safePut(env, env.TENSORFEED_CACHE, k, JSON.stringify(next));
+  await r2WriteJson(env, bufferR2Key(providerKey), next);
+  await invalidateProbeCache(`buffer/${providerKey}`);
   return next;
 }
 
 async function readBuffer(env: Env, providerKey: string): Promise<ProbeResult[]> {
-  const k = `${HOURLY_BUFFER_PREFIX}${providerKey}`;
-  return ((await env.TENSORFEED_CACHE.get(k, 'json')) as ProbeResult[] | null) || [];
+  const r2 = await cachedRead<ProbeResult[]>(
+    `buffer/${providerKey}`,
+    PROBE_BUFFER_TTL_S,
+    () => r2ReadJson<ProbeResult[]>(env, bufferR2Key(providerKey)),
+  );
+  if (r2 && r2.length > 0) return r2;
+  return readBufferKVFallback(env, providerKey);
 }
 
 async function writeLatestSummary(env: Env, summary: LatestSummary): Promise<void> {
-  await safePut(env, env.TENSORFEED_CACHE, LATEST_KEY, JSON.stringify(summary));
+  await r2WriteJson(env, latestR2Key(), summary);
+  await invalidateProbeCache('latest');
 }
 
 async function readDaily(env: Env, date: string, providerKey: string): Promise<DailyAggregate | null> {
-  const k = `${DAILY_PREFIX}${date}:${providerKey}`;
-  return (await env.TENSORFEED_CACHE.get(k, 'json')) as DailyAggregate | null;
+  const r2 = await cachedRead<DailyAggregate>(
+    `daily/${date}/${providerKey}`,
+    PROBE_DAILY_TTL_S,
+    () => r2ReadJson<DailyAggregate>(env, dailyR2Key(date, providerKey)),
+  );
+  if (r2) return r2;
+  return readDailyKVFallback(env, date, providerKey);
 }
 
 async function writeDaily(env: Env, date: string, providerKey: string, agg: DailyAggregate): Promise<void> {
-  const k = `${DAILY_PREFIX}${date}:${providerKey}`;
-  await safePut(env, env.TENSORFEED_CACHE, k, JSON.stringify(agg));
+  await r2WriteJson(env, dailyR2Key(date, providerKey), agg);
+  await invalidateProbeCache(`daily/${date}/${providerKey}`);
 }
 
 async function pushIndexDate(env: Env, date: string): Promise<void> {
+  // INDEX_KEY stays in KV: tiny array, daily touch, hot reads on every
+  // /api/premium/probe/series query. KV's sub-50ms global read is the
+  // right tier for this one.
   const dates = ((await env.TENSORFEED_CACHE.get(INDEX_KEY, 'json')) as string[] | null) || [];
   if (!dates.includes(date)) {
     dates.unshift(date);
@@ -487,7 +646,13 @@ function computeIncidentHours(results: ProbeResult[]): Array<{ hour: string; ok_
 // === Public API: read endpoints ===
 
 export async function getLatestSummary(env: Env): Promise<LatestSummary | null> {
-  return (await env.TENSORFEED_CACHE.get(LATEST_KEY, 'json')) as LatestSummary | null;
+  const r2 = await cachedRead<LatestSummary>(
+    'latest',
+    PROBE_BUFFER_TTL_S,
+    () => r2ReadJson<LatestSummary>(env, latestR2Key()),
+  );
+  if (r2) return r2;
+  return readLatestSummaryKVFallback(env);
 }
 
 export interface SeriesPoint {
