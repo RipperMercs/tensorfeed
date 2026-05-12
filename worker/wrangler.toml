@@ -177,6 +177,13 @@ crons = [
   # Powers free /api/x402-registry/snapshot and the /x402-registry web view.
   # Slot picked in the early UTC quiet zone away from all other daily crons.
   "15 2 * * *",
+  # Sunday 06:00 UTC: weekly KV -> R2 backup (Layer 1 of the disaster
+  # recovery plan, worker/src/backup.ts). Walks every configured KV
+  # namespace, gzips each, uploads to r2://tensorfeed-backups/{date}/
+  # with a manifest.json carrying sha256 + key counts. Restore procedure
+  # in docs/restore-from-backup.md. Day-of-week is Sunday (0) so the
+  # expression is unique even though daily 06:00 is already taken.
+  "0 6 * * 0",
 ]
 
 [[kv_namespaces]]
@@ -197,6 +204,15 @@ id = "4de30d8becd24b3bba9556b98bad8e69"
 [[kv_namespaces]]
 binding = "OFAC_AUDIT_LOG"
 id = "432951e9eeea420bafc8a5184a50b872"
+
+# R2 bucket for weekly KV backups (Layer 1 of the disaster recovery
+# plan, worker/src/backup.ts). Created via the cloudflare-bindings MCP
+# tool on 2026-05-12. Holds gzipped JSONL dumps of every KV namespace
+# plus a manifest.json per date. Lifecycle policy: 12 weekly snapshots
+# retained (~3 months); see Cloudflare dashboard for the rule.
+[[r2_buckets]]
+binding = "BACKUPS_R2"
+bucket_name = "tensorfeed-backups"
 
 # Workers AI binding for news-history Phase B clustering. Free tier
 # allots 10K neurons/day which comfortably covers our daily 200-

@@ -31,6 +31,9 @@ export interface Env {
   CHAINALYSIS_API_KEY?: string;
   // Persistent OFAC block audit log (optional, 7-year retention per privacy policy)
   OFAC_AUDIT_LOG?: KVNamespace;
+  // R2 bucket for weekly KV backups (Layer 1 of the disaster recovery
+  // plan). Optional binding; backup module no-ops if missing.
+  BACKUPS_R2?: R2Bucket;
   // Admin-only routes auth. REQUIRED in production. Set via:
   //   wrangler secret put ADMIN_KEY
   // Used by /api/admin/* and /api/refresh. Replaces the previous

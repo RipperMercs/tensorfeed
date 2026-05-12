@@ -344,6 +344,7 @@ import {
 } from './rate-limit';
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
+import { backupKvToR2, listRecentBackups, readManifest } from './backup';
 import { sanitizeArticleForAgents } from './sanitize';
 
 /**
@@ -7065,6 +7066,45 @@ export default {
       }, 200, 0);
     }
 
+    // /api/admin/backup/run  POST&key=<ADMIN_KEY>  Trigger an ad-hoc KV backup to R2
+    // /api/admin/backup/list GET &key=<ADMIN_KEY>  List recent backup dates + object sizes
+    // /api/admin/backup/manifest GET &key=&date=YYYY-MM-DD  Read a manifest by date
+    if (path === '/api/admin/backup/run' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      if (request.method !== 'POST') {
+        return jsonResponse({ ok: false, error: 'POST_required' }, 405);
+      }
+      try {
+        const manifest = await backupKvToR2(env, 'admin', env.ENVIRONMENT || 'unknown');
+        return jsonResponse({ ok: true, manifest }, 200, 0);
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
+    }
+
+    if (path === '/api/admin/backup/list' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      try {
+        const limit = Math.min(90, Math.max(1, parseInt(url.searchParams.get('limit') || '30', 10) || 30));
+        const recent = await listRecentBackups(env, limit);
+        return jsonResponse({ ok: true, count: recent.length, backups: recent }, 200, 0);
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
+    }
+
+    if (path === '/api/admin/backup/manifest' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      const date = url.searchParams.get('date');
+      if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return jsonResponse({ ok: false, error: 'date_param_required_YYYY-MM-DD' }, 400);
+      }
+      try {
+        const manifest = await readManifest(env, date);
+        if (!manifest) return jsonResponse({ ok: false, error: 'manifest_not_found', date }, 404);
+        return jsonResponse({ ok: true, manifest }, 200, 0);
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
+    }
+
     if (path === '/api/admin/anomalies' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const events = await getAnomalyEvents(env);
       const severityFilter = url.searchParams.get('severity');
@@ -7584,6 +7624,16 @@ export default {
       // the registry snapshot. Politeness-paced (800ms between fetches);
       // tiny seed list at MVP.
       await run('refreshX402Registry', () => refreshX402Registry(env));
+    } else if (cron === '0 6 * * 0') {
+      // Sunday 06:00 UTC: weekly KV → R2 backup. Layer 1 of the
+      // disaster recovery plan. Walks every configured KV namespace,
+      // gzips, uploads to r2://tensorfeed-backups/{date}/. No-ops if
+      // the BACKUPS_R2 binding is missing (e.g. in dev environments
+      // where the bucket has not been provisioned).
+      await run('backupKvToR2', async () => {
+        if (!env.BACKUPS_R2) return { skipped: 'BACKUPS_R2_binding_missing' };
+        return backupKvToR2(env, 'cron', env.ENVIRONMENT || 'unknown');
+      });
     }
 
     // Record RSS poll history for the daily summary digest
