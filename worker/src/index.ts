@@ -342,6 +342,7 @@ import {
   isRateLimitExempt,
   rateLimitedResponse,
 } from './rate-limit';
+import { maybeHandleHoneypot } from './honeypot';
 import { sanitizeArticleForAgents } from './sanitize';
 
 /**
@@ -826,6 +827,13 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: CORS_HEADERS });
     }
+
+    // Honeypot trap. Runs before everything else so the request body, KV
+    // hits, and analytics are not consumed by obvious scanners. Returns
+    // an indistinguishable 404 and logs the probe to KV + Logpush for
+    // forensic export via /api/security/iocs.json.
+    const trapResponse = maybeHandleHoneypot(request, env, ctx);
+    if (trapResponse) return trapResponse;
 
     // Chaos engineering: short-circuit if the caller is testing failure modes.
     // Runs before activity tracking, route dispatch, and requirePayment so a
