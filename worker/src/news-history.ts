@@ -183,7 +183,7 @@ export function summarizeSourceHealth(day: SourceHealthDay): SourceHealthEntry[]
   for (const [id, slot] of Object.entries(day.sources)) {
     const reliability_pct =
       slot.polls > 0 ? Math.round((slot.polls_ok / slot.polls) * 1000) / 10 : 0;
-    entries.push({
+    const entry: SourceHealthEntry = {
       id,
       name: slot.name,
       polls: slot.polls,
@@ -193,9 +193,16 @@ export function summarizeSourceHealth(day: SourceHealthDay): SourceHealthEntry[]
       articles_total: slot.articles_total,
       reliability_pct,
       last_status: slot.last_status,
-      last_error: slot.last_error,
       last_seen_at: slot.last_seen_at,
-    });
+    };
+    // Only attach last_error when actually present. Otherwise the
+    // entry would carry `last_error: undefined`, which JSON.stringify
+    // silently drops but canonicalJSON (the receipt-signing
+    // serializer) refuses by design, throwing inside premiumResponse.
+    if (typeof slot.last_error === 'string') {
+      entry.last_error = slot.last_error;
+    }
+    entries.push(entry);
   }
   entries.sort((a, b) => b.reliability_pct - a.reliability_pct);
   return entries;

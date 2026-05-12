@@ -113,6 +113,57 @@ describe('summarizeSourceHealth', () => {
     expect(out[1].id).toBe('a');
     expect(out[1].reliability_pct).toBe(50);
   });
+
+  it('omits last_error entirely when the source has not errored, so canonicalJSON does not see undefined', () => {
+    const day: SourceHealthDay = {
+      date: '2026-05-12',
+      total_polls: 1,
+      updated_at: NOW.toISOString(),
+      sources: {
+        google: {
+          name: 'Google AI Blog',
+          polls: 1,
+          polls_ok: 1,
+          polls_empty: 0,
+          polls_error: 0,
+          articles_total: 5,
+          last_status: 'ok',
+          // no last_error: source has never errored
+          last_seen_at: NOW.toISOString(),
+        },
+      },
+    };
+    const entries = summarizeSourceHealth(day);
+    expect(entries).toHaveLength(1);
+    const entry = entries[0];
+    // The key must not appear at all. `'last_error' in entry` would be
+    // true if we emitted it as undefined, which would crash canonicalJSON
+    // when premiumResponse hashes the body for the AFTA receipt.
+    expect('last_error' in entry).toBe(false);
+  });
+
+  it('keeps last_error when the source actually errored', () => {
+    const day: SourceHealthDay = {
+      date: '2026-05-12',
+      total_polls: 1,
+      updated_at: NOW.toISOString(),
+      sources: {
+        flaky: {
+          name: 'Flaky Source',
+          polls: 1,
+          polls_ok: 0,
+          polls_empty: 0,
+          polls_error: 1,
+          articles_total: 0,
+          last_status: 'error',
+          last_error: 'connect ETIMEDOUT',
+          last_seen_at: NOW.toISOString(),
+        },
+      },
+    };
+    const entries = summarizeSourceHealth(day);
+    expect(entries[0].last_error).toBe('connect ETIMEDOUT');
+  });
 });
 
 describe('recordRSSPoll', () => {
