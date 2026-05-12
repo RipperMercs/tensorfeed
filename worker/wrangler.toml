@@ -3,6 +3,17 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
+# Cloudflare Workers Observability. Captures structured request logs +
+# console output for query via the Workers Observability API. Used by
+# the /api/mcp/activity public dashboard (which queries call counts by
+# tool) and by the operator-side query_worker_observability MCP tool.
+# Head sampling at 100% during initial rollout to capture all MCP
+# traffic; revisit if cost exceeds the Workers Paid bundle (50M
+# observability events/month free as of 2026-05).
+[observability]
+enabled = true
+head_sampling_rate = 1.0
+
 routes = [
   { pattern = "tensorfeed.ai/api/*", zone_name = "tensorfeed.ai" },
   # Trailing * on the single-file patterns is required: Cloudflare Pages
