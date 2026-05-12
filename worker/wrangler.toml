@@ -234,6 +234,24 @@ bucket_name = "tensorfeed-backups"
 binding = "SNAPSHOTS_R2"
 bucket_name = "tensorfeed-snapshots"
 
+# Workers Analytics Engine datasets. Free with Workers Paid (25M
+# datapoints/dataset/month). Purpose-built for high-frequency event
+# logging where KV is the wrong tool.
+#
+# tf_honeypot_hits: per-probe records. Replaces the 2-KV-write-per-hit
+# pattern that was a time bomb if a bot scan ever landed.
+#
+# tf_mcp_tool_calls: per-tool-call telemetry for the hosted MCP endpoint
+# at /api/mcp. Replaces the per-call KV read-modify-write counter that
+# would scale linearly with MCP traffic growth.
+[[analytics_engine_datasets]]
+binding = "HONEYPOT_AE"
+dataset = "tf_honeypot_hits"
+
+[[analytics_engine_datasets]]
+binding = "MCP_TOOL_CALLS_AE"
+dataset = "tf_mcp_tool_calls"
+
 # Workers AI binding for news-history Phase B clustering. Free tier
 # allots 10K neurons/day which comfortably covers our daily 200-
 # article embedding pass via @cf/baai/bge-base-en-v1.5. Used by

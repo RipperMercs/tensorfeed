@@ -61,12 +61,17 @@ const EMPTY_DAY = (): HostedDayCounts => ({ tools: {}, total: 0 });
 
 /**
  * Record a single hosted-endpoint tool call. Called from mcp-http
- * dispatch. Read-modify-write on a daily KV key; racy across isolates
- * but acceptable for an aggregate counter.
+ * dispatch. Storage (2026-05-12 onward): Workers Analytics Engine.
  *
- * Cost: 2 KV ops per tool call (one read + one write). At TF's
- * current hosted-endpoint volume this is well under the Workers Paid
- * free bundle. The kill switch protects against runaway cost.
+ * Migrated off the prior 2-KV-op-per-call read-modify-write counter
+ * because that pattern scales linearly with MCP traffic growth and
+ * would exhaust the KV bundle under any traction. AE is free with
+ * Workers Paid (25M datapoints/mo) and purpose-built for per-event
+ * telemetry; aggregations are computed at read time via the SQL API.
+ *
+ * Until the SQL reader is wired up, /api/mcp/activity shows zeros for
+ * hosted_endpoint counts; npm download stats remain the dominant
+ * signal (stdio installs are the majority install path anyway).
  */
 export async function recordHostedToolCall(
   env: Env,
@@ -74,38 +79,25 @@ export async function recordHostedToolCall(
   tier: 'free' | 'premium' | 'unknown',
   outcome: 'ok' | 'validation_error' | string,
 ): Promise<void> {
+  if (!env.MCP_TOOL_CALLS_AE) return;
   try {
-    const date = new Date().toISOString().slice(0, 10);
-    const key = HOSTED_COUNTER_KEY(date);
-    const raw = await env.TENSORFEED_CACHE.get(key);
-    let day: HostedDayCounts;
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object' && parsed.tools && typeof parsed.total === 'number') {
-          day = parsed as HostedDayCounts;
-        } else {
-          day = EMPTY_DAY();
-        }
-      } catch {
-        day = EMPTY_DAY();
-      }
-    } else {
-      day = EMPTY_DAY();
-    }
-    if (!day.tools[toolName]) {
-      day.tools[toolName] = { free: 0, premium: 0, errors: 0 };
-    }
-    const tt = day.tools[toolName]!;
-    if (tier === 'premium') tt.premium += 1;
-    else tt.free += 1;
-    if (outcome !== 'ok') tt.errors += 1;
-    day.total += 1;
-    await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify(day), {
-      expirationTtl: HOSTED_COUNTER_KEEP_DAYS * 24 * 60 * 60,
+    env.MCP_TOOL_CALLS_AE.writeDataPoint({
+      // index1 is the sampling key: tool name lets the aggregator group
+      // by tool with sampling. Max 96 bytes.
+      indexes: [toolName.slice(0, 96)],
+      blobs: [
+        tier,
+        outcome.slice(0, 64),
+        // YYYY-MM-DD for day-grain queries that need bucket alignment.
+        new Date().toISOString().slice(0, 10),
+      ],
+      doubles: [
+        // Epoch ms for finer-grain bucketing.
+        Date.now(),
+      ],
     });
   } catch {
-    // Best-effort counter; never break the calling request path
+    // Best-effort telemetry; never break the calling request path.
   }
 }
 
@@ -241,7 +233,7 @@ export async function getActivitySnapshot(env: Env): Promise<MCPActivitySnapshot
       daily_series_30d: dailySeries.reverse(),
     },
     attribution:
-      'Source: api.npmjs.org for download counts (cached 1h); TF Worker KV counters for hosted endpoint tool calls (best-effort, may undercount on isolate races).',
+      'Source: api.npmjs.org for download counts (cached 1h). Hosted-endpoint tool calls migrated to Workers Analytics Engine on 2026-05-12; counts shown here reflect legacy KV-stored daily aggregates and will roll off over 30 days. SQL-backed AE aggregations land in a follow-up.',
     next_steps: {
       agent_install: 'npx -y @tensorfeed/x402-base-mcp',
       verify_signature: 'npm audit signatures @tensorfeed/x402-base-mcp',

@@ -24,7 +24,6 @@
 
 import type { Env } from './types';
 import { getClientIP } from './rate-limit';
-import { safePut } from './kill-switch';
 
 /**
  * Path prefixes and exact paths considered traps. Match is exact OR
@@ -103,10 +102,12 @@ export interface HoneypotHit {
   country: string | null;
 }
 
+// Legacy KV layout (drained, kept for the IOC reader's transitional
+// fallback until AE SQL API is wired up). Records under sec:honeypot:hits:*
+// will TTL out naturally over 30 days.
 const HITS_PREFIX = 'sec:honeypot:hits:';
 const HITS_INDEX_KEY = 'sec:honeypot:index';
 const HITS_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
-const INDEX_CAP = 5_000;
 
 /**
  * Return true if `path` is a honeypot trap path.
@@ -143,41 +144,42 @@ export function makeHit(request: Request): HoneypotHit {
  * Persist a hit and emit a structured log line. Async; do not block
  * the response on this. Use ctx.waitUntil() at the call site.
  *
- * Storage:
- *   - sec:honeypot:hits:{rayId} -> HoneypotHit (TTL 30 days)
- *   - sec:honeypot:index -> ring buffer of last 5000 ray ids
+ * Storage (2026-05-12 onward): Workers Analytics Engine. Migrated off
+ * KV because the prior pattern wrote 2 KV ops per hit (record + index
+ * update), which is a time bomb under any sustained bot scan. AE is
+ * free with Workers Paid (25M datapoints/mo) and purpose-built for
+ * high-frequency event logging.
  *
- * Cost: 1 KV write + 1 KV write per honeypot hit. Cloudflare's WAF
- * blocks the vast majority of these before they reach the Worker, so
- * volume should stay <1k/day in steady state. Wrapped in safePut so
- * the kill switch protects against runaway cost.
+ * The console.log line is preserved so Workers Observability still has
+ * full per-hit forensic detail for ad-hoc investigation.
  */
 export async function logHoneypotHit(env: Env, hit: HoneypotHit): Promise<void> {
   // eslint-disable-next-line no-console
   console.log('honeypot_hit', JSON.stringify(hit));
-  const rayId = hit.cf_ray || `nocf-${Date.now()}`;
-  await safePut(env, env.TENSORFEED_CACHE, `${HITS_PREFIX}${rayId}`, JSON.stringify(hit), {
-    expirationTtl: HITS_TTL_SECONDS,
-  });
-  // Update index (best-effort; we tolerate races since this is forensic)
-  try {
-    const raw = await env.TENSORFEED_CACHE.get(HITS_INDEX_KEY);
-    let index: string[] = [];
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) index = parsed.filter((v) => typeof v === 'string');
-      } catch {
-        // bad index value, start fresh
-      }
+  if (env.HONEYPOT_AE) {
+    try {
+      env.HONEYPOT_AE.writeDataPoint({
+        // index1 is the sampling key (max 1, max 96 bytes). IP gives
+        // good per-attacker dedupe for the SQL aggregation that powers
+        // the IOC export.
+        indexes: [hit.ip.slice(0, 96)],
+        blobs: [
+          hit.path.slice(0, 256),
+          hit.method.slice(0, 16),
+          hit.user_agent.slice(0, 256),
+          hit.country ?? '',
+          hit.cf_ray.slice(0, 64),
+        ],
+        doubles: [
+          hit.asn ?? 0,
+          // Epoch ms for time bucketing in SQL queries.
+          Date.parse(hit.detected_at),
+        ],
+      });
+    } catch (err) {
+      // AE writes are best-effort; never break the response on telemetry.
+      console.warn('honeypot AE write failed:', err);
     }
-    index.push(rayId);
-    if (index.length > INDEX_CAP) {
-      index = index.slice(-INDEX_CAP);
-    }
-    await safePut(env, env.TENSORFEED_CACHE, HITS_INDEX_KEY, JSON.stringify(index));
-  } catch {
-    // Index update is non-critical; the per-hit record is the source of truth
   }
 }
 

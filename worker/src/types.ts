@@ -39,6 +39,16 @@ export interface Env {
   // for hot-path writes. Optional binding; module falls back to KV reads
   // if missing (so a deploy with a stale wrangler.toml degrades gracefully).
   SNAPSHOTS_R2?: R2Bucket;
+  // Workers Analytics Engine: honeypot hit records. Replaces the 2-KV-
+  // write-per-hit pattern in honeypot.ts (record + index). Free with
+  // Workers Paid, 25M datapoints/mo. Read via SQL API (set up later).
+  HONEYPOT_AE?: AnalyticsEngineDataset;
+  // Workers Analytics Engine: hosted MCP endpoint tool call telemetry.
+  // Replaces the per-call KV counter in mcp-activity.ts. Read via SQL
+  // API; until that's wired the /api/mcp/activity dashboard shows
+  // zeros for hosted_endpoint (npm download counts remain the primary
+  // signal).
+  MCP_TOOL_CALLS_AE?: AnalyticsEngineDataset;
   // Admin-only routes auth. REQUIRED in production. Set via:
   //   wrangler secret put ADMIN_KEY
   // Used by /api/admin/* and /api/refresh. Replaces the previous
