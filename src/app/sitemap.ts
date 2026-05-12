@@ -213,6 +213,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/x402-verifier-mcp-launch`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/verify`, lastModified: now, changeFrequency: 'daily', priority: 0.95 },
     { url: `${baseUrl}/mcp/activity`, lastModified: now, changeFrequency: 'hourly', priority: 0.9 },
+    { url: `${baseUrl}/x402/health`, lastModified: now, changeFrequency: 'hourly', priority: 0.9 },
     { url: `${baseUrl}/originals/anthropic-dreaming-managed-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/apple-intelligence-extensions-ios-27`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/one-day-eight-free-apis`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },

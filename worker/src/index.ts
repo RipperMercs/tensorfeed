@@ -347,6 +347,7 @@ import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
 import { getActivitySnapshot } from './mcp-activity';
 import { handleAftaBadge } from './afta-badge';
+import { runX402StatusCheck, getStatusSnapshot } from './x402-status';
 import { sanitizeArticleForAgents } from './sanitize';
 
 /**
@@ -951,6 +952,25 @@ export default {
     // and the badge reflects their live AFTA score. Errors gracefully.
     if (path === '/api/afta/badge' || path === '/api/afta/badge.svg') {
       return handleAftaBadge(request, env, url);
+    }
+
+    // x402 publisher status snapshot. Hourly cron monitors every known
+    // x402 publisher's /.well-known/x402.json. Returns current state +
+    // 24h/7d uptime + recent series for the public /x402/health dashboard.
+    if (path === '/api/x402/status' || path === '/api/x402/health') {
+      try {
+        const snapshot = await getStatusSnapshot(env);
+        return new Response(JSON.stringify(snapshot), {
+          status: 200,
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+            'cache-control': 'public, max-age=120, s-maxage=120',
+            'access-control-allow-origin': '*',
+          },
+        });
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
     }
 
     if (path === '/api/mcp/activity' || path === '/api/mcp/activity.json') {
@@ -7663,6 +7683,11 @@ export default {
         if (!env.BACKUPS_R2) return { skipped: 'BACKUPS_R2_binding_missing' };
         return backupKvToR2(env, 'cron', env.ENVIRONMENT || 'unknown');
       });
+    } else if (cron === '27 * * * *') {
+      // Hourly :27 UTC: probe every known x402 publisher's manifest
+      // and record latency + validity. Rolls up to 24h + 7d uptime
+      // stats served on /x402/health.
+      await run('runX402StatusCheck', () => runX402StatusCheck(env, env.SITE_URL || 'https://tensorfeed.ai'));
     }
 
     // Record RSS poll history for the daily summary digest

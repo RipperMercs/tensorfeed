@@ -187,6 +187,12 @@ crons = [
   # docs/restore-from-backup.md. Cloudflare's cron parser rejected
   # the Sunday-only "0 6 * * 0" form, so daily it is.
   "15 6 * * *",
+  # Every hour at :27 UTC: probe every known x402 publisher's
+  # /.well-known/x402.json (worker/src/x402-status.ts). Records
+  # latency, manifest validity, HTTP status. Rolls up to 24h + 7d
+  # uptime stats served on /x402/health. :27 slot picked to avoid
+  # the :00/:10/:15/:30/:45 clusters other crons use.
+  "27 * * * *",
 ]
 
 [[kv_namespaces]]
