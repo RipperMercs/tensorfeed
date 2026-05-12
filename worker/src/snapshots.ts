@@ -3,16 +3,39 @@ import { Env, Article } from './types';
 /**
  * Rolling hourly snapshot system.
  *
- * Each snapshot type is stored as a single KV key whose value is an array
+ * Each snapshot type is stored as a single object whose value is an array
  * of up to 24 entries (one per hour). New entries are prepended; the tail
  * is trimmed. If a cron run ever produces empty or missing live data, the
  * latest good snapshot can be restored into the live key so readers
  * never see an empty response.
  *
- * Writes: 7 snapshot keys * once per hour = 168 writes/day (negligible).
+ * Storage backend: R2 (migrated off KV on 2026-05-12).
+ *
+ * Why R2 instead of KV
+ * --------------------
+ * The hourly cron capturing 8 snapshot types = 192 writes/day = ~5,760
+ * writes/month. KV billable overage is $5 per million writes after the
+ * 1M bundle, so this is pennies in raw cost. The real reason to move
+ * is the *bundle competition*: every snapshot write that goes to KV is
+ * one fewer write available for hot-path writes (payments, replay
+ * protection, anomaly events) before the 1M bundle is exhausted and
+ * everything starts billing. R2 has its own separate, generous free
+ * tier (10 GB storage, 1M Class A ops/mo) that does not compete with
+ * KV bundles at all.
+ *
+ * Reads are wrapped in Cache API (5 min TTL) so steady-state read load
+ * doesn't hit R2 either. Worst case is 12 R2 reads/hour/type at full
+ * Cache API miss rate, well under any tier limit.
+ *
+ * Failure modes
+ * -------------
+ * Bind missing or R2 outage: write/read functions return as if the
+ * snapshot was empty/missing. Callers degrade gracefully (snapshots
+ * stop accumulating temporarily; readers fall back to live data).
  */
 
 const MAX_SNAPSHOTS = 24;
+const CACHE_TTL_SECONDS = 300; // 5 min; reads are fronted by Cache API
 
 interface SnapshotEntry<T> {
   timestamp: string;
@@ -33,6 +56,12 @@ const SNAPSHOT_KEY_PREFIX = 'snapshot:';
 
 function snapshotKey(type: SnapshotType): string {
   return `${SNAPSHOT_KEY_PREFIX}${type}`;
+}
+
+function snapshotR2Key(type: SnapshotType): string {
+  // Object key in R2. Keep the same logical name as the legacy KV key
+  // for traceability against historical logs.
+  return `${SNAPSHOT_KEY_PREFIX}${type}.json`;
 }
 
 function namespaceFor(env: Env, type: SnapshotType): KVNamespace {
@@ -86,25 +115,130 @@ function isGoodLiveValue(type: SnapshotType, value: unknown): boolean {
   return false;
 }
 
-async function readSnapshotArray<T>(env: Env, type: SnapshotType): Promise<SnapshotEntry<T>[]> {
-  const ns = namespaceFor(env, type);
-  const raw = (await ns.get(snapshotKey(type), 'json')) as SnapshotEntry<T>[] | null;
-  return Array.isArray(raw) ? raw : [];
+// ── R2 + Cache API wrappers ────────────────────────────────────────
+
+function cacheRequestFor(type: SnapshotType): Request {
+  return new Request(`https://tf-snapshots.internal/v1/${encodeURIComponent(type)}`, {
+    method: 'GET',
+  });
 }
 
-async function writeSnapshotArray<T>(
+function getCache(): Cache | null {
+  try {
+    if (typeof caches === 'undefined') return null;
+    return caches.default ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function readSnapshotArrayR2<T>(env: Env, type: SnapshotType): Promise<SnapshotEntry<T>[]> {
+  // 1. Try edge Cache API. Free, fast, fronts every read so steady-state
+  //    reads never touch R2.
+  const cache = getCache();
+  const cacheReq = cacheRequestFor(type);
+  if (cache) {
+    try {
+      const hit = await cache.match(cacheReq);
+      if (hit) {
+        const text = await hit.text();
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) return parsed as SnapshotEntry<T>[];
+      }
+    } catch {
+      // Cache miss or parse failure: fall through to R2.
+    }
+  }
+
+  // 2. R2 read. Object is a JSON array.
+  if (!env.SNAPSHOTS_R2) return [];
+  let entries: SnapshotEntry<T>[] = [];
+  try {
+    const obj = await env.SNAPSHOTS_R2.get(snapshotR2Key(type));
+    if (obj) {
+      const text = await obj.text();
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed)) entries = parsed as SnapshotEntry<T>[];
+    }
+  } catch (err) {
+    console.warn(`snapshots: R2 read failed for ${type}:`, err);
+    return [];
+  }
+
+  // 3. Populate cache for next reader.
+  if (cache && entries.length > 0) {
+    try {
+      const res = new Response(JSON.stringify(entries), {
+        headers: {
+          'content-type': 'application/json',
+          'cache-control': `s-maxage=${CACHE_TTL_SECONDS}`,
+        },
+      });
+      await cache.put(cacheReq, res);
+    } catch {
+      // Cache populate failure is non-blocking.
+    }
+  }
+
+  return entries;
+}
+
+async function writeSnapshotArrayR2<T>(
   env: Env,
   type: SnapshotType,
   entries: SnapshotEntry<T>[],
 ): Promise<void> {
-  const ns = namespaceFor(env, type);
-  await ns.put(snapshotKey(type), JSON.stringify(entries));
+  if (!env.SNAPSHOTS_R2) {
+    console.warn(`snapshots: SNAPSHOTS_R2 binding missing, skipping write for ${type}`);
+    return;
+  }
+  await env.SNAPSHOTS_R2.put(snapshotR2Key(type), JSON.stringify(entries), {
+    httpMetadata: {
+      contentType: 'application/json',
+    },
+  });
+  // Invalidate cache so the next read picks up the fresh array.
+  const cache = getCache();
+  if (cache) {
+    try {
+      await cache.delete(cacheRequestFor(type));
+    } catch {
+      // Cache invalidation failure is non-blocking; cache entry will
+      // age out within CACHE_TTL_SECONDS anyway.
+    }
+  }
 }
+
+/**
+ * Legacy KV read for fallback during the migration window. R2 starts
+ * empty after the bucket is created; until the first hourly cron fires
+ * and populates each type, readers will get nothing from R2. Falling
+ * back to the last good KV snapshot keeps `restoreFromSnapshot` working
+ * during the transition. Remove this fallback after 24h of healthy R2
+ * writes (next session).
+ */
+async function readSnapshotArrayKVFallback<T>(
+  env: Env,
+  type: SnapshotType,
+): Promise<SnapshotEntry<T>[]> {
+  const ns = namespaceFor(env, type);
+  try {
+    const raw = (await ns.get(snapshotKey(type), 'json')) as SnapshotEntry<T>[] | null;
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+// ── Public API ─────────────────────────────────────────────────────
 
 /**
  * Capture the current live value for a given type into the rolling snapshot
  * array, if the live value looks healthy. Returns true if a snapshot was
  * taken, false if skipped (missing or empty live data).
+ *
+ * Writes go to R2 only. The hourly cron drives this; KV is no longer
+ * touched by the snapshot write path.
  */
 export async function captureSnapshot(env: Env, type: SnapshotType): Promise<boolean> {
   const ns = namespaceFor(env, type);
@@ -114,11 +248,16 @@ export async function captureSnapshot(env: Env, type: SnapshotType): Promise<boo
     return false;
   }
 
-  const entries = await readSnapshotArray<unknown>(env, type);
+  // Read prior array from R2 (with KV fallback during the transition
+  // window so we don't lose the rolling history at the moment of cutover).
+  let entries = await readSnapshotArrayR2<unknown>(env, type);
+  if (entries.length === 0) {
+    entries = await readSnapshotArrayKVFallback<unknown>(env, type);
+  }
   entries.unshift({ timestamp: new Date().toISOString(), data: live });
   const trimmed = entries.slice(0, MAX_SNAPSHOTS);
-  await writeSnapshotArray(env, type, trimmed);
-  console.log(`snapshot captured: ${type} (rolling=${trimmed.length})`);
+  await writeSnapshotArrayR2(env, type, trimmed);
+  console.log(`snapshot captured: ${type} (rolling=${trimmed.length}, backend=R2)`);
   return true;
 }
 
@@ -159,19 +298,28 @@ export async function captureAllSnapshots(env: Env): Promise<{
 
 /**
  * Read the latest snapshot for a given type without modifying anything.
+ * Prefers R2 (with Cache API in front); falls back to KV during the
+ * migration window so `restoreFromSnapshot` keeps working immediately
+ * after deploy, before R2 has been populated.
  */
 export async function getLatestSnapshot<T>(
   env: Env,
   type: SnapshotType,
 ): Promise<SnapshotEntry<T> | null> {
-  const entries = await readSnapshotArray<T>(env, type);
-  return entries.length > 0 ? entries[0] : null;
+  const r2Entries = await readSnapshotArrayR2<T>(env, type);
+  if (r2Entries.length > 0) return r2Entries[0];
+  const kvEntries = await readSnapshotArrayKVFallback<T>(env, type);
+  return kvEntries.length > 0 ? kvEntries[0] : null;
 }
 
 /**
  * Restore a specific type from the most recent snapshot back into the live
  * KV key. Used when the live value is missing, empty, or stale. Returns
  * true if a restore happened.
+ *
+ * The restored value goes back into the LIVE KV key (e.g. `articles`),
+ * which is the read-hot path. That single write is small and not a
+ * candidate for migration; the snapshot itself is what moved to R2.
  */
 export async function restoreFromSnapshot(env: Env, type: SnapshotType): Promise<boolean> {
   const latest = await getLatestSnapshot<unknown>(env, type);
@@ -225,7 +373,8 @@ export async function getSnapshotSummary(
 
   const summary = {} as Record<SnapshotType, { count: number; newest: string | null; oldest: string | null }>;
   for (const type of allTypes) {
-    const entries = await readSnapshotArray(env, type);
+    let entries = await readSnapshotArrayR2(env, type);
+    if (entries.length === 0) entries = await readSnapshotArrayKVFallback(env, type);
     summary[type] = {
       count: entries.length,
       newest: entries[0]?.timestamp ?? null,

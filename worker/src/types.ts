@@ -34,6 +34,11 @@ export interface Env {
   // R2 bucket for weekly KV backups (Layer 1 of the disaster recovery
   // plan). Optional binding; backup module no-ops if missing.
   BACKUPS_R2?: R2Bucket;
+  // R2 bucket for rolling hourly snapshots (worker/src/snapshots.ts).
+  // Migrated off KV on 2026-05-12 to preserve the KV write/month bundle
+  // for hot-path writes. Optional binding; module falls back to KV reads
+  // if missing (so a deploy with a stale wrangler.toml degrades gracefully).
+  SNAPSHOTS_R2?: R2Bucket;
   // Admin-only routes auth. REQUIRED in production. Set via:
   //   wrangler secret put ADMIN_KEY
   // Used by /api/admin/* and /api/refresh. Replaces the previous

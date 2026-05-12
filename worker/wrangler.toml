@@ -223,6 +223,17 @@ id = "432951e9eeea420bafc8a5184a50b872"
 binding = "BACKUPS_R2"
 bucket_name = "tensorfeed-backups"
 
+# R2 bucket for rolling hourly snapshots (worker/src/snapshots.ts).
+# Migrated off KV on 2026-05-12 to free up the 1M write/month bundle
+# for hot-path writes; daily snapshot writes used ~5,760 ops/month on
+# KV at $5/M (~$0.03) but compete for the bundle with everything else
+# during growth. R2 storage cost is negligible (8 types × ~50 KB each
+# × rolling 24h = under 10 MB total, well inside the 10 GB free tier).
+# Reads go through Cache API (5 min TTL) so R2 op cost is also tiny.
+[[r2_buckets]]
+binding = "SNAPSHOTS_R2"
+bucket_name = "tensorfeed-snapshots"
+
 # Workers AI binding for news-history Phase B clustering. Free tier
 # allots 10K neurons/day which comfortably covers our daily 200-
 # article embedding pass via @cf/baai/bge-base-en-v1.5. Used by
