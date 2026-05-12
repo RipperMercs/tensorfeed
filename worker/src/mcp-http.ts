@@ -904,18 +904,47 @@ async function handleToolCall(
       'authentication_required: this tool requires an Authorization: Bearer tf_live_... header. Buy credits at https://tensorfeed.ai/developers/agent-payments.',
     );
   }
+  const startMs = Date.now();
   try {
     const data = await tool.handler(ctx.env, args);
+    // Structured log so each MCP tool invocation lands in Workers
+    // Observability. Used by the cloudflare-observability MCP query
+    // surface for operator dashboards + (later) a public
+    // /api/mcp/activity endpoint. Cheap; one console.log per call.
+    // eslint-disable-next-line no-console
+    console.log('mcp_tool_call', JSON.stringify({
+      tool: tool.name,
+      tier: tool.tier,
+      authed: Boolean(ctx.bearerToken),
+      duration_ms: Date.now() - startMs,
+      outcome: 'ok',
+    }));
     return { result: mcpContent(data) };
   } catch (e) {
     if (e instanceof ValidationError) {
       // Intentional validation error: message is safe to surface.
+      // eslint-disable-next-line no-console
+      console.log('mcp_tool_call', JSON.stringify({
+        tool: tool.name,
+        tier: tool.tier,
+        authed: Boolean(ctx.bearerToken),
+        duration_ms: Date.now() - startMs,
+        outcome: 'validation_error',
+      }));
       return mcpToolError(`validation_error: ${e.message}`);
     }
     const tag = newErrorTag();
     const bucket = classifyException(e);
     // Full exception goes to logs only, never to the client.
     console.error(`mcp-http tool_error tag=${tag} tool=${tool.name} bucket=${bucket}:`, e);
+    // eslint-disable-next-line no-console
+    console.log('mcp_tool_call', JSON.stringify({
+      tool: tool.name,
+      tier: tool.tier,
+      authed: Boolean(ctx.bearerToken),
+      duration_ms: Date.now() - startMs,
+      outcome: `tool_error:${bucket}`,
+    }));
     return mcpToolError(`tool_error:${bucket} ref=${tag}`);
   }
 }
