@@ -376,6 +376,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [MCP Pro Tier](https://tensorfeed.ai/mcp/pro): $25 USDC/month subscription token for unlimited TensorFeed premium API calls when used through the TensorFeed MCP server. Designed for Claude Desktop, Cline, and other MCP-capable agent environments. Invite-only beta. Machine-readable catalog at /api/mcp/pro-tier.
 
 ## Tools for Agents
+- [MCP Activity Dashboard](https://tensorfeed.ai/mcp/activity): Live install counts for @tensorfeed/mcp-server and @tensorfeed/x402-base-mcp pulled from api.npmjs.org (last day / last week / last month), plus hosted endpoint tool-call telemetry from /api/mcp (today / last 7d / last 30d, daily series, top tools by call volume). Free, no auth, agent-friendly. JSON at `/api/mcp/activity`. Cached 5 min at the edge.
 - [Verify an x402 Publisher (live AFTA scorecard)](https://tensorfeed.ai/verify): Paste any domain to instantly score its x402 + AFTA compliance. Six concrete checks: canonical Coinbase x402 V2 manifest, paid items with valid accepts[] entries, per-network EIP-712 domain hints, AFTA fair-trade declaration with no-charge guarantees, signed-receipt declaration, published receipt-signing public key. Federation members get federation_parent surfaced. Direct programmatic access at `/api/afta-certify/check?domain=X`. Free, no auth, idempotent.
 
 ## Content Hubs

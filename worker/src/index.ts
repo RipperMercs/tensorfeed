@@ -345,6 +345,7 @@ import {
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
+import { getActivitySnapshot } from './mcp-activity';
 import { sanitizeArticleForAgents } from './sanitize';
 
 /**
@@ -938,6 +939,26 @@ export default {
 
     if (path === '/api/security/iocs.json' || path === '/api/security/iocs') {
       return handleIocExport(env);
+    }
+
+    // Public MCP activity dashboard data. Two signal sources:
+    //  - npm downloads (primary; covers the dominant stdio install path)
+    //  - Hosted /api/mcp tool-call counters from KV (secondary)
+    // Cached at the edge for 5 minutes; npm fetches inside are cached 1 hr.
+    if (path === '/api/mcp/activity' || path === '/api/mcp/activity.json') {
+      try {
+        const snapshot = await getActivitySnapshot(env);
+        return new Response(JSON.stringify(snapshot), {
+          status: 200,
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+            'cache-control': 'public, max-age=300, s-maxage=300',
+            'access-control-allow-origin': '*',
+          },
+        });
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
     }
 
     if (path === '/api/health') {
