@@ -20,6 +20,17 @@ function mockR2(): { bucket: any; puts: Array<{ key: string; value: any; meta: a
   const puts: Array<{ key: string; value: any; meta: any }> = [];
   const bucket = {
     put: vi.fn(async (key: string, value: any, opts: any) => {
+      // Drain ReadableStream bodies the way real R2.put would; otherwise
+      // the generator behind streamNamespaceToR2 never produces its
+      // values and key_count stays at zero.
+      if (value && typeof value.getReader === 'function') {
+        const reader = value.getReader();
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { done } = await reader.read();
+          if (done) break;
+        }
+      }
       puts.push({ key, value, meta: opts });
     }),
     list: vi.fn(async (opts: any) => ({
@@ -109,17 +120,23 @@ describe('backupKvToR2', () => {
     expect(manifest.namespaces.find((n) => n.name === 'TENSORFEED_STATUS')!.error).toBeUndefined();
   });
 
-  it('produces a sha256 for each successful namespace dump', async () => {
+  it('records byte_count as the streaming run progresses', async () => {
+    // Post-streaming-refactor: sha256 is intentionally empty (computing
+    // it would require a stream tee + full buffer, defeating the
+    // streaming design). R2 returns an etag on put that serves as the
+    // integrity check. byte_count is still useful as a sanity signal.
     const { bucket } = mockR2();
     const env = {
-      TENSORFEED_NEWS: mockKvNamespace([{ key: 'a', value: 'b' }]),
+      TENSORFEED_NEWS: mockKvNamespace([{ key: 'a', value: 'somevalue' }]),
       TENSORFEED_STATUS: mockKvNamespace([]),
       TENSORFEED_CACHE: mockKvNamespace([]),
       BACKUPS_R2: bucket,
     } as unknown as Env;
     const manifest = await backupKvToR2(env, 'cron');
     const ns = manifest.namespaces.find((n) => n.name === 'TENSORFEED_NEWS');
-    expect(ns!.sha256_hex).toMatch(/^[0-9a-f]{64}$/);
+    expect(ns!.sha256_hex).toBe('');
+    expect(ns!.byte_count).toBeGreaterThan(0);
+    expect(ns!.key_count).toBe(1);
   });
 });
 

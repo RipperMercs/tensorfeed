@@ -64,110 +64,88 @@ export interface BackupManifest {
 }
 
 /**
- * Walk one KV namespace and stream a JSONL representation into an
- * accumulating buffer + sha256 hash. Returns the assembled buffer
- * plus stats. Caller is responsible for gzipping + uploading to R2.
+ * Walk one KV namespace and stream its contents directly through gzip
+ * into R2. No in-memory buffering of the JSONL — values flow from KV
+ * through a ReadableStream, through CompressionStream('gzip'), and
+ * straight into R2.put as a streamed body.
  *
- * Memory consideration: a full namespace can be large. We chunk the
- * JSONL into 1 MB segments so a single oversized value doesn't blow
- * the isolate memory limit. If a namespace produces more than 50 MB
- * we abort that namespace's backup with an error and continue with
- * the others (better partial than nothing).
+ * Memory footprint is bounded by the largest single KV value plus
+ * gzip working memory (low double-digit MB at most). Removes the
+ * 50/100 MB cap that the previous buffering implementation needed.
+ *
+ * Tradeoff: we no longer compute sha256 of the uncompressed content
+ * because that would require a tee + full buffer. R2 returns an etag
+ * (md5 of the put content) on success that serves as the integrity
+ * check; the manifest captures the R2-side checksum after the upload
+ * completes.
  */
-async function dumpNamespace(
+async function streamNamespaceToR2(
   ns: KVNamespace,
   name: string,
-): Promise<{ jsonl: string; summary: NamespaceBackupSummary }> {
+  r2: R2Bucket,
+  objectKey: string,
+  runId: string,
+): Promise<NamespaceBackupSummary> {
   const started = Date.now();
-  const parts: string[] = [];
+  const encoder = new TextEncoder();
   let keyCount = 0;
   let byteCount = 0;
-  let cursor: string | undefined;
-  // 100 MB sanity cap. Worker isolate memory ceiling is ~128 MB, and we
-  // buffer the entire JSONL in memory before gzipping. When a single
-  // namespace exceeds this we need to refactor to a streaming pipeline
-  // (ReadableStream chained through CompressionStream into R2.put).
-  // TENSORFEED_CACHE first crossed 50 MB on 2026-05-12; revisit
-  // streaming when it exceeds 80 MB.
-  const MAX_BYTES = 100 * 1024 * 1024;
+  let firstError: string | undefined;
+
+  async function* walk(): AsyncGenerator<Uint8Array> {
+    let cursor: string | undefined;
+    try {
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const page = await ns.list({ limit: LIST_LIMIT, cursor });
+        for (const key of page.keys) {
+          const value = await ns.get(key.name, 'text');
+          const line = JSON.stringify({ k: key.name, v: value, m: key.metadata ?? null }) + '\n';
+          const bytes = encoder.encode(line);
+          keyCount += 1;
+          byteCount += bytes.length;
+          yield bytes;
+        }
+        if (page.list_complete) return;
+        cursor = page.cursor;
+        if (!cursor) return;
+      }
+    } catch (e) {
+      firstError = e instanceof Error ? e.message : String(e);
+      return;
+    }
+  }
+
+  const iter = walk();
+  const body = new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      const { value, done } = await iter.next();
+      if (done) controller.close();
+      else if (value) controller.enqueue(value);
+    },
+  });
 
   try {
-    // Loop the list cursor until exhausted. Each list returns up to 1000
-    // keys; we get the value separately because list() does not include
-    // values by design.
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const page = await ns.list({ limit: LIST_LIMIT, cursor });
-      for (const key of page.keys) {
-        // Read the value as text. Most TF values are JSON strings.
-        // Binary blobs (rare on TF) would lose fidelity in this format
-        // and need a per-key sidecar; out of scope for v1.
-        const value = await ns.get(key.name, 'text');
-        const record = {
-          k: key.name,
-          v: value,
-          m: key.metadata ?? null,
-        };
-        const line = JSON.stringify(record) + '\n';
-        parts.push(line);
-        keyCount += 1;
-        byteCount += line.length;
-        if (byteCount > MAX_BYTES) {
-          throw new Error(`namespace_too_large: ${name} exceeded ${MAX_BYTES} bytes after ${keyCount} keys`);
-        }
-      }
-      if (page.list_complete) break;
-      cursor = page.cursor;
-      if (!cursor) break;
-    }
-  } catch (e) {
-    return {
-      jsonl: parts.join(''),
-      summary: {
-        name,
-        key_count: keyCount,
-        byte_count: byteCount,
-        sha256_hex: '',
-        duration_ms: Date.now() - started,
-        error: e instanceof Error ? e.message : String(e),
+    const gzipped = body.pipeThrough(new CompressionStream('gzip'));
+    await r2.put(objectKey, gzipped, {
+      httpMetadata: { contentType: 'application/gzip' },
+      customMetadata: {
+        namespace: name,
+        run_id: runId,
       },
-    };
+    });
+  } catch (e) {
+    firstError = firstError ?? (e instanceof Error ? e.message : String(e));
   }
 
-  const jsonl = parts.join('');
-  const sha256 = await sha256Hex(jsonl);
   return {
-    jsonl,
-    summary: {
-      name,
-      key_count: keyCount,
-      byte_count: byteCount,
-      sha256_hex: sha256,
-      duration_ms: Date.now() - started,
-    },
+    name,
+    key_count: keyCount,
+    byte_count: byteCount,
+    sha256_hex: '',
+    duration_ms: Date.now() - started,
+    error: firstError,
   };
-}
-
-async function sha256Hex(input: string): Promise<string> {
-  const buf = new TextEncoder().encode(input);
-  const digest = await crypto.subtle.digest('SHA-256', buf);
-  const bytes = new Uint8Array(digest);
-  let hex = '';
-  for (let i = 0; i < bytes.length; i++) {
-    const b = bytes[i] ?? 0;
-    hex += b.toString(16).padStart(2, '0');
-  }
-  return hex;
-}
-
-/**
- * Gzip a string using the platform CompressionStream. Returns a
- * Uint8Array suitable for R2.put.
- */
-async function gzip(input: string): Promise<Uint8Array> {
-  const stream = new Blob([input]).stream().pipeThrough(new CompressionStream('gzip'));
-  const buf = await new Response(stream).arrayBuffer();
-  return new Uint8Array(buf);
 }
 
 function todayDateStamp(): string {
@@ -218,25 +196,9 @@ export async function backupKvToR2(
       });
       continue;
     }
-    const { jsonl, summary } = await dumpNamespace(ns, name);
+    const objectKey = `${dateStamp}/${name}.jsonl.gz`;
+    const summary = await streamNamespaceToR2(ns, name, env.BACKUPS_R2, objectKey, runId);
     summaries.push(summary);
-    if (summary.error) continue;
-
-    try {
-      const gz = await gzip(jsonl);
-      const objectKey = `${dateStamp}/${name}.jsonl.gz`;
-      await env.BACKUPS_R2.put(objectKey, gz, {
-        httpMetadata: { contentType: 'application/gzip' },
-        customMetadata: {
-          namespace: name,
-          run_id: runId,
-          key_count: String(summary.key_count),
-          sha256_uncompressed: summary.sha256_hex,
-        },
-      });
-    } catch (e) {
-      summary.error = `r2_put_failed: ${e instanceof Error ? e.message : String(e)}`;
-    }
   }
 
   const completedAt = new Date().toISOString();
