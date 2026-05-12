@@ -126,12 +126,37 @@ async function streamNamespaceToR2(
   });
 
   try {
-    const gzipped = body.pipeThrough(new CompressionStream('gzip'));
-    await r2.put(objectKey, gzipped, {
+    // R2.put requires bodies of known length. Stream the JSONL source
+    // through gzip (this is where the win is — no 54MB string ever
+    // exists in memory), then collect the COMPRESSED bytes into a
+    // single Uint8Array for the upload. Compressed size is roughly
+    // 10% of source for typical JSON, so 54MB uncompressed -> ~5MB
+    // gzipped, well under the Worker isolate memory ceiling.
+    const compressed = body.pipeThrough(new CompressionStream('gzip'));
+    const reader = compressed.getReader();
+    const chunks: Uint8Array[] = [];
+    let compressedLen = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (value) {
+        chunks.push(value);
+        compressedLen += value.length;
+      }
+    }
+    const buf = new Uint8Array(compressedLen);
+    let offset = 0;
+    for (const chunk of chunks) {
+      buf.set(chunk, offset);
+      offset += chunk.length;
+    }
+    await r2.put(objectKey, buf, {
       httpMetadata: { contentType: 'application/gzip' },
       customMetadata: {
         namespace: name,
         run_id: runId,
+        compressed_bytes: String(compressedLen),
       },
     });
   } catch (e) {
