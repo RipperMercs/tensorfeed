@@ -34,6 +34,7 @@ import { fetchCVE } from './security-cve';
 import { readKEVCurrent, summarizeKEVForFreeTier } from './security-kev';
 import { fetchEPSSCurrent } from './security-epss';
 import { fetchOSVForPackage, fetchOSVById } from './security-osv';
+import { getAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import {
   parseEdgarSearchQuery,
   searchEdgar,
@@ -319,6 +320,55 @@ const TOOLS: McpToolDef[] = [
       const id = getStringArg(args, 'id');
       if (!id) throw new ValidationError('id is required');
       return await fetchOSVById(env, id);
+    },
+  },
+  {
+    name: 'check_ai_supply_chain_risk',
+    description:
+      'Check the TensorFeed AI/MCP/LLM supply-chain IOC feed. Returns publicly-disclosed malicious npm/PyPI packages whose name or summary signals relevance to AI agent operators. With no args, returns the whole snapshot (typically a small number of entries). With "package_name", returns only entries matching that name (substring, case-insensitive) so an agent can ask "is X risky right now?" before installing. Each entry cites its GHSA primary source. Posture: TF republishes already-public advisories; the listed primary source is authoritative.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        package_name: {
+          type: 'string',
+          description:
+            'Optional case-insensitive substring of the package name (e.g. "mistralai" or "@mistralai/mistralai-gcp"). If omitted, returns all current entries.',
+        },
+        ecosystem: {
+          type: 'string',
+          description: 'Optional ecosystem filter: "npm" or "pip"',
+        },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const snapshot = await getAiSupplyChainIocs(env);
+      if (!snapshot) {
+        return {
+          ok: false,
+          error: 'no_snapshot_yet',
+          message: 'The AI supply-chain IOC feed has not been populated yet. Try again after the next 07:15 UTC cron.',
+        };
+      }
+      const pkgFilter = getStringArg(args, 'package_name');
+      const ecoFilter = getStringArg(args, 'ecosystem');
+      let entries = snapshot.entries;
+      if (pkgFilter) {
+        const needle = pkgFilter.toLowerCase();
+        entries = entries.filter((e) => e.package.name.toLowerCase().includes(needle));
+      }
+      if (ecoFilter) {
+        const eco = ecoFilter.toLowerCase();
+        entries = entries.filter((e) => e.package.ecosystem.toLowerCase() === eco);
+      }
+      return {
+        ok: true,
+        generated_at: snapshot.generated_at,
+        total: entries.length,
+        entries,
+        sources: snapshot.sources,
+        posture: snapshot.posture,
+      };
     },
   },
 
