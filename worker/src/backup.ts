@@ -83,7 +83,13 @@ async function dumpNamespace(
   let keyCount = 0;
   let byteCount = 0;
   let cursor: string | undefined;
-  const MAX_BYTES = 50 * 1024 * 1024;
+  // 100 MB sanity cap. Worker isolate memory ceiling is ~128 MB, and we
+  // buffer the entire JSONL in memory before gzipping. When a single
+  // namespace exceeds this we need to refactor to a streaming pipeline
+  // (ReadableStream chained through CompressionStream into R2.put).
+  // TENSORFEED_CACHE first crossed 50 MB on 2026-05-12; revisit
+  // streaming when it exceeds 80 MB.
+  const MAX_BYTES = 100 * 1024 * 1024;
 
   try {
     // Loop the list cursor until exhausted. Each list returns up to 1000
