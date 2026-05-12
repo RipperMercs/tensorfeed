@@ -211,6 +211,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/ai-week-may-8-2026`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/aws-x402-coinbase-agent-payments`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/x402-verifier-mcp-launch`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/verify`, lastModified: now, changeFrequency: 'daily', priority: 0.95 },
     { url: `${baseUrl}/originals/anthropic-dreaming-managed-agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/apple-intelligence-extensions-ios-27`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/one-day-eight-free-apis`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
