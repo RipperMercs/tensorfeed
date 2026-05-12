@@ -443,6 +443,19 @@ export const MCP_SERVER_CATALOG: MCPServer[] = [
     notes: 'AI ecosystem data tools: news, status, models, benchmarks, harnesses, attention index, embeddings, vector DBs, frameworks, usage rankings. Free tier; paid premium tools require a USDC credit token.',
   },
   {
+    id: 'tensorfeed-x402-base',
+    name: 'TensorFeed x402 Base Reader',
+    vendor: 'TensorFeed.ai',
+    capabilities: ['fetch-payment'],
+    transports: ['stdio'],
+    firstParty: true,
+    language: 'typescript',
+    license: 'MIT',
+    install: 'npx -y @tensorfeed/x402-base-mcp',
+    url: 'https://github.com/RipperMercs/tensorfeed-x402-base-mcp',
+    notes: 'Read-only Base mainnet chain reader for x402 payment verification. Eleven tools: verify x402 settlements on-chain, parse publisher /.well-known/x402 manifests, query USDC balances and transfers, check AFTA federation status. No private keys; verification only. Drop-in for any agent that needs to independently confirm an x402 payment receipt.',
+  },
+  {
     id: 'stripe',
     name: 'Stripe',
     vendor: 'Stripe',
@@ -470,4 +483,4 @@ export const MCP_SERVER_CATALOG: MCPServer[] = [
   },
 ];
 
-export const MCP_SERVERS_LAST_UPDATED = '2026-04-30';
+export const MCP_SERVERS_LAST_UPDATED = '2026-05-11';

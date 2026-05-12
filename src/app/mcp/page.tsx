@@ -86,7 +86,7 @@ const FAQS = [
   {
     question: 'What is the relationship between MCP and x402?',
     answer:
-      'They compose. MCP is how agents discover and call tools. x402 is how agents pay for them when the tool is gated. The TensorFeed pattern: an MCP server (tensorfeed-mcp) wraps the x402-payable HTTP API (tensorfeed.ai/api/premium). Agent calls the MCP tool. Tool consumes a bearer token paid for via USDC on Base over x402. Same loop, different layers. MCP solves discovery and shape; x402 solves settlement.',
+      'They compose. MCP is how agents discover and call tools. x402 is how agents pay for them when the tool is gated. The TensorFeed pattern: the @tensorfeed/mcp-server data MCP wraps the x402-payable HTTP API (tensorfeed.ai/api/premium). Agent calls the MCP tool. Tool consumes a bearer token paid for via USDC on Base over x402. Same loop, different layers. MCP solves discovery and shape; x402 solves settlement. A second TF package, @tensorfeed/x402-base-mcp, closes the trust loop: a read-only Base mainnet reader that lets any agent independently verify an x402 payment receipt on-chain without holding private keys.',
   },
 ];
 
