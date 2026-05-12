@@ -180,18 +180,23 @@ export default function ActivityClient() {
               Daily calls (last 30d)
             </div>
             <div className="flex items-end gap-0.5 h-32">
-              {data.hosted_endpoint.daily_series_30d.map((d) => {
+              {data.hosted_endpoint.daily_series_30d.map((d, i) => {
                 const h = Math.max(2, Math.round((d.count / maxDaily) * 120));
                 return (
                   <div
                     key={d.date}
                     title={`${d.date}: ${d.count}`}
-                    className="flex-1 bg-accent-primary/40 hover:bg-accent-primary rounded-t transition-colors"
-                    style={{ height: `${h}px` }}
+                    className="flex-1 bg-accent-primary/40 hover:bg-accent-primary rounded-t origin-bottom"
+                    style={{
+                      height: `${h}px`,
+                      animation: `tf-bar-grow 600ms cubic-bezier(.2,.7,.3,1) ${i * 18}ms backwards`,
+                      transition: 'background-color 200ms',
+                    }}
                   />
                 );
               })}
             </div>
+            <style>{`@keyframes tf-bar-grow { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }`}</style>
           </div>
         ) : (
           <div className="bg-bg-secondary border border-border-primary rounded p-6 mb-4 text-center text-text-muted">

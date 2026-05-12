@@ -47,6 +47,48 @@ function outcomeMeta(outcome: Outcome): { label: string; color: string; icon: ty
   }
 }
 
+function StatusSparkline({ series }: { series: StatusCheckResult[] }) {
+  const recent = series.slice(-48);
+  if (recent.length === 0) {
+    return <span className="text-xs text-text-muted">no history</span>;
+  }
+  const tickWidth = 3;
+  const gap = 1;
+  const height = 18;
+  const width = recent.length * (tickWidth + gap) - gap;
+  return (
+    <svg
+      width={width}
+      height={height}
+      role="img"
+      aria-label={`${recent.length} recent status checks`}
+      style={{ display: 'block' }}
+    >
+      {recent.map((r, i) => {
+        const ok = r.outcome === 'ok';
+        const malformed = r.outcome === 'manifest_malformed';
+        const color = ok ? '#22C55E' : malformed ? '#EAB308' : '#EF4444';
+        return (
+          <rect
+            key={`${r.checked_at}-${i}`}
+            x={i * (tickWidth + gap)}
+            y={2}
+            width={tickWidth}
+            height={height - 4}
+            rx={0.5}
+            fill={color}
+            opacity={0.85}
+          >
+            <title>
+              {r.checked_at}: {r.outcome} ({r.latency_ms}ms)
+            </title>
+          </rect>
+        );
+      })}
+    </svg>
+  );
+}
+
 function formatRelativeTime(iso: string): string {
   const then = new Date(iso).getTime();
   const now = Date.now();
@@ -183,7 +225,7 @@ export default function HealthClient() {
                   {p.current.reason ? (
                     <div className="text-xs text-text-muted mt-1">{p.current.reason}</div>
                   ) : null}
-                  <div className="flex items-center gap-4 mt-2 text-xs">
+                  <div className="flex items-center gap-4 mt-2 text-xs flex-wrap">
                     <span className="text-text-muted">
                       24h uptime:{' '}
                       <span className="text-text-primary font-medium">{p.uptime_pct_24h}%</span>
@@ -198,6 +240,12 @@ export default function HealthClient() {
                     >
                       AFTA scorecard <ExternalLink className="w-3 h-3" />
                     </a>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <StatusSparkline series={p.series} />
+                    <span className="text-[10px] text-text-muted uppercase tracking-wide">
+                      last {Math.min(48, p.series.length)} checks
+                    </span>
                   </div>
                 </div>
               </div>
