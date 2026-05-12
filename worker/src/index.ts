@@ -346,6 +346,7 @@ import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
 import { getActivitySnapshot } from './mcp-activity';
+import { handleAftaBadge } from './afta-badge';
 import { sanitizeArticleForAgents } from './sanitize';
 
 /**
@@ -945,6 +946,13 @@ export default {
     //  - npm downloads (primary; covers the dominant stdio install path)
     //  - Hosted /api/mcp tool-call counters from KV (secondary)
     // Cached at the edge for 5 minutes; npm fetches inside are cached 1 hr.
+    // AFTA Certified badge — SVG renderer. Publishers embed
+    //   <img src="https://tensorfeed.ai/api/afta/badge?domain=X" />
+    // and the badge reflects their live AFTA score. Errors gracefully.
+    if (path === '/api/afta/badge' || path === '/api/afta/badge.svg') {
+      return handleAftaBadge(request, env, url);
+    }
+
     if (path === '/api/mcp/activity' || path === '/api/mcp/activity.json') {
       try {
         const snapshot = await getActivitySnapshot(env);

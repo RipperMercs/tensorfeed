@@ -232,6 +232,50 @@ export default function AftaCertifiedPage() {
       </section>
 
       <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-text-primary mb-4">Embed the badge on your site</h2>
+        <p className="text-text-secondary leading-relaxed mb-4 max-w-3xl">
+          Show your live AFTA score wherever you talk about your x402 API. The SVG renders
+          server-side from the same self-check endpoint above, so the badge always reflects
+          your current state. If you fix a failing criterion, the badge updates within five
+          minutes. Clicking the badge opens the full scorecard on TensorFeed.
+        </p>
+
+        <div className="mb-5 flex flex-wrap items-center gap-3 bg-bg-secondary border border-border rounded p-5">
+          <span className="text-sm text-text-muted">Preview:</span>
+          {/* Live badge for tensorfeed.ai itself */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/api/afta/badge?domain=tensorfeed.ai"
+            alt="AFTA score for tensorfeed.ai"
+            height={20}
+            style={{ height: 20 }}
+          />
+          <code className="text-xs text-text-muted">/api/afta/badge?domain=tensorfeed.ai</code>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <div className="text-xs text-text-muted uppercase tracking-wide mb-2">HTML</div>
+            <pre className="bg-bg-secondary border border-border rounded p-4 overflow-x-auto text-xs text-text-primary"><code>{`<a href="https://tensorfeed.ai/verify?domain=YOURDOMAIN.com">
+  <img src="https://tensorfeed.ai/api/afta/badge?domain=YOURDOMAIN.com"
+       alt="AFTA score" height="20" />
+</a>`}</code></pre>
+          </div>
+          <div>
+            <div className="text-xs text-text-muted uppercase tracking-wide mb-2">Markdown (for READMEs)</div>
+            <pre className="bg-bg-secondary border border-border rounded p-4 overflow-x-auto text-xs text-text-primary"><code>{`[![AFTA score](https://tensorfeed.ai/api/afta/badge?domain=YOURDOMAIN.com)](https://tensorfeed.ai/verify?domain=YOURDOMAIN.com)`}</code></pre>
+          </div>
+        </div>
+
+        <p className="text-sm text-text-muted mt-4 leading-relaxed">
+          The badge is free for any publisher, certified or not. If you score 6/6, the badge
+          renders &quot;Certified 6/6&quot; in green. Below 6/6 it shows the partial score so
+          your visitors know what they&apos;re looking at — the score is always live and
+          falsifiable.
+        </p>
+      </section>
+
+      <section className="mb-10">
         <h2 className="text-2xl font-semibold text-text-primary mb-4">FAQ</h2>
         <div className="space-y-3 max-w-3xl">
           {FAQS.map((faq, i) => (
