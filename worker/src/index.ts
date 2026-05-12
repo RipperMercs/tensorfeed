@@ -7624,11 +7624,11 @@ export default {
       // the registry snapshot. Politeness-paced (800ms between fetches);
       // tiny seed list at MVP.
       await run('refreshX402Registry', () => refreshX402Registry(env));
-    } else if (cron === '0 6 * * 0') {
-      // Sunday 06:00 UTC: weekly KV → R2 backup. Layer 1 of the
-      // disaster recovery plan. Walks every configured KV namespace,
-      // gzips, uploads to r2://tensorfeed-backups/{date}/. No-ops if
-      // the BACKUPS_R2 binding is missing (e.g. in dev environments
+    } else if (cron === '15 6 * * *') {
+      // Daily 06:15 UTC: KV → R2 backup. Layer 1 of the disaster
+      // recovery plan. Walks every configured KV namespace, gzips,
+      // uploads to r2://tensorfeed-backups/{date}/. No-ops if the
+      // BACKUPS_R2 binding is missing (e.g. in dev environments
       // where the bucket has not been provisioned).
       await run('backupKvToR2', async () => {
         if (!env.BACKUPS_R2) return { skipped: 'BACKUPS_R2_binding_missing' };
