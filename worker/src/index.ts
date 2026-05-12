@@ -343,6 +343,7 @@ import {
   rateLimitedResponse,
 } from './rate-limit';
 import { maybeHandleHoneypot } from './honeypot';
+import { handleIocExport } from './iocs';
 import { sanitizeArticleForAgents } from './sanitize';
 
 /**
@@ -932,6 +933,10 @@ export default {
       }
       const mcpResp = await handleMcpHttpRequest(request, env);
       return applyRateLimitHeaders(mcpResp, mcpRate);
+    }
+
+    if (path === '/api/security/iocs.json' || path === '/api/security/iocs') {
+      return handleIocExport(env);
     }
 
     if (path === '/api/health') {
