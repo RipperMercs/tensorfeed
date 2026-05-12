@@ -335,6 +335,7 @@ import {
 } from './chaos';
 import {
   applyRateLimitHeaders,
+  checkAdminIPRateLimit,
   checkIPRateLimit,
   checkMcpIPRateLimit,
   checkNoChargeAbuse,
@@ -345,6 +346,7 @@ import {
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
+import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import { getActivitySnapshot } from './mcp-activity';
 import { handleAftaBadge } from './afta-badge';
 import { runX402StatusCheck, getStatusSnapshot } from './x402-status';
@@ -941,6 +943,30 @@ export default {
 
     if (path === '/api/security/iocs.json' || path === '/api/security/iocs') {
       return handleIocExport(env);
+    }
+
+    // Public AI/MCP/LLM supply-chain IOC feed. Free tier. Daily cron
+    // refresh; KV-cached snapshot. Served as-is with a cache hint.
+    // Posture: republish public advisories with attribution, never
+    // detect or attribute. See worker/src/ai-supply-chain-iocs.ts.
+    if (
+      path === '/api/security/ai-supply-chain-iocs.json' ||
+      path === '/api/security/ai-supply-chain-iocs'
+    ) {
+      const snapshot = await getAiSupplyChainIocs(env);
+      if (!snapshot) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'no_snapshot_yet',
+            message:
+              'The AI supply-chain IOC feed has not been refreshed yet. Retry after the next 07:15 UTC cron run.',
+          },
+          503,
+          0,
+        );
+      }
+      return jsonResponse({ ok: true, ...snapshot }, 200, 60 * 60);
     }
 
     // Public MCP activity dashboard data. Two signal sources:
@@ -2090,6 +2116,7 @@ export default {
           securityOSVPackage: '/api/security/osv/package?ecosystem=&name=&version= (free; OSV.dev advisories affecting one package version. Ecosystems: PyPI, npm, Go, crates.io, Maven, NuGet, RubyGems, Packagist, Hex, Pub, Hackage, Linux, etc)',
           securityOSVEcosystems: '/api/security/osv/ecosystems (free; supported OSV ecosystem identifiers)',
           securityVulnrichment: '/api/security/vulnrichment/{CVE-id} (free; CISA Vulnrichment enrichment for one CVE - CWE mappings, CVSS, exploitation evidence, KEV cross-refs - lazy-fetched from cisagov/vulnrichment, cached 7d. License: US Gov public domain. Pair with /api/security/cve/{id} for the MITRE record)',
+          securityAiSupplyChainIocs: '/api/security/ai-supply-chain-iocs.json (free; daily-refreshed feed of publicly-disclosed malicious npm + PyPI packages relevant to AI / MCP / LLM operators. Each entry cites its primary source (GHSA). Posture: republish + cite; TF does not detect, attribute, or actively scan. License: GitHub ToS + TF attribution; primary source authority always wins)',
           secEdgarSearch: '/api/sec/edgar/search?q=&forms=10-K,10-Q,8-K&from=YYYY-MM-DD&to=YYYY-MM-DD&limit=1-50&page=1-100 (free; SEC EDGAR full-text search across the entire filings corpus since 1990s. License: US Gov public domain. Pair with /api/sec/company-tickers for ticker-to-CIK lookup)',
           secEdgarSubmissions: '/api/sec/edgar/submissions/{cik} (free; recent filings + entity metadata for one CIK. Accepts numeric CIK in any zero-padding form, or CIK0000320193 prefixed form)',
           climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
@@ -2215,7 +2242,7 @@ export default {
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities|ai-supply-chain-iocs]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -7063,6 +7090,32 @@ export default {
     // This replaces the earlier ?key=<ENVIRONMENT> pattern, which was
     // unsafe once the repo went public (ENVIRONMENT="production" lives
     // in wrangler.toml).
+    //
+    // Hardening pre-check: any /api/admin/* request first goes through
+    // a tight per-IP rate limiter (5/min/IP), then a 401 if the key is
+    // missing or wrong. The rate limiter counts ALL admin requests,
+    // including bad-key ones, so a runaway loop or a brute-force probe
+    // saturates the limiter rather than the worker's request budget.
+    // The 401 (vs. 404) gives clearer telemetry for separating typo'd
+    // paths from auth failures on real admin paths.
+    if (path.startsWith('/api/admin/')) {
+      const adminIp = getClientIP(request);
+      const adminRate = checkAdminIPRateLimit(adminIp);
+      if (!adminRate.allowed) {
+        return rateLimitedResponse(adminRate);
+      }
+      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'unauthorized',
+            message: 'admin endpoint requires a valid ?key= param',
+          },
+          401,
+          0,
+        );
+      }
+    }
 
     if (path === '/api/admin/usage' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
@@ -7287,6 +7340,14 @@ export default {
       if (task === 'sports-news') {
         const [nfl, mlb] = await Promise.all([pollNFLNews(env), pollMLBNews(env)]);
         return jsonResponse({ message: 'Sports news polled', nfl, mlb });
+      }
+      if (task === 'ai-supply-chain-iocs') {
+        const snap = await refreshAiSupplyChainIocs(env);
+        return jsonResponse({
+          message: 'AI supply-chain IOC feed refreshed',
+          total: snap.total,
+          generated_at: snap.generated_at,
+        });
       }
       if (task === 'cluster') {
         const dateParam = url.searchParams.get('date');
@@ -7683,6 +7744,14 @@ export default {
         if (!env.BACKUPS_R2) return { skipped: 'BACKUPS_R2_binding_missing' };
         return backupKvToR2(env, 'cron', env.ENVIRONMENT || 'unknown');
       });
+    } else if (cron === '15 7 * * *') {
+      // Daily 07:15 UTC: refresh the AI/MCP/LLM supply-chain IOC
+      // feed (worker/src/ai-supply-chain-iocs.ts). Pulls public
+      // malware advisories from GHSA, filters for AI relevance,
+      // writes a single KV snapshot served at
+      // /api/security/ai-supply-chain-iocs.json. Posture is
+      // republish + cite, not detect + attribute.
+      await run('refreshAiSupplyChainIocs', () => refreshAiSupplyChainIocs(env));
     } else if (cron === '27 * * * *') {
       // Hourly :27 UTC: probe every known x402 publisher's manifest
       // and record latency + validity. Rolls up to 24h + 7d uptime

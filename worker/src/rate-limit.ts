@@ -33,6 +33,7 @@
 const WINDOW_MS = 60_000;
 const DEFAULT_LIMIT_PER_MIN = 120;
 const MCP_LIMIT_PER_MIN = 60;
+const ADMIN_LIMIT_PER_MIN = 5;
 const MAX_TRACKED_IPS = 50_000;
 
 interface IPState {
@@ -48,6 +49,14 @@ const buckets: Map<string, IPState> = new Map();
 // Defense in depth: the general limiter still applies; this is a
 // second tier specifically for the MCP surface.
 const mcpBuckets: Map<string, IPState> = new Map();
+
+// Separate bucket map for /api/admin/*. A legitimate operator only
+// needs a handful of admin calls per minute; anything well above that
+// is either a runaway loop or a probe. Counted regardless of whether
+// the supplied key is valid, so brute-force key guessing also hits
+// this ceiling. The cap intentionally sits well below the public
+// limit and the MCP limit since admin endpoints are not user-facing.
+const adminBuckets: Map<string, IPState> = new Map();
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -106,6 +115,16 @@ export function checkIPRateLimit(
  */
 export function checkMcpIPRateLimit(ip: string): RateLimitResult {
   return checkBucket(mcpBuckets, ip, MCP_LIMIT_PER_MIN);
+}
+
+/**
+ * Tight per-IP cap for /api/admin/*. Counts every request, including
+ * those with a wrong key, so a leak or a misconfigured loop cannot
+ * burn through the worker's request budget unchecked. Legitimate
+ * operator usage is far below 5/min.
+ */
+export function checkAdminIPRateLimit(ip: string): RateLimitResult {
+  return checkBucket(adminBuckets, ip, ADMIN_LIMIT_PER_MIN);
 }
 
 function checkBucket(
@@ -208,6 +227,8 @@ export const RATE_LIMIT_DEFAULTS = {
 // Test-only: clear the in-memory state between unit tests.
 export function _resetRateLimitState(): void {
   buckets.clear();
+  mcpBuckets.clear();
+  adminBuckets.clear();
   noChargeBuckets.clear();
 }
 
