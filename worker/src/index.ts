@@ -348,6 +348,7 @@ import {
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
+import { buildSuggestedNextCalls } from './suggested-next';
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import {
   DECISION_VERIFIED_ATTRIBUTION,
@@ -649,6 +650,15 @@ async function premiumResponse(
     bodyResult.stale = true;
     bodyResult.stale_age_seconds = staleness.ageSeconds;
     bodyResult.stale_sla_seconds = staleness.slaSeconds;
+  }
+  // Cross-sell hints: per-endpoint static map of suggested next TF
+  // endpoints, with inherited query params where applicable. Surfaced
+  // in the body BEFORE receipt signing so an agent can audit "what
+  // TF recommended at the time of this call". Capped at 3 to avoid
+  // burying the real response. Defined in worker/src/suggested-next.ts.
+  const suggestedNext = buildSuggestedNextCalls(request);
+  if (suggestedNext.length > 0) {
+    bodyResult.suggested_next_calls = suggestedNext;
   }
 
   const billing: Record<string, unknown> = {
