@@ -35,6 +35,14 @@ import { readKEVCurrent, summarizeKEVForFreeTier } from './security-kev';
 import { fetchEPSSCurrent } from './security-epss';
 import { fetchOSVForPackage, fetchOSVById } from './security-osv';
 import { getAiSupplyChainIocs } from './ai-supply-chain-iocs';
+import { getClientIP, peekFreeTrialQuota, FREE_TRIAL_DEFAULTS } from './rate-limit';
+import { submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
+import {
+  createFreeWatch,
+  FREE_FIRE_CAP,
+  FREE_PER_IP_WATCH_CAP,
+  FREE_WATCH_TTL_SECONDS,
+} from './watches';
 import {
   parseEdgarSearchQuery,
   searchEdgar,
@@ -104,7 +112,9 @@ interface McpToolDef {
   inputSchema: Record<string, unknown>;
   // Async handler returning the raw result data (will be serialized into
   // MCP content[] before being returned).
-  handler: (env: Env, args: Record<string, unknown>) => Promise<unknown>;
+  // Third arg is the dispatch context (env + bearerToken + ip);
+  // pre-existing handlers may ignore it. IP-keyed tools read ctx.ip.
+  handler: (env: Env, args: Record<string, unknown>, ctx?: { ip: string; bearerToken: string | null }) => Promise<unknown>;
   tier: 'free' | 'premium';
 }
 
@@ -368,6 +378,117 @@ const TOOLS: McpToolDef[] = [
         entries,
         sources: snapshot.sources,
         posture: snapshot.posture,
+      };
+    },
+  },
+
+  // ─── Agent self-service: free trial + wantlist + free watches ───
+  {
+    name: 'check_free_tier_status',
+    description:
+      'Check the caller IP\'s free premium-API trial quota. TensorFeed gives 100 free /api/premium/* calls per IP per 24h rolling window with no auth required. This tool returns used_today, remaining, and resets_at without consuming a quota slot. Use it before deciding whether to make a paid call versus waiting for the trial reset. No arguments.',
+    inputSchema: { type: 'object', properties: {} },
+    tier: 'free',
+    handler: async (_env, _args, ctx) => {
+      const ip = ctx?.ip ?? 'anonymous';
+      const peek = peekFreeTrialQuota(ip);
+      return {
+        ok: true,
+        ip,
+        free_trial: {
+          calls_per_ip_per_day: peek.limit,
+          window: '24h rolling per IP',
+          auth_required: false,
+          used_today: peek.used,
+          remaining: peek.remaining,
+          resets_at: peek.resetAt,
+          retry_in_seconds_when_exhausted: peek.resetSeconds,
+          applies_to: '/api/premium/* (every premium endpoint)',
+          upgrade_when_ready: '/api/payment/buy-credits',
+        },
+      };
+    },
+  },
+  {
+    name: 'submit_wantlist_item',
+    description:
+      'Submit a wantlist entry telling TensorFeed what data you wish was served. Aggregated patterns inform TF\'s pipeline priorities. Anonymous by default, no PII collected, items expire after 30 days. Per-IP rate limit 5 submissions per 24h. Signal collector, not a contract.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        topic: { type: 'string', description: 'Short label for the data category, e.g. "real estate records" or "crypto on-chain treasury"' },
+        request_type: {
+          type: 'string',
+          enum: ['data_source', 'endpoint', 'tool', 'mcp', 'integration', 'other'],
+          description: 'What kind of thing you want. Defaults to "other" if omitted.',
+        },
+        description: { type: 'string', description: '1 to 2 sentences explaining the use case. Max 500 chars.' },
+        contact_optional: { type: 'string', description: 'Optional contact for follow-up. Leave blank to stay anonymous.' },
+      },
+      required: ['topic', 'description'],
+    },
+    tier: 'free',
+    handler: async (env, args, ctx) => {
+      const ip = ctx?.ip ?? 'anonymous';
+      const out = await submitWantlistItem(env, ip, args as Record<string, unknown>);
+      if (out.ok && out.notify_promise) {
+        // Best-effort fire-and-forget. The MCP dispatch does not have
+        // ctx.waitUntil access here, so we attach a no-op catch and
+        // detach. The Resend POST will run during the worker's
+        // remaining wall time after the JSON-RPC response is built.
+        out.notify_promise.catch((err) => console.error('wantlist notify error:', err));
+        const { notify_promise: _np, ...rest } = out;
+        return rest;
+      }
+      return out;
+    },
+  },
+  {
+    name: 'register_free_watch',
+    description:
+      'Register a free webhook subscription. TensorFeed POSTs HMAC-signed deliveries to your callback_url when the watch spec fires (price drop, status change, leaderboard rank shift, macro indicator threshold crossing, etc). 5 watches per IP, 25 fires per watch, 30-day TTL. Same delivery infrastructure as paid /api/premium/watches. If you omit secret, TensorFeed generates one and returns it; you cannot retrieve it again later. Same IP for management; manage via the REST endpoints under /api/watches/free/{id}.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        spec: {
+          type: 'object',
+          description: 'Watch spec. Examples: { type: "price", model: "opus-4-7", field: "blended", op: "lt", threshold: 50 }; { type: "status", provider: "openai", op: "becomes", value: "down" }; { type: "leaderboard_rank", provider: "anthropic", op: "drops_below", threshold: 3 }; { type: "macro_indicator", source: "fred", series_id: "T10Y2Y", metric: "value", op: "crosses", threshold: 0 }; { type: "digest", cadence: "daily" }.',
+        },
+        callback_url: { type: 'string', description: 'HTTPS URL to receive POST deliveries. Must NOT be private/localhost (SSRF guarded).' },
+        secret: { type: 'string', description: 'Optional shared secret for HMAC-SHA256 signing. If omitted, TensorFeed generates a 32-hex secret and returns it once.' },
+        fire_cap: { type: 'number', description: 'Optional cap on total fires for this watch. Capped at 25 for free tier; smaller values honored.' },
+      },
+      required: ['spec', 'callback_url'],
+    },
+    tier: 'free',
+    handler: async (env, args, ctx) => {
+      const ip = ctx?.ip ?? 'anonymous';
+      const callerSecret = typeof args.secret === 'string' && args.secret.length > 0 ? (args.secret as string) : undefined;
+      const fireCap = typeof args.fire_cap === 'number' ? (args.fire_cap as number) : undefined;
+      const callbackUrl = typeof args.callback_url === 'string' ? (args.callback_url as string) : '';
+      const result = await createFreeWatch(env, ip, {
+        spec: args.spec as never,
+        callback_url: callbackUrl,
+        ...(callerSecret ? { secret: callerSecret } : {}),
+        ...(fireCap !== undefined ? { fire_cap: fireCap } : {}),
+      });
+      if (!result.ok) return result;
+      return {
+        ok: true,
+        watch: result.watch,
+        tier: 'free',
+        caps: {
+          per_ip: FREE_PER_IP_WATCH_CAP,
+          fires_per_watch: FREE_FIRE_CAP,
+          ttl_seconds: FREE_WATCH_TTL_SECONDS,
+        },
+        ...(callerSecret
+          ? {}
+          : {
+              generated_secret: result.watch.secret,
+              secret_note: 'Auto-generated. Store this; it will not be returned again. Use it to verify the X-TensorFeed-Signature header (HMAC-SHA256) on inbound webhook POSTs.',
+            }),
+        management_note: 'GET and DELETE on this watch require the same IP that registered it. Hit /api/watches/free/{id} via REST. IP rotation = lose access; just recreate.',
       };
     },
   },
@@ -897,6 +1018,10 @@ const TOOLS: McpToolDef[] = [
 interface DispatchContext {
   env: Env;
   bearerToken: string | null;
+  /** Caller's IP, populated by getClientIP(request) at dispatch.
+   * Used by IP-keyed tools (free watches, wantlist, free-tier status)
+   * so they can hit the same per-IP storage as the REST endpoints. */
+  ip: string;
 }
 
 async function handleInitialize(): Promise<unknown> {
@@ -958,7 +1083,10 @@ async function handleToolCall(
   const startMs = Date.now();
   const tierForCounter: 'free' | 'premium' | 'unknown' = tool.tier === 'premium' ? 'premium' : 'free';
   try {
-    const data = await tool.handler(ctx.env, args);
+    // Pass the dispatch ctx as a third arg; existing tools that
+    // only declare (env, args) ignore it. New IP-keyed tools (free
+    // watches, wantlist, free-tier status) read ctx.ip from here.
+    const data = await tool.handler(ctx.env, args, ctx);
     // eslint-disable-next-line no-console
     console.log('mcp_tool_call', JSON.stringify({
       tool: tool.name,
@@ -1082,7 +1210,7 @@ export async function handleMcpHttpRequest(request: Request, env: Env): Promise<
   const id = body.id ?? null;
   const auth = request.headers.get('Authorization') ?? '';
   const bearerToken = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  const ctx: DispatchContext = { env, bearerToken };
+  const ctx: DispatchContext = { env, bearerToken, ip: getClientIP(request) };
 
   try {
     switch (body.method) {

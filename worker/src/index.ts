@@ -356,7 +356,7 @@ import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
 import { buildSuggestedNextCalls } from './suggested-next';
-import { listWantlist, submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
+import { deleteWantlistItem, listWantlist, listWantlistForAdmin, submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import {
   DECISION_VERIFIED_ATTRIBUTION,
@@ -7526,6 +7526,27 @@ export default {
         events: sorted,
         filters: { severity: severityFilter },
       }, 200, 0);
+    }
+
+    // === ADMIN: wantlist moderation (auth-gated, inherits the
+    // admin pre-check rate limit + 401-on-bad-key behavior) ===
+    // GET /api/admin/wantlist/recent  full items including IPs +
+    //   contact_optional, in case there's something to follow up on
+    //   beyond what the per-submission email surfaced.
+    // DELETE /api/admin/wantlist/{id}  remove a specific submission
+    //   (spam, off-thesis, accidental duplicate, etc).
+    if (path === '/api/admin/wantlist/recent' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      const limitParam = url.searchParams.get('limit');
+      const limit = limitParam ? parseInt(limitParam, 10) : 100;
+      const snap = await listWantlistForAdmin(env, Number.isFinite(limit) ? limit : 100);
+      return jsonResponse({ ok: true, ...snap }, 200, 0);
+    }
+    const adminWantlistDelete = path.match(/^\/api\/admin\/wantlist\/([^/]+)$/);
+    if (adminWantlistDelete && request.method === 'DELETE' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      const id = adminWantlistDelete[1]!;
+      const result = await deleteWantlistItem(env, id);
+      const status = result.ok ? 200 : (result.error === 'not_found' ? 404 : 400);
+      return jsonResponse(result, status, 0);
     }
 
     if (path === '/api/admin/burn-token' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {

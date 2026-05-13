@@ -351,6 +351,47 @@ export async function listWantlist(
   };
 }
 
+// === Admin moderation: delete one item ===
+
+/**
+ * Remove a wantlist item by id. Pulls the id out of the rolling
+ * index, deletes the per-item KV key, decrements (or removes) the
+ * topic counter. Used by the admin moderation endpoint to scrub
+ * spam without waiting for the 30-day TTL. Idempotent: calling on
+ * a missing id just no-ops and reports not_found.
+ */
+export async function deleteWantlistItem(env: Env, id: string): Promise<{ ok: true; topic_slug: string } | { ok: false; error: string }> {
+  const item = (await env.TENSORFEED_CACHE.get<WantlistItem>(KV_ITEM(id), 'json'));
+  if (!item) return { ok: false, error: 'not_found' };
+
+  // Read + write the index
+  const indexCurrent = (await env.TENSORFEED_CACHE.get<string[]>(KV_INDEX, 'json')) ?? [];
+  const indexNext = indexCurrent.filter((x) => x !== id);
+
+  // Decrement topic counter (or delete if it would hit 0)
+  const topicCurrent = (await env.TENSORFEED_CACHE.get<number>(KV_TOPIC(item.topic_slug), 'json')) ?? 0;
+  const topicNext = topicCurrent - 1;
+  const topicWriteOrDelete = topicNext > 0
+    ? env.TENSORFEED_CACHE.put(KV_TOPIC(item.topic_slug), JSON.stringify(topicNext), { expirationTtl: ITEM_TTL_SECONDS })
+    : env.TENSORFEED_CACHE.delete(KV_TOPIC(item.topic_slug));
+
+  await Promise.all([
+    env.TENSORFEED_CACHE.delete(KV_ITEM(id)),
+    env.TENSORFEED_CACHE.put(KV_INDEX, JSON.stringify(indexNext)),
+    topicWriteOrDelete,
+  ]);
+
+  return { ok: true, topic_slug: item.topic_slug };
+}
+
+/**
+ * Admin-tier read: same as listWantlist but explicitly returns the
+ * full WantlistItem records including contact_optional. The public
+ * listWantlist already returns these fields; this alias exists so
+ * the call site in the admin endpoint reads as intentional.
+ */
+export const listWantlistForAdmin = listWantlist;
+
 export const WANTLIST_DEFAULTS = {
   ITEM_TTL_SECONDS,
   INDEX_CAP,
