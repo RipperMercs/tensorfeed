@@ -2479,6 +2479,7 @@ export default {
           agentsBans: '/api/agents/bans (free; transparency list of every banned wallet or token-prefix with reason + evidence_url; auto-bans for Chainalysis OFAC hits)',
           agentsBadgeByWallet: '/api/agents/badge/{wallet}.svg (free; embeddable 200x40 SVG reputation badge with composite rank, trust grade letter, reliability %. XSS-hardened, CSP-locked, 1h edge cache)',
           agentsBadgeByToken: '/api/agents/badge/by-token/{prefix}.svg (free; same shape, indexed by tf_live_ token prefix)',
+          premiumAgentsLeaderboardFull: '/api/premium/agents/leaderboard/full?metric=&window= (1 credit, AFTA-signed; untruncated reputation leaderboard with full cards for every ranked agent. Free /api/agents/leaderboard caps at 25.)',
           agentActivity: '/api/agents/activity',
           chaosStats: '/api/chaos/stats',
           podcasts: '/api/podcasts',
@@ -4307,6 +4308,63 @@ export default {
     // Derived/aggregated views over the daily history:* snapshots captured
     // by Phase 0. Single-date snapshots stay free at /api/history; these
     // pay endpoints add deltas, ranges, uptime rollups, and date diffs.
+
+    // === PAID PREMIUM: AGENT REPUTATION BUREAU (1 credit) ===
+    // Untruncated leaderboard with full reputation cards for every
+    // ranked agent. Free /api/agents/leaderboard caps at 25; this
+    // returns the full cohort for ops dashboards + cross-marketplace
+    // routing decisions. AFTA-signed receipt on every response.
+    if (path === '/api/premium/agents/leaderboard/full') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const metricParam = (url.searchParams.get('metric') ?? 'composite') as RankableMetric;
+      const windowParam = (url.searchParams.get('window') ?? 'all') as LeaderboardWindow;
+      if (!ALL_METRICS.includes(metricParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_metric', allowed: ALL_METRICS },
+          400,
+        );
+      }
+      if (!ALL_WINDOWS.includes(windowParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_window', allowed: ALL_WINDOWS },
+          400,
+        );
+      }
+      const ids = await getLeaderboard(env, metricParam, windowParam);
+      const cards = await Promise.all(
+        ids.map(async (id) => {
+          const isWallet = id.startsWith('0x');
+          const card = isWallet
+            ? await getReputationCardByWallet(env, id)
+            : await getReputationCardByToken(env, id);
+          return { id, card };
+        }),
+      );
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/agents/leaderboard/full',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          metric: metricParam,
+          window: windowParam,
+          total: ids.length,
+          results: cards,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
 
     if (path === '/api/premium/history/pricing/series') {
       const payment = await requirePayment(request, env, 1);
