@@ -532,9 +532,13 @@ async function cachedKVGet(
   key: string,
   cacheTTL: number
 ): Promise<unknown> {
-  // Build a synthetic cache URL for this KV key
-  const cacheUrl = new URL(request.url);
-  cacheUrl.pathname = `/__kv_cache/${key}`;
+  // Synthetic cache key URL. Pinned to a constant origin + no search
+  // params so every caller of cachedKVGet(..., key, ...) hits the same
+  // Cache API entry regardless of the inbound request's host or query
+  // string. Without this, /api/news?category=X and /api/news?category=Y
+  // fragmented the same `articles` KV value into per-querystring entries
+  // and the hit rate collapsed to ~10%.
+  const cacheUrl = new URL(`https://tensorfeed-kv-cache.internal/__kv_cache/${encodeURIComponent(key)}`);
   const cacheRequest = new Request(cacheUrl.toString());
 
   // Try Cache API first (free, unlimited)
