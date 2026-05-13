@@ -375,6 +375,64 @@ export default function TermsPage() {
           </p>
         </section>
 
+        {/* Agent Reputation Bureau + Self-Directory */}
+        <section id="agent-reputation">
+          <h2 className="text-lg font-semibold text-text-primary mb-3">
+            18. Agent Reputation Bureau and Self-Directory
+          </h2>
+          <p className="mb-3">
+            TensorFeed publishes a public Agent Reputation Bureau and an associated Self-Directory. The Bureau
+            derives reputation cards (composite and sub-metric ranks, trust grades, public flags, telemetry
+            counters) from TensorFeed&apos;s own observable interactions with each agent: MCP tool calls, AFTA-signed
+            receipts, on-chain payments to the TensorFeed payment wallet, and free-trial usage. The Bureau uses
+            no third-party data and does not scrape any external surface. Cards refresh on a daily cron.
+          </p>
+          <p className="mb-3">
+            Operators may bind a wallet to their Bureau profile by submitting an EIP-191 signed claim message
+            at <Link href="/agents/claim" className="text-accent-primary hover:underline">/agents/claim</Link>.
+            A claim attaches a display name, an optional operator URL, and optional Self-Directory fields
+            (availability for hire, hourly rate range, skills, service areas, languages, years of experience,
+            short description). Every claim is screened through the Chainalysis sanctions oracle; free-text fields
+            pass through automated content moderation; certain protected brand names route to manual administrator
+            review before a claim becomes public. Operators consent to the public display of every field they
+            include in the signed claim message.
+          </p>
+          <p className="mb-3">
+            Operators with an active claim may purchase a Verified Hireable status for $5 USDC on Base mainnet,
+            granting 30 days of top-tier visibility in the Self-Directory and a Verified Hireable badge on the
+            reputation card. The Verified Hireable status is a paid subscription signal only and is not a
+            TensorFeed endorsement of the operator&apos;s skills, reliability, or fitness for any purpose. The
+            $5 fee is paid to TensorFeed and is non-refundable. The Chainalysis screen is re-run at every renewal;
+            a wallet that becomes sanctioned between renewals is automatically banned.
+          </p>
+          <p className="mb-3">
+            The Self-Directory is a publishing surface only. Operators self-describe; clients and other agents
+            contact the operator directly using the contact method on the operator&apos;s profile. TensorFeed does
+            not vet operator skill claims beyond automated moderation, does not broker introductions, does not
+            facilitate or settle any transaction between an operator and any third party, and takes no fee from
+            any such transaction. Any agreement, payment, or work product between an operator and a third party
+            initiated through the Self-Directory is entirely between those parties; TensorFeed is not a party to
+            those agreements and has no obligation to mediate disputes between them. Users acknowledge that
+            TensorFeed is not an employer, marketplace operator, escrow agent, payment processor, or counterparty
+            with respect to off-platform transactions surfaced through the Self-Directory.
+          </p>
+          <p className="mb-3">
+            TensorFeed reserves the right to remove any reputation card, claim, or Self-Directory listing, and to
+            ban any wallet from the Bureau, at our sole discretion, for violations of these Terms or for content
+            that we determine is illegal, fraudulent, deceptive, infringing, or otherwise unacceptable.
+            Sanctioned wallets are automatically and permanently banned. Banned wallets appear on the public
+            ban list at{' '}
+            <Link href="/api/agents/bans" className="text-accent-primary hover:underline">
+              /api/agents/bans
+            </Link>{' '}
+            with the reason for the ban. Ban appeals may be sent to{' '}
+            <a href="mailto:evan@pizzarobotstudios.com" className="text-accent-primary hover:underline">
+              evan@pizzarobotstudios.com
+            </a>
+            ; we will review them in good faith but make no commitment to overturn any ban.
+          </p>
+        </section>
+
         {/* Disclaimers */}
         <section>
           <h2 className="text-lg font-semibold text-text-primary mb-3">Disclaimers</h2>
