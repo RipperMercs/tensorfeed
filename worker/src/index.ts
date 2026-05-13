@@ -360,8 +360,13 @@ import { deleteWantlistItem, listWantlist, listWantlistForAdmin, submitWantlistI
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import { rebuildAllReputationCards } from './agent-reputation-rebuild';
 import {
+  ALL_METRICS,
+  ALL_WINDOWS,
+  getLeaderboard,
   getReputationCardByToken,
   getReputationCardByWallet,
+  type LeaderboardWindow,
+  type RankableMetric,
 } from './agent-reputation-store';
 import {
   DECISION_VERIFIED_ATTRIBUTION,
@@ -2232,6 +2237,56 @@ export default {
       const card = await getReputationCardByWallet(env, wallet);
       if (!card) return jsonResponse({ ok: false, error: 'not_found' }, 404);
       return jsonResponse(card, 200, 60);
+    }
+
+    // Public leaderboard. Free tier capped at 25 entries; the
+    // untruncated cohort lives on the premium /api/premium/agents/leaderboard/full
+    // endpoint (1 credit). Window='all' is the only meaningful window
+    // in v0 since metrics are cumulative; the parameter is accepted +
+    // validated so the public contract is forward-compatible.
+    if (path === '/api/agents/leaderboard') {
+      const metricParam = (url.searchParams.get('metric') ?? 'composite') as RankableMetric;
+      const windowParam = (url.searchParams.get('window') ?? 'all') as LeaderboardWindow;
+      const limitParam = parseInt(url.searchParams.get('limit') ?? '25', 10);
+      if (!ALL_METRICS.includes(metricParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_metric', allowed: ALL_METRICS },
+          400,
+        );
+      }
+      if (!ALL_WINDOWS.includes(windowParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_window', allowed: ALL_WINDOWS },
+          400,
+        );
+      }
+      const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(25, limitParam)) : 25;
+      const ids = await getLeaderboard(env, metricParam, windowParam);
+      const total = ids.length;
+      const slice = ids.slice(0, limit);
+      const cards = await Promise.all(
+        slice.map(async (id) => {
+          const isWallet = id.startsWith('0x');
+          const card = isWallet
+            ? await getReputationCardByWallet(env, id)
+            : await getReputationCardByToken(env, id);
+          return { id, card };
+        }),
+      );
+      return jsonResponse(
+        {
+          ok: true,
+          metric: metricParam,
+          window: windowParam,
+          total,
+          limit,
+          attribution:
+            'TensorFeed.ai Agent Reputation Bureau. Free tier capped at 25 entries; untruncated cohort on /api/premium/agents/leaderboard/full (1 credit).',
+          results: cards,
+        },
+        200,
+        60,
+      );
     }
 
     // === AGENT OPPORTUNITIES (daily GitHub scan) ===
