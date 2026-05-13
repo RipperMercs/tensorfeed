@@ -27,6 +27,7 @@
  */
 
 import type { Env } from './types';
+import { sendEmail } from './alerts';
 
 const KV_ITEM = (id: string) => `wantlist:item:${id}`;
 const KV_INDEX = 'wantlist:index';
@@ -156,6 +157,66 @@ export interface SubmitOk {
     limit_per_day: number;
     remaining: number;
   };
+  /** Email-notify side-effect promise; ctx.waitUntil() this from the
+   * caller. Resolves to true when the email was actually sent.
+   * Always present even when notification is going to no-op (so the
+   * caller does not need to branch on its presence). */
+  notify_promise?: Promise<boolean>;
+}
+
+/**
+ * Plain-text + HTML email body for a single wantlist submission.
+ * Pure function so it can be unit-tested without touching Resend.
+ */
+export function buildNotificationEmail(item: WantlistItem, ip: string): { subject: string; text: string; html: string } {
+  const subject = `Wantlist: [${item.request_type}] ${item.topic}`.slice(0, 200);
+  const lines = [
+    `Topic: ${item.topic}`,
+    `Type: ${item.request_type}`,
+    `Description: ${item.description}`,
+    `Contact: ${item.contact_optional ?? '(none)'}`,
+    `Source IP: ${ip}`,
+    `Submitted: ${item.created_at}`,
+    `Item ID: ${item.id}`,
+    `Topic slug: ${item.topic_slug}`,
+    '',
+    'View aggregated: https://tensorfeed.ai/api/wantlist',
+  ];
+  const text = lines.join('\n');
+  const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:600px;color:#222;">
+  <h2 style="color:#0a66c2;margin:0 0 12px;">New wantlist submission</h2>
+  <table style="border-collapse:collapse;width:100%;font-size:14px;">
+    <tr><td style="padding:6px 8px;color:#666;width:120px;">Topic</td><td style="padding:6px 8px;font-weight:600;">${escape(item.topic)}</td></tr>
+    <tr><td style="padding:6px 8px;color:#666;">Type</td><td style="padding:6px 8px;"><code>${escape(item.request_type)}</code></td></tr>
+    <tr><td style="padding:6px 8px;color:#666;vertical-align:top;">Description</td><td style="padding:6px 8px;white-space:pre-wrap;">${escape(item.description)}</td></tr>
+    <tr><td style="padding:6px 8px;color:#666;">Contact</td><td style="padding:6px 8px;">${item.contact_optional ? escape(item.contact_optional) : '<em style="color:#999;">(none)</em>'}</td></tr>
+    <tr><td style="padding:6px 8px;color:#666;">Source IP</td><td style="padding:6px 8px;font-family:monospace;font-size:12px;">${escape(ip)}</td></tr>
+    <tr><td style="padding:6px 8px;color:#666;">Submitted</td><td style="padding:6px 8px;font-family:monospace;font-size:12px;">${escape(item.created_at)}</td></tr>
+    <tr><td style="padding:6px 8px;color:#666;">Item ID</td><td style="padding:6px 8px;font-family:monospace;font-size:12px;">${escape(item.id)}</td></tr>
+  </table>
+  <p style="margin:18px 0 0;font-size:13px;color:#666;">
+    <a href="https://tensorfeed.ai/api/wantlist" style="color:#0a66c2;">View the full aggregated wantlist</a>
+  </p>
+</div>`.trim();
+  return { subject, text, html };
+}
+
+/**
+ * Fire-and-forget notify. Wraps sendEmail with try/catch so any
+ * failure (Resend down, env vars missing) never propagates back to
+ * the caller. The intent is "best effort"; the wantlist write is
+ * the source of truth.
+ */
+export async function notifyWantlistSubmission(env: Env, item: WantlistItem, ip: string): Promise<boolean> {
+  try {
+    const { subject, text, html } = buildNotificationEmail(item, ip);
+    return await sendEmail(env, subject, html, text);
+  } catch (err) {
+    console.error('notifyWantlistSubmission error:', err);
+    return false;
+  }
 }
 
 export async function submitWantlistItem(
@@ -205,6 +266,13 @@ export async function submitWantlistItem(
     env.TENSORFEED_CACHE.put(KV_TOPIC(topic_slug), JSON.stringify(topicCurrent + 1), { expirationTtl: ITEM_TTL_SECONDS }),
   ]);
 
+  // Fire-and-forget email notification. The caller (HTTP handler)
+  // should ctx.waitUntil(result.notify_promise) so the response
+  // returns to the agent immediately without blocking on Resend.
+  // Resolves to false (no-op) when env is missing the email vars,
+  // which is the dev / unconfigured case.
+  const notify_promise = notifyWantlistSubmission(env, item, ip);
+
   return {
     ok: true,
     id,
@@ -214,6 +282,7 @@ export async function submitWantlistItem(
       limit_per_day: rl.limit,
       remaining: Math.max(0, rl.limit - rl.usedToday),
     },
+    notify_promise,
   };
 }
 

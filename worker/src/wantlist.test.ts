@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildNotificationEmail,
   listWantlist,
   parseSubmission,
   slugifyTopic,
   submitWantlistItem,
   WANTLIST_DEFAULTS,
 } from './wantlist';
+import type { WantlistItem } from './wantlist';
 
 function makeKv(): { kv: any; store: Map<string, string> } {
   const store = new Map<string, string>();
@@ -193,5 +195,79 @@ describe('listWantlist', () => {
     }
     const snap = await listWantlist(env, 2);
     expect(snap.recent.length).toBe(2);
+  });
+});
+
+describe('buildNotificationEmail', () => {
+  const item: WantlistItem = {
+    id: 'abc-test',
+    created_at: '2026-05-13T03:30:00Z',
+    topic: 'real estate records',
+    topic_slug: 'real-estate-records',
+    request_type: 'data_source',
+    description: 'Structured public US property records by parcel id.',
+    contact_optional: 'agent@example.com',
+  };
+
+  it('produces a subject including request_type and topic', () => {
+    const out = buildNotificationEmail(item, '1.2.3.4');
+    expect(out.subject).toContain('data_source');
+    expect(out.subject).toContain('real estate records');
+    expect(out.subject.length).toBeLessThanOrEqual(200);
+  });
+
+  it('includes all key fields in the text body', () => {
+    const out = buildNotificationEmail(item, '1.2.3.4');
+    expect(out.text).toContain('real estate records');
+    expect(out.text).toContain('data_source');
+    expect(out.text).toContain('Structured public US property records');
+    expect(out.text).toContain('agent@example.com');
+    expect(out.text).toContain('1.2.3.4');
+    expect(out.text).toContain('abc-test');
+  });
+
+  it('renders "(none)" when contact_optional is absent', () => {
+    const noContact = { ...item, contact_optional: null };
+    const out = buildNotificationEmail(noContact, '1.2.3.4');
+    expect(out.text).toContain('Contact: (none)');
+  });
+
+  it('escapes HTML special chars in user-supplied fields', () => {
+    const xss = { ...item, topic: '<script>alert(1)</script>', description: 'Use & abuse < > "stuff"' };
+    const out = buildNotificationEmail(xss, '1.2.3.4');
+    expect(out.html).not.toContain('<script>alert(1)</script>');
+    expect(out.html).toContain('&lt;script&gt;');
+    expect(out.html).toContain('Use &amp; abuse');
+  });
+});
+
+describe('submit returns a notify_promise side-effect', () => {
+  it('attaches notify_promise on a successful submission', async () => {
+    const { kv } = (() => {
+      const store = new Map<string, string>();
+      const k = {
+        async get(key: string, fmt?: string) {
+          const raw = store.get(key);
+          if (raw === undefined) return null;
+          return fmt === 'json' ? JSON.parse(raw) : raw;
+        },
+        async put(key: string, value: string) {
+          store.set(key, value);
+        },
+      };
+      return { kv: k };
+    })();
+    const env = { TENSORFEED_CACHE: kv } as any;
+    const out = await submitWantlistItem(env, '1.2.3.4', {
+      topic: 't',
+      description: 'd'.repeat(20),
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) {
+      expect(out.notify_promise).toBeDefined();
+      // No env email vars, sendEmail returns false (no-op) but does not throw.
+      const result = await out.notify_promise;
+      expect(result).toBe(false);
+    }
   });
 });

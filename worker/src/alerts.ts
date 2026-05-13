@@ -51,7 +51,7 @@ async function setAlertState(env: Env, state: AlertState): Promise<void> {
  * failure. Failures are logged but never thrown so the caller can keep
  * running the rest of the cron pipeline.
  */
-async function sendEmail(
+export async function sendEmail(
   env: Env,
   subject: string,
   html: string,

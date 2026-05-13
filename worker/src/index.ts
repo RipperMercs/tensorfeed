@@ -1011,8 +1011,19 @@ export default {
       }
       const ip = getClientIP(request);
       const out = await submitWantlistItem(env, ip, body as Record<string, unknown>);
+      // Fire-and-forget email notification when a successful submission
+      // produced one. ctx.waitUntil keeps the worker alive until the
+      // Resend POST resolves without blocking the response to the agent.
+      // notify_promise is also stripped from the response body so we
+      // don't serialize a Promise object back to the caller.
+      let responseBody: unknown = out;
+      if (out.ok && out.notify_promise) {
+        ctx.waitUntil(out.notify_promise);
+        const { notify_promise, ...rest } = out;
+        responseBody = rest;
+      }
       const status = out.ok ? 201 : ((out as { error: string }).error === 'rate_limit_exceeded' ? 429 : 400);
-      return jsonResponse(out, status, 0);
+      return jsonResponse(responseBody, status, 0);
     }
     if (path === '/api/wantlist' && (request.method === 'GET' || request.method === 'HEAD')) {
       const recentParam = url.searchParams.get('recent');
