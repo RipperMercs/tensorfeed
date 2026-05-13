@@ -18,7 +18,15 @@ import {
   computeMacroIndicatorTransitions,
   signBody,
   createWatch,
+  createFreeWatch,
+  deleteFreeWatch,
+  FREE_FIRE_CAP,
+  FREE_PER_IP_WATCH_CAP,
+  FREE_WATCH_TTL_SECONDS,
+  freeWatchOwnerKey,
+  getFreeWatch,
   getWatch,
+  listFreeWatchesForIP,
   listWatchesForToken,
   deleteWatch,
   dispatchPriceWatches,
@@ -1002,5 +1010,178 @@ describe('computeMacroIndicatorTransitions', () => {
     const out = computeMacroIndicatorTransitions('fred', null, current);
     expect(out).toHaveLength(1);
     expect(out[0].metric).toBe('value');
+  });
+});
+
+// === Free watches (per-IP, no bearer required) ===
+
+const VALID_PRICE_SPEC: PriceWatchSpec = {
+  type: 'price',
+  model: 'opus-4-7',
+  field: 'blended',
+  op: 'lt',
+  threshold: 50,
+};
+
+describe('freeWatchOwnerKey', () => {
+  it('returns ip:<addr>', () => {
+    expect(freeWatchOwnerKey('1.2.3.4')).toBe('ip:1.2.3.4');
+  });
+});
+
+describe('createFreeWatch', () => {
+  it('creates a watch and stamps the IP-derived owner', async () => {
+    const env = makeEnv();
+    const out = await createFreeWatch(env, '1.2.3.4', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://agent.example.com/hook',
+    });
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.watch.token).toBe('ip:1.2.3.4');
+    expect(out.watch.fire_cap).toBe(FREE_FIRE_CAP);
+    // expires_at should be ~30 days out, not 90.
+    const expiresMs = Date.parse(out.watch.expires_at) - Date.now();
+    expect(expiresMs).toBeGreaterThan(FREE_WATCH_TTL_SECONDS * 1000 * 0.99);
+    expect(expiresMs).toBeLessThan(FREE_WATCH_TTL_SECONDS * 1000 * 1.01);
+  });
+
+  it('caps fire_cap at FREE_FIRE_CAP even when caller asks for more', async () => {
+    const env = makeEnv();
+    const out = await createFreeWatch(env, '2.2.2.2', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://agent.example.com/hook',
+      fire_cap: 9999,
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.watch.fire_cap).toBe(FREE_FIRE_CAP);
+  });
+
+  it('honors a smaller fire_cap if requested', async () => {
+    const env = makeEnv();
+    const out = await createFreeWatch(env, '3.3.3.3', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://agent.example.com/hook',
+      fire_cap: 10,
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.watch.fire_cap).toBe(10);
+  });
+
+  it('refuses after the per-IP cap is reached', async () => {
+    const env = makeEnv();
+    const ip = '4.4.4.4';
+    for (let i = 0; i < FREE_PER_IP_WATCH_CAP; i += 1) {
+      const r = await createFreeWatch(env, ip, {
+        spec: VALID_PRICE_SPEC,
+        callback_url: `https://agent.example.com/hook${i}`,
+      });
+      expect(r.ok).toBe(true);
+    }
+    const denied = await createFreeWatch(env, ip, {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://agent.example.com/hook-overflow',
+    });
+    expect(denied.ok).toBe(false);
+    if (!denied.ok) expect(denied.error).toBe('free_per_ip_watch_cap_reached');
+  });
+
+  it('isolates per-IP caps', async () => {
+    const env = makeEnv();
+    for (let i = 0; i < FREE_PER_IP_WATCH_CAP; i += 1) {
+      await createFreeWatch(env, '5.5.5.5', {
+        spec: VALID_PRICE_SPEC,
+        callback_url: `https://a.example.com/${i}`,
+      });
+    }
+    // A different IP should still be allowed up to its own cap.
+    const r = await createFreeWatch(env, '6.6.6.6', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://b.example.com/',
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it('propagates spec validation errors from the underlying createWatch', async () => {
+    const env = makeEnv();
+    const out = await createFreeWatch(env, '7.7.7.7', {
+      spec: { type: 'bogus' } as never,
+      callback_url: 'https://agent.example.com/hook',
+    });
+    expect(out.ok).toBe(false);
+    if (!out.ok) expect(out.error).toBe('invalid_spec');
+  });
+});
+
+describe('listFreeWatchesForIP', () => {
+  it('returns only the IP-owned watches', async () => {
+    const env = makeEnv();
+    await createFreeWatch(env, '1.1.1.1', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://a/',
+    });
+    await createFreeWatch(env, '2.2.2.2', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://b/',
+    });
+    await createFreeWatch(env, '1.1.1.1', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://c/',
+    });
+    const out = await listFreeWatchesForIP(env, '1.1.1.1');
+    expect(out).toHaveLength(2);
+    expect(out.every((w) => w.token === 'ip:1.1.1.1')).toBe(true);
+  });
+});
+
+describe('getFreeWatch', () => {
+  it('returns the watch when IP matches', async () => {
+    const env = makeEnv();
+    const created = await createFreeWatch(env, '8.8.8.8', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://h/',
+    });
+    if (!created.ok) throw new Error('seed failed');
+    const out = await getFreeWatch(env, created.watch.id, '8.8.8.8');
+    expect(out).not.toBeNull();
+    expect(out!.id).toBe(created.watch.id);
+  });
+
+  it('returns null when IP differs', async () => {
+    const env = makeEnv();
+    const created = await createFreeWatch(env, '8.8.8.8', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://h/',
+    });
+    if (!created.ok) throw new Error('seed failed');
+    const out = await getFreeWatch(env, created.watch.id, '9.9.9.9');
+    expect(out).toBeNull();
+  });
+});
+
+describe('deleteFreeWatch', () => {
+  it('deletes when IP matches', async () => {
+    const env = makeEnv();
+    const created = await createFreeWatch(env, '8.8.8.8', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://h/',
+    });
+    if (!created.ok) throw new Error('seed failed');
+    const r = await deleteFreeWatch(env, created.watch.id, '8.8.8.8');
+    expect(r.ok).toBe(true);
+    // Subsequent read returns null.
+    const after = await getFreeWatch(env, created.watch.id, '8.8.8.8');
+    expect(after).toBeNull();
+  });
+
+  it('refuses when IP differs', async () => {
+    const env = makeEnv();
+    const created = await createFreeWatch(env, '8.8.8.8', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://h/',
+    });
+    if (!created.ok) throw new Error('seed failed');
+    const r = await deleteFreeWatch(env, created.watch.id, '9.9.9.9');
+    expect(r.ok).toBe(false);
   });
 });

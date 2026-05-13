@@ -568,6 +568,89 @@ export async function deleteWatch(env: Env, id: string, token: string): Promise<
   return { ok: true };
 }
 
+// === Free tier ===
+//
+// Free watches reuse the same KV storage and the same delivery cron
+// as paid watches. The owner key is "ip:<addr>" instead of a bearer
+// token, so the per-token KV index naturally namespaces them
+// (watch:byToken:ip:1.2.3.4). Caps are tighter than paid: at most
+// 5 watches per IP, 25 fires per watch, 30-day TTL. The fire-cap
+// override is enforced at creation time. Same IP for management
+// (GET/DELETE require the request to come from the IP that created
+// the watch); IP rotation = lose access (recreate is the workaround).
+
+export const FREE_PER_IP_WATCH_CAP = 5;
+export const FREE_FIRE_CAP = 25;
+export const FREE_WATCH_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
+
+export function freeWatchOwnerKey(ip: string): string {
+  return `ip:${ip}`;
+}
+
+export async function createFreeWatch(
+  env: Env,
+  ip: string,
+  input: CreateWatchInput,
+): Promise<CreateWatchResult | CreateWatchError> {
+  const owner = freeWatchOwnerKey(ip);
+
+  // Pre-check the IP-specific cap BEFORE delegating to createWatch
+  // (which would otherwise enforce the looser PER_TOKEN_WATCH_CAP).
+  const existing = await readTokenIndex(env, owner);
+  if (existing.length >= FREE_PER_IP_WATCH_CAP) {
+    return {
+      ok: false,
+      error: 'free_per_ip_watch_cap_reached',
+      reason: `Free tier allows at most ${FREE_PER_IP_WATCH_CAP} active watches per IP. Delete one first or upgrade to credits flow at /api/payment/buy-credits for the higher cap.`,
+    };
+  }
+
+  // Cap the fire_cap override at FREE_FIRE_CAP. Caller's value (if
+  // smaller and positive) is still honored.
+  const requestedCap =
+    typeof input.fire_cap === 'number' && input.fire_cap > 0 ? input.fire_cap : FREE_FIRE_CAP;
+  const effectiveCap = Math.min(requestedCap, FREE_FIRE_CAP);
+
+  const result = await createWatch(env, owner, {
+    ...input,
+    fire_cap: effectiveCap,
+  });
+  if (!result.ok) return result;
+
+  // Override TTL on the persisted watch: createWatch stamps
+  // expires_at = now + WATCH_TTL_SECONDS (90 days). For free, we
+  // shorten to 30 days. The KV TTL was set by createWatch using the
+  // 90-day constant; rewrite the value with the corrected expires_at
+  // and shorter TTL so KV physically expires earlier too.
+  const shortened: Watch = {
+    ...result.watch,
+    expires_at: expiresIso(FREE_WATCH_TTL_SECONDS),
+  };
+  await env.TENSORFEED_CACHE.put(`watch:${shortened.id}`, JSON.stringify(shortened), {
+    expirationTtl: FREE_WATCH_TTL_SECONDS,
+  });
+  return { ok: true, watch: shortened };
+}
+
+export async function listFreeWatchesForIP(env: Env, ip: string): Promise<Watch[]> {
+  return listWatchesForToken(env, freeWatchOwnerKey(ip));
+}
+
+export async function deleteFreeWatch(
+  env: Env,
+  id: string,
+  ip: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  return deleteWatch(env, id, freeWatchOwnerKey(ip));
+}
+
+export async function getFreeWatch(env: Env, id: string, ip: string): Promise<Watch | null> {
+  const watch = await getWatch(env, id);
+  if (!watch) return null;
+  if (watch.token !== freeWatchOwnerKey(ip)) return null;
+  return watch;
+}
+
 // === Delivery ===
 
 interface FirePayload {

@@ -127,9 +127,16 @@ import { generateUptimeBadge, resolveProviderSlug } from './badges';
 import { getProviderUptimeSeries } from './status-history';
 import {
   createWatch,
-  getWatch,
-  listWatchesForToken,
+  createFreeWatch,
+  deleteFreeWatch,
   deleteWatch,
+  FREE_FIRE_CAP,
+  FREE_PER_IP_WATCH_CAP,
+  FREE_WATCH_TTL_SECONDS,
+  getFreeWatch,
+  getWatch,
+  listFreeWatchesForIP,
+  listWatchesForToken,
   runPriceWatchCycle,
   runDigestWatchCycle,
   runLeaderboardWatchCycle,
@@ -1003,6 +1010,93 @@ export default {
       const recentLimit = recentParam ? parseInt(recentParam, 10) : 25;
       const snapshot = await listWantlist(env, Number.isFinite(recentLimit) ? recentLimit : 25);
       return jsonResponse({ ok: true, ...snapshot }, 200, 60);
+    }
+
+    // === FREE WATCHES (per-IP webhook subscriptions) ===
+    // Same storage and same delivery cron as paid /api/premium/watches.
+    // Owner key is "ip:<addr>" so the existing per-token KV index
+    // naturally namespaces. Caps are tighter: 5 watches per IP, 25
+    // fires per watch, 30-day TTL. Same IP for management; IP rotation
+    // = lose access (recreate is the workaround). The agent-side
+    // webhook handler IS a reason for TF to live in their codebase
+    // forever; this is the stickiness move.
+    if (path === '/api/watches/free' && request.method === 'POST') {
+      const ip = getClientIP(request);
+      let body: { spec?: unknown; callback_url?: string; secret?: string; fire_cap?: number };
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400, 0);
+      }
+      if (typeof body.callback_url !== 'string') {
+        return jsonResponse({ ok: false, error: 'callback_url_required' }, 400, 0);
+      }
+      const result = await createFreeWatch(env, ip, {
+        spec: body.spec as never,
+        callback_url: body.callback_url,
+        ...(typeof body.secret === 'string' ? { secret: body.secret } : {}),
+        ...(typeof body.fire_cap === 'number' ? { fire_cap: body.fire_cap } : {}),
+      });
+      if (!result.ok) {
+        const status = result.error === 'free_per_ip_watch_cap_reached' ? 429 : 400;
+        return jsonResponse(result, status, 0);
+      }
+      return jsonResponse(
+        {
+          ok: true,
+          watch: result.watch,
+          tier: 'free',
+          caps: {
+            per_ip: FREE_PER_IP_WATCH_CAP,
+            fires_per_watch: FREE_FIRE_CAP,
+            ttl_seconds: FREE_WATCH_TTL_SECONDS,
+          },
+          management_note: 'GET and DELETE on this watch require the same IP. Rotation loses access; just recreate.',
+          upgrade_when_ready: '/api/payment/buy-credits',
+        },
+        201,
+        0,
+      );
+    }
+
+    if (path === '/api/watches/free' && (request.method === 'GET' || request.method === 'HEAD')) {
+      const ip = getClientIP(request);
+      const watches = await listFreeWatchesForIP(env, ip);
+      return jsonResponse(
+        {
+          ok: true,
+          ip,
+          count: watches.length,
+          watches,
+          caps: {
+            per_ip: FREE_PER_IP_WATCH_CAP,
+            fires_per_watch: FREE_FIRE_CAP,
+            ttl_seconds: FREE_WATCH_TTL_SECONDS,
+          },
+        },
+        200,
+        0,
+      );
+    }
+
+    const freeWatchMatch = path.match(/^\/api\/watches\/free\/(wat_[a-f0-9]{24})$/);
+    if (freeWatchMatch) {
+      const id = freeWatchMatch[1]!;
+      const ip = getClientIP(request);
+      if (request.method === 'GET') {
+        const watch = await getFreeWatch(env, id, ip);
+        if (!watch) return jsonResponse({ ok: false, error: 'watch_not_found_or_forbidden' }, 404, 0);
+        return jsonResponse({ ok: true, watch }, 200, 0);
+      }
+      if (request.method === 'DELETE') {
+        const result = await deleteFreeWatch(env, id, ip);
+        if (!result.ok) {
+          const status = result.error === 'watch_not_found' ? 404 : 403;
+          return jsonResponse(result, status, 0);
+        }
+        return jsonResponse({ ok: true, deleted: id }, 200, 0);
+      }
+      return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405, 0);
     }
 
     // Free, no-auth self-service endpoint so an agent can check its
@@ -2209,6 +2303,9 @@ export default {
           freeTrialStatus: `/api/free-tier/status (free; self-service quota check. Returns the caller IP\'s current premium-trial state: used today, remaining today, resets_at. Each IP gets ${FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY} free premium API calls per 24h rolling window, no auth required, applied to every /api/premium/* endpoint. Excess returns canonical x402 V2 challenge)`,
           wantlistGet: `/api/wantlist (free, GET; aggregated AI-agent wantlist. Returns the most-recent ${WANTLIST_DEFAULTS.INDEX_CAP}-item rolling window of submissions, top topics by count, and request-type breakdown. Items expire after ${WANTLIST_DEFAULTS.ITEM_TTL_SECONDS / 86400}d. Pass ?recent=N to control how many items are hydrated, capped at 100)`,
           wantlistPost: `/api/wantlist (free, POST; submit what data you wish TF served. JSON body: { topic, request_type, description, contact_optional }. request_type one of: ${WANTLIST_DEFAULTS.REQUEST_TYPE_VALUES.join(', ')}. Rate-limited to ${WANTLIST_DEFAULTS.RL_PER_IP_PER_DAY} submissions per IP per 24h. Anonymous by default. Patterns inform pipeline priorities)`,
+          freeWatchesCreate: `/api/watches/free (free, POST; register a webhook subscription to a watch spec without paying credits. Body: { spec, callback_url, secret?, fire_cap? }. ${FREE_PER_IP_WATCH_CAP} watches per IP, ${FREE_FIRE_CAP} fires per watch, ${FREE_WATCH_TTL_SECONDS / 86400}-day TTL. Same delivery infrastructure as paid /api/premium/watches: HMAC-signed POST to callback_url when the spec fires. Spec types: price, status, digest, leaderboard_rank, macro_indicator (see /api/premium/watches docs for shapes))`,
+          freeWatchesList: `/api/watches/free (free, GET; list watches for the caller IP)`,
+          freeWatchesItem: `/api/watches/free/{id} (free, GET|DELETE; manage a watch from the same IP that created it)`,
           premiumDecisionVerified: '/api/premium/news/decision-verified?cluster_id=&date= (1 credit; structured verification scores for a single corroboration cluster: verification_tier (single|limited|moderately-corroborated|broadly-verified|widely-reported), source_diversity_score, time_span_hours, per-source breakdown, AFTA-signed receipt over the source set. Pair with /api/history/news/clusters?date= to discover cluster_ids)',
           premiumDecisionVerifiedSearch: '/api/premium/news/decision-verified/search?q=&since=&until=&min_sources=1-50&limit=1-100 (1 credit; search recent days for clusters whose hero title matches q (substring + token-overlap), filtered by min_sources, sorted by match score then source count. Default lookback 30 days; max 90)',
           secEdgarSearch: '/api/sec/edgar/search?q=&forms=10-K,10-Q,8-K&from=YYYY-MM-DD&to=YYYY-MM-DD&limit=1-50&page=1-100 (free; SEC EDGAR full-text search across the entire filings corpus since 1990s. License: US Gov public domain. Pair with /api/sec/company-tickers for ticker-to-CIK lookup)',
