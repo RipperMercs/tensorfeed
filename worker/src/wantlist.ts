@@ -198,7 +198,11 @@ export async function submitWantlistItem(
   await Promise.all([
     env.TENSORFEED_CACHE.put(KV_ITEM(id), JSON.stringify(item), { expirationTtl: ITEM_TTL_SECONDS }),
     env.TENSORFEED_CACHE.put(KV_INDEX, JSON.stringify(indexNext)),
-    env.TENSORFEED_CACHE.put(KV_TOPIC(topic_slug), JSON.stringify(topicCurrent + 1)),
+    // Topic counter inherits the item TTL so unique-topic keys do
+    // not accumulate forever as the corpus rotates. Each new submission
+    // for an existing topic re-extends the counter's TTL by ITEM_TTL,
+    // so popular topics stay live as long as anyone is asking.
+    env.TENSORFEED_CACHE.put(KV_TOPIC(topic_slug), JSON.stringify(topicCurrent + 1), { expirationTtl: ITEM_TTL_SECONDS }),
   ]);
 
   return {

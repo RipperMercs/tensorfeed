@@ -994,6 +994,15 @@ export default {
     // post what data they wish TF served. Aggregated patterns inform
     // pipeline priorities. Per worker/src/wantlist.ts.
     if (path === '/api/wantlist' && request.method === 'POST') {
+      // Reject obviously oversized bodies before parse. parseSubmission
+      // already caps individual fields, but a 100MB payload would still
+      // burn CPU just reaching the parser. 10KB is comfortably above
+      // any honest submission (largest field is description, capped at
+      // 500 chars).
+      const contentLength = parseInt(request.headers.get('content-length') ?? '0', 10);
+      if (Number.isFinite(contentLength) && contentLength > 10_000) {
+        return jsonResponse({ ok: false, error: 'body_too_large', hint: 'Wantlist body must be under 10 KB.' }, 413, 0);
+      }
       let body: unknown;
       try {
         body = await request.json();
@@ -1022,6 +1031,13 @@ export default {
     // forever; this is the stickiness move.
     if (path === '/api/watches/free' && request.method === 'POST') {
       const ip = getClientIP(request);
+      // Reject oversized bodies before parse. The largest legitimate
+      // submission is a callback_url + spec + small secret, well
+      // under 4 KB. 10 KB cap matches the wantlist endpoint.
+      const wcLen = parseInt(request.headers.get('content-length') ?? '0', 10);
+      if (Number.isFinite(wcLen) && wcLen > 10_000) {
+        return jsonResponse({ ok: false, error: 'body_too_large', hint: 'Watch creation body must be under 10 KB.' }, 413, 0);
+      }
       let body: { spec?: unknown; callback_url?: string; secret?: string; fire_cap?: number };
       try {
         body = await request.json();
@@ -1031,10 +1047,11 @@ export default {
       if (typeof body.callback_url !== 'string') {
         return jsonResponse({ ok: false, error: 'callback_url_required' }, 400, 0);
       }
+      const callerSuppliedSecret = typeof body.secret === 'string' && body.secret.length > 0;
       const result = await createFreeWatch(env, ip, {
         spec: body.spec as never,
         callback_url: body.callback_url,
-        ...(typeof body.secret === 'string' ? { secret: body.secret } : {}),
+        ...(callerSuppliedSecret ? { secret: body.secret as string } : {}),
         ...(typeof body.fire_cap === 'number' ? { fire_cap: body.fire_cap } : {}),
       });
       if (!result.ok) {
@@ -1051,6 +1068,17 @@ export default {
             fires_per_watch: FREE_FIRE_CAP,
             ttl_seconds: FREE_WATCH_TTL_SECONDS,
           },
+          // When the caller did not provide a secret, surface the auto-
+          // generated one so they can verify the X-TensorFeed-Signature
+          // HMAC on inbound webhook deliveries. Storage already has it;
+          // exposing it in the response is the only way the agent can
+          // pick it up.
+          ...(callerSuppliedSecret
+            ? {}
+            : {
+                generated_secret: result.watch.secret,
+                secret_note: 'Auto-generated. Store this; it will not be returned again. Use it to verify the X-TensorFeed-Signature header (HMAC-SHA256) on inbound webhook POSTs.',
+              }),
           management_note: 'GET and DELETE on this watch require the same IP. Rotation loses access; just recreate.',
           upgrade_when_ready: '/api/payment/buy-credits',
         },

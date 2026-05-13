@@ -1068,6 +1068,30 @@ describe('createFreeWatch', () => {
     if (out.ok) expect(out.watch.fire_cap).toBe(10);
   });
 
+  it('auto-generates a 32-hex shared secret when caller omits it', async () => {
+    const env = makeEnv();
+    const out = await createFreeWatch(env, '3a.3a.3a.3a', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://agent.example.com/hook',
+    });
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(typeof out.watch.secret).toBe('string');
+    expect(out.watch.secret).toMatch(/^[0-9a-f]{32}$/);
+  });
+
+  it('preserves caller-supplied secret instead of regenerating', async () => {
+    const env = makeEnv();
+    const callerVal = 'fake-test-value';
+    const out = await createFreeWatch(env, '3b.3b.3b.3b', {
+      spec: VALID_PRICE_SPEC,
+      callback_url: 'https://agent.example.com/hook',
+      secret: callerVal,
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.watch.secret).toBe(callerVal);
+  });
+
   it('refuses after the per-IP cap is reached', async () => {
     const env = makeEnv();
     const ip = '4.4.4.4';

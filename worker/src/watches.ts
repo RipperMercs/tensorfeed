@@ -611,9 +611,22 @@ export async function createFreeWatch(
     typeof input.fire_cap === 'number' && input.fire_cap > 0 ? input.fire_cap : FREE_FIRE_CAP;
   const effectiveCap = Math.min(requestedCap, FREE_FIRE_CAP);
 
+  // Auto-generate a 32-hex-char shared secret if the caller did not
+  // supply one. Without a secret the agent's webhook handler cannot
+  // verify an inbound POST really came from TF; defaulting to no-
+  // secret is a security-UX trap. Surfaced in the response so the
+  // agent can store it once, even if they did not think to ask for one.
+  let effectiveSecret = input.secret;
+  if (typeof effectiveSecret !== 'string' || effectiveSecret.length === 0) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    effectiveSecret = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
   const result = await createWatch(env, owner, {
     ...input,
     fire_cap: effectiveCap,
+    secret: effectiveSecret,
   });
   if (!result.ok) return result;
 
