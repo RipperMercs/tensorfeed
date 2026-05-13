@@ -347,6 +347,13 @@ import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
+import {
+  DECISION_VERIFIED_ATTRIBUTION,
+  lookupVerifiedCluster,
+  parseLookupQuery,
+  parseSearchQuery,
+  searchVerifiedClusters,
+} from './decision-verified';
 import { getActivitySnapshot } from './mcp-activity';
 import { handleAftaBadge } from './afta-badge';
 import { runX402StatusCheck, getStatusSnapshot } from './x402-status';
@@ -2117,6 +2124,8 @@ export default {
           securityOSVEcosystems: '/api/security/osv/ecosystems (free; supported OSV ecosystem identifiers)',
           securityVulnrichment: '/api/security/vulnrichment/{CVE-id} (free; CISA Vulnrichment enrichment for one CVE - CWE mappings, CVSS, exploitation evidence, KEV cross-refs - lazy-fetched from cisagov/vulnrichment, cached 7d. License: US Gov public domain. Pair with /api/security/cve/{id} for the MITRE record)',
           securityAiSupplyChainIocs: '/api/security/ai-supply-chain-iocs.json (free; daily-refreshed feed of publicly-disclosed malicious npm + PyPI packages relevant to AI / MCP / LLM operators. Each entry cites its primary source (GHSA). Posture: republish + cite; TF does not detect, attribute, or actively scan. License: GitHub ToS + TF attribution; primary source authority always wins)',
+          premiumDecisionVerified: '/api/premium/news/decision-verified?cluster_id=&date= (1 credit; structured verification scores for a single corroboration cluster — verification_tier (single|limited|moderately-corroborated|broadly-verified|widely-reported), source_diversity_score, time_span_hours, per-source breakdown, AFTA-signed receipt over the source set. Pair with /api/history/news/clusters?date= to discover cluster_ids)',
+          premiumDecisionVerifiedSearch: '/api/premium/news/decision-verified/search?q=&since=&until=&min_sources=1-50&limit=1-100 (1 credit; search recent days for clusters whose hero title matches q (substring + token-overlap), filtered by min_sources, sorted by match score then source count. Default lookback 30 days; max 90)',
           secEdgarSearch: '/api/sec/edgar/search?q=&forms=10-K,10-Q,8-K&from=YYYY-MM-DD&to=YYYY-MM-DD&limit=1-50&page=1-100 (free; SEC EDGAR full-text search across the entire filings corpus since 1990s. License: US Gov public domain. Pair with /api/sec/company-tickers for ticker-to-CIK lookup)',
           secEdgarSubmissions: '/api/sec/edgar/submissions/{cik} (free; recent filings + entity metadata for one CIK. Accepts numeric CIK in any zero-padding form, or CIK0000320193 prefixed form)',
           climatePowerDaily: '/api/climate/power/daily?latitude=&longitude=&parameters=&start=YYYYMMDD&end=YYYYMMDD&community=AG|RE|SB (free; NASA POWER daily meteorological + solar data for one point. License: open access US Gov public domain. Range capped at 365 days)',
@@ -4102,6 +4111,81 @@ export default {
           articles_total: totalArticles,
           days,
         },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // === PAID PREMIUM: DECISION-VERIFIED NEWS (Tier 1, 1 credit) ===
+    // Per defensible-pipelines spec: agents fact-checking a fast-moving
+    // claim get back STRUCTURED VERIFICATION SCORES on top of the
+    // existing news clusters. The unique value-add over the free
+    // /api/history/news/clusters: verification tier, source-diversity
+    // score, time-span analysis, AFTA-signed receipt over the source
+    // set. Two query modes:
+    //   ?cluster_id=&date=        verify a known cluster (cheap, 2 KV reads)
+    //   /search?q=&since=&...     search recent dates for matching clusters
+    if (path === '/api/premium/news/decision-verified') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const parsed = parseLookupQuery(url);
+      if (!parsed.ok) {
+        return await premiumValidationFailure(parsed as unknown as Record<string, unknown>, payment, request, env);
+      }
+      const result = await lookupVerifiedCluster(env, parsed.query.date, parsed.query.cluster_id);
+      if (!result) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'cluster_not_found',
+            hint: 'no cluster with that cluster_id on the requested date. List clusters via /api/history/news/clusters?date=',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/news/decision-verified',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        { ok: true, mode: 'cluster_lookup', ...result, attribution: DECISION_VERIFIED_ATTRIBUTION },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    if (path === '/api/premium/news/decision-verified/search') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const parsed = parseSearchQuery(url);
+      if (!parsed.ok) {
+        return await premiumValidationFailure(parsed as unknown as Record<string, unknown>, payment, request, env);
+      }
+      const result = await searchVerifiedClusters(env, parsed.query);
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/news/decision-verified/search',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        { ok: true, mode: 'search', ...result, attribution: DECISION_VERIFIED_ATTRIBUTION },
         payment,
         1,
         request,
