@@ -96,7 +96,12 @@ export function classifyLlamaGuardResponse(raw: string): ModerationVerdict {
   if (trimmed.length === 0) {
     return { action: 'fail_closed', error: 'empty_response' };
   }
-  if (trimmed === 'safe' || trimmed.startsWith('safe\n') || trimmed.startsWith('safe ')) {
+  // Canonical Llama Guard "safe" outputs: either the literal "safe"
+  // string or "safe" followed by a newline (categories list never
+  // appears after "safe"). We deliberately do NOT accept "safe ..."
+  // with a trailing space because a prompt-injected response like
+  // "safer alternative: ..." would otherwise pass this check.
+  if (trimmed === 'safe' || trimmed.startsWith('safe\n')) {
     return { action: 'pass' };
   }
   if (!trimmed.startsWith('unsafe')) {

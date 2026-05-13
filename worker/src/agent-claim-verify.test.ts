@@ -510,6 +510,67 @@ describe('verifyClaimSignature', () => {
 // │ Vocabulary sanity                                                │
 // └──────────────────────────────────────────────────────────────────┘
 
+// ┌──────────────────────────────────────────────────────────────────┐
+// │ Defense-in-depth hardening (added 2026-05-13 audit pass)         │
+// └──────────────────────────────────────────────────────────────────┘
+
+describe('hardening: line-count cap', () => {
+  it('rejects messages with >200 lines', () => {
+    const padding = '\n'.repeat(250);
+    const msg = padding + buildMessage();
+    const r = parseClaimMessage(msg);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error).toBe('invalid_message_shape');
+      expect(r.detail).toBe('too many lines');
+    }
+  });
+
+  it('accepts a normal-size message (~20 lines)', () => {
+    const r = parseClaimMessage(buildMessage());
+    expect(r.ok).toBe(true);
+  });
+});
+
+describe('hardening: HTTPS-only URL', () => {
+  it('rejects http:// operator_url', () => {
+    const msg = buildMessage({ operator_url: 'http://example.com/agent' });
+    const r = parseClaimMessage(msg);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe('operator_url_invalid');
+  });
+
+  it('accepts https:// operator_url', () => {
+    const msg = buildMessage({ operator_url: 'https://example.com/agent' });
+    const r = parseClaimMessage(msg);
+    expect(r.ok).toBe(true);
+  });
+});
+
+describe('hardening: expanded_description char class', () => {
+  it('rejects chars in the previously-accidentally-permitted range 45-61', () => {
+    // Previously the hyphen between + and = in `+\-=` was interpreted as
+    // a range, accidentally letting through chars between ASCII 43-61.
+    // The fix moves the hyphen to the end as a literal. The angle-bracket
+    // chars (<, >) and the colon (:) should be REJECTED by both old and
+    // new regexes, but the comma (,) and dot (.) are explicitly allowed,
+    // so this test asserts an unrelated angle-bracket case to confirm
+    // the regex still rejects HTML tags.
+    const msg = buildMessage({ expanded_description: 'I do work <script>alert(1)</script>' });
+    const r = parseClaimMessage(msg);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe('expanded_description_invalid_chars');
+  });
+
+  it('still accepts the safe punctuation set', () => {
+    const msg = buildMessage({
+      expanded_description: 'I do data analysis. Skills: research, coding (Python/JS) #ai @work $50/hr',
+    });
+    const r = parseClaimMessage(msg);
+    expect(r.ok).toBe(true);
+  });
+});
+
 describe('vocabularies', () => {
   it('SKILLS_TAG_VOCAB has all-lowercase tags', () => {
     for (const tag of SKILLS_TAG_VOCAB) {

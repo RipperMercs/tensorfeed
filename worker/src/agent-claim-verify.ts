@@ -229,8 +229,16 @@ export type ClaimValidationResult =
 /** Display-name content allowlist: ASCII letters, digits, spaces, and a small punctuation set. */
 const DISPLAY_NAME_ALLOWED_RE = /^[A-Za-z0-9 ._\-']+$/;
 
-/** Expanded-description content allowlist: alphanumerics + standard punctuation + whitespace. */
-const EXPANDED_DESCRIPTION_ALLOWED_RE = /^[A-Za-z0-9 \t\n\r.,!?;:()[\]{}'"@&%#/$+\-=_]+$/;
+/**
+ * Expanded-description content allowlist: alphanumerics + standard punctuation + whitespace.
+ *
+ * The hyphen lives at the END of the character class so it's a literal,
+ * not a range operator. Inside `[]`, a hyphen between two chars
+ * (e.g. `+\-=`) is parsed as the range from `+` (43) to `=` (61),
+ * which would silently admit unintended characters. With the hyphen
+ * trailing (`...+=_-]`) it's an unambiguous literal.
+ */
+const EXPANDED_DESCRIPTION_ALLOWED_RE = /^[A-Za-z0-9 \t\n\r.,!?;:()[\]{}'"@&%#/$+=_-]+$/;
 
 /** BCP 47 language code shape: 2-3 letter primary, optional subtags. */
 const BCP47_RE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
@@ -238,8 +246,10 @@ const BCP47_RE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
 /** Hex nonce shape: 16-64 hex chars (8-32 bytes). */
 const NONCE_RE = /^[0-9a-fA-F]{16,64}$/;
 
-/** URL shape: http/https only. */
-const HTTPS_URL_RE = /^https?:\/\/[^\s<>"]+$/;
+/** URL shape: https only. Operators that need http for staging/local
+ *  should set up an https tunnel; the bureau publishes URLs that
+ *  downstream UIs link to, and accepting http risks MITM substitution. */
+const HTTPS_URL_RE = /^https:\/\/[^\s<>"]+$/;
 
 function normalizeForBrandCheck(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -304,8 +314,14 @@ export function parseClaimMessage(message: string): ClaimValidationResult {
   if (typeof message !== 'string' || message.length === 0 || message.length > 4096) {
     return { ok: false, error: 'invalid_message_shape', detail: 'message empty or too long' };
   }
+  const lines = message.split('\n');
+  // Cap line count to bound the parser's work regardless of input
+  // pathologies. Honest claims are ~10-20 lines; 200 is plenty.
+  if (lines.length > 200) {
+    return { ok: false, error: 'invalid_message_shape', detail: 'too many lines' };
+  }
   const map = new Map<string, string>();
-  for (const rawLine of message.split('\n')) {
+  for (const rawLine of lines) {
     const line = rawLine.trim();
     if (!line) continue;
     const kv = parseKeyValue(line);
@@ -400,6 +416,9 @@ export function parseClaimMessage(message: string): ClaimValidationResult {
     expanded_description = expanded_description_raw;
   }
 
+  // Tag arrays: cap is checked BEFORE the vocab-validation loop so a
+  // pathologically large comma-separated input doesn't iterate before
+  // being rejected.
   const skills_tags_raw = map.get('skills_tags') ?? '';
   const skills_tags = splitAndLowercaseTags(skills_tags_raw);
   if (skills_tags.length > MAX_SKILLS_TAGS) {
@@ -432,6 +451,10 @@ export function parseClaimMessage(message: string): ClaimValidationResult {
       return { ok: false, error: 'language_invalid', detail: lang };
     }
   }
+  // Note: splitAndLowercaseTags can still produce >MAX entries from a
+  // comma-spam input; the cap above catches it after split but before
+  // the vocab iterate. The split itself is bounded by the 4096-byte
+  // message cap, so the worst-case array size is bounded above.
 
   const years_experience = parseNumberField(map.get('years_experience'));
   if (

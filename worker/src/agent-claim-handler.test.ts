@@ -329,6 +329,52 @@ describe('handleClaimApplication: brand allowlist', () => {
 // │ Happy path + directory fields                                    │
 // └──────────────────────────────────────────────────────────────────┘
 
+describe('handleClaimApplication: hardening (nonce-burn ordering)', () => {
+  it('burns the nonce AFTER signature verify but BEFORE Chainalysis', async () => {
+    setupChainalysisFetch({ status: 500 });
+    const { env, kv } = makeEnv();
+    const { message, signature } = await signed();
+    const r = await handleClaimApplication(env, { message, signature }, { now: NOW });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.status).toBe('retry_later');
+    // Hardened behavior: nonce IS burned even on retry_later. Operator
+    // must submit a fresh signed message with a new nonce.
+    expect(kv.store.has(CLAIM_NONCE_KEY_PREFIX + 'deadbeef0123456789abcdef01234567')).toBe(true);
+  });
+
+  it('does NOT burn the nonce when the signature is invalid', async () => {
+    setupChainalysisFetch();
+    const { env, kv } = makeEnv();
+    const message = buildMessage();
+    const wrongSig = await OTHER_ACCOUNT.signMessage({ message });
+    const r = await handleClaimApplication(env, { message, signature: wrongSig }, { now: NOW });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect((r as any).reason).toBe('signature_invalid');
+    expect(kv.store.has(CLAIM_NONCE_KEY_PREFIX + 'deadbeef0123456789abcdef01234567')).toBe(false);
+  });
+
+  it('does NOT burn the nonce when the message is malformed', async () => {
+    setupChainalysisFetch();
+    const { env, kv } = makeEnv();
+    const r = await handleClaimApplication(
+      env,
+      { message: 'garbage', signature: '0x' + 'a'.repeat(130) },
+      { now: NOW },
+    );
+    expect(r.ok).toBe(false);
+    expect(kv.store.size).toBe(0);
+  });
+
+  it('does NOT burn the nonce when the timestamp is expired', async () => {
+    setupChainalysisFetch();
+    const { env, kv } = makeEnv();
+    const message = buildMessage({ timestamp: '2026-05-13T19:00:00.000Z' });
+    const signature = await TEST_ACCOUNT.signMessage({ message });
+    await handleClaimApplication(env, { message, signature }, { now: NOW });
+    expect(kv.store.has(CLAIM_NONCE_KEY_PREFIX + 'deadbeef0123456789abcdef01234567')).toBe(false);
+  });
+});
+
 describe('handleClaimApplication: approved path', () => {
   it('approves a clean claim and writes to KV', async () => {
     setupChainalysisFetch();

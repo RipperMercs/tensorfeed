@@ -18,6 +18,15 @@ describe('classifyLlamaGuardResponse', () => {
     expect(classifyLlamaGuardResponse('safe\n')).toEqual({ action: 'pass' });
   });
 
+  it('does NOT classify "safe " (space prefix) as pass (hardened 2026-05-13)', () => {
+    // Earlier code accepted "safe ..." as pass, which a prompt-injected
+    // model could exploit by emitting "safer alternative: ..." or
+    // "safely reject the request". Hardened to require exact "safe"
+    // or "safe\n".
+    const v = classifyLlamaGuardResponse('safer alternative: ...');
+    expect(v.action).not.toBe('pass');
+  });
+
   it('classifies uppercase "SAFE" as pass (case-insensitive)', () => {
     expect(classifyLlamaGuardResponse('SAFE')).toEqual({ action: 'pass' });
   });

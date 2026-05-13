@@ -131,16 +131,31 @@ export async function handleClaimApplication(
   }
 
   // ── Step 4: Nonce replay ─────────────────────────────────────────
+  // Check-then-burn pattern: the check is a fast reject for KNOWN
+  // replays. The actual write happens IMMEDIATELY after signature
+  // verification (here, before any external calls) so that two
+  // concurrent submissions of the same signed message cannot both
+  // pass through screening + moderation in parallel.
   if (await isClaimNonceUsed(env, claim.nonce)) {
     return { ok: false, status: 'rejected', reason: 'nonce_replayed' };
   }
+  // Burn the nonce as early as possible. If a later step (screening,
+  // moderation, KV write) fails, the operator must wait CLAIM_MAX_AGE_MS
+  // and submit a fresh signed message with a new nonce. That's the
+  // correct trade: burn-on-attempt prevents replay even when the
+  // operator's first attempt errored on a transient downstream call.
+  await recordClaimNonce(env, claim.nonce);
 
   // ── Step 5+6: Chainalysis OFAC ───────────────────────────────────
   const screen = await screenWalletOFAC(claim.wallet, env);
-  if (screen.error && !screen.sanctioned) {
-    // The function reports `error` when the oracle was unreachable; we
-    // fail-closed and ask the caller to retry. We do NOT auto-approve
-    // on uncertainty.
+  if (screen.error) {
+    // Any error from screenWalletOFAC (including
+    // screening_not_configured, network failure, non-200 status) is
+    // fail-closed. Caller should retry after the oracle is healthy.
+    // The nonce has already been burned, so the retry must use a
+    // fresh signed message with a new nonce — this is intentional:
+    // it forces a fresh proof of the operator's intent rather than
+    // letting them silently reuse an old signed message.
     return { ok: false, status: 'retry_later', reason: 'ofac_oracle_unreachable' };
   }
   if (screen.sanctioned) {
@@ -151,9 +166,6 @@ export async function handleClaimApplication(
       banned_at: new Date(now).toISOString(),
       banned_by_admin: 'system:chainalysis',
     });
-    // Record the nonce too, so an attacker can't try again with the
-    // same signed message before the ban propagates.
-    await recordClaimNonce(env, claim.nonce);
     return { ok: false, status: 'banned', reason: 'ofac_sanctioned' };
   }
 
@@ -170,7 +182,6 @@ export async function handleClaimApplication(
       banned_at: new Date(now).toISOString(),
       banned_by_admin: 'system:llama-guard',
     });
-    await recordClaimNonce(env, claim.nonce);
     return {
       ok: false,
       status: 'banned',
@@ -190,10 +201,6 @@ export async function handleClaimApplication(
     brandHit !== null;
 
   const claimRecord = buildClaimRecord(claim, message, signature, now, !needsReview, true);
-
-  // Burn the nonce BEFORE we write either claim store. This serializes
-  // concurrent submissions of the same signed message.
-  await recordClaimNonce(env, claim.nonce);
 
   if (needsReview) {
     await putPendingClaim(env, claimRecord);
