@@ -349,6 +349,7 @@ import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
 import { buildSuggestedNextCalls } from './suggested-next';
+import { listWantlist, submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import {
   DECISION_VERIFIED_ATTRIBUTION,
@@ -979,6 +980,29 @@ export default {
 
     if (path === '/api/security/iocs.json' || path === '/api/security/iocs') {
       return handleIocExport(env);
+    }
+
+    // === AI-AGENT WANTLIST ===
+    // Free demand-signal collector. Agents (or their human operators)
+    // post what data they wish TF served. Aggregated patterns inform
+    // pipeline priorities. Per worker/src/wantlist.ts.
+    if (path === '/api/wantlist' && request.method === 'POST') {
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'bad_json', hint: 'POST a JSON body' }, 400, 0);
+      }
+      const ip = getClientIP(request);
+      const out = await submitWantlistItem(env, ip, body as Record<string, unknown>);
+      const status = out.ok ? 201 : ((out as { error: string }).error === 'rate_limit_exceeded' ? 429 : 400);
+      return jsonResponse(out, status, 0);
+    }
+    if (path === '/api/wantlist' && (request.method === 'GET' || request.method === 'HEAD')) {
+      const recentParam = url.searchParams.get('recent');
+      const recentLimit = recentParam ? parseInt(recentParam, 10) : 25;
+      const snapshot = await listWantlist(env, Number.isFinite(recentLimit) ? recentLimit : 25);
+      return jsonResponse({ ok: true, ...snapshot }, 200, 60);
     }
 
     // Free, no-auth self-service endpoint so an agent can check its
@@ -2183,6 +2207,8 @@ export default {
           securityVulnrichment: '/api/security/vulnrichment/{CVE-id} (free; CISA Vulnrichment enrichment for one CVE - CWE mappings, CVSS, exploitation evidence, KEV cross-refs - lazy-fetched from cisagov/vulnrichment, cached 7d. License: US Gov public domain. Pair with /api/security/cve/{id} for the MITRE record)',
           securityAiSupplyChainIocs: '/api/security/ai-supply-chain-iocs.json (free; daily-refreshed feed of publicly-disclosed malicious npm + PyPI packages relevant to AI / MCP / LLM operators. Each entry cites its primary source (GHSA). Posture: republish + cite; TF does not detect, attribute, or actively scan. License: GitHub ToS + TF attribution; primary source authority always wins)',
           freeTrialStatus: `/api/free-tier/status (free; self-service quota check. Returns the caller IP\'s current premium-trial state: used today, remaining today, resets_at. Each IP gets ${FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY} free premium API calls per 24h rolling window, no auth required, applied to every /api/premium/* endpoint. Excess returns canonical x402 V2 challenge)`,
+          wantlistGet: `/api/wantlist (free, GET; aggregated AI-agent wantlist. Returns the most-recent ${WANTLIST_DEFAULTS.INDEX_CAP}-item rolling window of submissions, top topics by count, and request-type breakdown. Items expire after ${WANTLIST_DEFAULTS.ITEM_TTL_SECONDS / 86400}d. Pass ?recent=N to control how many items are hydrated, capped at 100)`,
+          wantlistPost: `/api/wantlist (free, POST; submit what data you wish TF served. JSON body: { topic, request_type, description, contact_optional }. request_type one of: ${WANTLIST_DEFAULTS.REQUEST_TYPE_VALUES.join(', ')}. Rate-limited to ${WANTLIST_DEFAULTS.RL_PER_IP_PER_DAY} submissions per IP per 24h. Anonymous by default. Patterns inform pipeline priorities)`,
           premiumDecisionVerified: '/api/premium/news/decision-verified?cluster_id=&date= (1 credit; structured verification scores for a single corroboration cluster: verification_tier (single|limited|moderately-corroborated|broadly-verified|widely-reported), source_diversity_score, time_span_hours, per-source breakdown, AFTA-signed receipt over the source set. Pair with /api/history/news/clusters?date= to discover cluster_ids)',
           premiumDecisionVerifiedSearch: '/api/premium/news/decision-verified/search?q=&since=&until=&min_sources=1-50&limit=1-100 (1 credit; search recent days for clusters whose hero title matches q (substring + token-overlap), filtered by min_sources, sorted by match score then source count. Default lookback 30 days; max 90)',
           secEdgarSearch: '/api/sec/edgar/search?q=&forms=10-K,10-Q,8-K&from=YYYY-MM-DD&to=YYYY-MM-DD&limit=1-50&page=1-100 (free; SEC EDGAR full-text search across the entire filings corpus since 1990s. License: US Gov public domain. Pair with /api/sec/company-tickers for ticker-to-CIK lookup)',
