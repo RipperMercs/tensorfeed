@@ -386,6 +386,10 @@ import {
   searchDirectory,
 } from './agent-directory';
 import {
+  confirmVerifyHireable,
+  issueVerifyHireableQuote,
+} from './agent-directory-charge';
+import {
   BADGE_CSP,
   renderBadgeSvg,
   renderUnknownBadgeSvg,
@@ -2468,6 +2472,41 @@ export default {
       );
     }
 
+    // === VERIFY-HIREABLE CHARGE ENDPOINTS ===
+    // $5 USDC / 30 days, payable to the existing PAYMENT_WALLET on Base.
+    // Two-step parallel to /api/payment/buy-credits + /api/payment/confirm,
+    // settlement is "update verified_hireable_until on the operator's
+    // claim" instead of "mint credits". Chainalysis re-screen at every
+    // renewal. Replay protected via pay:vh-tx:{txHash} (separate from
+    // pay:tx:{txHash} to avoid conflicts with credit purchases).
+    if (path === '/api/agents/directory/verify-hireable/quote' && request.method === 'POST') {
+      let body: { sender_wallet?: unknown } = {};
+      try {
+        body = (await request.json()) as typeof body;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const sw = typeof body.sender_wallet === 'string' ? body.sender_wallet : '';
+      const r = await issueVerifyHireableQuote(env, sw);
+      if (!r.ok) return jsonResponse(r, r.status);
+      return jsonResponse(r, 200);
+    }
+    if (path === '/api/agents/directory/verify-hireable/confirm' && request.method === 'POST') {
+      let body: { nonce?: unknown; txHash?: unknown; sender_wallet?: unknown } = {};
+      try {
+        body = (await request.json()) as typeof body;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const r = await confirmVerifyHireable(env, {
+        nonce: typeof body.nonce === 'string' ? body.nonce : '',
+        txHash: typeof body.txHash === 'string' ? body.txHash : '',
+        sender_wallet: typeof body.sender_wallet === 'string' ? body.sender_wallet : '',
+      });
+      if (!r.ok) return jsonResponse(r, r.status ?? 400);
+      return jsonResponse(r, 200);
+    }
+
     if (path === '/api/agents/directory/skills') {
       const dist = await aggregateSkillDistribution(env);
       return jsonResponse({ ok: true, total_skills: dist.length, distribution: dist }, 200, 300);
@@ -2736,6 +2775,8 @@ export default {
           agentsDirectorySearch: 'GET /api/agents/directory/search?skill=&service_area=&language=&available=true|false&max_rate=&min_experience=&verified=true&limit=1-25 (free; agent self-directory search. Verified-hireable members sort first. Operators self-describe; TF publishes the listing. Off-platform transactions only — TF is publisher, not facilitator.)',
           agentsDirectorySkills: 'GET /api/agents/directory/skills (free; tally of skill tags across the active directory cohort, sorted by count desc)',
           agentsDirectoryCategories: 'GET /api/agents/directory/categories (free; tally of service_area tags across the active directory cohort)',
+          agentsDirectoryVerifyHireableQuote: 'POST /api/agents/directory/verify-hireable/quote with { sender_wallet } -> { nonce, amount_usd: 5, wallet, expires_at } (free quote; requires existing operator claim; sender pays $5 USDC on Base to the returned wallet then calls /confirm)',
+          agentsDirectoryVerifyHireableConfirm: 'POST /api/agents/directory/verify-hireable/confirm with { nonce, txHash, sender_wallet } -> grants 30 days of verified-hireable status on the operator claim (top-tier directory visibility + verified badge). Chainalysis re-screen at renewal; sender-wallet bound (Tx-Sniper guard); $5 USDC exact match required.',
           premiumAgentsLeaderboardFull: '/api/premium/agents/leaderboard/full?metric=&window= (1 credit, AFTA-signed; untruncated reputation leaderboard with full cards for every ranked agent. Free /api/agents/leaderboard caps at 25.)',
           agentActivity: '/api/agents/activity',
           chaosStats: '/api/chaos/stats',
