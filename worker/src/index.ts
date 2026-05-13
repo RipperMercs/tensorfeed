@@ -360,6 +360,10 @@ import { deleteWantlistItem, listWantlist, listWantlistForAdmin, submitWantlistI
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import { rebuildAllReputationCards } from './agent-reputation-rebuild';
 import {
+  getReputationCardByToken,
+  getReputationCardByWallet,
+} from './agent-reputation-store';
+import {
   DECISION_VERIFIED_ATTRIBUTION,
   lookupVerifiedCluster,
   parseLookupQuery,
@@ -2203,6 +2207,31 @@ export default {
         source: 'tensorfeed.ai',
         ...(cached as Record<string, unknown> || {}),
       }, 200, 300);
+    }
+
+    // === AGENT REPUTATION BUREAU (v0 read surfaces) ===
+    // Public reputation cards keyed by wallet OR token prefix. Cards are
+    // rebuilt daily at 04:50 UTC; reads are direct KV gets cached at the
+    // edge for 60s. Per the bureau spec, returning a 404 (not a synthetic
+    // empty card) on miss is the contract so consumers can distinguish
+    // "unknown agent" from "agent with no activity".
+    if (path.startsWith('/api/agents/reputation/by-token/')) {
+      const prefix = path.slice('/api/agents/reputation/by-token/'.length);
+      if (!prefix || !/^tf_live_[0-9a-fA-F]+$/.test(prefix) || prefix.length < 9 || prefix.length > 16) {
+        return jsonResponse({ ok: false, error: 'invalid_token_prefix' }, 400);
+      }
+      const card = await getReputationCardByToken(env, prefix);
+      if (!card) return jsonResponse({ ok: false, error: 'not_found' }, 404);
+      return jsonResponse(card, 200, 60);
+    }
+    if (path.startsWith('/api/agents/reputation/')) {
+      const wallet = path.slice('/api/agents/reputation/'.length);
+      if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+        return jsonResponse({ ok: false, error: 'invalid_wallet' }, 400);
+      }
+      const card = await getReputationCardByWallet(env, wallet);
+      if (!card) return jsonResponse({ ok: false, error: 'not_found' }, 404);
+      return jsonResponse(card, 200, 60);
     }
 
     // === AGENT OPPORTUNITIES (daily GitHub scan) ===
