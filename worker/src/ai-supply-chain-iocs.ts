@@ -66,13 +66,22 @@ const AI_RELEVANCE_KEYWORDS: ReadonlyArray<string> = [
   'transformers',
   'pytorch',
   'tensorflow',
-  // mcp + agent ecosystem
+  // mcp + agent ecosystem (broadened 2026-05-13 in response to the
+  // expanded npm worm: original `mcp-` only matched packages with a
+  // trailing hyphen; missed cmux-agent-mcp, nextmove-mcp, etc.
+  // `agent-` catches agent-tool/agent-cli/codedagent-tool patterns
+  // beyond the narrower agent-sdk).
   'mcp-',
+  '-mcp',
   'mcp_',
   '@modelcontextprotocol',
   'model-context-protocol',
   'agent-sdk',
   'agents-sdk',
+  'agent-',
+  'agent.sdk',
+  // RPA / agent platforms (npm-scope-anchored; bounded blast radius)
+  '@uipath/',
   // vector stores commonly used by AI agents
   'chromadb',
   'pinecone',

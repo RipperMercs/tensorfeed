@@ -8021,13 +8021,13 @@ export default {
         if (!env.BACKUPS_R2) return { skipped: 'BACKUPS_R2_binding_missing' };
         return backupKvToR2(env, 'cron', env.ENVIRONMENT || 'unknown');
       });
-    } else if (cron === '15 7 * * *') {
-      // Daily 07:15 UTC: refresh the AI/MCP/LLM supply-chain IOC
-      // feed (worker/src/ai-supply-chain-iocs.ts). Pulls public
-      // malware advisories from GHSA, filters for AI relevance,
-      // writes a single KV snapshot served at
-      // /api/security/ai-supply-chain-iocs.json. Posture is
-      // republish + cite, not detect + attribute.
+    } else if (cron === '15 */6 * * *') {
+      // Every 6h at :15 UTC: refresh the AI/MCP/LLM supply-chain IOC
+      // feed (worker/src/ai-supply-chain-iocs.ts). Authenticated GHSA
+      // pull, AI-keyword filter, single KV snapshot at
+      // /api/security/ai-supply-chain-iocs.json. Bumped from daily on
+      // 2026-05-13 in response to the expanded npm worm. Republish +
+      // cite posture; no active scanning, no attribution.
       await run('refreshAiSupplyChainIocs', () => refreshAiSupplyChainIocs(env));
     } else if (cron === '27 * * * *') {
       // Hourly :27 UTC: probe every known x402 publisher's manifest
