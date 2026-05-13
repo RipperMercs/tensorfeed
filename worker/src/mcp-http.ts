@@ -35,6 +35,10 @@ import { readKEVCurrent, summarizeKEVForFreeTier } from './security-kev';
 import { fetchEPSSCurrent } from './security-epss';
 import { fetchOSVForPackage, fetchOSVById } from './security-osv';
 import { getAiSupplyChainIocs } from './ai-supply-chain-iocs';
+import {
+  getReputationCardByToken,
+  getReputationCardByWallet,
+} from './agent-reputation-store';
 import { getClientIP, peekFreeTrialQuota, FREE_TRIAL_DEFAULTS } from './rate-limit';
 import { submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
 import {
@@ -379,6 +383,78 @@ const TOOLS: McpToolDef[] = [
         sources: snapshot.sources,
         posture: snapshot.posture,
       };
+    },
+  },
+
+  // ─── Agent Reputation Bureau ──────────────────────────────────────
+  {
+    name: 'check_agent_reputation',
+    description:
+      'Look up an agent\'s public reputation card from the TensorFeed Agent Reputation Bureau. Takes a wallet (0x + 40 hex) OR a token_prefix (first 16 chars of a tf_live_ bearer). Returns the full ReputationCard: composite + sub-metric ranks (reliability, spend, activity, streak), trust grade A through F, public flags (new_wallet, spend_spike, claim_disputed, etc), wallet age, first_seen, last_active, ofac_clean, banned + ban_reason if applicable. Cards rebuild daily at 04:50 UTC from TF\'s own observable telemetry. Returns ok=false with status=not_found for unknown identities so callers can distinguish "we have no record" from "we have a record showing zero activity". Useful for: marketplaces routing work to high-grade agents, peer agents deciding to trust another agent, ops dashboards monitoring an agent\'s standing, or operators inspecting their own reputation before claiming a wallet.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        wallet: {
+          type: 'string',
+          description: 'EIP-55 or lowercased EOA wallet address (0x + 40 hex). Mutually exclusive with token_prefix.',
+        },
+        token_prefix: {
+          type: 'string',
+          description: 'First 16 chars of a tf_live_ bearer token (e.g. "tf_live_18e54f47"). Mutually exclusive with wallet.',
+        },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const wallet = getStringArg(args, 'wallet')?.trim();
+      const token_prefix = getStringArg(args, 'token_prefix')?.trim();
+      if (!wallet && !token_prefix) {
+        return {
+          ok: false,
+          status: 'invalid_arguments',
+          message: 'Pass either wallet (0x + 40 hex) or token_prefix (first 16 chars of a tf_live_ bearer).',
+        };
+      }
+      if (wallet && token_prefix) {
+        return {
+          ok: false,
+          status: 'invalid_arguments',
+          message: 'Pass wallet OR token_prefix, not both. The bureau indexes both surfaces; pick one for the lookup.',
+        };
+      }
+      if (wallet) {
+        if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+          return { ok: false, status: 'invalid_wallet', message: 'wallet must be 0x + 40 hex chars.' };
+        }
+        const card = await getReputationCardByWallet(env, wallet);
+        if (!card) {
+          return {
+            ok: false,
+            status: 'not_found',
+            wallet,
+            hint: 'No reputation record indexed for this wallet. Cards rebuild daily at 04:50 UTC; new wallets appear after their first TF interaction lands in a rebuild.',
+          };
+        }
+        return card;
+      }
+      // token_prefix branch
+      if (!/^tf_live_[0-9a-fA-F]+$/.test(token_prefix!) || token_prefix!.length < 9 || token_prefix!.length > 16) {
+        return {
+          ok: false,
+          status: 'invalid_token_prefix',
+          message: 'token_prefix must match tf_live_[hex]{1,8} and be 9-16 chars long (the first 16 chars of a tf_live_ bearer).',
+        };
+      }
+      const card = await getReputationCardByToken(env, token_prefix!);
+      if (!card) {
+        return {
+          ok: false,
+          status: 'not_found',
+          token_prefix,
+          hint: 'No reputation record indexed for this token prefix.',
+        };
+      }
+      return card;
     },
   },
 
