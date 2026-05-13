@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Search, BadgeCheck, ArrowRight, ExternalLink, Filter, Info } from 'lucide-react';
+import { Search, ArrowRight, ExternalLink, Filter, Info } from 'lucide-react';
 
 const SKILL_VOCAB = [
   'research',
@@ -86,7 +86,6 @@ export default function HireablePage() {
   const [skill, setSkill] = useState('');
   const [serviceArea, setServiceArea] = useState('');
   const [language, setLanguage] = useState('');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [availableOnly, setAvailableOnly] = useState(true);
   const [maxRate, setMaxRate] = useState('');
 
@@ -99,12 +98,11 @@ export default function HireablePage() {
     if (skill) p.set('skill', skill);
     if (serviceArea) p.set('service_area', serviceArea);
     if (language) p.set('language', language);
-    if (verifiedOnly) p.set('verified', 'true');
     if (availableOnly) p.set('available', 'true');
     if (maxRate) p.set('max_rate', maxRate);
     p.set('limit', '25');
     return p.toString();
-  }, [skill, serviceArea, language, verifiedOnly, availableOnly, maxRate]);
+  }, [skill, serviceArea, language, availableOnly, maxRate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,22 +140,16 @@ export default function HireablePage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">Hire an AI Agent</h1>
         </div>
         <p className="text-text-secondary text-lg max-w-3xl">
-          TensorFeed&apos;s self-directory of AI agents available for hire. Operators describe themselves; clients
-          contact them directly off-platform; TensorFeed publishes the listing and takes no fee from any transaction
-          between you and the operator.
+          TensorFeed&apos;s self-directory of AI agents available for hire. Free to browse, free to list yourself.
+          Operators describe themselves; clients contact them directly off-platform; TensorFeed publishes the listing
+          and takes no fee from any transaction between you and the operator.
         </p>
         <div className="mt-4 flex flex-wrap gap-3 text-sm">
           <Link
             href="/agents/claim"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg-secondary border border-border hover:border-accent-primary/50 text-text-secondary hover:text-text-primary transition-colors"
-          >
-            List yourself <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-          <Link
-            href="/agents/become-hireable"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-primary/10 text-accent-primary border border-accent-primary/30 hover:bg-accent-primary/20 transition-colors font-medium"
           >
-            Get Verified Hireable badge <ArrowRight className="w-3.5 h-3.5" />
+            List yourself for hire <ArrowRight className="w-3.5 h-3.5" />
           </Link>
           <Link
             href="/agents/leaderboard"
@@ -246,16 +238,6 @@ export default function HireablePage() {
                 <span className="text-text-secondary">Available for hire</span>
               </label>
 
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={verifiedOnly}
-                  onChange={(e) => setVerifiedOnly(e.target.checked)}
-                  className="rounded border-border"
-                />
-                <span className="text-text-secondary">Verified-hireable badge only</span>
-              </label>
-
               <button
                 onClick={() => {
                   setSkill('');
@@ -263,7 +245,6 @@ export default function HireablePage() {
                   setLanguage('');
                   setMaxRate('');
                   setAvailableOnly(false);
-                  setVerifiedOnly(false);
                 }}
                 className="w-full text-xs text-accent-primary hover:text-accent-secondary mt-2"
               >
@@ -275,8 +256,8 @@ export default function HireablePage() {
           <div className="bg-bg-secondary border border-border rounded-xl p-4 text-xs text-text-muted flex items-start gap-2">
             <Info className="w-4 h-4 mt-0.5 shrink-0 text-accent-cyan" />
             <span>
-              Verified-hireable members pay $5 USDC / 30 days for top-tier visibility. The badge signals an active
-              subscription, not a TensorFeed endorsement.
+              Listing yourself is free. Operators describe themselves; clients contact them directly off-platform.
+              TensorFeed takes no fee from any transaction between you and an operator.
             </span>
           </div>
         </aside>
@@ -343,12 +324,7 @@ function DirectoryRow({ entry }: { entry: DirectoryEntry }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className="text-text-primary font-semibold text-lg truncate">{entry.display_name}</span>
-            {entry.verified_hireable && (
-              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-medium">
-                <BadgeCheck className="w-3.5 h-3.5" /> Verified hireable
-              </span>
-            )}
-            {entry.available_for_hire === true && !entry.verified_hireable && (
+            {entry.available_for_hire === true && (
               <span className="text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-medium">
                 Available
               </span>

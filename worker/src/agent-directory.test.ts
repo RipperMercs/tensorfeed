@@ -228,10 +228,10 @@ describe('compareDirectoryEntries', () => {
     };
   }
 
-  it('verified_hireable sorts before unverified', () => {
+  it('composite_score desc is the primary sort (verified flag is ignored in v0)', () => {
     const a = entry({ verified_hireable: true, composite_score: 10 });
     const b = entry({ verified_hireable: false, composite_score: 90 });
-    expect(compareDirectoryEntries(a, b)).toBeLessThan(0);
+    expect(compareDirectoryEntries(a, b)).toBeGreaterThan(0);
   });
 
   it('within tier, higher composite_score wins', () => {
@@ -335,7 +335,7 @@ describe('searchDirectory', () => {
     expect(r.results[0].wallet).toBe('0xaaaa');
   });
 
-  it('sorts verified-hireable first, then by composite_score desc', async () => {
+  it('sorts purely by composite_score desc (no verified-hireable tier in v0)', async () => {
     const future = '2026-06-01T00:00:00.000Z';
     const claims: OperatorClaim[] = [
       claim({ wallet: '0xaaaa', display_name: 'Alpha' }),
@@ -348,9 +348,9 @@ describe('searchDirectory', () => {
     ]);
     const env = makeEnvWith(claims, cards);
     const r = await searchDirectory(env, {}, 10, NOW);
-    expect(r.results[0].wallet).toBe('0xbbbb'); // verified first even with composite=0
-    expect(r.results[1].wallet).toBe('0xaaaa'); // composite 100
-    expect(r.results[2].wallet).toBe('0xcccc'); // composite 50
+    expect(r.results[0].wallet).toBe('0xaaaa'); // composite 100 wins
+    expect(r.results[1].wallet).toBe('0xcccc'); // composite 50
+    expect(r.results[2].wallet).toBe('0xbbbb'); // composite 0 even though verified
   });
 
   it('respects limit', async () => {

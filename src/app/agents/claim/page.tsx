@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Wallet, Check, AlertTriangle, Copy, ArrowRight, Shield, ExternalLink } from 'lucide-react';
 
@@ -118,6 +118,47 @@ export default function ClaimPage() {
   const [submissionResult, setSubmissionResult] = useState<ClaimResponse | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [generatedMessage, setGeneratedMessage] = useState<string>('');
+
+  // On mount: silently restore the connected account if MetaMask /
+  // Coinbase Wallet / Rabby is already authorized. `eth_accounts` does
+  // NOT prompt (unlike `eth_requestAccounts`), so this is safe to call
+  // automatically. Then listen for accountsChanged so the page updates
+  // if the user switches accounts in the wallet UI.
+  useEffect(() => {
+    if (!window.ethereum) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const accounts = (await window.ethereum!.request({ method: 'eth_accounts' })) as string[];
+        if (!cancelled && accounts.length > 0) {
+          setWallet(accounts[0]);
+        }
+      } catch {
+        // silent: if the wallet errors on initial probe we just leave the
+        // user to click Connect manually
+      }
+    })();
+    const eth = window.ethereum as EthereumProvider & {
+      on?: (event: string, handler: (...args: unknown[]) => void) => void;
+      removeListener?: (event: string, handler: (...args: unknown[]) => void) => void;
+    };
+    if (typeof eth.on === 'function') {
+      const handler = (...args: unknown[]) => {
+        const accounts = (Array.isArray(args[0]) ? args[0] : []) as string[];
+        setWallet(accounts.length > 0 ? accounts[0] : '');
+      };
+      eth.on('accountsChanged', handler);
+      return () => {
+        if (typeof eth.removeListener === 'function') {
+          eth.removeListener('accountsChanged', handler);
+        }
+        cancelled = true;
+      };
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function connectWallet() {
     if (!window.ethereum) {
@@ -498,10 +539,10 @@ function SubmissionOutcome({ result, message }: { result: ClaimResponse; message
               {copiedProfile ? 'Copied' : 'Copy profile URL'}
             </button>
             <Link
-              href="/agents/become-hireable"
+              href="/agents/hireable"
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-accent-primary text-white hover:bg-accent-secondary text-sm"
             >
-              Get Verified Hireable badge <ArrowRight className="w-3.5 h-3.5" />
+              Browse the directory <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         )}

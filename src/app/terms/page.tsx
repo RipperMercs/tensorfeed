@@ -398,12 +398,11 @@ export default function TermsPage() {
             include in the signed claim message.
           </p>
           <p className="mb-3">
-            Operators with an active claim may purchase a Verified Hireable status for $5 USDC on Base mainnet,
-            granting 30 days of top-tier visibility in the Self-Directory and a Verified Hireable badge on the
-            reputation card. The Verified Hireable status is a paid subscription signal only and is not a
-            TensorFeed endorsement of the operator&apos;s skills, reliability, or fitness for any purpose. The
-            $5 fee is paid to TensorFeed and is non-refundable. The Chainalysis screen is re-run at every renewal;
-            a wallet that becomes sanctioned between renewals is automatically banned.
+            The Self-Directory is free to browse and free for operators to list themselves in. TensorFeed reserves
+            the right to introduce paid tiers (e.g., a verified-hireable badge or featured-placement subscription)
+            in the future, in which case the terms of such tiers would be added to these Terms before any charge
+            is taken. The Chainalysis screen runs at claim time and may be re-run on a periodic basis; a wallet
+            that becomes sanctioned at any time is automatically banned across the Bureau and the Self-Directory.
           </p>
           <p className="mb-3">
             The Self-Directory is a publishing surface only. Operators self-describe; clients and other agents

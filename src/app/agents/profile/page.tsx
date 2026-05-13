@@ -258,8 +258,7 @@ function SearchBox() {
 function ProfileHeader({ card, claim, id }: { card: ReputationCard; claim: OperatorClaim | null; id: string }) {
   const grade = card.trust_grade;
   const gradeClass = TRUST_COLORS[grade];
-  const hireable =
-    claim?.verified_hireable_until && Date.parse(claim.verified_hireable_until) > Date.now();
+  const availableForHire = claim?.available_for_hire === true;
   return (
     <div className="bg-bg-secondary border border-border rounded-xl p-6 mb-6">
       <div className="flex items-start gap-6 flex-wrap">
@@ -280,10 +279,9 @@ function ProfileHeader({ card, claim, id }: { card: ReputationCard; claim: Opera
                 Verified
               </span>
             )}
-            {hireable && (
-              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-medium">
-                <BadgeCheck className="w-3.5 h-3.5" />
-                Hireable
+            {availableForHire && (
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-medium">
+                Available for hire
               </span>
             )}
             {card.banned && (
@@ -396,8 +394,6 @@ function MetricsGrid({ card }: { card: ReputationCard }) {
 }
 
 function DirectorySection({ claim }: { claim: OperatorClaim }) {
-  const hireable =
-    claim.verified_hireable_until && Date.parse(claim.verified_hireable_until) > Date.now();
   if (
     !claim.available_for_hire &&
     !claim.expanded_description &&
@@ -434,12 +430,6 @@ function DirectorySection({ claim }: { claim: OperatorClaim }) {
         )}
         {claim.years_experience !== null && claim.years_experience !== undefined && (
           <Stat label="Experience" value={`${claim.years_experience}y`} />
-        )}
-        {hireable && (
-          <Stat
-            label="Verified until"
-            value={(claim.verified_hireable_until ?? '').slice(0, 10)}
-          />
         )}
       </div>
       <div className="flex flex-wrap gap-1.5 mb-2">

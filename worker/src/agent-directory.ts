@@ -152,14 +152,17 @@ export function composeDirectoryEntry(
 }
 
 /**
- * Sort comparator for directory results. Verified-hireable first.
- * Within tier: composite_score desc, then claim age (older first),
- * then wallet asc (deterministic ties).
+ * Sort comparator for directory results.
+ *
+ * v0 (post-2026-05-13 free-tier pivot): composite_score desc, then
+ * claim age (older first), then wallet asc (deterministic ties).
+ *
+ * (The earlier verified-hireable-first tier was removed when the $5
+ * paywall was dropped. The verified_hireable field still exists on the
+ * entry shape — pre-set to false for everyone in v0 — so the directory
+ * v1 rev tier can re-enable the tiered sort without a schema change.)
  */
 export function compareDirectoryEntries(a: DirectorySearchEntry, b: DirectorySearchEntry): number {
-  if (a.verified_hireable !== b.verified_hireable) {
-    return a.verified_hireable ? -1 : 1;
-  }
   if (b.composite_score !== a.composite_score) {
     return b.composite_score - a.composite_score;
   }
