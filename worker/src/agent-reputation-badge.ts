@@ -96,6 +96,9 @@ export function shortIdentityLabel(card: ReputationCard): string {
  */
 export function pickBadgeColor(ranks: ReputationRanks, trust_grade: string): string {
   let bestRank = Number.MAX_SAFE_INTEGER;
+  // Note: rank > 0 explicitly skips the noRank() sentinel (which is
+  // rank=0). Without this guard, an unranked card would otherwise
+  // accidentally be treated as tied-for-first and surface gold tier.
   for (const r of [ranks.reliability, ranks.spend, ranks.activity, ranks.streak, ranks.composite]) {
     if (r && r.rank > 0 && r.rank < bestRank) bestRank = r.rank;
   }

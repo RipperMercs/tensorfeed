@@ -2335,11 +2335,22 @@ export default {
       }
       const pending = await getPendingClaim(env, wallet);
       if (!pending) return jsonResponse({ ok: false, error: 'no_pending_claim' }, 404);
-      let body: { action?: unknown; reason?: unknown } = {};
+      let body: { action?: unknown; reason?: unknown; expected_nonce?: unknown } = {};
       try {
         body = (await request.json()) as typeof body;
       } catch {
         return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      // Optional concurrency guard: admin can pass the nonce of the pending
+      // claim they actually reviewed. If a new pending claim landed between
+      // review and approve, the nonces won't match and we reject with
+      // claim_changed_since_review — protecting the admin from approving a
+      // different claim than the one they saw.
+      if (typeof body.expected_nonce === 'string' && body.expected_nonce !== pending.nonce) {
+        return jsonResponse(
+          { ok: false, error: 'claim_changed_since_review', current_nonce: pending.nonce },
+          409,
+        );
       }
       const action = body.action;
       const reason = typeof body.reason === 'string' ? body.reason.trim().slice(0, 200) : '';

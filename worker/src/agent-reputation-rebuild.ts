@@ -112,12 +112,20 @@ interface AgentEntry {
  * upper anchor for computeSpendScore so one whale doesn't squash
  * everyone else's signal. Falls back to max(1) when the pool is too
  * small to have a meaningful percentile.
+ *
+ * Sybil dilution defense: agents with zero paid_calls contribute
+ * nothing of value but would dilute the percentile if included. We
+ * filter them out so an attacker spinning up free-trial-only sybil
+ * tokens cannot artificially lower the cap (and thereby inflate the
+ * relative spend score of a single high-spend whale wallet).
  */
 export function computeCohortSpendCap(telemetry: AgentTelemetry[]): number {
   if (telemetry.length === 0) return 1;
   const spends = telemetry
+    .filter((t) => t.paid_calls > 0)
     .map((t) => t.paid_calls * 5 + t.free_trial_calls)
     .sort((a, b) => a - b);
+  if (spends.length === 0) return 1;
   if (spends.length < 2) return Math.max(1, spends[0] ?? 1);
   const idx = Math.floor(spends.length * 0.95);
   const cap = spends[Math.min(idx, spends.length - 1)];
@@ -199,8 +207,36 @@ export async function rebuildAllReputationCards(
   let cards_written = 0;
   let leaderboards_written = 0;
 
+  // Snapshot ban + claim state ONCE before composing cards. Two reasons:
+  //   1. Atomicity: the serial composeCard loop used to read the latest
+  //      ban/claim for each agent right before writing that agent's card.
+  //      If a new ban or claim landed mid-loop, half the cohort would
+  //      reflect pre-state and half post-state. The snapshot pattern
+  //      gives every agent in the same rebuild a consistent point-in-
+  //      time view of bans + claims.
+  //   2. Performance: parallel KV reads (Promise.all) vs sequential
+  //      awaits cut the rebuild time roughly in half on real cohorts.
+  // For the v0 cohort (~hundreds of agents) the in-memory snapshot is
+  // a few hundred KB. The full ban+claim list is also already small
+  // (one ban / one claim per banned-or-claimed agent).
+  const banLookups: Promise<[string, Awaited<ReturnType<typeof getBanRecord>>]>[] = [];
+  const claimLookups: Promise<[string, Awaited<ReturnType<typeof getOperatorClaim>>]>[] = [];
+  for (const e of entries) {
+    if (e.telemetry.wallet) {
+      const w = e.telemetry.wallet;
+      banLookups.push(getBanRecord(env, w).then((r) => [w.toLowerCase(), r]));
+      claimLookups.push(getOperatorClaim(env, w).then((r) => [w.toLowerCase(), r]));
+    }
+    if (e.telemetry.token_prefix) {
+      const p = e.telemetry.token_prefix;
+      banLookups.push(getBanRecord(env, p).then((r) => [p.toLowerCase(), r]));
+    }
+  }
+  const banSnapshot = new Map((await Promise.all(banLookups)).filter(([, v]) => v !== null) as [string, NonNullable<Awaited<ReturnType<typeof getBanRecord>>>][]);
+  const claimSnapshot = new Map((await Promise.all(claimLookups)).filter(([, v]) => v !== null) as [string, NonNullable<Awaited<ReturnType<typeof getOperatorClaim>>>][]);
+
   for (const entry of entries) {
-    const card = await composeCard(env, entry, rankByMetric, today);
+    const card = composeCardFromSnapshot(entry, rankByMetric, today, banSnapshot, claimSnapshot);
     const ok = await putReputationCard(env, card);
     if (ok) cards_written += 1;
   }
@@ -270,12 +306,13 @@ function leaderboardIds(
     .map((e) => e.id);
 }
 
-async function composeCard(
-  env: Env,
+function composeCardFromSnapshot(
   entry: AgentEntry,
   rankByMetric: Record<RankableMetric, Map<string, RankEntry>>,
   today: string,
-): Promise<ReputationCard> {
+  banSnapshot: Map<string, { reason: string }>,
+  claimSnapshot: Map<string, { display_name: string; operator_url: string | null; verified: boolean; ofac_clean: boolean; claim_disputed?: boolean }>,
+): ReputationCard {
   const t = entry.telemetry;
   const metrics = entry.metrics;
 
@@ -283,14 +320,14 @@ async function composeCard(
   let banned = false;
   let ban_reason: string | null = null;
   if (t.wallet) {
-    const b = await getBanRecord(env, t.wallet);
+    const b = banSnapshot.get(t.wallet.toLowerCase());
     if (b) {
       banned = true;
       ban_reason = b.reason;
     }
   }
   if (!banned && t.token_prefix) {
-    const b = await getBanRecord(env, t.token_prefix);
+    const b = banSnapshot.get(t.token_prefix.toLowerCase());
     if (b) {
       banned = true;
       ban_reason = b.reason;
@@ -304,7 +341,7 @@ async function composeCard(
   let ofac_clean = true;
   let claim_disputed = false;
   if (t.wallet) {
-    const claim = await getOperatorClaim(env, t.wallet);
+    const claim = claimSnapshot.get(t.wallet.toLowerCase());
     if (claim) {
       display_name = claim.display_name;
       operator_url = claim.operator_url;

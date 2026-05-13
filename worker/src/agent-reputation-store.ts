@@ -211,7 +211,10 @@ export function getReputationCardByToken(
   env: Env,
   tokenPrefixValue: string,
 ): Promise<ReputationCard | null> {
-  return readJson<ReputationCard>(env, TOKEN_KEY_PREFIX + tokenPrefixValue);
+  // Token prefixes are lowercase hex by convention (tf_live_ + [0-9a-f]+).
+  // Normalize the lookup key so callers that pass uppercase variants hit
+  // the same record. Mirrors the wallet-lookup lowercase normalization.
+  return readJson<ReputationCard>(env, TOKEN_KEY_PREFIX + tokenPrefixValue.toLowerCase());
 }
 
 export function getOperatorClaim(env: Env, wallet: string): Promise<OperatorClaim | null> {
