@@ -74,7 +74,7 @@ const BREADCRUMBS = [
 export default function VerifyPage() {
   return (
     <>
-      <FAQPageJsonLd questions={FAQS} />
+      <FAQPageJsonLd faqs={FAQS} />
       <BreadcrumbListJsonLd items={BREADCRUMBS} />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         <header className="mb-8">
