@@ -7608,12 +7608,23 @@ export default {
         return jsonResponse({ message: 'Sports news polled', nfl, mlb });
       }
       if (task === 'ai-supply-chain-iocs') {
-        const snap = await refreshAiSupplyChainIocs(env);
-        return jsonResponse({
-          message: 'AI supply-chain IOC feed refreshed',
-          total: snap.total,
-          generated_at: snap.generated_at,
-        });
+        try {
+          const snap = await refreshAiSupplyChainIocs(env);
+          return jsonResponse({
+            message: 'AI supply-chain IOC feed refreshed',
+            total: snap.total,
+            generated_at: snap.generated_at,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          const stack = err instanceof Error ? (err.stack ?? '') : '';
+          console.error('refreshAiSupplyChainIocs threw:', msg, stack);
+          return jsonResponse(
+            { ok: false, error: 'refresh_failed', message: msg, stack: stack.split('\n').slice(0, 6) },
+            500,
+            0,
+          );
+        }
       }
       if (task === 'cluster') {
         const dateParam = url.searchParams.get('date');
