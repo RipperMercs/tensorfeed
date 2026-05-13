@@ -358,6 +358,7 @@ import { backupKvToR2, listRecentBackups, readManifest } from './backup';
 import { buildSuggestedNextCalls } from './suggested-next';
 import { deleteWantlistItem, listWantlist, listWantlistForAdmin, submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
+import { rebuildAllReputationCards } from './agent-reputation-rebuild';
 import {
   DECISION_VERIFIED_ATTRIBUTION,
   lookupVerifiedCluster,
@@ -2472,7 +2473,7 @@ export default {
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities|ai-supply-chain-iocs]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities|ai-supply-chain-iocs|agent-reputation]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -7686,6 +7687,29 @@ export default {
           );
         }
       }
+      if (task === 'agent-reputation') {
+        try {
+          const now = new Date();
+          const result = await rebuildAllReputationCards(env, {
+            today: now.toISOString().slice(0, 10),
+            generated_at: now.toISOString(),
+            version: 'v0.1',
+          });
+          return jsonResponse({
+            message: 'Agent reputation cards rebuilt',
+            ...result,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          const stack = err instanceof Error ? (err.stack ?? '') : '';
+          console.error('rebuildAllReputationCards threw:', msg, stack);
+          return jsonResponse(
+            { ok: false, error: 'refresh_failed', message: msg, stack: stack.split('\n').slice(0, 6) },
+            500,
+            0,
+          );
+        }
+      }
       if (task === 'cluster') {
         const dateParam = url.searchParams.get('date');
         const dateOverride = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : undefined;
@@ -8021,6 +8045,22 @@ export default {
           return;
         }
         console.log(`hf-leaderboard captured ${r.total_models} models for ${r.capturedAt}`);
+      });
+    } else if (cron === '50 4 * * *') {
+      // Daily 04:50 UTC: rebuild the agent reputation bureau cards from
+      // pay:credits / pay:tx / pay:usage / pay:no-charge telemetry.
+      // Writes per-agent cards (wallet + token-prefix indexes), five
+      // leaderboards, a daily rollup, and updates the dates index + meta.
+      // Spec asked for 04:30 but that slot is held by the CVE list cron;
+      // 04:50 keeps the bureau in the same early-UTC quiet zone, 5 min
+      // after the HF leaderboard cron finishes.
+      await run('rebuildAgentReputation', async () => {
+        const now = new Date();
+        return rebuildAllReputationCards(env, {
+          today: now.toISOString().slice(0, 10),
+          generated_at: now.toISOString(),
+          version: 'v0.1',
+        });
       });
     } else if (cron === '30 6 * * *') {
       // Daily 06:30 UTC: refresh the CISA KEV catalog (single ~3 MB JSON

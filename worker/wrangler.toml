@@ -119,6 +119,17 @@ crons = [
   # free /api/hf-leaderboard/latest and the premium series endpoints once
   # multiple days accumulate. Slot picked between CVE (04:30) and BLS (05:00).
   "45 4 * * *",
+  # Daily 04:50 UTC: rebuild the Agent Reputation Bureau cards
+  # (worker/src/agent-reputation-rebuild.ts). Reads pay:credits, pay:tx,
+  # pay:usage, pay:no-charge telemetry; assembles per-agent telemetry
+  # (token-only + wallet-merged); computes metrics, composite score,
+  # trust grade, flags; writes per-agent cards under agent-rep:wallet:*
+  # + agent-rep:token:*, plus 5 leaderboards (window='all' in v0), daily
+  # rollup, dates index, meta. Powers /api/agents/reputation/{wallet|by-token},
+  # /api/agents/leaderboard, /api/agents/bans. Spec asked for 04:30 UTC but
+  # that slot is held by the CVE list cron at line 128; 04:50 keeps the
+  # bureau in the same early-UTC quiet zone, 5 min after HF leaderboard.
+  "50 4 * * *",
   # Daily 04:30 UTC: walk the cvelistV5 GitHub repo's commit history
   # (worker/src/security-cve.ts) for the last 36h, harvest added or
   # modified CVE-* file paths, populate cve:recent ring + cve:by-date
