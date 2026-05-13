@@ -370,6 +370,11 @@ import {
   type RankableMetric,
 } from './agent-reputation-store';
 import {
+  BADGE_CSP,
+  renderBadgeSvg,
+  renderUnknownBadgeSvg,
+} from './agent-reputation-badge';
+import {
   DECISION_VERIFIED_ATTRIBUTION,
   lookupVerifiedCluster,
   parseLookupQuery,
@@ -2240,6 +2245,53 @@ export default {
       return jsonResponse(card, 200, 60);
     }
 
+    // Embeddable SVG reputation badge. 200x40, ~2 KB. Two paths:
+    //   /api/agents/badge/by-token/{prefix}.svg
+    //   /api/agents/badge/{wallet}.svg
+    // Both emit a minimal "no record yet" SVG for unknown identities
+    // instead of a 404 so an operator's embed stays visually intact.
+    // The renderer is XSS-hardened (allowlist + escape on every
+    // user-derived field); response headers add a strict CSP, image
+    // content-type, 1h edge cache, and CORS for cross-origin embeds.
+    if (path.startsWith('/api/agents/badge/by-token/') && path.endsWith('.svg')) {
+      const prefix = path.slice('/api/agents/badge/by-token/'.length, -'.svg'.length);
+      if (!prefix || !/^tf_live_[0-9a-fA-F]+$/.test(prefix) || prefix.length < 9 || prefix.length > 16) {
+        return jsonResponse({ ok: false, error: 'invalid_token_prefix' }, 400);
+      }
+      const card = await getReputationCardByToken(env, prefix);
+      const svg = card ? renderBadgeSvg(card) : renderUnknownBadgeSvg(prefix);
+      return new Response(svg, {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/svg+xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'CDN-Cache-Control': 'public, max-age=3600',
+          'Content-Security-Policy': BADGE_CSP,
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+    if (path.startsWith('/api/agents/badge/') && path.endsWith('.svg')) {
+      const wallet = path.slice('/api/agents/badge/'.length, -'.svg'.length);
+      if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+        return jsonResponse({ ok: false, error: 'invalid_wallet' }, 400);
+      }
+      const card = await getReputationCardByWallet(env, wallet);
+      const svg = card
+        ? renderBadgeSvg(card)
+        : renderUnknownBadgeSvg(`${wallet.slice(0, 6)}…${wallet.slice(-4)}`);
+      return new Response(svg, {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/svg+xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'CDN-Cache-Control': 'public, max-age=3600',
+          'Content-Security-Policy': BADGE_CSP,
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+
     // Public list of every banned wallet or token-prefix. Transparency
     // over hiding: the bureau publishes who got banned and why so any
     // disputed call can be audited from outside. No auth required.
@@ -2425,6 +2477,8 @@ export default {
           agentsReputationByToken: '/api/agents/reputation/by-token/{prefix} (free; same shape as the by-wallet card, indexed by tf_live_ token prefix for agents who have not signed an operator claim yet)',
           agentsLeaderboard: '/api/agents/leaderboard?metric=reliability|spend|activity|streak|composite&window=24h|7d|30d|all&limit=1-25 (free, cohort capped at 25; full cohort on /api/premium/agents/leaderboard/full at 1 credit)',
           agentsBans: '/api/agents/bans (free; transparency list of every banned wallet or token-prefix with reason + evidence_url; auto-bans for Chainalysis OFAC hits)',
+          agentsBadgeByWallet: '/api/agents/badge/{wallet}.svg (free; embeddable 200x40 SVG reputation badge with composite rank, trust grade letter, reliability %. XSS-hardened, CSP-locked, 1h edge cache)',
+          agentsBadgeByToken: '/api/agents/badge/by-token/{prefix}.svg (free; same shape, indexed by tf_live_ token prefix)',
           agentActivity: '/api/agents/activity',
           chaosStats: '/api/chaos/stats',
           podcasts: '/api/podcasts',
