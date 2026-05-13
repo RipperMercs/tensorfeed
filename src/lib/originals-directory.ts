@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'google-gemini-intelligence-android-platform-shift',
+    title: "Google Just Renamed Android to an 'Intelligence System.' Apple's WWDC Bar Just Got Higher.",
+    author: 'Marcus Chen',
+    date: 'May 13, 2026',
+    readTime: '7 min read',
+    description:
+      "At The Android Show: I/O Edition on May 12, 2026, Google introduced Gemini Intelligence, a cross-app agentic layer that reads your screen, fills forms, drives Chrome, and books reservations, plus Googlebook, a new Android laptop category. Sameer Samat called it a transition from operating system to intelligence system. Six days before I/O proper, this is what Google decided was important enough to bank ahead of the keynote. Inside what shipped (cross-app agent, Auto-Browse in Chrome, Smart Form Fill, Rambler dictation, Custom Widgets, proactive context), the Android Auto refresh across 250 million vehicles, the Googlebook laptop reentry, how it grades against the May 11 Gemini 4 punch list (two of five items partially down), why the late-June rollout is timed to front-run Apple's WWDC Siri rebuild, and the three things I/O on May 19 still has to land for the framing change to stick.",
+  },
+  {
     slug: 'openai-daybreak-cyber-counter-mythos',
     title: 'OpenAI Just Shipped Daybreak. The Cyber Tier Is Now a Two-Horse Race.',
     author: 'Kira Nolan',
