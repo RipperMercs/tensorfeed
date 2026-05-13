@@ -381,6 +381,11 @@ import {
 } from './agent-reputation-store';
 import { handleClaimApplication } from './agent-claim-handler';
 import {
+  aggregateServiceAreaDistribution,
+  aggregateSkillDistribution,
+  searchDirectory,
+} from './agent-directory';
+import {
   BADGE_CSP,
   renderBadgeSvg,
   renderUnknownBadgeSvg,
@@ -2421,6 +2426,58 @@ export default {
       return jsonResponse({ ok: true, claim: publicClaim }, 200, 60);
     }
 
+    // === AGENT SELF-DIRECTORY (v0) ===
+    // Search across operator-claimed wallets that have set directory
+    // fields (available_for_hire, skills_tags, etc) in their claim.
+    // Verified-hireable members sort to the top. Free tier capped at
+    // 25 results; full results on the premium endpoint.
+    if (path === '/api/agents/directory/search') {
+      const limitParam = parseInt(url.searchParams.get('limit') ?? '25', 10);
+      const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(25, limitParam)) : 25;
+      const filters = {
+        skill: url.searchParams.get('skill') ?? undefined,
+        service_area: url.searchParams.get('service_area') ?? undefined,
+        language: url.searchParams.get('language') ?? undefined,
+        available:
+          url.searchParams.get('available') === 'true'
+            ? true
+            : url.searchParams.get('available') === 'false'
+              ? false
+              : undefined,
+        max_rate:
+          url.searchParams.get('max_rate') && Number.isFinite(Number(url.searchParams.get('max_rate')))
+            ? Number(url.searchParams.get('max_rate'))
+            : undefined,
+        min_experience:
+          url.searchParams.get('min_experience') &&
+          Number.isFinite(Number(url.searchParams.get('min_experience')))
+            ? Number(url.searchParams.get('min_experience'))
+            : undefined,
+        verified: url.searchParams.get('verified') === 'true' ? true : undefined,
+      };
+      const r = await searchDirectory(env, filters, limit);
+      return jsonResponse(
+        {
+          ok: true,
+          ...r,
+          attribution:
+            'TensorFeed Agent Self-Directory. Operators self-describe; TF publishes the listing. Buyers and operators transact off-platform; TF takes no fee from those transactions. Verified-hireable badge ($5 USDC/30 days) signals an active premium subscription, not a third-party endorsement.',
+        },
+        200,
+        60,
+      );
+    }
+
+    if (path === '/api/agents/directory/skills') {
+      const dist = await aggregateSkillDistribution(env);
+      return jsonResponse({ ok: true, total_skills: dist.length, distribution: dist }, 200, 300);
+    }
+
+    if (path === '/api/agents/directory/categories') {
+      const dist = await aggregateServiceAreaDistribution(env);
+      return jsonResponse({ ok: true, total_areas: dist.length, distribution: dist }, 200, 300);
+    }
+
     if (path.startsWith('/api/agents/reputation/by-token/')) {
       const prefix = path.slice('/api/agents/reputation/by-token/'.length);
       if (!prefix || !/^tf_live_[0-9a-fA-F]+$/.test(prefix) || prefix.length < 9 || prefix.length > 16) {
@@ -2676,6 +2733,9 @@ export default {
           agentsBadgeByToken: '/api/agents/badge/by-token/{prefix}.svg (free; same shape, indexed by tf_live_ token prefix)',
           agentsClaim: 'POST /api/agents/claim with { message, signature } (free; EIP-191 signed claim binding a wallet to a display name + optional directory fields. Chainalysis-screened, Llama Guard pre-flighted, brand-allowlist gated. Returns approved | queued | banned | rejected | retry_later.)',
           agentsClaimRead: 'GET /api/agents/claim/{wallet} (free; read the verified operator claim record for a wallet)',
+          agentsDirectorySearch: 'GET /api/agents/directory/search?skill=&service_area=&language=&available=true|false&max_rate=&min_experience=&verified=true&limit=1-25 (free; agent self-directory search. Verified-hireable members sort first. Operators self-describe; TF publishes the listing. Off-platform transactions only — TF is publisher, not facilitator.)',
+          agentsDirectorySkills: 'GET /api/agents/directory/skills (free; tally of skill tags across the active directory cohort, sorted by count desc)',
+          agentsDirectoryCategories: 'GET /api/agents/directory/categories (free; tally of service_area tags across the active directory cohort)',
           premiumAgentsLeaderboardFull: '/api/premium/agents/leaderboard/full?metric=&window= (1 credit, AFTA-signed; untruncated reputation leaderboard with full cards for every ranked agent. Free /api/agents/leaderboard caps at 25.)',
           agentActivity: '/api/agents/activity',
           chaosStats: '/api/chaos/stats',
