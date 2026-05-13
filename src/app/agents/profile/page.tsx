@@ -474,11 +474,19 @@ function DirectorySection({ claim }: { claim: OperatorClaim }) {
 
 function EmbedSection({ card, id }: { card: ReputationCard; id: string }) {
   const [copied, setCopied] = useState(false);
-  const badgeUrl =
+  // Belt-and-suspenders HTML escape on every interpolated value. The
+  // server-side regex on /api/agents/reputation/* already enforces a strict
+  // identifier shape (0x + 40 hex OR tf_live_ + hex prefix), so the
+  // current values can't contain HTML metacharacters. Still escape here
+  // so the embed snippet remains safe even if the identifier format
+  // changes upstream or the value ever flows from a different source.
+  const safeId = htmlEscape(id);
+  const badgeUrl = htmlEscape(
     card.wallet
       ? `https://tensorfeed.ai/api/agents/badge/${card.wallet}.svg`
-      : `https://tensorfeed.ai/api/agents/badge/by-token/${id}.svg`;
-  const snippet = `<a href="https://tensorfeed.ai/agents/profile?id=${id}"><img src="${badgeUrl}" alt="TensorFeed Verified Agent" /></a>`;
+      : `https://tensorfeed.ai/api/agents/badge/by-token/${id}.svg`,
+  );
+  const snippet = `<a href="https://tensorfeed.ai/agents/profile?id=${safeId}"><img src="${badgeUrl}" alt="TensorFeed Verified Agent" /></a>`;
   return (
     <div className="bg-bg-secondary border border-border rounded-xl p-5">
       <div className="flex items-center justify-between mb-3">
@@ -512,4 +520,13 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <div className="text-[10px] uppercase tracking-wider text-text-muted">{label}</div>
     </div>
   );
+}
+
+function htmlEscape(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

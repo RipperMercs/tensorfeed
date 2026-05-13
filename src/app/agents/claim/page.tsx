@@ -148,7 +148,9 @@ export default function ClaimPage() {
       return;
     }
     if (!window.ethereum) {
-      setSubmissionError('Browser wallet not available.');
+      // Wallet may have been unloaded since connectWallet succeeded; bail
+      // cleanly instead of crashing on the subsequent personal_sign call.
+      setSubmissionError('Browser wallet not available. Reload the page and reconnect.');
       return;
     }
     const timestamp = new Date().toISOString();

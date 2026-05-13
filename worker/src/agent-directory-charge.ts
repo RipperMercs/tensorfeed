@@ -45,6 +45,12 @@ export const VERIFY_HIREABLE_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
  *  conflict with credit-purchase records. */
 export const VH_TX_KEY_PREFIX = 'pay:vh-tx:';
 
+/** Claim-intent placeholder TTL. Matches the payments.ts pattern: write
+ *  a short-lived "pending" record before the on-chain verification round
+ *  trip so concurrent confirm calls on different PoPs see the placeholder
+ *  and bail. */
+const CLAIM_INTENT_TTL_SECONDS = 60;
+
 interface QuoteRecordShape {
   amount_usd: number;
   amount_base_units?: number;
@@ -174,9 +180,27 @@ export async function confirmVerifyHireable(
   }
   const senderLower = sender_wallet.toLowerCase();
 
-  // 2. Replay protection
-  const existing = await env.TENSORFEED_CACHE.get(VH_TX_KEY_PREFIX + txHash, 'json');
+  // 2. Replay protection (with claim-intent placeholder pattern from
+  // payments.ts). Two concurrent confirms on different Cloudflare PoPs
+  // could both see an empty replay record. We stake the slot BEFORE the
+  // slow on-chain verification round-trip with a 60s TTL'd "pending"
+  // record, so the second-PoP request reads the placeholder and bails
+  // with 'tx_in_flight'. If the first attempt fails downstream, the
+  // pending TTL auto-expires and the operator can retry.
+  const existing = (await env.TENSORFEED_CACHE.get(
+    VH_TX_KEY_PREFIX + txHash,
+    'json',
+  )) as (VerifyHireableTxRecord & { pending?: boolean }) | null;
   if (existing) {
+    if (existing.pending) {
+      return {
+        ok: false,
+        error: 'tx_in_flight',
+        reason:
+          'this transaction is already being processed by another request; wait up to 60 seconds and retry',
+        status: 409,
+      };
+    }
     return { ok: false, error: 'tx_already_used', status: 409 };
   }
 
@@ -204,6 +228,26 @@ export async function confirmVerifyHireable(
   if (!quote.sender_wallet || quote.sender_wallet.toLowerCase() !== senderLower) {
     return { ok: false, error: 'sender_wallet_mismatch', status: 400 };
   }
+
+  // Stake the claim-intent placeholder BEFORE the on-chain RPC roundtrip.
+  // Per payments.ts CLAIM_INTENT pattern: a concurrent request on a
+  // different PoP will see this and bail (step 2 above). TTL is 60s so a
+  // transient RPC failure auto-heals.
+  await safePut(
+    env,
+    env.TENSORFEED_CACHE,
+    VH_TX_KEY_PREFIX + txHash,
+    JSON.stringify({
+      amount_usd: 0,
+      sender_wallet: senderLower,
+      nonce_used: nonce,
+      previous_verified_hireable_until: null,
+      new_verified_hireable_until: '',
+      created: new Date(now).toISOString(),
+      pending: true,
+    }),
+    { expirationTtl: CLAIM_INTENT_TTL_SECONDS },
+  );
 
   // 5. On-chain verification
   const verified = await verifyBaseUSDCTransaction(txHash, env);

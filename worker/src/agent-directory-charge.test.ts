@@ -244,6 +244,25 @@ describe('confirmVerifyHireable: input validation', () => {
 });
 
 describe('confirmVerifyHireable: replay + quote checks', () => {
+  it('rejects when txHash is in flight (claim-intent placeholder present)', async () => {
+    const { env, kv } = makeEnv();
+    kv.store.set(
+      VH_TX_KEY_PREFIX + TX_HASH,
+      JSON.stringify({ amount_usd: 0, pending: true, sender_wallet: SENDER_WALLET.toLowerCase() }),
+    );
+    const nonce = await newQuote(env);
+    const r = await confirmVerifyHireable(env, {
+      nonce,
+      txHash: TX_HASH,
+      sender_wallet: SENDER_WALLET,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error).toBe('tx_in_flight');
+      expect(r.status).toBe(409);
+    }
+  });
+
   it('rejects when txHash was already used', async () => {
     const { env, kv } = makeEnv();
     kv.store.set(VH_TX_KEY_PREFIX + TX_HASH, JSON.stringify({ amount_usd: 5 }));

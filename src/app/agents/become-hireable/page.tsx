@@ -74,6 +74,12 @@ export default function BecomeHireablePage() {
       setErrorMsg('Connect a wallet first.');
       return;
     }
+    if (!window.ethereum) {
+      // Wallet may have been unloaded since connectWallet succeeded; bail
+      // cleanly instead of crashing on a later request.
+      setErrorMsg('Browser wallet not available. Reload the page and reconnect.');
+      return;
+    }
     try {
       const res = await fetch('https://tensorfeed.ai/api/agents/directory/verify-hireable/quote', {
         method: 'POST',
@@ -94,12 +100,17 @@ export default function BecomeHireablePage() {
 
   async function submitConfirmation() {
     setErrorMsg(null);
-    if (!quote?.nonce || !wallet || !txHash) {
+    const trimmedTx = txHash.trim();
+    if (!quote?.nonce || !wallet || !trimmedTx) {
       setErrorMsg('Need a quote nonce, wallet, and tx hash to confirm.');
       return;
     }
-    if (!/^0x[a-fA-F0-9]{64}$/.test(txHash.trim())) {
+    if (!/^0x[a-fA-F0-9]{64}$/.test(trimmedTx)) {
       setErrorMsg('Transaction hash must be 0x + 64 hex chars.');
+      return;
+    }
+    if (quote.expires_at && Date.now() > quote.expires_at) {
+      setErrorMsg('Quote expired. Request a new $5 quote (your previous on-chain payment is still valid — paste the same tx_hash with the new quote).');
       return;
     }
     setPhase('confirming');
@@ -107,7 +118,7 @@ export default function BecomeHireablePage() {
       const res = await fetch('https://tensorfeed.ai/api/agents/directory/verify-hireable/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nonce: quote.nonce, txHash: txHash.trim(), sender_wallet: wallet }),
+        body: JSON.stringify({ nonce: quote.nonce, txHash: trimmedTx, sender_wallet: wallet }),
       });
       const data = (await res.json()) as ConfirmResponse;
       setConfirmation(data);
@@ -218,10 +229,18 @@ export default function BecomeHireablePage() {
             </label>
             <button
               onClick={submitConfirmation}
-              disabled={!txHash || phase === 'confirming'}
+              disabled={
+                !txHash ||
+                phase === 'confirming' ||
+                Boolean(quote?.expires_at && Date.now() > quote.expires_at)
+              }
               className="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-lg font-medium hover:bg-accent-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {phase === 'confirming' ? 'Confirming…' : 'Confirm payment'}
+              {phase === 'confirming'
+                ? 'Confirming…'
+                : quote?.expires_at && Date.now() > quote.expires_at
+                  ? 'Quote expired — request a new one'
+                  : 'Confirm payment'}
             </button>
           </div>
         </div>
