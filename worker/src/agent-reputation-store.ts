@@ -325,6 +325,79 @@ export async function recordClaimNonce(env: Env, nonce: string): Promise<boolean
   );
 }
 
+// === Admin audit log ===
+//
+// Every admin moderation action (ban, unban, claim approve, claim
+// reject, etc) writes a row to agent-rep:admin-log:{date}:{seq}. The
+// log is append-only and serves as the defensible audit trail for
+// regulator / counsel asks about how TF moderated content. NEVER
+// surface raw admin identities (ADMIN_KEY substrings) publicly; this
+// log is admin-read only.
+
+export const ADMIN_LOG_KEY_PREFIX = 'agent-rep:admin-log:';
+
+export interface AdminActionLogEntry {
+  /** ISO timestamp when the action was committed. */
+  at: string;
+  /** Stable string identifying the action class. */
+  action:
+    | 'ban'
+    | 'unban'
+    | 'claim_approve'
+    | 'claim_reject'
+    | 'claim_reject_and_ban';
+  /** Target of the action (wallet address or token prefix). Lowercased. */
+  target: string;
+  /** Free-text reason supplied by the admin or system. */
+  reason: string;
+  /** Optional supporting evidence URL. */
+  evidence_url: string | null;
+  /** Admin identity marker; never the raw ADMIN_KEY. */
+  admin_id: string;
+}
+
+export async function recordAdminAction(env: Env, entry: AdminActionLogEntry): Promise<boolean> {
+  const dateBucket = entry.at.slice(0, 10);
+  const seq = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  const key = ADMIN_LOG_KEY_PREFIX + dateBucket + ':' + seq;
+  return safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify(entry));
+}
+
+export async function listAdminActions(
+  env: Env,
+  date: string,
+): Promise<AdminActionLogEntry[]> {
+  const prefix = ADMIN_LOG_KEY_PREFIX + date + ':';
+  const out: AdminActionLogEntry[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await env.TENSORFEED_CACHE.list({ prefix, cursor });
+    for (const k of page.keys) {
+      const rec = await readJson<AdminActionLogEntry>(env, k.name);
+      if (rec) out.push(rec);
+    }
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+  return out.sort((a, b) => a.at.localeCompare(b.at));
+}
+
+/** List pending claims waiting for admin review (paginated). */
+export async function listPendingClaims(env: Env, limit = 100): Promise<OperatorClaim[]> {
+  const out: OperatorClaim[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await env.TENSORFEED_CACHE.list({ prefix: PENDING_CLAIM_KEY_PREFIX, cursor });
+    for (const k of page.keys) {
+      if (out.length >= limit) break;
+      const rec = await readJson<OperatorClaim>(env, k.name);
+      if (rec) out.push(rec);
+    }
+    if (out.length >= limit) break;
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+  return out.sort((a, b) => (a.claimed_at < b.claimed_at ? -1 : 1));
+}
+
 export function putBanRecord(env: Env, ban: BanRecord): Promise<boolean> {
   return safePut(
     env,

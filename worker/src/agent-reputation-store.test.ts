@@ -15,8 +15,11 @@ import {
   getReputationDates,
   getReputationMeta,
   getRollup,
+  isClaimNonceUsed,
+  listAdminActions,
   listAllPaidTokens,
   listBans,
+  listPendingClaims,
   mergeTelemetryAcrossTokens,
   putBanRecord,
   putLeaderboard,
@@ -26,8 +29,11 @@ import {
   putReputationDates,
   putReputationMeta,
   putRollup,
+  recordAdminAction,
+  recordClaimNonce,
   tokenPrefix,
   tokenShortFromFull,
+  type AdminActionLogEntry,
   type BanRecord,
   type OperatorClaim,
   type ReputationMeta,
@@ -530,6 +536,133 @@ describe('assembleTelemetryForToken', () => {
     );
     const t = await assembleTelemetryForToken(env, full, new Map(), '0xWALLET');
     expect(t?.wallet).toBe('0xWALLET');
+  });
+});
+
+describe('claim nonce replay protection', () => {
+  it('returns false for an unseen nonce', async () => {
+    const env = makeEnv(makeKv());
+    expect(await isClaimNonceUsed(env, 'deadbeef0123456789abcdef01234567')).toBe(false);
+  });
+
+  it('returns true after recordClaimNonce was called', async () => {
+    const env = makeEnv(makeKv());
+    await recordClaimNonce(env, 'deadbeef0123456789abcdef01234567');
+    expect(await isClaimNonceUsed(env, 'deadbeef0123456789abcdef01234567')).toBe(true);
+  });
+
+  it('stores the nonce under the agent-rep:claim-nonce: prefix', async () => {
+    const env = makeEnv(makeKv());
+    await recordClaimNonce(env, 'aaaa1111bbbb2222cccc3333dddd4444');
+    expect(env.TENSORFEED_CACHE.store.has('agent-rep:claim-nonce:aaaa1111bbbb2222cccc3333dddd4444')).toBe(true);
+  });
+});
+
+describe('admin audit log', () => {
+  it('records and lists admin actions for a given date', async () => {
+    const env = makeEnv(makeKv());
+    const at = '2026-05-13T20:30:00.000Z';
+    const entry1: AdminActionLogEntry = {
+      at,
+      action: 'ban',
+      target: '0xaaaa',
+      reason: 'test ban',
+      evidence_url: null,
+      admin_id: 'admin:test',
+    };
+    const entry2: AdminActionLogEntry = {
+      at: '2026-05-13T21:00:00.000Z',
+      action: 'unban',
+      target: '0xaaaa',
+      reason: 'test unban',
+      evidence_url: null,
+      admin_id: 'admin:test',
+    };
+    await recordAdminAction(env, entry1);
+    await recordAdminAction(env, entry2);
+    const entries = await listAdminActions(env, '2026-05-13');
+    expect(entries.length).toBe(2);
+    expect(entries[0].action).toBe('ban');
+    expect(entries[1].action).toBe('unban');
+  });
+
+  it('isolates entries by date bucket', async () => {
+    const env = makeEnv(makeKv());
+    await recordAdminAction(env, {
+      at: '2026-05-13T20:30:00.000Z',
+      action: 'ban',
+      target: '0xa',
+      reason: 'x',
+      evidence_url: null,
+      admin_id: 'admin:test',
+    });
+    await recordAdminAction(env, {
+      at: '2026-05-14T08:00:00.000Z',
+      action: 'unban',
+      target: '0xb',
+      reason: 'y',
+      evidence_url: null,
+      admin_id: 'admin:test',
+    });
+    expect((await listAdminActions(env, '2026-05-13')).length).toBe(1);
+    expect((await listAdminActions(env, '2026-05-14')).length).toBe(1);
+    expect((await listAdminActions(env, '2026-05-15')).length).toBe(0);
+  });
+});
+
+describe('listPendingClaims', () => {
+  it('returns pending claims sorted by claimed_at ascending', async () => {
+    const env = makeEnv(makeKv());
+    await putPendingClaim(env, {
+      wallet: '0xabc',
+      display_name: 'A',
+      operator_url: null,
+      contact: null,
+      signature: '0x',
+      message: '',
+      timestamp: '',
+      nonce: 'n1',
+      verified: false,
+      ofac_clean: true,
+      claimed_at: '2026-05-13T20:00:00.000Z',
+    });
+    await putPendingClaim(env, {
+      wallet: '0xdef',
+      display_name: 'B',
+      operator_url: null,
+      contact: null,
+      signature: '0x',
+      message: '',
+      timestamp: '',
+      nonce: 'n2',
+      verified: false,
+      ofac_clean: true,
+      claimed_at: '2026-05-13T19:00:00.000Z',
+    });
+    const list = await listPendingClaims(env);
+    expect(list.length).toBe(2);
+    expect(list[0].wallet).toBe('0xdef'); // earlier claimed_at
+    expect(list[1].wallet).toBe('0xabc');
+  });
+
+  it('respects the limit argument', async () => {
+    const env = makeEnv(makeKv());
+    for (let i = 0; i < 5; i++) {
+      await putPendingClaim(env, {
+        wallet: '0x' + i.toString().padStart(40, '0'),
+        display_name: 'A' + i,
+        operator_url: null,
+        contact: null,
+        signature: '0x',
+        message: '',
+        timestamp: '',
+        nonce: 'n' + i,
+        verified: false,
+        ofac_clean: true,
+        claimed_at: `2026-05-13T2${i}:00:00.000Z`,
+      });
+    }
+    expect((await listPendingClaims(env, 3)).length).toBe(3);
   });
 });
 

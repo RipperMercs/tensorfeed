@@ -362,11 +362,20 @@ import { rebuildAllReputationCards } from './agent-reputation-rebuild';
 import {
   ALL_METRICS,
   ALL_WINDOWS,
+  deleteBanRecord,
+  deletePendingClaim,
+  getBanRecord,
   getLeaderboard,
   getOperatorClaim,
+  getPendingClaim,
   getReputationCardByToken,
   getReputationCardByWallet,
+  listAdminActions,
   listBans,
+  listPendingClaims,
+  putBanRecord,
+  putOperatorClaim,
+  recordAdminAction,
   type LeaderboardWindow,
   type RankableMetric,
 } from './agent-reputation-store';
@@ -2237,6 +2246,146 @@ export default {
     // on display_name + expanded_description; brand-allowlist check;
     // route to live or pending-review queue. See agent-claim-handler.ts
     // for the full decision tree.
+    // === AGENT REP BUREAU: ADMIN MODERATION ENDPOINTS ===
+    // ADMIN_KEY-gated. Inherit the existing admin pre-check (path
+    // startsWith /api/admin/, rate-limited + 401 on bad key earlier in
+    // this handler). These cover the bureau Week 3 step 15 deliverable:
+    // ban / unban / claim-review approve / claim-review reject, plus
+    // a pending list + admin audit log read for the daily admin sweep.
+    if (path === '/api/admin/agents/claim/pending' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100), 500);
+      const pending = await listPendingClaims(env, limit);
+      return jsonResponse({ ok: true, total: pending.length, claims: pending }, 200, 0);
+    }
+    if (path === '/api/admin/agents/admin-log' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      const date = url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return jsonResponse({ ok: false, error: 'invalid_date' }, 400);
+      }
+      const entries = await listAdminActions(env, date);
+      return jsonResponse({ ok: true, date, total: entries.length, entries }, 200, 0);
+    }
+    if (path === '/api/admin/agents/ban' && request.method === 'POST' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      let body: { target?: unknown; reason?: unknown; evidence_url?: unknown } = {};
+      try {
+        body = (await request.json()) as typeof body;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const target = typeof body.target === 'string' ? body.target.trim() : '';
+      const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
+      if (!target || target.length < 4 || target.length > 64) {
+        return jsonResponse({ ok: false, error: 'invalid_target' }, 400);
+      }
+      if (!reason || reason.length > 200) {
+        return jsonResponse({ ok: false, error: 'invalid_reason' }, 400);
+      }
+      const evidence_url =
+        typeof body.evidence_url === 'string' && /^https?:\/\/[^\s<>"]+$/.test(body.evidence_url)
+          ? body.evidence_url
+          : null;
+      const now = new Date().toISOString();
+      await putBanRecord(env, {
+        target,
+        reason,
+        evidence_url,
+        banned_at: now,
+        banned_by_admin: 'admin:manual',
+      });
+      await recordAdminAction(env, {
+        at: now,
+        action: 'ban',
+        target: target.toLowerCase(),
+        reason,
+        evidence_url,
+        admin_id: 'admin:manual',
+      });
+      return jsonResponse({ ok: true, banned: target, at: now }, 200, 0);
+    }
+    if (path.startsWith('/api/admin/agents/ban/') && request.method === 'DELETE' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      const target = path.slice('/api/admin/agents/ban/'.length);
+      if (!target) return jsonResponse({ ok: false, error: 'invalid_target' }, 400);
+      const existing = await getBanRecord(env, target);
+      if (!existing) return jsonResponse({ ok: false, error: 'not_banned' }, 404);
+      await deleteBanRecord(env, target);
+      const now = new Date().toISOString();
+      await recordAdminAction(env, {
+        at: now,
+        action: 'unban',
+        target: target.toLowerCase(),
+        reason: url.searchParams.get('reason') ?? 'admin lifted ban',
+        evidence_url: null,
+        admin_id: 'admin:manual',
+      });
+      return jsonResponse({ ok: true, unbanned: target, at: now }, 200, 0);
+    }
+    if (path.startsWith('/api/admin/agents/claim/review/') && request.method === 'POST' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      const wallet = path.slice('/api/admin/agents/claim/review/'.length);
+      if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+        return jsonResponse({ ok: false, error: 'invalid_wallet' }, 400);
+      }
+      const pending = await getPendingClaim(env, wallet);
+      if (!pending) return jsonResponse({ ok: false, error: 'no_pending_claim' }, 404);
+      let body: { action?: unknown; reason?: unknown } = {};
+      try {
+        body = (await request.json()) as typeof body;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const action = body.action;
+      const reason = typeof body.reason === 'string' ? body.reason.trim().slice(0, 200) : '';
+      const now = new Date().toISOString();
+      if (action === 'approve') {
+        // Move pending → active
+        await putOperatorClaim(env, { ...pending, verified: true });
+        await deletePendingClaim(env, wallet);
+        await recordAdminAction(env, {
+          at: now,
+          action: 'claim_approve',
+          target: wallet.toLowerCase(),
+          reason: reason || 'admin approved pending claim',
+          evidence_url: null,
+          admin_id: 'admin:manual',
+        });
+        return jsonResponse({ ok: true, approved: wallet, at: now }, 200, 0);
+      }
+      if (action === 'reject') {
+        await deletePendingClaim(env, wallet);
+        await recordAdminAction(env, {
+          at: now,
+          action: 'claim_reject',
+          target: wallet.toLowerCase(),
+          reason: reason || 'admin rejected pending claim',
+          evidence_url: null,
+          admin_id: 'admin:manual',
+        });
+        return jsonResponse({ ok: true, rejected: wallet, at: now }, 200, 0);
+      }
+      if (action === 'reject_and_ban') {
+        await deletePendingClaim(env, wallet);
+        await putBanRecord(env, {
+          target: wallet,
+          reason: reason || 'admin rejected claim and banned',
+          evidence_url: null,
+          banned_at: now,
+          banned_by_admin: 'admin:manual',
+        });
+        await recordAdminAction(env, {
+          at: now,
+          action: 'claim_reject_and_ban',
+          target: wallet.toLowerCase(),
+          reason: reason || 'admin rejected claim and banned',
+          evidence_url: null,
+          admin_id: 'admin:manual',
+        });
+        return jsonResponse({ ok: true, rejected_and_banned: wallet, at: now }, 200, 0);
+      }
+      return jsonResponse(
+        { ok: false, error: 'invalid_action', allowed: ['approve', 'reject', 'reject_and_ban'] },
+        400,
+      );
+    }
+
     if (path === '/api/agents/claim' && request.method === 'POST') {
       let body: unknown;
       try {
