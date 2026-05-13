@@ -137,14 +137,21 @@ function matchAiRelevance(packageName: string, summary: string): string[] {
   return hits;
 }
 
-async function fetchGhsaMalwareAdvisories(): Promise<AiSupplyChainEntry[]> {
-  const res = await fetch(GITHUB_ADVISORIES_URL, {
-    headers: {
-      'User-Agent': USER_AGENT,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-  });
+async function fetchGhsaMalwareAdvisories(env: Env): Promise<AiSupplyChainEntry[]> {
+  // GitHub treats unauthenticated requests from Cloudflare egress IPs
+  // aggressively and will return 403 even when below the documented
+  // 60 req/hr unauth limit. Authenticated requests get the full
+  // 5000 req/hr REST quota and bypass the bot-detection block.
+  // GITHUB_TOKEN is already set in env for other endpoints; reuse it.
+  const headers: Record<string, string> = {
+    'User-Agent': USER_AGENT,
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+  if (env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
+  }
+  const res = await fetch(GITHUB_ADVISORIES_URL, { headers });
   if (!res.ok) {
     throw new Error(`github advisories fetch failed: ${res.status}`);
   }
@@ -188,7 +195,7 @@ async function fetchGhsaMalwareAdvisories(): Promise<AiSupplyChainEntry[]> {
  * from an admin-triggered manual refresh.
  */
 export async function refreshAiSupplyChainIocs(env: Env): Promise<AiSupplyChainSnapshot> {
-  const entries = await fetchGhsaMalwareAdvisories();
+  const entries = await fetchGhsaMalwareAdvisories(env);
 
   // Dedupe by (advisory_id, package.name). One advisory can name
   // multiple packages; we keep each as a separate entry.
