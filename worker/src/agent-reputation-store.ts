@@ -67,6 +67,13 @@ export const ALL_WINDOWS: ReadonlyArray<LeaderboardWindow> = ['24h', '7d', '30d'
  * verbatim so the signature can be re-verified later by anyone.
  * `verified` and `ofac_clean` are the Worker's gates at write time;
  * `claim_disputed` is admin-set if a claim is contested.
+ *
+ * Directory fields (available_for_hire, hourly_rate_*, expanded_description,
+ * skills_tags, service_areas, languages, years_experience) are OPTIONAL
+ * per the agent-directory v0 spec. When present they're parsed from the
+ * same signed message and surfaced through the directory search endpoint.
+ * The premium verified-hireable badge is gated separately on
+ * verified_hireable_until.
  */
 export interface OperatorClaim {
   wallet: string;
@@ -89,7 +96,36 @@ export interface OperatorClaim {
   claimed_at: string;
   /** Admin-set flag if a claim is contested. */
   claim_disputed?: boolean;
+
+  // === Directory v0 additions (optional) ===
+  available_for_hire?: boolean | null;
+  hourly_rate_min_usd?: number | null;
+  hourly_rate_max_usd?: number | null;
+  expanded_description?: string | null;
+  skills_tags?: string[];
+  service_areas?: string[];
+  languages?: string[];
+  years_experience?: number | null;
+
+  /** Set by /api/agents/directory/verify-hireable on a successful $5 USDC charge. */
+  verified_hireable_until?: string | null;
+  /** Cumulative count of successful directory premium renewals. */
+  verified_hireable_renewal_count?: number;
+  /** Cumulative total paid for directory premium across the wallet's lifetime. */
+  verified_hireable_total_paid_usd?: number;
 }
+
+// === Claim nonce replay-protection ===
+//
+// Each signed claim carries a random nonce. We store the nonce with a
+// short TTL after accepting it so re-submission of the same signed
+// message (replay) fails. The TTL is set to the claim acceptance
+// window plus a safety margin so a replay attempt always lands while
+// the marker is still in KV.
+
+export const CLAIM_NONCE_KEY_PREFIX = 'agent-rep:claim-nonce:';
+/** Replay marker TTL in seconds. 15 minutes = 10-min acceptance window + 5-min margin. */
+export const CLAIM_NONCE_TTL_SECONDS = 15 * 60;
 
 export interface BanRecord {
   /** Wallet OR token_prefix being banned. */
@@ -261,6 +297,32 @@ export function putPendingClaim(env: Env, claim: OperatorClaim): Promise<boolean
 
 export async function deletePendingClaim(env: Env, wallet: string): Promise<void> {
   await env.TENSORFEED_CACHE.delete(PENDING_CLAIM_KEY_PREFIX + wallet.toLowerCase());
+}
+
+/**
+ * Check whether a claim nonce has been seen recently. Replay marker
+ * is per-nonce, not per-wallet (a wallet can submit multiple claims;
+ * each must have a fresh nonce). TTL = CLAIM_NONCE_TTL_SECONDS.
+ */
+export async function isClaimNonceUsed(env: Env, nonce: string): Promise<boolean> {
+  const v = await env.TENSORFEED_CACHE.get(CLAIM_NONCE_KEY_PREFIX + nonce);
+  return v !== null;
+}
+
+/**
+ * Record a claim nonce as used. TTL'd so the bookkeeping doesn't grow
+ * unbounded. Caller MUST do this AFTER the signature is verified and
+ * BEFORE the claim record is written, so a duplicate concurrent
+ * request loses the race here rather than mid-write.
+ */
+export async function recordClaimNonce(env: Env, nonce: string): Promise<boolean> {
+  return safePut(
+    env,
+    env.TENSORFEED_CACHE,
+    CLAIM_NONCE_KEY_PREFIX + nonce,
+    'used',
+    { expirationTtl: CLAIM_NONCE_TTL_SECONDS },
+  );
 }
 
 export function putBanRecord(env: Env, ban: BanRecord): Promise<boolean> {

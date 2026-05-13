@@ -363,12 +363,14 @@ import {
   ALL_METRICS,
   ALL_WINDOWS,
   getLeaderboard,
+  getOperatorClaim,
   getReputationCardByToken,
   getReputationCardByWallet,
   listBans,
   type LeaderboardWindow,
   type RankableMetric,
 } from './agent-reputation-store';
+import { handleClaimApplication } from './agent-claim-handler';
 import {
   BADGE_CSP,
   renderBadgeSvg,
@@ -2226,6 +2228,50 @@ export default {
     // edge for 60s. Per the bureau spec, returning a 404 (not a synthetic
     // empty card) on miss is the contract so consumers can distinguish
     // "unknown agent" from "agent with no activity".
+    // === AGENT OPERATOR CLAIM FLOW ===
+    // Members sign an EIP-191 message binding a wallet to a display name
+    // (plus optional directory fields per agent-directory v0 spec).
+    // Worker: parse + verify ECDSA via viem; check 10-min replay window;
+    // check nonce-replay (per-nonce TTL'd marker in KV); screen wallet
+    // via Chainalysis (fail-closed on outage); Llama Guard pre-flight
+    // on display_name + expanded_description; brand-allowlist check;
+    // route to live or pending-review queue. See agent-claim-handler.ts
+    // for the full decision tree.
+    if (path === '/api/agents/claim' && request.method === 'POST') {
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const outcome = await handleClaimApplication(env, body as any);
+      const httpStatus =
+        outcome.status === 'approved' || outcome.status === 'queued'
+          ? 200
+          : outcome.status === 'bad_request'
+            ? 400
+            : outcome.status === 'rejected'
+              ? 401
+              : outcome.status === 'banned'
+                ? 403
+                : 503;
+      return jsonResponse(outcome, httpStatus);
+    }
+    if (path.startsWith('/api/agents/claim/') && request.method === 'GET') {
+      const wallet = path.slice('/api/agents/claim/'.length);
+      if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+        return jsonResponse({ ok: false, error: 'invalid_wallet' }, 400);
+      }
+      const claim = await getOperatorClaim(env, wallet);
+      if (!claim) return jsonResponse({ ok: false, error: 'not_found' }, 404);
+      // Strip the signature + message from public reads; they're stored
+      // verbatim for audit but the public read returns the structured
+      // form only. Anyone re-verifying can use the bureau card + signed
+      // message via a separate audit endpoint (not in v0).
+      const { signature: _sig, message: _msg, ...publicClaim } = claim;
+      return jsonResponse({ ok: true, claim: publicClaim }, 200, 60);
+    }
+
     if (path.startsWith('/api/agents/reputation/by-token/')) {
       const prefix = path.slice('/api/agents/reputation/by-token/'.length);
       if (!prefix || !/^tf_live_[0-9a-fA-F]+$/.test(prefix) || prefix.length < 9 || prefix.length > 16) {
@@ -2479,6 +2525,8 @@ export default {
           agentsBans: '/api/agents/bans (free; transparency list of every banned wallet or token-prefix with reason + evidence_url; auto-bans for Chainalysis OFAC hits)',
           agentsBadgeByWallet: '/api/agents/badge/{wallet}.svg (free; embeddable 200x40 SVG reputation badge with composite rank, trust grade letter, reliability %. XSS-hardened, CSP-locked, 1h edge cache)',
           agentsBadgeByToken: '/api/agents/badge/by-token/{prefix}.svg (free; same shape, indexed by tf_live_ token prefix)',
+          agentsClaim: 'POST /api/agents/claim with { message, signature } (free; EIP-191 signed claim binding a wallet to a display name + optional directory fields. Chainalysis-screened, Llama Guard pre-flighted, brand-allowlist gated. Returns approved | queued | banned | rejected | retry_later.)',
+          agentsClaimRead: 'GET /api/agents/claim/{wallet} (free; read the verified operator claim record for a wallet)',
           premiumAgentsLeaderboardFull: '/api/premium/agents/leaderboard/full?metric=&window= (1 credit, AFTA-signed; untruncated reputation leaderboard with full cards for every ranked agent. Free /api/agents/leaderboard caps at 25.)',
           agentActivity: '/api/agents/activity',
           chaosStats: '/api/chaos/stats',
