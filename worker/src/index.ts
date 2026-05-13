@@ -365,6 +365,7 @@ import {
   getLeaderboard,
   getReputationCardByToken,
   getReputationCardByWallet,
+  listBans,
   type LeaderboardWindow,
   type RankableMetric,
 } from './agent-reputation-store';
@@ -2239,6 +2240,29 @@ export default {
       return jsonResponse(card, 200, 60);
     }
 
+    // Public list of every banned wallet or token-prefix. Transparency
+    // over hiding: the bureau publishes who got banned and why so any
+    // disputed call can be audited from outside. No auth required.
+    if (path === '/api/agents/bans') {
+      const bans = await listBans(env);
+      return jsonResponse(
+        {
+          ok: true,
+          total: bans.length,
+          attribution:
+            'TensorFeed.ai Agent Reputation Bureau. Bans are admin-set, publicly listed for transparency. Sanctioned wallets (Chainalysis OFAC oracle) are auto-banned; other bans are operator gaming, brand-impersonation claim attempts, or terms-of-service violations.',
+          bans: bans.map((b) => ({
+            target: b.target,
+            reason: b.reason,
+            evidence_url: b.evidence_url,
+            banned_at: b.banned_at,
+          })),
+        },
+        200,
+        60,
+      );
+    }
+
     // Public leaderboard. Free tier capped at 25 entries; the
     // untruncated cohort lives on the premium /api/premium/agents/leaderboard/full
     // endpoint (1 credit). Window='all' is the only meaningful window
@@ -2397,6 +2421,10 @@ export default {
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           agentsDirectory: '/api/agents/directory',
           agentsOpportunities: '/api/agents/opportunities (free; daily-refreshed scan of new GitHub repos that represent submission/distribution opportunities for TF: anthropics/openai/microsoft/modelcontextprotocol orgs + MCP/x402/skills keyword sweeps. Scored by signal_weight * recency + log10(stars). 13:30 UTC cron)',
+          agentsReputationByWallet: '/api/agents/reputation/{wallet} (free; v0 Agent Reputation Bureau. Returns a ReputationCard with metrics, ranks, trust grade, flags, and operator-claim status. Cards rebuilt daily at 04:50 UTC from TF telemetry. 404 on unknown wallet. Premium time series at /api/premium/agents/reputation/series.)',
+          agentsReputationByToken: '/api/agents/reputation/by-token/{prefix} (free; same shape as the by-wallet card, indexed by tf_live_ token prefix for agents who have not signed an operator claim yet)',
+          agentsLeaderboard: '/api/agents/leaderboard?metric=reliability|spend|activity|streak|composite&window=24h|7d|30d|all&limit=1-25 (free, cohort capped at 25; full cohort on /api/premium/agents/leaderboard/full at 1 credit)',
+          agentsBans: '/api/agents/bans (free; transparency list of every banned wallet or token-prefix with reason + evidence_url; auto-bans for Chainalysis OFAC hits)',
           agentActivity: '/api/agents/activity',
           chaosStats: '/api/chaos/stats',
           podcasts: '/api/podcasts',
