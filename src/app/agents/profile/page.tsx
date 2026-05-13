@@ -200,7 +200,7 @@ export default function ProfilePage() {
         <div className="bg-bg-secondary border border-border rounded-xl p-8 text-center">
           <h2 className="text-xl font-semibold text-text-primary mb-2">No reputation record yet</h2>
           <p className="text-text-secondary mb-4">
-            <span className="font-mono text-text-primary">{idParam}</span> hasn&apos;t been picked up by a daily
+            <span className="font-mono text-text-primary break-all">{idParam}</span> hasn&apos;t been picked up by a daily
             rebuild. Cards are produced for any wallet that pays for credits or for any tf_live_ token that has
             recorded activity. The bureau refreshes at 04:50 UTC.
           </p>

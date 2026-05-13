@@ -336,7 +336,7 @@ function SuccessPanel({ confirmation }: { confirmation: ConfirmResponse }) {
         <span className="font-semibold text-emerald-300">Verified Hireable, 30 days</span>
       </div>
       <p className="text-sm mb-4">
-        Your wallet <span className="font-mono">{confirmation.wallet}</span> is now Verified Hireable until{' '}
+        Your wallet <span className="font-mono break-all">{confirmation.wallet}</span> is now Verified Hireable until{' '}
         <strong className="font-mono">{until.slice(0, 10)}</strong>. Cards refresh on the next daily rebuild; your
         listing sorts to the top of every directory search.
       </p>

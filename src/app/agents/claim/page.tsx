@@ -218,10 +218,13 @@ export default function ClaimPage() {
       <div className="bg-bg-secondary border border-border rounded-xl p-5 mb-6">
         <h2 className="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wider">Wallet</h2>
         {wallet ? (
-          <div className="flex items-center gap-2 text-sm">
-            <Check className="w-4 h-4 text-emerald-400" />
-            <span className="font-mono text-text-primary">{wallet}</span>
-            <button onClick={() => setWallet('')} className="text-xs text-text-muted hover:text-text-primary ml-auto">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-mono text-text-primary break-all min-w-0 flex-1">{wallet}</span>
+            <button
+              onClick={() => setWallet('')}
+              className="text-xs text-text-muted hover:text-text-primary shrink-0"
+            >
               Disconnect
             </button>
           </div>
@@ -472,7 +475,7 @@ function SubmissionOutcome({ result, message }: { result: ClaimResponse; message
           <span className="font-semibold text-emerald-300">Claim approved</span>
         </div>
         <p className="text-sm mb-4">
-          Your wallet <span className="font-mono">{result.wallet}</span> is now linked to{' '}
+          Your wallet <span className="font-mono break-all">{result.wallet}</span> is now linked to{' '}
           <strong>{result.display_name}</strong> on every reputation card and badge.
         </p>
         {profile && (
