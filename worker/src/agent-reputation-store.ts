@@ -144,8 +144,27 @@ export function tokenShortFromFull(token: string): string {
 
 // === Read helpers ===
 
+/**
+ * Resilient JSON read. KV's `get(key, 'json')` throws SyntaxError on
+ * malformed values (truncated writes, legacy/garbage payloads), and
+ * the thrown error has no stack frames into user code so the failing
+ * key is impossible to identify. We read as text + parse here so any
+ * malformed value is logged with its key and prefix, then treated as
+ * absent. The rebuild keeps making progress instead of bombing on a
+ * single bad record, and the observability log carries the breadcrumbs
+ * to investigate the bad key out-of-band.
+ */
 async function readJson<T>(env: Env, key: string): Promise<T | null> {
-  return (await env.TENSORFEED_CACHE.get(key, 'json')) as T | null;
+  const raw = await env.TENSORFEED_CACHE.get(key, 'text');
+  if (raw === null) return null;
+  try {
+    return JSON.parse(raw) as T;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const preview = raw.length > 80 ? raw.slice(0, 80) + '...' : raw;
+    console.error(`agent-rep readJson: malformed JSON at key=${key} (${raw.length}B): ${msg} | preview=${preview}`);
+    return null;
+  }
 }
 
 export function getReputationCardByWallet(env: Env, wallet: string): Promise<ReputationCard | null> {

@@ -119,6 +119,26 @@ describe('tokenShortFromFull', () => {
   });
 });
 
+describe('readJson resilience (malformed JSON is skipped, not thrown)', () => {
+  it('returns null + logs when a stored value is not valid JSON', async () => {
+    const env = makeEnv(makeKv());
+    // Write a deliberately broken value at a key that read helpers touch.
+    await env.TENSORFEED_CACHE.put('agent-rep:wallet:0xdead', '{ broken');
+    const card = await getReputationCardByWallet(env, '0xdead');
+    expect(card).toBeNull();
+  });
+
+  it('still parses valid JSON the same way', async () => {
+    const env = makeEnv(makeKv());
+    await env.TENSORFEED_CACHE.put(
+      'agent-rep:wallet:0xgood',
+      JSON.stringify({ wallet: '0xgood', ok: true }),
+    );
+    const card = await getReputationCardByWallet(env, '0xgood');
+    expect((card as any)?.wallet).toBe('0xgood');
+  });
+});
+
 describe('read helpers (missing keys return null/[])', () => {
   it('getReputationCardByWallet returns null for unknown wallet', async () => {
     const env = makeEnv(makeKv());
