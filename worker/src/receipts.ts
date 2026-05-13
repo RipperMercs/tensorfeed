@@ -29,6 +29,7 @@ export type NoChargeReason =
   | 'schema_validation_failure'
   | 'upstream_failure'
   | 'stale_data'
+  | 'free_trial'
   | null;
 
 /**

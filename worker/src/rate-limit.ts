@@ -58,6 +58,22 @@ const mcpBuckets: Map<string, IPState> = new Map();
 // limit and the MCP limit since admin endpoints are not user-facing.
 const adminBuckets: Map<string, IPState> = new Map();
 
+// Free-trial bucket for /api/premium/*. Each IP gets up to
+// FREE_TRIAL_LIMIT_PER_DAY premium calls without authentication; over
+// the cap we fall through to the canonical x402 V2 challenge. Window
+// is 24h rolling, not the in-window-of-the-minute pattern used by
+// the request-rate limiters above. We re-use the IPState shape but
+// reinterpret `windowStart` as the start of the current 24h window.
+//
+// Per-isolate counter (matches the existing in-memory pattern). An IP
+// MAY get more than the nominal cap because Cloudflare can route the
+// IP's requests across multiple worker isolates; that is acceptable
+// for a trial feature where slight over-generosity is preferable to
+// under-grant. KV-backed counters would be exact but cost ops/req.
+const FREE_TRIAL_WINDOW_MS = 24 * 60 * 60 * 1000;
+const FREE_TRIAL_LIMIT_PER_DAY = 100;
+const freeTrialBuckets: Map<string, IPState> = new Map();
+
 export interface RateLimitResult {
   allowed: boolean;
   limit: number;
@@ -126,6 +142,96 @@ export function checkMcpIPRateLimit(ip: string): RateLimitResult {
 export function checkAdminIPRateLimit(ip: string): RateLimitResult {
   return checkBucket(adminBuckets, ip, ADMIN_LIMIT_PER_MIN);
 }
+
+export interface FreeTrialQuota {
+  allowed: boolean;     // true if this call is within today's free quota
+  used: number;         // calls used in the current 24h window (after this call counted)
+  remaining: number;    // calls left in the current 24h window
+  limit: number;        // FREE_TRIAL_LIMIT_PER_DAY
+  resetSeconds: number; // seconds until the current window resets
+  resetAt: string;      // ISO timestamp when the current window resets
+}
+
+/**
+ * Atomic check-and-increment for the free-trial counter. Returns the
+ * post-call state (`used` includes this call when allowed=true).
+ *
+ * Per-IP counter for premium-endpoint trial access. Mirrors the
+ * existing rate-limit primitives but uses a 24h window with a higher
+ * count cap. Per-isolate, like the others; over-generosity at the
+ * margin is acceptable because the feature is a trial.
+ *
+ * If allowed=false, the caller should fall through to the standard
+ * canonical x402 V2 challenge (no free quota = same flow as if the
+ * trial did not exist).
+ */
+export function checkFreeTrialQuota(ip: string): FreeTrialQuota {
+  const now = Date.now();
+
+  // Soft GC same pattern as the other buckets.
+  if (freeTrialBuckets.size > MAX_TRACKED_IPS) {
+    for (const [k, st] of freeTrialBuckets) {
+      if (now - st.windowStart > FREE_TRIAL_WINDOW_MS * 2) freeTrialBuckets.delete(k);
+      if (freeTrialBuckets.size <= MAX_TRACKED_IPS / 2) break;
+    }
+  }
+
+  let state = freeTrialBuckets.get(ip);
+  if (!state || now - state.windowStart >= FREE_TRIAL_WINDOW_MS) {
+    state = { count: 0, windowStart: now };
+    freeTrialBuckets.set(ip, state);
+  }
+
+  const allowed = state.count < FREE_TRIAL_LIMIT_PER_DAY;
+  if (allowed) state.count += 1;
+
+  const resetMs = state.windowStart + FREE_TRIAL_WINDOW_MS - now;
+  const resetSeconds = Math.max(1, Math.ceil(resetMs / 1000));
+  const resetAt = new Date(state.windowStart + FREE_TRIAL_WINDOW_MS).toISOString();
+
+  return {
+    allowed,
+    used: state.count,
+    remaining: Math.max(0, FREE_TRIAL_LIMIT_PER_DAY - state.count),
+    limit: FREE_TRIAL_LIMIT_PER_DAY,
+    resetSeconds,
+    resetAt,
+  };
+}
+
+/**
+ * Read-only peek at the free-trial state for an IP. Does NOT increment.
+ * Used by /api/free-tier/status so an agent can budget without burning
+ * a quota slot just to check.
+ */
+export function peekFreeTrialQuota(ip: string): FreeTrialQuota {
+  const now = Date.now();
+  const state = freeTrialBuckets.get(ip);
+  if (!state || now - state.windowStart >= FREE_TRIAL_WINDOW_MS) {
+    return {
+      allowed: true,
+      used: 0,
+      remaining: FREE_TRIAL_LIMIT_PER_DAY,
+      limit: FREE_TRIAL_LIMIT_PER_DAY,
+      resetSeconds: FREE_TRIAL_WINDOW_MS / 1000,
+      resetAt: new Date(now + FREE_TRIAL_WINDOW_MS).toISOString(),
+    };
+  }
+  const resetMs = state.windowStart + FREE_TRIAL_WINDOW_MS - now;
+  return {
+    allowed: state.count < FREE_TRIAL_LIMIT_PER_DAY,
+    used: state.count,
+    remaining: Math.max(0, FREE_TRIAL_LIMIT_PER_DAY - state.count),
+    limit: FREE_TRIAL_LIMIT_PER_DAY,
+    resetSeconds: Math.max(1, Math.ceil(resetMs / 1000)),
+    resetAt: new Date(state.windowStart + FREE_TRIAL_WINDOW_MS).toISOString(),
+  };
+}
+
+export const FREE_TRIAL_DEFAULTS = {
+  WINDOW_MS: FREE_TRIAL_WINDOW_MS,
+  LIMIT_PER_DAY: FREE_TRIAL_LIMIT_PER_DAY,
+};
 
 function checkBucket(
   bucketMap: Map<string, IPState>,
@@ -229,6 +335,7 @@ export function _resetRateLimitState(): void {
   buckets.clear();
   mcpBuckets.clear();
   adminBuckets.clear();
+  freeTrialBuckets.clear();
   noChargeBuckets.clear();
 }
 

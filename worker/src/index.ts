@@ -339,8 +339,10 @@ import {
   checkIPRateLimit,
   checkMcpIPRateLimit,
   checkNoChargeAbuse,
+  FREE_TRIAL_DEFAULTS,
   getClientIP,
   isRateLimitExempt,
+  peekFreeTrialQuota,
   rateLimitedResponse,
 } from './rate-limit';
 import { maybeHandleHoneypot } from './honeypot';
@@ -661,6 +663,23 @@ async function premiumResponse(
     billing.new_token_issued = true;
     billing.token = payment.token;
   }
+  // Surface free-trial state when the call was granted under the
+  // 100-call/IP/24h trial. Lets agents budget without an extra round
+  // trip to /api/free-tier/status. Mirrors the X-RateLimit-* header
+  // pattern for parity with rate-limited responses.
+  if (payment.freeTrial) {
+    billing.tier = 'free_trial';
+    billing.free_trial_used_today = payment.freeTrial.used;
+    billing.free_trial_remaining = payment.freeTrial.remaining;
+    billing.free_trial_limit = payment.freeTrial.limit;
+    billing.free_trial_resets_at = payment.freeTrial.resetAt;
+    billing.upgrade_when_ready = '/api/payment/buy-credits';
+    headers['X-TF-Free-Trial'] = '1';
+    headers['X-TF-Free-Trial-Used'] = String(payment.freeTrial.used);
+    headers['X-TF-Free-Trial-Remaining'] = String(payment.freeTrial.remaining);
+    headers['X-TF-Free-Trial-Limit'] = String(payment.freeTrial.limit);
+    headers['X-TF-Free-Trial-Resets-At'] = payment.freeTrial.resetAt;
+  }
 
   // Receipt: build core, sign with Ed25519, embed in response.
   // X-Agent-Nonce (optional): if the agent supplies a valid nonce, it
@@ -950,6 +969,35 @@ export default {
 
     if (path === '/api/security/iocs.json' || path === '/api/security/iocs') {
       return handleIocExport(env);
+    }
+
+    // Free, no-auth self-service endpoint so an agent can check its
+    // current premium-trial quota without burning a slot. Returns the
+    // 24h rolling counter for the caller's IP. Cheap (single in-memory
+    // map peek). Does NOT increment the counter.
+    if (path === '/api/free-tier/status') {
+      const ip = getClientIP(request);
+      const peek = peekFreeTrialQuota(ip);
+      return jsonResponse(
+        {
+          ok: true,
+          ip,
+          free_trial: {
+            calls_per_ip_per_day: peek.limit,
+            window: '24h rolling per IP',
+            auth_required: false,
+            used_today: peek.used,
+            remaining: peek.remaining,
+            resets_at: peek.resetAt,
+            retry_in_seconds_when_exhausted: peek.resetSeconds,
+            note: 'Each IP gets 100 free premium API calls per 24-hour window. No authentication, no signup, no wallet required. Excess returns canonical x402 V2 challenge with the same trial state surfaced.',
+            applies_to: '/api/premium/* (every premium endpoint)',
+            upgrade_when_ready: '/api/payment/buy-credits',
+          },
+        },
+        200,
+        60,
+      );
     }
 
     // Public AI/MCP/LLM supply-chain IOC feed. Free tier. Daily cron
@@ -2124,6 +2172,7 @@ export default {
           securityOSVEcosystems: '/api/security/osv/ecosystems (free; supported OSV ecosystem identifiers)',
           securityVulnrichment: '/api/security/vulnrichment/{CVE-id} (free; CISA Vulnrichment enrichment for one CVE - CWE mappings, CVSS, exploitation evidence, KEV cross-refs - lazy-fetched from cisagov/vulnrichment, cached 7d. License: US Gov public domain. Pair with /api/security/cve/{id} for the MITRE record)',
           securityAiSupplyChainIocs: '/api/security/ai-supply-chain-iocs.json (free; daily-refreshed feed of publicly-disclosed malicious npm + PyPI packages relevant to AI / MCP / LLM operators. Each entry cites its primary source (GHSA). Posture: republish + cite; TF does not detect, attribute, or actively scan. License: GitHub ToS + TF attribution; primary source authority always wins)',
+          freeTrialStatus: `/api/free-tier/status (free; self-service quota check. Returns the caller IP\'s current premium-trial state: used today, remaining today, resets_at. Each IP gets ${FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY} free premium API calls per 24h rolling window, no auth required, applied to every /api/premium/* endpoint. Excess returns canonical x402 V2 challenge)`,
           premiumDecisionVerified: '/api/premium/news/decision-verified?cluster_id=&date= (1 credit; structured verification scores for a single corroboration cluster: verification_tier (single|limited|moderately-corroborated|broadly-verified|widely-reported), source_diversity_score, time_span_hours, per-source breakdown, AFTA-signed receipt over the source set. Pair with /api/history/news/clusters?date= to discover cluster_ids)',
           premiumDecisionVerifiedSearch: '/api/premium/news/decision-verified/search?q=&since=&until=&min_sources=1-50&limit=1-100 (1 credit; search recent days for clusters whose hero title matches q (substring + token-overlap), filtered by min_sources, sorted by match score then source count. Default lookback 30 days; max 90)',
           secEdgarSearch: '/api/sec/edgar/search?q=&forms=10-K,10-Q,8-K&from=YYYY-MM-DD&to=YYYY-MM-DD&limit=1-50&page=1-100 (free; SEC EDGAR full-text search across the entire filings corpus since 1990s. License: US Gov public domain. Pair with /api/sec/company-tickers for ticker-to-CIK lookup)',

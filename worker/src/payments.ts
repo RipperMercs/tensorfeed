@@ -4,6 +4,11 @@ import type { NoChargeReason } from './receipts';
 import { checkSpendCap, incrementDailySpent, validateSpendCap } from './spend-cap';
 import { recordAndAssess as recordAnomalySpend, listAnomalyEvents, AnomalyEvent } from './anomaly';
 import {
+  checkFreeTrialQuota,
+  getClientIP as getClientIPFromRequest,
+  type FreeTrialQuota,
+} from './rate-limit';
+import {
   parseXPaymentHeader,
   verifyPayment as verifyX402Payment,
   settlePayment as settleX402Payment,
@@ -1563,6 +1568,10 @@ export interface PaymentResult {
   // Set when the X-PAYMENT (canonical Coinbase x402 V2) path settles. Caller
   // should attach as PAYMENT-RESPONSE on the eventual 200 response.
   paymentResponseHeader?: string;
+  // Set when the call was granted under the free-trial quota (no auth
+  // headers, IP under daily cap). Causes commitPayment to log a no-charge
+  // event with reason='free_trial' and skip credit/wallet I/O entirely.
+  freeTrial?: FreeTrialQuota;
 }
 
 export async function requirePayment(
@@ -2155,17 +2164,80 @@ export async function requirePayment(
     };
   }
 
-  // No payment provided -> return 402 with full payment instructions
-  return { paid: false, response: paymentRequiredResponse(env, cost, tier, request) };
+  // No bearer, no X-Payment-Tx, no X-PAYMENT. Before serving the
+  // canonical 402 challenge, give this IP a free-trial slot if its
+  // 24h quota allows. The trial is intentionally outside the standard
+  // payment paths: it does not mint a bearer token and it does not
+  // settle on-chain. The handler dispatches the same code path as a
+  // paid call; commitPayment sees `noChargeReason === 'free_trial'`
+  // and logs the no-charge event without touching credit state.
+  //
+  // Only granted when there is genuinely no payment attempt. If the
+  // caller supplied a malformed Authorization header earlier in the
+  // function, we already returned 401 above and never reach here.
+  const trialIp = getClientIPFromRequest(request);
+  const trial = checkFreeTrialQuota(trialIp);
+  if (trial.allowed) {
+    return {
+      paid: true,
+      cost,
+      currentBalance: 0,
+      tokenRemaining: 0,
+      freeTrial: trial,
+    };
+  }
+  // Quota exhausted -> return the canonical 402 challenge with the
+  // exhaustion context surfaced so the agent knows why and when it
+  // can retry without paying.
+  return {
+    paid: false,
+    response: paymentRequiredResponse(env, cost, tier, request, trial),
+  };
 }
 
-function paymentRequiredResponse(env: Env, creditsRequired: number, tier: number, request: Request): Response {
+function paymentRequiredResponse(
+  env: Env,
+  creditsRequired: number,
+  tier: number,
+  request: Request,
+  exhaustedFreeTrial?: FreeTrialQuota,
+): Response {
   const minUsd = Math.max(1, creditsRequired * 0.02);
   // Atomic USDC units (6 decimals): 1 credit = $0.02 = 20000 micro-USDC.
   const amount = String(creditsRequired * 20000);
   const url = new URL(request.url);
   const resourceUrl = `${url.origin}${url.pathname}`;
   const x402Config = getX402Config(env);
+
+  // Compose the human-and-LLM-facing message based on whether the
+  // caller arrived here because they exhausted today's free quota or
+  // because they made an unauthenticated call from an IP that has
+  // never used the free quota (e.g. they came in cold without trying
+  // the free tier first).
+  const trialMessage = exhaustedFreeTrial
+    ? `This IP has used all ${exhaustedFreeTrial.limit} free premium calls in the current 24-hour window. The free quota resets at ${exhaustedFreeTrial.resetAt}. To continue immediately, sign an EIP-3009 transferWithAuthorization via X-PAYMENT or buy credits.`
+    : 'This is a paid endpoint. Sign an EIP-3009 transferWithAuthorization and submit it via X-PAYMENT, or use the credits flow for repeat use.';
+
+  // Always advertise the free-trial allowance so an agent that probes
+  // a 402 (with no prior call) knows the option exists.
+  const freeTrialAdvert = {
+    calls_per_ip_per_day: 100,
+    window: '24h rolling per IP',
+    auth_required: false,
+    docs: '/api/free-tier/status',
+    note:
+      'TensorFeed offers 100 free premium API calls per IP per 24-hour window. No authentication, no signup, no wallet required. After the cap is reached this 402 challenge fires and on-chain or credit-flow payment is required.',
+    ...(exhaustedFreeTrial
+      ? {
+          status: 'exhausted',
+          used_today: exhaustedFreeTrial.used,
+          remaining: exhaustedFreeTrial.remaining,
+          resets_at: exhaustedFreeTrial.resetAt,
+          retry_in_seconds: exhaustedFreeTrial.resetSeconds,
+        }
+      : {}),
+  };
+
   return jsonResponse(
     {
       // Canonical Coinbase x402 V2 PaymentRequired body. AgentCore Payments
@@ -2199,8 +2271,8 @@ function paymentRequiredResponse(env: Env, creditsRequired: number, tier: number
       // recommended for repeat use; the X-Payment-Tx fallback is kept for
       // back-compat with SDK clients that pre-broadcast the tx.
       ok: false,
-      message:
-        'This is a paid endpoint. Sign an EIP-3009 transferWithAuthorization and submit it via X-PAYMENT, or use the credits flow for repeat use.',
+      message: trialMessage,
+      free_trial: freeTrialAdvert,
       payment: {
         wallet: env.PAYMENT_WALLET,
         currency: 'USDC',
@@ -2344,6 +2416,16 @@ export async function commitPayment(
   endpoint: string,
   noChargeReason: NoChargeReason,
 ): Promise<{ creditsCharged: number; balanceAfter: number; noChargeReason: NoChargeReason }> {
+  // Free-trial path: no token, no debit, no balance. Log the no-charge
+  // event so the public no-charge stats reflect the trial volume and
+  // the funnel from "free trial used" to "credits purchased" can be
+  // tracked downstream. Honors any handler-supplied noChargeReason
+  // (e.g. stale_data), defaulting to 'free_trial' otherwise.
+  if (payment.freeTrial) {
+    const reason: NoChargeReason = noChargeReason ?? 'free_trial';
+    await logNoChargeEvent(env, reason, endpoint, payment.cost ?? 0, 'free_trial');
+    return { creditsCharged: 0, balanceAfter: 0, noChargeReason: reason };
+  }
   if (!payment.paid || !payment.token || payment.cost === undefined) {
     return { creditsCharged: 0, balanceAfter: 0, noChargeReason: null };
   }

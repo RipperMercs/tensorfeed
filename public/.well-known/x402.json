@@ -53,6 +53,25 @@
       "stackableWithVolumeDiscounts": true,
       "responseFields": ["welcome_bonus_credits", "is_first_payment"]
     },
+    "freeTrialAllowance": {
+      "calls": 100,
+      "windowHours": 24,
+      "windowKind": "rolling per IP",
+      "authRequired": false,
+      "walletRequired": false,
+      "appliesTo": "every /api/premium/* endpoint",
+      "selfServiceStatusEndpoint": "https://tensorfeed.ai/api/free-tier/status",
+      "exhaustedBehavior": "Returns the canonical x402 V2 PaymentRequired (402) challenge with the trial state surfaced under free_trial.status='exhausted'. Agent can wait for the rolling 24h reset OR pay via X-PAYMENT (EIP-3009) OR buy credits via /api/payment/buy-credits.",
+      "stackableWith": "welcomeBonus + volumeDiscounts (independent: trial gives evaluation; bonus + discounts apply to first paid purchase)",
+      "responseFields": [
+        "billing.tier='free_trial'",
+        "billing.free_trial_used_today",
+        "billing.free_trial_remaining",
+        "billing.free_trial_resets_at",
+        "X-TF-Free-Trial header set on every trial-served response"
+      ],
+      "rationale": "Removes wallet-setup friction for first-time agent evaluation. Lets an agent prototype against any premium endpoint with zero authentication, zero on-chain settlement, and zero per-call cost until the daily cap is hit. Conversion path remains unchanged: agents that want production access buy credits or pay per call via x402."
+    },
     "flows": {
       "credits": {
         "description": "Recommended for repeat use. Buy a bearer token once, decrement credits per call.",
@@ -804,6 +823,10 @@
     {
       "resource": "https://tensorfeed.ai/api/preview/routing",
       "description": "Free top-1 routing recommendation. Rate-limited to 5 calls per UTC day per IP. Premium /api/premium/routing has no rate limit and returns top-N with full breakdown."
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/free-tier/status",
+      "description": "Self-service quota check for the free premium-trial allowance. No auth required. Returns caller IP's used/remaining/resets_at for the 24h rolling 100-call window. Lets agents budget without burning a quota slot."
     },
     {
       "resource": "https://tensorfeed.ai/api/agents/activity",

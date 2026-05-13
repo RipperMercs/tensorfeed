@@ -1,10 +1,13 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import {
   applyRateLimitHeaders,
+  checkFreeTrialQuota,
   checkIPRateLimit,
   checkNoChargeAbuse,
+  FREE_TRIAL_DEFAULTS,
   getClientIP,
   isRateLimitExempt,
+  peekFreeTrialQuota,
   rateLimitedResponse,
   _resetRateLimitState,
   RATE_LIMIT_DEFAULTS,
@@ -166,6 +169,83 @@ describe('rate-limit', () => {
       const r = checkNoChargeAbuse('tf_live_resetcheck');
       expect(r.resetSeconds).toBeGreaterThan(0);
       expect(r.resetSeconds).toBeLessThanOrEqual(NO_CHARGE_ABUSE_DEFAULTS.WINDOW_MS / 1000);
+    });
+  });
+
+  describe('checkFreeTrialQuota', () => {
+    it('grants the first call and increments used', () => {
+      const r = checkFreeTrialQuota('1.2.3.4');
+      expect(r.allowed).toBe(true);
+      expect(r.used).toBe(1);
+      expect(r.remaining).toBe(FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY - 1);
+      expect(r.limit).toBe(FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY);
+      expect(r.resetSeconds).toBeGreaterThan(0);
+      expect(r.resetSeconds).toBeLessThanOrEqual(FREE_TRIAL_DEFAULTS.WINDOW_MS / 1000);
+      expect(typeof r.resetAt).toBe('string');
+    });
+
+    it('counts each call against the per-IP cap', () => {
+      const ip = '5.6.7.8';
+      for (let i = 0; i < 5; i += 1) checkFreeTrialQuota(ip);
+      const r = checkFreeTrialQuota(ip);
+      expect(r.used).toBe(6);
+      expect(r.remaining).toBe(FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY - 6);
+    });
+
+    it('denies after the cap is reached and stops incrementing', () => {
+      const ip = '9.9.9.9';
+      // Burn the entire daily allowance.
+      for (let i = 0; i < FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY; i += 1) checkFreeTrialQuota(ip);
+      const denied = checkFreeTrialQuota(ip);
+      expect(denied.allowed).toBe(false);
+      expect(denied.used).toBe(FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY);
+      expect(denied.remaining).toBe(0);
+      // A second denial does NOT push used above the cap.
+      const denied2 = checkFreeTrialQuota(ip);
+      expect(denied2.allowed).toBe(false);
+      expect(denied2.used).toBe(FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY);
+    });
+
+    it('isolates buckets per IP', () => {
+      checkFreeTrialQuota('aaa');
+      checkFreeTrialQuota('aaa');
+      const a = checkFreeTrialQuota('aaa');
+      const b = checkFreeTrialQuota('bbb');
+      expect(a.used).toBe(3);
+      expect(b.used).toBe(1);
+    });
+  });
+
+  describe('peekFreeTrialQuota', () => {
+    it('returns full allowance for a never-seen IP without consuming', () => {
+      const peek = peekFreeTrialQuota('never-seen');
+      expect(peek.used).toBe(0);
+      expect(peek.remaining).toBe(FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY);
+      expect(peek.allowed).toBe(true);
+      // A subsequent peek still shows zero use.
+      const peek2 = peekFreeTrialQuota('never-seen');
+      expect(peek2.used).toBe(0);
+    });
+
+    it('reflects existing usage without incrementing', () => {
+      const ip = 'peek-test';
+      checkFreeTrialQuota(ip);
+      checkFreeTrialQuota(ip);
+      checkFreeTrialQuota(ip);
+      const peek = peekFreeTrialQuota(ip);
+      expect(peek.used).toBe(3);
+      expect(peek.remaining).toBe(FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY - 3);
+      // Peek did not change anything.
+      const peek2 = peekFreeTrialQuota(ip);
+      expect(peek2.used).toBe(3);
+    });
+
+    it('reports allowed=false when the cap is reached', () => {
+      const ip = 'peek-exhausted';
+      for (let i = 0; i < FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY; i += 1) checkFreeTrialQuota(ip);
+      const peek = peekFreeTrialQuota(ip);
+      expect(peek.allowed).toBe(false);
+      expect(peek.remaining).toBe(0);
     });
   });
 });
