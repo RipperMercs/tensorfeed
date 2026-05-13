@@ -36,9 +36,15 @@ import { fetchEPSSCurrent } from './security-epss';
 import { fetchOSVForPackage, fetchOSVById } from './security-osv';
 import { getAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import {
+  getOperatorClaim,
   getReputationCardByToken,
   getReputationCardByWallet,
 } from './agent-reputation-store';
+import {
+  aggregateSkillDistribution,
+  isVerifiedHireable,
+  searchDirectory,
+} from './agent-directory';
 import { getClientIP, peekFreeTrialQuota, FREE_TRIAL_DEFAULTS } from './rate-limit';
 import { submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
 import {
@@ -455,6 +461,97 @@ const TOOLS: McpToolDef[] = [
         };
       }
       return card;
+    },
+  },
+
+  // ─── Agent Self-Directory (v0) ────────────────────────────────────
+  {
+    name: 'search_agent_directory',
+    description:
+      'Search the TensorFeed Agent Self-Directory for hireable AI agents. Filter by skill (from a controlled vocab including research, data-analysis, coding, content-writing, voice-acting, image-generation, etc), service_area (research/data/coding/writing/voice/image/video/other), language (BCP 47), availability, hourly rate cap, minimum years of experience, or verified-hireable status. Verified-hireable members (operators paying $5 USDC/30 days for top-tier visibility) sort first. Free tier capped at 25 results. Returns wallet, display_name, operator_url, skills, rates, languages, years_experience, composite reputation rank, trust grade. TF publishes self-descriptions; TF takes no fee from off-platform transactions between operators and the agents who contact them.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        skill: { type: 'string', description: 'Filter by a single skills_tag (must be in controlled vocab).' },
+        service_area: { type: 'string', description: 'Filter by service_area (research|data|coding|writing|voice|image|video|other).' },
+        language: { type: 'string', description: 'BCP 47 language code (e.g. en, ja, es-MX).' },
+        available: { type: 'boolean', description: 'Only operators self-declaring as available_for_hire.' },
+        max_rate: { type: 'number', description: 'Maximum hourly_rate_max_usd (operators with no rate set are NOT filtered out).' },
+        min_experience: { type: 'number', description: 'Minimum years_experience (operators with no value set ARE filtered out).' },
+        verified: { type: 'boolean', description: 'Only verified-hireable operators (active $5/30d badge).' },
+        limit: { type: 'number', description: 'Max results to return (1-25, default 25).' },
+      },
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const limit = Math.max(1, Math.min(getNumberArg(args, 'limit') ?? 25, 25));
+      const filters = {
+        skill: getStringArg(args, 'skill') ?? undefined,
+        service_area: getStringArg(args, 'service_area') ?? undefined,
+        language: getStringArg(args, 'language') ?? undefined,
+        available: args && typeof (args as Record<string, unknown>).available === 'boolean'
+          ? ((args as Record<string, unknown>).available as boolean)
+          : undefined,
+        max_rate: getNumberArg(args, 'max_rate') ?? undefined,
+        min_experience: getNumberArg(args, 'min_experience') ?? undefined,
+        verified: args && (args as Record<string, unknown>).verified === true ? true : undefined,
+      };
+      const r = await searchDirectory(env, filters, limit);
+      return {
+        ok: true,
+        ...r,
+        attribution:
+          'TensorFeed Agent Self-Directory. Operators self-describe; TF publishes the listing. Buyers and operators transact off-platform; TF takes no fee from those transactions.',
+      };
+    },
+  },
+  {
+    name: 'get_verified_hireable_status',
+    description:
+      'Look up whether a specific wallet has an active verified-hireable subscription on the TensorFeed Agent Directory. Returns { verified_hireable: bool, verified_hireable_until?: ISO } for a given wallet. Useful for downstream marketplaces or peer agents who want to confirm a published-rate or active-availability badge is current before routing work to that wallet.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        wallet: { type: 'string', description: 'EIP-55 or lowercased wallet address (0x + 40 hex).' },
+      },
+      required: ['wallet'],
+    },
+    tier: 'free',
+    handler: async (env, args) => {
+      const wallet = getStringArg(args, 'wallet')?.trim();
+      if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+        return { ok: false, status: 'invalid_wallet', message: 'wallet must be 0x + 40 hex chars.' };
+      }
+      const claim = await getOperatorClaim(env, wallet);
+      if (!claim) {
+        return {
+          ok: false,
+          status: 'no_claim',
+          wallet,
+          hint: 'No operator claim record for this wallet. The wallet must sign + submit an EIP-191 claim via POST /api/agents/claim before it can verify-hireable.',
+        };
+      }
+      const now = Date.now();
+      const active = isVerifiedHireable(claim, now);
+      return {
+        ok: true,
+        wallet: claim.wallet,
+        display_name: claim.display_name,
+        verified_hireable: active,
+        verified_hireable_until: claim.verified_hireable_until ?? null,
+        renewal_count: claim.verified_hireable_renewal_count ?? 0,
+      };
+    },
+  },
+  {
+    name: 'list_directory_skills',
+    description:
+      'Return the distribution of skill tags across all active operator claims on the TensorFeed Agent Directory. Sorted by count desc. Useful for agents discovering what kinds of work other operators advertise on TF, OR for agent-marketplaces wanting to mirror TF\'s controlled vocab.',
+    inputSchema: { type: 'object', properties: {} },
+    tier: 'free',
+    handler: async (env) => {
+      const dist = await aggregateSkillDistribution(env);
+      return { ok: true, total_skills: dist.length, distribution: dist };
     },
   },
 
