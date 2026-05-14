@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "generated_at": "2026-05-13T00:00:00Z",
+  "license": "TF curation CC-BY-4.0. Underlying public-record sources retain their original license.",
+  "notice": "Editorial registry of disclosed major AI buildout projects. Each entry preserves canonical source URLs. Capacity, capex, and timeline figures reflect publicly announced or reported numbers at time of curation and may evolve. Status enum: announced (publicly committed, no ground broken), permitted (regulatory greenlights obtained), construction (active build), operational (online and serving traffic). Power source enum is the announced primary source; many projects mix multiple feeds.",
+  "schema": {
+    "id": "string slug",
+    "name": "project display name",
+    "operator": "primary AI operator / tenant",
+    "partners": "array of named development, capital, or supply partners",
+    "location": "city, state or region, country",
+    "status": "announced | permitted | construction | operational",
+    "capacity_mw_announced": "integer megawatts, announced peak draw",
+    "power_source": "primary announced source",
+    "announced_date": "ISO date of public announcement",
+    "target_operational": "year or year range",
+    "capex_usd_billion": "approximate announced capex; null if not disclosed",
+    "context": "one-paragraph editorial summary",
+    "primary_sources": "array of authoritative URLs"
+  },
+  "projects": [
+    {
+      "id": "stargate-abilene",
+      "name": "Stargate Abilene",
+      "operator": "OpenAI",
+      "partners": ["Oracle", "Crusoe Energy", "SoftBank", "MGX"],
+      "location": { "city": "Abilene", "state": "Texas", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": 1200,
+      "power_source": "natural gas plus grid",
+      "announced_date": "2025-01-21",
+      "target_operational": "2026",
+      "capex_usd_billion": 100,
+      "context": "First flagship campus of the $500 billion Stargate program, announced from the White House in January 2025. Crusoe Energy is the campus developer; Oracle Cloud is the anchor tenant; OpenAI is the primary compute consumer. Phase one of a multi-site rollout.",
+      "primary_sources": [
+        "https://openai.com/index/announcing-the-stargate-project/",
+        "https://www.crusoeenergy.com/news/the-stargate-project"
+      ]
+    },
+    {
+      "id": "meta-hyperion-richland-parish",
+      "name": "Meta Hyperion",
+      "operator": "Meta",
+      "partners": ["Entergy"],
+      "location": { "city": "Richland Parish", "state": "Louisiana", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": 2000,
+      "power_source": "natural gas plus grid",
+      "announced_date": "2024-12-04",
+      "target_operational": "2030",
+      "capex_usd_billion": 10,
+      "context": "Meta's largest single data center campus, roughly 5 million square feet on completion. Entergy Louisiana is the serving utility and has filed multi-gigawatt expansion plans tied to the load. Construction underway across phased buildings.",
+      "primary_sources": [
+        "https://about.fb.com/news/2024/12/meta-establishing-louisiana-data-center/"
+      ]
+    },
+    {
+      "id": "xai-colossus-memphis",
+      "name": "xAI Colossus",
+      "operator": "xAI",
+      "partners": ["Supermicro", "Dell"],
+      "location": { "city": "Memphis", "state": "Tennessee", "country": "USA" },
+      "status": "operational",
+      "capacity_mw_announced": 250,
+      "power_source": "natural gas turbines plus grid",
+      "announced_date": "2024-06-05",
+      "target_operational": "2024",
+      "capex_usd_billion": null,
+      "context": "Operational since late 2024 with an initial 100,000 Nvidia H100 build, expanded to roughly 200,000 GPUs through 2025. Local controversy over the temporary methane gas turbines and downstream air-quality concerns in nearby neighborhoods. Memphis Light, Gas and Water is the serving utility.",
+      "primary_sources": [
+        "https://x.ai/news/colossus",
+        "https://www.supermicro.com/en/pressreleases/supermicro-and-xai-launch-worlds-largest-ai-supercomputer"
+      ]
+    },
+    {
+      "id": "microsoft-three-mile-island",
+      "name": "Three Mile Island Unit 1 Restart",
+      "operator": "Microsoft",
+      "partners": ["Constellation Energy"],
+      "location": { "city": "Londonderry Township", "state": "Pennsylvania", "country": "USA" },
+      "status": "permitted",
+      "capacity_mw_announced": 835,
+      "power_source": "nuclear",
+      "announced_date": "2024-09-20",
+      "target_operational": "2028",
+      "capex_usd_billion": 1.6,
+      "context": "Constellation will restart Three Mile Island Unit 1 (renamed Crane Clean Energy Center) under a 20-year power purchase agreement with Microsoft. Unit 1 is the undamaged reactor on the site; Unit 2 was the one that suffered the 1979 partial meltdown and remains permanently shut. NRC license renewal in progress.",
+      "primary_sources": [
+        "https://news.microsoft.com/source/2024/09/20/constellation-and-microsoft-sign-power-purchase-agreement/",
+        "https://www.constellationenergy.com/newsroom/2024/Three-Mile-Island-Restart.html"
+      ]
+    },
+    {
+      "id": "amazon-talen-susquehanna",
+      "name": "Amazon Susquehanna Campus",
+      "operator": "Amazon Web Services",
+      "partners": ["Talen Energy"],
+      "location": { "city": "Salem Township", "state": "Pennsylvania", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": 960,
+      "power_source": "nuclear",
+      "announced_date": "2024-03-04",
+      "target_operational": "2025",
+      "capex_usd_billion": 0.65,
+      "context": "AWS acquired the Cumulus data center campus adjacent to Talen Energy's Susquehanna nuclear plant for $650 million. Initial direct-feed agreement of 480 MW with provisions to scale to 960 MW. FERC blocked an amended interconnection in late 2024, sending the parties back to renegotiate the grid-bypass structure.",
+      "primary_sources": [
+        "https://www.talenenergy.com/news/talen-energy-completes-650-million-data-center-campus-sale-to-aws/"
+      ]
+    },
+    {
+      "id": "google-council-bluffs",
+      "name": "Google Council Bluffs Expansion",
+      "operator": "Google",
+      "partners": ["MidAmerican Energy"],
+      "location": { "city": "Council Bluffs", "state": "Iowa", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": null,
+      "power_source": "mixed including wind PPA",
+      "announced_date": "2023-04-26",
+      "target_operational": "ongoing",
+      "capex_usd_billion": 5.4,
+      "context": "Multi-phase expansion of Google's flagship Iowa cloud region, the heart of its TPU deployment footprint. Most recent announced phase brought cumulative Iowa investment past $7 billion. Google has paired the buildout with multiple wind and solar PPAs through MidAmerican.",
+      "primary_sources": [
+        "https://blog.google/inside-google/company-announcements/iowa-council-bluffs-investment-2023/"
+      ]
+    },
+    {
+      "id": "anthropic-google-tpu-buildout",
+      "name": "Anthropic TPU Capacity Commitment",
+      "operator": "Anthropic",
+      "partners": ["Google Cloud", "Broadcom"],
+      "location": { "city": "multi-region", "state": "Google Cloud regions", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": null,
+      "power_source": "Google Cloud regional mix",
+      "announced_date": "2026-05-05",
+      "target_operational": "2027",
+      "capex_usd_billion": 200,
+      "context": "Five-year, $200 billion compute commitment from Anthropic for Google Cloud capacity and Broadcom-built TPU chips, reported on May 5, 2026. The buildout is a derived AI-infrastructure project rather than a single named campus; the gigawatt-scale capacity backing it begins arriving in 2027 across Google Cloud regions. See the TF original analysis for the math.",
+      "primary_sources": [
+        "https://www.theinformation.com/articles/anthropic-200-billion-google-deal",
+        "https://tensorfeed.ai/originals/anthropic-200b-google-tpu-math"
+      ]
+    },
+    {
+      "id": "microsoft-mount-pleasant-wisconsin",
+      "name": "Microsoft Mount Pleasant Campus",
+      "operator": "Microsoft",
+      "partners": ["We Energies"],
+      "location": { "city": "Mount Pleasant", "state": "Wisconsin", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": null,
+      "power_source": "mixed including new gas plants",
+      "announced_date": "2024-03-08",
+      "target_operational": "2026",
+      "capex_usd_billion": 3.3,
+      "context": "Sits on the former Foxconn site. Microsoft announced an additional $3.3 billion commitment in 2024 on top of earlier phases. We Energies has separately filed for approval of two new natural gas peaker plants partly attributed to the data center load.",
+      "primary_sources": [
+        "https://blogs.microsoft.com/blog/2024/05/08/3-3b-microsoft-investment-in-mount-pleasant-to-spur-ai-innovation/"
+      ]
+    },
+    {
+      "id": "meta-prometheus-ohio",
+      "name": "Meta Prometheus",
+      "operator": "Meta",
+      "partners": ["AEP Ohio"],
+      "location": { "city": "New Albany", "state": "Ohio", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": null,
+      "power_source": "grid",
+      "announced_date": "2024-08-14",
+      "target_operational": "2026",
+      "capex_usd_billion": 1,
+      "context": "Meta's New Albany campus expansion, codenamed Prometheus in some internal references. Sits inside the broader AEP Ohio service area which has filed multiple data center load adjustments. Smaller than Hyperion but earlier to operational status.",
+      "primary_sources": [
+        "https://about.fb.com/news/2024/08/expanding-our-new-albany-data-center/"
+      ]
+    },
+    {
+      "id": "apple-maiden",
+      "name": "Apple Maiden Campus Expansion",
+      "operator": "Apple",
+      "partners": ["Duke Energy"],
+      "location": { "city": "Maiden", "state": "North Carolina", "country": "USA" },
+      "status": "operational",
+      "capacity_mw_announced": null,
+      "power_source": "Duke Energy renewable PPAs",
+      "announced_date": "2023-06-07",
+      "target_operational": "ongoing",
+      "capex_usd_billion": 1,
+      "context": "Apple's flagship east-coast data center, expanded multiple times to support Apple Intelligence and the M-series silicon trained at AWS plus Apple's own private cloud compute. Paired with Apple-owned solar farms in Catawba and Conover.",
+      "primary_sources": [
+        "https://www.apple.com/newsroom/2023/06/apple-launches-its-largest-renewable-energy-project-in-europe/"
+      ]
+    }
+  ]
+}
