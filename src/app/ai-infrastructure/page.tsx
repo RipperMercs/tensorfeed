@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { Server, ArrowRight, Zap, Droplet, Factory, AlertTriangle } from 'lucide-react';
+import Image from 'next/image';
+import { Server, ArrowRight, Zap, Droplet, Factory, AlertTriangle, Satellite } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 import projectsData from '../../../data/ai-infrastructure-projects.json';
@@ -143,57 +144,48 @@ export default function AIInfrastructurePage() {
       <FAQPageJsonLd faqs={FAQS} />
 
       {/*
-        Hero with atmospheric background. CSS-only:
-          - Two radial gradients: warm amber (suggests data center heat) +
-            cool cyan (suggests grid / tech)
-          - A faint dot grid overlay (suggests server racks at low key)
-          - All sits behind the content via -z-10
-        To swap in a generated background image later:
-          1. Drop the asset at public/ai-infrastructure-hero.jpg (or .webp)
-          2. Replace the inner aria-hidden gradient div with:
-             <Image src="/ai-infrastructure-hero.jpg" alt="" fill priority
-               className="object-cover opacity-50" />
-          3. Keep the grid overlay + dark overlay layers for tone control.
+        Hero with photo background. The desert data center image evokes the
+        actual geography of most AI buildouts (Texas, Arizona, Nevada). We
+        layer dark + grid overlays on top to keep text legible and match
+        TF's dark editorial aesthetic. Image is 2400px wide WebP, ~65KB.
       */}
-      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary bg-bg-secondary/40 mb-10 px-6 sm:px-8 py-10 sm:py-14">
+      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary mb-10 px-6 sm:px-8 py-12 sm:py-20">
+        <Image
+          src="/ai-infrastructure-hero-desert.webp"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 1280px"
+          className="object-cover -z-20"
+        />
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10"
           style={{
-            background: [
-              'radial-gradient(ellipse 70% 60% at 80% 20%, rgba(217, 119, 6, 0.18) 0%, transparent 60%)',
-              'radial-gradient(ellipse 60% 70% at 15% 90%, rgba(14, 116, 144, 0.20) 0%, transparent 60%)',
-              'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 70%)',
-            ].join(', '),
+            background:
+              'linear-gradient(to bottom, rgba(2,6,23,0.55) 0%, rgba(2,6,23,0.70) 100%)',
           }}
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 opacity-[0.05]"
+          className="absolute inset-0 -z-10 opacity-[0.04]"
           style={{
             backgroundImage: [
-              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)',
-              'linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+              'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)',
+              'linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
             ].join(', '),
             backgroundSize: '48px 48px',
           }}
         />
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 h-24 -z-10"
-          style={{
-            background:
-              'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.25) 100%)',
-          }}
-        />
 
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-accent-primary/10 backdrop-blur-sm">
+          <div className="p-2 rounded-lg bg-accent-primary/15 backdrop-blur-sm">
             <Server className="w-7 h-7 text-accent-primary" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">AI Infrastructure</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-md">AI Infrastructure</h1>
         </div>
-        <p className="text-text-secondary text-lg max-w-3xl mb-4">
+        <p className="text-text-secondary text-lg max-w-3xl mb-4 drop-shadow">
           The physical buildout behind the AI ecosystem: gigawatt-class data centers, nuclear power
           deals, hyperscaler campuses, and the long-dated compute commitments backing them.
         </p>
@@ -361,6 +353,55 @@ export default function AIInfrastructurePage() {
           </div>
         </div>
       </div>
+
+      {/*
+        Long-arc thesis visual. The lunar / orbital image pairs with the
+        concept-stage entry in the registry and the dedicated orbital
+        deep-dive original. Dark overlay keeps text legible against the
+        bright Earth in the source image. Image is 1800px wide WebP, ~220KB.
+      */}
+      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary mb-10 px-6 sm:px-8 py-12 sm:py-16">
+        <Image
+          src="/ai-infrastructure-orbital.webp"
+          alt=""
+          aria-hidden="true"
+          fill
+          sizes="(max-width: 768px) 100vw, 1280px"
+          className="object-cover -z-20"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'linear-gradient(to bottom right, rgba(2,6,23,0.78) 0%, rgba(2,6,23,0.55) 60%, rgba(2,6,23,0.78) 100%)',
+          }}
+        />
+
+        <div className="max-w-2xl">
+          <div className="flex items-center gap-2 mb-3 text-xs uppercase tracking-wider text-accent-cyan font-mono">
+            <Satellite className="w-4 h-4" />
+            Long-arc thesis
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 drop-shadow-md">
+            When terrestrial runs out of room, the steel goes up.
+          </h2>
+          <p className="text-text-secondary leading-relaxed mb-5 drop-shadow">
+            The four constraints terrestrial AI infrastructure hits (grid, water, permits, NIMBY)
+            all go away in orbit. Continuous solar plus vacuum cooling sidesteps the bottlenecks
+            that are hardening on the ground. The catch is launch cost, and that is the one
+            curve actively bending in the right direction. Concept-stage today; 2030-plus
+            timeline. We track it on this page as it moves from feasibility into engineering.
+          </p>
+          <Link
+            href="/originals/ai-compute-orbital-thesis"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-cyan hover:text-white transition-colors"
+          >
+            Read the orbital thesis
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </section>
 
       <div className="border-t border-bg-tertiary pt-6 mb-10">
         <h2 className="text-xl font-semibold text-text-primary mb-4">Related on TensorFeed</h2>
