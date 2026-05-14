@@ -100,6 +100,14 @@ export default function FundingPortfolioPage() {
             training compute (in FLOPs) that runs on Nvidia in any given quarter. We will start publishing
             that derived metric once enough quarters of disclosure have rolled in.
           </p>
+          <p>
+            For the physical-buildout layer underneath these capital flows (the campuses, the nuclear PPAs,
+            the gigawatt deals that turn equity dollars into actual silicon), see{' '}
+            <Link href="/ai-infrastructure" className="text-accent-primary hover:underline">
+              /ai-infrastructure
+            </Link>
+            .
+          </p>
         </div>
       </div>
 

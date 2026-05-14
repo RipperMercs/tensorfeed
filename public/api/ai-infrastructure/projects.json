@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "generated_at": "2026-05-13T00:00:00Z",
+  "version": 2,
+  "generated_at": "2026-05-13T20:00:00Z",
   "license": "TF curation CC-BY-4.0. Underlying public-record sources retain their original license.",
   "notice": "Editorial registry of disclosed major AI buildout projects. Each entry preserves canonical source URLs. Capacity, capex, and timeline figures reflect publicly announced or reported numbers at time of curation and may evolve. Status enum: announced (publicly committed, no ground broken), permitted (regulatory greenlights obtained), construction (active build), operational (online and serving traffic). Power source enum is the announced primary source; many projects mix multiple feeds.",
   "schema": {
@@ -191,6 +191,95 @@
       "context": "Apple's flagship east-coast data center, expanded multiple times to support Apple Intelligence and the M-series silicon trained at AWS plus Apple's own private cloud compute. Paired with Apple-owned solar farms in Catawba and Conover.",
       "primary_sources": [
         "https://www.apple.com/newsroom/2023/06/apple-launches-its-largest-renewable-energy-project-in-europe/"
+      ]
+    },
+    {
+      "id": "coreweave-fleet",
+      "name": "CoreWeave AI Cloud Fleet",
+      "operator": "CoreWeave",
+      "partners": ["Microsoft", "Nvidia"],
+      "location": { "city": "multi-region", "state": "32+ US data centers", "country": "USA plus Europe" },
+      "status": "operational",
+      "capacity_mw_announced": null,
+      "power_source": "colocation grid mix",
+      "announced_date": "2017-01-01",
+      "target_operational": "ongoing",
+      "capex_usd_billion": 20,
+      "context": "AI-specialized GPU cloud, IPO on Nasdaq in March 2025 (CRWV). Operates 32+ data centers as of 2026 with hundreds of thousands of Nvidia GPUs (H100, H200, GB200) deployed. Microsoft is the anchor customer, accounting for roughly half of revenue. Nvidia holds a meaningful equity stake. Heavy spend on multi-year capacity commitments tied to Microsoft and OpenAI deals.",
+      "primary_sources": [
+        "https://www.coreweave.com/",
+        "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001769628&type=10-K"
+      ]
+    },
+    {
+      "id": "iren-fleet",
+      "name": "IREN AI Compute Fleet",
+      "operator": "IREN",
+      "partners": ["Nvidia", "Dell"],
+      "location": { "city": "multi-region", "state": "Childress TX, West Texas, British Columbia", "country": "USA and Canada" },
+      "status": "construction",
+      "capacity_mw_announced": 2910,
+      "power_source": "renewables (wind, solar, hydro)",
+      "announced_date": "2025-09-22",
+      "target_operational": "2027",
+      "capex_usd_billion": 2.1,
+      "context": "Originally Iris Energy, Australian-founded Bitcoin miner that pivoted to AI compute. Nvidia announced a $2.1 billion equity stake in 2026 covering five gigawatts of DSX-branded rack deployments over the next several years. Renewable-power-focused, with sites in Childress and West Texas and British Columbia. Nasdaq ticker IREN.",
+      "primary_sources": [
+        "https://iris-energy.com.au/",
+        "https://nvidianews.nvidia.com/news/"
+      ]
+    },
+    {
+      "id": "hut8-ai-portfolio",
+      "name": "Hut 8 AI Hosting Portfolio",
+      "operator": "Hut 8",
+      "partners": ["Coatue", "Anthropic (reported)"],
+      "location": { "city": "multi-region", "state": "Salt Creek TX, Vega TX, North Dakota", "country": "USA and Canada" },
+      "status": "construction",
+      "capacity_mw_announced": 1500,
+      "power_source": "natural gas plus grid",
+      "announced_date": "2024-06-04",
+      "target_operational": "2026",
+      "capex_usd_billion": 1.2,
+      "context": "Originally a Bitcoin mining operator (Nasdaq HUT), now pivoting infrastructure toward AI hosting. Joint venture with Coatue (Highrise AI) targeting gigawatt-class HPC capacity. Mixed-use sites still run some Bitcoin workloads while new AI capacity comes online. Vega TX site is the flagship new build.",
+      "primary_sources": [
+        "https://hut8.com/",
+        "https://hut8.com/news/"
+      ]
+    },
+    {
+      "id": "lambda-labs",
+      "name": "Lambda GPU Cloud Fleet",
+      "operator": "Lambda Labs",
+      "partners": ["Microsoft", "Nvidia"],
+      "location": { "city": "multi-region", "state": "primarily US colocation", "country": "USA" },
+      "status": "operational",
+      "capacity_mw_announced": null,
+      "power_source": "colocation grid mix",
+      "announced_date": "2012-01-01",
+      "target_operational": "ongoing",
+      "capex_usd_billion": null,
+      "context": "Established AI-specialized GPU cloud with H100 and H200 SuperPOD deployments across US colocation partners. Smaller than CoreWeave on raw capacity but well-known among AI research teams and frontier labs running shorter-cycle workloads. Multi-year Microsoft capacity agreement disclosed in 2024.",
+      "primary_sources": [
+        "https://lambda.ai/",
+        "https://lambda.ai/news/lambda-and-microsoft-strategic-collaboration"
+      ]
+    },
+    {
+      "id": "anthropic-spacex-colossus-orbital",
+      "name": "Orbital AI Compute (Concept)",
+      "operator": "Anthropic, SpaceX, Google (separately exploring)",
+      "partners": ["Starcloud", "various"],
+      "location": { "city": "low Earth orbit", "state": "feasibility studies", "country": "international" },
+      "status": "announced",
+      "capacity_mw_announced": null,
+      "power_source": "solar (free, continuous, vacuum-radiated cooling)",
+      "announced_date": "2026-05-09",
+      "target_operational": "2030 or later",
+      "capex_usd_billion": null,
+      "context": "Multiple separately-reported feasibility programs into placing AI training or inference capacity in low Earth orbit. Anthropic and SpaceX have publicly discussed orbital extensions of Colossus-class compute; Google has separately explored similar concepts via Starcloud-style partners. Power thesis: continuous solar plus vacuum heat-rejection sidesteps the grid and water constraints driving terrestrial buildouts. Capacity, capex, and timeline figures are all aspirational at this stage. Concept-stage entry; we will reclassify when a launch contract or specific construction commitment lands.",
+      "primary_sources": [
+        "https://tensorfeed.ai/originals/anthropic-spacexai-colossus-orbital"
       ]
     }
   ]
