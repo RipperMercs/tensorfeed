@@ -164,12 +164,312 @@ const WHATS_NEW_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/routing — top-N model recommendation joining live pricing,
+ * benchmarks, status, and per-component composite scoring. Replaces several
+ * fan-out calls + the agent's own ranking logic. The "I would pay $0.02 for
+ * this" call per Kimi K2.6's external analysis of TF (2026-05-14).
+ */
+const ROUTING_PILOT: BazaarPilotConfig = {
+  description:
+    'Top-N AI model recommendation for a task. Joins live pricing, benchmarks, provider status, and latency into a single composite score so an agent gets a ranked answer in one call instead of stitching three free endpoints together.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { task: 'code', budget: 5.0, min_quality: 0.7, top_n: 3 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            task: 'code',
+            recommendations: [
+              {
+                rank: 1,
+                model: { name: 'Claude Opus 4.7', provider: 'anthropic' },
+                pricing: {
+                  input: 15,
+                  output: 75,
+                  currency: 'USD',
+                  unit: 'per 1M tokens',
+                },
+                status: 'operational',
+                composite_score: 0.87,
+                components: {
+                  quality: 0.94,
+                  availability: 1.0,
+                  cost: 0.65,
+                  latency: 0.5,
+                },
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  task: {
+                    type: 'string',
+                    enum: ['code', 'reasoning', 'creative', 'general'],
+                    description: 'Task family the model needs to be good at.',
+                  },
+                  budget: {
+                    type: 'number',
+                    description: 'Max blended USD per 1M tokens.',
+                  },
+                  min_quality: {
+                    type: 'number',
+                    minimum: 0,
+                    maximum: 1,
+                    description: 'Minimum acceptable quality score (0 to 1).',
+                  },
+                  top_n: {
+                    type: 'integer',
+                    minimum: 1,
+                    maximum: 10,
+                    description: 'How many models to return ranked, default 3.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: {
+              type: { type: 'string' },
+              example: { type: 'object' },
+            },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/compare/models — side-by-side comparison of 2-5 models with
+ * pricing, benchmarks (normalized to union-of-keys, nulls intentional),
+ * status, recent news mentions, and computed rankings (cheapest blended,
+ * widest context, per-benchmark leaderboard). One agent call replaces
+ * stitching /api/models + /api/benchmarks + /api/status + /api/news per
+ * candidate.
+ */
+const COMPARE_MODELS_PILOT: BazaarPilotConfig = {
+  description:
+    'Side-by-side comparison of 2-5 AI models. Returns pricing, benchmarks normalized to union-of-keys with explicit nulls, live provider status, recent news mentions, and per-benchmark rankings in one ready-to-rank payload.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { ids: 'opus-4-7,gpt-5-5,gemini-3' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            models: [
+              {
+                id: 'opus-4-7',
+                name: 'Claude Opus 4.7',
+                provider: 'anthropic',
+                pricing: { input: 15, output: 75, blended: 25 },
+                benchmarks: {
+                  swe_bench: 0.74,
+                  mmlu_pro: 0.83,
+                  gpqa_diamond: 0.68,
+                  math: null,
+                  human_eval: 0.94,
+                },
+                status: 'operational',
+                news_count_30d: 12,
+                context_window: 200000,
+              },
+            ],
+            rankings: {
+              cheapest_blended: ['gpt-5-5', 'gemini-3', 'opus-4-7'],
+              widest_context: ['gemini-3', 'opus-4-7', 'gpt-5-5'],
+              per_benchmark: {
+                swe_bench: ['opus-4-7', 'gpt-5-5', 'gemini-3'],
+              },
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  ids: {
+                    type: 'string',
+                    description:
+                      'Comma-separated list of 2 to 5 model ids or display names (e.g. "opus-4-7,gpt-5-5,gemini-3").',
+                  },
+                },
+                required: ['ids'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: {
+              type: { type: 'string' },
+              example: { type: 'object' },
+            },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/cost/projection — project a token-usage workload across 1-10
+ * models. Returns daily/weekly/monthly/yearly totals per model plus a ranking
+ * by cheapest monthly. Eliminates the need for agents to maintain pricing
+ * tables locally.
+ */
+const COST_PROJECTION_PILOT: BazaarPilotConfig = {
+  description:
+    'Project the cost of a token-usage workload across 1-10 AI models. Returns daily, weekly, monthly, and yearly totals per model plus a ranking by cheapest monthly. The canonical "given my workload, what would each model cost me" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: {
+            model: 'opus-4-7,gpt-5-5',
+            input_tokens_per_day: 1000000,
+            output_tokens_per_day: 200000,
+            horizon: 'monthly',
+          },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            workload: {
+              input_tokens_per_day: 1000000,
+              output_tokens_per_day: 200000,
+            },
+            primary_horizon: 'monthly',
+            projections: [
+              {
+                model: 'Claude Opus 4.7',
+                provider: 'anthropic',
+                matched: true,
+                rates: {
+                  input_per_1m: 15,
+                  output_per_1m: 75,
+                  blended_per_1m: 25,
+                },
+                daily: { input_cost: 15, output_cost: 15, total: 30 },
+                weekly_total: 210,
+                monthly_total: 900,
+                yearly_total: 10950,
+              },
+            ],
+            ranking_by_monthly_cheapest: ['gpt-5-5', 'opus-4-7'],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  model: {
+                    type: 'string',
+                    description:
+                      'Comma-separated list of 1 to 10 model ids or display names.',
+                  },
+                  input_tokens_per_day: {
+                    type: 'integer',
+                    minimum: 0,
+                    description: 'Input tokens per day for the workload.',
+                  },
+                  output_tokens_per_day: {
+                    type: 'integer',
+                    minimum: 0,
+                    description: 'Output tokens per day for the workload.',
+                  },
+                  horizon: {
+                    type: 'string',
+                    enum: ['daily', 'weekly', 'monthly', 'yearly'],
+                    description:
+                      'Primary horizon for the ranking (other horizons are still returned). Default monthly.',
+                  },
+                },
+                required: ['model', 'input_tokens_per_day', 'output_tokens_per_day'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: {
+              type: { type: 'string' },
+              example: { type: 'object' },
+            },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
+  '/api/premium/routing': ROUTING_PILOT,
+  '/api/premium/compare/models': COMPARE_MODELS_PILOT,
+  '/api/premium/cost/projection': COST_PROJECTION_PILOT,
 };
 
 /**

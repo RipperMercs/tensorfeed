@@ -37,11 +37,20 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/probe/series',
   '/api/premium/funding/exposure',
   '/api/premium/packages/pypi/momentum',
-  // Re-added 2026-05-14 for CDP debugging. Ethan Oroshiba (x402 team)
-  // on GitHub #2207 needs the endpoint to return 402 to anonymous GET
-  // so he can inspect our bazaar metadata. Roll back to plain trial
-  // after debugging concludes.
+  // Bazaar pilot endpoints. Each path here also lives in BAZAAR_PILOTS in
+  // worker/src/bazaar-pilots.ts so the 402 response carries the bazaar
+  // extension. Strict-premium status is required because CDP's Bazaar
+  // crawler (and x402scan's) probe anonymously and must see a 402, not
+  // the free-trial 200. Wave 1 added /routing + /compare/models +
+  // /cost/projection (2026-05-14) — the highest-leverage "decision-ready"
+  // endpoints per Kimi K2.6's external analysis. Trade is loss of
+  // free-trial UX on these three; gain is x402scan/Bazaar registration
+  // for the agent-discovery path. Per project_premium_lock_strategy 70/30
+  // framework this puts the ratio at ~30% strict, the boundary.
   '/api/premium/whats-new',
+  '/api/premium/routing',
+  '/api/premium/compare/models',
+  '/api/premium/cost/projection',
 ];
 
 /**

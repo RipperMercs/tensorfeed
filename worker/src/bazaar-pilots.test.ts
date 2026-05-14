@@ -16,15 +16,34 @@ import {
   bazaarDescriptionFor,
 } from './bazaar-pilots';
 
+// Pilot paths currently in BAZAAR_PILOTS. Wave 1 (2026-05-14) added
+// /routing, /compare/models, /cost/projection alongside the original
+// /whats-new pilot.
+const PILOT_PATHS = [
+  '/api/premium/whats-new',
+  '/api/premium/routing',
+  '/api/premium/compare/models',
+  '/api/premium/cost/projection',
+] as const;
+
+// Premium paths that are intentionally NOT in BAZAAR_PILOTS. Used for
+// negative-control assertions across the file.
+const NON_PILOT_PREMIUM_PATHS = [
+  '/api/premium/macro/digest',
+  '/api/premium/watches',
+];
+
 describe('isBazaarPilotPath', () => {
-  it('returns true for the whats-new pilot path', () => {
-    expect(isBazaarPilotPath('/api/premium/whats-new')).toBe(true);
+  it('returns true for every Wave 0+1 pilot path', () => {
+    for (const path of PILOT_PATHS) {
+      expect(isBazaarPilotPath(path)).toBe(true);
+    }
   });
 
   it('returns false for non-pilot premium paths', () => {
-    expect(isBazaarPilotPath('/api/premium/routing')).toBe(false);
-    expect(isBazaarPilotPath('/api/premium/compare/models')).toBe(false);
-    expect(isBazaarPilotPath('/api/premium/macro/digest')).toBe(false);
+    for (const path of NON_PILOT_PREMIUM_PATHS) {
+      expect(isBazaarPilotPath(path)).toBe(false);
+    }
   });
 
   it('returns false for free paths', () => {
@@ -41,41 +60,53 @@ describe('isBazaarPilotPath', () => {
 });
 
 describe('getBazaarPilotConfig', () => {
-  it('returns a config with description and extension for piloted paths', () => {
-    const config = getBazaarPilotConfig('/api/premium/whats-new');
-    expect(config).not.toBeNull();
-    expect(typeof config!.description).toBe('string');
-    expect(config!.description.length).toBeGreaterThan(20);
-    expect(typeof config!.extension).toBe('object');
-    expect(config!.extension.bazaar).toBeDefined();
+  it('returns a config with description and extension for every pilot path', () => {
+    for (const path of PILOT_PATHS) {
+      const config = getBazaarPilotConfig(path);
+      expect(config, `getBazaarPilotConfig(${path}) should not be null`).not.toBeNull();
+      expect(typeof config!.description).toBe('string');
+      expect(config!.description.length).toBeGreaterThan(20);
+      expect(typeof config!.extension).toBe('object');
+      expect(config!.extension.bazaar).toBeDefined();
+    }
   });
 
   it('returns null for non-piloted paths', () => {
-    expect(getBazaarPilotConfig('/api/premium/routing')).toBeNull();
+    expect(getBazaarPilotConfig('/api/premium/macro/digest')).toBeNull();
     expect(getBazaarPilotConfig('/api/news')).toBeNull();
   });
 });
 
 describe('bazaarExtensionsFor', () => {
-  it('returns the bazaar extension block for piloted paths', () => {
-    const ext = bazaarExtensionsFor('/api/premium/whats-new');
-    expect(ext.bazaar).toBeDefined();
+  it('returns the bazaar extension block for every pilot path', () => {
+    for (const path of PILOT_PATHS) {
+      const ext = bazaarExtensionsFor(path);
+      expect(ext.bazaar, `bazaarExtensionsFor(${path}).bazaar should be defined`).toBeDefined();
+    }
   });
 
   it('returns an empty object for non-piloted paths', () => {
-    expect(bazaarExtensionsFor('/api/premium/routing')).toEqual({});
+    expect(bazaarExtensionsFor('/api/premium/macro/digest')).toEqual({});
     expect(bazaarExtensionsFor('/api/news')).toEqual({});
   });
 });
 
 describe('bazaarDescriptionFor', () => {
   it('returns the pilot-specific description for piloted paths', () => {
-    const desc = bazaarDescriptionFor('/api/premium/whats-new', 'fallback');
-    expect(desc).toContain('morning brief');
+    expect(bazaarDescriptionFor('/api/premium/whats-new', 'fallback')).toContain('morning brief');
+    expect(bazaarDescriptionFor('/api/premium/routing', 'fallback').toLowerCase()).toContain(
+      'recommendation',
+    );
+    expect(bazaarDescriptionFor('/api/premium/compare/models', 'fallback').toLowerCase()).toContain(
+      'comparison',
+    );
+    expect(
+      bazaarDescriptionFor('/api/premium/cost/projection', 'fallback').toLowerCase(),
+    ).toContain('project');
   });
 
   it('returns the fallback for non-piloted paths', () => {
-    expect(bazaarDescriptionFor('/api/premium/routing', 'TensorFeed premium API')).toBe(
+    expect(bazaarDescriptionFor('/api/premium/macro/digest', 'TensorFeed premium API')).toBe(
       'TensorFeed premium API',
     );
   });
@@ -162,4 +193,45 @@ describe('whats-new bazaar extension AJV validation', () => {
     tampered.input.queryParams.days = 99;
     expect(validate(tampered)).toBe(false);
   });
+});
+
+describe('Wave 1 pilot AJV validation', () => {
+  // Same load-bearing test as the whats-new block, generalized across the
+  // three Wave 1 pilots. If any of these regress, the endpoint silently
+  // fails to catalog in Bazaar.
+  const wave1Paths = [
+    '/api/premium/routing',
+    '/api/premium/compare/models',
+    '/api/premium/cost/projection',
+  ];
+
+  for (const path of wave1Paths) {
+    it(`${path} info validates against its declared schema`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const valid = validate(bazaar.info);
+      if (!valid) {
+        throw new Error(
+          `${path} bazaar extension info failed schema validation: ${JSON.stringify(
+            validate.errors,
+            null,
+            2,
+          )}`,
+        );
+      }
+      expect(valid).toBe(true);
+    });
+
+    it(`${path} rejects info with wrong input.method (negative control)`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const tampered = JSON.parse(JSON.stringify(bazaar.info));
+      tampered.input.method = 'POST';
+      expect(validate(tampered)).toBe(false);
+    });
+  }
 });

@@ -89,36 +89,111 @@ async function main() {
   console.log('kinds:', JSON.stringify(supported.body.kinds, null, 2));
   console.log('extensions:', supported.body.extensions);
 
-  // 2. Discovery list
-  console.log('\n=== /discovery/resources?type=http&limit=200 ===');
-  const discovery = await callCdp(
+  // 2. Discovery list (paginated full scan for tensorfeed.ai hits)
+  console.log('\n=== /discovery/resources (paginated full scan) ===');
+  const PAGE_SIZE = 200;
+  let offset = 0;
+  let totalItems = 0;
+  let totalCatalog = 0;
+  let pages = 0;
+  const tfHits = [];
+
+  while (true) {
+    const path = `/platform/v2/x402/discovery/resources?type=http&limit=${PAGE_SIZE}&offset=${offset}`;
+    const page = await callCdp('GET', path, apiKeyId, apiKeySecret);
+    if (page.status !== 200) {
+      console.log(`page at offset=${offset} returned HTTP ${page.status}`);
+      console.log(JSON.stringify(page.body, null, 2));
+      process.exit(3);
+    }
+    const items = page.body.items ?? [];
+    if (items.length === 0) break;
+    totalItems += items.length;
+    totalCatalog = page.body.pagination?.total ?? totalCatalog;
+    pages += 1;
+    for (const item of items) {
+      if ((item.resource ?? '').includes('tensorfeed.ai')) {
+        tfHits.push(item);
+      }
+    }
+    offset += items.length;
+    if (offset >= totalCatalog) break;
+    if (pages % 25 === 0) {
+      process.stdout.write(`\rscanned ${pages} pages (${totalItems}/${totalCatalog})…`);
+    }
+  }
+
+  console.log(`\rscanned ${pages} pages, ${totalItems}/${totalCatalog} items total          `);
+
+  // Diagnostic: surface entries where the payTo wallet matches TF's, to
+  // catch the case where our entry was cataloged under a normalized URL
+  // form that doesn't substring-match "tensorfeed.ai".
+  const TF_PAY_TO = '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1';
+  const payToHits = [];
+  // Diagnostic: top N most recently updated entries
+  const recentSorted = [];
+  // Collect from a re-scan — items were not retained per page in the
+  // outer loop. Re-walk one more pass with a smaller limit.
+
+  // Actually we need to re-fetch since we didn't accumulate items.
+  // Quick second pass focused on diagnostic signals only.
+  const diagOffset = 0;
+  const diagLimit = 200;
+  const firstPage = await callCdp(
     'GET',
-    '/platform/v2/x402/discovery/resources?type=http&limit=200',
+    `/platform/v2/x402/discovery/resources?type=http&limit=${diagLimit}&offset=${diagOffset}`,
     apiKeyId,
     apiKeySecret,
   );
-  console.log('HTTP', discovery.status);
-  if (discovery.status !== 200) {
-    console.log(JSON.stringify(discovery.body, null, 2));
-    process.exit(3);
-  }
-  const items = discovery.body.items ?? [];
-  console.log(`total items: ${items.length}`);
-  console.log(`pagination: ${JSON.stringify(discovery.body.pagination)}`);
+  const firstItems = firstPage.body.items ?? [];
 
-  // 3. Filter for tensorfeed
-  const tfHits = items.filter((r) => (r.resource ?? '').includes('tensorfeed.ai'));
-  console.log(`\ntensorfeed.ai hits: ${tfHits.length}`);
+  for (const item of firstItems) {
+    const payTos = (item.accepts ?? []).map((a) => (a.payTo ?? '').toLowerCase());
+    if (payTos.includes(TF_PAY_TO.toLowerCase())) {
+      payToHits.push(item);
+    }
+  }
+
+  // Top 5 most-recently-updated from the first page
+  const sortedByRecency = [...firstItems].sort((a, b) =>
+    (b.lastUpdated ?? '').localeCompare(a.lastUpdated ?? ''),
+  );
+  for (const item of sortedByRecency.slice(0, 5)) {
+    recentSorted.push(item);
+  }
+
+  console.log(`\ntensorfeed.ai (URL substring) hits: ${tfHits.length}`);
   for (const hit of tfHits) {
-    console.log('  -', hit.resource, '(lastUpdated:', hit.lastUpdated, ')');
+    console.log(`  - ${hit.resource}`);
+    console.log(`      lastUpdated: ${hit.lastUpdated}`);
+    if (hit.accepts && hit.accepts.length > 0) {
+      const acc = hit.accepts[0];
+      console.log(
+        `      accepts: ${acc.scheme} ${acc.network} amount=${acc.amount} payTo=${acc.payTo}`,
+      );
+    }
+    if (hit.metadata) {
+      console.log(`      metadata: ${JSON.stringify(hit.metadata).slice(0, 200)}`);
+    }
   }
 
-  if (tfHits.length === 0) {
+  console.log(`\npayTo=${TF_PAY_TO} (TF wallet) hits in first 200: ${payToHits.length}`);
+  for (const hit of payToHits) {
+    console.log(`  - ${hit.resource}`);
+    console.log(`      lastUpdated: ${hit.lastUpdated}`);
+  }
+
+  console.log(`\nMost recently updated entries (first 200 of catalog):`);
+  for (const item of recentSorted) {
+    console.log(`  ${item.lastUpdated}  ${item.resource}`);
+  }
+
+  if (tfHits.length === 0 && payToHits.length === 0) {
     console.log(
-      '\nNo TensorFeed entries cataloged yet. Cataloging fires ~10 min after first successful settle.',
+      '\nNo TensorFeed entries detected by URL substring or by payTo wallet match.',
     );
-    console.log('First settle tx 0xbb41b06d31c871a0047144d58ab98d13aaed7e49c6d83a92bee05c52f88c068d was at 2026-05-14T15:08:46.');
-    console.log('Re-run this script after ~15 min to confirm.');
+  } else if (tfHits.length > 0 || payToHits.length > 0) {
+    console.log('\nBazaar catalog confirmed for TensorFeed.');
   }
 }
 

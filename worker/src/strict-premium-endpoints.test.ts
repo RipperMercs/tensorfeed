@@ -48,16 +48,7 @@ describe('isStrictPremiumPath', () => {
     });
   });
 
-  describe('non-strict premium paths (the 70% that keep the trial)', () => {
-    it('does NOT match /api/premium/routing', () => {
-      expect(isStrictPremiumPath('/api/premium/routing')).toBe(false);
-    });
-    it('does NOT match /api/premium/compare/models', () => {
-      expect(isStrictPremiumPath('/api/premium/compare/models')).toBe(false);
-    });
-    it('does NOT match /api/premium/cost/projection', () => {
-      expect(isStrictPremiumPath('/api/premium/cost/projection')).toBe(false);
-    });
+  describe('non-strict premium paths (still on the trial layer)', () => {
     it('does NOT match /api/premium/news/search', () => {
       expect(isStrictPremiumPath('/api/premium/news/search')).toBe(false);
     });
@@ -113,9 +104,9 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 8 exact paths', () => {
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(8);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(8); // no duplicates
+    it('exposes all 11 exact paths', () => {
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(11);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(11); // no duplicates
     });
     it('exposes 1 prefix path', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(1);
