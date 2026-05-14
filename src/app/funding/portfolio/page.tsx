@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Banknote, ArrowLeft } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 import FundingRegistryWidget from '@/components/funding/FundingRegistryWidget';
@@ -71,17 +72,55 @@ export default function FundingPortfolioPage() {
         Back to AI funding rounds
       </Link>
 
-      <div className="mb-10">
+      {/*
+        Hero with photo background. Aerial desert plain at dusk with
+        light filaments flowing toward an industrial cluster on the
+        horizon. The filaments suggest capital flowing into
+        infrastructure (the page's exact thesis). 2400px WebP, ~195KB.
+      */}
+      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary mb-10 px-6 sm:px-8 py-12 sm:py-20">
+        <Image
+          src="/funding-portfolio-hero.webp"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 1024px"
+          className="object-cover -z-20"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(2,6,23,0.60) 0%, rgba(2,6,23,0.78) 100%)',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.04]"
+          style={{
+            backgroundImage: [
+              'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)',
+              'linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+            ].join(', '),
+            backgroundSize: '48px 48px',
+          }}
+        />
+
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-accent-primary/10">
+          <div className="p-2 rounded-lg bg-accent-primary/15 backdrop-blur-sm">
             <Banknote className="w-7 h-7 text-accent-primary" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">AI Funding Portfolio</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-md">AI Funding Portfolio</h1>
         </div>
-        <p className="text-text-secondary text-lg max-w-2xl mb-4">
+        <p className="text-text-secondary text-lg max-w-2xl drop-shadow">
           Disclosed AI corporate equity stakes, compute commitments, and capacity partnerships, each
           tagged with the recipient silicon dependency.
         </p>
+      </section>
+
+      <div className="mb-10">
         <div className="text-text-secondary leading-relaxed max-w-3xl space-y-3 text-sm">
           <p>
             Generic funding trackers (including our own{' '}
