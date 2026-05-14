@@ -82,10 +82,124 @@ function parseArgs(argv) {
     else if (a === '--network') args.network = argv[++i];
     else if (a === '--pay-to') args.payTo = argv[++i];
     else if (a === '--amount') args.amount = argv[++i];
+    else if (a === '--with-bazaar-pilot') args.withBazaarPilot = true;
     else if (a === '--help' || a === '-h') args.help = true;
   }
   return args;
 }
+
+// Hardcoded bazaar extension for the /api/premium/whats-new pilot. Mirrors
+// the WHATS_NEW_PILOT.extension.bazaar block in worker/src/bazaar-pilots.ts.
+// Keep in sync manually until the bazaar-pilots module is JS-importable
+// from this script.
+// CDP catalogs a resource only when the bazaar extension flows through
+// /settle inside the PaymentPayload. We embed it here so the smoke test
+// produces the same shape a real agent would after copying it from the
+// PaymentRequired 402 response.
+const WHATS_NEW_BAZAAR_EXTENSION = {
+  bazaar: {
+    info: {
+      input: {
+        type: 'http',
+        method: 'GET',
+        queryParams: { days: 1, news_limit: 10 },
+      },
+      output: {
+        type: 'json',
+        example: {
+          ok: true,
+          window: { from: '2026-05-13', to: '2026-05-14', days: 1 },
+          computed_at: '2026-05-14T08:00:00Z',
+          summary: {
+            total_pricing_changes: 3,
+            new_models: 1,
+            removed_models: 0,
+            incidents: 2,
+            news_articles: 10,
+          },
+          pricing: {
+            changes: [
+              {
+                model: 'Claude Opus 4.7',
+                provider: 'anthropic',
+                field: 'inputPrice',
+                from: 15,
+                to: 14,
+                delta_pct: -6.6667,
+              },
+            ],
+            new_models: [
+              {
+                model: 'Sonnet 4.7',
+                provider: 'anthropic',
+                input_per_1m: 3,
+                output_per_1m: 15,
+                tier: 'mid',
+              },
+            ],
+            removed_models: [],
+          },
+          status: {
+            incidents: [
+              {
+                service: 'API',
+                provider: 'openai',
+                severity: 'minor',
+                title: 'Elevated latency for ChatGPT',
+                started_at: '2026-05-13T18:00:00Z',
+                resolved_at: '2026-05-13T19:30:00Z',
+                duration_minutes: 90,
+              },
+            ],
+            currently_operational: 12,
+            currently_degraded: 1,
+            currently_down: 0,
+            currently_unknown: 0,
+          },
+          news: [
+            {
+              title: 'Anthropic announces Claude Opus 4.8',
+              url: 'https://anthropic.com/news/opus-4-8',
+              source: 'Anthropic',
+              published_at: '2026-05-13T15:00:00Z',
+            },
+          ],
+        },
+      },
+    },
+    schema: {
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
+      type: 'object',
+      properties: {
+        input: {
+          type: 'object',
+          properties: {
+            type: { type: 'string', const: 'http' },
+            method: { type: 'string', enum: ['GET'] },
+            queryParams: {
+              type: 'object',
+              properties: {
+                days: { type: 'integer', minimum: 1, maximum: 7 },
+                news_limit: { type: 'integer', minimum: 1, maximum: 25 },
+              },
+            },
+          },
+          required: ['type', 'method'],
+          additionalProperties: false,
+        },
+        output: {
+          type: 'object',
+          properties: {
+            type: { type: 'string' },
+            example: { type: 'object' },
+          },
+          required: ['type'],
+        },
+      },
+      required: ['input'],
+    },
+  },
+};
 
 function usage() {
   console.log(
@@ -149,6 +263,10 @@ async function main() {
   });
   console.log('signature   :', signature);
 
+  const extensions = args.withBazaarPilot ? WHATS_NEW_BAZAAR_EXTENSION : {};
+  if (args.withBazaarPilot) {
+    console.log('bazaar pilot: including extensions.bazaar in payload');
+  }
   const payload = {
     x402Version: 2,
     accepted: {
@@ -161,7 +279,7 @@ async function main() {
       extra: { name: 'USDC', version: '2' },
     },
     payload: { signature, authorization: auth },
-    extensions: {},
+    extensions,
   };
   const xPaymentHeader = Buffer.from(JSON.stringify(payload)).toString('base64');
 
@@ -180,9 +298,24 @@ async function main() {
     if (
       k.toLowerCase().startsWith('x-payment') ||
       k.toLowerCase() === 'payment-response' ||
+      k.toLowerCase() === 'extension-responses' ||
       k.toLowerCase() === 'content-type'
     ) {
       console.log(`  ${k}: ${v}`);
+    }
+  }
+  // Bazaar pilot signal: CDP echoes this header on settle responses
+  // when the endpoint is routed through their facilitator. "processing"
+  // means our bazaar extension was accepted and the endpoint will be
+  // cataloged within ~10 min. "rejected" means the info/schema is broken
+  // and we will NOT be cataloged.
+  const extensionResponses = res.headers.get('EXTENSION-RESPONSES');
+  if (extensionResponses) {
+    console.log('\nBazaar extension status:', extensionResponses);
+    if (extensionResponses === 'rejected') {
+      console.log('  WARNING: CDP rejected the bazaar extension. Check info/schema match.');
+    } else if (extensionResponses === 'processing') {
+      console.log('  OK: endpoint will be cataloged in Bazaar within ~10 min.');
     }
   }
   const settlementHeader = res.headers.get('payment-response') || res.headers.get('PAYMENT-RESPONSE');
