@@ -37,14 +37,6 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/probe/series',
   '/api/premium/funding/exposure',
   '/api/premium/packages/pypi/momentum',
-  // Bazaar pilot: must return 402 to unauthenticated CDP crawler requests
-  // or CDP refuses to index ("when Bazaar crawls your endpoint, your server
-  // must respond with HTTP 402 to confirm x402 enablement"). The free-trial
-  // layer would return 200 to CDP's anonymous crawler, blocking the catalog.
-  // Revisit after pilot proves cataloging works; could replace with
-  // CDP-crawler IP/UA detection that preserves the free trial for normal
-  // users while still serving 402 to the crawler specifically.
-  '/api/premium/whats-new',
 ];
 
 /**
