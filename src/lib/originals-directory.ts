@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'cve-data-layer-matters-now',
+    title:
+      '271 Zero-Days, Five Schemas: The AI-Cyber Data Layer Just Got Load-Bearing',
+    author: 'Ripper',
+    date: 'May 14, 2026',
+    readTime: '5 min read',
+    description:
+      'AI-driven vulnerability discovery is no longer theoretical. Claude Mythos surfaced 271 Firefox zero-days in one cycle. The third major Linux kernel flaw in two weeks was attributed to AI-assisted research. OpenAI Daybreak shipped two days ago. The agents finding vulns now move faster than the data layer they need to call. Inside the five-schemas-five-cadences problem (MITRE CVE, CISA KEV, FIRST EPSS, OSV, Vulnrichment), the cross-database verified-CVE call we ship as the fix, and why TensorFeed cares about a security data layer it does not build agents on top of. We also shipped /cve-watch today as the canonical hub.',
+  },
+  {
     slug: 'agentic-usdc-pay-and-trade-converge',
     title:
       'Same Dollar, Same Chain, Same Custodian: The Agentic USDC Stack Is Converging',

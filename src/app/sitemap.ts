@@ -208,6 +208,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verified-feed`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/cve-data-layer-matters-now`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/agentic-usdc-pay-and-trade-converge`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/apple-20-day-window-io-wwdc`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/google-gemini-intelligence-android-platform-shift`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
