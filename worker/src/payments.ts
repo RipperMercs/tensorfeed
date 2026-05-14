@@ -2288,42 +2288,54 @@ function paymentRequiredResponse(
           : {}),
       };
 
+  // Canonical x402 V2 PaymentRequired object. Per the HTTP transport v2 spec
+  // (github.com/coinbase/x402/specs/transports-v2/http.md): "All x402 protocol
+  // information is communicated through headers (PAYMENT-REQUIRED,
+  // PAYMENT-SIGNATURE, PAYMENT-RESPONSE)". Response body is "a server
+  // implementation concern." CDP's Bazaar crawler reads the header, not the
+  // body. Without the header, the bazaar extension is invisible at indexing
+  // time even though settles return EXTENSION-RESPONSES: processing. This
+  // was the load-bearing gap causing TF and several federation members to
+  // never appear in /discovery/resources. Confirmed by Ethan Oroshiba on
+  // GitHub #2207 on 2026-05-14 and corroborated by inspecting cataloged
+  // endpoints (blockrun.ai emits both `payment-required` and
+  // `WWW-Authenticate: X402 requirements="..."` headers).
+  const canonicalPaymentRequired = {
+    x402Version: 2,
+    error: 'payment_required',
+    resource: {
+      url: resourceUrl,
+      description: bazaarDescriptionFor(url.pathname, 'TensorFeed premium API'),
+      mimeType: 'application/json',
+    },
+    accepts: [
+      {
+        scheme: 'exact',
+        network: x402Config.network,
+        amount,
+        asset: x402Config.usdcAddress,
+        payTo: env.PAYMENT_WALLET,
+        maxTimeoutSeconds: 60,
+        extra: { name: x402Config.domain.name, version: x402Config.domain.version },
+      },
+    ],
+    extensions: bazaarExtensionsFor(url.pathname),
+  };
+
+  // Base64-encode canonical PaymentRequired for the headers. JSON output is
+  // ASCII for our content (English descriptions, hex addresses, numeric
+  // amounts), so btoa is safe. Use TextEncoder->String.fromCharCode if we
+  // ever introduce Unicode in resource/description fields.
+  const canonicalB64 = btoa(JSON.stringify(canonicalPaymentRequired));
+
   return jsonResponse(
     {
-      // Canonical Coinbase x402 V2 PaymentRequired body. AgentCore Payments
-      // and the @coinbase/x402 SDK read these fields to prepare the
-      // EIP-3009 transferWithAuthorization signed payload, base64-encode it,
-      // and resubmit with the X-PAYMENT header. Network selected via
-      // env.X402_NETWORK (defaults to Base mainnet).
-      x402Version: 2,
-      error: 'payment_required',
-      resource: {
-        url: resourceUrl,
-        // Pilot endpoints get an endpoint-specific description for better
-        // Bazaar ranking. Non-pilots use the generic fallback.
-        description: bazaarDescriptionFor(url.pathname, 'TensorFeed premium API'),
-        mimeType: 'application/json',
-      },
-      accepts: [
-        {
-          scheme: 'exact',
-          network: x402Config.network,
-          amount,
-          asset: x402Config.usdcAddress,
-          payTo: env.PAYMENT_WALLET,
-          maxTimeoutSeconds: 60,
-          // Per-network domain name. Base mainnet USDC = "USD Coin";
-          // Base Sepolia USDC = "USDC". Clients use this hint to build
-          // the EIP-712 domain for transferWithAuthorization signing.
-          extra: { name: x402Config.domain.name, version: x402Config.domain.version },
-        },
-      ],
-      // Pilot endpoints carry a `bazaar` extension so CDP can catalog the
-      // endpoint on first successful settle. Non-pilots ship empty {}.
-      extensions: bazaarExtensionsFor(url.pathname),
-      // TensorFeed-specific helpful fields (non-spec). The credits flow is
-      // recommended for repeat use; the X-Payment-Tx fallback is kept for
-      // back-compat with SDK clients that pre-broadcast the tx.
+      // Extended body. Per spec the body is implementation-defined; we keep
+      // the canonical fields here too for human-friendly debugging plus our
+      // TF-specific extras (free_trial advert, credits-flow pointers, legacy
+      // x402 fallback notes). Real agents read the headers; humans hitting
+      // the endpoint in a browser get this richer view.
+      ...canonicalPaymentRequired,
       ok: false,
       message: trialMessage,
       free_trial: freeTrialAdvert,
@@ -2351,6 +2363,19 @@ function paymentRequiredResponse(
     },
     402,
     {
+      // x402 V2 HTTP transport spec: PAYMENT-REQUIRED carries the canonical
+      // PaymentRequired schema in the header. Bazaar crawlers read this.
+      'PAYMENT-REQUIRED': canonicalB64,
+      // RFC 7235 auth-challenge convention; cataloged x402 servers (blockrun,
+      // etc.) emit this alongside PAYMENT-REQUIRED for maximum compatibility
+      // with HTTP clients that follow standard auth-challenge handling.
+      'WWW-Authenticate': `X402 requirements="${canonicalB64}"`,
+      // Expose the x402 headers to browser-side agents. Without this, CORS
+      // hides the headers from any client running in a browser context.
+      'Access-Control-Expose-Headers':
+        'PAYMENT-REQUIRED, PAYMENT-RESPONSE, WWW-Authenticate, X-Payment-Address, X-Payment-Currency, X-Payment-Network, X-Payment-Credits-Required, X-Payment-Min-USD',
+      // TF-specific summary headers (non-spec, kept for backward compat with
+      // legacy clients sniffing X-Payment-* on the 402).
       'X-Payment-Address': env.PAYMENT_WALLET,
       'X-Payment-Currency': 'USDC',
       'X-Payment-Network': 'base',
