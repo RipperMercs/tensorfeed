@@ -4644,7 +4644,9 @@ export default {
     }
 
     if (path === '/api/premium/history/pricing/series') {
-      const payment = await requirePayment(request, env, 1);
+      // Strict-premium tier 2 ($0.04): full-window historical time-series,
+      // no per-IP trial. See worker/src/strict-premium-endpoints.ts.
+      const payment = await requirePayment(request, env, 2);
       if (!payment.paid) return payment.response!;
 
       const model = url.searchParams.get('model')?.trim();
@@ -4668,13 +4670,14 @@ export default {
 
       const result = await getPricingSeries(env, model, range.from, range.to);
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/history/pricing/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        logPremiumUsage(env, '/api/premium/history/pricing/series', request.headers.get('User-Agent') || 'unknown', 2, payment.token),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      return await premiumResponse(result, payment, 2, request, env);
     }
 
     if (path === '/api/premium/history/benchmarks/series') {
-      const payment = await requirePayment(request, env, 1);
+      // Strict-premium tier 2 ($0.04): full-window historical time-series.
+      const payment = await requirePayment(request, env, 2);
       if (!payment.paid) return payment.response!;
 
       const model = url.searchParams.get('model')?.trim();
@@ -4703,13 +4706,14 @@ export default {
 
       const result = await getBenchmarkSeries(env, model, benchmark, range.from, range.to);
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/history/benchmarks/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        logPremiumUsage(env, '/api/premium/history/benchmarks/series', request.headers.get('User-Agent') || 'unknown', 2, payment.token),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      return await premiumResponse(result, payment, 2, request, env);
     }
 
     if (path === '/api/premium/history/status/uptime') {
-      const payment = await requirePayment(request, env, 1);
+      // Strict-premium tier 2 ($0.04): full-window historical time-series.
+      const payment = await requirePayment(request, env, 2);
       if (!payment.paid) return payment.response!;
 
       const provider = url.searchParams.get('provider')?.trim();
@@ -4733,9 +4737,9 @@ export default {
 
       const result = await getStatusUptime(env, provider, range.from, range.to);
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/history/status/uptime', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        logPremiumUsage(env, '/api/premium/history/status/uptime', request.headers.get('User-Agent') || 'unknown', 2, payment.token),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      return await premiumResponse(result, payment, 2, request, env);
     }
 
     // === PAID PREMIUM: NEWS HISTORY FULL (Tier 1, 1 credit) ===
@@ -6866,7 +6870,9 @@ export default {
     // so it's part of the data moat behind the free endpoint.
 
     if (path === '/api/premium/status/leaderboard') {
-      const payment = await requirePayment(request, env, 1);
+      // Strict-premium tier 3 ($0.06): heavy cross-provider aggregation,
+      // incident_count + MTTR computed per provider.
+      const payment = await requirePayment(request, env, 3);
       if (!payment.paid) return payment.response!;
 
       const range = resolveRange(url.searchParams.get('from'), url.searchParams.get('to'));
@@ -6889,11 +6895,11 @@ export default {
           env,
           '/api/premium/status/leaderboard',
           request.headers.get('User-Agent') || 'unknown',
-          1,
+          3,
           payment.token,
         ),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      return await premiumResponse(result, payment, 3, request, env);
     }
 
     // === PAID PREMIUM: ATTENTION INDEX TIME SERIES (Tier 1, 1 credit) ===
@@ -6978,7 +6984,9 @@ export default {
     // history per LLM provider. 90-day max range, default 30 days back.
 
     if (path === '/api/premium/probe/series') {
-      const payment = await requirePayment(request, env, 1);
+      // Strict-premium tier 3 ($0.06): TF-measured latency series unique
+      // to TF (we record it ourselves), 90-day window.
+      const payment = await requirePayment(request, env, 3);
       if (!payment.paid) return payment.response!;
 
       const provider = url.searchParams.get('provider')?.trim();
@@ -7006,9 +7014,9 @@ export default {
 
       const result = await getProviderSeries(env, provider, range.from!, range.to!);
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/probe/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        logPremiumUsage(env, '/api/premium/probe/series', request.headers.get('User-Agent') || 'unknown', 3, payment.token),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      return await premiumResponse(result, payment, 3, request, env);
     }
 
     // === FREE: GPU PRICING TIME SERIES ===
@@ -7153,7 +7161,10 @@ export default {
     // pairs (investors that both hold stakes in the same recipient).
 
     if (path === '/api/premium/funding/exposure') {
-      const payment = await requirePayment(request, env, 1);
+      // Strict-premium tier 3 ($0.06): derived metrics over the free
+      // funding/portfolio registry. Silicon-concentration + circular-
+      // exposure + co-investor pairs computed server-side.
+      const payment = await requirePayment(request, env, 3);
       if (!payment.paid) return payment.response!;
 
       const result = computeFundingExposure();
@@ -7165,9 +7176,9 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/funding/exposure', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        logPremiumUsage(env, '/api/premium/funding/exposure', request.headers.get('User-Agent') || 'unknown', 3, payment.token),
       );
-      return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
+      return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 3, request, env);
     }
 
     // === PAID PREMIUM: ARXIV MILESTONE DETECTOR (Tier 1, 1 credit) ===
@@ -7327,7 +7338,9 @@ export default {
     // (npm's downloads endpoint only returns last_week per call).
 
     if (path === '/api/premium/packages/pypi/momentum') {
-      const payment = await requirePayment(request, env, 1);
+      // Strict-premium tier 3 ($0.06): rolling npm/PyPI momentum metrics
+      // over the trending snapshot, computed server-side.
+      const payment = await requirePayment(request, env, 3);
       if (!payment.paid) return payment.response!;
 
       const result = await computePackagesMomentum(env);
@@ -7341,9 +7354,9 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/packages/pypi/momentum', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        logPremiumUsage(env, '/api/premium/packages/pypi/momentum', request.headers.get('User-Agent') || 'unknown', 3, payment.token),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      return await premiumResponse(result, payment, 3, request, env);
     }
 
     // === PAID PREMIUM: ECONOMY SERIES FULL HISTORY (Tier 1, 1 credit) ===
@@ -7474,15 +7487,16 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
-    // === PAID PREMIUM: PROVIDER DEEP-DIVE (Tier 1, 1 credit) ===
+    // === PAID PREMIUM: PROVIDER DEEP-DIVE (Tier 3, 3 credits = $0.06) ===
     // /api/premium/providers/{name} returns one paid response that
     // joins live status, all models with pricing + tier, all benchmark
     // scores, recent news, and agent traffic. Aggregation IS the value;
-    // agents pay 1 credit instead of stitching 4-5 free endpoints.
+    // agents pay one call here instead of stitching 4-5 free endpoints.
+    // Strict-premium tier 3: no per-IP trial, see strict-premium-endpoints.ts.
 
     const providerMatch = path.match(/^\/api\/premium\/providers\/([a-zA-Z0-9_\- ]+)$/);
     if (providerMatch) {
-      const payment = await requirePayment(request, env, 1);
+      const payment = await requirePayment(request, env, 3);
       if (!payment.paid) return payment.response!;
       const providerKey = decodeURIComponent(providerMatch[1]);
       const result = await computeProviderDeepDive(env, providerKey);
@@ -7490,9 +7504,9 @@ export default {
         return jsonResponse(result, 404);
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/providers', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        logPremiumUsage(env, '/api/premium/providers', request.headers.get('User-Agent') || 'unknown', 3, payment.token),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      return await premiumResponse(result, payment, 3, request, env);
     }
 
     // === PAID PREMIUM: COST PROJECTION (Tier 1, 1 credit) ===
