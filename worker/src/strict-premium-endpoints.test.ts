@@ -52,9 +52,6 @@ describe('isStrictPremiumPath', () => {
     it('does NOT match /api/premium/routing', () => {
       expect(isStrictPremiumPath('/api/premium/routing')).toBe(false);
     });
-    it('does NOT match /api/premium/whats-new', () => {
-      expect(isStrictPremiumPath('/api/premium/whats-new')).toBe(false);
-    });
     it('does NOT match /api/premium/compare/models', () => {
       expect(isStrictPremiumPath('/api/premium/compare/models')).toBe(false);
     });
@@ -116,9 +113,9 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 7 exact paths', () => {
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(7);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(7); // no duplicates
+    it('exposes all 8 exact paths', () => {
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(8);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(8); // no duplicates
     });
     it('exposes 1 prefix path', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(1);

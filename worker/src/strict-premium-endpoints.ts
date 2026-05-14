@@ -37,6 +37,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/probe/series',
   '/api/premium/funding/exposure',
   '/api/premium/packages/pypi/momentum',
+  // Re-added 2026-05-14 for CDP debugging. Ethan Oroshiba (x402 team)
+  // on GitHub #2207 needs the endpoint to return 402 to anonymous GET
+  // so he can inspect our bazaar metadata. Roll back to plain trial
+  // after debugging concludes.
+  '/api/premium/whats-new',
 ];
 
 /**
