@@ -521,51 +521,6 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
-    path: '/api/premium/climate/power/hourly',
-    description:
-      'NASA POWER hourly-resolution meteorological and solar data for one point. Same parameter codes as the free daily endpoint, but at hourly bins. Range capped at 30 days due to upstream payload size. License: NASA POWER open access, US Government public domain.',
-    cost: '1 credit per call',
-    example: `// Query: ?latitude=34.0522&longitude=-118.2437&parameters=T2M,ALLSKY_SFC_SW_DWN&start=20260101&end=20260103&community=RE
-{
-  "ok": true,
-  "query": { "latitude": 34.0522, "longitude": -118.2437, "parameters": ["T2M", "ALLSKY_SFC_SW_DWN"], "start": "20260101", "end": "20260103", "community": "RE", "temporal": "hourly" },
-  "data": {
-    "type": "Feature",
-    "properties": {
-      "parameter": {
-        "T2M": { "2026010100": 12.4, "2026010101": 12.1, "2026010102": 11.9 },
-        "ALLSKY_SFC_SW_DWN": { "2026010100": 0.0, "2026010108": 0.31, "2026010113": 0.84 }
-      }
-    }
-  },
-  "billing": { "credits_charged": 1, "credits_remaining": 40 }
-}`,
-  },
-  {
-    method: 'GET',
-    path: '/api/premium/health/fda/aggregate',
-    description:
-      'Histogram-by-field across openFDA\'s millions of drug, food, and device records. Uses openFDA\'s `count` parameter to return bucket counts in one call instead of paging through individual records. Useful for top-N analyses (top drugs by adverse events, top reactions for one drug, top recalled food categories). License: CC0 1.0 Universal Dedication, FDA waiver of all copyright interests.',
-    cost: '1 credit per call',
-    example: `// Query: ?category=drug/events&count_by=patient.reaction.reactionmeddrapt.exact&limit=5
-{
-  "ok": true,
-  "query": { "category": "drug/events", "count_by": "patient.reaction.reactionmeddrapt.exact", "limit": 5 },
-  "data": {
-    "meta": { "last_updated": "2026-04-28" },
-    "results": [
-      { "term": "DRUG INEFFECTIVE", "count": 1842734 },
-      { "term": "NAUSEA", "count": 1234567 },
-      { "term": "FATIGUE", "count": 987654 },
-      { "term": "HEADACHE", "count": 876543 },
-      { "term": "DIZZINESS", "count": 654321 }
-    ]
-  },
-  "billing": { "credits_charged": 1, "credits_remaining": 39 }
-}`,
-  },
-  {
-    method: 'GET',
     path: '/api/premium/clean/cve/{CVE-id}',
     description:
       'LLM-ready MITRE CVE record. Drops a typical CVE from ~3KB nested JSON to ~500 bytes flat JSON (~80% token reduction) with zero information loss for agent decision-making. Adds derived severity_band (none/low/medium/high/critical), deduped CWEs, flat vendor+product affected_products list, and top 5 references. Versioned via schema_version + cleaning_version for schema stability. The deep moat over the free /api/security/cve/{id} endpoint: agents pay because their context-window-tax savings exceed the $0.02 cost.',
@@ -649,71 +604,6 @@ const ENDPOINTS: PremiumEndpoint[] = [
     "series_max": { "date": "2026-04-12", "epss": 0.86103 }
   },
   "billing": { "credits_charged": 1, "credits_remaining": 36 }
-}`,
-  },
-  {
-    method: 'GET',
-    path: '/api/premium/clean/power/daily',
-    description:
-      'LLM-ready NASA POWER point query. Pivots NASA\'s parameter-keyed dicts ({"T2M": {"20260101": 13.57}}) into agent-friendly date-keyed rows ([{"date": "2026-01-01", "T2M": 13.57}]). NASA fill value (-999) coerced to null. Same parameters as the free daily endpoint. License: US Government public domain.',
-    cost: '1 credit per call',
-    example: `// Query: ?latitude=34.0522&longitude=-118.2437&parameters=T2M,PRECTOTCORR&start=20260101&end=20260103
-{
-  "ok": true,
-  "source_format": "nasa_power_geojson_v1",
-  "target_format": "tensorfeed_llm_ready_v1",
-  "schema_version": "1.0",
-  "cleaning_version": "1.0",
-  "data": {
-    "location": { "latitude": 34.052, "longitude": -118.244, "elevation_meters": 395 },
-    "parameters_meta": {
-      "T2M": { "units": "C", "longname": "Temperature at 2 Meters" },
-      "PRECTOTCORR": { "units": "mm/day", "longname": "Precipitation Corrected" }
-    },
-    "rows": [
-      { "date": "2026-01-01", "T2M": 13.57, "PRECTOTCORR": 21.84 },
-      { "date": "2026-01-02", "T2M": 14.07, "PRECTOTCORR": 5.71 },
-      { "date": "2026-01-03", "T2M": 13.44, "PRECTOTCORR": 15.77 }
-    ],
-    "summary": { "row_count": 3, "parameter_count": 2, "date_start": "2026-01-01", "date_end": "2026-01-03", "sources": ["MERRA2"] }
-  },
-  "billing": { "credits_charged": 1, "credits_remaining": 35 }
-}`,
-  },
-  {
-    method: 'GET',
-    path: '/api/premium/clean/eia/series',
-    description:
-      'LLM-ready EIA Open Data series. Sorts ascending, parses numeric values from stringified upstream, extracts primary_units from the first valid point, and computes month-over-month + year-over-year delta percentages against valid observations. The deltas are usually the whole reason an agent is asking; we pre-compute them. License: US Government public domain.',
-    cost: '1 credit per call',
-    example: `// Query: ?route=petroleum/pri/spt&frequency=daily&length=400
-{
-  "ok": true,
-  "source_format": "eia_v2_envelope",
-  "target_format": "tensorfeed_llm_ready_v1",
-  "schema_version": "1.0",
-  "cleaning_version": "1.0",
-  "data": {
-    "frequency": "daily",
-    "period_format": "YYYY-MM-DD",
-    "description": "WTI Crude Oil Spot Price",
-    "primary_units": "dollars per barrel",
-    "points": [
-      { "period": "2025-04-09", "value": 79.91, "units": "dollars per barrel" },
-      { "period": "2026-04-09", "value": 75.13, "units": "dollars per barrel" },
-      { "period": "2026-05-08", "value": 78.42, "units": "dollars per barrel" }
-    ],
-    "summary": {
-      "count": 400,
-      "first": { "period": "2025-04-09", "value": 79.91 },
-      "latest": { "period": "2026-05-08", "value": 78.42 },
-      "min": { "period": "2026-01-15", "value": 70.21 },
-      "max": { "period": "2025-09-30", "value": 88.74 },
-      "mom_delta_pct": 4.38,
-      "yoy_delta_pct": -4.42
-    }
-  },
-  "billing": { "credits_charged": 1, "credits_remaining": 34 }
 }`,
   },
   {
@@ -909,27 +799,6 @@ const ENDPOINTS: PremiumEndpoint[] = [
     }
   ],
   "summary": { "overall_uptime_pct": 0.992, "days_with_data": 29, "days_with_incidents": 2 },
-  "notes": [],
-  "billing": { "credits_charged": 1, "credits_remaining": 41 }
-}`,
-  },
-  {
-    method: 'GET',
-    path: '/api/premium/mcp/registry/series',
-    description:
-      "Multi-day time series of the official Model Context Protocol server registry: total server count, active/deprecated breakdown, daily added and removed counts. The registry is open data, but a 30/90-day trend requires daily capture started weeks ago. We capture every morning at 9:30 AM UTC. 90-day max range, default 30 days back. A free single-day snapshot lives at /api/mcp/registry/snapshot.",
-    cost: '1 credit per call',
-    example: `// Query: ?from=2026-04-01&to=2026-04-29
-{
-  "ok": true,
-  "from": "2026-04-01",
-  "to": "2026-04-29",
-  "days": 29,
-  "points": [
-    { "date": "2026-04-01", "total_servers": 4812, "active_count": 4798, "added": 24, "removed": 3, "net": 21, "has_data": true },
-    { "date": "2026-04-29", "total_servers": 5104, "active_count": 5089, "added": 18, "removed": 2, "net": 16, "has_data": true }
-  ],
-  "delta_in_window": { "start_total": 4812, "end_total": 5104, "net": 292 },
   "notes": [],
   "billing": { "credits_charged": 1, "credits_remaining": 41 }
 }`,

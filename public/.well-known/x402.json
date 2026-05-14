@@ -334,40 +334,6 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/climate/power/hourly",
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
-      ],
-      "lastUpdated": "2026-05-08T00:00:00Z",
-      "metadata": {
-        "name": "NASA POWER hourly meteorological + solar",
-        "description": "Hourly-resolution meteorological and solar data for one point, sourced from NASA Langley's POWER API. Same source as free /api/climate/power/daily; hourly bins produce ~24x payload so range is capped at 30 days. Parameters include T2M, RH2M, PRECTOTCORR, WS10M, ALLSKY_SFC_SW_DWN, and 100+ others. License: NASA POWER open access; US Government work in the public domain.",
-        "tier": 1,
-        "credits": 1,
-        "category": "climate-weather"
-      }
-    },
-    {
-      "resource": "https://tensorfeed.ai/api/premium/health/fda/aggregate",
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
-      ],
-      "lastUpdated": "2026-05-08T00:00:00Z",
-      "metadata": {
-        "name": "OpenFDA aggregate query",
-        "description": "Histogram-by-field across openFDA's drug, food, and device record sets (FAERS, MAUDE, structured product labels, enforcement reports). Uses openFDA's `count` parameter to return bucket counts in one call instead of paging through millions of individual records. Useful for top-N analyses (top drugs by adverse events, top reactions for one drug, top recalled food categories). License: CC0 1.0 Universal Dedication, FDA waiver of all copyright interests, commercial redistribution permitted.",
-        "tier": 1,
-        "credits": 1,
-        "category": "health-regulatory"
-      }
-    },
-    {
       "resource": "https://tensorfeed.ai/api/premium/clean/cve/{CVE-id}",
       "type": "http",
       "method": "GET",
@@ -450,40 +416,6 @@
         "tier": 1,
         "credits": 1,
         "category": "ai-models-openrouter-clean"
-      }
-    },
-    {
-      "resource": "https://tensorfeed.ai/api/premium/clean/power/daily",
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
-      ],
-      "lastUpdated": "2026-05-09T00:00:00Z",
-      "metadata": {
-        "name": "LLM-ready NASA POWER daily",
-        "description": "NASA POWER point query transformed into LLM-ready format. Pivots NASA's parameter-keyed dicts into date-keyed rows for token-efficient agent consumption. NASA fill value (-999) becomes null; date strings normalized to ISO 8601. Same parameters and same data as free /api/climate/power/daily, just shaped for direct LLM ingestion. License: US Government public domain.",
-        "tier": 1,
-        "credits": 1,
-        "category": "climate-weather-clean"
-      }
-    },
-    {
-      "resource": "https://tensorfeed.ai/api/premium/clean/eia/series",
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
-      ],
-      "lastUpdated": "2026-05-09T00:00:00Z",
-      "metadata": {
-        "name": "LLM-ready EIA series",
-        "description": "EIA Open Data series transformed into LLM-ready format. Sorts ascending, extracts numeric values from stringified upstream, surfaces primary_units, and computes MoM and YoY delta percentages against valid (non-null) observations. The deltas are usually the agent's whole reason for asking; we save them the math and the parsing. License: US Government public domain.",
-        "tier": 1,
-        "credits": 1,
-        "category": "economy-energy-clean"
       }
     },
     {
@@ -589,23 +521,6 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/macro/digest",
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
-      ],
-      "lastUpdated": "2026-05-06T00:00:00Z",
-      "metadata": {
-        "name": "Macro digest",
-        "description": "Joins free BLS and FRED snapshots into one agent-shaped morning brief: rates section with yield-curve regime classification, inflation section with regime classification, employment section with regime classification, growth + money, FX + commodities, plus templated headline narratives per section and a 2-3 sentence overall brief. Compute is the gate; raw upstream data remains free.",
-        "tier": 1,
-        "credits": 1,
-        "category": "macro-economic-synthesis"
-      }
-    },
-    {
       "resource": "https://tensorfeed.ai/api/premium/policy/timeline",
       "type": "http",
       "method": "GET",
@@ -688,23 +603,6 @@
         "tier": 1,
         "credits": 1,
         "category": "macro-series-history"
-      }
-    },
-    {
-      "resource": "https://tensorfeed.ai/api/premium/mcp/registry/series",
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
-      ],
-      "lastUpdated": "2026-04-29T00:00:00Z",
-      "metadata": {
-        "name": "MCP registry series",
-        "description": "Multi-day time series of the official Model Context Protocol server registry: total server count, active/deprecated breakdown, daily added and removed counts. 90-day max range. Compounds daily; backfill is impossible.",
-        "tier": 1,
-        "credits": 1,
-        "category": "mcp-ecosystem-telemetry"
       }
     },
     {

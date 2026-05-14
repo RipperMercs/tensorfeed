@@ -526,7 +526,7 @@ for a in data.get("alerts", []):
 const { alerts } = await res.json();
 for (const a of alerts) console.log(\`[\${a.severity}] \${a.event}: \${a.area_desc}\`);`,
     mcpTool: 'get_weather_alerts',
-    relatedSlugs: ['climate-earthquakes', 'premium-clean-power-daily'],
+    relatedSlugs: ['climate-earthquakes'],
     faqs: [
       {
         q: 'What event names does NWS use?',
@@ -622,7 +622,7 @@ for q in data["earthquakes"][:10]:
 const { earthquakes } = await res.json();
 for (const q of earthquakes) console.log(\`M\${q.magnitude} \${q.place}\`);`,
     mcpTool: 'get_recent_earthquakes',
-    relatedSlugs: ['premium-clean-power-daily', 'premium-climate-power-hourly'],
+    relatedSlugs: [],
     faqs: [
       {
         q: 'What does each magnitude bucket mean?',
@@ -2406,65 +2406,6 @@ console.log(lb.leaderboard.slice(0, 5));`,
     ],
   },
 
-  {
-    slug: 'premium-macro-digest',
-    name: 'Premium Macro Digest',
-    path: '/api/premium/macro/digest',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'macro',
-    seoTitle: 'TensorFeed Macro Digest API: BLS + FRED Daily Snapshot',
-    seoDescription:
-      'TensorFeed /api/premium/macro/digest combines BLS labor + CPI + PPI + FRED rates + treasuries + GDP into one daily fact card with regime classification. 1 credit.',
-    intro:
-      'The /api/premium/macro/digest endpoint composes BLS economic indicators (CPI, core CPI, PPI, unemployment, payrolls, hourly earnings, weekly hours, labor force participation, JOLTS) with FRED macro indicators (fed funds, 10Y/2Y treasuries + spread, GDP, M2, mortgage rate, USD index, oil) into a single daily fact card with regime classification (inflation, employment, rates, growth) and headline summary.',
-    whenToUse:
-      'When an agent needs the macroeconomic backdrop in one call instead of 19 fan-outs across BLS and FRED. Ideal for daily morning briefings, regime-shift detection, or any decision that depends on "where are we in the cycle right now."',
-    params: [],
-    exampleResponse: `{
-  "ok": true,
-  "as_of": "2026-05-08",
-  "regimes": { "inflation": "moderate", "employment": "cooling", "rates": "tight", "growth": "expanding" },
-  "headline": "CPI 2.8% YoY, unemployment 4.2%, fed funds 4.50%, T10Y2Y +12bps.",
-  "data": {
-    "cpi_yoy_pct": 2.8,
-    "unemployment_pct": 4.2,
-    "fed_funds_pct": 4.50,
-    "treasury_10y2y_bps": 12
-  },
-  "billing": { "credits_charged": 1, "credits_remaining": 49 }
-}`,
-    pythonExample: `from tensorfeed import TensorFeed
-
-tf = TensorFeed(token="tf_live_...")
-d = tf._get("/premium/macro/digest")
-print(d["headline"])
-print(f"Regimes: {d['regimes']}")`,
-    typescriptExample: `const res = await fetch(
-  "https://tensorfeed.ai/api/premium/macro/digest",
-  { headers: { Authorization: "Bearer tf_live_..." } }
-);
-const d = await res.json();
-console.log(d.headline);`,
-    mcpTool: null,
-    relatedSlugs: ['premium-economy-recession-watch'],
-    faqs: [
-      {
-        q: 'Why use this over the free BLS/FRED endpoints?',
-        a: 'Free /api/economy/bls/indicators and /api/economy/fred/indicators return the raw 19 series. The digest pre-composes them into one fact card with regime classification and a one-sentence headline. Saves the agent the cross-reference work and the parsing of two different upstream formats.',
-      },
-      {
-        q: 'How current are the indicators?',
-        a: 'CPI/PPI publish monthly with a ~2-week lag. Unemployment publishes monthly. Treasuries and fed funds are daily. GDP is quarterly. The as_of date reflects the most recent publication date across all included series.',
-      },
-      {
-        q: 'Where does the regime classification come from?',
-        a: 'Heuristic banding on the underlying series (e.g. inflation: "low" if CPI YoY < 2%, "moderate" if 2-4%, "elevated" if 4-6%, "high" if >6%). The exact thresholds are stable across releases and documented in worker/src/macro-digest.ts. Treat regime tags as a glance-summary, not a model prediction.',
-      },
-    ],
-  },
-
   // ── Phase 4 follow-up (2026-05-09): remaining 16 premium endpoints.
   //    Tighter entry shape than the strategic batch above; same schema.
 
@@ -2621,31 +2562,6 @@ console.log(d.headline);`,
     ],
   },
   {
-    slug: 'premium-mcp-registry-series',
-    name: 'Premium MCP Registry Series',
-    path: '/api/premium/mcp/registry/series',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'history',
-    seoTitle: 'TensorFeed MCP Registry Series API: Server Catalog Trends',
-    seoDescription: 'TensorFeed /api/premium/mcp/registry/series returns daily MCP server registry counts and version churn over a date range.',
-    intro: 'Daily snapshot deltas for the canonical MCP Registry. Each day returns total server count, new servers added that day, and version-bump count, sourced from registry.modelcontextprotocol.io.',
-    whenToUse: 'For tracking the MCP ecosystem growth (new servers per day) and churn (which servers are publishing actively). Useful for newsletter-grade ecosystem monitoring.',
-    params: [
-      { name: 'from', in: 'query', required: true, type: 'string', description: 'Start date YYYY-MM-DD', example: '2026-04-01' },
-      { name: 'to', in: 'query', required: true, type: 'string', description: 'End date YYYY-MM-DD (max 90 days)', example: '2026-05-09' },
-    ],
-    exampleResponse: `{ "ok": true, "range": { "from": "2026-04-01", "to": "2026-05-09" }, "by_date": { "2026-05-09": { "total_servers": 287, "new_servers": 12, "version_bumps": 8 } }, "billing": { "credits_charged": 1, "credits_remaining": 49 } }`,
-    pythonExample: `tf._get("/premium/mcp/registry/series", **{"from":"2026-04-01","to":"2026-05-09"})`,
-    typescriptExample: `await fetch("https://tensorfeed.ai/api/premium/mcp/registry/series?from=2026-04-01&to=2026-05-09", { headers: { Authorization: "Bearer tf_live_..." } });`,
-    mcpTool: null,
-    relatedSlugs: ['premium-clean-openrouter'],
-    faqs: [
-      { q: 'When did capture start?', a: 'TF began snapshotting the MCP Registry in April 2026. Earlier dates return empty.' },
-    ],
-  },
-  {
     slug: 'premium-probe-series',
     name: 'Premium Probe Series',
     path: '/api/premium/probe/series',
@@ -2688,122 +2604,9 @@ console.log(d.headline);`,
     pythonExample: `tf._get("/premium/economy/recession-watch")`,
     typescriptExample: `await fetch("https://tensorfeed.ai/api/premium/economy/recession-watch", { headers: { Authorization: "Bearer tf_live_..." } });`,
     mcpTool: null,
-    relatedSlugs: ['premium-macro-digest'],
+    relatedSlugs: ['premium-policy-timeline'],
     faqs: [
       { q: 'What is the methodology?', a: 'Heuristic composite of yield-curve inversion (T10Y2Y), Sahm-rule unemployment trigger, claims trend, JOLTS hires/separations, and PMI direction. Documented in worker/src/recession-watch.ts.' },
-    ],
-  },
-  {
-    slug: 'premium-clean-eia-series',
-    name: 'Premium LLM-Ready EIA Series',
-    path: '/api/premium/clean/eia/series',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'macro',
-    seoTitle: 'TensorFeed LLM-Ready EIA Series API: Pre-Computed Deltas',
-    seoDescription: 'TensorFeed /api/premium/clean/eia/series transforms EIA Open Data into a flat token-efficient shape with MoM/YoY deltas pre-computed.',
-    intro: 'EIA Open Data series in LLM-ready format. Sorted-ascending numeric points, extracted primary_units, and derived month-over-month + year-over-year delta percentages computed against valid (non-null) observations. The deltas are usually the whole reason an agent is asking.',
-    whenToUse: 'When an agent needs "is this trending up or down?" without writing time-series math. Free /api/economy/eia/series returns raw points; this returns deltas.',
-    params: [
-      { name: 'route', in: 'query', required: true, type: 'string', description: 'EIA route (petroleum/pri/spt, electricity/retail-sales, etc.)', example: 'petroleum/pri/spt' },
-      { name: 'frequency', in: 'query', type: 'string', description: 'daily | monthly | annual', example: 'monthly' },
-      { name: 'start', in: 'query', type: 'string', description: 'Start date in frequency-matched format (YYYY, YYYY-MM, or YYYY-MM-DD)', example: '2025-01' },
-      { name: 'end', in: 'query', type: 'string', description: 'End date', example: '2026-04' },
-      { name: 'length', in: 'query', type: 'number', description: 'Max records (1-5000)', example: '20' },
-    ],
-    exampleResponse: `{ "ok": true, "source_format": "eia_v2_envelope", "target_format": "tensorfeed_llm_ready_v1", "data": { "primary_units": "$/Mcf", "points": [{ "period": "2026-04", "value": 2.85, "mom_pct": 1.8, "yoy_pct": -12.4 }] }, "compression_stats": { "reduction_pct": 64 }, "billing": { "credits_charged": 1, "credits_remaining": 49 } }`,
-    pythonExample: `tf._get("/premium/clean/eia/series", route="petroleum/pri/spt", frequency="daily")`,
-    typescriptExample: `await fetch("https://tensorfeed.ai/api/premium/clean/eia/series?route=petroleum/pri/spt&frequency=daily", { headers: { Authorization: "Bearer tf_live_..." } });`,
-    mcpTool: null,
-    relatedSlugs: ['premium-macro-digest'],
-    faqs: [
-      { q: 'Why do MoM/YoY deltas matter?', a: 'Almost every agent asking about an economic indicator wants to know "is it changing." Pre-computing the deltas saves them the math and the parsing of the upstream EIA response shape.' },
-    ],
-  },
-  {
-    slug: 'premium-clean-power-daily',
-    name: 'Premium LLM-Ready NASA POWER Daily',
-    path: '/api/premium/clean/power/daily',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'climate',
-    seoTitle: 'TensorFeed NASA POWER Daily API: LLM-Ready Climate Data',
-    seoDescription: 'TensorFeed /api/premium/clean/power/daily transforms NASA POWER daily climate + solar data into date-keyed rows with -999 fills normalized to null.',
-    intro: 'NASA POWER point query in LLM-ready format. Parameter-keyed dicts pivoted into date-keyed rows. NASA\'s -999 fill value becomes null; date strings normalized to ISO 8601.',
-    whenToUse: 'For any agent doing climate, agro, or solar-resource analysis on historical daily data. Free /api/climate/power/daily passes through the raw NASA shape; this returns clean rows.',
-    params: [
-      { name: 'latitude', in: 'query', required: true, type: 'number', description: 'WGS84 latitude', example: '37.7' },
-      { name: 'longitude', in: 'query', required: true, type: 'number', description: 'WGS84 longitude', example: '-122.4' },
-      { name: 'parameters', in: 'query', required: true, type: 'string', description: 'Comma-separated parameter codes (T2M, RH2M, ALLSKY_SFC_SW_DWN, etc.)', example: 'T2M,RH2M' },
-      { name: 'start', in: 'query', required: true, type: 'string', description: 'YYYYMMDD', example: '20260501' },
-      { name: 'end', in: 'query', required: true, type: 'string', description: 'YYYYMMDD', example: '20260507' },
-      { name: 'community', in: 'query', type: 'string', description: 'AG | RE | SB', example: 'AG' },
-    ],
-    exampleResponse: `{ "ok": true, "data": { "rows": [{ "date": "2026-05-01", "T2M": 14.2, "RH2M": 78 }] }, "compression_stats": { "reduction_pct": 71 }, "billing": { "credits_charged": 1, "credits_remaining": 49 } }`,
-    pythonExample: `tf._get("/premium/clean/power/daily", latitude=37.7, longitude=-122.4, parameters="T2M,RH2M", start="20260501", end="20260507", community="AG")`,
-    typescriptExample: `await fetch("https://tensorfeed.ai/api/premium/clean/power/daily?latitude=37.7&longitude=-122.4&parameters=T2M&start=20260501&end=20260507&community=AG", { headers: { Authorization: "Bearer tf_live_..." } });`,
-    mcpTool: null,
-    relatedSlugs: ['premium-climate-power-hourly'],
-    faqs: [
-      { q: 'License?', a: 'NASA POWER is open access, US Government public domain. Commercial redistribution permitted; attribution preserved on every response.' },
-    ],
-  },
-  {
-    slug: 'premium-climate-power-hourly',
-    name: 'Premium NASA POWER Hourly',
-    path: '/api/premium/climate/power/hourly',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'climate',
-    seoTitle: 'TensorFeed NASA POWER Hourly API: Hourly Resolution Climate Data',
-    seoDescription: 'TensorFeed /api/premium/climate/power/hourly returns hourly-resolution NASA POWER meteorological + solar data for one point.',
-    intro: 'Hourly-resolution NASA POWER data for one point. Same parameter codes as the daily endpoint but at hourly bins. Range capped at 30 days due to upstream payload size.',
-    whenToUse: 'For energy modeling, hour-of-day analysis, or agronomic decisions where daily averages lose the relevant signal.',
-    params: [
-      { name: 'latitude', in: 'query', required: true, type: 'number', description: 'WGS84 latitude', example: '37.7' },
-      { name: 'longitude', in: 'query', required: true, type: 'number', description: 'WGS84 longitude', example: '-122.4' },
-      { name: 'parameters', in: 'query', required: true, type: 'string', description: 'Comma-separated parameter codes', example: 'T2M' },
-      { name: 'start', in: 'query', required: true, type: 'string', description: 'YYYYMMDD', example: '20260501' },
-      { name: 'end', in: 'query', required: true, type: 'string', description: 'YYYYMMDD (max 30 days from start)', example: '20260530' },
-      { name: 'community', in: 'query', type: 'string', description: 'AG | RE | SB', example: 'AG' },
-    ],
-    exampleResponse: `{ "ok": true, "data": { "header": { "fill_value": -999 }, "properties": { "parameter": { "T2M": { "20260501-00": 11.4, "20260501-01": 10.9 } } } }, "billing": { "credits_charged": 1, "credits_remaining": 49 } }`,
-    pythonExample: `tf._get("/premium/climate/power/hourly", latitude=37.7, longitude=-122.4, parameters="T2M", start="20260501", end="20260502", community="AG")`,
-    typescriptExample: `await fetch("https://tensorfeed.ai/api/premium/climate/power/hourly?latitude=37.7&longitude=-122.4&parameters=T2M&start=20260501&end=20260502", { headers: { Authorization: "Bearer tf_live_..." } });`,
-    mcpTool: null,
-    relatedSlugs: ['premium-clean-power-daily'],
-    faqs: [
-      { q: 'Why is the range capped at 30 days?', a: 'Hourly resolution produces ~24x the payload of daily. NASA POWER is generous with rate limits but the response sizes get unwieldy past 30 days.' },
-    ],
-  },
-  {
-    slug: 'premium-health-fda-aggregate',
-    name: 'Premium OpenFDA Aggregate',
-    path: '/api/premium/health/fda/aggregate',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'health',
-    seoTitle: 'TensorFeed OpenFDA Aggregate API: Histogram-by-Field',
-    seoDescription: 'TensorFeed /api/premium/health/fda/aggregate runs histogram-by-field queries across openFDA millions-of-records datasets.',
-    intro: 'Histogram-by-field across openFDA\'s drug, food, and device record sets (FAERS, MAUDE, structured product labels, enforcement reports). Uses openFDA\'s `count` parameter to return bucket counts in one call instead of paging.',
-    whenToUse: 'For top-N analyses (top drugs by adverse events, top reactions for one drug, top recalled food categories) where you do not want to ingest millions of individual records.',
-    params: [
-      { name: 'category', in: 'query', required: true, type: 'string', description: 'drug/events | drug/labels | drug/recalls | food/recalls | device/events', example: 'drug/events' },
-      { name: 'count_by', in: 'query', required: true, type: 'string', description: 'openFDA field path to bucket on', example: 'patient.drug.medicinalproduct.exact' },
-      { name: 'search', in: 'query', type: 'string', description: 'openFDA Lucene search to scope the aggregation', example: 'patient.drug.medicinalproduct:aspirin' },
-      { name: 'limit', in: 'query', type: 'number', description: 'Top-N buckets (1-1000)', example: '100' },
-    ],
-    exampleResponse: `{ "ok": true, "category": "drug/events", "count_by": "patient.drug.medicinalproduct.exact", "buckets": [{ "term": "ASPIRIN", "count": 12345 }], "billing": { "credits_charged": 1, "credits_remaining": 49 } }`,
-    pythonExample: `tf._get("/premium/health/fda/aggregate", category="drug/events", count_by="patient.drug.medicinalproduct.exact", limit=100)`,
-    typescriptExample: `await fetch("https://tensorfeed.ai/api/premium/health/fda/aggregate?category=drug/events&count_by=patient.drug.medicinalproduct.exact&limit=100", { headers: { Authorization: "Bearer tf_live_..." } });`,
-    mcpTool: null,
-    relatedSlugs: ['premium-clean-fda'],
-    faqs: [
-      { q: 'License?', a: 'openFDA is CC0 1.0 Universal Dedication, FDA waiver of all copyright. Commercial redistribution permitted.' },
     ],
   },
   {
