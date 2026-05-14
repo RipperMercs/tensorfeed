@@ -121,6 +121,15 @@ export interface Env {
   // broadcast destination. Set via:
   //   wrangler secret put X402_NETWORK   (or unset for mainnet default)
   X402_NETWORK?: string;
+  // Coinbase Developer Platform x402 facilitator credentials. ONLY consumed
+  // by worker/src/cdp-facilitator.ts; no other module imports these.
+  // CDP_API_KEY_ID is the public key identifier shown in the CDP dashboard.
+  // CDP_API_KEY_SECRET is the 64-byte base64 Ed25519 secret (32 seed +
+  // 32 pubkey) issued once at key creation. Per feedback_cdp_key_constraints
+  // these are tied to Evan's personal Coinbase account: read-only scope,
+  // never logged, never echoed, never used outside this module.
+  CDP_API_KEY_ID?: string;
+  CDP_API_KEY_SECRET?: string;
 }
 
 export interface Article {
