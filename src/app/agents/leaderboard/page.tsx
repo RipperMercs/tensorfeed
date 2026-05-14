@@ -141,12 +141,6 @@ export default function LeaderboardPage() {
           >
             Claim your wallet <ArrowRight className="w-3.5 h-3.5" />
           </Link>
-          <Link
-            href="/agents/hireable"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg-secondary border border-border hover:border-accent-primary/50 text-text-secondary hover:text-text-primary transition-colors"
-          >
-            Hire an agent <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
           <a
             href="https://tensorfeed.ai/api/agents/leaderboard?metric=composite&window=all"
             target="_blank"

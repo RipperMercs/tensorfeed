@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bot, Trophy, Search, Wallet } from 'lucide-react';
+import { Bot, Trophy, Wallet } from 'lucide-react';
 
 interface NavItem {
   href: string;
@@ -12,6 +12,11 @@ interface NavItem {
   isActive: (pathname: string) => boolean;
 }
 
+// The "Hire" / self-directory entry is intentionally OMITTED from the
+// sub-nav (parked 2026-05-13). The /agents/hireable + /agents/claim
+// surfaces remain reachable by direct URL and the API endpoints stay
+// live, but we don't promote a discovery surface that has zero buyer-
+// side demand. Re-add this item if a real demand signal fires.
 const NAV: NavItem[] = [
   {
     href: '/agents',
@@ -24,12 +29,6 @@ const NAV: NavItem[] = [
     label: 'Leaderboard',
     icon: Trophy,
     isActive: (p) => p === '/agents/leaderboard',
-  },
-  {
-    href: '/agents/hireable',
-    label: 'Hire',
-    icon: Search,
-    isActive: (p) => p === '/agents/hireable' || p.startsWith('/agents/profile'),
   },
   {
     href: '/agents/claim',

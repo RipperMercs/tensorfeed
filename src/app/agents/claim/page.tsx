@@ -538,12 +538,6 @@ function SubmissionOutcome({ result, message }: { result: ClaimResponse; message
               {copiedProfile ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               {copiedProfile ? 'Copied' : 'Copy profile URL'}
             </button>
-            <Link
-              href="/agents/hireable"
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-accent-primary text-white hover:bg-accent-secondary text-sm"
-            >
-              Browse the directory <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
         )}
       </div>
