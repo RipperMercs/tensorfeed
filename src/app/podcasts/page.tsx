@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Headphones, Clock, ExternalLink } from 'lucide-react';
 import PodcastPlayer from '@/components/podcasts/PodcastPlayer';
 import type { PodcastEpisode } from '@/lib/types';
@@ -95,16 +96,52 @@ export default function PodcastsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <JsonLd data={schema} />
 
-      {/* Header */}
-      <div className="mb-8">
+      {/*
+        Hero with photo background. Recording studio at night with a
+        single amber boom lamp, condenser mic, faint blue waveform
+        projected on the rear wall. Intimate, professional. 2400px
+        WebP, ~50KB.
+      */}
+      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary mb-8 px-6 sm:px-8 py-12 sm:py-20">
+        <Image
+          src="/podcasts-hero.webp"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 1280px"
+          className="object-cover -z-20"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(2,6,23,0.55) 0%, rgba(2,6,23,0.78) 100%)',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.04]"
+          style={{
+            backgroundImage: [
+              'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)',
+              'linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+            ].join(', '),
+            backgroundSize: '48px 48px',
+          }}
+        />
+
         <div className="flex items-center gap-3 mb-2">
-          <Headphones className="w-7 h-7 text-accent-primary" />
-          <h1 className="text-3xl font-bold text-text-primary">AI Podcasts</h1>
+          <div className="p-2 rounded-lg bg-accent-primary/15 backdrop-blur-sm">
+            <Headphones className="w-7 h-7 text-accent-primary" />
+          </div>
+          <h1 className="text-3xl font-bold text-white drop-shadow-md">AI Podcasts</h1>
         </div>
-        <p className="text-text-secondary text-lg">
+        <p className="text-text-secondary text-lg drop-shadow">
           Listen to the latest AI news and analysis from top podcasts, all in one place.
         </p>
-      </div>
+      </section>
 
       {/* Show filter */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
