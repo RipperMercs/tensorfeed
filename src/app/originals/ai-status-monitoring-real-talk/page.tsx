@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd, BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
@@ -117,7 +116,6 @@ export default function AiStatusMonitoringRealTalkPage() {
           Beyond pure status, we run an <Link href="/api/probe/latest" className="text-accent-primary hover:underline">active LLM endpoint probe</Link> every 15 minutes against each provider. We POST a tiny prompt at the chat completion endpoint and measure ttfb, total response time, and HTTP status. That data goes into a 24-hour rolling buffer. The output is at <Link href="/api/probe/latest" className="text-accent-primary hover:underline">/api/probe/latest</Link>: per-provider success rate, p50, p95, p99 latency, and the last error string. This is genuinely unique data. It is measured, not self-reported. Most status pages won&apos;t tell you about elevated latency unless it crosses some threshold; we just show you the percentiles.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">Real Incidents the Stack Caught</h2>
 

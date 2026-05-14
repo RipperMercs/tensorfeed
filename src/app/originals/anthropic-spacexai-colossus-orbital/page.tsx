@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock, Rocket } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
@@ -218,7 +217,6 @@ export default function AnthropicSpacexaiColossusOrbitalPage() {
           this partnership ships hardware, they will be ordinary.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">What this means for the cloud-AI duopoly thesis</h2>
 
@@ -330,7 +328,6 @@ export default function AnthropicSpacexaiColossusOrbitalPage() {
         </div>
       </footer>
 
-      <AdPlaceholder format="horizontal" className="mt-10" />
 
       <div className="flex flex-wrap items-center gap-4 mt-12 pt-6 border-t border-border text-sm">
         <Link

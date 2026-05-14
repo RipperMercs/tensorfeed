@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, ShieldCheck, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
@@ -217,7 +216,6 @@ export default function X402VerifierMcpLaunchPage() {
         </p>
       </div>
 
-      <AdPlaceholder slot="originals-article-footer" />
     </article>
   );
 }

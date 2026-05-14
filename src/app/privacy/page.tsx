@@ -107,24 +107,6 @@ export default function PrivacyPage() {
               </p>
             </div>
 
-            <div className="bg-bg-secondary border border-border rounded-lg p-4">
-              <p className="text-text-primary font-medium mb-1">Advertising Cookies</p>
-              <p className="text-sm">
-                We use Google AdSense to display advertisements on our site. Google AdSense may use cookies
-                to serve ads based on your prior visits to this site or other websites. Google&apos;s use of
-                advertising cookies enables it and its partners to serve ads based on your browsing activity.
-                You may opt out of personalized advertising by visiting{' '}
-                <a
-                  href="https://www.google.com/settings/ads"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent-primary hover:underline"
-                >
-                  Google&apos;s Ads Settings
-                </a>. Advertising cookies are only loaded after you accept cookies through our cookie
-                consent banner.
-              </p>
-            </div>
           </div>
 
           <p className="mt-3">
@@ -152,25 +134,10 @@ export default function PrivacyPage() {
               </a>.
             </p>
             <p>
-              <span className="text-text-primary font-medium">Google AdSense:</span> We use Google AdSense
-              to display advertisements. Google may collect and use data to personalize ads. See{' '}
-              <a
-                href="https://policies.google.com/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent-primary hover:underline"
-              >
-                Google&apos;s Privacy Policy
-              </a>{' '}
-              and{' '}
-              <a
-                href="https://policies.google.com/technologies/ads"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent-primary hover:underline"
-              >
-                How Google Uses Information from Sites That Use Its Services
-              </a>.
+              <span className="text-text-primary font-medium">Ad networks:</span> TensorFeed runs no
+              third-party display ad networks as of the date listed above. If that changes, this
+              section will list the providers and link to their privacy policies; the cookie consent
+              banner will be updated accordingly.
             </p>
             <p>
               <span className="text-text-primary font-medium">Resend:</span> If you subscribe to outage
@@ -320,7 +287,6 @@ export default function PrivacyPage() {
             <li>Provide and maintain our services</li>
             <li>Understand how visitors use the site so we can improve it</li>
             <li>Send outage alerts to subscribers who opted in</li>
-            <li>Display relevant advertisements through Google AdSense</li>
             <li>Respond to inquiries sent to our contact email</li>
           </ul>
         </section>

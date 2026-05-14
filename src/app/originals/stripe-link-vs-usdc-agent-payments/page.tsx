@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
@@ -115,7 +114,6 @@ export default function StripeLinkVsUsdcPage() {
           The on-chain transaction is the receipt.
         </p>
 
-        <AdPlaceholder format="in-article" />
 
         <h2 className="text-xl font-semibold text-text-primary mt-10 mb-4">
           Why We Did Not Use Stripe
@@ -191,7 +189,6 @@ result = tf.confirm(tx_hash="0x...", nonce=quote["memo"])`}
           is probably the lowest-friction path.
         </p>
 
-        <AdPlaceholder format="in-article" />
 
         <h2 className="text-xl font-semibold text-text-primary mt-10 mb-4">
           Where Direct USDC Wins
@@ -336,7 +333,6 @@ result = tf.confirm(tx_hash="0x...", nonce=quote["memo"])`}
           endpoint. Cross-check all four before sending funds.
         </p>
 
-        <AdPlaceholder format="horizontal" />
 
         {/* Footer links */}
         <div className="mt-12 pt-8 border-t border-border-primary">

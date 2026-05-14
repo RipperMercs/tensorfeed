@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
@@ -166,7 +165,6 @@ export default function AuditedOurPaidApiPage() {
           itself moved because the legal posture demanded it.
         </p>
 
-        <AdPlaceholder slot="article-mid" />
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">
           Red #2: benchmarks were merging in the HuggingFace leaderboard

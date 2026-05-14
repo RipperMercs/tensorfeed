@@ -31,9 +31,8 @@ export default function CookieConsent() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1">
             <p className="text-sm text-text-secondary leading-relaxed">
-              This site uses cookies for analytics and advertising. We use Cloudflare Web Analytics and
-              Google AdSense, which may set cookies to improve your experience and serve relevant ads.
-              See our{' '}
+              This site uses cookies for analytics. We use Cloudflare Web Analytics, which sets
+              minimal cookies to measure aggregate traffic. See our{' '}
               <Link href="/privacy" className="text-accent-primary hover:underline">
                 Privacy Policy
               </Link>{' '}

@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock, CheckCircle2 } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
@@ -197,7 +196,6 @@ export default function VerifiedFeedTrustLayerPage() {
           data.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">Why TensorFeed could ship it</h2>
 
@@ -328,7 +326,6 @@ export default function VerifiedFeedTrustLayerPage() {
         </div>
       </footer>
 
-      <AdPlaceholder format="horizontal" className="mt-10" />
 
       <div className="flex flex-wrap items-center gap-4 mt-12 pt-6 border-t border-border text-sm">
         <Link

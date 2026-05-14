@@ -97,16 +97,11 @@ export default function EditorialPolicyPage() {
             strategic investment from any AI provider, and no sponsorship that influences
             our coverage.
           </p>
-          <p className="mb-3">
-            TensorFeed displays programmatic advertising via Google AdSense. Advertisers
-            have no access to our editorial process, no ability to approve or reject
-            stories, and no insight into our publishing schedule. Coverage decisions are
-            made solely by the editorial team.
-          </p>
           <p>
-            If we ever accept a paid placement, sponsored post, or affiliate link, it will
-            be clearly labeled as such inside the article. We do not currently publish
-            sponsored content.
+            TensorFeed runs no third-party display advertising at this time. If we ever
+            accept a paid placement, sponsored post, or affiliate link, it will be clearly
+            labeled as such inside the article. Coverage decisions are made solely by the
+            editorial team and have never been influenced by ad placement.
           </p>
         </section>
 

@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
@@ -103,7 +102,6 @@ export default function AiInferenceFloorMay2026Page() {
           The interesting question for 2026 is how fast the gap closes. DeepSeek R1 shocked everyone by closing it on reasoning at a tenth of the price. Qwen has been closing it on Chinese-language benchmarks. The frontier labs respond by extending the spread on capabilities the open shelf cannot easily replicate (1M+ context, agentic reliability, multimodal). So far the spread has held. But it has narrowed.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">Practical Numbers Worth Remembering</h2>
 

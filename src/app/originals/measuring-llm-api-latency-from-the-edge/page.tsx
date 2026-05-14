@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
@@ -223,7 +222,6 @@ export default function MeasuringLlmApiLatencyPage() {
           and will be refined in the first weekly report.
         </p>
 
-        <AdPlaceholder slot="article-bottom" />
       </div>
     </article>
   );

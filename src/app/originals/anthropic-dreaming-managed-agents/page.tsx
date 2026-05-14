@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, BrainCircuit, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
@@ -197,7 +196,6 @@ export default function AnthropicDreamingManagedAgentsPage() {
           Polling is not.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">Where This Puts Anthropic vs. OpenAI vs. Google</h2>
 
@@ -295,7 +293,6 @@ export default function AnthropicDreamingManagedAgentsPage() {
         </div>
       </footer>
 
-      <AdPlaceholder format="horizontal" className="mt-10" />
 
       {/* Footer links */}
       <div className="flex flex-wrap items-center gap-4 mt-12 pt-6 border-t border-border text-sm">

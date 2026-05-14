@@ -72,7 +72,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="google-adsense-account" content="ca-pub-7224757913262984" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){var m=document.cookie.match(/(^| )theme=([^;]+)/);var t=m?m[2]:'dark';document.documentElement.setAttribute('data-theme',t);var v=document.cookie.match(/(^| )view-mode=([^;]+)/);document.documentElement.setAttribute('data-view-mode',v&&v[2]==='agent'?'agent':'human')})()`,
@@ -80,12 +79,6 @@ export default function RootLayout({
         />
         <link rel="alternate" type="text/markdown" href="/llms-full.txt" title="LLM Full Context" />
         <link rel="preconnect" href="https://tensorfeed.ai" />
-        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7224757913262984"
-          crossOrigin="anonymous"
-        />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

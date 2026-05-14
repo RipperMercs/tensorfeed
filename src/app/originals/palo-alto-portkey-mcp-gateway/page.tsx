@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
@@ -214,7 +213,6 @@ export default function PaloAltoPortkeyMcpGatewayPage() {
           tells you how compressed the timing pressure is.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">Why MCP Is the Real Story</h2>
 
@@ -360,7 +358,6 @@ export default function PaloAltoPortkeyMcpGatewayPage() {
         </div>
       </footer>
 
-      <AdPlaceholder format="horizontal" className="mt-10" />
 
       {/* Footer links */}
       <div className="flex flex-wrap items-center gap-4 mt-12 pt-6 border-t border-border text-sm">

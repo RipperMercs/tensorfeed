@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
@@ -116,7 +115,6 @@ export default function AgentsMdNewRobotsTxtPage() {
           You do not need a section for things the agent can read off the file tree. You do not need to explain that you use TypeScript if there is a tsconfig.json sitting there. The point of AGENTS.md is to capture what the agent cannot infer.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">The Discoverability Question</h2>
 
