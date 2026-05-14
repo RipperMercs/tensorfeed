@@ -69,6 +69,18 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/security/cve/range',
   '/api/premium/security/kev/series',
   '/api/premium/security/epss/series',
+  // Culled-from-advertising routes that still run as handlers (commit
+  // 4082fe0, 2026-05-14). Off-thesis under the Gemini 3 audit but kept
+  // live so any pre-cull callers don't break. They all require query
+  // params and would otherwise return 400 under the free-trial pool;
+  // strict-premium makes them emit a clean 402 instead so any scanner
+  // probing the URL directly (Tate Lyman / x402-surface-check@0.2.3
+  // followup on solana-foundation/pay-skills #68, 2026-05-14) reads
+  // them as paid-route-shaped rather than broken.
+  '/api/premium/clean/eia/series',
+  '/api/premium/clean/power/daily',
+  '/api/premium/climate/power/hourly',
+  '/api/premium/health/fda/aggregate',
 ];
 
 /**

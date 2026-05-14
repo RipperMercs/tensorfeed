@@ -52,6 +52,18 @@ describe('isStrictPremiumPath', () => {
     it('matches /api/premium/security/epss/series', () => {
       expect(isStrictPremiumPath('/api/premium/security/epss/series')).toBe(true);
     });
+    it('matches /api/premium/clean/eia/series', () => {
+      expect(isStrictPremiumPath('/api/premium/clean/eia/series')).toBe(true);
+    });
+    it('matches /api/premium/clean/power/daily', () => {
+      expect(isStrictPremiumPath('/api/premium/clean/power/daily')).toBe(true);
+    });
+    it('matches /api/premium/climate/power/hourly', () => {
+      expect(isStrictPremiumPath('/api/premium/climate/power/hourly')).toBe(true);
+    });
+    it('matches /api/premium/health/fda/aggregate', () => {
+      expect(isStrictPremiumPath('/api/premium/health/fda/aggregate')).toBe(true);
+    });
     it('does NOT match /api/premium/security/kev/full (no params, safe under trial)', () => {
       // kev/full and epss/top do not require query params, so the trial layer
       // returns a real 200 for them. They stay on the trial layer intentionally.
@@ -136,9 +148,9 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 18 exact paths', () => {
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(18);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(18); // no duplicates
+    it('exposes all 22 exact paths', () => {
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(22);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(22); // no duplicates
     });
     it('exposes 1 prefix path', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(1);
