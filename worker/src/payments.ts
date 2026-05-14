@@ -17,6 +17,17 @@ import {
   getX402Config,
   type PaymentRequirements as X402PaymentRequirements,
 } from './x402-facilitator';
+// Bazaar pilot routing (worker/src/cdp-facilitator.ts + bazaar-pilots.ts).
+// X-PAYMENT settlements for paths in the bazaar pilot set route through
+// CDP's hosted facilitator instead of our self-broadcast facilitator,
+// triggering automatic Bazaar catalog indexing on first successful settle.
+// All other endpoints continue to use the self-broadcast path unchanged.
+import { cdpVerify, cdpSettle } from './cdp-facilitator';
+import {
+  isBazaarPilotPath,
+  bazaarExtensionsFor,
+  bazaarDescriptionFor,
+} from './bazaar-pilots';
 
 /**
  * Payment middleware for premium endpoints.
@@ -2029,7 +2040,13 @@ export async function requirePayment(
       };
     }
 
-    const verify = await verifyX402Payment(payload, requirements, undefined, x402Config);
+    // Pilot endpoints route verify+settle through CDP's hosted facilitator
+    // so Bazaar can auto-catalog them on first successful settle.
+    // Non-pilot endpoints stay on the self-broadcast path (unchanged).
+    const viaCDP = isBazaarPilotPath(url.pathname);
+    const verify = viaCDP
+      ? await cdpVerify(env, payload, requirements)
+      : await verifyX402Payment(payload, requirements, undefined, x402Config);
     if (!verify.isValid) {
       return {
         paid: false,
@@ -2088,10 +2105,14 @@ export async function requirePayment(
       };
     }
 
-    // Settle on-chain via USDC.transferWithAuthorization. The facilitator
-    // module pre-checks EIP-3009 nonce state, broadcasts via the configured
-    // X402_BROADCAST_KEY hot wallet, and waits for receipt.
-    const settle = await settleX402Payment(payload, env);
+    // Settle on-chain via USDC.transferWithAuthorization. For pilot
+    // endpoints routed through CDP, Coinbase's hosted facilitator
+    // performs the broadcast (paying gas); for everything else our
+    // self-broadcast module uses the X402_BROADCAST_KEY hot wallet.
+    // Both return a SettleResult-shaped object.
+    const settle = viaCDP
+      ? await cdpSettle(env, payload, requirements)
+      : await settleX402Payment(payload, env);
     if (!settle.success) {
       return {
         paid: false,
@@ -2267,7 +2288,9 @@ function paymentRequiredResponse(
       error: 'payment_required',
       resource: {
         url: resourceUrl,
-        description: 'TensorFeed premium API',
+        // Pilot endpoints get an endpoint-specific description for better
+        // Bazaar ranking. Non-pilots use the generic fallback.
+        description: bazaarDescriptionFor(url.pathname, 'TensorFeed premium API'),
         mimeType: 'application/json',
       },
       accepts: [
@@ -2284,7 +2307,9 @@ function paymentRequiredResponse(
           extra: { name: x402Config.domain.name, version: x402Config.domain.version },
         },
       ],
-      extensions: {},
+      // Pilot endpoints carry a `bazaar` extension so CDP can catalog the
+      // endpoint on first successful settle. Non-pilots ship empty {}.
+      extensions: bazaarExtensionsFor(url.pathname),
       // TensorFeed-specific helpful fields (non-spec). The credits flow is
       // recommended for repeat use; the X-Payment-Tx fallback is kept for
       // back-compat with SDK clients that pre-broadcast the tx.
