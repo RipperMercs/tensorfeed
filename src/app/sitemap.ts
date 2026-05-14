@@ -170,6 +170,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/funding`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/funding/portfolio`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/ai-infrastructure`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${baseUrl}/hyperliquid`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/oss-tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/ai-policy`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/conferences`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },

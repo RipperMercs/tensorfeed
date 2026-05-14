@@ -294,4 +294,18 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     statusPageUrl: 'https://status.lumalabs.ai',
     type: 'html',
   },
+  {
+    // Hyperliquid: perps DEX on Hyperliquid L1, the venue where most AI
+    // trading agents settle USDC collateral. Added 2026-05-14 after
+    // Coinbase became the official treasury deployer of USDC on Hyperliquid
+    // and Circle made USDC the Aligned Quote Asset across HIP-1/2/3/4
+    // markets. Brand stretch from pure-LLM status into agent-operational-
+    // substrate status, but agents using TF for data also trade on HL, so
+    // operational visibility is in the same lane.
+    name: 'Hyperliquid',
+    provider: 'Hyperliquid',
+    url: 'https://hyperliquid.statuspage.io/api/v2/summary.json',
+    statusPageUrl: 'https://hyperliquid.statuspage.io',
+    type: 'statuspage',
+  },
 ];
