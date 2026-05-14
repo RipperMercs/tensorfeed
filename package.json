@@ -7,7 +7,8 @@
     "prebuild": "tsx scripts/fetch-feeds.ts && tsx scripts/generate-llms-full.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepare": "husky"
   },
   "dependencies": {
     "lucide-react": "^1.7.0",
@@ -25,6 +26,7 @@
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
+    "husky": "^9.1.7",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.21.0",

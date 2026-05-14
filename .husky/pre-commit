@@ -1,0 +1,15 @@
+#!/bin/sh
+# Pizza Robot Studios pre-commit hook: block commits that look like they
+# contain API keys. Mandated by the global CLAUDE.md. Patterns cover the
+# providers we use; expand here if a new provider is added to the stack.
+#
+# Note on the `re_` pattern: real Resend keys are ~35 chars after `re_`.
+# Bumping the minimum suffix length to 30 avoids matching legit identifiers
+# in the codebase like `re_payments_integration` (the AgentCore Payments
+# integration id; false positive seen 2026-05-14 during the audit pass).
+PATTERNS="sk-ant-[a-zA-Z0-9_-]{20,}|sk-proj-[a-zA-Z0-9_-]{30,}|AIza[0-9A-Za-z_-]{35}|re_[a-zA-Z0-9_-]{30,}|xoxb-[a-zA-Z0-9-]{20,}|github_pat_[a-zA-Z0-9_]{50,}|ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|ghs_[a-zA-Z0-9]{36}|-----BEGIN [A-Z ]*PRIVATE KEY-----"
+if git diff --cached | grep -qE "$PATTERNS"; then
+  echo "COMMIT BLOCKED: possible API key detected in staged changes."
+  echo "Remove the key from the diff, move it behind process.env / wrangler secret put, then retry."
+  exit 1
+fi
