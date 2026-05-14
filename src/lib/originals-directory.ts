@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'ferc-ai-data-center-bypass-watch',
+    title: 'The FERC Ruling Watch: One Decision Could Reshape Every AI Nuclear Deal',
+    author: 'Marcus Chen',
+    date: 'May 13, 2026',
+    readTime: '6 min read',
+    description:
+      "The single highest-stakes pending regulatory decision in the AI buildout is not at the NRC, not at the EPA, not in any state utility commission. It is at FERC, in the matter of the Amazon-Talen Susquehanna interconnection service amendment. In November 2024 FERC blocked the amended ISA that would have let Amazon scale its draw from 480 MW to 960 MW behind the meter; the matter is still procedurally open. Inside the state of play, what FERC has to decide, the three possible outcomes (approves bypass / rejects / splits), the projects at stake on each side (Constellation, Vistra, Dominion, plus Meta + Apple + xAI waiting to file), and the signposts to watch as the decision approaches. Live watch piece, will update when the ruling lands.",
+  },
+  {
     slug: 'ai-compute-orbital-thesis',
     title: 'AI Compute in Orbit: The Long-Arc Thesis. Why Solar + Vacuum Beats Texas + Gas (Eventually).',
     author: 'Ripper',

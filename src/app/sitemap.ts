@@ -214,6 +214,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/ai-buildout-explained`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/ai-nuclear-restart-thesis`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/ai-compute-orbital-thesis`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/ferc-ai-data-center-bypass-watch`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/openai-gpt-realtime-2-voice-stack`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/anthropic-spacexai-colossus-orbital`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/verified-feed-trust-layer`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },

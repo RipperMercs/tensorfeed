@@ -141,9 +141,53 @@ export default function AIInfrastructurePage() {
       />
       <FAQPageJsonLd faqs={FAQS} />
 
-      <div className="mb-10">
+      {/*
+        Hero with atmospheric background. CSS-only:
+          - Two radial gradients: warm amber (suggests data center heat) +
+            cool cyan (suggests grid / tech)
+          - A faint dot grid overlay (suggests server racks at low key)
+          - All sits behind the content via -z-10
+        To swap in a generated background image later:
+          1. Drop the asset at public/ai-infrastructure-hero.jpg (or .webp)
+          2. Replace the inner aria-hidden gradient div with:
+             <Image src="/ai-infrastructure-hero.jpg" alt="" fill priority
+               className="object-cover opacity-50" />
+          3. Keep the grid overlay + dark overlay layers for tone control.
+      */}
+      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary bg-bg-secondary/40 mb-10 px-6 sm:px-8 py-10 sm:py-14">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{
+            background: [
+              'radial-gradient(ellipse 70% 60% at 80% 20%, rgba(217, 119, 6, 0.18) 0%, transparent 60%)',
+              'radial-gradient(ellipse 60% 70% at 15% 90%, rgba(14, 116, 144, 0.20) 0%, transparent 60%)',
+              'radial-gradient(ellipse 50% 50% at 50% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 70%)',
+            ].join(', '),
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.05]"
+          style={{
+            backgroundImage: [
+              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)',
+              'linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            ].join(', '),
+            backgroundSize: '48px 48px',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-24 -z-10"
+          style={{
+            background:
+              'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.25) 100%)',
+          }}
+        />
+
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-accent-primary/10">
+          <div className="p-2 rounded-lg bg-accent-primary/10 backdrop-blur-sm">
             <Server className="w-7 h-7 text-accent-primary" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">AI Infrastructure</h1>
@@ -176,7 +220,7 @@ export default function AIInfrastructurePage() {
             the politics. The politics changes faster than the steel.
           </p>
         </div>
-      </div>
+      </section>
 
       <section className="mb-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="border border-bg-tertiary rounded-lg p-4 bg-bg-secondary/50">
