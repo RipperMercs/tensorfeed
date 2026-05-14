@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'google-a2a-x402-payments-extension',
+    title:
+      'Google Just Put 60 Payment Companies Behind a Crypto-Native Agent Rail',
+    author: 'Marcus Chen',
+    date: 'May 14, 2026',
+    readTime: '6 min read',
+    description:
+      "Google's A2A x402 extension shipped v0.2 with a coalition that includes Mastercard, American Express, PayPal, Adyen, Worldpay, JCB, UnionPay, Coinbase, Circle, MetaMask, the Ethereum Foundation, Etsy, Salesforce, ServiceNow, and roughly forty others. A coalition that size has not formed around a payments standard since ISO 8583. Inside what the spec reuses from canonical x402 V2 (PaymentRequirements, PaymentPayload, EIP-3009 settlement, all identical), what is genuinely new (JSON-RPC transport over A2A messages, AgentCard discovery, the Global A2A Registry), and why the acceptance side of agent commerce is being laid before the demand side has arrived.",
+  },
+  {
     slug: 'cve-data-layer-matters-now',
     title:
       '271 Zero-Days, Five Schemas: The AI-Cyber Data Layer Just Got Load-Bearing',
