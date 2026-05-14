@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { BarChart3 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import fallbackData from '@/../data/benchmarks.json';
 
 interface BenchmarkDef {
@@ -127,18 +128,51 @@ export default function BenchmarksPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-10">
+      {/*
+        Hero with photo background. Long-exposure racetrack with multi-
+        colored light trails evokes model competition + ranked
+        performance lanes. 2400px WebP, ~141KB.
+      */}
+      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary mb-10 px-6 sm:px-8 py-12 sm:py-20">
+        <Image
+          src="/benchmarks-hero.webp"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 1024px"
+          className="object-cover -z-20"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(2,6,23,0.65) 0%, rgba(2,6,23,0.78) 100%)',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.04]"
+          style={{
+            backgroundImage: [
+              'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)',
+              'linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+            ].join(', '),
+            backgroundSize: '48px 48px',
+          }}
+        />
+
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-accent-primary/10">
+          <div className="p-2 rounded-lg bg-accent-primary/15 backdrop-blur-sm">
             <BarChart3 className="w-7 h-7 text-accent-primary" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">AI Benchmarks</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-md">AI Benchmarks</h1>
         </div>
-        <p className="text-text-secondary text-lg max-w-2xl">
+        <p className="text-text-secondary text-lg max-w-2xl drop-shadow">
           Compare leading AI models across standardized benchmarks. Last updated {data.lastUpdated}.
         </p>
-      </div>
+      </section>
 
       {/* Per-benchmark leaderboard quick links */}
       <div className="mb-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
