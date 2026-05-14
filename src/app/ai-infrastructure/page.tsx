@@ -50,12 +50,17 @@ const FAQS = [
   {
     question: 'What does this page cover?',
     answer:
-      'Major AI buildout projects: gigawatt-class data centers, nuclear PPAs and restarts, hyperscaler campus expansions, and the long-dated compute commitments backing them. Editorial curation, every entry sourced to public records and announcements. Free JSON at /api/ai-infrastructure/projects.json.',
+      'Major AI buildout projects across four operator categories: hyperscalers selling capacity (Microsoft, Google, Amazon, Meta, Apple), frontier-lab compute farms consuming capacity (Stargate, Colossus, the Anthropic TPU commit), AI-specialized GPU clouds (CoreWeave, Lambda), and Bitcoin-pivot AI hosting (IREN, Hut 8). Plus the nuclear PPAs and restarts powering them and a concept-stage orbital entry. Editorial curation, every entry sourced to public records. Free JSON at /api/ai-infrastructure/projects.json.',
   },
   {
     question: 'Why a separate page for this?',
     answer:
       'AI infrastructure is the physical substrate of every model, every API call, every agent on this site. We already cover the model layer, the pricing layer, and the funding layer. This is the layer underneath them all. The next two years will be defined by which projects come online on time, which slip, and which utility relationships hold up.',
+  },
+  {
+    question: 'Is xAI a hyperscaler?',
+    answer:
+      'Strictly speaking, no. The traditional definition of hyperscaler is a cloud provider operating at massive scale that sells capacity to third parties: AWS, Microsoft Azure, Google Cloud, Oracle Cloud, plus arguably Meta and Apple operating hyperscale infrastructure for internal use. xAI Colossus today is a single-tenant frontier-lab compute farm: xAI builds it to train Grok, not to rent capacity. But the buzz term has expanded. Reporters and analysts increasingly use "hyperscaler" to mean "any operator running compute at hyperscale", which includes xAI. Elon has also signaled that future Colossus generations may open multi-tenant capacity, which would make the strict definition apply too. We track xAI Colossus as a frontier-lab compute farm in this registry, but flagging the terminology drift here so the search-term traffic finds the right entry.',
   },
   {
     question: 'How are projects added?',
@@ -93,16 +98,16 @@ function formatCapex(b: number | null): string {
 }
 
 export const metadata: Metadata = {
-  title: 'AI Infrastructure: Data Center & Power Buildout Tracker | TensorFeed',
+  title: 'AI Infrastructure: Hyperscaler & Data Center Buildout Tracker | TensorFeed',
   description:
-    'Hand-curated registry of major AI data center campuses, nuclear PPAs, gigawatt-class buildouts, and the long-dated compute commitments backing them. Status, capacity, power source, capex, and primary sources per project. Free JSON at /api/ai-infrastructure/projects.json.',
+    'Hand-curated registry of hyperscaler campuses, frontier-lab compute farms, AI-specialized GPU clouds, nuclear PPAs, and gigawatt-class buildouts. 15 major projects tracked with status, capacity, power source, capex, and primary sources. Free JSON at /api/ai-infrastructure/projects.json.',
   alternates: { canonical: 'https://tensorfeed.ai/ai-infrastructure' },
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/ai-infrastructure',
     title: 'TensorFeed AI Infrastructure Tracker',
     description:
-      'Major AI data center campuses, nuclear PPAs, and gigawatt-class buildouts. Status, capacity, power source, capex, sources.',
+      'Hyperscaler campuses, frontier-lab compute farms, AI-specialized GPU clouds, nuclear PPAs. Status, capacity, power source, capex, sources.',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
