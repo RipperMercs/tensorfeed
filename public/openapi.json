@@ -1420,16 +1420,11 @@
           }
         ],
         "x-payment-info": {
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.02"
-          },
           "protocols": [
-            {
-              "x402": {}
-            }
-          ]
+            "x402"
+          ],
+          "pricingMode": "fixed",
+          "price": "$0.020000"
         },
         "parameters": [
           {
@@ -1493,7 +1488,8 @@
           "402": {
             "description": "Payment Required"
           }
-        }
+        },
+        "x-payment-required": true
       }
     },
     "/api/premium/news/search": {
@@ -1509,16 +1505,11 @@
           }
         ],
         "x-payment-info": {
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.02"
-          },
           "protocols": [
-            {
-              "x402": {}
-            }
-          ]
+            "x402"
+          ],
+          "pricingMode": "fixed",
+          "price": "$0.020000"
         },
         "parameters": [
           {
@@ -1604,7 +1595,8 @@
           "402": {
             "description": "Payment Required"
           }
-        }
+        },
+        "x-payment-required": true
       }
     },
     "/api/premium/cost/projection": {
@@ -1620,16 +1612,11 @@
           }
         ],
         "x-payment-info": {
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.02"
-          },
           "protocols": [
-            {
-              "x402": {}
-            }
-          ]
+            "x402"
+          ],
+          "pricingMode": "fixed",
+          "price": "$0.020000"
         },
         "parameters": [
           {
@@ -1720,7 +1707,8 @@
           "402": {
             "description": "Payment Required"
           }
-        }
+        },
+        "x-payment-required": true
       }
     },
     "/api/premium/whats-new": {
@@ -1736,16 +1724,11 @@
           }
         ],
         "x-payment-info": {
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.02"
-          },
           "protocols": [
-            {
-              "x402": {}
-            }
-          ]
+            "x402"
+          ],
+          "pricingMode": "fixed",
+          "price": "$0.020000"
         },
         "parameters": [
           {
@@ -1807,7 +1790,8 @@
           "402": {
             "description": "Payment Required"
           }
-        }
+        },
+        "x-payment-required": true
       }
     }
   },
