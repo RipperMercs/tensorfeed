@@ -308,7 +308,14 @@ describe('paymentRequiredV2', () => {
     );
     expect(body.accepts[0].payTo).toBe(PAY_TO);
     expect(body.accepts[0].maxTimeoutSeconds).toBe(60);
-    expect(body.accepts[0].extra).toEqual({ name: 'USD Coin', version: '2' });
+    // Resource URL echoed at top-level + inside extra per x402-surface-check
+    // P2 (pay-skills PR #68, 2026-05-14).
+    expect(body.accepts[0].resource).toBe('https://tensorfeed.ai/api/premium/x');
+    expect(body.accepts[0].extra).toEqual({
+      name: 'USD Coin',
+      version: '2',
+      resource: 'https://tensorfeed.ai/api/premium/x',
+    });
     expect(body.extensions).toEqual({});
   });
 

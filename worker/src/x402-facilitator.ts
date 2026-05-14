@@ -179,7 +179,15 @@ export interface PaymentRequirements {
   asset: string;
   payTo: Address;
   maxTimeoutSeconds: number;
-  extra?: { name?: string; version?: string };
+  // Resource URL echoed at the accepts entry level. Some catalog validators
+  // (x402-surface-check, pay-skills #68) cross-check the URL between
+  // resource.url at the top of the PaymentRequired body and accepts[].resource.
+  resource?: string;
+  // EIP-712 domain hints + resource echo. `name`/`version` come from the
+  // USDC token (mainnet: "USD Coin"/"2"; sepolia: "USDC"/"2") for the
+  // TransferWithAuthorization signing domain. `resource` is the same URL
+  // duplicated for the validators that look here instead of top-level.
+  extra?: { name?: string; version?: string; resource?: string };
 }
 
 // Canonical x402 V2 error codes (do not invent custom names; spec-exact).
@@ -652,10 +660,18 @@ export function paymentRequiredV2(opts: {
         asset: cfg.usdcAddress,
         payTo: opts.payTo,
         maxTimeoutSeconds: opts.maxTimeoutSeconds ?? 60,
+        // Echo resource URL at top-level + inside extra per x402-surface-check
+        // P2 finding (pay-skills PR #68, 2026-05-14). Keeps this helper in
+        // lockstep with payments.ts paymentRequiredResponse().
+        resource: opts.resourceUrl,
         // Per-network EIP-712 domain hint. Mainnet USDC reports name="USD Coin";
         // Sepolia reports name="USDC". Clients should use these exact strings
         // when constructing the TransferWithAuthorization signature.
-        extra: { name: cfg.domain.name, version: cfg.domain.version },
+        extra: {
+          name: cfg.domain.name,
+          version: cfg.domain.version,
+          resource: opts.resourceUrl,
+        },
       },
     ],
     extensions: {},

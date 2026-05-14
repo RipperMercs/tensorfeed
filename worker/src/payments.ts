@@ -2316,7 +2316,18 @@ function paymentRequiredResponse(
         asset: x402Config.usdcAddress,
         payTo: env.PAYMENT_WALLET,
         maxTimeoutSeconds: 60,
-        extra: { name: x402Config.domain.name, version: x402Config.domain.version },
+        // Echo the resource URL at both top-level `resource` and inside
+        // `extra.resource` per x402-surface-check@0.2.2 P2 finding (pay-skills
+        // PR #68, 2026-05-14). Some validators cross-check the URL between
+        // top-level resource.url and accepts[].resource / accepts[].extra.resource;
+        // duplication is cheap and satisfies either lookup. EIP-712 domain hints
+        // (name, version) preserved.
+        resource: resourceUrl,
+        extra: {
+          name: x402Config.domain.name,
+          version: x402Config.domain.version,
+          resource: resourceUrl,
+        },
       },
     ],
     extensions: bazaarExtensionsFor(url.pathname),
