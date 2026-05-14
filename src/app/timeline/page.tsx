@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Clock } from 'lucide-react';
 import timelineData from '@/../data/timeline.json';
+import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 
 type Category = 'model-release' | 'pricing' | 'acquisition' | 'policy' | 'research' | 'milestone' | 'open-source';
 
@@ -203,6 +204,8 @@ export default function TimelinePage() {
           <span className="ml-4 text-sm text-text-muted italic">Timeline begins here</span>
         </div>
       </div>
+
+      <LastUpdatedFooter path="/timeline" />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Server, ArrowRight, Zap, Droplet, Factory, AlertTriangle } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 import projectsData from '../../../data/ai-infrastructure-projects.json';
 
 interface Project {
@@ -413,6 +414,8 @@ export default function AIInfrastructurePage() {
           ))}
         </dl>
       </div>
+
+      <LastUpdatedFooter path="/ai-infrastructure" />
     </div>
   );
 }

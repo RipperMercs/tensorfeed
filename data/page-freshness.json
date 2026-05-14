@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "schema": {
+    "last_reviewed": "ISO date (YYYY-MM-DD) when an editor last reviewed the page",
+    "cadence": "expected review interval: daily | weekly | biweekly | monthly | editorial",
+    "notes": "optional one-line context shown next to the stamp"
+  },
+  "policy": "Editor bumps last_reviewed when the page gets a real review or content update. Pages with cadence other than 'editorial' get a Next-Review-Due stamp computed from last_reviewed + cadence interval, and surface an OVERDUE flag when today is past that date.",
+  "pages": {
+    "/ai-infrastructure": {
+      "last_reviewed": "2026-05-13",
+      "cadence": "weekly",
+      "notes": "New projects added when announced; updates when status (announced/permitted/construction/operational) changes."
+    },
+    "/timeline": {
+      "last_reviewed": "2026-05-13",
+      "cadence": "monthly",
+      "notes": "Historical record of AI ecosystem milestones. Monthly review for new entries."
+    }
+  }
+}
