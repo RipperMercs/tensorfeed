@@ -1,9 +1,9 @@
-name: Weekly benchmarks review
+name: Weekly funding portfolio review
 
 # Opens a GitHub issue every Monday at 14:00 UTC (07:00 PT) summarizing
-# whether data/benchmarks.json likely needs updating. Operator triages
-# the issue, edits the file if a new flagship dropped, otherwise closes.
-# See scripts/weekly-benchmarks-check.mjs for the report body logic.
+# whether the funding portfolio registry needs new corporate equity
+# stakes, compute commitments, or capacity partnerships added.
+# See scripts/weekly-funding-portfolio-check.mjs for the report body logic.
 
 on:
   schedule:
@@ -28,9 +28,9 @@ jobs:
       - name: Generate report body
         id: report
         run: |
-          node scripts/weekly-benchmarks-check.mjs > issue-body.md
+          node scripts/weekly-funding-portfolio-check.mjs > issue-body.md
           {
-            echo "title=Weekly benchmark review: $(date -u +%Y-%m-%d)"
+            echo "title=Weekly funding portfolio review: $(date -u +%Y-%m-%d)"
           } >> "$GITHUB_OUTPUT"
 
       - name: Open issue
@@ -40,4 +40,4 @@ jobs:
           gh issue create \
             --title "${{ steps.report.outputs.title }}" \
             --body-file issue-body.md \
-            --label "benchmarks,maintenance"
+            --label "funding,maintenance"

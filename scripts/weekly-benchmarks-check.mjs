@@ -158,7 +158,7 @@ async function main() {
   if (recentReleases.length) {
     lines.push('');
     for (const m of recentReleases.slice(0, 8)) {
-      lines.push(`  - ${m.released} — ${m.provider} — ${m.model}`);
+      lines.push(`  - ${m.released} | ${m.provider} | ${m.model}`);
     }
   }
   lines.push('');

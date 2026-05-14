@@ -1,0 +1,44 @@
+name: Biweekly AI policy review
+
+# Opens a GitHub issue twice a month (1st and 15th at 14:00 UTC)
+# summarizing whether the /api/ai-policy registry needs new entries
+# or status updates on existing entries. Policy moves slower than
+# infrastructure or capital, so biweekly cadence rather than weekly.
+# See scripts/biweekly-ai-policy-check.mjs for the report body logic.
+
+on:
+  schedule:
+    - cron: '0 14 1,15 * *'   # 14:00 UTC on the 1st and 15th of each month
+  workflow_dispatch:           # allow manual runs from the Actions tab
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  open-review-issue:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate report body
+        id: report
+        run: |
+          node scripts/biweekly-ai-policy-check.mjs > issue-body.md
+          {
+            echo "title=Biweekly AI policy review: $(date -u +%Y-%m-%d)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "${{ steps.report.outputs.title }}" \
+            --body-file issue-body.md \
+            --label "ai-policy,maintenance"
