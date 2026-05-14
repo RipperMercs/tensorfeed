@@ -6,7 +6,7 @@ import {
 } from './strict-premium-endpoints';
 
 describe('isStrictPremiumPath', () => {
-  describe('exact-match paths (the 7 listed in STRICT_PREMIUM_PATHS)', () => {
+  describe('exact-match paths (moat endpoints in STRICT_PREMIUM_PATHS)', () => {
     it('matches /api/premium/history/pricing/series', () => {
       expect(isStrictPremiumPath('/api/premium/history/pricing/series')).toBe(true);
     });
@@ -27,6 +27,38 @@ describe('isStrictPremiumPath', () => {
     });
     it('matches /api/premium/packages/pypi/momentum', () => {
       expect(isStrictPremiumPath('/api/premium/packages/pypi/momentum')).toBe(true);
+    });
+  });
+
+  describe('parameter-required history + security paths (pay-skills #68 fix)', () => {
+    it('matches /api/premium/history/news/full', () => {
+      expect(isStrictPremiumPath('/api/premium/history/news/full')).toBe(true);
+    });
+    it('matches /api/premium/history/news/source-health', () => {
+      expect(isStrictPremiumPath('/api/premium/history/news/source-health')).toBe(true);
+    });
+    it('matches /api/premium/history/news/clusters/full', () => {
+      expect(isStrictPremiumPath('/api/premium/history/news/clusters/full')).toBe(true);
+    });
+    it('matches /api/premium/history/news/verified', () => {
+      expect(isStrictPremiumPath('/api/premium/history/news/verified')).toBe(true);
+    });
+    it('matches /api/premium/security/cve/range', () => {
+      expect(isStrictPremiumPath('/api/premium/security/cve/range')).toBe(true);
+    });
+    it('matches /api/premium/security/kev/series', () => {
+      expect(isStrictPremiumPath('/api/premium/security/kev/series')).toBe(true);
+    });
+    it('matches /api/premium/security/epss/series', () => {
+      expect(isStrictPremiumPath('/api/premium/security/epss/series')).toBe(true);
+    });
+    it('does NOT match /api/premium/security/kev/full (no params, safe under trial)', () => {
+      // kev/full and epss/top do not require query params, so the trial layer
+      // returns a real 200 for them. They stay on the trial layer intentionally.
+      expect(isStrictPremiumPath('/api/premium/security/kev/full')).toBe(false);
+    });
+    it('does NOT match /api/premium/security/epss/top (date optional, safe under trial)', () => {
+      expect(isStrictPremiumPath('/api/premium/security/epss/top')).toBe(false);
     });
   });
 
@@ -104,9 +136,9 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 11 exact paths', () => {
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(11);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(11); // no duplicates
+    it('exposes all 18 exact paths', () => {
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(18);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(18); // no duplicates
     });
     it('exposes 1 prefix path', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(1);

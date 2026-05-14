@@ -42,7 +42,7 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // extension. Strict-premium status is required because CDP's Bazaar
   // crawler (and x402scan's) probe anonymously and must see a 402, not
   // the free-trial 200. Wave 1 added /routing + /compare/models +
-  // /cost/projection (2026-05-14) — the highest-leverage "decision-ready"
+  // /cost/projection (2026-05-14), the highest-leverage "decision-ready"
   // endpoints per Kimi K2.6's external analysis. Trade is loss of
   // free-trial UX on these three; gain is x402scan/Bazaar registration
   // for the agent-discovery path. Per project_premium_lock_strategy 70/30
@@ -51,6 +51,24 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/routing',
   '/api/premium/compare/models',
   '/api/premium/cost/projection',
+  // Parameter-required historical + security routes. Without strict-premium
+  // designation, anonymous probes from x402-surface-check (pay-skills) and
+  // similar tools were granted a free-trial slot, then immediately rejected
+  // with 400 missing_params, since these handlers require ?date=, ?from=&to=,
+  // or ?cve_id= to do anything. Catalog validators read the 400 as a broken
+  // paid route. Reported by Tate Lyman on solana-foundation/pay-skills #68
+  // (2026-05-14) via x402-surface-check@0.2.2 against the live manifest.
+  // Strict-premium gate fixes this for all anonymous crawlers, not just
+  // surface-check: any tool probing without payment now sees the canonical
+  // x402 402 challenge. These endpoints fit the moat pattern anyway (full-
+  // window historical ranges and curated security datasets).
+  '/api/premium/history/news/full',
+  '/api/premium/history/news/source-health',
+  '/api/premium/history/news/clusters/full',
+  '/api/premium/history/news/verified',
+  '/api/premium/security/cve/range',
+  '/api/premium/security/kev/series',
+  '/api/premium/security/epss/series',
 ];
 
 /**
