@@ -265,10 +265,19 @@ async function main() {
 
   const extensions = args.withBazaarPilot ? WHATS_NEW_BAZAAR_EXTENSION : {};
   if (args.withBazaarPilot) {
-    console.log('bazaar pilot: including extensions.bazaar in payload');
+    console.log('bazaar pilot: including extensions.bazaar + resource block in payload');
   }
+  // The top-level `resource` field is what CDP's bazaar extractor reads
+  // for the catalog URL key (paymentPayload.resource.url). Omitting it
+  // causes "discovery request validation failed: resource is required"
+  // and silent catalog-skip even though the on-chain settle succeeds.
   const payload = {
     x402Version: 2,
+    resource: {
+      url: args.endpoint,
+      description: 'TensorFeed premium API',
+      mimeType: 'application/json',
+    },
     accepted: {
       scheme: 'exact',
       network: cfg.network,
