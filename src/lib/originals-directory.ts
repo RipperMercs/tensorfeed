@@ -17,6 +17,25 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'agentic-usdc-pay-and-trade-converge',
+    title:
+      'Same Dollar, Same Chain, Same Custodian: The Agentic USDC Stack Is Converging',
+    author: 'Ripper',
+    date: 'May 14, 2026',
+    readTime: '6 min read',
+    description:
+      "AgentCore Payments uses USDC for agents to buy APIs. Hyperliquid just standardized USDC as agent trading collateral, with Coinbase as official treasury deployer and Circle staking HYPE. We settled five real x402 payments through CDP this morning, each $0.02 on Base, broadcast by Coinbase's own facilitator wallet. The agent economy plumbing is converging on one asset, one chain, one custodian. Inside what the two announcements actually mean for builders, the boring detail nobody is leading with, and what is still missing (Bazaar indexing is broken, agentic.market is closed, but the underlying just stopped moving).",
+  },
+  {
+    slug: 'apple-20-day-window-io-wwdc',
+    title: "Apple Just Got a 20-Day Window. Between Google I/O and WWDC, It Has To Rewrite the Siri Story.",
+    author: 'Ripper',
+    date: 'May 14, 2026',
+    readTime: '7 min read',
+    description:
+      "Google I/O lands May 19. Apple WWDC lands June 8. That is a 20-day gap, and it is the most valuable counterprogramming window Apple has gotten in a decade. Inside what Gemini 4 is expected to reveal, what Apple can still swap into the WWDC keynote in three weeks (with a difficulty-ranked move list), why the Siri-as-router framing is the only outcome that preserves Apple's margin position long term, the 2014 and 2017 historical precedents for this exact calendar shape, and the three signposts I am watching between May 19 and June 8.",
+  },
+  {
     slug: 'ferc-ai-data-center-bypass-watch',
     title: 'The FERC Ruling Watch: One Decision Could Reshape Every AI Nuclear Deal',
     author: 'Marcus Chen',
