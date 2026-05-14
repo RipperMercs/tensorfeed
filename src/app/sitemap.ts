@@ -97,10 +97,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/api-reference`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/catalogs`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/agents`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${baseUrl}/agents/leaderboard`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
-    { url: `${baseUrl}/agents/hireable`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
-    { url: `${baseUrl}/agents/claim`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
-    { url: `${baseUrl}/agents/profile`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    // Agent reputation bureau frontend (/agents/leaderboard, /hireable,
+    // /claim, /profile) is parked 2026-05-13: pages stay reachable by
+    // direct URL but are not promoted via sitemap. The bureau lives as
+    // an API + MCP surface; restore these entries when there's a real
+    // reason to crawl them.
     { url: `${baseUrl}/research`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/podcasts`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
 

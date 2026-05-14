@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import AgentsSubNav from './AgentsSubNav';
 
 export const metadata: Metadata = {
   title: 'AI Agent Directory',
@@ -20,10 +19,5 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <AgentsSubNav />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
