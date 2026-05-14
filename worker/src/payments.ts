@@ -8,6 +8,7 @@ import {
   getClientIP as getClientIPFromRequest,
   type FreeTrialQuota,
 } from './rate-limit';
+import { isStrictPremiumPath } from './strict-premium-endpoints';
 import {
   parseXPaymentHeader,
   verifyPayment as verifyX402Payment,
@@ -2172,12 +2173,21 @@ export async function requirePayment(
   // paid call; commitPayment sees `noChargeReason === 'free_trial'`
   // and logs the no-charge event without touching credit state.
   //
+  // Strict-premium endpoints (worker/src/strict-premium-endpoints.ts)
+  // bypass the trial entirely. These paths are the TF moat
+  // (historical full-window time-series, heavy aggregations, curated
+  // premium-only datasets). They have free siblings for discovery
+  // (e.g. pricing_series_free 7-day-capped). Strict-premium hits
+  // fall straight through to the canonical 402 challenge.
+  //
   // Only granted when there is genuinely no payment attempt. If the
   // caller supplied a malformed Authorization header earlier in the
   // function, we already returned 401 above and never reach here.
+  const requestUrl = new URL(request.url);
+  const isStrict = isStrictPremiumPath(requestUrl.pathname);
   const trialIp = getClientIPFromRequest(request);
-  const trial = checkFreeTrialQuota(trialIp);
-  if (trial.allowed) {
+  const trial = isStrict ? null : checkFreeTrialQuota(trialIp);
+  if (trial && trial.allowed) {
     return {
       paid: true,
       cost,
@@ -2186,12 +2196,12 @@ export async function requirePayment(
       freeTrial: trial,
     };
   }
-  // Quota exhausted -> return the canonical 402 challenge with the
-  // exhaustion context surfaced so the agent knows why and when it
-  // can retry without paying.
+  // Quota exhausted, or strict-premium path -> return the canonical
+  // 402 challenge with the exhaustion context (if any) and a flag
+  // so the response copy can be honest about what is on offer.
   return {
     paid: false,
-    response: paymentRequiredResponse(env, cost, tier, request, trial),
+    response: paymentRequiredResponse(env, cost, tier, request, trial ?? undefined, isStrict),
   };
 }
 
@@ -2201,6 +2211,7 @@ function paymentRequiredResponse(
   tier: number,
   request: Request,
   exhaustedFreeTrial?: FreeTrialQuota,
+  strictPremium?: boolean,
 ): Response {
   const minUsd = Math.max(1, creditsRequired * 0.02);
   // Atomic USDC units (6 decimals): 1 credit = $0.02 = 20000 micro-USDC.
@@ -2209,34 +2220,41 @@ function paymentRequiredResponse(
   const resourceUrl = `${url.origin}${url.pathname}`;
   const x402Config = getX402Config(env);
 
-  // Compose the human-and-LLM-facing message based on whether the
-  // caller arrived here because they exhausted today's free quota or
-  // because they made an unauthenticated call from an IP that has
-  // never used the free quota (e.g. they came in cold without trying
-  // the free tier first).
-  const trialMessage = exhaustedFreeTrial
-    ? `This IP has used all ${exhaustedFreeTrial.limit} free premium calls in the current 24-hour window. The free quota resets at ${exhaustedFreeTrial.resetAt}. To continue immediately, sign an EIP-3009 transferWithAuthorization via X-PAYMENT or buy credits.`
-    : 'This is a paid endpoint. Sign an EIP-3009 transferWithAuthorization and submit it via X-PAYMENT, or use the credits flow for repeat use.';
+  // Compose the human-and-LLM-facing message. Three cases:
+  //   1. Strict-premium path: trial does not apply. Tell the agent
+  //      directly that this endpoint is strict-premium and point at
+  //      the free siblings used for discovery.
+  //   2. Exhausted trial: caller burned today's 100-call quota.
+  //   3. Cold caller: no prior trial use this window.
+  const trialMessage = strictPremium
+    ? 'This endpoint is strict-premium and does not offer the per-IP free trial. Sign an EIP-3009 transferWithAuthorization via X-PAYMENT or use the credits flow. Free siblings exist for discovery (pricing_series_free, benchmark_series_free, status_uptime_free, status_leaderboard_free, each 7-day-capped).'
+    : exhaustedFreeTrial
+      ? `This IP has used all ${exhaustedFreeTrial.limit} free premium calls in the current 24-hour window. The free quota resets at ${exhaustedFreeTrial.resetAt}. To continue immediately, sign an EIP-3009 transferWithAuthorization via X-PAYMENT or buy credits.`
+      : 'This is a paid endpoint. Sign an EIP-3009 transferWithAuthorization and submit it via X-PAYMENT, or use the credits flow for repeat use.';
 
-  // Always advertise the free-trial allowance so an agent that probes
-  // a 402 (with no prior call) knows the option exists.
-  const freeTrialAdvert = {
-    calls_per_ip_per_day: 100,
-    window: '24h rolling per IP',
-    auth_required: false,
-    docs: '/api/free-tier/status',
-    note:
-      'TensorFeed offers 100 free premium API calls per IP per 24-hour window. No authentication, no signup, no wallet required. After the cap is reached this 402 challenge fires and on-chain or credit-flow payment is required.',
-    ...(exhaustedFreeTrial
-      ? {
-          status: 'exhausted',
-          used_today: exhaustedFreeTrial.used,
-          remaining: exhaustedFreeTrial.remaining,
-          resets_at: exhaustedFreeTrial.resetAt,
-          retry_in_seconds: exhaustedFreeTrial.resetSeconds,
-        }
-      : {}),
-  };
+  // Advertise the free-trial allowance ONLY on non-strict endpoints
+  // so the response is honest about what is on offer. Strict-premium
+  // paths return `free_trial: null` so an agent does not waste cycles
+  // trying to use a trial that does not apply.
+  const freeTrialAdvert = strictPremium
+    ? null
+    : {
+        calls_per_ip_per_day: 100,
+        window: '24h rolling per IP',
+        auth_required: false,
+        docs: '/api/free-tier/status',
+        note:
+          'TensorFeed offers 100 free premium API calls per IP per 24-hour window. No authentication, no signup, no wallet required. After the cap is reached this 402 challenge fires and on-chain or credit-flow payment is required.',
+        ...(exhaustedFreeTrial
+          ? {
+              status: 'exhausted',
+              used_today: exhaustedFreeTrial.used,
+              remaining: exhaustedFreeTrial.remaining,
+              resets_at: exhaustedFreeTrial.resetAt,
+              retry_in_seconds: exhaustedFreeTrial.resetSeconds,
+            }
+          : {}),
+      };
 
   return jsonResponse(
     {
