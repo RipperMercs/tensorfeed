@@ -27,12 +27,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const OPENAPI_PATH = resolve(__dirname, '..', 'public', 'openapi.json');
 
 const PREMIUM_PREFIX = '/api/premium/';
-const BASE_PRICE = '$0.020000'; // 1 credit baseline; matches well-known/x402.json amount=20000
-
+// 1 credit baseline; matches well-known/x402.json amount=20000 (= $0.02 USD).
+// Structured shape per x402scan's DISCOVERY.md (Merit-Systems/x402scan repo).
+// Legacy flat shape (pricingMode + "$0.020000" string) also accepted but
+// flagged L2_PAYMENT_INFO_LEGACY by the agentcash discovery validator.
 const X_PAYMENT_INFO = {
-  protocols: ['x402'],
-  pricingMode: 'fixed',
-  price: BASE_PRICE,
+  protocols: [{ x402: {} }],
+  price: {
+    mode: 'fixed',
+    currency: 'USD',
+    amount: '0.02',
+  },
 };
 
 const spec = JSON.parse(readFileSync(OPENAPI_PATH, 'utf-8'));
@@ -50,13 +55,20 @@ for (const [path, ops] of Object.entries(paths)) {
   for (const [method, op] of Object.entries(ops || {})) {
     if (typeof op !== 'object' || op === null) continue;
     if (!['get', 'post', 'put', 'patch', 'delete', 'head'].includes(method.toLowerCase())) continue;
-    if (op['x-payment-required'] === true && op['x-payment-info']) {
-      already += 1;
-      continue;
-    }
+    // Force-overwrite x-payment-info to keep the structured shape canonical.
+    // Avoids drift if upstream regenerates the OpenAPI with a different schema
+    // or if the legacy flat format leaks back in. Idempotent on already-correct
+    // entries (overwriting with the same constant is a no-op).
+    const wasAlready =
+      op['x-payment-required'] === true &&
+      JSON.stringify(op['x-payment-info']) === JSON.stringify(X_PAYMENT_INFO);
     op['x-payment-required'] = true;
     op['x-payment-info'] = { ...X_PAYMENT_INFO };
-    patched += 1;
+    if (wasAlready) {
+      already += 1;
+    } else {
+      patched += 1;
+    }
   }
 }
 

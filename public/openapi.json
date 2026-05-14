@@ -1421,10 +1421,15 @@
         ],
         "x-payment-info": {
           "protocols": [
-            "x402"
+            {
+              "x402": {}
+            }
           ],
-          "pricingMode": "fixed",
-          "price": "$0.020000"
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
         },
         "parameters": [
           {
@@ -1506,10 +1511,15 @@
         ],
         "x-payment-info": {
           "protocols": [
-            "x402"
+            {
+              "x402": {}
+            }
           ],
-          "pricingMode": "fixed",
-          "price": "$0.020000"
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
         },
         "parameters": [
           {
@@ -1613,10 +1623,15 @@
         ],
         "x-payment-info": {
           "protocols": [
-            "x402"
+            {
+              "x402": {}
+            }
           ],
-          "pricingMode": "fixed",
-          "price": "$0.020000"
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
         },
         "parameters": [
           {
@@ -1725,10 +1740,15 @@
         ],
         "x-payment-info": {
           "protocols": [
-            "x402"
+            {
+              "x402": {}
+            }
           ],
-          "pricingMode": "fixed",
-          "price": "$0.020000"
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
         },
         "parameters": [
           {
