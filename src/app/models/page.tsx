@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Cpu, ExternalLink } from 'lucide-react';
 import fallbackPricingData from '@/../data/pricing.json';
 import { DatasetJsonLd } from '@/components/seo/JsonLd';
@@ -54,15 +55,48 @@ export default function ModelsPage() {
         description="Comprehensive AI model pricing comparison, release tracking, and specifications across all major providers."
         url="https://tensorfeed.ai/models"
       />
-      {/* Page Header */}
-      <div className="mb-10">
+      {/*
+        Hero with photo background. Circuit-board with floating token-coins
+        evokes per-million-token API pricing. Layered with dark gradient +
+        faint grid for legibility. Image is 2400px wide WebP, ~81KB.
+      */}
+      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary mb-10 px-6 sm:px-8 py-12 sm:py-20">
+        <Image
+          src="/pricing-hero.webp"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 1280px"
+          className="object-cover -z-20"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(2,6,23,0.65) 0%, rgba(2,6,23,0.75) 100%)',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.04]"
+          style={{
+            backgroundImage: [
+              'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)',
+              'linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+            ].join(', '),
+            backgroundSize: '48px 48px',
+          }}
+        />
+
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-accent-primary/10">
+          <div className="p-2 rounded-lg bg-accent-primary/15 backdrop-blur-sm">
             <Cpu className="w-7 h-7 text-accent-primary" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">AI Models</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-md">AI Models</h1>
         </div>
-        <p className="text-text-secondary text-lg max-w-2xl mb-4">
+        <p className="text-text-secondary text-lg max-w-2xl mb-4 drop-shadow">
           Track releases, compare pricing, and benchmark scores across all major providers.
         </p>
         <div className="text-text-secondary leading-relaxed max-w-3xl space-y-3 text-sm">
@@ -85,7 +119,7 @@ export default function ModelsPage() {
             <Link href="/compare" className="text-accent-primary hover:underline">compare models side by side</Link>.
           </p>
         </div>
-      </div>
+      </section>
 
       {/* Latest Releases + Pricing Comparison (client-hydrated) */}
       <ModelsDataSection initialData={initialData} />
