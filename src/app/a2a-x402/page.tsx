@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowRight,
   Network,
@@ -123,22 +124,63 @@ export default function A2AX402Page() {
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
       <FAQPageJsonLd faqs={FAQS.map((f) => ({ question: f.question, answer: f.answer }))} />
 
-      <header className="mb-10">
-        <div className="text-xs text-text-secondary tracking-wider uppercase mb-3">
-          Topic Hub · Agent Stack
+      {/*
+        Hero with photo background. Abstract agent-network at night, dense
+        teal void with cyan light trails between nodes and one warm-gold
+        token in flight. 2400px WebP, ~84KB.
+      */}
+      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary mb-10 px-6 sm:px-8 py-12 sm:py-16">
+        <Image
+          src="/a2a-x402-hero.webp"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 1280px"
+          className="object-cover -z-20"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(2,6,23,0.55) 0%, rgba(2,6,23,0.78) 100%)',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.04]"
+          style={{
+            backgroundImage: [
+              'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)',
+              'linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+            ].join(', '),
+            backgroundSize: '48px 48px',
+          }}
+        />
+
+        <div className="max-w-4xl">
+          <div className="text-xs text-white/70 tracking-wider uppercase mb-3 drop-shadow">
+            Topic Hub · Agent Stack
+          </div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-accent-primary/15 backdrop-blur-sm">
+              <Network className="w-7 h-7 text-accent-primary" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight drop-shadow-md">
+              A2A x402: Google&apos;s Agent Payments Extension
+            </h1>
+          </div>
+          <p className="text-base sm:text-lg text-text-secondary leading-relaxed drop-shadow">
+            The A2A x402 extension brings on-chain cryptocurrency payments to
+            Google&apos;s Agent-to-Agent protocol. Backed by 60 organizations
+            including Mastercard, PayPal, American Express, Coinbase, MetaMask,
+            and the Ethereum Foundation. Same payment data structures as canonical
+            x402 V2. New JSON-RPC transport. New AgentCard-based discovery layer.
+            This page is the working reference.
+          </p>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-text-primary leading-tight mb-4">
-          A2A x402: Google&apos;s Agent Payments Extension
-        </h1>
-        <p className="text-lg text-text-secondary leading-relaxed">
-          The A2A x402 extension brings on-chain cryptocurrency payments to
-          Google&apos;s Agent-to-Agent protocol. Backed by 60 organizations
-          including Mastercard, PayPal, American Express, Coinbase, MetaMask,
-          and the Ethereum Foundation. Same payment data structures as canonical
-          x402 V2. New JSON-RPC transport. New AgentCard-based discovery layer.
-          This page is the working reference.
-        </p>
-      </header>
+      </section>
 
       {/* Headline coalition card */}
       <section className="mb-12 rounded-lg border border-border bg-bg-secondary p-6">
