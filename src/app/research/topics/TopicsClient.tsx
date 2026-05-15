@@ -1,9 +1,10 @@
 'use client';
 
-import { Sparkles, ExternalLink } from 'lucide-react';
+import { Sparkles, ExternalLink, TrendingUp } from 'lucide-react';
 import ResearchHero from '@/components/research/ResearchHero';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
 import { useEmergingKeywords } from '@/components/research/useResearchData';
+import { categoryForSeed } from '@/components/research/categories';
 
 export default function TopicsClient() {
   const keywords = useEmergingKeywords(100);
@@ -30,17 +31,24 @@ export default function TopicsClient() {
         <p className="text-text-muted font-mono text-sm">Emerging keywords snapshot not yet refreshed.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {keywords.map((k) => (
+          {keywords.map((k) => {
+            const cat = categoryForSeed(k.keyword);
+            return (
             <div
               key={k.keyword}
               className="bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
+              style={{ borderTop: `2px solid ${cat.color}` }}
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-mono font-semibold text-text-primary">
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <span className="text-sm font-mono font-semibold text-text-primary truncate" style={{ color: cat.color }}>
                   {k.keyword}
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20 tabular-nums">
-                  {k.lift.toFixed(1)}× lift
+                <span
+                  className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border tabular-nums shrink-0"
+                  style={{ background: cat.tint, color: cat.color, borderColor: cat.tint }}
+                >
+                  <TrendingUp className="w-2.5 h-2.5" />
+                  {k.lift.toFixed(1)}×
                 </span>
               </div>
               <div className="flex items-center justify-between text-[11px] font-mono text-text-muted tabular-nums mb-2">
@@ -66,12 +74,14 @@ export default function TopicsClient() {
                 href={`https://arxiv.org/search/?query=${encodeURIComponent(k.keyword)}&searchtype=all`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 pt-2 border-t border-border inline-flex items-center gap-1 text-[10px] font-mono text-accent-primary hover:underline"
+                className="mt-2 pt-2 border-t border-border inline-flex items-center gap-1 text-[10px] font-mono hover:underline"
+                style={{ color: cat.color }}
               >
                 Search arXiv <ExternalLink className="w-3 h-3" />
               </a>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

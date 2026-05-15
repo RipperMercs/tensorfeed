@@ -3,7 +3,8 @@
 import { ExternalLink, TrendingUp } from 'lucide-react';
 import ResearchHero from '@/components/research/ResearchHero';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
-import { useCitationVelocity, paperAccent } from '@/components/research/useResearchData';
+import { useCitationVelocity } from '@/components/research/useResearchData';
+import { categoryForSeed } from '@/components/research/categories';
 
 export default function VelocityClient() {
   const papers = useCitationVelocity(100);
@@ -35,7 +36,7 @@ export default function VelocityClient() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {papers.map((v) => {
-            const accent = paperAccent(v.openalex_id);
+            const cat = categoryForSeed(v.openalex_id);
             return (
             <a
               key={v.openalex_id}
@@ -43,7 +44,7 @@ export default function VelocityClient() {
               target="_blank"
               rel="noopener noreferrer"
               className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
-              style={{ borderTop: `2px solid ${accent.color}` }}
+              style={{ borderTop: `2px solid ${cat.color}` }}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-mono text-text-muted">

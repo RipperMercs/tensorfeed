@@ -11,8 +11,13 @@ import {
   useCitationVelocity,
   useEmergingKeywords,
   useInstitutions,
-  paperAccent,
 } from '@/components/research/useResearchData';
+import {
+  categoryForSubfield,
+  categoryForArxiv,
+  categoryForSeed,
+} from '@/components/research/categories';
+import BackgroundParticles from '@/components/research/BackgroundParticles';
 
 function SectionHeader({
   icon: Icon,
@@ -68,7 +73,11 @@ export default function ResearchHubClient() {
   const institutions = useInstitutions(8);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+      {/* Background canvas particle field, fixed to viewport, behind all
+          content. Decorative. Auto-disabled under prefers-reduced-motion. */}
+      <BackgroundParticles count={140} connections={true} flow="drift" />
+
       {/*
         Hero with photo background. Cinematic dim atrium library with
         shelves of softly-glowing holographic research papers in pastel
@@ -141,7 +150,7 @@ export default function ResearchHubClient() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {milestones.map((p) => {
-              const accent = paperAccent(p.subfield_tag || p.arxiv_id);
+              const cat = categoryForSubfield(p.subfield_tag);
               return (
               <a
                 key={p.arxiv_id}
@@ -149,12 +158,13 @@ export default function ResearchHubClient() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
-                style={{ borderTop: `2px solid ${accent.color}` }}
+                style={{ borderTop: `2px solid ${cat.color}`, boxShadow: `0 0 0 0 ${cat.glow}`, transition: 'box-shadow 0.2s, border-color 0.2s' }}
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <span
                     className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border border-border"
-                    style={{ background: accent.bgTint, color: accent.color }}
+                    style={{ background: cat.tint, color: cat.color, borderColor: cat.tint }}
+                    title={cat.name}
                   >
                     {p.subfield_tag}
                   </span>
@@ -190,7 +200,7 @@ export default function ResearchHubClient() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {velocity.map((v) => {
-              const accent = paperAccent(v.openalex_id);
+              const cat = categoryForSeed(v.openalex_id);
               return (
               <a
                 key={v.openalex_id}
@@ -198,7 +208,7 @@ export default function ResearchHubClient() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
-                style={{ borderTop: `2px solid ${accent.color}` }}
+                style={{ borderTop: `2px solid ${cat.color}` }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-mono text-text-muted">#{v.rank} · {v.publication_year}</span>
@@ -306,17 +316,23 @@ export default function ResearchHubClient() {
             <div className="flex flex-wrap gap-2">
               {keywords.map((k) => {
                 const size = Math.min(2, 0.8 + Math.log10(k.lift));
+                const cat = categoryForSeed(k.keyword);
                 return (
                   <a
                     key={k.keyword}
                     href={`https://arxiv.org/search/?query=${encodeURIComponent(k.keyword)}&searchtype=all`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-bg-tertiary hover:border-accent-primary hover:text-accent-primary transition-colors"
-                    style={{ fontSize: `${size}rem` }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors"
+                    style={{
+                      fontSize: `${size}rem`,
+                      borderColor: cat.tint,
+                      background: cat.tint,
+                      color: cat.color,
+                    }}
                   >
-                    <span className="font-mono text-text-primary">{k.keyword}</span>
-                    <span className="text-[10px] font-mono text-text-muted tabular-nums">
+                    <span className="font-mono">{k.keyword}</span>
+                    <span className="text-[10px] font-mono opacity-70 tabular-nums">
                       {k.lift.toFixed(1)}×
                     </span>
                   </a>
@@ -335,7 +351,7 @@ export default function ResearchHubClient() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {arxiv.map((p) => {
-              const accent = paperAccent(p.primaryCategory || p.arxivId);
+              const cat = categoryForArxiv(p.primaryCategory);
               return (
               <a
                 key={p.arxivId}
@@ -343,13 +359,14 @@ export default function ResearchHubClient() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
-                style={{ borderTop: `2px solid ${accent.color}` }}
+                style={{ borderTop: `2px solid ${cat.color}` }}
               >
                 <div className="flex items-center justify-between mb-2">
                   {p.primaryCategory && (
                     <span
-                      className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border border-border"
-                      style={{ background: accent.bgTint, color: accent.color }}
+                      className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border"
+                      style={{ background: cat.tint, color: cat.color, borderColor: cat.tint }}
+                      title={cat.name}
                     >
                       {p.primaryCategory}
                     </span>

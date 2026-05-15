@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import ResearchHero from '@/components/research/ResearchHero';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
-import { useArxivLatest, paperAccent } from '@/components/research/useResearchData';
+import { useArxivLatest } from '@/components/research/useResearchData';
+import { categoryForArxiv } from '@/components/research/categories';
 
 function shortAbstract(s: string | null, max = 280): string {
   if (!s) return '';
@@ -77,7 +78,7 @@ export default function PapersClient() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((p) => {
-            const accent = paperAccent(p.primaryCategory || p.arxivId);
+            const cat = categoryForArxiv(p.primaryCategory);
             return (
             <a
               key={p.arxivId}
@@ -85,13 +86,14 @@ export default function PapersClient() {
               target="_blank"
               rel="noopener noreferrer"
               className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
-              style={{ borderTop: `2px solid ${accent.color}` }}
+              style={{ borderTop: `2px solid ${cat.color}` }}
             >
               <div className="flex items-center justify-between mb-2">
                 {p.primaryCategory && (
                   <span
-                    className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border border-border"
-                    style={{ background: accent.bgTint, color: accent.color }}
+                    className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border"
+                    style={{ background: cat.tint, color: cat.color, borderColor: cat.tint }}
+                    title={cat.name}
                   >
                     {p.primaryCategory}
                   </span>

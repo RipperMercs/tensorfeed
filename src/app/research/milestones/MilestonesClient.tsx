@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 import { Award } from 'lucide-react';
 import ResearchHero from '@/components/research/ResearchHero';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
-import { useMilestones, paperAccent } from '@/components/research/useResearchData';
+import { useMilestones } from '@/components/research/useResearchData';
+import { categoryForSubfield } from '@/components/research/categories';
 
 export default function MilestonesClient() {
   const papers = useMilestones(100);
@@ -80,7 +81,7 @@ export default function MilestonesClient() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {visible.map((p) => {
-            const accent = paperAccent(p.subfield_tag || p.arxiv_id);
+            const cat = categoryForSubfield(p.subfield_tag);
             return (
             <a
               key={p.arxiv_id}
@@ -88,13 +89,14 @@ export default function MilestonesClient() {
               target="_blank"
               rel="noopener noreferrer"
               className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
-              style={{ borderTop: `2px solid ${accent.color}` }}
+              style={{ borderTop: `2px solid ${cat.color}` }}
             >
               <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
-                    className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border border-border"
-                    style={{ background: accent.bgTint, color: accent.color }}
+                    className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border"
+                    style={{ background: cat.tint, color: cat.color, borderColor: cat.tint }}
+                    title={cat.name}
                   >
                     {p.subfield_tag}
                   </span>
