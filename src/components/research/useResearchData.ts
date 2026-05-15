@@ -207,11 +207,11 @@ export function useInstitutions(limit = 10) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const data = await safeFetch<{ ok: boolean; snapshot?: { institutions?: InstitutionRow[] } }>(
+      const data = await safeFetch<{ ok: boolean; institutions?: InstitutionRow[] }>(
         `${API}/api/research/institutions/ai`,
       );
       if (cancelled) return;
-      setRows(data?.snapshot?.institutions?.slice(0, limit) ?? []);
+      setRows(data?.institutions?.slice(0, limit) ?? []);
     })();
     return () => { cancelled = true; };
   }, [limit]);

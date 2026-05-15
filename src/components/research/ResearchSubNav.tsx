@@ -36,8 +36,8 @@ export default function ResearchSubNav() {
               href={item.href}
               className={`whitespace-nowrap px-3 py-2 text-sm font-mono transition-colors border-b-2 -mb-px ${
                 isActive
-                  ? 'border-accent-primary text-text-primary'
-                  : 'border-transparent text-text-muted hover:text-text-primary'
+                  ? 'border-accent-cyan text-text-primary'
+                  : 'border-transparent text-text-muted hover:text-accent-cyan'
               }`}
               aria-current={isActive ? 'page' : undefined}
             >

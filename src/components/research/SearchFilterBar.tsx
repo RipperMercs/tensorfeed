@@ -124,8 +124,8 @@ export default function SearchFilterBar({
                 aria-pressed={active}
                 className={`px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.1em] rounded inline-flex items-center gap-1.5 transition-colors ${
                   active
-                    ? 'bg-accent-primary/15 text-accent-primary'
-                    : 'text-text-muted hover:text-text-primary'
+                    ? 'bg-accent-cyan/15 text-accent-cyan'
+                    : 'text-text-muted hover:text-accent-cyan'
                 }`}
               >
                 <Icon className="w-3 h-3" />
@@ -142,12 +142,12 @@ export default function SearchFilterBar({
             onClick={() => setFilterOpen((v) => !v)}
             aria-expanded={filterOpen}
             aria-haspopup="menu"
-            className="h-full px-3 py-2 bg-bg-tertiary rounded text-[10px] font-mono uppercase tracking-[0.1em] inline-flex items-center gap-1.5 text-text-muted hover:text-text-primary transition-colors w-full sm:w-auto justify-center"
+            className="h-full px-3 py-2 bg-bg-tertiary rounded text-[10px] font-mono uppercase tracking-[0.1em] inline-flex items-center gap-1.5 text-text-muted hover:text-accent-cyan transition-colors w-full sm:w-auto justify-center"
           >
             <Filter className="w-3 h-3" />
             Categories
             {activeFilterCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-accent-primary/20 text-accent-primary text-[9px] font-bold">
+              <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-accent-cyan/20 text-accent-cyan text-[9px] font-bold">
                 {activeFilterCount}
               </span>
             )}
@@ -179,7 +179,7 @@ export default function SearchFilterBar({
                       />
                       <span
                         className={`inline-block w-3 h-3 border rounded-sm ${
-                          checked ? 'border-accent-primary' : 'border-border'
+                          checked ? 'border-accent-cyan' : 'border-border'
                         }`}
                         aria-hidden="true"
                         style={{
@@ -218,7 +218,7 @@ export default function SearchFilterBar({
                   type="button"
                   onClick={() => toggleCat(k)}
                   aria-label={`Remove ${cat.name} filter`}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-border bg-bg-tertiary text-text-primary hover:border-accent-primary transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-border bg-bg-tertiary text-text-primary hover:border-accent-cyan transition-colors"
                   style={{ borderLeftColor: cat.color, borderLeftWidth: 2 }}
                 >
                   {cat.short}
