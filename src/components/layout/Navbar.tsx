@@ -123,8 +123,8 @@ export default function Navbar() {
                     isStatus
                       ? `${statusColor} hover:brightness-110`
                       : isActive
-                        ? 'text-accent-primary'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                        ? 'text-accent-cyan'
+                        : 'text-text-secondary hover:text-accent-cyan hover:bg-bg-secondary'
                   }`}
                 >
                   <span className="flex items-center gap-1.5">
@@ -132,7 +132,7 @@ export default function Navbar() {
                     {link.label}
                   </span>
                   {isActive && !isStatus && (
-                    <span className="absolute bottom-0 left-1 right-1 h-0.5 rounded-full bg-gradient-to-r from-accent-primary to-accent-cyan" />
+                    <span className="absolute bottom-0 left-1 right-1 h-0.5 rounded-full bg-accent-cyan" />
                   )}
                 </Link>
               );
@@ -144,14 +144,14 @@ export default function Navbar() {
                 onClick={() => setGuidesOpen(!guidesOpen)}
                 className={`relative flex items-center gap-1 px-3 py-1.5 rounded text-sm transition-colors ${
                   isGuideActive
-                    ? 'text-accent-primary'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                    ? 'text-accent-cyan'
+                    : 'text-text-secondary hover:text-accent-cyan hover:bg-bg-secondary'
                 }`}
               >
                 Guides
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${guidesOpen ? 'rotate-180' : ''}`} />
                 {isGuideActive && (
-                  <span className="absolute bottom-0 left-1 right-1 h-0.5 rounded-full bg-gradient-to-r from-accent-primary to-accent-cyan" />
+                  <span className="absolute bottom-0 left-1 right-1 h-0.5 rounded-full bg-accent-cyan" />
                 )}
               </button>
               {guidesOpen && (
@@ -165,8 +165,8 @@ export default function Navbar() {
                         onClick={() => setGuidesOpen(false)}
                         className={`block px-4 py-2 text-sm transition-colors ${
                           isActive
-                            ? 'text-accent-primary bg-accent-primary/10'
-                            : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                            ? 'text-accent-cyan bg-accent-cyan/10'
+                            : 'text-text-secondary hover:text-accent-cyan hover:bg-bg-secondary'
                         }`}
                       >
                         {guide.label}
@@ -259,8 +259,8 @@ export default function Navbar() {
                   isStatus
                     ? `${statusColor} hover:brightness-110`
                     : isActive
-                      ? 'text-accent-primary'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                      ? 'text-accent-cyan'
+                      : 'text-text-secondary hover:text-accent-cyan hover:bg-bg-secondary'
                 }`}
               >
                 <span className="flex items-center gap-1.5">
@@ -268,7 +268,7 @@ export default function Navbar() {
                   {link.label}
                 </span>
                 {isActive && !isStatus && (
-                  <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-gradient-to-b from-accent-primary to-accent-cyan" />
+                  <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-accent-cyan" />
                 )}
               </Link>
             );
@@ -287,13 +287,13 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className={`relative block px-3 py-2 rounded text-sm transition-colors ${
                   isActive
-                    ? 'text-accent-primary'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                    ? 'text-accent-cyan'
+                    : 'text-text-secondary hover:text-accent-cyan hover:bg-bg-secondary'
                 }`}
               >
                 {guide.label}
                 {isActive && (
-                  <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-gradient-to-b from-accent-primary to-accent-cyan" />
+                  <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-accent-cyan" />
                 )}
               </Link>
             );
