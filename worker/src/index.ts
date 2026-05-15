@@ -385,6 +385,8 @@ import {
   type RankableMetric,
 } from './agent-reputation-store';
 import { handleClaimApplication } from './agent-claim-handler';
+import { listGigs, getGig } from './jobs-store';
+import { toPublicGig } from './jobs';
 import {
   aggregateServiceAreaDistribution,
   aggregateSkillDistribution,
@@ -2640,6 +2642,50 @@ export default {
         200,
         60,
       );
+    }
+
+    // === TENSORFEED JOBS: read endpoints (no money path) ===
+    // Free, capped at 25 active listings, newest first. The full and
+    // filtered cohort is the premium endpoint. Listings are third-party
+    // content. TensorFeed is a listing and discovery service and is
+    // never a party to any transaction (see ToS). No auth, short cache.
+    if (path === '/api/jobs' && request.method === 'GET') {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const limParam = parseInt(url.searchParams.get('limit') ?? '25', 10);
+      const limit = Number.isFinite(limParam)
+        ? Math.max(1, Math.min(25, limParam))
+        : 25;
+      const category = url.searchParams.get('category') || undefined;
+      const q = url.searchParams.get('q') || undefined;
+      const gigs = await listGigs(env, { now: nowSec, limit, category, q });
+      return jsonResponse(
+        {
+          ok: true,
+          count: gigs.length,
+          capped_at: 25,
+          attribution:
+            'TensorFeed Jobs. Free tier returns up to 25 active listings, newest first. Full and filtered cohort on /api/premium/jobs (1 credit). Listings are third-party content; TensorFeed is a listing and discovery service, not a party to any transaction.',
+          jobs: gigs.map((g) => toPublicGig(g, nowSec)),
+        },
+        200,
+        30,
+      );
+    }
+
+    // Single listing by id. 404 on unknown or removed: removed content
+    // is never served. Single-segment id only, so this never shadows a
+    // future /api/jobs/{id}/close subpath.
+    if (path.startsWith('/api/jobs/') && request.method === 'GET') {
+      const id = path.slice('/api/jobs/'.length);
+      if (id && !id.includes('/')) {
+        const nowSec = Math.floor(Date.now() / 1000);
+        const rec = await getGig(env, id);
+        const pub = rec ? toPublicGig(rec, nowSec) : null;
+        if (!pub || pub.status === 'removed') {
+          return jsonResponse({ ok: false, error: 'not_found' }, 404, 30);
+        }
+        return jsonResponse({ ok: true, job: pub }, 200, 30);
+      }
     }
 
     // === AGENT OPPORTUNITIES (daily GitHub scan) ===

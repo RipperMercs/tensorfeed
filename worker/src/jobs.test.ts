@@ -6,6 +6,7 @@ import {
   validateSignedAt,
   assembleGigRecord,
   isExpired,
+  toPublicGig,
   GIG_TTL_DAYS,
   MAX_TITLE_LEN,
   MAX_BODY_LEN,
@@ -151,5 +152,33 @@ describe('assembleGigRecord / isExpired', () => {
     const rec = assembleGigRecord(sub, now, 'gig_test_2');
     expect(isExpired(rec, rec.expires_at - 1)).toBe(false);
     expect(isExpired(rec, rec.expires_at)).toBe(true);
+  });
+});
+
+describe('toPublicGig', () => {
+  const now = 1_778_000_000;
+  const sub: GigSubmission = (() => {
+    const r = validateGigSubmission(validRaw(), VOCAB);
+    if (!r.ok) throw new Error('fixture invalid');
+    return r.value;
+  })();
+
+  it('never leaks signature, signed_message, or nonce', () => {
+    const pub = toPublicGig(assembleGigRecord(sub, now, 'p1'), now);
+    const keys = Object.keys(pub);
+    expect(keys).not.toContain('signature');
+    expect(keys).not.toContain('signed_message');
+    expect(keys).not.toContain('nonce');
+    expect(keys).not.toContain('removed_reason');
+    expect(pub.id).toBe('p1');
+    expect(pub.poster_x402).toBe(sub.poster_x402);
+  });
+
+  it('computes effective status', () => {
+    const rec = assembleGigRecord(sub, now, 'p2');
+    expect(toPublicGig(rec, now).status).toBe('active');
+    expect(toPublicGig(rec, rec.expires_at).status).toBe('expired');
+    const removed = { ...rec, status: 'removed' as const };
+    expect(toPublicGig(removed, now).status).toBe('removed');
   });
 });

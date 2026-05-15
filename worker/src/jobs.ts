@@ -230,3 +230,40 @@ export function assembleGigRecord(
 export function isExpired(record: GigRecord, nowSec: number): boolean {
   return nowSec >= record.expires_at;
 }
+
+/**
+ * The public projection served by the read endpoints. Deliberately omits
+ * signature, signed_message, nonce, and removed_reason: those are
+ * internal audit artifacts, not part of the public listing contract.
+ * status is the effective status (an aged-out active gig reads expired).
+ */
+export interface PublicGig {
+  id: string;
+  status: GigStatus;
+  title: string;
+  body: string;
+  category: string;
+  budget_note: string;
+  poster_addr: string;
+  poster_x402: string;
+  created_at: number;
+  expires_at: number;
+}
+
+export function toPublicGig(rec: GigRecord, nowSec: number): PublicGig {
+  return {
+    id: rec.id,
+    status:
+      rec.status === 'active' && isExpired(rec, nowSec)
+        ? 'expired'
+        : rec.status,
+    title: rec.title,
+    body: rec.body,
+    category: rec.category,
+    budget_note: rec.budget_note,
+    poster_addr: rec.poster_addr,
+    poster_x402: rec.poster_x402,
+    created_at: rec.created_at,
+    expires_at: rec.expires_at,
+  };
+}
