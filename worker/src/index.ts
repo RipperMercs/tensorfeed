@@ -2285,6 +2285,34 @@ export default {
     // this handler). These cover the bureau Week 3 step 15 deliverable:
     // ban / unban / claim-review approve / claim-review reject, plus
     // a pending list + admin audit log read for the daily admin sweep.
+    // Hardening pre-check (hoisted): EVERY /api/admin/* request goes
+    // through a tight per-IP rate limiter (5/min/IP), then a 401 if the
+    // key is missing or wrong, BEFORE any specific admin handler runs.
+    // The limiter counts ALL admin requests, including bad-key ones, so
+    // a runaway loop or brute-force probe saturates the limiter rather
+    // than the worker request budget. The 401 (vs 404) gives clear
+    // telemetry separating typo'd paths from auth failures. This block
+    // must stay above the first admin handler so all admin routes,
+    // including the early agents/jobs ones, uniformly inherit it.
+    if (path.startsWith('/api/admin/')) {
+      const adminIp = getClientIP(request);
+      const adminRate = checkAdminIPRateLimit(adminIp);
+      if (!adminRate.allowed) {
+        return rateLimitedResponse(adminRate);
+      }
+      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'unauthorized',
+            message: 'admin endpoint requires a valid ?key= param',
+          },
+          401,
+          0,
+        );
+      }
+    }
+
     if (path === '/api/admin/agents/claim/pending' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100), 500);
       const pending = await listPendingClaims(env, limit);
@@ -2715,6 +2743,30 @@ export default {
     // the agent and mints credits regardless (existing system behavior,
     // not something this handler can or should change).
     if (path === '/api/jobs' && request.method === 'POST') {
+      // Writes are restricted to the prepaid credits/bearer flow. The
+      // per-call x402 path settles USDC on-chain INSIDE requirePayment
+      // before any jobs gate runs, so a rejected post over that path
+      // would still move real money. Requiring a bearer token (AFTA
+      // deferred-debit, debited only by premiumResponse on full success)
+      // is what makes "a rejected post is never charged" actually true.
+      const jobsAuth = request.headers.get('Authorization');
+      if (
+        !jobsAuth ||
+        !jobsAuth.startsWith('Bearer ') ||
+        !jobsAuth.slice(7).trim().startsWith('tf_live_')
+      ) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'bearer_required',
+            message:
+              'Posting a listing requires a prepaid TensorFeed credits token. Buy credits at /api/payment/buy-credits and retry with Authorization: Bearer tf_live_<token>. The per-call x402 settle path is not accepted for writes, so a rejected post is never charged.',
+            doc: '/developers/agent-payments',
+          },
+          402,
+          0,
+        );
+      }
       const payment = await requirePayment(request, env, 3);
       if (!payment.paid) return payment.response!;
 
@@ -3086,7 +3138,7 @@ export default {
           jobsPremium:
             '/api/premium/jobs (1 credit, AFTA-signed; full and filtered cohort ?category=&q=&status=active|filled|closed|expired; removed listings are never served)',
           jobsPost:
-            'POST /api/jobs (tier 3, 5 credits about $0.10; body is a free-text listing plus an EIP-191 signature, nonce, and signed_at; gated by schema allowlist, signed_at window, signature recovery to the poster wallet, single-use nonce, and Chainalysis OFAC fail-closed; settlement for the work is peer-to-peer off-platform; a rejected post is never charged and returns a signed no-charge receipt)',
+            'POST /api/jobs (tier 3, 5 credits about $0.10; requires a prepaid credits bearer token, the per-call x402 path is not accepted for writes; body is a free-text listing plus an EIP-191 signature, nonce, and signed_at; gated by schema allowlist, signed_at window, signature recovery to the poster wallet, single-use nonce, and Chainalysis OFAC fail-closed; settlement for the work is peer-to-peer off-platform; a rejected post is never charged and returns a signed no-charge receipt)',
           jobsClose:
             'POST /api/jobs/{id}/close (the original poster signs an EIP-191 close message, action-pinned and nonce single-use, no payment, marks the listing filled)',
           agentActivity: '/api/agents/activity',
@@ -8489,31 +8541,10 @@ export default {
     // unsafe once the repo went public (ENVIRONMENT="production" lives
     // in wrangler.toml).
     //
-    // Hardening pre-check: any /api/admin/* request first goes through
-    // a tight per-IP rate limiter (5/min/IP), then a 401 if the key is
-    // missing or wrong. The rate limiter counts ALL admin requests,
-    // including bad-key ones, so a runaway loop or a brute-force probe
-    // saturates the limiter rather than the worker's request budget.
-    // The 401 (vs. 404) gives clearer telemetry for separating typo'd
-    // paths from auth failures on real admin paths.
-    if (path.startsWith('/api/admin/')) {
-      const adminIp = getClientIP(request);
-      const adminRate = checkAdminIPRateLimit(adminIp);
-      if (!adminRate.allowed) {
-        return rateLimitedResponse(adminRate);
-      }
-      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
-        return jsonResponse(
-          {
-            ok: false,
-            error: 'unauthorized',
-            message: 'admin endpoint requires a valid ?key= param',
-          },
-          401,
-          0,
-        );
-      }
-    }
+    // (The /api/admin/* per-IP rate-limit + 401 pre-check was hoisted
+    // above the first admin handler so every admin route inherits it,
+    // including the early ones. See the block immediately before the
+    // /api/admin/agents/claim/pending handler.)
 
     if (path === '/api/admin/usage' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
