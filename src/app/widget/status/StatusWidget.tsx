@@ -212,6 +212,46 @@ export default function StatusWidget() {
   }, [cards]);
 
   return (
+    <>
+      <style>{`
+        @keyframes tf-widget-glow-amber {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.35), 0 0 10px rgba(245,158,11,0.15); }
+          50%      { box-shadow: 0 0 0 1px rgba(245,158,11,0.7),  0 0 24px rgba(245,158,11,0.5); }
+        }
+        @keyframes tf-widget-glow-red {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(239,68,68,0.45), 0 0 12px rgba(239,68,68,0.28); }
+          50%      { box-shadow: 0 0 0 1px rgba(239,68,68,0.85), 0 0 30px rgba(239,68,68,0.6); }
+        }
+        @keyframes tf-widget-dot-pulse-amber {
+          0%, 100% { box-shadow: 0 0 3px rgba(245,158,11,0.6); }
+          50%      { box-shadow: 0 0 10px 2px rgba(245,158,11,0.95); }
+        }
+        @keyframes tf-widget-dot-pulse-red {
+          0%, 100% { box-shadow: 0 0 4px rgba(239,68,68,0.65); }
+          50%      { box-shadow: 0 0 12px 3px rgba(239,68,68,1); }
+        }
+        @keyframes tf-widget-pill-pulse-amber {
+          0%, 100% { background: rgba(245,158,11,0.10); }
+          50%      { background: rgba(245,158,11,0.28); }
+        }
+        @keyframes tf-widget-pill-pulse-red {
+          0%, 100% { background: rgba(239,68,68,0.12); }
+          50%      { background: rgba(239,68,68,0.32); }
+        }
+        .tf-widget-card-warn { animation: tf-widget-glow-amber 2.4s ease-in-out infinite; }
+        .tf-widget-card-down { animation: tf-widget-glow-red 1.6s ease-in-out infinite; }
+        .tf-widget-dot-warn  { animation: tf-widget-dot-pulse-amber 1.6s ease-in-out infinite; }
+        .tf-widget-dot-down  { animation: tf-widget-dot-pulse-red 1.2s ease-in-out infinite; }
+        .tf-widget-pill-warn { animation: tf-widget-pill-pulse-amber 1.6s ease-in-out infinite; }
+        .tf-widget-pill-down { animation: tf-widget-pill-pulse-red 1.2s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .tf-widget-card-warn, .tf-widget-card-down,
+          .tf-widget-dot-warn,  .tf-widget-dot-down,
+          .tf-widget-pill-warn, .tf-widget-pill-down {
+            animation: none !important;
+          }
+        }
+      `}</style>
     <div
       style={{
         background: '#0a0a0f',
@@ -251,6 +291,11 @@ export default function StatusWidget() {
             }}
           >
             <span
+              className={
+                overall === 'warn' ? 'tf-widget-dot-warn'
+                : overall === 'down' ? 'tf-widget-dot-down'
+                : ''
+              }
               style={{
                 width: 6,
                 height: 6,
@@ -309,9 +354,22 @@ export default function StatusWidget() {
       >
         {cards.map(({ def, state, spark }) => {
           const color = STATUS_COLOR[state.status];
+          const cardAnim =
+            state.status === 'warn' ? 'tf-widget-card-warn'
+            : state.status === 'down' ? 'tf-widget-card-down'
+            : '';
+          const dotAnim =
+            state.status === 'warn' ? 'tf-widget-dot-warn'
+            : state.status === 'down' ? 'tf-widget-dot-down'
+            : '';
+          const pillAnim =
+            state.status === 'warn' ? 'tf-widget-pill-warn'
+            : state.status === 'down' ? 'tf-widget-pill-down'
+            : '';
           return (
             <div
               key={def.id}
+              className={cardAnim}
               style={{
                 background: '#0d1117',
                 border: '1px solid #1f2937',
@@ -335,6 +393,7 @@ export default function StatusWidget() {
                   {def.display}
                 </div>
                 <div
+                  className={pillAnim}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -354,6 +413,7 @@ export default function StatusWidget() {
                   }}
                 >
                   <span
+                    className={dotAnim}
                     style={{
                       width: 5,
                       height: 5,
@@ -429,6 +489,7 @@ export default function StatusWidget() {
         </a>
       </div>
     </div>
+    </>
   );
 }
 
