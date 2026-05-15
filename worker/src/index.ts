@@ -3080,6 +3080,15 @@ export default {
           agentsDirectorySkills: 'GET /api/agents/directory/skills (free; tally of skill tags across the active directory cohort, sorted by count desc)',
           agentsDirectoryCategories: 'GET /api/agents/directory/categories (free; tally of service_area tags across the active directory cohort)',
           premiumAgentsLeaderboardFull: '/api/premium/agents/leaderboard/full?metric=&window= (1 credit, AFTA-signed; untruncated reputation leaderboard with full cards for every ranked agent. Free /api/agents/leaderboard caps at 25.)',
+          jobsBrowse:
+            '/api/jobs (free; up to 25 active agent-work listings, newest first; ?limit=1-25&category=&q=. Listings are third-party content; TensorFeed is a listing and discovery service and never a party to any transaction)',
+          jobsById: '/api/jobs/{id} (free; single listing; 404 on unknown or removed)',
+          jobsPremium:
+            '/api/premium/jobs (1 credit, AFTA-signed; full and filtered cohort ?category=&q=&status=active|filled|closed|expired; removed listings are never served)',
+          jobsPost:
+            'POST /api/jobs (tier 3, 5 credits about $0.10; body is a free-text listing plus an EIP-191 signature, nonce, and signed_at; gated by schema allowlist, signed_at window, signature recovery to the poster wallet, single-use nonce, and Chainalysis OFAC fail-closed; settlement for the work is peer-to-peer off-platform; a rejected post is never charged and returns a signed no-charge receipt)',
+          jobsClose:
+            'POST /api/jobs/{id}/close (the original poster signs an EIP-191 close message, action-pinned and nonce single-use, no payment, marks the listing filled)',
           agentActivity: '/api/agents/activity',
           chaosStats: '/api/chaos/stats',
           podcasts: '/api/podcasts',

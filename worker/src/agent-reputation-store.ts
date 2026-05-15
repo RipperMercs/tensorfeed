@@ -348,7 +348,8 @@ export interface AdminActionLogEntry {
     | 'unban'
     | 'claim_approve'
     | 'claim_reject'
-    | 'claim_reject_and_ban';
+    | 'claim_reject_and_ban'
+    | 'jobs_remove';
   /** Target of the action (wallet address or token prefix). Lowercased. */
   target: string;
   /** Free-text reason supplied by the admin or system. */
