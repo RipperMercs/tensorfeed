@@ -19,6 +19,7 @@ import {
 } from '@/components/research/categories';
 import BackgroundParticles from '@/components/research/BackgroundParticles';
 import HeroConstellation from '@/components/research/HeroConstellation';
+import KnowledgeLandscape from '@/components/research/KnowledgeLandscape';
 
 function SectionHeader({
   icon: Icon,
@@ -199,6 +200,13 @@ export default function ResearchHubClient() {
             })}
           </div>
         )}
+      </section>
+
+      {/* Knowledge landscape: 3×3 cluster grid showing 90 days of papers
+          across the 9 visual categories with cross-cluster flow lines on
+          their own slow cycle. Decorative + orientational. */}
+      <section className="mb-12">
+        <KnowledgeLandscape />
       </section>
 
       {/* Citation velocity */}
