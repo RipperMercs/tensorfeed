@@ -7482,7 +7482,12 @@ export default {
         ...(Number.isFinite(newsLimitParam) ? { newsLimit: newsLimitParam } : {}),
       });
       if (!result.ok) {
-        return jsonResponse(result, 400);
+        return await premiumValidationFailure(
+          result as unknown as Record<string, unknown>,
+          payment,
+          request,
+          env,
+        );
       }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/whats-new', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
@@ -7506,13 +7511,15 @@ export default {
       const minutesRaw = parseInt(url.searchParams.get('minutes') ?? '', 10);
       const minutes = Number.isFinite(minutesRaw) ? minutesRaw : 60;
       if (minutes < 5 || minutes > 1440) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'invalid_minutes',
             hint: 'minutes must be between 5 and 1440 (24 hours). For windows >1 day, use /api/premium/whats-new?days=N.',
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const newsLimitParam = parseInt(url.searchParams.get('news_limit') ?? '', 10);
@@ -7521,7 +7528,12 @@ export default {
         ...(Number.isFinite(newsLimitParam) ? { newsLimit: newsLimitParam } : {}),
       });
       if (!result.ok) {
-        return jsonResponse(result, 400);
+        return await premiumValidationFailure(
+          result as unknown as Record<string, unknown>,
+          payment,
+          request,
+          env,
+        );
       }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/recent', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
