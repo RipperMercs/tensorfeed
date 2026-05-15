@@ -386,6 +386,25 @@ import {
 } from './agent-reputation-store';
 import { handleClaimApplication } from './agent-claim-handler';
 import {
+  listGigs,
+  getGig,
+  reserveNonce,
+  putGig,
+  setGigStatus,
+} from './jobs-store';
+import {
+  toPublicGig,
+  validateGigSubmission,
+  validateSignedAt,
+  assembleGigRecord,
+  buildCloseMessage,
+} from './jobs';
+import {
+  verifyPosterSignature,
+  screenPoster,
+  verifyAddressSignature,
+} from './jobs-gate';
+import {
   aggregateServiceAreaDistribution,
   aggregateSkillDistribution,
   searchDirectory,
@@ -2266,10 +2285,81 @@ export default {
     // this handler). These cover the bureau Week 3 step 15 deliverable:
     // ban / unban / claim-review approve / claim-review reject, plus
     // a pending list + admin audit log read for the daily admin sweep.
+    // Hardening pre-check (hoisted): EVERY /api/admin/* request goes
+    // through a tight per-IP rate limiter (5/min/IP), then a 401 if the
+    // key is missing or wrong, BEFORE any specific admin handler runs.
+    // The limiter counts ALL admin requests, including bad-key ones, so
+    // a runaway loop or brute-force probe saturates the limiter rather
+    // than the worker request budget. The 401 (vs 404) gives clear
+    // telemetry separating typo'd paths from auth failures. This block
+    // must stay above the first admin handler so all admin routes,
+    // including the early agents/jobs ones, uniformly inherit it.
+    if (path.startsWith('/api/admin/')) {
+      const adminIp = getClientIP(request);
+      const adminRate = checkAdminIPRateLimit(adminIp);
+      if (!adminRate.allowed) {
+        return rateLimitedResponse(adminRate);
+      }
+      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'unauthorized',
+            message: 'admin endpoint requires a valid ?key= param',
+          },
+          401,
+          0,
+        );
+      }
+    }
+
     if (path === '/api/admin/agents/claim/pending' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100), 500);
       const pending = await listPendingClaims(env, limit);
       return jsonResponse({ ok: true, total: pending.length, claims: pending }, 200, 0);
+    }
+    // Admin: remove a listing for a TOS violation. Inherits the global
+    // /api/admin rate-limit + ADMIN_KEY pre-check. Audit-logged. Removed
+    // listings are never re-served on any free or paid surface.
+    if (
+      path === '/api/admin/jobs/remove' &&
+      request.method === 'POST' &&
+      isAuthorizedAdmin(env, url.searchParams.get('key'))
+    ) {
+      let rbody: { id?: unknown; reason?: unknown; evidence_url?: unknown } =
+        {};
+      try {
+        rbody = (await request.json()) as typeof rbody;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const id = typeof rbody.id === 'string' ? rbody.id.trim() : '';
+      const reason =
+        typeof rbody.reason === 'string' ? rbody.reason.trim() : '';
+      if (!id || id.length > 80) {
+        return jsonResponse({ ok: false, error: 'invalid_id' }, 400);
+      }
+      if (!reason || reason.length > 200) {
+        return jsonResponse({ ok: false, error: 'invalid_reason' }, 400);
+      }
+      const evidence_url =
+        typeof rbody.evidence_url === 'string' &&
+        /^https?:\/\/[^\s<>"]+$/.test(rbody.evidence_url)
+          ? rbody.evidence_url
+          : null;
+      if (!(await setGigStatus(env, id, 'removed', reason))) {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404);
+      }
+      const now = new Date().toISOString();
+      await recordAdminAction(env, {
+        at: now,
+        action: 'jobs_remove',
+        target: id,
+        reason,
+        evidence_url,
+        admin_id: 'admin:manual',
+      });
+      return jsonResponse({ ok: true, removed: id, at: now }, 200, 0);
     }
     if (path === '/api/admin/agents/admin-log' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const date = url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
@@ -2642,6 +2732,286 @@ export default {
       );
     }
 
+    // === TENSORFEED JOBS: create a listing (the money line) ===
+    // Tier 3 (5 credits, ~$0.10). Charge ordering is proven from the
+    // payment code: the bearer path uses AFTA deferred-debit, so a
+    // credit is debited ONLY by premiumResponse -> commitPayment on
+    // success. Every gate failure returns premiumValidationFailure:
+    // HTTP 400, no debit, a signed no-charge receipt, and built-in
+    // no-charge abuse capping. So a rejected post is never charged on
+    // the credits path. The per-call x402 path is pre-paid on-chain by
+    // the agent and mints credits regardless (existing system behavior,
+    // not something this handler can or should change).
+    if (path === '/api/jobs' && request.method === 'POST') {
+      // Writes are restricted to the prepaid credits/bearer flow. The
+      // per-call x402 path settles USDC on-chain INSIDE requirePayment
+      // before any jobs gate runs, so a rejected post over that path
+      // would still move real money. Requiring a bearer token (AFTA
+      // deferred-debit, debited only by premiumResponse on full success)
+      // is what makes "a rejected post is never charged" actually true.
+      const jobsAuth = request.headers.get('Authorization');
+      if (
+        !jobsAuth ||
+        !jobsAuth.startsWith('Bearer ') ||
+        !jobsAuth.slice(7).trim().startsWith('tf_live_')
+      ) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'bearer_required',
+            message:
+              'Posting a listing requires a prepaid TensorFeed credits token. Buy credits at /api/payment/buy-credits and retry with Authorization: Bearer tf_live_<token>. The per-call x402 settle path is not accepted for writes, so a rejected post is never charged.',
+            doc: '/developers/agent-payments',
+          },
+          402,
+          0,
+        );
+      }
+      const payment = await requirePayment(request, env, 3);
+      if (!payment.paid) return payment.response!;
+
+      // A listing is a write, not a data trial. The free-trial quota
+      // covers discovery reads only. Never let it fund persistent
+      // listings or the paid-to-post anti-spam economic is bypassable.
+      if (payment.freeTrial) {
+        return premiumValidationFailure(
+          {
+            ok: false,
+            error: 'payment_required',
+            message:
+              'Posting requires a paid credit. The free trial covers discovery reads only, not writes.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      let body: Record<string, unknown>;
+      try {
+        const parsed = await request.json();
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+          throw new Error('not_object');
+        }
+        body = parsed as Record<string, unknown>;
+      } catch {
+        return premiumValidationFailure(
+          { ok: false, error: 'invalid_json' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const v = validateGigSubmission(body);
+      if (!v.ok) {
+        return premiumValidationFailure(
+          { ok: false, error: 'validation_failed', detail: v.error },
+          payment,
+          request,
+          env,
+        );
+      }
+      const sub = v.value;
+
+      const nowSec = Math.floor(Date.now() / 1000);
+      const skew = validateSignedAt(nowSec, sub.signed_at);
+      if (!skew.ok) {
+        return premiumValidationFailure(
+          { ok: false, error: 'replay_window', detail: skew.error },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      // Signature BEFORE the nonce burn: only the wallet owner can burn
+      // its own nonce, so a bad-signature request cannot grief a
+      // victim's future nonce.
+      if (!(await verifyPosterSignature(sub))) {
+        return premiumValidationFailure(
+          { ok: false, error: 'bad_signature' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      // Nonce burn BETWEEN signature and OFAC, mirroring the audited
+      // claim flow: a replay is rejected before a Chainalysis call is
+      // spent. Single-use: a transient downstream failure means the
+      // agent re-signs with a fresh nonce and retries.
+      if (!(await reserveNonce(env, sub.nonce))) {
+        return premiumValidationFailure(
+          { ok: false, error: 'nonce_replayed_or_writes_disabled' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const screen = await screenPoster(sub, env);
+      if (!screen.ok) {
+        return premiumValidationFailure(
+          { ok: false, error: screen.reason, detail: screen.detail },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      // All gates passed. Persist, then charge via premiumResponse,
+      // which runs commitPayment, the only place a credit is debited.
+      const id = 'gig_' + crypto.randomUUID();
+      const rec = assembleGigRecord(sub, nowSec, id);
+      if (!(await putGig(env, rec))) {
+        return premiumValidationFailure(
+          {
+            ok: false,
+            error: 'storage_unavailable',
+            message:
+              'Listing store is temporarily read-only. No credit was charged.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      return await premiumResponse(
+        { ok: true, id, job: toPublicGig(rec, nowSec) },
+        payment,
+        5,
+        request,
+        env,
+      );
+    }
+
+    // Close a listing. The original poster signs buildCloseMessage; the
+    // recovered address must equal the listing's stored poster_addr, so
+    // only the poster can close their own gig. No payment. Nonce burned
+    // after signature verify to prevent close-replay.
+    if (
+      path.startsWith('/api/jobs/') &&
+      path.endsWith('/close') &&
+      request.method === 'POST'
+    ) {
+      const id = path.slice('/api/jobs/'.length, -'/close'.length);
+      if (!id || id.includes('/')) {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404, 0);
+      }
+      let cbody: { nonce?: unknown; signed_at?: unknown; signature?: unknown } =
+        {};
+      try {
+        cbody = (await request.json()) as typeof cbody;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400, 0);
+      }
+      const nonce = typeof cbody.nonce === 'string' ? cbody.nonce.trim() : '';
+      const signature =
+        typeof cbody.signature === 'string' ? cbody.signature.trim() : '';
+      const signedAt = cbody.signed_at;
+      if (!nonce || nonce.length > 128 || !signature) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_close_request' },
+          400,
+          0,
+        );
+      }
+      if (typeof signedAt !== 'number' || !Number.isInteger(signedAt)) {
+        return jsonResponse({ ok: false, error: 'signed_at_invalid' }, 400, 0);
+      }
+      const nowSec = Math.floor(Date.now() / 1000);
+      const rec = await getGig(env, id);
+      const pub = rec ? toPublicGig(rec, nowSec) : null;
+      if (!rec || !pub || pub.status === 'removed') {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404, 0);
+      }
+      if (pub.status !== 'active') {
+        return jsonResponse(
+          { ok: false, error: 'not_active', status: pub.status },
+          409,
+          0,
+        );
+      }
+      const skew = validateSignedAt(nowSec, signedAt);
+      if (!skew.ok) {
+        return jsonResponse(
+          { ok: false, error: 'replay_window', detail: skew.error },
+          400,
+          0,
+        );
+      }
+      const okSig = await verifyAddressSignature(
+        rec.poster_addr,
+        buildCloseMessage({ id, nonce, signed_at: signedAt }),
+        signature,
+      );
+      if (!okSig) {
+        return jsonResponse({ ok: false, error: 'bad_signature' }, 401, 0);
+      }
+      if (!(await reserveNonce(env, nonce))) {
+        return jsonResponse(
+          { ok: false, error: 'nonce_replayed_or_writes_disabled' },
+          409,
+          0,
+        );
+      }
+      if (!(await setGigStatus(env, id, 'filled'))) {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404, 0);
+      }
+      const updated = await getGig(env, id);
+      return jsonResponse(
+        { ok: true, job: updated ? toPublicGig(updated, nowSec) : null },
+        200,
+        0,
+      );
+    }
+
+    // === TENSORFEED JOBS: read endpoints (no money path) ===
+    // Free, capped at 25 active listings, newest first. The full and
+    // filtered cohort is the premium endpoint. Listings are third-party
+    // content. TensorFeed is a listing and discovery service and is
+    // never a party to any transaction (see ToS). No auth, short cache.
+    if (path === '/api/jobs' && request.method === 'GET') {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const limParam = parseInt(url.searchParams.get('limit') ?? '25', 10);
+      const limit = Number.isFinite(limParam)
+        ? Math.max(1, Math.min(25, limParam))
+        : 25;
+      const category = url.searchParams.get('category') || undefined;
+      const q = url.searchParams.get('q') || undefined;
+      const gigs = await listGigs(env, { now: nowSec, limit, category, q });
+      return jsonResponse(
+        {
+          ok: true,
+          count: gigs.length,
+          capped_at: 25,
+          attribution:
+            'TensorFeed Jobs. Free tier returns up to 25 active listings, newest first. Full and filtered cohort on /api/premium/jobs (1 credit). Listings are third-party content; TensorFeed is a listing and discovery service, not a party to any transaction.',
+          jobs: gigs.map((g) => toPublicGig(g, nowSec)),
+        },
+        200,
+        30,
+      );
+    }
+
+    // Single listing by id. 404 on unknown or removed: removed content
+    // is never served. Single-segment id only, so this never shadows a
+    // future /api/jobs/{id}/close subpath.
+    if (path.startsWith('/api/jobs/') && request.method === 'GET') {
+      const id = path.slice('/api/jobs/'.length);
+      if (id && !id.includes('/')) {
+        const nowSec = Math.floor(Date.now() / 1000);
+        const rec = await getGig(env, id);
+        const pub = rec ? toPublicGig(rec, nowSec) : null;
+        if (!pub || pub.status === 'removed') {
+          return jsonResponse({ ok: false, error: 'not_found' }, 404, 30);
+        }
+        return jsonResponse({ ok: true, job: pub }, 200, 30);
+      }
+    }
+
     // === AGENT OPPORTUNITIES (daily GitHub scan) ===
     // Daily snapshot of new GitHub repos that are submission/distribution
     // opportunities for TF: Anthropic/OpenAI/Microsoft/MCP-org repos created
@@ -2762,6 +3132,15 @@ export default {
           agentsDirectorySkills: 'GET /api/agents/directory/skills (free; tally of skill tags across the active directory cohort, sorted by count desc)',
           agentsDirectoryCategories: 'GET /api/agents/directory/categories (free; tally of service_area tags across the active directory cohort)',
           premiumAgentsLeaderboardFull: '/api/premium/agents/leaderboard/full?metric=&window= (1 credit, AFTA-signed; untruncated reputation leaderboard with full cards for every ranked agent. Free /api/agents/leaderboard caps at 25.)',
+          jobsBrowse:
+            '/api/jobs (free; up to 25 active agent-work listings, newest first; ?limit=1-25&category=&q=. Listings are third-party content; TensorFeed is a listing and discovery service and never a party to any transaction)',
+          jobsById: '/api/jobs/{id} (free; single listing; 404 on unknown or removed)',
+          jobsPremium:
+            '/api/premium/jobs (1 credit, AFTA-signed; full and filtered cohort ?category=&q=&status=active|filled|closed|expired; removed listings are never served)',
+          jobsPost:
+            'POST /api/jobs (tier 3, 5 credits about $0.10; requires a prepaid credits bearer token, the per-call x402 path is not accepted for writes; body is a free-text listing plus an EIP-191 signature, nonce, and signed_at; gated by schema allowlist, signed_at window, signature recovery to the poster wallet, single-use nonce, and Chainalysis OFAC fail-closed; settlement for the work is peer-to-peer off-platform; a rejected post is never charged and returns a signed no-charge receipt)',
+          jobsClose:
+            'POST /api/jobs/{id}/close (the original poster signs an EIP-191 close message, action-pinned and nonce single-use, no payment, marks the listing filled)',
           agentActivity: '/api/agents/activity',
           chaosStats: '/api/chaos/stats',
           podcasts: '/api/podcasts',
@@ -4639,6 +5018,62 @@ export default {
           window: windowParam,
           total: ids.length,
           results: cards,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
+    // TensorFeed Jobs: premium read. Untruncated + filtered cohort.
+    // 1 credit, AFTA-signed, reusing the exact audited premium wrapper.
+    // 'removed' is deliberately NOT an allowed status filter: removed
+    // listings were taken down for a TOS violation and must not be
+    // re-served on any public or paid surface. Admin visibility only.
+    if (path === '/api/premium/jobs') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const PUBLIC_STATUSES = ['active', 'filled', 'closed', 'expired'] as const;
+      const statusParam = url.searchParams.get('status') ?? 'active';
+      if (!(PUBLIC_STATUSES as readonly string[]).includes(statusParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_status', allowed: PUBLIC_STATUSES },
+          400,
+        );
+      }
+      const nowSec = Math.floor(Date.now() / 1000);
+      const limParam = parseInt(url.searchParams.get('limit') ?? '200', 10);
+      const limit = Number.isFinite(limParam)
+        ? Math.max(1, Math.min(500, limParam))
+        : 200;
+      const category = url.searchParams.get('category') || undefined;
+      const q = url.searchParams.get('q') || undefined;
+      const gigs = await listGigs(env, {
+        now: nowSec,
+        limit,
+        status: statusParam as (typeof PUBLIC_STATUSES)[number],
+        category,
+        q,
+      });
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/jobs',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          status: statusParam,
+          category: category ?? null,
+          q: q ?? null,
+          count: gigs.length,
+          jobs: gigs.map((g) => toPublicGig(g, nowSec)),
         },
         payment,
         1,
@@ -8106,31 +8541,10 @@ export default {
     // unsafe once the repo went public (ENVIRONMENT="production" lives
     // in wrangler.toml).
     //
-    // Hardening pre-check: any /api/admin/* request first goes through
-    // a tight per-IP rate limiter (5/min/IP), then a 401 if the key is
-    // missing or wrong. The rate limiter counts ALL admin requests,
-    // including bad-key ones, so a runaway loop or a brute-force probe
-    // saturates the limiter rather than the worker's request budget.
-    // The 401 (vs. 404) gives clearer telemetry for separating typo'd
-    // paths from auth failures on real admin paths.
-    if (path.startsWith('/api/admin/')) {
-      const adminIp = getClientIP(request);
-      const adminRate = checkAdminIPRateLimit(adminIp);
-      if (!adminRate.allowed) {
-        return rateLimitedResponse(adminRate);
-      }
-      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
-        return jsonResponse(
-          {
-            ok: false,
-            error: 'unauthorized',
-            message: 'admin endpoint requires a valid ?key= param',
-          },
-          401,
-          0,
-        );
-      }
-    }
+    // (The /api/admin/* per-IP rate-limit + 401 pre-check was hoisted
+    // above the first admin handler so every admin route inherits it,
+    // including the early ones. See the block immediately before the
+    // /api/admin/agents/claim/pending handler.)
 
     if (path === '/api/admin/usage' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);

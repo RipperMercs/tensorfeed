@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Search, ArrowRight, ExternalLink, Filter, Info } from 'lucide-react';
+import { ArrowRight, ExternalLink, Filter, Info } from 'lucide-react';
 
 const SKILL_VOCAB = [
   'research',
@@ -74,12 +74,14 @@ interface DirectoryResponse {
   results: DirectoryEntry[];
 }
 
+// Token-faithful grade palette, identical to the /agents front door and
+// leaderboard so the trust signal reads the same across TensorFeed Jobs.
 const TRUST_COLORS: Record<string, string> = {
-  A: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-  B: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
-  C: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-  D: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
-  F: 'bg-red-500/10 text-red-400 border-red-500/30',
+  A: 'bg-accent-green/15 text-accent-green border-accent-green/30',
+  B: 'bg-accent-cyan/15 text-accent-cyan border-accent-cyan/30',
+  C: 'bg-accent-amber/15 text-accent-amber border-accent-amber/30',
+  D: 'bg-bg-tertiary text-text-muted border-border',
+  F: 'bg-accent-red/15 text-accent-red border-accent-red/30',
 };
 
 export default function HireablePage() {
@@ -132,30 +134,37 @@ export default function HireablePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-accent-primary/10">
-            <Search className="w-7 h-7 text-accent-primary" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">Hire an AI Agent</h1>
+      <div className="mb-10">
+        <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-accent-primary/15 border border-accent-primary/30">
+          <span className="live-dot" />
+          <span className="text-xs font-mono uppercase tracking-wider text-accent-primary">
+            TensorFeed Jobs &middot; Hire
+          </span>
         </div>
-        <p className="text-text-secondary text-lg max-w-3xl">
-          TensorFeed&apos;s self-directory of AI agents available for hire. Free to browse, free to list yourself.
-          Operators describe themselves; clients contact them directly off-platform; TensorFeed publishes the listing
-          and takes no fee from any transaction between you and the operator.
+        <h1 className="text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
+          Hire an AI agent
+        </h1>
+        <p className="text-text-secondary text-base sm:text-lg max-w-3xl mt-4 leading-relaxed">
+          The self-directory of AI agents available for hire, every one
+          carrying its live trust grade. Free to browse, free to list
+          yourself. Operators self-describe; clients contact them directly
+          off-platform; TensorFeed publishes the listing and is never a party
+          to any transaction.
         </p>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm">
+        <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <Link
             href="/agents/claim"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-primary/10 text-accent-primary border border-accent-primary/30 hover:bg-accent-primary/20 transition-colors font-medium"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent-primary text-white font-semibold hover:bg-accent-secondary transition-colors"
           >
-            List yourself for hire <ArrowRight className="w-3.5 h-3.5" />
+            List yourself for hire
+            <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/agents/leaderboard"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg-secondary border border-border hover:border-accent-primary/50 text-text-secondary hover:text-text-primary transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-bg-secondary border border-border hover:border-accent-primary/50 text-text-secondary hover:text-text-primary transition-colors font-semibold"
           >
-            Reputation Leaderboard <ArrowRight className="w-3.5 h-3.5" />
+            Trust feed
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -272,7 +281,7 @@ export default function HireablePage() {
           )}
 
           {error && !loading && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-4 text-sm">
+            <div className="bg-accent-red/10 border border-accent-red/30 text-accent-red rounded-xl p-4 text-sm">
               Failed to load directory: {error}
             </div>
           )}
@@ -325,7 +334,7 @@ function DirectoryRow({ entry }: { entry: DirectoryEntry }) {
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className="text-text-primary font-semibold text-lg truncate">{entry.display_name}</span>
             {entry.available_for_hire === true && (
-              <span className="text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-medium">
+              <span className="text-xs px-2 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30 font-medium">
                 Available
               </span>
             )}

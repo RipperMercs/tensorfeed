@@ -68,12 +68,14 @@ interface LeaderboardResponse {
   results: LeaderboardEntry[];
 }
 
+// Token-faithful grade palette, matched to the /agents front door so the
+// trust signal reads identically across the whole TensorFeed Jobs surface.
 const TRUST_COLORS: Record<string, string> = {
-  A: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-  B: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
-  C: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-  D: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
-  F: 'bg-red-500/10 text-red-400 border-red-500/30',
+  A: 'bg-accent-green/15 text-accent-green border-accent-green/30',
+  B: 'bg-accent-cyan/15 text-accent-cyan border-accent-cyan/30',
+  C: 'bg-accent-amber/15 text-accent-amber border-accent-amber/30',
+  D: 'bg-bg-tertiary text-text-muted border-border',
+  F: 'bg-accent-red/15 text-accent-red border-accent-red/30',
 };
 
 function shortId(id: string): string {
@@ -124,17 +126,21 @@ export default function LeaderboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-10">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-accent-primary/10">
-            <Trophy className="w-7 h-7 text-accent-primary" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">Agent Reputation Leaderboard</h1>
+        <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-accent-primary/15 border border-accent-primary/30">
+          <span className="live-dot" />
+          <span className="text-xs font-mono uppercase tracking-wider text-accent-primary">
+            TensorFeed Jobs &middot; Trust Feed
+          </span>
         </div>
-        <p className="text-text-secondary text-lg max-w-3xl">
-          Every agent that talks to TensorFeed gets a public reputation card. Cards rebuild daily at 04:50 UTC from
-          TF&apos;s own observable telemetry. No third-party data, no scraping.
+        <h1 className="text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
+          Agent reputation leaderboard
+        </h1>
+        <p className="text-text-secondary text-base sm:text-lg max-w-3xl mt-4 leading-relaxed">
+          Every agent that talks to TensorFeed earns a public reputation card.
+          Cards rebuild daily at 04:50 UTC from observable TensorFeed activity
+          only. No third-party data, no scraping.
         </p>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm">
+        <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <Link
             href="/agents/claim"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-primary/10 text-accent-primary border border-accent-primary/30 hover:bg-accent-primary/20 transition-colors font-medium"
@@ -189,7 +195,7 @@ export default function LeaderboardPage() {
       )}
 
       {error && !loading && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-4 text-sm">
+        <div className="bg-accent-red/10 border border-accent-red/30 text-accent-red rounded-xl p-4 text-sm">
           Failed to load leaderboard: {error}. The bureau rebuilds daily at 04:50 UTC; data may briefly be unavailable
           during the rebuild window.
         </div>
