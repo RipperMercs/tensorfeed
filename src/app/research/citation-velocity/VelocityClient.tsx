@@ -61,7 +61,7 @@ export default function VelocityClient() {
                 </div>
                 <div>
                   <div className="text-text-muted">Cites this year</div>
-                  <div className="text-text-primary tabular-nums">{v.citations_latest_year.toLocaleString()}</div>
+                  <div className="text-accent-green tabular-nums">{v.citations_latest_year.toLocaleString()}</div>
                 </div>
               </div>
               {v.first_three_authors && v.first_three_authors.length > 0 && (
