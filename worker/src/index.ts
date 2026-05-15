@@ -7445,6 +7445,45 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: RECENT WINDOW (Tier 1, 1 credit) ===
+    // /api/premium/recent?minutes=N (5-1440, default 60). Sub-daily variant of
+    // /whats-new for agents that boot frequently and want a "what happened in
+    // the last hour" delta. Pricing diff is omitted because history snapshots
+    // are daily-resolution; news + status incidents filter to the window as
+    // normal. Composer is shared with /whats-new; this endpoint just parses
+    // minutes instead of days. Useful as an agent re-orientation call after
+    // long idle periods or between scheduled jobs.
+
+    if (path === '/api/premium/recent') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const minutesRaw = parseInt(url.searchParams.get('minutes') ?? '', 10);
+      const minutes = Number.isFinite(minutesRaw) ? minutesRaw : 60;
+      if (minutes < 5 || minutes > 1440) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'invalid_minutes',
+            hint: 'minutes must be between 5 and 1440 (24 hours). For windows >1 day, use /api/premium/whats-new?days=N.',
+          },
+          400,
+        );
+      }
+      const newsLimitParam = parseInt(url.searchParams.get('news_limit') ?? '', 10);
+      const result = await computeWhatsNew(env, {
+        minutes,
+        ...(Number.isFinite(newsLimitParam) ? { newsLimit: newsLimitParam } : {}),
+      });
+      if (!result.ok) {
+        return jsonResponse(result, 400);
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/recent', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: COMPARE MODELS (Tier 1, 1 credit) ===
     // /api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3
     // Returns a normalized side-by-side comparison block per model

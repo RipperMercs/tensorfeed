@@ -129,7 +129,7 @@ export interface NewsHeadline {
 
 export interface WhatsNewResult {
   ok: true;
-  window: { from: string; to: string; days: number };
+  window: { from: string; to: string; days: number; minutes?: number };
   computed_at: string;
   summary: {
     total_pricing_changes: number;
@@ -207,8 +207,17 @@ function flattenPricing(p: PricingPayload | null): Map<string, { providerName: s
 // === Top-level entry ===
 
 export interface WhatsNewOptions {
-  /** Window length in days (1-7, default 1). */
+  /** Window length in days (1-7, default 1). Mutually exclusive with `minutes`. */
   days?: number;
+  /**
+   * Sub-daily window in minutes (5-1440). When set, overrides `days` and
+   * switches the composer to "recent" mode: pricing diff is skipped because
+   * history snapshots are only daily-resolution, so sub-daily pricing
+   * changes are not knowable. News and status events filter to the window
+   * as normal. Used by the `/api/premium/recent` endpoint for agents that
+   * boot frequently and want a "what happened in the last hour" delta.
+   */
+  minutes?: number;
   /** Max news headlines to include (1-25, default 10). */
   newsLimit?: number;
 }
@@ -217,21 +226,41 @@ export async function computeWhatsNew(
   env: Env,
   options: WhatsNewOptions = {},
 ): Promise<WhatsNewResult | WhatsNewError> {
-  const days = Math.max(
-    MIN_WINDOW_DAYS,
-    Math.min(options.days ?? DEFAULT_WINDOW_DAYS, MAX_WINDOW_DAYS),
-  );
+  // Sub-daily mode: `minutes` set, override the days-based window.
+  // Pricing diff is unavailable for sub-daily windows because history
+  // snapshots are daily-resolution; the response notes this in `notes`.
+  const subDaily = typeof options.minutes === 'number' && options.minutes >= 5 && options.minutes <= 1440;
+  const windowMinutes = subDaily
+    ? Math.max(5, Math.min(options.minutes!, 1440))
+    : null;
+  const days = subDaily
+    ? 1   // not used for window math when subDaily; placeholder for window.days output
+    : Math.max(
+        MIN_WINDOW_DAYS,
+        Math.min(options.days ?? DEFAULT_WINDOW_DAYS, MAX_WINDOW_DAYS),
+      );
   const newsLimit = Math.max(1, Math.min(options.newsLimit ?? DEFAULT_NEWS_LIMIT, MAX_NEWS_LIMIT));
 
   const today = todayUTC();
   const windowStartDate = addDays(today, -days);
   const nowMs = Date.now();
-  const windowStartMs = nowMs - days * 24 * 60 * 60 * 1000;
+  const windowStartMs = subDaily
+    ? nowMs - windowMinutes! * 60 * 1000
+    : nowMs - days * 24 * 60 * 60 * 1000;
 
+  // In sub-daily mode skip the pricing history reads entirely; they're
+  // daily-resolution and would yield a stale "what changed today" view
+  // that doesn't match the requested window. Saves 2 KV reads per call.
   const [pricingRaw, fromSnap, toSnap, servicesRaw, incidentsRaw, articlesRaw] = await Promise.all([
-    env.TENSORFEED_CACHE.get('models', 'json') as Promise<PricingPayload | null>,
-    env.TENSORFEED_CACHE.get(`history:${windowStartDate}:models`, 'json') as Promise<HistorySnapshot<PricingPayload> | null>,
-    env.TENSORFEED_CACHE.get(`history:${today}:models`, 'json') as Promise<HistorySnapshot<PricingPayload> | null>,
+    subDaily
+      ? Promise.resolve(null as PricingPayload | null)
+      : env.TENSORFEED_CACHE.get('models', 'json') as Promise<PricingPayload | null>,
+    subDaily
+      ? Promise.resolve(null as HistorySnapshot<PricingPayload> | null)
+      : env.TENSORFEED_CACHE.get(`history:${windowStartDate}:models`, 'json') as Promise<HistorySnapshot<PricingPayload> | null>,
+    subDaily
+      ? Promise.resolve(null as HistorySnapshot<PricingPayload> | null)
+      : env.TENSORFEED_CACHE.get(`history:${today}:models`, 'json') as Promise<HistorySnapshot<PricingPayload> | null>,
     env.TENSORFEED_STATUS.get('services', 'json') as Promise<ServiceStatus[] | null>,
     env.TENSORFEED_STATUS.get('incidents', 'json') as Promise<IncidentEntry[] | null>,
     env.TENSORFEED_NEWS.get('articles', 'json') as Promise<Article[] | null>,
@@ -322,10 +351,12 @@ export async function computeWhatsNew(
     }));
 
   const notes: string[] = [];
-  if (!fromSnap) {
+  if (subDaily) {
+    notes.push(`Sub-daily window (${windowMinutes} minutes). Pricing diff is omitted because history snapshots are daily-resolution. For pricing changes, request a window of 1 day or more.`);
+  } else if (!fromSnap) {
     notes.push(`No pricing snapshot for ${windowStartDate}; pricing diff may be incomplete. Snapshots accumulate daily, full deltas available after a few days of operation.`);
   }
-  if (changes.length === 0 && newModels.length === 0 && removedModels.length === 0) {
+  if (!subDaily && changes.length === 0 && newModels.length === 0 && removedModels.length === 0) {
     notes.push('No pricing changes in the window. This is the steady state most days.');
   }
   if (incidents.length === 0) {
@@ -338,6 +369,7 @@ export async function computeWhatsNew(
       from: new Date(windowStartMs).toISOString(),
       to: new Date(nowMs).toISOString(),
       days,
+      ...(subDaily ? { minutes: windowMinutes! } : {}),
     },
     computed_at: new Date().toISOString(),
     summary: {

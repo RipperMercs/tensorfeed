@@ -271,6 +271,64 @@ describe('computeWhatsNew: window validation', () => {
   });
 });
 
+describe('computeWhatsNew: sub-daily window (minutes mode)', () => {
+  it('filters news to a 60-min window when minutes=60', async () => {
+    const now = Date.now();
+    const env = makeEnv({
+      articles: [
+        { id: '1', title: '30 min ago', url: 'https://x/1', source: 'X', sourceDomain: 'x.com', snippet: '', categories: [], publishedAt: new Date(now - 30 * 60 * 1000).toISOString() },
+        { id: '2', title: '90 min ago', url: 'https://x/2', source: 'X', sourceDomain: 'x.com', snippet: '', categories: [], publishedAt: new Date(now - 90 * 60 * 1000).toISOString() },
+        { id: '3', title: '5 hours ago', url: 'https://x/3', source: 'X', sourceDomain: 'x.com', snippet: '', categories: [], publishedAt: new Date(now - 5 * 60 * 60 * 1000).toISOString() },
+      ],
+    });
+    const r = await computeWhatsNew(env, { minutes: 60 });
+    if (!r.ok) return;
+    expect(r.news).toHaveLength(1);
+    expect(r.news[0].title).toBe('30 min ago');
+    expect(r.window.minutes).toBe(60);
+  });
+
+  it('omits pricing diff in sub-daily mode and notes why', async () => {
+    const env = makeEnv({
+      pricing: { providers: [{ id: 'a', name: 'A', models: [{ id: 'm1', name: 'M1', inputPrice: 1, outputPrice: 2 }] }] },
+      todaySnap: { date: 'today', type: 'models', capturedAt: '', data: { providers: [{ id: 'a', name: 'A', models: [{ id: 'm1', name: 'M1', inputPrice: 1, outputPrice: 2 }] }] } },
+    });
+    const r = await computeWhatsNew(env, { minutes: 60 });
+    if (!r.ok) return;
+    expect(r.pricing.changes).toEqual([]);
+    expect(r.pricing.new_models).toEqual([]);
+    expect(r.pricing.removed_models).toEqual([]);
+    expect(r.notes.some(n => n.toLowerCase().includes('sub-daily'))).toBe(true);
+  });
+
+  it('clamps minutes to [5, 1440]', async () => {
+    const env = makeEnv({});
+    const tooLow = await computeWhatsNew(env, { minutes: 1 });   // falls through to days mode
+    if (!tooLow.ok) return;
+    expect(tooLow.window.minutes).toBeUndefined();   // sub-daily skipped, days mode applies
+    expect(tooLow.window.days).toBe(1);
+
+    const tooHigh = await computeWhatsNew(env, { minutes: 9999 });
+    if (!tooHigh.ok) return;
+    expect(tooHigh.window.minutes).toBeUndefined();   // out of range, falls back to days mode
+    expect(tooHigh.window.days).toBe(1);
+  });
+
+  it('filters status incidents to the minutes window', async () => {
+    const now = Date.now();
+    const env = makeEnv({
+      incidents: [
+        { id: '1', service: 'API', provider: 'openai', severity: 'minor', title: '30 min ago', startedAt: new Date(now - 30 * 60 * 1000).toISOString(), resolvedAt: null, durationMinutes: null },
+        { id: '2', service: 'API', provider: 'anthropic', severity: 'major', title: '4 hours ago', startedAt: new Date(now - 4 * 60 * 60 * 1000).toISOString(), resolvedAt: null, durationMinutes: null },
+      ],
+    });
+    const r = await computeWhatsNew(env, { minutes: 60 });
+    if (!r.ok) return;
+    expect(r.status.incidents).toHaveLength(1);
+    expect(r.status.incidents[0].title).toBe('30 min ago');
+  });
+});
+
 describe('computeWhatsNew: emit notes', () => {
   it('notes when there is no historical pricing snapshot', async () => {
     const env = makeEnv({});
