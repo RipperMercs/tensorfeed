@@ -235,15 +235,15 @@ export default function ResearchHubClient() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-mono text-text-muted">#{v.rank} · {v.publication_year}</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent-green/10 text-accent-green border border-accent-green/20">
-                    {Math.round(v.citations_latest_year_share * 100)}% this year
-                  </span>
                 </div>
                 <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent-cyan transition-colors mb-2 leading-snug line-clamp-2">
                   {v.title}
                 </h3>
                 <div className="flex items-center justify-between text-[11px] font-mono text-text-muted">
-                  <span>{v.cited_by_count.toLocaleString()} total cites</span>
+                  <span>
+                    <span className="text-accent-green tabular-nums">{v.citations_latest_year.toLocaleString()}</span>
+                    <span className="ml-1">cites this year</span>
+                  </span>
                   {v.venue && <span className="truncate ml-2">{v.venue}</span>}
                 </div>
               </a>
