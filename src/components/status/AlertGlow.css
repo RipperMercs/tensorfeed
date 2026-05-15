@@ -1,0 +1,181 @@
+/* Shared alert-glow primitives for status surfaces (status dashboard,
+ * homepage status grid, embeddable widget, future kinetic tab strip).
+ * From the design facelift spec section 3 ("the alert system").
+ *
+ * Production defaults locked in per spec section 0:
+ *   --motion: 1.2  (animation speed multiplier)
+ *   density:  standard
+ *   scanline: off
+ *
+ * State -> visual mapping:
+ *   ok      no animation, calm green border + faint inset green wash
+ *   warn    3.4s amber breath, full perimeter glow + amber background tint
+ *   down    2.0s red breath, full perimeter glow + red background tint
+ *   unknown muted slate border, no animation
+ *
+ * Animations are GPU-accelerated (box-shadow + border-color only, no
+ * transforms on the card itself). prefers-reduced-motion disables every
+ * pulse.
+ */
+
+:root {
+  --tf-motion: 1.2;
+}
+
+.tf-rack {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(16, 185, 129, 0.025), rgba(16, 185, 129, 0.008) 60%, transparent),
+    var(--bg-secondary, #0f1117);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 24px rgba(16, 185, 129, 0.018),
+    0 0 0 rgba(16, 185, 129, 0);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.3s ease,
+    transform 0.15s ease;
+}
+
+.tf-rack:hover {
+  border-color: rgba(16, 185, 129, 0.55);
+  box-shadow:
+    inset 0 0 24px rgba(16, 185, 129, 0.025),
+    0 0 18px rgba(16, 185, 129, 0.18);
+}
+
+.tf-rack.tf-rack-warn {
+  border-color: rgba(245, 158, 11, 0.5);
+  background:
+    linear-gradient(180deg, rgba(245, 158, 11, 0.06), rgba(245, 158, 11, 0.02) 60%, transparent),
+    var(--bg-secondary, #0f1117);
+  animation: tf-yellow-alert calc(3.4s / var(--tf-motion, 1.2)) ease-in-out infinite;
+}
+
+.tf-rack.tf-rack-down {
+  border-color: rgba(239, 68, 68, 0.55);
+  background:
+    linear-gradient(180deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.03) 60%, transparent),
+    var(--bg-secondary, #0f1117);
+  animation: tf-red-alert calc(2s / var(--tf-motion, 1.2)) ease-in-out infinite;
+}
+
+.tf-rack.tf-rack-unknown {
+  border-color: rgba(100, 116, 139, 0.18);
+  background:
+    linear-gradient(180deg, rgba(100, 116, 139, 0.02), transparent),
+    var(--bg-secondary, #0f1117);
+}
+
+/* Hover override for warn/down would interrupt the alert breath; skip it
+ * intentionally. Hover only emphasizes operational cards. */
+
+@keyframes tf-yellow-alert {
+  0%,
+  100% {
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow:
+      inset 0 0 24px rgba(245, 158, 11, 0.035),
+      0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.9);
+    box-shadow:
+      inset 0 0 50px rgba(245, 158, 11, 0.14),
+      0 0 38px rgba(245, 158, 11, 0.42);
+  }
+}
+
+@keyframes tf-red-alert {
+  0%,
+  100% {
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow:
+      inset 0 0 24px rgba(239, 68, 68, 0.05),
+      0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 1);
+    box-shadow:
+      inset 0 0 60px rgba(239, 68, 68, 0.22),
+      0 0 50px rgba(239, 68, 68, 0.6);
+  }
+}
+
+/* Master breathing LED used on the summary band. Bigger than the per-card
+ * status dots, with a radial bloom that pulses in sync with the headline.
+ * CSS-only so no JS re-renders happen on a single LED tick. */
+.tf-master-led {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  animation: tf-led-breathe 2.4s ease-in-out infinite;
+}
+
+.tf-master-led.tf-led-ok {
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+}
+
+.tf-master-led.tf-led-warn {
+  background: #f59e0b;
+  animation-duration: 1.6s;
+}
+
+.tf-master-led.tf-led-down {
+  background: #ef4444;
+  animation-duration: 1.2s;
+}
+
+.tf-master-led.tf-led-unknown {
+  background: #6b7280;
+  animation: none;
+}
+
+@keyframes tf-led-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 currentColor;
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.12);
+    box-shadow: 0 0 18px 4px currentColor;
+    opacity: 1;
+  }
+}
+
+/* Gradient text for the headline. Per spec section 5.1, the H1 color
+ * shifts by overall state. We use CSS classes rather than inline style
+ * so reduced-motion users still get the gradient, just without animation. */
+.tf-headline-ok {
+  background: linear-gradient(135deg, #d1fae5 0%, #34d399 50%, #06b6d4 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.tf-headline-warn {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 50%, #f59e0b 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.tf-headline-down {
+  background: linear-gradient(135deg, #fecaca 0%, #f87171 50%, #ef4444 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-rack.tf-rack-warn,
+  .tf-rack.tf-rack-down,
+  .tf-master-led {
+    animation: none !important;
+  }
+}

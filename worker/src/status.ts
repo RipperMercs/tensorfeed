@@ -415,12 +415,18 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
     // HTML-based status pages (Better Stack, Checkly, etc.)
     if (service.type === 'html') {
       const html = await response.text();
+      const headline = parseHtmlStatus(html);
       return {
         name: service.name,
         provider: service.provider,
-        status: parseHtmlStatus(html),
+        status: headline,
         statusPageUrl: service.statusPageUrl,
-        components: [],
+        // HTML scrapers can't extract per-component breakdowns. Synthesize a
+        // single 'API' component carrying the headline status so every card
+        // is structurally consistent for the frontend (no special-case "empty
+        // components" UI). Per the design facelift spec: card layout assumes
+        // ≥1 component row.
+        components: [{ name: 'API', status: headline }],
         lastChecked: new Date().toISOString(),
       };
     }
@@ -435,12 +441,15 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
       const componentDerived = aggregateCoreStatus(allComponents, service.componentFilter);
       const headlineStatus =
         componentDerived ?? normalizeInstatusPageStatus(data.page?.status || '');
+      const components = allComponents.length > 0
+        ? allComponents.slice(0, 6)
+        : [{ name: 'API', status: headlineStatus }];
       return {
         name: service.name,
         provider: service.provider,
         status: headlineStatus,
         statusPageUrl: service.statusPageUrl,
-        components: allComponents.slice(0, 6),
+        components,
         lastChecked: new Date().toISOString(),
       };
     }
@@ -450,12 +459,18 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
       const incidents: GcpIncident[] = await response.json();
       const productIds = service.gcpProductIds || [];
       const { status: headlineStatus, affected } = aggregateGcpStatus(incidents, productIds);
+      // When operational with no active incidents, GCP returns no affected
+      // products. Synthesize a default 'Inference API' component so the card
+      // displays consistently with other providers (see html branch above).
+      const components = affected.length > 0
+        ? affected.slice(0, 6)
+        : [{ name: 'Inference API', status: headlineStatus }];
       return {
         name: service.name,
         provider: service.provider,
         status: headlineStatus,
         statusPageUrl: service.statusPageUrl,
-        components: affected.slice(0, 6),
+        components,
         lastChecked: new Date().toISOString(),
       };
     }
@@ -466,12 +481,15 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
       const events = decodeAwsEventsBuffer(buffer);
       const match = service.awsServiceMatch || '';
       const { status: headlineStatus, affected } = aggregateAwsStatus(events, match);
+      const components = affected.length > 0
+        ? affected.slice(0, 6)
+        : [{ name: 'Bedrock API', status: headlineStatus }];
       return {
         name: service.name,
         provider: service.provider,
         status: headlineStatus,
         statusPageUrl: service.statusPageUrl,
-        components: affected.slice(0, 6),
+        components,
         lastChecked: new Date().toISOString(),
       };
     }
@@ -482,12 +500,15 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
       const items = parseAzureRssItems(xml);
       const keywords = service.azureKeywords || [];
       const { status: headlineStatus, affected } = aggregateAzureStatus(items, keywords);
+      const components = affected.length > 0
+        ? affected.slice(0, 6)
+        : [{ name: 'Azure OpenAI Service', status: headlineStatus }];
       return {
         name: service.name,
         provider: service.provider,
         status: headlineStatus,
         statusPageUrl: service.statusPageUrl,
-        components: affected.slice(0, 6),
+        components,
         lastChecked: new Date().toISOString(),
       };
     }
@@ -528,12 +549,19 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
       ...allComponents.filter((c) => !inScope(c)),
     ].slice(0, 6);
 
+    // Statuspage providers occasionally return an empty components array
+    // (e.g. DeepSeek when their page is freshly provisioned). Fall back to a
+    // synthesized 'API' component so the card stays visually consistent
+    // with siblings that do publish components.
+    const finalComponents = sortedComponents.length > 0
+      ? sortedComponents
+      : [{ name: 'API', status: headlineStatus }];
     return {
       name: service.name,
       provider: service.provider,
       status: headlineStatus,
       statusPageUrl: service.statusPageUrl,
-      components: sortedComponents,
+      components: finalComponents,
       lastChecked: new Date().toISOString(),
     };
   } catch (error) {
