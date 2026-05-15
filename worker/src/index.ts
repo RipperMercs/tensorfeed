@@ -804,6 +804,7 @@ async function premiumValidationFailure(
   request: Request,
   env: Env,
   noChargeReason: NoChargeReason = 'schema_validation_failure',
+  status: number = 400,
 ): Promise<Response> {
   const url = new URL(request.url);
   const endpoint = url.pathname;
@@ -910,7 +911,7 @@ async function premiumValidationFailure(
     responseBody.receipt_status = 'pending_key_bootstrap';
   }
 
-  return new Response(JSON.stringify(responseBody), { status: 400, headers });
+  return new Response(JSON.stringify(responseBody), { status, headers });
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -969,6 +970,14 @@ export default {
     url: URL,
     path: string,
   ): Promise<Response> {
+    // B-F3: single outer guard around the entire route dispatch. A
+    // handler throw must not escape as a Cloudflare HTML 500
+    // (unparseable for agents) and must still honor the AFTA 5xx
+    // no-charge guarantee. Deferred-debit already means no credit was
+    // charged on a throw; the catch adds a structured JSON 500 (all
+    // paths) plus the 5xx no-charge ledger entry + signed receipt
+    // (premium paths). The catch NEVER debits.
+    try {
     // Track agent/bot activity (non-blocking, batched in memory)
     ctx.waitUntil(trackAgentActivity(request, env, path));
 
@@ -8597,6 +8606,66 @@ export default {
     // }
 
     return jsonResponse({ error: 'Not found', endpoints: ['/api/health', '/api/news', '/api/status', '/api/models', '/api/benchmarks', '/api/harnesses', '/api/podcasts', '/api/trending-repos', '/api/feed.xml', '/api/feed.json', '/api/meta'] }, 404);
+
+    } catch (err) {
+      // Deferred-debit already guarantees no credit was charged on a
+      // throw (commitPayment never ran). Re-derive the bearer token from
+      // the Authorization header so NO handler needs to expose its
+      // payment object. For a premium path, record the AFTA 5xx
+      // no-charge event + signed receipt (HTTP 500) via the audited
+      // helper. Always return parseable JSON, never a Cloudflare HTML
+      // error page. This path NEVER debits (commitPayment with a
+      // non-null reason logs only).
+      try {
+        console.error(
+          'worker_unhandled_error',
+          path,
+          err instanceof Error ? err.stack || err.message : String(err),
+        );
+      } catch {}
+      const authH = request.headers.get('Authorization');
+      const tok =
+        authH && authH.startsWith('Bearer ') ? authH.slice(7).trim() : '';
+      if (path.startsWith('/api/premium/') && tok.startsWith('tf_live_')) {
+        try {
+          const recovered = {
+            paid: true,
+            token: tok,
+            cost: 0,
+          } as import('./payments').PaymentResult;
+          return await premiumValidationFailure(
+            {
+              ok: false,
+              error: 'internal_error',
+              message:
+                'The request failed inside the handler. No credit was charged for this call.',
+            },
+            recovered,
+            request,
+            env,
+            '5xx',
+            500,
+          );
+        } catch (e2) {
+          try {
+            console.error(
+              'worker_5xx_nocharge_failed',
+              path,
+              e2 instanceof Error ? e2.message : String(e2),
+            );
+          } catch {}
+        }
+      }
+      return jsonResponse(
+        {
+          ok: false,
+          error: 'internal_error',
+          message:
+            'The request failed unexpectedly. If this was a premium call, no credit was charged.',
+        },
+        500,
+      );
+    }
   },
 
   async scheduled(event: ScheduledEvent, env: Env): Promise<void> {
