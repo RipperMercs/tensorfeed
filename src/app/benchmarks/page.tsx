@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, GitCompare, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import fallbackData from '@/../data/benchmarks.json';
@@ -192,6 +192,31 @@ export default function BenchmarksPage() {
           </Link>
         ))}
       </div>
+
+      {/* Compare CTA: side-by-side model comparison entry point. Previously
+          lived as its own top-nav slot; folded here so /research could take
+          that slot. /compare itself is unchanged, just promoted from here. */}
+      <Link
+        href="/compare"
+        className="group block mb-10 bg-bg-secondary border border-border rounded-xl p-5 hover:border-accent-primary transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-lg bg-accent-primary/10 shrink-0">
+            <GitCompare className="w-6 h-6 text-accent-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h2 className="text-lg font-semibold text-text-primary group-hover:text-accent-primary transition-colors">
+                Compare specific models, side-by-side
+              </h2>
+              <ArrowRight className="w-5 h-5 text-text-muted group-hover:text-accent-primary transition-colors shrink-0" />
+            </div>
+            <p className="text-sm text-text-secondary mt-1">
+              Pick any 2 to 5 models to put head-to-head across benchmarks, pricing, and context windows. Popular pairs: Claude Opus vs GPT-5.5, Gemini 3 vs Llama 4, open-source vs frontier.
+            </p>
+          </div>
+        </div>
+      </Link>
 
       {/* Editorial Intro */}
       <div className="max-w-4xl mb-10 text-text-secondary leading-relaxed space-y-4">
