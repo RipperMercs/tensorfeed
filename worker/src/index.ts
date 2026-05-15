@@ -361,6 +361,7 @@ import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chai
 import { getGhsaAiFeed, refreshGhsaAiFeed } from './ghsa-ai-feed';
 import { getOpenAlexAIAuthors, refreshOpenAlexAIAuthors } from './openalex-authors';
 import { getOpenAlexAICitationVelocity, refreshOpenAlexAICitationVelocity } from './openalex-citation-velocity';
+import { getApisGuruAIWatch, refreshApisGuruAIWatch } from './apis-guru-ai-watch';
 import { rebuildAllReputationCards } from './agent-reputation-rebuild';
 import {
   ALL_METRICS,
@@ -2891,6 +2892,7 @@ export default {
           premiumResearchVelocity: '/api/premium/research/velocity (1 credit; per-institution velocity over the OpenAlex 365-day baseline + fresh 30-day window, with direction classification, notable-movers, by-country and by-type breakdowns)',
           premiumResearchAuthors: '/api/premium/research/authors (1 credit; top 100 AI authors ranked by AI publication volume in the trailing 365 days. Enriched with h_index, i10_index, cited_by_count, primary affiliation (institution + country), ORCID, derived ai_share_pct (AI works as share of total). OpenAlex CC0. Daily refresh.)',
           premiumResearchCitationVelocity: '/api/premium/research/citation-velocity (1 credit; top 100 recent AI papers ranked by share of total citations gained in the most recent calendar year. Papers published in the last 2 years with 3+ citations. Returns title, year, total + latest-year citations, share, DOI, venue, first 3 authors, primary affiliation. OpenAlex CC0. Daily refresh.)',
+          premiumApisGuruAiFeed: '/api/premium/apis-guru/ai-feed (1 credit; AI-relevant entries from the APIs.guru public directory of 2400+ OpenAPI specs, filtered via curated keyword match on provider + title + description. Per-entry first_seen_at against our daily snapshot history so agents can diff "what new AI APIs appeared in the last 7 days." Includes by_provider counts + a separate newly_added_last_7d array. CC-BY-SA 4.0; primary source links preserved.)',
           premiumResearchMilestones: '/api/premium/research/milestones (1 credit; last 30 days of arXiv preprints flagged is_milestone_candidate by an offline Qwen 3.6 27B per-paper extraction pass. Each paper carries structured reasoning stating the named benchmark + quantified delta, model release, or novel architecture justification. Conservative; false positives are worse than false negatives.)',
           premiumResearchEmergingKeywords: '/api/premium/research/emerging-keywords (1 credit; top-50 multi-word keyphrases across recent arXiv abstracts ranked by recent-vs-baseline lift, last 30d frequency over prior 90d, smoothed. Each entry carries 2-5 example arxiv_ids.)',
           premiumResearchTopicSearch: '/api/premium/research/topic-search?subfield_tag=&methodology_bucket=&since=&until=&milestone_only=&limit=&offset= (1 credit; structured search over the arXiv preprint corpus using TF derived taxonomy. Filters arXiv by subfield + methodology, dimensions arXiv\'s native search has no concept of.)',
@@ -2921,7 +2923,7 @@ export default {
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|nflverse|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -7581,6 +7583,37 @@ export default {
       return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: APIs.GURU AI WATCH (Tier 1, 1 credit) ===
+    // /api/premium/apis-guru/ai-feed — AI-relevant entries from the
+    // APIs.guru public API directory (2400+ entries, CC-BY-SA 4.0).
+    // Filtered with the shared AI keyword list + API-specific extensions
+    // (model provider domains, service categories, generic tokens). Each
+    // entry includes first_seen_at against our snapshot history so agents
+    // can answer "what new AI APIs appeared in the last 7 days," a diff
+    // APIs.guru's static list doesn't expose. Daily refresh.
+
+    if (path === '/api/premium/apis-guru/ai-feed') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const snapshot = await getApisGuruAIWatch(env);
+      if (!snapshot) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'no_snapshot_yet',
+            hint: 'APIs.guru AI watch has not yet been refreshed. Cron runs daily; retry shortly.',
+          },
+          503,
+          60,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/apis-guru/ai-feed', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: COMPARE MODELS (Tier 1, 1 credit) ===
     // /api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3
     // Returns a normalized side-by-side comparison block per model
@@ -8299,6 +8332,25 @@ export default {
         const result = await refreshOpenAlexAICitationVelocity(env);
         return jsonResponse({ message: 'OpenAlex AI citation-velocity refreshed', ...result });
       }
+      if (task === 'apis-guru-ai') {
+        try {
+          const snap = await refreshApisGuruAIWatch(env);
+          return jsonResponse({
+            message: 'APIs.guru AI watch refreshed',
+            total: snap.total,
+            newly_added_last_7d: snap.newly_added_last_7d.length,
+            generated_at: snap.generated_at,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error('refreshApisGuruAIWatch threw:', msg);
+          return jsonResponse(
+            { ok: false, error: 'refresh_failed', message: msg },
+            500,
+            0,
+          );
+        }
+      }
       if (task === 'hf-leaderboard') {
         const result = await captureHfLeaderboard(env);
         return jsonResponse({ message: 'HF Open LLM Leaderboard captured', ...result });
@@ -8765,6 +8817,11 @@ export default {
       // OpenAlex polite-pool quota easily absorbs three calls per day.
       await run('refreshOpenAlexAIAuthors', () => refreshOpenAlexAIAuthors(env));
       await run('refreshOpenAlexAICitationVelocity', () => refreshOpenAlexAICitationVelocity(env));
+      // APIs.guru AI watch: filter the 2400-entry directory to AI-relevant
+      // APIs, preserve first_seen_at from the prior snapshot. Single fetch,
+      // single KV write. Runs on the same daily tick to consolidate
+      // discovery-surface refreshes in one Worker invocation.
+      await run('refreshApisGuruAIWatch', () => refreshApisGuruAIWatch(env));
     } else if (cron === '0 5 * * *') {
       // Daily 05:00 UTC: refresh BLS economic indicators (10 series via
       // public V1 GET endpoint). Public domain. Sequential to stay
