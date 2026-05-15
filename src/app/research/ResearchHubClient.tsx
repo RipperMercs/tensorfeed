@@ -236,7 +236,7 @@ export default function ResearchHubClient() {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-mono text-text-muted">#{v.rank} · {v.publication_year}</span>
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent-green/10 text-accent-green border border-accent-green/20">
-                    {Math.round(v.citations_latest_year_share * 100)}% latest year
+                    {Math.round(v.citations_latest_year_share * 100)}% this year
                   </span>
                 </div>
                 <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent-primary transition-colors mb-2 leading-snug line-clamp-2">

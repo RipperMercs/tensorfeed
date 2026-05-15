@@ -51,7 +51,7 @@ export default function VelocityClient() {
                   #{v.rank} · {v.publication_year}
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-green/10 text-accent-green border border-accent-green/20">
-                  {Math.round(v.citations_latest_year_share * 100)}% in latest year
+                  {Math.round(v.citations_latest_year_share * 100)}% this year
                 </span>
               </div>
               <h3 className="text-base font-semibold text-text-primary group-hover:text-accent-primary transition-colors mb-3 leading-snug">
@@ -63,7 +63,7 @@ export default function VelocityClient() {
                   <div className="text-text-primary tabular-nums">{v.cited_by_count.toLocaleString()}</div>
                 </div>
                 <div>
-                  <div className="text-text-muted">Latest year</div>
+                  <div className="text-text-muted">Cites this year</div>
                   <div className="text-text-primary tabular-nums">{v.citations_latest_year.toLocaleString()}</div>
                 </div>
               </div>
