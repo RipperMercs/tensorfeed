@@ -354,7 +354,7 @@ export default function AgentsPage() {
               off platform.
             </p>
             <span className="inline-block text-[11px] font-mono uppercase tracking-wide px-2 py-1 rounded-full bg-bg-tertiary text-text-muted border border-border">
-              Opens after legal review
+              Coming soon
             </span>
           </div>
         </div>
