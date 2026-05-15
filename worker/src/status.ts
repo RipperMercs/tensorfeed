@@ -377,8 +377,20 @@ export const _internal = {
 
 function parseHtmlStatus(html: string): 'operational' | 'degraded' | 'down' | 'unknown' {
   const lower = html.toLowerCase();
-  // Check for clear positive banner text first (most reliable)
-  if (lower.includes('all systems operational') || lower.includes('all services are online') || lower.includes('fully operational') || lower.includes('all monitors are up')) {
+  // Check for clear positive banner text first (most reliable). Covers
+  // Atlassian Statuspage, BetterUptime, Instatus, OnlineOrNot, DeepSeek's
+  // custom page, and similar variants observed in the wild.
+  const OPERATIONAL_PHRASES = [
+    'all systems operational',
+    'all services are online',
+    'fully operational',
+    'all monitors are up',
+    'everything is running smoothly',          // DeepSeek
+    'all systems are operating as expected',   // DeepSeek
+    'all systems normal',
+    'no incidents reported',
+  ];
+  if (OPERATIONAL_PHRASES.some((p) => lower.includes(p))) {
     return 'operational';
   }
   // Check for active incident banners (not historical logs)

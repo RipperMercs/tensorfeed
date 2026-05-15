@@ -236,9 +236,14 @@ export const STATUS_PAGES: StatusPageConfig[] = [
   {
     name: 'DeepSeek',
     provider: 'DeepSeek',
-    url: 'https://status.deepseek.com/api/v2/summary.json',
+    // DeepSeek runs a custom status page (not Atlassian Statuspage), so the
+    // /api/v2/summary.json path we previously hit returns 404 and the card
+    // showed "unknown" 2026-05-14. HTML scraper catches their "Everything
+    // is running smoothly" and "All systems are operating as expected"
+    // banner copy (added to parseHtmlStatus same commit).
+    url: 'https://status.deepseek.com/',
     statusPageUrl: 'https://status.deepseek.com',
-    type: 'statuspage',
+    type: 'html',
   },
   {
     name: 'Together AI',
