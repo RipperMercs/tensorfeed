@@ -4693,6 +4693,62 @@ export default {
       );
     }
 
+    // TensorFeed Jobs: premium read. Untruncated + filtered cohort.
+    // 1 credit, AFTA-signed, reusing the exact audited premium wrapper.
+    // 'removed' is deliberately NOT an allowed status filter: removed
+    // listings were taken down for a TOS violation and must not be
+    // re-served on any public or paid surface. Admin visibility only.
+    if (path === '/api/premium/jobs') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const PUBLIC_STATUSES = ['active', 'filled', 'closed', 'expired'] as const;
+      const statusParam = url.searchParams.get('status') ?? 'active';
+      if (!(PUBLIC_STATUSES as readonly string[]).includes(statusParam)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_status', allowed: PUBLIC_STATUSES },
+          400,
+        );
+      }
+      const nowSec = Math.floor(Date.now() / 1000);
+      const limParam = parseInt(url.searchParams.get('limit') ?? '200', 10);
+      const limit = Number.isFinite(limParam)
+        ? Math.max(1, Math.min(500, limParam))
+        : 200;
+      const category = url.searchParams.get('category') || undefined;
+      const q = url.searchParams.get('q') || undefined;
+      const gigs = await listGigs(env, {
+        now: nowSec,
+        limit,
+        status: statusParam as (typeof PUBLIC_STATUSES)[number],
+        category,
+        q,
+      });
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/jobs',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+        ),
+      );
+      return await premiumResponse(
+        {
+          ok: true,
+          status: statusParam,
+          category: category ?? null,
+          q: q ?? null,
+          count: gigs.length,
+          jobs: gigs.map((g) => toPublicGig(g, nowSec)),
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
     if (path === '/api/premium/history/pricing/series') {
       // Strict-premium tier 2 ($0.04): full-window historical time-series,
       // no per-IP trial. See worker/src/strict-premium-endpoints.ts.
