@@ -18,6 +18,7 @@ import {
   categoryForSeed,
 } from '@/components/research/categories';
 import BackgroundParticles from '@/components/research/BackgroundParticles';
+import HeroConstellation from '@/components/research/HeroConstellation';
 
 function SectionHeader({
   icon: Icon,
@@ -115,6 +116,18 @@ export default function ResearchHubClient() {
             backgroundSize: '48px 48px',
           }}
         />
+        {/* Constellation overlay: breathing category-colored nodes drift
+            over the photo's dimmed atmosphere. Sits between the gradient
+            (-z-10) and the text content. Pointer-events none, mix-blend
+            screen so colors brighten the dark backdrop rather than wash
+            it out. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 pointer-events-none"
+          style={{ mixBlendMode: 'screen', opacity: 0.55 }}
+        >
+          <HeroConstellation />
+        </div>
 
         <div className="max-w-4xl">
           <div className="flex items-center gap-3 mb-3">
