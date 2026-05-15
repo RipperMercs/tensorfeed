@@ -1,0 +1,189 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+// Endpoints the hub consumes. All anonymous reads either fall through
+// the per-IP free-trial pool (premium endpoints, 100/day) or hit free
+// surfaces directly. Each visitor's browser has its own trial budget,
+// so the hub scales linearly with visitors.
+
+const API = 'https://tensorfeed.ai';
+
+export interface ArxivPaper {
+  arxivId: string;
+  title: string;
+  abstract: string | null;
+  authors: string[];
+  primaryCategory: string | null;
+  publishedAt: string;
+  htmlUrl: string;
+  pdfUrl: string;
+}
+
+export interface MilestonePaper {
+  arxiv_id: string;
+  date: string;
+  subfield_tag: string;
+  methodology_bucket: string;
+  title: string;
+  affiliations: string[];
+  milestone_reasoning: string;
+  summary: string;
+}
+
+export interface AuthorRow {
+  rank: number;
+  openalex_id: string;
+  display_name: string;
+  orcid: string | null;
+  primary_affiliation: {
+    openalex_id: string | null;
+    display_name: string | null;
+    country_code: string | null;
+  };
+  ai_works_last_year: number;
+  total_works_count: number | null;
+  cited_by_count: number | null;
+  h_index: number | null;
+  ai_share_pct: number | null;
+}
+
+export interface VelocityPaper {
+  rank: number;
+  openalex_id: string;
+  title: string;
+  publication_year: number;
+  cited_by_count: number;
+  citations_latest_year: number;
+  citations_latest_year_share: number;
+  doi: string | null;
+  venue: string | null;
+  landing_page_url: string | null;
+  first_three_authors: Array<{ openalex_id: string | null; display_name: string }>;
+  primary_affiliation: { openalex_id: string | null; display_name: string | null };
+}
+
+export interface EmergingKeyword {
+  keyword: string;
+  recent_count: number;
+  baseline_count: number;
+  lift: number;
+  example_arxiv_ids: string[];
+}
+
+export interface InstitutionRow {
+  rank: number;
+  openalex_id: string;
+  display_name: string;
+  country_code: string | null;
+  type: string | null;
+  ai_works_last_year: number;
+}
+
+async function safeFetch<T>(url: string): Promise<T | null> {
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+// === Hooks ===
+
+export function useArxivLatest(limit = 12) {
+  const [papers, setPapers] = useState<ArxivPaper[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; snapshot?: { papers?: ArxivPaper[] } }>(
+        `${API}/api/papers/arxiv-recent`,
+      );
+      if (cancelled) return;
+      setPapers(data?.snapshot?.papers?.slice(0, limit) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [limit]);
+  return papers;
+}
+
+export function useMilestones(limit = 12) {
+  const [papers, setPapers] = useState<MilestonePaper[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; papers?: MilestonePaper[] }>(
+        `${API}/api/premium/research/milestones`,
+      );
+      if (cancelled) return;
+      setPapers(data?.papers?.slice(0, limit) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [limit]);
+  return papers;
+}
+
+export function useAuthors(limit = 15) {
+  const [rows, setRows] = useState<AuthorRow[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; authors?: AuthorRow[] }>(
+        `${API}/api/premium/research/authors`,
+      );
+      if (cancelled) return;
+      setRows(data?.authors?.slice(0, limit) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [limit]);
+  return rows;
+}
+
+export function useCitationVelocity(limit = 15) {
+  const [papers, setPapers] = useState<VelocityPaper[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; papers?: VelocityPaper[] }>(
+        `${API}/api/premium/research/citation-velocity`,
+      );
+      if (cancelled) return;
+      setPapers(data?.papers?.slice(0, limit) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [limit]);
+  return papers;
+}
+
+export function useEmergingKeywords(limit = 30) {
+  const [keywords, setKeywords] = useState<EmergingKeyword[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; keywords?: EmergingKeyword[] }>(
+        `${API}/api/premium/research/emerging-keywords`,
+      );
+      if (cancelled) return;
+      setKeywords(data?.keywords?.slice(0, limit) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [limit]);
+  return keywords;
+}
+
+export function useInstitutions(limit = 10) {
+  const [rows, setRows] = useState<InstitutionRow[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; snapshot?: { institutions?: InstitutionRow[] } }>(
+        `${API}/api/research/institutions/ai`,
+      );
+      if (cancelled) return;
+      setRows(data?.snapshot?.institutions?.slice(0, limit) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [limit]);
+  return rows;
+}

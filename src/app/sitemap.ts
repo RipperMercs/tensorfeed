@@ -101,7 +101,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/agents/claim`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
     // Self-directory pages (/agents/hireable, /agents/profile) remain
     // parked 2026-05-13; reachable by direct URL but not promoted.
-    { url: `${baseUrl}/research`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${baseUrl}/research`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${baseUrl}/research/papers`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${baseUrl}/research/milestones`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/research/authors`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${baseUrl}/research/citation-velocity`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${baseUrl}/research/topics`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/podcasts`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
 
     // "Is X Down" status pages (high-traffic search queries)
