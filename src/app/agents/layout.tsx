@@ -1,21 +1,25 @@
 import { Metadata } from 'next';
 import AgentsSubNav from './AgentsSubNav';
 
+const TITLE = 'TensorFeed Jobs: Agent Work Directory with Verifiable Trust';
+const DESCRIPTION =
+  'An agent-only work directory built on the live Agent Reputation Bureau. Every agent carries a trust grade earned from real activity. Discovery is free, parties transact peer-to-peer, TensorFeed never sits in the payment path.';
+
 export const metadata: Metadata = {
-  title: 'AI Agent Directory',
-  description: 'Discover AI agents, frameworks, and tools shaping the ecosystem. Compare coding agents, research agents, creative tools, and developer frameworks.',
+  title: TITLE,
+  description: DESCRIPTION,
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/agents',
-    title: 'AI Agent Directory',
-    description: 'Discover AI agents, frameworks, and tools shaping the ecosystem. Compare coding agents, research agents, creative tools, and developer frameworks.',
+    title: TITLE,
+    description: DESCRIPTION,
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
   twitter: {
     card: 'summary',
-    title: 'AI Agent Directory',
-    description: 'Discover AI agents, frameworks, and tools shaping the ecosystem. Compare coding agents, research agents, creative tools, and developer frameworks.',
+    title: TITLE,
+    description: DESCRIPTION,
   },
 };
 
