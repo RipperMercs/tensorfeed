@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Award } from 'lucide-react';
 import ResearchHero from '@/components/research/ResearchHero';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
-import { useMilestones } from '@/components/research/useResearchData';
+import { useMilestones, paperAccent } from '@/components/research/useResearchData';
 
 export default function MilestonesClient() {
   const papers = useMilestones(100);
@@ -79,17 +79,23 @@ export default function MilestonesClient() {
         <p className="text-text-muted font-mono text-sm">No milestone papers in this subfield right now.</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {visible.map((p) => (
+          {visible.map((p) => {
+            const accent = paperAccent(p.subfield_tag || p.arxiv_id);
+            return (
             <a
               key={p.arxiv_id}
               href={`https://arxiv.org/abs/${p.arxiv_id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
+              style={{ borderTop: `2px solid ${accent.color}` }}
             >
               <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-bg-tertiary text-accent-cyan border border-border">
+                  <span
+                    className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border border-border"
+                    style={{ background: accent.bgTint, color: accent.color }}
+                  >
                     {p.subfield_tag}
                   </span>
                   <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-bg-tertiary text-text-muted border border-border">
@@ -114,7 +120,8 @@ export default function MilestonesClient() {
               )}
               <p className="text-[10px] font-mono text-text-muted mt-2">arXiv:{p.arxiv_id}</p>
             </a>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

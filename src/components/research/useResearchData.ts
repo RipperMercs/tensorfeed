@@ -90,6 +90,36 @@ async function safeFetch<T>(url: string): Promise<T | null> {
   }
 }
 
+// ── Card accent palette ────────────────────────────────────────────
+// Pastel "digital library" palette. Each research card gets a 2px top
+// accent + matching 4% bg tint on hover, picked deterministically from
+// a string seed (subfield tag, primary category, openalex id, etc.) so
+// the same paper always renders the same color across reloads.
+
+const ACCENT_PALETTE: { name: string; color: string; bgTint: string }[] = [
+  { name: 'light-blue', color: '#93c5fd', bgTint: 'rgba(147, 197, 253, 0.06)' },
+  { name: 'gold',       color: '#fcd34d', bgTint: 'rgba(252, 211, 77, 0.06)' },
+  { name: 'pale-yellow',color: '#fde68a', bgTint: 'rgba(253, 230, 138, 0.06)' },
+  { name: 'mint',       color: '#a7f3d0', bgTint: 'rgba(167, 243, 208, 0.06)' },
+  { name: 'lavender',   color: '#c4b5fd', bgTint: 'rgba(196, 181, 253, 0.06)' },
+  { name: 'rose',       color: '#fda4af', bgTint: 'rgba(253, 164, 175, 0.06)' },
+  { name: 'teal',       color: '#67e8f9', bgTint: 'rgba(103, 232, 249, 0.06)' },
+  { name: 'coral',      color: '#fdba74', bgTint: 'rgba(253, 186, 116, 0.06)' },
+];
+
+export interface PaperAccent {
+  color: string;
+  bgTint: string;
+}
+
+/** Deterministic accent color for a research card. Same seed = same color. */
+export function paperAccent(seed: string): PaperAccent {
+  if (!seed) return ACCENT_PALETTE[0];
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) h = (h ^ seed.charCodeAt(i)) * 16777619;
+  return ACCENT_PALETTE[(h >>> 0) % ACCENT_PALETTE.length];
+}
+
 // === Hooks ===
 
 export function useArxivLatest(limit = 12) {

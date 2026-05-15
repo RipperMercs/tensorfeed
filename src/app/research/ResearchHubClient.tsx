@@ -11,6 +11,7 @@ import {
   useCitationVelocity,
   useEmergingKeywords,
   useInstitutions,
+  paperAccent,
 } from '@/components/research/useResearchData';
 
 function SectionHeader({
@@ -85,16 +86,22 @@ export default function ResearchHubClient() {
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
-            {milestones.map((p) => (
+            {milestones.map((p) => {
+              const accent = paperAccent(p.subfield_tag || p.arxiv_id);
+              return (
               <a
                 key={p.arxiv_id}
                 href={`https://arxiv.org/abs/${p.arxiv_id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
+                style={{ borderTop: `2px solid ${accent.color}` }}
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
-                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-bg-tertiary text-accent-cyan border border-border">
+                  <span
+                    className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border border-border"
+                    style={{ background: accent.bgTint, color: accent.color }}
+                  >
                     {p.subfield_tag}
                   </span>
                   <span className="text-[10px] font-mono text-text-muted">{p.date}</span>
@@ -111,7 +118,8 @@ export default function ResearchHubClient() {
                   </p>
                 )}
               </a>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -127,13 +135,16 @@ export default function ResearchHubClient() {
           <SkeletonGrid count={6} />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {velocity.map((v) => (
+            {velocity.map((v) => {
+              const accent = paperAccent(v.openalex_id);
+              return (
               <a
                 key={v.openalex_id}
                 href={v.landing_page_url ?? (v.doi ? `https://doi.org/${v.doi}` : `https://openalex.org/${v.openalex_id}`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
+                style={{ borderTop: `2px solid ${accent.color}` }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-mono text-text-muted">#{v.rank} · {v.publication_year}</span>
@@ -149,7 +160,8 @@ export default function ResearchHubClient() {
                   {v.venue && <span className="truncate ml-2">{v.venue}</span>}
                 </div>
               </a>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -268,17 +280,23 @@ export default function ResearchHubClient() {
           <SkeletonGrid count={6} />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {arxiv.map((p) => (
+            {arxiv.map((p) => {
+              const accent = paperAccent(p.primaryCategory || p.arxivId);
+              return (
               <a
                 key={p.arxivId}
                 href={p.htmlUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
+                style={{ borderTop: `2px solid ${accent.color}` }}
               >
                 <div className="flex items-center justify-between mb-2">
                   {p.primaryCategory && (
-                    <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-bg-tertiary text-accent-cyan border border-border">
+                    <span
+                      className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border border-border"
+                      style={{ background: accent.bgTint, color: accent.color }}
+                    >
                       {p.primaryCategory}
                     </span>
                   )}
@@ -295,7 +313,8 @@ export default function ResearchHubClient() {
                   {p.authors.length > 3 && ` +${p.authors.length - 3}`}
                 </div>
               </a>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

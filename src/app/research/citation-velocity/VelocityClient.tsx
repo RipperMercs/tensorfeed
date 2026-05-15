@@ -3,7 +3,7 @@
 import { ExternalLink, TrendingUp } from 'lucide-react';
 import ResearchHero from '@/components/research/ResearchHero';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
-import { useCitationVelocity } from '@/components/research/useResearchData';
+import { useCitationVelocity, paperAccent } from '@/components/research/useResearchData';
 
 export default function VelocityClient() {
   const papers = useCitationVelocity(100);
@@ -34,13 +34,16 @@ export default function VelocityClient() {
         <p className="text-text-muted font-mono text-sm">Citation velocity snapshot not yet refreshed. Cron runs daily.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {papers.map((v) => (
+          {papers.map((v) => {
+            const accent = paperAccent(v.openalex_id);
+            return (
             <a
               key={v.openalex_id}
               href={v.landing_page_url ?? (v.doi ? `https://doi.org/${v.doi}` : `https://openalex.org/${v.openalex_id}`)}
               target="_blank"
               rel="noopener noreferrer"
               className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
+              style={{ borderTop: `2px solid ${accent.color}` }}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-mono text-text-muted">
@@ -75,7 +78,8 @@ export default function VelocityClient() {
                 </span>
               </div>
             </a>
-          ))}
+            );
+          })}
         </div>
       )}
 
