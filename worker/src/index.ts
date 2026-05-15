@@ -385,8 +385,14 @@ import {
   type RankableMetric,
 } from './agent-reputation-store';
 import { handleClaimApplication } from './agent-claim-handler';
-import { listGigs, getGig } from './jobs-store';
-import { toPublicGig } from './jobs';
+import { listGigs, getGig, reserveNonce, putGig } from './jobs-store';
+import {
+  toPublicGig,
+  validateGigSubmission,
+  validateSignedAt,
+  assembleGigRecord,
+} from './jobs';
+import { verifyPosterSignature, screenPoster } from './jobs-gate';
 import {
   aggregateServiceAreaDistribution,
   aggregateSkillDistribution,
@@ -2641,6 +2647,137 @@ export default {
         },
         200,
         60,
+      );
+    }
+
+    // === TENSORFEED JOBS: create a listing (the money line) ===
+    // Tier 3 (5 credits, ~$0.10). Charge ordering is proven from the
+    // payment code: the bearer path uses AFTA deferred-debit, so a
+    // credit is debited ONLY by premiumResponse -> commitPayment on
+    // success. Every gate failure returns premiumValidationFailure:
+    // HTTP 400, no debit, a signed no-charge receipt, and built-in
+    // no-charge abuse capping. So a rejected post is never charged on
+    // the credits path. The per-call x402 path is pre-paid on-chain by
+    // the agent and mints credits regardless (existing system behavior,
+    // not something this handler can or should change).
+    if (path === '/api/jobs' && request.method === 'POST') {
+      const payment = await requirePayment(request, env, 3);
+      if (!payment.paid) return payment.response!;
+
+      // A listing is a write, not a data trial. The free-trial quota
+      // covers discovery reads only. Never let it fund persistent
+      // listings or the paid-to-post anti-spam economic is bypassable.
+      if (payment.freeTrial) {
+        return premiumValidationFailure(
+          {
+            ok: false,
+            error: 'payment_required',
+            message:
+              'Posting requires a paid credit. The free trial covers discovery reads only, not writes.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      let body: Record<string, unknown>;
+      try {
+        const parsed = await request.json();
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+          throw new Error('not_object');
+        }
+        body = parsed as Record<string, unknown>;
+      } catch {
+        return premiumValidationFailure(
+          { ok: false, error: 'invalid_json' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const v = validateGigSubmission(body);
+      if (!v.ok) {
+        return premiumValidationFailure(
+          { ok: false, error: 'validation_failed', detail: v.error },
+          payment,
+          request,
+          env,
+        );
+      }
+      const sub = v.value;
+
+      const nowSec = Math.floor(Date.now() / 1000);
+      const skew = validateSignedAt(nowSec, sub.signed_at);
+      if (!skew.ok) {
+        return premiumValidationFailure(
+          { ok: false, error: 'replay_window', detail: skew.error },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      // Signature BEFORE the nonce burn: only the wallet owner can burn
+      // its own nonce, so a bad-signature request cannot grief a
+      // victim's future nonce.
+      if (!(await verifyPosterSignature(sub))) {
+        return premiumValidationFailure(
+          { ok: false, error: 'bad_signature' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      // Nonce burn BETWEEN signature and OFAC, mirroring the audited
+      // claim flow: a replay is rejected before a Chainalysis call is
+      // spent. Single-use: a transient downstream failure means the
+      // agent re-signs with a fresh nonce and retries.
+      if (!(await reserveNonce(env, sub.nonce))) {
+        return premiumValidationFailure(
+          { ok: false, error: 'nonce_replayed_or_writes_disabled' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const screen = await screenPoster(sub, env);
+      if (!screen.ok) {
+        return premiumValidationFailure(
+          { ok: false, error: screen.reason, detail: screen.detail },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      // All gates passed. Persist, then charge via premiumResponse,
+      // which runs commitPayment, the only place a credit is debited.
+      const id = 'gig_' + crypto.randomUUID();
+      const rec = assembleGigRecord(sub, nowSec, id);
+      if (!(await putGig(env, rec))) {
+        return premiumValidationFailure(
+          {
+            ok: false,
+            error: 'storage_unavailable',
+            message:
+              'Listing store is temporarily read-only. No credit was charged.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      return await premiumResponse(
+        { ok: true, id, job: toPublicGig(rec, nowSec) },
+        payment,
+        5,
+        request,
+        env,
       );
     }
 

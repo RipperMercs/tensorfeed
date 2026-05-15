@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { privateKeyToAccount } from 'viem/accounts';
-import { gatePosting } from './jobs-gate';
+import { gatePosting, verifyPosterSignature, screenPoster } from './jobs-gate';
 import { buildSignedMessage, type GigSignedPayload, type GigSubmission } from './jobs';
 import type { Env } from './types';
 
@@ -115,5 +115,38 @@ describe('gatePosting: OFAC fail-closed', () => {
       expect(r.detail).toBe('screening_not_configured');
     }
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('granular gate steps (used by the POST handler)', () => {
+  it('verifyPosterSignature: true for a valid sig, false for a wrong one', async () => {
+    const sub = await makeSubmission();
+    expect(await verifyPosterSignature(sub)).toBe(true);
+    const wrong = await account.signMessage({ message: 'other' });
+    expect(await verifyPosterSignature({ ...sub, signature: wrong })).toBe(false);
+  });
+
+  it('screenPoster: clean passes, sanctioned and outage both fail closed', async () => {
+    const sub = await makeSubmission();
+    stubFetch(async () => ({ ok: true, status: 200, json: async () => ({ identifications: [] }) }));
+    expect(await screenPoster(sub, KEYED_ENV)).toEqual({ ok: true });
+
+    vi.unstubAllGlobals();
+    stubFetch(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ identifications: [{ category: 'sanctions' }] }),
+    }));
+    const s = await screenPoster(sub, KEYED_ENV);
+    expect(s.ok).toBe(false);
+    if (!s.ok) expect(s.reason).toBe('ofac_sanctioned');
+
+    vi.unstubAllGlobals();
+    stubFetch(async () => {
+      throw new Error('down');
+    });
+    const u = await screenPoster(sub, KEYED_ENV);
+    expect(u.ok).toBe(false);
+    if (!u.ok) expect(u.reason).toBe('screen_unavailable');
   });
 });

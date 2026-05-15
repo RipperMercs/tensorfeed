@@ -66,40 +66,67 @@ export type GateResult =
  * from the caller, so there is a single deterministic signed string and
  * no room for a mismatched-message bug.
  */
-export async function gatePosting(
+/**
+ * Step 1 of the gate: prove the submitter controls poster_addr. The
+ * message is derived here via buildSignedMessage, never accepted from
+ * the caller. Exposed granularly so the POST handler can burn the
+ * replay nonce strictly BETWEEN signature verification and the OFAC
+ * call (a victim's nonce must not be griefable by a bad-sig request).
+ */
+export async function verifyPosterSignature(
   sub: GigSubmission,
-  env: Env,
-): Promise<GateResult> {
-  // 1. Signature first. Cheap, and it proves wallet control before we
-  //    spend an external screening call (mirrors the claim-flow order).
-  const message = buildSignedMessage(sub);
-  let recovered = false;
+): Promise<boolean> {
   try {
-    recovered = await verifyMessage({
+    return await verifyMessage({
       address: sub.poster_addr as `0x${string}`,
-      message,
+      message: buildSignedMessage(sub),
       signature: sub.signature as `0x${string}`,
     });
   } catch {
-    recovered = false;
+    return false;
   }
-  if (!recovered) {
-    return { ok: false, reason: 'bad_signature' };
-  }
+}
 
-  // 2. OFAC screen, fail-closed. Allow ONLY on an unambiguously clean
-  //    result. Any error (not configured, invalid, bad status,
-  //    unreachable, timeout) rejects.
+export type ScreenResult =
+  | { ok: true }
+  | {
+      ok: false;
+      reason: 'ofac_sanctioned' | 'screen_unavailable';
+      detail?: string;
+    };
+
+/**
+ * Step 2 of the gate: OFAC screen poster_addr, fail-closed. Allows ONLY
+ * on an unambiguously clean result. Error is checked before sanctioned
+ * so not-configured / unreachable maps to screen_unavailable, never a
+ * false sanctions label.
+ */
+export async function screenPoster(
+  sub: GigSubmission,
+  env: Env,
+): Promise<ScreenResult> {
   const screen = await screenWalletOFAC(sub.poster_addr, env);
   if (screen.error !== null) {
-    return {
-      ok: false,
-      reason: 'screen_unavailable',
-      detail: screen.error,
-    };
+    return { ok: false, reason: 'screen_unavailable', detail: screen.error };
   }
   if (screen.sanctioned) {
     return { ok: false, reason: 'ofac_sanctioned' };
   }
   return { ok: true };
+}
+
+/**
+ * Composed gate (signature then OFAC), unchanged behavior. Kept for
+ * callers that do not need to interleave a nonce burn. The POST handler
+ * uses the granular functions above instead so it can burn the nonce
+ * between the two steps.
+ */
+export async function gatePosting(
+  sub: GigSubmission,
+  env: Env,
+): Promise<GateResult> {
+  if (!(await verifyPosterSignature(sub))) {
+    return { ok: false, reason: 'bad_signature' };
+  }
+  return screenPoster(sub, env);
 }
