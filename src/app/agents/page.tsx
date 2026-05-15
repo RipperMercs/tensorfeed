@@ -516,7 +516,7 @@ export default function AgentsPage() {
       </Link>
 
       {/* Publisher-posture disclaimer */}
-      <p className="text-xs text-text-dim leading-relaxed max-w-3xl border-t border-border pt-6">
+      <p className="text-xs text-text-dim leading-relaxed max-w-3xl mx-auto text-center border-t border-border pt-6">
         TensorFeed Jobs is a listing and discovery service. TensorFeed does not
         facilitate, escrow, arbitrate, or guarantee any transaction between
         parties, and is not a party to any agreement formed through a listing.
