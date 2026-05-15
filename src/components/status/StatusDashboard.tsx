@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import './AlertGlow.css';
+import ProviderTabStrip from './ProviderTabStrip';
+import RackCard from './RackCard';
+import IncidentTimeline from './IncidentTimeline';
 
 interface StatusService {
   name: string;
@@ -12,6 +15,25 @@ interface StatusService {
   lastChecked?: string;
 }
 
+interface Incident {
+  id: string;
+  service: string;
+  provider: string;
+  severity: string;
+  title: string;
+  startedAt: string;
+  resolvedAt: string | null;
+  durationMinutes: number | null;
+}
+
+interface ProbeAggregate {
+  provider: string;
+  ok_pct: number;
+  total: { p95: number | null };
+  ttfb: { p95: number | null };
+  last_probe_at: string | null;
+}
+
 type Norm = 'ok' | 'warn' | 'down' | 'unknown';
 
 const STATUS_PRIORITY: Record<string, number> = {
@@ -19,40 +41,6 @@ const STATUS_PRIORITY: Record<string, number> = {
   degraded: 1,
   operational: 2,
 };
-
-function normalize(status: string): Norm {
-  const s = (status || '').toLowerCase();
-  if (s === 'down' || s === 'outage' || s === 'major') return 'down';
-  if (s === 'degraded' || s === 'partial' || s === 'warn') return 'warn';
-  if (s === 'operational' || s === 'ok') return 'ok';
-  return 'unknown';
-}
-
-function pillClass(n: Norm): string {
-  switch (n) {
-    case 'ok':
-      return 'bg-accent-green/10 text-accent-green border-accent-green/30';
-    case 'warn':
-      return 'bg-accent-amber/10 text-accent-amber border-accent-amber/30';
-    case 'down':
-      return 'bg-accent-red/10 text-accent-red border-accent-red/30';
-    default:
-      return 'bg-bg-tertiary text-text-muted border-border';
-  }
-}
-
-function pillLabel(n: Norm): string {
-  switch (n) {
-    case 'ok':
-      return 'OPERATIONAL';
-    case 'warn':
-      return 'DEGRADED';
-    case 'down':
-      return 'DOWN';
-    default:
-      return 'UNKNOWN';
-  }
-}
 
 function dotColor(n: Norm): string {
   switch (n) {
@@ -67,97 +55,45 @@ function dotColor(n: Norm): string {
   }
 }
 
-function StatusCard({ service }: { service: StatusService }) {
-  const n = normalize(service.status);
-  const rackCls = `tf-rack ${n === 'warn' ? 'tf-rack-warn' : n === 'down' ? 'tf-rack-down' : n === 'unknown' ? 'tf-rack-unknown' : ''}`;
-  const checkedTime = service.lastChecked
-    ? new Date(service.lastChecked).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-    : null;
-  return (
-    <article
-      className={`${rackCls} p-5`}
-      data-provider={service.provider.toLowerCase().replace(/\s+/g, '-')}
-      aria-label={`${service.name} status: ${pillLabel(n)}`}
-    >
-      <header className="flex items-start justify-between gap-3 mb-4">
-        <div className="min-w-0">
-          <h3 className="text-text-primary font-semibold text-base truncate">{service.name}</h3>
-          <p className="text-text-muted text-xs mt-0.5 font-mono uppercase tracking-wider">
-            {service.provider}
-          </p>
-        </div>
-        <span
-          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-mono font-semibold tracking-[0.12em] border ${pillClass(n)}`}
-        >
-          <span
-            className="inline-block w-1.5 h-1.5 rounded-full"
-            style={{
-              background: dotColor(n),
-              boxShadow: n === 'ok' ? `0 0 6px ${dotColor(n)}` : undefined,
-            }}
-            aria-hidden="true"
-          />
-          {pillLabel(n)}
-        </span>
-      </header>
-
-      {service.components.length > 0 && (
-        <div className="mb-3">
-          <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted mb-2">
-            Components / {service.components.length} tracked
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5">
-            {service.components.map((c) => {
-              const cn = normalize(c.status);
-              return (
-                <div
-                  key={c.name}
-                  className="flex items-center justify-between text-xs gap-2 min-w-0"
-                >
-                  <span className="text-text-secondary truncate">{c.name}</span>
-                  <span
-                    className="inline-block w-2 h-2 rounded-full shrink-0"
-                    style={{ background: dotColor(cn) }}
-                    aria-label={pillLabel(cn).toLowerCase()}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <footer className="mt-3 pt-3 border-t border-border flex items-center justify-between">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">
-          {checkedTime ? `Last check ${checkedTime}` : 'Awaiting probe'}
-        </span>
-        {service.statusPageUrl && (
-          <a
-            href={service.statusPageUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] font-mono text-text-muted hover:text-accent-primary"
-          >
-            source →
-          </a>
-        )}
-      </footer>
-    </article>
-  );
+function probeProviderKey(serviceName: string): string | null {
+  const n = serviceName.toLowerCase();
+  if (n.includes('claude') || n.includes('anthropic')) return 'anthropic';
+  if (n.includes('openai')) return 'openai';
+  if (n.includes('gemini') || n.includes('google')) return 'gemini';
+  if (n.includes('cohere')) return 'cohere';
+  if (n.includes('mistral')) return 'mistral';
+  return null;
 }
 
-function SkeletonCard() {
+function formatCountdown(ms: number): string {
+  if (ms < 0) return '0s';
+  const totalSec = Math.floor(ms / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  if (days > 0) return `${days}d ${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m`;
+  if (hours > 0) return `${hours}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+  if (mins > 0) return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+  return `${secs}s`;
+}
+
+function SkeletonRack() {
   return (
     <div className="tf-rack p-5 animate-pulse">
       <div className="flex items-start justify-between mb-4">
-        <div>
-          <div className="h-4 bg-bg-tertiary rounded w-32 mb-2" />
-          <div className="h-3 bg-bg-tertiary rounded w-20" />
+        <div className="flex items-center gap-3">
+          <div className="h-4 w-10 bg-bg-tertiary rounded" />
+          <div>
+            <div className="h-4 bg-bg-tertiary rounded w-32 mb-2" />
+            <div className="h-2 bg-bg-tertiary rounded w-20" />
+          </div>
         </div>
         <div className="h-5 bg-bg-tertiary rounded w-24" />
       </div>
+      <div className="h-12 bg-bg-tertiary/60 rounded mb-3" />
+      <div className="h-9 bg-bg-tertiary/60 rounded mb-3" />
       <div className="space-y-2">
-        <div className="h-3 bg-bg-tertiary rounded w-full" />
         <div className="h-3 bg-bg-tertiary rounded w-3/4" />
         <div className="h-3 bg-bg-tertiary rounded w-2/3" />
       </div>
@@ -167,24 +103,45 @@ function SkeletonCard() {
 
 export default function StatusDashboard() {
   const [statuses, setStatuses] = useState<StatusService[]>([]);
+  const [probes, setProbes] = useState<ProbeAggregate[]>([]);
+  const [incidents, setIncidents] = useState<Incident[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastSweep, setLastSweep] = useState<Date | null>(null);
+  const [, setTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    async function fetchStatuses() {
+
+    async function pollAll() {
       try {
-        const res = await fetch('https://tensorfeed.ai/api/status', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = await res.json();
+        const [statusRes, probeRes, incidentRes] = await Promise.all([
+          fetch('https://tensorfeed.ai/api/status', { cache: 'no-store' }),
+          fetch('https://tensorfeed.ai/api/probe/latest', { cache: 'no-store' }).catch(() => null),
+          fetch('https://tensorfeed.ai/api/incidents', { cache: 'no-store' }).catch(() => null),
+        ]);
         if (cancelled) return;
-        if (data.ok && data.services?.length) {
-          const sorted = [...data.services].sort(
-            (a: StatusService, b: StatusService) =>
-              (STATUS_PRIORITY[a.status] ?? 3) - (STATUS_PRIORITY[b.status] ?? 3),
-          );
-          setStatuses(sorted);
-          setLastSweep(new Date());
+
+        if (statusRes.ok) {
+          const data = await statusRes.json();
+          if (data.ok && data.services?.length) {
+            const sorted = [...data.services].sort(
+              (a: StatusService, b: StatusService) =>
+                (STATUS_PRIORITY[a.status] ?? 3) - (STATUS_PRIORITY[b.status] ?? 3),
+            );
+            setStatuses(sorted);
+            setLastSweep(new Date());
+          }
+        }
+
+        if (probeRes && probeRes.ok) {
+          const j = await probeRes.json();
+          if (j?.summary?.providers) setProbes(j.summary.providers as ProbeAggregate[]);
+        }
+
+        if (incidentRes && incidentRes.ok) {
+          const j = await incidentRes.json();
+          if (Array.isArray(j.incidents)) setIncidents(j.incidents as Incident[]);
+          else setIncidents([]);
         }
       } catch {
         // Network blip; keep last-known.
@@ -192,26 +149,31 @@ export default function StatusDashboard() {
         if (!cancelled) setLoading(false);
       }
     }
-    fetchStatuses();
-    const interval = setInterval(fetchStatuses, 120_000);
+
+    pollAll();
+    const interval = setInterval(pollAll, 120_000);
+    // Tick re-renders the last-incident counter every second without
+    // touching other state. Single setInterval per spec section 7.
+    const tickInterval = setInterval(() => setTick((n) => n + 1), 1000);
     return () => {
       cancelled = true;
       clearInterval(interval);
+      clearInterval(tickInterval);
     };
   }, []);
 
   const operationalCount = statuses.filter((s) => s.status === 'operational').length;
   const degradedCount = statuses.filter((s) => s.status === 'degraded').length;
   const downCount = statuses.filter((s) => s.status === 'down').length;
-  const unknownCount = statuses.filter((s) => !['operational', 'degraded', 'down'].includes(s.status)).length;
+  const unknownCount = statuses.filter(
+    (s) => !['operational', 'degraded', 'down'].includes(s.status),
+  ).length;
 
-  const overall: Norm = downCount > 0 ? 'down' : degradedCount > 0 ? 'warn' : statuses.length > 0 ? 'ok' : 'unknown';
+  const overall: Norm =
+    downCount > 0 ? 'down' : degradedCount > 0 ? 'warn' : statuses.length > 0 ? 'ok' : 'unknown';
+
   const headlineCls =
-    overall === 'down'
-      ? 'tf-headline-down'
-      : overall === 'warn'
-        ? 'tf-headline-warn'
-        : 'tf-headline-ok';
+    overall === 'down' ? 'tf-headline-down' : overall === 'warn' ? 'tf-headline-warn' : 'tf-headline-ok';
   const headlineText =
     overall === 'down'
       ? 'Service Disruption'
@@ -219,11 +181,32 @@ export default function StatusDashboard() {
         ? 'Partial Degradation'
         : 'All Systems Nominal';
 
+  // Last major incident: most recent 'down' or 'major' severity in the
+  // incidents feed. Counter shows time since startedAt.
+  const lastMajor = incidents
+    ? incidents.find((i) => {
+        const s = (i.severity || '').toLowerCase();
+        return s === 'major' || s === 'critical' || s === 'down' || s === 'major_outage';
+      })
+    : null;
+  const lastMajorMs = lastMajor ? Date.now() - new Date(lastMajor.startedAt).getTime() : null;
+
+  // Indexed probes for RackCard lookup.
+  const probeByKey: Record<string, ProbeAggregate> = {};
+  for (const p of probes) probeByKey[p.provider] = p;
+
   return (
     <>
+      {/* Page chrome: corner crosshairs + faint grid mask. Decorative. */}
+      <span className="tf-corner tf-corner-tl" aria-hidden="true" />
+      <span className="tf-corner tf-corner-tr" aria-hidden="true" />
+      <span className="tf-corner tf-corner-bl" aria-hidden="true" />
+      <span className="tf-corner tf-corner-br" aria-hidden="true" />
+      <span className="tf-grid-mask" aria-hidden="true" />
+
       {/* Header */}
-      <header className="mb-8">
-        <div className="flex items-center gap-2 mb-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
+      <header className="mb-8 relative">
+        <div className="flex items-center gap-2 mb-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted flex-wrap">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
@@ -233,24 +216,52 @@ export default function StatusDashboard() {
           <span>AI infrastructure</span>
           <span className="text-border">/</span>
           <span>Polled every 2 minutes</span>
+          <span className="text-border">/</span>
+          <span>Observatory uplink stable</span>
         </div>
-        <h1
-          className={`text-4xl sm:text-5xl font-extrabold tracking-tight ${headlineCls}`}
-          aria-label={headlineText}
-        >
-          {headlineText}
-        </h1>
-        <p className="text-text-muted text-sm mt-3">
-          Real-time operational status of major AI services. Each card pulses on degradation or outage.
-        </p>
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr] items-start">
+          <h1
+            className={`text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] ${headlineCls}`}
+            aria-label={headlineText}
+            style={{ letterSpacing: '-0.035em' }}
+          >
+            {headlineText}
+          </h1>
+          {lastMajor && lastMajorMs != null ? (
+            <div className="bg-bg-secondary/60 border border-border rounded-lg p-4">
+              <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-2">
+                Time since last major incident
+              </div>
+              <div
+                className="text-[26px] font-mono font-bold tabular-nums leading-none"
+                style={{ color: '#06b6d4' }}
+              >
+                {formatCountdown(lastMajorMs)}
+              </div>
+              <div className="text-[11px] text-text-muted mt-2 leading-snug">
+                {lastMajor.service}: {lastMajor.title}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-bg-secondary/60 border border-border rounded-lg p-4">
+              <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-2">
+                Last major incident
+              </div>
+              <div className="text-[15px] font-mono text-accent-green">No major incidents on record</div>
+              <div className="text-[11px] text-text-muted mt-2 leading-snug">
+                Stability is the norm. Counter starts on the next outage.
+              </div>
+            </div>
+          )}
+        </div>
       </header>
 
-      {/* Summary band — breathing LED + state counts + sweep meta */}
+      {/* Summary band */}
       <section
         aria-label="Status summary"
         role="status"
         aria-live="polite"
-        className="bg-bg-secondary border border-border rounded-lg p-5 mb-6 grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-5 items-center"
+        className="bg-bg-secondary border border-border rounded-lg p-5 mb-8 grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-5 items-center relative"
       >
         <div className="flex items-center gap-3">
           <span
@@ -267,7 +278,9 @@ export default function StatusDashboard() {
                   : 'All systems nominal'}
             </div>
             <div className="text-[10px] font-mono text-text-muted mt-0.5">
-              {lastSweep ? `Last sweep ${lastSweep.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` : 'Awaiting first sweep'}
+              {lastSweep
+                ? `Last sweep ${lastSweep.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
+                : 'Awaiting first sweep'}
             </div>
           </div>
         </div>
@@ -292,12 +305,29 @@ export default function StatusDashboard() {
         </div>
       </section>
 
-      {/* Status grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Provider tab strip (kinetic) */}
+      {statuses.length > 0 && <ProviderTabStrip services={statuses} />}
+
+      {/* Rack grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {loading
-          ? Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} />)
-          : statuses.map((service) => <StatusCard key={service.name} service={service} />)}
+          ? Array.from({ length: 9 }).map((_, i) => <SkeletonRack key={i} />)
+          : statuses.map((service, i) => {
+              const probeKey = probeProviderKey(service.name);
+              const probe = probeKey ? probeByKey[probeKey] ?? null : null;
+              return (
+                <RackCard
+                  key={service.name}
+                  service={service}
+                  probe={probe}
+                  rackIndex={i}
+                />
+              );
+            })}
       </div>
+
+      {/* Incident timeline (last 7 days) */}
+      <IncidentTimeline />
     </>
   );
 }

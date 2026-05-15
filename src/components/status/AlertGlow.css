@@ -172,9 +172,198 @@
   color: transparent;
 }
 
+/* Tab-strip cells: same alert language as racks, scaled to the smaller
+ * surface. Per spec section 5.2: 12x14 inner padding, 4px radius, full
+ * perimeter alert border with reduced glow intensity. */
+.tf-tab {
+  position: relative;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(100, 116, 139, 0.18);
+  background: var(--bg-secondary, #0f1117);
+  transition: border-color 0.18s ease, box-shadow 0.3s ease;
+}
+
+.tf-tab.tf-tab-ok {
+  border-color: rgba(16, 185, 129, 0.22);
+  background:
+    linear-gradient(180deg, rgba(16, 185, 129, 0.02), transparent),
+    var(--bg-secondary, #0f1117);
+}
+
+.tf-tab.tf-tab-warn {
+  border-color: rgba(245, 158, 11, 0.5);
+  background:
+    linear-gradient(180deg, rgba(245, 158, 11, 0.05), transparent),
+    var(--bg-secondary, #0f1117);
+  animation: tf-tab-yellow-alert calc(3.4s / var(--tf-motion, 1.2)) ease-in-out infinite;
+}
+
+.tf-tab.tf-tab-down {
+  border-color: rgba(239, 68, 68, 0.55);
+  background:
+    linear-gradient(180deg, rgba(239, 68, 68, 0.06), transparent),
+    var(--bg-secondary, #0f1117);
+  animation: tf-tab-red-alert calc(2s / var(--tf-motion, 1.2)) ease-in-out infinite;
+}
+
+.tf-tab.tf-tab-unknown {
+  border-color: rgba(100, 116, 139, 0.18);
+  background: var(--bg-secondary, #0f1117);
+}
+
+/* Random fresh-probe pulse: a single cell briefly gains a cyan inset ring
+ * fade. Driven by one global setInterval in ProviderTabStrip.tsx so only
+ * one tab pulses at a time and only once per 3.5s tick.
+ */
+.tf-tab.tf-tab-pulse {
+  animation: tf-tab-probe-pulse 1.6s ease-out;
+}
+
+@keyframes tf-tab-yellow-alert {
+  0%, 100% {
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: inset 0 0 12px rgba(245, 158, 11, 0.02);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.85);
+    box-shadow: inset 0 0 18px rgba(245, 158, 11, 0.08),
+                0 0 14px rgba(245, 158, 11, 0.28);
+  }
+}
+
+@keyframes tf-tab-red-alert {
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow: inset 0 0 12px rgba(239, 68, 68, 0.025);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 1);
+    box-shadow: inset 0 0 22px rgba(239, 68, 68, 0.14),
+                0 0 22px rgba(239, 68, 68, 0.45);
+  }
+}
+
+@keyframes tf-tab-probe-pulse {
+  0% {
+    box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0.7),
+                0 0 18px rgba(6, 182, 212, 0.35);
+  }
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0),
+                0 0 0 rgba(6, 182, 212, 0);
+  }
+}
+
+/* Page chrome: corner crosshairs. Four 18x18 cyan brackets in the
+ * viewport corners, no movement. Sells the data-center vibe per spec
+ * section 6. Positioned via the StatusPageChrome wrapper. */
+.tf-corner {
+  position: fixed;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  opacity: 0.18;
+  z-index: 1;
+}
+
+.tf-corner::before,
+.tf-corner::after {
+  content: '';
+  position: absolute;
+  background: #06b6d4;
+}
+
+.tf-corner.tf-corner-tl {
+  top: 18px;
+  left: 18px;
+}
+.tf-corner.tf-corner-tl::before {
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 1px;
+}
+.tf-corner.tf-corner-tl::after {
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 18px;
+}
+
+.tf-corner.tf-corner-tr {
+  top: 18px;
+  right: 18px;
+}
+.tf-corner.tf-corner-tr::before {
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 1px;
+}
+.tf-corner.tf-corner-tr::after {
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 18px;
+}
+
+.tf-corner.tf-corner-bl {
+  bottom: 18px;
+  left: 18px;
+}
+.tf-corner.tf-corner-bl::before {
+  bottom: 0;
+  left: 0;
+  width: 18px;
+  height: 1px;
+}
+.tf-corner.tf-corner-bl::after {
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 18px;
+}
+
+.tf-corner.tf-corner-br {
+  bottom: 18px;
+  right: 18px;
+}
+.tf-corner.tf-corner-br::before {
+  bottom: 0;
+  right: 0;
+  width: 18px;
+  height: 1px;
+}
+.tf-corner.tf-corner-br::after {
+  bottom: 0;
+  right: 0;
+  width: 1px;
+  height: 18px;
+}
+
+/* Subtle 60px grid mask behind the status content, very faint. Per spec
+ * section 6: data-center vibe without movement. Lives behind everything
+ * via z-index 0 and pointer-events: none. */
+.tf-grid-mask {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 35%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 75%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tf-rack.tf-rack-warn,
   .tf-rack.tf-rack-down,
+  .tf-tab.tf-tab-warn,
+  .tf-tab.tf-tab-down,
+  .tf-tab.tf-tab-pulse,
   .tf-master-led {
     animation: none !important;
   }
