@@ -5285,10 +5285,24 @@ export default {
 
       const raw = await fetchCVE(env, cleanCveMatch[1]);
       if (!raw.ok) {
-        const status = raw.error === 'cve_not_found' ? 404 : raw.error === 'invalid_cve_id' ? 400 : 502;
+        if (raw.error === 'cve_not_found' || raw.error === 'invalid_cve_id') {
+          // Client/validation no-charge: route through the AFTA ledger +
+          // signed receipt + no-charge abuse cap (B-F4).
+          return await premiumValidationFailure(
+            { ok: false, error: raw.error, cve_id: raw.cveId, attribution: raw.attribution },
+            payment,
+            request,
+            env,
+          );
+        }
+        // Upstream MITRE failure: a 5xx-class no-charge, NOT a client
+        // validation failure. Keep the 502 + raw shape (deferred-debit
+        // already means no charge). The uniform signed 5xx no-charge
+        // receipt for this class is B-F3, not B-F4; do not mislabel it
+        // as schema_validation_failure or downgrade it to 400.
         return jsonResponse(
           { ok: false, error: raw.error, cve_id: raw.cveId, attribution: raw.attribution },
-          status,
+          502,
         );
       }
       const clean = attachCompressionStats(
@@ -5327,7 +5341,7 @@ export default {
 
       const entry = await readKEVByCVE(env, cleanKevMatch[1]);
       if (!entry) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'not_in_kev',
@@ -5335,7 +5349,9 @@ export default {
             hint: 'CVE may exist in MITRE CVE List but not be on the CISA KEV catalog.',
             attribution: KEV_ATTRIBUTION,
           },
-          404,
+          payment,
+          request,
+          env,
         );
       }
       const clean = attachCompressionStats(
