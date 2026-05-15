@@ -83,12 +83,14 @@ const TRUST_DESCRIPTIONS: Record<string, string> = {
   F: 'Banned, sanctioned, or accumulated multiple flags.',
 };
 
+// Token-faithful grade palette, identical to the /agents front door,
+// leaderboard, and hireable directory so the trust signal is uniform.
 const TRUST_COLORS: Record<string, string> = {
-  A: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-  B: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
-  C: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-  D: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
-  F: 'bg-red-500/10 text-red-400 border-red-500/30',
+  A: 'bg-accent-green/15 text-accent-green border-accent-green/30',
+  B: 'bg-accent-cyan/15 text-accent-cyan border-accent-cyan/30',
+  C: 'bg-accent-amber/15 text-accent-amber border-accent-amber/30',
+  D: 'bg-bg-tertiary text-text-muted border-border',
+  F: 'bg-accent-red/15 text-accent-red border-accent-red/30',
 };
 
 function detectIdShape(id: string): 'wallet' | 'token_prefix' | 'unknown' {
@@ -154,6 +156,12 @@ export default function ProfilePage() {
   if (!idParam) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-accent-primary/15 border border-accent-primary/30">
+          <span className="live-dot" />
+          <span className="text-xs font-mono uppercase tracking-wider text-accent-primary">
+            TensorFeed Jobs &middot; Reputation
+          </span>
+        </div>
         <h1 className="text-2xl font-bold text-text-primary mb-3">Agent Profile</h1>
         <p className="text-text-secondary mb-6">
           Look up an agent&apos;s public reputation card by wallet address or by the first 16 chars of their tf_live_
@@ -190,7 +198,7 @@ export default function ProfilePage() {
       )}
 
       {error && !loading && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-4 text-sm flex items-start gap-2">
+        <div className="bg-accent-red/10 border border-accent-red/30 text-accent-red rounded-xl p-4 text-sm flex items-start gap-2">
           <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -280,12 +288,12 @@ function ProfileHeader({ card, claim, id }: { card: ReputationCard; claim: Opera
               </span>
             )}
             {availableForHire && (
-              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-medium">
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30 font-medium">
                 Available for hire
               </span>
             )}
             {card.banned && (
-              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/30 font-medium">
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-accent-red/15 text-accent-red border border-accent-red/30 font-medium">
                 Banned
               </span>
             )}
@@ -306,7 +314,7 @@ function ProfileHeader({ card, claim, id }: { card: ReputationCard; claim: Opera
               {card.flags.map((f) => (
                 <span
                   key={f}
-                  className="text-xs px-2 py-0.5 rounded bg-bg-tertiary text-amber-400 border border-amber-500/30 font-mono"
+                  className="text-xs px-2 py-0.5 rounded bg-bg-tertiary text-accent-amber border border-accent-amber/30 font-mono"
                   title="Public flag from the bureau"
                 >
                   ⚑ {f}
@@ -315,7 +323,7 @@ function ProfileHeader({ card, claim, id }: { card: ReputationCard; claim: Opera
             </div>
           )}
           {card.banned && card.ban_reason && (
-            <div className="mt-3 text-sm text-red-400">
+            <div className="mt-3 text-sm text-accent-red">
               Reason: <span className="font-mono">{card.ban_reason}</span>
             </div>
           )}
