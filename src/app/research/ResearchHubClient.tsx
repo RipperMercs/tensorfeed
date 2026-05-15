@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, ExternalLink, TrendingUp, FileText, Users, Sparkles, Building2, Award } from 'lucide-react';
-import ResearchHero from '@/components/research/ResearchHero';
+import Image from 'next/image';
+import { ArrowRight, ExternalLink, TrendingUp, FileText, Users, Sparkles, Building2, Award, Microscope } from 'lucide-react';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
 import {
   useArxivLatest,
@@ -69,10 +69,64 @@ export default function ResearchHubClient() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <ResearchHero
-        title="AI Research Hub"
-        subtitle="Live AI research signal: milestone papers, top authors, citation velocity, emerging topics, and the daily arXiv firehose. Pulled from the TensorFeed extraction pipeline."
-      />
+      {/*
+        Hero with photo background. Cinematic dim atrium library with
+        shelves of softly-glowing holographic research papers in pastel
+        tints (light blue, gold, lavender, mint, rose, coral). Foreground
+        floating papers + faint cyan grid floor. 2400px WebP, ~205KB.
+        Generated via nano-banana per spec at Desktop/nano-banana-research
+        -hub-hero.md, 2026-05-14.
+      */}
+      <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary mb-10 px-6 sm:px-8 py-12 sm:py-16">
+        <Image
+          src="/research-hero.webp"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 1280px"
+          className="object-cover -z-20"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(2,6,23,0.5) 0%, rgba(2,6,23,0.82) 100%)',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.035]"
+          style={{
+            backgroundImage: [
+              'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)',
+              'linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
+            ].join(', '),
+            backgroundSize: '48px 48px',
+          }}
+        />
+
+        <div className="max-w-4xl">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-accent-primary/15 backdrop-blur-sm">
+              <Microscope className="w-6 h-6 sm:w-7 sm:h-7 text-accent-primary" />
+            </div>
+            <span className="inline-flex items-center px-3 py-1 text-[10px] font-mono font-semibold tracking-[0.18em] uppercase rounded border border-white/15 bg-black/30 backdrop-blur-sm text-white/80">
+              / RESEARCH
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white drop-shadow-md tracking-tight mb-3">
+            AI Research Hub
+          </h1>
+          <p className="text-white/85 leading-relaxed drop-shadow text-sm sm:text-base max-w-3xl">
+            Live AI research signal pulled from arXiv, OpenAlex, and the TensorFeed extraction pipeline. Milestone papers flagged by an offline pass. Top authors ranked by 365-day output. Papers gaining citations fastest right now. Emerging keyphrases. The daily arXiv firehose.
+          </p>
+          <p className="text-white/65 leading-relaxed drop-shadow text-xs sm:text-sm mt-3 max-w-3xl">
+            Every signal here is also served as a machine-readable API endpoint for AI agents. One product surfaced two ways: a human-readable library + a paid agent feed.
+          </p>
+        </div>
+      </section>
       <ResearchSubNav />
 
       {/* Milestone papers — highest signal section, leads */}
