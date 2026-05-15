@@ -35,6 +35,10 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { viewMode, toggleViewMode, mounted: viewModeMounted } = useViewMode();
 
+  // Embeddable iframe surfaces under /widget/* render with no chrome so
+  // host sites get a clean drop-in. Skip the nav entirely on those routes.
+  const isWidget = pathname.startsWith('/widget');
+
   // Fetch overall status for the nav indicator
   useEffect(() => {
     async function fetchStatus() {
@@ -74,6 +78,9 @@ export default function Navbar() {
   }, []);
 
   const isGuideActive = GUIDE_LINKS.some((link) => pathname.startsWith(link.href));
+
+  // Embeddable widget surfaces: render nothing so the iframe has no nav chrome.
+  if (isWidget) return null;
 
   return (
     <nav className="sticky top-0 z-50 bg-bg-primary/80 backdrop-blur-md border-b border-border">

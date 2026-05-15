@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import ConditionalFooter from '@/components/layout/ConditionalFooter';
+import ChromeGate from '@/components/layout/ChromeGate';
 import ThemeProvider from '@/components/ThemeProvider';
 import ViewModeProvider from '@/components/ViewModeProvider';
 import AgentView from '@/components/AgentView';
@@ -111,13 +112,17 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <ViewModeProvider>
-            <LiveTicker />
-            <StatusAlertBar services={[]} />
+            <ChromeGate>
+              <LiveTicker />
+              <StatusAlertBar services={[]} />
+            </ChromeGate>
             <Navbar />
             <main className="flex-1">{children}</main>
             <ConditionalFooter />
-            <CookieConsent />
-            <AgentView />
+            <ChromeGate>
+              <CookieConsent />
+              <AgentView />
+            </ChromeGate>
           </ViewModeProvider>
         </ThemeProvider>
       </body>

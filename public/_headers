@@ -29,6 +29,16 @@
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=3600
 
+# Embeddable widget surfaces. Override the default DENY frame policy
+# and the strict CSP frame-ancestors so any third-party site can drop
+# the widget into an iframe. Aggressive cache: widget HTML is static
+# at build, the live data is fetched client-side from /api/status/summary.
+/widget/*
+  X-Frame-Options: ALLOWALL
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors *; form-action 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://tensorfeed.ai https://api.tensorfeed.ai
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=300, s-maxage=300
+
 /openapi.json
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=3600
