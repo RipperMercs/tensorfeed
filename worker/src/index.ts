@@ -358,6 +358,7 @@ import { backupKvToR2, listRecentBackups, readManifest } from './backup';
 import { buildSuggestedNextCalls } from './suggested-next';
 import { deleteWantlistItem, listWantlist, listWantlistForAdmin, submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
+import { getGhsaAiFeed, refreshGhsaAiFeed } from './ghsa-ai-feed';
 import { rebuildAllReputationCards } from './agent-reputation-rebuild';
 import {
   ALL_METRICS,
@@ -2788,6 +2789,7 @@ export default {
           securityOSVEcosystems: '/api/security/osv/ecosystems (free; supported OSV ecosystem identifiers)',
           securityVulnrichment: '/api/security/vulnrichment/{CVE-id} (free; CISA Vulnrichment enrichment for one CVE - CWE mappings, CVSS, exploitation evidence, KEV cross-refs - lazy-fetched from cisagov/vulnrichment, cached 7d. License: US Gov public domain. Pair with /api/security/cve/{id} for the MITRE record)',
           securityAiSupplyChainIocs: '/api/security/ai-supply-chain-iocs.json (free; daily-refreshed feed of publicly-disclosed malicious npm + PyPI packages relevant to AI / MCP / LLM operators. Each entry cites its primary source (GHSA). Posture: republish + cite; TF does not detect, attribute, or actively scan. License: GitHub ToS + TF attribution; primary source authority always wins)',
+          premiumSecurityGhsaAiFeed: '/api/premium/security/ghsa/ai-feed (1 credit; broader companion to the free supply-chain IOC feed. All GHSA advisory types (reviewed/unreviewed/malware) across all ecosystems (npm, pip, RubyGems, Maven, Go, Composer, NuGet, Rust, etc.), filtered to the same AI keyword list. Adds derived severity_band, age_days, ai_relevance.confidence per entry plus by_severity / by_ecosystem / by_type aggregates. Refresh every 6h. Posture: republish + derive + cite; primary source authority always wins.)',
           freeTrialStatus: `/api/free-tier/status (free; self-service quota check. Returns the caller IP\'s current premium-trial state: used today, remaining today, resets_at. Each IP gets ${FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY} free premium API calls per 24h rolling window, no auth required, applied to every /api/premium/* endpoint. Excess returns canonical x402 V2 challenge)`,
           wantlistGet: `/api/wantlist (free, GET; aggregated AI-agent wantlist. Returns the most-recent ${WANTLIST_DEFAULTS.INDEX_CAP}-item rolling window of submissions, top topics by count, and request-type breakdown. Items expire after ${WANTLIST_DEFAULTS.ITEM_TTL_SECONDS / 86400}d. Pass ?recent=N to control how many items are hydrated, capped at 100)`,
           wantlistPost: `/api/wantlist (free, POST; submit what data you wish TF served. JSON body: { topic, request_type, description, contact_optional }. request_type one of: ${WANTLIST_DEFAULTS.REQUEST_TYPE_VALUES.join(', ')}. Rate-limited to ${WANTLIST_DEFAULTS.RL_PER_IP_PER_DAY} submissions per IP per 24h. Anonymous by default. Patterns inform pipeline priorities)`,
@@ -2915,7 +2917,7 @@ export default {
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities|ai-supply-chain-iocs|agent-reputation]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|nflverse|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -7484,6 +7486,38 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: GHSA AI FIREHOSE (Tier 1, 1 credit) ===
+    // /api/premium/security/ghsa/ai-feed — broader companion to the
+    // free /api/security/ai-supply-chain-iocs.json. Covers all GHSA
+    // types (reviewed, unreviewed, malware) across all ecosystems
+    // (npm, pip, RubyGems, Maven, Go, Composer, NuGet, Rust, etc.),
+    // filtered to the same AI keyword list. Adds derived severity_band,
+    // age_days, ai_relevance.confidence, by_severity / by_ecosystem /
+    // by_type aggregates. See worker/src/ghsa-ai-feed.ts. Refresh runs
+    // alongside the IOC feed on the existing 6-hourly cron.
+
+    if (path === '/api/premium/security/ghsa/ai-feed') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const snapshot = await getGhsaAiFeed(env);
+      if (!snapshot) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'no_snapshot_yet',
+            hint: 'The GHSA AI feed has not yet been refreshed. Cron runs every 6 hours; retry shortly. Absence of snapshot is not the same as no advisories.',
+          },
+          503,
+          60,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/security/ghsa/ai-feed', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: COMPARE MODELS (Tier 1, 1 credit) ===
     // /api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3
     // Returns a normalized side-by-side comparison block per model
@@ -8229,6 +8263,27 @@ export default {
           );
         }
       }
+      if (task === 'ghsa-ai-feed') {
+        try {
+          const snap = await refreshGhsaAiFeed(env);
+          return jsonResponse({
+            message: 'GHSA AI firehose refreshed',
+            total: snap.total,
+            by_severity: snap.by_severity,
+            by_type: snap.by_type,
+            generated_at: snap.generated_at,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          const stack = err instanceof Error ? (err.stack ?? '') : '';
+          console.error('refreshGhsaAiFeed threw:', msg, stack);
+          return jsonResponse(
+            { ok: false, error: 'refresh_failed', message: msg, stack: stack.split('\n').slice(0, 6) },
+            500,
+            0,
+          );
+        }
+      }
       if (task === 'agent-reputation') {
         try {
           const now = new Date();
@@ -8664,13 +8719,17 @@ export default {
         return backupKvToR2(env, 'cron', env.ENVIRONMENT || 'unknown');
       });
     } else if (cron === '15 */6 * * *') {
-      // Every 6h at :15 UTC: refresh the AI/MCP/LLM supply-chain IOC
-      // feed (worker/src/ai-supply-chain-iocs.ts). Authenticated GHSA
-      // pull, AI-keyword filter, single KV snapshot at
-      // /api/security/ai-supply-chain-iocs.json. Bumped from daily on
-      // 2026-05-13 in response to the expanded npm worm. Republish +
-      // cite posture; no active scanning, no attribution.
+      // Every 6h at :15 UTC: refresh both GHSA-backed AI security feeds.
+      //  1. The narrow malware-only IOC feed at /api/security/ai-supply-chain-iocs.json
+      //     (worker/src/ai-supply-chain-iocs.ts). Defensive signal, free.
+      //  2. The broader GHSA AI firehose at /api/premium/security/ghsa/ai-feed
+      //     (worker/src/ghsa-ai-feed.ts). All advisory types, all ecosystems,
+      //     same AI keyword filter, premium endpoint.
+      // Both share the GITHUB_TOKEN auth path and the AI_RELEVANCE_KEYWORDS
+      // list. Two GHSA fetches per 6h is well within the 5000 req/hr quota.
+      // Republish + cite posture for both; no active scanning, no attribution.
       await run('refreshAiSupplyChainIocs', () => refreshAiSupplyChainIocs(env));
+      await run('refreshGhsaAiFeed', () => refreshGhsaAiFeed(env));
     } else if (cron === '27 * * * *') {
       // Hourly :27 UTC: probe every known x402 publisher's manifest
       // and record latency + validity. Rolls up to 24h + 7d uptime

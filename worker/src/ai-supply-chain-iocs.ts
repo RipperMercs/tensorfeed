@@ -40,7 +40,11 @@ const USER_AGENT = 'TensorFeed.ai/security-supply-chain (+https://tensorfeed.ai)
 // advisory summary that mark an advisory as AI-relevant. Keep this
 // list curated; over-broad keywords produce false positives that
 // dilute the feed.
-const AI_RELEVANCE_KEYWORDS: ReadonlyArray<string> = [
+//
+// Exported so the broader GHSA AI firehose at /api/premium/security/ghsa/ai-feed
+// (worker/src/ghsa-ai-feed.ts) can re-use the same definitions. Edits to
+// this list affect both feeds.
+export const AI_RELEVANCE_KEYWORDS: ReadonlyArray<string> = [
   // model providers and SDKs
   'openai',
   'anthropic',
@@ -137,7 +141,12 @@ interface GhsaApiResponse {
   }>;
 }
 
-function matchAiRelevance(packageName: string, summary: string): string[] {
+/**
+ * Substring-match an arbitrary text blob against the AI keyword list.
+ * Returns the (trimmed) keywords that hit. Empty array = no match.
+ * Exported so the broader GHSA AI firehose can re-use the same matcher.
+ */
+export function matchAiRelevance(packageName: string, summary: string): string[] {
   const haystack = `${packageName} ${summary}`.toLowerCase();
   const hits: string[] = [];
   for (const keyword of AI_RELEVANCE_KEYWORDS) {
