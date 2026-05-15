@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, ExternalLink, TrendingUp, FileText, Users, Sparkles, Building2, Award, Microscope } from 'lucide-react';
+import { ArrowRight, ExternalLink, TrendingUp, Sparkles, Award, Microscope } from 'lucide-react';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
 import {
   useArxivLatest,
@@ -14,12 +14,14 @@ import {
 } from '@/components/research/useResearchData';
 import {
   categoryForSubfield,
-  categoryForArxiv,
   categoryForSeed,
 } from '@/components/research/categories';
 import BackgroundParticles from '@/components/research/BackgroundParticles';
 import HeroConstellation from '@/components/research/HeroConstellation';
 import KnowledgeLandscape from '@/components/research/KnowledgeLandscape';
+import AuthorsPanel from '@/components/research/AuthorsPanel';
+import InstitutionsPanel from '@/components/research/InstitutionsPanel';
+import Firehose from '@/components/research/Firehose';
 
 function SectionHeader({
   icon: Icon,
@@ -58,12 +60,6 @@ function SkeletonGrid({ count = 6 }: { count?: number }) {
       ))}
     </div>
   );
-}
-
-function shortAbstract(s: string | null, max = 200): string {
-  if (!s) return '';
-  if (s.length <= max) return s;
-  return s.slice(0, max - 1).trimEnd() + '…';
 }
 
 export default function ResearchHubClient() {
@@ -251,80 +247,11 @@ export default function ResearchHubClient() {
         )}
       </section>
 
-      {/* Two-column: Authors + Institutions */}
-      <section className="mb-12 grid gap-8 lg:grid-cols-2">
-        <div>
-          <SectionHeader icon={Users} title="Top AI Authors (365d)" href="/research/authors" />
-          {!authors ? (
-            <SkeletonGrid count={4} />
-          ) : (
-            <div className="bg-bg-secondary border border-border rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-bg-tertiary text-text-muted">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-wider">#</th>
-                    <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-wider">Author</th>
-                    <th className="px-3 py-2 text-right font-mono text-[10px] uppercase tracking-wider">AI works</th>
-                    <th className="px-3 py-2 text-right font-mono text-[10px] uppercase tracking-wider">h-idx</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {authors.map((a) => (
-                    <tr key={a.openalex_id} className="border-t border-border hover:bg-bg-tertiary/50 transition-colors">
-                      <td className="px-3 py-2 font-mono text-text-muted text-xs">{a.rank}</td>
-                      <td className="px-3 py-2">
-                        <div className="text-text-primary font-medium text-sm">{a.display_name}</div>
-                        {a.primary_affiliation.display_name && (
-                          <div className="text-[10px] font-mono text-text-muted truncate max-w-[200px]">
-                            {a.primary_affiliation.display_name}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono text-text-primary text-sm tabular-nums">{a.ai_works_last_year}</td>
-                      <td className="px-3 py-2 text-right font-mono text-text-muted text-xs tabular-nums">
-                        {a.h_index ?? '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-        <div>
-          <SectionHeader icon={Building2} title="Top Institutions (365d)" href="/research/institutions" />
-          {!institutions ? (
-            <SkeletonGrid count={4} />
-          ) : (
-            <div className="bg-bg-secondary border border-border rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-bg-tertiary text-text-muted">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-wider">#</th>
-                    <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-wider">Institution</th>
-                    <th className="px-3 py-2 text-right font-mono text-[10px] uppercase tracking-wider">AI works</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {institutions.map((i) => (
-                    <tr key={i.openalex_id} className="border-t border-border hover:bg-bg-tertiary/50 transition-colors">
-                      <td className="px-3 py-2 font-mono text-text-muted text-xs">{i.rank}</td>
-                      <td className="px-3 py-2">
-                        <div className="text-text-primary font-medium text-sm">{i.display_name}</div>
-                        <div className="text-[10px] font-mono text-text-muted">
-                          {[i.country_code, i.type].filter(Boolean).join(' · ')}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono text-text-primary text-sm tabular-nums">
-                        {i.ai_works_last_year.toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+      {/* Two-column: Authors + Institutions panels (redesigned with
+          category pills + h-index bars + cyan/green works gradient). */}
+      <section className="mb-12 grid gap-6 lg:grid-cols-2">
+        <AuthorsPanel authors={authors} />
+        <InstitutionsPanel institutions={institutions} />
       </section>
 
       {/* Emerging keywords cloud */}
@@ -364,51 +291,11 @@ export default function ResearchHubClient() {
         )}
       </section>
 
-      {/* Latest arXiv */}
+      {/* arXiv Firehose: live streaming log of new papers, color-coded by
+          category, newest paper glow-highlighted. Replaces the old
+          3-up card grid per facelift spec. */}
       <section className="mb-12">
-        <SectionHeader icon={FileText} title="Latest arXiv (Last 24h)" href="/research/papers" ctaLabel="Browse all papers" />
-        {!arxiv ? (
-          <SkeletonGrid count={6} />
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {arxiv.map((p) => {
-              const cat = categoryForArxiv(p.primaryCategory);
-              return (
-              <a
-                key={p.arxivId}
-                href={p.htmlUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
-                style={{ borderTop: `2px solid ${cat.color}` }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  {p.primaryCategory && (
-                    <span
-                      className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border"
-                      style={{ background: cat.tint, color: cat.color, borderColor: cat.tint }}
-                      title={cat.name}
-                    >
-                      {p.primaryCategory}
-                    </span>
-                  )}
-                  <span className="text-[10px] font-mono text-text-muted">{p.arxivId}</span>
-                </div>
-                <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent-primary transition-colors mb-2 leading-snug line-clamp-2">
-                  {p.title}
-                </h3>
-                <p className="text-xs text-text-muted leading-relaxed line-clamp-3">
-                  {shortAbstract(p.abstract, 220)}
-                </p>
-                <div className="mt-2 text-[11px] font-mono text-text-muted truncate">
-                  {p.authors.slice(0, 3).join(', ')}
-                  {p.authors.length > 3 && ` +${p.authors.length - 3}`}
-                </div>
-              </a>
-              );
-            })}
-          </div>
-        )}
+        <Firehose papers={arxiv} />
       </section>
 
       <section className="border-t border-border pt-8 mb-4">
