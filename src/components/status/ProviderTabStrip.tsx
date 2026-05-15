@@ -44,6 +44,8 @@ function rackId(idx: number): string {
 
 interface ProviderTabStripProps {
   services: StatusService[];
+  selectedName: string | null;
+  onSelect: (name: string) => void;
 }
 
 /**
@@ -51,8 +53,12 @@ interface ProviderTabStripProps {
  * alert breath on degraded/down (shared keyframes from AlertGlow.css).
  * Every ~3.5s a random cell briefly pulses with a cyan inner ring to
  * simulate a fresh probe sweep. Driven by ONE setInterval, not per-cell.
+ *
+ * Clicking a cell selects it; the parent renders the corresponding
+ * RackCard detail panel below the strip. Single source of truth for
+ * each provider (no duplicate grid).
  */
-export default function ProviderTabStrip({ services }: ProviderTabStripProps) {
+export default function ProviderTabStrip({ services, selectedName, onSelect }: ProviderTabStripProps) {
   const [pulseIdx, setPulseIdx] = useState<number | null>(null);
 
   useEffect(() => {
@@ -83,12 +89,17 @@ export default function ProviderTabStrip({ services }: ProviderTabStripProps) {
   return (
     <section
       aria-label="Provider sweep"
-      className="mb-8"
+      className="mb-6"
     >
       <header className="flex items-center justify-between mb-3">
-        <h2 className="text-[10px] font-mono uppercase tracking-[0.16em] text-text-muted">
-          Provider sweep
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-[10px] font-mono uppercase tracking-[0.16em] text-text-muted">
+            Provider sweep
+          </h2>
+          <span className="text-[10px] font-mono text-text-muted">
+            Click any tab for detail
+          </span>
+        </div>
         <div className="hidden sm:flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#10b981' }} />
@@ -106,7 +117,8 @@ export default function ProviderTabStrip({ services }: ProviderTabStripProps) {
       </header>
       <div
         className="rounded-lg border border-border bg-bg-secondary/40 p-1.5"
-        role="list"
+        role="tablist"
+        aria-label="Provider status tabs"
       >
         <div
           className="grid gap-1.5"
@@ -114,15 +126,19 @@ export default function ProviderTabStrip({ services }: ProviderTabStripProps) {
         >
           {cells.map((c, i) => {
             const color = dotColor(c.norm);
+            const isSelected = selectedName === c.service.name;
             const cls = `tf-tab ${
               c.norm === 'warn' ? 'tf-tab-warn' : c.norm === 'down' ? 'tf-tab-down' : c.norm === 'unknown' ? 'tf-tab-unknown' : 'tf-tab-ok'
-            } ${pulseIdx === i ? 'tf-tab-pulse' : ''}`;
+            } ${pulseIdx === i ? 'tf-tab-pulse' : ''} ${isSelected ? 'tf-tab-selected' : ''} text-left w-full cursor-pointer`;
             return (
-              <div
+              <button
                 key={c.service.name}
-                role="listitem"
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                aria-label={`${c.service.name} ${c.norm}, ${c.latency}ms latency. Click for details.`}
                 className={cls}
-                aria-label={`${c.service.name} ${c.norm}`}
+                onClick={() => onSelect(c.service.name)}
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span
@@ -152,7 +168,7 @@ export default function ProviderTabStrip({ services }: ProviderTabStripProps) {
                     gradientId={`tabspark-${c.id}`}
                   />
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

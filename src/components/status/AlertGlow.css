@@ -220,6 +220,39 @@
   animation: tf-tab-probe-pulse 1.6s ease-out;
 }
 
+/* Reset default button chrome on the clickable tab so it inherits the
+ * .tf-tab visual exactly, not the browser's button defaults. */
+button.tf-tab {
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  color: inherit;
+  outline: none;
+}
+
+button.tf-tab:focus-visible {
+  outline: 2px solid #06b6d4;
+  outline-offset: 1px;
+}
+
+/* Selected tab: cyan accent ring + slightly elevated background so it
+ * reads as the "current detail" indicator. Stacks with alert state
+ * colors (cyan ring + amber/red border can coexist; the selection
+ * signal is the inset cyan ring, the state is the perimeter border).
+ */
+.tf-tab.tf-tab-selected {
+  box-shadow: inset 0 0 0 1.5px rgba(6, 182, 212, 0.85),
+              0 0 14px rgba(6, 182, 212, 0.22);
+}
+
+.tf-tab.tf-tab-selected.tf-tab-warn,
+.tf-tab.tf-tab-selected.tf-tab-down {
+  /* When alerts are firing, override the breathing shadow with a static
+   * "selected" ring so the user sees a clear "this is the one I clicked"
+   * even on a pulsing card. */
+  animation: none;
+}
+
 @keyframes tf-tab-yellow-alert {
   0%, 100% {
     border-color: rgba(245, 158, 11, 0.4);

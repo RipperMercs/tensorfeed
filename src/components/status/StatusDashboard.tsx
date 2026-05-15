@@ -108,6 +108,16 @@ export default function StatusDashboard() {
   const [loading, setLoading] = useState(true);
   const [lastSweep, setLastSweep] = useState<Date | null>(null);
   const [, setTick] = useState(0);
+  const [selectedName, setSelectedName] = useState<string | null>(null);
+
+  // Auto-select first problematic service (or first service overall) when
+  // statuses arrive. After the user clicks a tab, their selection sticks.
+  useEffect(() => {
+    if (selectedName !== null) return;
+    if (statuses.length === 0) return;
+    const firstBroken = statuses.find((s) => s.status === 'down' || s.status === 'degraded');
+    setSelectedName((firstBroken ?? statuses[0]).name);
+  }, [statuses, selectedName]);
 
   useEffect(() => {
     let cancelled = false;
@@ -305,26 +315,51 @@ export default function StatusDashboard() {
         </div>
       </section>
 
-      {/* Provider tab strip (kinetic) */}
-      {statuses.length > 0 && <ProviderTabStrip services={statuses} />}
+      {/* Provider tab strip (kinetic, clickable). Selected tab swaps the
+          detail panel below; default-selects the first warn/down provider
+          or the first overall. */}
+      {statuses.length > 0 && (
+        <ProviderTabStrip
+          services={statuses}
+          selectedName={selectedName}
+          onSelect={setSelectedName}
+        />
+      )}
 
-      {/* Rack grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {loading
-          ? Array.from({ length: 9 }).map((_, i) => <SkeletonRack key={i} />)
-          : statuses.map((service, i) => {
-              const probeKey = probeProviderKey(service.name);
-              const probe = probeKey ? probeByKey[probeKey] ?? null : null;
-              return (
-                <RackCard
-                  key={service.name}
-                  service={service}
-                  probe={probe}
-                  rackIndex={i}
-                />
-              );
-            })}
-      </div>
+      {/* Selected rack detail */}
+      {loading ? (
+        <div className="mb-8">
+          <SkeletonRack />
+        </div>
+      ) : (
+        (() => {
+          const selectedIndex = selectedName
+            ? statuses.findIndex((s) => s.name === selectedName)
+            : -1;
+          const selected = selectedIndex >= 0 ? statuses[selectedIndex] : statuses[0];
+          if (!selected) return null;
+          const probeKey = probeProviderKey(selected.name);
+          const probe = probeKey ? probeByKey[probeKey] ?? null : null;
+          return (
+            <div className="mb-8 max-w-2xl">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[10px] font-mono uppercase tracking-[0.16em] text-text-muted">
+                  Rack detail
+                </h2>
+                <span className="text-[10px] font-mono text-text-muted">
+                  Showing {selected.name}
+                </span>
+              </div>
+              <RackCard
+                key={selected.name}
+                service={selected}
+                probe={probe}
+                rackIndex={selectedIndex >= 0 ? selectedIndex : 0}
+              />
+            </div>
+          );
+        })()
+      )}
 
       {/* Incident timeline (last 7 days) */}
       <IncidentTimeline />
