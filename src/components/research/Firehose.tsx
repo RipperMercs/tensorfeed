@@ -92,7 +92,7 @@ export default function Firehose({ papers, href = '/research/papers' }: Props) {
           </span>
           <Link
             href={href}
-            className="text-xs font-mono text-text-muted hover:text-accent-primary transition-colors"
+            className="text-xs font-mono text-text-muted hover:text-accent-cyan transition-colors"
           >
             View all →
           </Link>
@@ -125,7 +125,7 @@ export default function Firehose({ papers, href = '/research/papers' }: Props) {
               >
                 {cat.short}
               </span>
-              <span className="text-sm text-text-primary group-hover:text-accent-primary transition-colors flex-1 truncate">
+              <span className="text-sm text-text-primary group-hover:text-accent-cyan transition-colors flex-1 truncate">
                 {p.title}
               </span>
               <span className="font-mono text-[10px] text-text-muted truncate max-w-[180px] shrink-0 hidden md:inline">

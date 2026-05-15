@@ -60,7 +60,7 @@ export default function ResearchInstitutionsPage() {
 
       <Link
         href="/research"
-        className="inline-flex items-center gap-1 text-sm text-text-tertiary hover:text-accent-primary mb-4"
+        className="inline-flex items-center gap-1 text-sm text-text-tertiary hover:text-accent-cyan mb-4"
       >
         <ArrowLeft className="w-4 h-4" /> Research
       </Link>

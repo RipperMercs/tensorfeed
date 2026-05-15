@@ -98,7 +98,7 @@ export default function MilestonesClient() {
                 href={`https://arxiv.org/abs/${p.arxiv_id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
+                className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-cyan transition-colors"
                 style={{ borderTop: `2px solid ${cat.color}` }}
               >
                 <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
@@ -116,7 +116,7 @@ export default function MilestonesClient() {
                   </div>
                   <span className="text-[10px] font-mono text-text-muted">{p.date}</span>
                 </div>
-                <h3 className="text-base font-semibold text-text-primary group-hover:text-accent-primary transition-colors mb-2 leading-snug">
+                <h3 className="text-base font-semibold text-text-primary group-hover:text-accent-cyan transition-colors mb-2 leading-snug">
                   {p.title}
                 </h3>
                 <p className="text-xs text-text-secondary leading-relaxed mb-3">

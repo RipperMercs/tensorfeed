@@ -55,7 +55,7 @@ export default function AuthorsPanel({ authors, href = '/research/authors' }: Pr
         </h3>
         <Link
           href={href}
-          className="text-xs font-mono text-text-muted hover:text-accent-primary transition-colors"
+          className="text-xs font-mono text-text-muted hover:text-accent-cyan transition-colors"
         >
           View all →
         </Link>

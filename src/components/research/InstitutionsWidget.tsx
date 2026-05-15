@@ -67,7 +67,7 @@ export default function InstitutionsWidget() {
             onClick={() => setTypeFilter(f.id)}
             className={`text-xs px-3 py-1 rounded font-mono transition-colors ${
               typeFilter === f.id
-                ? 'bg-accent-primary text-bg-primary'
+                ? 'bg-accent-cyan text-bg-primary'
                 : 'bg-bg-tertiary text-text-secondary hover:text-text-primary'
             }`}
           >
@@ -115,7 +115,7 @@ export default function InstitutionsWidget() {
                       href={`https://openalex.org/${inst.openalex_id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:text-accent-primary"
+                      className="hover:text-accent-cyan"
                     >
                       {inst.display_name}
                     </a>

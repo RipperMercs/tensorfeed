@@ -45,8 +45,8 @@ export default function PapersClient() {
             onClick={() => setFilter(null)}
             className={`px-3 py-1 text-[11px] font-mono rounded-full border transition-colors ${
               filter === null
-                ? 'border-accent-primary text-accent-primary bg-accent-primary/10'
-                : 'border-border text-text-muted hover:border-accent-primary hover:text-text-primary'
+                ? 'border-accent-cyan text-accent-cyan bg-accent-cyan/10'
+                : 'border-border text-text-muted hover:border-accent-cyan hover:text-text-primary'
             }`}
           >
             All ({papers?.length ?? 0})
@@ -57,8 +57,8 @@ export default function PapersClient() {
               onClick={() => setFilter(cat)}
               className={`px-3 py-1 text-[11px] font-mono rounded-full border transition-colors ${
                 filter === cat
-                  ? 'border-accent-primary text-accent-primary bg-accent-primary/10'
-                  : 'border-border text-text-muted hover:border-accent-primary hover:text-text-primary'
+                  ? 'border-accent-cyan text-accent-cyan bg-accent-cyan/10'
+                  : 'border-border text-text-muted hover:border-accent-cyan hover:text-text-primary'
               }`}
             >
               {cat} ({count})
@@ -85,7 +85,7 @@ export default function PapersClient() {
               href={p.htmlUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
+              className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-cyan transition-colors"
               style={{ borderTop: `2px solid ${cat.color}` }}
             >
               <div className="flex items-center justify-between mb-2">
@@ -100,7 +100,7 @@ export default function PapersClient() {
                 )}
                 <span className="text-[10px] font-mono text-text-muted">{p.arxivId}</span>
               </div>
-              <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent-primary transition-colors mb-2 leading-snug">
+              <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent-cyan transition-colors mb-2 leading-snug">
                 {p.title}
               </h3>
               <p className="text-xs text-text-muted leading-relaxed mb-2">

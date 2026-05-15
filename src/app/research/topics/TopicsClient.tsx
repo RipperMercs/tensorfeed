@@ -36,7 +36,7 @@ export default function TopicsClient() {
             return (
             <div
               key={k.keyword}
-              className="bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
+              className="bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-cyan transition-colors"
               style={{ borderTop: `2px solid ${cat.color}` }}
             >
               <div className="flex items-center justify-between mb-2 gap-2">
@@ -63,7 +63,7 @@ export default function TopicsClient() {
                       href={`https://arxiv.org/abs/${id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] font-mono text-text-muted hover:text-accent-primary transition-colors"
+                      className="text-[10px] font-mono text-text-muted hover:text-accent-cyan transition-colors"
                     >
                       {id}
                     </a>

@@ -39,7 +39,7 @@ export default function AuthorsClient() {
       <th
         className={`px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider cursor-pointer hover:text-text-primary transition-colors ${
           align === 'left' ? 'text-left' : 'text-right'
-        } ${sortKey === k ? 'text-accent-primary' : 'text-text-muted'}`}
+        } ${sortKey === k ? 'text-accent-cyan' : 'text-text-muted'}`}
         onClick={() => setSortKey(k)}
         aria-sort={sortKey === k ? 'descending' : 'none'}
       >
@@ -87,7 +87,7 @@ export default function AuthorsClient() {
                         href={a.orcid.startsWith('http') ? a.orcid : `https://orcid.org/${a.orcid}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[10px] font-mono text-text-muted hover:text-accent-primary"
+                        className="text-[10px] font-mono text-text-muted hover:text-accent-cyan"
                       >
                         {a.orcid.replace('https://orcid.org/', '')}
                       </a>
@@ -118,7 +118,7 @@ export default function AuthorsClient() {
                       href={`https://openalex.org/${a.openalex_id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-mono text-text-muted hover:text-accent-primary"
+                      className="inline-flex items-center gap-1 text-xs font-mono text-text-muted hover:text-accent-cyan"
                     >
                       OpenAlex <ExternalLink className="w-3 h-3" />
                     </a>

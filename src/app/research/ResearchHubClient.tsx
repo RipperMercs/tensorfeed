@@ -44,7 +44,7 @@ function SectionHeader({
       {href && (
         <Link
           href={href}
-          className="inline-flex items-center gap-1 text-sm font-mono text-text-muted hover:text-accent-primary transition-colors"
+          className="inline-flex items-center gap-1 text-sm font-mono text-text-muted hover:text-accent-cyan transition-colors"
         >
           {ctaLabel} <ArrowRight className="w-3.5 h-3.5" />
         </Link>
@@ -173,7 +173,7 @@ export default function ResearchHubClient() {
                 href={`https://arxiv.org/abs/${p.arxiv_id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
+                className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-cyan transition-colors"
                 style={{ borderTop: `2px solid ${cat.color}`, boxShadow: `0 0 0 0 ${cat.glow}`, transition: 'box-shadow 0.2s, border-color 0.2s' }}
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
@@ -186,7 +186,7 @@ export default function ResearchHubClient() {
                   </span>
                   <span className="text-[10px] font-mono text-text-muted">{p.date}</span>
                 </div>
-                <h3 className="text-base font-semibold text-text-primary group-hover:text-accent-primary transition-colors mb-2 leading-snug">
+                <h3 className="text-base font-semibold text-text-primary group-hover:text-accent-cyan transition-colors mb-2 leading-snug">
                   {p.title}
                 </h3>
                 <p className="text-xs text-text-muted leading-relaxed mb-2">
@@ -230,7 +230,7 @@ export default function ResearchHubClient() {
                 href={v.landing_page_url ?? (v.doi ? `https://doi.org/${v.doi}` : `https://openalex.org/${v.openalex_id}`)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-primary transition-colors"
+                className="group block bg-bg-secondary border border-border rounded-lg p-4 hover:border-accent-cyan transition-colors"
                 style={{ borderTop: `2px solid ${cat.color}` }}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -239,7 +239,7 @@ export default function ResearchHubClient() {
                     {Math.round(v.citations_latest_year_share * 100)}% this year
                   </span>
                 </div>
-                <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent-primary transition-colors mb-2 leading-snug line-clamp-2">
+                <h3 className="text-sm font-semibold text-text-primary group-hover:text-accent-cyan transition-colors mb-2 leading-snug line-clamp-2">
                   {v.title}
                 </h3>
                 <div className="flex items-center justify-between text-[11px] font-mono text-text-muted">

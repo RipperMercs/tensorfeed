@@ -47,7 +47,7 @@ export default function InstitutionsPanel({ institutions, href = '/research/inst
         </h3>
         <Link
           href={href}
-          className="text-xs font-mono text-text-muted hover:text-accent-primary transition-colors"
+          className="text-xs font-mono text-text-muted hover:text-accent-cyan transition-colors"
         >
           View all →
         </Link>

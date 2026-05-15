@@ -43,7 +43,7 @@ export default function VelocityClient() {
               href={v.landing_page_url ?? (v.doi ? `https://doi.org/${v.doi}` : `https://openalex.org/${v.openalex_id}`)}
               target="_blank"
               rel="noopener noreferrer"
-              className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-primary transition-colors"
+              className="group block bg-bg-secondary border border-border rounded-lg p-5 hover:border-accent-cyan transition-colors"
               style={{ borderTop: `2px solid ${cat.color}` }}
             >
               <div className="flex items-center justify-between mb-2">
@@ -54,7 +54,7 @@ export default function VelocityClient() {
                   {Math.round(v.citations_latest_year_share * 100)}% this year
                 </span>
               </div>
-              <h3 className="text-base font-semibold text-text-primary group-hover:text-accent-primary transition-colors mb-3 leading-snug">
+              <h3 className="text-base font-semibold text-text-primary group-hover:text-accent-cyan transition-colors mb-3 leading-snug">
                 {v.title}
               </h3>
               <div className="grid grid-cols-2 gap-2 mb-3 text-[11px] font-mono">
