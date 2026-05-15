@@ -87,6 +87,28 @@ export async function verifyPosterSignature(
   }
 }
 
+/**
+ * Generic EIP-191 recovery check: did `signature` over `message` come
+ * from `address`. Used for the close action, where the message is
+ * buildCloseMessage and the address is the listing's stored poster_addr
+ * (so only the original poster can close their own listing).
+ */
+export async function verifyAddressSignature(
+  address: string,
+  message: string,
+  signature: string,
+): Promise<boolean> {
+  try {
+    return await verifyMessage({
+      address: address as `0x${string}`,
+      message,
+      signature: signature as `0x${string}`,
+    });
+  } catch {
+    return false;
+  }
+}
+
 export type ScreenResult =
   | { ok: true }
   | {

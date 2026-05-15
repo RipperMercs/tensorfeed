@@ -250,6 +250,31 @@ export interface PublicGig {
   expires_at: number;
 }
 
+/**
+ * Close action. The poster signs this to mark their own listing filled.
+ * action is pinned to 'close' so a create signature can never be
+ * replayed as a close (different canonical message, different intent).
+ */
+export interface CloseSignedPayload {
+  action: 'close';
+  id: string;
+  nonce: string;
+  signed_at: number;
+}
+
+export function buildCloseMessage(p: {
+  id: string;
+  nonce: string;
+  signed_at: number;
+}): string {
+  return canonicalJSON({
+    action: 'close',
+    id: p.id,
+    nonce: p.nonce,
+    signed_at: p.signed_at,
+  });
+}
+
 export function toPublicGig(rec: GigRecord, nowSec: number): PublicGig {
   return {
     id: rec.id,

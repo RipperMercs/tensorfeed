@@ -385,14 +385,25 @@ import {
   type RankableMetric,
 } from './agent-reputation-store';
 import { handleClaimApplication } from './agent-claim-handler';
-import { listGigs, getGig, reserveNonce, putGig } from './jobs-store';
+import {
+  listGigs,
+  getGig,
+  reserveNonce,
+  putGig,
+  setGigStatus,
+} from './jobs-store';
 import {
   toPublicGig,
   validateGigSubmission,
   validateSignedAt,
   assembleGigRecord,
+  buildCloseMessage,
 } from './jobs';
-import { verifyPosterSignature, screenPoster } from './jobs-gate';
+import {
+  verifyPosterSignature,
+  screenPoster,
+  verifyAddressSignature,
+} from './jobs-gate';
 import {
   aggregateServiceAreaDistribution,
   aggregateSkillDistribution,
@@ -2279,6 +2290,49 @@ export default {
       const pending = await listPendingClaims(env, limit);
       return jsonResponse({ ok: true, total: pending.length, claims: pending }, 200, 0);
     }
+    // Admin: remove a listing for a TOS violation. Inherits the global
+    // /api/admin rate-limit + ADMIN_KEY pre-check. Audit-logged. Removed
+    // listings are never re-served on any free or paid surface.
+    if (
+      path === '/api/admin/jobs/remove' &&
+      request.method === 'POST' &&
+      isAuthorizedAdmin(env, url.searchParams.get('key'))
+    ) {
+      let rbody: { id?: unknown; reason?: unknown; evidence_url?: unknown } =
+        {};
+      try {
+        rbody = (await request.json()) as typeof rbody;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const id = typeof rbody.id === 'string' ? rbody.id.trim() : '';
+      const reason =
+        typeof rbody.reason === 'string' ? rbody.reason.trim() : '';
+      if (!id || id.length > 80) {
+        return jsonResponse({ ok: false, error: 'invalid_id' }, 400);
+      }
+      if (!reason || reason.length > 200) {
+        return jsonResponse({ ok: false, error: 'invalid_reason' }, 400);
+      }
+      const evidence_url =
+        typeof rbody.evidence_url === 'string' &&
+        /^https?:\/\/[^\s<>"]+$/.test(rbody.evidence_url)
+          ? rbody.evidence_url
+          : null;
+      if (!(await setGigStatus(env, id, 'removed', reason))) {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404);
+      }
+      const now = new Date().toISOString();
+      await recordAdminAction(env, {
+        at: now,
+        action: 'jobs_remove',
+        target: id,
+        reason,
+        evidence_url,
+        admin_id: 'admin:manual',
+      });
+      return jsonResponse({ ok: true, removed: id, at: now }, 200, 0);
+    }
     if (path === '/api/admin/agents/admin-log' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const date = url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -2778,6 +2832,87 @@ export default {
         5,
         request,
         env,
+      );
+    }
+
+    // Close a listing. The original poster signs buildCloseMessage; the
+    // recovered address must equal the listing's stored poster_addr, so
+    // only the poster can close their own gig. No payment. Nonce burned
+    // after signature verify to prevent close-replay.
+    if (
+      path.startsWith('/api/jobs/') &&
+      path.endsWith('/close') &&
+      request.method === 'POST'
+    ) {
+      const id = path.slice('/api/jobs/'.length, -'/close'.length);
+      if (!id || id.includes('/')) {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404, 0);
+      }
+      let cbody: { nonce?: unknown; signed_at?: unknown; signature?: unknown } =
+        {};
+      try {
+        cbody = (await request.json()) as typeof cbody;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400, 0);
+      }
+      const nonce = typeof cbody.nonce === 'string' ? cbody.nonce.trim() : '';
+      const signature =
+        typeof cbody.signature === 'string' ? cbody.signature.trim() : '';
+      const signedAt = cbody.signed_at;
+      if (!nonce || nonce.length > 128 || !signature) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_close_request' },
+          400,
+          0,
+        );
+      }
+      if (typeof signedAt !== 'number' || !Number.isInteger(signedAt)) {
+        return jsonResponse({ ok: false, error: 'signed_at_invalid' }, 400, 0);
+      }
+      const nowSec = Math.floor(Date.now() / 1000);
+      const rec = await getGig(env, id);
+      const pub = rec ? toPublicGig(rec, nowSec) : null;
+      if (!rec || !pub || pub.status === 'removed') {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404, 0);
+      }
+      if (pub.status !== 'active') {
+        return jsonResponse(
+          { ok: false, error: 'not_active', status: pub.status },
+          409,
+          0,
+        );
+      }
+      const skew = validateSignedAt(nowSec, signedAt);
+      if (!skew.ok) {
+        return jsonResponse(
+          { ok: false, error: 'replay_window', detail: skew.error },
+          400,
+          0,
+        );
+      }
+      const okSig = await verifyAddressSignature(
+        rec.poster_addr,
+        buildCloseMessage({ id, nonce, signed_at: signedAt }),
+        signature,
+      );
+      if (!okSig) {
+        return jsonResponse({ ok: false, error: 'bad_signature' }, 401, 0);
+      }
+      if (!(await reserveNonce(env, nonce))) {
+        return jsonResponse(
+          { ok: false, error: 'nonce_replayed_or_writes_disabled' },
+          409,
+          0,
+        );
+      }
+      if (!(await setGigStatus(env, id, 'filled'))) {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404, 0);
+      }
+      const updated = await getGig(env, id);
+      return jsonResponse(
+        { ok: true, job: updated ? toPublicGig(updated, nowSec) : null },
+        200,
+        0,
       );
     }
 

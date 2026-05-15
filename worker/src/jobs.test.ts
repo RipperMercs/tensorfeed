@@ -7,6 +7,7 @@ import {
   assembleGigRecord,
   isExpired,
   toPublicGig,
+  buildCloseMessage,
   GIG_TTL_DAYS,
   MAX_TITLE_LEN,
   MAX_BODY_LEN,
@@ -180,5 +181,20 @@ describe('toPublicGig', () => {
     expect(toPublicGig(rec, rec.expires_at).status).toBe('expired');
     const removed = { ...rec, status: 'removed' as const };
     expect(toPublicGig(removed, now).status).toBe('removed');
+  });
+});
+
+describe('buildCloseMessage', () => {
+  it('is deterministic and pins action to close', () => {
+    const m = buildCloseMessage({ id: 'gig_1', nonce: 'n1', signed_at: 100 });
+    expect(m).toBe(buildCloseMessage({ id: 'gig_1', nonce: 'n1', signed_at: 100 }));
+    expect(m).toContain('"action":"close"');
+  });
+
+  it('is distinct from a create-signature message (no cross-replay)', () => {
+    const closeMsg = buildCloseMessage({ id: 'gig_1', nonce: 'n1', signed_at: 100 });
+    const r = validateGigSubmission(validRaw(), VOCAB);
+    if (!r.ok) throw new Error('fixture invalid');
+    expect(closeMsg).not.toBe(buildSignedMessage(r.value));
   });
 });

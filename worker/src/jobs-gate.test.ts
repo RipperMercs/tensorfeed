@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { privateKeyToAccount } from 'viem/accounts';
-import { gatePosting, verifyPosterSignature, screenPoster } from './jobs-gate';
+import {
+  gatePosting,
+  verifyPosterSignature,
+  screenPoster,
+  verifyAddressSignature,
+} from './jobs-gate';
 import { buildSignedMessage, type GigSignedPayload, type GigSubmission } from './jobs';
 import type { Env } from './types';
 
@@ -124,6 +129,22 @@ describe('granular gate steps (used by the POST handler)', () => {
     expect(await verifyPosterSignature(sub)).toBe(true);
     const wrong = await account.signMessage({ message: 'other' });
     expect(await verifyPosterSignature({ ...sub, signature: wrong })).toBe(false);
+  });
+
+  it('verifyAddressSignature: true only for the signing address', async () => {
+    const msg = 'close gig_1';
+    const sig = await account.signMessage({ message: msg });
+    expect(await verifyAddressSignature(account.address, msg, sig)).toBe(true);
+    expect(
+      await verifyAddressSignature(
+        '0x000000000000000000000000000000000000dEaD',
+        msg,
+        sig,
+      ),
+    ).toBe(false);
+    expect(await verifyAddressSignature(account.address, 'tampered', sig)).toBe(
+      false,
+    );
   });
 
   it('screenPoster: clean passes, sanctioned and outage both fail closed', async () => {
