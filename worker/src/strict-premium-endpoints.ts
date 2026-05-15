@@ -69,6 +69,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/security/cve/range',
   '/api/premium/security/kev/series',
   '/api/premium/security/epss/series',
+  // Param-required: the handler does nothing without ?vendor=. Without
+  // strict-premium it gets a free-trial slot then a 400, which catalog
+  // validators (x402-surface-check) read as a broken paid route. Curated
+  // premium-only security dataset, fits the moat pattern.
+  '/api/premium/cve/kev-exploitation-timeline',
   // Culled-from-advertising routes that still run as handlers (commit
   // 4082fe0, 2026-05-14). Off-thesis under the Gemini 3 audit but kept
   // live so any pre-cull callers don't break. They all require query

@@ -432,6 +432,42 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/cve/kev-exploitation-timeline',
+    description:
+      'Per-vendor exploited-in-the-wild history from the cve-kev-2026 dataset. One vendor per call (?vendor=, loose matching: vendor=cisco resolves to "Cisco Systems, Inc."). Each CVE in the vendor timeline carries NVD disclosure date, days from disclosure to CISA KEV listing (often thousands of days for old CVEs CISA added in 2026), vulnerability class, CVSS, attack vector, vendor patch status, ransomware association, and a one-sentence summary, plus per-vendor aggregates (kev_count, mean and fastest KEV-add lag, severity distribution). Built from an offline per-CVE LLM extraction and a deterministic per-vendor rollup. v1 is a capped slice, not the full KEV catalog. License: NVD + CISA KEV US Government public domain (17 USC 105), commercial redistribution permitted.',
+    cost: '1 credit per call',
+    example: `// Query: ?vendor=cisco
+{
+  "ok": true,
+  "vendor_query": "cisco",
+  "matched_vendor": "Cisco Systems, Inc.",
+  "dataset_meta": {
+    "dataset": "cve-kev-2026",
+    "cves_total": 200,
+    "vendors_total": 91,
+    "coverage": "v1 capped slice (not the full kev-anchored-2026 corpus)",
+    "attribution": { "source": "NVD and CISA KEV", "license": "US Government public domain (17 USC 105)" }
+  },
+  "vendor": {
+    "vendor_normalized": "Cisco Systems, Inc.",
+    "cve_count": 12,
+    "kev_count": 12,
+    "ransomware_count": 0,
+    "mean_days_disclosure_to_kev": 1180.4,
+    "fastest_days_disclosure_to_kev": 21,
+    "severity_distribution": { "critical": 5, "high": 7 },
+    "timeline": [
+      { "cve_id": "CVE-20XX-NNNN", "published_date": "20XX-0X-0X", "kev_date_added": "2026-0X-0X",
+        "days_disclosure_to_kev": 412, "vulnerability_class": "rce-unauth", "cvss_v3_score": 9.8,
+        "attack_vector": "network", "vendor_patch_status": "patch-released",
+        "ransomware_use_known": false, "summary_one_sentence": "..." }
+    ]
+  },
+  "billing": { "credits_charged": 1, "credits_remaining": 44 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/security/kev/full',
     description:
       'Full untruncated CISA KEV catalog. Free /api/security/kev returns top-50 most-recent; this endpoint returns the entire current catalog with every field per entry. License: US Government public domain (17 USC 105), commercial redistribution explicitly permitted.',

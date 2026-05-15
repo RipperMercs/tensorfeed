@@ -148,9 +148,9 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 22 exact paths', () => {
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(22);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(22); // no duplicates
+    it('exposes all 23 exact paths', () => {
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(23);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(23); // no duplicates
     });
     it('exposes 1 prefix path', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(1);
