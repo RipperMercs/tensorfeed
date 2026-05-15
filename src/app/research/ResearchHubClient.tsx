@@ -22,6 +22,7 @@ import KnowledgeLandscape from '@/components/research/KnowledgeLandscape';
 import AuthorsPanel from '@/components/research/AuthorsPanel';
 import InstitutionsPanel from '@/components/research/InstitutionsPanel';
 import Firehose from '@/components/research/Firehose';
+import { useResearchTweaks } from '@/components/research/useResearchTweaks';
 
 function SectionHeader({
   icon: Icon,
@@ -69,12 +70,17 @@ export default function ResearchHubClient() {
   const velocity = useCitationVelocity(6);
   const keywords = useEmergingKeywords(24);
   const institutions = useInstitutions(8);
+  const tweaks = useResearchTweaks();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+    <div
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative"
+      style={tweaks.paletteFilter ? { filter: tweaks.paletteFilter } : undefined}
+    >
       {/* Background canvas particle field, fixed to viewport, behind all
-          content. Decorative. Auto-disabled under prefers-reduced-motion. */}
-      <BackgroundParticles count={140} connections={true} flow="drift" />
+          content. Decorative. Auto-disabled under prefers-reduced-motion
+          or ?bg=off. */}
+      {tweaks.bg && <BackgroundParticles count={140} connections={true} flow="drift" />}
 
       {/*
         Hero with photo background. Cinematic dim atrium library with
@@ -123,7 +129,7 @@ export default function ResearchHubClient() {
           className="absolute inset-0 -z-10 pointer-events-none"
           style={{ mixBlendMode: 'screen', opacity: 0.55 }}
         >
-          <HeroConstellation />
+          <HeroConstellation motion={tweaks.motion} />
         </div>
 
         <div className="max-w-4xl">
@@ -202,7 +208,7 @@ export default function ResearchHubClient() {
           across the 9 visual categories with cross-cluster flow lines on
           their own slow cycle. Decorative + orientational. */}
       <section className="mb-12">
-        <KnowledgeLandscape />
+        <KnowledgeLandscape motion={tweaks.motion} />
       </section>
 
       {/* Citation velocity */}
