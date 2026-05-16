@@ -282,7 +282,7 @@
   background: linear-gradient(90deg, rgba(255, 85, 113, 0.10) 0%, rgba(255, 85, 113, 0.40) 50%, rgba(255, 85, 113, 0.10) 100%);
   background-size: 200% 100%;
   border-bottom-color: rgba(255, 85, 113, 0.4);
-  animation: tf-sweep 2s linear infinite;
+  animation: tf-sweep 2.8s linear infinite;
 }
 
 .tf-klaxon-label {

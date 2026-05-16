@@ -89,7 +89,7 @@ function sweepVars(item: Item): CSSProperties | undefined {
   if (item.state !== 'critical' && item.state !== 'degraded') return undefined;
   let h = 0;
   for (let i = 0; i < item.id.length; i++) h = (h * 31 + item.id.charCodeAt(i)) >>> 0;
-  const dur = (1.8 + (h % 9) * 0.1).toFixed(2); // 1.80s to 2.60s
+  const dur = (2.4 + (h % 11) * 0.1).toFixed(2); // 2.40s to 3.40s
   const delay = (-(((h >>> 3) % 40) * 0.1)).toFixed(2); // 0 to -3.9s phase
   const dir = h & 1 ? 'reverse' : 'normal'; // half sweep the other way
   const vars: Record<string, string> = {
