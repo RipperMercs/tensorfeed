@@ -317,7 +317,7 @@ recent = news.filter(lambda x: x["fetchedAt"] >= "2026-05-01")`}</code></pre>
         </div>
         <p className="text-text-secondary mb-4">
           The dataset is a daily mirror. The live API is updated continuously: news every 10
-          minutes, status every 5 minutes, models and benchmarks daily, GPU pricing every 4
+          minutes, status every 2 minutes, models and benchmarks daily, GPU pricing every 4
           hours.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
