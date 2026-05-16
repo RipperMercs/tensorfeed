@@ -173,6 +173,30 @@ function readAppearance(): { accent: 'blue' | 'green'; accentAuto: boolean; poll
   };
 }
 
+type DemoScenario = 'nominal' | 'degraded' | 'critical' | 'offline';
+const DEMO_SCENARIOS: DemoScenario[] = ['nominal', 'degraded', 'critical', 'offline'];
+
+function readDemo(): DemoScenario | null {
+  if (typeof window === 'undefined') return null;
+  const d = (new URLSearchParams(window.location.search).get('demo') || '').toLowerCase();
+  return (DEMO_SCENARIOS as string[]).includes(d) ? (d as DemoScenario) : null;
+}
+
+// Opt-in preview of the alert chrome so the yellow/red/no-data states
+// can be verified without waiting for a real outage. Off unless ?demo=
+// is in the URL, so real embeds and the extension popup (which never
+// pass it) are completely unaffected. Forces every row to the chosen
+// state so the condition rollup, klaxon, spine, and alert strip all
+// show. A loud SIMULATION banner is rendered whenever this is active so
+// it can never be mistaken for real status.
+function applyDemo(feed: Feed, s: DemoScenario): Feed {
+  const map = (it: Item): Item =>
+    s === 'offline'
+      ? { ...it, state: 'offline', latencyMs: null, uptimePct: null }
+      : { ...it, state: s };
+  return { ...feed, llms: feed.llms.map(map), services: feed.services.map(map) };
+}
+
 const SKELETON_ROWS = Array.from({ length: 6 });
 
 export default function Widget() {
@@ -187,11 +211,13 @@ export default function Widget() {
     accentAuto: false,
     pollMs: POLL_MS,
   }));
+  const [demo, setDemo] = useState<DemoScenario | null>(null);
   const failRef = useRef(0);
   const [failCount, setFailCount] = useState(0);
 
   useEffect(() => {
     setAppearance(readAppearance());
+    setDemo(readDemo());
   }, []);
 
   useEffect(() => {
@@ -223,8 +249,9 @@ export default function Widget() {
     };
   }, [appearance.pollMs]);
 
-  const llms = feed?.llms ?? [];
-  const services = feed?.services ?? [];
+  const effFeed = useMemo(() => (demo && feed ? applyDemo(feed, demo) : feed), [feed, demo]);
+  const llms = effFeed?.llms ?? [];
+  const services = effFeed?.services ?? [];
   const items = tab === 'llms' ? llms : services;
 
   const visible = useMemo(
@@ -271,6 +298,28 @@ export default function Widget() {
   };
 
   return (
+    <>
+    {demo && (
+      <div
+        role="alert"
+        style={{
+          width: '100%',
+          background: '#f5a623',
+          color: '#0a0a0f',
+          fontFamily: 'ui-monospace, Menlo, monospace',
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          textAlign: 'center',
+          padding: '8px 14px',
+          boxSizing: 'border-box',
+        }}
+      >
+        Simulation: sample data to preview alert states (?demo={demo}). Not live. Remove the demo
+        parameter for real status.
+      </div>
+    )}
     <div
       className="tf-widget"
       data-condition={condition}
@@ -418,5 +467,6 @@ export default function Widget() {
       )}
       <style>{`@keyframes tf-spin{to{transform:rotate(360deg)}}`}</style>
     </div>
+    </>
   );
 }

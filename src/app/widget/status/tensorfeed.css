@@ -214,11 +214,11 @@
 .tf-widget[data-condition="critical"] .tf-spine {
   background: linear-gradient(180deg, var(--tf-critical), color-mix(in oklab, var(--tf-critical), #000 35%));
   box-shadow: 0 0 30px rgba(255, 85, 113, 0.55);
-  animation: tf-spine-flash 0.9s steps(2, end) infinite;
+  animation: tf-spine-flash 1.5s ease-in-out infinite;
 }
 @keyframes tf-spine-flash {
-  0%, 49%   { filter: brightness(1); }
-  50%, 100% { filter: brightness(1.4); }
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.32); }
 }
 .tf-spine-code {
   writing-mode: vertical-rl;
@@ -329,11 +329,19 @@
 .tf-widget[data-condition="critical"] .tf-lamp {
   background: var(--tf-critical);
   box-shadow: 0 0 16px var(--tf-critical);
-  animation: tf-lamp-blink 0.7s steps(2, end) infinite;
+  animation: tf-pulse-crit 1.1s ease-in-out infinite;
 }
 @keyframes tf-lamp-blink {
   0%, 49%   { opacity: 1; }
   50%, 100% { opacity: 0.25; }
+}
+/* Critical pulse: smooth breathing, not a hard strobe. Replaces the
+   steps(2,end) flash on the lamp, row dot, tab badge, per owner
+   direction ("more fluid, too blinky"). Harmonized near the
+   already-smooth klaxon-wash (1.2s) and critical-pulse (1.4s). */
+@keyframes tf-pulse-crit {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
 }
 
 /* ============================================================
@@ -447,7 +455,7 @@
 .tf-tab-badge[data-kind="warn"]  { background: var(--tf-degraded); box-shadow: 0 0 6px var(--tf-degraded); }
 .tf-tab-badge[data-kind="warn2"] { background: var(--tf-downgraded); box-shadow: 0 0 6px var(--tf-downgraded); }
 .tf-tab-badge[data-kind="crit"]  { background: var(--tf-critical); box-shadow: 0 0 7px var(--tf-critical);
-                                   animation: tf-lamp-blink 0.7s steps(2, end) infinite; }
+                                   animation: tf-pulse-crit 1.1s ease-in-out infinite; }
 
 /* ============================================================
    FILTER ROW (segmented control)
@@ -588,7 +596,7 @@
 .tf-row[data-state="offline"]    .tf-r-status { color: var(--tf-offline); }
 
 .tf-row[data-state="degraded"] .tf-r-status .tf-r-dot { animation: tf-lamp-blink 1.4s ease-in-out infinite; }
-.tf-row[data-state="critical"] .tf-r-status .tf-r-dot { animation: tf-lamp-blink 0.65s steps(2, end) infinite; }
+.tf-row[data-state="critical"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 1.1s ease-in-out infinite; }
 /* downgraded dot is steady — a stable, intentional state */
 
 .tf-r-name {
