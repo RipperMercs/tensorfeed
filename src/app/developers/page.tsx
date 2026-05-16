@@ -1050,7 +1050,7 @@ export default function DevelopersPage() {
               className="bg-bg-secondary border border-border rounded-xl overflow-hidden"
             >
               <div className="px-5 py-4 border-b border-border">
-                <div className="flex items-center gap-3 mb-1">
+                <div className="flex flex-wrap items-center gap-3 mb-1">
                   <span className="text-xs font-bold text-accent-green bg-accent-green/10 px-2 py-0.5 rounded">
                     {ep.method}
                   </span>
