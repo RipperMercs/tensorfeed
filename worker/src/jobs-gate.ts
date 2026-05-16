@@ -118,16 +118,18 @@ export type ScreenResult =
     };
 
 /**
- * Step 2 of the gate: OFAC screen poster_addr, fail-closed. Allows ONLY
+ * Generic OFAC screen for any single address, fail-closed. Allows ONLY
  * on an unambiguously clean result. Error is checked before sanctioned
  * so not-configured / unreachable maps to screen_unavailable, never a
- * false sanctions label.
+ * false sanctions label. Single source of the jobs fail-closed OFAC
+ * decision: the poster gate and the deliverable-submission gate both
+ * route through this so there is one implementation to audit.
  */
-export async function screenPoster(
-  sub: GigSubmission,
+export async function screenAddress(
+  address: string,
   env: Env,
 ): Promise<ScreenResult> {
-  const screen = await screenWalletOFAC(sub.poster_addr, env);
+  const screen = await screenWalletOFAC(address, env);
   if (screen.error !== null) {
     return { ok: false, reason: 'screen_unavailable', detail: screen.error };
   }
@@ -135,6 +137,17 @@ export async function screenPoster(
     return { ok: false, reason: 'ofac_sanctioned' };
   }
   return { ok: true };
+}
+
+/**
+ * Step 2 of the poster gate: OFAC screen poster_addr, fail-closed.
+ * Thin wrapper over screenAddress, behavior unchanged.
+ */
+export async function screenPoster(
+  sub: GigSubmission,
+  env: Env,
+): Promise<ScreenResult> {
+  return screenAddress(sub.poster_addr, env);
 }
 
 /**
