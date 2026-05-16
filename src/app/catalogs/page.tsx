@@ -84,7 +84,7 @@ const GROUPS: CatalogGroup[] = [
     title: 'Live Signals',
     blurb: 'Real-time operational data we measure ourselves.',
     entries: [
-      { href: '/status', apiHref: '/api/status', title: 'AI Service Status', description: 'Live operational status of 12+ AI services. Polled every 5 minutes.', icon: Activity },
+      { href: '/status', apiHref: '/api/status', title: 'AI Service Status', description: 'Live operational status of more than 20 AI services. Polled every 2 minutes.', icon: Activity },
       { href: '/incidents', apiHref: '/api/incidents', title: 'Incidents Feed', description: 'Active and recent AI service incidents.', icon: Activity },
       { href: '/attention', apiHref: '/api/attention', title: 'AI Attention Index', description: 'Live 0-100 attention score per provider from news + GitHub trending + agent traffic. Daily snapshots.', icon: TrendingUp },
       { href: '/agent-traffic', apiHref: '/api/agents/activity', title: 'Agent Traffic Dashboard', description: 'Live AI bot activity on TensorFeed. Per-bot breakdown, top endpoints, rolling tail.', icon: Activity },
