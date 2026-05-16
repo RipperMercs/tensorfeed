@@ -279,13 +279,10 @@
   border-bottom-color: rgba(255, 200, 69, 0.3);
 }
 .tf-widget[data-condition="critical"] .tf-klaxon {
-  background: linear-gradient(90deg, var(--tf-critical-dim), rgba(255, 85, 113, 0.08) 50%, transparent);
+  background: linear-gradient(90deg, rgba(255, 85, 113, 0.10) 0%, rgba(255, 85, 113, 0.40) 50%, rgba(255, 85, 113, 0.10) 100%);
+  background-size: 200% 100%;
   border-bottom-color: rgba(255, 85, 113, 0.4);
-  animation: tf-klaxon-wash 3.6s ease-in-out infinite;
-}
-@keyframes tf-klaxon-wash {
-  0%, 100% { background: linear-gradient(90deg, rgba(255, 85, 113, 0.18), rgba(255, 85, 113, 0.04) 50%, transparent); }
-  50%      { background: linear-gradient(90deg, rgba(255, 85, 113, 0.26), rgba(255, 85, 113, 0.08) 60%, transparent); }
+  animation: tf-sweep 2s linear infinite;
 }
 
 .tf-klaxon-label {
@@ -558,7 +555,9 @@
 .tf-row[data-state="nominal"]    { border-left-color: var(--tf-nominal); }
 .tf-row[data-state="degraded"]   {
   border-left-color: var(--tf-degraded);
-  background: linear-gradient(90deg, rgba(255, 200, 69, 0.06), var(--tf-bg-row) 70%);
+  background: linear-gradient(90deg, rgba(255, 200, 69, 0.07) 0%, rgba(255, 200, 69, 0.30) 50%, rgba(255, 200, 69, 0.07) 100%);
+  background-size: 200% 100%;
+  animation: tf-sweep 2.6s linear infinite;
 }
 .tf-row[data-state="downgraded"] {
   border-left-color: var(--tf-downgraded);
@@ -566,17 +565,25 @@
 }
 .tf-row[data-state="critical"] {
   border-left-color: var(--tf-critical);
-  background: linear-gradient(90deg, rgba(255, 85, 113, 0.08), var(--tf-bg-row) 70%);
-  animation: tf-row-flash 3.6s ease-in-out infinite;
+  background: linear-gradient(90deg, rgba(255, 85, 113, 0.09) 0%, rgba(255, 85, 113, 0.44) 50%, rgba(255, 85, 113, 0.09) 100%);
+  background-size: 200% 100%;
+  animation: tf-sweep 2s linear infinite;
 }
 .tf-row[data-state="offline"] {
   border-left-color: var(--tf-offline);
   background: var(--tf-offline-dim);
   opacity: 0.78;
 }
-@keyframes tf-row-flash {
-  0%, 100% { background: linear-gradient(90deg, rgba(255, 85, 113, 0.05), var(--tf-bg-row) 70%); }
-  50%      { background: linear-gradient(90deg, rgba(255, 85, 113, 0.10), var(--tf-bg-row) 70%); }
+/* Traveling light wave: a bright state-colored band sweeps left to
+   right across the alert surface at constant velocity (linear), so it
+   reads as an organic wave instead of a blink. Shared by the critical
+   and degraded rows and the critical klaxon bar so the whole alert
+   flows together. The brightness is a moving band, not a full-surface
+   flash, so it can be vivid without being harsh. Same mechanism as
+   the skeleton shimmer (background-size 200% + position sweep). */
+@keyframes tf-sweep {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
 }
 
 /* row pieces */
@@ -857,6 +864,7 @@
   .tf-widget[data-condition="critical"] .tf-klaxon,
   .tf-lamp,
   .tf-row[data-state="critical"],
+  .tf-row[data-state="degraded"],
   .tf-r-status .tf-r-dot,
   .tf-tab-badge[data-kind="crit"],
   .tf-grid::before,
