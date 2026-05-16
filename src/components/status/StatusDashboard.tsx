@@ -341,7 +341,7 @@ export default function StatusDashboard() {
           const probeKey = probeProviderKey(selected.name);
           const probe = probeKey ? probeByKey[probeKey] ?? null : null;
           return (
-            <div className="mb-8 max-w-2xl">
+            <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-[10px] font-mono uppercase tracking-[0.16em] text-text-muted">
                   Rack detail
