@@ -66,19 +66,31 @@ function normalizeStatus(s: string): 'ok' | 'warn' | 'down' | 'unknown' {
   return 'unknown';
 }
 
-// Derive state from real signals only. downgraded is a routing-layer
-// signal TF does not publish, so it is never inferred (README section
-// 12 says collapse it; we simply never produce it).
+// Vendor status is authoritative. TF's own synthetic probe (ok_pct) is
+// NOT a provider-health signal on its own: a low ok_pct is frequently
+// TF's probe key being rate-limited or on a trial quota (verified
+// 2026-05-15: Google ok_pct 0.35 = "quota issues", Cohere ok_pct 0.0 =
+// "trial key limitations", while both report operational). A public
+// embed must never declare an operational provider CRITICAL because of
+// our own probe limits. So: status decides state; the probe only
+// decides when there is no vendor signal at all. The probe p95 is still
+// shown as the latency number regardless. downgraded is a routing-layer
+// signal TF does not publish, so it is never inferred.
 function deriveState(
-  matched: boolean,
   status: 'ok' | 'warn' | 'down' | 'unknown',
+  hasProbe: boolean,
   okPct: number | null,
 ): ItemState {
-  if (!matched && okPct == null) return 'offline';
-  if (status === 'down' || (okPct != null && okPct < 0.5)) return 'critical';
-  if (status === 'warn' || (okPct != null && okPct < 0.95)) return 'degraded';
-  if (status === 'unknown' && okPct == null) return 'offline';
-  return 'nominal';
+  if (status === 'down') return 'critical';
+  if (status === 'warn') return 'degraded';
+  if (status === 'ok') return 'nominal';
+  // status unknown: fall back to the probe only (no vendor signal).
+  if (hasProbe && okPct != null) {
+    if (okPct < 0.5) return 'critical';
+    if (okPct < 0.95) return 'degraded';
+    return 'nominal';
+  }
+  return 'offline'; // unknown + no probe; buildItems excludes these
 }
 
 // Deterministic 16-bar [0,1] shape seeded by id, biased by state, so the
@@ -128,7 +140,11 @@ function buildItems(
 
     const status = svc ? normalizeStatus(svc.status) : 'unknown';
     const okPct = probe ? probe.ok_pct : null;
-    const state = deriveState(Boolean(svc), status, okPct);
+    // No real signal (no vendor status and no probe): exclude rather
+    // than fake an OFFLINE row, which would falsely imply we monitor it
+    // and it is down, and would trip the whole-widget Red Alert.
+    if (status === 'unknown' && !probe) continue;
+    const state = deriveState(status, Boolean(probe), okPct);
     const latencyMs = probe ? (probe.total?.p95 ?? probe.ttfb?.p95 ?? null) : null;
     items.push({
       id: c.id,
