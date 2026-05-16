@@ -9,7 +9,8 @@ export interface Item {
   name: string; // display
   vendor: string; // display, small caps
   state: ItemState;
-  latencyMs: number | null; // null = no latency sample (not the same as offline)
+  latencyMs: number | null; // probed p95, or null when this provider is not latency-probed
+  uptimePct: number | null; // real 7-day uptime % (shown when there is no latency probe)
   lastCheckedAgoS: number | null; // seconds since last successful check
   history: number[]; // length 16, each in [0, 1], drives the sparkline
   detailHref: string;

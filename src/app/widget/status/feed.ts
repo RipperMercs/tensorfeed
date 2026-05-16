@@ -12,8 +12,31 @@ import type { Feed, Item, ItemState } from './types';
 export const POLL_MS = 30_000;
 const STATUS_URL = 'https://tensorfeed.ai/api/status/summary';
 const PROBE_URL = 'https://tensorfeed.ai/api/probe/latest';
-const DETAIL_BASE =
-  'https://tensorfeed.ai/status?utm_source=widget&utm_medium=embed&utm_campaign=detail';
+const LEADERBOARD_URL = 'https://tensorfeed.ai/api/status/leaderboard?days=7';
+const UTM = 'utm_source=widget&utm_medium=embed&utm_campaign=detail';
+
+// Per-provider deep-link slugs. TF has a rich /uptime/{slug} page
+// (7-day chart, downtime, FAQ, cross-links) for these. Detail links
+// there when we can resolve a slug, else falls back to /status (which
+// the owner explicitly likes), anchored by id.
+const DETAIL_SLUGS: Array<[string, string]> = [
+  ['claude', 'claude'], ['anthropic', 'claude'], ['openai', 'openai'], ['gpt', 'openai'],
+  ['gemini', 'gemini'], ['google', 'gemini'], ['groq', 'groq'], ['bedrock', 'bedrock'],
+  ['azure', 'azure'], ['deepseek', 'deepseek'], ['together', 'together'],
+  ['fireworks', 'fireworks'], ['openrouter', 'openrouter'], ['perplexity', 'perplexity'],
+  ['copilot', 'copilot'], ['github', 'copilot'], ['hugging', 'huggingface'],
+  ['replicate', 'replicate'], ['cohere', 'cohere'], ['mistral', 'mistral'],
+  ['elevenlabs', 'elevenlabs'], ['stability', 'stability'], ['runway', 'runway'],
+  ['luma', 'luma'],
+];
+
+function detailHref(name: string, vendor: string, id: string): string {
+  const hay = `${name} ${vendor}`.toLowerCase();
+  const hit = DETAIL_SLUGS.find(([kw]) => hay.includes(kw));
+  return hit
+    ? `https://tensorfeed.ai/uptime/${hit[1]}?${UTM}`
+    : `https://tensorfeed.ai/status?${UTM}#${id}`;
+}
 
 interface RawService {
   name: string;
@@ -114,7 +137,28 @@ function agoSeconds(iso: string | null): number | null {
   return Math.floor(ms / 1000);
 }
 
-function toItem(svc: RawService, probes: ProbeAggregate[]): Item {
+interface LeaderboardEntry {
+  provider: string;
+  uptime_pct: number;
+}
+
+// Match a row to its 7-day uptime entry by fuzzy provider-name overlap
+// (leaderboard "provider" is the display name, same family as the
+// status feed name/provider).
+function findUptime(name: string, vendor: string, lb: LeaderboardEntry[]): number | null {
+  const a = name.toLowerCase();
+  const v = vendor.toLowerCase();
+  for (const e of lb) {
+    const p = (e.provider || '').toLowerCase();
+    if (!p) continue;
+    if (p === a || p.includes(a) || a.includes(p) || p === v || p.includes(v) || v.includes(p)) {
+      return typeof e.uptime_pct === 'number' ? e.uptime_pct : null;
+    }
+  }
+  return null;
+}
+
+function toItem(svc: RawService, probes: ProbeAggregate[], lb: LeaderboardEntry[]): Item {
   const name = svc.name || 'Unknown';
   const provider = svc.provider || '';
   const hay = `${name} ${provider}`.toLowerCase();
@@ -131,13 +175,14 @@ function toItem(svc: RawService, probes: ProbeAggregate[]): Item {
     vendor: provider || name,
     state,
     latencyMs: latencyMs != null ? Math.round(latencyMs) : null,
+    uptimePct: findUptime(name, provider, lb),
     lastCheckedAgoS: probe ? agoSeconds(probe.last_probe_at) : null,
     history: makeHistory(id, state),
-    detailHref: `${DETAIL_BASE}#${id}`,
+    detailHref: detailHref(name, provider, id),
   };
 }
 
-export function buildFeed(statusJson: unknown, probeJson: unknown): Feed {
+export function buildFeed(statusJson: unknown, probeJson: unknown, leaderboardJson: unknown): Feed {
   const services: RawService[] =
     statusJson && typeof statusJson === 'object' && Array.isArray((statusJson as { services?: unknown }).services)
       ? ((statusJson as { services: RawService[] }).services)
@@ -150,11 +195,18 @@ export function buildFeed(statusJson: unknown, probeJson: unknown): Feed {
       ? ((probeJson as { summary: { providers: ProbeAggregate[] } }).summary.providers)
       : [];
 
+  const lb: LeaderboardEntry[] =
+    leaderboardJson &&
+    typeof leaderboardJson === 'object' &&
+    Array.isArray((leaderboardJson as { entries?: unknown }).entries)
+      ? ((leaderboardJson as { entries: LeaderboardEntry[] }).entries)
+      : [];
+
   const llms: Item[] = [];
   const svc: Item[] = [];
   for (const raw of services) {
     if (!raw || !raw.name) continue;
-    const item = toItem(raw, probes);
+    const item = toItem(raw, probes, lb);
     if (classifyTab(raw.name, raw.provider || '') === 'llm') llms.push(item);
     else svc.push(item);
   }
@@ -168,14 +220,16 @@ export function buildFeed(statusJson: unknown, probeJson: unknown): Feed {
 
 export async function fetchFeed(): Promise<Feed | null> {
   try {
-    const [statusRes, probeRes] = await Promise.all([
+    const [statusRes, probeRes, lbRes] = await Promise.all([
       fetch(STATUS_URL, { cache: 'no-store' }),
       fetch(PROBE_URL, { cache: 'no-store' }).catch(() => null),
+      fetch(LEADERBOARD_URL, { cache: 'no-store' }).catch(() => null),
     ]);
     if (!statusRes.ok) return null;
     const statusJson = await statusRes.json();
     const probeJson = probeRes && probeRes.ok ? await probeRes.json() : null;
-    return buildFeed(statusJson, probeJson);
+    const leaderboardJson = lbRes && lbRes.ok ? await lbRes.json() : null;
+    return buildFeed(statusJson, probeJson, leaderboardJson);
   } catch {
     return null;
   }

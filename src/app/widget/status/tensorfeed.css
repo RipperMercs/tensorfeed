@@ -515,7 +515,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 420px;
+  /* Grow with the provider list instead of staying a small scroll box.
+     On the standalone /widget/status page and tall embeds this shows
+     ~10 to 14 rows before scrolling; still caps + scrolls when huge. */
+  max-height: min(72vh, 760px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--tf-border-bright) transparent;

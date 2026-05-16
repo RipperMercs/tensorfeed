@@ -68,20 +68,27 @@ function Row({ item }: { item: Item }) {
         ))}
       </div>
       <div className="tf-r-metric">
-        {item.latencyMs == null ? (
-          'n/a'
-        ) : (
+        {item.latencyMs != null ? (
           <>
             {item.latencyMs.toLocaleString()}
             <span className="tf-r-unit">ms</span>
           </>
+        ) : item.uptimePct != null ? (
+          <>
+            {Number.isInteger(item.uptimePct) ? item.uptimePct : item.uptimePct.toFixed(1)}
+            <span className="tf-r-unit">%</span>
+          </>
+        ) : (
+          'n/a'
         )}
         <div className="tf-r-meta">
-          {item.state === 'offline'
+          {item.latencyMs != null
             ? `last ${formatAgo(item.lastCheckedAgoS)}`
-            : item.latencyMs == null
-              ? 'no probe'
-              : `last ${formatAgo(item.lastCheckedAgoS)}`}
+            : item.uptimePct != null
+              ? '7d uptime'
+              : item.state === 'offline'
+                ? `last ${formatAgo(item.lastCheckedAgoS)}`
+                : 'monitored'}
         </div>
       </div>
       <div className="tf-r-act">
