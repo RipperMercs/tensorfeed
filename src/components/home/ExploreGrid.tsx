@@ -135,7 +135,7 @@ const CARDS: ExploreCardData[] = [
     kind: 'monitor',
     title: 'Status Dashboard',
     desc: 'Live uptime and latency for every major API, updated every 2 minutes.',
-    meta: '10 services monitored',
+    meta: '20+ services monitored',
     color: 'var(--accent-green)',
     Vis: StatusVis,
   },
