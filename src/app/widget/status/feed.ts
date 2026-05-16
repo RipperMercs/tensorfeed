@@ -304,8 +304,11 @@ function demoStateFor(s: 'nominal' | 'degraded' | 'critical' | 'offline', id: st
   if (s === 'nominal') return 'nominal';
   if (s === 'degraded') return id === 'mistral' || id === 'perplexity' ? 'degraded' : 'nominal';
   if (s === 'offline') return id === 'deepseek' || id === 'replicate' ? 'offline' : 'nominal';
-  // critical: two down, one degraded, the rest healthy
-  return id === 'cohere' || id === 'deepseek'
+  // critical: exactly one down, one degraded, the rest healthy. A
+  // single real outage plus one wobble is what a believable incident
+  // looks like, and it is the cleaner backdrop for product shots than
+  // a board full of red.
+  return id === 'cohere'
     ? 'critical'
     : id === 'mistral'
       ? 'degraded'
