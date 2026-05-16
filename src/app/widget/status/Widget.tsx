@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Condition, Feed, Item, ItemState } from './types';
-import { fetchFeed, POLL_MS } from './feed';
+import { fetchFeed, POLL_MS, buildDemoFeed } from './feed';
 
 /**
  * TensorFeed Live Monitor. 1:1 port of the design prototype, wired to
@@ -182,20 +182,11 @@ function readDemo(): DemoScenario | null {
   return (DEMO_SCENARIOS as string[]).includes(d) ? (d as DemoScenario) : null;
 }
 
-// Opt-in preview of the alert chrome so the yellow/red/no-data states
-// can be verified without waiting for a real outage. Off unless ?demo=
-// is in the URL, so real embeds and the extension popup (which never
-// pass it) are completely unaffected. Forces every row to the chosen
-// state so the condition rollup, klaxon, spine, and alert strip all
-// show. A loud SIMULATION banner is rendered whenever this is active so
-// it can never be mistaken for real status.
-function applyDemo(feed: Feed, s: DemoScenario): Feed {
-  const map = (it: Item): Item =>
-    s === 'offline'
-      ? { ...it, state: 'offline', latencyMs: null, uptimePct: null }
-      : { ...it, state: s };
-  return { ...feed, llms: feed.llms.map(map), services: feed.services.map(map) };
-}
+// Demo mode now uses buildDemoFeed (feed.ts): a self-contained
+// synthetic feed with zero network dependency, so ?demo= renders the
+// alert chrome instantly and works offline. A loud SIMULATION banner
+// is shown whenever it is active so it can never be mistaken for real
+// status. Real embeds and the extension popup never pass ?demo=.
 
 const SKELETON_ROWS = Array.from({ length: 6 });
 
@@ -249,7 +240,10 @@ export default function Widget() {
     };
   }, [appearance.pollMs]);
 
-  const effFeed = useMemo(() => (demo && feed ? applyDemo(feed, demo) : feed), [feed, demo]);
+  // Demo mode renders a self-contained synthetic feed: no dependency on
+  // the live API, the poll, or the network, so the alert chrome shows
+  // instantly and works offline / before any fetch returns.
+  const effFeed = useMemo(() => (demo ? buildDemoFeed(demo) : feed), [feed, demo]);
   const llms = effFeed?.llms ?? [];
   const services = effFeed?.services ?? [];
   const items = tab === 'llms' ? llms : services;
@@ -298,7 +292,14 @@ export default function Widget() {
   };
 
   return (
-    <>
+    <div
+      style={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
     {demo && (
       <div
         role="alert"
@@ -406,7 +407,7 @@ export default function Widget() {
       </div>
 
       <ul className="tf-feed" role="list">
-        {loading ? (
+        {loading && !demo ? (
           SKELETON_ROWS.map((_, i) => (
             <li key={i} className="tf-row tf-skel" aria-hidden="true">
               <div />
@@ -467,6 +468,6 @@ export default function Widget() {
       )}
       <style>{`@keyframes tf-spin{to{transform:rotate(360deg)}}`}</style>
     </div>
-    </>
+    </div>
   );
 }

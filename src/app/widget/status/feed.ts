@@ -234,3 +234,50 @@ export async function fetchFeed(): Promise<Feed | null> {
     return null;
   }
 }
+
+// Self-contained demo feed for ?demo= preview. Does NOT touch the live
+// API or the real feed: it must render the alert chrome instantly and
+// unconditionally, even offline or before any poll returns. A
+// representative provider set, every row forced to the chosen state.
+const DEMO_ROWS: ReadonlyArray<{ id: string; name: string; vendor: string; base: number; tab: 'llm' | 'service' }> = [
+  { id: 'claude', name: 'Claude API', vendor: 'Anthropic', base: 1174, tab: 'llm' },
+  { id: 'openai', name: 'OpenAI API', vendor: 'OpenAI', base: 287, tab: 'llm' },
+  { id: 'gemini', name: 'Google Gemini', vendor: 'Google', base: 1209, tab: 'llm' },
+  { id: 'mistral', name: 'Mistral', vendor: 'Mistral AI', base: 655, tab: 'llm' },
+  { id: 'cohere', name: 'Cohere', vendor: 'Cohere', base: 412, tab: 'llm' },
+  { id: 'deepseek', name: 'DeepSeek', vendor: 'DeepSeek', base: 530, tab: 'llm' },
+  { id: 'groq', name: 'Groq', vendor: 'Groq', base: 142, tab: 'llm' },
+  { id: 'perplexity', name: 'Perplexity', vendor: 'Perplexity AI', base: 388, tab: 'llm' },
+  { id: 'bedrock', name: 'AWS Bedrock', vendor: 'AWS', base: 264, tab: 'llm' },
+  { id: 'azure-openai', name: 'Azure OpenAI', vendor: 'Microsoft Azure', base: 301, tab: 'llm' },
+  { id: 'huggingface', name: 'Hugging Face', vendor: 'Hugging Face', base: 233, tab: 'service' },
+  { id: 'replicate', name: 'Replicate', vendor: 'Replicate', base: 540, tab: 'service' },
+  { id: 'openrouter', name: 'OpenRouter', vendor: 'OpenRouter', base: 319, tab: 'service' },
+  { id: 'together', name: 'Together AI', vendor: 'Together AI', base: 198, tab: 'service' },
+  { id: 'fireworks', name: 'Fireworks AI', vendor: 'Fireworks AI', base: 176, tab: 'service' },
+];
+
+export function buildDemoFeed(s: 'nominal' | 'degraded' | 'critical' | 'offline'): Feed {
+  const mk = (r: (typeof DEMO_ROWS)[number]): Item => {
+    const state: ItemState = s;
+    const offline = s === 'offline';
+    const latencyMs = offline ? null : s === 'critical' ? Math.round(r.base * 1.8) : s === 'degraded' ? Math.round(r.base * 1.5) : r.base;
+    return {
+      id: r.id,
+      name: r.name,
+      vendor: r.vendor,
+      state,
+      latencyMs,
+      uptimePct: null,
+      lastCheckedAgoS: offline ? null : 9,
+      history: makeHistory(r.id, state),
+      detailHref: 'https://tensorfeed.ai/status?utm_source=widget&utm_medium=demo',
+    };
+  };
+  return {
+    pollIntervalMs: POLL_MS,
+    generatedAt: new Date().toISOString(),
+    llms: DEMO_ROWS.filter((r) => r.tab === 'llm').map(mk),
+    services: DEMO_ROWS.filter((r) => r.tab === 'service').map(mk),
+  };
+}
