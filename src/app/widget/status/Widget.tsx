@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { Condition, Feed, Item, ItemState } from './types';
 import { fetchFeed, POLL_MS, buildDemoFeed } from './feed';
 
@@ -79,6 +79,27 @@ function compCs(status: string): string {
   return COMP_CS[(status || '').toLowerCase()] || 'offline';
 }
 
+// Per-provider wave desync. A deterministic hash of the id (same idea
+// as makeHistory in feed.ts) gives each provider its own stable phase,
+// duration and direction, so the alert rows never move in lockstep and
+// the board reads organic, not like a synchronized rank. Stable across
+// polls because it is id-seeded, so the wave never jumps on refresh.
+// Only emitted for the animated states; other rows get no inline style.
+function sweepVars(item: Item): CSSProperties | undefined {
+  if (item.state !== 'critical' && item.state !== 'degraded') return undefined;
+  let h = 0;
+  for (let i = 0; i < item.id.length; i++) h = (h * 31 + item.id.charCodeAt(i)) >>> 0;
+  const dur = (1.8 + (h % 9) * 0.1).toFixed(2); // 1.80s to 2.60s
+  const delay = (-(((h >>> 3) % 40) * 0.1)).toFixed(2); // 0 to -3.9s phase
+  const dir = h & 1 ? 'reverse' : 'normal'; // half sweep the other way
+  const vars: Record<string, string> = {
+    '--sw-dur': `${dur}s`,
+    '--sw-delay': `${delay}s`,
+    '--sw-dir': dir,
+  };
+  return vars as CSSProperties;
+}
+
 function Row({
   item,
   open,
@@ -98,6 +119,7 @@ function Row({
       <div
         className="tf-row tf-row-sum"
         data-state={item.state}
+        style={sweepVars(item)}
         role="button"
         tabIndex={0}
         aria-expanded={open}

@@ -557,7 +557,12 @@
   border-left-color: var(--tf-degraded);
   background: linear-gradient(90deg, rgba(255, 200, 69, 0.07) 0%, rgba(255, 200, 69, 0.30) 50%, rgba(255, 200, 69, 0.07) 100%);
   background-size: 200% 100%;
-  animation: tf-sweep 2.6s linear infinite;
+  animation-name: tf-sweep;
+  animation-duration: var(--sw-dur, 2.6s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-delay: var(--sw-delay, 0s);
+  animation-direction: var(--sw-dir, normal);
 }
 .tf-row[data-state="downgraded"] {
   border-left-color: var(--tf-downgraded);
@@ -567,7 +572,15 @@
   border-left-color: var(--tf-critical);
   background: linear-gradient(90deg, rgba(255, 85, 113, 0.09) 0%, rgba(255, 85, 113, 0.44) 50%, rgba(255, 85, 113, 0.09) 100%);
   background-size: 200% 100%;
-  animation: tf-sweep 2s linear infinite;
+  /* Phase, duration and direction are per-provider, set inline by the
+     component from a deterministic id hash, so each row waves on its
+     own timing. Fallbacks keep a sane wave if the vars are absent. */
+  animation-name: tf-sweep;
+  animation-duration: var(--sw-dur, 2s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-delay: var(--sw-delay, 0s);
+  animation-direction: var(--sw-dir, normal);
 }
 .tf-row[data-state="offline"] {
   border-left-color: var(--tf-offline);
