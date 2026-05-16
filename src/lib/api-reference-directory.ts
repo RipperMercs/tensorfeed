@@ -200,7 +200,7 @@ console.log(\`\${incidents.length} services with issues\`);`,
       },
       {
         q: 'Which AI services does the status endpoint cover?',
-        a: 'Anthropic (Claude), OpenAI (ChatGPT, API), Google (Gemini), Mistral, Cohere, Replicate, HuggingFace, Perplexity, Microsoft Copilot, and Midjourney. The list is in worker/src/sources.ts and grows as we add providers.',
+        a: 'More than 20 AI providers and services, including Anthropic (Claude), OpenAI, Google (Gemini), AWS Bedrock, Azure OpenAI, Mistral, Cohere, Groq, Together, Fireworks, and OpenRouter, plus voice, image, and video services. The live roster is whatever /api/status/summary returns and grows as we add providers.',
       },
       {
         q: 'How accurate is the status data?',
