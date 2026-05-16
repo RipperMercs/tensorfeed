@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'live-ai-status-widget',
+    title: 'We Made AI Status Embeddable: One Line of HTML, Live on Any Site',
+    author: 'Ripper',
+    date: 'May 15, 2026',
+    readTime: '6 min read',
+    description:
+      'We shipped a free, self-contained widget that drops a real-time AI status console onto any site with one line of HTML. Sixteen LLM providers and counting, real p95 latency where we probe and real seven-day uptime where we do not, no fabricated charts, no cry-wolf alarms, no ads. Inside the honest-by-construction engineering (vendor status authoritative, the probe never overrides it, NO DATA is never an outage), why an embeddable trust widget is the cleanest discovery loop for humans and agents, and the three ways to embed it: one line of HTML, the zero-dependency @tensorfeed/status-widget npm component, or the browser extension on the way.',
+  },
+  {
     slug: 'google-a2a-x402-payments-extension',
     title:
       'Google Just Put 60 Payment Companies Behind a Crypto-Native Agent Rail',

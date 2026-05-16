@@ -1,0 +1,45 @@
+{
+  "name": "@tensorfeed/status-widget",
+  "version": "0.1.0",
+  "description": "Drop the live TensorFeed AI status monitor onto any site with one line. Zero dependencies, framework agnostic web component plus a helper for React and plain HTML.",
+  "type": "module",
+  "main": "./index.js",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
+  },
+  "files": ["index.js", "index.d.ts", "README.md"],
+  "sideEffects": ["./index.js"],
+  "keywords": [
+    "tensorfeed",
+    "ai",
+    "llm",
+    "status",
+    "monitor",
+    "uptime",
+    "widget",
+    "web-component",
+    "embed",
+    "openai",
+    "anthropic",
+    "claude",
+    "gemini"
+  ],
+  "homepage": "https://tensorfeed.ai/embed",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RipperMercs/tensorfeed.git",
+    "directory": "packages/status-widget"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
