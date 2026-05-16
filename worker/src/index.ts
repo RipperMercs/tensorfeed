@@ -396,6 +396,7 @@ import {
   listSubmissions,
   setSubmissionDecision,
 } from './jobs-store';
+import { sendJobsMorningDigest } from './jobs-digest';
 import {
   toPublicGig,
   validateGigSubmission,
@@ -9386,6 +9387,14 @@ export default {
       // Daily 8:30 AM UTC: refresh trending AI repos + send daily summary email
       await run('pollTrendingRepos', () => pollTrendingRepos(env));
       await run('sendDailySummary', () => sendDailySummary(env));
+    } else if (cron === '0 15 * * *') {
+      // Daily 15:00 UTC (08:00 America/Los_Angeles during PDT, 07:00
+      // during PST: the accepted seasonal drift). Email evan@tensorfeed.ai
+      // a digest of agent-work gig listings posted to the public jobs
+      // board in the last 24 hours. No email on a zero-activity day; the
+      // cron-status log is the heartbeat. Read-only over jobs:gig:* KV
+      // plus one Resend send, mirrors the sendDailySummary discipline.
+      await run('sendJobsMorningDigest', () => sendJobsMorningDigest(env));
     } else if (cron === '30 9 * * *') {
       // Daily 9:30 AM UTC: capture MCP server registry telemetry. Compounds
       // into a multi-month time series of registry growth, churn, and
