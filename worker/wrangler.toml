@@ -32,6 +32,14 @@ crons = [
   "0 */2 * * *",
   "0 7 * * *",
   "30 8 * * *",
+  # Daily 15:00 UTC: email evan@tensorfeed.ai a digest of new agent-work
+  # gig listings posted to the public jobs board in the last 24 hours
+  # (worker/src/jobs-digest.ts). 08:00 America/Los_Angeles during PDT,
+  # 07:00 during PST (accepted seasonal drift). No email on a zero-
+  # activity day; the cron-status log is the heartbeat. Slot 15:00 UTC
+  # is otherwise unused; nearest neighbors are 0/15/30 14 and the
+  # 27 * * * * x402 probe, so no trigger collision.
+  "0 15 * * *",
   # Daily 9:30 AM UTC: capture MCP server registry telemetry from
   # registry.modelcontextprotocol.io. Powers /api/mcp/registry/snapshot
   # (free) and /api/premium/mcp/registry/series (1 credit).
