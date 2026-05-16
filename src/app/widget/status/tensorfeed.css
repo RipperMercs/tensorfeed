@@ -212,13 +212,21 @@
   box-shadow: 0 0 22px rgba(255, 200, 69, 0.4);
 }
 .tf-widget[data-condition="critical"] .tf-spine {
-  background: linear-gradient(180deg, var(--tf-critical), color-mix(in oklab, var(--tf-critical), #000 35%));
+  /* Owner direction: darker red on the left spine. Deep crimson to a
+     dark maroon-red, not the bright pink-red token. */
+  background: linear-gradient(180deg, #cf2f49, #7c1626);
   box-shadow: 0 0 30px rgba(255, 85, 113, 0.55);
-  animation: tf-spine-flash 1.5s ease-in-out infinite;
+  animation: tf-spine-flash 2s ease-in-out infinite;
+}
+/* The TF-FEED code is dark (#061018) because the normal spine is bright
+   cyan. On the darkened red critical spine that vanishes, so flip it to
+   a light tint to keep the label legible. */
+.tf-widget[data-condition="critical"] .tf-spine-code {
+  color: rgba(255, 255, 255, 0.82);
 }
 @keyframes tf-spine-flash {
   0%, 100% { filter: brightness(1); }
-  50%      { filter: brightness(1.32); }
+  50%      { filter: brightness(1.22); }
 }
 .tf-spine-code {
   writing-mode: vertical-rl;
@@ -324,24 +332,21 @@
 .tf-widget[data-condition="degraded"] .tf-lamp {
   background: var(--tf-degraded);
   box-shadow: 0 0 12px var(--tf-degraded);
-  animation: tf-lamp-blink 1.4s ease-in-out infinite;
+  animation: tf-pulse-crit 2.4s ease-in-out infinite;
 }
 .tf-widget[data-condition="critical"] .tf-lamp {
   background: var(--tf-critical);
   box-shadow: 0 0 16px var(--tf-critical);
-  animation: tf-pulse-crit 1.1s ease-in-out infinite;
+  animation: tf-pulse-crit 1.8s ease-in-out infinite;
 }
-@keyframes tf-lamp-blink {
-  0%, 49%   { opacity: 1; }
-  50%, 100% { opacity: 0.25; }
-}
-/* Critical pulse: smooth breathing, not a hard strobe. Replaces the
-   steps(2,end) flash on the lamp, row dot, tab badge, per owner
-   direction ("more fluid, too blinky"). Harmonized near the
-   already-smooth klaxon-wash (1.2s) and critical-pulse (1.4s). */
+/* Gentle breathing pulse for every alert (yellow and red): a smooth,
+   low-amplitude opacity fade, never a hard blink. Owner direction:
+   "smooth pulse, fade in and out, fluid". Used by the lamp, row dots,
+   and tab badge for both degraded (slower, calmer) and critical
+   (slightly quicker). Reduced-motion disables it. */
 @keyframes tf-pulse-crit {
   0%, 100% { opacity: 1; }
-  50%      { opacity: 0.35; }
+  50%      { opacity: 0.62; }
 }
 
 /* ============================================================
@@ -435,7 +440,7 @@
   background: var(--tf-degraded); box-shadow: 0 0 18px var(--tf-degraded-dim);
 }
 .tf-widget[data-condition="critical"] .tf-tab[aria-selected="true"] {
-  background: var(--tf-critical); color: #fff; box-shadow: 0 0 22px var(--tf-critical-dim);
+  background: #bf2740; color: #fff; box-shadow: 0 0 22px var(--tf-critical-dim);
 }
 .tf-tab-count {
   font-family: var(--tf-font-mono);
@@ -455,7 +460,7 @@
 .tf-tab-badge[data-kind="warn"]  { background: var(--tf-degraded); box-shadow: 0 0 6px var(--tf-degraded); }
 .tf-tab-badge[data-kind="warn2"] { background: var(--tf-downgraded); box-shadow: 0 0 6px var(--tf-downgraded); }
 .tf-tab-badge[data-kind="crit"]  { background: var(--tf-critical); box-shadow: 0 0 7px var(--tf-critical);
-                                   animation: tf-pulse-crit 1.1s ease-in-out infinite; }
+                                   animation: tf-pulse-crit 1.8s ease-in-out infinite; }
 
 /* ============================================================
    FILTER ROW (segmented control)
@@ -595,8 +600,8 @@
 .tf-row[data-state="critical"]   .tf-r-status { color: var(--tf-critical); }
 .tf-row[data-state="offline"]    .tf-r-status { color: var(--tf-offline); }
 
-.tf-row[data-state="degraded"] .tf-r-status .tf-r-dot { animation: tf-lamp-blink 1.4s ease-in-out infinite; }
-.tf-row[data-state="critical"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 1.1s ease-in-out infinite; }
+.tf-row[data-state="degraded"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 2.4s ease-in-out infinite; }
+.tf-row[data-state="critical"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 1.8s ease-in-out infinite; }
 /* downgraded dot is steady — a stable, intentional state */
 
 .tf-r-name {

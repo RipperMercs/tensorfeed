@@ -257,11 +257,34 @@ const DEMO_ROWS: ReadonlyArray<{ id: string; name: string; vendor: string; base:
   { id: 'fireworks', name: 'Fireworks AI', vendor: 'Fireworks AI', base: 176, tab: 'service' },
 ];
 
+// Realistic incident, not "paint everything red". A calm mostly-nominal
+// board with a couple of real problems is both how production actually
+// looks and the right backdrop for judging whether the alert chrome
+// pops. Deterministic by id so it is stable to look at. Flagship
+// providers are kept nominal even in the obviously-labelled sim.
+function demoStateFor(s: 'nominal' | 'degraded' | 'critical' | 'offline', id: string): ItemState {
+  if (s === 'nominal') return 'nominal';
+  if (s === 'degraded') return id === 'mistral' || id === 'perplexity' ? 'degraded' : 'nominal';
+  if (s === 'offline') return id === 'deepseek' || id === 'replicate' ? 'offline' : 'nominal';
+  // critical: two down, one degraded, the rest healthy
+  return id === 'cohere' || id === 'deepseek'
+    ? 'critical'
+    : id === 'mistral'
+      ? 'degraded'
+      : 'nominal';
+}
+
 export function buildDemoFeed(s: 'nominal' | 'degraded' | 'critical' | 'offline'): Feed {
   const mk = (r: (typeof DEMO_ROWS)[number]): Item => {
-    const state: ItemState = s;
-    const offline = s === 'offline';
-    const latencyMs = offline ? null : s === 'critical' ? Math.round(r.base * 1.8) : s === 'degraded' ? Math.round(r.base * 1.5) : r.base;
+    const state = demoStateFor(s, r.id);
+    const latencyMs =
+      state === 'offline'
+        ? null
+        : state === 'critical'
+          ? Math.round(r.base * 1.9)
+          : state === 'degraded'
+            ? Math.round(r.base * 1.5)
+            : r.base;
     return {
       id: r.id,
       name: r.name,
@@ -269,7 +292,7 @@ export function buildDemoFeed(s: 'nominal' | 'degraded' | 'critical' | 'offline'
       state,
       latencyMs,
       uptimePct: null,
-      lastCheckedAgoS: offline ? null : 9,
+      lastCheckedAgoS: state === 'offline' ? null : 9,
       history: makeHistory(r.id, state),
       detailHref: 'https://tensorfeed.ai/status?utm_source=widget&utm_medium=demo',
     };
