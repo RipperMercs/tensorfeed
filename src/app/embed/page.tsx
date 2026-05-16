@@ -107,6 +107,37 @@ export default function EmbedPage() {
         <EmbedShowcase />
       </section>
 
+      {/* npm component */}
+      <section className="mb-12">
+        <h2 className="text-xl font-bold text-text-primary mb-3">Prefer a component?</h2>
+        <p className="text-sm text-text-secondary mb-4 max-w-3xl">
+          For anything with a build step, install the zero-dependency, SSR-safe package. It is a
+          framework-agnostic web component plus a helper for React, MIT licensed.
+        </p>
+        <pre
+          className="rounded-lg border border-border overflow-x-auto px-4 py-3 text-[12.5px] leading-relaxed font-mono text-text-secondary"
+          style={{ background: 'var(--bg-secondary)' }}
+        >
+          <code>{`npm install @tensorfeed/status-widget
+
+import '@tensorfeed/status-widget';
+<tensorfeed-status accent="blue" poll="30"></tensorfeed-status>`}</code>
+        </pre>
+        <p className="text-xs text-text-muted mt-2">
+          On npm:{' '}
+          <a
+            href="https://www.npmjs.com/package/@tensorfeed/status-widget"
+            className="text-accent-cyan hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            @tensorfeed/status-widget
+          </a>
+          . React users can skip the element and use the{' '}
+          <code>tensorfeedStatusSrc()</code> helper directly.
+        </p>
+      </section>
+
       {/* What powers it */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-text-primary mb-4">What powers it</h2>
