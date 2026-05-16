@@ -239,7 +239,7 @@ export default function RackCard({ service, probe, rackIndex }: RackCardProps) {
           <div className="text-[9.5px] font-mono uppercase tracking-[0.14em] text-text-muted mb-2">
             Components / {service.components.length} tracked
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5">
             {service.components.map((c) => {
               const cn = normalize(c.status);
               return (
