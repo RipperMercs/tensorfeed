@@ -182,7 +182,7 @@
     0 0 0 1px rgba(255, 85, 113, 0.22) inset,
     0 0 50px rgba(255, 85, 113, 0.20),
     0 20px 60px rgba(0, 0, 0, 0.55);
-  animation: tf-critical-pulse 2.6s ease-in-out infinite;
+  animation: tf-critical-pulse 3.6s ease-in-out infinite;
 }
 @keyframes tf-critical-pulse {
   0%, 100% { box-shadow:
@@ -190,8 +190,8 @@
     0 0 50px rgba(255, 85, 113, 0.16),
     0 20px 60px rgba(0, 0, 0, 0.55); }
   50% { box-shadow:
-    0 0 0 1px rgba(255, 85, 113, 0.45) inset,
-    0 0 80px rgba(255, 85, 113, 0.32),
+    0 0 0 1px rgba(255, 85, 113, 0.30) inset,
+    0 0 80px rgba(255, 85, 113, 0.22),
     0 20px 60px rgba(0, 0, 0, 0.55); }
 }
 
@@ -216,7 +216,7 @@
      dark maroon-red, not the bright pink-red token. */
   background: linear-gradient(180deg, #cf2f49, #7c1626);
   box-shadow: 0 0 30px rgba(255, 85, 113, 0.55);
-  animation: tf-spine-flash 2.8s ease-in-out infinite;
+  animation: tf-spine-flash 3.6s ease-in-out infinite;
 }
 /* The TF-FEED code is dark (#061018) because the normal spine is bright
    cyan. On the darkened red critical spine that vanishes, so flip it to
@@ -226,7 +226,7 @@
 }
 @keyframes tf-spine-flash {
   0%, 100% { filter: brightness(1); }
-  50%      { filter: brightness(1.22); }
+  50%      { filter: brightness(1.12); }
 }
 .tf-spine-code {
   writing-mode: vertical-rl;
@@ -281,11 +281,11 @@
 .tf-widget[data-condition="critical"] .tf-klaxon {
   background: linear-gradient(90deg, var(--tf-critical-dim), rgba(255, 85, 113, 0.08) 50%, transparent);
   border-bottom-color: rgba(255, 85, 113, 0.4);
-  animation: tf-klaxon-wash 2.6s ease-in-out infinite;
+  animation: tf-klaxon-wash 3.6s ease-in-out infinite;
 }
 @keyframes tf-klaxon-wash {
   0%, 100% { background: linear-gradient(90deg, rgba(255, 85, 113, 0.18), rgba(255, 85, 113, 0.04) 50%, transparent); }
-  50%      { background: linear-gradient(90deg, rgba(255, 85, 113, 0.42), rgba(255, 85, 113, 0.12) 60%, transparent); }
+  50%      { background: linear-gradient(90deg, rgba(255, 85, 113, 0.26), rgba(255, 85, 113, 0.08) 60%, transparent); }
 }
 
 .tf-klaxon-label {
@@ -332,12 +332,12 @@
 .tf-widget[data-condition="degraded"] .tf-lamp {
   background: var(--tf-degraded);
   box-shadow: 0 0 12px var(--tf-degraded);
-  animation: tf-pulse-crit 3.2s ease-in-out infinite;
+  animation: tf-pulse-crit 4.2s ease-in-out infinite;
 }
 .tf-widget[data-condition="critical"] .tf-lamp {
   background: var(--tf-critical);
   box-shadow: 0 0 16px var(--tf-critical);
-  animation: tf-pulse-crit 2.6s ease-in-out infinite;
+  animation: tf-pulse-crit 3.6s ease-in-out infinite;
 }
 /* Gentle breathing pulse for every alert (yellow and red): a smooth,
    low-amplitude opacity fade, never a hard blink. Owner direction:
@@ -346,7 +346,7 @@
    (slightly quicker). Reduced-motion disables it. */
 @keyframes tf-pulse-crit {
   0%, 100% { opacity: 1; }
-  50%      { opacity: 0.62; }
+  50%      { opacity: 0.78; }
 }
 
 /* ============================================================
@@ -460,7 +460,7 @@
 .tf-tab-badge[data-kind="warn"]  { background: var(--tf-degraded); box-shadow: 0 0 6px var(--tf-degraded); }
 .tf-tab-badge[data-kind="warn2"] { background: var(--tf-downgraded); box-shadow: 0 0 6px var(--tf-downgraded); }
 .tf-tab-badge[data-kind="crit"]  { background: var(--tf-critical); box-shadow: 0 0 7px var(--tf-critical);
-                                   animation: tf-pulse-crit 2.6s ease-in-out infinite; }
+                                   animation: tf-pulse-crit 3.6s ease-in-out infinite; }
 
 /* ============================================================
    FILTER ROW (segmented control)
@@ -567,7 +567,7 @@
 .tf-row[data-state="critical"] {
   border-left-color: var(--tf-critical);
   background: linear-gradient(90deg, rgba(255, 85, 113, 0.08), var(--tf-bg-row) 70%);
-  animation: tf-row-flash 2.6s ease-in-out infinite;
+  animation: tf-row-flash 3.6s ease-in-out infinite;
 }
 .tf-row[data-state="offline"] {
   border-left-color: var(--tf-offline);
@@ -575,8 +575,8 @@
   opacity: 0.78;
 }
 @keyframes tf-row-flash {
-  0%, 100% { background: linear-gradient(90deg, rgba(255, 85, 113, 0.06), var(--tf-bg-row) 70%); }
-  50%      { background: linear-gradient(90deg, rgba(255, 85, 113, 0.18), var(--tf-bg-row) 70%); }
+  0%, 100% { background: linear-gradient(90deg, rgba(255, 85, 113, 0.05), var(--tf-bg-row) 70%); }
+  50%      { background: linear-gradient(90deg, rgba(255, 85, 113, 0.10), var(--tf-bg-row) 70%); }
 }
 
 /* row pieces */
@@ -600,8 +600,8 @@
 .tf-row[data-state="critical"]   .tf-r-status { color: var(--tf-critical); }
 .tf-row[data-state="offline"]    .tf-r-status { color: var(--tf-offline); }
 
-.tf-row[data-state="degraded"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 3.2s ease-in-out infinite; }
-.tf-row[data-state="critical"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 2.6s ease-in-out infinite; }
+.tf-row[data-state="degraded"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 4.2s ease-in-out infinite; }
+.tf-row[data-state="critical"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 3.6s ease-in-out infinite; }
 /* downgraded dot is steady — a stable, intentional state */
 
 .tf-r-name {
