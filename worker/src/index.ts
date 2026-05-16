@@ -841,6 +841,7 @@ async function premiumValidationFailure(
   request: Request,
   env: Env,
   noChargeReason: NoChargeReason = 'schema_validation_failure',
+  status: number = 400,
 ): Promise<Response> {
   const url = new URL(request.url);
   const endpoint = url.pathname;
@@ -947,7 +948,7 @@ async function premiumValidationFailure(
     responseBody.receipt_status = 'pending_key_bootstrap';
   }
 
-  return new Response(JSON.stringify(responseBody), { status: 400, headers });
+  return new Response(JSON.stringify(responseBody), { status, headers });
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1006,6 +1007,14 @@ export default {
     url: URL,
     path: string,
   ): Promise<Response> {
+    // B-F3: single outer guard around the entire route dispatch. A
+    // handler throw must not escape as a Cloudflare HTML 500
+    // (unparseable for agents) and must still honor the AFTA 5xx
+    // no-charge guarantee. Deferred-debit already means no credit was
+    // charged on a throw; the catch adds a structured JSON 500 (all
+    // paths) plus the 5xx no-charge ledger entry + signed receipt
+    // (premium paths). The catch NEVER debits.
+    try {
     // Track agent/bot activity (non-blocking, batched in memory)
     ctx.waitUntil(trackAgentActivity(request, env, path));
 
@@ -6162,10 +6171,24 @@ export default {
 
       const raw = await fetchCVE(env, cleanCveMatch[1]);
       if (!raw.ok) {
-        const status = raw.error === 'cve_not_found' ? 404 : raw.error === 'invalid_cve_id' ? 400 : 502;
+        if (raw.error === 'cve_not_found' || raw.error === 'invalid_cve_id') {
+          // Client/validation no-charge: route through the AFTA ledger +
+          // signed receipt + no-charge abuse cap (B-F4).
+          return await premiumValidationFailure(
+            { ok: false, error: raw.error, cve_id: raw.cveId, attribution: raw.attribution },
+            payment,
+            request,
+            env,
+          );
+        }
+        // Upstream MITRE failure: a 5xx-class no-charge, NOT a client
+        // validation failure. Keep the 502 + raw shape (deferred-debit
+        // already means no charge). The uniform signed 5xx no-charge
+        // receipt for this class is B-F3, not B-F4; do not mislabel it
+        // as schema_validation_failure or downgrade it to 400.
         return jsonResponse(
           { ok: false, error: raw.error, cve_id: raw.cveId, attribution: raw.attribution },
-          status,
+          502,
         );
       }
       const clean = attachCompressionStats(
@@ -6204,7 +6227,7 @@ export default {
 
       const entry = await readKEVByCVE(env, cleanKevMatch[1]);
       if (!entry) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'not_in_kev',
@@ -6212,7 +6235,9 @@ export default {
             hint: 'CVE may exist in MITRE CVE List but not be on the CISA KEV catalog.',
             attribution: KEV_ATTRIBUTION,
           },
-          404,
+          payment,
+          request,
+          env,
         );
       }
       const clean = attachCompressionStats(
@@ -8359,7 +8384,12 @@ export default {
         ...(Number.isFinite(newsLimitParam) ? { newsLimit: newsLimitParam } : {}),
       });
       if (!result.ok) {
-        return jsonResponse(result, 400);
+        return await premiumValidationFailure(
+          result as unknown as Record<string, unknown>,
+          payment,
+          request,
+          env,
+        );
       }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/whats-new', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
@@ -8383,13 +8413,15 @@ export default {
       const minutesRaw = parseInt(url.searchParams.get('minutes') ?? '', 10);
       const minutes = Number.isFinite(minutesRaw) ? minutesRaw : 60;
       if (minutes < 5 || minutes > 1440) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'invalid_minutes',
             hint: 'minutes must be between 5 and 1440 (24 hours). For windows >1 day, use /api/premium/whats-new?days=N.',
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const newsLimitParam = parseInt(url.searchParams.get('news_limit') ?? '', 10);
@@ -8398,7 +8430,12 @@ export default {
         ...(Number.isFinite(newsLimitParam) ? { newsLimit: newsLimitParam } : {}),
       });
       if (!result.ok) {
-        return jsonResponse(result, 400);
+        return await premiumValidationFailure(
+          result as unknown as Record<string, unknown>,
+          payment,
+          request,
+          env,
+        );
       }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/recent', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
@@ -9425,6 +9462,66 @@ export default {
     // }
 
     return jsonResponse({ error: 'Not found', endpoints: ['/api/health', '/api/news', '/api/status', '/api/models', '/api/benchmarks', '/api/harnesses', '/api/podcasts', '/api/trending-repos', '/api/feed.xml', '/api/feed.json', '/api/meta'] }, 404);
+
+    } catch (err) {
+      // Deferred-debit already guarantees no credit was charged on a
+      // throw (commitPayment never ran). Re-derive the bearer token from
+      // the Authorization header so NO handler needs to expose its
+      // payment object. For a premium path, record the AFTA 5xx
+      // no-charge event + signed receipt (HTTP 500) via the audited
+      // helper. Always return parseable JSON, never a Cloudflare HTML
+      // error page. This path NEVER debits (commitPayment with a
+      // non-null reason logs only).
+      try {
+        console.error(
+          'worker_unhandled_error',
+          path,
+          err instanceof Error ? err.stack || err.message : String(err),
+        );
+      } catch {}
+      const authH = request.headers.get('Authorization');
+      const tok =
+        authH && authH.startsWith('Bearer ') ? authH.slice(7).trim() : '';
+      if (path.startsWith('/api/premium/') && tok.startsWith('tf_live_')) {
+        try {
+          const recovered = {
+            paid: true,
+            token: tok,
+            cost: 0,
+          } as import('./payments').PaymentResult;
+          return await premiumValidationFailure(
+            {
+              ok: false,
+              error: 'internal_error',
+              message:
+                'The request failed inside the handler. No credit was charged for this call.',
+            },
+            recovered,
+            request,
+            env,
+            '5xx',
+            500,
+          );
+        } catch (e2) {
+          try {
+            console.error(
+              'worker_5xx_nocharge_failed',
+              path,
+              e2 instanceof Error ? e2.message : String(e2),
+            );
+          } catch {}
+        }
+      }
+      return jsonResponse(
+        {
+          ok: false,
+          error: 'internal_error',
+          message:
+            'The request failed unexpectedly. If this was a premium call, no credit was charged.',
+        },
+        500,
+      );
+    }
   },
 
   async scheduled(event: ScheduledEvent, env: Env): Promise<void> {

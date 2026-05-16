@@ -355,6 +355,65 @@ interface ChainalysisResponse {
 
 const CHAINALYSIS_TIMEOUT_MS = 8000;
 
+// B-F5: in-isolate clean-screen cache. NOT KV. A short memory-only
+// cache of addresses we screened unambiguously clean (200 zero-ids or
+// 404) so a brief Chainalysis 429/5xx does not hard-block a repeat
+// legitimate payer. A sanctioned or errored result is NEVER cached.
+const OFAC_CLEAN_TTL_MS = 120_000;
+const ofacCleanCache = new Map<string, number>();
+
+function markOfacScreenClean(addr: string): void {
+  ofacCleanCache.set(addr.toLowerCase(), Date.now() + OFAC_CLEAN_TTL_MS);
+}
+
+function hasRecentCleanOfacScreen(addr: string): boolean {
+  const exp = ofacCleanCache.get(addr.toLowerCase());
+  if (exp === undefined) return false;
+  if (Date.now() > exp) {
+    ofacCleanCache.delete(addr.toLowerCase());
+    return false;
+  }
+  return true;
+}
+
+// Transient Chainalysis failure (outage / rate-limit / unreachable), as
+// distinct from a confirmed sanctions hit or a misconfig. These are the
+// only errors B-F5 fails closed on (without flagging the wallet).
+function isTransientOfacError(err: string | null): err is string {
+  return (
+    !!err &&
+    (err.startsWith('chainalysis_status_') ||
+      err.startsWith('chainalysis_unreachable'))
+  );
+}
+
+/**
+ * B-F5: decide whether a transient screening failure should fail closed.
+ * Returns 'reject' (no recent clean screen on file, refuse the mint, do
+ * NOT flag the wallet) or 'cache_pass' (a clean screen within the TTL,
+ * allow through a brief outage). Logs the decision in structured form
+ * so a sustained degraded window is queryable/alertable, not silent.
+ */
+function ofacTransientDecision(
+  addr: string,
+  err: string,
+  context: string,
+): 'reject' | 'cache_pass' {
+  const decision = hasRecentCleanOfacScreen(addr) ? 'cache_pass' : 'reject';
+  console.log(
+    JSON.stringify({
+      event: 'ofac_screen_degraded',
+      alert: decision === 'reject',
+      wallet: addr,
+      context,
+      error: err,
+      decision,
+      timestamp: new Date().toISOString(),
+    }),
+  );
+  return decision;
+}
+
 export async function screenWalletOFAC(
   walletAddress: string,
   env: Env,
@@ -378,12 +437,14 @@ export async function screenWalletOFAC(
     if (!res.ok) {
       // 404 means address not in their sanctions database, treat as clean.
       if (res.status === 404) {
+        markOfacScreenClean(walletAddress);
         return { sanctioned: false, identifications: [], error: null };
       }
       return { sanctioned: false, identifications: null, error: 'chainalysis_status_' + res.status };
     }
     const data = (await res.json()) as ChainalysisResponse;
     const ids = Array.isArray(data?.identifications) ? data.identifications : [];
+    if (ids.length === 0) markOfacScreenClean(walletAddress);
     return { sanctioned: ids.length > 0, identifications: ids, error: null };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -1046,16 +1107,39 @@ export async function confirmPayment(
       };
     }
     if (screen.error) {
-      console.log(
-        JSON.stringify({
-          event: 'ofac_screen_degraded',
-          wallet: verified.senderAddress,
-          tx_hash: txHash,
-          error: screen.error,
-          decision: 'fail_open_continue',
-          timestamp: new Date().toISOString(),
-        }),
-      );
+      if (isTransientOfacError(screen.error)) {
+        if (
+          ofacTransientDecision(
+            verified.senderAddress,
+            screen.error,
+            'confirm_payment',
+          ) === 'reject'
+        ) {
+          return {
+            ok: false,
+            error: 'screening_unavailable',
+            reason:
+              'Sanctions screening is temporarily unavailable and this address has no recent clean screen on file. No credits were issued and the wallet was NOT flagged or banned. The on-chain USDC transfer is irreversible; retry once screening recovers and the same payment will credit.',
+            status: 503,
+          };
+        }
+        // cache_pass: a clean screen within the TTL, allow through the
+        // brief outage (decision already logged).
+      } else {
+        // Non-transient, non-sanctioned, non-misconfig (e.g.
+        // invalid_address; callers validate shape first so this is not
+        // expected here). Preserve prior behavior: log and continue.
+        console.log(
+          JSON.stringify({
+            event: 'ofac_screen_degraded',
+            wallet: verified.senderAddress,
+            tx_hash: txHash,
+            error: screen.error,
+            decision: 'fail_open_continue',
+            timestamp: new Date().toISOString(),
+          }),
+        );
+      }
     }
   }
 
@@ -1918,16 +2002,40 @@ export async function requirePayment(
         };
       }
       if (screen.error) {
-        console.log(
-          JSON.stringify({
-            event: 'ofac_screen_degraded',
-            wallet: verified.senderAddress,
-            tx_hash: txHash,
-            error: screen.error,
-            decision: 'fail_open_continue',
-            timestamp: new Date().toISOString(),
-          }),
-        );
+        if (isTransientOfacError(screen.error)) {
+          if (
+            ofacTransientDecision(
+              verified.senderAddress,
+              screen.error,
+              'require_payment_mint',
+            ) === 'reject'
+          ) {
+            return {
+              paid: false,
+              response: jsonResponse(
+                {
+                  ok: false,
+                  error: 'screening_unavailable',
+                  message:
+                    'Sanctions screening is temporarily unavailable and this address has no recent clean screen on file. No credits were issued and the wallet was NOT flagged or banned. Retry once screening recovers.',
+                },
+                503,
+              ),
+            };
+          }
+          // cache_pass: allow through the brief outage (logged).
+        } else {
+          console.log(
+            JSON.stringify({
+              event: 'ofac_screen_degraded',
+              wallet: verified.senderAddress,
+              tx_hash: txHash,
+              error: screen.error,
+              decision: 'fail_open_continue',
+              timestamp: new Date().toISOString(),
+            }),
+          );
+        }
       }
     }
 
@@ -2103,6 +2211,35 @@ export async function requirePayment(
           403,
         ),
       };
+    }
+
+    // B-F5: transient Chainalysis failure (429/5xx/unreachable). This
+    // path already fails closed on misconfig + sanctioned above; here
+    // we fail closed on a transient outage too UNLESS the address has a
+    // recent in-isolate clean screen. Never flags or persists a block.
+    if (isTransientOfacError(screen.error)) {
+      if (
+        ofacTransientDecision(
+          payerAddress,
+          screen.error,
+          'require_payment_x402',
+        ) === 'reject'
+      ) {
+        return {
+          paid: false,
+          response: jsonResponse(
+            {
+              x402Version: 2,
+              success: false,
+              errorReason: 'unexpected_verify_error',
+              message:
+                'Sanctions screening is temporarily unavailable and this address has no recent clean screen on file. The authorization was not broadcast and the wallet was NOT flagged. Please retry shortly.',
+            },
+            503,
+          ),
+        };
+      }
+      // cache_pass: a clean screen within the TTL, allow through (logged).
     }
 
     // Settle on-chain via USDC.transferWithAuthorization. For pilot
