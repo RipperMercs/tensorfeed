@@ -68,6 +68,11 @@ mcp-server/registry/
 .claude/*.lock
 .claude/commands/
 
+# Playwright MCP scratch output: page snapshots, console logs, and
+# transient screenshots from automated mobile/visual checks. Tooling
+# artifact, never source.
+.playwright-mcp/
+
 # Internal-only docs (Pizza Robot Studios public-repo policy).
 # Public-facing READMEs and CHANGELOGs are still tracked; these three
 # leak internal strategy / architecture / maintainer-only ops, so they
