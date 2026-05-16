@@ -67,61 +67,176 @@ function TFMark() {
   );
 }
 
-function Row({ item }: { item: Item }) {
+// Component status to the widget's state-color vocabulary. Real data is
+// already normalized by feed.ts cleanComponents (ok|warn|down|unknown);
+// the extra aliases keep it robust if a vendor word slips through.
+const COMP_CS: Record<string, string> = {
+  ok: 'nominal', operational: 'nominal',
+  warn: 'degraded', degraded: 'degraded', partial: 'degraded',
+  down: 'critical', outage: 'critical', major: 'critical',
+};
+function compCs(status: string): string {
+  return COMP_CS[(status || '').toLowerCase()] || 'offline';
+}
+
+function Row({
+  item,
+  open,
+  onToggle,
+}: {
+  item: Item;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const drawerId = `tf-d-${item.id}`;
+  const hasComps = item.components.length > 0;
   return (
-    <li className="tf-row" data-state={item.state}>
-      <div className="tf-r-status">
-        <span className="tf-r-dot" aria-hidden="true" />
-        <span>{STATUS_LABEL[item.state]}</span>
-      </div>
-      <div className="tf-r-name">
-        <span className="tf-r-name-text">{item.name}</span>
-        <span className="tf-r-vendor">{item.vendor}</span>
-      </div>
-      {/* Sparkline only where there is a real latency probe. Drawing a
-          chart on a no-probe row implies a series we do not have, which
-          on a trust widget is worse than no chart. */}
-      {item.latencyMs != null ? (
-        <div className="tf-r-spark" role="img" aria-label={`Latency trend for ${item.name}`}>
-          {item.history.map((v, i) => (
-            <div key={i} className="tf-r-spark-bar" style={{ height: `${v * 100}%` }} />
-          ))}
+    <li className="tf-row-wrap" data-state={item.state}>
+      {/* The whole summary is the disclosure control. A div with button
+          semantics (not a real <button>) keeps the grid layout and the
+          role="img" sparkline valid and avoids nested interactives. */}
+      <div
+        className="tf-row tf-row-sum"
+        data-state={item.state}
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        aria-controls={drawerId}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+      >
+        <div className="tf-r-status">
+          <span className="tf-r-dot" aria-hidden="true" />
+          <span>{STATUS_LABEL[item.state]}</span>
         </div>
-      ) : (
-        <div className="tf-r-spark" aria-hidden="true" />
-      )}
-      <div className="tf-r-metric">
+        <div className="tf-r-name">
+          <span className="tf-r-name-text">{item.name}</span>
+          <span className="tf-r-vendor">{item.vendor}</span>
+        </div>
+        {/* Sparkline only where there is a real latency probe. Drawing a
+            chart on a no-probe row implies a series we do not have, which
+            on a trust widget is worse than no chart. */}
         {item.latencyMs != null ? (
-          <>
-            {item.latencyMs.toLocaleString()}
-            <span className="tf-r-unit">ms</span>
-          </>
-        ) : item.uptimePct != null ? (
-          <>
-            {Number.isInteger(item.uptimePct) ? item.uptimePct : item.uptimePct.toFixed(1)}
-            <span className="tf-r-unit">%</span>
-          </>
+          <div className="tf-r-spark" role="img" aria-label={`Latency trend for ${item.name}`}>
+            {item.history.map((v, i) => (
+              <div key={i} className="tf-r-spark-bar" style={{ height: `${v * 100}%` }} />
+            ))}
+          </div>
         ) : (
-          'n/a'
+          <div className="tf-r-spark" aria-hidden="true" />
         )}
-        <div className="tf-r-meta">
-          {item.latencyMs != null
-            ? `last ${formatAgo(item.lastCheckedAgoS)}`
-            : item.uptimePct != null
-              ? '7d uptime'
-              : item.state === 'offline'
-                ? `last ${formatAgo(item.lastCheckedAgoS)}`
-                : 'monitored'}
+        <div className="tf-r-metric">
+          {item.latencyMs != null ? (
+            <>
+              {item.latencyMs.toLocaleString()}
+              <span className="tf-r-unit">ms</span>
+            </>
+          ) : item.uptimePct != null ? (
+            <>
+              {Number.isInteger(item.uptimePct) ? item.uptimePct : item.uptimePct.toFixed(1)}
+              <span className="tf-r-unit">%</span>
+            </>
+          ) : (
+            'n/a'
+          )}
+          <div className="tf-r-meta">
+            {item.latencyMs != null
+              ? `last ${formatAgo(item.lastCheckedAgoS)}`
+              : item.uptimePct != null
+                ? '7d uptime'
+                : item.state === 'offline'
+                  ? `last ${formatAgo(item.lastCheckedAgoS)}`
+                  : 'monitored'}
+          </div>
+        </div>
+        <div className="tf-r-act" aria-hidden="true">
+          <span className="tf-r-chev" data-open={open ? 'true' : undefined}>
+            ▾
+          </span>
         </div>
       </div>
-      <div className="tf-r-act">
-        <button
-          type="button"
-          onClick={() => window.open(item.detailHref, '_blank', 'noopener,noreferrer')}
+
+      {open && (
+        <div
+          id={drawerId}
+          className="tf-drawer"
+          data-state={item.state}
+          role="region"
+          aria-label={`${item.name} detail`}
         >
-          Detail
-        </button>
-      </div>
+          <div className="tf-dr-grid">
+            <div className="tf-dr-cell">
+              <span className="tf-dr-k">STATUS</span>
+              <span className="tf-dr-v">{STATUS_LABEL[item.state]}</span>
+            </div>
+            {item.latencyMs != null && (
+              <div className="tf-dr-cell">
+                <span className="tf-dr-k">P95 LATENCY</span>
+                <span className="tf-dr-v">
+                  {item.latencyMs.toLocaleString()} ms <em>24h</em>
+                </span>
+              </div>
+            )}
+            {item.uptimePct != null && (
+              <div className="tf-dr-cell">
+                <span className="tf-dr-k">UPTIME</span>
+                <span className="tf-dr-v">
+                  {Number.isInteger(item.uptimePct) ? item.uptimePct : item.uptimePct.toFixed(2)}% <em>7d</em>
+                </span>
+              </div>
+            )}
+            {item.lastCheckedAgoS != null && (
+              <div className="tf-dr-cell">
+                <span className="tf-dr-k">LAST CHECK</span>
+                <span className="tf-dr-v">{formatAgo(item.lastCheckedAgoS)} ago</span>
+              </div>
+            )}
+          </div>
+
+          {hasComps ? (
+            <div className="tf-dr-comps">
+              <div className="tf-dr-h">COMPONENTS / {item.components.length} TRACKED</div>
+              <ul className="tf-dr-clist" role="list">
+                {item.components.map((c) => (
+                  <li key={c.name} className="tf-dr-citem">
+                    <span className="tf-dr-cdot" data-cs={compCs(c.status)} aria-hidden="true" />
+                    <span className="tf-dr-cname">{c.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="tf-dr-none">No component breakdown published by this vendor.</div>
+          )}
+
+          <div className="tf-dr-act">
+            <a
+              className="tf-dr-cta"
+              href={item.detailHref}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Full 7-day history and incidents on TensorFeed{' '}
+              <span aria-hidden="true">→</span>
+            </a>
+            {item.sourceUrl && (
+              <a
+                className="tf-dr-src"
+                href={item.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Vendor status page <span aria-hidden="true">↗</span>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </li>
   );
 }
@@ -205,11 +320,19 @@ export default function Widget() {
   const [demo, setDemo] = useState<DemoScenario | null>(null);
   const failRef = useRef(0);
   const [failCount, setFailCount] = useState(0);
+  // Which row's detail drawer is open (accordion: one at a time keeps a
+  // compact embed from ballooning). Reset when the visible set changes
+  // so a stale row from another tab/filter cannot stay expanded.
+  const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     setAppearance(readAppearance());
     setDemo(readDemo());
   }, []);
+
+  useEffect(() => {
+    setOpenId(null);
+  }, [tab, filter, demo]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -422,7 +545,14 @@ export default function Widget() {
             {items.length === 0 ? 'No endpoints reporting yet.' : 'Nothing matches that filter.'}
           </li>
         ) : (
-          visible.map((item) => <Row key={item.id} item={item} />)
+          visible.map((item) => (
+            <Row
+              key={item.id}
+              item={item}
+              open={openId === item.id}
+              onToggle={() => setOpenId((o) => (o === item.id ? null : item.id))}
+            />
+          ))
         )}
       </ul>
 

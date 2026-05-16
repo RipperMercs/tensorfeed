@@ -14,6 +14,12 @@ export interface Item {
   lastCheckedAgoS: number | null; // seconds since last successful check
   history: number[]; // length 16, each in [0, 1], drives the sparkline
   detailHref: string;
+  // Drawer-only enrichments from /api/status (the same public endpoint
+  // the /status page uses). Always present so the row contract is
+  // uniform; components is [] and sourceUrl is null when the vendor
+  // publishes neither. Never fabricated.
+  components: { name: string; status: string }[];
+  sourceUrl: string | null; // vendor's own status page, opens off-site
 }
 
 export interface Feed {

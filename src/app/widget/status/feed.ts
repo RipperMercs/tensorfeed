@@ -1,6 +1,6 @@
 // Maps TensorFeed's live public endpoints onto the design's Feed/Item
 // contract. Coverage is the whole point: the widget renders EVERY
-// provider /api/status/summary tracks (no hardcoded catalog), so it
+// provider /api/status tracks (no hardcoded catalog), so it
 // always mirrors the site's status page and auto-includes anything TF
 // adds later. Honesty rules hold: latency is the real probed p95 or
 // null (never invented); state is derived from real signals only with
@@ -10,7 +10,12 @@
 import type { Feed, Item, ItemState } from './types';
 
 export const POLL_MS = 30_000;
-const STATUS_URL = 'https://tensorfeed.ai/api/status/summary';
+// /api/status (not /summary): same public endpoint the /status page
+// uses, returns the same `status` field PLUS per-vendor components,
+// statusPageUrl and lastChecked for the detail drawer. ~6.6KB, behind
+// the Cloudflare Cache API, one request swapped for one (not an added
+// call), so the steady-state poll cost is unchanged.
+const STATUS_URL = 'https://tensorfeed.ai/api/status';
 const PROBE_URL = 'https://tensorfeed.ai/api/probe/latest';
 const LEADERBOARD_URL = 'https://tensorfeed.ai/api/status/leaderboard?days=7';
 const UTM = 'utm_source=widget&utm_medium=embed&utm_campaign=detail';
@@ -42,6 +47,9 @@ interface RawService {
   name: string;
   provider?: string;
   status: string;
+  statusPageUrl?: string;
+  components?: Array<{ name?: string; status?: string }>;
+  lastChecked?: string;
 }
 interface ProbeAggregate {
   provider: string;
@@ -158,6 +166,31 @@ function findUptime(name: string, vendor: string, lb: LeaderboardEntry[]): numbe
   return null;
 }
 
+// Sanitize the vendor component list: keep only entries with a real
+// name, trim, normalize status to the four known buckets, and cap the
+// count so a vendor with dozens of sub-components cannot blow out the
+// drawer height inside a small embed. Never invents an entry.
+function cleanComponents(raw: RawService['components']): { name: string; status: string }[] {
+  if (!Array.isArray(raw)) return [];
+  const out: { name: string; status: string }[] = [];
+  for (const c of raw) {
+    const name = (c?.name || '').trim();
+    if (!name) continue;
+    out.push({ name: name.slice(0, 64), status: normalizeStatus(c?.status || '') });
+    if (out.length >= 14) break;
+  }
+  return out;
+}
+
+// Only surface a vendor status-page link if it is a plain https URL.
+// Anything else is dropped rather than rendered as a dead or unsafe
+// link.
+function cleanSourceUrl(u: string | undefined): string | null {
+  if (typeof u !== 'string') return null;
+  const v = u.trim();
+  return /^https:\/\/[^\s]+$/i.test(v) ? v : null;
+}
+
 function toItem(svc: RawService, probes: ProbeAggregate[], lb: LeaderboardEntry[]): Item {
   const name = svc.name || 'Unknown';
   const provider = svc.provider || '';
@@ -176,9 +209,14 @@ function toItem(svc: RawService, probes: ProbeAggregate[], lb: LeaderboardEntry[
     state,
     latencyMs: latencyMs != null ? Math.round(latencyMs) : null,
     uptimePct: findUptime(name, provider, lb),
-    lastCheckedAgoS: probe ? agoSeconds(probe.last_probe_at) : null,
+    // Prefer the probe timestamp; for the ~16 non-probed providers fall
+    // back to the vendor's own lastChecked so the drawer shows a real
+    // freshness instead of nothing.
+    lastCheckedAgoS: probe ? agoSeconds(probe.last_probe_at) : agoSeconds(svc.lastChecked ?? null),
     history: makeHistory(id, state),
     detailHref: detailHref(name, provider, id),
+    components: cleanComponents(svc.components),
+    sourceUrl: cleanSourceUrl(svc.statusPageUrl),
   };
 }
 
@@ -285,6 +323,18 @@ export function buildDemoFeed(s: 'nominal' | 'degraded' | 'critical' | 'offline'
           : state === 'degraded'
             ? Math.round(r.base * 1.5)
             : r.base;
+    // Representative components so ?demo= exercises the drawer too.
+    // Same normalized status vocab cleanComponents emits (ok|warn|down)
+    // so the drawer dot logic is uniform with live data. Offline rows
+    // carry none, exercising the honest no-components fallback.
+    const components =
+      state === 'offline'
+        ? []
+        : [
+            { name: 'API', status: state === 'critical' ? 'down' : state === 'degraded' ? 'warn' : 'ok' },
+            { name: 'Dashboard', status: state === 'critical' ? 'warn' : 'ok' },
+            { name: 'Console', status: 'ok' },
+          ];
     return {
       id: r.id,
       name: r.name,
@@ -295,6 +345,8 @@ export function buildDemoFeed(s: 'nominal' | 'degraded' | 'critical' | 'offline'
       lastCheckedAgoS: state === 'offline' ? null : 9,
       history: makeHistory(r.id, state),
       detailHref: 'https://tensorfeed.ai/status?utm_source=widget&utm_medium=demo',
+      components,
+      sourceUrl: `https://status.${r.id}.com`,
     };
   };
   return {
