@@ -628,17 +628,30 @@
   display: flex; align-items: flex-end; gap: 2px;
   height: 22px;
   width: 100%;
+  /* State-colored neon bloom. The HUD already glows on the spine,
+     lamp and status dots; the sparkline was the last flat element, so
+     it gets the same language and the live widget matches the product
+     render. One container drop-shadow per row is far cheaper than a
+     shadow per bar. Nominal is the default; the states below recolor
+     it. Reuses the exact rgba glow values used elsewhere in this file
+     so it reads as the same system. Bump the blur or alpha to push
+     the intensity. */
+  filter: drop-shadow(0 0 6px rgba(78, 224, 164, 0.55));
 }
 .tf-r-spark-bar {
   flex: 1;
   background: var(--tf-nominal);
   border-radius: 1px;
-  opacity: 0.85;
+  opacity: 0.95;
   min-height: 2px;
 }
+.tf-row[data-state="degraded"]   .tf-r-spark     { filter: drop-shadow(0 0 6px rgba(255, 200, 69, 0.55)); }
 .tf-row[data-state="degraded"]   .tf-r-spark-bar { background: var(--tf-degraded); }
+.tf-row[data-state="downgraded"] .tf-r-spark     { filter: drop-shadow(0 0 6px rgba(255, 146, 68, 0.5)); }
 .tf-row[data-state="downgraded"] .tf-r-spark-bar { background: var(--tf-downgraded); }
+.tf-row[data-state="critical"]   .tf-r-spark     { filter: drop-shadow(0 0 7px rgba(255, 85, 113, 0.6)); }
 .tf-row[data-state="critical"]   .tf-r-spark-bar { background: var(--tf-critical); }
+.tf-row[data-state="offline"]    .tf-r-spark     { filter: none; }
 .tf-row[data-state="offline"]    .tf-r-spark-bar { background: var(--tf-offline); opacity: 0.4; }
 
 /* metric */
