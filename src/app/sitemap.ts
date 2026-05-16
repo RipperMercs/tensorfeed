@@ -64,6 +64,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/status`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/leaderboard`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/badges`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
+    { url: `${baseUrl}/embed`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     // Per-provider uptime trend pages (one per monitored provider)
     { url: `${baseUrl}/uptime/claude`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
     { url: `${baseUrl}/uptime/openai`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
