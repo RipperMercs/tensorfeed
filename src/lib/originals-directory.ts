@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'codex-bleed-anthropic-three-interventions',
+    title:
+      'The Codex Bleed: Anthropic Just Made Its Third Capacity Move in Five Weeks',
+    author: 'Marcus Chen',
+    date: 'May 16, 2026',
+    readTime: '7 min read',
+    description:
+      'Anthropic bumped Claude Code weekly limits 50 percent through July 13, then re-allowed third-party agent harnesses on paid plans behind a separate credit meter, then watched Sam Altman dangle two free months of Codex at every new business customer. Three live interventions on the same product surface in 35 days. Inside the 4.2x token-efficiency gap that makes Codex structurally cheaper to deliver, the $900B funding round running on top of the same unit-economics problem, and the July 13 sunset that gives Anthropic eight weeks to figure out what the agent subscription actually costs.',
+  },
+  {
     slug: 'cerebras-95-billion-ipo-inference-bet',
     title:
       'Cerebras Went Public at a $95 Billion Close. The Non-Nvidia Inference Bet Is Now a Market Story.',
