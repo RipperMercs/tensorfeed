@@ -81,10 +81,10 @@ export default function StatusPage() {
           </div>
           <div className="text-text-secondary leading-relaxed space-y-3 drop-shadow text-sm sm:text-base">
             <p>
-              Building AI applications means depending on external APIs. Claude, GPT-4, Gemini, and dozens of other services power production systems that serve millions of users. When these services degrade or go offline, the impact ripples through the entire ecosystem. We monitor 12 major AI providers in real time and update this dashboard every 2 minutes.
+              Building AI applications means depending on external APIs. Claude, GPT, Gemini, and dozens of other services power production systems that serve millions of users. When these services degrade or go offline, the impact ripples through the entire ecosystem. We monitor more than 20 AI providers and services in real time and update this dashboard every 2 minutes.
             </p>
             <p>
-              We track Claude API, OpenAI, Google Gemini, AWS Bedrock, Mistral, Hugging Face, Replicate, Cohere, Perplexity, Microsoft Copilot, and Midjourney. Each service is monitored continuously for availability, response-time degradation, and error rates. Green is operational. Amber is degraded. Red is down.
+              Coverage spans the major LLM APIs and AI infrastructure: Claude, OpenAI, Gemini, Bedrock, Azure OpenAI, Mistral, Cohere, Groq, Together, Fireworks, OpenRouter, and more, alongside voice, image, and video services. The full live list is the dashboard below, not a fixed roster. Each service is monitored continuously for availability, response-time degradation, and error rates. Green is operational. Amber is degraded. Red is down.
             </p>
             <p>
               Beyond this real-time view: historical{' '}

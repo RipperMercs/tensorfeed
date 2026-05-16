@@ -157,9 +157,9 @@ for (const a of result.articles) {
     category: 'status',
     seoTitle: 'TensorFeed Status API: Live AI Service Status, Free',
     seoDescription:
-      'TensorFeed /api/status returns real-time operational status for Claude, OpenAI, Gemini, Mistral, Cohere, Replicate, HuggingFace, and more. Polled every 5 minutes. Free, no auth.',
+      'TensorFeed /api/status returns real-time operational status for Claude, OpenAI, Gemini, Mistral, Cohere, Replicate, HuggingFace, and more. Polled every 2 minutes. Free, no auth.',
     intro:
-      'The /api/status endpoint returns the live operational status of major AI services. Polled every 5 minutes by a Cloudflare Worker cron that hits each provider\'s status page directly. Status values are normalized to operational, degraded, down, or unknown for easy programmatic consumption.',
+      'The /api/status endpoint returns the live operational status of major AI services. Polled every 2 minutes by a Cloudflare Worker cron that hits each provider\'s status page directly. Status values are normalized to operational, degraded, down, or unknown for easy programmatic consumption.',
     whenToUse:
       'When your agent needs to know whether a specific AI service is up before routing a request. Pair with /api/premium/routing to automatically avoid down providers.',
     params: [],
@@ -196,11 +196,11 @@ console.log(\`\${incidents.length} services with issues\`);`,
     faqs: [
       {
         q: 'How does TensorFeed determine service status?',
-        a: 'A Cloudflare Worker cron polls each provider\'s status page (Atlassian Statuspage JSON or HTML banner parsing) every 5 minutes. We normalize to operational, degraded, down, or unknown for consistent agent consumption.',
+        a: 'A Cloudflare Worker cron polls each provider\'s status page (Atlassian Statuspage JSON or HTML banner parsing) every 2 minutes. We normalize to operational, degraded, down, or unknown for consistent agent consumption.',
       },
       {
         q: 'Which AI services does the status endpoint cover?',
-        a: 'Anthropic (Claude), OpenAI (ChatGPT, API), Google (Gemini), Mistral, Cohere, Replicate, HuggingFace, Perplexity, Microsoft Copilot, and Midjourney. The list is in worker/src/sources.ts and grows as we add providers.',
+        a: 'More than 20 AI providers and services, including Anthropic (Claude), OpenAI, Google (Gemini), AWS Bedrock, Azure OpenAI, Mistral, Cohere, Groq, Together, Fireworks, and OpenRouter, plus voice, image, and video services. The live roster is whatever /api/status/summary returns and grows as we add providers.',
       },
       {
         q: 'How accurate is the status data?',
