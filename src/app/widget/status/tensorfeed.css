@@ -1,0 +1,833 @@
+/* ============================================================
+   TensorFeed Live Monitor Widget
+   Standalone embeddable widget.
+   Single CSS file. No host-page dependencies.
+   ============================================================ */
+
+/* Fonts — engineering should swap to next/font with these families/weights. */
+
+/* ----- design tokens ----- */
+:root {
+  /* Accent schemes — switched by [data-accent="blue|green"] on .tf-widget */
+  --tf-accent:        #5fd4f5;                      /* blue (default) */
+  --tf-accent-dim:    rgba(95, 212, 245, 0.18);
+  --tf-accent-deep:   #2a8fb8;                      /* gradient bottom of spine */
+
+  /* Status palette — used regardless of accent scheme */
+  --tf-nominal:       #4ee0a4;
+  --tf-nominal-dim:   rgba(78, 224, 164, 0.16);
+  --tf-degraded:      #ffc845;                      /* yellow */
+  --tf-degraded-dim:  rgba(255, 200, 69, 0.16);
+  --tf-downgraded:    #ff9244;                      /* orange (between yellow + red) */
+  --tf-downgraded-dim:rgba(255, 146, 68, 0.16);
+  --tf-critical:      #ff5571;                      /* red */
+  --tf-critical-dim:  rgba(255, 85, 113, 0.18);
+  --tf-offline:       #7a8aa0;                      /* grey */
+  --tf-offline-dim:   rgba(122, 138, 160, 0.12);
+
+  /* Surfaces */
+  --tf-bg-0:          #04070d;
+  --tf-bg-panel:      rgba(10, 16, 26, 0.78);
+  --tf-bg-panel-2:    rgba(14, 22, 36, 0.88);
+  --tf-bg-row:        rgba(14, 22, 36, 0.5);
+  --tf-bg-row-hover:  rgba(20, 32, 48, 0.75);
+
+  /* Text */
+  --tf-fg:            #e8eef7;
+  --tf-fg-dim:        #a4b3c6;
+  --tf-fg-low:        #6b7c92;
+
+  /* Lines */
+  --tf-border:        rgba(120, 170, 220, 0.18);
+  --tf-border-bright: rgba(120, 170, 220, 0.35);
+
+  /* Typography */
+  --tf-font-display:  'Rajdhani', system-ui, -apple-system, sans-serif;
+  --tf-font-mono:     'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+
+/* Green accent scheme (manual or auto-switched when all systems nominal) */
+.tf-widget[data-accent="green"] {
+  --tf-accent:      #4ee0a4;
+  --tf-accent-dim:  rgba(78, 224, 164, 0.18);
+  --tf-accent-deep: #2a8d65;
+}
+
+/* ============================================================
+   Background stage (host page) — purely decorative
+   The widget itself does NOT require any of these layers; they
+   are for the standalone /widget/status route.
+   Embedded inside an iframe, host page can drop these or keep
+   them — they're independent of widget rendering.
+   ============================================================ */
+.tf-stage {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: var(--tf-bg-0);
+  color: var(--tf-fg);
+  font-family: var(--tf-font-display);
+  -webkit-font-smoothing: antialiased;
+}
+
+.tf-nebula {
+  position: fixed; inset: 0; z-index: -4; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 30%, rgba(50, 90, 140, 0.35), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 70%, rgba(80, 40, 120, 0.30), transparent 60%),
+    radial-gradient(ellipse 40% 30% at 70% 20%, rgba(60, 120, 180, 0.25), transparent 70%),
+    linear-gradient(180deg, #060a14 0%, #02040a 100%);
+}
+
+/* Perspective grid floor — CSS only, very faint */
+.tf-grid {
+  position: fixed; inset: 0; z-index: -3; pointer-events: none;
+  perspective: 600px;
+  perspective-origin: 50% 0%;
+  overflow: hidden;
+}
+.tf-grid::before {
+  content: '';
+  position: absolute;
+  left: -25%; right: -25%;
+  top: 50%;
+  height: 120vh;
+  transform: rotateX(64deg);
+  transform-origin: top center;
+  background-image:
+    linear-gradient(to right,  rgba(95, 212, 245, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(95, 212, 245, 0.08) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, black 28%, black 78%, transparent 100%);
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, black 28%, black 78%, transparent 100%);
+  animation: tf-grid-glide 22s linear infinite;
+}
+@keyframes tf-grid-glide {
+  from { background-position: 0 0; }
+  to   { background-position: 0 72px; }
+}
+
+/* Warp particle streaks — JS-driven canvas (see WarpField in JSX).
+   When JS is disabled, the .tf-grid + .tf-nebula carry the look alone. */
+.tf-warp {
+  position: fixed; inset: 0; z-index: -2;
+  pointer-events: none; display: block;
+  width: 100%; height: 100%;
+}
+
+/* Viewport vignette */
+.tf-arc {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 95% 80% at 50% 60%,
+    transparent 62%, rgba(0,0,0,0.65) 78%, #000 100%);
+}
+
+/* Scanlines (very subtle) */
+.tf-scanlines {
+  position: fixed; inset: 0; z-index: 999; pointer-events: none;
+  background: repeating-linear-gradient(180deg,
+    transparent 0px, transparent 2px,
+    rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 3px);
+  mix-blend-mode: screen;
+}
+
+/* ============================================================
+   THE WIDGET
+   Root: <div class="tf-widget" data-condition="nominal|degraded|critical" data-accent="blue|green">
+   ============================================================ */
+.tf-widget {
+  position: relative;
+  width: min(720px, 100%);
+  font-family: var(--tf-font-display);
+  color: var(--tf-fg);
+  background: var(--tf-bg-panel);
+  border: 1px solid var(--tf-border);
+  border-radius: 6px 28px 28px 6px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 20px 60px rgba(0, 0, 0, 0.55);
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* widget glows depend on condition (top-level alert level) */
+.tf-widget[data-condition="degraded"] {
+  border-color: rgba(255, 200, 69, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(255, 200, 69, 0.18) inset,
+    0 0 40px rgba(255, 200, 69, 0.12),
+    0 20px 60px rgba(0, 0, 0, 0.55);
+}
+.tf-widget[data-condition="critical"] {
+  border-color: rgba(255, 85, 113, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(255, 85, 113, 0.22) inset,
+    0 0 50px rgba(255, 85, 113, 0.20),
+    0 20px 60px rgba(0, 0, 0, 0.55);
+  animation: tf-critical-pulse 1.4s ease-in-out infinite;
+}
+@keyframes tf-critical-pulse {
+  0%, 100% { box-shadow:
+    0 0 0 1px rgba(255, 85, 113, 0.22) inset,
+    0 0 50px rgba(255, 85, 113, 0.16),
+    0 20px 60px rgba(0, 0, 0, 0.55); }
+  50% { box-shadow:
+    0 0 0 1px rgba(255, 85, 113, 0.45) inset,
+    0 0 80px rgba(255, 85, 113, 0.32),
+    0 20px 60px rgba(0, 0, 0, 0.55); }
+}
+
+/* ----- spine (left vertical end-cap) ----- */
+.tf-spine {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 56px;
+  background: linear-gradient(180deg, var(--tf-accent), var(--tf-accent-deep));
+  border-radius: 6px 0 0 6px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 22px var(--tf-accent-dim);
+  z-index: 1;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+.tf-widget[data-condition="degraded"] .tf-spine {
+  background: linear-gradient(180deg, var(--tf-degraded), color-mix(in oklab, var(--tf-degraded), #000 35%));
+  box-shadow: 0 0 22px rgba(255, 200, 69, 0.4);
+}
+.tf-widget[data-condition="critical"] .tf-spine {
+  background: linear-gradient(180deg, var(--tf-critical), color-mix(in oklab, var(--tf-critical), #000 35%));
+  box-shadow: 0 0 30px rgba(255, 85, 113, 0.55);
+  animation: tf-spine-flash 0.9s steps(2, end) infinite;
+}
+@keyframes tf-spine-flash {
+  0%, 49%   { filter: brightness(1); }
+  50%, 100% { filter: brightness(1.4); }
+}
+.tf-spine-code {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--tf-font-mono);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  color: #061018;
+  text-transform: uppercase;
+}
+
+/* ----- HUD corner ticks ----- */
+.tf-widget::before, .tf-widget::after,
+.tf-corners::before, .tf-corners::after {
+  content: ''; position: absolute;
+  width: 14px; height: 14px;
+  border: 1.5px solid var(--tf-accent);
+  opacity: 0.75;
+  pointer-events: none;
+  transition: border-color 0.4s ease;
+  z-index: 2;
+}
+.tf-widget::before    { top: 8px;    right: 8px;  border-left: 0; border-bottom: 0; }
+.tf-widget::after     { bottom: 8px; right: 8px;  border-left: 0; border-top: 0; }
+.tf-corners::before   { top: 8px;    left: 64px;  border-right: 0; border-bottom: 0; }
+.tf-corners::after    { bottom: 8px; left: 64px;  border-right: 0; border-top: 0; }
+.tf-widget[data-condition="degraded"] ::before,
+.tf-widget[data-condition="degraded"] ::after { border-color: var(--tf-degraded); }
+.tf-widget[data-condition="critical"] ::before,
+.tf-widget[data-condition="critical"] ::after { border-color: var(--tf-critical); }
+
+/* ============================================================
+   KLAXON / CONDITION BAR
+   ============================================================ */
+.tf-klaxon {
+  position: relative;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 18px 0 78px;
+  gap: 14px;
+  border-bottom: 1px solid var(--tf-border);
+  background: linear-gradient(90deg, var(--tf-accent-dim), transparent 50%);
+  overflow: hidden;
+  transition: background 0.4s ease, border-bottom-color 0.4s ease;
+}
+.tf-widget[data-condition="degraded"] .tf-klaxon {
+  background: linear-gradient(90deg, var(--tf-degraded-dim), rgba(255, 200, 69, 0.06) 50%, transparent);
+  border-bottom-color: rgba(255, 200, 69, 0.3);
+}
+.tf-widget[data-condition="critical"] .tf-klaxon {
+  background: linear-gradient(90deg, var(--tf-critical-dim), rgba(255, 85, 113, 0.08) 50%, transparent);
+  border-bottom-color: rgba(255, 85, 113, 0.4);
+  animation: tf-klaxon-wash 1.2s ease-in-out infinite;
+}
+@keyframes tf-klaxon-wash {
+  0%, 100% { background: linear-gradient(90deg, rgba(255, 85, 113, 0.18), rgba(255, 85, 113, 0.04) 50%, transparent); }
+  50%      { background: linear-gradient(90deg, rgba(255, 85, 113, 0.42), rgba(255, 85, 113, 0.12) 60%, transparent); }
+}
+
+.tf-klaxon-label {
+  font-family: var(--tf-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--tf-nominal);
+  white-space: nowrap;
+}
+.tf-widget[data-condition="degraded"] .tf-klaxon-label { color: var(--tf-degraded); }
+.tf-widget[data-condition="critical"] .tf-klaxon-label { color: var(--tf-critical); }
+
+.tf-klaxon-status {
+  font-family: var(--tf-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--tf-fg-dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+.tf-klaxon-status b { color: var(--tf-fg); font-weight: 500; letter-spacing: 0.06em; }
+
+.tf-klaxon-clock {
+  font-family: var(--tf-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--tf-fg-dim);
+  white-space: nowrap;
+}
+
+/* warning lamp */
+.tf-lamp {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--tf-nominal);
+  box-shadow: 0 0 10px var(--tf-nominal);
+  flex-shrink: 0;
+}
+.tf-widget[data-condition="degraded"] .tf-lamp {
+  background: var(--tf-degraded);
+  box-shadow: 0 0 12px var(--tf-degraded);
+  animation: tf-lamp-blink 1.4s ease-in-out infinite;
+}
+.tf-widget[data-condition="critical"] .tf-lamp {
+  background: var(--tf-critical);
+  box-shadow: 0 0 16px var(--tf-critical);
+  animation: tf-lamp-blink 0.7s steps(2, end) infinite;
+}
+@keyframes tf-lamp-blink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0.25; }
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.tf-head {
+  position: relative;
+  padding: 14px 20px 12px 78px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px dashed var(--tf-border);
+}
+.tf-mark {
+  width: 34px;
+  height: 27px;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(146, 121, 255, 0.45));
+}
+.tf-title {
+  font-family: var(--tf-font-display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  color: var(--tf-accent);
+  text-shadow: 0 0 18px var(--tf-accent-dim);
+  white-space: nowrap;
+}
+.tf-sub {
+  font-family: var(--tf-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  color: var(--tf-fg-dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tf-tickrail {
+  flex: 1;
+  height: 8px;
+  position: relative;
+  display: flex; align-items: center;
+  min-width: 12px;
+}
+.tf-tickrail::before {
+  content: ''; flex: 1; height: 1px; background: var(--tf-border-bright);
+}
+.tf-tickrail::after {
+  content: ''; flex: 0 0 30%; height: 1px;
+  background: var(--tf-accent); opacity: 0.45;
+  margin-left: 6px;
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+.tf-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px 12px 78px;
+  flex-wrap: wrap;
+}
+.tf-tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 18px;
+  border-radius: 999px;
+  background: rgba(20, 32, 48, 0.6);
+  border: 1px solid var(--tf-border);
+  color: var(--tf-fg-dim);
+  font-family: var(--tf-font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.tf-tab:hover { color: var(--tf-fg); border-color: var(--tf-accent); }
+.tf-tab:focus-visible {
+  outline: 2px solid var(--tf-accent);
+  outline-offset: 2px;
+}
+.tf-tab[aria-selected="true"] {
+  background: var(--tf-accent);
+  color: #061018;
+  border-color: transparent;
+  box-shadow: 0 0 18px var(--tf-accent-dim);
+}
+.tf-widget[data-condition="degraded"] .tf-tab[aria-selected="true"] {
+  background: var(--tf-degraded); box-shadow: 0 0 18px var(--tf-degraded-dim);
+}
+.tf-widget[data-condition="critical"] .tf-tab[aria-selected="true"] {
+  background: var(--tf-critical); color: #fff; box-shadow: 0 0 22px var(--tf-critical-dim);
+}
+.tf-tab-count {
+  font-family: var(--tf-font-mono);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.18);
+  color: inherit;
+  font-weight: 500;
+}
+.tf-tab:not([aria-selected="true"]) .tf-tab-count {
+  background: rgba(120, 170, 220, 0.08);
+}
+.tf-tab-badge {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.tf-tab-badge[data-kind="warn"]  { background: var(--tf-degraded); box-shadow: 0 0 6px var(--tf-degraded); }
+.tf-tab-badge[data-kind="warn2"] { background: var(--tf-downgraded); box-shadow: 0 0 6px var(--tf-downgraded); }
+.tf-tab-badge[data-kind="crit"]  { background: var(--tf-critical); box-shadow: 0 0 7px var(--tf-critical);
+                                   animation: tf-lamp-blink 0.7s steps(2, end) infinite; }
+
+/* ============================================================
+   FILTER ROW (segmented control)
+   ============================================================ */
+.tf-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 20px 12px 78px;
+  font-family: var(--tf-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  color: var(--tf-fg-low);
+  text-transform: uppercase;
+}
+.tf-filter-label { white-space: nowrap; }
+.tf-seg {
+  display: inline-flex;
+  border: 1px solid var(--tf-border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(15, 26, 40, 0.6);
+  flex-shrink: 1;
+  min-width: 0;
+}
+.tf-seg button {
+  background: transparent;
+  border: 0;
+  padding: 4px 10px;
+  font-family: var(--tf-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--tf-fg-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tf-seg button:hover { color: var(--tf-fg); }
+.tf-seg button:focus-visible {
+  outline: 2px solid var(--tf-accent);
+  outline-offset: -2px;
+}
+.tf-seg button[aria-pressed="true"] {
+  background: var(--tf-accent-dim);
+  color: var(--tf-accent);
+}
+.tf-filter-grow { flex: 1; }
+.tf-filter-now {
+  color: var(--tf-fg);
+  letter-spacing: 0.1em;
+  font-family: var(--tf-font-mono);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   FEED LIST
+   ============================================================ */
+.tf-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0 12px 14px 70px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 420px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tf-border-bright) transparent;
+}
+.tf-feed::-webkit-scrollbar { width: 6px; }
+.tf-feed::-webkit-scrollbar-track { background: transparent; }
+.tf-feed::-webkit-scrollbar-thumb { background: var(--tf-border-bright); border-radius: 3px; }
+
+.tf-row {
+  display: grid;
+  grid-template-columns: 116px 1fr 64px 90px 60px;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 4px 14px 14px 4px;
+  background: var(--tf-bg-row);
+  border: 1px solid rgba(120, 170, 220, 0.08);
+  border-left: 3px solid var(--tf-nominal);
+  position: relative;
+  transition: background 0.15s, border-color 0.2s;
+}
+.tf-row:hover { background: var(--tf-bg-row-hover); }
+
+.tf-row[data-state="nominal"]    { border-left-color: var(--tf-nominal); }
+.tf-row[data-state="degraded"]   {
+  border-left-color: var(--tf-degraded);
+  background: linear-gradient(90deg, rgba(255, 200, 69, 0.06), var(--tf-bg-row) 70%);
+}
+.tf-row[data-state="downgraded"] {
+  border-left-color: var(--tf-downgraded);
+  background: linear-gradient(90deg, rgba(255, 146, 68, 0.06), var(--tf-bg-row) 70%);
+}
+.tf-row[data-state="critical"] {
+  border-left-color: var(--tf-critical);
+  background: linear-gradient(90deg, rgba(255, 85, 113, 0.08), var(--tf-bg-row) 70%);
+  animation: tf-row-flash 1.6s ease-in-out infinite;
+}
+.tf-row[data-state="offline"] {
+  border-left-color: var(--tf-offline);
+  background: var(--tf-offline-dim);
+  opacity: 0.78;
+}
+@keyframes tf-row-flash {
+  0%, 100% { background: linear-gradient(90deg, rgba(255, 85, 113, 0.06), var(--tf-bg-row) 70%); }
+  50%      { background: linear-gradient(90deg, rgba(255, 85, 113, 0.18), var(--tf-bg-row) 70%); }
+}
+
+/* row pieces */
+.tf-r-status {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--tf-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.tf-r-status .tf-r-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  flex-shrink: 0;
+}
+.tf-row[data-state="nominal"]    .tf-r-status { color: var(--tf-nominal); }
+.tf-row[data-state="degraded"]   .tf-r-status { color: var(--tf-degraded); }
+.tf-row[data-state="downgraded"] .tf-r-status { color: var(--tf-downgraded); }
+.tf-row[data-state="critical"]   .tf-r-status { color: var(--tf-critical); }
+.tf-row[data-state="offline"]    .tf-r-status { color: var(--tf-offline); }
+
+.tf-row[data-state="degraded"] .tf-r-status .tf-r-dot { animation: tf-lamp-blink 1.4s ease-in-out infinite; }
+.tf-row[data-state="critical"] .tf-r-status .tf-r-dot { animation: tf-lamp-blink 0.65s steps(2, end) infinite; }
+/* downgraded dot is steady — a stable, intentional state */
+
+.tf-r-name {
+  font-family: var(--tf-font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tf-fg);
+  letter-spacing: 0.02em;
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 0;
+}
+.tf-r-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tf-r-vendor {
+  font-family: var(--tf-font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tf-fg-low);
+}
+
+/* sparkline */
+.tf-r-spark {
+  display: flex; align-items: flex-end; gap: 2px;
+  height: 22px;
+  width: 100%;
+}
+.tf-r-spark-bar {
+  flex: 1;
+  background: var(--tf-nominal);
+  border-radius: 1px;
+  opacity: 0.85;
+  min-height: 2px;
+}
+.tf-row[data-state="degraded"]   .tf-r-spark-bar { background: var(--tf-degraded); }
+.tf-row[data-state="downgraded"] .tf-r-spark-bar { background: var(--tf-downgraded); }
+.tf-row[data-state="critical"]   .tf-r-spark-bar { background: var(--tf-critical); }
+.tf-row[data-state="offline"]    .tf-r-spark-bar { background: var(--tf-offline); opacity: 0.4; }
+
+/* metric */
+.tf-r-metric {
+  font-family: var(--tf-font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--tf-fg);
+  text-align: right;
+  white-space: nowrap;
+}
+.tf-r-metric .tf-r-unit { color: var(--tf-fg-low); margin-left: 2px; font-size: 10.5px; }
+.tf-r-meta {
+  font-family: var(--tf-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--tf-fg-dim);
+  text-align: right;
+}
+.tf-row[data-state="degraded"]   .tf-r-metric { color: var(--tf-degraded); }
+.tf-row[data-state="downgraded"] .tf-r-metric { color: var(--tf-downgraded); }
+.tf-row[data-state="critical"]   .tf-r-metric { color: var(--tf-critical); }
+.tf-row[data-state="offline"]    .tf-r-metric { color: var(--tf-offline); }
+
+.tf-r-act { text-align: right; }
+.tf-r-act button {
+  background: transparent;
+  border: 1px solid var(--tf-border);
+  border-radius: 4px;
+  color: var(--tf-fg-dim);
+  font-family: var(--tf-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tf-r-act button:hover {
+  color: var(--tf-accent);
+  border-color: var(--tf-accent);
+}
+.tf-r-act button:focus-visible {
+  outline: 2px solid var(--tf-accent);
+  outline-offset: 2px;
+}
+
+/* empty list state */
+.tf-empty {
+  font-family: var(--tf-font-mono);
+  font-size: 11px;
+  color: var(--tf-fg-low);
+  padding: 18px 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+}
+.tf-empty::before { content: '◌'; color: var(--tf-accent); opacity: 0.6; }
+
+/* loading skeleton row */
+.tf-row.tf-skel {
+  border-left-color: var(--tf-border);
+  background: var(--tf-bg-row);
+  opacity: 0.7;
+}
+.tf-row.tf-skel > * {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  background-size: 200% 100%;
+  animation: tf-shimmer 1.6s linear infinite;
+  border-radius: 3px; height: 12px; color: transparent;
+}
+@keyframes tf-shimmer {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.tf-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px 12px 78px;
+  border-top: 1px solid var(--tf-border);
+  font-family: var(--tf-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tf-fg-low);
+  flex-wrap: wrap;
+}
+.tf-foot .tf-stat {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.tf-foot .tf-stat-v {
+  color: var(--tf-fg);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+.tf-foot-grow { flex: 1; min-width: 0; }
+.tf-refresh {
+  background: rgba(15, 26, 40, 0.7);
+  border: 1px solid var(--tf-border-bright);
+  border-radius: 4px;
+  color: var(--tf-accent);
+  padding: 4px 10px;
+  font-family: var(--tf-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+}
+.tf-refresh::before {
+  content: ''; position: absolute;
+  left: -1px; top: -1px; bottom: -1px;
+  width: 3px; border-radius: 4px 0 0 4px;
+  background: var(--tf-accent);
+}
+.tf-refresh:hover { color: var(--tf-fg); }
+.tf-refresh:focus-visible {
+  outline: 2px solid var(--tf-accent);
+  outline-offset: 2px;
+}
+.tf-refresh[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* critical alert strip */
+.tf-alert-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px 12px 78px;
+  border-top: 1px solid rgba(255, 85, 113, 0.3);
+  background: linear-gradient(90deg, rgba(255, 85, 113, 0.15), transparent 60%);
+  font-family: var(--tf-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tf-critical);
+}
+.tf-alert-strip .tf-alert-glyph {
+  width: 16px; height: 16px; display: grid; place-items: center; font-size: 13px;
+}
+.tf-alert-strip .tf-alert-incident { color: var(--tf-fg-dim); }
+
+/* ============================================================
+   RESPONSIVE — widget supports 320px to ∞
+   ============================================================ */
+
+/* ≤ 720px — collapse Detail column, tighten paddings */
+@media (max-width: 720px) {
+  .tf-widget { border-radius: 4px 18px 18px 4px; }
+  .tf-klaxon, .tf-head, .tf-tabs, .tf-filter, .tf-foot, .tf-alert-strip { padding-left: 64px; }
+  .tf-feed { padding-left: 60px; }
+  .tf-row {
+    grid-template-columns: 100px 1fr 50px 80px;
+    column-gap: 10px;
+  }
+  .tf-r-act { display: none; }
+  .tf-spine { width: 44px; }
+  .tf-corners::before, .tf-corners::after { left: 50px; }
+}
+
+/* ≤ 480px — drop sparkline, condense further */
+@media (max-width: 480px) {
+  .tf-widget { border-radius: 4px 14px 14px 4px; }
+  .tf-klaxon, .tf-head, .tf-tabs, .tf-filter, .tf-foot, .tf-alert-strip { padding-left: 52px; }
+  .tf-feed { padding-left: 48px; }
+  .tf-spine { width: 36px; }
+  .tf-spine-code { font-size: 9.5px; letter-spacing: 0.24em; }
+  .tf-corners::before, .tf-corners::after { left: 42px; }
+  .tf-row {
+    grid-template-columns: 88px 1fr 72px;
+    column-gap: 8px;
+    padding: 8px 10px;
+  }
+  .tf-r-spark { display: none; }
+  .tf-title { font-size: 18px; }
+  .tf-tab { padding: 6px 14px; font-size: 12px; }
+  .tf-klaxon-status { display: none; }
+}
+
+/* ≤ 360px — most compact, klaxon clock hides */
+@media (max-width: 360px) {
+  .tf-klaxon-clock { display: none; }
+  .tf-r-name { font-size: 14px; }
+  .tf-r-vendor { display: none; }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   Honors prefers-reduced-motion. State color and badges still
+   convey alert level; only the kinetic feedback is muted.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .tf-widget,
+  .tf-widget[data-condition="critical"],
+  .tf-widget[data-condition="critical"] .tf-spine,
+  .tf-widget[data-condition="critical"] .tf-klaxon,
+  .tf-lamp,
+  .tf-row[data-state="critical"],
+  .tf-r-status .tf-r-dot,
+  .tf-tab-badge[data-kind="crit"],
+  .tf-grid::before,
+  .tf-row.tf-skel > * {
+    animation: none !important;
+  }
+  .tf-widget,
+  .tf-widget *,
+  .tf-widget *::before,
+  .tf-widget *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -11,7 +11,7 @@ import EmbedShowcase from './EmbedShowcase';
 export const metadata: Metadata = {
   title: 'Embed Live AI Status on Your Site - Free Widget | TensorFeed',
   description:
-    'Drop a live AI provider status widget into any site with one line of HTML. Real-time operational state and p95 latency for Claude, OpenAI, Gemini, Mistral, Cohere and more. Free, no API key, dark or light theme, refreshed every ~2 minutes.',
+    'Drop a live AI status monitor into any site with one line of HTML. A sci-fi Live Monitor console with real-time operational state and p95 latency for major AI providers and services. Free, no API key, auto blue or all-clear-green accent, live refresh.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/embed',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Embed Live AI Status on Your Site - Free Widget',
     description:
-      'One line of HTML for a live AI provider status board. Free, no key, dark or light theme.',
+      'One line of HTML for a sci-fi live AI status monitor. Free, no key, auto blue/green accent.',
   },
   alternates: { canonical: 'https://tensorfeed.ai/embed' },
 };
@@ -44,7 +44,7 @@ const FAQS: { question: string; answer: string }[] = [
   {
     question: 'Can I match the widget to my site theme?',
     answer:
-      'Yes. The widget is a sci-fi HUD console with four accent schemes: cyan (default), amber, tactical, and magenta, set via ?scheme=. Surface is dark by default; add ?theme=light for a light surface or ?theme=auto to follow the visitor prefers-color-scheme setting. Use the controls on this page to preview every combination and copy the matching snippet.',
+      'The widget is a sci-fi Live Monitor console. It has two accent modes set via ?accent=: blue (bridge cyan) and green (all-clear). The default is auto, which shows green when every system is nominal and blue the moment anything degrades, so the warning colors never compete with green. Status colors (yellow degraded, orange downgraded, red critical, grey offline) are constant. You can also slow the refresh with ?poll=<seconds>. Use the controls on this page to preview and copy the matching snippet.',
   },
   {
     question: 'Which AI providers does the widget cover?',
@@ -93,7 +93,7 @@ export default function EmbedPage() {
         <p className="text-text-secondary leading-relaxed max-w-3xl text-sm sm:text-base">
           One line of HTML puts a live AI provider status board on your site: real-time
           operational state plus p95 latency for Claude, OpenAI, Gemini, Mistral, Cohere, and
-          more, in a sci-fi HUD console with four accent schemes, dark or light. Free, no API
+          more, in a sci-fi Live Monitor console with an auto blue/green accent. Free, no API
           key, no tracking. It is the same live data behind the TensorFeed{' '}
           <Link href="/status" className="text-accent-cyan hover:underline">
             status dashboard

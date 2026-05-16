@@ -1,64 +1,50 @@
 import type { Metadata } from 'next';
-import StatusWidget from './StatusWidget';
+import Widget from './Widget';
+import WarpField from './WarpField';
 
 /**
- * Embeddable AI provider status widget.
+ * Embeddable TensorFeed Live Monitor.
  *
- * Real-time status from /api/status/summary plus p95 latency from
- * /api/probe/latest, client-polled every 120s (matches the ~2 minute
- * server refresh). Drop into any site via:
+ * Renders as its own document at /widget/status and drops into any site
+ * via an iframe. Site chrome is route-gated off /widget/* (ChromeGate /
+ * Navbar / ConditionalFooter); fonts load via the /widget layout's
+ * next/font setup; styling is the design's drop-in tensorfeed.css.
+ *
+ * Background stage (nebula + perspective grid + warp canvas + vignette +
+ * scanlines) per the design handoff section 6. All decorative layers are
+ * aria-hidden; the warp canvas bails out under prefers-reduced-motion.
  *
  *   <iframe src="https://tensorfeed.ai/widget/status"
- *           width="100%" height="560" frameborder="0"
- *           title="AI provider status by TensorFeed"></iframe>
+ *           width="100%" height="600" title="TensorFeed live monitor"
+ *           style="border:0"></iframe>
  *
- * Appearance: sci-fi HUD console skin. Accent scheme via
- * ?scheme=cyan (default) | amber | tactical | magenta, and surface via
- * ?theme=dark (default) | light | auto.
- *
- * No chrome (no nav, footer, or cookie banner) so host pages get a clean
- * drop-in. Frame policy lives in public/_headers (CSP frame-ancestors *
- * for /widget/*); embedding is not controlled from page metadata.
+ * Accent: ?accent=auto (default, green when all nominal else blue) |
+ * blue | green. Poll: ?poll=<seconds> (5 to 600, default 30).
  *
  * The human-facing showcase + copy-paste snippets live at /embed.
- *
- * Follow-up formats (not yet built): /widget/status/[provider] single
- * card, and a minimal status badge SVG for README embedding.
  */
 
 export const metadata: Metadata = {
-  title: 'AI Provider Status Widget | TensorFeed',
+  title: 'TensorFeed Live Monitor Widget',
   description:
-    'Embeddable real-time status across Anthropic, OpenAI, Google, Mistral, and other major AI providers, with p95 latency. Free iframe widget powered by TensorFeed.ai.',
+    'Embeddable real-time status monitor for major AI providers and services, with p95 latency. Free iframe widget powered by TensorFeed.ai.',
   alternates: { canonical: 'https://tensorfeed.ai/embed' },
-  robots: {
-    // The widget route exists to be embedded, not to rank. The indexable
-    // discovery surface is /embed.
-    index: false,
-    follow: true,
-  },
+  robots: { index: false, follow: true },
 };
 
 const widgetJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: 'TensorFeed AI Provider Status Widget',
+  name: 'TensorFeed Live Monitor Widget',
   applicationCategory: 'DeveloperApplication',
   operatingSystem: 'Any',
   url: 'https://tensorfeed.ai/widget/status',
   description:
-    'Free embeddable widget showing real-time operational status and p95 latency for major AI providers (Claude, OpenAI, Gemini, Mistral, Cohere and more).',
+    'Free embeddable widget showing real-time operational status and p95 latency for major AI providers and services.',
   isAccessibleForFree: true,
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  publisher: {
-    '@type': 'Organization',
-    name: 'TensorFeed',
-    url: 'https://tensorfeed.ai',
-  },
-  isBasedOn: [
-    'https://tensorfeed.ai/api/status/summary',
-    'https://tensorfeed.ai/api/probe/latest',
-  ],
+  publisher: { '@type': 'Organization', name: 'TensorFeed', url: 'https://tensorfeed.ai' },
+  isBasedOn: ['https://tensorfeed.ai/api/status/summary', 'https://tensorfeed.ai/api/probe/latest'],
   mainEntityOfPage: 'https://tensorfeed.ai/status',
 };
 
@@ -69,7 +55,14 @@ export default function StatusWidgetPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(widgetJsonLd) }}
       />
-      <StatusWidget />
+      <div className="tf-nebula" aria-hidden="true" />
+      <div className="tf-grid" aria-hidden="true" />
+      <WarpField speed={0.5} />
+      <div className="tf-arc" aria-hidden="true" />
+      <div className="tf-scanlines" aria-hidden="true" />
+      <div className="tf-stage">
+        <Widget />
+      </div>
     </>
   );
 }

@@ -1,61 +1,55 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Check, Copy, Monitor, Sun, Moon } from 'lucide-react';
+import { Check, Copy, Sparkles, Sun, Moon } from 'lucide-react';
 
 /**
- * Interactive showcase for the embeddable status widget. Live preview
- * (iframe to the production /widget/status) plus theme, accent scheme,
- * and height controls that update a copy-paste snippet in real time.
+ * Interactive showcase for the embeddable Live Monitor widget. Live
+ * preview (iframe to the production /widget/status) plus accent and
+ * height controls that update a copy-paste snippet in real time.
  *
  * The preview always points at the deployed widget so what a publisher
  * copies is exactly what they will see on their own site.
  */
 
-type ThemeChoice = 'dark' | 'light' | 'auto';
-type SchemeChoice = 'cyan' | 'amber' | 'tactical' | 'magenta';
+type Accent = 'auto' | 'blue' | 'green';
 
 const WIDGET_BASE = 'https://tensorfeed.ai/widget/status';
 
-const SCHEMES: { id: SchemeChoice; label: string; swatch: string }[] = [
-  { id: 'cyan', label: 'Cyan', swatch: '#5fd4f5' },
-  { id: 'amber', label: 'Amber', swatch: '#ffb347' },
-  { id: 'tactical', label: 'Tactical', swatch: '#7be38c' },
-  { id: 'magenta', label: 'Magenta', swatch: '#e88bff' },
+const ACCENTS: { id: Accent; label: string; swatch: string; note: string }[] = [
+  { id: 'auto', label: 'Auto', swatch: 'linear-gradient(135deg,#4ee0a4,#5fd4f5)', note: 'green when all nominal, blue otherwise' },
+  { id: 'blue', label: 'Blue', swatch: '#5fd4f5', note: 'always bridge cyan' },
+  { id: 'green', label: 'Green', swatch: '#4ee0a4', note: 'always all-clear green' },
 ];
 
 const HEIGHTS: { label: string; value: number; note: string }[] = [
-  { label: 'Compact', value: 460, note: 'sidebars, tight columns' },
-  { label: 'Standard', value: 560, note: 'most pages' },
-  { label: 'Full', value: 720, note: 'dedicated status section' },
+  { label: 'Compact', value: 480, note: 'sidebars, tight columns' },
+  { label: 'Standard', value: 600, note: 'most pages' },
+  { label: 'Tall', value: 760, note: 'dedicated status section' },
 ];
 
-function srcFor(theme: ThemeChoice, scheme: SchemeChoice): string {
-  const q = new URLSearchParams();
-  if (scheme !== 'cyan') q.set('scheme', scheme);
-  if (theme !== 'dark') q.set('theme', theme);
-  const qs = q.toString();
-  return qs ? `${WIDGET_BASE}?${qs}` : WIDGET_BASE;
+function srcFor(accent: Accent): string {
+  return accent === 'auto' ? WIDGET_BASE : `${WIDGET_BASE}?accent=${accent}`;
 }
 
-function iframeSnippet(theme: ThemeChoice, scheme: SchemeChoice, height: number): string {
+function iframeSnippet(accent: Accent, height: number): string {
   return `<iframe
-  src="${srcFor(theme, scheme)}"
-  title="Live AI provider status by TensorFeed"
+  src="${srcFor(accent)}"
+  title="TensorFeed live monitor"
   width="100%"
   height="${height}"
   loading="lazy"
-  style="border:0;border-radius:14px;max-width:900px"
+  style="border:0;max-width:720px"
 ></iframe>`;
 }
 
-function responsiveSnippet(theme: ThemeChoice, scheme: SchemeChoice): string {
-  return `<div style="position:relative;width:100%;max-width:900px;aspect-ratio:900/560">
+function responsiveSnippet(accent: Accent): string {
+  return `<div style="position:relative;width:100%;max-width:720px;aspect-ratio:720/600">
   <iframe
-    src="${srcFor(theme, scheme)}"
-    title="Live AI provider status by TensorFeed"
+    src="${srcFor(accent)}"
+    title="TensorFeed live monitor"
     loading="lazy"
-    style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:14px"
+    style="position:absolute;inset:0;width:100%;height:100%;border:0"
   ></iframe>
 </div>`;
 }
@@ -93,49 +87,32 @@ function CopyBlock({ code, label }: { code: string; label: string }) {
 }
 
 export default function EmbedShowcase() {
-  const [theme, setTheme] = useState<ThemeChoice>('dark');
-  const [scheme, setScheme] = useState<SchemeChoice>('cyan');
-  const [height, setHeight] = useState<number>(560);
+  const [accent, setAccent] = useState<Accent>('auto');
+  const [height, setHeight] = useState<number>(600);
 
-  const src = useMemo(() => srcFor(theme, scheme), [theme, scheme]);
-  const snippet = useMemo(() => iframeSnippet(theme, scheme, height), [theme, scheme, height]);
-  const responsive = useMemo(() => responsiveSnippet(theme, scheme), [theme, scheme]);
+  const src = useMemo(() => srcFor(accent), [accent]);
+  const snippet = useMemo(() => iframeSnippet(accent, height), [accent, height]);
+  const responsive = useMemo(() => responsiveSnippet(accent), [accent]);
 
-  const themeBtn = (value: ThemeChoice, Icon: typeof Sun, label: string) => {
-    const active = theme === value;
-    return (
-      <button
-        type="button"
-        onClick={() => setTheme(value)}
-        aria-pressed={active}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border transition-colors ${
-          active
-            ? 'border-accent-primary text-text-primary'
-            : 'border-border text-text-muted hover:text-text-secondary'
-        }`}
-        style={active ? { background: 'var(--bg-tertiary)' } : undefined}
-      >
-        <Icon className="w-4 h-4" />
-        {label}
-      </button>
-    );
-  };
+  const accentIcon = (id: Accent) =>
+    id === 'auto' ? <Sparkles className="w-4 h-4" /> : id === 'green' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />;
 
   return (
     <div className="space-y-6">
       {/* Controls */}
       <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
         <div>
-          <div className="text-xs font-mono uppercase tracking-wider text-text-muted mb-2">Accent scheme</div>
+          <div className="text-xs font-mono uppercase tracking-wider text-text-muted mb-2">Accent</div>
           <div className="flex gap-2">
-            {SCHEMES.map((s) => {
-              const active = scheme === s.id;
+            {ACCENTS.map((a) => {
+              const active = accent === a.id;
               return (
                 <button
-                  key={s.id}
+                  key={a.id}
                   type="button"
-                  onClick={() => setScheme(s.id)}
+                  onClick={() => setAccent(a.id)}
                   aria-pressed={active}
+                  title={a.note}
                   className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border transition-colors ${
                     active
                       ? 'border-accent-primary text-text-primary'
@@ -143,23 +120,12 @@ export default function EmbedShowcase() {
                   }`}
                   style={active ? { background: 'var(--bg-tertiary)' } : undefined}
                 >
-                  <span
-                    aria-hidden="true"
-                    className="w-3 h-3 rounded-full"
-                    style={{ background: s.swatch, boxShadow: `0 0 6px ${s.swatch}` }}
-                  />
-                  {s.label}
+                  <span aria-hidden="true" className="w-3 h-3 rounded-full" style={{ background: a.swatch }} />
+                  {accentIcon(a.id)}
+                  {a.label}
                 </button>
               );
             })}
-          </div>
-        </div>
-        <div>
-          <div className="text-xs font-mono uppercase tracking-wider text-text-muted mb-2">Surface</div>
-          <div className="flex gap-2">
-            {themeBtn('dark', Moon, 'Dark')}
-            {themeBtn('light', Sun, 'Light')}
-            {themeBtn('auto', Monitor, 'Auto')}
           </div>
         </div>
         <div>
@@ -196,13 +162,13 @@ export default function EmbedShowcase() {
           Live preview (this is the real, deployed widget)
         </div>
         <div
-          className="rounded-xl border border-bg-tertiary overflow-hidden"
-          style={{ background: 'var(--bg-secondary)' }}
+          className="rounded-xl border border-bg-tertiary overflow-hidden flex justify-center"
+          style={{ background: '#04070d' }}
         >
           <iframe
-            key={`${theme}-${scheme}-${height}`}
+            key={`${accent}-${height}`}
             src={src}
-            title="Live AI provider status by TensorFeed"
+            title="TensorFeed live monitor"
             loading="lazy"
             style={{ width: '100%', height, border: 0, display: 'block' }}
           />
@@ -226,7 +192,8 @@ export default function EmbedShowcase() {
           >
             /api/probe/latest
           </a>
-          . No API key, no tracking, refreshed every ~2 minutes.
+          . No API key, no tracking. Add{' '}
+          <code className="text-text-secondary">?poll=60</code> to slow the refresh.
         </p>
       </div>
 
