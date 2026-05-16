@@ -238,8 +238,10 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       <div
-        className={`md:hidden border-t border-border bg-bg-primary/95 backdrop-blur-md overflow-hidden transition-all duration-300 ease-in-out ${
-          mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0 border-t-0'
+        className={`md:hidden border-t border-border bg-bg-primary/95 backdrop-blur-md transition-all duration-300 ease-in-out ${
+          mobileOpen
+            ? 'max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain opacity-100'
+            : 'max-h-0 overflow-hidden opacity-0 border-t-0'
         }`}
       >
         <div className="px-4 py-3 space-y-1">
