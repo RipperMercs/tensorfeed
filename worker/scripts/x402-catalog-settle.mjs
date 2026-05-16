@@ -251,9 +251,12 @@ async function main() {
 
   let account = null;
   if (!args.dryRun) {
-    const key = process.env.AGENT_KEY;
-    if (!key || !/^0x[0-9a-fA-F]{64}$/.test(key)) {
-      console.error('Set AGENT_KEY to the test buyer EOA private key (0x + 64 hex), or pass --dry-run.');
+    let key = (process.env.AGENT_KEY || '').trim();
+    // Accept the key with or without a 0x prefix. Still strictly exactly
+    // 64 hex characters, so this does not weaken the format check.
+    if (/^[0-9a-fA-F]{64}$/.test(key)) key = '0x' + key;
+    if (!/^0x[0-9a-fA-F]{64}$/.test(key)) {
+      console.error('Set AGENT_KEY to the test buyer EOA private key (64 hex, 0x optional), or pass --dry-run.');
       process.exit(1);
     }
     account = privateKeyToAccount(key);
