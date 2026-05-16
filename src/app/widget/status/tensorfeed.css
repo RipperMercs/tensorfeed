@@ -53,6 +53,16 @@
   --tf-accent-deep: #2a8d65;
 }
 
+/* Self-contained box model. The design assumes a border-box reset (the
+   prototype inherited one from its host page). An embeddable widget
+   cannot rely on the host providing it, so guarantee it here, otherwise
+   row padding + border add onto the fixed grid tracks and the rightmost
+   column overflows under the rounded corner. */
+.tf-stage, .tf-stage *, .tf-stage *::before, .tf-stage *::after,
+.tf-widget, .tf-widget *, .tf-widget *::before, .tf-widget *::after {
+  box-sizing: border-box;
+}
+
 /* ============================================================
    Background stage (host page) — purely decorative
    The widget itself does NOT require any of these layers; they
@@ -501,7 +511,7 @@
 .tf-feed {
   list-style: none;
   margin: 0;
-  padding: 0 12px 14px 70px;
+  padding: 0 16px 14px 70px;
   display: flex;
   flex-direction: column;
   gap: 6px;
