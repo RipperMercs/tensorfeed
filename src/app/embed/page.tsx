@@ -44,7 +44,7 @@ const FAQS: { question: string; answer: string }[] = [
   {
     question: 'Can I match the widget to my site theme?',
     answer:
-      'Yes. The widget defaults to a dark theme. Append ?theme=light for a light theme, or ?theme=auto to follow the visitor prefers-color-scheme setting. The colors are the exact TensorFeed design tokens so it stays visually consistent with the full status dashboard.',
+      'Yes. The widget is a sci-fi HUD console with four accent schemes: cyan (default), amber, tactical, and magenta, set via ?scheme=. Surface is dark by default; add ?theme=light for a light surface or ?theme=auto to follow the visitor prefers-color-scheme setting. Use the controls on this page to preview every combination and copy the matching snippet.',
   },
   {
     question: 'Which AI providers does the widget cover?',
@@ -93,8 +93,8 @@ export default function EmbedPage() {
         <p className="text-text-secondary leading-relaxed max-w-3xl text-sm sm:text-base">
           One line of HTML puts a live AI provider status board on your site: real-time
           operational state plus p95 latency for Claude, OpenAI, Gemini, Mistral, Cohere, and
-          more. Free, no API key, no tracking, dark or light theme. It is the same live data
-          behind the TensorFeed{' '}
+          more, in a sci-fi HUD console with four accent schemes, dark or light. Free, no API
+          key, no tracking. It is the same live data behind the TensorFeed{' '}
           <Link href="/status" className="text-accent-cyan hover:underline">
             status dashboard
           </Link>

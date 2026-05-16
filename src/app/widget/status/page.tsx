@@ -12,7 +12,9 @@ import StatusWidget from './StatusWidget';
  *           width="100%" height="560" frameborder="0"
  *           title="AI provider status by TensorFeed"></iframe>
  *
- * Theme: append ?theme=light or ?theme=auto to the src.
+ * Appearance: sci-fi HUD console skin. Accent scheme via
+ * ?scheme=cyan (default) | amber | tactical | magenta, and surface via
+ * ?theme=dark (default) | light | auto.
  *
  * No chrome (no nav, footer, or cookie banner) so host pages get a clean
  * drop-in. Frame policy lives in public/_headers (CSP frame-ancestors *
