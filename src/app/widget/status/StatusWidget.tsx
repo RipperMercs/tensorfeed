@@ -155,15 +155,14 @@ function resolveAppearance(): { scheme: SchemeName; theme: ThemeName } {
 // theme adjusts surface/foreground vars only. Namespaced under
 // .tfw-root so nothing leaks if the markup is ever inlined.
 const STYLE = `
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 .tfw-root{
   --c-primary:#5fd4f5;--c-primary-dim:rgba(95,212,245,.18);--c-secondary:#f5a64a;
   --c-success:#4ee0a4;--c-danger:#ff6a8a;--c-muted:#6b7c92;
   --bg-0:#04070d;--bg-panel:rgba(10,16,26,.72);--bg-panel-2:rgba(14,22,36,.85);
   --fg:#e8eef7;--fg-dim:#a4b3c6;
   --border:rgba(120,170,220,.18);--border-bright:rgba(120,170,220,.35);
-  --fdisp:'Rajdhani',system-ui,Segoe UI,sans-serif;
-  --fmono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fdisp:var(--tfw-fdisp),'Rajdhani',system-ui,Segoe UI,sans-serif;
+  --fmono:var(--tfw-fmono),'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   position:relative;min-height:100%;width:100%;background:var(--bg-0);
   color:var(--fg);font-family:var(--fdisp);overflow:hidden;
   -webkit-font-smoothing:antialiased;
