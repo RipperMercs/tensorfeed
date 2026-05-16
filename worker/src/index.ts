@@ -391,6 +391,10 @@ import {
   reserveNonce,
   putGig,
   setGigStatus,
+  putSubmission,
+  getSubmission,
+  listSubmissions,
+  setSubmissionDecision,
 } from './jobs-store';
 import {
   toPublicGig,
@@ -400,8 +404,14 @@ import {
   buildCloseMessage,
 } from './jobs';
 import {
+  validateDeliverable,
+  assembleSubmissionRecord,
+  buildSubmissionMessage,
+} from './jobs-submissions';
+import {
   verifyPosterSignature,
   screenPoster,
+  screenAddress,
   verifyAddressSignature,
 } from './jobs-gate';
 import {
@@ -2361,6 +2371,114 @@ export default {
       });
       return jsonResponse({ ok: true, removed: id, at: now }, 200, 0);
     }
+    // Admin: review pending deliverable submissions (the TF-as-buyer
+    // verification surface). Inherits the global /api/admin rate-limit +
+    // ADMIN_KEY pre-check. Read-only. Returns full records so the
+    // operator can see every row and source_url to verify out-of-band.
+    if (
+      path === '/api/admin/jobs/submissions' &&
+      request.method === 'GET' &&
+      isAuthorizedAdmin(env, url.searchParams.get('key'))
+    ) {
+      const SUB_STATUSES = ['pending', 'accepted', 'rejected'] as const;
+      const sp = url.searchParams.get('status');
+      if (sp && !(SUB_STATUSES as readonly string[]).includes(sp)) {
+        return jsonResponse(
+          { ok: false, error: 'invalid_status', allowed: SUB_STATUSES },
+          400,
+        );
+      }
+      const gig = url.searchParams.get('gig') || undefined;
+      const limParam = parseInt(url.searchParams.get('limit') ?? '200', 10);
+      const limit = Number.isFinite(limParam)
+        ? Math.max(1, Math.min(500, limParam))
+        : 200;
+      const subs = await listSubmissions(env, {
+        limit,
+        gig_id: gig,
+        status: (sp as (typeof SUB_STATUSES)[number]) || undefined,
+      });
+      return jsonResponse(
+        { ok: true, count: subs.length, submissions: subs },
+        200,
+        0,
+      );
+    }
+    // Admin: accept or reject a submission. M1 BOUNDARY: this ONLY
+    // records the decision. It does NOT pay the submitter and does NOT
+    // ingest the rows. Payout and ingest are M2 and stay manual /
+    // per-action explicit, never an autonomous Worker action. Audit-
+    // logged via recordAdminAction.
+    if (
+      path === '/api/admin/jobs/submissions/decide' &&
+      request.method === 'POST' &&
+      isAuthorizedAdmin(env, url.searchParams.get('key'))
+    ) {
+      let dbody: { id?: unknown; decision?: unknown; note?: unknown } = {};
+      try {
+        dbody = (await request.json()) as typeof dbody;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const sid = typeof dbody.id === 'string' ? dbody.id.trim() : '';
+      const decision =
+        typeof dbody.decision === 'string' ? dbody.decision.trim() : '';
+      const note = typeof dbody.note === 'string' ? dbody.note.trim() : '';
+      if (!sid || sid.length > 80) {
+        return jsonResponse({ ok: false, error: 'invalid_id' }, 400);
+      }
+      if (decision !== 'accept' && decision !== 'reject') {
+        return jsonResponse(
+          { ok: false, error: 'invalid_decision', allowed: ['accept', 'reject'] },
+          400,
+        );
+      }
+      if (!note || note.length > 200) {
+        return jsonResponse({ ok: false, error: 'invalid_note' }, 400);
+      }
+      const existing = await getSubmission(env, sid);
+      if (!existing) {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404);
+      }
+      if (existing.status !== 'pending') {
+        return jsonResponse(
+          { ok: false, error: 'already_decided', status: existing.status },
+          409,
+        );
+      }
+      const status = decision === 'accept' ? 'accepted' : 'rejected';
+      const nowSec = Math.floor(Date.now() / 1000);
+      if (!(await setSubmissionDecision(env, sid, status, note, nowSec))) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'write_unavailable',
+            message: 'Decision store is temporarily read-only or the submission changed. Retry.',
+          },
+          503,
+        );
+      }
+      const decidedAt = new Date().toISOString();
+      await recordAdminAction(env, {
+        at: decidedAt,
+        action: 'jobs_submission_decide',
+        target: sid,
+        reason: decision + ': ' + note,
+        evidence_url: null,
+        admin_id: 'admin:manual',
+      });
+      return jsonResponse(
+        {
+          ok: true,
+          id: sid,
+          status,
+          at: decidedAt,
+          note: 'Decision recorded. Payout and ingest are manual, per-action, and not performed by this endpoint.',
+        },
+        200,
+        0,
+      );
+    }
     if (path === '/api/admin/agents/admin-log' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const date = url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -2965,6 +3083,197 @@ export default {
         { ok: true, job: updated ? toPublicGig(updated, nowSec) : null },
         200,
         0,
+      );
+    }
+
+    // Submit a deliverable against a TF-funded gig (M1 of the
+    // cold-start data flywheel). Bearer-only and 1 credit, mirroring
+    // the poster path's anti-spam economic: a rejected submission is
+    // never charged (premiumValidationFailure, no debit) and the credit
+    // is committed only by premiumResponse on full success. The
+    // submitter signs a canonical deliverable (EIP-191), is OFAC
+    // screened fail-closed, and is nonce-replay guarded, exactly like
+    // the poster gate.
+    //
+    // SSRF: source_url values are validated and STORED, never fetched
+    // here. Verification fetches happen out-of-band on the operator
+    // side. Do not add a Worker fetch of any submitter-supplied URL.
+    if (
+      path.startsWith('/api/jobs/') &&
+      path.endsWith('/submit') &&
+      request.method === 'POST'
+    ) {
+      const gigId = path.slice('/api/jobs/'.length, -'/submit'.length);
+      if (!gigId || gigId.includes('/')) {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404, 0);
+      }
+
+      const subAuth = request.headers.get('Authorization');
+      if (
+        !subAuth ||
+        !subAuth.startsWith('Bearer ') ||
+        !subAuth.slice(7).trim().startsWith('tf_live_')
+      ) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'bearer_required',
+            message:
+              'Submitting a deliverable requires a prepaid TensorFeed credits token. Buy credits at /api/payment/buy-credits and retry with Authorization: Bearer tf_live_<token>. The per-call x402 settle path is not accepted for writes, so a rejected submission is never charged.',
+            doc: '/developers/agent-payments',
+          },
+          402,
+          0,
+        );
+      }
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      if (payment.freeTrial) {
+        return premiumValidationFailure(
+          {
+            ok: false,
+            error: 'payment_required',
+            message:
+              'Submitting a deliverable requires a paid credit. The free trial covers discovery reads only, not writes.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      let sbody: Record<string, unknown>;
+      try {
+        const parsed = await request.json();
+        if (
+          typeof parsed !== 'object' ||
+          parsed === null ||
+          Array.isArray(parsed)
+        ) {
+          throw new Error('not_object');
+        }
+        sbody = parsed as Record<string, unknown>;
+      } catch {
+        return premiumValidationFailure(
+          { ok: false, error: 'invalid_json' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const dv = validateDeliverable(sbody);
+      if (!dv.ok) {
+        return premiumValidationFailure(
+          { ok: false, error: 'validation_failed', detail: dv.error },
+          payment,
+          request,
+          env,
+        );
+      }
+      const sub = dv.value;
+
+      // The signed gig_id must match the path so a deliverable signed
+      // for one gig cannot be charged against another.
+      if (sub.gig_id !== gigId) {
+        return premiumValidationFailure(
+          { ok: false, error: 'gig_id_mismatch' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      // Fail fast (and cheaply, before any signature or Chainalysis
+      // work) if the gig is not an open listing.
+      const nowSec = Math.floor(Date.now() / 1000);
+      const gigRec = await getGig(env, gigId);
+      const gigPub = gigRec ? toPublicGig(gigRec, nowSec) : null;
+      if (!gigPub || gigPub.status !== 'active') {
+        return premiumValidationFailure(
+          { ok: false, error: 'gig_not_open' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const sskew = validateSignedAt(nowSec, sub.signed_at);
+      if (!sskew.ok) {
+        return premiumValidationFailure(
+          { ok: false, error: 'replay_window', detail: sskew.error },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      // Signature BEFORE the nonce burn: only the wallet owner can burn
+      // its own nonce, so a bad-signature request cannot grief a
+      // victim's future nonce. The message is derived here, never
+      // accepted from the caller.
+      const okSubSig = await verifyAddressSignature(
+        sub.submitter_addr,
+        buildSubmissionMessage(sub),
+        sub.signature,
+      );
+      if (!okSubSig) {
+        return premiumValidationFailure(
+          { ok: false, error: 'bad_signature' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      if (!(await reserveNonce(env, sub.nonce))) {
+        return premiumValidationFailure(
+          { ok: false, error: 'nonce_replayed_or_writes_disabled' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const sscreen = await screenAddress(sub.submitter_addr, env);
+      if (!sscreen.ok) {
+        return premiumValidationFailure(
+          { ok: false, error: sscreen.reason, detail: sscreen.detail },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const subId = 'sub_' + crypto.randomUUID();
+      const subRec = assembleSubmissionRecord(sub, nowSec, subId);
+      if (!(await putSubmission(env, subRec))) {
+        return premiumValidationFailure(
+          {
+            ok: false,
+            error: 'storage_unavailable',
+            message:
+              'Submission store is temporarily read-only. No credit was charged.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      return await premiumResponse(
+        {
+          ok: true,
+          submission_id: subId,
+          gig_id: gigId,
+          status: 'pending',
+          rows_received: subRec.rows.length,
+          note: 'Stored for out-of-band verification. Acceptance, payout, and ingest are manual and decided by TensorFeed as the buyer.',
+        },
+        payment,
+        1,
+        request,
+        env,
       );
     }
 
