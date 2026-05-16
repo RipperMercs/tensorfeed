@@ -7,6 +7,7 @@ import {
   ingestAcceptedSubmission,
   getIngest,
   listIngest,
+  deleteIngest,
   ingestKey,
   projectModelPricingFeed,
   type IngestRecord,
@@ -131,6 +132,34 @@ describe('ingestAcceptedSubmission / getIngest', () => {
     const env = envWith(kv);
     await kv.put(ingestKey('bad'), '{not json');
     expect(await getIngest(env, 'bad')).toBeNull();
+  });
+});
+
+describe('deleteIngest', () => {
+  it('removes an existing ingest record and reports removed', async () => {
+    const kv = new FakeKV();
+    const env = envWith(kv);
+    await ingestAcceptedSubmission(env, sub('s1', [row()]), 1);
+    expect(await deleteIngest(env, 's1')).toBe('removed');
+    expect(kv.store.has(ingestKey('s1'))).toBe(false);
+    expect(await getIngest(env, 's1')).toBeNull();
+  });
+
+  it('reports not_found for an absent record (no throw)', async () => {
+    const env = envWith(new FakeKV());
+    expect(await deleteIngest(env, 'nope')).toBe('not_found');
+  });
+
+  it('fails closed under the kill switch and does not delete', async () => {
+    const kv = new FakeKV();
+    await ingestAcceptedSubmission(envWith(kv), sub('s1', [row()]), 1);
+    // The non-killed setup write populated the kill-switch isolate memo;
+    // reset it so the killed read is actually exercised (same pattern
+    // the jobs-store kill-switch tests rely on).
+    _resetIsolateMemoForTests();
+    const killed = envWith(kv, true);
+    expect(await deleteIngest(killed, 's1')).toBe('write_blocked');
+    expect(kv.store.has(ingestKey('s1'))).toBe(true);
   });
 });
 

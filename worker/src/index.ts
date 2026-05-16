@@ -414,6 +414,7 @@ import {
 import {
   ingestAcceptedSubmission,
   listIngest,
+  deleteIngest,
   projectModelPricingFeed,
 } from './jobs-ingest';
 import {
@@ -2443,6 +2444,56 @@ export default {
         admin_id: 'admin:manual',
       });
       return jsonResponse({ ok: true, removed: id, at: now }, 200, 0);
+    }
+    // Admin: retract an ingested submission's rows from the public
+    // /api/feeds/model-pricing feed. Mirrors jobs/remove: inherits the
+    // hoisted /api/admin rate-limit + ADMIN_KEY pre-check, audit-logged,
+    // fail-closed under the KV kill switch. The accept decision record
+    // is untouched; this only unpublishes the rows.
+    if (
+      path === '/api/admin/jobs/ingest/remove' &&
+      request.method === 'POST' &&
+      isAuthorizedAdmin(env, url.searchParams.get('key'))
+    ) {
+      let ib: { submission_id?: unknown; reason?: unknown } = {};
+      try {
+        ib = (await request.json()) as typeof ib;
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const subId =
+        typeof ib.submission_id === 'string' ? ib.submission_id.trim() : '';
+      const ireason = typeof ib.reason === 'string' ? ib.reason.trim() : '';
+      if (!subId || subId.length > 80) {
+        return jsonResponse({ ok: false, error: 'invalid_submission_id' }, 400);
+      }
+      if (!ireason || ireason.length > 200) {
+        return jsonResponse({ ok: false, error: 'invalid_reason' }, 400);
+      }
+      const outcome = await deleteIngest(env, subId);
+      if (outcome === 'write_blocked') {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'write_unavailable',
+            message: 'Feed store is temporarily read-only (kill switch). Retry.',
+          },
+          503,
+        );
+      }
+      if (outcome === 'not_found') {
+        return jsonResponse({ ok: false, error: 'not_found' }, 404);
+      }
+      const inow = new Date().toISOString();
+      await recordAdminAction(env, {
+        at: inow,
+        action: 'jobs_ingest_remove',
+        target: subId,
+        reason: ireason,
+        evidence_url: null,
+        admin_id: 'admin:manual',
+      });
+      return jsonResponse({ ok: true, removed: subId, at: inow }, 200, 0);
     }
     // Admin: review pending deliverable submissions (the TF-as-buyer
     // verification surface). Inherits the global /api/admin rate-limit +

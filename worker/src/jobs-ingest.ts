@@ -33,7 +33,7 @@
  */
 
 import type { Env } from './types';
-import { safePut } from './kill-switch';
+import { safePut, getKillSwitchState } from './kill-switch';
 import type { PricingRow, SubmissionRecord } from './jobs-submissions';
 
 export const INGEST_KEY_PREFIX = 'gigfeed:pricing:sub:';
@@ -153,6 +153,26 @@ export async function getIngest(
     );
     return null;
   }
+}
+
+/**
+ * Retract one ingested submission's rows from the feed. The accept
+ * decision record itself is untouched; this only unpublishes the rows.
+ * ADMIN-only (the route gates auth + audit). Fail-closed under the KV
+ * kill switch: during an incident the feed is not mutated. Discriminated
+ * result so the route can map write_blocked -> 503, not_found -> 404,
+ * removed -> 200. Closes the M2 gap of having no way to retract an
+ * erroneous or test-origin row from a public feed.
+ */
+export async function deleteIngest(
+  env: Env,
+  submissionId: string,
+): Promise<'removed' | 'not_found' | 'write_blocked'> {
+  if ((await getKillSwitchState(env)).active) return 'write_blocked';
+  const existing = await getIngest(env, submissionId);
+  if (!existing) return 'not_found';
+  await env.TENSORFEED_CACHE.delete(ingestKey(submissionId));
+  return 'removed';
 }
 
 /**
