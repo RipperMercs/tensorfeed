@@ -17,6 +17,36 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'cerebras-95-billion-ipo-inference-bet',
+    title:
+      'Cerebras Went Public at a $95 Billion Close. The Non-Nvidia Inference Bet Is Now a Market Story.',
+    author: 'Marcus Chen',
+    date: 'May 16, 2026',
+    readTime: '7 min read',
+    description:
+      'Cerebras priced its IPO at $185, above the raised $150 to $160 range, opened at $350 on May 14, and closed day one up 68 percent near a $95 billion market cap, then gave back about 10 percent on day two. The largest US tech IPO since Uber in 2019 sits on $510 million of revenue, a non-GAAP loss, a $10 billion OpenAI contract, and 86 percent revenue from two UAE entities. The mechanics, the asterisks, and what it does to the compute capital map.',
+  },
+  {
+    slug: 'wafer-scale-vs-gpu-what-cerebras-sells',
+    title:
+      'Wafer-Scale vs the GPU: What Cerebras Actually Sells, and Why It Only Matters for Inference',
+    author: 'Ripper',
+    date: 'May 16, 2026',
+    readTime: '6 min read',
+    description:
+      'Now that Cerebras is public, the question is the chip, not the valuation. The WSE-3 is one 46,225 square millimeter die: 4 trillion transistors, 900,000 cores, the whole model resident in on-wafer SRAM. Cerebras and Artificial Analysis report Llama 4 Maverick at 2,522 tokens per second against 1,038 on Nvidia Blackwell. Why on-wafer residence collapses token latency, why latency is the cost that compounds in agent loops, and the honest bear case.',
+  },
+  {
+    slug: 'cerebras-g42-cfius-national-security-tax',
+    title:
+      'Cerebras Cleared the IPO. It Did Not Clear the G42 Question.',
+    author: 'Kira Nolan',
+    date: 'May 16, 2026',
+    readTime: '6 min read',
+    description:
+      'The CFIUS review of the G42 stake is what postponed this exact IPO in 2024. The 2026 listing went through after the investment was restructured into non-voting shares and the notice was withdrawn, not after the dependence was removed. The 86 percent revenue concentration in two UAE entities is still in the S-1 as a risk. Why national-security scrutiny was papered rather than resolved, and why it is now a structural tax on the 2026 AI-silicon IPO class.',
+  },
+  {
     slug: 'live-ai-status-widget',
     title: 'We Made AI Status Embeddable: One Line of HTML, Live on Any Site',
     author: 'Ripper',
