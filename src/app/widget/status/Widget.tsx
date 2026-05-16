@@ -19,7 +19,10 @@ const STATUS_LABEL: Record<ItemState, string> = {
 };
 
 function computeCondition(items: Item[]): Condition {
-  if (items.some((i) => i.state === 'critical' || i.state === 'offline')) return 'critical';
+  // offline is NOT escalated to a widget-wide Red Alert: TF "unknown"
+  // status means "no status source right now" (a coverage gap), not a
+  // confirmed outage. Only a real critical (vendor down) klaxons red.
+  if (items.some((i) => i.state === 'critical')) return 'critical';
   if (items.some((i) => i.state === 'degraded' || i.state === 'downgraded')) return 'degraded';
   return 'nominal';
 }
@@ -121,9 +124,12 @@ const FILTERS = ['all', 'issues', 'nominal', 'degraded', 'downgraded', 'critical
 type Filter = (typeof FILTERS)[number];
 
 function readAppearance(): { accent: 'blue' | 'green'; accentAuto: boolean; pollMs: number } {
-  if (typeof window === 'undefined') return { accent: 'blue', accentAuto: true, pollMs: POLL_MS };
+  if (typeof window === 'undefined') return { accent: 'blue', accentAuto: false, pollMs: POLL_MS };
   const q = new URLSearchParams(window.location.search);
-  const a = (q.get('accent') || 'auto').toLowerCase();
+  // Default is blue: a light-blue bridge spine against green status
+  // indicators reads as a sci-fi array and keeps contrast in the
+  // all-nominal state. auto (design default) and green stay opt-in.
+  const a = (q.get('accent') || 'blue').toLowerCase();
   const pollParam = Number(q.get('poll'));
   const pollMs =
     Number.isFinite(pollParam) && pollParam >= 5 && pollParam <= 600 ? pollParam * 1000 : POLL_MS;
@@ -145,7 +151,7 @@ export default function Widget() {
   const [now, setNow] = useState<Date | null>(null);
   const [appearance, setAppearance] = useState(() => ({
     accent: 'blue' as 'blue' | 'green',
-    accentAuto: true,
+    accentAuto: false,
     pollMs: POLL_MS,
   }));
   const failRef = useRef(0);

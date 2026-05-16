@@ -17,8 +17,8 @@ type Accent = 'auto' | 'blue' | 'green';
 const WIDGET_BASE = 'https://tensorfeed.ai/widget/status';
 
 const ACCENTS: { id: Accent; label: string; swatch: string; note: string }[] = [
-  { id: 'auto', label: 'Auto', swatch: 'linear-gradient(135deg,#4ee0a4,#5fd4f5)', note: 'green when all nominal, blue otherwise' },
-  { id: 'blue', label: 'Blue', swatch: '#5fd4f5', note: 'always bridge cyan' },
+  { id: 'blue', label: 'Blue', swatch: '#5fd4f5', note: 'bridge cyan spine, green status (default, recommended)' },
+  { id: 'auto', label: 'Auto', swatch: 'linear-gradient(135deg,#4ee0a4,#5fd4f5)', note: 'whole accent goes green when all nominal' },
   { id: 'green', label: 'Green', swatch: '#4ee0a4', note: 'always all-clear green' },
 ];
 
@@ -29,7 +29,7 @@ const HEIGHTS: { label: string; value: number; note: string }[] = [
 ];
 
 function srcFor(accent: Accent): string {
-  return accent === 'auto' ? WIDGET_BASE : `${WIDGET_BASE}?accent=${accent}`;
+  return accent === 'blue' ? WIDGET_BASE : `${WIDGET_BASE}?accent=${accent}`;
 }
 
 function iframeSnippet(accent: Accent, height: number): string {
@@ -87,7 +87,7 @@ function CopyBlock({ code, label }: { code: string; label: string }) {
 }
 
 export default function EmbedShowcase() {
-  const [accent, setAccent] = useState<Accent>('auto');
+  const [accent, setAccent] = useState<Accent>('blue');
   const [height, setHeight] = useState<number>(600);
 
   const src = useMemo(() => srcFor(accent), [accent]);

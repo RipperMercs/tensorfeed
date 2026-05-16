@@ -1,10 +1,11 @@
 // Maps TensorFeed's live public endpoints onto the design's Feed/Item
-// contract. Honesty rules hold: a row only appears when the real status
-// feed has it; latency is the real probed p95 or null (never invented);
-// state is derived only from real signals (operational status + ok_pct).
-// The 16-bar sparkline is a deterministic per-id shape: the design ships
-// this as the sanctioned default (README section 7) since the free
-// endpoints do not expose a 16-sample history.
+// contract. Coverage is the whole point: the widget renders EVERY
+// provider /api/status/summary tracks (no hardcoded catalog), so it
+// always mirrors the site's status page and auto-includes anything TF
+// adds later. Honesty rules hold: latency is the real probed p95 or
+// null (never invented); state is derived from real signals only with
+// vendor status authoritative; the 16-bar sparkline is the design's
+// sanctioned deterministic default (README section 7).
 
 import type { Feed, Item, ItemState } from './types';
 
@@ -27,36 +28,32 @@ interface ProbeAggregate {
   last_probe_at: string | null;
 }
 
-interface CatalogEntry {
-  id: string;
-  name: string;
-  vendor: string;
-  match: string[]; // substrings tested against status name + provider
-  probe: string | null; // /api/probe/latest provider key, or null
+// A service goes in the LLMs tab if its name or provider matches a
+// model / LLM-gateway keyword; everything else (voice, image, video,
+// other infra) goes in the Services tab. New providers classify
+// automatically. The design's LLMs tab is "LLM endpoints", Services is
+// "everything else we monitor".
+const LLM_KEYWORDS = [
+  'claude', 'anthropic', 'openai', 'gpt', 'chatgpt', 'gemini', 'google', 'bard',
+  'mistral', 'cohere', 'deepseek', 'llama', 'meta', 'groq', 'perplexity',
+  'together', 'fireworks', 'openrouter', 'bedrock', 'azure', 'copilot',
+  'hugging', 'replicate', 'qwen', 'grok', 'xai', 'ai21', 'reka', 'nous',
+  'databricks', 'inflection', 'nvidia', 'nim', 'sambanova', 'cerebras',
+];
+
+// Provider keys present in /api/probe/latest (latency is only measured
+// for these). Any service whose name/provider contains one of these
+// gets the real p95; the rest show no latency, just real status.
+const PROBE_KEYS = ['anthropic', 'openai', 'google', 'mistral', 'cohere'];
+
+function slug(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'svc';
 }
 
-// Frontier model labs -> LLMs tab.
-const LLM_CATALOG: ReadonlyArray<CatalogEntry> = [
-  { id: 'anthropic', name: 'Claude', vendor: 'Anthropic', match: ['claude', 'anthropic'], probe: 'anthropic' },
-  { id: 'openai', name: 'OpenAI', vendor: 'OpenAI', match: ['openai'], probe: 'openai' },
-  { id: 'google', name: 'Google Gemini', vendor: 'Google', match: ['gemini', 'google'], probe: 'google' },
-  { id: 'mistral', name: 'Mistral', vendor: 'Mistral', match: ['mistral'], probe: 'mistral' },
-  { id: 'cohere', name: 'Cohere', vendor: 'Cohere', match: ['cohere'], probe: 'cohere' },
-  { id: 'meta', name: 'Llama', vendor: 'Meta', match: ['llama', 'meta'], probe: null },
-  { id: 'deepseek', name: 'DeepSeek', vendor: 'DeepSeek', match: ['deepseek'], probe: null },
-  { id: 'groq', name: 'Groq', vendor: 'Groq', match: ['groq'], probe: null },
-  { id: 'perplexity', name: 'Perplexity', vendor: 'Perplexity', match: ['perplexity'], probe: null },
-];
-
-// Cloud LLM gateways / infrastructure -> Services tab.
-const SERVICE_CATALOG: ReadonlyArray<CatalogEntry> = [
-  { id: 'bedrock', name: 'AWS Bedrock', vendor: 'AWS', match: ['bedrock', 'aws'], probe: null },
-  { id: 'azure-openai', name: 'Azure OpenAI', vendor: 'Microsoft', match: ['azure'], probe: null },
-  { id: 'huggingface', name: 'Hugging Face', vendor: 'Hugging Face', match: ['hugging'], probe: null },
-  { id: 'replicate', name: 'Replicate', vendor: 'Replicate', match: ['replicate'], probe: null },
-  { id: 'copilot', name: 'GitHub Copilot', vendor: 'GitHub', match: ['copilot', 'github'], probe: null },
-  { id: 'openrouter', name: 'OpenRouter', vendor: 'OpenRouter', match: ['openrouter'], probe: null },
-];
+function classifyTab(name: string, provider: string): 'llm' | 'service' {
+  const hay = `${name} ${provider}`.toLowerCase();
+  return LLM_KEYWORDS.some((k) => hay.includes(k)) ? 'llm' : 'service';
+}
 
 function normalizeStatus(s: string): 'ok' | 'warn' | 'down' | 'unknown' {
   const v = (s || '').toLowerCase();
@@ -69,13 +66,15 @@ function normalizeStatus(s: string): 'ok' | 'warn' | 'down' | 'unknown' {
 // Vendor status is authoritative. TF's own synthetic probe (ok_pct) is
 // NOT a provider-health signal on its own: a low ok_pct is frequently
 // TF's probe key being rate-limited or on a trial quota (verified
-// 2026-05-15: Google ok_pct 0.35 = "quota issues", Cohere ok_pct 0.0 =
-// "trial key limitations", while both report operational). A public
-// embed must never declare an operational provider CRITICAL because of
-// our own probe limits. So: status decides state; the probe only
-// decides when there is no vendor signal at all. The probe p95 is still
-// shown as the latency number regardless. downgraded is a routing-layer
-// signal TF does not publish, so it is never inferred.
+// 2026-05-15: Google ok_pct 0.35 = "quota issues", Cohere 0.0 = "trial
+// key", both vendor-operational). A public embed must never declare an
+// operational provider CRITICAL because of our own probe limits. So
+// status decides state; the probe only decides when there is no vendor
+// signal at all; the probe p95 is still shown as latency regardless.
+// downgraded is a routing-layer signal TF does not publish, never
+// inferred. unknown + no probe -> offline, kept for full coverage but
+// treated as non-escalating by computeCondition (TF "unknown" means
+// "no status source right now", a coverage gap, not an outage).
 function deriveState(
   status: 'ok' | 'warn' | 'down' | 'unknown',
   hasProbe: boolean,
@@ -84,17 +83,16 @@ function deriveState(
   if (status === 'down') return 'critical';
   if (status === 'warn') return 'degraded';
   if (status === 'ok') return 'nominal';
-  // status unknown: fall back to the probe only (no vendor signal).
   if (hasProbe && okPct != null) {
     if (okPct < 0.5) return 'critical';
     if (okPct < 0.95) return 'degraded';
     return 'nominal';
   }
-  return 'offline'; // unknown + no probe; buildItems excludes these
+  return 'offline';
 }
 
-// Deterministic 16-bar [0,1] shape seeded by id, biased by state, so the
-// sparkline does not flicker between polls. Mirrors the prototype.
+// Deterministic 16-bar [0,1] shape seeded by id, biased by state, so
+// the sparkline does not flicker between polls. Mirrors the prototype.
 function makeHistory(id: string, state: ItemState): number[] {
   let s = 0;
   for (let i = 0; i < id.length; i++) s = (s * 31 + id.charCodeAt(i)) % 233280;
@@ -116,48 +114,27 @@ function agoSeconds(iso: string | null): number | null {
   return Math.floor(ms / 1000);
 }
 
-function buildItems(
-  catalog: ReadonlyArray<CatalogEntry>,
-  services: RawService[],
-  probes: ProbeAggregate[],
-): Item[] {
-  const items: Item[] = [];
-  for (const c of catalog) {
-    let svc: RawService | undefined;
-    for (const s of services) {
-      const lc = (s.name || '').toLowerCase();
-      const pv = (s.provider || '').toLowerCase();
-      if (c.match.some((m) => lc.includes(m) || pv.includes(m))) {
-        svc = s;
-        break;
-      }
-    }
-    const probe = c.probe ? probes.find((p) => p.provider === c.probe) : undefined;
-    // Only render rows we actually monitor. Showing an un-monitored
-    // provider as "offline" would falsely imply we track it and it is
-    // down, so exclude when there is neither status nor probe data.
-    if (!svc && !probe) continue;
-
-    const status = svc ? normalizeStatus(svc.status) : 'unknown';
-    const okPct = probe ? probe.ok_pct : null;
-    // No real signal (no vendor status and no probe): exclude rather
-    // than fake an OFFLINE row, which would falsely imply we monitor it
-    // and it is down, and would trip the whole-widget Red Alert.
-    if (status === 'unknown' && !probe) continue;
-    const state = deriveState(status, Boolean(probe), okPct);
-    const latencyMs = probe ? (probe.total?.p95 ?? probe.ttfb?.p95 ?? null) : null;
-    items.push({
-      id: c.id,
-      name: c.name,
-      vendor: c.vendor,
-      state,
-      latencyMs: latencyMs != null ? Math.round(latencyMs) : null,
-      lastCheckedAgoS: probe ? agoSeconds(probe.last_probe_at) : null,
-      history: makeHistory(c.id, state),
-      detailHref: `${DETAIL_BASE}#${c.id}`,
-    });
-  }
-  return items;
+function toItem(svc: RawService, probes: ProbeAggregate[]): Item {
+  const name = svc.name || 'Unknown';
+  const provider = svc.provider || '';
+  const hay = `${name} ${provider}`.toLowerCase();
+  const probeKey = PROBE_KEYS.find((k) => hay.includes(k));
+  const probe = probeKey ? probes.find((p) => p.provider === probeKey) : undefined;
+  const status = normalizeStatus(svc.status);
+  const okPct = probe ? probe.ok_pct : null;
+  const state = deriveState(status, Boolean(probe), okPct);
+  const latencyMs = probe ? (probe.total?.p95 ?? probe.ttfb?.p95 ?? null) : null;
+  const id = slug(name);
+  return {
+    id,
+    name,
+    vendor: provider || name,
+    state,
+    latencyMs: latencyMs != null ? Math.round(latencyMs) : null,
+    lastCheckedAgoS: probe ? agoSeconds(probe.last_probe_at) : null,
+    history: makeHistory(id, state),
+    detailHref: `${DETAIL_BASE}#${id}`,
+  };
 }
 
 export function buildFeed(statusJson: unknown, probeJson: unknown): Feed {
@@ -172,11 +149,20 @@ export function buildFeed(statusJson: unknown, probeJson: unknown): Feed {
     Array.isArray((probeJson as { summary: { providers?: unknown } }).summary.providers)
       ? ((probeJson as { summary: { providers: ProbeAggregate[] } }).summary.providers)
       : [];
+
+  const llms: Item[] = [];
+  const svc: Item[] = [];
+  for (const raw of services) {
+    if (!raw || !raw.name) continue;
+    const item = toItem(raw, probes);
+    if (classifyTab(raw.name, raw.provider || '') === 'llm') llms.push(item);
+    else svc.push(item);
+  }
   return {
     pollIntervalMs: POLL_MS,
     generatedAt: new Date().toISOString(),
-    llms: buildItems(LLM_CATALOG, services, probes),
-    services: buildItems(SERVICE_CATALOG, services, probes),
+    llms,
+    services: svc,
   };
 }
 

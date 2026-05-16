@@ -9,9 +9,9 @@
 /* ----- design tokens ----- */
 :root {
   /* Accent schemes — switched by [data-accent="blue|green"] on .tf-widget */
-  --tf-accent:        #5fd4f5;                      /* blue (default) */
-  --tf-accent-dim:    rgba(95, 212, 245, 0.18);
-  --tf-accent-deep:   #2a8fb8;                      /* gradient bottom of spine */
+  --tf-accent:        #3a9fd6;                      /* blue (default) deeper, bluer than the design cyan per owner direction */
+  --tf-accent-dim:    rgba(58, 159, 214, 0.18);
+  --tf-accent-deep:   #205f8a;                      /* gradient bottom of spine */
 
   /* Status palette — used regardless of accent scheme */
   --tf-nominal:       #4ee0a4;
