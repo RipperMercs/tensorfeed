@@ -1,0 +1,6 @@
+# Cloudflare Pages redirects.
+# Natural URL: a human typing /widget wants the showcase (live preview
+# + copy-paste embed + get-it links), not the chromeless iframe target
+# at /widget/status. Exact-match only, so /widget/status is unaffected.
+/widget /embed 301
+/widget/ /embed 301
