@@ -56,6 +56,16 @@ export const ORIGINALS: OriginalArticle[] = [
       'We shipped a free, self-contained widget that drops a real-time AI status console onto any site with one line of HTML. Sixteen LLM providers and counting, real p95 latency where we probe and real seven-day uptime where we do not, no fabricated charts, no cry-wolf alarms, no ads. Inside the honest-by-construction engineering (vendor status authoritative, the probe never overrides it, NO DATA is never an outage), why an embeddable trust widget is the cleanest discovery loop for humans and agents, and the three ways to embed it: one line of HTML, the zero-dependency @tensorfeed/status-widget npm component, or the browser extension on the way.',
   },
   {
+    slug: 'ai-week-may-15-2026',
+    title:
+      'This Week in AI: Four Days to I/O, Eight Models Going Dark, and a $950B Number',
+    author: 'Kira Nolan',
+    date: 'May 15, 2026',
+    readTime: '7 min read',
+    description:
+      "Google sandbagged its own keynote with the Android Show and shipped Gemini Intelligence on Monday. Anthropic let the $900B to $950B valuation talks leak Tuesday. xAI sunsets eight models at noon Pacific today. Apple started rewriting App Store rules for autonomous agents. Amazon killed Rufus and replaced it with Alexa for Shopping. The Snap-Perplexity $400M deal collapsed. The pre-Google-I/O positioning week ran louder than the keynote it leads into. Inside the seven moves that mattered and what to watch when Sundar takes the stage Tuesday.",
+  },
+  {
     slug: 'google-a2a-x402-payments-extension',
     title:
       'Google Just Put 60 Payment Companies Behind a Crypto-Native Agent Rail',
