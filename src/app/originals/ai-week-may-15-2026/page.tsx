@@ -153,7 +153,7 @@ export default function AIWeekMay152026Page() {
               <tr>
                 <td className="px-4 py-3 text-accent-primary font-medium">Anthropic</td>
                 <td className="px-4 py-3 text-accent-primary">$900B to $950B (in talks)</td>
-                <td className="px-4 py-3">~$30B</td>
+                <td className="px-4 py-3">~$45B</td>
               </tr>
               <tr>
                 <td className="px-4 py-3 text-accent-primary font-medium">OpenAI</td>
@@ -171,7 +171,7 @@ export default function AIWeekMay152026Page() {
 
         <p>
           The ARR line is the one that matters. Anthropic has gone from a roughly $9 billion run
-          rate at the end of 2025 to about $30 billion by Q2 2026. That is the fastest ramp from a
+          rate at the end of 2025 to an annualized revenue on track to top $45 billion. That is the fastest ramp from a
           frontier-model business in history, and it is what is supporting the valuation walk-up.
           The $40 billion Google equity commitment from April and the $25 billion Amazon commitment
           are still in the mix; the new round is on top of, not instead of.
