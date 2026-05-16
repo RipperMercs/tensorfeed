@@ -1,4 +1,4 @@
-import type { ReactNode } from 'next';
+import type { ReactNode } from 'react';
 import { Rajdhani, IBM_Plex_Mono } from 'next/font/google';
 
 /**
