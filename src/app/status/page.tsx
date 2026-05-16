@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Activity } from 'lucide-react';
 import { WebApplicationJsonLd } from '@/components/seo/JsonLd';
 import StatusDashboard from '@/components/status/StatusDashboard';
+import EmbedCallout from '@/components/status/EmbedCallout';
 
 export const metadata: Metadata = {
   title: 'AI Service Status Dashboard',
@@ -110,6 +111,7 @@ export default function StatusPage() {
       </section>
 
       <StatusDashboard />
+      <EmbedCallout />
     </div>
   );
 }
