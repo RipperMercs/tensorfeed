@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; padding: 0; background: #04070d; width: 520px; }
+  /* The widget is its own self-contained document. The popup just
+     frames it. 520px keeps the sparkline column (>480) while dropping
+     the Detail column (<=720) for a compact toolbar view. */
+  iframe { display: block; width: 520px; height: 560px; border: 0; }
+  .bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 12px; background: #04070d;
+    border-top: 1px solid rgba(120,170,220,0.18);
+    font: 600 10px ui-monospace, Menlo, monospace;
+    letter-spacing: 0.16em; text-transform: uppercase; color: #6b7c92;
+  }
+  .bar a { color: #3a9fd6; text-decoration: none; }
+  .bar a:hover { color: #e8eef7; }
+</style>
+</head>
+<body>
+  <iframe
+    src="https://tensorfeed.ai/widget/status?accent=blue&poll=30&utm_source=extension&utm_medium=popup"
+    title="TensorFeed live AI status"></iframe>
+  <div class="bar">
+    <span>TensorFeed</span>
+    <a href="https://tensorfeed.ai/status?utm_source=extension&utm_medium=popup_footer"
+       target="_blank" rel="noopener">Full monitor &rarr;</a>
+  </div>
+</body>
+</html>
