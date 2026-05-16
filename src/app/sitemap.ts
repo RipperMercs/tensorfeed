@@ -215,6 +215,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verified-feed`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/live-ai-status-widget`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/aws-ships-hosted-mcp-server`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/google-a2a-x402-payments-extension`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/cve-data-layer-matters-now`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
