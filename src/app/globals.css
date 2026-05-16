@@ -498,3 +498,43 @@ html[data-view-mode="agent"] {
     color: #555;
   }
 }
+
+/* === Mobile hardening: site-wide horizontal-overflow safety net =====
+ * Added 2026-05-16. TF is data dense (wallet addresses, API URLs,
+ * JSON, long model slugs) and had no global horizontal-overflow guard,
+ * so a single too-wide element on any one of 200+ routes made the
+ * whole page scroll and shift on a sideways swipe. These rules are
+ * containment only: they cannot change a correct desktop layout, they
+ * only stop runaway horizontal overflow and keep media and code inside
+ * the viewport. Per-component scale work (button and padding sizing,
+ * responsive type, table scroll wrappers) is handled in the page
+ * sweep, not here.
+ */
+html,
+body {
+  max-width: 100%;
+  /* clip, not hidden: stops the sideways scroll and shift without
+   * creating a scroll container, so position:sticky chrome (navbar,
+   * alert bar) keeps working. Vertical scrolling is untouched. */
+  overflow-x: clip;
+}
+body {
+  /* Last-resort break for otherwise unbreakable tokens (0x wallet
+   * addresses, long API URLs). break-word only triggers when a word
+   * would overflow, so normal copy and tabular-nums alignment are
+   * unaffected. */
+  overflow-wrap: break-word;
+}
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+img,
+video {
+  height: auto;
+}
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
