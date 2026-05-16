@@ -15,7 +15,9 @@ const STATUS_LABEL: Record<ItemState, string> = {
   degraded: 'DEGRADED',
   downgraded: 'DOWNGRADED',
   critical: 'CRITICAL',
-  offline: 'OFFLINE',
+  // "offline" here means "no status source for this provider", a
+  // coverage gap, NOT an outage. Label it so it never reads as "down".
+  offline: 'NO DATA',
 };
 
 function computeCondition(items: Item[]): Condition {
@@ -44,6 +46,20 @@ function formatAgo(s: number | null): string {
   return `${Math.floor(s / 3600)}h`;
 }
 
+// An unlabeled time on a global status product is ambiguous. Render the
+// viewer's local time with its short timezone (e.g. "20:52:31 PDT").
+function clockLabel(d: Date): string {
+  const t = d.toLocaleTimeString([], { hour12: false });
+  try {
+    const tz = new Intl.DateTimeFormat([], { timeZoneName: 'short' })
+      .formatToParts(d)
+      .find((p) => p.type === 'timeZoneName');
+    return tz ? `${t} ${tz.value}` : `${t} local`;
+  } catch {
+    return `${t} local`;
+  }
+}
+
 function TFMark() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -62,11 +78,18 @@ function Row({ item }: { item: Item }) {
         <span className="tf-r-name-text">{item.name}</span>
         <span className="tf-r-vendor">{item.vendor}</span>
       </div>
-      <div className="tf-r-spark" role="img" aria-label={`Latency history for ${item.name}, ${item.state}`}>
-        {item.history.map((v, i) => (
-          <div key={i} className="tf-r-spark-bar" style={{ height: `${v * 100}%` }} />
-        ))}
-      </div>
+      {/* Sparkline only where there is a real latency probe. Drawing a
+          chart on a no-probe row implies a series we do not have, which
+          on a trust widget is worse than no chart. */}
+      {item.latencyMs != null ? (
+        <div className="tf-r-spark" role="img" aria-label={`Latency trend for ${item.name}`}>
+          {item.history.map((v, i) => (
+            <div key={i} className="tf-r-spark-bar" style={{ height: `${v * 100}%` }} />
+          ))}
+        </div>
+      ) : (
+        <div className="tf-r-spark" aria-hidden="true" />
+      )}
       <div className="tf-r-metric">
         {item.latencyMs != null ? (
           <>
@@ -127,7 +150,10 @@ function TabBtn({
   );
 }
 
-const FILTERS = ['all', 'issues', 'nominal', 'degraded', 'downgraded', 'critical', 'offline'] as const;
+// 'downgraded' omitted: it is a routing-layer signal TF never publishes
+// (feed.ts never produces it), so a filter for it would be dead UI.
+const FILTERS = ['all', 'issues', 'nominal', 'degraded', 'critical', 'offline'] as const;
+const FILTER_LABEL: Record<string, string> = { offline: 'no data' };
 type Filter = (typeof FILTERS)[number];
 
 function readAppearance(): { accent: 'blue' | 'green'; accentAuto: boolean; pollMs: number } {
@@ -271,19 +297,16 @@ export default function Widget() {
               · <b>{countsAll.degraded}</b> degraded{' '}
             </>
           )}
-          {countsAll.downgraded > 0 && (
-            <>
-              · <b>{countsAll.downgraded}</b> downgraded{' '}
-            </>
-          )}
-          {countsAll.offline > 0 && (
-            <>
-              · <b>{countsAll.offline}</b> offline{' '}
-            </>
-          )}
           {condition === 'nominal' && (
             <>
-              · all systems <b>nominal</b>
+              · all monitored systems <b>nominal</b>{' '}
+            </>
+          )}
+          {/* no-data is a coverage gap, shown neutrally, never as an
+              alert, so the green headline never contradicts itself. */}
+          {countsAll.offline > 0 && (
+            <>
+              · <b>{countsAll.offline}</b> no data{' '}
             </>
           )}
           {failCount > 0 && (
@@ -293,7 +316,7 @@ export default function Widget() {
           )}
         </span>
         <span className="tf-klaxon-clock">
-          {now ? now.toLocaleTimeString([], { hour12: false }) : ''}
+          {now ? clockLabel(now) : ''}
         </span>
       </div>
 
@@ -323,7 +346,7 @@ export default function Widget() {
         <div className="tf-seg" role="group" aria-label="Filter by state">
           {FILTERS.map((k) => (
             <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)}>
-              {k}
+              {FILTER_LABEL[k] ?? k}
             </button>
           ))}
         </div>
@@ -360,7 +383,9 @@ export default function Widget() {
         <span className="tf-stat">
           Issues{' '}
           <b className="tf-stat-v">
-            {counts.degraded + counts.downgraded + counts.critical + counts.offline}
+            {/* no-data excluded: a missing status source is not an
+                outage, so Issues stays consistent with Condition Green */}
+            {counts.degraded + counts.downgraded + counts.critical}
           </b>
         </span>
         <span className="tf-foot-grow" />
