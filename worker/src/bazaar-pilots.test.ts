@@ -14,6 +14,8 @@ import {
   getBazaarPilotConfig,
   bazaarExtensionsFor,
   bazaarDescriptionFor,
+  bazaarPilotPaths,
+  pilotCatalogStatus,
 } from './bazaar-pilots';
 
 // Pilot paths currently in BAZAAR_PILOTS. Wave 1 (2026-05-14) added
@@ -234,4 +236,67 @@ describe('Wave 1 pilot AJV validation', () => {
       expect(validate(tampered)).toBe(false);
     });
   }
+});
+
+describe('bazaarPilotPaths', () => {
+  it('returns exactly the registered pilot paths', () => {
+    expect(bazaarPilotPaths().sort()).toEqual([...PILOT_PATHS].sort());
+  });
+
+  it('does not include any non-pilot premium path', () => {
+    const paths = bazaarPilotPaths();
+    for (const p of NON_PILOT_PREMIUM_PATHS) {
+      expect(paths).not.toContain(p);
+    }
+  });
+
+  it('every returned path resolves to a pilot config', () => {
+    for (const p of bazaarPilotPaths()) {
+      expect(isBazaarPilotPath(p)).toBe(true);
+      expect(getBazaarPilotConfig(p)).not.toBeNull();
+    }
+  });
+});
+
+describe('pilotCatalogStatus', () => {
+  it('marks a pilot cataloged only on exact pathname match of a full URL', () => {
+    const status = pilotCatalogStatus([
+      { resource: 'https://tensorfeed.ai/api/premium/whats-new' },
+    ]);
+    const byPath = Object.fromEntries(status.map((s) => [s.path, s.cataloged]));
+    expect(byPath['/api/premium/whats-new']).toBe(true);
+    expect(byPath['/api/premium/routing']).toBe(false);
+    expect(byPath['/api/premium/compare/models']).toBe(false);
+    expect(byPath['/api/premium/cost/projection']).toBe(false);
+  });
+
+  it('ignores query strings when matching the pathname', () => {
+    const status = pilotCatalogStatus([
+      { resource: 'https://tensorfeed.ai/api/premium/routing?task=code' },
+    ]);
+    const byPath = Object.fromEntries(status.map((s) => [s.path, s.cataloged]));
+    expect(byPath['/api/premium/routing']).toBe(true);
+  });
+
+  it('matches a bare path resource (non-absolute URL fallback)', () => {
+    const status = pilotCatalogStatus([
+      { resource: '/api/premium/cost/projection' },
+    ]);
+    const byPath = Object.fromEntries(status.map((s) => [s.path, s.cataloged]));
+    expect(byPath['/api/premium/cost/projection']).toBe(true);
+  });
+
+  it('does not let a sibling path false-match (compare vs compare/models)', () => {
+    const status = pilotCatalogStatus([
+      { resource: 'https://tensorfeed.ai/api/premium/compare' },
+    ]);
+    const byPath = Object.fromEntries(status.map((s) => [s.path, s.cataloged]));
+    expect(byPath['/api/premium/compare/models']).toBe(false);
+  });
+
+  it('returns one entry per pilot path, all false, for an empty catalog', () => {
+    const status = pilotCatalogStatus([]);
+    expect(status).toHaveLength(bazaarPilotPaths().length);
+    expect(status.every((s) => s.cataloged === false)).toBe(true);
+  });
 });

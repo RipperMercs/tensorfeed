@@ -504,3 +504,40 @@ export function bazaarDescriptionFor(path: string, fallback: string): string {
   const config = getBazaarPilotConfig(path);
   return config ? config.description : fallback;
 }
+
+/**
+ * The ordered list of TF endpoint paths that route through CDP and are
+ * therefore eligible to appear in the CDP Bazaar catalog. This is the
+ * authoritative "what could ampersend or any Bazaar-aware marketplace
+ * ingest from us" list.
+ */
+export function bazaarPilotPaths(): string[] {
+  return Object.keys(BAZAAR_PILOTS);
+}
+
+/**
+ * Given the `items` from a CDP /discovery/resources response, report which
+ * of our pilot paths are actually cataloged. A pilot counts as cataloged
+ * only when a resource's URL pathname exactly equals the pilot path, so
+ * sibling paths (e.g. /compare/models vs /compare) never false-match.
+ * Pure function: no network, no env, fully unit-testable.
+ */
+export function pilotCatalogStatus(
+  resources: ReadonlyArray<{ resource: string }>,
+): { path: string; cataloged: boolean }[] {
+  const cataloged = new Set<string>();
+  for (const item of resources) {
+    let pathname = item.resource;
+    try {
+      pathname = new URL(item.resource).pathname;
+    } catch {
+      // Not an absolute URL; fall back to the raw string so a bare
+      // "/api/premium/whats-new" resource still matches exactly.
+    }
+    cataloged.add(pathname);
+  }
+  return bazaarPilotPaths().map((path) => ({
+    path,
+    cataloged: cataloged.has(path),
+  }));
+}

@@ -8,6 +8,8 @@ import { pollPodcastFeeds } from './podcasts';
 import { pollTrendingRepos } from './trending';
 import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatestSnapshot } from './snapshots';
 import { captureHistory, listHistory, readHistory } from './history';
+import { cdpListDiscoveryResources } from './cdp-facilitator';
+import { bazaarPilotPaths, pilotCatalogStatus } from './bazaar-pilots';
 import {
   readNewsDaily,
   readSourceHealth,
@@ -2328,6 +2330,62 @@ export default {
       const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100), 500);
       const pending = await listPendingClaims(env, limit);
       return jsonResponse({ ok: true, total: pending.length, claims: pending }, 200, 0);
+    }
+    // Admin: read the CDP Bazaar catalog (the surface ampersend and other
+    // Bazaar-aware marketplaces ingest from). Inherits the global
+    // /api/admin rate-limit + ADMIN_KEY pre-check. Read-only: it only
+    // GETs CDP's /discovery/resources, which authHeaders() already scopes
+    // to the allowed /platform/v2/x402 path, so it does not broaden the
+    // CDP key blast radius. tf_pilots reports, per registered pilot path,
+    // whether that endpoint is actually cataloged yet (catalog fires
+    // ~10 min after each endpoint's first successful CDP settle).
+    if (
+      path === '/api/admin/bazaar/discovery' &&
+      request.method === 'GET' &&
+      isAuthorizedAdmin(env, url.searchParams.get('key'))
+    ) {
+      const dLimit = Math.min(
+        Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100),
+        1000,
+      );
+      const dOffset = Math.max(
+        0,
+        parseInt(url.searchParams.get('offset') ?? '0', 10) || 0,
+      );
+      const rawType = url.searchParams.get('type');
+      const dType =
+        rawType && /^[a-z0-9-]{1,40}$/i.test(rawType) ? rawType : undefined;
+      try {
+        const cdp = await cdpListDiscoveryResources(env, {
+          type: dType,
+          limit: dLimit,
+          offset: dOffset,
+        });
+        return jsonResponse(
+          {
+            ok: true,
+            tf_pilots: pilotCatalogStatus(cdp.items),
+            registered_pilot_paths: bazaarPilotPaths(),
+            cdp: {
+              x402Version: cdp.x402Version,
+              pagination: cdp.pagination,
+              items: cdp.items,
+            },
+          },
+          200,
+          0,
+        );
+      } catch (err) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'cdp_discovery_failed',
+            message: err instanceof Error ? err.message : 'unknown error',
+          },
+          502,
+          0,
+        );
+      }
     }
     // Admin: remove a listing for a TOS violation. Inherits the global
     // /api/admin rate-limit + ADMIN_KEY pre-check. Audit-logged. Removed
