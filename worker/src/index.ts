@@ -412,6 +412,11 @@ import {
   buildSubmissionMessage,
 } from './jobs-submissions';
 import {
+  ingestAcceptedSubmission,
+  listIngest,
+  projectModelPricingFeed,
+} from './jobs-ingest';
+import {
   verifyPosterSignature,
   screenPoster,
   screenAddress,
@@ -2463,11 +2468,13 @@ export default {
         0,
       );
     }
-    // Admin: accept or reject a submission. M1 BOUNDARY: this ONLY
-    // records the decision. It does NOT pay the submitter and does NOT
-    // ingest the rows. Payout and ingest are M2 and stay manual /
-    // per-action explicit, never an autonomous Worker action. Audit-
-    // logged via recordAdminAction.
+    // Admin: accept or reject a submission. M2: an ACCEPT records the
+    // decision AND auto-ingests the validated rows into the
+    // provenance-tagged model-pricing feed, fail-closed (feed write
+    // first, decision second). Still per-action explicit: a human admin
+    // explicitly accepts each submission, the accept IS the gate. PAYOUT
+    // remains fully manual and is never an autonomous Worker action.
+    // Reject ingests nothing. Audit-logged via recordAdminAction.
     if (
       path === '/api/admin/jobs/submissions/decide' &&
       request.method === 'POST' &&
@@ -2507,6 +2514,23 @@ export default {
       }
       const status = decision === 'accept' ? 'accepted' : 'rejected';
       const nowSec = Math.floor(Date.now() / 1000);
+      // Fail-closed M2 ingest: publish the validated rows into the feed
+      // BEFORE recording the decision. A blocked feed write leaves the
+      // submission pending and retryable, so the feed and the decision
+      // can never disagree. Idempotent (keyed by submission id), so a
+      // retry after a partial decide converges. Reject ingests nothing.
+      if (status === 'accepted') {
+        if (!(await ingestAcceptedSubmission(env, existing, nowSec))) {
+          return jsonResponse(
+            {
+              ok: false,
+              error: 'ingest_unavailable',
+              message: 'Feed store is temporarily read-only. The submission is unchanged and the accept can be retried.',
+            },
+            503,
+          );
+        }
+      }
       if (!(await setSubmissionDecision(env, sid, status, note, nowSec))) {
         return jsonResponse(
           {
@@ -2532,7 +2556,10 @@ export default {
           id: sid,
           status,
           at: decidedAt,
-          note: 'Decision recorded. Payout and ingest are manual, per-action, and not performed by this endpoint.',
+          note:
+            status === 'accepted'
+              ? 'Decision recorded and rows ingested into /api/feeds/model-pricing. Payout remains manual and is not performed by this endpoint.'
+              : 'Decision recorded. Nothing ingested. Payout is not performed by this endpoint.',
         },
         200,
         0,
@@ -3336,6 +3363,52 @@ export default {
       );
     }
 
+    // === TENSORFEED JOBS: M2 ingest feed (no money path) ===
+    // Free. Agent-sourced model-pricing observations published by the
+    // cold-start gig flywheel: each row was submitted with a primary
+    // source_url, validated at intake, and accepted by a human admin
+    // before landing here. Provenance-distinct from TF's canonical
+    // pricing dataset by design. No Worker SSRF: source_url is served,
+    // never fetched here. Behind the normal edge cache, short maxAge.
+    if (path === '/api/feeds/model-pricing' && request.method === 'GET') {
+      const lp = parseInt(url.searchParams.get('limit') ?? '200', 10);
+      const limit = Number.isFinite(lp)
+        ? Math.max(1, Math.min(1000, lp))
+        : 200;
+      const model = url.searchParams.get('model') || undefined;
+      const vendor = url.searchParams.get('vendor') || undefined;
+      const records = await listIngest(env);
+      const feed = projectModelPricingFeed(records, { limit, model, vendor });
+      return jsonResponse(
+        {
+          ok: true,
+          source: 'tensorfeed.ai',
+          feed: 'agent-sourced-model-pricing',
+          generated_at: new Date().toISOString(),
+          _meta: {
+            description:
+              'Model pricing observations sourced via the TensorFeed cold-start gig flywheel. Each observation was submitted by an agent with a primary-source source_url, validated at intake, and accepted by a human reviewer. Use source_url as the authority.',
+            provenance_fields: [
+              'submission_id',
+              'gig_id',
+              'submitter_addr',
+              'accepted_at',
+              'source_url',
+            ],
+            canonical_note:
+              'Community and agent sourced. Intentionally separate from the curated TensorFeed pricing catalog.',
+            license:
+              'Observations cite their primary source; primary source authority always wins. Attribution to tensorfeed.ai appreciated.',
+          },
+          summary: feed.summary,
+          latest: feed.latest,
+          observations: feed.observations,
+        },
+        200,
+        60,
+      );
+    }
+
     // === TENSORFEED JOBS: read endpoints (no money path) ===
     // Free, capped at 25 active listings, newest first. The full and
     // filtered cohort is the premium endpoint. Listings are third-party
@@ -3541,6 +3614,7 @@ export default {
           securityVulnrichment: '/api/security/vulnrichment/{CVE-id} (free; CISA Vulnrichment enrichment for one CVE - CWE mappings, CVSS, exploitation evidence, KEV cross-refs - lazy-fetched from cisagov/vulnrichment, cached 7d. License: US Gov public domain. Pair with /api/security/cve/{id} for the MITRE record)',
           securityAiSupplyChainIocs: '/api/security/ai-supply-chain-iocs.json (free; daily-refreshed feed of publicly-disclosed malicious npm + PyPI packages relevant to AI / MCP / LLM operators. Each entry cites its primary source (GHSA). Posture: republish + cite; TF does not detect, attribute, or actively scan. License: GitHub ToS + TF attribution; primary source authority always wins)',
           premiumSecurityGhsaAiFeed: '/api/premium/security/ghsa/ai-feed (1 credit; broader companion to the free supply-chain IOC feed. All GHSA advisory types (reviewed/unreviewed/malware) across all ecosystems (npm, pip, RubyGems, Maven, Go, Composer, NuGet, Rust, etc.), filtered to the same AI keyword list. Adds derived severity_band, age_days, ai_relevance.confidence per entry plus by_severity / by_ecosystem / by_type aggregates. Refresh every 6h. Posture: republish + derive + cite; primary source authority always wins.)',
+          feedModelPricing: '/api/feeds/model-pricing (free; agent-sourced model pricing observations published by the cold-start gig flywheel. Each row was submitted with a primary-source source_url, validated at intake, and accepted by a human reviewer. Returns observations (newest accepted first), latest-per-(model,vendor), and a summary. Optional ?model=&vendor=&limit=. Provenance-distinct from the curated TF pricing catalog; source_url is the authority)',
           freeTrialStatus: `/api/free-tier/status (free; self-service quota check. Returns the caller IP\'s current premium-trial state: used today, remaining today, resets_at. Each IP gets ${FREE_TRIAL_DEFAULTS.LIMIT_PER_DAY} free premium API calls per 24h rolling window, no auth required, applied to every /api/premium/* endpoint. Excess returns canonical x402 V2 challenge)`,
           wantlistGet: `/api/wantlist (free, GET; aggregated AI-agent wantlist. Returns the most-recent ${WANTLIST_DEFAULTS.INDEX_CAP}-item rolling window of submissions, top topics by count, and request-type breakdown. Items expire after ${WANTLIST_DEFAULTS.ITEM_TTL_SECONDS / 86400}d. Pass ?recent=N to control how many items are hydrated, capped at 100)`,
           wantlistPost: `/api/wantlist (free, POST; submit what data you wish TF served. JSON body: { topic, request_type, description, contact_optional }. request_type one of: ${WANTLIST_DEFAULTS.REQUEST_TYPE_VALUES.join(', ')}. Rate-limited to ${WANTLIST_DEFAULTS.RL_PER_IP_PER_DAY} submissions per IP per 24h. Anonymous by default. Patterns inform pipeline priorities)`,

@@ -274,9 +274,11 @@ export async function listSubmissions(
 }
 
 /**
- * Record an accept/reject decision. M1 boundary: this ONLY records the
- * decision. It does NOT pay the submitter and does NOT ingest the rows.
- * Payout and ingest are M2 and stay manual / per-action explicit.
+ * Record an accept/reject decision. This function ONLY records the
+ * decision; it never pays and never ingests. As of M2 the decide route
+ * (index.ts) calls jobs-ingest BEFORE this, fail-closed, so an accepted
+ * submission's rows are published to /api/feeds/model-pricing. PAYOUT
+ * stays manual and per-action, never an autonomous Worker action.
  * Returns false if the submission does not exist, is already decided,
  * or the write was blocked.
  */
