@@ -69,7 +69,7 @@ const DATASETS = [
     audience: 'SLA monitoring vendors, AI infrastructure teams, agent reliability platforms',
     description:
       'Per-provider status timeline: operational/degraded/down classification per check interval, incident events, derived uptime percentages.',
-    scale: '~10 major providers polled every 2-10 min',
+    scale: '20+ providers polled every 2 min',
     formats: 'jsonl, parquet',
   },
   {
