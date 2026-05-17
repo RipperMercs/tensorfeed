@@ -1,4 +1,5 @@
 import { fetchAllFeeds } from '../src/lib/rss';
+import { ORIGINALS } from '../src/lib/originals-directory';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -51,6 +52,61 @@ function writeFile(filePath: string, content: string) {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(filePath, content, 'utf-8');
   console.log(`  Wrote ${filePath}`);
+}
+
+// ---------------------------------------------------------------------------
+// Originals RSS feed
+// ---------------------------------------------------------------------------
+
+// Static RSS of the TensorFeed Original editorial articles. Every item links
+// to an on-site https://tensorfeed.ai/originals/<slug> permalink so sister
+// sites that blend this feed (e.g. TerminalFeed) drive real traffic back to
+// TensorFeed. Originals change only on deploy, so a build-time static file is
+// the right fit (the fast aggregator /feed.xml stays Worker-served from KV).
+// Distinct path: the Worker intercepts /feed.xml and /feed/*.xml, not this.
+
+const SITE = 'https://tensorfeed.ai';
+const ORIGINALS_FEED_MAX = 30;
+
+function cdata(value: string): string {
+  return `<![CDATA[${(value || '').replace(/\]\]>/g, ']]]]><![CDATA[>')}]]>`;
+}
+
+function writeOriginalsFeed(publicDir: string) {
+  const items = ORIGINALS.slice(0, ORIGINALS_FEED_MAX);
+  const lastBuild = (
+    items.length > 0 ? new Date(items[0].date) : new Date()
+  ).toUTCString();
+
+  const itemsXml = items
+    .map((a) => {
+      const url = `${SITE}/originals/${a.slug}`;
+      const pub = new Date(a.date).toUTCString();
+      return `    <item>
+      <title>${cdata(a.title)}</title>
+      <link>${url}</link>
+      <guid isPermaLink="true">${url}</guid>
+      <pubDate>${pub}</pubDate>
+      <dc:creator>${cdata(a.author)}</dc:creator>
+      <description>${cdata(a.description)}</description>
+    </item>`;
+    })
+    .join('\n');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>TensorFeed.ai Originals</title>
+    <link>${SITE}</link>
+    <description>Original AI editorial from the TensorFeed team.</description>
+    <language>en-us</language>
+    <lastBuildDate>${lastBuild}</lastBuildDate>
+    <atom:link href="${SITE}/originals.xml" rel="self" type="application/rss+xml"/>
+${itemsXml}
+  </channel>
+</rss>`;
+
+  writeFile(path.join(publicDir, 'originals.xml'), xml);
 }
 
 // ---------------------------------------------------------------------------
@@ -113,6 +169,10 @@ async function main() {
     path.join(agentApiDir, 'pricing.json'),
     JSON.stringify({ ok: true, ...pricingData }, null, 2),
   );
+
+  // 3. Generate the static Originals RSS feed (on-site permalinks)
+  console.log('\nGenerating Originals RSS feed...');
+  writeOriginalsFeed(publicDir);
 
   console.log('\nDone. All feeds and API files generated.');
 }
