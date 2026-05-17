@@ -207,6 +207,56 @@ try {
 | `tf.compareModels({ ids })` | 1 credit | Side-by-side compare of 2-5 models with normalized benchmarks + rankings |
 | `tf.whatsNew({ days?, newsLimit? })` | 1 credit | Agent morning brief: pricing changes + incidents + top news from last 1-7 days |
 
+## Framework Tools (Vercel AI SDK, LangChain.js)
+
+Drop TensorFeed into an agent framework as ready-made premium tools.
+Both adapters are separate entry points with optional peer
+dependencies, so the base `tensorfeed` install stays zero-dependency.
+
+Vercel AI SDK:
+
+```bash
+npm install ai
+```
+
+```typescript
+import { generateText } from 'ai';
+import { tensorfeedPremiumTools } from 'tensorfeed/ai';
+
+// Async: the optional dep is loaded lazily. Pass a token to enable
+// paid calls; omit it to attach guidance-only tools.
+const tools = await tensorfeedPremiumTools({ token: 'YOUR_TOKEN' });
+
+await generateText({ model, tools, prompt: 'What changed in AI today?' });
+```
+
+LangChain.js:
+
+```bash
+npm install @langchain/core zod
+```
+
+```typescript
+import { tensorfeedPremiumTools } from 'tensorfeed/langchain';
+
+const tools = await tensorfeedPremiumTools({ token: 'YOUR_TOKEN' });
+// pass `tools` to createReactAgent / bindTools
+```
+
+The catalog covers the same seven premium endpoints as the Python SDK:
+whats-new, full routing, compare models, cost projection, news search,
+provider deep dive, and status leaderboard.
+
+**Payment posture.** The premium tools never move funds. Attach them
+with or without a token: called without spendable credits they return a
+short, actionable guidance string (explaining that an operator
+provisions credits out of band) instead of paying or throwing. There is
+no code path from a tool call to the wallet or any signer. Credit
+purchases stay an explicit, per-action operator decision, by design.
+This is enforced in one shared module and covered by tests, including a
+static guard that fails if a future change introduces an
+autonomous-payment path.
+
 ## Wallet & Trust
 
 The TensorFeed payment wallet is `0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1` on Base mainnet. USDC contract: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`.
