@@ -118,6 +118,12 @@ async function main() {
   const publicDir = path.join(root, 'public');
   const dataDir = path.join(root, 'data');
 
+  // 0. Originals RSS feed FIRST. It is pure-local (the ORIGINALS constant,
+  // no network) so it must not sit behind the live RSS fetch below: if that
+  // fetch throws in CI, main() would exit before the feed is ever written.
+  console.log('Generating Originals RSS feed...');
+  writeOriginalsFeed(publicDir);
+
   // 1. Fetch articles from live RSS feeds
   console.log('Fetching RSS feeds...');
   const articles: Article[] = await fetchAllFeeds();
@@ -169,10 +175,6 @@ async function main() {
     path.join(agentApiDir, 'pricing.json'),
     JSON.stringify({ ok: true, ...pricingData }, null, 2),
   );
-
-  // 3. Generate the static Originals RSS feed (on-site permalinks)
-  console.log('\nGenerating Originals RSS feed...');
-  writeOriginalsFeed(publicDir);
 
   console.log('\nDone. All feeds and API files generated.');
 }
