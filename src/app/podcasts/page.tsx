@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Headphones, Clock, ExternalLink } from 'lucide-react';
+import { Headphones, Clock, ExternalLink, Mail } from 'lucide-react';
 import PodcastPlayer from '@/components/podcasts/PodcastPlayer';
 import type { PodcastEpisode } from '@/lib/types';
 import JsonLd from '@/components/seo/JsonLd';
@@ -141,6 +141,34 @@ export default function PodcastsPage() {
         <p className="text-text-secondary text-lg drop-shadow">
           Listen to the latest AI news and analysis from top podcasts, all in one place.
         </p>
+      </section>
+
+      {/* Add or request a podcast */}
+      <section
+        aria-label="Add or request a podcast"
+        className="mb-6 rounded-lg border border-border bg-bg-secondary p-5 sm:flex sm:items-center sm:justify-between sm:gap-4"
+      >
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-lg bg-accent-primary/15 shrink-0">
+            <Mail className="w-5 h-5 text-accent-primary" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-text-primary">
+              Add or Request a Podcast
+            </h2>
+            <p className="text-sm text-text-secondary mt-0.5">
+              Run an AI podcast, or want one added to the feed? Send us an email and we will take a look.
+            </p>
+          </div>
+        </div>
+        <a
+          href="mailto:feedback@tensorfeed.ai?subject=Podcast%20add%20or%20request"
+          aria-label="Email feedback@tensorfeed.ai to add or request a podcast"
+          className="mt-3 sm:mt-0 inline-flex items-center gap-2 shrink-0 rounded-lg bg-accent-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+        >
+          <Mail className="w-4 h-4" />
+          feedback@tensorfeed.ai
+        </a>
       </section>
 
       {/* Show filter */}
