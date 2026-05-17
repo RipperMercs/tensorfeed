@@ -72,7 +72,10 @@ export interface ORSnapshot {
 }
 
 const todayUTC = (): string => new Date().toISOString().slice(0, 10);
-const dailyKey = (date: string): string => `${DAILY_PREFIX}${date}`;
+// Exported so or-series.ts reads the exact same KV namespace the
+// capture writes. Single source of truth: a drift here would silently
+// fork the premium series off the daily snapshot.
+export const dailyKey = (date: string): string => `${DAILY_PREFIX}${date}`;
 
 function clampStr(s: string, max: number): string {
   if (s.length <= max) return s;

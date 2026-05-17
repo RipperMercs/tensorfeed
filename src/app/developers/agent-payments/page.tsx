@@ -841,6 +841,42 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/openrouter/series',
+    description:
+      "Daily OpenRouter cross-provider catalog drift over a 90-day window. Per day: model count, cheapest paid input and output USD-per-million floor, free-tier count, namespace breadth. Plus day-over-day churn: models added, models removed, and per-model price-change counts versus the prior captured day, with sample id lists. OpenRouter's public catalog serves only current state, so this longitudinal record is captured by TensorFeed and cannot be backfilled. Optional ?from=&to= (ISO dates), default 30-day window, 90-day max.",
+    cost: '1 credit per call',
+    example: `// Query: ?from=2026-05-01&to=2026-05-16
+{
+  "ok": true,
+  "from": "2026-05-01",
+  "to": "2026-05-16",
+  "days": 16,
+  "points": [
+    {
+      "date": "2026-05-16",
+      "total_models": 372,
+      "cheapest_input_usd_per_m": 0.02,
+      "cheapest_output_usd_per_m": 0.05,
+      "free_tier_count": 41,
+      "namespace_count": 58,
+      "top_namespace": "openai",
+      "added": 3, "removed": 1, "price_changes": 7,
+      "added_sample": ["x-ai/grok-4-mini"],
+      "removed_sample": ["deprecated/old-model"],
+      "has_data": true
+    }
+  ],
+  "delta_in_window": {
+    "start_total": 361, "end_total": 372, "net": 11,
+    "cheapest_input_start": 0.03, "cheapest_input_end": 0.02,
+    "cheapest_output_start": 0.06, "cheapest_output_end": 0.05
+  },
+  "notes": [],
+  "billing": { "credits_charged": 1, "credits_remaining": 40 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/compare/models',
     description:
       'Side-by-side comparison of 2-5 AI models. Each entry returns pricing, benchmarks (normalized to a union of keys with null for missing scores so downstream code never crashes on undefined), provider live status, capabilities, context window, and recent news. Plus rankings: cheapest blended, most context, and a per-benchmark leaderboard.',

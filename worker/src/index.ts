@@ -422,6 +422,12 @@ import {
   projectModelPricingFeed,
 } from './jobs-ingest';
 import {
+  getORSeries,
+  resolveRange as resolveORRange,
+  MAX_RANGE_DAYS as OR_MAX_RANGE_DAYS,
+  DEFAULT_RANGE_DAYS as OR_DEFAULT_RANGE_DAYS,
+} from './or-series';
+import {
   verifyPosterSignature,
   screenPoster,
   screenAddress,
@@ -3787,6 +3793,7 @@ export default {
           premiumResearchLabProductivity: '/api/premium/research/lab-productivity?window=&affiliation_type=&limit= (1 credit; top labs by paper count over 30d/90d/365d windows, derived from TF normalized affiliations on the offline Qwen extraction. Filter by window (30d|90d|365d, default returns all three) and affiliation_type (industry|academia|government|nonprofit|mixed). arXiv has no native concept of normalized lab attribution.)',
           premiumRecessionWatch: '/api/premium/economy/recession-watch (1 credit; composite recession-risk signal across yield-curve inversion + Sahm rule, with red/yellow/green classification per signal and a composite verdict)',
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
+          premiumOpenRouterSeries: '/api/premium/openrouter/series?from=&to= (1 credit; daily OpenRouter cross-provider catalog drift over a 90-day window: model count, cheapest paid input/output USD-per-million floor, free-tier count, namespace breadth, plus day-over-day model add/remove churn and per-model price-change counts. OpenRouter serves only current state, so this history is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90.)',
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
           premiumAttentionSeries: '/api/premium/attention/series?provider=&from=&to=',
           paymentInfo: '/api/payment/info',
@@ -7940,6 +7947,37 @@ export default {
       const result = await getMcpRegistrySeries(env, range.from!, range.to!);
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/mcp/registry/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: OPENROUTER CATALOG DRIFT SERIES (Tier 1, 1 credit) ===
+    // Daily cross-provider OpenRouter catalog series over or:daily. The
+    // capture runs on the 14:00 UTC cron; OpenRouter serves only current
+    // state, so this history cannot be backfilled. Non-strict (from/to
+    // optional, default 30 days) like the MCP registry series. 90-day max.
+    if (path === '/api/premium/openrouter/series') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const range = resolveORRange(url.searchParams.get('from'), url.searchParams.get('to'));
+      if (!range.ok) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: range.error,
+            limits: {
+              max_range_days: OR_MAX_RANGE_DAYS,
+              default_range_days: OR_DEFAULT_RANGE_DAYS,
+            },
+          },
+          400,
+        );
+      }
+
+      const result = await getORSeries(env, range.from!, range.to!);
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/openrouter/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
