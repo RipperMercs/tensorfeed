@@ -291,7 +291,6 @@ describe('computeWhatsNew: sub-daily window (minutes mode)', () => {
   it('omits pricing diff in sub-daily mode and notes why', async () => {
     const env = makeEnv({
       pricing: { providers: [{ id: 'a', name: 'A', models: [{ id: 'm1', name: 'M1', inputPrice: 1, outputPrice: 2 }] }] },
-      todaySnap: { date: 'today', type: 'models', capturedAt: '', data: { providers: [{ id: 'a', name: 'A', models: [{ id: 'm1', name: 'M1', inputPrice: 1, outputPrice: 2 }] }] } },
     });
     const r = await computeWhatsNew(env, { minutes: 60 });
     if (!r.ok) return;
