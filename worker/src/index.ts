@@ -434,6 +434,12 @@ import {
   DEFAULT_RANGE_DAYS as X402REG_DEFAULT_RANGE_DAYS,
 } from './x402-reg-series';
 import {
+  getHFVelocitySeries,
+  resolveRange as resolveHFVelRange,
+  MAX_RANGE_DAYS as HFVEL_MAX_RANGE_DAYS,
+  DEFAULT_RANGE_DAYS as HFVEL_DEFAULT_RANGE_DAYS,
+} from './hf-velocity-series';
+import {
   verifyPosterSignature,
   screenPoster,
   screenAddress,
@@ -3801,6 +3807,7 @@ export default {
           premiumProbeSeries: '/api/premium/probe/series?provider=&from=&to=',
           premiumOpenRouterSeries: '/api/premium/openrouter/series?from=&to= (1 credit; daily OpenRouter cross-provider catalog drift over a 90-day window: model count, cheapest paid input/output USD-per-million floor, free-tier count, namespace breadth, plus day-over-day model add/remove churn and per-model price-change counts. OpenRouter serves only current state, so this history is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90.)',
           premiumX402RegistrySeries: '/api/premium/x402-registry/series?from=&to= (1 credit; daily x402 publisher-registry drift over a 90-day window: reachable vs erroring publishers, federation count, network breadth, paid and free endpoint totals, agent-fair-trade declarations, plus day-over-day domains added/removed, status flips, and payment-wallet changes. A registry is current-state only, so this history is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90.)',
+          premiumHFVelocity: '/api/premium/hf/velocity?from=&to= (1 credit; daily Hugging Face download-velocity over a 90-day window: per-day top models and datasets by download delta and top Spaces by likes delta among the daily top-30, top-set entered/exited churn, plus window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is TensorFeed-computed and cannot be backfilled. Default 30 days, max 90.)',
           gpuPricingSeries: '/api/gpu/pricing/series?gpu=&from=&to= (moved from premium 2026-05-06)',
           premiumAttentionSeries: '/api/premium/attention/series?provider=&from=&to=',
           paymentInfo: '/api/payment/info',
@@ -8016,6 +8023,37 @@ export default {
       const result = await getX402RegSeries(env, range.from!, range.to!);
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/x402-registry/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: HUGGING FACE DOWNLOAD-VELOCITY SERIES (Tier 1, 1 credit) ===
+    // Day-over-day download velocity over hf:daily. The capture runs on
+    // the 12:00 UTC cron; HF exposes only cumulative totals and a live
+    // top list, so this velocity cannot be backfilled. Non-strict
+    // (from/to optional, default 30 days) like the other series. 90-day max.
+    if (path === '/api/premium/hf/velocity') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const range = resolveHFVelRange(url.searchParams.get('from'), url.searchParams.get('to'));
+      if (!range.ok) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: range.error,
+            limits: {
+              max_range_days: HFVEL_MAX_RANGE_DAYS,
+              default_range_days: HFVEL_DEFAULT_RANGE_DAYS,
+            },
+          },
+          400,
+        );
+      }
+
+      const result = await getHFVelocitySeries(env, range.from!, range.to!);
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/hf/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }

@@ -657,6 +657,23 @@
       }
     },
     {
+      "resource": "https://tensorfeed.ai/api/premium/hf/velocity",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+      ],
+      "lastUpdated": "2026-05-16T00:00:00Z",
+      "metadata": {
+        "name": "Hugging Face download-velocity series",
+        "description": "Daily Hugging Face download-velocity over a 90-day window: per-day top models and datasets by download delta and top Spaces by likes delta among the daily top-30, top-set entered and exited churn, plus window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is TensorFeed-computed and cannot be backfilled. Default 30-day window, max 90.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-hf-velocity-series"
+      }
+    },
+    {
       "resource": "https://tensorfeed.ai/api/premium/compare/models",
       "type": "http",
       "method": "GET",

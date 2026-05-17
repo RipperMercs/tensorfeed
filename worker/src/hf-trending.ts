@@ -86,7 +86,10 @@ export interface HFSnapshot {
 }
 
 const todayUTC = (): string => new Date().toISOString().slice(0, 10);
-const dailyKey = (date: string): string => `${DAILY_PREFIX}${date}`;
+// Exported so hf-velocity-series.ts reads the exact same KV namespace
+// the daily capture writes. Single source of truth: a drift here would
+// silently fork the premium velocity series off the snapshot.
+export const dailyKey = (date: string): string => `${DAILY_PREFIX}${date}`;
 
 function namespaceOf(id: string): string {
   const slash = id.indexOf('/');

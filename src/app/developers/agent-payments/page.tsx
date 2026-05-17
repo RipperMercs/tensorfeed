@@ -912,6 +912,50 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/hf/velocity',
+    description:
+      "Daily Hugging Face download-velocity over a 90-day window. Per day: the top models and datasets by download delta and the top Spaces by likes delta, computed only for ids present in the daily top-30 on both the prior captured day and this one. Plus top-set churn (models and datasets entered and exited) and window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is computed by TensorFeed and cannot be backfilled. Optional ?from=&to= (ISO dates), default 30-day window, 90-day max.",
+    cost: '1 credit per call',
+    example: `// Query: ?from=2026-05-01&to=2026-05-16
+{
+  "ok": true,
+  "from": "2026-05-01",
+  "to": "2026-05-16",
+  "days": 16,
+  "points": [
+    {
+      "date": "2026-05-16",
+      "model_count": 30, "dataset_count": 30, "space_count": 30,
+      "models_entered": 2, "models_exited": 2,
+      "datasets_entered": 1, "datasets_exited": 1,
+      "top_models_by_download_delta": [
+        { "id": "deepseek-ai/DeepSeek-V4", "downloads": 4120333, "download_delta": 88210 }
+      ],
+      "top_datasets_by_download_delta": [
+        { "id": "open-r1/Mixture", "downloads": 990122, "download_delta": 15400 }
+      ],
+      "top_spaces_by_likes_delta": [
+        { "id": "huggingface/chat", "likes": 71233, "likes_delta": 412 }
+      ],
+      "has_data": true
+    }
+  ],
+  "window": {
+    "top_model_gainers": [
+      { "id": "deepseek-ai/DeepSeek-V4", "downloads": 4120333, "download_delta": 612944 }
+    ],
+    "top_dataset_gainers": [
+      { "id": "open-r1/Mixture", "downloads": 990122, "download_delta": 88010 }
+    ],
+    "model_count_start": 30,
+    "model_count_end": 30
+  },
+  "notes": [],
+  "billing": { "credits_charged": 1, "credits_remaining": 38 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/compare/models',
     description:
       'Side-by-side comparison of 2-5 AI models. Each entry returns pricing, benchmarks (normalized to a union of keys with null for missing scores so downstream code never crashes on undefined), provider live status, capabilities, context window, and recent news. Plus rankings: cheapest blended, most context, and a per-benchmark leaderboard.',
