@@ -10,6 +10,8 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
   logPremiumUsage,
+  getLifetimeStats,
+  backfillLifetimeFromRollups,
   getTokenUsage,
   validateAndCharge,
   screenWalletOFAC,
@@ -713,6 +715,67 @@ describe('createQuote (sender_wallet binding)', () => {
     const { quote: q4 } = await createQuote(env, 10000, sender);
     expect(q4.amount_base_units).toBe(10_000_000_000);
     expect(Number.isSafeInteger(q4.amount_base_units!)).toBe(true);
+  });
+});
+
+describe('lifetime traction counter', () => {
+  it('logPremiumUsage bumps pay:stats:lifetime', async () => {
+    const env = makeEnv();
+    await logPremiumUsage(env, '/api/premium/whats-new', 'agent/1', 1, 'tf_live_x');
+    await logPremiumUsage(env, '/api/premium/routing', 'agent/2', 2);
+    const s = await getLifetimeStats(env);
+    expect(s.premium_calls).toBe(2);
+    expect(s.total_credits_charged).toBe(3);
+    expect(s.first_at).toBeTruthy();
+    expect(s.last_at).toBeTruthy();
+    expect(new Date(s.last_at!).getTime()).toBeGreaterThanOrEqual(
+      new Date(s.first_at!).getTime(),
+    );
+  });
+
+  it('getLifetimeStats returns a zeroed default when unset', async () => {
+    const env = makeEnv();
+    const s = await getLifetimeStats(env);
+    expect(s).toEqual({
+      premium_calls: 0,
+      total_credits_charged: 0,
+      first_at: null,
+      last_at: null,
+    });
+  });
+
+  it('backfill sums persisted dated rollups and is idempotent', async () => {
+    const env = makeEnv({
+      'pay:rollup:2026-05-15': { date: '2026-05-15', call_count: 4, total_credits_charged: 6 },
+      'pay:rollup:2026-05-16': { date: '2026-05-16', call_count: 3, total_credits_charged: 5 },
+      'pay:credits:tf_live_z': { balance: 1 }, // unrelated key must be ignored
+    });
+    const a = await backfillLifetimeFromRollups(env);
+    expect(a.premium_calls).toBe(7);
+    expect(a.total_credits_charged).toBe(11);
+    expect(a.first_at).toBe('2026-05-15T00:00:00.000Z');
+    expect(a.last_at).toBe('2026-05-16T23:59:59.999Z');
+    // Idempotent: a re-run recomputes the same numbers, never doubles.
+    const b = await backfillLifetimeFromRollups(env);
+    expect(b).toEqual(a);
+    const s = await getLifetimeStats(env);
+    expect(s.premium_calls).toBe(7);
+  });
+
+  it('backfill ignores non-rollup keys even if list does not filter', async () => {
+    const env = makeEnv({
+      'pay:rollup:2026-05-16': { date: '2026-05-16', call_count: 2, total_credits_charged: 2 },
+      'pay:stats:lifetime': {
+        premium_calls: 999,
+        total_credits_charged: 999,
+        first_at: null,
+        last_at: null,
+      },
+      'agent-activity': [{ bot: 'x' }],
+    });
+    const a = await backfillLifetimeFromRollups(env);
+    expect(a.premium_calls).toBe(2);
+    expect(a.total_credits_charged).toBe(2);
   });
 });
 

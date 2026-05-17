@@ -313,6 +313,8 @@ import {
   confirmPayment,
   getBalance,
   logPremiumUsage,
+  getLifetimeStats,
+  backfillLifetimeFromRollups,
   getRollup,
   listRollupDates,
   getTokenUsage,
@@ -1045,6 +1047,39 @@ export default {
     if (path === '/api/agents/activity') {
       const activity = await getAgentActivity(env);
       return jsonResponse(activity, 200, 10);
+    }
+
+    // Public traction headline. Reads ONLY the single O(1) lifetime
+    // counter (pay:stats:lifetime), never the dated rollups, so it is
+    // KV-budget-safe. Counts successful, credit-debited premium calls
+    // only: not requests, not free endpoints, not crawler traffic, so
+    // it cannot be inflated the way the raw bot counter could. Each
+    // such call also returns a signed AFTA receipt whenever the receipt
+    // key is provisioned; the headline states that only when true so it
+    // never overclaims. Edge-cached 60s.
+    if (path === '/api/stats') {
+      const s = await getLifetimeStats(env);
+      const receiptsActive =
+        typeof env.RECEIPT_PRIVATE_KEY_JWK === 'string' &&
+        env.RECEIPT_PRIVATE_KEY_JWK.length > 0;
+      const headline = receiptsActive
+        ? `${s.premium_calls} verifiable paid agent API calls served, each returning a signed AFTA receipt`
+        : `${s.premium_calls} paid premium API calls served`;
+      return jsonResponse(
+        {
+          ok: true,
+          premium_calls_served: s.premium_calls,
+          each_call_returns_signed_afta_receipt: receiptsActive,
+          total_credits_charged: s.total_credits_charged,
+          first_at: s.first_at,
+          last_at: s.last_at,
+          headline,
+          note: 'Successful credit-debited premium API calls only. Excludes free endpoints and crawler/bot traffic. AFTA receipts are not stored server-side (zero custody); receipt issuance is deterministic in receipt-key presence, surfaced here as each_call_returns_signed_afta_receipt.',
+          generated_at: new Date().toISOString(),
+        },
+        200,
+        60,
+      );
     }
 
     // Chaos engineering counter. Free, public, edge-cached. Lets agent
@@ -2363,6 +2398,20 @@ export default {
       }
     }
 
+    // One-time / idempotent: seed the lifetime traction counter from the
+    // persisted dated rollups so /api/stats launches at the true
+    // historical number instead of zero. Inherits the hoisted /api/admin
+    // rate-limit + ADMIN_KEY pre-check. Safe to re-run (recomputes from
+    // the authoritative rollups and overwrites). Not per-request.
+    if (
+      path === '/api/admin/stats/backfill' &&
+      request.method === 'GET' &&
+      isAuthorizedAdmin(env, url.searchParams.get('key'))
+    ) {
+      const backfilled = await backfillLifetimeFromRollups(env);
+      return jsonResponse({ ok: true, backfilled }, 200, 0);
+    }
+
     if (path === '/api/admin/agents/claim/pending' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
       const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100), 500);
       const pending = await listPendingClaims(env, limit);
@@ -3665,6 +3714,7 @@ export default {
           jobsClose:
             'POST /api/jobs/{id}/close (the original poster signs an EIP-191 close message, action-pinned and nonce single-use, no payment, marks the listing filled)',
           agentActivity: '/api/agents/activity',
+          stats: '/api/stats (free; lifetime count of successful credit-debited premium API calls served, each returning a signed AFTA receipt when the receipt key is provisioned. Excludes free and crawler traffic. Edge-cached 60s.)',
           chaosStats: '/api/chaos/stats',
           podcasts: '/api/podcasts',
           trendingRepos: '/api/trending-repos',
@@ -3828,6 +3878,7 @@ export default {
         },
         admin: {
           usage: '/api/admin/usage?date=YYYY-MM-DD&key=<ADMIN_KEY>',
+          statsBackfill: '/api/admin/stats/backfill?key=<ADMIN_KEY> (GET; one-time/idempotent seed of the /api/stats lifetime counter from the persisted daily rollups)',
           usageDates: '/api/admin/usage/dates?key=<ADMIN_KEY>',
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',

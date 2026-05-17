@@ -519,6 +519,87 @@ async function writeRollup(env: Env, rollup: DailyRollup): Promise<void> {
   await env.TENSORFEED_CACHE.put(`pay:rollup:${rollup.date}`, JSON.stringify(rollup));
 }
 
+// === Lifetime traction counter ===
+//
+// A single O(1) key tallying successful, credit-debited premium calls
+// across all time. The public /api/stats headline reads ONLY this key;
+// it never sums the dated rollups per request (that grows unbounded and
+// would blow the KV budget). It is bumped inside logPremiumUsage's
+// existing best-effort try/catch, which is itself ctx.waitUntil
+// fire-and-forget at every call site, so it can never block a response
+// or touch the billing path. The extra read+write rides a path that
+// already does one read+write per premium call, and premium traffic is
+// paid and low volume, so it is a rounding error against the 100k/day
+// budget. Rationale: tensorfeed-work/traction-counter/DESIGN.md.
+
+const LIFETIME_KEY = 'pay:stats:lifetime';
+
+export interface LifetimeStats {
+  premium_calls: number;
+  total_credits_charged: number;
+  first_at: string | null;
+  last_at: string | null;
+}
+
+function emptyLifetime(): LifetimeStats {
+  return { premium_calls: 0, total_credits_charged: 0, first_at: null, last_at: null };
+}
+
+export async function getLifetimeStats(env: Env): Promise<LifetimeStats> {
+  const v = (await env.TENSORFEED_CACHE.get(LIFETIME_KEY, 'json')) as LifetimeStats | null;
+  return v ?? emptyLifetime();
+}
+
+async function bumpLifetime(env: Env, creditsCharged: number, atIso: string): Promise<void> {
+  const s = await getLifetimeStats(env);
+  s.premium_calls += 1;
+  s.total_credits_charged += creditsCharged;
+  if (!s.first_at) s.first_at = atIso;
+  s.last_at = atIso;
+  await env.TENSORFEED_CACHE.put(LIFETIME_KEY, JSON.stringify(s));
+}
+
+/**
+ * One-time, idempotent backfill: recompute the lifetime counter from the
+ * persisted (no-TTL) dated rollups so /api/stats launches at the true
+ * historical number instead of zero. Safe to re-run; it recomputes from
+ * the authoritative rollups and overwrites. Paginates KV list so it is
+ * correct beyond one page. ADMIN-gated at the route, never per-request.
+ */
+export async function backfillLifetimeFromRollups(env: Env): Promise<LifetimeStats> {
+  let cursor: string | undefined;
+  let calls = 0;
+  let credits = 0;
+  let minDate: string | null = null;
+  let maxDate: string | null = null;
+  const prefix = 'pay:rollup:';
+  do {
+    const page = await env.TENSORFEED_CACHE.list({ prefix, cursor });
+    for (const k of page.keys) {
+      // Do not rely on list() honoring the prefix; guard explicitly so
+      // this is correct regardless of KV-list behavior.
+      if (!k.name.startsWith(prefix)) continue;
+      const date = k.name.slice(prefix.length);
+      const r = (await env.TENSORFEED_CACHE.get(k.name, 'json')) as DailyRollup | null;
+      if (!r || typeof r.call_count !== 'number') continue;
+      calls += r.call_count || 0;
+      credits += r.total_credits_charged || 0;
+      if (!minDate || date < minDate) minDate = date;
+      if (!maxDate || date > maxDate) maxDate = date;
+    }
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+
+  const s: LifetimeStats = {
+    premium_calls: calls,
+    total_credits_charged: credits,
+    first_at: minDate ? `${minDate}T00:00:00.000Z` : null,
+    last_at: maxDate ? `${maxDate}T23:59:59.999Z` : null,
+  };
+  await env.TENSORFEED_CACHE.put(LIFETIME_KEY, JSON.stringify(s));
+  return s;
+}
+
 function noteUniqueAgent(rollup: DailyRollup, agentUa: string): void {
   if (!rollup.unique_agents.includes(agentUa)) {
     rollup.unique_agents.push(agentUa);
@@ -603,6 +684,10 @@ export async function logPremiumUsage(
     rollup.by_endpoint[endpoint] = slot;
 
     await writeRollup(env, rollup);
+
+    // Lifetime traction counter. Same best-effort try/catch, same
+    // fire-and-forget call path. Never sums rollups per request.
+    await bumpLifetime(env, creditsCharged, now);
 
     if (token && token.startsWith('tf_live_')) {
       await appendTokenUsage(env, token, endpoint, creditsCharged, now);
