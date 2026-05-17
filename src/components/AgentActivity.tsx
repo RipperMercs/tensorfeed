@@ -20,8 +20,11 @@ function timeAgo(timestamp: string): string {
 export default function AgentActivity() {
   const [count, setCount] = useState<number | null>(null);
   const [recent, setRecent] = useState<AgentHit[]>([]);
+  const [paidCalls, setPaidCalls] = useState<number | null>(null);
+  const [receiptsActive, setReceiptsActive] = useState(false);
 
-  // Fetch real data and refresh every 30 seconds
+  // Fetch real data and refresh every 30 seconds. The two endpoints are
+  // polled independently so one failing never blanks the other.
   useEffect(() => {
     async function fetchActivity() {
       try {
@@ -32,8 +35,21 @@ export default function AgentActivity() {
         setRecent((data.recent ?? []).slice(0, 5));
       } catch {}
     }
+    async function fetchStats() {
+      try {
+        const res = await fetch('https://tensorfeed.ai/api/stats');
+        if (!res.ok) return;
+        const data = await res.json();
+        setPaidCalls(data.premium_calls_served ?? 0);
+        setReceiptsActive(Boolean(data.each_call_returns_signed_afta_receipt));
+      } catch {}
+    }
     fetchActivity();
-    const interval = setInterval(fetchActivity, 30_000);
+    fetchStats();
+    const interval = setInterval(() => {
+      fetchActivity();
+      fetchStats();
+    }, 30_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -53,9 +69,16 @@ export default function AgentActivity() {
         </span>
       </div>
 
+      {paidCalls !== null && (
+        <p className="text-text-secondary text-sm mb-1">
+          <span className="text-text-primary font-semibold">{paidCalls.toLocaleString()}</span> verifiable paid agent API calls served
+          {receiptsActive && ', each with a signed AFTA receipt'}
+        </p>
+      )}
+
       {count !== null && (
         <p className="text-text-secondary text-sm mb-3">
-          <span className="text-text-primary font-semibold">{count.toLocaleString()}</span> agent requests today
+          <span className="text-text-primary font-semibold">{count.toLocaleString()}</span> agent requests today (all bots, includes crawlers)
         </p>
       )}
 

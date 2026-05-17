@@ -175,6 +175,22 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/stats',
+    description:
+      'Lifetime count of successful, credit-debited premium API calls served, each returning a signed AFTA receipt when the receipt key is provisioned. Counts paid agent calls only: it excludes free endpoints and crawler/bot traffic, so it cannot be inflated the way raw bot counts can. Free, no auth.',
+    cache: 'Cache for 60 seconds',
+    example: `{
+  "ok": true,
+  "premium_calls_served": 1342,
+  "each_call_returns_signed_afta_receipt": true,
+  "total_credits_charged": 1810,
+  "first_at": "2026-04-27T00:00:00.000Z",
+  "last_at": "2026-05-17T16:44:09.512Z",
+  "headline": "1342 verifiable paid agent API calls served, each returning a signed AFTA receipt"
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/health',
     description: 'Simple health check endpoint. Returns 200 if the service is running.',
     cache: 'No cache needed',
