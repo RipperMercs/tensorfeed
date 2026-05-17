@@ -877,6 +877,41 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/x402-registry/series',
+    description:
+      "Daily x402 publisher-registry drift over a 90-day window. Per day: reachable vs erroring publisher counts, federation count, distinct payment networks, paid and free endpoint totals, and agent-fair-trade declarations. Plus day-over-day churn versus the prior captured day: domains added, domains removed, status flips (a publisher going dark or returning), and payment-wallet changes, each with sample domain lists. A registry is current-state only by nature, so this longitudinal record is captured by TensorFeed and cannot be backfilled. Optional ?from=&to= (ISO dates), default 30-day window, 90-day max.",
+    cost: '1 credit per call',
+    example: `// Query: ?from=2026-05-01&to=2026-05-16
+{
+  "ok": true,
+  "from": "2026-05-01",
+  "to": "2026-05-16",
+  "days": 16,
+  "points": [
+    {
+      "date": "2026-05-16",
+      "total": 6, "ok_count": 5, "error_count": 1,
+      "federation_count": 2, "network_count": 2,
+      "networks": ["eip155:8453", "eip155:84532"],
+      "paid_endpoints_total": 41, "free_endpoints_total": 12,
+      "agent_fair_trade_count": 3,
+      "added": 1, "removed": 0, "status_flips": 1, "wallet_changes": 0,
+      "added_sample": ["newpublisher.ai"],
+      "removed_sample": [],
+      "wallet_change_sample": [],
+      "has_data": true
+    }
+  ],
+  "delta_in_window": {
+    "start_total": 4, "end_total": 6, "net": 2,
+    "start_ok": 4, "end_ok": 5
+  },
+  "notes": [],
+  "billing": { "credits_charged": 1, "credits_remaining": 39 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/compare/models',
     description:
       'Side-by-side comparison of 2-5 AI models. Each entry returns pricing, benchmarks (normalized to a union of keys with null for missing scores so downstream code never crashes on undefined), provider live status, capabilities, context window, and recent news. Plus rankings: cheapest blended, most context, and a per-benchmark leaderboard.',

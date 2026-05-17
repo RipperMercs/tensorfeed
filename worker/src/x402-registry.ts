@@ -40,7 +40,10 @@ import { sanitizeTitle, sanitizeSnippet } from './sanitize';
 
 const LATEST_KEY = 'x402-reg:latest';
 const INDEX_KEY = 'x402-reg:index';
-const dailyKey = (date: string) => `x402-reg:daily:${date}`;
+// Exported so x402-reg-series.ts reads the exact same KV namespace the
+// daily crawl writes. Single source of truth: a drift here would
+// silently fork the premium series off the capture.
+export const dailyKey = (date: string) => `x402-reg:daily:${date}`;
 
 const FETCH_TIMEOUT_MS = 15000;
 const USER_AGENT = 'TensorFeedX402Registry/1.0 (+https://tensorfeed.ai/x402-registry)';

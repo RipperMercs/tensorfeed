@@ -100,6 +100,7 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/history/news/verified': NULL_SLA,
   '/api/premium/mcp/registry/series': NULL_SLA,
   '/api/premium/openrouter/series': NULL_SLA,
+  '/api/premium/x402-registry/series': NULL_SLA,
   '/api/premium/probe/series': NULL_SLA,
   '/api/gpu/pricing/series': NULL_SLA,
   // Watch registration: pure write, no capture concept.
@@ -231,6 +232,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/history/news/verified': 'historical immutable',
     '/api/premium/mcp/registry/series': 'historical immutable',
     '/api/premium/openrouter/series': 'historical immutable; daily OpenRouter catalog snapshots captured by TF, cannot be backfilled',
+    '/api/premium/x402-registry/series': 'historical immutable; daily x402 publisher-registry snapshots captured by TF, cannot be backfilled',
     '/api/premium/probe/series': 'historical immutable',
     '/api/gpu/pricing/series': 'historical immutable',
     '/api/premium/watches': 'registration write, no capture concept',
