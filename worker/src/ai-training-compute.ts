@@ -259,7 +259,12 @@ export async function captureEpochSnapshot(env: Env): Promise<CaptureResult> {
       signal: AbortSignal.timeout(20000),
     });
     if (!res.ok) return { ok: false, date, error: `epoch returned HTTP ${res.status}` };
-    csv = await res.text();
+    // Decode explicitly as UTF-8. res.text() infers charset from the
+    // response and the Epoch CSV served without one decodes multibyte
+    // chars as Latin-1 (model/org names with U+00D7 etc. mojibake into
+    // "Ã—"). Numeric fields are ASCII so unaffected, but the served
+    // strings must be clean.
+    csv = new TextDecoder('utf-8').decode(new Uint8Array(await res.arrayBuffer()));
   } catch (err) {
     return { ok: false, date, error: (err as Error).message };
   }
