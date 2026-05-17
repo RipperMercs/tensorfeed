@@ -12,13 +12,23 @@
  * is a queryable TF product," which is the north star (a gig manufactures
  * a free data feed).
  *
+ * STANDING-MARKET FOUNDATION (Phase A): the storage, retract, list, and
+ * key layer is now feed-id parameterized via the FEEDS registry instead
+ * of one hardcoded namespace. This is the smallest step that makes a
+ * second feed a registry entry rather than a fork, and it is deliberately
+ * behavior-preserving: DEFAULT_FEED_ID is 'pricing', feedPrefix('pricing')
+ * is byte-identical to the pre-registry 'gigfeed:pricing:sub:' namespace,
+ * every existing callsite is positional so it keeps the default, and the
+ * pure projection is unchanged. No row-schema generalization, no money
+ * path, no canonical write. Those remain later, separate milestones.
+ *
  * DELIBERATE SCOPE, inheriting every M1 constraint:
  *   - No Worker SSRF. This module never fetches source_url or anything
  *     else. It only ever persists rows that were validated at intake and
  *     adjudicated out-of-band by a human admin.
  *   - No money path. Payout stays manual and per-action, exactly as M1.
  *     Auto-ingest-on-accept is still "per-action explicit" because a
- *     human admin explicitly accepts each submission; the accept IS the
+ *     human admin explicitly accepts each submission, the accept IS the
  *     gate.
  *   - Provenance-distinct, not canonical-touching. This is an
  *     agent-sourced observations feed with its own KV namespace. It does
@@ -36,7 +46,68 @@ import type { Env } from './types';
 import { safePut, getKillSwitchState } from './kill-switch';
 import type { PricingRow, SubmissionRecord } from './jobs-submissions';
 
-export const INGEST_KEY_PREFIX = 'gigfeed:pricing:sub:';
+/**
+ * A registered feed. The id is the {feed_id} segment of the KV
+ * namespace; route is the public read endpoint that serves its
+ * projection. Adding a feed is a new entry here plus its own row
+ * validator in a sibling module (a later milestone), never a fork of
+ * this storage layer.
+ */
+export interface FeedDescriptor {
+  id: string;
+  label: string;
+  route: string;
+}
+
+/**
+ * The feed registry. One entry today. The pricing entry's namespace is
+ * frozen byte-for-byte to the pre-registry M2 value so no data migration
+ * is required and the live /api/feeds/model-pricing wire output does not
+ * change. INGEST_KEY_PREFIX below pins that guarantee under test.
+ */
+export const FEEDS: Readonly<Record<string, FeedDescriptor>> = {
+  pricing: {
+    id: 'pricing',
+    label: 'Agent-sourced model pricing observations',
+    route: '/api/feeds/model-pricing',
+  },
+};
+
+/** The only feed today and the default for every positional callsite. */
+export const DEFAULT_FEED_ID = 'pricing';
+
+export function isRegisteredFeed(feedId: string): boolean {
+  return Object.prototype.hasOwnProperty.call(FEEDS, feedId);
+}
+
+/**
+ * Hard guard at every storage entrypoint. An unregistered feed id is a
+ * programmer error (the routes pass a registered literal), so it throws
+ * loudly in CI rather than silently mis-namespacing a write. Defaults
+ * always pass, so the tested production path never throws.
+ */
+export function assertRegisteredFeed(feedId: string): void {
+  if (!isRegisteredFeed(feedId)) {
+    throw new Error(`unregistered_feed:${feedId}`);
+  }
+}
+
+/**
+ * KV prefix for a feed's per-submission records. Total and pure so it
+ * can build the back-compat constant at module load. feedPrefix(
+ * DEFAULT_FEED_ID) is exactly 'gigfeed:pricing:sub:', the pre-registry
+ * value, by construction.
+ */
+export function feedPrefix(feedId: string): string {
+  return 'gigfeed:' + feedId + ':sub:';
+}
+
+/**
+ * Back-compat export and a production-namespace pin. Equals the
+ * pre-registry literal 'gigfeed:pricing:sub:'. A test asserts this exact
+ * string so a future refactor cannot silently move the live feed.
+ */
+export const INGEST_KEY_PREFIX = feedPrefix(DEFAULT_FEED_ID);
 
 // Same v0 bound as jobs-store's MAX_LIST_PAGES. Low-volume feed; refuse
 // to walk an unbounded number of KV list pages on a read. Kept local so
@@ -88,8 +159,11 @@ export interface FeedProjectionOpts {
   vendor?: string;
 }
 
-export function ingestKey(submissionId: string): string {
-  return INGEST_KEY_PREFIX + submissionId;
+export function ingestKey(
+  submissionId: string,
+  feedId: string = DEFAULT_FEED_ID,
+): string {
+  return feedPrefix(feedId) + submissionId;
 }
 
 /**
@@ -123,12 +197,14 @@ export async function ingestAcceptedSubmission(
   env: Env,
   rec: SubmissionRecord,
   acceptedAtSec: number,
+  feedId: string = DEFAULT_FEED_ID,
 ): Promise<boolean> {
+  assertRegisteredFeed(feedId);
   const ing = assembleIngestRecord(rec, acceptedAtSec);
   return safePut(
     env,
     env.TENSORFEED_CACHE,
-    ingestKey(ing.submission_id),
+    ingestKey(ing.submission_id, feedId),
     JSON.stringify(ing),
   );
 }
@@ -137,8 +213,11 @@ export async function ingestAcceptedSubmission(
 export async function getIngest(
   env: Env,
   submissionId: string,
+  feedId: string = DEFAULT_FEED_ID,
 ): Promise<IngestRecord | null> {
-  const raw = await env.TENSORFEED_CACHE.get(ingestKey(submissionId), 'text');
+  assertRegisteredFeed(feedId);
+  const key = ingestKey(submissionId, feedId);
+  const raw = await env.TENSORFEED_CACHE.get(key, 'text');
   if (!raw) return null;
   try {
     return JSON.parse(raw) as IngestRecord;
@@ -146,7 +225,7 @@ export async function getIngest(
     console.log(
       JSON.stringify({
         event: 'gigfeed_bad_record',
-        key: ingestKey(submissionId),
+        key,
         len: raw.length,
         preview: raw.slice(0, 80),
       }),
@@ -167,11 +246,13 @@ export async function getIngest(
 export async function deleteIngest(
   env: Env,
   submissionId: string,
+  feedId: string = DEFAULT_FEED_ID,
 ): Promise<'removed' | 'not_found' | 'write_blocked'> {
+  assertRegisteredFeed(feedId);
   if ((await getKillSwitchState(env)).active) return 'write_blocked';
-  const existing = await getIngest(env, submissionId);
+  const existing = await getIngest(env, submissionId, feedId);
   if (!existing) return 'not_found';
-  await env.TENSORFEED_CACHE.delete(ingestKey(submissionId));
+  await env.TENSORFEED_CACHE.delete(ingestKey(submissionId, feedId));
   return 'removed';
 }
 
@@ -181,20 +262,25 @@ export async function deleteIngest(
  * a hot per-request hot path (the read endpoint should sit behind the
  * normal edge cache).
  */
-export async function listIngest(env: Env): Promise<IngestRecord[]> {
+export async function listIngest(
+  env: Env,
+  feedId: string = DEFAULT_FEED_ID,
+): Promise<IngestRecord[]> {
+  assertRegisteredFeed(feedId);
+  const prefix = feedPrefix(feedId);
   const out: IngestRecord[] = [];
   let cursor: string | undefined;
   let pages = 0;
 
   do {
     const page = await env.TENSORFEED_CACHE.list({
-      prefix: INGEST_KEY_PREFIX,
+      prefix,
       cursor,
     });
     pages += 1;
     for (const k of page.keys) {
-      const id = k.name.slice(INGEST_KEY_PREFIX.length);
-      const rec = await getIngest(env, id);
+      const id = k.name.slice(prefix.length);
+      const rec = await getIngest(env, id, feedId);
       if (!rec) continue;
       out.push(rec);
     }

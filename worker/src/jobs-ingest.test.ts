@@ -10,6 +10,11 @@ import {
   deleteIngest,
   ingestKey,
   projectModelPricingFeed,
+  INGEST_KEY_PREFIX,
+  DEFAULT_FEED_ID,
+  feedPrefix,
+  isRegisteredFeed,
+  assertRegisteredFeed,
   type IngestRecord,
 } from './jobs-ingest';
 
@@ -228,5 +233,51 @@ describe('projectModelPricingFeed', () => {
     expect(f.observations).toHaveLength(1);
     expect(f.observations[0].accepted_at).toBe(2000);
     expect(f.summary.total_observations).toBe(3);
+  });
+});
+
+describe('feed registry (Phase A foundation)', () => {
+  it('pins the production namespace byte-for-byte', () => {
+    // This is the load-bearing regression lock: if a future refactor
+    // moves the live feed, the existing gigfeed:pricing:sub:* records
+    // and /api/feeds/model-pricing would silently break. Do not relax.
+    expect(INGEST_KEY_PREFIX).toBe('gigfeed:pricing:sub:');
+    expect(DEFAULT_FEED_ID).toBe('pricing');
+    expect(feedPrefix('pricing')).toBe('gigfeed:pricing:sub:');
+  });
+
+  it('default feed id reproduces the pre-registry key exactly', () => {
+    expect(ingestKey('s1')).toBe('gigfeed:pricing:sub:s1');
+    expect(ingestKey('s1')).toBe(ingestKey('s1', 'pricing'));
+  });
+
+  it('namespaces distinct feed ids without collision', () => {
+    expect(feedPrefix('pricing')).not.toBe(feedPrefix('gpu-pricing'));
+    expect(ingestKey('s1', 'pricing')).not.toBe(ingestKey('s1', 'gpu-pricing'));
+  });
+
+  it('recognizes the registered feed and rejects unknown ids', () => {
+    expect(isRegisteredFeed('pricing')).toBe(true);
+    expect(isRegisteredFeed('gpu-pricing')).toBe(false);
+    expect(() => assertRegisteredFeed('pricing')).not.toThrow();
+    expect(() => assertRegisteredFeed('nope')).toThrow('unregistered_feed:nope');
+  });
+
+  it('storage entrypoints reject an unregistered feed before any KV write', async () => {
+    const kv = new FakeKV();
+    const env = envWith(kv);
+    await expect(
+      ingestAcceptedSubmission(env, sub('s1', [row()]), 1, 'ghost'),
+    ).rejects.toThrow('unregistered_feed:ghost');
+    expect(kv.store.size).toBe(0);
+    await expect(getIngest(env, 's1', 'ghost')).rejects.toThrow(
+      'unregistered_feed:ghost',
+    );
+    await expect(deleteIngest(env, 's1', 'ghost')).rejects.toThrow(
+      'unregistered_feed:ghost',
+    );
+    await expect(listIngest(env, 'ghost')).rejects.toThrow(
+      'unregistered_feed:ghost',
+    );
   });
 });
