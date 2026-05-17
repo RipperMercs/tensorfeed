@@ -269,6 +269,10 @@ import {
   getLatestSnapshot as getORLatest,
 } from './openrouter-catalog';
 import {
+  captureEpochSnapshot,
+  getLatestEpochSnapshot,
+} from './ai-training-compute';
+import {
   captureHFDailyPapers,
   getLatestSnapshot as getHFDailyPapersLatest,
 } from './hf-daily-papers';
@@ -3710,6 +3714,7 @@ export default {
           issuesHot: '/api/issues/hot',
           redditTrending: '/api/reddit/trending',
           openrouterModels: '/api/openrouter/models',
+          aiTrainingCompute: '/api/ai/training-compute (free; daily snapshot of the Epoch AI Models dataset: per-model training compute in FLOP, parameters, training dataset size, training compute cost in 2023 USD, training power draw, frontier flag, org, domain, country, accessibility, primary-source link. Fills the AI training-compute gap; complements /api/models. License: Epoch AI CC-BY-4.0, attribution in payload. Daily snapshots compound for a future premium compute-trend series.)',
           papersHFDaily: '/api/papers/hf-daily',
           today: '/api/today (composite morning brief, optional ?sections=news,papers,hf,community,inference,status&limit=1-10)',
           probeLatest: '/api/probe/latest',
@@ -3806,7 +3811,7 @@ export default {
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -4832,6 +4837,21 @@ export default {
       const snapshot = await getORLatest(env);
       if (!snapshot) {
         return jsonResponse({ ok: false, error: 'openrouter_unavailable' }, 503);
+      }
+      return jsonResponse({ ok: true, snapshot }, 200, 600);
+    }
+
+    // === AI TRAINING COMPUTE (free) ===
+    // Daily snapshot of the Epoch AI "AI Models" dataset: per-model
+    // training compute (FLOP), parameters, dataset size, compute cost,
+    // power draw, frontier flag. Fills the AI-data-library gap "AI
+    // training compute / FLOPs" and complements /api/models. CC-BY-4.0;
+    // Epoch attribution is in the payload (license-required). Daily
+    // cron refresh via /api/refresh?task=epoch; lazy capture-on-miss.
+    if (path === '/api/ai/training-compute') {
+      const snapshot = await getLatestEpochSnapshot(env);
+      if (!snapshot) {
+        return jsonResponse({ ok: false, error: 'epoch_unavailable' }, 503);
       }
       return jsonResponse({ ok: true, snapshot }, 200, 600);
     }
@@ -9272,6 +9292,10 @@ export default {
       if (task === 'openrouter') {
         const result = await captureORSnapshot(env);
         return jsonResponse({ message: 'OpenRouter catalog snapshot captured', ...result });
+      }
+      if (task === 'epoch') {
+        const result = await captureEpochSnapshot(env);
+        return jsonResponse({ message: 'Epoch AI training-compute snapshot captured', ...result });
       }
       if (task === 'hf-daily-papers') {
         const result = await captureHFDailyPapers(env);
