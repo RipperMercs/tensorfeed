@@ -164,6 +164,34 @@ print(tf.balance())
 rec = tf.routing(task="code")
 ```
 
+## Framework Tools (LangChain, CrewAI)
+
+Drop TensorFeed into an agent framework as ready-made tools.
+
+```bash
+pip install 'tensorfeed[langchain]'   # or 'tensorfeed[crewai]'
+```
+
+```python
+from tensorfeed.langchain import tensorfeed_tools, tensorfeed_premium_tools
+
+# Five free tools (news, status, attention, harnesses, routing preview)
+free = tensorfeed_tools()
+
+# Free plus the paid catalog (whats_new, full routing, compare models,
+# cost projection, news search, provider deep dive, status leaderboard)
+all_tools = tensorfeed_tools(token="YOUR_TOKEN", include_premium=True)
+
+# Just the paid catalog
+paid = tensorfeed_premium_tools(token="YOUR_TOKEN")
+```
+
+CrewAI is identical: `from tensorfeed.crewai import tensorfeed_tools, tensorfeed_premium_tools`.
+
+The default `tensorfeed_tools()` stays free-only and unchanged, so existing code keeps working. Premium is opt-in via `include_premium=True`.
+
+**Payment posture.** The premium tools never move funds. Attach them with or without a token: called without spendable credits they return a short, actionable guidance string (explaining that an operator provisions credits out of band) instead of paying or raising. There is no code path from a tool call to the wallet or the web3 signer. Credit purchases stay an explicit, per-action operator decision, by design. This is enforced in one shared module and covered by tests, including a static guard that fails if a future change introduces an autonomous-payment path.
+
 ## Error Handling
 
 ```python

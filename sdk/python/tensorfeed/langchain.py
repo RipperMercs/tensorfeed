@@ -11,7 +11,12 @@ Provides:
     * ``TensorFeedAttentionTool`` - tool wrapping ``/api/attention``
     * ``TensorFeedHarnessesTool`` - tool wrapping ``/api/harnesses``
     * ``TensorFeedNewsLoader``  - LangChain document loader for news articles
-    * ``tensorfeed_tools()``    - convenience: returns the full tool list
+    * ``tensorfeed_tools()``    - convenience: free tools, optionally premium
+    * ``tensorfeed_premium_tools()`` - the paid catalog (1 credit each)
+
+The premium tools never move funds. Called without a credit token they
+return a clear guidance string instead of paying or raising. Provisioning
+credits stays an explicit operator action; see ``_premium_tools``.
 
 Usage::
 
@@ -32,6 +37,7 @@ import json
 from typing import Any
 
 from .client import TensorFeed
+from ._premium_tools import DESCRIPTIONS, FORMATTERS, safe_call
 
 
 def _require_langchain() -> tuple[Any, Any]:
@@ -194,14 +200,183 @@ def TensorFeedHarnessesTool(token: str | None = None):
     )
 
 
-def tensorfeed_tools(token: str | None = None) -> list[Any]:
-    """Convenience: returns all TensorFeed LangChain tools."""
-    return [
+def tensorfeed_tools(
+    token: str | None = None,
+    *,
+    include_premium: bool = False,
+) -> list[Any]:
+    """Convenience: the TensorFeed LangChain tools.
+
+    Returns the five free tools by default. Pass
+    ``include_premium=True`` to also attach the paid catalog (1 credit
+    per call). The premium tools are safe to attach even without a
+    token: called with no credits they return guidance instead of
+    paying or raising, so an agent can still reason about them.
+
+    Args:
+        token: Optional bearer token for premium calls. Free tools
+            ignore it.
+        include_premium: Append the premium tools as well.
+    """
+    tools = [
         TensorFeedNewsTool(token),
         TensorFeedStatusTool(token),
         TensorFeedRoutingTool(token),
         TensorFeedAttentionTool(token),
         TensorFeedHarnessesTool(token),
+    ]
+    if include_premium:
+        tools.extend(tensorfeed_premium_tools(token))
+    return tools
+
+
+# ── Premium tools (paid, 1 credit each, never auto-pay) ───────────────
+#
+# Each tool has an explicit typed signature so LangChain builds a clean
+# argument schema for the model. The call is routed through the shared
+# ``safe_call`` so the payment posture and result formatting are
+# identical to the CrewAI binding and tested once.
+
+
+def _premium_structured_tool(name: str, fn):
+    StructuredTool, _ = _require_langchain()
+    return StructuredTool.from_function(
+        func=fn, name=name, description=DESCRIPTIONS[name]
+    )
+
+
+def TensorFeedWhatsNewTool(token: str | None = None):
+    """Paid agent boot brief. 1 credit. Will not auto-pay."""
+
+    def _whats_new(days: int = 1, news_limit: int = 10) -> str:
+        return safe_call(
+            lambda: _client(token).whats_new(days=days, news_limit=news_limit),
+            FORMATTERS["tensorfeed_whats_new"],
+        )
+
+    return _premium_structured_tool("tensorfeed_whats_new", _whats_new)
+
+
+def TensorFeedRoutingFullTool(token: str | None = None):
+    """Paid full ranked routing. 1 credit. Will not auto-pay."""
+
+    def _routing(
+        task: str = "general",
+        budget: float | None = None,
+        top_n: int = 5,
+    ) -> str:
+        return safe_call(
+            lambda: _client(token).routing(task=task, budget=budget, top_n=top_n),
+            FORMATTERS["tensorfeed_routing"],
+        )
+
+    return _premium_structured_tool("tensorfeed_routing", _routing)
+
+
+def TensorFeedCompareModelsTool(token: str | None = None):
+    """Paid 2-5 model comparison. 1 credit. Will not auto-pay."""
+
+    def _compare(ids: str) -> str:
+        return safe_call(
+            lambda: _client(token).compare_models(ids=ids),
+            FORMATTERS["tensorfeed_compare_models"],
+        )
+
+    return _premium_structured_tool("tensorfeed_compare_models", _compare)
+
+
+def TensorFeedCostProjectionTool(token: str | None = None):
+    """Paid workload cost projection. 1 credit. Will not auto-pay."""
+
+    def _cost(
+        models: str,
+        input_tokens_per_day: float,
+        output_tokens_per_day: float,
+        horizon: str | None = None,
+    ) -> str:
+        return safe_call(
+            lambda: _client(token).cost_projection(
+                models=models,
+                input_tokens_per_day=input_tokens_per_day,
+                output_tokens_per_day=output_tokens_per_day,
+                horizon=horizon,
+            ),
+            FORMATTERS["tensorfeed_cost_projection"],
+        )
+
+    return _premium_structured_tool("tensorfeed_cost_projection", _cost)
+
+
+def TensorFeedNewsSearchTool(token: str | None = None):
+    """Paid full-text news search. 1 credit. Will not auto-pay."""
+
+    def _search(
+        q: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        provider: str | None = None,
+        category: str | None = None,
+        limit: int = 25,
+    ) -> str:
+        return safe_call(
+            lambda: _client(token).news_search(
+                q=q,
+                from_date=from_date,
+                to_date=to_date,
+                provider=provider,
+                category=category,
+                limit=limit,
+            ),
+            FORMATTERS["tensorfeed_news_search"],
+        )
+
+    return _premium_structured_tool("tensorfeed_news_search", _search)
+
+
+def TensorFeedProviderDeepDiveTool(token: str | None = None):
+    """Paid one-call provider profile. 1 credit. Will not auto-pay."""
+
+    def _deepdive(provider: str) -> str:
+        return safe_call(
+            lambda: _client(token).provider_deepdive(provider),
+            FORMATTERS["tensorfeed_provider_deepdive"],
+        )
+
+    return _premium_structured_tool("tensorfeed_provider_deepdive", _deepdive)
+
+
+def TensorFeedStatusLeaderboardTool(token: str | None = None):
+    """Paid 90-day uptime leaderboard. 1 credit. Will not auto-pay."""
+
+    def _leaderboard(
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> str:
+        return safe_call(
+            lambda: _client(token).status_leaderboard(
+                from_date=from_date, to_date=to_date
+            ),
+            FORMATTERS["tensorfeed_status_leaderboard"],
+        )
+
+    return _premium_structured_tool("tensorfeed_status_leaderboard", _leaderboard)
+
+
+def tensorfeed_premium_tools(token: str | None = None) -> list[Any]:
+    """The paid TensorFeed tool catalog (1 credit per call).
+
+    Safe to attach without a token: each tool returns actionable
+    guidance instead of paying or raising when no credits are
+    available. None of these tools move funds.
+    """
+    return [
+        TensorFeedWhatsNewTool(token),
+        TensorFeedRoutingFullTool(token),
+        TensorFeedCompareModelsTool(token),
+        TensorFeedCostProjectionTool(token),
+        TensorFeedNewsSearchTool(token),
+        TensorFeedProviderDeepDiveTool(token),
+        TensorFeedStatusLeaderboardTool(token),
     ]
 
 

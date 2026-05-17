@@ -11,6 +11,11 @@ Provides a set of CrewAI-compatible tools:
     * ``tensorfeed_harnesses_tool()`` - coding harness leaderboard
     * ``tensorfeed_routing_tool()``   - top model recommendation
 
+Plus the paid catalog via ``tensorfeed_premium_tools()`` (1 credit per
+call). Premium tools never move funds: called without a credit token
+they return a clear guidance string instead of paying or raising.
+Provisioning credits stays an explicit operator action.
+
 Usage::
 
     from crewai import Agent
@@ -33,6 +38,7 @@ import json
 from typing import Any
 
 from .client import TensorFeed
+from ._premium_tools import DESCRIPTIONS, FORMATTERS, safe_call
 
 
 def _require_crewai() -> Any:
@@ -163,12 +169,140 @@ def tensorfeed_routing_tool(token: str | None = None) -> Any:
     return _Tool()
 
 
-def tensorfeed_tools(token: str | None = None) -> list[Any]:
-    """Convenience: returns the full TensorFeed CrewAI tool list."""
-    return [
+def tensorfeed_tools(
+    token: str | None = None,
+    *,
+    include_premium: bool = False,
+) -> list[Any]:
+    """Convenience: the TensorFeed CrewAI tool list.
+
+    Returns the five free tools by default. Pass
+    ``include_premium=True`` to also attach the paid catalog (1 credit
+    per call). Premium tools are safe to attach without a token: called
+    with no credits they return guidance instead of paying or raising.
+    """
+    tools = [
         tensorfeed_news_tool(token),
         tensorfeed_status_tool(token),
         tensorfeed_attention_tool(token),
         tensorfeed_harnesses_tool(token),
         tensorfeed_routing_tool(token),
+    ]
+    if include_premium:
+        tools.extend(tensorfeed_premium_tools(token))
+    return tools
+
+
+# ── Premium tools (paid, 1 credit each, never auto-pay) ───────────────
+#
+# Each is a thin CrewAI BaseTool whose _run routes through the shared
+# safe_call, so the payment posture and formatting match the LangChain
+# binding exactly and are tested once in test_premium_tools.py.
+
+
+def _premium_tool(token: str | None, tool_name: str, runner) -> Any:
+    BaseTool = _require_crewai()
+    fmt = FORMATTERS[tool_name]
+
+    class _Tool(BaseTool):  # type: ignore[misc, valid-type]
+        name: str = tool_name
+        description: str = DESCRIPTIONS[tool_name]
+
+        def _run(self, **kwargs: Any) -> str:
+            return safe_call(lambda: runner(_client(token), kwargs), fmt)
+
+    return _Tool()
+
+
+def tensorfeed_whats_new_tool(token: str | None = None) -> Any:
+    return _premium_tool(
+        token,
+        "tensorfeed_whats_new",
+        lambda c, kw: c.whats_new(
+            days=kw.get("days", 1), news_limit=kw.get("news_limit", 10)
+        ),
+    )
+
+
+def tensorfeed_routing_full_tool(token: str | None = None) -> Any:
+    return _premium_tool(
+        token,
+        "tensorfeed_routing",
+        lambda c, kw: c.routing(
+            task=kw.get("task", "general"),
+            budget=kw.get("budget"),
+            top_n=kw.get("top_n", 5),
+        ),
+    )
+
+
+def tensorfeed_compare_models_tool(token: str | None = None) -> Any:
+    return _premium_tool(
+        token,
+        "tensorfeed_compare_models",
+        lambda c, kw: c.compare_models(ids=kw.get("ids", "")),
+    )
+
+
+def tensorfeed_cost_projection_tool(token: str | None = None) -> Any:
+    return _premium_tool(
+        token,
+        "tensorfeed_cost_projection",
+        lambda c, kw: c.cost_projection(
+            models=kw.get("models", ""),
+            input_tokens_per_day=kw.get("input_tokens_per_day", 0),
+            output_tokens_per_day=kw.get("output_tokens_per_day", 0),
+            horizon=kw.get("horizon"),
+        ),
+    )
+
+
+def tensorfeed_news_search_tool(token: str | None = None) -> Any:
+    return _premium_tool(
+        token,
+        "tensorfeed_news_search",
+        lambda c, kw: c.news_search(
+            q=kw.get("q"),
+            from_date=kw.get("from_date"),
+            to_date=kw.get("to_date"),
+            provider=kw.get("provider"),
+            category=kw.get("category"),
+            limit=kw.get("limit", 25),
+        ),
+    )
+
+
+def tensorfeed_provider_deepdive_tool(token: str | None = None) -> Any:
+    return _premium_tool(
+        token,
+        "tensorfeed_provider_deepdive",
+        lambda c, kw: c.provider_deepdive(kw.get("provider", "")),
+    )
+
+
+def tensorfeed_status_leaderboard_tool(token: str | None = None) -> Any:
+    return _premium_tool(
+        token,
+        "tensorfeed_status_leaderboard",
+        lambda c, kw: c.status_leaderboard(
+            from_date=kw.get("from_date"), to_date=kw.get("to_date")
+        ),
+    )
+
+
+def tensorfeed_premium_tools(token: str | None = None) -> list[Any]:
+    """The paid TensorFeed CrewAI tool catalog (1 credit per call).
+
+    Safe to attach without a token: each tool returns actionable
+    guidance instead of paying or raising when no credits are
+    available. None of these tools move funds.
+    """
+    return [
+        tensorfeed_whats_new_tool(token),
+        tensorfeed_routing_full_tool(token),
+        tensorfeed_compare_models_tool(token),
+        tensorfeed_cost_projection_tool(token),
+        tensorfeed_news_search_tool(token),
+        tensorfeed_provider_deepdive_tool(token),
+        tensorfeed_status_leaderboard_tool(token),
     ]
