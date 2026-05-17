@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'openai-chatgpt-bank-access-agent-trust-gap',
+    title:
+      'OpenAI Wants ChatGPT in Your Bank Account. That Is the Opposite of How Agent Money Should Work.',
+    author: 'Ripper',
+    date: 'May 17, 2026',
+    readTime: '5 min read',
+    description:
+      'OpenAI is wiring ChatGPT into financial accounts through a Plaid connection. Broad standing access to your bank is the convenient answer and the wrong architecture. The other one is not theoretical: no custody, per-action authorization, a signed receipt for every paid call. Today our own /api/stats crossed into the thousands of verifiable paid agent calls, each with a receipt an auditor can check against our published key. That contrast is the whole argument: convenience is winning the demo, it should not win the standard.',
+  },
+  {
     slug: 'mistral-europe-ai-sovereignty-two-year-clock',
     title:
       'Mistral Says Europe Has Two Years. The Compute Map Says the Clock Runs Faster Than That.',
