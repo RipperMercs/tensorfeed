@@ -9763,6 +9763,12 @@ export default {
       // metadata). Single API call, no auth. Daily snapshot keyed
       // under or:daily:{date}. Backs free /api/openrouter/models.
       await run('captureORSnapshot', () => captureORSnapshot(env));
+      // Same 14:00 UTC slot: Epoch AI training-compute catalog (same
+      // class of daily external model-data snapshot). Co-located here
+      // deliberately to reuse this already-registered cron trigger and
+      // avoid a duplicate wrangler.toml trigger. Makes the "daily
+      // snapshot" claim in /api/meta + llms.txt true.
+      await run('captureEpochSnapshot', () => captureEpochSnapshot(env));
     } else if (cron === '15 14 * * *') {
       // Daily 14:15 UTC: capture HF Daily Papers (editor-curated set of
       // AI papers worth reading + community upvotes/comments). Single
