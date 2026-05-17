@@ -215,6 +215,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verified-feed`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/mistral-europe-ai-sovereignty-two-year-clock`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/codex-bleed-anthropic-three-interventions`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/cerebras-95-billion-ipo-inference-bet`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/wafer-scale-vs-gpu-what-cerebras-sells`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },

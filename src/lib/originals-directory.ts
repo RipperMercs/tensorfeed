@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'mistral-europe-ai-sovereignty-two-year-clock',
+    title:
+      'Mistral Says Europe Has Two Years. The Compute Map Says the Clock Runs Faster Than That.',
+    author: 'Kira Nolan',
+    date: 'May 17, 2026',
+    readTime: '6 min read',
+    description:
+      'The Mistral CEO told Europe it has roughly two years to avoid becoming an American AI vassal state. Read against the data we already publish, the warning is correct and the timeline is generous: the frontier tier on our model catalog is almost entirely US labs, attention concentrates there too, and the compute that decides the next two years is being financed through American IPOs and Gulf capital. The model layer is not where Europe is behind. The layers under it are.',
+  },
+  {
     slug: 'codex-bleed-anthropic-three-interventions',
     title:
       'The Codex Bleed: Anthropic Just Made Its Third Capacity Move in Five Weeks',
