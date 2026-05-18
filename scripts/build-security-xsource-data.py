@@ -83,21 +83,54 @@ def card(rec: dict) -> dict:
     }
 
 
-def build_payload(bundle_dir: Path | None) -> dict:
-    records: list = []
-    summary: dict = {}
-    if bundle_dir is not None:
-        jl = bundle_dir / "corroboration.jsonl"
-        if not jl.exists():
-            sys.exit(f"no corroboration.jsonl in {bundle_dir}")
-        for line in jl.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line:
-                records.append(json.loads(line))
-        sf = bundle_dir / "corroborate_summary.json"
-        if sf.exists():
-            summary = json.loads(sf.read_text(encoding="utf-8"))
+def _load_jsonl(jl: Path) -> list:
+    out: list = []
+    for line in jl.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line:
+            out.append(json.loads(line))
+    return out
 
+
+def load_single(bundle_dir: Path) -> tuple:
+    jl = bundle_dir / "corroboration.jsonl"
+    if not jl.exists():
+        sys.exit(f"no corroboration.jsonl in {bundle_dir}")
+    sf = bundle_dir / "corroborate_summary.json"
+    summary = json.loads(sf.read_text(encoding="utf-8")) if sf.exists() else {}
+    return _load_jsonl(jl), summary
+
+
+def load_accumulated(acc_dir: Path) -> tuple:
+    """Merge every *.jsonl increment in acc_dir, dedup by source_url.
+    Files processed in sorted name order; a later file's record for the
+    same source_url wins (a newer increment supersedes an older one).
+    Returns the deduped record list and an accumulation provenance dict.
+    Each new For_TFCC_ increment is integrated by dropping its
+    corroboration.jsonl into this dir and re-running, nothing else."""
+    files = sorted(acc_dir.glob("*.jsonl"))
+    if not files:
+        sys.exit(f"no *.jsonl in accumulation dir {acc_dir}")
+    by_url: dict = {}
+    per_file: list = []
+    dupes = 0
+    for f in files:
+        recs = _load_jsonl(f)
+        per_file.append({"file": f.name, "records": len(recs)})
+        for r in recs:
+            u = r.get("source_url")
+            if u in by_url:
+                dupes += 1
+            by_url[u] = r
+    return list(by_url.values()), {
+        "mode": "accumulated",
+        "increments": per_file,
+        "merged_unique": len(by_url),
+        "dedup_collisions": dupes,
+    }
+
+
+def build_payload(records: list, summary: dict, accumulation: dict | None = None) -> dict:
     trusted = [
         r for r in records
         if r.get("overall") != "excluded" and not r.get("extraction_suspect")
@@ -157,6 +190,7 @@ def build_payload(bundle_dir: Path | None) -> dict:
                 if r.get("overall") == "excluded" or r.get("extraction_suspect")
             ),
             "source_summary": summary,
+            "accumulation": accumulation or {"mode": "single"},
             "attribution": {
                 "advisory_source": "GitHub Security Advisories (GHSA)",
                 "corroboration_sources": "OSV.dev, CISA KEV, FIRST EPSS, NVD, CISA Vulnrichment (public)",
@@ -231,6 +265,7 @@ export interface SecurityXsourcePayload {
     note: string;
     excluded_quarantined: number;
     source_summary: Record<string, unknown>;
+    accumulation: Record<string, unknown>;
     attribution: Record<string, string>;
   };
   packages: Record<string, SxPackage>;
@@ -253,14 +288,25 @@ export function getSecurityXsource(): SecurityXsourcePayload {
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("bundle_dir", nargs="?", help="dir with corroboration.jsonl")
+    ap.add_argument("bundle_dir", nargs="?", help="single bundle dir with corroboration.jsonl")
+    ap.add_argument("--accumulate", metavar="DIR",
+                    help="dir of *.jsonl increments, merged + deduped by source_url (the cumulative production path)")
     ap.add_argument("--empty", action="store_true", help="emit a valid empty module")
     args = ap.parse_args()
 
-    if not args.empty and not args.bundle_dir:
-        ap.error("pass <bundle_dir> or --empty")
+    if not args.empty and not args.bundle_dir and not args.accumulate:
+        ap.error("pass <bundle_dir>, --accumulate DIR, or --empty")
 
-    payload = build_payload(None if args.empty else Path(args.bundle_dir))
+    if args.empty:
+        records, summary, accumulation = [], {}, None
+    elif args.accumulate:
+        records, accumulation = load_accumulated(Path(args.accumulate))
+        summary = {}
+    else:
+        records, summary = load_single(Path(args.bundle_dir))
+        accumulation = None
+
+    payload = build_payload(records, summary, accumulation)
     b64 = base64.b64encode(
         json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     ).decode("ascii")
