@@ -468,6 +468,37 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/security/corroborated',
+    description:
+      'One package whole corroborated GHSA advisory set per call (?package=, loose matching: package=commons-text resolves to the canonical name). Each advisory carries three explicit provenance buckets: corroborated_claim (verbatim affected_products + the deterministic product-vs-authoritative-OSV verdict, never-false-confirm), deterministic_enrichment (KEV/EPSS/SSVC/OSV joined ONLY by a verbatim-verified CVE id), verbatim_context (version/severity/exploited copied verbatim, not corroborated). meta.claim is surfaced verbatim: we corroborate the affected package and enrich by verified CVE id; we do NOT verify the advisory exploitation or severity claims (GHSA prose does not make them). Quarantined (extraction_suspect) records are never served. Honest counts: 82 package-addressable advisories (73 corroborated, 9 novel) across 47 packages; product-less unverifiable and quarantined excluded from served counts, not padded. Built from an offline grammar-constrained extraction, a deterministic OSV-only never-false-confirm corroboration, and a verbatim-CVE guard. Strict-premium: anonymous probes get the canonical 402. License: GHSA + OSV/CISA KEV/FIRST EPSS/NVD public; derived metadata + corroboration verdicts, advisory prose not republished.',
+    cost: '1 credit per call',
+    example: `// Query: ?package=free5gc
+{
+  "ok": true,
+  "package_query": "free5gc",
+  "matched_package": "free5GC",
+  "claim": "Affected package corroborated against authoritative OSV, plus deterministic KEV/EPSS/CVSS/SSVC enrichment joined by a verbatim-verified CVE id. We do NOT verify the advisory exploitation or severity claims; GHSA prose does not make them.",
+  "advisory_count": 13,
+  "advisories": [
+    {
+      "source_url": "https://github.com/advisories/GHSA-27ph-8q4f-h7m7",
+      "overall": "corroborated",
+      "corroborated_claim": { "affected_products": ["free5GC"], "product_corroboration": "confirmed" },
+      "deterministic_enrichment": {
+        "cves_verbatim_verified": [], "kev_listed": false, "epss_percentile": null,
+        "ssvc": null, "osv_packages": ["github.com/free5gc/bsf"]
+      },
+      "verbatim_context": {
+        "affected_version_ranges": ["v4.2.1"], "fixed_versions": [],
+        "severity_label": "unstated", "exploited_in_wild": "unstated"
+      }
+    }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 44 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/security/kev/full',
     description:
       'Full untruncated CISA KEV catalog. Free /api/security/kev returns top-50 most-recent; this endpoint returns the entire current catalog with every field per entry. License: US Government public domain (17 USC 105), commercial redistribution explicitly permitted.',

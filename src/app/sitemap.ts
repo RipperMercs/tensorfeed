@@ -215,6 +215,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/mcp/pro`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/agent-provisioning`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/verified-feed`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${baseUrl}/security/corroborated`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/originals/openai-chatgpt-bank-access-agent-trust-gap`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
