@@ -212,6 +212,7 @@ import {
 import { computePackagesMomentum } from './premium-packages-momentum';
 import { computeResearchVelocity } from './premium-research-velocity';
 import { computeCveKevTimeline } from './premium-cve-kev-timeline';
+import { computeSecurityXsource } from './premium-security-xsource';
 import {
   computeMilestones as computeArxivMilestones,
   computeEmergingKeywords as computeArxivEmergingKeywords,
@@ -3850,6 +3851,7 @@ export default {
           premiumApisGuruAiFeed: '/api/premium/apis-guru/ai-feed (1 credit; AI-relevant entries from the APIs.guru public directory of 2400+ OpenAPI specs, filtered via curated keyword match on provider + title + description. Per-entry first_seen_at against our daily snapshot history so agents can diff "what new AI APIs appeared in the last 7 days." Includes by_provider counts + a separate newly_added_last_7d array. CC-BY-SA 4.0; primary source links preserved.)',
           premiumResearchMilestones: '/api/premium/research/milestones (1 credit; last 30 days of arXiv preprints flagged is_milestone_candidate by an offline Qwen 3.6 27B per-paper extraction pass. Each paper carries structured reasoning stating the named benchmark + quantified delta, model release, or novel architecture justification. Conservative; false positives are worse than false negatives.)',
           premiumCveKevExploitationTimeline: '/api/premium/cve/kev-exploitation-timeline?vendor= (1 credit, strict-premium; per-vendor exploited-in-the-wild history from the cve-kev-2026 dataset. One vendor per call: NVD disclosure date, days to CISA KEV listing, vendor patch status, ransomware association, severity distribution, mean and fastest KEV-add lag. Offline per-CVE extraction + deterministic per-vendor rollup. v1 capped slice, expandable. NVD + CISA KEV US public domain.)',
+          premiumSecurityCorroborated: '/api/premium/security/corroborated?package= (1 credit, strict-premium; the full corroborated GHSA advisory set for one package in one call. Per advisory: the deterministic affected-package vs authoritative-OSV verdict (never-false-confirm), plus KEV/EPSS/SSVC/OSV enrichment joined ONLY by a verbatim-verified CVE id, plus verbatim version/severity context, each in an explicit provenance bucket. We corroborate the package and enrich by verified CVE id; we do NOT verify the advisory exploitation/severity claims. Quarantined records never served. Offline extraction + deterministic corroboration + verbatim-CVE guard.)',
           premiumResearchEmergingKeywords: '/api/premium/research/emerging-keywords (1 credit; top-50 multi-word keyphrases across recent arXiv abstracts ranked by recent-vs-baseline lift, last 30d frequency over prior 90d, smoothed. Each entry carries 2-5 example arxiv_ids.)',
           premiumResearchTopicSearch: '/api/premium/research/topic-search?subfield_tag=&methodology_bucket=&since=&until=&milestone_only=&limit=&offset= (1 credit; structured search over the arXiv preprint corpus using TF derived taxonomy. Filters arXiv by subfield + methodology, dimensions arXiv\'s native search has no concept of.)',
           premiumResearchLabProductivity: '/api/premium/research/lab-productivity?window=&affiliation_type=&limit= (1 credit; top labs by paper count over 30d/90d/365d windows, derived from TF normalized affiliations on the offline Qwen extraction. Filter by window (30d|90d|365d, default returns all three) and affiliation_type (industry|academia|government|nonprofit|mixed). arXiv has no native concept of normalized lab attribution.)',
@@ -8344,6 +8346,45 @@ export default {
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/cve/kev-exploitation-timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: SECURITY CROSS-SOURCE CORROBORATED (Tier 1, 1 credit) ===
+    // /api/premium/security/corroborated?package=<name>
+    // One package's full corroborated GHSA advisory set in one call.
+    // Per advisory: the deterministic affected-package vs authoritative-
+    // OSV verdict (never-false-confirm), KEV/EPSS/SSVC/OSV enrichment
+    // joined ONLY by a verbatim-verified CVE id, and verbatim version/
+    // severity context, each in an explicit provenance bucket. We
+    // corroborate the package and enrich by verified CVE id; we do NOT
+    // verify the advisory exploitation/severity claims. Quarantined
+    // (extraction_suspect) records are never in the dataset. Strict-
+    // premium (param-required); bundled offline, zero KV at request time.
+
+    if (path === '/api/premium/security/corroborated') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const result = computeSecurityXsource(url.searchParams.get('package'));
+      if (!result.ok) {
+        // missing_package / package_not_found are caller-input problems,
+        // so the AFTA receipt no_charge_reason is schema_validation_failure
+        // (the agent's input did not validate, not "our upstream is down").
+        return await premiumValidationFailure(
+          {
+            error: result.error,
+            ...(result.hint ? { hint: result.hint } : {}),
+            ...(result.available_package_sample
+              ? { available_package_sample: result.available_package_sample }
+              : {}),
+          },
+          payment, request, env, 'schema_validation_failure',
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/security/corroborated', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
