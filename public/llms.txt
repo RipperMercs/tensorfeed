@@ -21,6 +21,7 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [JSON Feed](https://tensorfeed.ai/feed.json): JSON Feed 1.1 format, preferred for programmatic access
 - [Research RSS](https://tensorfeed.ai/feed/research.xml): Research papers and academic AI news only
 - [Tools RSS](https://tensorfeed.ai/feed/tools.xml): Developer tools and frameworks news only
+- [AI Research Firehose](https://tensorfeed.ai/api/research/firehose.json): Raw, fast, unverified dump of recent arXiv AI/ML papers. CAVEAT (read before use): heuristic tags from a fast local model; subfield_tag and is_milestone_candidate are best-effort and NOT authoritative; not verified TensorFeed data. Bibliographic fields (arxiv_id, date, title, authors, arxiv_categories, keywords, summary_one_sentence) are verbatim and sound; interpretive fields are noise unless independently verified. Free only, no premium tier ever, not server-side queryable by design. Human page: https://tensorfeed.ai/research/firehose
 
 ## TensorFeed MCP Servers
 TensorFeed ships two complementary MCP servers under the @tensorfeed scope on npm. Both are open source (MIT), published with cryptographic provenance via GitHub Actions OIDC, and verifiable with `npm audit signatures`.
