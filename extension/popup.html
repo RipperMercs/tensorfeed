@@ -4,10 +4,37 @@
 <meta charset="utf-8" />
 <style>
   html, body { margin: 0; padding: 0; background: #04070d; width: 520px; }
-  /* The widget is its own self-contained document. The popup just
-     frames it. 520px keeps the sparkline column (>480) while dropping
-     the Detail column (<=720) for a compact toolbar view. */
-  iframe { display: block; width: 520px; height: 560px; border: 0; }
+  /* The widget is its own self-contained document. The popup frames it
+     for the rich view (sparklines, p95). 520px keeps the sparkline
+     column (>480) while dropping the Detail column (<=720). */
+  iframe { display: none; width: 520px; height: 560px; border: 0; }
+
+  /* Self-contained fallback. Shown by default and rendered from
+     /api/status/summary so the toolbar is NEVER blank, even if the
+     remote frame is blocked (CSP / sandboxed reviewer / offline).
+     iframe.onload swaps to the rich widget when it actually loads. */
+  #fallback {
+    width: 520px; box-sizing: border-box; padding: 14px 16px 16px;
+    color: #e8eef7; font: 13px/1.4 ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  #fallback h1 {
+    margin: 2px 0 12px; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase; color: #6b7c92;
+  }
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0; border-top: 1px solid rgba(120,170,220,0.12);
+  }
+  .row:first-of-type { border-top: 0; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .dot.green { background: #10b981; }
+  .dot.amber { background: #f59e0b; }
+  .dot.red   { background: #ef4444; }
+  .nm { flex: 1; color: #e8eef7; }
+  .pv { color: #6b7c92; font-size: 11px; }
+  .st { font-size: 11px; text-transform: capitalize; color: #9fb0c5; }
+  #msg { color: #9fb0c5; padding: 6px 0; }
+
   .bar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 7px 12px; background: #04070d;
@@ -20,13 +47,20 @@
 </style>
 </head>
 <body>
+  <section id="fallback" aria-live="polite">
+    <h1>TensorFeed AI Status</h1>
+    <div id="msg">Loading live status&hellip;</div>
+    <div id="list"></div>
+  </section>
   <iframe
-    src="https://tensorfeed.ai/widget/status?accent=blue&poll=30&utm_source=extension&utm_medium=popup"
+    id="frame"
+    data-src="https://tensorfeed.ai/widget/status?accent=blue&poll=30&utm_source=extension&utm_medium=popup"
     title="TensorFeed live AI status"></iframe>
   <div class="bar">
     <span>TensorFeed</span>
     <a href="https://tensorfeed.ai/status?utm_source=extension&utm_medium=popup_footer"
        target="_blank" rel="noopener">Full monitor &rarr;</a>
   </div>
+  <script src="popup.js"></script>
 </body>
 </html>

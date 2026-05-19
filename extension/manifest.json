@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TensorFeed AI Status",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Live operational status and p95 latency for every major AI provider and service, right in your toolbar.",
   "action": {
     "default_popup": "popup.html",
