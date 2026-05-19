@@ -18,6 +18,7 @@ import {
   cdpSettle,
   cdpGetSupported,
   cdpListDiscoveryResources,
+  decodeBazaarStatus,
   CDP_FACILITATOR_CONSTANTS,
 } from './cdp-facilitator';
 import type { Env } from './types';
@@ -373,34 +374,68 @@ describe('cdpSettle response mapping', () => {
     expect(result.payer).toBe('0xabc');
   });
 
-  it('captures EXTENSION-RESPONSES header on success', async () => {
+  function settleWithExtHeader(headerValue: string) {
     global.fetch = vi.fn(async () => {
       return new Response(
         JSON.stringify({ success: true, transaction: '0xdef', network: 'eip155:8453' }),
         {
           status: 200,
-          headers: { 'EXTENSION-RESPONSES': 'processing' },
+          headers: { 'EXTENSION-RESPONSES': headerValue },
         },
       );
     }) as unknown as typeof fetch;
-    const result = await cdpSettle(mockEnv(), DUMMY_PAYLOAD, DUMMY_REQUIREMENTS);
+    return cdpSettle(mockEnv(), DUMMY_PAYLOAD, DUMMY_REQUIREMENTS);
+  }
+
+  it('captures EXTENSION-RESPONSES bare-literal format (pre-fix wire format)', async () => {
+    const result = await settleWithExtHeader('processing');
     expect(result.success).toBe(true);
+    // Raw header preserved verbatim for debugging.
     expect(result.extensionResponses).toBe('processing');
+    // Normalized status decoded from the bare literal.
+    expect(result.bazaarStatus).toBe('processing');
   });
 
-  it('captures EXTENSION-RESPONSES=rejected when bazaar metadata is invalid', async () => {
+  it('captures EXTENSION-RESPONSES=rejected bare literal', async () => {
+    const result = await settleWithExtHeader('rejected');
+    expect(result.success).toBe(true);
+    expect(result.extensionResponses).toBe('rejected');
+    expect(result.bazaarStatus).toBe('rejected');
+  });
+
+  it('decodes EXTENSION-RESPONSES base64(JSON) format (post-fix wire format)', async () => {
+    // The format 0xdespot verified on hyperD 2026-05-18: base64 of
+    // { bazaar: { status: "processing" } }.
+    const raw = Buffer.from(
+      JSON.stringify({ bazaar: { status: 'processing', detail: 'queued' } }),
+    ).toString('base64');
+    const result = await settleWithExtHeader(raw);
+    expect(result.success).toBe(true);
+    // Raw header kept exactly as CDP sent it (base64 blob).
+    expect(result.extensionResponses).toBe(raw);
+    // Operator-facing signal is the decoded status, not the blob.
+    expect(result.bazaarStatus).toBe('processing');
+  });
+
+  it('decodes base64(JSON) rejection so log/alert can branch on it', async () => {
+    const raw = Buffer.from(
+      JSON.stringify({ bazaar: { status: 'rejected' } }),
+    ).toString('base64');
+    const result = await settleWithExtHeader(raw);
+    expect(result.bazaarStatus).toBe('rejected');
+  });
+
+  it('leaves bazaarStatus undefined when CDP sends no EXTENSION-RESPONSES header', async () => {
     global.fetch = vi.fn(async () => {
       return new Response(
         JSON.stringify({ success: true, transaction: '0xdef', network: 'eip155:8453' }),
-        {
-          status: 200,
-          headers: { 'EXTENSION-RESPONSES': 'rejected' },
-        },
+        { status: 200 },
       );
     }) as unknown as typeof fetch;
     const result = await cdpSettle(mockEnv(), DUMMY_PAYLOAD, DUMMY_REQUIREMENTS);
     expect(result.success).toBe(true);
-    expect(result.extensionResponses).toBe('rejected');
+    expect(result.extensionResponses).toBeUndefined();
+    expect(result.bazaarStatus).toBeUndefined();
   });
 
   it('maps 5xx HTTP error to unexpected_settle_error', async () => {
@@ -420,6 +455,62 @@ describe('cdpSettle response mapping', () => {
     expect(result.success).toBe(false);
     expect(result.errorReason).toBe('unexpected_settle_error');
     expect(result.message).toContain('network error');
+  });
+});
+
+describe('decodeBazaarStatus (tolerant EXTENSION-RESPONSES decoder)', () => {
+  const b64 = (v: unknown) => Buffer.from(JSON.stringify(v)).toString('base64');
+
+  it('returns undefined for missing / empty / whitespace input', () => {
+    expect(decodeBazaarStatus(undefined)).toBeUndefined();
+    expect(decodeBazaarStatus('')).toBeUndefined();
+    expect(decodeBazaarStatus('   ')).toBeUndefined();
+  });
+
+  it('passes bare-literal tokens through unchanged (pre-fix wire format)', () => {
+    expect(decodeBazaarStatus('processing')).toBe('processing');
+    expect(decodeBazaarStatus('indexed')).toBe('indexed');
+    expect(decodeBazaarStatus('rejected')).toBe('rejected');
+  });
+
+  it('trims surrounding whitespace on bare literals', () => {
+    expect(decodeBazaarStatus('  processing\n')).toBe('processing');
+  });
+
+  it('decodes base64(JSON) { bazaar: { status } } (post-fix wire format)', () => {
+    expect(decodeBazaarStatus(b64({ bazaar: { status: 'processing' } }))).toBe(
+      'processing',
+    );
+    expect(
+      decodeBazaarStatus(b64({ bazaar: { status: 'rejected', detail: 'bad schema' } })),
+    ).toBe('rejected');
+  });
+
+  it('handles base64(JSON) where bazaar is itself the status string', () => {
+    expect(decodeBazaarStatus(b64({ bazaar: 'indexed' }))).toBe('indexed');
+  });
+
+  it('falls back to a top-level status field', () => {
+    expect(decodeBazaarStatus(b64({ status: 'processing' }))).toBe('processing');
+  });
+
+  it('decodes un-encoded JSON too (defensive against a third format)', () => {
+    expect(decodeBazaarStatus(JSON.stringify({ bazaar: { status: 'rejected' } }))).toBe(
+      'rejected',
+    );
+  });
+
+  it('falls back to the raw trimmed token when nothing decodes', () => {
+    // Not base64-of-JSON and not JSON: treat as an opaque literal rather
+    // than throwing or dropping the signal.
+    expect(decodeBazaarStatus('some-unknown-token')).toBe('some-unknown-token');
+  });
+
+  it('never throws on adversarial input', () => {
+    expect(() => decodeBazaarStatus('!!!not base64!!!')).not.toThrow();
+    expect(() => decodeBazaarStatus(b64({ bazaar: { status: 42 } }))).not.toThrow();
+    // Numeric status is not a string -> no status extracted -> raw fallback.
+    expect(decodeBazaarStatus(b64({ bazaar: { status: 42 } }))).toBeTypeOf('string');
   });
 });
 

@@ -82,12 +82,20 @@ export interface CdpSupportedResponse {
 
 /**
  * Extends SettleResult with the EXTENSION-RESPONSES header, which CDP
- * uses to indicate Bazaar metadata acceptance ("processing") vs rejection
- * ("rejected"). Surface this on the settle response so the route handler
- * can log + alert on rejection without re-querying the catalog.
+ * uses to indicate Bazaar metadata acceptance vs rejection. Surface this
+ * on the settle response so the route handler can log + alert on
+ * rejection without re-querying the catalog.
+ *
+ *   - extensionResponses: the raw header value, exactly as CDP sent it.
+ *     Kept verbatim for debugging (the wire format is not stable; see
+ *     decodeBazaarStatus).
+ *   - bazaarStatus: the normalized status token ("processing" |
+ *     "indexed" | "rejected" | ...), tolerant-decoded from whatever
+ *     format the header arrived in. This is the value to branch/alert on.
  */
 export interface CdpSettleResult extends SettleResult {
   extensionResponses?: string;
+  bazaarStatus?: string;
 }
 
 // ---------- base64 / base64url helpers (Workers-safe; no Node Buffer) ----------
@@ -117,6 +125,66 @@ function randomNonceHex(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function base64ToUtf8(b64: string): string {
+  // decodeBase64ToBytes uses atob and throws on non-base64 input; callers
+  // wrap this in try/catch and fall back to literal handling.
+  return new TextDecoder().decode(decodeBase64ToBytes(b64));
+}
+
+function extractBazaarStatus(json: unknown): string | undefined {
+  if (!json || typeof json !== 'object') return undefined;
+  const obj = json as Record<string, unknown>;
+  const bazaar = obj.bazaar;
+  if (typeof bazaar === 'string') return bazaar;
+  if (bazaar && typeof bazaar === 'object') {
+    const status = (bazaar as Record<string, unknown>).status;
+    if (typeof status === 'string') return status;
+  }
+  if (typeof obj.status === 'string') return obj.status;
+  return undefined;
+}
+
+/**
+ * Normalizes CDP's EXTENSION-RESPONSES header to a status token. Two wire
+ * formats have been observed on this header:
+ *
+ *   - Bare literal token: "processing" | "indexed" | "rejected"
+ *     (documented 2026-05-14 against GitHub x402-foundation/x402#2207).
+ *   - Base64-encoded JSON: { bazaar: { status: "processing", ... } }
+ *     (verified 2026-05-18 on hyperD, described in the same thread as the
+ *     "post-fix" wire format).
+ *
+ * The format is not stable across facilitator deployments / over time, so
+ * this decodes tolerantly rather than betting on one shape: try
+ * base64 -> JSON -> bazaar.status, then un-encoded JSON, then fall back to
+ * the trimmed literal. NEVER throws and never returns '' (maps to
+ * undefined) so callers can branch on a clean optional string.
+ */
+export function decodeBazaarStatus(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+
+  // base64(JSON) — the post-fix format verified on hyperD.
+  try {
+    const status = extractBazaarStatus(JSON.parse(base64ToUtf8(trimmed)));
+    if (status) return status;
+  } catch {
+    /* not base64 JSON; fall through */
+  }
+
+  // Some deployments may send the JSON object un-encoded.
+  try {
+    const status = extractBazaarStatus(JSON.parse(trimmed));
+    if (status) return status;
+  } catch {
+    /* not raw JSON either */
+  }
+
+  // Bare literal token ("processing" | "indexed" | "rejected" | ...).
+  return trimmed;
 }
 
 // ---------- JWT construction ----------
@@ -351,6 +419,7 @@ export async function cdpSettle(
   }
 
   const extensionResponses = resp.headers.get('EXTENSION-RESPONSES') ?? undefined;
+  const bazaarStatus = decodeBazaarStatus(extensionResponses);
   const { text, json } = await readBody(resp);
   const body = json as Record<string, unknown>;
 
@@ -363,6 +432,7 @@ export async function cdpSettle(
       errorReason,
       message: `cdp settle HTTP ${resp.status}: ${clipResponseText(text)}`,
       extensionResponses,
+      bazaarStatus,
     };
   }
 
@@ -377,6 +447,7 @@ export async function cdpSettle(
     amount: typeof body.amount === 'string' ? body.amount : undefined,
     message: typeof body.errorMessage === 'string' ? body.errorMessage : undefined,
     extensionResponses,
+    bazaarStatus,
   };
 }
 

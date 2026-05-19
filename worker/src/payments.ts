@@ -2336,14 +2336,19 @@ export async function requirePayment(
       ? await cdpSettle(env, payload, requirements)
       : await settleX402Payment(payload, env);
     // Bazaar pilot observability. CDP's EXTENSION-RESPONSES header indicates
-    // whether our bazaar metadata was accepted ("processing") or rejected
-    // ("rejected"). Log it so wrangler tail surfaces the signal during the
-    // pilot. Cheap; only fires on CDP-routed paths.
+    // whether our bazaar metadata was accepted ("processing"/"indexed") or
+    // rejected ("rejected"). The header wire format is not stable (bare
+    // literal vs base64(JSON); see cdp-facilitator decodeBazaarStatus), so
+    // log the decoded bazaarStatus as the grep-able signal and keep the raw
+    // header alongside for debugging. Cheap; only fires on CDP-routed paths.
     if (viaCDP && 'extensionResponses' in settle) {
+      const cdpResult = settle as { extensionResponses?: string; bazaarStatus?: string };
       console.log(
-        `[bazaar-pilot] path=${url.pathname} success=${settle.success} extensionResponses=${
-          (settle as { extensionResponses?: string }).extensionResponses ?? '(none)'
-        } tx=${settle.transaction ?? '(none)'}`,
+        `[bazaar-pilot] path=${url.pathname} success=${settle.success} bazaarStatus=${
+          cdpResult.bazaarStatus ?? '(none)'
+        } extensionResponsesRaw=${cdpResult.extensionResponses ?? '(none)'} tx=${
+          settle.transaction ?? '(none)'
+        }`,
       );
     }
     if (!settle.success) {
