@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-karpathy-four-moves-one-week',
+    title:
+      'Karpathy Joined Anthropic. That Is the Fourth Structural Move in One Week.',
+    author: 'Marcus Chen',
+    date: 'May 19, 2026',
+    readTime: '6 min read',
+    description:
+      'Andrej Karpathy, an OpenAI founding member, joined Anthropic on May 19 to help launch a team that uses Claude to accelerate its own pretraining. Read in isolation it is a talent coup. Read against the last seven days it is the fourth structural move Anthropic has made, each on a different layer of the stack: capacity (Claude Code limits), capital (a reported $900B round), supply chain (the Stainless SDK pipeline), and now talent. The pattern is the story, and talent is the apex because it is the one layer a term sheet cannot buy.',
+  },
+  {
     slug: 'anthropic-stainless-sdk-supply-chain',
     title:
       'Anthropic Bought the Pipeline Its Rivals Ship Their SDKs On. Then It Turned the Hosted Product Off.',
