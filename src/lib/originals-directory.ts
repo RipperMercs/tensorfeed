@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-stainless-sdk-supply-chain',
+    title:
+      'Anthropic Bought the Pipeline Its Rivals Ship Their SDKs On. Then It Turned the Hosted Product Off.',
+    author: 'Marcus Chen',
+    date: 'May 19, 2026',
+    readTime: '6 min read',
+    description:
+      'Anthropic acquired Stainless, the codegen company that generates the official SDKs (and MCP servers) for OpenAI, Google, Cloudflare, Runway, and Anthropic itself, reportedly for more than $300 million against a $150M Series A seventeen months earlier. Then it said it will wind down every hosted Stainless product. The frozen-SDK reassurance is real and beside the point: the asset was never the generated code, it was the regeneration loop, and that loop is now an Anthropic internal tool. A supply-chain move on the layer between an API and the agents that call it, wearing an acquisition’s clothes.',
+  },
+  {
     slug: 'openai-chatgpt-bank-access-agent-trust-gap',
     title:
       'OpenAI Wants ChatGPT in Your Bank Account. That Is the Opposite of How Agent Money Should Work.',
