@@ -218,6 +218,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/security/corroborated`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/ai-status-extension-live`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/anthropic-karpathy-four-moves-one-week`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/anthropic-stainless-sdk-supply-chain`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/openai-chatgpt-bank-access-agent-trust-gap`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },

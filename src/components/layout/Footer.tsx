@@ -85,6 +85,14 @@ export default function Footer() {
               HF Dataset
             </a>
             <a
+              href="https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors"
+            >
+              Chrome Extension
+            </a>
+            <a
               href="https://x.com/tensorfeed"
               target="_blank"
               rel="noopener noreferrer"

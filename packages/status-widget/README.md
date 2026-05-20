@@ -7,6 +7,9 @@ Free, no API key, no tracking, zero dependencies.
 
 Live preview and docs: https://tensorfeed.ai/embed
 
+Prefer it in your toolbar? The same Live Monitor ships as a Chrome
+extension: [install on the Web Store](https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde).
+
 ## Install
 
 ```sh

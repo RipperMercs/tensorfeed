@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'ai-status-extension-live',
+    title:
+      'TensorFeed AI Status Is Now a Chrome Extension. Live AI Health Sits in Your Toolbar.',
+    author: 'Ripper',
+    date: 'May 20, 2026',
+    readTime: '4 min read',
+    description:
+      'Our embeddable Live Monitor just shipped as a Chrome extension, approved and public on the Web Store as of today. A toolbar popup with real status and real p95 latency for every major AI provider, plus a passive badge that quietly turns amber or red the moment something degrades. Same honest-by-construction rules as the widget, in the surface that already lives next to your address bar. One click to install, no account, no tracking, host access scoped to tensorfeed.ai only. Inside: why a toolbar popup is the right surface for an AI health signal, the CSP frame-ancestors detail that almost killed the review, and what permissions we deliberately did not ask for.',
+  },
+  {
     slug: 'anthropic-karpathy-four-moves-one-week',
     title:
       'Karpathy Joined Anthropic. That Is the Fourth Structural Move in One Week.',

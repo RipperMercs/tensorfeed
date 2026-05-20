@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { Activity, ArrowRight, Code2, Zap, Bot } from 'lucide-react';
+import { Activity, ArrowRight, Code2, Zap, Bot, Chrome } from 'lucide-react';
 import {
   WebApplicationJsonLd,
   BreadcrumbListJsonLd,
@@ -50,6 +50,11 @@ const FAQS: { question: string; answer: string }[] = [
     question: 'Which AI providers does the widget cover?',
     answer:
       'Claude, OpenAI, Google Gemini, Mistral, Cohere, AWS Bedrock, Azure OpenAI, Hugging Face, Replicate, Groq, Perplexity, and GitHub Copilot. Operational status is shown for all of them; measured p95 latency is shown for the providers TensorFeed actively probes, and the others show their real status with no invented number.',
+  },
+  {
+    question: 'Is there a browser extension?',
+    answer:
+      'Yes. TensorFeed AI Status is live on the Chrome Web Store: a one-click install that puts the same Live Monitor in a toolbar popup, plus a passive badge that quietly turns amber or red the moment a provider degrades. It only requests the alarms permission and host access to tensorfeed.ai, with no content scripts and no telemetry. Install at https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde. Firefox build is next.',
   },
   {
     question: 'I only want a small badge for my README. What should I use?',
@@ -135,6 +140,42 @@ import '@tensorfeed/status-widget';
           </a>
           . React users can skip the element and use the{' '}
           <code>tensorfeedStatusSrc()</code> helper directly.
+        </p>
+      </section>
+
+      {/* Browser extension */}
+      <section className="mb-12">
+        <h2 className="text-xl font-bold text-text-primary mb-3">
+          Prefer it in your toolbar?
+        </h2>
+        <p className="text-sm text-text-secondary mb-4 max-w-3xl">
+          The same Live Monitor ships as a Chrome extension: one-click install,
+          a popup with full provider status and p95 latency, and a passive
+          badge that turns amber or red the moment something degrades. Host
+          access scoped to tensorfeed.ai only, no content scripts, no
+          telemetry.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm whitespace-nowrap text-white"
+            style={{ background: 'var(--accent-primary)' }}
+          >
+            <Chrome className="w-4 h-4" />
+            Install on Chrome Web Store
+            <ArrowRight className="w-4 h-4" />
+          </a>
+          <Link
+            href="/originals/ai-status-extension-live"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm whitespace-nowrap border border-border text-text-secondary hover:text-accent-primary hover:border-accent-primary transition-colors"
+          >
+            Read the launch note
+          </Link>
+        </div>
+        <p className="text-xs text-text-muted mt-2">
+          Firefox build is next, same codebase.
         </p>
       </section>
 

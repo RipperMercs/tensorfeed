@@ -172,9 +172,25 @@ import '@tensorfeed/status-widget';
 <tensorfeed-status accent="blue" poll="30"></tensorfeed-status>`}</code></pre>
 
         <p>
-          And a browser extension is on the way: the same live console in a toolbar popup, with a
-          badge that quietly turns amber or red the moment a provider degrades, so you see AI
-          health without opening anything.
+          And a browser extension: the same live console in a toolbar popup, with a badge that
+          quietly turns amber or red the moment a provider degrades, so you see AI health without
+          opening anything. It is{' '}
+          <a
+            href="https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde"
+            className="text-accent-primary hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            live on the Chrome Web Store
+          </a>
+          ; Firefox build is next.{' '}
+          <Link
+            href="/originals/ai-status-extension-live"
+            className="text-accent-primary hover:underline"
+          >
+            Full write-up here
+          </Link>
+          .
         </p>
 
         <p>
