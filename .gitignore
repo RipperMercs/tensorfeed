@@ -87,6 +87,9 @@ specs/
 # Stray build / prebuild stdout dumps (not source)
 build-output.txt
 
+# web-ext build output for AMO (Firefox) submission — generated artifact, not source
+web-ext-artifacts/
+
 # Local-only operator scripts (one-off helpers from PR-submission, audit,
 # token-mint, and notebook-builder workflows). These are internal tooling
 # that wraps live credentials and registry binaries; the canonical scripts
