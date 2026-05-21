@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'x402-multi-rail-fireblocks-allunity',
+    title:
+      'Fireblocks Brought Spend Governance. AllUnity Brought a Krona. x402 Stopped Being a One-Rail Protocol This Week.',
+    author: 'Ripper',
+    date: 'May 21, 2026',
+    readTime: '6 min read',
+    description:
+      'Two announcements landed on May 20. Fireblocks — institutional crypto custody, not a startup — joined the x402 Foundation and shipped a security extension for request integrity and spend governance. The same day, Germany’s MiCA-regulated AllUnity rolled out Agentic Payments using x402 to settle into a Swedish krona stablecoin. The next morning, a third party offered the spec authors a non-Coinbase, three-rail acceptance fixture on #2207 covering Base USDC, Solana USDC, and JPYC on Polygon. x402 was a Coinbase-and-Cloudflare default six months ago. After this week the variant axis is open.',
+  },
+  {
     slug: 'ai-status-extension-live',
     title:
       'TensorFeed AI Status Is Now a Chrome Extension. Live AI Health Sits in Your Toolbar.',
