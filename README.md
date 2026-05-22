@@ -146,6 +146,10 @@ npm run build
 npm start
 ```
 
+## Writing conventions
+
+Anything published under the TensorFeed brand (Originals articles, metadata descriptions, social copy) follows the rules in [`docs/WRITING.md`](docs/WRITING.md). Hard rule: no em dashes. The file documents the soft principles too.
+
 ## License
 
 MIT. See `LICENSE`. Premium API responses ship under an inference-only license (no model training); see [tensorfeed.ai/agent-fair-trade](https://tensorfeed.ai/agent-fair-trade) for the full terms.
