@@ -10,6 +10,7 @@ export const NAV_LINKS = [
   { href: '/', label: 'Feed' },
   { href: '/today', label: 'Today' },
   { href: '/models', label: 'Models' },
+  { href: '/ai-hardware', label: 'Hardware' },
   { href: '/benchmarks', label: 'Benchmarks' },
   { href: '/research', label: 'Research' },
   { href: '/agents', label: 'Agents' },
