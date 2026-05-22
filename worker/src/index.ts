@@ -362,6 +362,7 @@ import {
   peekFreeTrialQuota,
   rateLimitedResponse,
 } from './rate-limit';
+import { isStrictPremiumPath } from './strict-premium-endpoints';
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
@@ -500,7 +501,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers':
     'Content-Type, Authorization, X-PAYMENT, X-Payment-Tx, X-Payment-Quote, X-TensorFeed-Simulate-Error, X-TensorFeed-Simulate-Latency, X-Internal-Auth',
   'Access-Control-Expose-Headers':
-    'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Payment-Token, X-Payment-Token-Balance, X-Payment-Token-Note, PAYMENT-RESPONSE, X-TensorFeed-Simulated, X-TensorFeed-Simulated-Latency-Ms',
+    'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Payment-Token, X-Payment-Token-Balance, X-Payment-Token-Note, PAYMENT-RESPONSE, X-TensorFeed-Simulated, X-TensorFeed-Simulated-Latency-Ms, X-TF-Free-Trial, X-TF-Free-Trial-Used, X-TF-Free-Trial-Remaining, X-TF-Free-Trial-Limit, X-TF-Free-Trial-Resets-At',
   'Access-Control-Max-Age': '86400',
 };
 
@@ -805,6 +806,20 @@ async function premiumResponse(
     headers['X-TF-Free-Trial-Remaining'] = String(payment.freeTrial.remaining);
     headers['X-TF-Free-Trial-Limit'] = String(payment.freeTrial.limit);
     headers['X-TF-Free-Trial-Resets-At'] = payment.freeTrial.resetAt;
+  } else if (!isStrictPremiumPath(endpoint)) {
+    // Paid path (bearer / x402) on a trial-eligible endpoint: peek the
+    // IP's free-trial pool and surface the four state headers WITHOUT
+    // the `X-TF-Free-Trial: 1` marker. Marker presence means "this call
+    // consumed a free slot"; the state headers alone mean "your IP has
+    // a free-trial pool with this much left, fwiw." Lets an agent
+    // fleet-manage across paid and free quotas without an extra round
+    // trip to /api/free-tier/status, and makes the free quota
+    // discoverable to paying agents who never saw the 402.
+    const peek = peekFreeTrialQuota(getClientIP(request));
+    headers['X-TF-Free-Trial-Used'] = String(peek.used);
+    headers['X-TF-Free-Trial-Remaining'] = String(peek.remaining);
+    headers['X-TF-Free-Trial-Limit'] = String(peek.limit);
+    headers['X-TF-Free-Trial-Resets-At'] = peek.resetAt;
   }
 
   // Receipt: build core, sign with Ed25519, embed in response.
