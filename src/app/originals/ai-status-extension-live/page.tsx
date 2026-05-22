@@ -132,8 +132,8 @@ export default function AiStatusExtensionLivePage() {
           A toolbar extension closes the loop the other direction: the signal
           comes to you. When everything is nominal, the icon is calm. When a
           provider degrades, the badge changes color before you have any reason
-          to suspect your own code is broken. Mean time to "is it them or is it
-          me" goes from minutes of triage to a glance at the chrome of the
+          to suspect your own code is broken. Mean time to &ldquo;is it them or is it
+          me&rdquo; goes from minutes of triage to a glance at the chrome of the
           browser itself.
         </p>
 
@@ -154,7 +154,7 @@ export default function AiStatusExtensionLivePage() {
           Chrome Web Store review is automated, strict, and unforgiving in ways
           that matter. Our first submission tripped a content-security-policy
           edge case: the extension popup embedded the same widget the public
-          site embeds, and the widget's <code>frame-ancestors</code> directive
+          site embeds, and the widget&rsquo;s <code>frame-ancestors</code> directive
           had been written assuming only web origins. The Chrome extension
           context is{' '}
           <code>chrome-extension://&lt;id&gt;</code>, which is technically a
@@ -167,7 +167,7 @@ export default function AiStatusExtensionLivePage() {
 
         <p>
           The discipline that fixed it is the same discipline behind the
-          widget's no-fake-numbers rule: the popup either renders real live
+          widget&rsquo;s no-fake-numbers rule: the popup either renders real live
           data from the same hardened endpoint everyone else hits, or it
           renders nothing. We did not paper over the CSP failure with a
           screenshot fallback or a cached snapshot. The popup is live or it is
@@ -212,7 +212,7 @@ export default function AiStatusExtensionLivePage() {
           <code>https://tensorfeed.ai/*</code> so the popup and worker can fetch
           our public status feeds. No <code>tabs</code>, no content scripts,
           no access to any other site, no analytics, no telemetry beacon. The
-          set of things it can see is: TensorFeed's own public JSON. That is
+          set of things it can see is: TensorFeed&rsquo;s own public JSON. That is
           it. The review passed in part because the manifest is small enough
           that there is no ambiguity about what is going on.
         </p>

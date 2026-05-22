@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { Activity, ArrowRight, Code2, Zap, Bot, Chrome } from 'lucide-react';
+import { Activity, ArrowRight, Code2, Zap, Bot, Puzzle } from 'lucide-react';
 import {
   WebApplicationJsonLd,
   BreadcrumbListJsonLd,
@@ -163,7 +163,7 @@ import '@tensorfeed/status-widget';
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm whitespace-nowrap text-white"
             style={{ background: 'var(--accent-primary)' }}
           >
-            <Chrome className="w-4 h-4" />
+            <Puzzle className="w-4 h-4" />
             Install on Chrome Web Store
             <ArrowRight className="w-4 h-4" />
           </a>
