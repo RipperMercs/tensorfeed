@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Cpu, ExternalLink } from 'lucide-react';
 import fallbackPricingData from '@/../data/pricing.json';
 import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 import ModelsDataSection, { PricingData } from '@/components/models/ModelsDataSection';
 
 export const metadata: Metadata = {
@@ -147,6 +148,8 @@ export default function ModelsPage() {
           ))}
         </div>
       </section>
+
+      <LastUpdatedFooter path="/models" />
     </div>
   );
 }

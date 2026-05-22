@@ -5,6 +5,7 @@ import { BarChart3, GitCompare, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import fallbackData from '@/../data/benchmarks.json';
+import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 
 interface BenchmarkDef {
   id: string;
@@ -317,6 +318,8 @@ export default function BenchmarksPage() {
           </tbody>
         </table>
       </div>
+
+      <LastUpdatedFooter path="/benchmarks" />
     </div>
   );
 }

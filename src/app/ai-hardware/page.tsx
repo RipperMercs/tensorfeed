@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Microchip, ExternalLink } from 'lucide-react';
+import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 
 interface Hardware {
   id: string;
@@ -169,6 +170,8 @@ export default function AIHardwarePage() {
           . Filter with <code className="font-mono">?manufacturer=NVIDIA|AMD|Google|AWS|Apple|Cerebras|Groq</code>. Free, no auth, cached 10 min.
         </p>
       </div>
+
+      <LastUpdatedFooter path="/ai-hardware" />
     </div>
   );
 }

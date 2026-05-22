@@ -1,0 +1,45 @@
+name: Weekly AI hardware review
+
+# Opens a GitHub issue every Monday at 14:00 UTC (07:00 PT) summarizing
+# whether worker/src/ai-hardware.ts (the AI accelerator chip catalog)
+# needs updating for newly-shipped chips or spec corrections. Operator
+# triages the issue, edits the file if anything material shifted,
+# otherwise closes.
+# See scripts/weekly-ai-hardware-check.mjs for the report body logic.
+
+on:
+  schedule:
+    - cron: '0 14 * * 1'   # 14:00 UTC every Monday
+  workflow_dispatch:        # allow manual runs from the Actions tab
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  open-review-issue:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Generate report body
+        id: report
+        run: |
+          node scripts/weekly-ai-hardware-check.mjs > issue-body.md
+          {
+            echo "title=Weekly AI hardware review: $(date -u +%Y-%m-%d)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "${{ steps.report.outputs.title }}" \
+            --body-file issue-body.md \
+            --label "ai-hardware,maintenance"

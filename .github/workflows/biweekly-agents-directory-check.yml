@@ -1,0 +1,70 @@
+name: Biweekly agents directory review
+
+# Opens a GitHub issue every other Monday at 14:00 UTC (07:00 PT)
+# summarizing whether data/agents-directory.json needs new entries,
+# deprecations, or category adjustments. Operator triages the issue,
+# edits the file if anything material shifted, otherwise closes.
+# See scripts/biweekly-agents-directory-check.mjs for the report body logic.
+#
+# Cron note: GitHub cron does not support a true "every other week"
+# expression. We use day-of-month math: fire only on Mondays where the
+# week-of-year is even. The job step skips execution on odd weeks.
+
+on:
+  schedule:
+    - cron: '0 14 * * 1'   # Mondays 14:00 UTC, gated to even ISO weeks below
+  workflow_dispatch:        # always runs manually
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  open-review-issue:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - name: Gate to even ISO week (skip on odd weeks for scheduled runs)
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Manual dispatch, running."
+            exit 0
+          fi
+          week=$(date -u +%V)
+          week_int=$((10#$week))
+          if [ $((week_int % 2)) -eq 0 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "ISO week $week is even, running."
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "ISO week $week is odd, skipping (biweekly cadence)."
+          fi
+
+      - uses: actions/checkout@v6
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: actions/setup-node@v6
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: '24'
+
+      - name: Generate report body
+        if: steps.gate.outputs.run == 'true'
+        id: report
+        run: |
+          node scripts/biweekly-agents-directory-check.mjs > issue-body.md
+          {
+            echo "title=Biweekly agents directory review: $(date -u +%Y-%m-%d)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open issue
+        if: steps.gate.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "${{ steps.report.outputs.title }}" \
+            --body-file issue-body.md \
+            --label "agents,maintenance"

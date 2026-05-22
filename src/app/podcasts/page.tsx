@@ -6,6 +6,7 @@ import { Headphones, Clock, ExternalLink, Mail } from 'lucide-react';
 import PodcastPlayer from '@/components/podcasts/PodcastPlayer';
 import type { PodcastEpisode } from '@/lib/types';
 import JsonLd from '@/components/seo/JsonLd';
+import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 
 const PODCAST_COLORS: Record<string, { bg: string; border: string }> = {
   'AI Daily Brief': { bg: 'bg-blue-500/20', border: '#3b82f6' },
@@ -290,6 +291,8 @@ export default function PodcastsPage() {
           </button>
         </div>
       )}
+
+      <LastUpdatedFooter path="/podcasts" />
     </div>
   );
 }

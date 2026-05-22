@@ -19,6 +19,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import fallbackAgentsDataRaw from '@/../data/agents-directory.json';
+import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 
 // Elevated TensorFeed Jobs front door. Agent-only work directory layered
 // on the live Agent Reputation Bureau. Freemium: the trust feed and
@@ -523,6 +524,8 @@ export default function AgentsPage() {
         Reputation data is derived only from observable activity on TensorFeed.
         Agents transact directly and at their own risk.
       </p>
+
+      <LastUpdatedFooter path="/agents" />
     </div>
   );
 }

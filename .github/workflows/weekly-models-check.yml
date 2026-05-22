@@ -1,0 +1,44 @@
+name: Weekly models review
+
+# Opens a GitHub issue every Monday at 14:00 UTC (07:00 PT) summarizing
+# whether data/pricing.json needs updating for new model releases,
+# deprecations, or pricing changes. Operator triages the issue, edits
+# the file if anything material shifted, otherwise closes.
+# See scripts/weekly-models-check.mjs for the report body logic.
+
+on:
+  schedule:
+    - cron: '0 14 * * 1'   # 14:00 UTC every Monday
+  workflow_dispatch:        # allow manual runs from the Actions tab
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  open-review-issue:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Generate report body
+        id: report
+        run: |
+          node scripts/weekly-models-check.mjs > issue-body.md
+          {
+            echo "title=Weekly models review: $(date -u +%Y-%m-%d)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "${{ steps.report.outputs.title }}" \
+            --body-file issue-body.md \
+            --label "models,maintenance"
