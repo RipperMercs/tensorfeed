@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title:
       'Fireblocks Brought Spend Governance. AllUnity Brought a Krona. x402 Stopped Being a One-Rail Protocol This Week.',
     description:
-      'Institutional spend governance from Fireblocks, a MiCA-regulated krona stablecoin from AllUnity, and a non-Coinbase three-rail fixture offered on issue #2207 — all in 24 hours. x402 just broke out of the USD-on-Base monoculture.',
+      'Institutional spend governance from Fireblocks, a MiCA-regulated krona stablecoin from AllUnity, and a non-Coinbase three-rail fixture offered on issue #2207. All in 24 hours, and x402 just broke out of the USD-on-Base monoculture.',
     type: 'article',
     url: 'https://tensorfeed.ai/originals/x402-multi-rail-fireblocks-allunity',
     publishedTime: '2026-05-21T15:00:00.000Z',
@@ -83,9 +83,9 @@ export default function Page() {
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Two announcements landed on May 20 and they were not the same announcement.
-          Fireblocks — institutional crypto custody, not a startup — joined the x402
-          Foundation and shipped the security extension that adds request integrity and
-          spend governance to the protocol. The same day, AllUnity, the German
+          Fireblocks, the institutional crypto custodian rather than a startup, joined
+          the x402 Foundation and shipped the security extension that adds request
+          integrity and spend governance to the protocol. The same day, AllUnity, the German
           MiCA-regulated stablecoin issuer backed by DWS, Flow Traders, and Galaxy
           Digital, rolled out Agentic Payments using x402 to accept agent-initiated
           transactions and settle them into a Swedish krona stablecoin called SEKAU.
@@ -121,7 +121,7 @@ export default function Page() {
           krona stablecoin they are issuing under the EU framework. Two things matter
           here. First, x402 is now being used to acquire payment in a non-USD asset
           under EU regulatory cover. Second, the settlement leg lands in a real
-          European bank account, not a self-hosted custody wallet — which means the
+          European bank account, not a self-hosted custody wallet. That means the
           off-ramp is regulated, audited, and recognizable to the European Banking
           Authority. The Coinbase-on-Base default did not change. A second supported
           path opened next to it.
@@ -133,14 +133,14 @@ export default function Page() {
 
         <p>
           The x402 spec has had a quiet structural gap. Conformance testing has
-          mostly run against test-echo-cdp — Coinbase’s reference facilitator on
-          Base USDC. That is the right reference. It is also a single-rail reference.
+          mostly run against test-echo-cdp, which is Coinbase’s reference facilitator
+          on Base USDC. That is the right reference. It is also a single-rail reference.
           If every conformance run uses the same facilitator, the same chain, and the
           same asset, the spec proves it works in that lane and proves very little
           about whether it works in any other lane. The variant axis is the dimension
           where you swap one of those (facilitator, chain, asset) and check that the
-          protocol shape — extensions.bazaar, the per-route manifest, the
-          well-known discovery endpoint, the receipt format — still holds.
+          protocol shape (extensions.bazaar, the per-route manifest, the
+          well-known discovery endpoint, the receipt format) still holds.
         </p>
 
         <p>
@@ -169,9 +169,9 @@ export default function Page() {
         </p>
 
         <p>
-          Read those three things together — Fireblocks at the governance layer,
+          Read those three things together. Fireblocks at the governance layer,
           AllUnity at the regulated-currency layer, anchor-x402 at the
-          facilitator-and-rail layer — and the same week-shape shows up. The
+          facilitator-and-rail layer. The same week-shape shows up. The
           single-rail period is closing.
         </p>
 
@@ -268,7 +268,7 @@ export default function Page() {
 
         <p>
           The agent payments stack has spent two years asking which stablecoin,
-          which chain, which custodian. The answer was — and still is — USDC, Base,
+          which chain, which custodian. The answer was, and still is, USDC, Base,
           Coinbase. The new question, the one this week opened, is which other
           rails count as conformant, and who certifies them. That is the question
           the foundation now has to answer in public. We will be watching.
