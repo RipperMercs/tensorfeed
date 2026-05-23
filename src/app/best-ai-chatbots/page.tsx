@@ -59,11 +59,13 @@ const chatbots = [
   {
     name: 'Gemini',
     company: 'Google',
-    model: 'Gemini 2.5 Pro / 2.0 Flash',
-    pricing: 'Free / Advanced $20/mo',
+    model: 'Gemini 3.5 Flash / 3.1 Flash-Lite / 2.5 Pro',
+    pricing: 'Free / Advanced $20/mo / AI Ultra (Spark agent access)',
     contextWindow: '1M tokens',
     strengths: [
       'Massive 1M token context window',
+      'Gemini 3.5 Flash (May 19, 2026) beats the prior Pro tier on agentic coding at roughly 4x throughput',
+      'New Gemini Spark agent reasons across connected apps for AI Ultra subscribers',
       'Deep Google Workspace integration',
       'Strong multimodal capabilities (images, video, audio)',
       'Excellent at research with Google Search integration',
@@ -163,7 +165,7 @@ export default function BestAIChatbotsPage() {
         title="AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini"
         description="Honest 2026 AI chatbot comparison across pricing, context window, benchmarks, free tier, and best use case. With live API status for each provider."
         datePublished="2025-08-01"
-        dateModified="2026-05-04"
+        dateModified="2026-05-23"
       />
       <BreadcrumbListJsonLd
         items={[
@@ -173,7 +175,7 @@ export default function BestAIChatbotsPage() {
         ]}
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: May 4, 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: May 23, 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini

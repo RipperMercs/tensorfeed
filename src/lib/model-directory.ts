@@ -406,6 +406,44 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     docsUrl: 'https://api-docs.deepseek.com/',
     tier: 'budget',
   },
+
+  // ── Alibaba ────────────────────────────────────────────────────────
+  {
+    slug: 'qwen3-7-max',
+    pricingId: 'qwen3-7-max',
+    benchmarkName: 'Qwen3.7-Max',
+    providerId: 'alibaba',
+    providerName: 'Alibaba',
+    providerUrl: 'https://qwenlm.ai',
+    seoTitle: 'Qwen3.7-Max: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Qwen3.7-Max by Alibaba. The 1M-context flagship that topped the public Intelligence Index at 57. Pricing, benchmarks, and specs on TensorFeed.',
+    intro:
+      'Qwen3.7-Max is Alibaba\'s May 2026 flagship model, landed on the Alibaba Cloud API on May 19 and unveiled at the 2026 Cloud Summit on May 20. At $2.50 per million input and $7.50 per million output tokens, with a 1,000,000 token context window and up to 65,536 output tokens, it carries an extended-thinking mode and claims of autonomous operation for up to 35 hours on long-horizon agentic tasks. Posted the top result on the public Artificial Analysis Intelligence Index at 57 and roughly 1,475 Elo on the LM Arena text leaderboard at release. Cached input drops to $0.25 per million tokens via OpenRouter, a 90 percent discount that makes repeated long-context calls dramatically cheaper.',
+    strengths: ['1M token context window', 'Top public Intelligence Index (57, #1)', 'Extended thinking mode', '35-hour autonomous agentic operation', '90 percent cache discount on input'],
+    useCases: ['Long-horizon agentic workflows', 'Deep multi-step reasoning', 'Agentic coding with sustained context', 'Document and codebase analysis at 1M scale'],
+    docsUrl: 'https://help.aliyun.com/zh/dashscope/',
+    tier: 'flagship',
+  },
+
+  // ── NVIDIA ─────────────────────────────────────────────────────────
+  {
+    slug: 'nemotron-3-nano-omni',
+    pricingId: 'nemotron-3-nano-omni',
+    benchmarkName: 'Nemotron 3 Nano Omni',
+    providerId: 'nvidia',
+    providerName: 'NVIDIA',
+    providerUrl: 'https://www.nvidia.com/en-us/ai/',
+    seoTitle: 'Nemotron 3 Nano Omni: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'NVIDIA Nemotron 3 Nano Omni. Open multimodal 30B-A3B model with native vision, audio, video. Specs, benchmarks, and self-host options on TensorFeed.',
+    intro:
+      'Nemotron 3 Nano Omni 30B-A3B-Reasoning is NVIDIA\'s April 2026 open-weight multimodal release, built on a hybrid Mamba-Transformer-MoE backbone that activates 3 billion of 30 billion parameters per token. It processes text, image, video, and audio in one unified sequence with a 256K context window and native audio handling up to 20 minutes per clip. Tops six public leaderboards including OCRBenchV2-En (65.8), MMLongBench-Doc (57.5), OSWorld (47.4), Video-MME (72.2), WorldSense (55.4), DailyOmni (74.1), and VoiceBench (89.4). Available on Hugging Face in BF16, FP8, and NVFP4 quantizations; the NVFP4 build runs on a consumer 24GB GPU.',
+    strengths: ['Native multimodal (text, image, video, audio)', '256K context window', 'Top scores on document and video benchmarks', 'Open weights with consumer-GPU formats', 'Audio as first-class modality'],
+    useCases: ['Long document and PDF intelligence', 'Video and audio understanding agents', 'Computer-use and GUI automation', 'Self-hosted multimodal inference'],
+    docsUrl: 'https://huggingface.co/nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16',
+    tier: 'mid',
+  },
 ];
 
 /** Look up a model by its URL slug */

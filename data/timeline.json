@@ -15,11 +15,18 @@
       "description": "Google introduces Gemini Spark, a general-purpose AI agent inside the Gemini app that can reason across connected apps and take actions on the user's behalf. Available first to trusted testers and Google AI Ultra subscribers in the week following the keynote."
     },
     {
-      "date": "2026-05-18",
-      "title": "Alibaba Releases Qwen3 Coder Next",
+      "date": "2026-05-20",
+      "title": "Alibaba Unveils Qwen3.7-Max at Cloud Summit",
       "provider": "Alibaba",
+      "category": "model-release",
+      "description": "Alibaba unveils Qwen3.7-Max at the 2026 Alibaba Cloud Summit, the flagship proprietary model in the Qwen3.7 family. 1 million token context window, extended thinking mode, claims of autonomous operation up to 35 hours on long-horizon agentic tasks. Scored 57 on the Artificial Analysis Intelligence Index (first place on the public leaderboard) and roughly 1,475 Elo on the LM Arena text leaderboard. Landed on the Alibaba API platform on May 19, formally announced May 20. Priced at $2.50 per million input and $7.50 per million output tokens via OpenRouter."
+    },
+    {
+      "date": "2026-04-28",
+      "title": "NVIDIA Releases Nemotron 3 Nano Omni",
+      "provider": "NVIDIA",
       "category": "open-source",
-      "description": "Alibaba ships Qwen3 Coder Next, the next-generation code-specialist variant in the Qwen3 family. Tuned for software engineering, tool use, and agentic coding workflows."
+      "description": "NVIDIA ships Nemotron 3 Nano Omni 30B-A3B-Reasoning, an open-weight multimodal model that processes text, image, video, and audio in a unified sequence. Hybrid Mamba-Transformer-MoE backbone (30B total, 3B active per token), 256K context window, native audio handling up to 20 minutes per clip. Tops six leaderboards for document intelligence and video/audio understanding including OCRBenchV2-En (65.8), MMLongBench-Doc (57.5), OSWorld (47.4), Video-MME (72.2), and VoiceBench (89.4). Available on Hugging Face in BF16, FP8, and NVFP4 quantizations."
     },
     {
       "date": "2026-05-07",

@@ -360,6 +360,44 @@
           "tier": "budget"
         }
       ]
+    },
+    {
+      "id": "alibaba",
+      "name": "Alibaba",
+      "logo": "/images/providers/alibaba.png",
+      "url": "https://qwenlm.ai",
+      "models": [
+        {
+          "id": "qwen3-7-max",
+          "name": "Qwen3.7-Max",
+          "inputPrice": 2.5,
+          "outputPrice": 7.5,
+          "contextWindow": 1000000,
+          "released": "2026-05",
+          "capabilities": ["text", "code", "reasoning", "tool-use"],
+          "tier": "flagship"
+        }
+      ]
+    },
+    {
+      "id": "nvidia",
+      "name": "NVIDIA",
+      "logo": "/images/providers/nvidia.png",
+      "url": "https://www.nvidia.com/en-us/ai/",
+      "models": [
+        {
+          "id": "nemotron-3-nano-omni",
+          "name": "Nemotron 3 Nano Omni",
+          "inputPrice": 0,
+          "outputPrice": 0,
+          "contextWindow": 256000,
+          "released": "2026-04",
+          "openSource": true,
+          "license": "NVIDIA Open Model License",
+          "capabilities": ["text", "vision", "audio", "video", "code", "reasoning", "tool-use"],
+          "tier": "mid"
+        }
+      ]
     }
   ],
   "pricingNotes": {

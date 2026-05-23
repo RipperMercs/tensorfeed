@@ -141,6 +141,38 @@ export const PROVIDERS: ProviderMeta[] = [
     keyProducts: ['DeepSeek V4 Pro', 'DeepSeek V4 Flash', 'DeepSeek API'],
     strengths: ['MIT open source license', 'Near-frontier benchmarks', 'Ultra-competitive pricing', 'Native 1M context', 'Strong coding performance'],
   },
+  {
+    slug: 'alibaba',
+    pricingId: 'alibaba',
+    name: 'Alibaba',
+    url: 'https://qwenlm.ai',
+    seoTitle: 'Alibaba Qwen: Qwen3.7-Max, Models, Pricing, and Overview',
+    seoDescription:
+      'Everything about Alibaba and the Qwen family. Qwen3.7-Max, 1M context, agentic reasoning, pricing, benchmarks, and capabilities. Updated daily on TensorFeed.',
+    intro:
+      'Alibaba is the Chinese hyperscaler behind the Qwen family of models, one of the most prolific release cadences in AI. Their May 2026 flagship Qwen3.7-Max landed on the Alibaba Cloud API on May 19 and was formally unveiled at the 2026 Alibaba Cloud Summit on May 20. It carries a 1 million token context window, an extended-thinking mode, and posted the top result on the public Artificial Analysis Intelligence Index at 57, with roughly 1,475 Elo on the LM Arena text leaderboard. Alibaba claims Qwen3.7-Max can run agentic workloads autonomously for up to 35 hours on long-horizon tasks. Earlier members of the family including Qwen3 Coder Next, Qwen3.5 Plus, and Qwen3.6 Plus remain widely deployed across OpenRouter and self-hosted setups.',
+    founded: '1999 (Alibaba); 2023 (Qwen)',
+    headquarters: 'Hangzhou, China',
+    ceo: 'Eddie Wu',
+    keyProducts: ['Qwen3.7-Max', 'Qwen3.6 Plus', 'Qwen3 Coder Next', 'Alibaba Cloud Model Studio', 'Zhenwu AI Chip'],
+    strengths: ['1M token context', 'Top public Intelligence Index score', 'Extended thinking mode', 'Long-horizon agentic operation', 'Aggressive open-weight cadence'],
+  },
+  {
+    slug: 'nvidia',
+    pricingId: 'nvidia',
+    name: 'NVIDIA',
+    url: 'https://www.nvidia.com/en-us/ai/',
+    seoTitle: 'NVIDIA AI: Nemotron Models, Pricing, and Overview',
+    seoDescription:
+      'Everything about NVIDIA AI and the Nemotron family. Open multimodal models, document and video intelligence, benchmarks, and self-hosted deployment. Updated daily on TensorFeed.',
+    intro:
+      'NVIDIA is best known as the GPU company that powers the AI industry, but their model lineup matters too. The Nemotron family is purpose-built to showcase what their hardware can do, and the April 2026 release of Nemotron 3 Nano Omni 30B-A3B-Reasoning landed as one of the strongest open multimodal models of the year. It processes text, image, video, and audio in a single unified sequence via a hybrid Mamba-Transformer-MoE backbone (30B total parameters, 3B active per token), with a 256K token context window and native audio handling up to 20 minutes per clip. It tops six public leaderboards for document intelligence, video understanding, and voice interaction, and is available on Hugging Face under an open weight license in BF16, FP8, and NVFP4 quantizations including consumer-GPU formats.',
+    founded: '1993',
+    headquarters: 'Santa Clara, CA',
+    ceo: 'Jensen Huang',
+    keyProducts: ['Nemotron 3 Nano Omni', 'NIM inference microservices', 'build.nvidia.com', 'NeMo framework', 'Parakeet ASR'],
+    strengths: ['Open weights with consumer GPU support', '256K context multimodal', 'Top document and video benchmarks', 'Native audio as first-class modality', 'Self-hosted deployment focus'],
+  },
 ];
 
 export function getProviderBySlug(slug: string): ProviderMeta | undefined {
