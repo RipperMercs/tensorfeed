@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-05-10",
+  "lastUpdated": "2026-05-23",
   "providers": [
     {
       "id": "anthropic",
@@ -197,6 +197,22 @@
             "reasoning"
           ],
           "tier": "budget"
+        },
+        {
+          "id": "gemini-3-5-flash",
+          "name": "Gemini 3.5 Flash",
+          "inputPrice": 1.5,
+          "outputPrice": 9,
+          "contextWindow": 1048576,
+          "released": "2026-05",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
+          "tier": "mid"
         }
       ]
     },

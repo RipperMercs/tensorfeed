@@ -67,11 +67,11 @@ export const PROVIDERS: ProviderMeta[] = [
     seoDescription:
       'Everything about Google AI and Gemini. Model lineup, pricing, 1M context window, benchmarks, and status. Updated daily on TensorFeed.',
     intro:
-      'Google brings the deepest infrastructure advantage to the AI race. Their Gemini 2.5 Pro offers a 1 million token context window, and their Flash models deliver some of the lowest per-token pricing available. At Google Cloud Next \'26 in Las Vegas on April 22, 2026, Google launched the Gemini Enterprise Agent Platform (the evolution of Vertex AI), backed by a $750 million partner fund, and announced that Gemini will power the next generation of Apple\'s Siri. Backed by custom TPU hardware and decades of ML research (Transformer architecture was invented at Google), they compete on both the frontier and the budget ends of the market.',
+      'Google brings the deepest infrastructure advantage to the AI race. Their Gemini 2.5 Pro offers a 1 million token context window, and their Flash models deliver some of the lowest per-token pricing available. At Google I/O 2026 on May 19, Google shipped Gemini 3.5 Flash, the first Flash-tier release that beats the previous Pro flagship on agentic coding suites at roughly 4x the throughput, alongside Gemini Spark, a general-purpose agent that reasons across connected apps. At Google Cloud Next \'26 in Las Vegas on April 22, 2026, Google launched the Gemini Enterprise Agent Platform (the evolution of Vertex AI), backed by a $750 million partner fund, and announced that Gemini will power the next generation of Apple\'s Siri. Backed by custom TPU hardware and decades of ML research (Transformer architecture was invented at Google), they compete on both the frontier and the budget ends of the market.',
     founded: '1998 (Google); 2023 (Google DeepMind)',
     headquarters: 'Mountain View, CA',
     ceo: 'Sundar Pichai',
-    keyProducts: ['Gemini 2.5 Pro', 'Gemini 3.1 Flash-Lite', 'Gemini 2.0 Flash', 'Gemini Enterprise Agent Platform', 'NotebookLM', 'Vertex AI', 'Google AI Studio'],
+    keyProducts: ['Gemini 3.5 Flash', 'Gemini 2.5 Pro', 'Gemini 3.1 Flash-Lite', 'Gemini 2.0 Flash', 'Gemini Spark', 'Gemini Enterprise Agent Platform', 'NotebookLM', 'Vertex AI', 'Google AI Studio'],
     strengths: ['1M token context window', 'Lowest-cost budget models', 'Custom TPU infrastructure', 'Vertex AI enterprise platform', 'NotebookLM research integration'],
     statusSlug: 'is-gemini-down',
   },

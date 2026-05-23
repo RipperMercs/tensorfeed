@@ -1,6 +1,27 @@
 {
   "events": [
     {
+      "date": "2026-05-19",
+      "title": "Google Launches Gemini 3.5 Flash at I/O 2026",
+      "provider": "Google",
+      "category": "model-release",
+      "description": "Google ships Gemini 3.5 Flash to general availability at I/O 2026. Priced at $1.50 per million input and $9.00 per million output tokens, with a 1,048,576 token context window. The first Flash-tier release that outscores the previous Pro flagship (Gemini 3.1 Pro) on agentic coding suites including Terminal-Bench 2.1 (76.2%) and MCP Atlas (83.6%), at roughly 4x the throughput."
+    },
+    {
+      "date": "2026-05-19",
+      "title": "Google Announces Gemini Spark Agent at I/O 2026",
+      "provider": "Google",
+      "category": "product-launch",
+      "description": "Google introduces Gemini Spark, a general-purpose AI agent inside the Gemini app that can reason across connected apps and take actions on the user's behalf. Available first to trusted testers and Google AI Ultra subscribers in the week following the keynote."
+    },
+    {
+      "date": "2026-05-18",
+      "title": "Alibaba Releases Qwen3 Coder Next",
+      "provider": "Alibaba",
+      "category": "open-source",
+      "description": "Alibaba ships Qwen3 Coder Next, the next-generation code-specialist variant in the Qwen3 family. Tuned for software engineering, tool use, and agentic coding workflows."
+    },
+    {
       "date": "2026-05-07",
       "title": "OpenAI Launches GPT-5.5-Cyber Preview",
       "provider": "OpenAI",

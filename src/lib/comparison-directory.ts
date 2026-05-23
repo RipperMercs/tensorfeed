@@ -662,6 +662,44 @@ export const COMPARISONS: ComparisonMeta[] = [
       'Workloads on Google Cloud / Vertex AI',
     ],
   },
+  {
+    slug: 'gemini-3-5-flash-vs-claude-sonnet-4-6',
+    modelA: 'gemini-3-5-flash',
+    modelB: 'claude-sonnet-4-6',
+    nameA: 'Gemini 3.5 Flash',
+    nameB: 'Claude Sonnet 4.6',
+    providerA: 'Google',
+    providerB: 'Anthropic',
+    benchmarkNameA: 'Gemini 3.5 Flash',
+    benchmarkNameB: 'Claude Sonnet 4.6',
+    seoTitle: 'Gemini 3.5 Flash vs Claude Sonnet 4.6 (2026): Mid-Tier Agentic Showdown',
+    seoDescription:
+      'Gemini 3.5 Flash vs Claude Sonnet 4.6. The two leading mid-tier agentic models compared on pricing, context, coding benchmarks, and tool use on TensorFeed.',
+    intro:
+      'Gemini 3.5 Flash (May 19, 2026) and Claude Sonnet 4.6 occupy the same mid-tier slot but solve different sides of the daily-driver problem. Flash 3.5 is the first Flash-tier release to beat the previous Pro flagship on agentic coding suites (Terminal-Bench 2.1 at 76.2%, MCP Atlas at 83.6%) while running at roughly 289 output tokens per second and shipping a 1M-token input window. Sonnet 4.6 still leads on academic reasoning (MMLU-Pro 88.7) and code generation (HumanEval 92.0) at a 200K context, and remains the default for MCP-native agent stacks. The decision usually comes down to throughput and context vs raw English benchmark scores.',
+    verdicts: [
+      { category: 'Agentic coding (Terminal-Bench, MCP Atlas)', winner: 'A', reason: 'Flash 3.5 beats the previous Pro flagship on both suites at Flash-tier pricing.' },
+      { category: 'Context window', winner: 'A', reason: 'Flash 3.5 has a 1,048,576 token input window vs Sonnet 4.6 at 200K. Roughly 5x more.' },
+      { category: 'Throughput', winner: 'A', reason: 'Flash 3.5 runs at around 289 output tokens per second, roughly 4x the prior Gemini frontier tier.' },
+      { category: 'Input pricing', winner: 'A', reason: 'Flash 3.5 at $1.50/1M vs Sonnet 4.6 at $3/1M. Half the input cost.' },
+      { category: 'Output pricing', winner: 'A', reason: 'Flash 3.5 at $9/1M vs Sonnet 4.6 at $15/1M. Roughly 40 percent cheaper on output.' },
+      { category: 'Code generation (HumanEval)', winner: 'B', reason: 'Sonnet 4.6 published HumanEval at 92.0; Google did not publish a HumanEval score for Flash 3.5.' },
+      { category: 'General reasoning (MMLU-Pro)', winner: 'B', reason: 'Sonnet 4.6 at 88.7 published; Flash 3.5 MMLU-Pro is reported around 88.3 on third-party leaderboards.' },
+      { category: 'MCP and tool use', winner: 'tie', reason: 'Both are first-class MCP citizens. Anthropic owns the spec; Google scored 83.6 on the MCP Atlas suite.' },
+    ],
+    chooseA: [
+      'Agentic coding and tool-use workflows at high throughput',
+      'RAG and long-document workloads (1M context)',
+      'Cost-sensitive mid-tier production at $1.50/$9 pricing',
+      'Workloads on Google Cloud / Vertex AI',
+    ],
+    chooseB: [
+      'English-heavy academic reasoning workloads',
+      'Anthropic ecosystem (Claude Code, MCP-first agent stacks)',
+      'Code generation where HumanEval and SWE-bench scores still drive selection',
+      'Teams standardized on the Claude API for safety and tool-use semantics',
+    ],
+  },
 ];
 
 export function getComparisonBySlug(slug: string): ComparisonMeta | undefined {

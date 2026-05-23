@@ -245,6 +245,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     docsUrl: 'https://ai.google.dev/gemini-api/docs',
     tier: 'budget',
   },
+  {
+    slug: 'gemini-3-5-flash',
+    pricingId: 'gemini-3-5-flash',
+    benchmarkName: 'Gemini 3.5 Flash',
+    providerId: 'google',
+    providerName: 'Google',
+    providerUrl: 'https://ai.google.dev',
+    seoTitle: 'Gemini 3.5 Flash: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Gemini 3.5 Flash by Google. The first Flash-tier model to beat the previous Pro flagship on coding and agentic tasks. Pricing, context window, and specs on TensorFeed.',
+    intro:
+      'Gemini 3.5 Flash went generally available on May 19, 2026 at Google I/O. At $1.50 per million input tokens and $9.00 per million output, with a 1,048,576 token input window and 65,536 output tokens, it is the first Flash-tier release that beats the previous Pro flagship (Gemini 3.1 Pro) on agentic coding suites (Terminal-Bench 2.1 at 76.2%, MCP Atlas at 83.6%, CharXiv Reasoning at 84.2%) while running roughly 4x faster at around 289 output tokens per second. Google positions it as the new daily-driver for coding agents and tool-use workflows where throughput and price-per-task matter.',
+    strengths: ['Beats Gemini 3.1 Pro on agentic coding', '1M token input context', 'Roughly 4x faster than prior frontier tier', 'Reasoning, vision, and tool use included'],
+    useCases: ['Agentic coding and SWE-style tool use', 'High-throughput RAG over long contexts', 'Live customer-facing assistants', 'Computer-use and MCP-driven agents'],
+    docsUrl: 'https://ai.google.dev/gemini-api/docs',
+    tier: 'mid',
+  },
 
   // ── Meta ───────────────────────────────────────────────────────────
   {
