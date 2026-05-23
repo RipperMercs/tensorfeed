@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'free-tier-on-paid-routes',
+    title:
+      'x402 Has Three Options for Free Trials on Paid Routes. We Shipped a Fourth.',
+    author: 'Ripper',
+    date: 'May 22, 2026',
+    readTime: '7 min read',
+    description:
+      'A thread on x402#2207 enumerated three options for how a paid x402 endpoint can offer a free trial without breaking the spec: a custom alt-challenge header, a probe-with-X-PAYMENT-rejected handshake, or dedicated free endpoints adjacent to every paid one. TensorFeed has been running a fourth in production. The trial lives in the rate-limiter, never at the 402 layer: 100 free calls per IP per 24h on the non-strict-premium subset of /api/premium/*, quota exhausted returns a canonical x402 V2 402, the ~30% strict-premium subset skips the trial so anonymous crawlers always see canonical 402, and X-TF-Free-Trial-* response headers make the pool discoverable to paying agents. x402trace v0.3.2 shipped on May 22 and exercised the pattern in one probe (D.4 per-route, D.5 body-discovery variant, D.3 indexer-state). Inside: the three options, the fourth, the two design decisions that hold it together, and the full v0.3.2 verdict envelope.',
+  },
+  {
     slug: 'x402-multi-rail-fireblocks-allunity',
     title:
       'Fireblocks Brought Spend Governance. AllUnity Brought a Krona. x402 Stopped Being a One-Rail Protocol This Week.',

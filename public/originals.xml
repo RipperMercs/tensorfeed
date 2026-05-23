@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>TensorFeed.ai Originals</title>
+    <link>https://tensorfeed.ai</link>
+    <description>Original AI editorial from the TensorFeed team.</description>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 22 May 2026 16:00:00 GMT</lastBuildDate>
+    <atom:link href="https://tensorfeed.ai/originals.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title><![CDATA[x402 Has Three Options for Free Trials on Paid Routes. We Shipped a Fourth.]]></title>
+      <link>https://tensorfeed.ai/originals/free-tier-on-paid-routes</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/free-tier-on-paid-routes</guid>
+      <pubDate>Fri, 22 May 2026 16:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[A thread on x402#2207 enumerated three options for how a paid x402 endpoint can offer a free trial without breaking the spec: a custom alt-challenge header, a probe-with-X-PAYMENT-rejected handshake, or dedicated free endpoints adjacent to every paid one. TensorFeed has been running a fourth in production. The trial lives in the rate-limiter, never at the 402 layer: 100 free calls per IP per 24h on the non-strict-premium subset of /api/premium/*, quota exhausted returns a canonical x402 V2 402, the ~30% strict-premium subset skips the trial so anonymous crawlers always see canonical 402, and X-TF-Free-Trial-* response headers make the pool discoverable to paying agents. x402trace v0.3.2 shipped on May 22 and exercised the pattern in one probe (D.4 per-route, D.5 body-discovery variant, D.3 indexer-state). Inside: the three options, the fourth, the two design decisions that hold it together, and the full v0.3.2 verdict envelope.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Fireblocks Brought Spend Governance. AllUnity Brought a Krona. x402 Stopped Being a One-Rail Protocol This Week.]]></title>
+      <link>https://tensorfeed.ai/originals/x402-multi-rail-fireblocks-allunity</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/x402-multi-rail-fireblocks-allunity</guid>
+      <pubDate>Thu, 21 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[Two announcements landed on May 20. Fireblocks — institutional crypto custody, not a startup — joined the x402 Foundation and shipped a security extension for request integrity and spend governance. The same day, Germany’s MiCA-regulated AllUnity rolled out Agentic Payments using x402 to settle into a Swedish krona stablecoin. The next morning, a third party offered the spec authors a non-Coinbase, three-rail acceptance fixture on #2207 covering Base USDC, Solana USDC, and JPYC on Polygon. x402 was a Coinbase-and-Cloudflare default six months ago. After this week the variant axis is open.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[TensorFeed AI Status Is Now a Chrome Extension. Live AI Health Sits in Your Toolbar.]]></title>
+      <link>https://tensorfeed.ai/originals/ai-status-extension-live</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-status-extension-live</guid>
+      <pubDate>Wed, 20 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[Our embeddable Live Monitor just shipped as a Chrome extension, approved and public on the Web Store as of today. A toolbar popup with real status and real p95 latency for every major AI provider, plus a passive badge that quietly turns amber or red the moment something degrades. Same honest-by-construction rules as the widget, in the surface that already lives next to your address bar. One click to install, no account, no tracking, host access scoped to tensorfeed.ai only. Inside: why a toolbar popup is the right surface for an AI health signal, the CSP frame-ancestors detail that almost killed the review, and what permissions we deliberately did not ask for.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Karpathy Joined Anthropic. That Is the Fourth Structural Move in One Week.]]></title>
+      <link>https://tensorfeed.ai/originals/anthropic-karpathy-four-moves-one-week</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/anthropic-karpathy-four-moves-one-week</guid>
+      <pubDate>Tue, 19 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[Andrej Karpathy, an OpenAI founding member, joined Anthropic on May 19 to help launch a team that uses Claude to accelerate its own pretraining. Read in isolation it is a talent coup. Read against the last seven days it is the fourth structural move Anthropic has made, each on a different layer of the stack: capacity (Claude Code limits), capital (a reported $900B round), supply chain (the Stainless SDK pipeline), and now talent. The pattern is the story, and talent is the apex because it is the one layer a term sheet cannot buy.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Anthropic Bought the Pipeline Its Rivals Ship Their SDKs On. Then It Turned the Hosted Product Off.]]></title>
+      <link>https://tensorfeed.ai/originals/anthropic-stainless-sdk-supply-chain</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/anthropic-stainless-sdk-supply-chain</guid>
+      <pubDate>Tue, 19 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[Anthropic acquired Stainless, the codegen company that generates the official SDKs (and MCP servers) for OpenAI, Google, Cloudflare, Runway, and Anthropic itself, reportedly for more than $300 million against a $150M Series A seventeen months earlier. Then it said it will wind down every hosted Stainless product. The frozen-SDK reassurance is real and beside the point: the asset was never the generated code, it was the regeneration loop, and that loop is now an Anthropic internal tool. A supply-chain move on the layer between an API and the agents that call it, wearing an acquisition’s clothes.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[OpenAI Wants ChatGPT in Your Bank Account. That Is the Opposite of How Agent Money Should Work.]]></title>
+      <link>https://tensorfeed.ai/originals/openai-chatgpt-bank-access-agent-trust-gap</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/openai-chatgpt-bank-access-agent-trust-gap</guid>
+      <pubDate>Sun, 17 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[OpenAI is wiring ChatGPT into financial accounts through a Plaid connection. Broad standing access to your bank is the convenient answer and the wrong architecture. The other one is not theoretical: no custody, per-action authorization, a signed receipt for every paid call. Today our own /api/stats crossed into the thousands of verifiable paid agent calls, each with a receipt an auditor can check against our published key. That contrast is the whole argument: convenience is winning the demo, it should not win the standard.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Mistral Says Europe Has Two Years. The Compute Map Says the Clock Runs Faster Than That.]]></title>
+      <link>https://tensorfeed.ai/originals/mistral-europe-ai-sovereignty-two-year-clock</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/mistral-europe-ai-sovereignty-two-year-clock</guid>
+      <pubDate>Sun, 17 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Kira Nolan]]></dc:creator>
+      <description><![CDATA[The Mistral CEO told Europe it has roughly two years to avoid becoming an American AI vassal state. Read against the data we already publish, the warning is correct and the timeline is generous: the frontier tier on our model catalog is almost entirely US labs, attention concentrates there too, and the compute that decides the next two years is being financed through American IPOs and Gulf capital. The model layer is not where Europe is behind. The layers under it are.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Codex Bleed: Anthropic Just Made Its Third Capacity Move in Five Weeks]]></title>
+      <link>https://tensorfeed.ai/originals/codex-bleed-anthropic-three-interventions</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/codex-bleed-anthropic-three-interventions</guid>
+      <pubDate>Sat, 16 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[Anthropic bumped Claude Code weekly limits 50 percent through July 13, then re-allowed third-party agent harnesses on paid plans behind a separate credit meter, then watched Sam Altman dangle two free months of Codex at every new business customer. Three live interventions on the same product surface in 35 days. Inside the 4.2x token-efficiency gap that makes Codex structurally cheaper to deliver, the $900B funding round running on top of the same unit-economics problem, and the July 13 sunset that gives Anthropic eight weeks to figure out what the agent subscription actually costs.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Cerebras Went Public at a $95 Billion Close. The Non-Nvidia Inference Bet Is Now a Market Story.]]></title>
+      <link>https://tensorfeed.ai/originals/cerebras-95-billion-ipo-inference-bet</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/cerebras-95-billion-ipo-inference-bet</guid>
+      <pubDate>Sat, 16 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[Cerebras priced its IPO at $185, above the raised $150 to $160 range, opened at $350 on May 14, and closed day one up 68 percent near a $95 billion market cap, then gave back about 10 percent on day two. The largest US tech IPO since Uber in 2019 sits on $510 million of revenue, a non-GAAP loss, a $10 billion OpenAI contract, and 86 percent revenue from two UAE entities. The mechanics, the asterisks, and what it does to the compute capital map.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Wafer-Scale vs the GPU: What Cerebras Actually Sells, and Why It Only Matters for Inference]]></title>
+      <link>https://tensorfeed.ai/originals/wafer-scale-vs-gpu-what-cerebras-sells</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/wafer-scale-vs-gpu-what-cerebras-sells</guid>
+      <pubDate>Sat, 16 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[Now that Cerebras is public, the question is the chip, not the valuation. The WSE-3 is one 46,225 square millimeter die: 4 trillion transistors, 900,000 cores, the whole model resident in on-wafer SRAM. Cerebras and Artificial Analysis report Llama 4 Maverick at 2,522 tokens per second against 1,038 on Nvidia Blackwell. Why on-wafer residence collapses token latency, why latency is the cost that compounds in agent loops, and the honest bear case.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Cerebras Cleared the IPO. It Did Not Clear the G42 Question.]]></title>
+      <link>https://tensorfeed.ai/originals/cerebras-g42-cfius-national-security-tax</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/cerebras-g42-cfius-national-security-tax</guid>
+      <pubDate>Sat, 16 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Kira Nolan]]></dc:creator>
+      <description><![CDATA[The CFIUS review of the G42 stake is what postponed this exact IPO in 2024. The 2026 listing went through after the investment was restructured into non-voting shares and the notice was withdrawn, not after the dependence was removed. The 86 percent revenue concentration in two UAE entities is still in the S-1 as a risk. Why national-security scrutiny was papered rather than resolved, and why it is now a structural tax on the 2026 AI-silicon IPO class.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[We Made AI Status Embeddable: One Line of HTML, Live on Any Site]]></title>
+      <link>https://tensorfeed.ai/originals/live-ai-status-widget</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/live-ai-status-widget</guid>
+      <pubDate>Fri, 15 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[We shipped a free, self-contained widget that drops a real-time AI status console onto any site with one line of HTML. Sixteen LLM providers and counting, real p95 latency where we probe and real seven-day uptime where we do not, no fabricated charts, no cry-wolf alarms, no ads. Inside the honest-by-construction engineering (vendor status authoritative, the probe never overrides it, NO DATA is never an outage), why an embeddable trust widget is the cleanest discovery loop for humans and agents, and the three ways to embed it: one line of HTML, the zero-dependency @tensorfeed/status-widget npm component, or the browser extension on the way.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[This Week in AI: Four Days to I/O, Eight Models Going Dark, and a $950B Number]]></title>
+      <link>https://tensorfeed.ai/originals/ai-week-may-15-2026</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-week-may-15-2026</guid>
+      <pubDate>Fri, 15 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Kira Nolan]]></dc:creator>
+      <description><![CDATA[Google sandbagged its own keynote with the Android Show and shipped Gemini Intelligence on Monday. Anthropic let the $900B to $950B valuation talks leak Tuesday. xAI sunsets eight models at noon Pacific today. Apple started rewriting App Store rules for autonomous agents. Amazon killed Rufus and replaced it with Alexa for Shopping. The Snap-Perplexity $400M deal collapsed. The pre-Google-I/O positioning week ran louder than the keynote it leads into. Inside the seven moves that mattered and what to watch when Sundar takes the stage Tuesday.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Google Just Put 60 Payment Companies Behind a Crypto-Native Agent Rail]]></title>
+      <link>https://tensorfeed.ai/originals/google-a2a-x402-payments-extension</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/google-a2a-x402-payments-extension</guid>
+      <pubDate>Thu, 14 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[Google's A2A x402 extension shipped v0.2 with a coalition that includes Mastercard, American Express, PayPal, Adyen, Worldpay, JCB, UnionPay, Coinbase, Circle, MetaMask, the Ethereum Foundation, Etsy, Salesforce, ServiceNow, and roughly forty others. A coalition that size has not formed around a payments standard since ISO 8583. Inside what the spec reuses from canonical x402 V2 (PaymentRequirements, PaymentPayload, EIP-3009 settlement, all identical), what is genuinely new (JSON-RPC transport over A2A messages, AgentCard discovery, the Global A2A Registry), and why the acceptance side of agent commerce is being laid before the demand side has arrived.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[271 Zero-Days, Five Schemas: The AI-Cyber Data Layer Just Got Load-Bearing]]></title>
+      <link>https://tensorfeed.ai/originals/cve-data-layer-matters-now</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/cve-data-layer-matters-now</guid>
+      <pubDate>Thu, 14 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[AI-driven vulnerability discovery is no longer theoretical. Claude Mythos surfaced 271 Firefox zero-days in one cycle. The third major Linux kernel flaw in two weeks was attributed to AI-assisted research. OpenAI Daybreak shipped two days ago. The agents finding vulns now move faster than the data layer they need to call. Inside the five-schemas-five-cadences problem (MITRE CVE, CISA KEV, FIRST EPSS, OSV, Vulnrichment), the cross-database verified-CVE call we ship as the fix, and why TensorFeed cares about a security data layer it does not build agents on top of. We also shipped /cve-watch today as the canonical hub.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Same Dollar, Same Chain, Same Custodian: The Agentic USDC Stack Is Converging]]></title>
+      <link>https://tensorfeed.ai/originals/agentic-usdc-pay-and-trade-converge</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/agentic-usdc-pay-and-trade-converge</guid>
+      <pubDate>Thu, 14 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[AgentCore Payments uses USDC for agents to buy APIs. Hyperliquid just standardized USDC as agent trading collateral, with Coinbase as official treasury deployer and Circle staking HYPE. We settled five real x402 payments through CDP this morning, each $0.02 on Base, broadcast by Coinbase's own facilitator wallet. The agent economy plumbing is converging on one asset, one chain, one custodian. Inside what the two announcements actually mean for builders, the boring detail nobody is leading with, and what is still missing (Bazaar indexing is broken, agentic.market is closed, but the underlying just stopped moving).]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Apple Just Got a 20-Day Window. Between Google I/O and WWDC, It Has To Rewrite the Siri Story.]]></title>
+      <link>https://tensorfeed.ai/originals/apple-20-day-window-io-wwdc</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/apple-20-day-window-io-wwdc</guid>
+      <pubDate>Thu, 14 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[Google I/O lands May 19. Apple WWDC lands June 8. That is a 20-day gap, and it is the most valuable counterprogramming window Apple has gotten in a decade. Inside what Gemini 4 is expected to reveal, what Apple can still swap into the WWDC keynote in three weeks (with a difficulty-ranked move list), why the Siri-as-router framing is the only outcome that preserves Apple's margin position long term, the 2014 and 2017 historical precedents for this exact calendar shape, and the three signposts I am watching between May 19 and June 8.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The FERC Ruling Watch: One Decision Could Reshape Every AI Nuclear Deal]]></title>
+      <link>https://tensorfeed.ai/originals/ferc-ai-data-center-bypass-watch</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/ferc-ai-data-center-bypass-watch</guid>
+      <pubDate>Wed, 13 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[The single highest-stakes pending regulatory decision in the AI buildout is not at the NRC, not at the EPA, not in any state utility commission. It is at FERC, in the matter of the Amazon-Talen Susquehanna interconnection service amendment. In November 2024 FERC blocked the amended ISA that would have let Amazon scale its draw from 480 MW to 960 MW behind the meter; the matter is still procedurally open. Inside the state of play, what FERC has to decide, the three possible outcomes (approves bypass / rejects / splits), the projects at stake on each side (Constellation, Vistra, Dominion, plus Meta + Apple + xAI waiting to file), and the signposts to watch as the decision approaches. Live watch piece, will update when the ruling lands.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[AI Compute in Orbit: The Long-Arc Thesis. Why Solar + Vacuum Beats Texas + Gas (Eventually).]]></title>
+      <link>https://tensorfeed.ai/originals/ai-compute-orbital-thesis</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-compute-orbital-thesis</guid>
+      <pubDate>Wed, 13 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[The reason orbital compute is worth taking seriously is not that we are anywhere near building it. We are not. The reason is that the four constraints terrestrial AI infrastructure runs into right now (grid bottlenecks, water draws, permits, NIMBY) all go away in orbit, and the one constraint that replaces them (launch cost) is the one with a curve actively bending the right way. Inside the math on continuous solar plus vacuum cooling, what Starship economics unlock, the four catches (radiation hardening, mass, ground bandwidth, $/kg), who is exploring (Anthropic + SpaceX, Google Project Suncatcher, Starcloud, defense primes, China), and why this is the 2030-plus long-arc thesis sitting under the 2026 short-cycle gigawatt buildout.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[AI Just Reopened American Nuclear. Inside the Eighteen-Month Shift.]]></title>
+      <link>https://tensorfeed.ai/originals/ai-nuclear-restart-thesis</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-nuclear-restart-thesis</guid>
+      <pubDate>Wed, 13 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[For thirty years US utility nuclear was in retreat. New plants got cancelled, old plants got retired, and the orthodoxy said we were done building reactors. Then in eighteen months: Microsoft signed a 20-year PPA to restart Three Mile Island Unit 1, Amazon bought a direct feed from Talen Susquehanna, Google signed with Kairos Power for up to 500 MW of SMRs, Amazon backed X-energy, Oracle announced three SMRs. AI capital just reopened American nuclear. Inside the deals, why nuclear fits AI workloads so cleanly (24/7 baseload, 20-year PPAs, the carbon math), the FERC fight on grid bypass that could unravel the direct-feed structures, the SMR pipeline behind the restarts (Kairos, X-energy, NuScale, TerraPower), and four signposts to watch over the next twelve months.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The AI Buildout, Plain English: What Is Actually Getting Built]]></title>
+      <link>https://tensorfeed.ai/originals/ai-buildout-explained</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-buildout-explained</guid>
+      <pubDate>Wed, 13 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[The AI industry is putting steel and concrete in the ground at a pace nobody has seen since the dotcom buildout of physical fiber. Stargate, Hyperion, Colossus, nuclear restarts at Three Mile Island, hyperscaler campuses heading for two-gigawatt single-site draw. A plain-English read of what is being built, where, with what power, and what it means for the AI we use. Inside the structural shift to higher silicon density and flatter workload profiles, why hyperscalers are reopening reactors the previous decade closed, the three flashpoints (water draws, grid bypass, local pushback), and why pricing floors for the next three years are set by which campuses come online when. Companion to the new /ai-infrastructure tracker.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Google Just Renamed Android to an 'Intelligence System.' Apple's WWDC Bar Just Got Higher.]]></title>
+      <link>https://tensorfeed.ai/originals/google-gemini-intelligence-android-platform-shift</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/google-gemini-intelligence-android-platform-shift</guid>
+      <pubDate>Wed, 13 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[At The Android Show: I/O Edition on May 12, 2026, Google introduced Gemini Intelligence, a cross-app agentic layer that reads your screen, fills forms, drives Chrome, and books reservations, plus Googlebook, a new Android laptop category. Sameer Samat called it a transition from operating system to intelligence system. Six days before I/O proper, this is what Google decided was important enough to bank ahead of the keynote. Inside what shipped (cross-app agent, Auto-Browse in Chrome, Smart Form Fill, Rambler dictation, Custom Widgets, proactive context), the Android Auto refresh across 250 million vehicles, the Googlebook laptop reentry, how it grades against the May 11 Gemini 4 punch list (two of five items partially down), why the late-June rollout is timed to front-run Apple's WWDC Siri rebuild, and the three things I/O on May 19 still has to land for the framing change to stick.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[OpenAI Just Shipped Daybreak. The Cyber Tier Is Now a Two-Horse Race.]]></title>
+      <link>https://tensorfeed.ai/originals/openai-daybreak-cyber-counter-mythos</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/openai-daybreak-cyber-counter-mythos</guid>
+      <pubDate>Tue, 12 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Kira Nolan]]></dc:creator>
+      <description><![CDATA[OpenAI launched Daybreak on May 12, 2026: a three-tier cyber model stack (GPT-5.5, GPT-5.5 with Trusted Access for Cyber, GPT-5.5-Cyber), the Codex Security agentic harness, and 20-plus security partners spanning Cisco, Palo Alto Networks, CrowdStrike, Cloudflare, Trail of Bits, and SpecterOps. It is OpenAI's explicit answer to Anthropic Claude Mythos and Project Glasswing. Inside the strategic split (Mythos optimized for autonomous discovery with 271 Firefox zero-days in one cycle, Daybreak optimized for workflow integration with day-one partner distribution), what it does to Google and xAI at I/O and beyond, why the regulatory floor moves with the market, and the three signposts I am watching over the next sixty days.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Google I/O Is in Eight Days. Here Is What Gemini 4 Needs to Do to Matter.]]></title>
+      <link>https://tensorfeed.ai/originals/google-io-2026-gemini-4-stakes</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/google-io-2026-gemini-4-stakes</guid>
+      <pubDate>Mon, 11 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[Google I/O 2026 lands May 19, with The Android Show: I/O Edition opening tomorrow. Over the last fourteen days Anthropic committed $200B to Google TPUs, rented every accelerator at Colossus 1, and hit a $30B run rate on 80x Q1 growth. OpenAI shipped a reasoning voice stack. Apple opened Siri to every compatible model. Inside the five-item punch list Gemini 4 has to clear at the keynote (2M+ context that stays priced for long-doc agents, a first-party Claude Code competitor, an Omni video model with shippable benchmarks, a public stance on the cyber tier, and an Apple Intelligence Extensions flag) and why the cost-per-useful-task quadrant is the one Google cannot afford to lose.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Nvidia Just Crossed $40 Billion in AI Equity Bets. The Customer-Investor Loop Is the Real Moat.]]></title>
+      <link>https://tensorfeed.ai/originals/nvidia-40b-equity-customer-investor-loop</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/nvidia-40b-equity-customer-investor-loop</guid>
+      <pubDate>Sun, 10 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Kira Nolan]]></dc:creator>
+      <description><![CDATA[Nvidia's 2026 equity commitments to AI companies just topped $40 billion, anchored by a $30B OpenAI stake and capped this week with $3.2B into Corning and $2.1B into IREN. Add roughly two dozen private startup rounds and seven multi-billion public-equity deals, and a chip vendor is running one of the largest active venture programs on the planet. Inside what each deal actually trades, the circular-investment critique (the Cisco 1999 ghost is real but the analogy is incomplete), what the loop locks in (perimeter defense against TPU, Trainium, MI400, and Maia), and the three risks worth tracking through the next two earnings cycles.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Anthropic's $200B Compute Bill Is Bigger Than Its Revenue. The Google TPU Deal in Numbers.]]></title>
+      <link>https://tensorfeed.ai/originals/anthropic-200b-google-tpu-math</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/anthropic-200b-google-tpu-math</guid>
+      <pubDate>Sat, 09 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[On May 5, 2026, Anthropic committed $200 billion to Google Cloud and Broadcom-built TPUs over five years. That averages $40B per year against a current run-rate revenue of roughly $30B and a 2026 server cost forecast near $20B. Inside the math, why Google effectively recollects most of its $40B Anthropic equity stake on the compute side, what TPU economics (40 to 50% lower than equivalent Nvidia capacity) do to Nvidia's pricing power at the top of the buyer list, and why 2027 is the year the gigawatts actually arrive.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[OpenAI Just Shipped Voice Models That Reason Mid-Sentence. ElevenLabs Has a Pricing Problem.]]></title>
+      <link>https://tensorfeed.ai/originals/openai-gpt-realtime-2-voice-stack</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/openai-gpt-realtime-2-voice-stack</guid>
+      <pubDate>Sat, 09 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Kira Nolan]]></dc:creator>
+      <description><![CDATA[OpenAI shipped GPT-Realtime-2, GPT-Realtime-Translate, and GPT-Realtime-Whisper on May 7, 2026. The first OpenAI voice model with GPT-5-class reasoning, 128K context, and the ability to keep talking while it thinks. Translate at $0.034/min and streaming Whisper at $0.017/min round out a three-model stack priced to make most voice middleware repriceable. Inside the launch, the pricing math against ElevenLabs ($0.08/min) and Deepgram, the reasoning-mid-sentence detail, and what it does to the voice vendor middle.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Anthropic Just Booked 220K GPUs on Colossus 1. The Orbital Footnote Is the Bigger Story.]]></title>
+      <link>https://tensorfeed.ai/originals/anthropic-spacexai-colossus-orbital</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/anthropic-spacexai-colossus-orbital</guid>
+      <pubDate>Sat, 09 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[SpaceXAI signed a compute partnership with Anthropic giving access to Colossus 1 (220,000+ NVIDIA H100, H200, and GB200 accelerators) routing capacity into Claude Pro and Claude Max. The buried lede in the announcement: Anthropic also expressed interest in partnering on multiple gigawatts of orbital AI compute capacity. Inside what Colossus 1 actually buys Anthropic, why orbital compute is now a near-term engineering program rather than a research concept, what this does to the cloud-AI duopoly thesis, and the three signposts to watch on whether the orbital piece is real.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Verified Feed Is Live: Cross-Source Story Corroboration for AI Agents]]></title>
+      <link>https://tensorfeed.ai/originals/verified-feed-trust-layer</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/verified-feed-trust-layer</guid>
+      <pubDate>Sat, 09 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[Most discourse about AI safety in 2026 is focused on the wrong failure mode. Hallucinations are bounded; agents acting on a single source is the actual problem about to bite the autonomous economy. TensorFeed shipped the fix tonight: embedding-based story clustering across 12 RSS sources, premium "verified across N sources" feed, free preview at 25 clusters/day. Inside how it works, the threshold-tuning trade-off, why TF could ship it (only we have the cross-source view at scale), and how the AFTA federation makes the corroboration math compose across publishers.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The AI Cyber Tier Now Has a Data Layer. It Is Token-Optimized, Pay-Per-Call, and Live.]]></title>
+      <link>https://tensorfeed.ai/originals/ai-cyber-tier-data-layer</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-cyber-tier-data-layer</guid>
+      <pubDate>Sat, 09 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[The week opened with Anthropic Mythos and the policy reaction. It closes with the data infrastructure agents need to do something useful with cyber-tier capability. Inside the agent-data layer TensorFeed shipped in 24 hours: MITRE CVE, CISA KEV, EPSS, NASA POWER, OpenFDA, and EIA Open Data as free + premium x402-billable endpoints with LLM-ready transforms that drop typical responses by 80% in tokens. Why $0.02 USDC settles a problem that $5K/month enterprise APIs cannot. Why the deep moat is the transform, not the data itself. Why TerminalFeed.io adopting AFTA last week is a signal more than a footnote.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[This Week in AI: The Mythos Effect, $200B for Google, and an FDA for Models]]></title>
+      <link>https://tensorfeed.ai/originals/ai-week-may-8-2026</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-week-may-8-2026</guid>
+      <pubDate>Fri, 08 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[Five business days, one Anthropic security model, and the entire U.S. AI policy floor moved. CAISI signed pre-launch evaluation agreements with Google DeepMind, Microsoft, and xAI. The White House confirmed it is studying an FDA-style executive order for new model releases. Anthropic locked in $200 billion of Google Cloud and Broadcom TPU capacity, more than 40% of Google's reported revenue backlog. OpenAI shipped GPT-5.5-Cyber to vetted security teams. Cohere closed its $20B sovereign-AI merger with Aleph Alpha. China formally blocked Meta's $2B Manus acquisition. Inside the through-line: capability triggered policy, policy triggered procurement, and the cyber tier just became a real product category every frontier lab has to answer.]]></description>
+    </item>
+  </channel>
+</rss>
