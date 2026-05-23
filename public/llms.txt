@@ -355,6 +355,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [OpenAI o1](https://tensorfeed.ai/models/o1): Pricing, benchmarks, specs for OpenAI's reasoning model
 - [OpenAI o3-mini](https://tensorfeed.ai/models/o3-mini): Pricing, benchmarks, specs for OpenAI's affordable reasoning model
 - [Gemini 3.1 Pro](https://tensorfeed.ai/models/gemini-3-1-pro): Pricing, benchmarks, specs for Google's current flagship (1M context, omnimodal)
+- [Gemini 3.5 Flash](https://tensorfeed.ai/models/gemini-3-5-flash): Pricing, benchmarks, specs for Google's new Flash-tier model (GA May 19, 2026; beats prior Pro flagship on agentic coding)
 - [Gemini 3.1 Flash-Lite](https://tensorfeed.ai/models/gemini-3-1-flash-lite): Pricing, benchmarks, specs for Google's $0.25 budget model
 - [Gemini 2.5 Pro](https://tensorfeed.ai/models/gemini-2-5-pro): Pricing, benchmarks, specs for Google's previous-generation flagship with 1M context
 - [Gemini 2.0 Flash](https://tensorfeed.ai/models/gemini-2-0-flash): Pricing, benchmarks, specs for Google's speed model
@@ -383,6 +384,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 - [Gemini 3.1 Pro vs Claude Opus 4.7](https://tensorfeed.ai/compare/gemini-3-1-pro-vs-claude-opus-4-7): Two 1M-context flagships compared, with multimodal and pricing breakdown
 - [Gemini 3.1 Pro vs GPT-5.5](https://tensorfeed.ai/compare/gemini-3-1-pro-vs-gpt-5-5): Google vs OpenAI omnimodal frontier comparison
 - [Gemini 3.1 Flash-Lite vs DeepSeek V4 Flash](https://tensorfeed.ai/compare/gemini-3-1-flash-lite-vs-deepseek-v4-flash): Closed multimodal vs open-weight budget tier
+- [Gemini 3.5 Flash vs Claude Sonnet 4.6](https://tensorfeed.ai/compare/gemini-3-5-flash-vs-claude-sonnet-4-6): Mid-tier agentic showdown. Flash's throughput and 1M context vs Sonnet's reasoning and MCP-native ecosystem.
 
 ## AI Providers
 - [Anthropic](https://tensorfeed.ai/providers/anthropic): Claude models, pricing, benchmarks, and company overview

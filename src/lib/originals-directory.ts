@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'openai-ipo-filing-anthropic-first-profit',
+    title:
+      'OpenAI Filed for a Trillion-Dollar IPO. The Same Week Anthropic Booked Its First Profit.',
+    author: 'Ripper',
+    date: 'May 23, 2026',
+    readTime: '7 min read',
+    description:
+      'OpenAI sent its confidential S-1 to the SEC on Friday May 22 targeting an $852B to $1T Q4 listing with Goldman Sachs and Morgan Stanley leading, while still losing $1.22 for every dollar of revenue in Q1 on $5.7B of quarterly revenue. Six days earlier, Anthropic told investors it expects a $559M operating profit on $10.9B of Q2 revenue (130% growth from Q1), the first profitable quarter in company history, with the compute cost ratio collapsing from 71 cents per $1 to 56 cents in a single quarter. Two trillion-dollar labs, two opposite financial moments in the same week. Inside the side-by-side, why distribution-first burning and unit-economics-first compounding can both be rational bets, what the S-1 actually discloses vs hides until the public roadshow, and what the price-floor implications are for every other API vendor.',
+  },
+  {
     slug: 'free-tier-on-paid-routes',
     title:
       'x402 Has Three Options for Free Trials on Paid Routes. We Shipped a Fourth.',
