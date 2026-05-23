@@ -5,6 +5,7 @@ import { getAllProviderSlugs } from '@/lib/provider-directory';
 import { getAllBenchmarkSlugs } from '@/lib/benchmark-directory';
 import { getAllApiRefSlugs } from '@/lib/api-reference-directory';
 import { getAllHarnessSlugs } from '@/lib/harness-directory';
+import { getActiveCategorySlugs } from '@/lib/gear';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://tensorfeed.ai';
@@ -57,6 +58,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: 'weekly' as const,
     priority: 0.75,
   }));
+
+  // Gear category subpages (only categories with products are generated)
+  const gearCategoryPages: MetadataRoute.Sitemap = getActiveCategorySlugs().map(
+    slug => ({
+      url: `${baseUrl}/gear/${slug}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.75,
+    })
+  );
 
   return [
     // Core pages (update frequently)
@@ -348,5 +359,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/terms`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${baseUrl}/security`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${baseUrl}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${baseUrl}/affiliate-disclosure`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+
+    // Gear (curated AI-relevant consumer hardware, refreshed weekly)
+    { url: `${baseUrl}/gear`, lastModified: now, changeFrequency: 'weekly', priority: 0.75 },
+    ...gearCategoryPages,
   ];
 }

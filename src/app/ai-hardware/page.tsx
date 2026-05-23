@@ -171,6 +171,19 @@ export default function AIHardwarePage() {
         </p>
       </div>
 
+      <div className="mt-6 bg-bg-secondary/50 border border-border/60 rounded-lg p-4 text-sm text-text-secondary flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p>
+          Looking to buy AI-ready consumer hardware? Laptops for local LLMs, AR glasses, builder GPUs, edge devices.
+        </p>
+        <Link
+          href="/gear"
+          className="inline-flex items-center gap-1.5 text-accent-primary hover:text-accent-cyan font-medium whitespace-nowrap transition-colors"
+        >
+          Gear picks
+          <ExternalLink className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
       <LastUpdatedFooter path="/ai-hardware" />
     </div>
   );

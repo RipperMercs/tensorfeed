@@ -17,6 +17,7 @@ export const NAV_LINKS = [
   { href: '/podcasts', label: 'Podcasts' },
   { href: '/originals', label: 'Originals' },
   { href: '/live', label: 'Live' },
+  { href: '/gear', label: 'Gear' },
 ] as const;
 
 export const CATEGORIES = [

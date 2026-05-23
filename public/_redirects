@@ -4,3 +4,9 @@
 # at /widget/status. Exact-match only, so /widget/status is unaffected.
 /widget /embed 301
 /widget/ /embed 301
+
+# /hardware aliases the canonical /gear page (consumer AI hardware picks).
+# /ai-hardware (datacenter chip specs) is a separate page; no redirect there.
+/hardware /gear 301
+/hardware/ /gear 301
+/hardware/* /gear/:splat 301

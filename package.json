@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "tsx scripts/fetch-feeds.ts && tsx scripts/generate-llms-full.ts",
+    "prebuild": "tsx scripts/fetch-feeds.ts && tsx scripts/generate-gear-api.ts && tsx scripts/generate-llms-full.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
