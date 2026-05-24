@@ -19,10 +19,10 @@
  * Paid   /api/premium/ai-velocity (1 credit)    Cross-pollinated + traction-ranked
  *
  * AI relevance filter:
- *   HF        — pipeline in the AI/ML set (text-generation, image-text-
+ *   HF       : pipeline in the AI/ML set (text-generation, image-text-
  *               to-text, automatic-speech-recognition, etc.). HF Spaces +
  *               models all carry a pipeline_tag.
- *   GitHub    — description / name carry an AI keyword from a curated
+ *   GitHub   : description / name carry an AI keyword from a curated
  *               list (LLM, agent, transformer, diffusion, embedding, etc.)
  *               OR primary language is AI-typical (Python/TS) and the
  *               description matches one of the looser markers.

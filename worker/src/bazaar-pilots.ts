@@ -16,9 +16,9 @@
  *   - Wave 3 (POST): /api/premium/watches
  *
  * Per-pilot metadata below feeds two places at request time:
- *   1. The 402 PaymentRequired response body — `resource.description` and
+ *   1. The 402 PaymentRequired response body: `resource.description` and
  *      `extensions.bazaar` are read by CDP when cataloging the endpoint.
- *   2. The CDP /settle request — clients echo the extension back in their
+ *   2. The CDP /settle request: clients echo the extension back in their
  *      PaymentPayload, and CDP validates the `info` against `schema` (AJV
  *      JSON Schema 2020-12). Validation failure = endpoint not cataloged.
  *
@@ -164,7 +164,7 @@ const WHATS_NEW_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/routing — top-N model recommendation joining live pricing,
+ * /api/premium/routing: top-N model recommendation joining live pricing,
  * benchmarks, status, and per-component composite scoring. Replaces several
  * fan-out calls + the agent's own ranking logic. The "I would pay $0.02 for
  * this" call per Kimi K2.6's external analysis of TF (2026-05-14).
@@ -263,7 +263,7 @@ const ROUTING_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/compare/models — side-by-side comparison of 2-5 models with
+ * /api/premium/compare/models: side-by-side comparison of 2-5 models with
  * pricing, benchmarks (normalized to union-of-keys, nulls intentional),
  * status, recent news mentions, and computed rankings (cheapest blended,
  * widest context, per-benchmark leaderboard). One agent call replaces
@@ -354,7 +354,7 @@ const COMPARE_MODELS_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/cost/projection — project a token-usage workload across 1-10
+ * /api/premium/cost/projection: project a token-usage workload across 1-10
  * models. Returns daily/weekly/monthly/yearly totals per model plus a ranking
  * by cheapest monthly. Eliminates the need for agents to maintain pricing
  * tables locally.
@@ -494,7 +494,7 @@ function flatGetSchema(): Record<string, unknown> {
 }
 
 /**
- * /api/premium/agents/directory — enriched AI agents directory. Joins the
+ * /api/premium/agents/directory: enriched AI agents directory. Joins the
  * static catalog with live status, recent news, agent-traffic activity, and
  * sample pricing, returning a trending-score-ranked list in one paid call.
  * Replaces fan-out of /api/agents/directory + /api/status + /api/news.
@@ -576,7 +576,7 @@ const AGENTS_DIRECTORY_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/funding/exposure — derived metrics over the free AI funding
+ * /api/premium/funding/exposure: derived metrics over the free AI funding
  * portfolio. Charges 3 credits (tier 3) reflecting the heavier compute:
  * silicon-vendor concentration shares, per-investor circular-loop
  * classification, co-investor pairs, top recipients.
@@ -617,7 +617,7 @@ const FUNDING_EXPOSURE_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/packages/pypi/momentum — per-package momentum + velocity
+ * /api/premium/packages/pypi/momentum: per-package momentum + velocity
  * over the AI/ML PyPI trending snapshot. Direction classification + notable
  * movers + by-category counts in one call.
  */
@@ -655,7 +655,7 @@ const PYPI_MOMENTUM_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/research/velocity — per-institution AI publication velocity
+ * /api/premium/research/velocity: per-institution AI publication velocity
  * over the OpenAlex 365-day baseline + fresh 30-day window. Direction
  * classification + by-country and by-type breakdowns.
  */
@@ -695,7 +695,7 @@ const RESEARCH_VELOCITY_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/research/authors — top 100 AI authors by trailing-365d
+ * /api/premium/research/authors: top 100 AI authors by trailing-365d
  * publication volume, enriched with h_index, ORCID, affiliation. OpenAlex.
  */
 const RESEARCH_AUTHORS_PILOT: BazaarPilotConfig = {
@@ -741,7 +741,7 @@ const RESEARCH_AUTHORS_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/research/citation-velocity — recent AI papers ranked by
+ * /api/premium/research/citation-velocity: recent AI papers ranked by
  * share of total citations earned in the most recent calendar year.
  */
 const RESEARCH_CITATION_VELOCITY_PILOT: BazaarPilotConfig = {
@@ -781,7 +781,7 @@ const RESEARCH_CITATION_VELOCITY_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/research/milestones — Qwen-flagged milestone arXiv papers
+ * /api/premium/research/milestones: Qwen-flagged milestone arXiv papers
  * from the last 30 days with structured reasoning per paper.
  */
 const RESEARCH_MILESTONES_PILOT: BazaarPilotConfig = {
@@ -818,7 +818,7 @@ const RESEARCH_MILESTONES_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/research/emerging-keywords — top-50 keyphrases by recent vs
+ * /api/premium/research/emerging-keywords: top-50 keyphrases by recent vs
  * baseline lift across arXiv abstracts, with example arxiv_ids.
  */
 const RESEARCH_EMERGING_KEYWORDS_PILOT: BazaarPilotConfig = {
@@ -854,7 +854,7 @@ const RESEARCH_EMERGING_KEYWORDS_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/economy/recession-watch — composite recession-risk signal
+ * /api/premium/economy/recession-watch: composite recession-risk signal
  * across yield curve + Sahm rule. red/yellow/green classification.
  */
 const RECESSION_WATCH_PILOT: BazaarPilotConfig = {
@@ -902,7 +902,7 @@ const RECESSION_WATCH_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/policy/timeline — forward + backward calendar over the AI
+ * /api/premium/policy/timeline: forward + backward calendar over the AI
  * policy registry. Optional ?days_back=, ?days_forward=, ?jurisdiction= with
  * sane defaults.
  */
@@ -977,13 +977,13 @@ const POLICY_TIMELINE_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/apis-guru/ai-feed — AI-relevant APIs from the APIs.guru
+ * /api/premium/apis-guru/ai-feed: AI-relevant APIs from the APIs.guru
  * directory of 2400+ OpenAPI specs, with per-entry first_seen_at + a
  * separate newly_added_last_7d cohort.
  */
 const APIS_GURU_AI_PILOT: BazaarPilotConfig = {
   description:
-    'AI-relevant APIs from the APIs.guru directory of 2400+ OpenAPI specs, filtered via curated keyword matching. Per-entry first_seen_at against TensorFeed snapshot history so an agent can answer "what new AI APIs appeared in the last 7 days" — a diff APIs.guru itself cannot provide. CC-BY-SA 4.0; source links preserved.',
+    'AI-relevant APIs from the APIs.guru directory of 2400+ OpenAPI specs, filtered via curated keyword matching. Per-entry first_seen_at against TensorFeed snapshot history so an agent can answer "what new AI APIs appeared in the last 7 days": a diff APIs.guru itself cannot provide. CC-BY-SA 4.0; source links preserved.',
   extension: {
     bazaar: {
       info: {
@@ -1022,7 +1022,7 @@ const APIS_GURU_AI_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/model-deprecations/timeline — Wave 3 pilot (2026-05-24).
+ * /api/premium/model-deprecations/timeline: Wave 3 pilot (2026-05-24).
  * Window-centered timeline over the model-deprecation registry, enriched
  * with urgency_band, days_until_sunset, days_since_sunset, and a resolved
  * migration_chain hop sequence per entry. Premium-shaped because the
@@ -1119,7 +1119,7 @@ const MODEL_DEPRECATIONS_TIMELINE_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/inference-providers/arbitrage — Wave 4 pilot (2026-05-24).
+ * /api/premium/inference-providers/arbitrage: Wave 4 pilot (2026-05-24).
  * Cross-provider price-spread analytics over the curated inference-providers
  * matrix. Surfaces per-model cheapest/most-expensive/spread/savings_pct and
  * per-provider value_score. Free /api/inference-providers serves the raw
@@ -1212,7 +1212,7 @@ const INFERENCE_ARBITRAGE_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/ai-safety/incidents/exposure — Wave 5 pilot (2026-05-24).
+ * /api/premium/ai-safety/incidents/exposure: Wave 5 pilot (2026-05-24).
  * Vendor exposure rollups over the daily-refreshed AVID snapshot.
  * Per-developer + per-deployer incident counts with recency-weighted
  * exposure_score, risk_domain + sep_view distributions, top affected
@@ -1313,7 +1313,7 @@ const AI_SAFETY_EXPOSURE_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/ai-safety/packages/security/radar — Wave 6 pilot (2026-05-24).
+ * /api/premium/ai-safety/packages/security/radar: Wave 6 pilot (2026-05-24).
  * Per-package risk scoring + breaking-change radar over the daily-refreshed
  * OSV snapshot of the curated AI/ML package lists. Risk_score (0-100) from
  * a weighted sum of recent critical/high counts plus open advisory count
@@ -1403,7 +1403,7 @@ const AI_PKG_SECURITY_RADAR_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/packages/releases/velocity — Wave 7 pilot (2026-05-24).
+ * /api/premium/packages/releases/velocity: Wave 7 pilot (2026-05-24).
  * Per-package release velocity + breaking-change radar over the 6-hourly
  * PyPI + npm snapshot. Premium-shaped because the bump classification
  * (semver-aware, pre-1.0 minor = major) and 24h/7d/30d windowing run
@@ -1494,7 +1494,7 @@ const PKG_RELEASES_VELOCITY_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/ai-velocity — Wave 8 pilot (2026-05-24).
+ * /api/premium/ai-velocity: Wave 8 pilot (2026-05-24).
  * First AFTA federation cross-call: TF pulls TerminalFeed's HF + GitHub
  * trending leaderboards, filters each to AI-relevant entries, derives
  * traction scoring + cross-pollination. The "what AI project is rising
@@ -1602,7 +1602,7 @@ const AI_VELOCITY_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/ai-crypto-pulse — Wave 9 pilot (2026-05-24).
+ * /api/premium/ai-crypto-pulse: Wave 9 pilot (2026-05-24).
  * Second AFTA federation cross-call: TF joins TerminalFeed's crypto-movers
  * + funding-rates streams over an AI-thesis token cohort, classifies each
  * position as squeeze/chase/coiled/neutral based on the funding-rate vs
@@ -1693,7 +1693,7 @@ const AI_CRYPTO_PULSE_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/coding-harnesses/weekly-deltas — Wave 10 pilot (2026-05-24).
+ * /api/premium/coding-harnesses/weekly-deltas: Wave 10 pilot (2026-05-24).
  * Third AFTA federation cross-call. Compares two daily TerminalFeed
  * harness snapshots to surface score + rank deltas, entered/exited
  * combinations, biggest movers, and per-benchmark leader churn.
@@ -1784,7 +1784,7 @@ const HARNESS_DELTAS_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/news/action-cards — Wave 11 pilot (2026-05-24).
+ * /api/premium/news/action-cards: Wave 11 pilot (2026-05-24).
  * First Haiku-derived premium endpoint. Per-article structured action
  * cards over the daily news feed. Per-article 7-day cache means
  * marginal compute is near-zero for repeat-coverage articles.
@@ -1872,7 +1872,7 @@ const NEWS_ACTION_CARDS_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/status/incidents/triage — Wave 12 pilot (2026-05-24).
+ * /api/premium/status/incidents/triage: Wave 12 pilot (2026-05-24).
  * Second Haiku-derived premium endpoint. Per-incident triage cards over
  * AI provider status feed with impact classification + recommended
  * action. Per-incident KV cache keeps Haiku spend near-zero.

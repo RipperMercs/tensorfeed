@@ -45,7 +45,7 @@ export interface ModelMatrix {
   modelId: string;
   /** Display name. */
   modelName: string;
-  /** Origin lab (Meta, DeepSeek, etc) — for grouping in the UI. */
+  /** Origin lab (Meta, DeepSeek, etc): for grouping in the UI. */
   family: string;
   /** Parameter count, in billions, for sorting. */
   paramsB: number | null;

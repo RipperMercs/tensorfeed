@@ -176,7 +176,7 @@ crons = [
   # re-runs of the cron reuse Haiku output. Powers free
   # /api/status/incidents/triage and premium variant. Slot picked to
   # avoid the :15 specific-hour crons (04:15 SEC, 06:15 backup, 14:15 HF
-  # papers) — those still fire on their own schedules; this cron fires
+  # papers): those still fire on their own schedules; this cron fires
   # at 00:15, 02:15, 04:15 (with SEC), 06:15 (with backup), etc.
   # Independent strings, both run.
   "15 */2 * * *",

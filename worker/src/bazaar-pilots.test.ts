@@ -2,7 +2,7 @@
  * Tests for the bazaar pilot registry.
  *
  * Important: validates the bazaar extension's `info` against its `schema`
- * using AJV — the same library CDP uses on its facilitator side. If the
+ * using AJV: the same library CDP uses on its facilitator side. If the
  * test fails, our endpoint would also fail to catalog in production
  * (CDP rejects extensions whose info doesn't match its schema).
  */
@@ -272,7 +272,7 @@ describe('Wave 1 pilot AJV validation', () => {
 
 describe('Wave 2 pilot AJV validation', () => {
   // Wave 2 (2026-05-24): 11 flat-schema GET endpoints. Same load-bearing
-  // AJV check as Wave 1 — if any of these regress, the endpoint silently
+  // AJV check as Wave 1: if any of these regress, the endpoint silently
   // fails to catalog in Bazaar.
   const wave2Paths = [
     '/api/premium/agents/directory',

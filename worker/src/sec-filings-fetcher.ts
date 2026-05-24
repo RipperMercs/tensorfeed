@@ -8,11 +8,11 @@
  * follow-up commit reading from that DataPal-produced data.
  *
  * Cohort: 14 AI-relevant US-traded companies (silicon, hyperscaler,
- * AI-native, infra). CIKs hardcoded — they're stable identifiers, no
+ * AI-native, infra). CIKs hardcoded: they're stable identifiers, no
  * benefit to lookup on every cron run. Adding/removing companies is a
  * code change, intentionally.
  *
- * Source: data.sec.gov/submissions/CIK{cik}.json — official EDGAR API,
+ * Source: data.sec.gov/submissions/CIK{cik}.json: official EDGAR API,
  * public domain, requires a descriptive User-Agent identifying contact
  * info. We reuse SEC_USER_AGENT from sec-tickers.ts.
  *
