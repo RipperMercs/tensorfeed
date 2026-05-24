@@ -1494,6 +1494,114 @@ const PKG_RELEASES_VELOCITY_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/ai-velocity — Wave 8 pilot (2026-05-24).
+ * First AFTA federation cross-call: TF pulls TerminalFeed's HF + GitHub
+ * trending leaderboards, filters each to AI-relevant entries, derives
+ * traction scoring + cross-pollination. The "what AI project is rising
+ * on both HuggingFace AND GitHub right now" call.
+ */
+const AI_VELOCITY_PILOT: BazaarPilotConfig = {
+  description:
+    'AI velocity cross-surface signal. First AFTA federation cross-call: TensorFeed derives an AI cohort from TerminalFeed\'s HF + GitHub trending leaderboards with per-entry traction_score, cross-pollination (names appearing on BOTH leaderboards = higher confidence), and rollups by HF pipeline + GitHub language. Filters: pipeline, language, min_traction, cross_only.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { pipeline: 'text-generation', language: 'Python', min_traction: 50, cross_only: false },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-24T18:00:00Z',
+            snapshot_captured_at: '2026-05-24T17:42:00Z',
+            source: 'terminalfeed.io federation cross-call',
+            filter: { pipeline: 'text-generation', language: 'Python', min_traction: 50, cross_only: false },
+            cohort_size: { hf: 15, github: 15, cross_pollinated: 3 },
+            hf_top: [
+              {
+                id: 'meta-llama/Llama-4-8B',
+                author: 'meta-llama',
+                name: 'Llama-4-8B',
+                likes: 4120,
+                downloads: 2840000,
+                pipeline: 'text-generation',
+                url: 'https://huggingface.co/meta-llama/Llama-4-8B',
+                updated: '2026-05-22',
+                normalized_name: 'llama-4-8b',
+                traction_score: 12424.5,
+                on_both: true,
+              },
+            ],
+            github_top: [
+              {
+                name: 'llama.cpp',
+                fullName: 'ggerganov/llama.cpp',
+                description: 'LLM inference in C/C++',
+                language: 'C++',
+                stars: 78420,
+                url: 'https://github.com/ggerganov/llama.cpp',
+                matched_markers: ['llm', 'inference engine'],
+                normalized_name: 'llama.cpp',
+                traction_score: 146.9,
+                on_both: false,
+              },
+            ],
+            cross_pollinated: [
+              {
+                normalized_name: 'llama-4-8b',
+                hf: { id: 'meta-llama/Llama-4-8B', name: 'Llama-4-8B', likes: 4120, downloads: 2840000, url: 'https://huggingface.co/meta-llama/Llama-4-8B' },
+                github: { fullName: 'meta-llama/Llama-4-8B', stars: 5200, language: 'Python', url: 'https://github.com/meta-llama/Llama-4-8B' },
+                combined_traction: 12537.2,
+              },
+            ],
+            summary: {
+              hf_by_pipeline: { 'text-generation': 12, 'image-text-to-text': 3 },
+              github_by_language: { Python: 9, 'C++': 3, TypeScript: 3 },
+              total_hf_likes: 18500,
+              total_github_stars: 245000,
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  pipeline: { type: 'string', description: 'Case-insensitive substring match against HuggingFace pipeline tag.' },
+                  language: { type: 'string', description: 'Case-insensitive substring match against GitHub repo primary language.' },
+                  min_traction: { type: 'number', minimum: 0, maximum: 10000, description: 'Minimum traction_score to include in headline arrays. Default 0.' },
+                  cross_only: { type: 'boolean', description: 'When true, return only items with on_both=true. Default false.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -1519,6 +1627,10 @@ const PKG_RELEASES_VELOCITY_PILOT: BazaarPilotConfig = {
  * Wave 7 (2026-05-24): packages/releases/velocity. Release velocity + bump
  * classification over the 6-hourly PyPI + npm snapshot. Total pilot
  * count: 19 -> 20.
+ *
+ * Wave 8 (2026-05-24): ai-velocity. First AFTA federation cross-call. TF
+ * pulls TerminalFeed's HF + GitHub trending leaderboards, derives
+ * AI-cohort traction + cross-pollination. Total pilot count: 20 -> 21.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -1547,6 +1659,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/ai-safety/packages/security/radar': AI_PKG_SECURITY_RADAR_PILOT,
   // Wave 7
   '/api/premium/packages/releases/velocity': PKG_RELEASES_VELOCITY_PILOT,
+  // Wave 8
+  '/api/premium/ai-velocity': AI_VELOCITY_PILOT,
 };
 
 /**

@@ -94,6 +94,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // AI-package release velocity: derived over the 6-hourly registry
   // snapshot. 9h SLA = cron cadence + 50% headroom for a missed run.
   '/api/premium/packages/releases/velocity': { maxAgeSeconds: 9 * 60 * 60 },
+  // AI velocity (TerminalFeed federation cross-call): lazy-refreshed
+  // every 30 min on cold cache. 2h SLA covers the snapshot TTL + 4x
+  // headroom for upstream hiccups (last-known-good fallback).
+  '/api/premium/ai-velocity': { maxAgeSeconds: 2 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

@@ -3784,6 +3784,8 @@ export default {
           aiSafetyIncidentsAvid: '/api/ai-safety/incidents/avid?limit=&developer=&risk_domain= (free, capped at 50; raw normalized AVID snapshot. Source: avidml/avid-db, MIT. Refreshed daily 03:00 UTC.)',
           aiSafetyPackagesSecurity: '/api/ai-safety/packages/security?package=&ecosystem=&category= (free; per-package vulnerability history over the curated AI/ML PyPI + npm package lists. Sourced from OSV.dev (GHSA + PyPA + RustSec + Maven + npm + others). Refreshed daily 05:45 UTC.)',
           packagesReleases: '/api/packages/releases?ecosystem=&category=&package=&within_days= (free; latest version + last 10 release timestamps for every curated AI/ML PyPI + npm package. Sourced from pypi.org + registry.npmjs.org public JSON. Refreshed every 6h.)',
+          aiVelocity: '/api/ai-velocity?limit= (free, capped at 30; first AFTA federation cross-call. Filters TerminalFeed.io HF + GitHub trending leaderboards to AI-relevant entries.)',
+          premiumAiVelocity: '/api/premium/ai-velocity?pipeline=&language=&min_traction=&cross_only= (1 credit, AFTA-signed; AI-velocity ranking + cross-pollination over the TerminalFeed-sourced HF + GitHub trending snapshot. Per-entry traction_score (HF: likes*3 + log10(downloads+1)*10; GH: log10(stars+1)*30), on_both flag, cross_pollinated array of normalized-name matches, summary rollups hf_by_pipeline + github_by_language.)',
           premiumPackagesReleasesVelocity: '/api/premium/packages/releases/velocity?ecosystem=&category=&package=&min_releases_7d= (1 credit, AFTA-signed; per-package release velocity (releases_24h/7d/30d), latest bump_kind (major/minor/patch/prerelease/sideways/unknown), is_breaking_recent flag (major bump within 30d). Notable movers: recent_major_bumps, most_releases_7d, fastest_cadence_30d. Pre-1.0 minor bumps count as major per semver convention.)',
           premiumAiSafetyPackagesSecurityRadar: '/api/premium/ai-safety/packages/security/radar?ecosystem=&category=&package=&min_risk_score= (1 credit, AFTA-signed; per-package risk_score (0-100) over the OSV snapshot. Risk_band classification (calm/watch/hot/critical), notable_movers (top-5 by_critical_30d, by_risk_score, new_in_last_7d), summary rollups by_band + by_ecosystem.)',
           premiumAiSafetyIncidentsExposure: '/api/premium/ai-safety/incidents/exposure?vendor=&risk_domain=&within_days= (1 credit, AFTA-signed; exposure rollups over the AVID snapshot. Per-developer + per-deployer incident counts with recency-weighted exposure_score (1.0 last 30d, 0.5 days 31-90, 0.25 older), risk_domain + sep_view distributions, top affected artifacts. Optional substring filters and within_days window [7, 730]. AIID coverage queued via the 100MB weekly R2 snapshot path.)',
@@ -8534,6 +8536,79 @@ export default {
         logPremiumUsage(env, '/api/premium/research/emerging-keywords', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
+    }
+
+    // === AI VELOCITY (free, cached 600s) ===
+    // /api/ai-velocity
+    // First AFTA federation cross-call: TF pulls TerminalFeed's two
+    // trending leaderboards (HF + GitHub), filters each to AI-relevant
+    // entries, and returns the capped cohort. Lazy refresh on the
+    // TerminalFeed fetch (30-min TTL on the snapshot). Premium derivative
+    // at /api/premium/ai-velocity adds traction scoring, cross-
+    // pollination, and rollups.
+
+    if (path === '/api/ai-velocity') {
+      const { getOrRefreshVelocitySnapshot } = await import('./terminalfeed-ai-velocity-fetcher');
+      const snap = await getOrRefreshVelocitySnapshot(env);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'upstream_unreachable',
+          hint: 'TerminalFeed.io did not respond and we have no cached snapshot. Retry in a few minutes.',
+        }, 503, 0);
+      }
+      const limit = (() => {
+        const n = parseInt(url.searchParams.get('limit') ?? '', 10);
+        return Number.isFinite(n) && n > 0 ? Math.min(n, 30) : 15;
+      })();
+      return jsonResponse({
+        ok: true,
+        source: snap.source,
+        capturedAt: snap.capturedAt,
+        upstream_endpoints: snap.upstream_endpoints,
+        hf: snap.hf.slice(0, limit),
+        github: snap.github.slice(0, limit),
+        attribution: {
+          source: 'TerminalFeed.io (AFTA federation sister site)',
+          license: 'Federation cross-call to TerminalFeed free endpoints; underlying HF + GitHub data carry their own terms.',
+          notes: 'Capped at 15 per surface by default (max 30). Premium derivative at /api/premium/ai-velocity returns the full cohort + traction scoring + cross-pollination.',
+        },
+      }, 200, 600);
+    }
+
+    // === PAID PREMIUM: AI VELOCITY (Tier 1, 1 credit) ===
+    // /api/premium/ai-velocity?pipeline=&language=&min_traction=&cross_only=
+    // Derived ranking + cross-pollination over the TerminalFeed-sourced
+    // HF + GitHub snapshot. Cohort intersection ("on both") is the
+    // strongest signal: a model with both HF likes/downloads AND GitHub
+    // stars is a higher-confidence agent investment than one only on
+    // one surface.
+
+    if (path === '/api/premium/ai-velocity') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getOrRefreshVelocitySnapshot } = await import('./terminalfeed-ai-velocity-fetcher');
+      const snap = await getOrRefreshVelocitySnapshot(env);
+      if (!snap) {
+        return await premiumValidationFailure(
+          { error: 'upstream_unreachable', hint: 'TerminalFeed.io did not respond and no cached snapshot is available. Retry in a few minutes.' },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      const { buildVelocity, parsePipeline, parseLanguage, parseMinTraction, parseCrossOnly } = await import('./premium-ai-velocity');
+      const result = buildVelocity(snap, {
+        pipeline: parsePipeline(url.searchParams.get('pipeline')),
+        language: parseLanguage(url.searchParams.get('language')),
+        min_traction: parseMinTraction(url.searchParams.get('min_traction')),
+        cross_only: parseCrossOnly(url.searchParams.get('cross_only')),
+      });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === AI PACKAGE RELEASES (free, cached 600s) ===

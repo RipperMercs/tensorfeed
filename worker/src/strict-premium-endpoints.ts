@@ -132,6 +132,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // package release counts + bump classification + breaking-change radar
   // over the 6-hourly PyPI/npm snapshot. Same hygiene rationale.
   '/api/premium/packages/releases/velocity',
+  // Wave 8 Bazaar pilot (2026-05-24). AI velocity: first AFTA federation
+  // cross-call. Pulls TerminalFeed's HF + GitHub trending leaderboards,
+  // filters to AI-relevant, derives traction scoring + cross-pollination.
+  '/api/premium/ai-velocity',
 ];
 
 /**
