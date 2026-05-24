@@ -92,12 +92,43 @@ describe('isStrictPremiumPath', () => {
     });
   });
 
+  describe('Wave 2 Bazaar pilots (2026-05-24 promotion to strict-premium)', () => {
+    // These 9 paths were promoted to strict-premium when added as Bazaar
+    // pilots so anonymous CDP / x402scan crawlers see a canonical 402 rather
+    // than the free-trial 200. funding/exposure + packages/pypi/momentum
+    // were already strict-premium pre-promotion.
+    it('matches /api/premium/agents/directory', () => {
+      expect(isStrictPremiumPath('/api/premium/agents/directory')).toBe(true);
+    });
+    it('matches /api/premium/research/velocity', () => {
+      expect(isStrictPremiumPath('/api/premium/research/velocity')).toBe(true);
+    });
+    it('matches /api/premium/research/authors', () => {
+      expect(isStrictPremiumPath('/api/premium/research/authors')).toBe(true);
+    });
+    it('matches /api/premium/research/citation-velocity', () => {
+      expect(isStrictPremiumPath('/api/premium/research/citation-velocity')).toBe(true);
+    });
+    it('matches /api/premium/research/milestones', () => {
+      expect(isStrictPremiumPath('/api/premium/research/milestones')).toBe(true);
+    });
+    it('matches /api/premium/research/emerging-keywords', () => {
+      expect(isStrictPremiumPath('/api/premium/research/emerging-keywords')).toBe(true);
+    });
+    it('matches /api/premium/economy/recession-watch', () => {
+      expect(isStrictPremiumPath('/api/premium/economy/recession-watch')).toBe(true);
+    });
+    it('matches /api/premium/policy/timeline', () => {
+      expect(isStrictPremiumPath('/api/premium/policy/timeline')).toBe(true);
+    });
+    it('matches /api/premium/apis-guru/ai-feed', () => {
+      expect(isStrictPremiumPath('/api/premium/apis-guru/ai-feed')).toBe(true);
+    });
+  });
+
   describe('non-strict premium paths (still on the trial layer)', () => {
     it('does NOT match /api/premium/news/search', () => {
       expect(isStrictPremiumPath('/api/premium/news/search')).toBe(false);
-    });
-    it('does NOT match /api/premium/agents/directory', () => {
-      expect(isStrictPremiumPath('/api/premium/agents/directory')).toBe(false);
     });
     it('does NOT match /api/premium/watches', () => {
       expect(isStrictPremiumPath('/api/premium/watches')).toBe(false);
@@ -148,9 +179,11 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 24 exact paths', () => {
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(24);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(24); // no duplicates
+    it('exposes all 33 exact paths', () => {
+      // 24 pre-Wave-2 + 9 Wave 2 Bazaar pilot promotions (2026-05-24).
+      // funding/exposure + packages/pypi/momentum were already strict.
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(33);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(33); // no duplicates
     });
     it('exposes 1 prefix path', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(1);

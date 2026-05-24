@@ -461,15 +461,594 @@ const COST_PROJECTION_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * Wave 2 helper: minimal schema for endpoints that take no query params.
+ * The schema still enforces the canonical HTTP GET input shape; queryParams
+ * is allowed but not required, which lets the example carry an empty object.
+ */
+function flatGetSchema(): Record<string, unknown> {
+  return {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    properties: {
+      input: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', const: 'http' },
+          method: { type: 'string', enum: ['GET'] },
+          queryParams: { type: 'object' },
+        },
+        required: ['type', 'method'],
+        additionalProperties: false,
+      },
+      output: {
+        type: 'object',
+        properties: {
+          type: { type: 'string' },
+          example: { type: 'object' },
+        },
+        required: ['type'],
+      },
+    },
+    required: ['input'],
+  };
+}
+
+/**
+ * /api/premium/agents/directory — enriched AI agents directory. Joins the
+ * static catalog with live status, recent news, agent-traffic activity, and
+ * sample pricing, returning a trending-score-ranked list in one paid call.
+ * Replaces fan-out of /api/agents/directory + /api/status + /api/news.
+ */
+const AGENTS_DIRECTORY_PILOT: BazaarPilotConfig = {
+  description:
+    'Enriched AI agents directory. One paid call returns the catalog joined with live provider status, recent news mentions, 24h agent traffic, and sample model pricing, ranked by a derived trending score. The agent-discovers-agent feed.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: {
+            category: 'coding',
+            status: 'operational',
+            open_source: false,
+            sort: 'trending',
+            limit: 25,
+          },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            count: 25,
+            agents: [
+              {
+                id: 'claude-code',
+                name: 'Claude Code',
+                provider: 'anthropic',
+                category: 'coding',
+                live_status: 'operational',
+                trending_score: 87,
+                recent_news_count: 4,
+                agent_traffic_24h: 312,
+                sample_pricing: { model: 'Claude Opus 4.7', blended_per_1m: 25 },
+                url: 'https://claude.com/code',
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  category: { type: 'string', description: 'Filter by category id (coding, search, voice, etc).' },
+                  status: { type: 'string', enum: ['operational', 'degraded', 'down', 'unknown'] },
+                  open_source: { type: 'boolean' },
+                  capability: { type: 'string', description: 'Filter to agents declaring this capability.' },
+                  sort: { type: 'string', enum: ['trending', 'name', 'recent_news', 'agent_traffic'] },
+                  limit: { type: 'integer', minimum: 1, maximum: 100 },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/funding/exposure — derived metrics over the free AI funding
+ * portfolio. Charges 3 credits (tier 3) reflecting the heavier compute:
+ * silicon-vendor concentration shares, per-investor circular-loop
+ * classification, co-investor pairs, top recipients.
+ */
+const FUNDING_EXPOSURE_PILOT: BazaarPilotConfig = {
+  description:
+    'Derived structural metrics over the AI funding portfolio. Silicon-vendor concentration shares per investor, circular-loop classification (fully-circular / partial-loop / agnostic), co-investor pairs holding the same recipient, top recipients by inbound capital. The "who is funding whose silicon" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-23T05:00:00Z',
+            silicon_concentration: [
+              { vendor: 'Nvidia', total_usd: 12500000000, recipient_count: 18 },
+              { vendor: 'AMD', total_usd: 3100000000, recipient_count: 6 },
+            ],
+            investor_loops: [
+              { investor: 'Microsoft', classification: 'fully-circular', silicon_exposure_pct: 78 },
+              { investor: 'Andreessen Horowitz', classification: 'agnostic', silicon_exposure_pct: 0 },
+            ],
+            top_recipients: [
+              { name: 'OpenAI', inbound_usd: 13000000000, investor_count: 4 },
+            ],
+            co_investor_pairs: [
+              { a: 'Microsoft', b: 'Nvidia', shared_recipients: ['OpenAI', 'Mistral'] },
+            ],
+            billing: { credits_charged: 3, credits_remaining: 47 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+/**
+ * /api/premium/packages/pypi/momentum — per-package momentum + velocity
+ * over the AI/ML PyPI trending snapshot. Direction classification + notable
+ * movers + by-category counts in one call.
+ */
+const PYPI_MOMENTUM_PILOT: BazaarPilotConfig = {
+  description:
+    'AI/ML PyPI package momentum and velocity. Per-package week-over-week change, direction classification (accelerating / steady / declining), notable movers, and by-category counts. The "what AI packages are heating up" feed.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            window: { window_days: 7 },
+            packages: [
+              {
+                name: 'langchain',
+                category: 'orchestration',
+                downloads_current: 5400000,
+                downloads_prior: 4900000,
+                velocity_ratio: 1.102,
+                direction: 'accelerating',
+              },
+            ],
+            notable_movers: { gainers: ['langchain', 'instructor'], decliners: ['old-llm-lib'] },
+            by_category: { orchestration: 12, embeddings: 8, evaluation: 5 },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+/**
+ * /api/premium/research/velocity — per-institution AI publication velocity
+ * over the OpenAlex 365-day baseline + fresh 30-day window. Direction
+ * classification + by-country and by-type breakdowns.
+ */
+const RESEARCH_VELOCITY_PILOT: BazaarPilotConfig = {
+  description:
+    'Per-institution AI research publication velocity. 30-day window vs 365-day baseline with direction classification, notable movers, plus by-country and by-affiliation-type breakdowns. OpenAlex CC0. The "which AI labs are accelerating" feed.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-23T06:00:00Z',
+            institutions: [
+              {
+                openalex_id: 'I1294671590',
+                display_name: 'Google DeepMind',
+                country_code: 'GB',
+                works_last_30d: 92,
+                works_baseline_30d_avg: 71,
+                velocity_ratio: 1.296,
+                direction: 'accelerating',
+              },
+            ],
+            notable_movers: { gainers: ['DeepMind', 'Anthropic'], decliners: [] },
+            by_country: { US: 412, CN: 178, GB: 96 },
+            by_type: { industry: 213, academia: 489 },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+/**
+ * /api/premium/research/authors — top 100 AI authors by trailing-365d
+ * publication volume, enriched with h_index, ORCID, affiliation. OpenAlex.
+ */
+const RESEARCH_AUTHORS_PILOT: BazaarPilotConfig = {
+  description:
+    'Top 100 AI researchers ranked by AI publication volume in the trailing 365 days, enriched with h-index, i10-index, total citation count, primary affiliation (institution + country), ORCID, and derived AI-share-of-total. OpenAlex CC0. Daily refresh.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-23T06:00:00Z',
+            window_days: 365,
+            concept: { id: 'C154945302', name: 'Artificial intelligence' },
+            authors: [
+              {
+                rank: 1,
+                openalex_id: 'A5023888391',
+                display_name: 'Yoshua Bengio',
+                orcid: 'https://orcid.org/0000-0002-9322-3515',
+                primary_affiliation: {
+                  openalex_id: 'I70931966',
+                  display_name: 'Université de Montréal',
+                  country_code: 'CA',
+                },
+                ai_works_last_year: 87,
+                total_works_count: 821,
+                cited_by_count: 412000,
+                h_index: 168,
+                i10_index: 632,
+                ai_share_pct: 0.74,
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+/**
+ * /api/premium/research/citation-velocity — recent AI papers ranked by
+ * share of total citations earned in the most recent calendar year.
+ */
+const RESEARCH_CITATION_VELOCITY_PILOT: BazaarPilotConfig = {
+  description:
+    'Top 100 recent AI papers ranked by the share of their total citations earned in the most recent calendar year. Papers published in the last 2 years with 3+ citations. Surfaces papers that are still gaining traction now. OpenAlex CC0.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-23T06:00:00Z',
+            papers: [
+              {
+                rank: 1,
+                openalex_id: 'W4400000000',
+                doi: '10.48550/arXiv.2503.00000',
+                title: 'Scaling Test-Time Compute Beyond Chain-of-Thought',
+                year: 2025,
+                total_citations: 412,
+                latest_year_citations: 318,
+                latest_year_share: 0.772,
+                venue: 'arXiv',
+                authors: ['First Author', 'Second Author', 'Third Author'],
+                primary_affiliation: { display_name: 'Anthropic', country_code: 'US' },
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+/**
+ * /api/premium/research/milestones — Qwen-flagged milestone arXiv papers
+ * from the last 30 days with structured reasoning per paper.
+ */
+const RESEARCH_MILESTONES_PILOT: BazaarPilotConfig = {
+  description:
+    'Last 30 days of arXiv preprints flagged as milestone candidates by an offline Qwen 3.6 27B per-paper extraction pass. Each paper carries structured reasoning naming the benchmark + quantified delta, model release, or novel architecture justification. Conservative; false positives are worse than false negatives.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-23T06:00:00Z',
+            window_days: 30,
+            papers: [
+              {
+                arxiv_id: '2505.12345',
+                title: 'A Reasoning Model That Wins Math Olympiad Gold',
+                published_at: '2026-05-14',
+                is_milestone_candidate: true,
+                reasoning: 'Reports 84.7% on AIME 2024 (prior SOTA 63.1%), +21.6pp absolute. Names a new MoE-of-Experts routing scheme; reproducible config.',
+                category: 'benchmark_delta',
+                arxiv_url: 'https://arxiv.org/abs/2505.12345',
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+/**
+ * /api/premium/research/emerging-keywords — top-50 keyphrases by recent vs
+ * baseline lift across arXiv abstracts, with example arxiv_ids.
+ */
+const RESEARCH_EMERGING_KEYWORDS_PILOT: BazaarPilotConfig = {
+  description:
+    'Top 50 multi-word keyphrases across recent arXiv AI abstracts ranked by recent-vs-baseline lift (last 30 days frequency over prior 90 days, smoothed). Each keyphrase carries 2-5 example arxiv_ids so an agent can drill into the underlying work. The trend-spotter feed for AI research vocabulary.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-23T06:00:00Z',
+            window: { recent_days: 30, baseline_days: 90 },
+            keywords: [
+              {
+                rank: 1,
+                phrase: 'test-time compute scaling',
+                recent_frequency: 47,
+                baseline_frequency: 6,
+                lift: 7.83,
+                example_arxiv_ids: ['2505.12345', '2505.23456', '2505.34567'],
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+/**
+ * /api/premium/economy/recession-watch — composite recession-risk signal
+ * across yield curve + Sahm rule. red/yellow/green classification.
+ */
+const RECESSION_WATCH_PILOT: BazaarPilotConfig = {
+  description:
+    'Composite recession-risk signal. Yield-curve inversion (10Y minus 2Y) and Sahm-rule unemployment trigger, each classified red / yellow / green with an explanation, plus a composite verdict and brief synthesis. BLS + FRED public-domain data; TensorFeed-derived classification.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            computed_at: '2026-05-23T12:00:00Z',
+            data_freshness: {
+              bls_captured_at: '2026-05-23T05:00:00Z',
+              fred_captured_at: '2026-05-23T05:30:00Z',
+            },
+            yield_curve: {
+              spread_10y_2y: -0.18,
+              level: 'yellow',
+              explanation: '10Y-2Y spread at -0.18pp: mildly inverted. Watching for sustained inversion.',
+            },
+            sahm_rule: {
+              unemp_3mo_avg: 4.2,
+              unemp_12mo_low: 3.8,
+              sahm_value: 0.4,
+              threshold_pp: 0.5,
+              level: 'yellow',
+              explanation: 'Sahm value 0.40pp: approaching the 0.5pp Sahm threshold. Watch.',
+            },
+            composite: {
+              level: 'yellow',
+              score: 50,
+              explanation: 'Mixed signals. At least one indicator is in the watch zone but neither has fully triggered.',
+            },
+            brief: 'Watch zone: at least one indicator is in transition.',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+/**
+ * /api/premium/policy/timeline — forward + backward calendar over the AI
+ * policy registry. Optional ?days_back=, ?days_forward=, ?jurisdiction= with
+ * sane defaults.
+ */
+const POLICY_TIMELINE_PILOT: BazaarPilotConfig = {
+  description:
+    'Forward and backward calendar over the AI policy registry. Each entry classified relative to now (past / active / upcoming), days-until-effective, with next-3-milestones for upcoming items. Filter by jurisdiction (EU, US, UK, etc) and time window. The "what AI rules are about to bite" feed.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { days_back: 90, days_forward: 365, jurisdiction: 'EU' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-23T07:00:00Z',
+            window: { days_back: 90, days_forward: 365, jurisdiction: 'EU' },
+            entries: [
+              {
+                id: 'eu-ai-act-gpai-codes',
+                title: 'EU AI Act: General-Purpose AI codes of practice',
+                jurisdiction: 'EU',
+                effective_date: '2026-08-02',
+                relative_to_now: 'upcoming',
+                days_until_effective: 71,
+                next_milestones: [
+                  { name: 'Codes finalized', date: '2026-07-01' },
+                  { name: 'Enforcement begins', date: '2026-08-02' },
+                ],
+                source_url: 'https://artificialintelligenceact.eu',
+              },
+            ],
+            counts: { past: 12, active: 4, upcoming: 9 },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  days_back: { type: 'integer', minimum: 0, maximum: 3650 },
+                  days_forward: { type: 'integer', minimum: 0, maximum: 3650 },
+                  jurisdiction: { type: 'string', description: 'ISO country/region code or known bloc (EU, US, UK, CN, etc).' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/apis-guru/ai-feed — AI-relevant APIs from the APIs.guru
+ * directory of 2400+ OpenAPI specs, with per-entry first_seen_at + a
+ * separate newly_added_last_7d cohort.
+ */
+const APIS_GURU_AI_PILOT: BazaarPilotConfig = {
+  description:
+    'AI-relevant APIs from the APIs.guru directory of 2400+ OpenAPI specs, filtered via curated keyword matching. Per-entry first_seen_at against TensorFeed snapshot history so an agent can answer "what new AI APIs appeared in the last 7 days" — a diff APIs.guru itself cannot provide. CC-BY-SA 4.0; source links preserved.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-23T08:00:00Z',
+            count: 142,
+            by_provider: { 'openai.com': 3, 'anthropic.com': 1, 'replicate.com': 2 },
+            entries: [
+              {
+                api_id: 'openai.com',
+                provider: 'openai.com',
+                title: 'OpenAI API',
+                description: 'The OpenAI REST API providing access to GPT-5, embeddings, vision, audio, and more.',
+                openapi_url: 'https://api.apis.guru/v2/specs/openai.com/2.3.0/openapi.yaml',
+                service_url: 'https://api.openai.com',
+                logo_url: 'https://api.apis.guru/v2/cache/logo/openai.com.png',
+                first_seen_at: '2025-09-12',
+                latest_updated_at: '2026-05-20',
+                matched_keywords: ['gpt', 'openai'],
+                newly_added_last_7d: false,
+              },
+            ],
+            newly_added_last_7d: [],
+            attribution: { source: 'APIs.guru', license: 'CC-BY-SA 4.0' },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
+ *
+ * Wave 2 (2026-05-24): 11 flat-schema GETs promoted from premium-only to
+ * Bazaar-cataloged. Selection criteria: stable response shape, no required
+ * query params (or sensible defaults), clearly premium-shaped (derived
+ * metrics, curated cohorts, or aggregations the agent would otherwise have
+ * to compute itself). Total pilot count: 4 -> 15.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
   '/api/premium/compare/models': COMPARE_MODELS_PILOT,
   '/api/premium/cost/projection': COST_PROJECTION_PILOT,
+  // Wave 2
+  '/api/premium/agents/directory': AGENTS_DIRECTORY_PILOT,
+  '/api/premium/funding/exposure': FUNDING_EXPOSURE_PILOT,
+  '/api/premium/packages/pypi/momentum': PYPI_MOMENTUM_PILOT,
+  '/api/premium/research/velocity': RESEARCH_VELOCITY_PILOT,
+  '/api/premium/research/authors': RESEARCH_AUTHORS_PILOT,
+  '/api/premium/research/citation-velocity': RESEARCH_CITATION_VELOCITY_PILOT,
+  '/api/premium/research/milestones': RESEARCH_MILESTONES_PILOT,
+  '/api/premium/research/emerging-keywords': RESEARCH_EMERGING_KEYWORDS_PILOT,
+  '/api/premium/economy/recession-watch': RECESSION_WATCH_PILOT,
+  '/api/premium/policy/timeline': POLICY_TIMELINE_PILOT,
+  '/api/premium/apis-guru/ai-feed': APIS_GURU_AI_PILOT,
 };
 
 /**

@@ -93,6 +93,23 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/clean/power/daily',
   '/api/premium/climate/power/hourly',
   '/api/premium/health/fda/aggregate',
+  // Wave 2 Bazaar pilots (2026-05-24). Promoted from premium-with-trial to
+  // strict-premium so CDP's Bazaar crawler + x402scan see the canonical 402
+  // challenge on anonymous probes rather than a free-trial 200. Each path
+  // also gets a BazaarPilotConfig in worker/src/bazaar-pilots.ts. Selection
+  // is "stable flat-schema GET, premium-shaped, no required params" so the
+  // strict-premium tradeoff (no free-trial preview) is not a UX loss for
+  // human evaluators (who can use the equivalent free siblings where they
+  // exist) but is a discovery win for paying agents.
+  '/api/premium/agents/directory',
+  '/api/premium/research/velocity',
+  '/api/premium/research/authors',
+  '/api/premium/research/citation-velocity',
+  '/api/premium/research/milestones',
+  '/api/premium/research/emerging-keywords',
+  '/api/premium/economy/recession-watch',
+  '/api/premium/policy/timeline',
+  '/api/premium/apis-guru/ai-feed',
 ];
 
 /**

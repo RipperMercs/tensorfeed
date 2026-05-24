@@ -20,12 +20,24 @@ import {
 
 // Pilot paths currently in BAZAAR_PILOTS. Wave 1 (2026-05-14) added
 // /routing, /compare/models, /cost/projection alongside the original
-// /whats-new pilot.
+// /whats-new pilot. Wave 2 (2026-05-24) added 11 flat-schema GETs.
 const PILOT_PATHS = [
   '/api/premium/whats-new',
   '/api/premium/routing',
   '/api/premium/compare/models',
   '/api/premium/cost/projection',
+  // Wave 2
+  '/api/premium/agents/directory',
+  '/api/premium/funding/exposure',
+  '/api/premium/packages/pypi/momentum',
+  '/api/premium/research/velocity',
+  '/api/premium/research/authors',
+  '/api/premium/research/citation-velocity',
+  '/api/premium/research/milestones',
+  '/api/premium/research/emerging-keywords',
+  '/api/premium/economy/recession-watch',
+  '/api/premium/policy/timeline',
+  '/api/premium/apis-guru/ai-feed',
 ] as const;
 
 // Premium paths that are intentionally NOT in BAZAAR_PILOTS. Used for
@@ -234,6 +246,61 @@ describe('Wave 1 pilot AJV validation', () => {
       const tampered = JSON.parse(JSON.stringify(bazaar.info));
       tampered.input.method = 'POST';
       expect(validate(tampered)).toBe(false);
+    });
+  }
+});
+
+describe('Wave 2 pilot AJV validation', () => {
+  // Wave 2 (2026-05-24): 11 flat-schema GET endpoints. Same load-bearing
+  // AJV check as Wave 1 — if any of these regress, the endpoint silently
+  // fails to catalog in Bazaar.
+  const wave2Paths = [
+    '/api/premium/agents/directory',
+    '/api/premium/funding/exposure',
+    '/api/premium/packages/pypi/momentum',
+    '/api/premium/research/velocity',
+    '/api/premium/research/authors',
+    '/api/premium/research/citation-velocity',
+    '/api/premium/research/milestones',
+    '/api/premium/research/emerging-keywords',
+    '/api/premium/economy/recession-watch',
+    '/api/premium/policy/timeline',
+    '/api/premium/apis-guru/ai-feed',
+  ];
+
+  for (const path of wave2Paths) {
+    it(`${path} info validates against its declared schema`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const valid = validate(bazaar.info);
+      if (!valid) {
+        throw new Error(
+          `${path} bazaar extension info failed schema validation: ${JSON.stringify(
+            validate.errors,
+            null,
+            2,
+          )}`,
+        );
+      }
+      expect(valid).toBe(true);
+    });
+
+    it(`${path} rejects info with wrong input.method (negative control)`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const tampered = JSON.parse(JSON.stringify(bazaar.info));
+      tampered.input.method = 'POST';
+      expect(validate(tampered)).toBe(false);
+    });
+
+    it(`${path} has a description longer than 40 chars`, () => {
+      const config = getBazaarPilotConfig(path);
+      expect(config).not.toBeNull();
+      expect(config!.description.length).toBeGreaterThan(40);
     });
   }
 });
