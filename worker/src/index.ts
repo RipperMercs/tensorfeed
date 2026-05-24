@@ -3994,7 +3994,7 @@ export default {
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -10481,6 +10481,23 @@ export default {
       if (task === 'sec-tickers') {
         const result = await captureSECTickersDaily(env);
         return jsonResponse({ message: 'SEC company tickers captured', ...result });
+      }
+      if (task === 'sec-filings') {
+        try {
+          const { refreshSecFilingsSnapshot } = await import('./sec-filings-fetcher');
+          const snap = await refreshSecFilingsSnapshot(env);
+          return jsonResponse({
+            message: 'SEC filings refreshed for AI bellwether cohort',
+            cohort_size: snap.cohort_size,
+            filings_count: snap.filings_count,
+            filings_by_company: snap.filings_by_company,
+            capturedAt: snap.capturedAt,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error('refreshSecFilingsSnapshot threw:', msg);
+          return jsonResponse({ ok: false, error: 'refresh_failed', message: msg }, 500, 0);
+        }
       }
       if (task === 'sports-news') {
         const [nfl, mlb] = await Promise.all([pollNFLNews(env), pollMLBNews(env)]);
