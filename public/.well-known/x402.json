@@ -140,7 +140,11 @@
   },
   "items": [
     {
-      "resource": "https://tensorfeed.ai/api/premium/routing",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/routing",
+        "description": "Top-N AI model recommendation for a task. Joins live pricing, benchmarks, provider status, and latency into a single composite score so an agent gets a ranked answer in one call instead of stitching three free endpoints together.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -358,7 +362,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/history/pricing/series",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/history/pricing/series",
+        "description": "Daily input/output/blended price points for one model with min/max/delta summary. Default 30-day window, max 90 days.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -386,7 +394,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/history/benchmarks/series",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/history/benchmarks/series",
+        "description": "Score evolution for a single benchmark on one model with delta in percentage points. Supported keys: swe_bench, mmlu_pro, gpqa_diamond, math, human_eval.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -414,7 +426,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/history/status/uptime",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/history/status/uptime",
+        "description": "Daily uptime rollup for one provider with operational, degraded, and down day counts. Uptime % treats degraded as half-credit. Missing-data days excluded from denominator.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -442,7 +458,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/history/news/full",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/history/news/full",
+        "description": "Untruncated TensorFeed daily news archive. Pass ?date=YYYY-MM-DD for one day, or ?from=&to= for a range up to 30 days. Each day returns up to 200 deduped articles captured from the most recent hourly RSS poll.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -470,7 +490,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/history/news/source-health",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/history/news/source-health",
+        "description": "Multi-day per-source RSS poll reliability series across all TensorFeed news sources. Daily polls/poll_ok/poll_empty/poll_error/articles_total per source, plus reliability_pct and last_status. Range capped at 90 days.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -498,7 +522,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/security/cve/range",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/security/cve/range",
+        "description": "MITRE CVE List range query: CVE IDs added or modified across a UTC date range, capped at 30 days. Each day in the response carries the full CVE-ID set indexed by the daily cvelistV5 commit-history scan. Pair with /api/security/cve/{id} for the per-CVE Record v5.2 lookup. License: MITRE CVE Terms of Use, commercial redistribution permitted; attribution block included on every response.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -526,7 +554,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/security/kev/full",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/security/kev/full",
+        "description": "Full untruncated CISA Known Exploited Vulnerabilities catalog. Free tier returns top-50 most recent entries; this endpoint returns the entire current catalog (~1500+ entries) with full entry detail. License: US Government public domain (17 USC 105), commercial redistribution explicitly permitted; attribution block on every response.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -554,7 +586,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/security/kev/series",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/security/kev/series",
+        "description": "Multi-day series of CISA KEV catalog additions across a UTC date range, capped at 90 days. Each day returns the full entry list whose dateAdded fell on that day. License: US Government public domain (17 USC 105), commercial redistribution explicitly permitted.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -582,7 +618,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/security/epss/series",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/security/epss/series",
+        "description": "Full historical EPSS (Exploit Prediction Scoring System) time-series for one CVE, sourced from FIRST.org. EPSS estimates the daily probability of exploitation in the next 30 days. License: free for any use per FIRST.org policy; commercial redistribution permitted.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -610,7 +650,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/security/epss/top",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/security/epss/top",
+        "description": "Top-N CVEs ranked by current or historical EPSS exploitation-likelihood score. Optional ?date=YYYY-MM-DD returns the leaderboard as of any past date. License: FIRST.org free-for-any-use policy.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -638,7 +682,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/clean/cve/{CVE-id}",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/clean/cve/{CVE-id}",
+        "description": "MITRE CVE Record v5.2 transformed into a flat token-efficient payload optimized for LLM context windows. Drops typical record from ~3KB nested JSON to ~500 bytes flat JSON (~80% token reduction) with no information loss for agent decision-making. Adds derived severity_band, deduped CWEs, flat affected_products, top references. Versioned via schema_version + cleaning_version for stability. License: MITRE CVE Terms of Use; commercial redistribution permitted.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -666,7 +714,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/clean/kev/{CVE-id}",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/clean/kev/{CVE-id}",
+        "description": "CISA Known Exploited Vulnerabilities entry transformed into LLM-ready format with normalized ransomware_use enum (yes / unknown / no) and extracted notes_urls. Versioned for stability. License: US Government public domain.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -694,7 +746,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/clean/epss/{CVE-id}",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/clean/epss/{CVE-id}",
+        "description": "FIRST.org EPSS score transformed into LLM-ready format with numeric probability (not stringified), derived risk_band (low/medium/high/critical), and optional series summary (first/min/max points instead of full daily series). Optional ?series=true returns the summary; default returns the current point only. License: FIRST.org free-for-any-use policy.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -722,7 +778,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/security/verified/{CVE-id}",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/security/verified/{CVE-id}",
+        "description": "Single-call cross-database CVE verification. Composes MITRE CVE Record + CISA Known Exploited Vulnerabilities + FIRST.org EPSS + OSV.dev advisory + CISA Vulnrichment SSVC into one LLM-ready fact card with confirmed_by array and corroboration_count. Reduces 5 fan-out calls and 5 different parsing schemas to one. The anti-hallucination lookup for security agents: corroboration_count is auditable per call. Sources missing the CVE just don't appear in confirmed_by; the call still returns whatever sources do have it. License terms inherited from each upstream source; attribution block per source included on every response.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -750,7 +810,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/clean/openrouter/{model_id}",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/clean/openrouter/{model_id}",
+        "description": "One model from the OpenRouter catalog (367+ entries) returned as an LLM-ready fact card. Pricing normalized to USD per million tokens with derived blended_5_to_1 input:output mix. Capability flags (tools, vision, structured_outputs, reasoning, response_format) extracted from supported_parameters + modality so agents can boolean-filter without parsing the raw parameter array. Free-tier detection (is_free_tier) and creation-date ISO normalization included. Compression typically 99%+ (270KB catalog -> ~500B card) since OpenRouter has no per-id filter on its public catalog endpoint. License: Public catalog data; pricing and capabilities owned by OpenRouter and the underlying inference providers.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -778,7 +842,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/history/news/clusters/full",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/history/news/clusters/full",
+        "description": "Full untruncated story-level cross-source corroboration clusters per UTC date or range up to 30 days. Each cluster groups TensorFeed news articles about the same story via embedding-based similarity (Workers AI bge-base-en-v1.5 at threshold 0.82) and reports source_count, sources_list, hero article (earliest publishedAt), corroboration_band (single/limited/broad), and contributing article_ids. The free /api/history/news/clusters caps at 25 clusters/day; this endpoint returns all clusters with no cap.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -806,7 +874,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/history/news/verified",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/history/news/verified",
+        "description": "Story-level news feed filtered to clusters with N or more independent sources corroborating. Default min_sources=4 (broad corroboration). Agents asking 'do not act on a single source' get a clean stream of stories that cleared the trust threshold. The trust play Gemini named: only TF can ship this because only TF has the cross-source view at scale. Single-date or 30-day range. Computed nightly via Workers AI bge-base-en-v1.5 embedding clustering.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -834,7 +906,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/clean/fda/{category}",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/clean/fda/{category}",
+        "description": "OpenFDA query results transformed into LLM-ready format with per-category flat schemas. drug/events flattens FAERS adverse-event reports with patient demo + drugs + reactions + outcomes + seriousness flags. drug/labels surfaces brand/generic/manufacturer + section text. drug/recalls + food/recalls expose enforcement reports with classification + reason + voluntary flag. device/events extracts primary device + outcomes + truncated narrative from MAUDE. License: CC0 1.0 Universal Dedication.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -862,7 +938,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/agents/directory",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/agents/directory",
+        "description": "Enriched AI agents directory. One paid call returns the catalog joined with live provider status, recent news mentions, 24h agent traffic, and sample model pricing, ranked by a derived trending score. The agent-discovers-agent feed.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1017,7 +1097,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/news/search",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/news/search",
+        "description": "Full-text search over the AI news corpus with relevance scoring (term hits weighted 3 in title, 1 in snippet, plus recency boost) and date/provider/category filters.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1045,7 +1129,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/whats-new",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/whats-new",
+        "description": "Agent morning brief. One paid call returns the last 24 hours of AI pricing changes, new and removed models, service-status incidents, and top news headlines. The endpoint an agent calls on boot.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1213,7 +1301,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/policy/timeline",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/policy/timeline",
+        "description": "Forward and backward calendar over the AI policy registry. Each entry classified relative to now (past / active / upcoming), days-until-effective, with next-3-milestones for upcoming items. Filter by jurisdiction (EU, US, UK, etc) and time window. The \"what AI rules are about to bite\" feed.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1360,7 +1452,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/economy/recession-watch",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/economy/recession-watch",
+        "description": "Composite recession-risk signal. Yield-curve inversion (10Y minus 2Y) and Sahm-rule unemployment trigger, each classified red / yellow / green with an explanation, plus a composite verdict and brief synthesis. BLS + FRED public-domain data; TensorFeed-derived classification.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1479,7 +1575,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/research/velocity",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/research/velocity",
+        "description": "Per-institution AI research publication velocity. 30-day window vs 365-day baseline with direction classification, notable movers, plus by-country and by-affiliation-type breakdowns. OpenAlex CC0. The \"which AI labs are accelerating\" feed.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1602,7 +1702,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/packages/pypi/momentum",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/packages/pypi/momentum",
+        "description": "AI/ML PyPI package momentum and velocity. Per-package week-over-week change, direction classification (accelerating / steady / declining), notable movers, and by-category counts. The \"what AI packages are heating up\" feed.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1724,7 +1828,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/economy/series/{source}/{series_id}",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/economy/series/{source}/{series_id}",
+        "description": "Full upstream observation history for any BLS (10y) or FRED series, normalized into one canonical shape across both sources. Each observation paired with its YoY change, 3-month and 12-month moving averages, plus summary min/max and 3-observation trend direction. Free /api/economy/bls/indicators caps at 24 monthly observations and /api/economy/fred/indicators at 90; this is the full archive plus the compute layer.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1752,7 +1860,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/probe/series",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/probe/series",
+        "description": "Per-day SLA series for one LLM provider, measured by TensorFeed itself: count, success rate, ttfb p50/p95/p99, total p50/p95/p99, incident-hour count. 90-day max range. Unique because we measure (vs. self-report). Pairs with /api/premium/routing.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1780,7 +1892,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/openrouter/series",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/openrouter/series",
+        "description": "Daily OpenRouter cross-provider catalog series over a 90-day window: per-day model count, cheapest paid input and output USD-per-million floor, free-tier count, namespace breadth, plus day-over-day model add and remove churn and per-model price-change counts. OpenRouter serves only current state, so this history is TensorFeed-captured and cannot be backfilled. Default 30-day window, max 90.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1808,7 +1924,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/x402-registry/series",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/x402-registry/series",
+        "description": "Daily x402 publisher-registry series over a 90-day window: reachable vs erroring publisher counts, federation count, network breadth, paid and free endpoint totals, agent-fair-trade declarations, plus day-over-day domains added and removed, status flips, and payment-wallet changes versus the prior captured day. A registry is current-state only, so this history is TensorFeed-captured and cannot be backfilled. Default 30-day window, max 90.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1836,7 +1956,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/hf/velocity",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/hf/velocity",
+        "description": "Daily Hugging Face download-velocity over a 90-day window: per-day top models and datasets by download delta and top Spaces by likes delta among the daily top-30, top-set entered and exited churn, plus window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is TensorFeed-computed and cannot be backfilled. Default 30-day window, max 90.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -1864,7 +1988,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/compare/models",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/compare/models",
+        "description": "Side-by-side comparison of 2-5 AI models. Returns pricing, benchmarks normalized to union-of-keys with explicit nulls, live provider status, recent news mentions, and per-benchmark rankings in one ready-to-rank payload.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -2011,7 +2139,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/providers/{name}",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/providers/{name}",
+        "description": "Everything about one AI provider in one paid call: live status, all models with pricing + tier + benchmark scores joined, recent news, agent traffic. Aggregation over 4 free endpoints.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -2039,7 +2171,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/cost/projection",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/cost/projection",
+        "description": "Project the cost of a token-usage workload across 1-10 AI models. Returns daily, weekly, monthly, and yearly totals per model plus a ranking by cheapest monthly. The canonical \"given my workload, what would each model cost me\" call.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -2199,7 +2335,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/watches",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/watches",
+        "description": "Register a webhook watch on a price change or service status transition. HMAC-SHA256 signed POST deliveries. 90-day TTL, default fire cap 100, per-token cap 25.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "POST",
       "x402Version": 2,
@@ -2238,7 +2378,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/funding/exposure",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/funding/exposure",
+        "description": "Derived structural metrics over the AI funding portfolio. Silicon-vendor concentration shares per investor, circular-loop classification (fully-circular / partial-loop / agnostic), co-investor pairs holding the same recipient, top recipients by inbound capital. The \"who is funding whose silicon\" call.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -2375,7 +2519,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/research/authors",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/research/authors",
+        "description": "Top 100 AI researchers ranked by AI publication volume in the trailing 365 days, enriched with h-index, i10-index, total citation count, primary affiliation (institution + country), ORCID, and derived AI-share-of-total. OpenAlex CC0. Daily refresh.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -2495,7 +2643,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/research/citation-velocity",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/research/citation-velocity",
+        "description": "Top 100 recent AI papers ranked by the share of their total citations earned in the most recent calendar year. Papers published in the last 2 years with 3+ citations. Surfaces papers that are still gaining traction now. OpenAlex CC0.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -2613,7 +2765,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/research/milestones",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/research/milestones",
+        "description": "Last 30 days of arXiv preprints flagged as milestone candidates by an offline Qwen 3.6 27B per-paper extraction pass. Each paper carries structured reasoning naming the benchmark + quantified delta, model release, or novel architecture justification. Conservative; false positives are worse than false negatives.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -2721,7 +2877,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/research/emerging-keywords",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/research/emerging-keywords",
+        "description": "Top 50 multi-word keyphrases across recent arXiv AI abstracts ranked by recent-vs-baseline lift (last 30 days frequency over prior 90 days, smoothed). Each keyphrase carries 2-5 example arxiv_ids so an agent can drill into the underlying work. The trend-spotter feed for AI research vocabulary.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -2835,7 +2995,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/apis-guru/ai-feed",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/apis-guru/ai-feed",
+        "description": "AI-relevant APIs from the APIs.guru directory of 2400+ OpenAPI specs, filtered via curated keyword matching. Per-entry first_seen_at against TensorFeed snapshot history so an agent can answer \"what new AI APIs appeared in the last 7 days\": a diff APIs.guru itself cannot provide. CC-BY-SA 4.0; source links preserved.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -2960,7 +3124,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/model-deprecations/timeline",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/model-deprecations/timeline",
+        "description": "Model deprecation timeline with migration intelligence. Each entry enriched with urgency_band (within_7d / within_30d / within_60d / within_90d / past), days_until_sunset, days_since_sunset, and a resolved migration_chain hop sequence to the first still-active replacement. Optional within_days window centered on now; optional provider filter. The \"is my model affected and what should I migrate to\" call.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -3114,7 +3282,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/inference-providers/arbitrage",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/inference-providers/arbitrage",
+        "description": "Cross-provider arbitrage analytics for hosted inference. Per-model: cheapest_paid, most_expensive_paid, spread_usd, savings_pct, median_paid_blended, fastest_tps, cheapest_with_tps, free_tier_offers. Plus provider_rollup (cheapest_count, top_tps_count, value_score 0-100) and top_arbitrage models sorted by savings_pct desc. Pairs with the free /api/inference-providers matrix. The \"where to migrate workloads\" call.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -3291,7 +3463,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/ai-safety/incidents/exposure",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/ai-safety/incidents/exposure",
+        "description": "AI safety incident exposure analytics. Per-developer and per-deployer incident counts with recency-weighted exposure_score (1.0 last 30d, 0.5 days 31-90, 0.25 older), risk_domain and SEP-view (Security/Ethics/Performance) distributions, top affected artifacts. Derived over the AVID (avidml/avid-db, MIT) snapshot refreshed daily. The \"which AI vendors have the most recent reported safety incidents\" call.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -3459,7 +3635,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/ai-safety/packages/security/radar",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/ai-safety/packages/security/radar",
+        "description": "AI-package security radar. Per-package risk_score (0-100) over the daily OSV snapshot of curated AI/ML PyPI + npm packages: critical_count_30d * 25 + high_30d * 12 + critical_90d * 6 + high_90d * 3 + min(open_count, 20) + 5 if any advisory in last 7d, saturated to 100. Risk_band classifications (calm <10 / watch 10-25 / hot 25-50 / critical 50+) plus notable_movers (top-5 by_critical_30d, by_risk_score, new_in_last_7d). The \"which AI deps should I be worried about right now\" call.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -3628,7 +3808,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/packages/releases/velocity",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/packages/releases/velocity",
+        "description": "AI-package release velocity. Per-package releases_24h / releases_7d / releases_30d, latest bump classification (major/minor/patch/prerelease, pre-1.0 minor counts as major per semver), is_breaking_recent flag (major bump within 30 days). Notable movers: recent_major_bumps, most_releases_7d, fastest_cadence_30d. Filter by ecosystem (PyPI/npm), category (llm-sdk, agent-framework, etc), or package substring. The \"what AI deps just changed and is it breaking\" call.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -3802,7 +3986,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/ai-velocity",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/ai-velocity",
+        "description": "AI velocity cross-surface signal. First AFTA federation cross-call: TensorFeed derives an AI cohort from TerminalFeed's HF + GitHub trending leaderboards with per-entry traction_score, cross-pollination (names appearing on BOTH leaderboards = higher confidence), and rollups by HF pipeline + GitHub language. Filters: pipeline, language, min_traction, cross_only.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -4000,7 +4188,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/ai-crypto-pulse",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/ai-crypto-pulse",
+        "description": "AI-thesis token pulse: joins price moves with venue-weighted perp funding-rate skew. Per-token setup classification (squeeze_up = rising + negative funding = shorts trapped; chase_up = rising + positive funding = leverage mean-reversion risk; squeeze_down; chase_down; coiled = flat + extreme funding). Notable movers cohort + breadth + median change summary. Filters: token substring, setup kind, min_abs_change_pct.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -4189,7 +4381,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/coding-harnesses/weekly-deltas",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/coding-harnesses/weekly-deltas",
+        "description": "Agentic-coding harness weekly deltas. Compares current TerminalFeed harness leaderboard snapshot (SWE-bench Verified, Terminal-Bench, Aider Polyglot, etc) to a prior snapshot. Per-(benchmark, harness, model) score + rank deltas with change_kind classification (gained / regressed / entered / exited / unchanged). Notable movers (biggest_gainers, biggest_regressions, entered, exited), per-benchmark leader_cards with leader_changed flag, summary rollups. Filters: days_back (1-90, default 7), harness, benchmark, model, min_abs_delta.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -4378,7 +4574,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/news/action-cards",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/news/action-cards",
+        "description": "AI news action cards. For each article in the daily TF news feed, Haiku 4.5 produces a structured agent action card answering \"what should an AI agent or operator DO in response to this.\" Per card: action_summary (1-2 sentences), migration_recommendation (string or null), affected_capability (model / pricing / safety / framework / infrastructure / tooling / policy / ecosystem), cost_impact, security_impact, urgency. Filters: capability + urgency exact-match, min_cost_impact + min_security_impact threshold, title/source query. Sort priority: urgency > security > cost > recency.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,
@@ -4583,7 +4783,11 @@
       }
     },
     {
-      "resource": "https://tensorfeed.ai/api/premium/status/incidents/triage",
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/status/incidents/triage",
+        "description": "AI provider incident triage. For each open or recently-resolved incident across Anthropic, OpenAI, Google, Mistral, Cohere, etc., Haiku 4.5 produces a structured triage card. Per card: triage_summary (1-2 sentences), impact_classification (informational / minor / major / critical), affected_capabilities (inference / training / embeddings / console / billing / fine-tuning / api-keys / tooling), recommended_action (no_action / monitor / retry_later / failover_now / escalate). Filters: provider substring, impact + recommended_action + capability exact-match, ongoing_only.",
+        "mimeType": "application/json"
+      },
       "type": "http",
       "method": "GET",
       "x402Version": 2,

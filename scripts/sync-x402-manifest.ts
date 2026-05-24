@@ -127,8 +127,21 @@ function walkAndAssertLatin1(obj: unknown, label: string): void {
 
 // ── Manifest shape (just enough for type safety) ───────────────────
 
+interface ResourceInfo {
+  url: string;
+  description?: string;
+  mimeType?: string;
+}
+
 interface ManifestItem {
-  resource: string;
+  // Per canonical x402 v2 PaymentRequiredV2Schema, `resource` is an object
+  // {url, description?, mimeType?}, NOT a bare string. Our runtime 402 response
+  // already emits the object form; this script now emits it for the static
+  // manifest too. Audited 2026-05-24: the bare-string form was the root cause
+  // of x402scan's `parseResponse: Missing input schema` rejection (their
+  // server validates against the canonical zod schema). Aligning the static
+  // manifest with what the runtime already does eliminates the gap.
+  resource: ResourceInfo;
   type: string;
   method: string;
   x402Version: number;
@@ -162,7 +175,11 @@ interface Manifest {
 function buildItem(pilotPath: string, pilot: BazaarPilotConfig, meta: PilotMeta, today: string): ManifestItem {
   const amount = String(meta.credits * CENTS_PER_CREDIT * Math.pow(10, USDC_DECIMALS - 2));
   return {
-    resource: `${SITE_URL}${pilotPath}`,
+    resource: {
+      url: `${SITE_URL}${pilotPath}`,
+      description: pilot.description,
+      mimeType: 'application/json',
+    },
     type: 'http',
     method: meta.method,
     x402Version: 2,
@@ -202,10 +219,34 @@ function main(): void {
   }
 
   const today = new Date().toISOString().slice(0, 10) + 'T00:00:00Z';
+
+  // Migration: rewrite any string-form `resource` into the canonical object
+  // {url, description, mimeType} form per x402 v2. This eliminates the
+  // structural drift between this static manifest and the Worker's runtime
+  // 402 challenge response, and unblocks x402scan registration. Existing
+  // object-form resources pass through unchanged. Idempotent.
+  let migrated = 0;
+  for (const item of manifest.items) {
+    const r = item.resource as unknown;
+    if (typeof r === 'string') {
+      item.resource = {
+        url: r,
+        description: item.metadata?.description ?? item.metadata?.name ?? '',
+        mimeType: 'application/json',
+      };
+      migrated++;
+    }
+  }
+  if (migrated > 0) {
+    console.log(`[sync-x402-manifest] resource-shape migration: ${migrated} string-form items rewritten to canonical object form`);
+  }
+
   const existingByPath = new Map<string, number>();
   manifest.items.forEach((item, idx) => {
     try {
-      const u = new URL(item.resource);
+      // Post-migration, item.resource is always the object form.
+      const urlStr = typeof item.resource === 'string' ? item.resource : item.resource.url;
+      const u = new URL(urlStr);
       existingByPath.set(u.pathname, idx);
     } catch {
       // Item with non-URL resource — skip indexing
