@@ -3776,6 +3776,7 @@ export default {
           aiPolicy: '/api/ai-policy?status=active|pending|proposed|stalled&jurisdiction=EU|US|UK|China|Korea',
           conferences: '/api/conferences?category=research|industry|developer|community&upcoming=true',
           modelDeprecations: '/api/model-deprecations?provider=OpenAI|Anthropic|Google|Cohere|...&status=announced|deprecated|sunsetted',
+          premiumModelDeprecationsTimeline: '/api/premium/model-deprecations/timeline?within_days=&provider= (1 credit, AFTA-signed; window-centered timeline over the model deprecation registry. Each entry enriched with urgency_band (within_7d / within_30d / within_60d / within_90d / within_180d / within_365d / past / future / no_date), days_until_sunset and days_since_sunset, and a resolved migration_chain hop sequence to the first still-active replacement. Summary breakdowns by_provider and by_urgency_band. within_days null returns the full registry; clamped to [7, 730].)',
           computeProviders: '/api/compute-providers?type=gpu-cloud|hyperscaler|ai-serverless|marketplace|specialized',
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
@@ -8526,6 +8527,36 @@ export default {
         logPremiumUsage(env, '/api/premium/research/emerging-keywords', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: MODEL DEPRECATION TIMELINE (Tier 1, 1 credit) ===
+    // /api/premium/model-deprecations/timeline?within_days=&provider=
+    // Derived-metrics timeline over the hand-curated model deprecation
+    // registry. Window centered on now (past N days + future N days) by
+    // default returns the full registry. Each entry enriched with
+    // urgency_band classification, days_until_sunset / days_since_sunset,
+    // and a resolved migration_chain showing the recommended hop sequence
+    // to a still-active model. Summary breakdowns by_provider and
+    // by_urgency_band. Free /api/model-deprecations returns the raw
+    // registry; this endpoint is the agent-decision-ready derivative.
+
+    if (path === '/api/premium/model-deprecations/timeline') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { buildTimeline, parseWithinDays, parseProvider } = await import('./premium-model-deprecations');
+      const result = buildTimeline(
+        {
+          within_days: parseWithinDays(url.searchParams.get('within_days')),
+          provider: parseProvider(url.searchParams.get('provider')),
+        },
+        new Date(),
+      );
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/model-deprecations/timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === PAID PREMIUM: ARXIV TOPIC SEARCH (Tier 1, 1 credit) ===

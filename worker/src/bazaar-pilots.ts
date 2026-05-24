@@ -1022,6 +1022,103 @@ const APIS_GURU_AI_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/model-deprecations/timeline — Wave 3 pilot (2026-05-24).
+ * Window-centered timeline over the model-deprecation registry, enriched
+ * with urgency_band, days_until_sunset, days_since_sunset, and a resolved
+ * migration_chain hop sequence per entry. Premium-shaped because the
+ * derived metrics + migration_chains are computed server-side; the free
+ * sibling at /api/model-deprecations returns the raw registry only.
+ */
+const MODEL_DEPRECATIONS_TIMELINE_PILOT: BazaarPilotConfig = {
+  description:
+    'Model deprecation timeline with migration intelligence. Each entry enriched with urgency_band (within_7d / within_30d / within_60d / within_90d / past), days_until_sunset, days_since_sunset, and a resolved migration_chain hop sequence to the first still-active replacement. Optional within_days window centered on now; optional provider filter. The "is my model affected and what should I migrate to" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { within_days: 90, provider: 'openai' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-24T12:00:00Z',
+            filter: { within_days: 90, provider: 'openai' },
+            total_in_registry: 12,
+            returned_count: 1,
+            entries: [
+              {
+                id: 'openai-gpt-4-32k',
+                provider: 'OpenAI',
+                model: 'gpt-4-32k-0613',
+                status: 'sunsetted',
+                announcedDate: '2024-06-06',
+                deprecationDate: '2025-06-06',
+                sunsetDate: '2025-06-06',
+                replacement: 'gpt-4-turbo',
+                sourceUrl: 'https://platform.openai.com/docs/deprecations',
+                days_until_deprecation: -351,
+                days_until_sunset: -351,
+                days_since_sunset: 351,
+                urgency_band: 'past',
+                migration_chain: ['gpt-4-32k-0613', 'gpt-4-turbo'],
+              },
+            ],
+            summary: {
+              by_provider: { OpenAI: 1 },
+              by_urgency_band: {
+                past: 1, within_7d: 0, within_30d: 0, within_60d: 0,
+                within_90d: 0, within_180d: 0, within_365d: 0,
+                future: 0, no_date: 0,
+              },
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  within_days: {
+                    type: 'integer',
+                    minimum: 7,
+                    maximum: 730,
+                    description: 'Window centered on now in days. Entries are included when |days_until_sunset| <= within_days. Omit for full registry.',
+                  },
+                  provider: {
+                    type: 'string',
+                    description: 'Case-insensitive substring match against provider (OpenAI, Anthropic, Google, Cohere, ...).',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -1031,6 +1128,9 @@ const APIS_GURU_AI_PILOT: BazaarPilotConfig = {
  * query params (or sensible defaults), clearly premium-shaped (derived
  * metrics, curated cohorts, or aggregations the agent would otherwise have
  * to compute itself). Total pilot count: 4 -> 15.
+ *
+ * Wave 3 (2026-05-24): model-deprecations timeline. Pure-compute derivation
+ * over the hand-curated registry. Total pilot count: 15 -> 16.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -1049,6 +1149,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/economy/recession-watch': RECESSION_WATCH_PILOT,
   '/api/premium/policy/timeline': POLICY_TIMELINE_PILOT,
   '/api/premium/apis-guru/ai-feed': APIS_GURU_AI_PILOT,
+  // Wave 3
+  '/api/premium/model-deprecations/timeline': MODEL_DEPRECATIONS_TIMELINE_PILOT,
 };
 
 /**

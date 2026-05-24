@@ -38,6 +38,8 @@ const PILOT_PATHS = [
   '/api/premium/economy/recession-watch',
   '/api/premium/policy/timeline',
   '/api/premium/apis-guru/ai-feed',
+  // Wave 3
+  '/api/premium/model-deprecations/timeline',
 ] as const;
 
 // Premium paths that are intentionally NOT in BAZAAR_PILOTS. Used for
@@ -266,6 +268,8 @@ describe('Wave 2 pilot AJV validation', () => {
     '/api/premium/economy/recession-watch',
     '/api/premium/policy/timeline',
     '/api/premium/apis-guru/ai-feed',
+    // Wave 3 (2026-05-24)
+    '/api/premium/model-deprecations/timeline',
   ];
 
   for (const path of wave2Paths) {

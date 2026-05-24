@@ -110,6 +110,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/economy/recession-watch',
   '/api/premium/policy/timeline',
   '/api/premium/apis-guru/ai-feed',
+  // Wave 3 Bazaar pilot (2026-05-24). Model-deprecations timeline:
+  // derived-metrics view (urgency_band, days_until_sunset, migration_chain)
+  // over the curated registry. Optional query params with sensible defaults,
+  // so anonymous crawlers see a clean 402 challenge instead of a partial 200.
+  '/api/premium/model-deprecations/timeline',
 ];
 
 /**
