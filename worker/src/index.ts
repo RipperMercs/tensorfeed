@@ -474,7 +474,8 @@ import { getActivitySnapshot } from './mcp-activity';
 import { handleAftaBadge } from './afta-badge';
 import { runX402StatusCheck, getStatusSnapshot } from './x402-status';
 import { sanitizeArticleForAgents } from './sanitize';
-import gearCatalog from '../../data/gear.json';
+import { PRODUCTS as GEAR_PRODUCTS } from '../../src/data/gear/products';
+import { GEAR_CATEGORIES } from '../../src/data/gear/categories';
 
 /**
  * CORS posture for the public API.
@@ -1481,66 +1482,58 @@ export default {
 
     // === Gear catalog (agent-readable view of /gear) ===
     // Companion data feed to https://tensorfeed.ai/gear (the human page).
-    // Affiliate plumbing (amazonAsin, affiliate, vendorUrl-tag-rewrite) is
-    // stripped so agents see a clean vendor URL and never get routed
-    // through a commissioned link.
+    // Affiliate plumbing (amazon-tag rewrite, the affiliate flag, secondary
+    // CTAs that earn commissions) is stripped so agents see a clean vendor
+    // URL and never get routed through a commissioned link.
     if (path === '/api/gear' || path === '/api/agents/gear' || path === '/api/agents/gear.json') {
-      type GearProductRecord = {
-        id: string;
-        name: string;
-        manufacturer: string;
-        category: string;
-        blurb: string;
-        description: string;
-        specs: string[];
-        aiUseCase: string;
-        priceRange: string;
-        affiliate: boolean;
-        amazonAsin?: string;
-        vendorUrl?: string;
-        tags: string[];
-        badges?: string[];
-        added: string;
-        updated: string;
-      };
-      type GearCatalog = { lastReviewed: string; products: GearProductRecord[] };
-      const catalog = gearCatalog as GearCatalog;
       const categoryFilter = url.searchParams.get('category');
 
-      let products = catalog.products;
+      let products: typeof GEAR_PRODUCTS = GEAR_PRODUCTS;
       if (categoryFilter) {
         products = products.filter(p => p.category === categoryFilter);
       }
 
       const agentProducts = products.map(p => {
-        const vendorUrl =
-          p.vendorUrl && p.vendorUrl.length > 0
-            ? p.vendorUrl
-            : p.amazonAsin
-              ? `https://www.amazon.com/dp/${p.amazonAsin}`
-              : '';
+        // Prefer the secondary direct CTA url when the primary is an affiliate
+        // link. Falls back to the primary url's host (without affiliate tag)
+        // when no secondary exists.
+        const directUrl =
+          p.secondaryCta && p.secondaryCta.kind === 'direct'
+            ? p.secondaryCta.url
+            : p.cta.kind === 'direct'
+              ? p.cta.url
+              : p.cta.url;
         return {
           id: p.id,
           name: p.name,
-          manufacturer: p.manufacturer,
+          brand: p.brand,
           category: p.category,
           blurb: p.blurb,
-          description: p.description,
           specs: p.specs,
-          aiUseCase: p.aiUseCase,
-          priceRange: p.priceRange,
-          vendorUrl,
+          aiUse: p.aiUse,
+          price: p.price,
+          priceNote: p.priceNote,
+          vendorUrl: directUrl,
           tags: p.tags,
           badges: p.badges ?? [],
-          added: p.added,
-          updated: p.updated,
+          pin: p.pin ?? null,
+          image: p.image ?? null,
+          addedAt: p.addedAt,
+          reviewedAt: p.reviewedAt,
         };
       });
 
       const counts: Record<string, number> = {};
-      for (const p of catalog.products) {
+      for (const p of GEAR_PRODUCTS) {
         counts[p.category] = (counts[p.category] ?? 0) + 1;
       }
+
+      const categories = GEAR_CATEGORIES.map(c => ({
+        id: c.id,
+        name: c.name,
+        hue: c.hue,
+        count: counts[c.id] ?? 0,
+      }));
 
       return jsonResponse({
         ok: true,
@@ -1550,10 +1543,10 @@ export default {
         canonical: 'https://tensorfeed.ai/gear',
         license: 'CC-BY-4.0',
         attribution: 'TensorFeed.ai',
-        lastReviewed: catalog.lastReviewed,
         updated: new Date().toISOString(),
         count: agentProducts.length,
         counts,
+        categories,
         products: agentProducts,
       });
     }

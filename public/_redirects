@@ -10,3 +10,18 @@
 /hardware /gear 301
 /hardware/ /gear 301
 /hardware/* /gear/:splat 301
+
+# /gear policy moved into the gear hub. Old standalone path kept as 301.
+/affiliate-disclosure /gear/policy 301
+/affiliate-disclosure/ /gear/policy 301
+
+# Category slug rename (longer kebab variants -> tighter spec slugs).
+# The earlier /gear/xr-ar-glasses etc. category pages were live for under a
+# day; these 301s catch anything that hit search engines in that window.
+/gear/xr-ar-glasses /gear/xr 301
+/gear/smart-home-ai /gear/smart 301
+/gear/cameras-vision /gear/cameras 301
+/gear/edge-devices /gear/edge 301
+/gear/books-learning /gear/books 301
+/gear/storage-memory /gear/storage 301
+/gear/audio-voice /gear/audio 301

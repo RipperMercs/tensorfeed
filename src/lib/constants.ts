@@ -11,13 +11,13 @@ export const NAV_LINKS = [
   { href: '/today', label: 'Today' },
   { href: '/models', label: 'Models' },
   { href: '/ai-hardware', label: 'Hardware' },
+  { href: '/gear', label: 'Gear' },
   { href: '/benchmarks', label: 'Benchmarks' },
   { href: '/research', label: 'Research' },
   { href: '/agents', label: 'Agents' },
   { href: '/podcasts', label: 'Podcasts' },
   { href: '/originals', label: 'Originals' },
   { href: '/live', label: 'Live' },
-  { href: '/gear', label: 'Gear' },
 ] as const;
 
 export const CATEGORIES = [

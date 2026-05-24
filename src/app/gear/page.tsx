@@ -1,185 +1,106 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { ArrowRight, Info, Microchip } from 'lucide-react';
 import JsonLd, { BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
-import {
-  getActiveCategories,
-  getFeaturedProducts,
-  getLastReviewed,
-  getProductCounts,
-  getProducts,
-} from '@/lib/gear';
-import GearCard from '@/components/gear/GearCard';
+import { GEAR_CATEGORIES } from '@/data/gear/categories';
+import { PRODUCTS, getCategoryCounts } from '@/data/gear/products';
+import { SPOTLIGHT } from '@/data/gear/spotlight';
+import GearHero from '@/components/gear/GearHero';
+import Spotlight from '@/components/gear/Spotlight';
+import GearInteractive from '@/components/gear/GearInteractive';
+import CompareStrip from '@/components/gear/CompareStrip';
 
 export const metadata: Metadata = {
-  title: 'AI Gear: Curated Hardware Picks for Local LLMs, XR, and Robotics',
+  title: 'AI Gear: hand-curated hardware for local LLMs, robotics, and AR',
   description:
-    'Hand-curated AI-relevant hardware. Laptops capable of running local language models, GPUs for self-built rigs, AR glasses, robotics, and more. Updated weekly on TensorFeed.',
+    "TensorFeed's curated hub of AI-relevant consumer hardware. Laptops capable of local LLMs, discrete GPUs, AR glasses, robotics, and edge accelerators. Reviewed and refreshed weekly.",
   alternates: { canonical: 'https://tensorfeed.ai/gear' },
   openGraph: {
-    title: 'AI Gear: Curated Hardware Picks for Local LLMs, XR, and Robotics',
-    description:
-      'Hand-curated AI-relevant consumer hardware. Updated weekly on TensorFeed.',
-    url: 'https://tensorfeed.ai/gear',
     type: 'website',
-    siteName: 'TensorFeed.ai',
-    images: [{ url: 'https://tensorfeed.ai/tensorfeed-logo.png', width: 1024, height: 1024 }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'AI Gear: Curated Hardware Picks on TensorFeed',
+    siteName: 'TensorFeed',
+    title: 'AI Gear · TensorFeed',
     description:
-      'Hand-curated AI-relevant consumer hardware: laptops, GPUs, AR glasses, and more.',
+      'Hand-curated AI-relevant consumer hardware, reviewed weekly.',
+    url: 'https://tensorfeed.ai/gear',
+    images: [
+      { url: 'https://tensorfeed.ai/tensorfeed-logo.png', width: 1024, height: 1024 },
+    ],
   },
+  twitter: { card: 'summary_large_image' },
 };
 
-export default function GearPage() {
-  const featured = getFeaturedProducts(9);
-  const activeCategories = getActiveCategories();
-  const counts = getProductCounts();
-  const lastReviewed = getLastReviewed();
-  const total = getProducts().length;
+export default function GearHubPage() {
+  const counts = getCategoryCounts();
+  const categories = GEAR_CATEGORIES.map(c => ({
+    ...c,
+    count: counts[c.id] ?? 0,
+  })).filter(c => c.count > 0);
+
+  const stats = {
+    products: PRODUCTS.length,
+    categories: categories.length,
+    lastReview: '2026-05-23',
+    refresh: 'Weekly',
+  };
 
   const itemList = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'TensorFeed AI Gear Picks',
+    name: 'TensorFeed AI Gear',
     description:
-      'Curated AI-relevant consumer hardware including laptops, GPUs, AR glasses, robotics, and edge devices.',
-    numberOfItems: total,
-    itemListElement: featured.map((p, i) => ({
+      'Curated AI-relevant consumer hardware including laptops, GPUs, AR glasses, robotics, edge accelerators, and AI-aware peripherals.',
+    numberOfItems: PRODUCTS.length,
+    itemListElement: PRODUCTS.map((p, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       item: {
         '@type': 'Product',
         name: p.name,
-        brand: { '@type': 'Brand', name: p.manufacturer },
+        brand: { '@type': 'Brand', name: p.brand },
         description: p.blurb,
         category: p.category,
+        image: p.image
+          ? `https://tensorfeed.ai${p.image}`
+          : undefined,
         url: `https://tensorfeed.ai/gear/${p.category}#${p.id}`,
       },
     })),
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="gear-main">
       <BreadcrumbListJsonLd
         items={[
-          { name: 'Home', url: 'https://tensorfeed.ai' },
-          { name: 'Gear', url: 'https://tensorfeed.ai/gear' },
+          { name: 'TensorFeed', url: 'https://tensorfeed.ai/' },
+          { name: 'AI Gear', url: 'https://tensorfeed.ai/gear' },
         ]}
       />
       <JsonLd data={itemList} />
 
-      <header className="mb-10">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-accent-primary/10">
-            <Microchip className="w-7 h-7 text-accent-primary" />
+      <GearHero stats={stats} />
+
+      <section className="gear-section" id="spotlight" style={{ paddingTop: 40 }}>
+        <div className="container">
+          <div className="gear-section-head">
+            <div>
+              <div className="h-eyebrow">
+                <span className="bar" aria-hidden="true" /> 01 / SPOTLIGHT
+              </div>
+              <h2>This Month&apos;s Pick</h2>
+            </div>
+            <div className="h-sub">
+              Updated <strong>weekly</strong> &middot; based on tested workloads
+            </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">AI Gear</h1>
+          <Spotlight spotlight={SPOTLIGHT} />
         </div>
-        <p className="text-text-secondary text-base sm:text-lg leading-relaxed max-w-3xl">
-          Hand-curated AI-relevant consumer hardware. Laptops capable of running
-          local language models, discrete GPUs for self-built rigs, AR glasses
-          with AI overlays, robotics, edge accelerators, and the occasional
-          experimental device worth knowing about.
-        </p>
-
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-text-muted">
-          <span className="font-mono">
-            {total} {total === 1 ? 'product' : 'products'}
-          </span>
-          <span aria-hidden>·</span>
-          <span>
-            Last reviewed:{' '}
-            <time dateTime={lastReviewed} className="font-mono">
-              {lastReviewed}
-            </time>
-          </span>
-          <span aria-hidden>·</span>
-          <span>Refreshed weekly</span>
-        </div>
-
-        <div className="mt-5 flex items-start gap-2 text-xs text-text-muted bg-bg-secondary/50 border border-border-primary/40 rounded px-3 py-2 max-w-3xl">
-          <Info className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden />
-          <p>
-            TensorFeed earns a commission from qualifying Amazon purchases.
-            Non-Amazon products are listed without affiliate links. See our{' '}
-            <Link
-              href="/affiliate-disclosure"
-              className="text-accent-primary hover:text-accent-cyan transition-colors underline underline-offset-2"
-            >
-              affiliate disclosure
-            </Link>
-            .
-          </p>
-        </div>
-      </header>
-
-      {activeCategories.length > 0 && (
-        <section className="mb-12">
-          <h2 className="text-xl font-semibold text-text-primary mb-4">
-            Browse by category
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {activeCategories.map(cat => (
-              <Link
-                key={cat.slug}
-                href={`/gear/${cat.slug}`}
-                className="group relative h-28 rounded-lg overflow-hidden border border-border-primary hover:border-accent-primary/40 transition-colors"
-                style={{
-                  background: `linear-gradient(135deg, ${cat.gradientFrom} 0%, ${cat.gradientTo} 100%)`,
-                }}
-              >
-                <div className="absolute inset-0 p-4 flex flex-col justify-end">
-                  <div className="text-white font-semibold text-base group-hover:text-accent-cyan transition-colors">
-                    {cat.display}
-                  </div>
-                  <div className="text-white/70 text-xs font-mono mt-0.5">
-                    {counts[cat.slug]}{' '}
-                    {counts[cat.slug] === 1 ? 'product' : 'products'}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {featured.length > 0 && (
-        <section className="mb-12">
-          <h2 className="text-xl font-semibold text-text-primary mb-4">
-            Featured picks
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {featured.map(product => (
-              <GearCard key={product.id} product={product} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {total === 0 && (
-        <section className="border border-dashed border-border-primary/60 rounded-lg p-10 text-center">
-          <p className="text-text-secondary text-sm">
-            The catalog is being seeded. Check back shortly for our first round
-            of picks.
-          </p>
-        </section>
-      )}
-
-      <section className="mt-16 pt-8 border-t border-border-primary/50 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between text-sm">
-        <div className="text-text-muted">
-          Want raw datacenter chip specs (H100, MI300, TPUs)?
-        </div>
-        <Link
-          href="/ai-hardware"
-          className="inline-flex items-center gap-1.5 text-accent-primary hover:text-accent-cyan transition-colors font-medium"
-        >
-          AI Hardware database
-          <ArrowRight className="w-4 h-4" />
-        </Link>
       </section>
-    </div>
+
+      <GearInteractive categories={categories} products={PRODUCTS} />
+
+      <section className="gear-section" style={{ paddingTop: 0 }}>
+        <div className="container">
+          <CompareStrip />
+        </div>
+      </section>
+    </main>
   );
 }
