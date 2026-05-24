@@ -1,4 +1,20 @@
-/* ===== AI Gear page styles (additive to styles.css) ===== */
+/* ===== AI Gear page styles (additive to global styles) ===== */
+
+/* Container: scoped to .gear-page so it does not collide with other pages.
+   The mock relied on a generic .container from its own styles.css; the
+   parent app does not define one, so this scopes the rule. */
+.gear-page .container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .gear-page .container {
+    padding: 0 16px;
+  }
+}
 
 :root {
   --gear-rail-blue: #4a90e2;
@@ -110,6 +126,25 @@
   min-width: 130px;
 }
 .gear-stat:last-child { border-right: none; }
+
+/* Mobile: collapse the stats strip into a 2x2 grid so it fits 375px wide. */
+@media (max-width: 640px) {
+  .gear-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-self: stretch;
+    width: 100%;
+  }
+  .gear-stat {
+    padding: 12px 14px;
+    min-width: 0;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .gear-stat:nth-child(2n) { border-right: none; }
+  .gear-stat:nth-last-child(-n+2) { border-bottom: none; }
+  .gear-stat .v { font-size: 18px; }
+}
 .gear-stat .k {
   font-family: var(--font-mono);
   font-size: 9.5px;
@@ -986,3 +1021,92 @@
 }
 .tweak-segrow button:last-child { border-right: none; }
 .tweak-segrow button.on { background: rgba(6,182,212,0.12); color: var(--accent-cyan); }
+
+/* ===== Mobile tuning (375 to 640) =====
+   Single-column layout, tighter section padding, smaller hero numbers,
+   filter chips that wrap cleanly instead of overflowing. */
+
+@media (max-width: 640px) {
+  .gear-hero { padding: 36px 0 24px; }
+  .gear-hero-inner { gap: 22px; }
+  .gear-section { padding: 36px 0 28px; }
+  .gear-section-head { margin-bottom: 18px; gap: 12px; }
+  .gear-section-head h2 { font-size: 19px; }
+
+  .gear-stats { align-self: stretch; }
+
+  .disclosure {
+    margin-top: 22px;
+    padding: 11px 12px;
+    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 12px;
+  }
+
+  .spotlight {
+    grid-template-columns: 1fr;
+    border-radius: 12px;
+  }
+  .spotlight-body { padding: 22px 18px 24px; }
+  .spotlight-body h3 { font-size: 22px; }
+  .spotlight-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .spotlight-foot > div:last-child {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cat-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .cat-card { padding: 14px; min-height: 96px; }
+  .cat-card .cat-name { font-size: 13.5px; }
+
+  .filter-bar {
+    padding: 12px 12px;
+    gap: 10px;
+  }
+  .filter-bar .fb-label { display: none; }
+  .filter-spacer { display: none; }
+  .view-toggle { margin-left: auto; }
+
+  .products {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .products.dense { grid-template-columns: 1fr; }
+  .product-card { border-radius: 12px; }
+  .pc-body { padding: 14px 14px 16px; }
+  .pc-title { font-size: 15.5px; }
+  .pc-blurb { font-size: 13px; }
+  .pc-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .pc-foot .pc-cta { justify-content: center; }
+
+  .compare-strip {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px;
+  }
+  .compare-strip .cta-btn { justify-content: center; }
+}
+
+/* ===== Small-tablet tuning (641 to 900) =====
+   Two-column cat grid, two-column products grid, tighter section padding. */
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .gear-section { padding: 44px 0 32px; }
+  .products { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .cat-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+}
+
