@@ -1872,6 +1872,95 @@ const NEWS_ACTION_CARDS_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/status/incidents/triage — Wave 12 pilot (2026-05-24).
+ * Second Haiku-derived premium endpoint. Per-incident triage cards over
+ * AI provider status feed with impact classification + recommended
+ * action. Per-incident KV cache keeps Haiku spend near-zero.
+ */
+const INCIDENT_TRIAGE_PILOT: BazaarPilotConfig = {
+  description:
+    'AI provider incident triage. For each open or recently-resolved incident across Anthropic, OpenAI, Google, Mistral, Cohere, etc., Haiku 4.5 produces a structured triage card. Per card: triage_summary (1-2 sentences), impact_classification (informational / minor / major / critical), affected_capabilities (inference / training / embeddings / console / billing / fine-tuning / api-keys / tooling), recommended_action (no_action / monitor / retry_later / failover_now / escalate). Filters: provider substring, impact + recommended_action + capability exact-match, ongoing_only.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { provider: 'OpenAI', ongoing_only: true, impact: 'major' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-24T18:15:00Z',
+            snapshot_captured_at: '2026-05-24T18:15:00Z',
+            source: 'tensorfeed.ai status incidents + Claude Haiku 4.5',
+            filter: { provider: 'OpenAI', impact: 'major', recommended_action: null, capability: null, ongoing_only: true },
+            cohort: { incidents_considered: 14, cards_in_snapshot: 12, cards_filtered: 1, ongoing_in_filtered: 1 },
+            cards: [
+              {
+                incident_id: 'openai-2026-05-24-001',
+                provider: 'openai',
+                service: 'API',
+                title: 'Elevated latency for ChatGPT and GPT-4 Turbo',
+                severity: 'major',
+                started_at: '2026-05-24T17:42:00Z',
+                resolved_at: null,
+                ongoing: true,
+                triage_summary: 'OpenAI API experiencing 5% elevated latency for ChatGPT and GPT-4 Turbo; Assistants API and Files unaffected.',
+                impact_classification: 'major',
+                affected_capabilities: ['inference'],
+                recommended_action: 'retry_later',
+                generated_at: '2026-05-24T18:15:00Z',
+              },
+            ],
+            summary: {
+              by_provider: { openai: 1 },
+              by_impact: { informational: 0, minor: 0, major: 1, critical: 0 },
+              by_recommended_action: { no_action: 0, monitor: 0, retry_later: 1, failover_now: 0, escalate: 0 },
+              by_capability: { inference: 1, training: 0, embeddings: 0, console: 0, billing: 0, 'fine-tuning': 0, 'api-keys': 0, tooling: 0 },
+              cards_with_failover_action: 0,
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  provider: { type: 'string', description: 'Case-insensitive substring match against provider name.' },
+                  impact: { type: 'string', enum: ['informational', 'minor', 'major', 'critical'] },
+                  recommended_action: { type: 'string', enum: ['no_action', 'monitor', 'retry_later', 'failover_now', 'escalate'] },
+                  capability: { type: 'string', enum: ['inference', 'training', 'embeddings', 'console', 'billing', 'fine-tuning', 'api-keys', 'tooling'] },
+                  ongoing_only: { type: 'boolean', description: 'When true, exclude resolved incidents. Default false.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -1914,6 +2003,10 @@ const NEWS_ACTION_CARDS_PILOT: BazaarPilotConfig = {
  * Wave 11 (2026-05-24): news/action-cards. First Haiku-derived premium
  * endpoint. Per-article structured agent action cards. Total pilot
  * count: 23 -> 24.
+ *
+ * Wave 12 (2026-05-24): status/incidents/triage. Second Haiku-derived
+ * endpoint. Per-incident triage cards with impact + action classification.
+ * Total pilot count: 24 -> 25.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -1950,6 +2043,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/coding-harnesses/weekly-deltas': HARNESS_DELTAS_PILOT,
   // Wave 11
   '/api/premium/news/action-cards': NEWS_ACTION_CARDS_PILOT,
+  // Wave 12
+  '/api/premium/status/incidents/triage': INCIDENT_TRIAGE_PILOT,
 };
 
 /**

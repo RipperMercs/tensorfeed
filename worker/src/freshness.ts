@@ -109,6 +109,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // News action cards: Haiku-derived. Daily 08:00 UTC cron + per-article
   // 7-day KV cache. 36h SLA covers a single missed run.
   '/api/premium/news/action-cards': { maxAgeSeconds: 36 * 60 * 60 },
+  // Incident triage: Haiku-derived. Every-2h cron + per-incident 24h KV
+  // cache. 6h SLA covers ~3 missed runs.
+  '/api/premium/status/incidents/triage': { maxAgeSeconds: 6 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

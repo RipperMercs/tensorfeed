@@ -148,6 +148,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // derived premium endpoint. Per-article structured action cards over
   // the daily news feed.
   '/api/premium/news/action-cards',
+  // Wave 12 Bazaar pilot (2026-05-24). Status incident triage: second
+  // Haiku-derived endpoint. Per-incident triage with impact +
+  // recommended_action classification. Same anonymous-crawler hygiene.
+  '/api/premium/status/incidents/triage',
 ];
 
 /**

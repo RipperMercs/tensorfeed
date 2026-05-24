@@ -3788,6 +3788,8 @@ export default {
           aiCryptoPulse: '/api/ai-crypto-pulse (free; second AFTA federation cross-call. Pulls TerminalFeed crypto-movers + funding-rates, filters to AI-thesis token cohort (TAO, FET, RNDR, AKT, WLD, ARKM, IO, OCEAN, GRT, VIRTUAL, AI16Z, NMR, AGIX, TURBO).)',
           codingHarnessesLatest: '/api/coding-harnesses/latest (free; third AFTA federation cross-call. Latest snapshot of TerminalFeed coding-harness leaderboard (SWE-bench Verified, Terminal-Bench, Aider Polyglot, etc). Refreshed daily 05:25 UTC.)',
           newsActionCards: '/api/news/action-cards?limit= (free, capped at 25; Haiku-derived structured agent action cards over the news feed. Per article: action_summary, migration_recommendation, affected_capability, cost_impact, security_impact, urgency. Daily 08:00 UTC refresh.)',
+          statusIncidentsTriage: '/api/status/incidents/triage?limit= (free, capped at 25; Haiku-triaged AI provider status incidents. Per card: triage_summary, impact_classification (informational/minor/major/critical), affected_capabilities, recommended_action (no_action/monitor/retry_later/failover_now/escalate). Refreshed every 2h.)',
+          premiumStatusIncidentsTriage: '/api/premium/status/incidents/triage?provider=&impact=&recommended_action=&capability=&ongoing_only= (1 credit, AFTA-signed; full incident cohort + provider substring + impact/action exact filters + capability membership filter + ongoing_only flag. Sort priority: impact > recommended_action > started_at. Summary rollups by_provider, by_impact, by_recommended_action, by_capability, cards_with_failover_action.)',
           premiumNewsActionCards: '/api/premium/news/action-cards?capability=&urgency=&min_cost_impact=&min_security_impact=&query= (1 credit, AFTA-signed; full cohort + capability/urgency exact filters + impact "at-or-above" threshold filters + title/source substring search. Sort priority: urgency > security_impact > cost_impact > published. Summary rollups by_capability, by_urgency, by_cost_impact, by_security_impact, cards_with_migration_recommendation.)',
           codingHarnessesDates: '/api/coding-harnesses/dates (free; ordered date index of captured TerminalFeed harness snapshots for delta queries.)',
           premiumCodingHarnessesWeeklyDeltas: '/api/premium/coding-harnesses/weekly-deltas?days_back=&harness=&benchmark=&model=&min_abs_delta= (1 credit, AFTA-signed; compares current TerminalFeed harness snapshot to a prior snapshot (default 7d back, clamp [1, 90]). Per-(benchmark, harness, model) score + rank deltas, biggest_gainers, biggest_regressions, entered/exited combinations, per-benchmark leader_cards with leader_changed flag.)',
@@ -8545,6 +8547,79 @@ export default {
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
 
+    // === INCIDENT TRIAGE (free, cached 300s) ===
+    // /api/status/incidents/triage?limit=
+    // Haiku-derived structured agent triage cards over AI provider
+    // status incidents. Each card answers "is this affecting my
+    // workload, how severe, what should I do." Free tier capped at 25.
+    // Refreshed every 2 hours at :15 UTC.
+
+    if (path === '/api/status/incidents/triage') {
+      const { getIncidentTriageSnapshot } = await import('./incident-triage-generator');
+      const snap = await getIncidentTriageSnapshot(env);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'snapshot_not_ready',
+          hint: 'Incident triage refreshes every 2 hours at :15 UTC. After deploy + first cron tick, this endpoint populates within 2 hours.',
+        }, 503, 0);
+      }
+      const limit = (() => {
+        const n = parseInt(url.searchParams.get('limit') ?? '', 10);
+        return Number.isFinite(n) && n > 0 ? Math.min(n, 25) : 25;
+      })();
+      return jsonResponse({
+        ok: true,
+        source: snap.source,
+        model: snap.model,
+        capturedAt: snap.capturedAt,
+        incidents_considered: snap.incidents_considered,
+        incidents_succeeded: snap.incidents_succeeded,
+        ongoing_count: snap.ongoing_count,
+        resolved_count: snap.resolved_count,
+        cards_total: snap.cards.length,
+        cards: snap.cards.slice(0, limit),
+        attribution: {
+          source: 'TensorFeed.ai status polling + Claude Haiku 4.5 (Anthropic). Each card cites the originating incident_id.',
+          license: 'Derivative agent-facing summary over public provider status pages. Conservative classifications for agent decision support.',
+          notes: 'Free tier capped at 25 cards. Premium endpoint at /api/premium/status/incidents/triage returns the full cohort with provider + impact + action + capability + ongoing_only filters.',
+        },
+      }, 200, 300);
+    }
+
+    // === PAID PREMIUM: INCIDENT TRIAGE (Tier 1, 1 credit) ===
+    // /api/premium/status/incidents/triage?provider=&impact=&recommended_action=&capability=&ongoing_only=
+    // Full Haiku-triaged incident cohort with filters and rollups.
+    // Sort priority: impact desc > recommended_action desc > started_at desc.
+
+    if (path === '/api/premium/status/incidents/triage') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getIncidentTriageSnapshot } = await import('./incident-triage-generator');
+      const snap = await getIncidentTriageSnapshot(env);
+      if (!snap) {
+        return await premiumValidationFailure(
+          { error: 'snapshot_not_ready', hint: 'Incident triage refreshes every 2 hours at :15 UTC. Retry after the next cron tick.' },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      const { buildTriageResponse, parseProvider, parseImpact, parseRecommendedAction, parseCapability, parseOngoingOnly } = await import('./premium-incident-triage');
+      const result = buildTriageResponse(snap, {
+        provider: parseProvider(url.searchParams.get('provider')),
+        impact: parseImpact(url.searchParams.get('impact')),
+        recommended_action: parseRecommendedAction(url.searchParams.get('recommended_action')),
+        capability: parseCapability(url.searchParams.get('capability')),
+        ongoing_only: parseOngoingOnly(url.searchParams.get('ongoing_only')),
+      });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/status/incidents/triage', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === NEWS ACTION CARDS (free, cached 600s) ===
     // /api/news/action-cards?limit=
     // Haiku-derived structured agent action cards over the day's news
@@ -10815,6 +10890,12 @@ export default {
       // /api/security/kev/added/{date}, /api/security/kev/dates, and
       // premium /api/premium/security/kev/full + /series.
       await run('captureKEV', () => captureKEV(env));
+    } else if (cron === '15 */2 * * *') {
+      // Every 2h at :15 UTC: Haiku-triage open + recent-resolved status
+      // incidents. Per-incident cache means most calls hit cache. Powers
+      // free /api/status/incidents/triage + premium variant.
+      const { refreshIncidentTriage } = await import('./incident-triage-generator');
+      await run('refreshIncidentTriage', () => refreshIncidentTriage(env));
     } else if (cron === '0 8 * * *') {
       // Daily 08:00 UTC: generate Haiku-derived news action cards over the
       // day's top ~50 articles. Per-article cache means re-runs don't burn
