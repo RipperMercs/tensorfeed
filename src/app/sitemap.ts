@@ -229,7 +229,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/security/corroborated`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${baseUrl}/originals/25-bazaar-pilots-one-day`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/openai-erdos-unit-distance-disproof`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/openai-ipo-filing-anthropic-first-profit`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/ai-status-extension-live`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
