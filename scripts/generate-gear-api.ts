@@ -1,5 +1,5 @@
 /**
- * Generate the agent-readable gear feed at public/api/gear.json.
+ * Generate the agent-readable gear feed at public/api/agents/gear.json.
  *
  * Reads the curated data/gear.json and strips affiliate plumbing so agents
  * see clean vendor URLs and no commissioned links. Runs in prebuild before
@@ -35,8 +35,12 @@ interface GearData {
   products: GearProduct[];
 }
 
+// Lives under /api/agents/ because the Cloudflare Worker captures /api/*
+// routes it knows about and returns 404 for unknown /api/foo paths. Static
+// files only fall through when the path is under /api/agents/. This matches
+// the existing pattern (news.json, status.json, pricing.json all live here).
 const SOURCE = path.join(process.cwd(), 'data', 'gear.json');
-const OUT_DIR = path.join(process.cwd(), 'public', 'api');
+const OUT_DIR = path.join(process.cwd(), 'public', 'api', 'agents');
 const OUT_FILE = path.join(OUT_DIR, 'gear.json');
 
 function main(): void {
@@ -89,7 +93,7 @@ function main(): void {
   fs.writeFileSync(OUT_FILE, JSON.stringify(output, null, 2) + '\n', 'utf8');
 
   console.log(
-    `[gear-api] wrote ${agentProducts.length} products to public/api/gear.json`
+    `[gear-api] wrote ${agentProducts.length} products to public/api/agents/gear.json`
   );
 }
 

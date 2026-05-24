@@ -8,7 +8,7 @@
  * only) are listed when they are interesting but not on Amazon or when we
  * have not yet sourced an Amazon ASIN.
  *
- * Agent-readable JSON view at /api/gear.json strips affiliate plumbing.
+ * Agent-readable JSON view at /api/agents/gear.json strips affiliate plumbing.
  */
 
 import gearData from '../../data/gear.json';
