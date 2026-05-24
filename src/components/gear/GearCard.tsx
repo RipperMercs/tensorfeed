@@ -38,7 +38,7 @@ export default function GearCard({ product }: GearCardProps) {
   const ctaLabel = isAffiliate ? 'View on Amazon' : 'Visit product site';
 
   return (
-    <article className="flex flex-col bg-bg-secondary border border-border-primary rounded-lg overflow-hidden hover:border-accent-primary/40 transition-colors">
+    <article className="group relative flex flex-col bg-bg-secondary border border-border-primary rounded-lg overflow-hidden hover:border-accent-primary/60 hover:bg-bg-secondary/80 transition-colors cursor-pointer focus-within:ring-2 focus-within:ring-accent-primary/40 focus-within:ring-offset-2 focus-within:ring-offset-bg-primary">
       <div
         className="relative h-44 w-full flex items-end p-4"
         style={{
@@ -86,10 +86,29 @@ export default function GearCard({ product }: GearCardProps) {
             <div className="text-xs uppercase tracking-wider text-text-muted mb-1">
               {product.manufacturer}
             </div>
-            <h3 className="text-lg font-semibold text-text-primary leading-tight">
-              {product.name}
+            <h3 className="text-lg font-semibold text-text-primary leading-tight group-hover:text-accent-primary transition-colors">
+              <a
+                href={link}
+                target="_blank"
+                rel={rel}
+                className="outline-none after:absolute after:inset-0 after:content-[''] after:z-10"
+                aria-label={`${ctaLabel}: ${product.name}`}
+              >
+                {product.name}
+              </a>
             </h3>
           </div>
+        )}
+        {!hasRealImage && (
+          <a
+            href={link}
+            target="_blank"
+            rel={rel}
+            aria-label={`${ctaLabel}: ${product.name}`}
+            className="absolute inset-0 z-10 outline-none focus-visible:ring-0"
+          >
+            <span className="sr-only">{ctaLabel}: {product.name}</span>
+          </a>
         )}
 
         <p className="text-sm text-text-secondary leading-relaxed">
@@ -118,19 +137,17 @@ export default function GearCard({ product }: GearCardProps) {
           <div className="text-base font-mono font-semibold text-text-primary">
             {product.priceRange}
           </div>
-          <a
-            href={link}
-            target="_blank"
-            rel={rel}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-primary hover:text-accent-cyan transition-colors"
+          <span
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-primary group-hover:text-accent-cyan transition-colors"
+            aria-hidden="true"
           >
             {ctaLabel}
             <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          </span>
         </div>
 
         {product.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border-primary/40">
+          <div className="relative z-20 flex flex-wrap gap-1.5 pt-2 border-t border-border-primary/40">
             {product.tags.map(tag => (
               <Link
                 key={tag}
