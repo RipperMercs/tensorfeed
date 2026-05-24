@@ -3778,8 +3778,9 @@ export default {
           modelDeprecations: '/api/model-deprecations?provider=OpenAI|Anthropic|Google|Cohere|...&status=announced|deprecated|sunsetted',
           premiumModelDeprecationsTimeline: '/api/premium/model-deprecations/timeline?within_days=&provider= (1 credit, AFTA-signed; window-centered timeline over the model deprecation registry. Each entry enriched with urgency_band (within_7d / within_30d / within_60d / within_90d / within_180d / within_365d / past / future / no_date), days_until_sunset and days_since_sunset, and a resolved migration_chain hop sequence to the first still-active replacement. Summary breakdowns by_provider and by_urgency_band. within_days null returns the full registry; clamped to [7, 730].)',
           computeProviders: '/api/compute-providers?type=gpu-cloud|hyperscaler|ai-serverless|marketplace|specialized',
-          inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba',
+          inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba|Microsoft',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
+          premiumInferenceArbitrage: '/api/premium/inference-providers/arbitrage?family=&min_savings_pct= (1 credit, AFTA-signed; cross-provider arbitrage analytics over the inference-providers matrix. Per-model: cheapest_paid, most_expensive_paid, spread_usd, savings_pct, median_paid_blended, fastest_tps, cheapest_with_tps, free_tier_offers. Plus provider_rollup (cheapest_count, top_tps_count, value_score) and top_arbitrage models sorted by savings_pct desc. Default min_savings_pct=20; clamp [0,100].)',
           agentsDirectory: '/api/agents/directory',
           agentsOpportunities: '/api/agents/opportunities (free; daily-refreshed scan of new GitHub repos that represent submission/distribution opportunities for TF: anthropics/openai/microsoft/modelcontextprotocol orgs + MCP/x402/skills keyword sweeps. Scored by signal_weight * recency + log10(stars). 13:30 UTC cron)',
           agentsReputationByWallet: '/api/agents/reputation/{wallet} (free; v0 Agent Reputation Bureau. Returns a ReputationCard with metrics, ranks, trust grade, flags, and operator-claim status. Cards rebuilt daily at 04:50 UTC from TF telemetry. 404 on unknown wallet. Premium time series at /api/premium/agents/reputation/series.)',
@@ -8527,6 +8528,38 @@ export default {
         logPremiumUsage(env, '/api/premium/research/emerging-keywords', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: INFERENCE-PROVIDER ARBITRAGE (Tier 1, 1 credit) ===
+    // /api/premium/inference-providers/arbitrage?family=&min_savings_pct=
+    // Derived-metrics arbitrage view over the curated inference-providers
+    // matrix. Per-model: cheapest_paid, most_expensive_paid, spread_usd,
+    // savings_pct, median_paid_blended, fastest_tps, cheapest_with_tps,
+    // free_tier_offers (rate-limited prototyping providers like GitHub
+    // Models). Plus provider_rollup with value_score and top_arbitrage
+    // models sorted by savings_pct desc. Free /api/inference-providers
+    // returns the raw matrix; this is the agent-decision-ready derivative.
+
+    if (path === '/api/premium/inference-providers/arbitrage') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { buildArbitrage, parseFamily, parseMinSavingsPct } = await import('./premium-inference-arbitrage');
+      const { INFERENCE_LAST_UPDATED } = await import('./inference-providers');
+      const result = buildArbitrage(
+        {
+          family: parseFamily(url.searchParams.get('family')),
+          min_savings_pct: parseMinSavingsPct(url.searchParams.get('min_savings_pct')),
+        },
+        new Date(),
+        undefined,
+        INFERENCE_LAST_UPDATED,
+      );
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/inference-providers/arbitrage', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === PAID PREMIUM: MODEL DEPRECATION TIMELINE (Tier 1, 1 credit) ===

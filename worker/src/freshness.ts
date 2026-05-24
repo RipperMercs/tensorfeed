@@ -81,6 +81,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // that updates on redeploy. No staleness signal applies; the relative-to-
   // now math runs at request time. Same shape as policy/timeline.
   '/api/premium/model-deprecations/timeline': NULL_SLA,
+  // Inference-provider arbitrage: pure compute over the hand-curated
+  // inference-providers matrix. Updates on redeploy; no staleness signal.
+  '/api/premium/inference-providers/arbitrage': NULL_SLA,
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

@@ -115,6 +115,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // over the curated registry. Optional query params with sensible defaults,
   // so anonymous crawlers see a clean 402 challenge instead of a partial 200.
   '/api/premium/model-deprecations/timeline',
+  // Wave 4 Bazaar pilot (2026-05-24). Inference-provider arbitrage view
+  // over the hand-curated matrix: cross-provider price spreads, value
+  // scores per provider, top arbitrage opportunities. Same anonymous-
+  // crawler hygiene rationale as Wave 3.
+  '/api/premium/inference-providers/arbitrage',
 ];
 
 /**

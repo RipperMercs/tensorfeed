@@ -120,6 +120,7 @@ export const INFERENCE_MATRIX: ModelMatrix[] = [
       { provider: 'Groq', providerModelId: 'llama-3.1-70b-versatile', inputPrice: 0.59, outputPrice: 0.79, blendedPrice: 0.69, contextWindow: 130000, outputTPS: 280, features: ['function-calling', 'json-mode'], url: 'https://groq.com/pricing', note: '' },
       { provider: 'OpenRouter', providerModelId: 'meta-llama/llama-3.1-70b-instruct', inputPrice: 0.40, outputPrice: 0.40, blendedPrice: 0.40, contextWindow: 130000, outputTPS: null, features: ['function-calling'], url: 'https://openrouter.ai/meta-llama/llama-3.1-70b-instruct', note: '' },
       { provider: 'Anyscale', providerModelId: 'meta-llama/Meta-Llama-3.1-70B-Instruct', inputPrice: 1.00, outputPrice: 1.00, blendedPrice: 1.00, contextWindow: 130000, outputTPS: 110, features: ['function-calling'], url: 'https://www.anyscale.com/pricing', note: '' },
+      { provider: 'GitHub Models', providerModelId: 'Meta-Llama-3.1-70B-Instruct', inputPrice: 0, outputPrice: 0, blendedPrice: 0, contextWindow: 130000, outputTPS: null, features: ['function-calling'], url: 'https://github.com/marketplace/models/azureml-meta/Meta-Llama-3-1-70B-Instruct', note: 'Free tier rate-limited (prototyping); paid via Azure AI Foundry' },
     ],
   },
 
@@ -136,6 +137,7 @@ export const INFERENCE_MATRIX: ModelMatrix[] = [
       { provider: 'Together AI', providerModelId: 'deepseek-ai/DeepSeek-V4-Pro', inputPrice: 0.27, outputPrice: 1.10, blendedPrice: 0.685, contextWindow: 1000000, outputTPS: 90, features: ['function-calling', 'json-mode'], url: 'https://www.together.ai/pricing', note: '' },
       { provider: 'Fireworks', providerModelId: 'accounts/fireworks/models/deepseek-v4-pro', inputPrice: 0.30, outputPrice: 1.20, blendedPrice: 0.75, contextWindow: 1000000, outputTPS: 85, features: ['function-calling', 'json-mode'], url: 'https://fireworks.ai/pricing', note: '' },
       { provider: 'OpenRouter', providerModelId: 'deepseek/deepseek-chat', inputPrice: 0.14, outputPrice: 0.28, blendedPrice: 0.21, contextWindow: 1000000, outputTPS: null, features: ['function-calling'], url: 'https://openrouter.ai/deepseek/deepseek-chat', note: 'Routes to first-party DeepSeek' },
+      { provider: 'GitHub Models', providerModelId: 'DeepSeek-V4-Pro', inputPrice: 0, outputPrice: 0, blendedPrice: 0, contextWindow: 1000000, outputTPS: null, features: ['function-calling'], url: 'https://github.com/marketplace/models', note: 'Free tier rate-limited (prototyping); paid via Azure AI Foundry' },
     ],
   },
   {
@@ -169,6 +171,22 @@ export const INFERENCE_MATRIX: ModelMatrix[] = [
     ],
   },
 
+  // ── Microsoft Phi-4 ─────────────────────────────────────
+  {
+    modelId: 'phi-4',
+    modelName: 'Phi-4',
+    family: 'Microsoft',
+    paramsB: 14,
+    license: 'MIT',
+    openWeights: true,
+    offers: [
+      { provider: 'GitHub Models', providerModelId: 'Phi-4', inputPrice: 0, outputPrice: 0, blendedPrice: 0, contextWindow: 16384, outputTPS: null, features: ['function-calling'], url: 'https://github.com/marketplace/models/azureml/Phi-4', note: 'Free tier rate-limited (prototyping); paid via Azure AI Foundry' },
+      { provider: 'DeepInfra', providerModelId: 'microsoft/phi-4', inputPrice: 0.07, outputPrice: 0.14, blendedPrice: 0.105, contextWindow: 16384, outputTPS: 220, features: ['function-calling'], url: 'https://deepinfra.com/pricing', note: '' },
+      { provider: 'Together AI', providerModelId: 'microsoft/phi-4', inputPrice: 0.08, outputPrice: 0.16, blendedPrice: 0.12, contextWindow: 16384, outputTPS: 200, features: ['function-calling'], url: 'https://www.together.ai/pricing', note: '' },
+      { provider: 'OpenRouter', providerModelId: 'microsoft/phi-4', inputPrice: 0.07, outputPrice: 0.14, blendedPrice: 0.105, contextWindow: 16384, outputTPS: null, features: ['function-calling'], url: 'https://openrouter.ai/microsoft/phi-4', note: '' },
+    ],
+  },
+
   // ── Qwen ────────────────────────────────────────────────
   {
     modelId: 'qwen-2.5-72b',
@@ -182,14 +200,15 @@ export const INFERENCE_MATRIX: ModelMatrix[] = [
       { provider: 'Fireworks', providerModelId: 'accounts/fireworks/models/qwen2p5-72b-instruct', inputPrice: 0.90, outputPrice: 0.90, blendedPrice: 0.90, contextWindow: 130000, outputTPS: 110, features: ['function-calling', 'json-mode'], url: 'https://fireworks.ai/pricing', note: '' },
       { provider: 'DeepInfra', providerModelId: 'Qwen/Qwen2.5-72B-Instruct', inputPrice: 0.35, outputPrice: 0.40, blendedPrice: 0.375, contextWindow: 130000, outputTPS: 80, features: ['function-calling'], url: 'https://deepinfra.com/pricing', note: 'Cheapest Qwen 72B host' },
       { provider: 'OpenRouter', providerModelId: 'qwen/qwen-2.5-72b-instruct', inputPrice: 0.35, outputPrice: 0.40, blendedPrice: 0.375, contextWindow: 130000, outputTPS: null, features: ['function-calling'], url: 'https://openrouter.ai/qwen/qwen-2.5-72b-instruct', note: '' },
+      { provider: 'GitHub Models', providerModelId: 'qwen2.5-72b-instruct', inputPrice: 0, outputPrice: 0, blendedPrice: 0, contextWindow: 130000, outputTPS: null, features: ['function-calling'], url: 'https://github.com/marketplace/models', note: 'Free tier rate-limited (prototyping); paid via Azure AI Foundry' },
     ],
   },
 ];
 
-export const INFERENCE_LAST_UPDATED = '2026-04-30';
+export const INFERENCE_LAST_UPDATED = '2026-05-24';
 
 export const TRACKED_PROVIDERS = [
-  'Together AI', 'Fireworks', 'DeepInfra', 'Groq', 'OpenRouter', 'Replicate', 'Anyscale', 'DeepSeek',
+  'Together AI', 'Fireworks', 'DeepInfra', 'Groq', 'OpenRouter', 'Replicate', 'Anyscale', 'DeepSeek', 'GitHub Models',
 ];
 
 /**

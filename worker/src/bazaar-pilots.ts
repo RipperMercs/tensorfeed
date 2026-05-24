@@ -1119,6 +1119,99 @@ const MODEL_DEPRECATIONS_TIMELINE_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/inference-providers/arbitrage — Wave 4 pilot (2026-05-24).
+ * Cross-provider price-spread analytics over the curated inference-providers
+ * matrix. Surfaces per-model cheapest/most-expensive/spread/savings_pct and
+ * per-provider value_score. Free /api/inference-providers serves the raw
+ * matrix; this is the agent-decision-ready derivative.
+ */
+const INFERENCE_ARBITRAGE_PILOT: BazaarPilotConfig = {
+  description:
+    'Cross-provider arbitrage analytics for hosted inference. Per-model: cheapest_paid, most_expensive_paid, spread_usd, savings_pct, median_paid_blended, fastest_tps, cheapest_with_tps, free_tier_offers. Plus provider_rollup (cheapest_count, top_tps_count, value_score 0-100) and top_arbitrage models sorted by savings_pct desc. Pairs with the free /api/inference-providers matrix. The "where to migrate workloads" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { family: 'Meta', min_savings_pct: 20 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-24T12:00:00Z',
+            filter: { family: 'Meta', min_savings_pct: 20 },
+            matrix_last_updated: '2026-05-24',
+            models_in_matrix: 3,
+            tracked_providers: ['Together AI', 'Fireworks', 'DeepInfra', 'Groq', 'OpenRouter', 'Replicate', 'Anyscale', 'DeepSeek', 'GitHub Models'],
+            models: [
+              {
+                modelId: 'llama-4-scout',
+                modelName: 'Llama 4 Scout',
+                family: 'Meta',
+                paramsB: 109,
+                offer_count_paid: 6,
+                free_tier_offers: [],
+                cheapest_paid: { provider: 'DeepInfra', blendedPrice: 0.355 },
+                most_expensive_paid: { provider: 'Replicate', blendedPrice: 0.425 },
+                median_paid_blended: 0.385,
+                spread_usd: 0.07,
+                savings_pct: 16.47,
+                fastest_tps: { provider: 'Groq', outputTPS: 950 },
+                cheapest_with_tps: { provider: 'DeepInfra', blendedPrice: 0.355, outputTPS: 170 },
+              },
+            ],
+            top_arbitrage: [],
+            provider_rollup: [
+              { provider: 'DeepInfra', appearances_paid: 5, cheapest_count: 3, top_tps_count: 0, free_tier_count: 0, value_score: 100 },
+              { provider: 'Groq', appearances_paid: 3, cheapest_count: 0, top_tps_count: 2, free_tier_count: 0, value_score: 33 },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  family: {
+                    type: 'string',
+                    description: 'Case-insensitive substring filter on model family (Meta, DeepSeek, Mistral, Alibaba, Microsoft, ...).',
+                  },
+                  min_savings_pct: {
+                    type: 'number',
+                    minimum: 0,
+                    maximum: 100,
+                    description: 'Minimum savings_pct to include a model in the top_arbitrage array. Default 20.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -1131,6 +1224,9 @@ const MODEL_DEPRECATIONS_TIMELINE_PILOT: BazaarPilotConfig = {
  *
  * Wave 3 (2026-05-24): model-deprecations timeline. Pure-compute derivation
  * over the hand-curated registry. Total pilot count: 15 -> 16.
+ *
+ * Wave 4 (2026-05-24): inference-providers arbitrage. Pure-compute derivation
+ * over the hand-curated inference matrix. Total pilot count: 16 -> 17.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -1151,6 +1247,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/apis-guru/ai-feed': APIS_GURU_AI_PILOT,
   // Wave 3
   '/api/premium/model-deprecations/timeline': MODEL_DEPRECATIONS_TIMELINE_PILOT,
+  // Wave 4
+  '/api/premium/inference-providers/arbitrage': INFERENCE_ARBITRAGE_PILOT,
 };
 
 /**
