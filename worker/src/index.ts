@@ -3785,6 +3785,8 @@ export default {
           aiSafetyPackagesSecurity: '/api/ai-safety/packages/security?package=&ecosystem=&category= (free; per-package vulnerability history over the curated AI/ML PyPI + npm package lists. Sourced from OSV.dev (GHSA + PyPA + RustSec + Maven + npm + others). Refreshed daily 05:45 UTC.)',
           packagesReleases: '/api/packages/releases?ecosystem=&category=&package=&within_days= (free; latest version + last 10 release timestamps for every curated AI/ML PyPI + npm package. Sourced from pypi.org + registry.npmjs.org public JSON. Refreshed every 6h.)',
           aiVelocity: '/api/ai-velocity?limit= (free, capped at 30; first AFTA federation cross-call. Filters TerminalFeed.io HF + GitHub trending leaderboards to AI-relevant entries.)',
+          aiCryptoPulse: '/api/ai-crypto-pulse (free; second AFTA federation cross-call. Pulls TerminalFeed crypto-movers + funding-rates, filters to AI-thesis token cohort (TAO, FET, RNDR, AKT, WLD, ARKM, IO, OCEAN, GRT, VIRTUAL, AI16Z, NMR, AGIX, TURBO).)',
+          premiumAiCryptoPulse: '/api/premium/ai-crypto-pulse?token=&setup=&min_abs_change_pct= (1 credit, AFTA-signed; joins AI-token price moves with venue-weighted funding-rate skew. Per-token setup classification: squeeze_up / chase_up / squeeze_down / chase_down / coiled / neutral. Notable movers (squeezes_up, squeezes_down, coiled, top_gainers, top_losers), summary (by_setup, breadth_pct_positive, median_change_24h_pct).)',
           premiumAiVelocity: '/api/premium/ai-velocity?pipeline=&language=&min_traction=&cross_only= (1 credit, AFTA-signed; AI-velocity ranking + cross-pollination over the TerminalFeed-sourced HF + GitHub trending snapshot. Per-entry traction_score (HF: likes*3 + log10(downloads+1)*10; GH: log10(stars+1)*30), on_both flag, cross_pollinated array of normalized-name matches, summary rollups hf_by_pipeline + github_by_language.)',
           premiumPackagesReleasesVelocity: '/api/premium/packages/releases/velocity?ecosystem=&category=&package=&min_releases_7d= (1 credit, AFTA-signed; per-package release velocity (releases_24h/7d/30d), latest bump_kind (major/minor/patch/prerelease/sideways/unknown), is_breaking_recent flag (major bump within 30d). Notable movers: recent_major_bumps, most_releases_7d, fastest_cadence_30d. Pre-1.0 minor bumps count as major per semver convention.)',
           premiumAiSafetyPackagesSecurityRadar: '/api/premium/ai-safety/packages/security/radar?ecosystem=&category=&package=&min_risk_score= (1 credit, AFTA-signed; per-package risk_score (0-100) over the OSV snapshot. Risk_band classification (calm/watch/hot/critical), notable_movers (top-5 by_critical_30d, by_risk_score, new_in_last_7d), summary rollups by_band + by_ecosystem.)',
@@ -8536,6 +8538,80 @@ export default {
         logPremiumUsage(env, '/api/premium/research/emerging-keywords', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
+    }
+
+    // === AI CRYPTO PULSE (free, cached 300s) ===
+    // /api/ai-crypto-pulse
+    // Second AFTA federation cross-call: TF pulls TerminalFeed's
+    // /api/crypto-movers + /api/funding-rates, filters to the curated
+    // AI-thesis token cohort (TAO, FET, RNDR, AKT, WLD, ARKM, etc.),
+    // returns the raw cohort. Premium derivative at
+    // /api/premium/ai-crypto-pulse joins price moves with funding-rate
+    // skew for squeeze/chase classification.
+
+    if (path === '/api/ai-crypto-pulse') {
+      const { getOrRefreshCryptoSnapshot } = await import('./terminalfeed-crypto-fetcher');
+      const snap = await getOrRefreshCryptoSnapshot(env);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'upstream_unreachable',
+          hint: 'TerminalFeed.io did not respond and we have no cached snapshot. Retry in a few minutes.',
+        }, 503, 0);
+      }
+      return jsonResponse({
+        ok: true,
+        source: snap.source,
+        capturedAt: snap.capturedAt,
+        upstream_endpoints: snap.upstream_endpoints,
+        cohort: {
+          movers_seen: snap.movers_cohort_size,
+          funding_seen: snap.funding_cohort_size,
+          failed_venues: snap.failed_venues,
+        },
+        movers: snap.movers,
+        funding: snap.funding,
+        attribution: {
+          source: 'TerminalFeed.io (AFTA federation sister site). Upstream crypto data via TerminalFeed.',
+          license: 'Federation cross-call to TerminalFeed free endpoints; upstream market data carries the upstream provider\'s own terms.',
+          notes: 'Cohort filtered to TF-curated AI-thesis tokens. Premium derivative at /api/premium/ai-crypto-pulse joins price + funding for squeeze/chase classification.',
+        },
+      }, 200, 300);
+    }
+
+    // === PAID PREMIUM: AI CRYPTO PULSE (Tier 1, 1 credit) ===
+    // /api/premium/ai-crypto-pulse?token=&setup=&min_abs_change_pct=
+    // Joins the price-mover signal with the funding-rate signal over the
+    // AI-thesis token cohort. Per-token setup classification:
+    // squeeze_up (rising + negative funding = shorts trapped),
+    // chase_up (rising + positive funding = leverage on long side),
+    // squeeze_down, chase_down, coiled, neutral. The squeeze
+    // classifications are the contrarian alpha agents pay for.
+
+    if (path === '/api/premium/ai-crypto-pulse') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getOrRefreshCryptoSnapshot } = await import('./terminalfeed-crypto-fetcher');
+      const snap = await getOrRefreshCryptoSnapshot(env);
+      if (!snap) {
+        return await premiumValidationFailure(
+          { error: 'upstream_unreachable', hint: 'TerminalFeed.io did not respond and no cached snapshot is available. Retry in a few minutes.' },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      const { buildPulse, parseToken, parseSetup, parseMinAbsChangePct } = await import('./premium-ai-crypto-pulse');
+      const result = buildPulse(snap, {
+        token: parseToken(url.searchParams.get('token')),
+        setup: parseSetup(url.searchParams.get('setup')),
+        min_abs_change_pct: parseMinAbsChangePct(url.searchParams.get('min_abs_change_pct')),
+      });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-crypto-pulse', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === AI VELOCITY (free, cached 600s) ===

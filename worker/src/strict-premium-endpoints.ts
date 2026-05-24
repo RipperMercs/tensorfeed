@@ -136,6 +136,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // cross-call. Pulls TerminalFeed's HF + GitHub trending leaderboards,
   // filters to AI-relevant, derives traction scoring + cross-pollination.
   '/api/premium/ai-velocity',
+  // Wave 9 Bazaar pilot (2026-05-24). AI crypto pulse: second federation
+  // cross-call. Joins TerminalFeed crypto-movers + funding-rates for the
+  // AI-thesis token cohort. Setup classification + squeeze/chase signal.
+  '/api/premium/ai-crypto-pulse',
 ];
 
 /**
