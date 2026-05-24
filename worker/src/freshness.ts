@@ -88,6 +88,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // matches the daily 03:00 UTC AVID refresh cadence with headroom for
   // a single missed run.
   '/api/premium/ai-safety/incidents/exposure': { maxAgeSeconds: 36 * 60 * 60 },
+  // AI-package security radar: derived over the daily 05:45 UTC OSV
+  // snapshot. 36h SLA matches the cron cadence with one-run headroom.
+  '/api/premium/ai-safety/packages/security/radar': { maxAgeSeconds: 36 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

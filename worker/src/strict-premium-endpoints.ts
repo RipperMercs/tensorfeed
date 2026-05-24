@@ -124,6 +124,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // vendor exposure rollups over the daily-refreshed AVID snapshot.
   // Same anonymous-crawler hygiene rationale as previous waves.
   '/api/premium/ai-safety/incidents/exposure',
+  // Wave 6 Bazaar pilot (2026-05-24). AI-package security radar: per-
+  // package risk scoring over the daily OSV snapshot of the curated AI
+  // package lists. Same anonymous-crawler hygiene rationale.
+  '/api/premium/ai-safety/packages/security/radar',
 ];
 
 /**

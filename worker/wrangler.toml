@@ -162,6 +162,15 @@ crons = [
   # premium series endpoint. Slot picked between nflverse (06:00) and
   # the morning UTC quiet zone.
   "30 6 * * *",
+  # Daily 05:45 UTC: refresh the AI-package security snapshot. For every
+  # package in the curated PyPI + npm AI lists (pypi-ai-packages.ts +
+  # npm-ai-packages.ts), POST OSV.dev with {package: {name, ecosystem}}
+  # to fetch the full vulnerability history. Parallel batches of 10.
+  # Writes ai-pkg-sec:current + ai-pkg-sec:daily:{date} + bumps index.
+  # Powers free /api/ai-safety/packages/security and premium
+  # /api/premium/ai-safety/packages/security/radar (1 credit). Slot picked
+  # between FRED (05:30) and nflverse (06:00) in the early UTC quiet zone.
+  "45 5 * * *",
   # Daily 03:00 UTC: refresh the AVID (AI Vulnerability Database) snapshot
   # from github.com/avidml/avid-db (MIT, no auth). Lists the current-year
   # reports/ dir via the GitHub Contents API, parallel-fetches the 50 most-

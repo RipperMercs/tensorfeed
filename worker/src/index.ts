@@ -3782,6 +3782,8 @@ export default {
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           premiumInferenceArbitrage: '/api/premium/inference-providers/arbitrage?family=&min_savings_pct= (1 credit, AFTA-signed; cross-provider arbitrage analytics over the inference-providers matrix. Per-model: cheapest_paid, most_expensive_paid, spread_usd, savings_pct, median_paid_blended, fastest_tps, cheapest_with_tps, free_tier_offers. Plus provider_rollup (cheapest_count, top_tps_count, value_score) and top_arbitrage models sorted by savings_pct desc. Default min_savings_pct=20; clamp [0,100].)',
           aiSafetyIncidentsAvid: '/api/ai-safety/incidents/avid?limit=&developer=&risk_domain= (free, capped at 50; raw normalized AVID snapshot. Source: avidml/avid-db, MIT. Refreshed daily 03:00 UTC.)',
+          aiSafetyPackagesSecurity: '/api/ai-safety/packages/security?package=&ecosystem=&category= (free; per-package vulnerability history over the curated AI/ML PyPI + npm package lists. Sourced from OSV.dev (GHSA + PyPA + RustSec + Maven + npm + others). Refreshed daily 05:45 UTC.)',
+          premiumAiSafetyPackagesSecurityRadar: '/api/premium/ai-safety/packages/security/radar?ecosystem=&category=&package=&min_risk_score= (1 credit, AFTA-signed; per-package risk_score (0-100) over the OSV snapshot. Risk_band classification (calm/watch/hot/critical), notable_movers (top-5 by_critical_30d, by_risk_score, new_in_last_7d), summary rollups by_band + by_ecosystem.)',
           premiumAiSafetyIncidentsExposure: '/api/premium/ai-safety/incidents/exposure?vendor=&risk_domain=&within_days= (1 credit, AFTA-signed; exposure rollups over the AVID snapshot. Per-developer + per-deployer incident counts with recency-weighted exposure_score (1.0 last 30d, 0.5 days 31-90, 0.25 older), risk_domain + sep_view distributions, top affected artifacts. Optional substring filters and within_days window [7, 730]. AIID coverage queued via the 100MB weekly R2 snapshot path.)',
           agentsDirectory: '/api/agents/directory',
           agentsOpportunities: '/api/agents/opportunities (free; daily-refreshed scan of new GitHub repos that represent submission/distribution opportunities for TF: anthropics/openai/microsoft/modelcontextprotocol orgs + MCP/x402/skills keyword sweeps. Scored by signal_weight * recency + log10(stars). 13:30 UTC cron)',
@@ -8532,6 +8534,89 @@ export default {
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
 
+    // === AI PACKAGE SECURITY (free, cached 600s) ===
+    // /api/ai-safety/packages/security?package=&ecosystem=&category=
+    // Per-package vulnerability history over the curated AI/ML PyPI + npm
+    // package list. Pulled daily from OSV.dev (Apache-2.0 schema; upstream
+    // GHSA + PyPA + RustSec + etc records carry their own terms). Each
+    // package record includes count breakdowns and the full advisory list.
+
+    if (path === '/api/ai-safety/packages/security') {
+      const { getAiPackageSecuritySnapshot } = await import('./ai-package-security-fetcher');
+      const snap = await getAiPackageSecuritySnapshot(env);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'snapshot_not_ready',
+          hint: 'AI-package security snapshot refreshes daily at 05:45 UTC. After deploy + first cron tick, this endpoint populates within 24 hours.',
+        }, 503, 0);
+      }
+      const ecosystem = url.searchParams.get('ecosystem');
+      const pkg = url.searchParams.get('package')?.toLowerCase().trim() || null;
+      const category = url.searchParams.get('category')?.toLowerCase().trim() || null;
+
+      let records = snap.records;
+      if (ecosystem === 'PyPI' || ecosystem === 'npm') {
+        records = records.filter((r) => r.ecosystem === ecosystem);
+      }
+      if (pkg) {
+        records = records.filter((r) => r.package.toLowerCase().includes(pkg));
+      }
+      if (category) {
+        records = records.filter((r) => r.category.toLowerCase().includes(category));
+      }
+
+      return jsonResponse({
+        ok: true,
+        source: snap.source,
+        source_license: snap.source_license,
+        capturedAt: snap.capturedAt,
+        package_count: records.length,
+        records,
+        attribution: {
+          source: 'OSV.dev (aggregator of GHSA, PyPA, RustSec, Go vulndb, Maven, npm and others)',
+          license: 'Apache-2.0 for the OSV schema. Upstream advisories carry their own per-source terms (GHSA CC-BY-4.0, PyPA public domain, etc).',
+          notes: 'Daily refresh at 05:45 UTC. Premium derivative at /api/premium/ai-safety/packages/security/radar adds risk_score per package, risk_band classification, and notable_movers across the cohort.',
+        },
+      }, 200, 600);
+    }
+
+    // === PAID PREMIUM: AI PACKAGE SECURITY RADAR (Tier 1, 1 credit) ===
+    // /api/premium/ai-safety/packages/security/radar?ecosystem=&category=&package=&min_risk_score=
+    // Derived risk scoring + breaking-change radar over the daily OSV
+    // snapshot. Per-package risk_score (0-100) from a weighted sum of
+    // critical/high counts in 30d + 90d windows, open_count clamp, and
+    // a 7d freshness bonus. Bands: calm <10, watch 10-25, hot 25-50,
+    // critical 50+. Plus notable_movers (top-5 by_critical_30d, by_risk_score,
+    // new_in_last_7d) and by_band/by_ecosystem rollups.
+
+    if (path === '/api/premium/ai-safety/packages/security/radar') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getAiPackageSecuritySnapshot } = await import('./ai-package-security-fetcher');
+      const snap = await getAiPackageSecuritySnapshot(env);
+      if (!snap) {
+        return await premiumValidationFailure(
+          { error: 'snapshot_not_ready', hint: 'AI-package security snapshot refreshes daily at 05:45 UTC. Retry after the next cron tick.' },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      const { buildRadar, parseEcosystem, parseCategory, parsePackage, parseMinRiskScore } = await import('./premium-ai-package-security');
+      const result = buildRadar(snap, {
+        ecosystem: parseEcosystem(url.searchParams.get('ecosystem')),
+        category: parseCategory(url.searchParams.get('category')),
+        min_risk_score: parseMinRiskScore(url.searchParams.get('min_risk_score')),
+        package: parsePackage(url.searchParams.get('package')),
+      }, new Date());
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-safety/packages/security/radar', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === AI SAFETY INCIDENTS: AVID (free, cached 600s) ===
     // /api/ai-safety/incidents/avid?limit=&developer=&risk_domain=
     // Raw normalized snapshot of recent AVID (AI Vulnerability Database)
@@ -10315,6 +10400,14 @@ export default {
       // /api/security/kev/added/{date}, /api/security/kev/dates, and
       // premium /api/premium/security/kev/full + /series.
       await run('captureKEV', () => captureKEV(env));
+    } else if (cron === '45 5 * * *') {
+      // Daily 05:45 UTC: refresh the AI-package security snapshot from OSV.
+      // Queries each package in CURATED_PYPI_PACKAGES + CURATED_PACKAGES (npm)
+      // and writes ai-pkg-sec:current. Powers free
+      // /api/ai-safety/packages/security and premium
+      // /api/premium/ai-safety/packages/security/radar.
+      const { refreshAiPackageSecuritySnapshot } = await import('./ai-package-security-fetcher');
+      await run('refreshAiPackageSecuritySnapshot', () => refreshAiPackageSecuritySnapshot(env));
     } else if (cron === '0 3 * * *') {
       // Daily 03:00 UTC: refresh the AVID snapshot from avidml/avid-db.
       // Pulls the 50 most-recent reports from the current-year directory,

@@ -1313,6 +1313,96 @@ const AI_SAFETY_EXPOSURE_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/ai-safety/packages/security/radar — Wave 6 pilot (2026-05-24).
+ * Per-package risk scoring + breaking-change radar over the daily-refreshed
+ * OSV snapshot of the curated AI/ML package lists. Risk_score (0-100) from
+ * a weighted sum of recent critical/high counts plus open advisory count
+ * and a 7d-freshness bonus. Bands: calm/watch/hot/critical.
+ */
+const AI_PKG_SECURITY_RADAR_PILOT: BazaarPilotConfig = {
+  description:
+    'AI-package security radar. Per-package risk_score (0-100) over the daily OSV snapshot of curated AI/ML PyPI + npm packages: critical_count_30d * 25 + high_30d * 12 + critical_90d * 6 + high_90d * 3 + min(open_count, 20) + 5 if any advisory in last 7d, saturated to 100. Risk_band classifications (calm <10 / watch 10-25 / hot 25-50 / critical 50+) plus notable_movers (top-5 by_critical_30d, by_risk_score, new_in_last_7d). The "which AI deps should I be worried about right now" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { ecosystem: 'PyPI', category: 'agent-framework', min_risk_score: 10 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-24T12:00:00Z',
+            snapshot_captured_at: '2026-05-24T05:45:00Z',
+            source: 'osv.dev',
+            filter: { ecosystem: 'PyPI', category: 'agent-framework', min_risk_score: 10, package: null },
+            packages_in_snapshot: 8,
+            rows: [
+              {
+                package: 'langchain',
+                ecosystem: 'PyPI',
+                category: 'agent-framework',
+                homepage: 'https://langchain.com',
+                open_count: 3,
+                critical_count_30d: 1,
+                high_count_30d: 0,
+                critical_count_90d: 1,
+                high_count_90d: 2,
+                latest_advisory_id: 'GHSA-xxxx-xxxx-2026',
+                latest_published: '2026-05-20',
+                days_since_latest: 4,
+                risk_score: 39,
+                risk_band: 'hot',
+                recent_advisories: [],
+              },
+            ],
+            notable_movers: { by_critical_30d: [], by_risk_score: [], new_in_last_7d: [] },
+            summary: {
+              by_band: { calm: 5, watch: 2, hot: 1, critical: 0 },
+              by_ecosystem: { PyPI: 8, npm: 0 },
+              total_open_advisories: 12,
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  ecosystem: { type: 'string', enum: ['PyPI', 'npm'] },
+                  category: { type: 'string', description: 'Case-insensitive substring match against curated category (llm-sdk, agent-framework, rag, ...).' },
+                  package: { type: 'string', description: 'Case-insensitive substring match against package name.' },
+                  min_risk_score: { type: 'number', minimum: 0, maximum: 100, description: 'Minimum risk_score to include in the headline rows array. Default 10.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -1331,6 +1421,9 @@ const AI_SAFETY_EXPOSURE_PILOT: BazaarPilotConfig = {
  *
  * Wave 5 (2026-05-24): ai-safety/incidents/exposure. Derived rollups over
  * the daily-refreshed AVID snapshot. Total pilot count: 17 -> 18.
+ *
+ * Wave 6 (2026-05-24): ai-safety/packages/security/radar. Risk scoring over
+ * the daily OSV snapshot of curated AI packages. Total pilot count: 18 -> 19.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -1355,6 +1448,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/inference-providers/arbitrage': INFERENCE_ARBITRAGE_PILOT,
   // Wave 5
   '/api/premium/ai-safety/incidents/exposure': AI_SAFETY_EXPOSURE_PILOT,
+  // Wave 6
+  '/api/premium/ai-safety/packages/security/radar': AI_PKG_SECURITY_RADAR_PILOT,
 };
 
 /**

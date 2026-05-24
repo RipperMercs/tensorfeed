@@ -44,6 +44,8 @@ const PILOT_PATHS = [
   '/api/premium/inference-providers/arbitrage',
   // Wave 5
   '/api/premium/ai-safety/incidents/exposure',
+  // Wave 6
+  '/api/premium/ai-safety/packages/security/radar',
 ] as const;
 
 // Premium paths that are intentionally NOT in BAZAAR_PILOTS. Used for
@@ -278,6 +280,8 @@ describe('Wave 2 pilot AJV validation', () => {
     '/api/premium/inference-providers/arbitrage',
     // Wave 5 (2026-05-24)
     '/api/premium/ai-safety/incidents/exposure',
+    // Wave 6 (2026-05-24)
+    '/api/premium/ai-safety/packages/security/radar',
   ];
 
   for (const path of wave2Paths) {
