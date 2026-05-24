@@ -1,5 +1,3 @@
-import Disclosure from './Disclosure';
-
 interface Stats {
   products: number;
   categories: number;
@@ -57,7 +55,6 @@ export default function GearHero({
             </div>
           </div>
         </div>
-        <Disclosure />
       </div>
     </section>
   );
