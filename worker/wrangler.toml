@@ -162,6 +162,13 @@ crons = [
   # premium series endpoint. Slot picked between nflverse (06:00) and
   # the morning UTC quiet zone.
   "30 6 * * *",
+  # Daily 08:00 UTC: generate Haiku-derived news action cards for the
+  # day's top ~50 articles. Per-article cache (7-day TTL) means re-runs
+  # don't burn tokens. Powers free /api/news/action-cards and premium
+  # /api/premium/news/action-cards (1 credit). Slot picked after the
+  # 07:30 news-clustering cron completes; well before the 14:30 X cron.
+  # Uses PROBE_ANTHROPIC_KEY secret (reused; existing key in probe.ts).
+  "0 8 * * *",
   # Daily 05:25 UTC: snapshot TerminalFeed's coding-harness leaderboard
   # for weekly-delta computation (third AFTA federation cross-call).
   # Stores tf-harnesses:current + tf-harnesses:daily:{date}, bumps

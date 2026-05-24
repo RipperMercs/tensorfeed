@@ -144,6 +144,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // third federation cross-call. Compares daily TerminalFeed harness
   // snapshots to surface score+rank deltas, entered/exited, leader churn.
   '/api/premium/coding-harnesses/weekly-deltas',
+  // Wave 11 Bazaar pilot (2026-05-24). News action cards: first Haiku-
+  // derived premium endpoint. Per-article structured action cards over
+  // the daily news feed.
+  '/api/premium/news/action-cards',
 ];
 
 /**

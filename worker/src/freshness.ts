@@ -106,6 +106,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // harness leaderboard. 36h SLA = daily cron cadence + headroom for one
   // missed run.
   '/api/premium/coding-harnesses/weekly-deltas': { maxAgeSeconds: 36 * 60 * 60 },
+  // News action cards: Haiku-derived. Daily 08:00 UTC cron + per-article
+  // 7-day KV cache. 36h SLA covers a single missed run.
+  '/api/premium/news/action-cards': { maxAgeSeconds: 36 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

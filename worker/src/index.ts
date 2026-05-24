@@ -3787,6 +3787,8 @@ export default {
           aiVelocity: '/api/ai-velocity?limit= (free, capped at 30; first AFTA federation cross-call. Filters TerminalFeed.io HF + GitHub trending leaderboards to AI-relevant entries.)',
           aiCryptoPulse: '/api/ai-crypto-pulse (free; second AFTA federation cross-call. Pulls TerminalFeed crypto-movers + funding-rates, filters to AI-thesis token cohort (TAO, FET, RNDR, AKT, WLD, ARKM, IO, OCEAN, GRT, VIRTUAL, AI16Z, NMR, AGIX, TURBO).)',
           codingHarnessesLatest: '/api/coding-harnesses/latest (free; third AFTA federation cross-call. Latest snapshot of TerminalFeed coding-harness leaderboard (SWE-bench Verified, Terminal-Bench, Aider Polyglot, etc). Refreshed daily 05:25 UTC.)',
+          newsActionCards: '/api/news/action-cards?limit= (free, capped at 25; Haiku-derived structured agent action cards over the news feed. Per article: action_summary, migration_recommendation, affected_capability, cost_impact, security_impact, urgency. Daily 08:00 UTC refresh.)',
+          premiumNewsActionCards: '/api/premium/news/action-cards?capability=&urgency=&min_cost_impact=&min_security_impact=&query= (1 credit, AFTA-signed; full cohort + capability/urgency exact filters + impact "at-or-above" threshold filters + title/source substring search. Sort priority: urgency > security_impact > cost_impact > published. Summary rollups by_capability, by_urgency, by_cost_impact, by_security_impact, cards_with_migration_recommendation.)',
           codingHarnessesDates: '/api/coding-harnesses/dates (free; ordered date index of captured TerminalFeed harness snapshots for delta queries.)',
           premiumCodingHarnessesWeeklyDeltas: '/api/premium/coding-harnesses/weekly-deltas?days_back=&harness=&benchmark=&model=&min_abs_delta= (1 credit, AFTA-signed; compares current TerminalFeed harness snapshot to a prior snapshot (default 7d back, clamp [1, 90]). Per-(benchmark, harness, model) score + rank deltas, biggest_gainers, biggest_regressions, entered/exited combinations, per-benchmark leader_cards with leader_changed flag.)',
           premiumAiCryptoPulse: '/api/premium/ai-crypto-pulse?token=&setup=&min_abs_change_pct= (1 credit, AFTA-signed; joins AI-token price moves with venue-weighted funding-rate skew. Per-token setup classification: squeeze_up / chase_up / squeeze_down / chase_down / coiled / neutral. Notable movers (squeezes_up, squeezes_down, coiled, top_gainers, top_losers), summary (by_setup, breadth_pct_positive, median_change_24h_pct).)',
@@ -8543,6 +8545,78 @@ export default {
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
 
+    // === NEWS ACTION CARDS (free, cached 600s) ===
+    // /api/news/action-cards?limit=
+    // Haiku-derived structured agent action cards over the day's news
+    // feed. Each card answers "what should an AI agent or operator DO
+    // in response to this article?" with affected_capability, cost_impact,
+    // security_impact, urgency, and an optional migration_recommendation.
+    // Free tier capped at 25 cards. Refreshed daily at 08:00 UTC.
+
+    if (path === '/api/news/action-cards') {
+      const { getActionCardsSnapshot } = await import('./action-cards-generator');
+      const snap = await getActionCardsSnapshot(env);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'snapshot_not_ready',
+          hint: 'News action cards refresh daily at 08:00 UTC. After deploy + first cron tick, this endpoint populates within 24 hours.',
+        }, 503, 0);
+      }
+      const limit = (() => {
+        const n = parseInt(url.searchParams.get('limit') ?? '', 10);
+        return Number.isFinite(n) && n > 0 ? Math.min(n, 25) : 25;
+      })();
+      return jsonResponse({
+        ok: true,
+        source: snap.source,
+        model: snap.model,
+        capturedAt: snap.capturedAt,
+        articles_considered: snap.articles_considered,
+        articles_succeeded: snap.articles_succeeded,
+        cards_total: snap.cards.length,
+        cards: snap.cards.slice(0, limit),
+        attribution: {
+          source: 'TensorFeed.ai news + Claude Haiku 4.5 (Anthropic). Each card cites the underlying article via article_url.',
+          license: 'Derivative agent-facing summary. Underlying articles remain the property of their publishers; we link back via article_url and never republish the full article body.',
+          notes: 'Free tier capped at 25 cards. Premium endpoint at /api/premium/news/action-cards returns the full cohort with capability + urgency + impact-threshold + query filters and editorial sort.',
+        },
+      }, 200, 600);
+    }
+
+    // === PAID PREMIUM: NEWS ACTION CARDS (Tier 1, 1 credit) ===
+    // /api/premium/news/action-cards?capability=&urgency=&min_cost_impact=&min_security_impact=&query=
+    // Full Haiku-derived action-card cohort with filters and rollups.
+    // Sort priority: urgency desc > security_impact desc > cost_impact desc > published desc.
+
+    if (path === '/api/premium/news/action-cards') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getActionCardsSnapshot } = await import('./action-cards-generator');
+      const snap = await getActionCardsSnapshot(env);
+      if (!snap) {
+        return await premiumValidationFailure(
+          { error: 'snapshot_not_ready', hint: 'News action cards refresh daily at 08:00 UTC. Retry after the next cron tick.' },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      const { buildCardsResponse, parseCapability, parseImpact, parseUrgency, parseQuery } = await import('./premium-news-action-cards');
+      const result = buildCardsResponse(snap, {
+        capability: parseCapability(url.searchParams.get('capability')),
+        min_cost_impact: parseImpact(url.searchParams.get('min_cost_impact')),
+        min_security_impact: parseImpact(url.searchParams.get('min_security_impact')),
+        urgency: parseUrgency(url.searchParams.get('urgency')),
+        query: parseQuery(url.searchParams.get('query')),
+      });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/news/action-cards', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === CODING HARNESSES LATEST (free, cached 600s) ===
     // /api/coding-harnesses/latest
     // Third AFTA federation cross-call. Returns the most recent snapshot
@@ -10741,6 +10815,13 @@ export default {
       // /api/security/kev/added/{date}, /api/security/kev/dates, and
       // premium /api/premium/security/kev/full + /series.
       await run('captureKEV', () => captureKEV(env));
+    } else if (cron === '0 8 * * *') {
+      // Daily 08:00 UTC: generate Haiku-derived news action cards over the
+      // day's top ~50 articles. Per-article cache means re-runs don't burn
+      // tokens. Powers free /api/news/action-cards + premium
+      // /api/premium/news/action-cards.
+      const { refreshActionCards } = await import('./action-cards-generator');
+      await run('refreshActionCards', () => refreshActionCards(env));
     } else if (cron === '25 5 * * *') {
       // Daily 05:25 UTC: snapshot TerminalFeed's coding-harness leaderboard
       // to KV for weekly-delta computation. Federation cross-call.

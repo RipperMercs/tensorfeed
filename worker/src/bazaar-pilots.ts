@@ -1784,6 +1784,94 @@ const HARNESS_DELTAS_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/news/action-cards — Wave 11 pilot (2026-05-24).
+ * First Haiku-derived premium endpoint. Per-article structured action
+ * cards over the daily news feed. Per-article 7-day cache means
+ * marginal compute is near-zero for repeat-coverage articles.
+ */
+const NEWS_ACTION_CARDS_PILOT: BazaarPilotConfig = {
+  description:
+    'AI news action cards. For each article in the daily TF news feed, Haiku 4.5 produces a structured agent action card answering "what should an AI agent or operator DO in response to this." Per card: action_summary (1-2 sentences), migration_recommendation (string or null), affected_capability (model / pricing / safety / framework / infrastructure / tooling / policy / ecosystem), cost_impact, security_impact, urgency. Filters: capability + urgency exact-match, min_cost_impact + min_security_impact threshold, title/source query. Sort priority: urgency > security > cost > recency.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { capability: 'model', urgency: 'immediate', min_cost_impact: 'medium' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-24T18:00:00Z',
+            snapshot_captured_at: '2026-05-24T08:00:00Z',
+            source: 'tensorfeed.ai news + Claude Haiku 4.5',
+            filter: { capability: 'model', min_cost_impact: 'medium', min_security_impact: 'none', urgency: 'immediate', query: null },
+            cohort: { articles_considered: 50, cards_in_snapshot: 47, cards_filtered: 3 },
+            cards: [
+              {
+                article_id: 'a1b2c3',
+                article_title: 'Anthropic deprecates Claude 3 Sonnet effective July 21',
+                article_url: 'https://example.com/claude-3-sonnet-deprecated',
+                article_source: 'Anthropic',
+                article_published_at: '2026-05-23T15:00:00Z',
+                action_summary: 'Migrate any agent still on claude-3-sonnet-20240229 to claude-haiku-4-5 or claude-opus-4-7 before July 21 to avoid silent 410 responses.',
+                migration_recommendation: 'claude-haiku-4-5-20251001 for cost-sensitive paths; claude-opus-4-7 for quality-critical paths',
+                affected_capability: 'model',
+                cost_impact: 'high',
+                security_impact: 'low',
+                urgency: 'immediate',
+                generated_at: '2026-05-24T08:00:00Z',
+              },
+            ],
+            summary: {
+              by_capability: { pricing: 0, model: 3, safety: 0, framework: 0, infrastructure: 0, tooling: 0, policy: 0, ecosystem: 0 },
+              by_urgency: { immediate: 3, this_week: 0, fyi: 0 },
+              by_cost_impact: { none: 0, low: 0, medium: 1, high: 2 },
+              by_security_impact: { none: 0, low: 3, medium: 0, high: 0 },
+              cards_with_migration_recommendation: 2,
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  capability: { type: 'string', enum: ['pricing', 'model', 'safety', 'framework', 'infrastructure', 'tooling', 'policy', 'ecosystem'] },
+                  urgency: { type: 'string', enum: ['immediate', 'this_week', 'fyi'] },
+                  min_cost_impact: { type: 'string', enum: ['none', 'low', 'medium', 'high'] },
+                  min_security_impact: { type: 'string', enum: ['none', 'low', 'medium', 'high'] },
+                  query: { type: 'string', description: 'Case-insensitive substring match against article_title and article_source.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -1822,6 +1910,10 @@ const HARNESS_DELTAS_PILOT: BazaarPilotConfig = {
  * Wave 10 (2026-05-24): coding-harnesses/weekly-deltas. Third federation
  * cross-call. Daily-snapshotted TerminalFeed harness leaderboard with
  * delta computation against a prior snapshot. Total pilot count: 22 -> 23.
+ *
+ * Wave 11 (2026-05-24): news/action-cards. First Haiku-derived premium
+ * endpoint. Per-article structured agent action cards. Total pilot
+ * count: 23 -> 24.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -1856,6 +1948,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/ai-crypto-pulse': AI_CRYPTO_PULSE_PILOT,
   // Wave 10
   '/api/premium/coding-harnesses/weekly-deltas': HARNESS_DELTAS_PILOT,
+  // Wave 11
+  '/api/premium/news/action-cards': NEWS_ACTION_CARDS_PILOT,
 };
 
 /**
