@@ -128,6 +128,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // package risk scoring over the daily OSV snapshot of the curated AI
   // package lists. Same anonymous-crawler hygiene rationale.
   '/api/premium/ai-safety/packages/security/radar',
+  // Wave 7 Bazaar pilot (2026-05-24). Package release velocity: per-
+  // package release counts + bump classification + breaking-change radar
+  // over the 6-hourly PyPI/npm snapshot. Same hygiene rationale.
+  '/api/premium/packages/releases/velocity',
 ];
 
 /**

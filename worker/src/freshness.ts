@@ -91,6 +91,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // AI-package security radar: derived over the daily 05:45 UTC OSV
   // snapshot. 36h SLA matches the cron cadence with one-run headroom.
   '/api/premium/ai-safety/packages/security/radar': { maxAgeSeconds: 36 * 60 * 60 },
+  // AI-package release velocity: derived over the 6-hourly registry
+  // snapshot. 9h SLA = cron cadence + 50% headroom for a missed run.
+  '/api/premium/packages/releases/velocity': { maxAgeSeconds: 9 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

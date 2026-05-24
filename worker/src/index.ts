@@ -3783,6 +3783,8 @@ export default {
           premiumInferenceArbitrage: '/api/premium/inference-providers/arbitrage?family=&min_savings_pct= (1 credit, AFTA-signed; cross-provider arbitrage analytics over the inference-providers matrix. Per-model: cheapest_paid, most_expensive_paid, spread_usd, savings_pct, median_paid_blended, fastest_tps, cheapest_with_tps, free_tier_offers. Plus provider_rollup (cheapest_count, top_tps_count, value_score) and top_arbitrage models sorted by savings_pct desc. Default min_savings_pct=20; clamp [0,100].)',
           aiSafetyIncidentsAvid: '/api/ai-safety/incidents/avid?limit=&developer=&risk_domain= (free, capped at 50; raw normalized AVID snapshot. Source: avidml/avid-db, MIT. Refreshed daily 03:00 UTC.)',
           aiSafetyPackagesSecurity: '/api/ai-safety/packages/security?package=&ecosystem=&category= (free; per-package vulnerability history over the curated AI/ML PyPI + npm package lists. Sourced from OSV.dev (GHSA + PyPA + RustSec + Maven + npm + others). Refreshed daily 05:45 UTC.)',
+          packagesReleases: '/api/packages/releases?ecosystem=&category=&package=&within_days= (free; latest version + last 10 release timestamps for every curated AI/ML PyPI + npm package. Sourced from pypi.org + registry.npmjs.org public JSON. Refreshed every 6h.)',
+          premiumPackagesReleasesVelocity: '/api/premium/packages/releases/velocity?ecosystem=&category=&package=&min_releases_7d= (1 credit, AFTA-signed; per-package release velocity (releases_24h/7d/30d), latest bump_kind (major/minor/patch/prerelease/sideways/unknown), is_breaking_recent flag (major bump within 30d). Notable movers: recent_major_bumps, most_releases_7d, fastest_cadence_30d. Pre-1.0 minor bumps count as major per semver convention.)',
           premiumAiSafetyPackagesSecurityRadar: '/api/premium/ai-safety/packages/security/radar?ecosystem=&category=&package=&min_risk_score= (1 credit, AFTA-signed; per-package risk_score (0-100) over the OSV snapshot. Risk_band classification (calm/watch/hot/critical), notable_movers (top-5 by_critical_30d, by_risk_score, new_in_last_7d), summary rollups by_band + by_ecosystem.)',
           premiumAiSafetyIncidentsExposure: '/api/premium/ai-safety/incidents/exposure?vendor=&risk_domain=&within_days= (1 credit, AFTA-signed; exposure rollups over the AVID snapshot. Per-developer + per-deployer incident counts with recency-weighted exposure_score (1.0 last 30d, 0.5 days 31-90, 0.25 older), risk_domain + sep_view distributions, top affected artifacts. Optional substring filters and within_days window [7, 730]. AIID coverage queued via the 100MB weekly R2 snapshot path.)',
           agentsDirectory: '/api/agents/directory',
@@ -8534,6 +8536,92 @@ export default {
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
 
+    // === AI PACKAGE RELEASES (free, cached 600s) ===
+    // /api/packages/releases?ecosystem=&category=&package=&within_days=
+    // Recent normalized release records for the curated AI/ML PyPI + npm
+    // package list. Each record carries latest version + last 10 versions
+    // with publish timestamps. Refreshed every 6h. Pairs with the existing
+    // /api/packages/{pypi,npm}/ai-trending (downloads-ranked) and the
+    // security snapshot at /api/ai-safety/packages/security.
+
+    if (path === '/api/packages/releases') {
+      const { getPackageReleasesSnapshot } = await import('./ai-package-releases-fetcher');
+      const snap = await getPackageReleasesSnapshot(env);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'snapshot_not_ready',
+          hint: 'Package-releases snapshot refreshes every 6 hours. After deploy + first cron tick, this endpoint populates within 6 hours.',
+        }, 503, 0);
+      }
+      const ecosystem = url.searchParams.get('ecosystem');
+      const pkg = url.searchParams.get('package')?.toLowerCase().trim() || null;
+      const category = url.searchParams.get('category')?.toLowerCase().trim() || null;
+      const withinDaysParam = parseInt(url.searchParams.get('within_days') ?? '', 10);
+      const within_days = Number.isFinite(withinDaysParam) && withinDaysParam > 0 ? Math.min(withinDaysParam, 90) : null;
+
+      let records = snap.records;
+      if (ecosystem === 'PyPI' || ecosystem === 'npm') {
+        records = records.filter((r) => r.ecosystem === ecosystem);
+      }
+      if (pkg) records = records.filter((r) => r.package.toLowerCase().includes(pkg));
+      if (category) records = records.filter((r) => r.category.toLowerCase().includes(category));
+      if (within_days !== null) {
+        const cutoff = Date.now() - within_days * 24 * 60 * 60 * 1000;
+        records = records.filter((r) => {
+          const t = new Date(r.latest_published_at).getTime();
+          return Number.isFinite(t) && t >= cutoff;
+        });
+      }
+
+      return jsonResponse({
+        ok: true,
+        source: snap.source,
+        source_license: snap.source_license,
+        capturedAt: snap.capturedAt,
+        package_count: records.length,
+        records,
+        attribution: {
+          source: 'PyPI and npm registry JSON endpoints (public)',
+          license: 'Registry metadata is public; per-package licenses vary. Source homepage included on every record for verification.',
+          notes: 'Refreshed every 6 hours. Premium derivative at /api/premium/packages/releases/velocity adds bump classification (major/minor/patch/prerelease) and breaking-change radar.',
+        },
+      }, 200, 600);
+    }
+
+    // === PAID PREMIUM: PACKAGE RELEASES VELOCITY (Tier 1, 1 credit) ===
+    // /api/premium/packages/releases/velocity?ecosystem=&category=&package=&min_releases_7d=
+    // Derived velocity rollups + breaking-change radar over the package
+    // releases snapshot. Per-package: releases_24h/7d/30d, latest_bump_kind,
+    // is_breaking_recent. Notable movers across the cohort.
+
+    if (path === '/api/premium/packages/releases/velocity') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getPackageReleasesSnapshot } = await import('./ai-package-releases-fetcher');
+      const snap = await getPackageReleasesSnapshot(env);
+      if (!snap) {
+        return await premiumValidationFailure(
+          { error: 'snapshot_not_ready', hint: 'Package-releases snapshot refreshes every 6 hours. Retry after the next cron tick.' },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      const { buildVelocity, parseEcosystem, parseCategory, parsePackage, parseMinReleases7d } = await import('./premium-package-releases-velocity');
+      const result = buildVelocity(snap, {
+        ecosystem: parseEcosystem(url.searchParams.get('ecosystem')),
+        category: parseCategory(url.searchParams.get('category')),
+        package: parsePackage(url.searchParams.get('package')),
+        min_releases_7d: parseMinReleases7d(url.searchParams.get('min_releases_7d')),
+      }, new Date());
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/packages/releases/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === AI PACKAGE SECURITY (free, cached 600s) ===
     // /api/ai-safety/packages/security?package=&ecosystem=&category=
     // Per-package vulnerability history over the curated AI/ML PyPI + npm
@@ -10400,6 +10488,13 @@ export default {
       // /api/security/kev/added/{date}, /api/security/kev/dates, and
       // premium /api/premium/security/kev/full + /series.
       await run('captureKEV', () => captureKEV(env));
+    } else if (cron === '35 */6 * * *') {
+      // Every 6h at :35 UTC: refresh the AI-package release-velocity snapshot.
+      // Polls PyPI + npm JSON for every curated AI package, captures latest
+      // version + last 10 release timestamps. Powers free /api/packages/releases
+      // and premium /api/premium/packages/releases/velocity.
+      const { refreshPackageReleasesSnapshot } = await import('./ai-package-releases-fetcher');
+      await run('refreshPackageReleasesSnapshot', () => refreshPackageReleasesSnapshot(env));
     } else if (cron === '45 5 * * *') {
       // Daily 05:45 UTC: refresh the AI-package security snapshot from OSV.
       // Queries each package in CURATED_PYPI_PACKAGES + CURATED_PACKAGES (npm)

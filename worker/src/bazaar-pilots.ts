@@ -1403,6 +1403,97 @@ const AI_PKG_SECURITY_RADAR_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/packages/releases/velocity — Wave 7 pilot (2026-05-24).
+ * Per-package release velocity + breaking-change radar over the 6-hourly
+ * PyPI + npm snapshot. Premium-shaped because the bump classification
+ * (semver-aware, pre-1.0 minor = major) and 24h/7d/30d windowing run
+ * server-side; free /api/packages/releases just serves raw versions.
+ */
+const PKG_RELEASES_VELOCITY_PILOT: BazaarPilotConfig = {
+  description:
+    'AI-package release velocity. Per-package releases_24h / releases_7d / releases_30d, latest bump classification (major/minor/patch/prerelease, pre-1.0 minor counts as major per semver), is_breaking_recent flag (major bump within 30 days). Notable movers: recent_major_bumps, most_releases_7d, fastest_cadence_30d. Filter by ecosystem (PyPI/npm), category (llm-sdk, agent-framework, etc), or package substring. The "what AI deps just changed and is it breaking" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { ecosystem: 'PyPI', category: 'agent-framework', min_releases_7d: 1 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-24T18:35:00Z',
+            snapshot_captured_at: '2026-05-24T18:35:00Z',
+            filter: { ecosystem: 'PyPI', category: 'agent-framework', package: null, min_releases_7d: 1 },
+            packages_in_snapshot: 12,
+            rows: [
+              {
+                package: 'langchain',
+                ecosystem: 'PyPI',
+                category: 'agent-framework',
+                homepage: 'https://langchain.com',
+                latest_version: '0.4.0',
+                latest_published_at: '2026-05-23T19:14:11Z',
+                days_since_latest: 1,
+                releases_24h: 1,
+                releases_7d: 3,
+                releases_30d: 9,
+                versions_known_total: 412,
+                latest_bump_kind: 'major',
+                previous_version: '0.3.27',
+                is_breaking_recent: true,
+              },
+            ],
+            notable_movers: { recent_major_bumps: [], most_releases_7d: [], fastest_cadence_30d: [] },
+            summary: {
+              by_ecosystem: { PyPI: 12, npm: 0 },
+              by_category: { 'agent-framework': 12 },
+              by_bump_kind: { major: 1, minor: 4, patch: 5, prerelease: 1, sideways: 0, unknown: 1 },
+              total_releases_7d: 18,
+              total_releases_30d: 47,
+              breaking_changes_30d: 2,
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  ecosystem: { type: 'string', enum: ['PyPI', 'npm'] },
+                  category: { type: 'string', description: 'Case-insensitive substring match against curated category (llm-sdk, agent-framework, rag, ...).' },
+                  package: { type: 'string', description: 'Case-insensitive substring match against package name.' },
+                  min_releases_7d: { type: 'integer', minimum: 0, maximum: 100, description: 'Minimum releases-in-window for the headline rows array. Default 1.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -1424,6 +1515,10 @@ const AI_PKG_SECURITY_RADAR_PILOT: BazaarPilotConfig = {
  *
  * Wave 6 (2026-05-24): ai-safety/packages/security/radar. Risk scoring over
  * the daily OSV snapshot of curated AI packages. Total pilot count: 18 -> 19.
+ *
+ * Wave 7 (2026-05-24): packages/releases/velocity. Release velocity + bump
+ * classification over the 6-hourly PyPI + npm snapshot. Total pilot
+ * count: 19 -> 20.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -1450,6 +1545,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/ai-safety/incidents/exposure': AI_SAFETY_EXPOSURE_PILOT,
   // Wave 6
   '/api/premium/ai-safety/packages/security/radar': AI_PKG_SECURITY_RADAR_PILOT,
+  // Wave 7
+  '/api/premium/packages/releases/velocity': PKG_RELEASES_VELOCITY_PILOT,
 };
 
 /**
