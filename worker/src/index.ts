@@ -3789,6 +3789,8 @@ export default {
           codingHarnessesLatest: '/api/coding-harnesses/latest (free; third AFTA federation cross-call. Latest snapshot of TerminalFeed coding-harness leaderboard (SWE-bench Verified, Terminal-Bench, Aider Polyglot, etc). Refreshed daily 05:25 UTC.)',
           newsActionCards: '/api/news/action-cards?limit= (free, capped at 25; Haiku-derived structured agent action cards over the news feed. Per article: action_summary, migration_recommendation, affected_capability, cost_impact, security_impact, urgency. Daily 08:00 UTC refresh.)',
           statusIncidentsTriage: '/api/status/incidents/triage?limit= (free, capped at 25; Haiku-triaged AI provider status incidents. Per card: triage_summary, impact_classification (informational/minor/major/critical), affected_capabilities, recommended_action (no_action/monitor/retry_later/failover_now/escalate). Refreshed every 2h.)',
+          secFilingsRecent: '/api/sec/filings/recent?form=&ticker=&limit= (free, capped 50; recent EDGAR filings for the AI bellwether cohort: NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA. Source data.sec.gov, public domain. Refreshed every 6h.)',
+          secFilingsByCik: '/api/sec/filings/{cik}/recent (free; per-company recent filings, CIK must be from cohort. Returns 404 with cohort hint otherwise.)',
           premiumStatusIncidentsTriage: '/api/premium/status/incidents/triage?provider=&impact=&recommended_action=&capability=&ongoing_only= (1 credit, AFTA-signed; full incident cohort + provider substring + impact/action exact filters + capability membership filter + ongoing_only flag. Sort priority: impact > recommended_action > started_at. Summary rollups by_provider, by_impact, by_recommended_action, by_capability, cards_with_failover_action.)',
           premiumNewsActionCards: '/api/premium/news/action-cards?capability=&urgency=&min_cost_impact=&min_security_impact=&query= (1 credit, AFTA-signed; full cohort + capability/urgency exact filters + impact "at-or-above" threshold filters + title/source substring search. Sort priority: urgency > security_impact > cost_impact > published. Summary rollups by_capability, by_urgency, by_cost_impact, by_security_impact, cards_with_migration_recommendation.)',
           codingHarnessesDates: '/api/coding-harnesses/dates (free; ordered date index of captured TerminalFeed harness snapshots for delta queries.)',
@@ -8547,6 +8549,98 @@ export default {
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
 
+    // === SEC FILINGS RECENT (free, cached 1800s) ===
+    // /api/sec/filings/recent?form=&ticker=&limit=
+    // Recent EDGAR filings across the curated AI bellwether cohort
+    // (NVDA, MSFT, GOOGL, META, AAPL, AMZN, TSLA, AMD, AVGO, ORCL, PLTR,
+    // ARM, TSM, SMCI). Refreshed every 6h. Source: data.sec.gov, public
+    // domain. Premium AI-flagged variant queued behind DataPal CC's
+    // Qwen extraction pipeline.
+
+    if (path === '/api/sec/filings/recent') {
+      const { getSecFilingsSnapshot } = await import('./sec-filings-fetcher');
+      const snap = await getSecFilingsSnapshot(env);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'snapshot_not_ready',
+          hint: 'SEC filings snapshot refreshes every 6h at :05 UTC. After deploy + first cron tick, populates within 6 hours.',
+        }, 503, 0);
+      }
+      const formFilter = url.searchParams.get('form')?.trim().toUpperCase() || null;
+      const tickerFilter = url.searchParams.get('ticker')?.trim().toUpperCase() || null;
+      const limit = (() => {
+        const n = parseInt(url.searchParams.get('limit') ?? '', 10);
+        return Number.isFinite(n) && n > 0 ? Math.min(n, 50) : 25;
+      })();
+      let filings = snap.filings;
+      if (formFilter) filings = filings.filter((f) => f.form.toUpperCase() === formFilter);
+      if (tickerFilter) filings = filings.filter((f) => f.ticker.toUpperCase() === tickerFilter);
+      filings = filings.slice(0, limit);
+      return jsonResponse({
+        ok: true,
+        source: snap.source,
+        source_license: snap.source_license,
+        capturedAt: snap.capturedAt,
+        cohort_size: snap.cohort_size,
+        cohort_tickers: ['NVDA', 'AMD', 'AVGO', 'TSM', 'ARM', 'MSFT', 'GOOGL', 'AMZN', 'ORCL', 'PLTR', 'SMCI', 'AAPL', 'META', 'TSLA'],
+        filings_count: filings.length,
+        filings_by_company: snap.filings_by_company,
+        filings,
+        attribution: {
+          source: 'U.S. Securities and Exchange Commission (EDGAR via data.sec.gov)',
+          license: 'Public domain (17 USC 105). Free to redistribute.',
+          notes: 'AI bellwether cohort filings, refreshed every 6 hours. Per-company recent via /api/sec/filings/{cik}/recent. Premium AI-extraction endpoints land after DataPal Qwen pipeline.',
+        },
+      }, 200, 1800);
+    }
+
+    // === SEC FILINGS BY CIK (free, cached 1800s) ===
+    // /api/sec/filings/{cik}/recent
+    // Per-company recent filings. CIK must be from the cohort.
+
+    if (path.startsWith('/api/sec/filings/') && path.endsWith('/recent') && path !== '/api/sec/filings/recent') {
+      const cikRaw = path.slice('/api/sec/filings/'.length, -'/recent'.length);
+      // Validate CIK format (10-digit zero-padded OR integer form).
+      const cikInt = parseInt(cikRaw, 10);
+      if (!Number.isFinite(cikInt) || cikInt <= 0 || cikRaw.length > 10) {
+        return jsonResponse({ ok: false, error: 'invalid_cik', hint: 'CIK must be the 10-digit zero-padded form (e.g. 0001045810).' }, 400);
+      }
+      const cikPadded = String(cikInt).padStart(10, '0');
+      const { getCompanyFilingsSnapshot, AI_BELLWETHERS } = await import('./sec-filings-fetcher');
+      const inCohort = AI_BELLWETHERS.some((b) => b.cik === cikPadded);
+      if (!inCohort) {
+        return jsonResponse({
+          ok: false,
+          error: 'cik_not_in_cohort',
+          hint: 'TF tracks a curated AI bellwether cohort. See cohort_tickers in /api/sec/filings/recent for the supported list.',
+        }, 404);
+      }
+      const snap = await getCompanyFilingsSnapshot(env, cikPadded);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'snapshot_not_ready',
+          hint: 'SEC filings snapshot refreshes every 6h at :05 UTC. After deploy + first cron tick, populates within 6 hours.',
+        }, 503, 0);
+      }
+      return jsonResponse({
+        ok: true,
+        source: 'data.sec.gov/submissions',
+        capturedAt: snap.capturedAt,
+        cik: snap.cik,
+        ticker: snap.ticker,
+        company_name: snap.company_name,
+        filings_count: snap.filings.length,
+        filings: snap.filings,
+        attribution: {
+          source: 'U.S. Securities and Exchange Commission (EDGAR via data.sec.gov)',
+          license: 'Public domain (17 USC 105).',
+          notes: 'Per-company recent filings, refreshed every 6 hours.',
+        },
+      }, 200, 1800);
+    }
+
     // === INCIDENT TRIAGE (free, cached 300s) ===
     // /api/status/incidents/triage?limit=
     // Haiku-derived structured agent triage cards over AI provider
@@ -10890,6 +10984,14 @@ export default {
       // /api/security/kev/added/{date}, /api/security/kev/dates, and
       // premium /api/premium/security/kev/full + /series.
       await run('captureKEV', () => captureKEV(env));
+    } else if (cron === '5 */6 * * *') {
+      // Every 6h at :05 UTC: refresh SEC EDGAR filings for the AI
+      // bellwether cohort. Sequential per-company fetches polite to SEC's
+      // 10 req/sec ceiling. Writes sec-filings:current + per-company
+      // snapshots. Powers free /api/sec/filings/recent +
+      // /api/sec/filings/{cik}/recent.
+      const { refreshSecFilingsSnapshot } = await import('./sec-filings-fetcher');
+      await run('refreshSecFilingsSnapshot', () => refreshSecFilingsSnapshot(env));
     } else if (cron === '15 */2 * * *') {
       // Every 2h at :15 UTC: Haiku-triage open + recent-resolved status
       // incidents. Per-incident cache means most calls hit cache. Powers
