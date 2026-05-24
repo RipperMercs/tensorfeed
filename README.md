@@ -66,7 +66,7 @@ For premium endpoints (routing, history series, news search, cost projection, we
 | **Python SDK** | `pip install tensorfeed`, optional `[web3]` for one-call USDC | `sdk/python/` |
 | **JavaScript SDK** | `npm install tensorfeed` | `sdk/javascript/` |
 | **HF dataset** | 42 daily JSONL feeds, 08:00 UTC commit, inference-only license | [`tensorfeed/ai-ecosystem-daily`](https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily) |
-| **Chrome extension** | TensorFeed AI Status — toolbar popup with live provider status + passive degradation badge | [Chrome Web Store](https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde) |
+| **Browser extension** | TensorFeed AI Status (Chrome + Firefox): toolbar popup with live provider status + passive degradation badge | [Chrome](https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde), [Firefox](https://addons.mozilla.org/addon/tensorfeed-ai-status/) |
 
 ## Free public endpoints
 

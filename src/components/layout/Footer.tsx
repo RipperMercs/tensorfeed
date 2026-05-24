@@ -93,6 +93,14 @@ export default function Footer() {
               Chrome Extension
             </a>
             <a
+              href="https://addons.mozilla.org/addon/tensorfeed-ai-status/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors"
+            >
+              Firefox Add-on
+            </a>
+            <a
               href="https://x.com/tensorfeed"
               target="_blank"
               rel="noopener noreferrer"

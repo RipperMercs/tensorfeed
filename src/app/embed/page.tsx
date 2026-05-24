@@ -54,7 +54,7 @@ const FAQS: { question: string; answer: string }[] = [
   {
     question: 'Is there a browser extension?',
     answer:
-      'Yes. TensorFeed AI Status is live on the Chrome Web Store: a one-click install that puts the same Live Monitor in a toolbar popup, plus a passive badge that quietly turns amber or red the moment a provider degrades. It only requests the alarms permission and host access to tensorfeed.ai, with no content scripts and no telemetry. Install at https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde. Firefox build is next.',
+      'Yes. TensorFeed AI Status is live on both the Chrome Web Store and Firefox Add-ons: a one-click install that puts the same Live Monitor in a toolbar popup, plus a passive badge that quietly turns amber or red the moment a provider degrades. It only requests the alarms permission and host access to tensorfeed.ai, with no content scripts and no telemetry. Install at https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde (Chrome) or https://addons.mozilla.org/addon/tensorfeed-ai-status/ (Firefox).',
   },
   {
     question: 'I only want a small badge for my README. What should I use?',
@@ -167,6 +167,16 @@ import '@tensorfeed/status-widget';
             Install on Chrome Web Store
             <ArrowRight className="w-4 h-4" />
           </a>
+          <a
+            href="https://addons.mozilla.org/addon/tensorfeed-ai-status/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm whitespace-nowrap border border-border text-text-secondary hover:text-accent-primary hover:border-accent-primary transition-colors"
+          >
+            <Puzzle className="w-4 h-4" />
+            Install on Firefox Add-ons
+            <ArrowRight className="w-4 h-4" />
+          </a>
           <Link
             href="/originals/ai-status-extension-live"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm whitespace-nowrap border border-border text-text-secondary hover:text-accent-primary hover:border-accent-primary transition-colors"
@@ -175,7 +185,7 @@ import '@tensorfeed/status-widget';
           </Link>
         </div>
         <p className="text-xs text-text-muted mt-2">
-          Firefox build is next, same codebase.
+          Same codebase on Chrome and Firefox. Both stores host v1.0.2.
         </p>
       </section>
 

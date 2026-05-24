@@ -48,17 +48,26 @@ export default function EmbedCallout() {
           <h3 className="text-base font-bold text-text-primary mb-1">Put it on your site</h3>
           <p className="text-sm text-text-secondary leading-relaxed max-w-xl">
             One line of HTML, or the zero-dependency component:{' '}
-            <code className="text-text-primary">npm i @tensorfeed/status-widget</code>. The Chrome
-            extension is{' '}
+            <code className="text-text-primary">npm i @tensorfeed/status-widget</code>. The
+            browser extension is live on{' '}
             <a
               href="https://chrome.google.com/webstore/detail/pdmcjopgilbnggocemjjncpcenpmglde"
               className="text-accent-cyan hover:underline"
               target="_blank"
               rel="noopener noreferrer"
             >
-              live on the Web Store
+              Chrome
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://addons.mozilla.org/addon/tensorfeed-ai-status/"
+              className="text-accent-cyan hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Firefox
             </a>
-            ; Firefox build is next.
+            .
           </p>
         </div>
         <Link

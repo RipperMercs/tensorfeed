@@ -91,6 +91,26 @@ export default function AiStatusExtensionLivePage() {
       />
 
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+        <div
+          className="rounded-lg border border-accent-cyan/30 bg-accent-cyan/5 px-4 py-3 text-sm text-text-secondary"
+          role="note"
+        >
+          <strong className="text-accent-cyan font-mono text-xs tracking-wider uppercase">
+            Update May 23, 2026:
+          </strong>{' '}
+          Firefox version is now also live on{' '}
+          <a
+            href="https://addons.mozilla.org/addon/tensorfeed-ai-status/"
+            className="text-accent-cyan underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Mozilla Add-ons
+          </a>
+          . Same v1.0.2 codebase, same permissions, same behavior. Install
+          from either store.
+        </div>
+
         <p className="text-lg text-text-primary leading-relaxed">
           As of today the TensorFeed Live Monitor is a Chrome extension,
           approved and public on the Chrome Web Store. One click installs a
@@ -102,13 +122,23 @@ export default function AiStatusExtensionLivePage() {
         </p>
 
         <p>
+          Install TensorFeed AI Status on{' '}
           <a
             href={STORE_URL}
             className="text-accent-primary hover:underline font-medium"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Install TensorFeed AI Status on Chrome
+            Chrome
+          </a>{' '}
+          or{' '}
+          <a
+            href="https://addons.mozilla.org/addon/tensorfeed-ai-status/"
+            className="text-accent-primary hover:underline font-medium"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Firefox
           </a>
           . Free, no account, no tracking, no host-page permissions. It only
           talks to tensorfeed.ai.
