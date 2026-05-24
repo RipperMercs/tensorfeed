@@ -17,6 +17,26 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: '25-bazaar-pilots-one-day',
+    title:
+      'I Shipped 25 CDP Bazaar Pilots in One Day. That Is What an AI Data Library Looks Like.',
+    author: 'Ripper',
+    date: 'May 24, 2026',
+    readTime: '6 min read',
+    description:
+      '4 to 25 CDP Bazaar-cataloged paid endpoints in one day. Three first-in-production AFTA federation cross-calls (live HF + GitHub trending, AI-thesis crypto with funding-rate skew, weekly agentic-coding harness deltas). Two Haiku-derived with per-item caching at $1 to $2 a month combined. The x402 manifest is now generated, not hand-edited. Two production bugs caught in same-day verification, including a single em dash that crashed btoa() inside a 402 challenge.',
+  },
+  {
+    slug: 'openai-erdos-unit-distance-disproof',
+    title:
+      'OpenAI Just Disproved an 80-Year Erdős Conjecture. The Model Was Not Trained for Math.',
+    author: 'Kira Nolan',
+    date: 'May 24, 2026',
+    readTime: '7 min read',
+    description:
+      'On May 20, OpenAI announced that an internal general-purpose reasoning model disproved a 1946 Erdős conjecture on the planar unit distance problem. 125 pages of coherent proof using Golod-Shafarevich theory and infinite class field towers, no math-specific training, no problem-targeted scaffolding. Fields medalist Tim Gowers and Princeton mathematician Will Sawin verified it, with Sawin tightening the bound to n raised to one plus delta with delta equal to 0.014. Inside what actually shipped, why the general-purpose framing is the structural story, the comparison to AlphaProof, FunSearch, and Numina, and what it does to the research-discovery rail and the next pricing tier.',
+  },
+  {
     slug: 'openai-ipo-filing-anthropic-first-profit',
     title:
       'OpenAI Filed for a Trillion-Dollar IPO. The Same Week Anthropic Booked Its First Profit.',
