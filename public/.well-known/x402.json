@@ -7,8 +7,22 @@
     "description": "Real-time AI news, model pricing, service status, and machine-payable premium intelligence for AI agents.",
     "agent_fair_trade": "TensorFeed.ai is agent fair-trade certified: open pricing, automatic no-charge on 5xx, breaker, schema fail, and stale data, Ed25519-signed receipts on every paid call, inference-only license. Built with Claude (Anthropic). Standard at /.well-known/agent-fair-trade.json.",
     "method_support": {
-      "live": [{ "method": "exact", "network": "eip155:8453", "asset_symbol": "USDC", "note": "USDC on Base mainnet, verified via Base RPC" }],
-      "evaluating": [{ "method": "stripe", "credential_type": "shared_payment_token", "spec": "https://link.com/agents", "note": "Stripe Link Shared Payment Tokens via x402 with method=stripe in www-authenticate. Under evaluation; not yet accepted." }]
+      "live": [
+        {
+          "method": "exact",
+          "network": "eip155:8453",
+          "asset_symbol": "USDC",
+          "note": "USDC on Base mainnet, verified via Base RPC"
+        }
+      ],
+      "evaluating": [
+        {
+          "method": "stripe",
+          "credential_type": "shared_payment_token",
+          "spec": "https://link.com/agents",
+          "note": "Stripe Link Shared Payment Tokens via x402 with method=stripe in www-authenticate. Under evaluation; not yet accepted."
+        }
+      ]
     },
     "contact": "contact@tensorfeed.ai",
     "docs": "https://tensorfeed.ai/developers/agent-payments",
@@ -41,17 +55,35 @@
     "creditsPerUsd": 50,
     "centsPerCredit": 2,
     "volumeDiscounts": [
-      { "minUsd": 5, "creditsPerUsd": 55, "label": "10% off" },
-      { "minUsd": 30, "creditsPerUsd": 65, "label": "25% off" },
-      { "minUsd": 200, "creditsPerUsd": 80, "label": "40% off" }
+      {
+        "minUsd": 5,
+        "creditsPerUsd": 55,
+        "label": "10% off"
+      },
+      {
+        "minUsd": 30,
+        "creditsPerUsd": 65,
+        "label": "25% off"
+      },
+      {
+        "minUsd": 200,
+        "creditsPerUsd": 80,
+        "label": "40% off"
+      }
     ],
     "welcomeBonus": {
       "credits": 50,
       "usdValue": "1.00",
       "trigger": "first successful USDC payment from a new sender wallet",
-      "appliesTo": ["credits flow (/api/payment/confirm)", "x402 fallback"],
+      "appliesTo": [
+        "credits flow (/api/payment/confirm)",
+        "x402 fallback"
+      ],
       "stackableWithVolumeDiscounts": true,
-      "responseFields": ["welcome_bonus_credits", "is_first_payment"]
+      "responseFields": [
+        "welcome_bonus_credits",
+        "is_first_payment"
+      ]
     },
     "freeTrialAllowance": {
       "calls": 100,
@@ -120,29 +152,52 @@
           "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
           "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
           "maxTimeoutSeconds": 60,
-          "extra": { "name": "USD Coin", "version": "2" }
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
         }
       ],
-      "lastUpdated": "2026-04-27T00:00:00Z",
+      "lastUpdated": "2026-05-24T00:00:00Z",
       "metadata": {
         "name": "Premium routing recommendations",
-        "description": "Top-N ranked AI model recommendations for a task with full composite-score breakdown across quality, availability, cost, and latency. Synthesizes live pricing, benchmarks, and provider status.",
+        "description": "Top-N AI model recommendation for a task. Joins live pricing, benchmarks, provider status, and latency into a single composite score so an agent gets a ranked answer in one call instead of stitching three free endpoints together.",
         "tier": 2,
         "credits": 1,
         "category": "ai-model-routing",
         "input": {
           "task": "code|reasoning|creative|general",
-          "budget": 5.0,
+          "budget": 5,
           "min_quality": 0.7,
           "top_n": 3
         },
         "inputSchema": {
           "type": "object",
           "properties": {
-            "task": { "type": "string", "enum": ["code", "reasoning", "creative", "general"], "description": "Task family the model needs to be good at" },
-            "budget": { "type": "number", "description": "Max blended USD per 1M tokens" },
-            "min_quality": { "type": "number", "minimum": 0, "maximum": 1 },
-            "top_n": { "type": "integer", "minimum": 1, "maximum": 10 }
+            "task": {
+              "type": "string",
+              "enum": [
+                "code",
+                "reasoning",
+                "creative",
+                "general"
+              ],
+              "description": "Task family the model needs to be good at"
+            },
+            "budget": {
+              "type": "number",
+              "description": "Max blended USD per 1M tokens"
+            },
+            "min_quality": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "top_n": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
           }
         },
         "output": {
@@ -151,14 +206,153 @@
             "recommendations": [
               {
                 "rank": 1,
-                "model": { "name": "Claude Opus 4.7", "provider": "anthropic" },
-                "pricing": { "input": 15, "output": 75, "currency": "USD", "unit": "per 1M tokens" },
+                "model": {
+                  "name": "Claude Opus 4.7",
+                  "provider": "anthropic"
+                },
+                "pricing": {
+                  "input": 15,
+                  "output": 75,
+                  "currency": "USD",
+                  "unit": "per 1M tokens"
+                },
                 "status": "operational",
                 "composite_score": 0.87,
-                "components": { "quality": 0.94, "availability": 1.0, "cost": 0.65, "latency": 0.5 }
+                "components": {
+                  "quality": 0.94,
+                  "availability": 1,
+                  "cost": 0.65,
+                  "latency": 0.5
+                }
               }
             ],
-            "billing": { "credits_charged": 1, "credits_remaining": 49 }
+            "billing": {
+              "credits_charged": 1,
+              "credits_remaining": 49
+            }
+          }
+        }
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "task": "code",
+                "budget": 5,
+                "min_quality": 0.7,
+                "top_n": 3
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "task": "code",
+                "recommendations": [
+                  {
+                    "rank": 1,
+                    "model": {
+                      "name": "Claude Opus 4.7",
+                      "provider": "anthropic"
+                    },
+                    "pricing": {
+                      "input": 15,
+                      "output": 75,
+                      "currency": "USD",
+                      "unit": "per 1M tokens"
+                    },
+                    "status": "operational",
+                    "composite_score": 0.87,
+                    "components": {
+                      "quality": 0.94,
+                      "availability": 1,
+                      "cost": 0.65,
+                      "latency": 0.5
+                    }
+                  }
+                ],
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "task": {
+                        "type": "string",
+                        "enum": [
+                          "code",
+                          "reasoning",
+                          "creative",
+                          "general"
+                        ],
+                        "description": "Task family the model needs to be good at."
+                      },
+                      "budget": {
+                        "type": "number",
+                        "description": "Max blended USD per 1M tokens."
+                      },
+                      "min_quality": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "Minimum acceptable quality score (0 to 1)."
+                      },
+                      "top_n": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10,
+                        "description": "How many models to return ranked, default 3."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
           }
         }
       }
@@ -169,7 +363,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -186,7 +391,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -203,7 +419,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -220,7 +447,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-08T00:00:00Z",
       "metadata": {
@@ -237,7 +475,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-08T00:00:00Z",
       "metadata": {
@@ -254,7 +503,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-08T00:00:00Z",
       "metadata": {
@@ -271,7 +531,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-08T00:00:00Z",
       "metadata": {
@@ -288,7 +559,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-08T00:00:00Z",
       "metadata": {
@@ -305,7 +587,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-08T00:00:00Z",
       "metadata": {
@@ -322,7 +615,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-08T00:00:00Z",
       "metadata": {
@@ -339,7 +643,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-09T00:00:00Z",
       "metadata": {
@@ -356,7 +671,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-09T00:00:00Z",
       "metadata": {
@@ -373,7 +699,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-09T00:00:00Z",
       "metadata": {
@@ -390,7 +727,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-09T00:00:00Z",
       "metadata": {
@@ -407,7 +755,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-09T00:00:00Z",
       "metadata": {
@@ -424,7 +783,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-09T00:00:00Z",
       "metadata": {
@@ -441,7 +811,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-09T00:00:00Z",
       "metadata": {
@@ -458,7 +839,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-09T00:00:00Z",
       "metadata": {
@@ -475,15 +867,153 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
-      "lastUpdated": "2026-04-27T00:00:00Z",
+      "lastUpdated": "2026-05-24T00:00:00Z",
       "metadata": {
         "name": "Enriched agents directory",
-        "description": "Static AI agents catalog joined with live status, recent news count and top 3 articles, agent traffic, flagship pricing, and a derived 0-100 trending_score. Server-side filter and sort.",
+        "description": "Enriched AI agents directory. One paid call returns the catalog joined with live provider status, recent news mentions, 24h agent traffic, and sample model pricing, ranked by a derived trending score. The agent-discovers-agent feed.",
         "tier": 1,
         "credits": 1,
         "category": "ai-agents-directory"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "category": "coding",
+                "status": "operational",
+                "open_source": false,
+                "sort": "trending",
+                "limit": 25
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "count": 25,
+                "agents": [
+                  {
+                    "id": "claude-code",
+                    "name": "Claude Code",
+                    "provider": "anthropic",
+                    "category": "coding",
+                    "live_status": "operational",
+                    "trending_score": 87,
+                    "recent_news_count": 4,
+                    "agent_traffic_24h": 312,
+                    "sample_pricing": {
+                      "model": "Claude Opus 4.7",
+                      "blended_per_1m": 25
+                    },
+                    "url": "https://claude.com/code"
+                  }
+                ],
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "category": {
+                        "type": "string",
+                        "description": "Filter by category id (coding, search, voice, etc)."
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "operational",
+                          "degraded",
+                          "down",
+                          "unknown"
+                        ]
+                      },
+                      "open_source": {
+                        "type": "boolean"
+                      },
+                      "capability": {
+                        "type": "string",
+                        "description": "Filter to agents declaring this capability."
+                      },
+                      "sort": {
+                        "type": "string",
+                        "enum": [
+                          "trending",
+                          "name",
+                          "recent_news",
+                          "agent_traffic"
+                        ]
+                      },
+                      "limit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 100
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
       }
     },
     {
@@ -492,7 +1022,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -509,15 +1050,166 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
-      "lastUpdated": "2026-04-27T00:00:00Z",
+      "lastUpdated": "2026-05-24T00:00:00Z",
       "metadata": {
         "name": "What's new",
-        "description": "Agent morning brief: pricing changes, new/removed models, status incidents, and top news headlines from the last 1-7 days. The endpoint to call when an agent boots up.",
+        "description": "Agent morning brief. One paid call returns the last 24 hours of AI pricing changes, new and removed models, service-status incidents, and top news headlines. The endpoint an agent calls on boot.",
         "tier": 1,
         "credits": 1,
         "category": "ai-agent-brief"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "days": 1,
+                "news_limit": 10
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "window": {
+                  "from": "2026-05-13",
+                  "to": "2026-05-14",
+                  "days": 1
+                },
+                "computed_at": "2026-05-14T08:00:00Z",
+                "summary": {
+                  "total_pricing_changes": 3,
+                  "new_models": 1,
+                  "removed_models": 0,
+                  "incidents": 2,
+                  "news_articles": 10
+                },
+                "pricing": {
+                  "changes": [
+                    {
+                      "model": "Claude Opus 4.7",
+                      "provider": "anthropic",
+                      "field": "inputPrice",
+                      "from": 15,
+                      "to": 14,
+                      "delta_pct": -6.6667
+                    }
+                  ],
+                  "new_models": [
+                    {
+                      "model": "Sonnet 4.7",
+                      "provider": "anthropic",
+                      "input_per_1m": 3,
+                      "output_per_1m": 15,
+                      "tier": "mid"
+                    }
+                  ],
+                  "removed_models": []
+                },
+                "status": {
+                  "incidents": [
+                    {
+                      "service": "API",
+                      "provider": "openai",
+                      "severity": "minor",
+                      "title": "Elevated latency for ChatGPT",
+                      "started_at": "2026-05-13T18:00:00Z",
+                      "resolved_at": "2026-05-13T19:30:00Z",
+                      "duration_minutes": 90
+                    }
+                  ],
+                  "currently_operational": 12,
+                  "currently_degraded": 1,
+                  "currently_down": 0,
+                  "currently_unknown": 0
+                },
+                "news": [
+                  {
+                    "title": "Anthropic announces Claude Opus 4.8",
+                    "url": "https://anthropic.com/news/opus-4-8",
+                    "source": "Anthropic",
+                    "published_at": "2026-05-13T15:00:00Z"
+                  }
+                ]
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "days": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 7,
+                        "description": "Window length in days back from now. Default 1, max 7."
+                      },
+                      "news_limit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 25,
+                        "description": "Max news headlines to return. Default 10, max 25."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
       }
     },
     {
@@ -526,15 +1218,145 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
-      "lastUpdated": "2026-05-06T00:00:00Z",
+      "lastUpdated": "2026-05-24T00:00:00Z",
       "metadata": {
         "name": "AI policy timeline",
-        "description": "Forward + backward calendar over the free /api/policy/ai/registry catalog. Each entry classified relative to now (past / today / upcoming / far-future), with days-until-effective. Configurable window (default 12 months: 6 back, 6 forward, 5-year cap). Surfaces next 3 upcoming milestones, aggregates by jurisdiction, and ships every entry with its source URL preserved. Compute is the gate; raw registry remains free.",
+        "description": "Forward and backward calendar over the AI policy registry. Each entry classified relative to now (past / active / upcoming), days-until-effective, with next-3-milestones for upcoming items. Filter by jurisdiction (EU, US, UK, etc) and time window. The \"what AI rules are about to bite\" feed.",
         "tier": 1,
         "credits": 1,
         "category": "ai-policy-temporal"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "days_back": 90,
+                "days_forward": 365,
+                "jurisdiction": "EU"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-23T07:00:00Z",
+                "window": {
+                  "days_back": 90,
+                  "days_forward": 365,
+                  "jurisdiction": "EU"
+                },
+                "entries": [
+                  {
+                    "id": "eu-ai-act-gpai-codes",
+                    "title": "EU AI Act: General-Purpose AI codes of practice",
+                    "jurisdiction": "EU",
+                    "effective_date": "2026-08-02",
+                    "relative_to_now": "upcoming",
+                    "days_until_effective": 71,
+                    "next_milestones": [
+                      {
+                        "name": "Codes finalized",
+                        "date": "2026-07-01"
+                      },
+                      {
+                        "name": "Enforcement begins",
+                        "date": "2026-08-02"
+                      }
+                    ],
+                    "source_url": "https://artificialintelligenceact.eu"
+                  }
+                ],
+                "counts": {
+                  "past": 12,
+                  "active": 4,
+                  "upcoming": 9
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "days_back": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 3650
+                      },
+                      "days_forward": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 3650
+                      },
+                      "jurisdiction": {
+                        "type": "string",
+                        "description": "ISO country/region code or known bloc (EU, US, UK, CN, etc)."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
       }
     },
     {
@@ -543,15 +1365,117 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
-      "lastUpdated": "2026-05-06T00:00:00Z",
+      "lastUpdated": "2026-05-24T00:00:00Z",
       "metadata": {
         "name": "Recession watch",
-        "description": "Composite recession-risk signal across two well-known indicators: yield-curve inversion (FRED 10Y-2Y spread) and the Sahm rule (current 3-month unemployment moving avg vs trailing-12-month low). Per-signal red/yellow/green classification with editorial explanation, plus a composite signal (red if either is red, green only if both green, yellow otherwise) and a brief synthesis paragraph. Distinct from the macro digest: this endpoint takes a stance on recession risk rather than serving the broad snapshot.",
+        "description": "Composite recession-risk signal. Yield-curve inversion (10Y minus 2Y) and Sahm-rule unemployment trigger, each classified red / yellow / green with an explanation, plus a composite verdict and brief synthesis. BLS + FRED public-domain data; TensorFeed-derived classification.",
         "tier": 1,
         "credits": 1,
         "category": "macro-recession-signal"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {}
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "computed_at": "2026-05-23T12:00:00Z",
+                "data_freshness": {
+                  "bls_captured_at": "2026-05-23T05:00:00Z",
+                  "fred_captured_at": "2026-05-23T05:30:00Z"
+                },
+                "yield_curve": {
+                  "spread_10y_2y": -0.18,
+                  "level": "yellow",
+                  "explanation": "10Y-2Y spread at -0.18pp: mildly inverted. Watching for sustained inversion."
+                },
+                "sahm_rule": {
+                  "unemp_3mo_avg": 4.2,
+                  "unemp_12mo_low": 3.8,
+                  "sahm_value": 0.4,
+                  "threshold_pp": 0.5,
+                  "level": "yellow",
+                  "explanation": "Sahm value 0.40pp: approaching the 0.5pp Sahm threshold. Watch."
+                },
+                "composite": {
+                  "level": "yellow",
+                  "score": 50,
+                  "explanation": "Mixed signals. At least one indicator is in the watch zone but neither has fully triggered."
+                },
+                "brief": "Watch zone: at least one indicator is in transition.",
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
       }
     },
     {
@@ -560,15 +1484,121 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
-      "lastUpdated": "2026-05-06T00:00:00Z",
+      "lastUpdated": "2026-05-24T00:00:00Z",
       "metadata": {
         "name": "AI research velocity",
-        "description": "Per-institution velocity layer over the free /api/research/institutions/ai 365-day OpenAlex baseline. Joins it with a fresh 30-day OpenAlex group_by query (cached 24h) and computes velocity_ratio = annualized-30d-output / 365d-baseline. Returns direction classification (accelerating / steady / decelerating / insufficient_data), top-5 notable_movers in each direction, plus by-country and by-type breakdowns. CC0 underlying data; compute is the gate.",
+        "description": "Per-institution AI research publication velocity. 30-day window vs 365-day baseline with direction classification, notable movers, plus by-country and by-affiliation-type breakdowns. OpenAlex CC0. The \"which AI labs are accelerating\" feed.",
         "tier": 1,
         "credits": 1,
         "category": "research-momentum"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {}
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-23T06:00:00Z",
+                "institutions": [
+                  {
+                    "openalex_id": "I1294671590",
+                    "display_name": "Google DeepMind",
+                    "country_code": "GB",
+                    "works_last_30d": 92,
+                    "works_baseline_30d_avg": 71,
+                    "velocity_ratio": 1.296,
+                    "direction": "accelerating"
+                  }
+                ],
+                "notable_movers": {
+                  "gainers": [
+                    "DeepMind",
+                    "Anthropic"
+                  ],
+                  "decliners": []
+                },
+                "by_country": {
+                  "US": 412,
+                  "CN": 178,
+                  "GB": 96
+                },
+                "by_type": {
+                  "industry": 213,
+                  "academia": 489
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
       }
     },
     {
@@ -577,15 +1607,120 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
-      "lastUpdated": "2026-05-06T00:00:00Z",
+      "lastUpdated": "2026-05-24T00:00:00Z",
       "metadata": {
         "name": "PyPI packages momentum",
-        "description": "Adds a momentum layer over the free /api/packages/pypi/ai-trending leaderboard: per-package momentum_ratio (last_week vs weekly avg in last_month), velocity_ratio (today annualized vs last_week pace), direction classification (accelerating / steady / decelerating / insufficient_data), top-5 notable movers in each direction, plus by-category counts. Single-snapshot computable; no historical accumulation required.",
+        "description": "AI/ML PyPI package momentum and velocity. Per-package week-over-week change, direction classification (accelerating / steady / declining), notable movers, and by-category counts. The \"what AI packages are heating up\" feed.",
         "tier": 1,
         "credits": 1,
         "category": "package-ecosystem-momentum"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {}
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "window": {
+                  "window_days": 7
+                },
+                "packages": [
+                  {
+                    "name": "langchain",
+                    "category": "orchestration",
+                    "downloads_current": 5400000,
+                    "downloads_prior": 4900000,
+                    "velocity_ratio": 1.102,
+                    "direction": "accelerating"
+                  }
+                ],
+                "notable_movers": {
+                  "gainers": [
+                    "langchain",
+                    "instructor"
+                  ],
+                  "decliners": [
+                    "old-llm-lib"
+                  ]
+                },
+                "by_category": {
+                  "orchestration": 12,
+                  "embeddings": 8,
+                  "evaluation": 5
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
       }
     },
     {
@@ -594,7 +1729,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-06T00:00:00Z",
       "metadata": {
@@ -611,7 +1757,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-04-29T00:00:00Z",
       "metadata": {
@@ -628,7 +1785,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-16T00:00:00Z",
       "metadata": {
@@ -645,7 +1813,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-16T00:00:00Z",
       "metadata": {
@@ -662,7 +1841,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-05-16T00:00:00Z",
       "metadata": {
@@ -679,15 +1869,145 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
-      "lastUpdated": "2026-04-27T00:00:00Z",
+      "lastUpdated": "2026-05-24T00:00:00Z",
       "metadata": {
         "name": "Compare models",
-        "description": "Side-by-side comparison of 2-5 AI models with pricing, benchmarks normalized to union-of-keys, status, and rankings (cheapest blended, most context, per-benchmark leaderboard).",
+        "description": "Side-by-side comparison of 2-5 AI models. Returns pricing, benchmarks normalized to union-of-keys with explicit nulls, live provider status, recent news mentions, and per-benchmark rankings in one ready-to-rank payload.",
         "tier": 1,
         "credits": 1,
         "category": "ai-model-comparison"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "ids": "opus-4-7,gpt-5-5,gemini-3"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "models": [
+                  {
+                    "id": "opus-4-7",
+                    "name": "Claude Opus 4.7",
+                    "provider": "anthropic",
+                    "pricing": {
+                      "input": 15,
+                      "output": 75,
+                      "blended": 25
+                    },
+                    "benchmarks": {
+                      "swe_bench": 0.74,
+                      "mmlu_pro": 0.83,
+                      "gpqa_diamond": 0.68,
+                      "math": null,
+                      "human_eval": 0.94
+                    },
+                    "status": "operational",
+                    "news_count_30d": 12,
+                    "context_window": 200000
+                  }
+                ],
+                "rankings": {
+                  "cheapest_blended": [
+                    "gpt-5-5",
+                    "gemini-3",
+                    "opus-4-7"
+                  ],
+                  "widest_context": [
+                    "gemini-3",
+                    "opus-4-7",
+                    "gpt-5-5"
+                  ],
+                  "per_benchmark": {
+                    "swe_bench": [
+                      "opus-4-7",
+                      "gpt-5-5",
+                      "gemini-3"
+                    ]
+                  }
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "ids": {
+                        "type": "string",
+                        "description": "Comma-separated list of 2 to 5 model ids or display names (e.g. \"opus-4-7,gpt-5-5,gemini-3\")."
+                      }
+                    },
+                    "required": [
+                      "ids"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
       }
     },
     {
@@ -696,7 +2016,18 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -713,15 +2044,158 @@
       "method": "GET",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
-      "lastUpdated": "2026-04-27T00:00:00Z",
+      "lastUpdated": "2026-05-24T00:00:00Z",
       "metadata": {
         "name": "Cost projection",
-        "description": "Project the cost of a token-usage workload across 1-10 AI models. Returns daily/weekly/monthly/yearly totals per model plus a ranking by cheapest monthly.",
+        "description": "Project the cost of a token-usage workload across 1-10 AI models. Returns daily, weekly, monthly, and yearly totals per model plus a ranking by cheapest monthly. The canonical \"given my workload, what would each model cost me\" call.",
         "tier": 1,
         "credits": 1,
         "category": "ai-cost-projection"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "model": "opus-4-7,gpt-5-5",
+                "input_tokens_per_day": 1000000,
+                "output_tokens_per_day": 200000,
+                "horizon": "monthly"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "workload": {
+                  "input_tokens_per_day": 1000000,
+                  "output_tokens_per_day": 200000
+                },
+                "primary_horizon": "monthly",
+                "projections": [
+                  {
+                    "model": "Claude Opus 4.7",
+                    "provider": "anthropic",
+                    "matched": true,
+                    "rates": {
+                      "input_per_1m": 15,
+                      "output_per_1m": 75,
+                      "blended_per_1m": 25
+                    },
+                    "daily": {
+                      "input_cost": 15,
+                      "output_cost": 15,
+                      "total": 30
+                    },
+                    "weekly_total": 210,
+                    "monthly_total": 900,
+                    "yearly_total": 10950
+                  }
+                ],
+                "ranking_by_monthly_cheapest": [
+                  "gpt-5-5",
+                  "opus-4-7"
+                ],
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "description": "Comma-separated list of 1 to 10 model ids or display names."
+                      },
+                      "input_tokens_per_day": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Input tokens per day for the workload."
+                      },
+                      "output_tokens_per_day": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Output tokens per day for the workload."
+                      },
+                      "horizon": {
+                        "type": "string",
+                        "enum": [
+                          "daily",
+                          "weekly",
+                          "monthly",
+                          "yearly"
+                        ],
+                        "description": "Primary horizon for the ranking (other horizons are still returned). Default monthly."
+                      }
+                    },
+                    "required": [
+                      "model",
+                      "input_tokens_per_day",
+                      "output_tokens_per_day"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
       }
     },
     {
@@ -730,7 +2204,18 @@
       "method": "POST",
       "x402Version": 2,
       "accepts": [
-        { "scheme": "exact", "network": "eip155:8453", "amount": "20000", "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1", "maxTimeoutSeconds": 60, "extra": { "name": "USD Coin", "version": "2" } }
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
       ],
       "lastUpdated": "2026-04-27T00:00:00Z",
       "metadata": {
@@ -740,9 +2225,2565 @@
         "credits": 1,
         "category": "ai-webhooks",
         "input": {
-          "spec": { "type": "price", "model": "Claude Opus 4.7", "field": "blended", "op": "lt", "threshold": 30 },
+          "spec": {
+            "type": "price",
+            "model": "Claude Opus 4.7",
+            "field": "blended",
+            "op": "lt",
+            "threshold": 30
+          },
           "callback_url": "https://your-agent.example.com/hook",
           "secret": "optional shared secret"
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/funding/exposure",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "60000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "AI funding exposure metrics",
+        "description": "Derived structural metrics over the AI funding portfolio. Silicon-vendor concentration shares per investor, circular-loop classification (fully-circular / partial-loop / agnostic), co-investor pairs holding the same recipient, top recipients by inbound capital. The \"who is funding whose silicon\" call.",
+        "tier": 1,
+        "credits": 3,
+        "category": "ai-funding-exposure"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {}
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-23T05:00:00Z",
+                "silicon_concentration": [
+                  {
+                    "vendor": "Nvidia",
+                    "total_usd": 12500000000,
+                    "recipient_count": 18
+                  },
+                  {
+                    "vendor": "AMD",
+                    "total_usd": 3100000000,
+                    "recipient_count": 6
+                  }
+                ],
+                "investor_loops": [
+                  {
+                    "investor": "Microsoft",
+                    "classification": "fully-circular",
+                    "silicon_exposure_pct": 78
+                  },
+                  {
+                    "investor": "Andreessen Horowitz",
+                    "classification": "agnostic",
+                    "silicon_exposure_pct": 0
+                  }
+                ],
+                "top_recipients": [
+                  {
+                    "name": "OpenAI",
+                    "inbound_usd": 13000000000,
+                    "investor_count": 4
+                  }
+                ],
+                "co_investor_pairs": [
+                  {
+                    "a": "Microsoft",
+                    "b": "Nvidia",
+                    "shared_recipients": [
+                      "OpenAI",
+                      "Mistral"
+                    ]
+                  }
+                ],
+                "billing": {
+                  "credits_charged": 3,
+                  "credits_remaining": 47
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/research/authors",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "Top AI authors",
+        "description": "Top 100 AI researchers ranked by AI publication volume in the trailing 365 days, enriched with h-index, i10-index, total citation count, primary affiliation (institution + country), ORCID, and derived AI-share-of-total. OpenAlex CC0. Daily refresh.",
+        "tier": 1,
+        "credits": 1,
+        "category": "research-authors"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {}
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-23T06:00:00Z",
+                "window_days": 365,
+                "concept": {
+                  "id": "C154945302",
+                  "name": "Artificial intelligence"
+                },
+                "authors": [
+                  {
+                    "rank": 1,
+                    "openalex_id": "A5023888391",
+                    "display_name": "Yoshua Bengio",
+                    "orcid": "https://orcid.org/0000-0002-9322-3515",
+                    "primary_affiliation": {
+                      "openalex_id": "I70931966",
+                      "display_name": "Université de Montréal",
+                      "country_code": "CA"
+                    },
+                    "ai_works_last_year": 87,
+                    "total_works_count": 821,
+                    "cited_by_count": 412000,
+                    "h_index": 168,
+                    "i10_index": 632,
+                    "ai_share_pct": 0.74
+                  }
+                ],
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/research/citation-velocity",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "AI citation velocity",
+        "description": "Top 100 recent AI papers ranked by the share of their total citations earned in the most recent calendar year. Papers published in the last 2 years with 3+ citations. Surfaces papers that are still gaining traction now. OpenAlex CC0.",
+        "tier": 1,
+        "credits": 1,
+        "category": "research-citation-velocity"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {}
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-23T06:00:00Z",
+                "papers": [
+                  {
+                    "rank": 1,
+                    "openalex_id": "W4400000000",
+                    "doi": "10.48550/arXiv.2503.00000",
+                    "title": "Scaling Test-Time Compute Beyond Chain-of-Thought",
+                    "year": 2025,
+                    "total_citations": 412,
+                    "latest_year_citations": 318,
+                    "latest_year_share": 0.772,
+                    "venue": "arXiv",
+                    "authors": [
+                      "First Author",
+                      "Second Author",
+                      "Third Author"
+                    ],
+                    "primary_affiliation": {
+                      "display_name": "Anthropic",
+                      "country_code": "US"
+                    }
+                  }
+                ],
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/research/milestones",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "arXiv milestone candidates",
+        "description": "Last 30 days of arXiv preprints flagged as milestone candidates by an offline Qwen 3.6 27B per-paper extraction pass. Each paper carries structured reasoning naming the benchmark + quantified delta, model release, or novel architecture justification. Conservative; false positives are worse than false negatives.",
+        "tier": 1,
+        "credits": 1,
+        "category": "research-milestones"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {}
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-23T06:00:00Z",
+                "window_days": 30,
+                "papers": [
+                  {
+                    "arxiv_id": "2505.12345",
+                    "title": "A Reasoning Model That Wins Math Olympiad Gold",
+                    "published_at": "2026-05-14",
+                    "is_milestone_candidate": true,
+                    "reasoning": "Reports 84.7% on AIME 2024 (prior SOTA 63.1%), +21.6pp absolute. Names a new MoE-of-Experts routing scheme; reproducible config.",
+                    "category": "benchmark_delta",
+                    "arxiv_url": "https://arxiv.org/abs/2505.12345"
+                  }
+                ],
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/research/emerging-keywords",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "arXiv emerging keywords",
+        "description": "Top 50 multi-word keyphrases across recent arXiv AI abstracts ranked by recent-vs-baseline lift (last 30 days frequency over prior 90 days, smoothed). Each keyphrase carries 2-5 example arxiv_ids so an agent can drill into the underlying work. The trend-spotter feed for AI research vocabulary.",
+        "tier": 1,
+        "credits": 1,
+        "category": "research-emerging-keywords"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {}
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-23T06:00:00Z",
+                "window": {
+                  "recent_days": 30,
+                  "baseline_days": 90
+                },
+                "keywords": [
+                  {
+                    "rank": 1,
+                    "phrase": "test-time compute scaling",
+                    "recent_frequency": 47,
+                    "baseline_frequency": 6,
+                    "lift": 7.83,
+                    "example_arxiv_ids": [
+                      "2505.12345",
+                      "2505.23456",
+                      "2505.34567"
+                    ]
+                  }
+                ],
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/apis-guru/ai-feed",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "APIs.guru AI feed",
+        "description": "AI-relevant APIs from the APIs.guru directory of 2400+ OpenAPI specs, filtered via curated keyword matching. Per-entry first_seen_at against TensorFeed snapshot history so an agent can answer \"what new AI APIs appeared in the last 7 days\": a diff APIs.guru itself cannot provide. CC-BY-SA 4.0; source links preserved.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-api-directory"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {}
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-23T08:00:00Z",
+                "count": 142,
+                "by_provider": {
+                  "openai.com": 3,
+                  "anthropic.com": 1,
+                  "replicate.com": 2
+                },
+                "entries": [
+                  {
+                    "api_id": "openai.com",
+                    "provider": "openai.com",
+                    "title": "OpenAI API",
+                    "description": "The OpenAI REST API providing access to GPT-5, embeddings, vision, audio, and more.",
+                    "openapi_url": "https://api.apis.guru/v2/specs/openai.com/2.3.0/openapi.yaml",
+                    "service_url": "https://api.openai.com",
+                    "logo_url": "https://api.apis.guru/v2/cache/logo/openai.com.png",
+                    "first_seen_at": "2025-09-12",
+                    "latest_updated_at": "2026-05-20",
+                    "matched_keywords": [
+                      "gpt",
+                      "openai"
+                    ],
+                    "newly_added_last_7d": false
+                  }
+                ],
+                "newly_added_last_7d": [],
+                "attribution": {
+                  "source": "APIs.guru",
+                  "license": "CC-BY-SA 4.0"
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/model-deprecations/timeline",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "Model deprecations timeline",
+        "description": "Model deprecation timeline with migration intelligence. Each entry enriched with urgency_band (within_7d / within_30d / within_60d / within_90d / past), days_until_sunset, days_since_sunset, and a resolved migration_chain hop sequence to the first still-active replacement. Optional within_days window centered on now; optional provider filter. The \"is my model affected and what should I migrate to\" call.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-model-lifecycle"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "within_days": 90,
+                "provider": "openai"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T12:00:00Z",
+                "filter": {
+                  "within_days": 90,
+                  "provider": "openai"
+                },
+                "total_in_registry": 12,
+                "returned_count": 1,
+                "entries": [
+                  {
+                    "id": "openai-gpt-4-32k",
+                    "provider": "OpenAI",
+                    "model": "gpt-4-32k-0613",
+                    "status": "sunsetted",
+                    "announcedDate": "2024-06-06",
+                    "deprecationDate": "2025-06-06",
+                    "sunsetDate": "2025-06-06",
+                    "replacement": "gpt-4-turbo",
+                    "sourceUrl": "https://platform.openai.com/docs/deprecations",
+                    "days_until_deprecation": -351,
+                    "days_until_sunset": -351,
+                    "days_since_sunset": 351,
+                    "urgency_band": "past",
+                    "migration_chain": [
+                      "gpt-4-32k-0613",
+                      "gpt-4-turbo"
+                    ]
+                  }
+                ],
+                "summary": {
+                  "by_provider": {
+                    "OpenAI": 1
+                  },
+                  "by_urgency_band": {
+                    "past": 1,
+                    "within_7d": 0,
+                    "within_30d": 0,
+                    "within_60d": 0,
+                    "within_90d": 0,
+                    "within_180d": 0,
+                    "within_365d": 0,
+                    "future": 0,
+                    "no_date": 0
+                  }
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "within_days": {
+                        "type": "integer",
+                        "minimum": 7,
+                        "maximum": 730,
+                        "description": "Window centered on now in days. Entries are included when |days_until_sunset| <= within_days. Omit for full registry."
+                      },
+                      "provider": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against provider (OpenAI, Anthropic, Google, Cohere, ...)."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/inference-providers/arbitrage",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "Inference-provider arbitrage",
+        "description": "Cross-provider arbitrage analytics for hosted inference. Per-model: cheapest_paid, most_expensive_paid, spread_usd, savings_pct, median_paid_blended, fastest_tps, cheapest_with_tps, free_tier_offers. Plus provider_rollup (cheapest_count, top_tps_count, value_score 0-100) and top_arbitrage models sorted by savings_pct desc. Pairs with the free /api/inference-providers matrix. The \"where to migrate workloads\" call.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-inference-arbitrage"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "family": "Meta",
+                "min_savings_pct": 20
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T12:00:00Z",
+                "filter": {
+                  "family": "Meta",
+                  "min_savings_pct": 20
+                },
+                "matrix_last_updated": "2026-05-24",
+                "models_in_matrix": 3,
+                "tracked_providers": [
+                  "Together AI",
+                  "Fireworks",
+                  "DeepInfra",
+                  "Groq",
+                  "OpenRouter",
+                  "Replicate",
+                  "Anyscale",
+                  "DeepSeek",
+                  "GitHub Models"
+                ],
+                "models": [
+                  {
+                    "modelId": "llama-4-scout",
+                    "modelName": "Llama 4 Scout",
+                    "family": "Meta",
+                    "paramsB": 109,
+                    "offer_count_paid": 6,
+                    "free_tier_offers": [],
+                    "cheapest_paid": {
+                      "provider": "DeepInfra",
+                      "blendedPrice": 0.355
+                    },
+                    "most_expensive_paid": {
+                      "provider": "Replicate",
+                      "blendedPrice": 0.425
+                    },
+                    "median_paid_blended": 0.385,
+                    "spread_usd": 0.07,
+                    "savings_pct": 16.47,
+                    "fastest_tps": {
+                      "provider": "Groq",
+                      "outputTPS": 950
+                    },
+                    "cheapest_with_tps": {
+                      "provider": "DeepInfra",
+                      "blendedPrice": 0.355,
+                      "outputTPS": 170
+                    }
+                  }
+                ],
+                "top_arbitrage": [],
+                "provider_rollup": [
+                  {
+                    "provider": "DeepInfra",
+                    "appearances_paid": 5,
+                    "cheapest_count": 3,
+                    "top_tps_count": 0,
+                    "free_tier_count": 0,
+                    "value_score": 100
+                  },
+                  {
+                    "provider": "Groq",
+                    "appearances_paid": 3,
+                    "cheapest_count": 0,
+                    "top_tps_count": 2,
+                    "free_tier_count": 0,
+                    "value_score": 33
+                  }
+                ],
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "family": {
+                        "type": "string",
+                        "description": "Case-insensitive substring filter on model family (Meta, DeepSeek, Mistral, Alibaba, Microsoft, ...)."
+                      },
+                      "min_savings_pct": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "description": "Minimum savings_pct to include a model in the top_arbitrage array. Default 20."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/ai-safety/incidents/exposure",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "AI safety incidents exposure",
+        "description": "AI safety incident exposure analytics. Per-developer and per-deployer incident counts with recency-weighted exposure_score (1.0 last 30d, 0.5 days 31-90, 0.25 older), risk_domain and SEP-view (Security/Ethics/Performance) distributions, top affected artifacts. Derived over the AVID (avidml/avid-db, MIT) snapshot refreshed daily. The \"which AI vendors have the most recent reported safety incidents\" call.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-safety-exposure"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "vendor": "OpenAI",
+                "risk_domain": "Security",
+                "within_days": 90
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T12:00:00Z",
+                "snapshot_captured_at": "2026-05-24T03:00:00Z",
+                "source": "avidml/avid-db",
+                "source_license": "MIT",
+                "filter": {
+                  "vendor": "OpenAI",
+                  "risk_domain": "Security",
+                  "within_days": 90
+                },
+                "window": {
+                  "window_days": 90,
+                  "cutoff_date": "2026-02-23"
+                },
+                "entries_count": 12,
+                "developers": [
+                  {
+                    "vendor": "OpenAI",
+                    "role": "developer",
+                    "incident_count": 8,
+                    "recent_count_30d": 2,
+                    "exposure_score": 5.5,
+                    "risk_domains": [
+                      "Ethics",
+                      "Security"
+                    ],
+                    "latest_report_id": "AVID-2026-R0481",
+                    "latest_reported_date": "2026-05-18"
+                  }
+                ],
+                "deployers": [],
+                "risk_domains": [
+                  {
+                    "risk_domain": "Security",
+                    "incident_count": 8,
+                    "recent_count_30d": 2
+                  }
+                ],
+                "sep_view": [
+                  {
+                    "sep_view": "S0403: Adversarial Example",
+                    "incident_count": 4
+                  }
+                ],
+                "top_artifacts": [
+                  {
+                    "name": "gpt-4o",
+                    "type": "Model",
+                    "incident_count": 3,
+                    "developers": [
+                      "OpenAI"
+                    ]
+                  }
+                ],
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "vendor": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against developer + deployer + artifact name."
+                      },
+                      "risk_domain": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against AVID risk_domains (Security, Ethics, Performance, ...)."
+                      },
+                      "within_days": {
+                        "type": "integer",
+                        "minimum": 7,
+                        "maximum": 730,
+                        "description": "Restrict to incidents reported in the last N days. Omit for full snapshot."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/ai-safety/packages/security/radar",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "AI-package security radar",
+        "description": "AI-package security radar. Per-package risk_score (0-100) over the daily OSV snapshot of curated AI/ML PyPI + npm packages: critical_count_30d * 25 + high_30d * 12 + critical_90d * 6 + high_90d * 3 + min(open_count, 20) + 5 if any advisory in last 7d, saturated to 100. Risk_band classifications (calm <10 / watch 10-25 / hot 25-50 / critical 50+) plus notable_movers (top-5 by_critical_30d, by_risk_score, new_in_last_7d). The \"which AI deps should I be worried about right now\" call.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-package-security"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "ecosystem": "PyPI",
+                "category": "agent-framework",
+                "min_risk_score": 10
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T12:00:00Z",
+                "snapshot_captured_at": "2026-05-24T05:45:00Z",
+                "source": "osv.dev",
+                "filter": {
+                  "ecosystem": "PyPI",
+                  "category": "agent-framework",
+                  "min_risk_score": 10,
+                  "package": null
+                },
+                "packages_in_snapshot": 8,
+                "rows": [
+                  {
+                    "package": "langchain",
+                    "ecosystem": "PyPI",
+                    "category": "agent-framework",
+                    "homepage": "https://langchain.com",
+                    "open_count": 3,
+                    "critical_count_30d": 1,
+                    "high_count_30d": 0,
+                    "critical_count_90d": 1,
+                    "high_count_90d": 2,
+                    "latest_advisory_id": "GHSA-xxxx-xxxx-2026",
+                    "latest_published": "2026-05-20",
+                    "days_since_latest": 4,
+                    "risk_score": 39,
+                    "risk_band": "hot",
+                    "recent_advisories": []
+                  }
+                ],
+                "notable_movers": {
+                  "by_critical_30d": [],
+                  "by_risk_score": [],
+                  "new_in_last_7d": []
+                },
+                "summary": {
+                  "by_band": {
+                    "calm": 5,
+                    "watch": 2,
+                    "hot": 1,
+                    "critical": 0
+                  },
+                  "by_ecosystem": {
+                    "PyPI": 8,
+                    "npm": 0
+                  },
+                  "total_open_advisories": 12
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "ecosystem": {
+                        "type": "string",
+                        "enum": [
+                          "PyPI",
+                          "npm"
+                        ]
+                      },
+                      "category": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against curated category (llm-sdk, agent-framework, rag, ...)."
+                      },
+                      "package": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against package name."
+                      },
+                      "min_risk_score": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "description": "Minimum risk_score to include in the headline rows array. Default 10."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/packages/releases/velocity",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "AI-package release velocity",
+        "description": "AI-package release velocity. Per-package releases_24h / releases_7d / releases_30d, latest bump classification (major/minor/patch/prerelease, pre-1.0 minor counts as major per semver), is_breaking_recent flag (major bump within 30 days). Notable movers: recent_major_bumps, most_releases_7d, fastest_cadence_30d. Filter by ecosystem (PyPI/npm), category (llm-sdk, agent-framework, etc), or package substring. The \"what AI deps just changed and is it breaking\" call.",
+        "tier": 1,
+        "credits": 1,
+        "category": "package-release-velocity"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "ecosystem": "PyPI",
+                "category": "agent-framework",
+                "min_releases_7d": 1
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T18:35:00Z",
+                "snapshot_captured_at": "2026-05-24T18:35:00Z",
+                "filter": {
+                  "ecosystem": "PyPI",
+                  "category": "agent-framework",
+                  "package": null,
+                  "min_releases_7d": 1
+                },
+                "packages_in_snapshot": 12,
+                "rows": [
+                  {
+                    "package": "langchain",
+                    "ecosystem": "PyPI",
+                    "category": "agent-framework",
+                    "homepage": "https://langchain.com",
+                    "latest_version": "0.4.0",
+                    "latest_published_at": "2026-05-23T19:14:11Z",
+                    "days_since_latest": 1,
+                    "releases_24h": 1,
+                    "releases_7d": 3,
+                    "releases_30d": 9,
+                    "versions_known_total": 412,
+                    "latest_bump_kind": "major",
+                    "previous_version": "0.3.27",
+                    "is_breaking_recent": true
+                  }
+                ],
+                "notable_movers": {
+                  "recent_major_bumps": [],
+                  "most_releases_7d": [],
+                  "fastest_cadence_30d": []
+                },
+                "summary": {
+                  "by_ecosystem": {
+                    "PyPI": 12,
+                    "npm": 0
+                  },
+                  "by_category": {
+                    "agent-framework": 12
+                  },
+                  "by_bump_kind": {
+                    "major": 1,
+                    "minor": 4,
+                    "patch": 5,
+                    "prerelease": 1,
+                    "sideways": 0,
+                    "unknown": 1
+                  },
+                  "total_releases_7d": 18,
+                  "total_releases_30d": 47,
+                  "breaking_changes_30d": 2
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "ecosystem": {
+                        "type": "string",
+                        "enum": [
+                          "PyPI",
+                          "npm"
+                        ]
+                      },
+                      "category": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against curated category (llm-sdk, agent-framework, rag, ...)."
+                      },
+                      "package": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against package name."
+                      },
+                      "min_releases_7d": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "description": "Minimum releases-in-window for the headline rows array. Default 1."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/ai-velocity",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "AI velocity (federation cross-call)",
+        "description": "AI velocity cross-surface signal. First AFTA federation cross-call: TensorFeed derives an AI cohort from TerminalFeed's HF + GitHub trending leaderboards with per-entry traction_score, cross-pollination (names appearing on BOTH leaderboards = higher confidence), and rollups by HF pipeline + GitHub language. Filters: pipeline, language, min_traction, cross_only.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-velocity-cross-surface"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "pipeline": "text-generation",
+                "language": "Python",
+                "min_traction": 50,
+                "cross_only": false
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T18:00:00Z",
+                "snapshot_captured_at": "2026-05-24T17:42:00Z",
+                "source": "terminalfeed.io federation cross-call",
+                "filter": {
+                  "pipeline": "text-generation",
+                  "language": "Python",
+                  "min_traction": 50,
+                  "cross_only": false
+                },
+                "cohort_size": {
+                  "hf": 15,
+                  "github": 15,
+                  "cross_pollinated": 3
+                },
+                "hf_top": [
+                  {
+                    "id": "meta-llama/Llama-4-8B",
+                    "author": "meta-llama",
+                    "name": "Llama-4-8B",
+                    "likes": 4120,
+                    "downloads": 2840000,
+                    "pipeline": "text-generation",
+                    "url": "https://huggingface.co/meta-llama/Llama-4-8B",
+                    "updated": "2026-05-22",
+                    "normalized_name": "llama-4-8b",
+                    "traction_score": 12424.5,
+                    "on_both": true
+                  }
+                ],
+                "github_top": [
+                  {
+                    "name": "llama.cpp",
+                    "fullName": "ggerganov/llama.cpp",
+                    "description": "LLM inference in C/C++",
+                    "language": "C++",
+                    "stars": 78420,
+                    "url": "https://github.com/ggerganov/llama.cpp",
+                    "matched_markers": [
+                      "llm",
+                      "inference engine"
+                    ],
+                    "normalized_name": "llama.cpp",
+                    "traction_score": 146.9,
+                    "on_both": false
+                  }
+                ],
+                "cross_pollinated": [
+                  {
+                    "normalized_name": "llama-4-8b",
+                    "hf": {
+                      "id": "meta-llama/Llama-4-8B",
+                      "name": "Llama-4-8B",
+                      "likes": 4120,
+                      "downloads": 2840000,
+                      "url": "https://huggingface.co/meta-llama/Llama-4-8B"
+                    },
+                    "github": {
+                      "fullName": "meta-llama/Llama-4-8B",
+                      "stars": 5200,
+                      "language": "Python",
+                      "url": "https://github.com/meta-llama/Llama-4-8B"
+                    },
+                    "combined_traction": 12537.2
+                  }
+                ],
+                "summary": {
+                  "hf_by_pipeline": {
+                    "text-generation": 12,
+                    "image-text-to-text": 3
+                  },
+                  "github_by_language": {
+                    "Python": 9,
+                    "C++": 3,
+                    "TypeScript": 3
+                  },
+                  "total_hf_likes": 18500,
+                  "total_github_stars": 245000
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "pipeline": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against HuggingFace pipeline tag."
+                      },
+                      "language": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against GitHub repo primary language."
+                      },
+                      "min_traction": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 10000,
+                        "description": "Minimum traction_score to include in headline arrays. Default 0."
+                      },
+                      "cross_only": {
+                        "type": "boolean",
+                        "description": "When true, return only items with on_both=true. Default false."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/ai-crypto-pulse",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "AI-thesis crypto pulse",
+        "description": "AI-thesis token pulse: joins price moves with venue-weighted perp funding-rate skew. Per-token setup classification (squeeze_up = rising + negative funding = shorts trapped; chase_up = rising + positive funding = leverage mean-reversion risk; squeeze_down; chase_down; coiled = flat + extreme funding). Notable movers cohort + breadth + median change summary. Filters: token substring, setup kind, min_abs_change_pct.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-crypto-funding"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "token": "TAO",
+                "setup": "squeeze_up",
+                "min_abs_change_pct": 1
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T18:00:00Z",
+                "snapshot_captured_at": "2026-05-24T17:57:00Z",
+                "source": "terminalfeed.io federation cross-call",
+                "filter": {
+                  "token": "TAO",
+                  "setup": "squeeze_up",
+                  "min_abs_change_pct": 1
+                },
+                "cohort": {
+                  "cohort_size": 1,
+                  "movers_seen": 6,
+                  "funding_seen": 4,
+                  "failed_venues": []
+                },
+                "rows": [
+                  {
+                    "symbol": "TAO",
+                    "display_name": "Bittensor",
+                    "thesis": "decentralized ML training network",
+                    "price_usd": 412.5,
+                    "change_24h_percent": 8.4,
+                    "market_cap": 3700000000,
+                    "funding_venue_count": 3,
+                    "funding_median_annualized_pct": -28.5,
+                    "funding_venue_spread_pct": 6.2,
+                    "funding_by_venue": [
+                      {
+                        "venue": "binance",
+                        "annualized_pct": -25.4,
+                        "period_rate": -0.000232,
+                        "mark_price": 412.4
+                      },
+                      {
+                        "venue": "bybit",
+                        "annualized_pct": -28.5,
+                        "period_rate": -0.000261,
+                        "mark_price": 412.5
+                      },
+                      {
+                        "venue": "hyperliquid",
+                        "annualized_pct": -31.6,
+                        "period_rate": -0.000289,
+                        "mark_price": 412.6
+                      }
+                    ],
+                    "setup": "squeeze_up"
+                  }
+                ],
+                "notable_movers": {
+                  "squeezes_up": [],
+                  "squeezes_down": [],
+                  "coiled": [],
+                  "top_gainers": [],
+                  "top_losers": []
+                },
+                "summary": {
+                  "by_setup": {
+                    "squeeze_up": 1,
+                    "chase_up": 0,
+                    "squeeze_down": 0,
+                    "chase_down": 0,
+                    "coiled": 0,
+                    "neutral": 0
+                  },
+                  "breadth_pct_positive": 100,
+                  "median_change_24h_pct": 8.4
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "token": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against symbol or display_name (TAO, Bittensor, etc)."
+                      },
+                      "setup": {
+                        "type": "string",
+                        "enum": [
+                          "squeeze_up",
+                          "chase_up",
+                          "squeeze_down",
+                          "chase_down",
+                          "coiled",
+                          "neutral"
+                        ]
+                      },
+                      "min_abs_change_pct": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1000,
+                        "description": "Minimum |change_24h_percent| to include in rows. Default 0."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/coding-harnesses/weekly-deltas",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "Coding-harness weekly deltas",
+        "description": "Agentic-coding harness weekly deltas. Compares current TerminalFeed harness leaderboard snapshot (SWE-bench Verified, Terminal-Bench, Aider Polyglot, etc) to a prior snapshot. Per-(benchmark, harness, model) score + rank deltas with change_kind classification (gained / regressed / entered / exited / unchanged). Notable movers (biggest_gainers, biggest_regressions, entered, exited), per-benchmark leader_cards with leader_changed flag, summary rollups. Filters: days_back (1-90, default 7), harness, benchmark, model, min_abs_delta.",
+        "tier": 1,
+        "credits": 1,
+        "category": "coding-harness-deltas"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "days_back": 7,
+                "harness": "Claude Code",
+                "benchmark": "swe-bench-verified",
+                "min_abs_delta": 1
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T18:00:00Z",
+                "current_captured_at": "2026-05-24T05:25:00Z",
+                "prior_captured_at": "2026-05-17T05:25:00Z",
+                "days_between_snapshots": 7,
+                "source": "terminalfeed.io federation cross-call",
+                "filter": {
+                  "days_back": 7,
+                  "harness": "Claude Code",
+                  "benchmark": "swe-bench-verified",
+                  "model": null,
+                  "min_abs_delta": 1
+                },
+                "cohort": {
+                  "rows_total": 84,
+                  "rows_filtered": 6,
+                  "benchmarks_in_window": 4
+                },
+                "rows": [
+                  {
+                    "benchmark": "swe-bench-verified",
+                    "harness": "Claude Code",
+                    "model": "Claude Opus 4.7",
+                    "current_score": 74.2,
+                    "prior_score": 72.1,
+                    "delta": 2.1,
+                    "current_rank": 1,
+                    "prior_rank": 1,
+                    "rank_delta": 0,
+                    "change_kind": "gained"
+                  }
+                ],
+                "notable_movers": {
+                  "biggest_gainers": [],
+                  "biggest_regressions": [],
+                  "entered": [],
+                  "exited": []
+                },
+                "leader_cards": [
+                  {
+                    "benchmark": "swe-bench-verified",
+                    "current_leader": {
+                      "harness": "Claude Code",
+                      "model": "Claude Opus 4.7",
+                      "score": 74.2
+                    },
+                    "prior_leader": {
+                      "harness": "Claude Code",
+                      "model": "Claude Opus 4.7",
+                      "score": 72.1
+                    },
+                    "leader_changed": false
+                  }
+                ],
+                "summary": {
+                  "by_change_kind": {
+                    "unchanged": 0,
+                    "gained": 6,
+                    "regressed": 0,
+                    "entered": 0,
+                    "exited": 0
+                  },
+                  "benchmarks_with_new_leader": 0
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "days_back": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 90,
+                        "description": "Days back to fetch the comparison snapshot. Default 7."
+                      },
+                      "harness": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against harness name."
+                      },
+                      "benchmark": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against benchmark id."
+                      },
+                      "model": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against model name."
+                      },
+                      "min_abs_delta": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "description": "Minimum |score delta| for the headline rows array. Default 0; entered/exited rows always included."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/news/action-cards",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "News action cards (Haiku-derived)",
+        "description": "AI news action cards. For each article in the daily TF news feed, Haiku 4.5 produces a structured agent action card answering \"what should an AI agent or operator DO in response to this.\" Per card: action_summary (1-2 sentences), migration_recommendation (string or null), affected_capability (model / pricing / safety / framework / infrastructure / tooling / policy / ecosystem), cost_impact, security_impact, urgency. Filters: capability + urgency exact-match, min_cost_impact + min_security_impact threshold, title/source query. Sort priority: urgency > security > cost > recency.",
+        "tier": 1,
+        "credits": 1,
+        "category": "news-action-cards"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "capability": "model",
+                "urgency": "immediate",
+                "min_cost_impact": "medium"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T18:00:00Z",
+                "snapshot_captured_at": "2026-05-24T08:00:00Z",
+                "source": "tensorfeed.ai news + Claude Haiku 4.5",
+                "filter": {
+                  "capability": "model",
+                  "min_cost_impact": "medium",
+                  "min_security_impact": "none",
+                  "urgency": "immediate",
+                  "query": null
+                },
+                "cohort": {
+                  "articles_considered": 50,
+                  "cards_in_snapshot": 47,
+                  "cards_filtered": 3
+                },
+                "cards": [
+                  {
+                    "article_id": "a1b2c3",
+                    "article_title": "Anthropic deprecates Claude 3 Sonnet effective July 21",
+                    "article_url": "https://example.com/claude-3-sonnet-deprecated",
+                    "article_source": "Anthropic",
+                    "article_published_at": "2026-05-23T15:00:00Z",
+                    "action_summary": "Migrate any agent still on claude-3-sonnet-20240229 to claude-haiku-4-5 or claude-opus-4-7 before July 21 to avoid silent 410 responses.",
+                    "migration_recommendation": "claude-haiku-4-5-20251001 for cost-sensitive paths; claude-opus-4-7 for quality-critical paths",
+                    "affected_capability": "model",
+                    "cost_impact": "high",
+                    "security_impact": "low",
+                    "urgency": "immediate",
+                    "generated_at": "2026-05-24T08:00:00Z"
+                  }
+                ],
+                "summary": {
+                  "by_capability": {
+                    "pricing": 0,
+                    "model": 3,
+                    "safety": 0,
+                    "framework": 0,
+                    "infrastructure": 0,
+                    "tooling": 0,
+                    "policy": 0,
+                    "ecosystem": 0
+                  },
+                  "by_urgency": {
+                    "immediate": 3,
+                    "this_week": 0,
+                    "fyi": 0
+                  },
+                  "by_cost_impact": {
+                    "none": 0,
+                    "low": 0,
+                    "medium": 1,
+                    "high": 2
+                  },
+                  "by_security_impact": {
+                    "none": 0,
+                    "low": 3,
+                    "medium": 0,
+                    "high": 0
+                  },
+                  "cards_with_migration_recommendation": 2
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "capability": {
+                        "type": "string",
+                        "enum": [
+                          "pricing",
+                          "model",
+                          "safety",
+                          "framework",
+                          "infrastructure",
+                          "tooling",
+                          "policy",
+                          "ecosystem"
+                        ]
+                      },
+                      "urgency": {
+                        "type": "string",
+                        "enum": [
+                          "immediate",
+                          "this_week",
+                          "fyi"
+                        ]
+                      },
+                      "min_cost_impact": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "low",
+                          "medium",
+                          "high"
+                        ]
+                      },
+                      "min_security_impact": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "low",
+                          "medium",
+                          "high"
+                        ]
+                      },
+                      "query": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against article_title and article_source."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "resource": "https://tensorfeed.ai/api/premium/status/incidents/triage",
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-24T00:00:00Z",
+      "metadata": {
+        "name": "Status incident triage (Haiku-derived)",
+        "description": "AI provider incident triage. For each open or recently-resolved incident across Anthropic, OpenAI, Google, Mistral, Cohere, etc., Haiku 4.5 produces a structured triage card. Per card: triage_summary (1-2 sentences), impact_classification (informational / minor / major / critical), affected_capabilities (inference / training / embeddings / console / billing / fine-tuning / api-keys / tooling), recommended_action (no_action / monitor / retry_later / failover_now / escalate). Filters: provider substring, impact + recommended_action + capability exact-match, ongoing_only.",
+        "tier": 1,
+        "credits": 1,
+        "category": "status-incident-triage"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "provider": "OpenAI",
+                "ongoing_only": true,
+                "impact": "major"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-24T18:15:00Z",
+                "snapshot_captured_at": "2026-05-24T18:15:00Z",
+                "source": "tensorfeed.ai status incidents + Claude Haiku 4.5",
+                "filter": {
+                  "provider": "OpenAI",
+                  "impact": "major",
+                  "recommended_action": null,
+                  "capability": null,
+                  "ongoing_only": true
+                },
+                "cohort": {
+                  "incidents_considered": 14,
+                  "cards_in_snapshot": 12,
+                  "cards_filtered": 1,
+                  "ongoing_in_filtered": 1
+                },
+                "cards": [
+                  {
+                    "incident_id": "openai-2026-05-24-001",
+                    "provider": "openai",
+                    "service": "API",
+                    "title": "Elevated latency for ChatGPT and GPT-4 Turbo",
+                    "severity": "major",
+                    "started_at": "2026-05-24T17:42:00Z",
+                    "resolved_at": null,
+                    "ongoing": true,
+                    "triage_summary": "OpenAI API experiencing 5% elevated latency for ChatGPT and GPT-4 Turbo; Assistants API and Files unaffected.",
+                    "impact_classification": "major",
+                    "affected_capabilities": [
+                      "inference"
+                    ],
+                    "recommended_action": "retry_later",
+                    "generated_at": "2026-05-24T18:15:00Z"
+                  }
+                ],
+                "summary": {
+                  "by_provider": {
+                    "openai": 1
+                  },
+                  "by_impact": {
+                    "informational": 0,
+                    "minor": 0,
+                    "major": 1,
+                    "critical": 0
+                  },
+                  "by_recommended_action": {
+                    "no_action": 0,
+                    "monitor": 0,
+                    "retry_later": 1,
+                    "failover_now": 0,
+                    "escalate": 0
+                  },
+                  "by_capability": {
+                    "inference": 1,
+                    "training": 0,
+                    "embeddings": 0,
+                    "console": 0,
+                    "billing": 0,
+                    "fine-tuning": 0,
+                    "api-keys": 0,
+                    "tooling": 0
+                  },
+                  "cards_with_failover_action": 0
+                },
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "provider": {
+                        "type": "string",
+                        "description": "Case-insensitive substring match against provider name."
+                      },
+                      "impact": {
+                        "type": "string",
+                        "enum": [
+                          "informational",
+                          "minor",
+                          "major",
+                          "critical"
+                        ]
+                      },
+                      "recommended_action": {
+                        "type": "string",
+                        "enum": [
+                          "no_action",
+                          "monitor",
+                          "retry_later",
+                          "failover_now",
+                          "escalate"
+                        ]
+                      },
+                      "capability": {
+                        "type": "string",
+                        "enum": [
+                          "inference",
+                          "training",
+                          "embeddings",
+                          "console",
+                          "billing",
+                          "fine-tuning",
+                          "api-keys",
+                          "tooling"
+                        ]
+                      },
+                      "ongoing_only": {
+                        "type": "boolean",
+                        "description": "When true, exclude resolved incidents. Default false."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
         }
       }
     }
@@ -816,5 +4857,5 @@
       "manifest": "https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
     }
   ],
-  "lastUpdated": "2026-05-16T00:00:00Z"
+  "lastUpdated": "2026-05-24T00:00:00Z"
 }
