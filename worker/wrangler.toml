@@ -162,6 +162,16 @@ crons = [
   # premium series endpoint. Slot picked between nflverse (06:00) and
   # the morning UTC quiet zone.
   "30 6 * * *",
+  # Daily 03:00 UTC: refresh the AVID (AI Vulnerability Database) snapshot
+  # from github.com/avidml/avid-db (MIT, no auth). Lists the current-year
+  # reports/ dir via the GitHub Contents API, parallel-fetches the 50 most-
+  # recent JSON files from raw.githubusercontent.com, normalizes, writes
+  # avid:current + avid:daily:{date} + bump avid:index. Uses GITHUB_TOKEN
+  # when present for the higher rate limit. Powers free
+  # /api/ai-safety/incidents/avid and premium
+  # /api/premium/ai-safety/incidents/exposure (1 credit, derived vendor +
+  # risk-domain rollups with recency-weighted exposure scoring).
+  "0 3 * * *",
   # Daily 03:30 UTC: refresh weekly download counts for the curated AI/ML
   # npm package list via the documented public api.npmjs.org/downloads
   # endpoint. Powers /api/packages/npm/ai-trending.

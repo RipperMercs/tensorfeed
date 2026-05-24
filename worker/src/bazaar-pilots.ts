@@ -1212,6 +1212,107 @@ const INFERENCE_ARBITRAGE_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/ai-safety/incidents/exposure — Wave 5 pilot (2026-05-24).
+ * Vendor exposure rollups over the daily-refreshed AVID snapshot.
+ * Per-developer + per-deployer incident counts with recency-weighted
+ * exposure_score, risk_domain + sep_view distributions, top affected
+ * artifacts. Premium-shaped because the rollup + recency weighting
+ * happen server-side; free /api/ai-safety/incidents/avid serves the
+ * raw snapshot only.
+ */
+const AI_SAFETY_EXPOSURE_PILOT: BazaarPilotConfig = {
+  description:
+    'AI safety incident exposure analytics. Per-developer and per-deployer incident counts with recency-weighted exposure_score (1.0 last 30d, 0.5 days 31-90, 0.25 older), risk_domain and SEP-view (Security/Ethics/Performance) distributions, top affected artifacts. Derived over the AVID (avidml/avid-db, MIT) snapshot refreshed daily. The "which AI vendors have the most recent reported safety incidents" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { vendor: 'OpenAI', risk_domain: 'Security', within_days: 90 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-24T12:00:00Z',
+            snapshot_captured_at: '2026-05-24T03:00:00Z',
+            source: 'avidml/avid-db',
+            source_license: 'MIT',
+            filter: { vendor: 'OpenAI', risk_domain: 'Security', within_days: 90 },
+            window: { window_days: 90, cutoff_date: '2026-02-23' },
+            entries_count: 12,
+            developers: [
+              {
+                vendor: 'OpenAI',
+                role: 'developer',
+                incident_count: 8,
+                recent_count_30d: 2,
+                exposure_score: 5.5,
+                risk_domains: ['Ethics', 'Security'],
+                latest_report_id: 'AVID-2026-R0481',
+                latest_reported_date: '2026-05-18',
+              },
+            ],
+            deployers: [],
+            risk_domains: [
+              { risk_domain: 'Security', incident_count: 8, recent_count_30d: 2 },
+            ],
+            sep_view: [
+              { sep_view: 'S0403: Adversarial Example', incident_count: 4 },
+            ],
+            top_artifacts: [
+              { name: 'gpt-4o', type: 'Model', incident_count: 3, developers: ['OpenAI'] },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  vendor: {
+                    type: 'string',
+                    description: 'Case-insensitive substring match against developer + deployer + artifact name.',
+                  },
+                  risk_domain: {
+                    type: 'string',
+                    description: 'Case-insensitive substring match against AVID risk_domains (Security, Ethics, Performance, ...).',
+                  },
+                  within_days: {
+                    type: 'integer',
+                    minimum: 7,
+                    maximum: 730,
+                    description: 'Restrict to incidents reported in the last N days. Omit for full snapshot.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -1227,6 +1328,9 @@ const INFERENCE_ARBITRAGE_PILOT: BazaarPilotConfig = {
  *
  * Wave 4 (2026-05-24): inference-providers arbitrage. Pure-compute derivation
  * over the hand-curated inference matrix. Total pilot count: 16 -> 17.
+ *
+ * Wave 5 (2026-05-24): ai-safety/incidents/exposure. Derived rollups over
+ * the daily-refreshed AVID snapshot. Total pilot count: 17 -> 18.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -1249,6 +1353,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/model-deprecations/timeline': MODEL_DEPRECATIONS_TIMELINE_PILOT,
   // Wave 4
   '/api/premium/inference-providers/arbitrage': INFERENCE_ARBITRAGE_PILOT,
+  // Wave 5
+  '/api/premium/ai-safety/incidents/exposure': AI_SAFETY_EXPOSURE_PILOT,
 };
 
 /**

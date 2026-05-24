@@ -3781,6 +3781,8 @@ export default {
           inferenceProviders: '/api/inference-providers?family=Meta|DeepSeek|Mistral|Alibaba|Microsoft',
           inferenceProvidersCheapest: '/api/inference-providers/cheapest?model=<id>&sort=blended|input|output|tps_desc',
           premiumInferenceArbitrage: '/api/premium/inference-providers/arbitrage?family=&min_savings_pct= (1 credit, AFTA-signed; cross-provider arbitrage analytics over the inference-providers matrix. Per-model: cheapest_paid, most_expensive_paid, spread_usd, savings_pct, median_paid_blended, fastest_tps, cheapest_with_tps, free_tier_offers. Plus provider_rollup (cheapest_count, top_tps_count, value_score) and top_arbitrage models sorted by savings_pct desc. Default min_savings_pct=20; clamp [0,100].)',
+          aiSafetyIncidentsAvid: '/api/ai-safety/incidents/avid?limit=&developer=&risk_domain= (free, capped at 50; raw normalized AVID snapshot. Source: avidml/avid-db, MIT. Refreshed daily 03:00 UTC.)',
+          premiumAiSafetyIncidentsExposure: '/api/premium/ai-safety/incidents/exposure?vendor=&risk_domain=&within_days= (1 credit, AFTA-signed; exposure rollups over the AVID snapshot. Per-developer + per-deployer incident counts with recency-weighted exposure_score (1.0 last 30d, 0.5 days 31-90, 0.25 older), risk_domain + sep_view distributions, top affected artifacts. Optional substring filters and within_days window [7, 730]. AIID coverage queued via the 100MB weekly R2 snapshot path.)',
           agentsDirectory: '/api/agents/directory',
           agentsOpportunities: '/api/agents/opportunities (free; daily-refreshed scan of new GitHub repos that represent submission/distribution opportunities for TF: anthropics/openai/microsoft/modelcontextprotocol orgs + MCP/x402/skills keyword sweeps. Scored by signal_weight * recency + log10(stars). 13:30 UTC cron)',
           agentsReputationByWallet: '/api/agents/reputation/{wallet} (free; v0 Agent Reputation Bureau. Returns a ReputationCard with metrics, ranks, trust grade, flags, and operator-claim status. Cards rebuilt daily at 04:50 UTC from TF telemetry. 404 on unknown wallet. Premium time series at /api/premium/agents/reputation/series.)',
@@ -8530,6 +8532,91 @@ export default {
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
 
+    // === AI SAFETY INCIDENTS: AVID (free, cached 600s) ===
+    // /api/ai-safety/incidents/avid?limit=&developer=&risk_domain=
+    // Raw normalized snapshot of recent AVID (AI Vulnerability Database)
+    // reports from avidml/avid-db. Refreshed daily at 03:00 UTC. License:
+    // MIT. AIID coverage is queued; their GraphQL is origin-gated to
+    // browsers and the 100MB weekly R2 snapshot path is a follow-up.
+
+    if (path === '/api/ai-safety/incidents/avid') {
+      const { getAvidSnapshot } = await import('./avid-fetcher');
+      const snap = await getAvidSnapshot(env);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'snapshot_not_ready',
+          hint: 'AVID snapshot refreshes daily at 03:00 UTC. After deploy + first cron tick, this endpoint populates within 24 hours.',
+        }, 503, 0);
+      }
+      const limitParam = parseInt(url.searchParams.get('limit') ?? '', 10);
+      const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 25;
+      const developer = url.searchParams.get('developer')?.toLowerCase().trim() || null;
+      const riskDomain = url.searchParams.get('risk_domain')?.toLowerCase().trim() || null;
+
+      let entries = snap.entries;
+      if (developer) {
+        entries = entries.filter((e) => e.developers.some((d) => d.toLowerCase().includes(developer)));
+      }
+      if (riskDomain) {
+        entries = entries.filter((e) => e.risk_domains.some((r) => r.toLowerCase().includes(riskDomain)));
+      }
+      entries = entries.slice(0, limit);
+
+      return jsonResponse({
+        ok: true,
+        source: snap.source,
+        source_license: snap.source_license,
+        capturedAt: snap.capturedAt,
+        total_in_snapshot: snap.entries_count,
+        returned_count: entries.length,
+        entries,
+        attribution: {
+          source: 'AVID (AI Vulnerability Database) - github.com/avidml/avid-db',
+          license: 'MIT. Redistribution permitted with attribution.',
+          notes: 'TensorFeed mirrors the ~50 most-recent reports. Derived per-vendor and per-risk-domain exposure on /api/premium/ai-safety/incidents/exposure.',
+        },
+      }, 200, 600);
+    }
+
+    // === PAID PREMIUM: AI SAFETY INCIDENTS EXPOSURE (Tier 1, 1 credit) ===
+    // /api/premium/ai-safety/incidents/exposure?vendor=&risk_domain=&within_days=
+    // Derived exposure rollups over the AVID snapshot: per-developer +
+    // per-deployer incident counts with recency-weighted exposure_score
+    // (1.0 last 30d, 0.5 days 31-90, 0.25 older), risk_domain + sep_view
+    // distributions, top affected artifacts (model names). Optional
+    // vendor + risk_domain substring filters and within_days window
+    // (clamp [7, 730]).
+
+    if (path === '/api/premium/ai-safety/incidents/exposure') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getAvidSnapshot } = await import('./avid-fetcher');
+      const snap = await getAvidSnapshot(env);
+      if (!snap) {
+        return await premiumValidationFailure(
+          {
+            error: 'snapshot_not_ready',
+            hint: 'AVID snapshot refreshes daily at 03:00 UTC. Retry after the next cron tick.',
+          },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      const { buildExposure, parseVendor, parseRiskDomain, parseWithinDays } = await import('./premium-ai-incidents-exposure');
+      const result = buildExposure(snap, {
+        vendor: parseVendor(url.searchParams.get('vendor')),
+        risk_domain: parseRiskDomain(url.searchParams.get('risk_domain')),
+        within_days: parseWithinDays(url.searchParams.get('within_days')),
+      }, new Date());
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-safety/incidents/exposure', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: INFERENCE-PROVIDER ARBITRAGE (Tier 1, 1 credit) ===
     // /api/premium/inference-providers/arbitrage?family=&min_savings_pct=
     // Derived-metrics arbitrage view over the curated inference-providers
@@ -10228,6 +10315,14 @@ export default {
       // /api/security/kev/added/{date}, /api/security/kev/dates, and
       // premium /api/premium/security/kev/full + /series.
       await run('captureKEV', () => captureKEV(env));
+    } else if (cron === '0 3 * * *') {
+      // Daily 03:00 UTC: refresh the AVID snapshot from avidml/avid-db.
+      // Pulls the 50 most-recent reports from the current-year directory,
+      // normalizes, writes avid:current + avid:daily:{date} + bump
+      // avid:index. Powers free /api/ai-safety/incidents/avid and premium
+      // /api/premium/ai-safety/incidents/exposure.
+      const { refreshAvidSnapshot } = await import('./avid-fetcher');
+      await run('refreshAvidSnapshot', () => refreshAvidSnapshot(env));
     } else if (cron === '30 3 * * *') {
       // Daily 03:30 UTC: refresh weekly download counts for the
       // curated AI/ML npm package list. One bulk call to api.npmjs.org

@@ -120,6 +120,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // scores per provider, top arbitrage opportunities. Same anonymous-
   // crawler hygiene rationale as Wave 3.
   '/api/premium/inference-providers/arbitrage',
+  // Wave 5 Bazaar pilot (2026-05-24). AI safety incidents exposure: per-
+  // vendor exposure rollups over the daily-refreshed AVID snapshot.
+  // Same anonymous-crawler hygiene rationale as previous waves.
+  '/api/premium/ai-safety/incidents/exposure',
 ];
 
 /**

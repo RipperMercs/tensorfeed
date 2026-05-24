@@ -138,6 +138,12 @@ describe('isStrictPremiumPath', () => {
     });
   });
 
+  describe('Wave 5 Bazaar pilot (2026-05-24)', () => {
+    it('matches /api/premium/ai-safety/incidents/exposure', () => {
+      expect(isStrictPremiumPath('/api/premium/ai-safety/incidents/exposure')).toBe(true);
+    });
+  });
+
   describe('non-strict premium paths (still on the trial layer)', () => {
     it('does NOT match /api/premium/news/search', () => {
       expect(isStrictPremiumPath('/api/premium/news/search')).toBe(false);
@@ -191,11 +197,11 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 35 exact paths', () => {
-      // 24 pre-Wave-2 + 9 Wave 2 + 1 Wave 3 + 1 Wave 4 Bazaar pilot promotion.
+    it('exposes all 36 exact paths', () => {
+      // 24 pre-Wave-2 + 9 Wave 2 + 1 Wave 3 + 1 Wave 4 + 1 Wave 5 Bazaar pilot.
       // funding/exposure + packages/pypi/momentum were already strict.
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(35);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(35); // no duplicates
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(36);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(36); // no duplicates
     });
     it('exposes 1 prefix path', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(1);
