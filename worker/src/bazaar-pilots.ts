@@ -1693,6 +1693,97 @@ const AI_CRYPTO_PULSE_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/coding-harnesses/weekly-deltas — Wave 10 pilot (2026-05-24).
+ * Third AFTA federation cross-call. Compares two daily TerminalFeed
+ * harness snapshots to surface score + rank deltas, entered/exited
+ * combinations, biggest movers, and per-benchmark leader churn.
+ */
+const HARNESS_DELTAS_PILOT: BazaarPilotConfig = {
+  description:
+    'Agentic-coding harness weekly deltas. Compares current TerminalFeed harness leaderboard snapshot (SWE-bench Verified, Terminal-Bench, Aider Polyglot, etc) to a prior snapshot. Per-(benchmark, harness, model) score + rank deltas with change_kind classification (gained / regressed / entered / exited / unchanged). Notable movers (biggest_gainers, biggest_regressions, entered, exited), per-benchmark leader_cards with leader_changed flag, summary rollups. Filters: days_back (1-90, default 7), harness, benchmark, model, min_abs_delta.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { days_back: 7, harness: 'Claude Code', benchmark: 'swe-bench-verified', min_abs_delta: 1 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-24T18:00:00Z',
+            current_captured_at: '2026-05-24T05:25:00Z',
+            prior_captured_at: '2026-05-17T05:25:00Z',
+            days_between_snapshots: 7,
+            source: 'terminalfeed.io federation cross-call',
+            filter: { days_back: 7, harness: 'Claude Code', benchmark: 'swe-bench-verified', model: null, min_abs_delta: 1 },
+            cohort: { rows_total: 84, rows_filtered: 6, benchmarks_in_window: 4 },
+            rows: [
+              {
+                benchmark: 'swe-bench-verified',
+                harness: 'Claude Code',
+                model: 'Claude Opus 4.7',
+                current_score: 74.2,
+                prior_score: 72.1,
+                delta: 2.1,
+                current_rank: 1,
+                prior_rank: 1,
+                rank_delta: 0,
+                change_kind: 'gained',
+              },
+            ],
+            notable_movers: { biggest_gainers: [], biggest_regressions: [], entered: [], exited: [] },
+            leader_cards: [
+              {
+                benchmark: 'swe-bench-verified',
+                current_leader: { harness: 'Claude Code', model: 'Claude Opus 4.7', score: 74.2 },
+                prior_leader: { harness: 'Claude Code', model: 'Claude Opus 4.7', score: 72.1 },
+                leader_changed: false,
+              },
+            ],
+            summary: { by_change_kind: { unchanged: 0, gained: 6, regressed: 0, entered: 0, exited: 0 }, benchmarks_with_new_leader: 0 },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  days_back: { type: 'integer', minimum: 1, maximum: 90, description: 'Days back to fetch the comparison snapshot. Default 7.' },
+                  harness: { type: 'string', description: 'Case-insensitive substring match against harness name.' },
+                  benchmark: { type: 'string', description: 'Case-insensitive substring match against benchmark id.' },
+                  model: { type: 'string', description: 'Case-insensitive substring match against model name.' },
+                  min_abs_delta: { type: 'number', minimum: 0, maximum: 100, description: 'Minimum |score delta| for the headline rows array. Default 0; entered/exited rows always included.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -1727,6 +1818,10 @@ const AI_CRYPTO_PULSE_PILOT: BazaarPilotConfig = {
  * TF joins TerminalFeed's crypto-movers + funding-rates for the
  * AI-thesis token cohort with squeeze/chase classification. Total
  * pilot count: 21 -> 22.
+ *
+ * Wave 10 (2026-05-24): coding-harnesses/weekly-deltas. Third federation
+ * cross-call. Daily-snapshotted TerminalFeed harness leaderboard with
+ * delta computation against a prior snapshot. Total pilot count: 22 -> 23.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -1759,6 +1854,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/ai-velocity': AI_VELOCITY_PILOT,
   // Wave 9
   '/api/premium/ai-crypto-pulse': AI_CRYPTO_PULSE_PILOT,
+  // Wave 10
+  '/api/premium/coding-harnesses/weekly-deltas': HARNESS_DELTAS_PILOT,
 };
 
 /**

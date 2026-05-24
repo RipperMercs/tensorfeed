@@ -3786,6 +3786,9 @@ export default {
           packagesReleases: '/api/packages/releases?ecosystem=&category=&package=&within_days= (free; latest version + last 10 release timestamps for every curated AI/ML PyPI + npm package. Sourced from pypi.org + registry.npmjs.org public JSON. Refreshed every 6h.)',
           aiVelocity: '/api/ai-velocity?limit= (free, capped at 30; first AFTA federation cross-call. Filters TerminalFeed.io HF + GitHub trending leaderboards to AI-relevant entries.)',
           aiCryptoPulse: '/api/ai-crypto-pulse (free; second AFTA federation cross-call. Pulls TerminalFeed crypto-movers + funding-rates, filters to AI-thesis token cohort (TAO, FET, RNDR, AKT, WLD, ARKM, IO, OCEAN, GRT, VIRTUAL, AI16Z, NMR, AGIX, TURBO).)',
+          codingHarnessesLatest: '/api/coding-harnesses/latest (free; third AFTA federation cross-call. Latest snapshot of TerminalFeed coding-harness leaderboard (SWE-bench Verified, Terminal-Bench, Aider Polyglot, etc). Refreshed daily 05:25 UTC.)',
+          codingHarnessesDates: '/api/coding-harnesses/dates (free; ordered date index of captured TerminalFeed harness snapshots for delta queries.)',
+          premiumCodingHarnessesWeeklyDeltas: '/api/premium/coding-harnesses/weekly-deltas?days_back=&harness=&benchmark=&model=&min_abs_delta= (1 credit, AFTA-signed; compares current TerminalFeed harness snapshot to a prior snapshot (default 7d back, clamp [1, 90]). Per-(benchmark, harness, model) score + rank deltas, biggest_gainers, biggest_regressions, entered/exited combinations, per-benchmark leader_cards with leader_changed flag.)',
           premiumAiCryptoPulse: '/api/premium/ai-crypto-pulse?token=&setup=&min_abs_change_pct= (1 credit, AFTA-signed; joins AI-token price moves with venue-weighted funding-rate skew. Per-token setup classification: squeeze_up / chase_up / squeeze_down / chase_down / coiled / neutral. Notable movers (squeezes_up, squeezes_down, coiled, top_gainers, top_losers), summary (by_setup, breadth_pct_positive, median_change_24h_pct).)',
           premiumAiVelocity: '/api/premium/ai-velocity?pipeline=&language=&min_traction=&cross_only= (1 credit, AFTA-signed; AI-velocity ranking + cross-pollination over the TerminalFeed-sourced HF + GitHub trending snapshot. Per-entry traction_score (HF: likes*3 + log10(downloads+1)*10; GH: log10(stars+1)*30), on_both flag, cross_pollinated array of normalized-name matches, summary rollups hf_by_pipeline + github_by_language.)',
           premiumPackagesReleasesVelocity: '/api/premium/packages/releases/velocity?ecosystem=&category=&package=&min_releases_7d= (1 credit, AFTA-signed; per-package release velocity (releases_24h/7d/30d), latest bump_kind (major/minor/patch/prerelease/sideways/unknown), is_breaking_recent flag (major bump within 30d). Notable movers: recent_major_bumps, most_releases_7d, fastest_cadence_30d. Pre-1.0 minor bumps count as major per semver convention.)',
@@ -8540,6 +8543,105 @@ export default {
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
 
+    // === CODING HARNESSES LATEST (free, cached 600s) ===
+    // /api/coding-harnesses/latest
+    // Third AFTA federation cross-call. Returns the most recent snapshot
+    // of TerminalFeed's coding-harness leaderboard (SWE-bench Verified,
+    // Terminal-Bench, Aider Polyglot, SWE-Lancer, etc). Refreshed daily
+    // at 05:25 UTC. Premium derivative at
+    // /api/premium/coding-harnesses/weekly-deltas computes deltas vs a
+    // prior-week snapshot.
+
+    if (path === '/api/coding-harnesses/latest') {
+      const { getHarnessSnapshot } = await import('./terminalfeed-harnesses-fetcher');
+      const snap = await getHarnessSnapshot(env);
+      if (!snap) {
+        return jsonResponse({
+          ok: false,
+          error: 'snapshot_not_ready',
+          hint: 'Coding-harness snapshot refreshes daily at 05:25 UTC. After deploy + first cron tick, this endpoint populates within 24 hours.',
+        }, 503, 0);
+      }
+      return jsonResponse({
+        ok: true,
+        source: snap.source,
+        capturedAt: snap.capturedAt,
+        upstream_generated_at: snap.upstream_generated_at,
+        benchmark_count: snap.benchmark_count,
+        total_results: snap.total_results,
+        benchmarks: snap.benchmarks,
+        attribution: {
+          source: 'TerminalFeed.io (AFTA federation sister site). Upstream: agentic-coding harness benchmark publishers via per-result source_url.',
+          license: 'Federation cross-call to TerminalFeed free endpoint. Underlying benchmark scores carry their own per-source terms.',
+          notes: 'Premium derivative at /api/premium/coding-harnesses/weekly-deltas computes score and rank deltas vs a prior-week snapshot.',
+        },
+      }, 200, 600);
+    }
+
+    // === CODING HARNESSES DATES INDEX (free, cached 600s) ===
+    // /api/coding-harnesses/dates returns the ordered list of dates with
+    // a captured TerminalFeed snapshot. Useful for an agent that wants
+    // to know what historical points are available for delta queries.
+
+    if (path === '/api/coding-harnesses/dates') {
+      const { getHarnessDatesIndex } = await import('./terminalfeed-harnesses-fetcher');
+      const dates = await getHarnessDatesIndex(env);
+      return jsonResponse({
+        ok: true,
+        source: 'tensorfeed.ai (snapshot index)',
+        count: dates.length,
+        dates,
+      }, 200, 600);
+    }
+
+    // === PAID PREMIUM: CODING HARNESSES WEEKLY DELTAS (Tier 1, 1 credit) ===
+    // /api/premium/coding-harnesses/weekly-deltas?days_back=&harness=&benchmark=&model=&min_abs_delta=
+    // Compares the current TerminalFeed harness snapshot to a prior
+    // snapshot (default 7 days back, clamp [1, 90]). Returns delta rows
+    // per (benchmark, harness, model), notable_movers (biggest_gainers,
+    // biggest_regressions, entered, exited), per-benchmark leader cards
+    // (canonical "who's #1 now vs then"), and summary rollups.
+
+    if (path === '/api/premium/coding-harnesses/weekly-deltas') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getHarnessSnapshot, findPriorSnapshot } = await import('./terminalfeed-harnesses-fetcher');
+      const current = await getHarnessSnapshot(env);
+      if (!current) {
+        return await premiumValidationFailure(
+          { error: 'snapshot_not_ready', hint: 'Coding-harness snapshot refreshes daily at 05:25 UTC. Retry after the next cron tick.' },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      const { buildDeltasResponse, parseDaysBack, parseHarness, parseBenchmark, parseModelFilter, parseMinAbsDelta } = await import('./premium-harness-deltas');
+      const days_back = parseDaysBack(url.searchParams.get('days_back'));
+      const prior = await findPriorSnapshot(env, current, days_back);
+      if (!prior) {
+        return await premiumValidationFailure(
+          {
+            error: 'no_prior_snapshot',
+            hint: `No snapshot found at-or-before ${days_back} days back. The index needs to accumulate before deltas can be computed (~${days_back} days after first deploy).`,
+          },
+          payment, request, env, 'upstream_failure',
+        );
+      }
+
+      const result = buildDeltasResponse(current, prior, {
+        days_back,
+        harness: parseHarness(url.searchParams.get('harness')),
+        benchmark: parseBenchmark(url.searchParams.get('benchmark')),
+        model: parseModelFilter(url.searchParams.get('model')),
+        min_abs_delta: parseMinAbsDelta(url.searchParams.get('min_abs_delta')),
+      });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/coding-harnesses/weekly-deltas', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === AI CRYPTO PULSE (free, cached 300s) ===
     // /api/ai-crypto-pulse
     // Second AFTA federation cross-call: TF pulls TerminalFeed's
@@ -10639,6 +10741,11 @@ export default {
       // /api/security/kev/added/{date}, /api/security/kev/dates, and
       // premium /api/premium/security/kev/full + /series.
       await run('captureKEV', () => captureKEV(env));
+    } else if (cron === '25 5 * * *') {
+      // Daily 05:25 UTC: snapshot TerminalFeed's coding-harness leaderboard
+      // to KV for weekly-delta computation. Federation cross-call.
+      const { refreshHarnessSnapshot } = await import('./terminalfeed-harnesses-fetcher');
+      await run('refreshHarnessSnapshot', () => refreshHarnessSnapshot(env));
     } else if (cron === '35 */6 * * *') {
       // Every 6h at :35 UTC: refresh the AI-package release-velocity snapshot.
       // Polls PyPI + npm JSON for every curated AI package, captures latest

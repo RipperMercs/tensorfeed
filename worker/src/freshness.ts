@@ -102,6 +102,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // every 5 min on cold cache. 30-min SLA caps billable staleness so the
   // backup-TTL last-known-good doesn't burn agent credits during outages.
   '/api/premium/ai-crypto-pulse': { maxAgeSeconds: 30 * 60 },
+  // Coding-harness weekly deltas: derived over daily-snapshotted TerminalFeed
+  // harness leaderboard. 36h SLA = daily cron cadence + headroom for one
+  // missed run.
+  '/api/premium/coding-harnesses/weekly-deltas': { maxAgeSeconds: 36 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

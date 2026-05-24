@@ -140,6 +140,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // cross-call. Joins TerminalFeed crypto-movers + funding-rates for the
   // AI-thesis token cohort. Setup classification + squeeze/chase signal.
   '/api/premium/ai-crypto-pulse',
+  // Wave 10 Bazaar pilot (2026-05-24). Coding-harness weekly deltas:
+  // third federation cross-call. Compares daily TerminalFeed harness
+  // snapshots to surface score+rank deltas, entered/exited, leader churn.
+  '/api/premium/coding-harnesses/weekly-deltas',
 ];
 
 /**

@@ -162,6 +162,13 @@ crons = [
   # premium series endpoint. Slot picked between nflverse (06:00) and
   # the morning UTC quiet zone.
   "30 6 * * *",
+  # Daily 05:25 UTC: snapshot TerminalFeed's coding-harness leaderboard
+  # for weekly-delta computation (third AFTA federation cross-call).
+  # Stores tf-harnesses:current + tf-harnesses:daily:{date}, bumps
+  # tf-harnesses:index. Powers free /api/coding-harnesses/latest +
+  # premium /api/premium/coding-harnesses/weekly-deltas (1 credit).
+  # Slot picked between BLS (0 5) and FRED (30 5) in the quiet zone.
+  "25 5 * * *",
   # Every 6 hours at :35 (00:35, 06:35, 12:35, 18:35): refresh the
   # AI-package release-velocity snapshot. Walks the curated PyPI + npm
   # AI lists, hits each registry's public JSON endpoint, harvests latest

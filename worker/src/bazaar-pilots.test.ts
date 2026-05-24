@@ -52,6 +52,8 @@ const PILOT_PATHS = [
   '/api/premium/ai-velocity',
   // Wave 9
   '/api/premium/ai-crypto-pulse',
+  // Wave 10
+  '/api/premium/coding-harnesses/weekly-deltas',
 ] as const;
 
 // Premium paths that are intentionally NOT in BAZAAR_PILOTS. Used for
@@ -294,6 +296,8 @@ describe('Wave 2 pilot AJV validation', () => {
     '/api/premium/ai-velocity',
     // Wave 9 (2026-05-24)
     '/api/premium/ai-crypto-pulse',
+    // Wave 10 (2026-05-24)
+    '/api/premium/coding-harnesses/weekly-deltas',
   ];
 
   for (const path of wave2Paths) {
