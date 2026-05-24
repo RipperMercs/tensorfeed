@@ -27,10 +27,7 @@ interface GearCardProps {
 export default function GearCard({ product }: GearCardProps) {
   const category = getCategoryMeta(product.category);
   const link = getProductLink(product);
-  const hasRealImage =
-    product.image &&
-    !product.image.startsWith('/gear/') &&
-    !product.image.includes('placeholder');
+  const hasRealImage = Boolean(product.image && product.image.length > 0);
   const isAffiliate = product.affiliate && product.amazonAsin;
   const rel = isAffiliate
     ? 'sponsored nofollow noopener'

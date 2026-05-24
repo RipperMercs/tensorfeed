@@ -474,6 +474,7 @@ import { getActivitySnapshot } from './mcp-activity';
 import { handleAftaBadge } from './afta-badge';
 import { runX402StatusCheck, getStatusSnapshot } from './x402-status';
 import { sanitizeArticleForAgents } from './sanitize';
+import gearCatalog from '../../data/gear.json';
 
 /**
  * CORS posture for the public API.
@@ -1475,6 +1476,85 @@ export default {
         count: sanitized.length,
         articles: sanitized,
         sanitization: 'enabled',
+      });
+    }
+
+    // === Gear catalog (agent-readable view of /gear) ===
+    // Companion data feed to https://tensorfeed.ai/gear (the human page).
+    // Affiliate plumbing (amazonAsin, affiliate, vendorUrl-tag-rewrite) is
+    // stripped so agents see a clean vendor URL and never get routed
+    // through a commissioned link.
+    if (path === '/api/gear' || path === '/api/agents/gear' || path === '/api/agents/gear.json') {
+      type GearProductRecord = {
+        id: string;
+        name: string;
+        manufacturer: string;
+        category: string;
+        blurb: string;
+        description: string;
+        specs: string[];
+        aiUseCase: string;
+        priceRange: string;
+        affiliate: boolean;
+        amazonAsin?: string;
+        vendorUrl?: string;
+        tags: string[];
+        badges?: string[];
+        added: string;
+        updated: string;
+      };
+      type GearCatalog = { lastReviewed: string; products: GearProductRecord[] };
+      const catalog = gearCatalog as GearCatalog;
+      const categoryFilter = url.searchParams.get('category');
+
+      let products = catalog.products;
+      if (categoryFilter) {
+        products = products.filter(p => p.category === categoryFilter);
+      }
+
+      const agentProducts = products.map(p => {
+        const vendorUrl =
+          p.vendorUrl && p.vendorUrl.length > 0
+            ? p.vendorUrl
+            : p.amazonAsin
+              ? `https://www.amazon.com/dp/${p.amazonAsin}`
+              : '';
+        return {
+          id: p.id,
+          name: p.name,
+          manufacturer: p.manufacturer,
+          category: p.category,
+          blurb: p.blurb,
+          description: p.description,
+          specs: p.specs,
+          aiUseCase: p.aiUseCase,
+          priceRange: p.priceRange,
+          vendorUrl,
+          tags: p.tags,
+          badges: p.badges ?? [],
+          added: p.added,
+          updated: p.updated,
+        };
+      });
+
+      const counts: Record<string, number> = {};
+      for (const p of catalog.products) {
+        counts[p.category] = (counts[p.category] ?? 0) + 1;
+      }
+
+      return jsonResponse({
+        ok: true,
+        name: 'TensorFeed AI Gear',
+        description:
+          'Curated, human-reviewed catalog of AI-relevant consumer hardware. Companion to https://tensorfeed.ai/gear with affiliate plumbing stripped.',
+        canonical: 'https://tensorfeed.ai/gear',
+        license: 'CC-BY-4.0',
+        attribution: 'TensorFeed.ai',
+        lastReviewed: catalog.lastReviewed,
+        updated: new Date().toISOString(),
+        count: agentProducts.length,
+        counts,
+        products: agentProducts,
       });
     }
 

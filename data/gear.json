@@ -6,7 +6,7 @@
       "name": "Lenovo Legion Pro 7i Gen 10 (16-inch, RTX 5090)",
       "manufacturer": "Lenovo",
       "category": "laptops",
-      "image": "/gear/lenovo-legion-pro-7i-gen-10.jpg",
+      "image": "",
       "blurb": "A 24GB VRAM RTX 5090 laptop that runs 30B parameter models locally in 4-bit without choking, and trains LoRA adapters on consumer datasets overnight.",
       "description": "Lenovo's flagship gaming and AI workstation pairs Intel's 24-core Core Ultra 9 275HX with a mobile RTX 5090 (24GB GDDR7, 175W TGP), a combo that punches well above most desktop tower CPUs. The 16-inch 2.5K OLED runs at 240Hz, which matters less for AI than the thermals: Lenovo's Coldfront cooling sustains the GPU at full power for long inference sessions.",
       "specs": [
@@ -32,7 +32,7 @@
       "name": "ASUS ROG Strix SCAR 18 (2026) G835",
       "manufacturer": "ASUS",
       "category": "laptops",
-      "image": "/gear/asus-rog-strix-scar-18-2026.jpg",
+      "image": "/gear/asus-rog-strix-scar-18-2026.webp",
       "blurb": "An 18-inch mobile workstation with a 24GB RTX 5090 and up to 128GB of DDR5, which means you can hold a full 70B model in system RAM and stream layers to the GPU for hybrid inference.",
       "description": "The SCAR 18 leans heavier into the AI workstation pitch than any other Strix model. The standout is the 128GB max RAM ceiling and 8TB max storage, both user upgradeable, alongside the world's first 4K 240Hz Mini LED laptop panel. Vapor chamber cooling with liquid metal on both CPU and GPU lets the RTX 5090 hold its 175W TGP under sustained load, which is the actual gating factor on long training jobs.",
       "specs": [
@@ -57,7 +57,7 @@
       "name": "Razer Blade 18 (2026)",
       "manufacturer": "Razer",
       "category": "laptops",
-      "image": "/gear/razer-blade-18-2026.jpg",
+      "image": "",
       "blurb": "Razer's flagship configures up to 128GB DDR5 alongside the 24GB RTX 5090, putting it in the same hybrid-inference tier as the SCAR 18 but in a sleeker CNC aluminum chassis.",
       "description": "The 2026 refresh moves the Blade 18 to Intel's Core Ultra 9 290HX Plus and offers GPUs from RTX 5070 Ti up to RTX 5090 (200W thermal budget). The 18-inch dual-mode display flips between UHD+ at 240Hz and FHD+ at 440Hz. You pay a steep premium over the SCAR for the build quality, the Thunderbolt 5 port, and the slimmest 18-inch chassis on the market.",
       "specs": [
@@ -133,7 +133,7 @@
       "name": "NVIDIA GeForce RTX 5090",
       "manufacturer": "NVIDIA",
       "category": "gpus",
-      "image": "/gear/nvidia-rtx-5090.jpg",
+      "image": "/gear/nvidia-rtx-5090.png",
       "blurb": "32GB of GDDR7 at 1,792 GB/s makes the 5090 the highest VRAM consumer GPU shipping, fitting a full 30B model in fp8 or a quantized 70B with room for context.",
       "description": "The Blackwell flagship pushes 21,760 CUDA cores and 170 SMs against a 575W TDP, delivering roughly 27 to 35 percent faster gaming than the 4090 and a similar lift on AI inference. The 32GB VRAM ceiling is the load-bearing spec for local LLM work: it crosses the 30B-at-fp8 threshold that the 4090 could not. Availability remains tight in May 2026 and street prices are well above the $1,999 MSRP.",
       "specs": [
@@ -159,7 +159,7 @@
       "name": "NVIDIA GeForce RTX 5080",
       "manufacturer": "NVIDIA",
       "category": "gpus",
-      "image": "/gear/nvidia-rtx-5080.jpg",
+      "image": "/gear/nvidia-rtx-5080.png",
       "blurb": "16GB of GDDR7 at 960 GB/s puts the 5080 right at the 13B-fp16 and 30B-4bit sweet spot for builders who want CUDA without the 5090 tax.",
       "description": "The 5080 ships 10,752 CUDA cores against a 360W TDP and pairs them with 16GB of GDDR7 on a 256-bit bus. For AI workloads, the practical ceiling is 13B class models in fp16 or 30B models in 4-bit quantization. It is the better value pick if VRAM is the bottleneck and you do not need to touch 70B class work locally.",
       "specs": [
@@ -211,7 +211,7 @@
       "name": "Meta Ray-Ban Display",
       "manufacturer": "Meta",
       "category": "xr-ar-glasses",
-      "image": "/gear/meta-ray-ban-display.jpg",
+      "image": "/gear/meta-ray-ban-display.png",
       "blurb": "The first mass-market AI glasses with an actual in-lens display, paired with an EMG wristband that reads finger twitches as input, making it the closest thing to a wearable agent UI in 2026.",
       "description": "Meta's Display generation adds a 600 by 600 monocular in-lens screen and the Meta Neural Band, an EMG wristband that picks up muscle signals from subtle finger movements and translates them into commands. The display sits at 42 pixels per degree across a 20-degree FOV with a 5,000 nit ceiling, which is bright enough to read in direct sun. Sold as a $799 bundle including the Neural Band.",
       "specs": [
@@ -287,7 +287,7 @@
       "name": "Brilliant Labs Frame",
       "manufacturer": "Brilliant Labs",
       "category": "xr-ar-glasses",
-      "image": "/gear/brilliant-labs-frame.jpg",
+      "image": "",
       "blurb": "Open source AI glasses with full design files on GitHub, a microOLED, a camera, and Noa, a hackable LLM assistant that turns the frame into a dev kit rather than a finished product.",
       "description": "Brilliant Labs ships the Frame as a near-40g pair of glasses with a microOLED bonded to a prism in the right lens (640 by 400, 500 nits, 20-degree diagonal FOV), a camera over the nose bridge, and a microphone. The Nordic nRF52840 plus a Lattice CrosslinkNX FPGA handle on-device compute. The pitch is that everything is open source, so you can build your own agent on top of the included Noa assistant.",
       "specs": [
@@ -312,7 +312,7 @@
       "name": "Plaud Note Pro",
       "manufacturer": "Plaud",
       "category": "wearables",
-      "image": "/gear/plaud-note-pro.jpg",
+      "image": "/gear/plaud-note-pro.webp",
       "blurb": "A 0.12-inch thin AI voice recorder that lives on the back of your phone and turns every meeting into a searchable, summarized transcript.",
       "description": "The Note Pro is the upgrade to Plaud's original card recorder. It uses four MEMS mics plus a voice processing unit to capture conversations at up to 16 feet, then pipes audio to the Plaud app for transcription in 112 languages with auto speaker labels and template-driven summaries.",
       "specs": [
@@ -363,7 +363,7 @@
       "name": "Friend",
       "manufacturer": "Friend.com",
       "category": "experimental",
-      "image": "/gear/friend-pendant.jpg",
+      "image": "",
       "blurb": "A $129 AI companion necklace that listens around the clock and texts you commentary like a slightly judgmental roommate.",
       "description": "Friend is Avi Schiffmann's controversial pendant, the spiritual continuation of his earlier Tab project. It hangs around your neck on a lanyard, listens continuously to ambient audio, and pushes opinionated AI-generated text messages back to your phone. There is no productivity layer, no summary view, no transcripts. The pitch is parasocial company, and it is divisive on purpose.",
       "specs": [
@@ -388,7 +388,7 @@
       "name": "Unitree Go2",
       "manufacturer": "Unitree Robotics",
       "category": "robotics",
-      "image": "/gear/unitree-go2.jpg",
+      "image": "/gear/unitree-go2.png",
       "blurb": "The most accessible quadruped robot money can buy, with onboard LiDAR and a real SDK path for serious robotics work.",
       "description": "The Go2 lineup runs from a $1,600 Air variant up to $16K+ EDU models that ship with full SDK and ROS 2 access. The Pro sits in the middle at around $2,800 and is the realistic consumer-on-ramp. All variants run Unitree's L2 4D LiDAR with a 360 by 96 degree field of view and reach speeds up to 13 km/h.",
       "specs": [
@@ -438,7 +438,7 @@
       "name": "1X NEO",
       "manufacturer": "1X Technologies",
       "category": "robotics",
-      "image": "/gear/1x-neo.jpg",
+      "image": "/gear/1x-neo.webp",
       "blurb": "A 66-pound household humanoid robot built for the home, now taking preorders with first deliveries to US homes in 2026.",
       "description": "NEO is the first humanoid pitched explicitly at consumer homes, not factories or research labs. It runs on a 3D lattice polymer soft body, has 22 DoF hands, and operates at a refrigerator-quiet 22 dB. First deliveries are slated for US homes in 2026, with international expansion in 2027.",
       "specs": [
@@ -515,7 +515,7 @@
       "name": "Rabbit R1",
       "manufacturer": "Rabbit",
       "category": "audio-voice",
-      "image": "/gear/rabbit-r1.jpg",
+      "image": "/gear/rabbit-r1.webp",
       "blurb": "The original orange AI handheld, still shipping in 2026 with a roadmap that now includes a CLI-flavored cyberdeck successor.",
       "description": "The R1 was the most-mocked AI device of 2024 and somehow outlived nearly all the wearables that ridiculed it. Rabbit raised fresh funding, kept shipping LAM updates, and is now actively developing a follow-up cyberdeck form factor focused on agent workflows and a real command-line surface.",
       "specs": [
@@ -566,7 +566,7 @@
       "name": "Insta360 X5",
       "manufacturer": "Insta360",
       "category": "cameras-vision",
-      "image": "/gear/insta360-x5.jpg",
+      "image": "",
       "blurb": "A 360-degree 8K action cam whose AI app auto-edits highlight reels and runs low-light denoising as a post-capture pipeline.",
       "description": "The X5 captures 8K 360 footage with replaceable lenses, then leans on Insta360's app-side AI to do the heavy lifting: highlight detection, automatic music-synced cuts, low-light reconstruction, and AI-driven reframing of the spherical capture into traditional 16:9 or vertical output.",
       "specs": [
@@ -591,7 +591,7 @@
       "name": "Amazon Echo Show 11",
       "manufacturer": "Amazon",
       "category": "smart-home-ai",
-      "image": "/gear/echo-show-11.jpg",
+      "image": "",
       "blurb": "The first Echo built around Alexa+, with a custom AZ3 Pro chip running on-device language models and vision transformers.",
       "description": "The Echo Show 11 is Amazon's flagship Alexa+ device, built on the AZ3 Pro silicon with native support for language models and vision transformers. The Omnisense sensor platform fuses a 13 MP camera, ultrasound, Wi-Fi radar, accelerometer, and Wi-Fi CSI into a single ambient AI loop. Alexa+ ships out of the box on new orders.",
       "specs": [
@@ -744,7 +744,7 @@
       "name": "Designing Machine Learning Systems by Chip Huyen",
       "manufacturer": "O'Reilly Media",
       "category": "books-learning",
-      "image": "/gear/designing-ml-systems.jpg",
+      "image": "",
       "blurb": "The book that taught a generation of ML engineers how to ship real systems before LLMs reset the conversation.",
       "description": "Chip Huyen's 2022 O'Reilly title remains the canonical reference for the non-LLM ML stack: data pipelines, feature engineering, training and serving infrastructure, monitoring, and the production loop. Translated into more than ten languages and used in Stanford's CS 329S curriculum.",
       "specs": [
@@ -796,7 +796,7 @@
       "name": "Crucial Pro 64GB DDR5-6400 Kit",
       "manufacturer": "Crucial (Micron)",
       "category": "storage-memory",
-      "image": "/gear/crucial-pro-ddr5-64gb.jpg",
+      "image": "/gear/crucial-pro-ddr5-64gb.png",
       "blurb": "A 2x32GB DDR5-6400 kit sized exactly for running 70B-class local models with headroom for the rest of your machine.",
       "description": "Modern local LLM workflows need real RAM, not just VRAM. A 70B model in 4-bit quantization wants 64 GB or more of system memory once you account for context window, KV cache, and the rest of the OS. This Crucial Pro kit is the cheapest path to that target with XMP 3.0 and EXPO overclocking support.",
       "specs": [
@@ -822,7 +822,7 @@
       "name": "WD_BLACK SN850X 4TB",
       "manufacturer": "Western Digital",
       "category": "storage-memory",
-      "image": "/gear/wd-black-sn850x-4tb.jpg",
+      "image": "",
       "blurb": "A 4 TB PCIe Gen4 NVMe SSD with the speed budget to host a full quantized 70B model plus your working datasets.",
       "description": "The SN850X 4TB is the sweet spot for local AI builds. At 7,300 MB/s sequential read it loads model weights fast enough to keep cold-start times reasonable, and 4 TB of capacity holds multiple quantized models, datasets, and embedding stores without the constant juggling of a 1 TB drive.",
       "specs": [
