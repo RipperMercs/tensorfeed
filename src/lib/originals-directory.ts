@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'agent-native-browsers-firefox-fork-runtime-shift',
+    title:
+      'AI Agents Just Got Their Own Web Browser. The Runtime Layer Is Forking Away From Humans.',
+    author: 'Marcus Chen',
+    date: 'May 24, 2026',
+    readTime: '6 min read',
+    description:
+      'A Firefox fork built explicitly for AI agents hit the Hacker News front page on May 24, the latest signal in a category that has been quietly assembling for eighteen months: dedicated browser runtimes for agent traffic, separated from the Chromium and Firefox builds humans use. Browserbase, Browserless, Arsenal, Playwright cloud surfaces, and now a Mozilla-derived agent fork have crossed from research project to deployable infrastructure. Inside what an agent-native browser actually changes, why the Firefox path matters (most agent browsers were Chromium until now), and the second-order consequences for site operators, anti-bot tooling, and the agent identity stack.',
+  },
+  {
     slug: 'chatbot-personality-exploits-prompt-injection-grows-up',
     title:
       "Hackers Are Targeting Chatbot 'Personalities.' The Attack Surface Just Moved Up the Stack.",
