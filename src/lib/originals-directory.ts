@@ -17,6 +17,26 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'chatbot-personality-exploits-prompt-injection-grows-up',
+    title:
+      "Hackers Are Targeting Chatbot 'Personalities.' The Attack Surface Just Moved Up the Stack.",
+    author: 'Kira Nolan',
+    date: 'May 24, 2026',
+    readTime: '5 min read',
+    description:
+      "The Verge published a column on May 24 reporting that hackers are increasingly exploiting the persona layer of consumer chatbots. The technique is not new in alignment research; the mainstream attention is, and it arrives right as consumer assistants gain real action permissions (Plaid hooks, calendar access, agent mode). Inside what persona-based prompt injection actually looks like, why constitutional and RLHF defenses do not catch it by default, what the vendors have shipped versus what they have not, and the three defensive rules an agent operator should be running this week.",
+  },
+  {
+    slug: 'xai-2-8b-gas-turbines-energy-bottleneck',
+    title:
+      "Elon Musk's xAI Just Committed $2.8 Billion to Gas Turbines. The AI Energy Crunch Has a Number Now.",
+    author: 'Marcus Chen',
+    date: 'May 24, 2026',
+    readTime: '6 min read',
+    description:
+      "WIRED reported on May 20 that Elon Musk's xAI is spending $2.8 billion on gas turbines to power its AI data centers, with the Memphis Colossus supercluster as the primary target. The dollar figure puts a hard number on the energy bottleneck the rest of the industry has been describing in adjectives. Inside: why xAI is paying for its own power plant when hyperscalers are still buying from the grid, the Memphis community fight Colossus walked into, what $2.8 billion in turbines actually buys (3.5 to 5 GW, enough for 15 to 30 Colossus-equivalents), and the structural read on what this signals for the AI capex cycle.",
+  },
+  {
     slug: 'openai-erdos-unit-distance-disproof',
     title:
       'OpenAI Just Disproved an 80-Year Erdős Conjecture. The Model Was Not Trained for Math.',
@@ -35,16 +55,6 @@ export const ORIGINALS: OriginalArticle[] = [
     readTime: '7 min read',
     description:
       'OpenAI sent its confidential S-1 to the SEC on Friday May 22 targeting an $852B to $1T Q4 listing with Goldman Sachs and Morgan Stanley leading, while still losing $1.22 for every dollar of revenue in Q1 on $5.7B of quarterly revenue. Six days earlier, Anthropic told investors it expects a $559M operating profit on $10.9B of Q2 revenue (130% growth from Q1), the first profitable quarter in company history, with the compute cost ratio collapsing from 71 cents per $1 to 56 cents in a single quarter. Two trillion-dollar labs, two opposite financial moments in the same week. Inside the side-by-side, why distribution-first burning and unit-economics-first compounding can both be rational bets, what the S-1 actually discloses vs hides until the public roadshow, and what the price-floor implications are for every other API vendor.',
-  },
-  {
-    slug: 'free-tier-on-paid-routes',
-    title:
-      'x402 Has Three Options for Free Trials on Paid Routes. We Shipped a Fourth.',
-    author: 'Ripper',
-    date: 'May 22, 2026',
-    readTime: '7 min read',
-    description:
-      'A thread on x402#2207 enumerated three options for how a paid x402 endpoint can offer a free trial without breaking the spec: a custom alt-challenge header, a probe-with-X-PAYMENT-rejected handshake, or dedicated free endpoints adjacent to every paid one. TensorFeed has been running a fourth in production. The trial lives in the rate-limiter, never at the 402 layer: 100 free calls per IP per 24h on the non-strict-premium subset of /api/premium/*, quota exhausted returns a canonical x402 V2 402, the ~30% strict-premium subset skips the trial so anonymous crawlers always see canonical 402, and X-TF-Free-Trial-* response headers make the pool discoverable to paying agents. x402trace v0.3.2 shipped on May 22 and exercised the pattern in one probe (D.4 per-route, D.5 body-discovery variant, D.3 indexer-state). Inside: the three options, the fourth, the two design decisions that hold it together, and the full v0.3.2 verdict envelope.',
   },
   {
     slug: 'x402-multi-rail-fireblocks-allunity',
