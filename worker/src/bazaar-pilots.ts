@@ -1961,6 +1961,211 @@ const INCIDENT_TRIAGE_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/ai-cves/ai-stack-cves: Wave 13 flagship (2026-05-24).
+ * AI-stack CVE intelligence over DP CC's Qwen-on-5090 security-xsource
+ * extraction pipeline. Filters the latest batch to papers whose
+ * affected_products match the curated AI_STACK_VENDORS list (inference,
+ * agent frameworks, training, vector DB, model gateway, MCP tools).
+ * Each paper carries a tf_ai_category tag. Sort: exploited_in_wild
+ * first, then severity_rank desc, then source_url asc. 99.8% of source
+ * data is CC BY 4.0 licensed (GitHub Security Advisories).
+ */
+const AI_CVES_AI_STACK_PILOT: BazaarPilotConfig = {
+  description:
+    'AI-stack CVE intelligence. Filters fresh security disclosures to vendors and products in the AI inference, agent framework, training, vector DB, model gateway, and MCP tool layers. Each paper carries a tf_ai_category tag and a severity_rank, sorted with exploited-in-wild and critical-severity first. 99.8% of underlying data is from GitHub Security Advisories (CC BY 4.0).',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: {},
+        },
+        output: {
+          type: 'json',
+          example: {
+            batch_id: '20260524-195226',
+            extracted_at: '2026-05-24T19:52:26Z',
+            total: 42,
+            papers: [
+              {
+                cve_ids: ['CVE-2026-44580'],
+                affected_products: ['Next.js'],
+                affected_version_ranges: [],
+                fixed_versions: ['v15.5.16', 'v16.2.5'],
+                exploited_in_wild: 'stated_yes',
+                severity_label: 'high',
+                source_url: 'https://github.com/advisories/GHSA-gx5p-jg67-6x7h',
+                tf_ai_category: 'agent-framework',
+                severity_rank: 3,
+              },
+            ],
+            source_license: 'CC BY 4.0',
+            source_attribution: 'GitHub Advisory Database (github.com/advisories) + vendor advisories',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: { type: 'object', additionalProperties: false },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/ai-cves/exploited-in-wild: Wave 13 (2026-05-24).
+ * Live-threat subset: papers with exploited_in_wild = stated_yes from
+ * the latest AI-flagged batch. Sorted by severity_rank desc then
+ * source_url asc. Same licensing as the flagship.
+ */
+const AI_CVES_EXPLOITED_PILOT: BazaarPilotConfig = {
+  description:
+    'Live-threat CVE feed. Returns only papers with exploited_in_wild = stated_yes from the latest AI-flagged batch, ranked by severity. The subset answers "what AI-stack CVEs are actively being weaponized right now."',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: {},
+        },
+        output: {
+          type: 'json',
+          example: {
+            batch_id: '20260524-195226',
+            extracted_at: '2026-05-24T19:52:26Z',
+            total: 3,
+            papers: [
+              {
+                cve_ids: ['CVE-2026-44580'],
+                affected_products: ['Next.js'],
+                affected_version_ranges: [],
+                fixed_versions: ['v15.5.16', 'v16.2.5'],
+                exploited_in_wild: 'stated_yes',
+                severity_label: 'high',
+                source_url: 'https://github.com/advisories/GHSA-gx5p-jg67-6x7h',
+                severity_rank: 3,
+              },
+            ],
+            source_license: 'CC BY 4.0',
+            source_attribution: 'GitHub Advisory Database (github.com/advisories) + vendor advisories',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: { type: 'object', additionalProperties: false },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/ai-cves/cve?id=CVE-2026-XXXXX: Wave 13 (2026-05-24).
+ * Single-CVE lookup via the persistent index. Param-required, so
+ * strict-premium gating is mandatory.
+ */
+const AI_CVES_CVE_LOOKUP_PILOT: BazaarPilotConfig = {
+  description:
+    'Single CVE lookup against the TensorFeed AI-CVE index. Pass id=CVE-YYYY-XXXXX, get the structured paper (affected products, version ranges, fixed versions, severity, exploitation status, source URL). Index spans the rolling 90-day retention window of TF ai-cves batches.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { id: 'CVE-2026-44580' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            cve_id: 'CVE-2026-44580',
+            found: true,
+            batch_id: '20260524-195226',
+            paper: {
+              cve_ids: ['CVE-2026-44580'],
+              affected_products: ['Next.js'],
+              affected_version_ranges: [],
+              fixed_versions: ['v15.5.16', 'v16.2.5'],
+              exploited_in_wild: 'unstated',
+              severity_label: 'high',
+              source_url: 'https://github.com/advisories/GHSA-gx5p-jg67-6x7h',
+            },
+            source_license: 'CC BY 4.0',
+            source_attribution: 'GitHub Advisory Database (github.com/advisories) + vendor advisories',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string', description: 'CVE id in canonical CVE-YYYY-NNNNN form. Case-insensitive.' },
+                },
+                required: ['id'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -2007,6 +2212,12 @@ const INCIDENT_TRIAGE_PILOT: BazaarPilotConfig = {
  * Wave 12 (2026-05-24): status/incidents/triage. Second Haiku-derived
  * endpoint. Per-incident triage cards with impact + action classification.
  * Total pilot count: 24 -> 25.
+ *
+ * Wave 13 (2026-05-24): ai-cves trio. First endpoints built on DP CC's
+ * Qwen-on-5090 security-xsource extraction pipeline. ai-stack-cves is
+ * the flagship (curated AI vendor filter + categorization);
+ * exploited-in-wild is the live-threat subset; cve is the
+ * param-required single-CVE lookup. Total pilot count: 25 -> 28.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -2045,6 +2256,10 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/news/action-cards': NEWS_ACTION_CARDS_PILOT,
   // Wave 12
   '/api/premium/status/incidents/triage': INCIDENT_TRIAGE_PILOT,
+  // Wave 13
+  '/api/premium/ai-cves/ai-stack-cves': AI_CVES_AI_STACK_PILOT,
+  '/api/premium/ai-cves/exploited-in-wild': AI_CVES_EXPLOITED_PILOT,
+  '/api/premium/ai-cves/cve': AI_CVES_CVE_LOOKUP_PILOT,
 };
 
 /**

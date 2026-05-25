@@ -239,11 +239,11 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 43 exact paths', () => {
-      // 24 pre-Wave-2 + 9 Wave 2 + 1 each Waves 3..12.
+    it('exposes all 46 exact paths', () => {
+      // 24 pre-Wave-2 + 9 Wave 2 + 1 each Waves 3..12 + 3 Wave 13 (ai-cves trio).
       // funding/exposure + packages/pypi/momentum were already strict.
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(43);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(43); // no duplicates
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(46);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(46); // no duplicates
     });
     it('exposes 1 prefix path', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(1);

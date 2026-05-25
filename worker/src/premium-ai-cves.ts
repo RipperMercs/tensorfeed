@@ -1,0 +1,359 @@
+/**
+ * Premium ai-cves derivations.
+ *
+ * Three endpoints derive over the ai-cves KV layout written by
+ * ai-cves-feed.ts. Two read the pre-built ai-flagged subset; one
+ * resolves a single CVE via the cve-index.
+ *
+ * All public outputs OMIT quote_spans (pending DP CC's normalize.py
+ * span-cleaning patch in job #78). Once that lands and TF can trust
+ * the field, restore via toPublicPaperWithSpans.
+ */
+
+import type { Env } from './types';
+import {
+  type AiCvesPaper,
+  type AiCategory,
+  type PublicPaper,
+  getAiFlagged,
+  getCveIndex,
+  getBatch,
+  toPublicPaper,
+  publicAttribution,
+} from './ai-cves-feed';
+
+// ─── Severity ranking ───────────────────────────────────────────────
+
+/**
+ * Maps severity_label substring to a numeric rank for sortability.
+ * 4 = critical, 3 = high, 2 = medium, 1 = low, 0 = unstated/unknown.
+ * Substring match so "critical", "Critical", "CVSS 9.8 critical" all
+ * land at 4. Order matters: check most-severe first.
+ */
+export function severityRank(label: string): number {
+  const l = label.toLowerCase();
+  if (l.includes('critical')) return 4;
+  if (l.includes('high')) return 3;
+  if (l.includes('medium') || l.includes('moderate')) return 2;
+  if (l.includes('low')) return 1;
+  return 0;
+}
+
+// ─── ai-stack-cves (the flagship) ───────────────────────────────────
+
+export interface AiStackCvePaper extends PublicPaper {
+  tf_ai_category: AiCategory;
+  severity_rank: number;
+}
+
+export interface AiStackCvesResponse {
+  batch_id: string | null;
+  extracted_at: string | null;
+  total: number;
+  papers: AiStackCvePaper[];
+  source_license: string;
+  source_attribution: string;
+}
+
+/**
+ * Read the pre-built ai-flagged subset, attach severity_rank, sort:
+ * 1. exploited_in_wild=stated_yes first
+ * 2. then by severity_rank desc
+ * 3. then by source_url asc (deterministic tie-break)
+ */
+export async function getAiStackCves(env: Env): Promise<AiStackCvesResponse> {
+  const flagged = await getAiFlagged(env);
+  if (!flagged) {
+    return {
+      batch_id: null,
+      extracted_at: null,
+      total: 0,
+      papers: [],
+      ...publicAttribution(),
+    };
+  }
+
+  const papers: AiStackCvePaper[] = flagged.papers.map((p) => ({
+    ...toPublicPaper(p),
+    tf_ai_category: p.tf_ai_category,
+    severity_rank: severityRank(p.severity_label),
+  }));
+
+  papers.sort((a, b) => {
+    const aExp = a.exploited_in_wild === 'stated_yes' ? 1 : 0;
+    const bExp = b.exploited_in_wild === 'stated_yes' ? 1 : 0;
+    if (aExp !== bExp) return bExp - aExp;
+    if (a.severity_rank !== b.severity_rank) return b.severity_rank - a.severity_rank;
+    return a.source_url.localeCompare(b.source_url);
+  });
+
+  return {
+    batch_id: flagged.batch_id,
+    extracted_at: flagged.extracted_at,
+    total: papers.length,
+    papers,
+    ...publicAttribution(),
+  };
+}
+
+// ─── exploited-in-wild ──────────────────────────────────────────────
+
+export interface ExploitedInWildPaper extends PublicPaper {
+  severity_rank: number;
+}
+
+export interface ExploitedInWildResponse {
+  batch_id: string | null;
+  extracted_at: string | null;
+  total: number;
+  papers: ExploitedInWildPaper[];
+  source_license: string;
+  source_attribution: string;
+}
+
+/**
+ * Filter the latest full batch to exploited_in_wild == stated_yes,
+ * attach severity_rank, sort by severity desc then source_url asc.
+ * No pagination: these are typically rare per batch (~1-2% of papers).
+ */
+export async function getExploitedInWild(
+  env: Env,
+  fullBatch: AiCvesPaper[] | null,
+): Promise<ExploitedInWildResponse> {
+  if (!fullBatch) {
+    return {
+      batch_id: null,
+      extracted_at: null,
+      total: 0,
+      papers: [],
+      ...publicAttribution(),
+    };
+  }
+  // Caller resolves the batch (so this function is testable without KV).
+  return buildExploitedInWild(null, null, fullBatch);
+}
+
+function buildExploitedInWild(
+  batchId: string | null,
+  extractedAt: string | null,
+  papers: AiCvesPaper[],
+): ExploitedInWildResponse {
+  const filtered: ExploitedInWildPaper[] = papers
+    .filter((p) => p.exploited_in_wild === 'stated_yes')
+    .map((p) => ({ ...toPublicPaper(p), severity_rank: severityRank(p.severity_label) }));
+
+  filtered.sort((a, b) => {
+    if (a.severity_rank !== b.severity_rank) return b.severity_rank - a.severity_rank;
+    return a.source_url.localeCompare(b.source_url);
+  });
+
+  return {
+    batch_id: batchId,
+    extracted_at: extractedAt,
+    total: filtered.length,
+    papers: filtered,
+    ...publicAttribution(),
+  };
+}
+
+/**
+ * Reads from KV, applies the filter, returns the response. The pure
+ * builder above is exposed for tests.
+ */
+export async function getExploitedInWildFromKv(env: Env): Promise<ExploitedInWildResponse> {
+  const flagged = await getAiFlagged(env);
+  // We deliberately scan the AI-flagged subset (always small) for the
+  // exploited filter rather than the full batch. Anything actively
+  // exploited in the AI stack is the highest-value subset; non-AI
+  // exploitation moves through TF's separate /api/security/* surfaces.
+  if (!flagged) {
+    return {
+      batch_id: null,
+      extracted_at: null,
+      total: 0,
+      papers: [],
+      ...publicAttribution(),
+    };
+  }
+  return buildExploitedInWild(flagged.batch_id, flagged.extracted_at, flagged.papers);
+}
+
+// ─── CVE lookup (single-CVE strict-premium) ─────────────────────────
+
+export interface CveLookupResponse {
+  cve_id: string;
+  found: boolean;
+  paper: PublicPaper | null;
+  batch_id: string | null;
+  source_license: string;
+  source_attribution: string;
+}
+
+/**
+ * Resolve a CVE id through the persistent index. Returns the paper
+ * with quote_spans omitted, or found=false if the index has no entry.
+ * Normalizes CVE id to uppercase for lookup.
+ */
+export async function lookupCve(env: Env, cveId: string): Promise<CveLookupResponse> {
+  const normalized = cveId.trim().toUpperCase();
+  const empty: CveLookupResponse = {
+    cve_id: normalized,
+    found: false,
+    paper: null,
+    batch_id: null,
+    ...publicAttribution(),
+  };
+
+  const idx = await getCveIndex(env);
+  if (!idx || !idx[normalized]) return empty;
+
+  const entry = idx[normalized];
+  const batch = await getBatch(env, entry.batch_id);
+  if (!batch || entry.paper_index >= batch.papers.length) return empty;
+
+  return {
+    cve_id: normalized,
+    found: true,
+    paper: toPublicPaper(batch.papers[entry.paper_index]),
+    batch_id: entry.batch_id,
+    ...publicAttribution(),
+  };
+}
+
+// ─── Free /api/ai-cves/* helpers ────────────────────────────────────
+
+export interface LatestResponse {
+  batch_id: string | null;
+  extracted_at: string | null;
+  window_start: string | null;
+  window_end: string | null;
+  total_papers: number;
+  ai_flagged_count: number;
+  papers: PublicPaper[];
+  source_license: string;
+  source_attribution: string;
+}
+
+/**
+ * Free `/api/ai-cves/latest`. Returns metadata + first 25 papers (no
+ * pagination at this endpoint; use /feed for paginated bulk).
+ */
+export function buildLatestResponse(
+  batch: { batch_id: string; extracted_at: string; window_start: string; window_end: string; papers: AiCvesPaper[] } | null,
+  aiFlaggedCount: number,
+): LatestResponse {
+  if (!batch) {
+    return {
+      batch_id: null,
+      extracted_at: null,
+      window_start: null,
+      window_end: null,
+      total_papers: 0,
+      ai_flagged_count: 0,
+      papers: [],
+      ...publicAttribution(),
+    };
+  }
+  return {
+    batch_id: batch.batch_id,
+    extracted_at: batch.extracted_at,
+    window_start: batch.window_start,
+    window_end: batch.window_end,
+    total_papers: batch.papers.length,
+    ai_flagged_count: aiFlaggedCount,
+    papers: batch.papers.slice(0, 25).map(toPublicPaper),
+    ...publicAttribution(),
+  };
+}
+
+export interface FeedResponse {
+  batch_id: string | null;
+  total: number;
+  limit: number;
+  offset: number;
+  papers: PublicPaper[];
+  source_license: string;
+  source_attribution: string;
+}
+
+export const FEED_MAX_LIMIT = 50;
+
+/**
+ * Free `/api/ai-cves/feed?limit=N&offset=N`. limit capped at 50.
+ */
+export function buildFeedResponse(
+  batch: { batch_id: string; papers: AiCvesPaper[] } | null,
+  rawLimit: number,
+  rawOffset: number,
+): FeedResponse {
+  const limit = Math.max(1, Math.min(FEED_MAX_LIMIT, Math.floor(rawLimit) || 25));
+  const offset = Math.max(0, Math.floor(rawOffset) || 0);
+  if (!batch) {
+    return {
+      batch_id: null,
+      total: 0,
+      limit,
+      offset,
+      papers: [],
+      ...publicAttribution(),
+    };
+  }
+  return {
+    batch_id: batch.batch_id,
+    total: batch.papers.length,
+    limit,
+    offset,
+    papers: batch.papers.slice(offset, offset + limit).map(toPublicPaper),
+    ...publicAttribution(),
+  };
+}
+
+export interface StatsResponse {
+  batch_id: string | null;
+  by_severity: Record<string, number>;
+  by_exploitation: Record<'stated_yes' | 'stated_no' | 'unstated', number>;
+  top_vendors: Array<{ vendor: string; count: number }>;
+  total_papers: number;
+  source_license: string;
+  source_attribution: string;
+}
+
+const TOP_VENDORS_LIMIT = 10;
+
+/**
+ * Free `/api/ai-cves/stats`. Aggregate counts.
+ */
+export function buildStatsResponse(
+  batch: { batch_id: string; papers: AiCvesPaper[] } | null,
+): StatsResponse {
+  const base: StatsResponse = {
+    batch_id: batch?.batch_id ?? null,
+    by_severity: { critical: 0, high: 0, medium: 0, low: 0, unstated: 0 },
+    by_exploitation: { stated_yes: 0, stated_no: 0, unstated: 0 },
+    top_vendors: [],
+    total_papers: batch?.papers.length ?? 0,
+    ...publicAttribution(),
+  };
+  if (!batch) return base;
+
+  const vendorCounts: Record<string, number> = {};
+  for (const p of batch.papers) {
+    const rank = severityRank(p.severity_label);
+    const bucket = ['unstated', 'low', 'medium', 'high', 'critical'][rank];
+    base.by_severity[bucket] += 1;
+    base.by_exploitation[p.exploited_in_wild] += 1;
+    // Vendor extraction: first token of each affected_product, capped
+    // at 32 chars so we don't have huge keys from full product names.
+    for (const product of p.affected_products) {
+      const vendor = product.split(/\s+/)[0]?.slice(0, 32) || '';
+      if (vendor) vendorCounts[vendor] = (vendorCounts[vendor] ?? 0) + 1;
+    }
+  }
+
+  base.top_vendors = Object.entries(vendorCounts)
+    .map(([vendor, count]) => ({ vendor, count }))
+    .sort((a, b) => b.count - a.count || a.vendor.localeCompare(b.vendor))
+    .slice(0, TOP_VENDORS_LIMIT);
+
+  return base;
+}

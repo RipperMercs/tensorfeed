@@ -152,6 +152,16 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // Haiku-derived endpoint. Per-incident triage with impact +
   // recommended_action classification. Same anonymous-crawler hygiene.
   '/api/premium/status/incidents/triage',
+  // ai-cves Wave 13 (2026-05-24). First TF endpoint built on DP CC's
+  // Qwen-on-5090 security-xsource extraction pipeline. AI-stack CVE
+  // intelligence: 99.8% sourced from GHSA (CC BY 4.0). ai-stack-cves
+  // is the flagship (filter + categorize); exploited-in-wild is the
+  // live-threat subset; cve lookup is param-required so it MUST be
+  // strict-premium per the param-required rule (anonymous probes would
+  // otherwise see 400 missing_params instead of 402).
+  '/api/premium/ai-cves/ai-stack-cves',
+  '/api/premium/ai-cves/exploited-in-wild',
+  '/api/premium/ai-cves/cve',
 ];
 
 /**

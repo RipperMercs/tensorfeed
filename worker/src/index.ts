@@ -2925,6 +2925,29 @@ export default {
       );
     }
 
+    // === AI-CVES INGEST (admin, POST) ==================================
+    // /api/admin/ai-cves/ingest?key=<ADMIN_KEY>
+    // DP CC's Qwen-on-5090 extraction pipeline POSTs validated batches here.
+    // See For_DP_CC_ai-cves-ingest-contract.md for the client contract +
+    // ai-cves-feed.ts for the validation rules + KV layout. Idempotent on
+    // batch_id (re-POSTing the same id overwrites in place). Inherits the
+    // hoisted /api/admin rate-limit + ADMIN_KEY pre-check.
+    if (path === '/api/admin/ai-cves/ingest' && request.method === 'POST') {
+      let raw: unknown;
+      try {
+        raw = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const { validateBatch, writeBatch } = await import('./ai-cves-feed');
+      const v = validateBatch(raw);
+      if (!v.ok) {
+        return jsonResponse({ ok: false, error: v.error, detail: v.detail }, 400);
+      }
+      const result = await writeBatch(env, v.batch);
+      return jsonResponse({ ok: true, ...result }, 200, 0);
+    }
+
     if (path === '/api/agents/claim' && request.method === 'POST') {
       let body: unknown;
       try {
@@ -8782,6 +8805,124 @@ export default {
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/news/action-cards', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === AI-CVES LATEST (free, cached 6h) ============================
+    // /api/ai-cves/latest
+    // Returns metadata for the most-recent DP CC batch + first 25 papers
+    // (no pagination at this endpoint; use /api/ai-cves/feed for paginated
+    // bulk). quote_spans field omitted pending DP CC's normalize.py
+    // span-cleaning patch in job #78.
+
+    if (path === '/api/ai-cves/latest') {
+      const { getLatestBatch, getAiFlagged } = await import('./ai-cves-feed');
+      const { buildLatestResponse } = await import('./premium-ai-cves');
+      const [batch, flagged] = await Promise.all([getLatestBatch(env), getAiFlagged(env)]);
+      const result = buildLatestResponse(batch, flagged?.papers.length ?? 0);
+      return jsonResponse(result, 200, 6 * 60 * 60);
+    }
+
+    // === AI-CVES FEED (free, paginated, cached 6h) ===================
+    // /api/ai-cves/feed?limit=N&offset=N
+    // Paginated raw papers from the latest batch. limit capped at 50.
+
+    if (path === '/api/ai-cves/feed') {
+      const { getLatestBatch } = await import('./ai-cves-feed');
+      const { buildFeedResponse } = await import('./premium-ai-cves');
+      const batch = await getLatestBatch(env);
+      const rawLimit = parseInt(url.searchParams.get('limit') ?? '', 10);
+      const rawOffset = parseInt(url.searchParams.get('offset') ?? '', 10);
+      const result = buildFeedResponse(
+        batch ? { batch_id: batch.batch_id, papers: batch.papers } : null,
+        Number.isFinite(rawLimit) ? rawLimit : 0,
+        Number.isFinite(rawOffset) ? rawOffset : 0,
+      );
+      return jsonResponse(result, 200, 6 * 60 * 60);
+    }
+
+    // === AI-CVES STATS (free, cached 6h) =============================
+    // /api/ai-cves/stats
+    // Aggregate counts (by_severity, by_exploitation, top_vendors).
+
+    if (path === '/api/ai-cves/stats') {
+      const { getLatestBatch } = await import('./ai-cves-feed');
+      const { buildStatsResponse } = await import('./premium-ai-cves');
+      const batch = await getLatestBatch(env);
+      const result = buildStatsResponse(
+        batch ? { batch_id: batch.batch_id, papers: batch.papers } : null,
+      );
+      return jsonResponse(result, 200, 6 * 60 * 60);
+    }
+
+    // === PAID PREMIUM: AI-STACK CVES (Tier 1, 1 credit) ==============
+    // /api/premium/ai-cves/ai-stack-cves
+    // Wave 13 flagship. Filters DP CC's latest batch to papers whose
+    // affected_products match the curated AI_STACK_VENDORS list, attaches
+    // tf_ai_category + severity_rank, sorts: exploited_in_wild first,
+    // then severity desc, then source_url asc. No params; bulk derived
+    // view that "answers is my AI stack vulnerable" in one call.
+
+    if (path === '/api/premium/ai-cves/ai-stack-cves') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getAiStackCves } = await import('./premium-ai-cves');
+      const result = await getAiStackCves(env);
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-cves/ai-stack-cves', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: EXPLOITED IN WILD (Tier 1, 1 credit) ==========
+    // /api/premium/ai-cves/exploited-in-wild
+    // Live-threat subset over the AI-flagged batch: only papers with
+    // exploited_in_wild = stated_yes, sorted by severity_rank desc.
+
+    if (path === '/api/premium/ai-cves/exploited-in-wild') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getExploitedInWildFromKv } = await import('./premium-ai-cves');
+      const result = await getExploitedInWildFromKv(env);
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-cves/exploited-in-wild', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: CVE LOOKUP (Tier 1, 1 credit, param-required) =
+    // /api/premium/ai-cves/cve?id=CVE-YYYY-NNNNN
+    // Single-CVE resolve via the persistent index. Param-required, so
+    // MUST be strict-premium (and is, per strict-premium-endpoints.ts)
+    // so anonymous probes see 402 not 400.
+
+    if (path === '/api/premium/ai-cves/cve') {
+      const id = url.searchParams.get('id');
+      if (!id || !/^CVE-\d{4}-\d{4,7}$/i.test(id.trim())) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'Pass id=CVE-YYYY-NNNNN. CVE IDs are case-insensitive (normalized to uppercase internally).',
+          },
+          400,
+          0,
+        );
+      }
+
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { lookupCve } = await import('./premium-ai-cves');
+      const result = await lookupCve(env, id);
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-cves/cve', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }

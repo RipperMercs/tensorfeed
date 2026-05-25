@@ -112,6 +112,16 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // Incident triage: Haiku-derived. Every-2h cron + per-incident 24h KV
   // cache. 6h SLA covers ~3 missed runs.
   '/api/premium/status/incidents/triage': { maxAgeSeconds: 6 * 60 * 60 },
+  // ai-cves trio: DP CC's Qwen-on-5090 extraction pipeline POSTs batches
+  // on a daily/weekly cadence. 10-day SLA = weekly cadence + 50% headroom
+  // for a single missed run. Tighter SLA waits for cadence confirmation
+  // from DP CC; once daily is confirmed sustainable, drop to 36h.
+  '/api/premium/ai-cves/ai-stack-cves': { maxAgeSeconds: 10 * 24 * 60 * 60 },
+  '/api/premium/ai-cves/exploited-in-wild': { maxAgeSeconds: 10 * 24 * 60 * 60 },
+  // CVE lookup: index spans the 90-day batch retention window. Each entry
+  // is the most-recent batch that saw the CVE, so freshness is roughly the
+  // batch ingest rate; same 10-day SLA as the bulk endpoints.
+  '/api/premium/ai-cves/cve': { maxAgeSeconds: 10 * 24 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

@@ -58,6 +58,10 @@ const PILOT_PATHS = [
   '/api/premium/news/action-cards',
   // Wave 12
   '/api/premium/status/incidents/triage',
+  // Wave 13 (ai-cves trio)
+  '/api/premium/ai-cves/ai-stack-cves',
+  '/api/premium/ai-cves/exploited-in-wild',
+  '/api/premium/ai-cves/cve',
 ] as const;
 
 // Premium paths that are intentionally NOT in BAZAAR_PILOTS. Used for
@@ -306,6 +310,10 @@ describe('Wave 2 pilot AJV validation', () => {
     '/api/premium/news/action-cards',
     // Wave 12 (2026-05-24)
     '/api/premium/status/incidents/triage',
+    // Wave 13 (2026-05-24)
+    '/api/premium/ai-cves/ai-stack-cves',
+    '/api/premium/ai-cves/exploited-in-wild',
+    '/api/premium/ai-cves/cve',
   ];
 
   for (const path of wave2Paths) {
