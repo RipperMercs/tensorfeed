@@ -2202,6 +2202,13 @@ export async function requirePayment(
     const url = new URL(request.url);
     const resourceUrl = `${url.origin}${url.pathname}`;
     const x402Config = getX402Config(env);
+    // Pilot endpoints carry a bazaar extension at settle time so CDP's
+    // indexer can catalog them. Without extensions in the settle POST,
+    // CDP returns EXTENSION-RESPONSES: e30= ({}) and the endpoint never
+    // surfaces on agentic.market (the 402 body's extensions block is for
+    // buyer-side validators only). Non-pilots get {} which is dropped
+    // before serialization.
+    const pilotExtensions = bazaarExtensionsFor(url.pathname);
     const requirements: X402PaymentRequirements = {
       scheme: 'exact',
       network: x402Config.network,
@@ -2209,10 +2216,12 @@ export async function requirePayment(
       asset: x402Config.usdcAddress,
       payTo: env.PAYMENT_WALLET as `0x${string}`,
       maxTimeoutSeconds: 60,
+      resource: resourceUrl,
       // Per-network domain name. Mainnet USDC.name() = "USD Coin";
       // Sepolia USDC.name() = "USDC". The `extra` field is the spec-defined
       // hint clients use to construct the EIP-712 domain.
-      extra: { name: x402Config.domain.name, version: x402Config.domain.version },
+      extra: { name: x402Config.domain.name, version: x402Config.domain.version, resource: resourceUrl },
+      ...(Object.keys(pilotExtensions).length > 0 ? { extensions: pilotExtensions } : {}),
     };
 
     const payload = parseXPaymentHeader(xPaymentHeader);

@@ -188,6 +188,13 @@ export interface PaymentRequirements {
   // TransferWithAuthorization signing domain. `resource` is the same URL
   // duplicated for the validators that look here instead of top-level.
   extra?: { name?: string; version?: string; resource?: string };
+  // Settle-time extensions. CDP's Bazaar indexer reads
+  // extensions.bazaar.{info, schema} from the paymentRequirements in the
+  // /settle POST body (NOT the 402 response we send to the buyer).
+  // Without this field, CDP returns EXTENSION-RESPONSES: e30= ({}) and
+  // never catalogs the endpoint. Populated from getBazaarPilotConfig(path)
+  // for piloted paths; absent for non-pilot endpoints.
+  extensions?: Record<string, unknown>;
 }
 
 // Canonical x402 V2 error codes (do not invent custom names; spec-exact).
