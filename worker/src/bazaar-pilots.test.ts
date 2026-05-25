@@ -62,7 +62,27 @@ const PILOT_PATHS = [
   '/api/premium/ai-cves/ai-stack-cves',
   '/api/premium/ai-cves/exploited-in-wild',
   '/api/premium/ai-cves/cve',
+  // Wave 14 (path-param templates). Listed here in template form because
+  // bazaarPilotPaths() returns the map keys. The template-match lookup is
+  // exercised separately below with concrete request paths.
+  '/api/premium/providers/:name',
+  '/api/premium/clean/cve/:id',
+  '/api/premium/clean/kev/:id',
+  '/api/premium/clean/epss/:id',
+  '/api/premium/clean/openrouter/:model_id',
+  '/api/premium/security/verified/:id',
 ] as const;
+
+// Concrete request paths that should match a Wave 14 template.
+const WAVE_14_CONCRETE_PATHS: Array<{ concrete: string; template: string }> = [
+  { concrete: '/api/premium/providers/anthropic', template: '/api/premium/providers/:name' },
+  { concrete: '/api/premium/providers/openai', template: '/api/premium/providers/:name' },
+  { concrete: '/api/premium/clean/cve/CVE-2024-3094', template: '/api/premium/clean/cve/:id' },
+  { concrete: '/api/premium/clean/kev/CVE-2024-3094', template: '/api/premium/clean/kev/:id' },
+  { concrete: '/api/premium/clean/epss/CVE-2026-44580', template: '/api/premium/clean/epss/:id' },
+  { concrete: '/api/premium/clean/openrouter/anthropic%2Fclaude-haiku-4.5', template: '/api/premium/clean/openrouter/:model_id' },
+  { concrete: '/api/premium/security/verified/CVE-2024-3094', template: '/api/premium/security/verified/:id' },
+];
 
 // Premium paths that are intentionally NOT in BAZAAR_PILOTS. Used for
 // negative-control assertions across the file.
@@ -95,6 +115,21 @@ describe('isBazaarPilotPath', () => {
     expect(isBazaarPilotPath('constructor')).toBe(false);
     expect(isBazaarPilotPath('toString')).toBe(false);
   });
+
+  it('matches concrete Wave 14 paths against their template', () => {
+    for (const { concrete } of WAVE_14_CONCRETE_PATHS) {
+      expect(isBazaarPilotPath(concrete), `isBazaarPilotPath(${concrete}) should be true`).toBe(true);
+    }
+  });
+
+  it('does NOT match paths with the wrong segment count against templates', () => {
+    // Extra segment beyond the template
+    expect(isBazaarPilotPath('/api/premium/clean/cve/CVE-2024-3094/extra')).toBe(false);
+    // Missing the param segment
+    expect(isBazaarPilotPath('/api/premium/clean/cve')).toBe(false);
+    // Wrong prefix
+    expect(isBazaarPilotPath('/api/premium/other/cve/CVE-2024-3094')).toBe(false);
+  });
 });
 
 describe('getBazaarPilotConfig', () => {
@@ -112,6 +147,23 @@ describe('getBazaarPilotConfig', () => {
   it('returns null for non-piloted paths', () => {
     expect(getBazaarPilotConfig('/api/premium/macro/digest')).toBeNull();
     expect(getBazaarPilotConfig('/api/news')).toBeNull();
+  });
+
+  it('returns the template config when given a concrete Wave 14 path', () => {
+    for (const { concrete, template } of WAVE_14_CONCRETE_PATHS) {
+      const c1 = getBazaarPilotConfig(concrete);
+      const c2 = getBazaarPilotConfig(template);
+      expect(c1, `concrete ${concrete} should match`).not.toBeNull();
+      expect(c1).toBe(c2);
+    }
+  });
+
+  it('Wave 14 configs carry routeTemplate matching their map key', () => {
+    for (const { template } of WAVE_14_CONCRETE_PATHS) {
+      const config = getBazaarPilotConfig(template);
+      const bazaar = (config!.extension.bazaar as Record<string, unknown>);
+      expect(bazaar.routeTemplate, `${template} should declare routeTemplate`).toBe(template);
+    }
   });
 });
 

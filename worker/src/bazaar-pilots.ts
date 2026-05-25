@@ -2102,6 +2102,334 @@ const AI_CVES_EXPLOITED_PILOT: BazaarPilotConfig = {
  * Single-CVE lookup via the persistent index. Param-required, so
  * strict-premium gating is mandatory.
  */
+// ── Wave 14 (2026-05-25): path-param endpoints with routeTemplate ──
+// These ship as Bazaar pilots together with template-matching lookup so
+// Coinbase's dynamic-routes consolidation surfaces them as ONE catalog
+// row per pattern instead of N rows per concrete id. The lookup helpers
+// (getBazaarPilotConfig, isBazaarPilotPath) accept either the concrete
+// path or the template; the BAZAAR_PILOTS map key IS the template.
+
+const PROVIDERS_PATH_PILOT: BazaarPilotConfig = {
+  description:
+    'Per-provider digest. Pass the provider slug (anthropic, openai, google, etc.) as the URL path segment. Returns the model catalog scoped to that provider plus current pricing matrix, status incidents, and reliability summary. The single-call lookup an agent makes when it needs everything about a specific provider.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          pathParams: { name: 'anthropic' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            provider: 'anthropic',
+            models: [{ id: 'claude-opus-4-7', input_price: 14, output_price: 70 }],
+            status: { operational: true, incidents_24h: 0 },
+            reliability_30d: { uptime_pct: 99.94, p95_latency_ms: 820 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              pathParams: {
+                type: 'object',
+                properties: { name: { type: 'string', description: 'Provider slug (anthropic, openai, google, mistral, cohere, etc.). Case-insensitive.' } },
+                required: ['name'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+      routeTemplate: '/api/premium/providers/:name',
+    },
+  },
+};
+
+const CLEAN_CVE_PILOT: BazaarPilotConfig = {
+  description:
+    'LLM-ready CVE record. Around 80 percent token reduction versus raw MITRE v5.2, with derived severity_band, deduped CWEs, flat affected_products list, and the top 5 references. Pass the CVE id as the URL path segment.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          pathParams: { id: 'CVE-2024-3094' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            source_format: 'mitre_cve_v5_2',
+            target_format: 'tensorfeed_llm_ready_v1',
+            cve_id: 'CVE-2024-3094',
+            severity_band: 'critical',
+            cwes: ['CWE-506'],
+            affected_products: ['xz-utils'],
+            references_top_5: ['https://nvd.nist.gov/vuln/detail/CVE-2024-3094'],
+            attribution: { source: 'MITRE CVE List v5.2', license: 'Terms of Use' },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              pathParams: {
+                type: 'object',
+                properties: { id: { type: 'string', description: 'CVE id in canonical CVE-YYYY-NNNNN form. Case-insensitive.' } },
+                required: ['id'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+      routeTemplate: '/api/premium/clean/cve/:id',
+    },
+  },
+};
+
+const CLEAN_KEV_PILOT: BazaarPilotConfig = {
+  description:
+    'LLM-ready CISA KEV entry with normalized ransomware_use enum (known, unknown, not_used) and notes_urls extracted from the freeform notes field. Pass the CVE id as the URL path segment. Returns 404 with a hint if the CVE id is valid but not on the KEV catalog.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          pathParams: { id: 'CVE-2024-3094' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            source_format: 'cisa_kev_v1',
+            target_format: 'tensorfeed_llm_ready_v1',
+            cve_id: 'CVE-2024-3094',
+            vendor: 'xz',
+            product: 'xz-utils',
+            ransomware_use: 'unknown',
+            date_added: '2024-04-01',
+            notes_urls: ['https://www.cisa.gov/news-events/alerts/2024/03/29/'],
+            attribution: { source: 'CISA Known Exploited Vulnerabilities Catalog', license: 'US Government public domain' },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              pathParams: {
+                type: 'object',
+                properties: { id: { type: 'string', description: 'CVE id in canonical CVE-YYYY-NNNNN form.' } },
+                required: ['id'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+      routeTemplate: '/api/premium/clean/kev/:id',
+    },
+  },
+};
+
+const CLEAN_EPSS_PILOT: BazaarPilotConfig = {
+  description:
+    'LLM-ready FIRST.org EPSS score with derived risk_band (none, low, moderate, elevated, high, critical). Pass the CVE id as the URL path segment. Optional series=true returns first/min/max summary instead of the full daily-score series.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          pathParams: { id: 'CVE-2024-3094' },
+          queryParams: { series: false },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            source_format: 'first_org_epss_v1',
+            target_format: 'tensorfeed_llm_ready_v1',
+            included_series: false,
+            cve_id: 'CVE-2024-3094',
+            epss: 0.9415,
+            percentile: 0.9981,
+            risk_band: 'critical',
+            attribution: { source: 'FIRST.org EPSS v3', license: 'FIRST.org Terms of Use' },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              pathParams: {
+                type: 'object',
+                properties: { id: { type: 'string', description: 'CVE id in canonical CVE-YYYY-NNNNN form.' } },
+                required: ['id'],
+              },
+              queryParams: {
+                type: 'object',
+                properties: { series: { type: 'boolean', description: 'true returns first/min/max summary; false (default) returns current score.' } },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+      routeTemplate: '/api/premium/clean/epss/:id',
+    },
+  },
+};
+
+const CLEAN_OPENROUTER_PILOT: BazaarPilotConfig = {
+  description:
+    'One model from the daily 367-entry OpenRouter catalog as an LLM-ready fact card. Pricing normalized to USD per million tokens with a derived blended_5_to_1 mix. Capability flags (tools, vision, structured_outputs, reasoning) extracted from supported_parameters plus modality. Pass the model id (URL-encoded if it contains a slash) as the URL path segment.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          pathParams: { model_id: 'anthropic/claude-haiku-4.5' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            source_format: 'openrouter_models_v1',
+            target_format: 'tensorfeed_llm_ready_v1',
+            model_id: 'anthropic/claude-haiku-4.5',
+            provider: 'anthropic',
+            input_usd_per_million: 1.0,
+            output_usd_per_million: 5.0,
+            blended_5_to_1: 1.67,
+            context_length: 200000,
+            capabilities: { tools: true, vision: true, structured_outputs: true, reasoning: false },
+            modality: ['text', 'image'],
+            attribution: { source: 'OpenRouter model catalog', license: 'OpenRouter Terms of Service' },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              pathParams: {
+                type: 'object',
+                properties: { model_id: { type: 'string', description: 'OpenRouter model id, URL-encoded. Format: provider/model-slug.' } },
+                required: ['model_id'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+      routeTemplate: '/api/premium/clean/openrouter/:model_id',
+    },
+  },
+};
+
+const SECURITY_VERIFIED_PILOT: BazaarPilotConfig = {
+  description:
+    'Cross-database CVE verification. Composes MITRE CVE plus CISA KEV plus FIRST.org EPSS plus OSV.dev plus CISA Vulnrichment into one fact card with a confirmed_by array and corroboration_count. The single-call anti-hallucination lookup for security agents. Pass the CVE id as the URL path segment.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          pathParams: { id: 'CVE-2024-3094' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            cve_id: 'CVE-2024-3094',
+            corroboration_count: 5,
+            confirmed_by: ['mitre_cve', 'cisa_kev', 'first_org_epss', 'osv_dev', 'cisa_vulnrichment'],
+            severity_consensus: 'critical',
+            exploited_in_wild: true,
+            attribution: { sources: ['MITRE CVE', 'CISA KEV', 'FIRST.org EPSS', 'OSV.dev', 'CISA Vulnrichment'] },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              pathParams: {
+                type: 'object',
+                properties: { id: { type: 'string', description: 'CVE id in canonical CVE-YYYY-NNNNN form.' } },
+                required: ['id'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+      routeTemplate: '/api/premium/security/verified/:id',
+    },
+  },
+};
+
 const AI_CVES_CVE_LOOKUP_PILOT: BazaarPilotConfig = {
   description:
     'Single CVE lookup against the TensorFeed AI-CVE index. Pass id=CVE-YYYY-XXXXX, get the structured paper (affected products, version ranges, fixed versions, severity, exploitation status, source URL). Index spans the rolling 90-day retention window of TF ai-cves batches.',
@@ -2218,6 +2546,14 @@ const AI_CVES_CVE_LOOKUP_PILOT: BazaarPilotConfig = {
  * the flagship (curated AI vendor filter + categorization);
  * exploited-in-wild is the live-threat subset; cve is the
  * param-required single-CVE lookup. Total pilot count: 25 -> 28.
+ *
+ * Wave 14 (2026-05-25): path-param endpoints with routeTemplate. First
+ * batch to use dynamic-route consolidation per the Coinbase CDP Bazaar
+ * spec. The BAZAAR_PILOTS map keys these by their template string (e.g.
+ * "/api/premium/clean/cve/:id") and the lookup helpers match concrete
+ * paths against the template at request time. Endpoints: providers/:name
+ * + the 5 single-CVE-id and 1 model-id LLM-ready surfaces. Total pilot
+ * count: 28 -> 34.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -2260,20 +2596,60 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/ai-cves/ai-stack-cves': AI_CVES_AI_STACK_PILOT,
   '/api/premium/ai-cves/exploited-in-wild': AI_CVES_EXPLOITED_PILOT,
   '/api/premium/ai-cves/cve': AI_CVES_CVE_LOOKUP_PILOT,
+  // Wave 14: path-param templates. Lookup helpers below match concrete
+  // request paths against these templates so the request still routes
+  // through CDP for first-pay cataloging.
+  '/api/premium/providers/:name': PROVIDERS_PATH_PILOT,
+  '/api/premium/clean/cve/:id': CLEAN_CVE_PILOT,
+  '/api/premium/clean/kev/:id': CLEAN_KEV_PILOT,
+  '/api/premium/clean/epss/:id': CLEAN_EPSS_PILOT,
+  '/api/premium/clean/openrouter/:model_id': CLEAN_OPENROUTER_PILOT,
+  '/api/premium/security/verified/:id': SECURITY_VERIFIED_PILOT,
 };
+
+// Template-match helper. Splits both paths on '/' and matches segment-by-
+// segment, treating any template segment that starts with ':' as a
+// wildcard. Returns true only on segment-count match (so /a/b/c does
+// not match /a/:x). Single-segment params only (FDA's multi-segment
+// category routes are intentionally not added to the wave yet).
+function matchesTemplate(path: string, template: string): boolean {
+  const pathSegs = path.split('/');
+  const tmplSegs = template.split('/');
+  if (pathSegs.length !== tmplSegs.length) return false;
+  for (let i = 0; i < tmplSegs.length; i++) {
+    if (tmplSegs[i].startsWith(':')) continue;
+    if (tmplSegs[i] !== pathSegs[i]) return false;
+  }
+  return true;
+}
 
 /**
  * True if this path's X-PAYMENT settlement should route through CDP.
+ * Accepts either an exact pilot path (the Wave 0-13 flat URLs) or a
+ * concrete path matching a Wave 14+ template (e.g.
+ * "/api/premium/clean/cve/CVE-2024-3094" matches "/api/premium/clean/cve/:id").
  */
 export function isBazaarPilotPath(path: string): boolean {
-  return Object.prototype.hasOwnProperty.call(BAZAAR_PILOTS, path);
+  return getBazaarPilotConfig(path) !== null;
 }
 
 /**
  * Returns the bazaar config for a pilot path, or null if not piloted.
+ * Fast path: exact match on the Wave 0-13 flat URLs. Slow path: walk
+ * the Wave 14+ templates and match by segment.
  */
 export function getBazaarPilotConfig(path: string): BazaarPilotConfig | null {
-  return BAZAAR_PILOTS[path] ?? null;
+  // hasOwnProperty guards against prototype-key lookups like __proto__,
+  // constructor, toString (which would otherwise return Object.prototype's
+  // entries and pass a naive truthy check).
+  if (Object.prototype.hasOwnProperty.call(BAZAAR_PILOTS, path)) {
+    return BAZAAR_PILOTS[path];
+  }
+  for (const key of Object.keys(BAZAAR_PILOTS)) {
+    if (!key.includes(':')) continue;
+    if (matchesTemplate(path, key)) return BAZAAR_PILOTS[key];
+  }
+  return null;
 }
 
 /**
@@ -2326,8 +2702,13 @@ export function pilotCatalogStatus(
     }
     cataloged.add(pathname);
   }
-  return bazaarPilotPaths().map((path) => ({
-    path,
-    cataloged: cataloged.has(path),
-  }));
+  return bazaarPilotPaths().map((path) => {
+    // For templated paths, match by template (any cataloged concrete
+    // path that matches the template counts the template as cataloged).
+    if (path.includes(':')) {
+      const hit = [...cataloged].some((c) => matchesTemplate(c, path));
+      return { path, cataloged: hit };
+    }
+    return { path, cataloged: cataloged.has(path) };
+  });
 }
