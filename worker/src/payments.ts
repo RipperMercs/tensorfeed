@@ -2241,6 +2241,10 @@ export async function requirePayment(
       ? await cdpVerify(env, payload, requirements)
       : await verifyX402Payment(payload, requirements, undefined, x402Config);
     if (!verify.isValid) {
+      // Surface verify.message + log it. Without this the buyer side only
+      // sees the generic errorReason code (e.g. unexpected_verify_error)
+      // with no way to know what CDP actually returned. Logged + returned.
+      console.error(`x402 verify failed: ${verify.invalidReason} - ${verify.message || '(no message)'}`);
       return {
         paid: false,
         response: jsonResponse(
@@ -2248,6 +2252,7 @@ export async function requirePayment(
             x402Version: 2,
             success: false,
             errorReason: verify.invalidReason,
+            invalidMessage: verify.message || null,
             accepts: [requirements],
             resource: { url: resourceUrl, mimeType: 'application/json' },
           },
