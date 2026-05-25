@@ -139,7 +139,8 @@ describe('refreshOpenAlexAICitationVelocity', () => {
   });
 
   it('returns ok:false on HTTP failure', async () => {
-    (fetch as any).mockResolvedValueOnce(new Response('rate limit', { status: 429 }));
+    // mockResolvedValue (not Once) — fetchOpenAlexWithRetry calls fetch up to 3 times.
+    (fetch as any).mockResolvedValue(new Response('rate limit', { status: 429 }));
     const { kv } = makeKv();
     const env = { TENSORFEED_CACHE: kv } as any;
     const r = await refreshOpenAlexAICitationVelocity(env);

@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { fetchOpenAlexWithRetry } from './openalex-fetch';
 
 /**
  * AI/ML academic research metrics from OpenAlex.
@@ -33,7 +34,6 @@ const AI_CONCEPT_ID = 'C154945302';
 // including a contact so they can reach out if something goes wrong;
 // not required, no auth, just goodwill that gets faster responses.
 const POLITE_UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
-const FETCH_TIMEOUT_MS = 15_000;
 
 const CURRENT_KEY = 'openalex-ai-institutions:current';
 const META_KEY = 'openalex-ai-institutions:meta';
@@ -79,10 +79,9 @@ async function fetchInstitutionAggregate(): Promise<InstitutionAggregate[]> {
     `&group_by=authorships.institutions.id` +
     `&per_page=200`;
 
-  const res = await fetch(url, {
-    headers: { 'User-Agent': POLITE_UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cf: { cacheTtl: 60 } as RequestInitCfProperties,
+  const res = await fetchOpenAlexWithRetry(url, {
+    'User-Agent': POLITE_UA,
+    Accept: 'application/json',
   });
   if (!res.ok) {
     throw new Error(`openalex group_by failed: HTTP ${res.status}`);
@@ -113,10 +112,9 @@ async function fetchInstitutionDetails(ids: string[]): Promise<Map<string, OpenA
     `&select=id,display_name,country_code,type,works_count` +
     `&per_page=200`;
 
-  const res = await fetch(url, {
-    headers: { 'User-Agent': POLITE_UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cf: { cacheTtl: 60 } as RequestInitCfProperties,
+  const res = await fetchOpenAlexWithRetry(url, {
+    'User-Agent': POLITE_UA,
+    Accept: 'application/json',
   });
   if (!res.ok) {
     throw new Error(`openalex institutions failed: HTTP ${res.status}`);

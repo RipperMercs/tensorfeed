@@ -1,4 +1,5 @@
 import type { Env } from './types';
+import { fetchOpenAlexWithRetry } from './openalex-fetch';
 
 /**
  * AI/ML research papers ranked by citation velocity (OpenAlex).
@@ -35,7 +36,6 @@ import type { Env } from './types';
 const OPENALEX_BASE = 'https://api.openalex.org';
 const AI_CONCEPT_ID = 'C154945302';
 const POLITE_UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
-const FETCH_TIMEOUT_MS = 20_000;
 
 const CURRENT_KEY = 'openalex-ai-citation-velocity:current';
 const TOP_N = 100;
@@ -106,10 +106,9 @@ async function fetchRecentCitedAIWorks(): Promise<OpenAlexWork[]> {
     `&sort=cited_by_count:desc` +
     `&per_page=200` +
     `&select=id,display_name,publication_year,cited_by_count,counts_by_year,authorships,doi,primary_location`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': POLITE_UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cf: { cacheTtl: 60 } as RequestInitCfProperties,
+  const res = await fetchOpenAlexWithRetry(url, {
+    'User-Agent': POLITE_UA,
+    Accept: 'application/json',
   });
   if (!res.ok) {
     throw new Error(`openalex works failed: HTTP ${res.status}`);

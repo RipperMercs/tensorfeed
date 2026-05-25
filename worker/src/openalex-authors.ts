@@ -1,4 +1,5 @@
 import type { Env } from './types';
+import { fetchOpenAlexWithRetry } from './openalex-fetch';
 
 /**
  * AI/ML academic research authors leaderboard from OpenAlex.
@@ -33,7 +34,6 @@ import type { Env } from './types';
 const OPENALEX_BASE = 'https://api.openalex.org';
 const AI_CONCEPT_ID = 'C154945302';
 const POLITE_UA = 'tensorfeed-research/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
-const FETCH_TIMEOUT_MS = 15_000;
 
 const CURRENT_KEY = 'openalex-ai-authors:current';
 const TOP_N = 100;
@@ -115,10 +115,9 @@ async function fetchAuthorAggregate(): Promise<AuthorAggregate[]> {
     `?filter=concepts.id:${AI_CONCEPT_ID},from_publication_date:${fromDate}` +
     `&group_by=authorships.author.id` +
     `&per_page=200`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': POLITE_UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cf: { cacheTtl: 60 } as RequestInitCfProperties,
+  const res = await fetchOpenAlexWithRetry(url, {
+    'User-Agent': POLITE_UA,
+    Accept: 'application/json',
   });
   if (!res.ok) {
     throw new Error(`openalex authors group_by failed: HTTP ${res.status}`);
@@ -144,10 +143,9 @@ async function fetchAuthorDetails(ids: string[]): Promise<Map<string, OpenAlexAu
     `?filter=ids.openalex:${encodeURIComponent(filterValue)}` +
     `&select=id,display_name,orcid,affiliations,summary_stats,works_count,cited_by_count` +
     `&per_page=200`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': POLITE_UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cf: { cacheTtl: 60 } as RequestInitCfProperties,
+  const res = await fetchOpenAlexWithRetry(url, {
+    'User-Agent': POLITE_UA,
+    Accept: 'application/json',
   });
   if (!res.ok) {
     throw new Error(`openalex authors details failed: HTTP ${res.status}`);
