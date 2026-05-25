@@ -1088,6 +1088,8 @@ export const PRODUCTS: Product[] = [
     },
     tags: ['book', 'ml-systems', 'mlops', 'learning'],
     hue: 28,
+    image: '/gear/designing-ml-systems.png',
+    imageAlt: "Designing Machine Learning Systems by Chip Huyen, O'Reilly book cover with partridge illustration",
     addedAt: '2026-05-23',
     reviewedAt: '2026-05-23',
   },
