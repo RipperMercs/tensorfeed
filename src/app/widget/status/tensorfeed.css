@@ -150,6 +150,7 @@
    THE WIDGET
    Root: <div class="tf-widget" data-condition="nominal|degraded|critical" data-accent="blue|green">
    ============================================================ */
+.tf-widget {
   width: 100%;
   /* Narrow + tall product: the widget renders as a portrait-oriented
      console (think "AI status sidebar"), not a wide dashboard. 640
