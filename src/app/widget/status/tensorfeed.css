@@ -150,20 +150,17 @@
    THE WIDGET
    Root: <div class="tf-widget" data-condition="nominal|degraded|critical" data-accent="blue|green">
    ============================================================ */
-.tf-widget {
-  position: relative;
-  /* Fluid width: grows with the container from a 420 mobile floor up to
-     1400 at 4K, taking 92% of available width in between. The widget
-     also defines itself as a query container so internal typography and
-     spacing can respond to the WIDGET'S own width (cqw units below),
-     not the viewport. That keeps the rendering crisp whether the widget
-     is in a 480 mobile column, an 800 popup, a 1280 desktop frame, or a
-     3840 4K hero. */
   width: 100%;
-  max-width: clamp(420px, 92vw, 1400px);
+  /* Narrow + tall product: the widget renders as a portrait-oriented
+     console (think "AI status sidebar"), not a wide dashboard. 640
+     ceiling keeps lines short and the row stack tall, which is the
+     intended product feel. Container queries below tune type and
+     spacing to the widget's OWN width, not the viewport. */
+  max-width: clamp(420px, 48vw, 640px);
   margin: 0 auto;
   container-type: inline-size;
   container-name: tfw;
+  position: relative;
   font-family: var(--tf-font-display);
   color: var(--tf-fg);
   background: var(--tf-bg-panel);
@@ -181,32 +178,27 @@
 
 /* ============================================================
    FLUID SCALE BLOCK
-   Type and spacing grow with the widget's own width (cqw = 1% of
-   container-inline). Defaults below stay readable at 420px floor;
-   the @container rules step things up at larger renders so the
-   widget feels like a real product at 1200+ widths (matching the
-   macro product shot aesthetic), not a fixed-pixel embed.
+   Type and spacing tune to the widget's OWN width via cqw units
+   (1cqw = 1% of container inline-size), since the widget is now a
+   narrow + tall product (max 640) embedded in iframes of varying
+   sizes. The single breakpoint at 540 gives the medium and wide
+   embeds a gentle bump in type weight and row breathing room; the
+   <540 case (sidebar/popup-narrow) falls back to base styles which
+   are tuned to be tight and readable.
    ============================================================ */
-@container tfw (min-width: 900px) {
-  .tf-title       { font-size: clamp(26px, 3.2cqw, 44px) !important; letter-spacing: 0.04em; }
-  .tf-sub         { font-size: clamp(11px, 1.2cqw, 16px) !important; }
-  .tf-r-name      { font-size: clamp(16px, 1.6cqw, 22px); }
-  .tf-r-vendor    { font-size: clamp(10.5px, 1cqw, 13px); }
-  .tf-r-status    { font-size: clamp(11px, 1.05cqw, 14px); letter-spacing: 0.2em; }
-  .tf-klaxon-label  { font-size: clamp(12px, 1.1cqw, 15px); }
-  .tf-klaxon-status { font-size: clamp(11px, 1cqw, 14px); }
-  .tf-klaxon-clock  { font-size: clamp(12px, 1.1cqw, 15px); }
-  .tf-row           { padding: 12px 16px; gap: 16px; }
-  .tf-feed          { padding: 0 24px 18px 84px; gap: 8px; }
-  .tf-head          { padding: 18px 24px 14px 84px; gap: 14px; }
-  .tf-klaxon        { height: 42px; padding: 0 22px 0 84px; }
-  .tf-filter        { padding: 0 24px 14px 84px; font-size: 12px; }
-}
-@container tfw (min-width: 1300px) {
-  .tf-row           { padding: 14px 18px; gap: 18px; }
-  .tf-feed          { padding: 0 30px 22px 92px; gap: 10px; }
-  .tf-head          { padding: 22px 30px 16px 92px; }
-  .tf-spine         { width: 64px; }
+@container tfw (min-width: 540px) {
+  .tf-title       { font-size: clamp(20px, 3.6cqw, 26px) !important; letter-spacing: 0.04em; }
+  .tf-r-name      { font-size: clamp(15px, 2.5cqw, 17px); }
+  .tf-r-vendor    { font-size: clamp(10px, 1.7cqw, 12px); }
+  .tf-r-status    { font-size: clamp(10.5px, 1.8cqw, 12px); letter-spacing: 0.2em; }
+  .tf-klaxon-label  { font-size: clamp(11px, 1.9cqw, 13px); }
+  .tf-klaxon-status { font-size: clamp(10.5px, 1.7cqw, 12px); }
+  .tf-klaxon-clock  { font-size: clamp(11px, 1.9cqw, 13px); }
+  .tf-row           { padding: 11px 14px; gap: 12px; }
+  .tf-feed          { padding: 0 18px 16px 76px; gap: 7px; }
+  .tf-head          { padding: 16px 20px 13px 76px; gap: 12px; }
+  .tf-klaxon        { height: 40px; padding: 0 20px 0 76px; }
+  .tf-filter        { padding: 0 20px 12px 76px; }
 }
 
 /* widget glows depend on condition (top-level alert level) */
