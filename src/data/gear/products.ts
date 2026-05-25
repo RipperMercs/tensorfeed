@@ -44,6 +44,8 @@ export const PRODUCTS: Product[] = [
     },
     tags: ['local-llm', 'claude-code', 'stable-diffusion', 'fine-tuning'],
     hue: 214,
+    image: '/gear/lenovo-legion-pro-7i-gen-10.jpg',
+    imageAlt: 'Lenovo Legion Pro 7i Gen 10, 16-inch RTX 5090 gaming laptop with RGB keyboard, product photograph',
     addedAt: '2026-05-23',
     reviewedAt: '2026-05-23',
     featured: true,
