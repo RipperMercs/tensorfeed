@@ -1,7 +1,7 @@
 {
   "ok": true,
   "source": "tensorfeed.ai",
-  "checked": "2026-05-03T21:50:54.370Z",
+  "checked": "2026-05-23T22:59:12.519Z",
   "services": [
     {
       "name": "Claude API",
@@ -11,10 +11,6 @@
       "components": [
         {
           "name": "claude.ai",
-          "status": "operational"
-        },
-        {
-          "name": "Claude Console (platform.claude.com)",
           "status": "operational"
         },
         {
@@ -32,26 +28,22 @@
         {
           "name": "Claude for Government",
           "status": "operational"
+        },
+        {
+          "name": "Claude Console (platform.claude.com)",
+          "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-03T21:45:56.583Z"
+      "lastChecked": "2026-05-23T22:58:37.867Z"
     },
     {
       "name": "OpenAI API",
       "provider": "OpenAI",
-      "status": "degraded",
+      "status": "operational",
       "statusPageUrl": "https://status.openai.com",
       "components": [
         {
-          "name": "Chat Completions",
-          "status": "operational"
-        },
-        {
           "name": "Responses",
-          "status": "operational"
-        },
-        {
-          "name": "VS Code extension",
           "status": "operational"
         },
         {
@@ -65,17 +57,148 @@
         {
           "name": "Batch",
           "status": "operational"
+        },
+        {
+          "name": "Moderations",
+          "status": "operational"
+        },
+        {
+          "name": "Embeddings",
+          "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-03T21:45:56.322Z"
+      "lastChecked": "2026-05-23T22:58:37.314Z"
+    },
+    {
+      "name": "Google Gemini",
+      "provider": "Google",
+      "status": "operational",
+      "statusPageUrl": "https://status.cloud.google.com",
+      "components": [
+        {
+          "name": "Inference API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.323Z"
+    },
+    {
+      "name": "GitHub Copilot",
+      "provider": "GitHub",
+      "status": "operational",
+      "statusPageUrl": "https://www.githubstatus.com",
+      "components": [
+        {
+          "name": "Copilot",
+          "status": "operational"
+        },
+        {
+          "name": "Copilot AI Model Providers",
+          "status": "operational"
+        },
+        {
+          "name": "Git Operations",
+          "status": "operational"
+        },
+        {
+          "name": "Webhooks",
+          "status": "operational"
+        },
+        {
+          "name": "API Requests",
+          "status": "operational"
+        },
+        {
+          "name": "Issues",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.358Z"
+    },
+    {
+      "name": "Perplexity",
+      "provider": "Perplexity AI",
+      "status": "operational",
+      "statusPageUrl": "https://status.perplexity.com",
+      "components": [
+        {
+          "name": "API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.263Z"
+    },
+    {
+      "name": "Groq",
+      "provider": "Groq",
+      "status": "operational",
+      "statusPageUrl": "https://groqstatus.com",
+      "components": [
+        {
+          "name": "meta-llama/llama-guard-4-12b",
+          "status": "operational"
+        },
+        {
+          "name": "groq/compound-mini",
+          "status": "operational"
+        },
+        {
+          "name": "Canopy Labs Orpheus Arabic Saudi",
+          "status": "operational"
+        },
+        {
+          "name": "meta-llama/llama-4-scout-17b-16e-instruct",
+          "status": "operational"
+        },
+        {
+          "name": "meta-llama/llama-prompt-guard-2-86m",
+          "status": "operational"
+        },
+        {
+          "name": "moonshotai/kimi-k2-instruct-0905",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.330Z"
+    },
+    {
+      "name": "AWS Bedrock",
+      "provider": "AWS",
+      "status": "operational",
+      "statusPageUrl": "https://health.aws.amazon.com/health/status",
+      "components": [
+        {
+          "name": "Bedrock API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.530Z"
+    },
+    {
+      "name": "Azure OpenAI",
+      "provider": "Microsoft Azure",
+      "status": "operational",
+      "statusPageUrl": "https://azure.status.microsoft/en-us/status",
+      "components": [
+        {
+          "name": "Azure OpenAI Service",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.365Z"
     },
     {
       "name": "Hugging Face",
       "provider": "Hugging Face",
       "status": "operational",
       "statusPageUrl": "https://status.huggingface.co",
-      "components": [],
-      "lastChecked": "2026-05-03T21:45:56.279Z"
+      "components": [
+        {
+          "name": "API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.405Z"
     },
     {
       "name": "Replicate",
@@ -83,10 +206,6 @@
       "status": "operational",
       "statusPageUrl": "https://status.replicate.com",
       "components": [
-        {
-          "name": "Billing",
-          "status": "operational"
-        },
         {
           "name": "Support Tickets",
           "status": "operational"
@@ -100,15 +219,19 @@
           "status": "operational"
         },
         {
+          "name": "Replicate Registry (r8.im)",
+          "status": "operational"
+        },
+        {
           "name": "CPU Hardware",
           "status": "operational"
         },
         {
-          "name": "Replicate Registry (r8.im)",
+          "name": "Home Page",
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-03T21:45:56.341Z"
+      "lastChecked": "2026-05-23T22:58:37.756Z"
     },
     {
       "name": "Cohere",
@@ -141,15 +264,176 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-03T21:45:56.340Z"
+      "lastChecked": "2026-05-23T22:58:37.459Z"
     },
     {
       "name": "Mistral",
       "provider": "Mistral AI",
       "status": "operational",
       "statusPageUrl": "https://status.mistral.ai",
+      "components": [
+        {
+          "name": "API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.459Z"
+    },
+    {
+      "name": "DeepSeek",
+      "provider": "DeepSeek",
+      "status": "unknown",
+      "statusPageUrl": "https://status.deepseek.com",
       "components": [],
-      "lastChecked": "2026-05-03T21:45:56.324Z"
+      "lastChecked": "2026-05-23T22:58:38.835Z"
+    },
+    {
+      "name": "Together AI",
+      "provider": "Together AI",
+      "status": "operational",
+      "statusPageUrl": "https://status.together.ai",
+      "components": [
+        {
+          "name": "API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.702Z"
+    },
+    {
+      "name": "Fireworks AI",
+      "provider": "Fireworks AI",
+      "status": "operational",
+      "statusPageUrl": "https://status.fireworks.ai",
+      "components": [
+        {
+          "name": "API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.573Z"
+    },
+    {
+      "name": "OpenRouter",
+      "provider": "OpenRouter",
+      "status": "operational",
+      "statusPageUrl": "https://status.openrouter.ai",
+      "components": [
+        {
+          "name": "API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.728Z"
+    },
+    {
+      "name": "ElevenLabs",
+      "provider": "ElevenLabs",
+      "status": "operational",
+      "statusPageUrl": "https://status.elevenlabs.io",
+      "components": [
+        {
+          "name": "UI",
+          "status": "operational"
+        },
+        {
+          "name": "Quality",
+          "status": "operational"
+        },
+        {
+          "name": "Other",
+          "status": "operational"
+        },
+        {
+          "name": "Other API endpoints",
+          "status": "operational"
+        },
+        {
+          "name": "RAG",
+          "status": "operational"
+        },
+        {
+          "name": "Telephony",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.641Z"
+    },
+    {
+      "name": "Stability AI",
+      "provider": "Stability AI",
+      "status": "operational",
+      "statusPageUrl": "https://status.stability.ai",
+      "components": [
+        {
+          "name": "Stability.ai Platform & Services",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.640Z"
+    },
+    {
+      "name": "Runway",
+      "provider": "Runway",
+      "status": "operational",
+      "statusPageUrl": "https://status.runwayml.com",
+      "components": [
+        {
+          "name": "Backend",
+          "status": "operational"
+        },
+        {
+          "name": "Support",
+          "status": "operational"
+        },
+        {
+          "name": "Public API",
+          "status": "operational"
+        },
+        {
+          "name": "App",
+          "status": "operational"
+        },
+        {
+          "name": "Billing",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.821Z"
+    },
+    {
+      "name": "Luma",
+      "provider": "Luma AI",
+      "status": "operational",
+      "statusPageUrl": "https://status.lumalabs.ai",
+      "components": [
+        {
+          "name": "API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.781Z"
+    },
+    {
+      "name": "Hyperliquid",
+      "provider": "Hyperliquid",
+      "status": "operational",
+      "statusPageUrl": "https://hyperliquid.statuspage.io",
+      "components": [
+        {
+          "name": "Frontend",
+          "status": "operational"
+        },
+        {
+          "name": "Hyperliquid L1",
+          "status": "operational"
+        },
+        {
+          "name": "API",
+          "status": "operational"
+        }
+      ],
+      "lastChecked": "2026-05-23T22:58:37.858Z"
     }
   ]
 }

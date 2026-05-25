@@ -1,6 +1,27 @@
 {
   "events": [
     {
+      "date": "2026-05-21",
+      "title": "Trump Postpones AI Executive Order Hours Before Signing",
+      "provider": "US Government",
+      "category": "policy",
+      "description": "President Trump pulled a landmark AI executive order from the schedule hours before its planned signing ceremony on May 21. The order would have established a voluntary 90-day pre-launch review framework for frontier AI models with NSA involvement and tasked federal agencies with using AI models to harden government network defenses. Trump cited concerns the framework could slow US competitiveness against China. Former AI czar David Sacks, Mark Zuckerberg, and Elon Musk are reported to have lobbied against it directly. No new signing date announced."
+    },
+    {
+      "date": "2026-05-21",
+      "title": "Coupa Acquires Tonkean for Agentic Procurement",
+      "provider": "Coupa",
+      "category": "acquisition",
+      "description": "Coupa acquired Tonkean, a Palo Alto-based no-code workflow orchestration platform with 250+ native connectors and multi-agent coordination. Financial terms were not disclosed. The deal is Coupa's second AI-focused acquisition in two weeks, following the May 12 Rossum (intelligent document processing) deal, and feeds Coupa's emerging agentic trade network across procurement, invoicing, and supplier transactions."
+    },
+    {
+      "date": "2026-05-20",
+      "title": "Cohere Releases Command A+ Open Source Under Apache 2.0",
+      "provider": "Cohere",
+      "category": "open-source",
+      "description": "Cohere released Command A+, a 218B-total / 25B-active mixture-of-experts model with a 128K input context and 64K max generation, under an Apache 2.0 license. Multimodal text and image input, tool use, 48-language coverage, available on Hugging Face in BF16, FP8, and W4A4 quantizations. Runs on a single NVIDIA Blackwell B200 or two H100s at W4A4. Scores 37 on the Artificial Analysis Intelligence Index, 75.1% on MMMU, and 80.6% on MathVista. Cohere's first fully Apache 2.0 enterprise model and first multimodal reasoning model."
+    },
+    {
       "date": "2026-05-19",
       "title": "Google Launches Gemini 3.5 Flash at I/O 2026",
       "provider": "Google",

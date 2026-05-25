@@ -2,13 +2,13 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
-  title: 'Best Open Source LLMs in 2026: Llama, DeepSeek V4, Mistral, Qwen & More | TensorFeed',
+  title: 'Best Open Source LLMs in 2026: Llama, DeepSeek V4, Mistral, Qwen, Cohere Command A+ & More | TensorFeed',
   description:
-    'Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, Mistral, Qwen 2.5, Phi-4, Gemma 2, and Command R. Parameters, benchmarks, licensing, and how to run them locally.',
+    'Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, Mistral, Qwen 2.5, Phi-4, Gemma 2, Cohere Command A+, and Command R. Parameters, benchmarks, licensing, and how to run them locally.',
   openGraph: {
     title: 'Best Open Source LLMs in 2026',
     description:
-      'Compare the best open source LLMs: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, and Command R.',
+      'Compare the best open source LLMs: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R.',
     url: 'https://tensorfeed.ai/best-open-source-llms',
   },
 };
@@ -177,6 +177,25 @@ const models = [
     considerations: 'Short context window (8K) is a significant limitation. License is permissive but not standard open source (custom Google terms). Ecosystem is smaller than Llama.',
   },
   {
+    name: 'Command A+',
+    company: 'Cohere',
+    parameters: '218B total (25B active per token)',
+    architecture: 'Mixture of Experts (MoE)',
+    contextWindow: '128K input / 64K max generation',
+    license: 'Apache 2.0',
+    released: 'May 2026',
+    highlights: [
+      'Fully Apache 2.0 licensed (Cohere\'s first), unrestricted commercial use',
+      'Multimodal reasoning: text and image input, native tool use',
+      'Runs on a single NVIDIA B200 or two H100s at W4A4 quantization',
+      'Lossless quantization across BF16, FP8, and W4A4 on Hugging Face',
+      '48 language coverage, with new tokenizer that cuts tokens 16 to 20% in Arabic, Korean, and Japanese',
+      'Artificial Analysis Intelligence Index of 37; MMMU 75.1%, MathVista 80.6%',
+    ],
+    bestFor: 'Enterprises that need sovereign, self-hostable AI with native citations and RAG, plus a permissive license for production. Strong fit for agentic workflows across regulated industries (financial services, healthcare, public sector).',
+    considerations: 'Trails the strongest Chinese open MoEs (DeepSeek V4 Pro, GLM, MiniMax) on the broadest general-intelligence benchmarks. Best paired with Cohere\'s North platform if you want the integrated agentic workspace. API pricing for the hosted version was not published at launch.',
+  },
+  {
     name: 'Command R+',
     company: 'Cohere',
     parameters: '104B',
@@ -192,7 +211,7 @@ const models = [
       'Reliable tool use and function calling',
     ],
     bestFor: 'RAG applications where you need the model to carefully reference and cite source documents. Enterprise search, knowledge bases, and document Q&A.',
-    considerations: 'Non-commercial license for the open weights version. Commercial use requires a license from Cohere. Slightly older than other models on this list.',
+    considerations: 'Superseded by Command A+ in May 2026, which is Apache 2.0 and multimodal. Keep Command R+ in mind only for existing deployments; new projects should default to Command A+.',
   },
 ];
 
@@ -201,12 +220,12 @@ export default function BestOpenSourceLLMsPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <ArticleJsonLd
         title="Best Open Source LLMs in 2026"
-        description="Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, and Command R. Includes benchmarks, licensing, and how to run locally."
+        description="Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R. Includes benchmarks, licensing, and how to run locally."
         datePublished="2025-05-01"
-        dateModified="2026-04-26"
+        dateModified="2026-05-24"
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: April 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: May 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         Best Open Source LLMs in 2026

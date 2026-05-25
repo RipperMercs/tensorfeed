@@ -113,16 +113,16 @@ export const PROVIDERS: ProviderMeta[] = [
     pricingId: 'cohere',
     name: 'Cohere',
     url: 'https://cohere.com',
-    seoTitle: 'Cohere: Command R Models, RAG, Pricing, and API Overview',
+    seoTitle: 'Cohere: Command A+, Command R Models, RAG, Pricing, and API Overview',
     seoDescription:
-      'Everything about Cohere. Enterprise RAG, Command R models, pricing, and capabilities. Updated daily on TensorFeed.',
+      'Everything about Cohere. Enterprise RAG, Command A+ open source MoE model, Command R lineup, pricing, and capabilities. Updated daily on TensorFeed.',
     intro:
-      'Cohere is the enterprise-focused AI company built around retrieval-augmented generation (RAG). Founded in 2019 by former Google Brain researchers, Cohere\'s Command R models are purpose-built for search, grounding, and citation workflows. If your primary use case is enterprise search, document Q&A with verifiable citations, or tool-augmented RAG pipelines, Cohere is the most specialized option available.',
+      'Cohere is the enterprise-focused AI company built around retrieval-augmented generation (RAG) and sovereign AI deployment. Founded in 2019 by former Google Brain researchers, Cohere\'s Command R models are purpose-built for search, grounding, and citation workflows. On May 20, 2026 Cohere released Command A+, a 218B / 25B-active mixture-of-experts model under an Apache 2.0 license, runnable on as little as two H100 GPUs and Cohere\'s first multimodal reasoning model. If your primary use case is enterprise search, document Q&A with verifiable citations, sovereign deployment, or tool-augmented RAG pipelines, Cohere is the most specialized option available.',
     founded: '2019',
     headquarters: 'Toronto, Canada',
     ceo: 'Aidan Gomez',
-    keyProducts: ['Command R+', 'Command R', 'Embed v4', 'Rerank'],
-    strengths: ['Purpose-built for RAG', 'Native grounding and citations', 'Strong embedding models', 'Enterprise search focus', 'Multilingual support'],
+    keyProducts: ['Command A+', 'Command R+', 'Command R', 'Embed v4', 'Rerank'],
+    strengths: ['Apache 2.0 open source MoE flagship', 'Purpose-built for RAG', 'Native grounding and citations', 'Strong embedding models', 'Enterprise search focus', 'Multilingual support (48 languages)'],
     statusSlug: 'is-cohere-down',
   },
   {

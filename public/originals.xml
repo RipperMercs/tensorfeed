@@ -5,13 +5,21 @@
     <link>https://tensorfeed.ai</link>
     <description>Original AI editorial from the TensorFeed team.</description>
     <language>en-us</language>
-    <lastBuildDate>Fri, 22 May 2026 16:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 23 May 2026 07:00:00 GMT</lastBuildDate>
     <atom:link href="https://tensorfeed.ai/originals.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title><![CDATA[OpenAI Filed for a Trillion-Dollar IPO. The Same Week Anthropic Booked Its First Profit.]]></title>
+      <link>https://tensorfeed.ai/originals/openai-ipo-filing-anthropic-first-profit</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/openai-ipo-filing-anthropic-first-profit</guid>
+      <pubDate>Sat, 23 May 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <description><![CDATA[OpenAI sent its confidential S-1 to the SEC on Friday May 22 targeting an $852B to $1T Q4 listing with Goldman Sachs and Morgan Stanley leading, while still losing $1.22 for every dollar of revenue in Q1 on $5.7B of quarterly revenue. Six days earlier, Anthropic told investors it expects a $559M operating profit on $10.9B of Q2 revenue (130% growth from Q1), the first profitable quarter in company history, with the compute cost ratio collapsing from 71 cents per $1 to 56 cents in a single quarter. Two trillion-dollar labs, two opposite financial moments in the same week. Inside the side-by-side, why distribution-first burning and unit-economics-first compounding can both be rational bets, what the S-1 actually discloses vs hides until the public roadshow, and what the price-floor implications are for every other API vendor.]]></description>
+    </item>
     <item>
       <title><![CDATA[x402 Has Three Options for Free Trials on Paid Routes. We Shipped a Fourth.]]></title>
       <link>https://tensorfeed.ai/originals/free-tier-on-paid-routes</link>
       <guid isPermaLink="true">https://tensorfeed.ai/originals/free-tier-on-paid-routes</guid>
-      <pubDate>Fri, 22 May 2026 16:00:00 GMT</pubDate>
+      <pubDate>Fri, 22 May 2026 07:00:00 GMT</pubDate>
       <dc:creator><![CDATA[Ripper]]></dc:creator>
       <description><![CDATA[A thread on x402#2207 enumerated three options for how a paid x402 endpoint can offer a free trial without breaking the spec: a custom alt-challenge header, a probe-with-X-PAYMENT-rejected handshake, or dedicated free endpoints adjacent to every paid one. TensorFeed has been running a fourth in production. The trial lives in the rate-limiter, never at the 402 layer: 100 free calls per IP per 24h on the non-strict-premium subset of /api/premium/*, quota exhausted returns a canonical x402 V2 402, the ~30% strict-premium subset skips the trial so anonymous crawlers always see canonical 402, and X-TF-Free-Trial-* response headers make the pool discoverable to paying agents. x402trace v0.3.2 shipped on May 22 and exercised the pattern in one probe (D.4 per-route, D.5 body-discovery variant, D.3 indexer-state). Inside: the three options, the fourth, the two design decisions that hold it together, and the full v0.3.2 verdict envelope.]]></description>
     </item>
@@ -21,7 +29,7 @@
       <guid isPermaLink="true">https://tensorfeed.ai/originals/x402-multi-rail-fireblocks-allunity</guid>
       <pubDate>Thu, 21 May 2026 07:00:00 GMT</pubDate>
       <dc:creator><![CDATA[Ripper]]></dc:creator>
-      <description><![CDATA[Two announcements landed on May 20. Fireblocks — institutional crypto custody, not a startup — joined the x402 Foundation and shipped a security extension for request integrity and spend governance. The same day, Germany’s MiCA-regulated AllUnity rolled out Agentic Payments using x402 to settle into a Swedish krona stablecoin. The next morning, a third party offered the spec authors a non-Coinbase, three-rail acceptance fixture on #2207 covering Base USDC, Solana USDC, and JPYC on Polygon. x402 was a Coinbase-and-Cloudflare default six months ago. After this week the variant axis is open.]]></description>
+      <description><![CDATA[Two announcements landed on May 20. Fireblocks, the institutional crypto custodian rather than a startup, joined the x402 Foundation and shipped a security extension for request integrity and spend governance. The same day, Germany’s MiCA-regulated AllUnity rolled out Agentic Payments using x402 to settle into a Swedish krona stablecoin. The next morning, a third party offered the spec authors a non-Coinbase, three-rail acceptance fixture on #2207 covering Base USDC, Solana USDC, and JPYC on Polygon. x402 was a Coinbase-and-Cloudflare default six months ago. After this week the variant axis is open.]]></description>
     </item>
     <item>
       <title><![CDATA[TensorFeed AI Status Is Now a Chrome Extension. Live AI Health Sits in Your Toolbar.]]></title>
@@ -238,22 +246,6 @@
       <pubDate>Sat, 09 May 2026 07:00:00 GMT</pubDate>
       <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
       <description><![CDATA[Most discourse about AI safety in 2026 is focused on the wrong failure mode. Hallucinations are bounded; agents acting on a single source is the actual problem about to bite the autonomous economy. TensorFeed shipped the fix tonight: embedding-based story clustering across 12 RSS sources, premium "verified across N sources" feed, free preview at 25 clusters/day. Inside how it works, the threshold-tuning trade-off, why TF could ship it (only we have the cross-source view at scale), and how the AFTA federation makes the corroboration math compose across publishers.]]></description>
-    </item>
-    <item>
-      <title><![CDATA[The AI Cyber Tier Now Has a Data Layer. It Is Token-Optimized, Pay-Per-Call, and Live.]]></title>
-      <link>https://tensorfeed.ai/originals/ai-cyber-tier-data-layer</link>
-      <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-cyber-tier-data-layer</guid>
-      <pubDate>Sat, 09 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
-      <description><![CDATA[The week opened with Anthropic Mythos and the policy reaction. It closes with the data infrastructure agents need to do something useful with cyber-tier capability. Inside the agent-data layer TensorFeed shipped in 24 hours: MITRE CVE, CISA KEV, EPSS, NASA POWER, OpenFDA, and EIA Open Data as free + premium x402-billable endpoints with LLM-ready transforms that drop typical responses by 80% in tokens. Why $0.02 USDC settles a problem that $5K/month enterprise APIs cannot. Why the deep moat is the transform, not the data itself. Why TerminalFeed.io adopting AFTA last week is a signal more than a footnote.]]></description>
-    </item>
-    <item>
-      <title><![CDATA[This Week in AI: The Mythos Effect, $200B for Google, and an FDA for Models]]></title>
-      <link>https://tensorfeed.ai/originals/ai-week-may-8-2026</link>
-      <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-week-may-8-2026</guid>
-      <pubDate>Fri, 08 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
-      <description><![CDATA[Five business days, one Anthropic security model, and the entire U.S. AI policy floor moved. CAISI signed pre-launch evaluation agreements with Google DeepMind, Microsoft, and xAI. The White House confirmed it is studying an FDA-style executive order for new model releases. Anthropic locked in $200 billion of Google Cloud and Broadcom TPU capacity, more than 40% of Google's reported revenue backlog. OpenAI shipped GPT-5.5-Cyber to vetted security teams. Cohere closed its $20B sovereign-AI merger with Aleph Alpha. China formally blocked Meta's $2B Manus acquisition. Inside the through-line: capability triggered policy, policy triggered procurement, and the cyber tier just became a real product category every frontier lab has to answer.]]></description>
     </item>
   </channel>
 </rss>
