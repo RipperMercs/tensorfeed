@@ -437,6 +437,8 @@ export const PRODUCTS: Product[] = [
     },
     tags: ['open-source', 'wearable-agent', 'dev-kit', 'vision-llm'],
     hue: 320,
+    image: '/gear/brilliant-labs-frame.png',
+    imageAlt: 'Brilliant Labs Frame open-source AI smart glasses with microOLED display and side-mounted camera, product photograph',
     addedAt: '2026-05-23',
     reviewedAt: '2026-05-23',
   },
