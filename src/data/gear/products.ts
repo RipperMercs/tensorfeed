@@ -794,6 +794,8 @@ export const PRODUCTS: Product[] = [
     },
     tags: ['camera', '360', 'ai-editing', 'action-cam'],
     hue: 195,
+    image: '/gear/insta360-x5.png',
+    imageAlt: 'Insta360 X5 360-degree action camera with dual lenses, product photograph',
     addedAt: '2026-05-23',
     reviewedAt: '2026-05-23',
   },
