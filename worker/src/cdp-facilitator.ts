@@ -397,13 +397,40 @@ export async function cdpSettle(
   const headers = await authHeaders(env, 'POST', path);
   const url = `${CDP_BASE_URL}/settle`;
 
-  // Note 2026-05-25 (evening): a previous attempt injected a top-level
-  // `resource` field into paymentPayload based on Ethan Oroshiba's quote
-  // on x402#2207. CDP responded with HTTP 400 `'paymentPayload' is
-  // invalid: must match one of [x402V2Pay...]` — the CDP schema does NOT
-  // allow unknown top-level fields on paymentPayload. The field exists
-  // at a different nesting level (TBD via the canonical x402#2207 thread
-  // or CDP discord); until that's confirmed, do not enrich.
+  // CDP catalog opt-in. Two server-side enrichments per x402-foundation/
+  // x402#2207 (AsaiShota + 0xdespot, validated by Ethan Oroshiba CDP):
+  //   1. paymentPayload.resource: an OPTIONAL TOP-LEVEL { url, description?,
+  //      mimeType? } OBJECT in PaymentPayloadV2Schema (@x402/core@2.11.0
+  //      schemas/index.d.mts:315-389). Buyer SDKs frequently omit it.
+  //      (An earlier attempt set this to a plain URL string and CDP
+  //      responded 400 `'paymentPayload' is invalid: must match one of
+  //      [x402V2Pay...]` — the field MUST be an object.)
+  //   2. paymentPayload.extensions: the bazaar extension echoed back from
+  //      the 402 challenge. CDP interprets missing paymentPayload.extensions
+  //      as "no bazaar opt-in" and skips bazaar processing entirely, which
+  //      produces the exact EXTENSION-RESPONSES=e30= ({}) symptom we see
+  //      across every pilot settle in observability.
+  // Non-destructive: keep any value the buyer already supplied.
+  type EnrichablePayload = PaymentPayload & {
+    resource?: { url: string; description?: string; mimeType?: string };
+    extensions?: Record<string, unknown>;
+  };
+  const buyerPayload = payload as EnrichablePayload;
+  const reqExtensions =
+    (requirements as PaymentRequirements & { extensions?: Record<string, unknown> })
+      .extensions;
+  const enrichedPayload: EnrichablePayload = {
+    ...buyerPayload,
+    resource: buyerPayload.resource ?? {
+      url: requirements.resource,
+      mimeType: 'application/json',
+    },
+    ...(buyerPayload.extensions
+      ? {}
+      : reqExtensions && Object.keys(reqExtensions).length > 0
+        ? { extensions: reqExtensions }
+        : {}),
+  };
 
   let resp: Response;
   try {
@@ -412,7 +439,7 @@ export async function cdpSettle(
       headers,
       body: JSON.stringify({
         x402Version: payload.x402Version,
-        paymentPayload: payload,
+        paymentPayload: enrichedPayload,
         paymentRequirements: requirements,
       }),
     });
