@@ -494,7 +494,7 @@ export default function Widget() {
           )}
           {condition === 'nominal' && (
             <>
-              · all monitored systems <b>nominal</b>{' '}
+              · all <b>nominal</b>{' '}
             </>
           )}
           {/* no-data is a coverage gap, shown neutrally, never as an

@@ -5,12 +5,13 @@
 <style>
   html, body { margin: 0; padding: 0; background: #04070d; width: 760px; }
   /* The widget is its own self-contained document. The popup frames it
-     for the rich view (sparklines, p95). 760px clears the widget's 720
-     desktop breakpoint so the full header text ("CONDITION GREEN, ALL
-     MONITORS, hh:mm:ss TZ") and all six filter chips fit without ellipsis,
-     and shows the Detail column alongside sparkline. Chrome's popup
-     ceiling is 800 wide by 600 tall; 760x600 leaves a 40px right gutter. */
-  iframe { display: none; width: 760px; height: 600px; border: 0; }
+     for the rich view (sparklines, p95). Width 760 clears the widget's
+     720 breakpoint so the full header text and all six filter chips fit
+     and the Detail column shows alongside sparkline. Height 800 gives
+     Firefox an extra ~3 LLM rows visible without scrolling; Chrome will
+     cap its popup at 800x600 (hard ceiling) regardless, so the same zip
+     works for both stores. */
+  iframe { display: none; width: 760px; height: 800px; border: 0; }
 
   /* Self-contained fallback. Shown by default and rendered from
      /api/status/summary so the toolbar is NEVER blank, even if the
