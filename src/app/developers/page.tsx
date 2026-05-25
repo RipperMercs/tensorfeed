@@ -881,6 +881,131 @@ const ENDPOINTS: Endpoint[] = [
   }
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/ai-cves/latest',
+    description:
+      'Most-recent AI-stack CVE batch metadata plus the first 25 papers. Each paper carries cve_ids, affected_products, affected_version_ranges, fixed_versions, exploited_in_wild (stated_yes / stated_no / unstated), severity_label, and source_url. License: CC BY 4.0 (GitHub Security Advisories) with vendor advisories for non-GHSA rows; attribution shipped on every response.',
+    cache: 'Cache for 6 hours',
+    example: `{
+  "batch_id": "20260525-001634",
+  "extracted_at": "2026-05-25T07:23:58+00:00",
+  "window_start": "2025-01-01",
+  "window_end": "2026-01-01",
+  "total_papers": 387,
+  "ai_flagged_count": 10,
+  "papers": [
+    {
+      "cve_ids": ["CVE-2026-44580"],
+      "affected_products": ["Next.js"],
+      "fixed_versions": ["v15.5.16", "v16.2.5"],
+      "exploited_in_wild": "stated_yes",
+      "severity_label": "high",
+      "source_url": "https://github.com/advisories/GHSA-gx5p-jg67-6x7h"
+    }
+  ],
+  "source_license": "CC BY 4.0",
+  "source_attribution": "GitHub Advisory Database (github.com/advisories) + vendor advisories"
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/ai-cves/feed',
+    description:
+      'Paginated raw papers from the most-recent AI-stack CVE batch. limit is capped at 50 (the premium /api/premium/ai-cves/ai-stack-cves returns the full AI-stack-filtered + categorized cohort in one call). License: CC BY 4.0.',
+    params: '?limit=25&offset=0',
+    cache: 'Cache for 6 hours',
+    example: `{
+  "batch_id": "20260525-001634",
+  "total": 387,
+  "limit": 25,
+  "offset": 0,
+  "papers": [ /* same shape as /api/ai-cves/latest */ ],
+  "source_license": "CC BY 4.0",
+  "source_attribution": "GitHub Advisory Database (github.com/advisories) + vendor advisories"
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/ai-cves/stats',
+    description:
+      'Aggregate counts across the most-recent AI-stack CVE batch: by_severity (critical, high, medium, low, unstated), by_exploitation (stated_yes, stated_no, unstated), top_vendors (top 10 by frequency, case-folded). License: CC BY 4.0.',
+    cache: 'Cache for 6 hours',
+    example: `{
+  "batch_id": "20260525-001634",
+  "total_papers": 387,
+  "by_severity": { "critical": 2, "high": 11, "medium": 13, "low": 3, "unstated": 358 },
+  "by_exploitation": { "stated_yes": 3, "stated_no": 0, "unstated": 384 },
+  "top_vendors": [
+    { "vendor": "OpenClaw", "count": 40 },
+    { "vendor": "AVideo", "count": 11 }
+  ],
+  "source_license": "CC BY 4.0",
+  "source_attribution": "GitHub Advisory Database (github.com/advisories) + vendor advisories"
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/ai-cves/ai-stack-cves',
+    description:
+      'AI-stack CVE intelligence (1 credit). Filters the latest batch to papers whose affected_products match the curated AI_STACK_VENDORS list (7 categories: inference-stack, agent-framework, training-stack, vector-db, model-gateway, mcp-tool, other-ai). Each paper carries tf_ai_category + severity_rank, sorted with exploited_in_wild stated_yes first, then severity desc, then source_url asc. Strict-premium-gated; anonymous probes see x402 402 challenge, not 400.',
+    cache: 'Cache for 1 hour',
+    example: `{
+  "batch_id": "20260525-001634",
+  "total": 10,
+  "papers": [
+    {
+      "cve_ids": ["CVE-2026-44580"],
+      "affected_products": ["Next.js"],
+      "fixed_versions": ["v15.5.16", "v16.2.5"],
+      "exploited_in_wild": "stated_yes",
+      "severity_label": "high",
+      "source_url": "https://github.com/advisories/GHSA-gx5p-jg67-6x7h",
+      "tf_ai_category": "agent-framework",
+      "severity_rank": 3
+    }
+  ],
+  "source_license": "CC BY 4.0",
+  "source_attribution": "GitHub Advisory Database (github.com/advisories) + vendor advisories"
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/ai-cves/exploited-in-wild',
+    description:
+      'Live-threat subset (1 credit). Filters the AI-flagged batch to papers with exploited_in_wild = stated_yes, sorted by severity_rank desc. The "what is actively being weaponized in the AI stack right now" signal. Strict-premium-gated.',
+    cache: 'Cache for 1 hour',
+    example: `{
+  "batch_id": "20260525-001634",
+  "total": 3,
+  "papers": [ /* same shape, severity_rank attached */ ],
+  "source_license": "CC BY 4.0",
+  "source_attribution": "GitHub Advisory Database (github.com/advisories) + vendor advisories"
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/ai-cves/cve',
+    description:
+      'Single-CVE resolve against the persistent index (1 credit). Pass id=CVE-YYYY-NNNNN, get the structured paper with all fields. Param-required; strict-premium-gated so anonymous probes see 402 not 400. Index spans the rolling 90-day batch retention window.',
+    params: '?id=CVE-2026-44580',
+    cache: 'Cache for 1 hour',
+    example: `{
+  "cve_id": "CVE-2026-44580",
+  "found": true,
+  "batch_id": "20260525-001634",
+  "paper": {
+    "cve_ids": ["CVE-2026-44580"],
+    "affected_products": ["Next.js"],
+    "fixed_versions": ["v15.5.16", "v16.2.5"],
+    "exploited_in_wild": "stated_yes",
+    "severity_label": "high",
+    "source_url": "https://github.com/advisories/GHSA-gx5p-jg67-6x7h"
+  },
+  "source_license": "CC BY 4.0",
+  "source_attribution": "GitHub Advisory Database (github.com/advisories) + vendor advisories"
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news
