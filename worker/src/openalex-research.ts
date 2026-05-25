@@ -77,7 +77,8 @@ async function fetchInstitutionAggregate(): Promise<InstitutionAggregate[]> {
     `${OPENALEX_BASE}/works` +
     `?filter=concepts.id:${AI_CONCEPT_ID},from_publication_date:${fromDate}` +
     `&group_by=authorships.institutions.id` +
-    `&per_page=200`;
+    `&per_page=200` +
+    `&mailto=evan@tensorfeed.ai`;
 
   const res = await fetchOpenAlexWithRetry(url, {
     'User-Agent': POLITE_UA,
@@ -110,7 +111,8 @@ async function fetchInstitutionDetails(ids: string[]): Promise<Map<string, OpenA
     `${OPENALEX_BASE}/institutions` +
     `?filter=ids.openalex:${encodeURIComponent(filterValue)}` +
     `&select=id,display_name,country_code,type,works_count` +
-    `&per_page=200`;
+    `&per_page=200` +
+    `&mailto=evan@tensorfeed.ai`;
 
   const res = await fetchOpenAlexWithRetry(url, {
     'User-Agent': POLITE_UA,

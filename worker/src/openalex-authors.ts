@@ -114,7 +114,8 @@ async function fetchAuthorAggregate(): Promise<AuthorAggregate[]> {
     `${OPENALEX_BASE}/works` +
     `?filter=concepts.id:${AI_CONCEPT_ID},from_publication_date:${fromDate}` +
     `&group_by=authorships.author.id` +
-    `&per_page=200`;
+    `&per_page=200` +
+    `&mailto=evan@tensorfeed.ai`;
   const res = await fetchOpenAlexWithRetry(url, {
     'User-Agent': POLITE_UA,
     Accept: 'application/json',
@@ -142,7 +143,8 @@ async function fetchAuthorDetails(ids: string[]): Promise<Map<string, OpenAlexAu
     `${OPENALEX_BASE}/authors` +
     `?filter=ids.openalex:${encodeURIComponent(filterValue)}` +
     `&select=id,display_name,orcid,affiliations,summary_stats,works_count,cited_by_count` +
-    `&per_page=200`;
+    `&per_page=200` +
+    `&mailto=evan@tensorfeed.ai`;
   const res = await fetchOpenAlexWithRetry(url, {
     'User-Agent': POLITE_UA,
     Accept: 'application/json',

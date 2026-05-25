@@ -105,7 +105,8 @@ async function fetchRecentCitedAIWorks(): Promise<OpenAlexWork[]> {
     `?filter=concepts.id:${AI_CONCEPT_ID},from_publication_date:${minYear}-01-01,cited_by_count:>${MIN_CITATIONS_TO_RANK - 1}` +
     `&sort=cited_by_count:desc` +
     `&per_page=200` +
-    `&select=id,display_name,publication_year,cited_by_count,counts_by_year,authorships,doi,primary_location`;
+    `&select=id,display_name,publication_year,cited_by_count,counts_by_year,authorships,doi,primary_location` +
+    `&mailto=evan@tensorfeed.ai`;
   const res = await fetchOpenAlexWithRetry(url, {
     'User-Agent': POLITE_UA,
     Accept: 'application/json',
