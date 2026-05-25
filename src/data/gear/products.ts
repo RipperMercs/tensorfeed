@@ -860,6 +860,8 @@ export const PRODUCTS: Product[] = [
     },
     tags: ['smart-home', 'ambient-ai', 'alexa-plus', 'voice-assistant'],
     hue: 260,
+    image: '/gear/echo-show-11.png',
+    imageAlt: 'Amazon Echo Show 11 smart display with touchscreen and fabric speaker base, product photograph',
     addedAt: '2026-05-23',
     reviewedAt: '2026-05-23',
   },
