@@ -29,7 +29,15 @@ crons = [
   "*/10 * * * *",
   "*/2 * * * *",
   "0 * * * *",
-  "0 */2 * * *",
+  # Every 2 hours at :25 past (00:25, 02:25, 04:25, ...): podcast feeds
+  # (10 sources, weekly release cadence). Renamed from "0 */2 * * *" on
+  # 2026-05-25 because the original collided with "0 4 * * *" at the 04:00
+  # UTC slot: Cloudflare fires a single scheduled() event for any timestamp,
+  # and the cron expression it surfaces in event.cron is whichever pattern
+  # registered first in the triggers array. That meant 0 4's branch in the
+  # worker dispatch was never reached after 2026-05-15. :25 is unused by
+  # any other daily fixed-time cron, so it stays collision-free.
+  "25 */2 * * *",
   "0 7 * * *",
   "30 8 * * *",
   # Daily 15:00 UTC: email evan@tensorfeed.ai a digest of new agent-work

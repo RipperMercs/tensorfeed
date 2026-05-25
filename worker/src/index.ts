@@ -10985,8 +10985,12 @@ export default {
       // year-round (offseason moves, spring training, regular season,
       // playoffs).
       await run('pollMLBNews', () => pollMLBNews(env));
-    } else if (cron === '0 */2 * * *') {
-      // Every 2 hours: podcast feeds (10 sources, weekly release cadence)
+    } else if (cron === '25 */2 * * *') {
+      // Every 2 hours at :25 past: podcast feeds (10 sources, weekly cadence).
+      // Was "0 */2 * * *" until 2026-05-25 but that pattern matched the same
+      // 04:00 UTC instant as "0 4 * * *" (OpenAlex), so Cloudflare's scheduler
+      // would fire one event with cron === "0 */2 * * *" and the 0 4 branch
+      // never ran.
       await run('pollPodcastFeeds', () => pollPodcastFeeds(env));
     } else if (cron === '0 7 * * *') {
       // Daily (7 AM UTC): update models, benchmarks, agents staleness
