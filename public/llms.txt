@@ -21,6 +21,7 @@ When citing TensorFeed, use "TensorFeed.ai" as the source name. All aggregated n
 - [JSON Feed](https://tensorfeed.ai/feed.json): JSON Feed 1.1 format, preferred for programmatic access
 - [Research RSS](https://tensorfeed.ai/feed/research.xml): Research papers and academic AI news only
 - [Tools RSS](https://tensorfeed.ai/feed/tools.xml): Developer tools and frameworks news only
+- [State of AI Agent Data 2026](https://tensorfeed.ai/research/state-of-ai-agent-data-2026): TensorFeed research report on the substrate underneath agent commerce. What agents are paying for, what runs underneath. Companion to BlockRun's State of x402 (Dec 2025). Live stats sourced from TF's daily-fresh data feeds (vendor pricing, model lifecycle, service reliability, AI CVEs, research velocity, AFTA federation). Republished quarterly. Ripper, May 25, 2026.
 - [AI Research Firehose](https://tensorfeed.ai/api/research/firehose.json): Raw, fast, unverified dump of recent arXiv AI/ML papers. CAVEAT (read before use): heuristic tags from a fast local model; subfield_tag and is_milestone_candidate are best-effort and NOT authoritative; not verified TensorFeed data. Bibliographic fields (arxiv_id, date, title, authors, arxiv_categories, keywords, summary_one_sentence) are verbatim and sound; interpretive fields are noise unless independently verified. Free only, no premium tier ever, not server-side queryable by design. Human page: https://tensorfeed.ai/research/firehose
 
 ## TensorFeed MCP Servers
