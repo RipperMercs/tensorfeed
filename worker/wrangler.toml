@@ -3,17 +3,13 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-# Cloudflare Workers Observability. Captures structured request logs +
-# console output for query via the Workers Observability API. Used by
-# the /api/mcp/activity public dashboard (which queries call counts by
-# tool) and by the operator-side query_worker_observability MCP tool.
-# Head sampling at 100% during initial rollout to capture all MCP
-# traffic; revisit if cost exceeds the Workers Paid bundle (50M
-# observability events/month free as of 2026-05).
-[observability]
-enabled = true
-head_sampling_rate = 1.0
-
+# Routes must live at the root of wrangler.toml (above any [section]
+# header) — TOML scoping rules attach later keys to whichever table
+# header was last seen. Earlier this lived under [observability] by
+# accident and wrangler warned "Unexpected fields found in observability
+# field: routes", which silently meant our route changes never reached
+# Cloudflare. Production /api/* keeps working only because those routes
+# also exist in the CF dashboard.
 routes = [
   { pattern = "tensorfeed.ai/api/*", zone_name = "tensorfeed.ai" },
   # Trailing * on the single-file patterns is required: Cloudflare Pages
@@ -26,10 +22,21 @@ routes = [
   # pattern parity: mcp.<site> is the agent-onboarding norm. Worker host
   # normalization (see worker/src/index.ts top of fetch) rewrites the path
   # to /api/mcp so the existing dispatch handles it without duplication.
-  # Bind / + /mcp explicitly. Requires the mcp DNS record (AAAA -> 100::,
-  # proxied) on the tensorfeed.ai zone in Cloudflare dashboard.
+  # Requires the mcp DNS record (AAAA -> 100::, proxied) on the
+  # tensorfeed.ai zone in Cloudflare dashboard.
   { pattern = "mcp.tensorfeed.ai/*", zone_name = "tensorfeed.ai" }
 ]
+
+# Cloudflare Workers Observability. Captures structured request logs +
+# console output for query via the Workers Observability API. Used by
+# the /api/mcp/activity public dashboard (which queries call counts by
+# tool) and by the operator-side query_worker_observability MCP tool.
+# Head sampling at 100% during initial rollout to capture all MCP
+# traffic; revisit if cost exceeds the Workers Paid bundle (50M
+# observability events/month free as of 2026-05).
+[observability]
+enabled = true
+head_sampling_rate = 1.0
 
 [triggers]
 crons = [
