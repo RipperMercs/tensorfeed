@@ -250,8 +250,13 @@ function normalizeBazaarExtensionsForCDP(
   const bazaar = (cloned.bazaar ?? {}) as Record<string, unknown>;
   const info = (bazaar.info ?? {}) as Record<string, unknown>;
   const input = (info.input ?? {}) as Record<string, unknown>;
-  input.discoverable = true;
-  input.url = resourceUrl;
+  // NOTE 2026-05-25 evening: do NOT set input.discoverable. Per Ethan
+  // Oroshiba (CDP) on x402-foundation/x402#2207, the `discoverable`
+  // field is not part of the Bazaar spec and CDP's validator treats
+  // its presence as a failed-discovery signal. We added this earlier
+  // today on a (wrong) hypothesis from the BlockRun pattern; removing.
+  // The keep-resource-url-in-input field is also unspec, drop it too
+  // so we send a minimal-and-correct extensions block.
   // V2 catalog-friendly typing: derive typed queryFields/pathFields from
   // the existing sample-value queryParams/pathParams. Keeps the legacy
   // keys in place for crawlers that still read them; adds the typed

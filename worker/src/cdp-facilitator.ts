@@ -397,6 +397,20 @@ export async function cdpSettle(
   const headers = await authHeaders(env, 'POST', path);
   const url = `${CDP_BASE_URL}/settle`;
 
+  // CDP catalog opt-in: paymentPayload.resource must be populated for the
+  // discovery job to fire. Per Ethan Oroshiba (CDP) on x402-foundation/
+  // x402#2207, this is REQUIRED for indexing even though x402 settles
+  // succeed without it. Buyer SDKs frequently omit the field, so inject
+  // it server-side from paymentRequirements.resource (which we control)
+  // before forwarding. Non-destructive: keeps any value the buyer already
+  // supplied.
+  const enrichedPayload = {
+    ...payload,
+    resource:
+      (payload as PaymentPayload & { resource?: string }).resource ??
+      requirements.resource,
+  };
+
   let resp: Response;
   try {
     resp = await fetch(url, {
@@ -404,7 +418,7 @@ export async function cdpSettle(
       headers,
       body: JSON.stringify({
         x402Version: payload.x402Version,
-        paymentPayload: payload,
+        paymentPayload: enrichedPayload,
         paymentRequirements: requirements,
       }),
     });
