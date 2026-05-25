@@ -1010,6 +1010,8 @@ export const PRODUCTS: Product[] = [
     },
     tags: ['storage', 'nvme', 'local-llm', 'ssd'],
     hue: 180,
+    image: '/gear/wd-black-sn850x-4tb.png',
+    imageAlt: 'WD_BLACK SN850X 4TB NVMe SSD in M.2 2280 form factor, product photograph',
     addedAt: '2026-05-23',
     reviewedAt: '2026-05-23',
   },
