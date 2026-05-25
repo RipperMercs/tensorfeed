@@ -1022,7 +1022,18 @@ async function premiumValidationFailure(
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
-    const path = url.pathname;
+    // Vanity-host normalization. mcp.tensorfeed.ai is bound by wrangler.toml
+    // to this worker; treat its root and /mcp paths as /api/mcp so the
+    // existing dispatch (line ~1168) handles the request without duplicating
+    // the MCP handler. Done at the top of fetch so logging/auth/rate-limit
+    // all see the canonical /api/mcp path. Per BlockRun-pattern parity:
+    // mcp.<site> vanity URL is the agent-onboarding norm.
+    let path = url.pathname;
+    if (url.hostname === 'mcp.tensorfeed.ai') {
+      if (path === '/' || path === '/mcp' || path === '/mcp/') {
+        path = '/api/mcp';
+      }
+    }
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: CORS_HEADERS });
