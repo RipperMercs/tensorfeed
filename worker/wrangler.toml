@@ -28,8 +28,7 @@ routes = [
   # to /api/mcp so the existing dispatch handles it without duplication.
   # Bind / + /mcp explicitly. Requires the mcp DNS record (AAAA -> 100::,
   # proxied) on the tensorfeed.ai zone in Cloudflare dashboard.
-  { pattern = "mcp.tensorfeed.ai/", zone_name = "tensorfeed.ai" },
-  { pattern = "mcp.tensorfeed.ai/mcp*", zone_name = "tensorfeed.ai" }
+  { pattern = "mcp.tensorfeed.ai/*", zone_name = "tensorfeed.ai" }
 ]
 
 [triggers]
