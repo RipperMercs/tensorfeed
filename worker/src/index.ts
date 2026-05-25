@@ -547,6 +547,29 @@ function isAuthorizedAdmin(env: Env, supplied: string | null): boolean {
   return constantTimeEqual(supplied, env.ADMIN_KEY);
 }
 
+// Privilege-separated ingest auth for /api/admin/ai-cves/ingest (DP CC's
+// POST surface). Prefers INGEST_KEY; falls back to ADMIN_KEY during the
+// rollout so DP CC's existing config keeps working until Evan provisions
+// INGEST_KEY and updates the contract. Once INGEST_KEY is set, ADMIN_KEY
+// loses ingest privileges (so a leaked telemetry key cannot inject papers).
+function isAuthorizedIngest(env: Env, supplied: string | null): boolean {
+  if (env.INGEST_KEY && env.INGEST_KEY.length > 0) {
+    if (!supplied) return false;
+    return constantTimeEqual(supplied, env.INGEST_KEY);
+  }
+  // Transition fallback. Once env.INGEST_KEY is provisioned, this branch
+  // is dead and ADMIN_KEY no longer authorizes ingest.
+  return isAuthorizedAdmin(env, supplied);
+}
+
+// Hoisted /api/admin/* pre-check accepts EITHER key so the rate limit
+// + 401 boundary is uniform. Per-route narrower checks (e.g.
+// isAuthorizedIngest at the ai-cves ingest handler) enforce which
+// specific key class is allowed for each path.
+function isAuthorizedAnyAdmin(env: Env, supplied: string | null): boolean {
+  return isAuthorizedAdmin(env, supplied) || isAuthorizedIngest(env, supplied);
+}
+
 // OFAC comprehensively-sanctioned country list (ISO 3166-1 alpha-2).
 // Wallet-level Chainalysis screening on /api/payment/confirm catches the
 // rest. Russia is sectorally sanctioned, not comprehensive, so we do not
@@ -2474,7 +2497,7 @@ export default {
       if (!adminRate.allowed) {
         return rateLimitedResponse(adminRate);
       }
-      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      if (!isAuthorizedAnyAdmin(env, url.searchParams.get('key'))) {
         return jsonResponse(
           {
             ok: false,
@@ -2933,6 +2956,16 @@ export default {
     // batch_id (re-POSTing the same id overwrites in place). Inherits the
     // hoisted /api/admin rate-limit + ADMIN_KEY pre-check.
     if (path === '/api/admin/ai-cves/ingest' && request.method === 'POST') {
+      // Narrower auth than the hoisted /api/admin pre-check: ingest accepts
+      // INGEST_KEY only (with ADMIN_KEY transition fallback while INGEST_KEY
+      // is unset). Post-rollout, a leaked ADMIN_KEY cannot inject papers.
+      if (!isAuthorizedIngest(env, url.searchParams.get('key'))) {
+        return jsonResponse(
+          { ok: false, error: 'unauthorized', message: 'ai-cves ingest requires INGEST_KEY (or ADMIN_KEY during transition).' },
+          401,
+          0,
+        );
+      }
       let raw: unknown;
       try {
         raw = await request.json();
@@ -2946,6 +2979,51 @@ export default {
       }
       const result = await writeBatch(env, v.batch);
       return jsonResponse({ ok: true, ...result }, 200, 0);
+    }
+
+    // /api/admin/snapshot/openalex/{institutions|authors|citation-velocity}
+    // POST a pre-built OpenAlex snapshot to KV. Used as a fallback when
+    // the Worker's cron path is blocked by OpenAlex's per-IP throttle on
+    // Cloudflare's shared egress (the throttle wedged for the 04:00 UTC
+    // cron 2026-05-15 to 2026-05-25). The TF CC operator builds the
+    // snapshot from a residential IP (which OpenAlex does NOT throttle)
+    // and POSTs the result here. Writes the SAME KV keys the cron uses.
+    // ADMIN_KEY gated (per-route narrower check). Body shape matches the
+    // exported {AIInstitutionsSnapshot, AIAuthorsSnapshot,
+    // CitationVelocitySnapshot} TS interfaces.
+    if (path.startsWith('/api/admin/snapshot/openalex/') && request.method === 'POST') {
+      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+        return jsonResponse({ ok: false, error: 'unauthorized' }, 401, 0);
+      }
+      let raw: unknown;
+      try {
+        raw = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const kind = path.slice('/api/admin/snapshot/openalex/'.length);
+      if (kind === 'institutions') {
+        const { validateInstitutionsSnapshot, putInstitutionsSnapshot } = await import('./openalex-research');
+        const v = validateInstitutionsSnapshot(raw);
+        if (!v.ok) return jsonResponse({ ok: false, error: v.error, detail: v.detail }, 400);
+        await putInstitutionsSnapshot(env, v.snapshot);
+        return jsonResponse({ ok: true, kind, capturedAt: v.snapshot.capturedAt, count: v.snapshot.institutions.length }, 200, 0);
+      }
+      if (kind === 'authors') {
+        const { validateAuthorsSnapshot, putAuthorsSnapshot } = await import('./openalex-authors');
+        const v = validateAuthorsSnapshot(raw);
+        if (!v.ok) return jsonResponse({ ok: false, error: v.error, detail: v.detail }, 400);
+        await putAuthorsSnapshot(env, v.snapshot);
+        return jsonResponse({ ok: true, kind, capturedAt: v.snapshot.capturedAt, count: v.snapshot.authors.length }, 200, 0);
+      }
+      if (kind === 'citation-velocity') {
+        const { validateCitationVelocitySnapshot, putCitationVelocitySnapshot } = await import('./openalex-citation-velocity');
+        const v = validateCitationVelocitySnapshot(raw);
+        if (!v.ok) return jsonResponse({ ok: false, error: v.error, detail: v.detail }, 400);
+        await putCitationVelocitySnapshot(env, v.snapshot);
+        return jsonResponse({ ok: true, kind, capturedAt: v.snapshot.capturedAt, count: v.snapshot.papers.length }, 200, 0);
+      }
+      return jsonResponse({ ok: false, error: 'unknown_snapshot_kind', kind, allowed: ['institutions', 'authors', 'citation-velocity'] }, 400);
     }
 
     if (path === '/api/agents/claim' && request.method === 'POST') {

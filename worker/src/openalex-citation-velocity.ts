@@ -236,10 +236,29 @@ export async function refreshOpenAlexAICitationVelocity(env: Env): Promise<Refre
     return { ok: false, error: (err as Error).message };
   }
   const snapshot = buildVelocitySnapshot(works);
+  await putCitationVelocitySnapshot(env, snapshot);
+  return { ok: true, count: snapshot.papers.length };
+}
+
+// Write a pre-built snapshot to KV. Used by refreshOpenAlexAICitationVelocity
+// AND by the admin POST endpoint that accepts a snapshot built from a
+// non-throttled IP. 7-day TTL matches cron cadence.
+export async function putCitationVelocitySnapshot(env: Env, snapshot: CitationVelocitySnapshot): Promise<void> {
   await env.TENSORFEED_CACHE.put(CURRENT_KEY, JSON.stringify(snapshot), {
     expirationTtl: 60 * 60 * 24 * 7,
   });
-  return { ok: true, count: snapshot.papers.length };
+}
+
+// Light validation for the admin snapshot POST endpoint.
+export function validateCitationVelocitySnapshot(input: unknown): { ok: true; snapshot: CitationVelocitySnapshot } | { ok: false; error: string; detail: string } {
+  if (input === null || typeof input !== 'object') return { ok: false, error: 'validation_failed', detail: 'body must be an object' };
+  const b = input as Record<string, unknown>;
+  if (typeof b.capturedAt !== 'string' || !b.capturedAt) return { ok: false, error: 'validation_failed', detail: 'capturedAt required (ISO timestamp string)' };
+  if (!b.filter || typeof b.filter !== 'object') return { ok: false, error: 'validation_failed', detail: 'filter required (object)' };
+  if (!Array.isArray(b.papers) || b.papers.length === 0) return { ok: false, error: 'validation_failed', detail: 'papers required (non-empty array)' };
+  if (!Array.isArray(b.notes)) return { ok: false, error: 'validation_failed', detail: 'notes required (array, may be empty)' };
+  if (!b.source || typeof b.source !== 'object') return { ok: false, error: 'validation_failed', detail: 'source required (object)' };
+  return { ok: true, snapshot: b as unknown as CitationVelocitySnapshot };
 }
 
 export async function getOpenAlexAICitationVelocity(

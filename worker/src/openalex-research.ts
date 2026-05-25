@@ -216,6 +216,18 @@ export async function refreshOpenAlexAIInstitutions(env: Env): Promise<RefreshRe
   }
 
   const snapshot = buildSnapshot(aggregates, details);
+  await putInstitutionsSnapshot(env, snapshot);
+  return { ok: true, count: snapshot.institutions.length };
+}
+
+// Write a pre-built snapshot to KV. Used by refreshOpenAlexAIInstitutions
+// (which builds from the upstream API) AND by the admin POST endpoint
+// that accepts a snapshot built from a non-throttled IP. Same writes,
+// same shape, single source of truth.
+export async function putInstitutionsSnapshot(
+  env: Env,
+  snapshot: AIInstitutionsSnapshot,
+): Promise<void> {
   await env.TENSORFEED_CACHE.put(CURRENT_KEY, JSON.stringify(snapshot));
   await env.TENSORFEED_CACHE.put(
     META_KEY,
@@ -225,8 +237,20 @@ export async function refreshOpenAlexAIInstitutions(env: Env): Promise<RefreshRe
       concept_id: AI_CONCEPT_ID,
     }),
   );
+}
 
-  return { ok: true, count: snapshot.institutions.length };
+// Light validation for the admin snapshot POST endpoint. Verifies the
+// top-level shape; trusts the entries inside because the writer is TF's
+// own local-fetch script. Returns ok or { error, detail }.
+export function validateInstitutionsSnapshot(input: unknown): { ok: true; snapshot: AIInstitutionsSnapshot } | { ok: false; error: string; detail: string } {
+  if (input === null || typeof input !== 'object') return { ok: false, error: 'validation_failed', detail: 'body must be an object' };
+  const b = input as Record<string, unknown>;
+  if (typeof b.capturedAt !== 'string' || !b.capturedAt) return { ok: false, error: 'validation_failed', detail: 'capturedAt required (ISO timestamp string)' };
+  if (typeof b.window_days !== 'number') return { ok: false, error: 'validation_failed', detail: 'window_days required (number)' };
+  if (!b.concept || typeof b.concept !== 'object') return { ok: false, error: 'validation_failed', detail: 'concept required (object)' };
+  if (!Array.isArray(b.institutions) || b.institutions.length === 0) return { ok: false, error: 'validation_failed', detail: 'institutions required (non-empty array)' };
+  if (!Array.isArray(b.notes)) return { ok: false, error: 'validation_failed', detail: 'notes required (array, may be empty)' };
+  return { ok: true, snapshot: b as unknown as AIInstitutionsSnapshot };
 }
 
 // === Read API =======================================================

@@ -55,6 +55,15 @@ export interface Env {
   // ?key=ENVIRONMENT pattern, which was unsafe once the repo went
   // public (ENVIRONMENT="production" lives in wrangler.toml).
   ADMIN_KEY?: string;
+  // Separate key for the high-blast-radius /api/admin/ai-cves/ingest
+  // endpoint (DP CC's POST surface). Privilege-separated from ADMIN_KEY
+  // 2026-05-25 so a leaked ADMIN_KEY (telemetry, dashboards, refresh
+  // scripts) cannot inject papers into production KV. Transition: while
+  // INGEST_KEY is unset, ai-cves ingest falls back to ADMIN_KEY so the
+  // rollout doesn't break DP CC's existing config. Once Evan provisions
+  // INGEST_KEY via `wrangler secret put INGEST_KEY <value>` and updates
+  // DP CC's contract, the fallback is dead code.
+  INGEST_KEY?: string;
   // Kill switch for non-critical KV writes. Persistent env-secret side
   // of the dual control surface implemented in kill-switch.ts. Set to
   // "true" via `wrangler secret put KILL_SWITCH_KV_WRITES` to no-op

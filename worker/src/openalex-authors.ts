@@ -269,10 +269,31 @@ export async function refreshOpenAlexAIAuthors(env: Env): Promise<RefreshAuthors
   }
 
   const snapshot = buildSnapshot(aggregates, details);
+  await putAuthorsSnapshot(env, snapshot);
+  return { ok: true, count: snapshot.authors.length };
+}
+
+// Write a pre-built snapshot to KV. Used by refreshOpenAlexAIAuthors AND
+// by the admin POST endpoint that accepts a snapshot built from a
+// non-throttled IP. 7-day TTL matches the cron cadence; if the cron
+// stops firing for a week the read endpoint returns no_snapshot_yet.
+export async function putAuthorsSnapshot(env: Env, snapshot: AIAuthorsSnapshot): Promise<void> {
   await env.TENSORFEED_CACHE.put(CURRENT_KEY, JSON.stringify(snapshot), {
     expirationTtl: 60 * 60 * 24 * 7,
   });
-  return { ok: true, count: snapshot.authors.length };
+}
+
+// Light validation for the admin snapshot POST endpoint.
+export function validateAuthorsSnapshot(input: unknown): { ok: true; snapshot: AIAuthorsSnapshot } | { ok: false; error: string; detail: string } {
+  if (input === null || typeof input !== 'object') return { ok: false, error: 'validation_failed', detail: 'body must be an object' };
+  const b = input as Record<string, unknown>;
+  if (typeof b.capturedAt !== 'string' || !b.capturedAt) return { ok: false, error: 'validation_failed', detail: 'capturedAt required (ISO timestamp string)' };
+  if (typeof b.window_days !== 'number') return { ok: false, error: 'validation_failed', detail: 'window_days required (number)' };
+  if (!b.concept || typeof b.concept !== 'object') return { ok: false, error: 'validation_failed', detail: 'concept required (object)' };
+  if (!Array.isArray(b.authors) || b.authors.length === 0) return { ok: false, error: 'validation_failed', detail: 'authors required (non-empty array)' };
+  if (!Array.isArray(b.notes)) return { ok: false, error: 'validation_failed', detail: 'notes required (array, may be empty)' };
+  if (!b.source || typeof b.source !== 'object') return { ok: false, error: 'validation_failed', detail: 'source required (object)' };
+  return { ok: true, snapshot: b as unknown as AIAuthorsSnapshot };
 }
 
 export async function getOpenAlexAIAuthors(env: Env): Promise<AIAuthorsSnapshot | null> {
