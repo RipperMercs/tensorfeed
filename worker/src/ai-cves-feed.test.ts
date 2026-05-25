@@ -275,6 +275,21 @@ describe('buildStatsResponse', () => {
     expect(r.top_vendors[1]).toEqual({ vendor: 'Spring', count: 1 });
   });
 
+  it('case-folds vendor names so OpenClaw and openclaw count as one', () => {
+    const papers = [
+      paper({ affected_products: ['OpenClaw'] }),
+      paper({ affected_products: ['openclaw'] }),
+      paper({ affected_products: ['OPENCLAW'] }),
+      paper({ affected_products: ['Apache HTTP'] }),
+    ];
+    const r = buildStatsResponse({ batch_id: 'b', papers });
+    expect(r.top_vendors).toHaveLength(2);
+    expect(r.top_vendors[0].count).toBe(3);
+    // The display spelling is the FIRST original-cased form encountered.
+    expect(r.top_vendors[0].vendor).toBe('OpenClaw');
+    expect(r.top_vendors[1]).toEqual({ vendor: 'Apache', count: 1 });
+  });
+
   it('handles null batch', () => {
     const r = buildStatsResponse(null);
     expect(r.total_papers).toBe(0);

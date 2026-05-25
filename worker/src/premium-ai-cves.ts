@@ -336,7 +336,11 @@ export function buildStatsResponse(
   };
   if (!batch) return base;
 
-  const vendorCounts: Record<string, number> = {};
+  // Vendor counts are bucketed case-insensitively (key = lowercased
+  // vendor) so "openclaw" and "OpenClaw" land in the same bin; we
+  // remember the FIRST original-cased spelling we saw for display so
+  // the response carries the natural spelling, not the lowercase form.
+  const vendorCounts: Record<string, { display: string; count: number }> = {};
   for (const p of batch.papers) {
     const rank = severityRank(p.severity_label);
     const bucket = ['unstated', 'low', 'medium', 'high', 'critical'][rank];
@@ -345,13 +349,17 @@ export function buildStatsResponse(
     // Vendor extraction: first token of each affected_product, capped
     // at 32 chars so we don't have huge keys from full product names.
     for (const product of p.affected_products) {
-      const vendor = product.split(/\s+/)[0]?.slice(0, 32) || '';
-      if (vendor) vendorCounts[vendor] = (vendorCounts[vendor] ?? 0) + 1;
+      const display = product.split(/\s+/)[0]?.slice(0, 32) || '';
+      if (!display) continue;
+      const key = display.toLowerCase();
+      const existing = vendorCounts[key];
+      if (existing) existing.count += 1;
+      else vendorCounts[key] = { display, count: 1 };
     }
   }
 
-  base.top_vendors = Object.entries(vendorCounts)
-    .map(([vendor, count]) => ({ vendor, count }))
+  base.top_vendors = Object.values(vendorCounts)
+    .map(({ display, count }) => ({ vendor: display, count }))
     .sort((a, b) => b.count - a.count || a.vendor.localeCompare(b.vendor))
     .slice(0, TOP_VENDORS_LIMIT);
 
