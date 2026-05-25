@@ -4864,6 +4864,57 @@ export default {
       return jsonResponse(result, 200, 1800);
     }
 
+    // === FREE RESEARCH FEEDS (top-25 previews of the premium full sets) ====
+    // The /research/* public pages (authors, citation-velocity, milestones,
+    // emerging-keywords) call these from the browser. They mirror the
+    // shape of /api/premium/research/* but clip to top 25, so the page
+    // renders without paying. The premium siblings return the full 100
+    // for paying agents. Cached 1800s.
+
+    if (path === '/api/research/authors') {
+      const snapshot = await getOpenAlexAIAuthors(env);
+      if (!snapshot) {
+        return jsonResponse(
+          { ok: false, error: 'no_snapshot_yet', hint: 'OpenAlex authors snapshot has not yet been refreshed. Cron runs daily; retry shortly.' },
+          503,
+          60,
+        );
+      }
+      const clipped = { ...snapshot, authors: (snapshot.authors ?? []).slice(0, 25) };
+      return jsonResponse({ ok: true, ...clipped }, 200, 1800);
+    }
+
+    if (path === '/api/research/citation-velocity') {
+      const snapshot = await getOpenAlexAICitationVelocity(env);
+      if (!snapshot) {
+        return jsonResponse(
+          { ok: false, error: 'no_snapshot_yet', hint: 'OpenAlex citation-velocity snapshot has not yet been refreshed. Cron runs daily; retry shortly.' },
+          503,
+          60,
+        );
+      }
+      const clipped = { ...snapshot, papers: (snapshot.papers ?? []).slice(0, 25) };
+      return jsonResponse({ ok: true, ...clipped }, 200, 1800);
+    }
+
+    if (path === '/api/research/milestones') {
+      const result = await computeArxivMilestones(env);
+      if (!result.ok) {
+        return jsonResponse({ ok: false, error: result.error, ...(result.hint ? { hint: result.hint } : {}) }, 503, 60);
+      }
+      const clipped = { ...result, papers: ((result as { papers?: unknown[] }).papers ?? []).slice(0, 25) };
+      return jsonResponse(clipped, 200, 1800);
+    }
+
+    if (path === '/api/research/emerging-keywords') {
+      const result = await computeArxivEmergingKeywords(env);
+      if (!result.ok) {
+        return jsonResponse({ ok: false, error: result.error, ...(result.hint ? { hint: result.hint } : {}) }, 503, 60);
+      }
+      const clipped = { ...result, keywords: ((result as { keywords?: unknown[] }).keywords ?? []).slice(0, 25) };
+      return jsonResponse(clipped, 200, 1800);
+    }
+
     // === PYPI AI/ML PACKAGE TRENDING (free) ===
     // Sister to the npm endpoint. Curated AI-relevant PyPI packages
     // ranked by last-month downloads. Source: pypistats.org JSON API,

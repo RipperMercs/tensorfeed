@@ -144,7 +144,7 @@ export function useMilestones(limit = 12) {
     let cancelled = false;
     (async () => {
       const data = await safeFetch<{ ok: boolean; papers?: MilestonePaper[] }>(
-        `${API}/api/premium/research/milestones`,
+        `${API}/api/research/milestones`,
       );
       if (cancelled) return;
       setPapers(data?.papers?.slice(0, limit) ?? []);
@@ -160,7 +160,7 @@ export function useAuthors(limit = 15) {
     let cancelled = false;
     (async () => {
       const data = await safeFetch<{ ok: boolean; authors?: AuthorRow[] }>(
-        `${API}/api/premium/research/authors`,
+        `${API}/api/research/authors`,
       );
       if (cancelled) return;
       setRows(data?.authors?.slice(0, limit) ?? []);
@@ -176,7 +176,7 @@ export function useCitationVelocity(limit = 15) {
     let cancelled = false;
     (async () => {
       const data = await safeFetch<{ ok: boolean; papers?: VelocityPaper[] }>(
-        `${API}/api/premium/research/citation-velocity`,
+        `${API}/api/research/citation-velocity`,
       );
       if (cancelled) return;
       setPapers(data?.papers?.slice(0, limit) ?? []);
@@ -192,7 +192,7 @@ export function useEmergingKeywords(limit = 30) {
     let cancelled = false;
     (async () => {
       const data = await safeFetch<{ ok: boolean; keywords?: EmergingKeyword[] }>(
-        `${API}/api/premium/research/emerging-keywords`,
+        `${API}/api/research/emerging-keywords`,
       );
       if (cancelled) return;
       setKeywords(data?.keywords?.slice(0, limit) ?? []);
