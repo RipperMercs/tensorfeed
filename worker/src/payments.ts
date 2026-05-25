@@ -207,6 +207,36 @@ function generateNonce(): string {
  * Returns a fresh object on every call (deep clone), so the shared
  * module-level config in bazaar-pilots.ts is never mutated.
  */
+// Infer a JSON-Schema-2020-12 fragment from a sample value. Used to
+// auto-derive typed queryFields + output schemas at settle-time from the
+// pilot configs' sample-value queryParams + output.example. Keeps the
+// pilot configs compact (one source of truth: the sample) while still
+// emitting CDP-friendly typed schemas. Integer detection prefers the
+// narrower type so catalog UIs render number inputs correctly.
+function inferJsonSchema(value: unknown): Record<string, unknown> {
+  if (value === null) return { type: 'null' };
+  if (typeof value === 'boolean') return { type: 'boolean' };
+  if (typeof value === 'number') {
+    return Number.isInteger(value)
+      ? { type: 'integer', example: value }
+      : { type: 'number', example: value };
+  }
+  if (typeof value === 'string') return { type: 'string', example: value };
+  if (Array.isArray(value)) {
+    return value.length > 0
+      ? { type: 'array', items: inferJsonSchema(value[0]) }
+      : { type: 'array' };
+  }
+  if (typeof value === 'object') {
+    const properties: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      properties[k] = inferJsonSchema(v);
+    }
+    return { type: 'object', properties };
+  }
+  return {};
+}
+
 function normalizeBazaarExtensionsForCDP(
   ext: Record<string, unknown>,
   resourceUrl: string,
@@ -222,7 +252,34 @@ function normalizeBazaarExtensionsForCDP(
   const input = (info.input ?? {}) as Record<string, unknown>;
   input.discoverable = true;
   input.url = resourceUrl;
+  // V2 catalog-friendly typing: derive typed queryFields/pathFields from
+  // the existing sample-value queryParams/pathParams. Keeps the legacy
+  // keys in place for crawlers that still read them; adds the typed
+  // variant for crawlers that prefer JSON-Schema fields. Required is
+  // left unset (CDP defaults to optional, which is true for every TF
+  // pilot today: all query params have sensible defaults in the worker).
+  if (input.queryParams && typeof input.queryParams === 'object' && !input.queryFields) {
+    const fields: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(input.queryParams as Record<string, unknown>)) {
+      fields[k] = inferJsonSchema(v);
+    }
+    input.queryFields = fields;
+  }
+  if (input.pathParams && typeof input.pathParams === 'object' && !input.pathFields) {
+    const fields: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(input.pathParams as Record<string, unknown>)) {
+      fields[k] = { ...inferJsonSchema(v), required: true };
+    }
+    input.pathFields = fields;
+  }
   info.input = input;
+  // V2 catalog-friendly typing for outputs: when info.output has an
+  // example but no schema, derive a JSON Schema from the example shape.
+  const output = (info.output ?? {}) as Record<string, unknown>;
+  if (output.example !== undefined && !output.schema) {
+    output.schema = inferJsonSchema(output.example);
+    info.output = output;
+  }
   bazaar.info = info;
   const schema = (bazaar.schema ?? {}) as Record<string, unknown>;
   if ('$schema' in schema) {
