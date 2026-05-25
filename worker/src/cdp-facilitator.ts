@@ -397,19 +397,13 @@ export async function cdpSettle(
   const headers = await authHeaders(env, 'POST', path);
   const url = `${CDP_BASE_URL}/settle`;
 
-  // CDP catalog opt-in: paymentPayload.resource must be populated for the
-  // discovery job to fire. Per Ethan Oroshiba (CDP) on x402-foundation/
-  // x402#2207, this is REQUIRED for indexing even though x402 settles
-  // succeed without it. Buyer SDKs frequently omit the field, so inject
-  // it server-side from paymentRequirements.resource (which we control)
-  // before forwarding. Non-destructive: keeps any value the buyer already
-  // supplied.
-  const enrichedPayload = {
-    ...payload,
-    resource:
-      (payload as PaymentPayload & { resource?: string }).resource ??
-      requirements.resource,
-  };
+  // Note 2026-05-25 (evening): a previous attempt injected a top-level
+  // `resource` field into paymentPayload based on Ethan Oroshiba's quote
+  // on x402#2207. CDP responded with HTTP 400 `'paymentPayload' is
+  // invalid: must match one of [x402V2Pay...]` — the CDP schema does NOT
+  // allow unknown top-level fields on paymentPayload. The field exists
+  // at a different nesting level (TBD via the canonical x402#2207 thread
+  // or CDP discord); until that's confirmed, do not enrich.
 
   let resp: Response;
   try {
@@ -418,7 +412,7 @@ export async function cdpSettle(
       headers,
       body: JSON.stringify({
         x402Version: payload.x402Version,
-        paymentPayload: enrichedPayload,
+        paymentPayload: payload,
         paymentRequirements: requirements,
       }),
     });
