@@ -229,6 +229,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/security/corroborated`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/agent-commerce-fee-floor-spacex-memo`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/pope-leo-magnifica-humanitas-anthropic-olah`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/agent-native-browsers-firefox-fork-runtime-shift`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/chatbot-personality-exploits-prompt-injection-grows-up`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/xai-2-8b-gas-turbines-energy-bottleneck`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
