@@ -192,6 +192,47 @@ function generateNonce(): string {
   return `tf-${toHex(bytes)}`;
 }
 
+/**
+ * Normalize the Bazaar extension block for CDP's indexer. CDP's hosted
+ * indexer at api.cdp.coinbase.com/platform/v2/x402/discovery/resources
+ * reads three signals our static BazaarPilotConfig blocks were missing
+ * (per the 2026-05-25 catalog deep-dive):
+ *   1. info.input.discoverable: true  (BlockRun ships this; entries
+ *      without it appear to be silently skipped from /discovery)
+ *   2. info.input.url  (full origin URL of the resource, repeated even
+ *      though accepts[].resource carries it too)
+ *   3. NO "$schema" pin on schema  (CDP loads draft-2020-12 implicitly;
+ *      an explicit pin can cause silent reject in some validators)
+ *
+ * Returns a fresh object on every call (deep clone), so the shared
+ * module-level config in bazaar-pilots.ts is never mutated.
+ */
+function normalizeBazaarExtensionsForCDP(
+  ext: Record<string, unknown>,
+  resourceUrl: string,
+): Record<string, unknown> {
+  // Pass-through empty (non-pilot endpoints).
+  if (!ext || Object.keys(ext).length === 0) return ext;
+  // Deep clone via JSON round-trip. Bazaar extensions are JSON-safe
+  // (only strings, numbers, booleans, arrays, plain objects); no Dates,
+  // BigInts, or Symbols sneak in.
+  const cloned: Record<string, unknown> = JSON.parse(JSON.stringify(ext));
+  const bazaar = (cloned.bazaar ?? {}) as Record<string, unknown>;
+  const info = (bazaar.info ?? {}) as Record<string, unknown>;
+  const input = (info.input ?? {}) as Record<string, unknown>;
+  input.discoverable = true;
+  input.url = resourceUrl;
+  info.input = input;
+  bazaar.info = info;
+  const schema = (bazaar.schema ?? {}) as Record<string, unknown>;
+  if ('$schema' in schema) {
+    delete schema.$schema;
+    bazaar.schema = schema;
+  }
+  cloned.bazaar = bazaar;
+  return cloned;
+}
+
 function checkRequestCircuit(request: Request, token: string) {
   const url = new URL(request.url);
   const sortedParams = [...url.searchParams.entries()].sort(
@@ -2208,7 +2249,21 @@ export async function requirePayment(
     // surfaces on agentic.market (the 402 body's extensions block is for
     // buyer-side validators only). Non-pilots get {} which is dropped
     // before serialization.
-    const pilotExtensions = bazaarExtensionsFor(url.pathname);
+    //
+    // Normalization 2026-05-25: CDP's hosted indexer reads three signals
+    // that TF's static BazaarPilotConfig blocks don't provide:
+    //   1. info.input.discoverable: true (BlockRun ships this; without it
+    //      CDP appears to skip the entry from /discovery/resources)
+    //   2. info.input.url (full origin URL, repeated; CDP correlates
+    //      against this field even though resource is also at accepts[])
+    //   3. NO $schema pin on extensions.bazaar.schema (CDP loads draft-
+    //      2020-12 implicitly; an explicit pin can cause silent reject)
+    // Inject at settle time so the static configs stay simple. Deep
+    // clone to avoid mutating the shared module-level config.
+    const pilotExtensions = normalizeBazaarExtensionsForCDP(
+      bazaarExtensionsFor(url.pathname),
+      resourceUrl,
+    );
     const requirements: X402PaymentRequirements = {
       scheme: 'exact',
       network: x402Config.network,
