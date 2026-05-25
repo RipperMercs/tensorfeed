@@ -2683,7 +2683,10 @@ function paymentRequiredResponse(
         },
       },
     ],
-    extensions: bazaarExtensionsFor(url.pathname),
+    extensions: normalizeBazaarExtensionsForCDP(
+      bazaarExtensionsFor(url.pathname),
+      resourceUrl,
+    ),
   };
 
   // Base64-encode canonical PaymentRequired for the headers. JSON output is
