@@ -1978,21 +1978,22 @@ curl -H "X-TensorFeed-Simulate-Latency: 2500" https://tensorfeed.ai/api/status`}
           <h3 className="text-sm font-semibold text-text-primary mb-2">Hosted HTTP MCP (Streamable HTTP, MCP 2024-11-05)</h3>
           <p className="text-text-secondary text-sm mb-2">
             The canonical entry for hosted-marketplace listings (Anthropic vertical agent repos, claude.ai connectors, third-party MCP catalogs).
-            POST a JSON-RPC 2.0 envelope to <code className="text-accent-primary font-mono">https://tensorfeed.ai/api/mcp</code>;
+            POST a JSON-RPC 2.0 envelope to <code className="text-accent-primary font-mono">https://mcp.tensorfeed.ai/mcp</code>;
             GET returns discovery info. CORS open for cross-origin agent fetches. 12 tools in V1 spanning AI news, model pricing, AI service status,
             MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR (search + submissions + ticker lookup), and EIA Open Data.
+            The legacy <code className="font-mono">https://tensorfeed.ai/api/mcp</code> path still works for backward compatibility.
           </p>
           <pre className="bg-bg-tertiary/50 border border-border rounded p-3 text-xs font-mono text-text-secondary overflow-x-auto whitespace-pre leading-relaxed mb-3">
 {`# Probe + initialize
-curl https://tensorfeed.ai/api/mcp
+curl https://mcp.tensorfeed.ai/mcp
 
 # Tool list
-curl -X POST https://tensorfeed.ai/api/mcp \\
+curl -X POST https://mcp.tensorfeed.ai/mcp \\
   -H 'Content-Type: application/json' \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 
 # Tool call: ticker lookup
-curl -X POST https://tensorfeed.ai/api/mcp \\
+curl -X POST https://mcp.tensorfeed.ai/mcp \\
   -H 'Content-Type: application/json' \\
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
        "params":{"name":"lookup_sec_company_ticker",
