@@ -170,6 +170,127 @@ interface Manifest {
   [k: string]: unknown;
 }
 
+// ── Per-param manifest split ───────────────────────────────────────
+//
+// BlockRun ships ~100 manifest resources by listing per-ticker entries
+// (/usstock/price/AAPL, /usstock/price/TSLA...) as separate manifest
+// items even though they're served by one parameterized handler.
+// agentic.market's manifest crawler treats each one as its own catalog
+// entry. Net result: BlockRun shows 35+ listings, TF shows 1.
+//
+// We replicate that pattern for our path-param Wave 14 pilots. Each
+// concrete entry below becomes its own ManifestItem with a fully-
+// qualified URL (no `:id` template literal). Same extensions.bazaar
+// config as the parent template (the routeTemplate field still tells
+// CDP that all concrete instances consolidate into one catalog row).
+//
+// Picked instances reflect what an agent is actually likely to query:
+// canonical famous CVEs for the security cleaners, top-tracked model
+// vendors for the OpenRouter cleaner, top frontier-lab providers for
+// the provider digest.
+
+interface SplitInstance {
+  /** The fully-qualified concrete path (no `:id` template). */
+  concretePath: string;
+  /** Display name for the manifest item. */
+  name: string;
+  /** Category (matches PILOT_METADATA naming). */
+  category: string;
+}
+
+// Top 10 famous CVEs that agents are most likely to look up. Used by
+// all four single-CVE cleaners (clean/cve, clean/kev, clean/epss,
+// security/verified).
+const TOP_CVES: ReadonlyArray<{ id: string; label: string }> = [
+  { id: 'CVE-2021-44228', label: 'Log4Shell' },
+  { id: 'CVE-2024-3094', label: 'xz-utils backdoor' },
+  { id: 'CVE-2017-0144', label: 'EternalBlue' },
+  { id: 'CVE-2014-0160', label: 'Heartbleed' },
+  { id: 'CVE-2021-34527', label: 'PrintNightmare' },
+  { id: 'CVE-2019-0708', label: 'BlueKeep' },
+  { id: 'CVE-2021-26855', label: 'ProxyLogon' },
+  { id: 'CVE-2020-1472', label: 'Zerologon' },
+  { id: 'CVE-2022-22965', label: 'Spring4Shell' },
+  { id: 'CVE-2021-26084', label: 'Confluence OGNL' },
+];
+
+const TOP_PROVIDERS: ReadonlyArray<{ slug: string; label: string }> = [
+  { slug: 'anthropic', label: 'Anthropic' },
+  { slug: 'openai', label: 'OpenAI' },
+  { slug: 'google', label: 'Google' },
+  { slug: 'meta', label: 'Meta' },
+  { slug: 'mistral', label: 'Mistral' },
+  { slug: 'cohere', label: 'Cohere' },
+  { slug: 'deepseek', label: 'DeepSeek' },
+  { slug: 'xai', label: 'xAI' },
+  { slug: 'microsoft', label: 'Microsoft' },
+  { slug: 'amazon', label: 'Amazon Bedrock' },
+];
+
+const TOP_OPENROUTER_MODELS: ReadonlyArray<{ id: string; label: string }> = [
+  { id: 'anthropic/claude-opus-4-7', label: 'Claude Opus 4.7' },
+  { id: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5' },
+  { id: 'openai/gpt-5-5', label: 'GPT-5.5' },
+  { id: 'openai/gpt-5-5-mini', label: 'GPT-5.5 Mini' },
+  { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+  { id: 'deepseek/deepseek-chat-v3.1', label: 'DeepSeek V3.1' },
+  { id: 'meta-llama/llama-3.3-70b', label: 'Llama 3.3 70B' },
+  { id: 'mistralai/mistral-large', label: 'Mistral Large' },
+  { id: 'x-ai/grok-3', label: 'Grok 3' },
+];
+
+function buildSplitInstances(): SplitInstance[] {
+  const out: SplitInstance[] = [];
+  // 4 single-CVE cleaners x 10 CVEs = 40 entries
+  const cveTemplates: ReadonlyArray<{ template: string; nameStem: string; category: string }> = [
+    { template: '/api/premium/clean/cve/',         nameStem: 'CVE record (LLM-ready)',      category: 'ai-cve-cleaner-mitre' },
+    { template: '/api/premium/clean/kev/',         nameStem: 'KEV entry (LLM-ready)',       category: 'ai-cve-cleaner-kev' },
+    { template: '/api/premium/clean/epss/',        nameStem: 'EPSS score (LLM-ready)',      category: 'ai-cve-cleaner-epss' },
+    { template: '/api/premium/security/verified/', nameStem: 'Cross-database CVE verified', category: 'ai-cve-corroborated' },
+  ];
+  for (const tmpl of cveTemplates) {
+    for (const cve of TOP_CVES) {
+      out.push({
+        concretePath: `${tmpl.template}${cve.id}`,
+        name: `${tmpl.nameStem}: ${cve.id} (${cve.label})`,
+        category: tmpl.category,
+      });
+    }
+  }
+  // 10 providers
+  for (const p of TOP_PROVIDERS) {
+    out.push({
+      concretePath: `/api/premium/providers/${p.slug}`,
+      name: `Provider digest: ${p.label}`,
+      category: 'ai-provider-digest',
+    });
+  }
+  // 10 OpenRouter models. Path needs URL-encoded slash.
+  for (const m of TOP_OPENROUTER_MODELS) {
+    out.push({
+      concretePath: `/api/premium/clean/openrouter/${encodeURIComponent(m.id)}`,
+      name: `OpenRouter model card: ${m.label}`,
+      category: 'ai-openrouter-model-card',
+    });
+  }
+  return out;
+}
+
+/**
+ * Resolve a concrete split path back to its parent template pilot path
+ * so we can read the parent's BazaarPilotConfig (description + extensions).
+ */
+function resolveSplitParent(concretePath: string): string | null {
+  if (concretePath.startsWith('/api/premium/clean/cve/'))         return '/api/premium/clean/cve/:id';
+  if (concretePath.startsWith('/api/premium/clean/kev/'))         return '/api/premium/clean/kev/:id';
+  if (concretePath.startsWith('/api/premium/clean/epss/'))        return '/api/premium/clean/epss/:id';
+  if (concretePath.startsWith('/api/premium/security/verified/')) return '/api/premium/security/verified/:id';
+  if (concretePath.startsWith('/api/premium/clean/openrouter/'))  return '/api/premium/clean/openrouter/:model_id';
+  if (concretePath.startsWith('/api/premium/providers/'))         return '/api/premium/providers/:name';
+  return null;
+}
+
 // ── Build a manifest item from a pilot path + config ──────────────
 
 function buildItem(pilotPath: string, pilot: BazaarPilotConfig, meta: PilotMeta, today: string): ManifestItem {
@@ -287,8 +408,49 @@ function main(): void {
     }
   }
 
+  // ── Per-param split: append concrete instances for path-param pilots ──
+  // BlockRun-style manifest inflation (5-10x catalog listings). Each
+  // SplitInstance becomes its own ManifestItem with a fully-qualified URL
+  // and inherits its parent template's BazaarPilotConfig. Idempotent: skips
+  // any concrete path already in the manifest.
+  let splitAdded = 0;
+  let splitRefreshed = 0;
+  for (const inst of buildSplitInstances()) {
+    const parentTemplate = resolveSplitParent(inst.concretePath);
+    if (!parentTemplate) continue;
+    const parentPilot = getBazaarPilotConfig(parentTemplate);
+    if (!parentPilot) continue;
+    const meta: PilotMeta = {
+      name: inst.name,
+      category: inst.category,
+      credits: 1,
+      method: 'GET',
+    };
+    const existingIdx = existingByPath.get(inst.concretePath);
+    if (existingIdx !== undefined) {
+      const item = manifest.items[existingIdx];
+      const before = JSON.stringify(item.extensions ?? null) + '|' + (item.metadata?.description ?? '');
+      item.extensions = parentPilot.extension;
+      if (item.metadata) {
+        item.metadata.description = parentPilot.description;
+        item.metadata.name = inst.name;
+        item.metadata.category = inst.category;
+      }
+      const after = JSON.stringify(item.extensions) + '|' + item.metadata.description;
+      if (before !== after) {
+        item.lastUpdated = today;
+        splitRefreshed++;
+      }
+    } else {
+      const newItem = buildItem(inst.concretePath, parentPilot, meta, today);
+      walkAndAssertLatin1(newItem, `split-item ${inst.concretePath}`);
+      manifest.items.push(newItem);
+      splitAdded++;
+    }
+  }
+
   // Bump the top-level lastUpdated only if anything actually changed.
-  if (added > 0 || refreshed > 0) {
+  if (added > 0 || refreshed > 0 || splitAdded > 0 || splitRefreshed > 0) {
     manifest.lastUpdated = today;
   }
 
@@ -298,7 +460,7 @@ function main(): void {
   const out = JSON.stringify(manifest, null, 2) + '\n';
   fs.writeFileSync(MANIFEST_PATH, out, 'utf-8');
 
-  console.log(`[sync-x402-manifest] items: ${manifest.items.length} total, +${added} new, ${refreshed} refreshed (extensions/description from bazaar-pilots.ts)`);
+  console.log(`[sync-x402-manifest] items: ${manifest.items.length} total, +${added} new pilots, ${refreshed} refreshed pilots, +${splitAdded} new splits, ${splitRefreshed} refreshed splits`);
 }
 
 main();
