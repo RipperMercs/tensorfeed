@@ -1158,6 +1158,8 @@ export const PRODUCTS: Product[] = [
     },
     tags: ['ai-companion', 'ambient-ai', 'experimental', 'always-listening'],
     hue: 280,
+    image: '/gear/friend-pendant.png',
+    imageAlt: 'Friend AI companion pendant, a white spherical wearable on a grey cord necklace, product photograph',
     addedAt: '2026-05-23',
     reviewedAt: '2026-05-23',
     featured: true,
