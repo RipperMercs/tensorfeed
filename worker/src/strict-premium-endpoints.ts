@@ -170,6 +170,19 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
  */
 export const STRICT_PREMIUM_PREFIXES: ReadonlyArray<string> = [
   '/api/premium/providers/',
+  // Wave 14 Bazaar path-param pilots (2026-05-25). All are LLM-ready
+  // single-record lookups (CVE / KEV / EPSS / OpenRouter model /
+  // cross-database verified). Strict-premium gate is required because
+  // anonymous Bazaar crawler probes hit the free-trial pool and the
+  // handler returns 200 with the data instead of a 402 challenge, so
+  // CDP never observes the settlement that would catalog the endpoint.
+  // Matches the BazaarPilotConfig templates in worker/src/bazaar-pilots.ts
+  // (Wave 14 block).
+  '/api/premium/clean/cve/',
+  '/api/premium/clean/kev/',
+  '/api/premium/clean/epss/',
+  '/api/premium/clean/openrouter/',
+  '/api/premium/security/verified/',
 ];
 
 /**
