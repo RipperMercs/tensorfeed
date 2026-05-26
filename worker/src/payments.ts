@@ -2698,7 +2698,20 @@ function paymentRequiredResponse(
   // ASCII for our content (English descriptions, hex addresses, numeric
   // amounts), so btoa is safe. Use TextEncoder->String.fromCharCode if we
   // ever introduce Unicode in resource/description fields.
-  const canonicalB64 = btoa(JSON.stringify(canonicalPaymentRequired));
+  //
+  // Header version OMITS the bazaar extensions block. Discovery: the body
+  // already carries the full extensions for catalog crawlers (agentic.market,
+  // CDP /discovery) which read the body. The header copy serves buyer SDKs
+  // (AgentCore Payments, @x402/fetch, etc.) which only need `accepts` to
+  // sign EIP-3009. Some bazaar pilots carry deeply-nested schema + example
+  // payloads (status/triage, news/action-cards, ai-velocity, etc.) whose
+  // base64 inflates the header past undici's default 16KB cap, producing
+  // "Headers Overflow Error" on Node fetch and silently breaking buyer-side
+  // settle retries. Bug found 2026-05-25 while debugging the 4 endpoints
+  // that wouldn't settle during the catalog sweep; verified via repro
+  // (tensorfeed-work/buyer-debug.mjs). Body kept untouched.
+  const headerCanonical = { ...canonicalPaymentRequired, extensions: {} };
+  const canonicalB64 = btoa(JSON.stringify(headerCanonical));
 
   return jsonResponse(
     {
