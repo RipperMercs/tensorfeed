@@ -2430,6 +2430,92 @@ const SECURITY_VERIFIED_PILOT: BazaarPilotConfig = {
   },
 };
 
+/**
+ * /api/premium/ai-cves/batch?ids=CVE-A,CVE-B,...: Wave 15 (2026-05-26).
+ * Multi-CVE lookup. Pass up to 10 CVE ids as a comma-separated list, get
+ * one paper per id (or found:false for misses) in a single round trip.
+ * Translated from AgentMail messages/batch-get. Same 1-credit cost as a
+ * single lookup so the value is the saved round trips. Param-required,
+ * strict-premium gated.
+ */
+const AI_CVES_BATCH_PILOT: BazaarPilotConfig = {
+  description:
+    'Multi-CVE lookup over the TensorFeed AI-CVE index. Pass ids=CVE-A,CVE-B,... (comma-separated, up to 10) and get one paper per id in a single call. Saves up to 10 round trips at the same 1-credit cost as a single lookup. Index spans the rolling 90-day retention window of TF ai-cves batches.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { ids: 'CVE-2026-44580,CVE-2026-12345' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            total_requested: 2,
+            total_found: 1,
+            results: [
+              {
+                cve_id: 'CVE-2026-44580',
+                found: true,
+                batch_id: '20260524-195226',
+                paper: {
+                  cve_ids: ['CVE-2026-44580'],
+                  affected_products: ['Next.js'],
+                  affected_version_ranges: [],
+                  fixed_versions: ['v15.5.16', 'v16.2.5'],
+                  exploited_in_wild: 'unstated',
+                  severity_label: 'high',
+                  source_url: 'https://github.com/advisories/GHSA-gx5p-jg67-6x7h',
+                },
+              },
+              {
+                cve_id: 'CVE-2026-12345',
+                found: false,
+                batch_id: null,
+                paper: null,
+              },
+            ],
+            source_license: 'CC BY 4.0',
+            source_attribution: 'GitHub Advisory Database (github.com/advisories) + vendor advisories',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  ids: {
+                    type: 'string',
+                    description: 'Comma-separated CVE ids in canonical CVE-YYYY-NNNNN form. Case-insensitive. Up to 10 per call.',
+                  },
+                },
+                required: ['ids'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const AI_CVES_CVE_LOOKUP_PILOT: BazaarPilotConfig = {
   description:
     'Single CVE lookup against the TensorFeed AI-CVE index. Pass id=CVE-YYYY-XXXXX, get the structured paper (affected products, version ranges, fixed versions, severity, exploitation status, source URL). Index spans the rolling 90-day retention window of TF ai-cves batches.',
@@ -2596,6 +2682,9 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/ai-cves/ai-stack-cves': AI_CVES_AI_STACK_PILOT,
   '/api/premium/ai-cves/exploited-in-wild': AI_CVES_EXPLOITED_PILOT,
   '/api/premium/ai-cves/cve': AI_CVES_CVE_LOOKUP_PILOT,
+  // Wave 15 (2026-05-26): ai-cves/batch. AgentMail messages/batch-get
+  // pattern. Up to 10 CVE ids per call at the single-lookup 1-credit cost.
+  '/api/premium/ai-cves/batch': AI_CVES_BATCH_PILOT,
   // Wave 14: path-param templates. Lookup helpers below match concrete
   // request paths against these templates so the request still routes
   // through CDP for first-pay cataloging.

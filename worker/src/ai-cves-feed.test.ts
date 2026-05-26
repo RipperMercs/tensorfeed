@@ -12,6 +12,9 @@ import {
   buildLatestResponse,
   buildFeedResponse,
   buildStatsResponse,
+  parseBatchIdsParam,
+  buildBatchResponse,
+  CVE_BATCH_MAX_IDS,
   FEED_MAX_LIMIT,
 } from './premium-ai-cves';
 
@@ -294,5 +297,155 @@ describe('buildStatsResponse', () => {
     const r = buildStatsResponse(null);
     expect(r.total_papers).toBe(0);
     expect(r.top_vendors).toEqual([]);
+  });
+});
+
+// ── parseBatchIdsParam ─────────────────────────────────────────────
+
+describe('parseBatchIdsParam', () => {
+  it('rejects null or empty string', () => {
+    const r1 = parseBatchIdsParam(null);
+    expect(r1.ok).toBe(false);
+    if (!r1.ok) expect(r1.error).toBe('missing_ids');
+    const r2 = parseBatchIdsParam('');
+    expect(r2.ok).toBe(false);
+    const r3 = parseBatchIdsParam('   ');
+    expect(r3.ok).toBe(false);
+  });
+
+  it('parses a single id', () => {
+    const r = parseBatchIdsParam('CVE-2026-0001');
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.ids).toEqual(['CVE-2026-0001']);
+  });
+
+  it('parses comma-separated ids with whitespace tolerance', () => {
+    const r = parseBatchIdsParam('CVE-2026-0001, CVE-2026-0002 ,CVE-2026-0003');
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.ids).toEqual(['CVE-2026-0001', 'CVE-2026-0002', 'CVE-2026-0003']);
+  });
+
+  it('accepts lowercase id', () => {
+    const r = parseBatchIdsParam('cve-2026-0001');
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.ids).toEqual(['cve-2026-0001']);
+  });
+
+  it('rejects more than CVE_BATCH_MAX_IDS', () => {
+    const ids = Array.from({ length: CVE_BATCH_MAX_IDS + 1 }, (_, i) => `CVE-2026-${String(i).padStart(4, '0')}`).join(',');
+    const r = parseBatchIdsParam(ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe('too_many_ids');
+  });
+
+  it('accepts exactly CVE_BATCH_MAX_IDS', () => {
+    const ids = Array.from({ length: CVE_BATCH_MAX_IDS }, (_, i) => `CVE-2026-${String(i).padStart(4, '0')}`).join(',');
+    const r = parseBatchIdsParam(ids);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.ids).toHaveLength(CVE_BATCH_MAX_IDS);
+  });
+
+  it('rejects malformed id', () => {
+    const r = parseBatchIdsParam('CVE-2026-0001,NOT-A-CVE,CVE-2026-0003');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe('invalid_cve_id');
+  });
+
+  it('rejects id with wrong year format', () => {
+    const r = parseBatchIdsParam('CVE-26-0001');
+    expect(r.ok).toBe(false);
+  });
+
+  it('rejects id with too-short sequence', () => {
+    const r = parseBatchIdsParam('CVE-2026-001');
+    expect(r.ok).toBe(false);
+  });
+
+  it('filters empty segments from leading/trailing commas', () => {
+    const r = parseBatchIdsParam(',CVE-2026-0001,,CVE-2026-0002,');
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.ids).toEqual(['CVE-2026-0001', 'CVE-2026-0002']);
+  });
+});
+
+// ── buildBatchResponse ─────────────────────────────────────────────
+
+describe('buildBatchResponse', () => {
+  it('returns all not-found when index is null', () => {
+    const r = buildBatchResponse(['CVE-2026-0001', 'CVE-2026-0002'], null, {});
+    expect(r.total_requested).toBe(2);
+    expect(r.total_found).toBe(0);
+    expect(r.results).toHaveLength(2);
+    expect(r.results.every((p) => !p.found)).toBe(true);
+  });
+
+  it('normalizes lowercase ids to uppercase in response', () => {
+    const r = buildBatchResponse(['cve-2026-0001'], null, {});
+    expect(r.results[0].cve_id).toBe('CVE-2026-0001');
+  });
+
+  it('resolves found ids from batch map', () => {
+    const p = paper({ cve_ids: ['CVE-2026-0001'], severity_label: 'critical' });
+    const b = { batch_id: 'b1', extracted_at: '', window_start: '', window_end: '', model: 'm', papers: [p] };
+    const idx = { 'CVE-2026-0001': { batch_id: 'b1', paper_index: 0 } };
+    const r = buildBatchResponse(['CVE-2026-0001'], idx, { b1: b });
+    expect(r.total_found).toBe(1);
+    expect(r.results[0].found).toBe(true);
+    expect(r.results[0].paper?.severity_label).toBe('critical');
+    expect(r.results[0].batch_id).toBe('b1');
+  });
+
+  it('strips quote_spans from returned papers', () => {
+    const p = paper({ cve_ids: ['CVE-2026-0001'] });
+    const b = { batch_id: 'b1', extracted_at: '', window_start: '', window_end: '', model: 'm', papers: [p] };
+    const idx = { 'CVE-2026-0001': { batch_id: 'b1', paper_index: 0 } };
+    const r = buildBatchResponse(['CVE-2026-0001'], idx, { b1: b });
+    expect(r.results[0].paper).toBeTruthy();
+    expect((r.results[0].paper as Record<string, unknown>).quote_spans).toBeUndefined();
+  });
+
+  it('returns found:false for ids absent from the index', () => {
+    const p = paper({ cve_ids: ['CVE-2026-0001'] });
+    const b = { batch_id: 'b1', extracted_at: '', window_start: '', window_end: '', model: 'm', papers: [p] };
+    const idx = { 'CVE-2026-0001': { batch_id: 'b1', paper_index: 0 } };
+    const r = buildBatchResponse(['CVE-2026-0001', 'CVE-2026-9999'], idx, { b1: b });
+    expect(r.total_requested).toBe(2);
+    expect(r.total_found).toBe(1);
+    expect(r.results[0].found).toBe(true);
+    expect(r.results[1].found).toBe(false);
+    expect(r.results[1].cve_id).toBe('CVE-2026-9999');
+  });
+
+  it('returns found:false when the batch is missing from the map', () => {
+    const idx = { 'CVE-2026-0001': { batch_id: 'b-missing', paper_index: 0 } };
+    const r = buildBatchResponse(['CVE-2026-0001'], idx, {});
+    expect(r.results[0].found).toBe(false);
+  });
+
+  it('returns found:false when paper_index is out of range', () => {
+    const p = paper({ cve_ids: ['CVE-2026-0001'] });
+    const b = { batch_id: 'b1', extracted_at: '', window_start: '', window_end: '', model: 'm', papers: [p] };
+    const idx = { 'CVE-2026-0001': { batch_id: 'b1', paper_index: 99 } };
+    const r = buildBatchResponse(['CVE-2026-0001'], idx, { b1: b });
+    expect(r.results[0].found).toBe(false);
+  });
+
+  it('preserves request order in results', () => {
+    const p1 = paper({ cve_ids: ['CVE-2026-0001'] });
+    const p2 = paper({ cve_ids: ['CVE-2026-0002'] });
+    const b = { batch_id: 'b1', extracted_at: '', window_start: '', window_end: '', model: 'm', papers: [p1, p2] };
+    const idx = {
+      'CVE-2026-0001': { batch_id: 'b1', paper_index: 0 },
+      'CVE-2026-0002': { batch_id: 'b1', paper_index: 1 },
+    };
+    const r = buildBatchResponse(['CVE-2026-0002', 'CVE-2026-0001'], idx, { b1: b });
+    expect(r.results.map((x) => x.cve_id)).toEqual(['CVE-2026-0002', 'CVE-2026-0001']);
+  });
+
+  it('carries attribution on the envelope and each result', () => {
+    const r = buildBatchResponse(['CVE-2026-0001'], null, {});
+    expect(r.source_license).toBeTruthy();
+    expect(r.source_attribution).toBeTruthy();
+    expect(r.results[0].source_license).toBeTruthy();
   });
 });

@@ -13,6 +13,7 @@
 import type { Env } from './types';
 import {
   type AiCvesPaper,
+  type AiCvesBatch,
   type AiCategory,
   type PublicPaper,
   getAiFlagged,
@@ -218,6 +219,124 @@ export async function lookupCve(env: Env, cveId: string): Promise<CveLookupRespo
     batch_id: entry.batch_id,
     ...publicAttribution(),
   };
+}
+
+// ─── CVE batch lookup (strict-premium, comma-separated ids) ─────────
+
+export interface CveBatchResponse {
+  total_requested: number;
+  total_found: number;
+  results: CveLookupResponse[];
+  source_license: string;
+  source_attribution: string;
+}
+
+export const CVE_BATCH_MAX_IDS = 10;
+
+export type ParseBatchIdsResult =
+  | { ok: true; ids: string[] }
+  | { ok: false; error: string; hint: string };
+
+/**
+ * Parses the `ids` query param. Returns up to CVE_BATCH_MAX_IDS canonical
+ * CVE ids, or a structured error. Each id must match CVE-YYYY-NNNNN
+ * (case-insensitive on input; the response normalizes to uppercase).
+ */
+export function parseBatchIdsParam(raw: string | null): ParseBatchIdsResult {
+  if (!raw || !raw.trim()) {
+    return {
+      ok: false,
+      error: 'missing_ids',
+      hint: `Pass ids=CVE-YYYY-NNNNN,CVE-YYYY-NNNNN (comma-separated). Up to ${CVE_BATCH_MAX_IDS} CVE ids per call.`,
+    };
+  }
+  const ids = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  if (ids.length === 0) {
+    return {
+      ok: false,
+      error: 'missing_ids',
+      hint: `Pass ids=CVE-YYYY-NNNNN,CVE-YYYY-NNNNN (comma-separated). Up to ${CVE_BATCH_MAX_IDS} CVE ids per call.`,
+    };
+  }
+  if (ids.length > CVE_BATCH_MAX_IDS) {
+    return {
+      ok: false,
+      error: 'too_many_ids',
+      hint: `Max ${CVE_BATCH_MAX_IDS} CVE ids per call. Got ${ids.length}.`,
+    };
+  }
+  for (const id of ids) {
+    if (!/^CVE-\d{4}-\d{4,7}$/i.test(id)) {
+      return {
+        ok: false,
+        error: 'invalid_cve_id',
+        hint: `Each id must match CVE-YYYY-NNNNN. Got ${JSON.stringify(id)}.`,
+      };
+    }
+  }
+  return { ok: true, ids };
+}
+
+/**
+ * Pure builder for testability. Takes already-loaded index + batch
+ * map; assembles per-id results. Normalizes ids to uppercase.
+ */
+export function buildBatchResponse(
+  ids: string[],
+  index: Record<string, { batch_id: string; paper_index: number }> | null,
+  batchesById: Record<string, AiCvesBatch | null>,
+): CveBatchResponse {
+  const normalized = ids.map((id) => id.trim().toUpperCase());
+  const results: CveLookupResponse[] = normalized.map((id) => {
+    const empty: CveLookupResponse = {
+      cve_id: id,
+      found: false,
+      paper: null,
+      batch_id: null,
+      ...publicAttribution(),
+    };
+    if (!index || !index[id]) return empty;
+    const entry = index[id];
+    const batch = batchesById[entry.batch_id];
+    if (!batch || entry.paper_index >= batch.papers.length) return empty;
+    return {
+      cve_id: id,
+      found: true,
+      paper: toPublicPaper(batch.papers[entry.paper_index]),
+      batch_id: entry.batch_id,
+      ...publicAttribution(),
+    };
+  });
+  return {
+    total_requested: ids.length,
+    total_found: results.filter((r) => r.found).length,
+    results,
+    ...publicAttribution(),
+  };
+}
+
+/**
+ * KV-aware batch lookup. Reads the index once, then dedupes batch
+ * reads by batch_id so worst case is 1 index read + N unique-batch
+ * reads (typically 1 since most IDs land in the latest batch).
+ */
+export async function lookupCvesBatch(env: Env, ids: string[]): Promise<CveBatchResponse> {
+  const normalized = ids.map((id) => id.trim().toUpperCase());
+  const idx = await getCveIndex(env);
+  const uniqueBatchIds = new Set<string>();
+  if (idx) {
+    for (const id of normalized) {
+      const entry = idx[id];
+      if (entry) uniqueBatchIds.add(entry.batch_id);
+    }
+  }
+  const batchesById: Record<string, AiCvesBatch | null> = {};
+  await Promise.all(
+    Array.from(uniqueBatchIds).map(async (bid) => {
+      batchesById[bid] = await getBatch(env, bid);
+    }),
+  );
+  return buildBatchResponse(ids, idx, batchesById);
 }
 
 // ─── Free /api/ai-cves/* helpers ────────────────────────────────────

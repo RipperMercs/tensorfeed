@@ -9067,6 +9067,40 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: CVE BATCH LOOKUP (Tier 1, 1 credit, param-required) ===
+    // /api/premium/ai-cves/batch?ids=CVE-A,CVE-B,...
+    // Up to 10 CVE ids per call, 1 credit flat. Reads the persistent
+    // cve-index once and dedupes batch reads by batch_id so worst case
+    // is 1 + N-unique-batch KV reads (typically 1 since most ids land in
+    // the latest batch). Param-required so strict-premium gates anonymous
+    // crawler probes to a clean 402 challenge.
+    //
+    // AgentMail messages/batch-get pattern translated. Saves up to 10
+    // round-trips for the same 1-credit cost as a single lookup.
+
+    if (path === '/api/premium/ai-cves/batch') {
+      const { parseBatchIdsParam } = await import('./premium-ai-cves');
+      const parsed = parseBatchIdsParam(url.searchParams.get('ids'));
+      if (!parsed.ok) {
+        return jsonResponse(
+          { ok: false, error: parsed.error, hint: parsed.hint },
+          400,
+          0,
+        );
+      }
+
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { lookupCvesBatch } = await import('./premium-ai-cves');
+      const result = await lookupCvesBatch(env, parsed.ids);
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-cves/batch', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === CODING HARNESSES LATEST (free, cached 600s) ===
     // /api/coding-harnesses/latest
     // Third AFTA federation cross-call. Returns the most recent snapshot

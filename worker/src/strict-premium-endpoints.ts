@@ -162,6 +162,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/ai-cves/ai-stack-cves',
   '/api/premium/ai-cves/exploited-in-wild',
   '/api/premium/ai-cves/cve',
+  // Wave 15 (2026-05-26). AgentMail messages/batch-get pattern translated.
+  // Comma-separated ids param required (?ids=CVE-A,CVE-B,...), capped at
+  // 10 ids per call, 1 credit flat. Param-required so strict-premium gates
+  // anonymous crawlers to a clean 402 challenge instead of 400 missing_ids.
+  '/api/premium/ai-cves/batch',
 ];
 
 /**
