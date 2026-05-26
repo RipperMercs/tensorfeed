@@ -151,13 +151,16 @@
    Root: <div class="tf-widget" data-condition="nominal|degraded|critical" data-accent="blue|green">
    ============================================================ */
 .tf-widget {
+  /* Fill the container the iframe gives us, capped at a sensible portrait
+     width. The previous clamp(420, 48vw, 640) forced the widget to 420px
+     inside a 760px extension popup, which then squeezed the 5-column row
+     grid down to where the vendor caption wrapped letter-by-letter. With
+     width:100%, the widget tracks its iframe; container queries below
+     adapt the row layout at every widget size. 1024 cap lets standalone
+     and wide-iframe embeds spread out for a more finished feel; the
+     extension popup at 760 still fills cleanly. */
   width: 100%;
-  /* Narrow + tall product: the widget renders as a portrait-oriented
-     console (think "AI status sidebar"), not a wide dashboard. 640
-     ceiling keeps lines short and the row stack tall, which is the
-     intended product feel. Container queries below tune type and
-     spacing to the widget's OWN width, not the viewport. */
-  max-width: clamp(420px, 48vw, 640px);
+  max-width: 1024px;
   margin: 0 auto;
   container-type: inline-size;
   container-name: tfw;
@@ -200,6 +203,27 @@
   .tf-head          { padding: 16px 20px 13px 76px; gap: 12px; }
   .tf-klaxon        { height: 40px; padding: 0 20px 0 76px; }
   .tf-filter        { padding: 0 20px 12px 76px; }
+}
+
+/* Narrow widget (< 540px container width): drop the chevron column.
+   Mirrors the viewport ≤720px media query below, but container-driven
+   so it works inside narrow iframes embedded on wide host pages. */
+@container tfw (max-width: 539.98px) {
+  .tf-row {
+    grid-template-columns: 100px minmax(100px, 1fr) 56px 86px;
+    column-gap: 10px;
+  }
+  .tf-r-act { display: none; }
+}
+
+/* Very narrow widget (< 440px container width): also drop the sparkline.
+   Mirrors the viewport ≤480px media query below, but container-driven. */
+@container tfw (max-width: 439.98px) {
+  .tf-row {
+    grid-template-columns: 88px minmax(100px, 1fr) 86px;
+    column-gap: 8px;
+  }
+  .tf-r-spark { display: none; }
 }
 
 /* widget glows depend on condition (top-level alert level) */
@@ -274,11 +298,21 @@
 }
 
 /* ----- HUD corner ticks ----- */
+/* Corner color follows the widget condition so the brackets never read
+   as a different system from the rest of the widget chrome. In degraded
+   or critical state, the klaxon bar is yellow or red; with blue corners
+   on top of it the brackets cut through visually. The variable swap
+   below keeps the corner color in family with whatever alert state the
+   widget is showing. */
+.tf-widget { --tf-corner-color: var(--tf-accent); }
+.tf-widget[data-condition="degraded"] { --tf-corner-color: var(--tf-degraded); }
+.tf-widget[data-condition="critical"] { --tf-corner-color: var(--tf-critical); }
+
 .tf-widget::before, .tf-widget::after,
 .tf-corners::before, .tf-corners::after {
   content: ''; position: absolute;
   width: 14px; height: 14px;
-  border: 1.5px solid var(--tf-accent);
+  border: 1.5px solid var(--tf-corner-color);
   opacity: 0.75;
   pointer-events: none;
   transition: border-color 0.4s ease;
@@ -573,7 +607,12 @@
 
 .tf-row {
   display: grid;
-  grid-template-columns: 116px 1fr 64px 90px 60px;
+  /* minmax on the name column guarantees a readable minimum even when
+     the widget is squeezed below 540px. Without it, grid would compute
+     1fr to ~0px and force letter-by-letter wrap on the vendor caption.
+     Container queries below drop the act+spark columns at narrow widget
+     widths so this minmax doesn't push the row past the widget edge. */
+  grid-template-columns: 116px minmax(120px, 1fr) 64px 90px 60px;
   align-items: center;
   gap: 12px;
   padding: 9px 12px;
@@ -675,6 +714,12 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--tf-fg-low);
+  /* Truncate to ellipsis instead of wrapping when the name column is
+     squeezed (was rendering 'ANTHROPIC' as a vertical letter stack at
+     narrow widget widths before this). */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* sparkline */
