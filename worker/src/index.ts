@@ -562,12 +562,26 @@ function isAuthorizedIngest(env: Env, supplied: string | null): boolean {
   return isAuthorizedAdmin(env, supplied);
 }
 
-// Hoisted /api/admin/* pre-check accepts EITHER key so the rate limit
-// + 401 boundary is uniform. Per-route narrower checks (e.g.
-// isAuthorizedIngest at the ai-cves ingest handler) enforce which
-// specific key class is allowed for each path.
+// Least-privilege auth for POST /api/admin/recon-email. Authorizes ONLY
+// that path (sending plain-text email via Resend). Falls back to nothing
+// if unset; the handler also accepts ADMIN_KEY directly.
+function isAuthorizedReconEmail(env: Env, supplied: string | null): boolean {
+  if (!env.RECON_EMAIL_KEY || env.RECON_EMAIL_KEY.length === 0) return false;
+  if (!supplied) return false;
+  return constantTimeEqual(supplied, env.RECON_EMAIL_KEY);
+}
+
+// Hoisted /api/admin/* pre-check accepts ANY admin-class key so the rate
+// limit + 401 boundary is uniform. Per-route narrower checks (e.g.
+// isAuthorizedIngest at the ai-cves ingest handler, the recon-email
+// auth at its handler) enforce which specific key class is allowed for
+// each path.
 function isAuthorizedAnyAdmin(env: Env, supplied: string | null): boolean {
-  return isAuthorizedAdmin(env, supplied) || isAuthorizedIngest(env, supplied);
+  return (
+    isAuthorizedAdmin(env, supplied) ||
+    isAuthorizedIngest(env, supplied) ||
+    isAuthorizedReconEmail(env, supplied)
+  );
 }
 
 // OFAC comprehensively-sanctioned country list (ISO 3166-1 alpha-2).
