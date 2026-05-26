@@ -64,6 +64,16 @@ export interface Env {
   // INGEST_KEY via `wrangler secret put INGEST_KEY <value>` and updates
   // DP CC's contract, the fallback is dead code.
   INGEST_KEY?: string;
+  // Least-privilege key for POST /api/admin/recon-email. Authorizes ONLY
+  // that endpoint (sending plain-text email via Resend to a configured
+  // recipient). Falls back to ADMIN_KEY if unset, so the rollout doesn't
+  // break before the secret is provisioned. Set with:
+  //   wrangler secret put RECON_EMAIL_KEY
+  // Preferred over ADMIN_KEY because the scheduled remote agent that
+  // calls this endpoint stores its prompt in Anthropic cloud config;
+  // a leaked recon key only authorizes email sends, not the broader
+  // admin surface (kill-switch, burn-token, refresh).
+  RECON_EMAIL_KEY?: string;
   // Kill switch for non-critical KV writes. Persistent env-secret side
   // of the dual control surface implemented in kill-switch.ts. Set to
   // "true" via `wrangler secret put KILL_SWITCH_KV_WRITES` to no-op

@@ -10726,6 +10726,114 @@ export default {
       }, 200, 0);
     }
 
+    // POST /api/admin/recon-email?key=ADMIN_KEY
+    // JSON body: { subject: string, body: string, to?: string }
+    // Sends a plain-text email via Resend from env.ALERT_EMAIL_FROM. Default
+    // recipient is env.ALERT_EMAIL_TO; the to override exists so a single
+    // endpoint can serve multiple routine targets later. Rejects em dashes
+    // (U+2014) per the TF anti-AI-detection rule so a malformed routine
+    // prompt can't accidentally ship one through.
+    //
+    // Built 2026-05-26 because the claude.ai Gmail MCP connector only exposes
+    // create_draft (no send_message capability), so scheduled remote agents
+    // can't deliver real email through Gmail. This endpoint is the workaround.
+    if (path === '/api/admin/recon-email' && request.method === 'POST') {
+      // Least-privilege auth: RECON_EMAIL_KEY (if configured) authorizes
+      // ONLY this endpoint. Falls back to ADMIN_KEY if the dedicated
+      // secret isn't set. The dedicated key is preferred because the
+      // routine prompt that calls this endpoint is stored in Anthropic
+      // cloud config; if it ever leaks, we'd rather expose a single email
+      // capability than the full admin surface (kill-switch, burn-token,
+      // etc). Wrangler: `wrangler secret put RECON_EMAIL_KEY` to enable.
+      const supplied = url.searchParams.get('key') ?? '';
+      const reconKeyOk =
+        !!env.RECON_EMAIL_KEY &&
+        env.RECON_EMAIL_KEY.length > 0 &&
+        supplied.length > 0 &&
+        constantTimeEqual(supplied, env.RECON_EMAIL_KEY);
+      const adminKeyOk = isAuthorizedAdmin(env, supplied);
+      if (!reconKeyOk && !adminKeyOk) {
+        return jsonResponse({ ok: false, error: 'unauthorized' }, 401);
+      }
+      if (!env.RESEND_API_KEY || !env.ALERT_EMAIL_FROM) {
+        return jsonResponse(
+          { ok: false, error: 'email_not_configured', hint: 'RESEND_API_KEY and ALERT_EMAIL_FROM must be set in Worker secrets.' },
+          500,
+        );
+      }
+
+      let parsed: { subject?: unknown; body?: unknown; to?: unknown };
+      try {
+        parsed = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+
+      const subject = typeof parsed.subject === 'string' ? parsed.subject.trim() : '';
+      const body = typeof parsed.body === 'string' ? parsed.body : '';
+      const to =
+        typeof parsed.to === 'string' && parsed.to.trim()
+          ? parsed.to.trim()
+          : env.ALERT_EMAIL_TO;
+
+      if (!subject) return jsonResponse({ ok: false, error: 'missing_subject' }, 400);
+      if (subject.length > 200) {
+        return jsonResponse({ ok: false, error: 'subject_too_long', hint: 'max 200 chars' }, 400);
+      }
+      if (!body) return jsonResponse({ ok: false, error: 'missing_body' }, 400);
+      if (body.length > 100_000) {
+        return jsonResponse({ ok: false, error: 'body_too_long', hint: 'max 100000 chars' }, 400);
+      }
+      if (!to) {
+        return jsonResponse(
+          { ok: false, error: 'no_recipient', hint: 'Pass to in body, or set ALERT_EMAIL_TO worker secret.' },
+          500,
+        );
+      }
+      // TF anti-AI-detection guard: em dash is forbidden in outbound copy.
+      if (body.includes('—') || subject.includes('—')) {
+        return jsonResponse(
+          { ok: false, error: 'em_dash_blocked', hint: 'Em dash (U+2014) is not allowed in TF outbound emails. Use commas, colons, or rewrite.' },
+          400,
+        );
+      }
+
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: `TensorFeed <${env.ALERT_EMAIL_FROM}>`,
+            to: [to],
+            subject,
+            text: body,
+          }),
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (!res.ok) {
+          const errBody = await res.text().catch(() => '');
+          return jsonResponse(
+            { ok: false, error: 'resend_failed', status: res.status, detail: errBody.slice(0, 500) },
+            502,
+          );
+        }
+        const result = (await res.json().catch(() => ({}))) as { id?: string };
+        return jsonResponse(
+          { ok: true, to, subject, message_id: result.id ?? null },
+          200,
+          0,
+        );
+      } catch (err) {
+        return jsonResponse(
+          { ok: false, error: 'send_exception', detail: String(err).slice(0, 500) },
+          500,
+        );
+      }
+    }
+
     if (path === '/api/alerts-status') {
       const status = await getAlertsStatus(env);
       return jsonResponse({ ok: true, now: new Date().toISOString(), ...status }, 200, 60);
