@@ -70,6 +70,9 @@ const PILOT_PATHS = [
   '/api/premium/status/google/incidents/triage',
   '/api/premium/status/aws/incidents/triage',
   '/api/premium/status/azure/incidents/triage',
+  // Wave 17 (SEC filings AI-extraction — Phase 3f.3)
+  '/api/premium/sec/filings/ai-flagged',
+  '/api/premium/sec/filings/by-form',
   // Wave 14 (path-param templates). Listed here in template form because
   // bazaarPilotPaths() returns the map keys. The template-match lookup is
   // exercised separately below with concrete request paths.
@@ -382,6 +385,9 @@ describe('Wave 2 pilot AJV validation', () => {
     '/api/premium/status/google/incidents/triage',
     '/api/premium/status/aws/incidents/triage',
     '/api/premium/status/azure/incidents/triage',
+    // Wave 17 (2026-05-26): SEC filings AI-extraction
+    '/api/premium/sec/filings/ai-flagged',
+    '/api/premium/sec/filings/by-form',
   ];
 
   for (const path of wave2Paths) {

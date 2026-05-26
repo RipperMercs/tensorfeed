@@ -179,6 +179,15 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/status/google/incidents/triage',
   '/api/premium/status/aws/incidents/triage',
   '/api/premium/status/azure/incidents/triage',
+  // Wave 17 (2026-05-26). SEC filings AI-extraction (Phase 3f.3). Three
+  // premium endpoints over the DP CC Qwen-extracted AI bellwether
+  // cohort. ai-flagged is the flagship (full cohort with optional
+  // filters); by-form is param-required form-type rollup; ai-disclosures
+  // is param-required single-filing lookup. All strict-premium so
+  // anonymous crawlers see clean 402 not partial 200 / 400 missing_params.
+  '/api/premium/sec/filings/ai-flagged',
+  '/api/premium/sec/filings/by-form',
+  '/api/premium/sec/filings/ai-disclosures',
 ];
 
 /**

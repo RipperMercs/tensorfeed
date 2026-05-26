@@ -3006,6 +3006,42 @@ export default {
       return jsonResponse({ ok: true, ...result }, 200, 0);
     }
 
+    // POST /api/admin/sec-filings-extraction/ingest?key=<INGEST_KEY>
+    //
+    // DP CC's Qwen-on-5090 extraction pipeline POSTs validated batches
+    // here for the SEC filings AI-extraction lane (Phase 3f.3). See
+    // For_DP_CC_sec-filings-HANDOFF.md for the schema + workflow.
+    // Idempotent on accession_number (re-POSTing replaces in-place);
+    // batch_id is a free-form identifier for operator telemetry.
+    // Inherits the hoisted /api/admin rate-limit + admin-class pre-check.
+    // Narrower auth: INGEST_KEY only (with ADMIN_KEY transition fallback
+    // while INGEST_KEY is unset), matching the ai-cves ingest pattern.
+    if (path === '/api/admin/sec-filings-extraction/ingest' && request.method === 'POST') {
+      if (!isAuthorizedIngest(env, url.searchParams.get('key'))) {
+        return jsonResponse(
+          { ok: false, error: 'unauthorized', message: 'sec-filings-extraction ingest requires INGEST_KEY (or ADMIN_KEY during transition).' },
+          401,
+          0,
+        );
+      }
+      let raw: unknown;
+      try {
+        raw = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const { validateBatch, writeBatch } = await import('./sec-filings-extraction');
+      const v = validateBatch(raw);
+      if (!v.ok) {
+        return jsonResponse(
+          { ok: false, error: v.error, detail: v.detail, ...(v.index !== undefined ? { filing_index: v.index } : {}) },
+          400,
+        );
+      }
+      const result = await writeBatch(env, v.value);
+      return jsonResponse({ ok: true, ...result }, 200, 0);
+    }
+
     // /api/admin/snapshot/openalex/{institutions|authors|citation-velocity}
     // POST a pre-built OpenAlex snapshot to KV. Used as a fallback when
     // the Worker's cron path is blocked by OpenAlex's per-IP throttle on
@@ -9135,6 +9171,124 @@ export default {
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-cves/cve', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === FREE: SEC FILINGS EXTRACTION INDEX ===
+    // /api/sec/filings/extraction-index?limit=&offset=
+    // Lightweight discovery surface over the DP CC Qwen-extracted cohort.
+    // Returns accession + form + ticker + filing_date + ai_relevant flag
+    // per filing so agents can decide which premium ai-disclosures
+    // lookups are worth a credit. Full cohort lives behind the premium
+    // ai-flagged endpoint. Capped at 100 entries per call.
+    if (path === '/api/sec/filings/extraction-index') {
+      const rawLimit = parseInt(url.searchParams.get('limit') ?? '', 10);
+      const rawOffset = parseInt(url.searchParams.get('offset') ?? '', 10);
+      const { getIndexResponse } = await import('./premium-sec-filings');
+      const result = await getIndexResponse(env, rawLimit, rawOffset);
+      return jsonResponse({ ok: true, ...result }, 200, 300);
+    }
+
+    // === PAID PREMIUM: SEC FILINGS AI-FLAGGED COHORT (Tier 1, 1 credit) ====
+    // /api/premium/sec/filings/ai-flagged?ticker=&form=&since=&min_score=
+    //
+    // Full AI-flagged filings cohort from the DP CC Qwen extraction.
+    // Each filing carries the verbatim AI-capex / AI-revenue /
+    // AI-partnership / AI-chip / new-AI-product / AI-workforce mention
+    // arrays plus key_quotes. Optional filters: ticker (case-insensitive
+    // exact), form (e.g. 10-K), since (YYYY-MM-DD, inclusive lower bound
+    // on filing_date), min_score (0-100, inclusive lower bound on
+    // ai_relevance_score). Sorted by filing_date desc, score desc.
+    if (path === '/api/premium/sec/filings/ai-flagged') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const {
+        getAiFlaggedResponse,
+        parseTickerFilter,
+        parseFormFilter,
+        parseSinceFilter,
+        parseMinScoreFilter,
+      } = await import('./premium-sec-filings');
+      const result = await getAiFlaggedResponse(env, {
+        ticker: parseTickerFilter(url.searchParams.get('ticker')),
+        form: parseFormFilter(url.searchParams.get('form')),
+        since: parseSinceFilter(url.searchParams.get('since')),
+        min_score: parseMinScoreFilter(url.searchParams.get('min_score')),
+      });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/sec/filings/ai-flagged', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: SEC FILINGS BY-FORM ROLLUP (Tier 1, 1 credit, param-required) ==
+    // /api/premium/sec/filings/by-form?form=10-K[&ticker=]
+    //
+    // Per-form-type rollup over the AI-flagged cohort. Each entry:
+    // total_filings, ai_relevant_count, avg_ai_relevance_score, totals
+    // for capex / revenue / partnership / chip mentions, top_filings
+    // (top 3 by ai_relevance_score). Param-required so anonymous Bazaar
+    // crawlers see clean 402 not partial 200.
+    if (path === '/api/premium/sec/filings/by-form') {
+      const form = url.searchParams.get('form');
+      if (!form || form.trim().length === 0) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'Pass form=10-K (or 8-K, 10-Q, S-1, DEF 14A, etc).',
+          },
+          400,
+          0,
+        );
+      }
+
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getByFormResponse, parseTickerFilter, parseFormFilter } = await import('./premium-sec-filings');
+      const result = await getByFormResponse(env, {
+        ticker: parseTickerFilter(url.searchParams.get('ticker')),
+        form: parseFormFilter(form),
+      });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/sec/filings/by-form', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: SEC FILING AI DISCLOSURES (Tier 1, 1 credit, param-required) ==
+    // /api/premium/sec/filings/ai-disclosures?accession=NNNNNNNNNN-NN-NNNNNN
+    //
+    // Single-filing dossier lookup. Returns the full FilingExtraction
+    // for one accession_number (Qwen-extracted AI mentions + verbatim
+    // key_quotes). Param-required so strict-premium gating is mandatory.
+    if (path === '/api/premium/sec/filings/ai-disclosures') {
+      const accession = url.searchParams.get('accession');
+      if (!accession || !/^\d{10}-\d{2}-\d{6}$/.test(accession.trim())) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'Pass accession=NNNNNNNNNN-NN-NNNNNN (SEC EDGAR accession number).',
+          },
+          400,
+          0,
+        );
+      }
+
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { lookupFiling } = await import('./premium-sec-filings');
+      const result = await lookupFiling(env, accession.trim());
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/sec/filings/ai-disclosures', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }

@@ -2050,6 +2050,177 @@ function makeProviderTriagePilot(provider: string, displayName: string): BazaarP
   };
 }
 
+/**
+ * /api/premium/sec/filings/ai-flagged: Wave 17 (2026-05-26).
+ * Full AI-flagged SEC filings cohort from DP CC Qwen-on-5090 extraction
+ * over the 14 AI bellwether companies (silicon, hyperscaler, ai-native,
+ * infra, consumer). Each filing carries verbatim AI-capex / AI-revenue /
+ * AI-partnership / AI-chip / new-AI-product / AI-workforce mention
+ * arrays plus key_quotes. Optional filters keep the cohort scope flexible.
+ */
+const SEC_FILINGS_AI_FLAGGED_PILOT: BazaarPilotConfig = {
+  description:
+    'AI-flagged SEC filings cohort. The Qwen-extracted AI mentions (capex, revenue, partnerships, chip vendors, new products, workforce changes, key quotes) from every recent SEC filing across the 14 AI bellwether companies (NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA). Optional filters: ticker, form (10-K, 10-Q, 8-K), since (YYYY-MM-DD), min_score (0-100). The single-call lookup an agent makes to track AI capex, partnership flow, and chip dependencies across the public-market AI ecosystem.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { ticker: 'NVDA', form: '10-K', min_score: 70 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            batch_id: '20260526-0000Z',
+            extracted_at: '2026-05-26T00:00:00Z',
+            filter: { ticker: 'NVDA', form: '10-K', since: null, min_score: 70 },
+            cohort: { total_in_snapshot: 142, total_after_filter: 3 },
+            filings: [
+              {
+                accession_number: '0001045810-25-000123',
+                cik: '0001045810',
+                ticker: 'NVDA',
+                company_name: 'NVIDIA',
+                form: '10-K',
+                filing_date: '2025-12-12',
+                ai_relevant: true,
+                ai_relevance_score: 95,
+                ai_keyword_hits: ['artificial intelligence', 'AI factory', 'H100', 'GPU'],
+                ai_capex_mentions: [],
+                ai_revenue_mentions: [],
+                ai_partnership_mentions: [
+                  {
+                    partner_name: 'Foxconn',
+                    relationship_type: 'joint_venture',
+                    context: 'multi-year strategic collaboration to build AI factories powered by NVIDIA H100 and H200 GPUs',
+                  },
+                ],
+                ai_chip_mentions: [
+                  { vendor: 'nvidia', chip_or_product: 'H100', context: 'powered by NVIDIA H100 and H200 GPUs' },
+                ],
+                new_ai_products_announced: [],
+                ai_workforce_changes: [],
+                key_quotes: [
+                  { quote: 'AI factories are the foundation of every nation intelligence infrastructure', section: 'Item 7.01' },
+                ],
+                extracted_by: 'qwen-3.6-27b',
+                extracted_at: '2026-05-26T00:00:00Z',
+              },
+            ],
+            source_license: 'US Government public domain (17 USC 105)',
+            source_attribution: 'SEC EDGAR (data.sec.gov) + Qwen 3.6 27B verbatim extraction + deterministic normalize',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  ticker: { type: 'string', description: 'AI bellwether ticker (NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA). Case-insensitive.' },
+                  form: { type: 'string', description: 'SEC form type (10-K, 10-Q, 8-K, S-1, DEF 14A, etc). Case-insensitive.' },
+                  since: { type: 'string', description: 'Inclusive lower bound on filing_date as YYYY-MM-DD.' },
+                  min_score: { type: 'integer', minimum: 0, maximum: 100, description: 'Inclusive lower bound on ai_relevance_score.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/sec/filings/by-form?form=10-K: Wave 17 (2026-05-26).
+ * Per-form-type rollup with top-3 filings per form by ai_relevance_score
+ * and aggregate counts (capex / revenue / partnership / chip mentions).
+ * Param-required: form is mandatory.
+ */
+const SEC_FILINGS_BY_FORM_PILOT: BazaarPilotConfig = {
+  description:
+    'Form-type rollup over the AI-flagged SEC filings cohort. Pass form=10-K (or 8-K, 10-Q, S-1, DEF 14A) to get per-form aggregate stats (total filings, ai_relevant_count, avg score, total capex/revenue/partnership/chip mentions) plus the top 3 AI-relevant filings for that form type. The "is the 10-K cohort heating up on AI capex disclosures" question in one call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { form: '10-K' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            batch_id: '20260526-0000Z',
+            extracted_at: '2026-05-26T00:00:00Z',
+            filter: { ticker: null, form: '10-K' },
+            by_form: [
+              {
+                form: '10-K',
+                total_filings: 14,
+                ai_relevant_count: 12,
+                avg_ai_relevance_score: 78.5,
+                total_capex_mentions: 22,
+                total_revenue_mentions: 14,
+                total_partnership_mentions: 31,
+                total_chip_mentions: 47,
+                top_filings: [],
+              },
+            ],
+            source_license: 'US Government public domain (17 USC 105)',
+            source_attribution: 'SEC EDGAR (data.sec.gov) + Qwen 3.6 27B verbatim extraction + deterministic normalize',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  form: { type: 'string', description: 'SEC form type (10-K, 10-Q, 8-K, S-1, DEF 14A, etc). Case-insensitive.' },
+                  ticker: { type: 'string', description: 'Optional AI bellwether ticker filter.' },
+                },
+                required: ['form'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const STATUS_TRIAGE_OPENAI_PILOT: BazaarPilotConfig = makeProviderTriagePilot('openai', 'OpenAI');
 const STATUS_TRIAGE_ANTHROPIC_PILOT: BazaarPilotConfig = makeProviderTriagePilot('anthropic', 'Anthropic');
 const STATUS_TRIAGE_GOOGLE_PILOT: BazaarPilotConfig = makeProviderTriagePilot('google', 'Google');
@@ -2791,6 +2962,15 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/status/google/incidents/triage': STATUS_TRIAGE_GOOGLE_PILOT,
   '/api/premium/status/aws/incidents/triage': STATUS_TRIAGE_AWS_PILOT,
   '/api/premium/status/azure/incidents/triage': STATUS_TRIAGE_AZURE_PILOT,
+  // Wave 17 (2026-05-26): SEC filings AI-extraction. First TF endpoint
+  // built on DP CC Qwen-on-5090 extraction of long-form SEC filings (10-K,
+  // 10-Q, 8-K, etc.) for 14 AI bellwether companies. Schema engine-fit
+  // per the 2026-05-24 DataPal pushback ruling. ai-flagged is the
+  // flagship cohort; by-form is the per-form rollup. ai-disclosures
+  // single lookup is param-required strict-premium but not Bazaar-
+  // cataloged (low catalog value for a one-record lookup).
+  '/api/premium/sec/filings/ai-flagged': SEC_FILINGS_AI_FLAGGED_PILOT,
+  '/api/premium/sec/filings/by-form': SEC_FILINGS_BY_FORM_PILOT,
   // Wave 14: path-param templates. Lookup helpers below match concrete
   // request paths against these templates so the request still routes
   // through CDP for first-pay cataloging.
