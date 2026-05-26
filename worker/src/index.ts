@@ -8877,6 +8877,64 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: PER-PROVIDER INCIDENT TRIAGE (Tier 1, 1 credit) ====
+    // /api/premium/status/{provider}/incidents/triage where provider is one
+    // of openai, anthropic, google, aws, azure. Reuses the Wave 12 Haiku
+    // triage snapshot and pre-applies the provider filter from the path.
+    // Optional query filters (impact, recommended_action, capability,
+    // ongoing_only) layer on top.
+    //
+    // AgentMail scoped+flat duplication pattern translated. Each path is a
+    // distinct Bazaar pilot (5 separate catalog rows), NOT path-param with
+    // routeTemplate which CDP consolidates to one row. The five rows let
+    // agents subscribe to / discover a specific provider's incident stream
+    // without re-deriving the filter on every call.
+
+    {
+      const providerTriageMatch = path.match(/^\/api\/premium\/status\/([a-z]+)\/incidents\/triage$/);
+      if (providerTriageMatch) {
+        const provider = providerTriageMatch[1];
+        const SUPPORTED = ['openai', 'anthropic', 'google', 'aws', 'azure'];
+        if (!SUPPORTED.includes(provider)) {
+          return jsonResponse(
+            {
+              ok: false,
+              error: 'unsupported_provider',
+              hint: `Supported per-provider triage providers: ${SUPPORTED.join(', ')}. For other providers use /api/premium/status/incidents/triage?provider=...`,
+            },
+            404,
+            0,
+          );
+        }
+
+        const payment = await requirePayment(request, env, 1);
+        if (!payment.paid) return payment.response!;
+
+        const { getIncidentTriageSnapshot } = await import('./incident-triage-generator');
+        const snap = await getIncidentTriageSnapshot(env);
+        if (!snap) {
+          return await premiumValidationFailure(
+            { error: 'snapshot_not_ready', hint: 'Incident triage refreshes every 2 hours at :15 UTC. Retry after the next cron tick.' },
+            payment, request, env, 'upstream_failure',
+          );
+        }
+
+        const { buildTriageResponse, parseImpact, parseRecommendedAction, parseCapability, parseOngoingOnly } = await import('./premium-incident-triage');
+        const result = buildTriageResponse(snap, {
+          provider,
+          impact: parseImpact(url.searchParams.get('impact')),
+          recommended_action: parseRecommendedAction(url.searchParams.get('recommended_action')),
+          capability: parseCapability(url.searchParams.get('capability')),
+          ongoing_only: parseOngoingOnly(url.searchParams.get('ongoing_only')),
+        });
+
+        ctx.waitUntil(
+          logPremiumUsage(env, `/api/premium/status/${provider}/incidents/triage`, request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+        );
+        return await premiumResponse(result, payment, 1, request, env);
+      }
+    }
+
     // === NEWS ACTION CARDS (free, cached 600s) ===
     // /api/news/action-cards?limit=
     // Haiku-derived structured agent action cards over the day's news

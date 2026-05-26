@@ -239,12 +239,12 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 47 exact paths', () => {
+    it('exposes all 52 exact paths', () => {
       // 24 pre-Wave-2 + 9 Wave 2 + 1 each Waves 3..12 + 3 Wave 13 (ai-cves trio)
-      // + 1 Wave 15 (ai-cves batch). funding/exposure + packages/pypi/momentum
-      // were already strict.
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(47);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(47); // no duplicates
+      // + 1 Wave 15 (ai-cves batch) + 5 Wave 16 (per-provider triage).
+      // funding/exposure + packages/pypi/momentum were already strict.
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(52);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(52); // no duplicates
     });
     it('exposes 6 prefix paths (providers + 5 Wave 14 path-param pilots)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(6);

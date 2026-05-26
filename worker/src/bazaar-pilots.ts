@@ -1961,6 +1961,102 @@ const INCIDENT_TRIAGE_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/status/{provider}/incidents/triage: Wave 16 (2026-05-26).
+ *
+ * AgentMail scoped+flat duplication pattern translated. Five distinct paths
+ * (openai, anthropic, google, aws, azure) each backed by the Wave 12 Haiku
+ * triage snapshot, pre-scoped by URL path. Each gets its own Bazaar pilot
+ * config (intentionally NOT a routeTemplate, which CDP consolidates to one
+ * catalog row) so agents can discover/subscribe per provider.
+ *
+ * Factory returns a config customized for the provider's display name and
+ * substring. All five share the same schema; only descriptions and example
+ * payloads vary so the cataloged page reads naturally per provider.
+ */
+function makeProviderTriagePilot(provider: string, displayName: string): BazaarPilotConfig {
+  return {
+    description:
+      `Per-provider incident triage scoped to ${displayName}. Same Haiku 4.5 cohort + filters + rollups as /api/premium/status/incidents/triage, pre-scoped to ${displayName}. The single-call lookup an agent makes when it needs to know whether ${displayName} is currently affecting its workload and what to do about it. Optional filters: impact, recommended_action, capability, ongoing_only.`,
+    extension: {
+      bazaar: {
+        info: {
+          input: {
+            type: 'http',
+            method: 'GET',
+            queryParams: { ongoing_only: true, impact: 'major' },
+          },
+          output: {
+            type: 'json',
+            example: {
+              ok: true,
+              snapshot_captured_at: '2026-05-26T08:15:00Z',
+              filter: { provider, impact: 'major', recommended_action: null, capability: null, ongoing_only: true },
+              cohort: { incidents_considered: 14, cards_in_snapshot: 12, cards_filtered: 1, ongoing_in_filtered: 1 },
+              cards: [
+                {
+                  provider,
+                  service: 'API',
+                  title: `Elevated latency on ${displayName} inference endpoints`,
+                  severity: 'major',
+                  started_at: '2026-05-26T07:42:00Z',
+                  ongoing: true,
+                  triage_summary: `${displayName} inference layer showing 5% elevated latency on completion endpoints; other capabilities unaffected.`,
+                  impact_classification: 'major',
+                  affected_capabilities: ['inference'],
+                  recommended_action: 'retry_later',
+                },
+              ],
+              summary: {
+                by_provider: { [provider]: 1 },
+                by_impact: { informational: 0, minor: 0, major: 1, critical: 0 },
+                by_recommended_action: { no_action: 0, monitor: 0, retry_later: 1, failover_now: 0, escalate: 0 },
+                cards_with_failover_action: 0,
+              },
+            },
+          },
+        },
+        schema: {
+          $schema: 'https://json-schema.org/draft/2020-12/schema',
+          type: 'object',
+          properties: {
+            input: {
+              type: 'object',
+              properties: {
+                type: { type: 'string', const: 'http' },
+                method: { type: 'string', enum: ['GET'] },
+                queryParams: {
+                  type: 'object',
+                  properties: {
+                    impact: { type: 'string', enum: ['informational', 'minor', 'major', 'critical'] },
+                    recommended_action: { type: 'string', enum: ['no_action', 'monitor', 'retry_later', 'failover_now', 'escalate'] },
+                    capability: { type: 'string', enum: ['inference', 'training', 'embeddings', 'console', 'billing', 'fine-tuning', 'api-keys', 'tooling'] },
+                    ongoing_only: { type: 'boolean', description: 'When true, exclude resolved incidents. Default false.' },
+                  },
+                },
+              },
+              required: ['type', 'method'],
+              additionalProperties: false,
+            },
+            output: {
+              type: 'object',
+              properties: { type: { type: 'string' }, example: { type: 'object' } },
+              required: ['type'],
+            },
+          },
+          required: ['input'],
+        },
+      },
+    },
+  };
+}
+
+const STATUS_TRIAGE_OPENAI_PILOT: BazaarPilotConfig = makeProviderTriagePilot('openai', 'OpenAI');
+const STATUS_TRIAGE_ANTHROPIC_PILOT: BazaarPilotConfig = makeProviderTriagePilot('anthropic', 'Anthropic');
+const STATUS_TRIAGE_GOOGLE_PILOT: BazaarPilotConfig = makeProviderTriagePilot('google', 'Google');
+const STATUS_TRIAGE_AWS_PILOT: BazaarPilotConfig = makeProviderTriagePilot('aws', 'AWS');
+const STATUS_TRIAGE_AZURE_PILOT: BazaarPilotConfig = makeProviderTriagePilot('azure', 'Azure');
+
+/**
  * /api/premium/ai-cves/ai-stack-cves: Wave 13 flagship (2026-05-24).
  * AI-stack CVE intelligence over DP CC's Qwen-on-5090 security-xsource
  * extraction pipeline. Filters the latest batch to papers whose
@@ -2685,6 +2781,16 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // Wave 15 (2026-05-26): ai-cves/batch. AgentMail messages/batch-get
   // pattern. Up to 10 CVE ids per call at the single-lookup 1-credit cost.
   '/api/premium/ai-cves/batch': AI_CVES_BATCH_PILOT,
+  // Wave 16 (2026-05-26): per-provider incident triage. AgentMail scoped+flat
+  // duplication pattern. Five distinct paths backed by the Wave 12 Haiku
+  // triage snapshot, each pre-scoped by provider. Intentionally NOT a
+  // routeTemplate so CDP catalogs five rows, one per provider, instead of
+  // collapsing to one consolidated pattern.
+  '/api/premium/status/openai/incidents/triage': STATUS_TRIAGE_OPENAI_PILOT,
+  '/api/premium/status/anthropic/incidents/triage': STATUS_TRIAGE_ANTHROPIC_PILOT,
+  '/api/premium/status/google/incidents/triage': STATUS_TRIAGE_GOOGLE_PILOT,
+  '/api/premium/status/aws/incidents/triage': STATUS_TRIAGE_AWS_PILOT,
+  '/api/premium/status/azure/incidents/triage': STATUS_TRIAGE_AZURE_PILOT,
   // Wave 14: path-param templates. Lookup helpers below match concrete
   // request paths against these templates so the request still routes
   // through CDP for first-pay cataloging.

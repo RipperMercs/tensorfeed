@@ -64,6 +64,12 @@ const PILOT_PATHS = [
   '/api/premium/ai-cves/cve',
   // Wave 15 (ai-cves batch — AgentMail messages/batch-get translation)
   '/api/premium/ai-cves/batch',
+  // Wave 16 (per-provider incident triage — AgentMail scoped+flat translation)
+  '/api/premium/status/openai/incidents/triage',
+  '/api/premium/status/anthropic/incidents/triage',
+  '/api/premium/status/google/incidents/triage',
+  '/api/premium/status/aws/incidents/triage',
+  '/api/premium/status/azure/incidents/triage',
   // Wave 14 (path-param templates). Listed here in template form because
   // bazaarPilotPaths() returns the map keys. The template-match lookup is
   // exercised separately below with concrete request paths.
@@ -370,6 +376,12 @@ describe('Wave 2 pilot AJV validation', () => {
     '/api/premium/ai-cves/cve',
     // Wave 15 (2026-05-26)
     '/api/premium/ai-cves/batch',
+    // Wave 16 (2026-05-26)
+    '/api/premium/status/openai/incidents/triage',
+    '/api/premium/status/anthropic/incidents/triage',
+    '/api/premium/status/google/incidents/triage',
+    '/api/premium/status/aws/incidents/triage',
+    '/api/premium/status/azure/incidents/triage',
   ];
 
   for (const path of wave2Paths) {

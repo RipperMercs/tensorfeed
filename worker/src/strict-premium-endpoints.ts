@@ -167,6 +167,18 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // 10 ids per call, 1 credit flat. Param-required so strict-premium gates
   // anonymous crawlers to a clean 402 challenge instead of 400 missing_ids.
   '/api/premium/ai-cves/batch',
+  // Wave 16 (2026-05-26). AgentMail scoped+flat duplication pattern
+  // translated. Five distinct paths (one per top frontier+cloud provider)
+  // backed by the same Wave 12 Haiku triage snapshot, pre-scoped by the
+  // path segment. Five Bazaar catalog rows so agents can discover/subscribe
+  // to a specific provider's incident stream without re-deriving the
+  // filter on every call. Strict-premium for anonymous-crawler hygiene
+  // (same rationale as the Wave 12 parent).
+  '/api/premium/status/openai/incidents/triage',
+  '/api/premium/status/anthropic/incidents/triage',
+  '/api/premium/status/google/incidents/triage',
+  '/api/premium/status/aws/incidents/triage',
+  '/api/premium/status/azure/incidents/triage',
 ];
 
 /**
