@@ -390,12 +390,13 @@ INDEXNOW_KEY = "5903913788b6a62e3d10e63e3319020a"
 ALERT_EMAIL_TO = "evan@tensorfeed.ai"
 ALERT_EMAIL_FROM = "alerts@tensorfeed.ai"
 # CreditLedger DO debit path activation (Phase 3 of Tier 2 audit
-# response, 2026-05-26). Default 'false' so the Phase 3 deploy ships
-# the wire-up but production stays on the legacy KV-only debit path.
-# Flip to 'true' as a deliberate ops step after the deploy bakes and
-# initial validation passes. Reversible: flip back to 'false' for an
-# instant return to the legacy path without a redeploy.
-CREDIT_LEDGER_ENABLED = "false"
+# response, 2026-05-26). Flipped to 'true' 2026-05-26 same session as
+# the Phase 3 wire-up shipped. The fallback safety net catches any DO
+# error and serves the request via the legacy KV path (with its known
+# bounded race), so activation is reversible by editing this back to
+# 'false' and redeploying. Legacy KV path still exists for grace
+# window; Phase 4 removes it after the DO path has soaked.
+CREDIT_LEDGER_ENABLED = "true"
 # RESEND_API_KEY is a secret. Set with: wrangler secret put RESEND_API_KEY
 # ADMIN_KEY is a secret guarding /api/admin/* and /api/refresh.
 # REQUIRED in production; admin endpoints default-deny if unset.
