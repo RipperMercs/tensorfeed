@@ -1316,6 +1316,63 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/ai-companies/{ticker}',
+    description:
+      "Per-ticker AI intelligence envelope for the 14 AI bellwethers (NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA). Composes four free siblings into one paid call: latest 10 SEC filings (data.sec.gov, public domain), latest 10 AI-tagged news mentions filtered by curated aliases (so PLTR does not match unrelated 'palantir' matches), strategic and equity funding rounds where the company is a lead or notable investor in the TensorFeed funding registry, and cohort metadata (CIK, display name, category, AI angle, exchange). Single captured-at timestamp, 9h freshness SLA. Strict-premium path; ticker must be in the cohort, otherwise 404. Built for trading agents on Robinhood Agentic, ChatGPT, Claude, and custom rails doing pre-trade context in one round trip.",
+    cost: '1 credit per call',
+    example: `// GET /api/premium/ai-companies/NVDA
+{
+  "ok": true,
+  "capturedAt": "2026-05-27T18:00:00Z",
+  "ticker": "NVDA",
+  "cohort_size": 14,
+  "company": {
+    "ticker": "NVDA",
+    "cik": "0001045810",
+    "display_name": "NVIDIA",
+    "category": "silicon",
+    "ai_angle": "The dominant supplier of AI training and inference GPUs (H100, H200, B200, Rubin). Every frontier lab buys from here.",
+    "exchange": "NASDAQ"
+  },
+  "filings": {
+    "count": 10,
+    "items": [
+      {
+        "accession_number": "0001045810-26-000052",
+        "form": "10-Q",
+        "filing_date": "2026-05-20",
+        "primary_doc_url": "https://www.sec.gov/Archives/edgar/data/1045810/..."
+      }
+    ],
+    "source": "data.sec.gov/submissions",
+    "license": "Public domain (17 USC 105). SEC EDGAR."
+  },
+  "news": {
+    "count": 4,
+    "items": [
+      {
+        "id": "abc123",
+        "title": "NVIDIA announces Rubin successor at GTC",
+        "url": "https://example.com/nvda-rubin",
+        "source": "TechCrunch AI",
+        "publishedAt": "2026-05-27T14:00:00Z",
+        "matched_aliases": ["NVIDIA"]
+      }
+    ],
+    "aliases_used": ["NVIDIA", "Nvidia"],
+    "sanitization": "enabled"
+  },
+  "funding_as_investor": {
+    "count": 0,
+    "items": [],
+    "description": "Strategic and equity rounds where this company is listed as a lead or notable investor in TensorFeed funding registry."
+  },
+  "attribution": { "sources": [ "SEC EDGAR ...", "TensorFeed news ...", "TensorFeed funding ..." ] },
+  "billing": { "credits_charged": 1, "credits_remaining": 40 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/research/topic-search',
     description:
       "Structured search over the arXiv preprint corpus using the TF derived taxonomy. Filters: subfield_tag, methodology_bucket, since (YYYY-MM-DD), until (YYYY-MM-DD), milestone_only (1 or 0), limit (1 to 100, default 25), offset (paginate). subfield_tag is one of llm-architecture, llm-training, llm-eval, llm-alignment, multimodal, vision, speech, robotics, rl, theory, optimization, efficiency, retrieval, agents, code-generation, scientific-ml, fairness-safety, dataset, survey, application, other. methodology_bucket is one of new-architecture, training-recipe, fine-tuning, eval-benchmark, theoretical-analysis, empirical-study, dataset-release, system-tooling, survey, position-paper, application, other. Returns matching papers sorted by date desc. arXiv's native search has no concept of methodology bucket or our subfield taxonomy; that's the gate.",

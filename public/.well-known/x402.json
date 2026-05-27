@@ -12640,6 +12640,134 @@
           "routeTemplate": "/api/premium/clean/openrouter/:model_id"
         }
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/ai-companies/NVDA",
+        "description": "Per-ticker AI intelligence envelope for the 14 AI bellwethers (NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA). Composes latest 10 SEC filings, latest 10 AI-tagged news mentions filtered by curated aliases, strategic and equity funding rounds where the company is a lead or notable investor, and cohort metadata into one paid call. Single captured-at timestamp, 9h freshness SLA.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-27T00:00:00Z",
+      "metadata": {
+        "name": "AI Companies: per-ticker intelligence envelope",
+        "description": "Per-ticker AI intelligence envelope for the 14 AI bellwethers. One paid call returns latest 10 SEC filings, 10 alias-filtered news mentions, funding rounds where the company is a lead or notable investor, and cohort metadata. Shipped the same day Robinhood Agentic Trading + Agentic Credit Card launched.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-public-equity-intelligence"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "pathParams": {
+                "ticker": "NVDA"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "capturedAt": "2026-05-27T18:00:00Z",
+                "ticker": "NVDA",
+                "cohort_size": 14,
+                "company": {
+                  "ticker": "NVDA",
+                  "cik": "0001045810",
+                  "display_name": "NVIDIA",
+                  "category": "silicon",
+                  "ai_angle": "The dominant supplier of AI training and inference GPUs.",
+                  "exchange": "NASDAQ"
+                },
+                "filings": {
+                  "count": 10,
+                  "source": "data.sec.gov/submissions",
+                  "license": "Public domain (17 USC 105). SEC EDGAR."
+                },
+                "news": {
+                  "count": 4,
+                  "aliases_used": ["NVIDIA", "Nvidia"],
+                  "sanitization": "enabled"
+                },
+                "funding_as_investor": {
+                  "count": 0,
+                  "description": "Strategic and equity rounds where this company is listed as a lead or notable investor in TensorFeed funding registry."
+                },
+                "attribution": {
+                  "sources": [
+                    "SEC EDGAR (data.sec.gov/submissions). Public domain (17 USC 105).",
+                    "TensorFeed.ai news aggregator (sanitized for agents).",
+                    "TensorFeed.ai funding registry (editorial)."
+                  ]
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": ["GET"]
+                  },
+                  "pathParams": {
+                    "type": "object",
+                    "properties": {
+                      "ticker": {
+                        "type": "string",
+                        "description": "AI bellwether ticker (NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA). Case-insensitive."
+                      }
+                    },
+                    "required": ["ticker"]
+                  }
+                },
+                "required": ["type", "method"],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": ["type"]
+              }
+            },
+            "required": ["input"]
+          },
+          "routeTemplate": "/api/premium/ai-companies/:ticker"
+        }
+      }
     }
   ],
   "freeEndpoints": [
