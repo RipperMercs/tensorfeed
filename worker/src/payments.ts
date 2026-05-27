@@ -62,7 +62,9 @@ const USDC_DECIMALS = 6;
 const DEFAULT_BASE_RPC = 'https://mainnet.base.org';
 
 const QUOTE_TTL_SECONDS = 30 * 60;
-const TIER_COSTS: Record<1 | 2 | 3, number> = { 1: 1, 2: 1, 3: 5 };
+// Tier 4 added 2026-05-26 for /api/premium/whats-new/pro (Parallel.ai-style
+// tier ladder, Haiku-derived analyst synthesis at 10 credits per call).
+const TIER_COSTS: Record<1 | 2 | 3 | 4, number> = { 1: 1, 2: 1, 3: 5, 4: 10 };
 
 // First-payment welcome bonus. Granted once per sender wallet, on the
 // first successful USDC payment from that address (credits flow OR
@@ -1861,7 +1863,7 @@ export interface PaymentResult {
 export async function requirePayment(
   request: Request,
   env: Env,
-  tier: 1 | 2 | 3,
+  tier: 1 | 2 | 3 | 4,
 ): Promise<PaymentResult> {
   if (env.PAYMENT_ENABLED !== 'true') {
     return {

@@ -69,9 +69,10 @@ function baseFixture(over: Partial<WhatsNewResult> = {}): WhatsNewResult {
       },
     ],
     news_attribution: {
-      source: 'TensorFeed.ai',
-      license: 'editorial',
-      notes: 'test fixture',
+      policy: 'snippet-only, links to source',
+      snippet_max_chars: 200,
+      link_required: true,
+      source_required: true,
     },
     data_freshness: { pricing: '2026-05-26T07:00:00Z', status: '2026-05-26T07:55:00Z', incidents_count: 1, news_total_corpus: 2 },
     notes: [],

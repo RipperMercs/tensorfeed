@@ -536,6 +536,22 @@ function constantTimeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+// Admin-class key extraction. Prefers Authorization: Bearer <key> header
+// (which does NOT appear in Cloudflare access logs, browser history, ops
+// screenshots, or error reports) over the ?key=<key> query string (which
+// does, and was audit H-3 / 2026-05-26). Both forms accepted for
+// backward compatibility; the query string is the older shape callers
+// may still be using. If both are present, the header wins. Returns
+// null when neither is present so downstream checks fail closed.
+function extractAdminKey(request: Request, url: URL): string | null {
+  const auth = request.headers.get('Authorization');
+  if (auth) {
+    const m = auth.match(/^Bearer\s+(.+)$/);
+    if (m && m[1].length > 0) return m[1].trim();
+  }
+  return extractAdminKey(request, url);
+}
+
 // Admin-route auth. Returns true only if env.ADMIN_KEY is configured
 // (non-empty) AND the supplied key matches it in constant time. Returns
 // false if the secret is unset (so admin routes default-deny when the
@@ -2519,7 +2535,7 @@ export default {
       if (!adminRate.allowed) {
         return rateLimitedResponse(adminRate);
       }
-      if (!isAuthorizedAnyAdmin(env, url.searchParams.get('key'))) {
+      if (!isAuthorizedAnyAdmin(env, extractAdminKey(request, url))) {
         return jsonResponse(
           {
             ok: false,
@@ -2540,13 +2556,13 @@ export default {
     if (
       path === '/api/admin/stats/backfill' &&
       request.method === 'GET' &&
-      isAuthorizedAdmin(env, url.searchParams.get('key'))
+      isAuthorizedAdmin(env, extractAdminKey(request, url))
     ) {
       const backfilled = await backfillLifetimeFromRollups(env);
       return jsonResponse({ ok: true, backfilled }, 200, 0);
     }
 
-    if (path === '/api/admin/agents/claim/pending' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/agents/claim/pending' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100), 500);
       const pending = await listPendingClaims(env, limit);
       return jsonResponse({ ok: true, total: pending.length, claims: pending }, 200, 0);
@@ -2562,7 +2578,7 @@ export default {
     if (
       path === '/api/admin/bazaar/discovery' &&
       request.method === 'GET' &&
-      isAuthorizedAdmin(env, url.searchParams.get('key'))
+      isAuthorizedAdmin(env, extractAdminKey(request, url))
     ) {
       const dLimit = Math.min(
         Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100),
@@ -2613,7 +2629,7 @@ export default {
     if (
       path === '/api/admin/jobs/remove' &&
       request.method === 'POST' &&
-      isAuthorizedAdmin(env, url.searchParams.get('key'))
+      isAuthorizedAdmin(env, extractAdminKey(request, url))
     ) {
       let rbody: { id?: unknown; reason?: unknown; evidence_url?: unknown } =
         {};
@@ -2658,7 +2674,7 @@ export default {
     if (
       path === '/api/admin/jobs/ingest/remove' &&
       request.method === 'POST' &&
-      isAuthorizedAdmin(env, url.searchParams.get('key'))
+      isAuthorizedAdmin(env, extractAdminKey(request, url))
     ) {
       let ib: { submission_id?: unknown; reason?: unknown } = {};
       try {
@@ -2707,7 +2723,7 @@ export default {
     if (
       path === '/api/admin/jobs/submissions' &&
       request.method === 'GET' &&
-      isAuthorizedAdmin(env, url.searchParams.get('key'))
+      isAuthorizedAdmin(env, extractAdminKey(request, url))
     ) {
       const SUB_STATUSES = ['pending', 'accepted', 'rejected'] as const;
       const sp = url.searchParams.get('status');
@@ -2743,7 +2759,7 @@ export default {
     if (
       path === '/api/admin/jobs/submissions/decide' &&
       request.method === 'POST' &&
-      isAuthorizedAdmin(env, url.searchParams.get('key'))
+      isAuthorizedAdmin(env, extractAdminKey(request, url))
     ) {
       let dbody: { id?: unknown; decision?: unknown; note?: unknown } = {};
       try {
@@ -2830,7 +2846,7 @@ export default {
         0,
       );
     }
-    if (path === '/api/admin/agents/admin-log' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/agents/admin-log' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const date = url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         return jsonResponse({ ok: false, error: 'invalid_date' }, 400);
@@ -2838,7 +2854,7 @@ export default {
       const entries = await listAdminActions(env, date);
       return jsonResponse({ ok: true, date, total: entries.length, entries }, 200, 0);
     }
-    if (path === '/api/admin/agents/ban' && request.method === 'POST' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/agents/ban' && request.method === 'POST' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       let body: { target?: unknown; reason?: unknown; evidence_url?: unknown } = {};
       try {
         body = (await request.json()) as typeof body;
@@ -2875,7 +2891,7 @@ export default {
       });
       return jsonResponse({ ok: true, banned: target, at: now }, 200, 0);
     }
-    if (path.startsWith('/api/admin/agents/ban/') && request.method === 'DELETE' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path.startsWith('/api/admin/agents/ban/') && request.method === 'DELETE' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const target = path.slice('/api/admin/agents/ban/'.length);
       if (!target) return jsonResponse({ ok: false, error: 'invalid_target' }, 400);
       const existing = await getBanRecord(env, target);
@@ -2892,7 +2908,7 @@ export default {
       });
       return jsonResponse({ ok: true, unbanned: target, at: now }, 200, 0);
     }
-    if (path.startsWith('/api/admin/agents/claim/review/') && request.method === 'POST' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path.startsWith('/api/admin/agents/claim/review/') && request.method === 'POST' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const wallet = path.slice('/api/admin/agents/claim/review/'.length);
       if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
         return jsonResponse({ ok: false, error: 'invalid_wallet' }, 400);
@@ -2982,7 +2998,7 @@ export default {
       // requires INGEST_KEY only. The ADMIN_KEY transition fallback was
       // retired 2026-05-26 (audit L-6) so a leaked ADMIN_KEY cannot
       // inject papers.
-      if (!isAuthorizedIngest(env, url.searchParams.get('key'))) {
+      if (!isAuthorizedIngest(env, extractAdminKey(request, url))) {
         return jsonResponse(
           { ok: false, error: 'unauthorized', message: 'ai-cves ingest requires a valid INGEST_KEY.' },
           401,
@@ -3015,7 +3031,7 @@ export default {
     // Narrower auth: INGEST_KEY only (transition fallback retired 2026-05-26),
     // matching the ai-cves ingest pattern.
     if (path === '/api/admin/sec-filings-extraction/ingest' && request.method === 'POST') {
-      if (!isAuthorizedIngest(env, url.searchParams.get('key'))) {
+      if (!isAuthorizedIngest(env, extractAdminKey(request, url))) {
         return jsonResponse(
           { ok: false, error: 'unauthorized', message: 'sec-filings-extraction ingest requires a valid INGEST_KEY.' },
           401,
@@ -3037,7 +3053,9 @@ export default {
         );
       }
       const result = await writeBatch(env, v.value);
-      return jsonResponse({ ok: true, ...result }, 200, 0);
+      // IngestResult already carries ok:true; spread it directly so we
+      // don't double-specify the key (caught by tsc as TS2783).
+      return jsonResponse(result, 200, 0);
     }
 
     // /api/admin/snapshot/openalex/{institutions|authors|citation-velocity}
@@ -3051,7 +3069,7 @@ export default {
     // exported {AIInstitutionsSnapshot, AIAuthorsSnapshot,
     // CitationVelocitySnapshot} TS interfaces.
     if (path.startsWith('/api/admin/snapshot/openalex/') && request.method === 'POST') {
-      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      if (!isAuthorizedAdmin(env, extractAdminKey(request, url))) {
         return jsonResponse({ ok: false, error: 'unauthorized' }, 401, 0);
       }
       let raw: unknown;
@@ -10152,7 +10170,10 @@ export default {
     // ~$0.0000005 KV read. Synthesis failure = no charge (deferred-debit
     // honors premiumValidationFailure path).
     if (path === '/api/premium/whats-new/pro') {
-      const payment = await requirePayment(request, env, 10);
+      // Tier 4 = 10 credits (per TIER_COSTS in payments.ts). The handler
+      // passes the TIER number; logPremiumUsage + premiumResponse take
+      // the credit COUNT (10) since that's what gets ledgered.
+      const payment = await requirePayment(request, env, 4);
       if (!payment.paid) return payment.response!;
 
       const daysParam = parseInt(url.searchParams.get('days') ?? '', 10);
@@ -10804,7 +10825,7 @@ export default {
     // including the early ones. See the block immediately before the
     // /api/admin/agents/claim/pending handler.)
 
-    if (path === '/api/admin/usage' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/usage' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
       const rollup = await getRollup(env, date);
       if (!rollup) {
@@ -10813,7 +10834,7 @@ export default {
       return jsonResponse({ ok: true, ...rollup }, 200, 0);
     }
 
-    if (path === '/api/admin/usage/dates' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/usage/dates' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const dates = await listRollupDates(env);
       return jsonResponse({ ok: true, count: dates.length, dates }, 200, 0);
     }
@@ -10832,7 +10853,7 @@ export default {
     //   POST ?key=<ADMIN_KEY>&action=on|off          flip the KV-flag side
     // The env-secret side (KILL_SWITCH_KV_WRITES) is independently controlled
     // via `wrangler secret put` and OR-combined with this flag.
-    if (path === '/api/admin/kill-switch' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/kill-switch' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       if (request.method === 'POST') {
         const action = url.searchParams.get('action');
         if (action !== 'on' && action !== 'off') {
@@ -10858,7 +10879,7 @@ export default {
     // /api/admin/backup/run  POST&key=<ADMIN_KEY>  Trigger an ad-hoc KV backup to R2
     // /api/admin/backup/list GET &key=<ADMIN_KEY>  List recent backup dates + object sizes
     // /api/admin/backup/manifest GET &key=&date=YYYY-MM-DD  Read a manifest by date
-    if (path === '/api/admin/backup/run' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/backup/run' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       if (request.method !== 'POST') {
         return jsonResponse({ ok: false, error: 'POST_required' }, 405);
       }
@@ -10870,7 +10891,7 @@ export default {
       }
     }
 
-    if (path === '/api/admin/backup/list' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/backup/list' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       try {
         const limit = Math.min(90, Math.max(1, parseInt(url.searchParams.get('limit') || '30', 10) || 30));
         const recent = await listRecentBackups(env, limit);
@@ -10880,7 +10901,7 @@ export default {
       }
     }
 
-    if (path === '/api/admin/backup/manifest' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/backup/manifest' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const date = url.searchParams.get('date');
       if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         return jsonResponse({ ok: false, error: 'date_param_required_YYYY-MM-DD' }, 400);
@@ -10894,7 +10915,7 @@ export default {
       }
     }
 
-    if (path === '/api/admin/anomalies' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/anomalies' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const events = await getAnomalyEvents(env);
       const severityFilter = url.searchParams.get('severity');
       const filtered = severityFilter
@@ -10917,21 +10938,21 @@ export default {
     //   beyond what the per-submission email surfaced.
     // DELETE /api/admin/wantlist/{id}  remove a specific submission
     //   (spam, off-thesis, accidental duplicate, etc).
-    if (path === '/api/admin/wantlist/recent' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/wantlist/recent' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const limitParam = url.searchParams.get('limit');
       const limit = limitParam ? parseInt(limitParam, 10) : 100;
       const snap = await listWantlistForAdmin(env, Number.isFinite(limit) ? limit : 100);
       return jsonResponse({ ok: true, ...snap }, 200, 0);
     }
     const adminWantlistDelete = path.match(/^\/api\/admin\/wantlist\/([^/]+)$/);
-    if (adminWantlistDelete && request.method === 'DELETE' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (adminWantlistDelete && request.method === 'DELETE' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const id = adminWantlistDelete[1]!;
       const result = await deleteWantlistItem(env, id);
       const status = result.ok ? 200 : (result.error === 'not_found' ? 404 : 400);
       return jsonResponse(result, status, 0);
     }
 
-    if (path === '/api/admin/burn-token' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/admin/burn-token' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const token = url.searchParams.get('token');
       if (!token || !token.startsWith('tf_live_')) {
         return jsonResponse({ ok: false, error: 'missing_or_invalid_token_param' }, 400);
@@ -10966,7 +10987,7 @@ export default {
       // cloud config; if it ever leaks, we'd rather expose a single email
       // capability than the full admin surface (kill-switch, burn-token,
       // etc). Wrangler: `wrangler secret put RECON_EMAIL_KEY` to enable.
-      const supplied = url.searchParams.get('key') ?? '';
+      const supplied = extractAdminKey(request, url) ?? '';
       const reconKeyOk =
         !!env.RECON_EMAIL_KEY &&
         env.RECON_EMAIL_KEY.length > 0 &&
@@ -11075,7 +11096,7 @@ export default {
       if (!refreshRate.allowed) {
         return rateLimitedResponse(refreshRate);
       }
-      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+      if (!isAuthorizedAdmin(env, extractAdminKey(request, url))) {
         return jsonResponse(
           { ok: false, error: 'unauthorized', message: '/api/refresh requires a valid ?key= param' },
           401,
@@ -11382,8 +11403,8 @@ export default {
     // Manual tweet trigger (protected)
     // DISABLED 2026-04-04: X account flagged as spam from 5x/day posting.
     // When re-enabling, limit to 1-2 posts/day max. See wrangler.toml for schedule notes.
-    // Auth pattern when re-enabled: isAuthorizedAdmin(env, url.searchParams.get('key'))
-    // if (path === '/api/tweet' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    // Auth pattern when re-enabled: isAuthorizedAdmin(env, extractAdminKey(request, url))
+    // if (path === '/api/tweet' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
     //   await postTopStories(env);
     //   return jsonResponse({ ok: true, message: 'Posted top stories to X' });
     // }
