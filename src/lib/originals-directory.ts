@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'pope-leo-magnifica-humanitas-anthropic-olah',
+    title:
+      "Pope Leo XIV Just Wrote a 235-Page Encyclical on AI. Anthropic's Co-Founder Was Standing Next to Him.",
+    author: 'Kira Nolan',
+    date: 'May 27, 2026',
+    readTime: '7 min read',
+    description:
+      "Magnifica Humanitas dropped May 25 in Vatican City. The first papal encyclical to take AI as its central subject, signed 135 years to the day after Rerum Novarum reframed labor and capital. Pope Leo presented it personally, the first pontiff ever to do so, with Anthropic co-founder Chris Olah at his side. Inside the text on autonomous weapons, data justice, labor protections, and governance; the staging against an OpenAI S-1 and a $900B Anthropic round in the same five business days; what moral capital actually buys for a frontier lab (regulator vocabulary, weapons-procurement leverage, enterprise sales motion to 1.4B baptized Catholics); and three signposts to watch for whether the encyclical functions as policy infrastructure or stays theology.",
+  },
+  {
     slug: 'starlette-badhost-critical-cve-agent-stack-audit',
     title:
       'Starlette Just Shipped a Critical CVE. If Your Agent Has FastAPI Anywhere in Its Stack, This Is Yours.',
