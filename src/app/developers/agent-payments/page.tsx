@@ -845,6 +845,42 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/whats-new/pro',
+    description:
+      "Pro tier of the morning brief. Same base payload as /api/premium/whats-new plus a Claude Haiku 4.5 analyst summary, 1 to 5 key takeaways with per-field cited basis IDs and confidence scores, and 1 to 3 recommended actions targeted by agent class. Every claim cites by stable basis ID assigned server-side BEFORE the model sees the data; citations are server-side validated, so the agent never sees a hallucinated reference. Failure to synthesize is a no-charge event under AFTA.",
+    cost: '10 credits per call',
+    example: `// Query: ?days=1&news_limit=10
+{
+  "ok": true,
+  "tier": "pro",
+  "window": { "from": "2026-05-13", "to": "2026-05-14", "days": 1 },
+  "summary": { "total_pricing_changes": 1, "new_models": 1, "incidents": 1, "news_articles": 1 },
+  "pricing": { "changes": [{ "model": "Claude Opus 4.7", "from": 15, "to": 14, "delta_pct": -6.6667 }], "new_models": [{ "model": "Sonnet 4.7", "tier": "mid" }] },
+  "status": { "incidents": [{ "provider": "openai", "severity": "minor", "title": "Elevated latency" }] },
+  "news": [{ "title": "Anthropic announces Sonnet 4.7", "url": "..." }],
+  "data_ids": {
+    "pricing_changes": { "c1": "Claude Opus 4.7|anthropic|inputPrice" },
+    "new_models": { "m1": "Sonnet 4.7|anthropic" },
+    "incidents": { "i1": "openai|Elevated latency|..." },
+    "news": { "n1": "https://anthropic.com/news/sonnet-4-7" }
+  },
+  "pro": {
+    "generated_by": "claude-haiku-4-5-20251001",
+    "analyst_summary": "Anthropic cut Claude Opus 4.7 input pricing by 7 percent. New Sonnet 4.7 mid tier model announced. OpenAI had a minor 90 minute latency event...",
+    "key_takeaways": [
+      { "claim": "Anthropic cut Claude Opus 4.7 input pricing by 7 percent", "basis": ["c1"], "confidence": 0.98 },
+      { "claim": "Anthropic announced a new Sonnet 4.7 mid tier model", "basis": ["m1", "n1"], "confidence": 0.95 }
+    ],
+    "recommended_actions": [
+      { "for": "cost-bound", "action": "Re-evaluate Claude Opus as primary model given the price cut", "priority": "monitor", "basis": ["c1"] },
+      { "for": "inference-bound", "action": "Test Sonnet 4.7 in low risk workloads", "priority": "monitor", "basis": ["m1"] }
+    ]
+  },
+  "billing": { "credits_charged": 10, "credits_remaining": 32 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/probe/series',
     description:
       "Daily SLA series for one LLM provider, measured by TensorFeed itself. Returns per-day count, success rate, ttfb p50/p95/p99, total latency p50/p95/p99, incident-hour count, plus an overall window summary. The free /api/probe/latest serves the most-recent 24h aggregate. We probe Anthropic, OpenAI, Google, Mistral, and Cohere chat-completion endpoints every 15 min with a single-token prompt and record measured response time + status. The data is unique: provider status pages are politically managed; this is what we measure. Pairs naturally with /api/premium/routing for picking a model whose SLA you can verify. 90-day max range, default 30 days back.",

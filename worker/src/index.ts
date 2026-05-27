@@ -4111,6 +4111,7 @@ export default {
           premiumProviderDeepDive: '/api/premium/providers/{name}',
           premiumCompareModels: '/api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3',
           premiumWhatsNew: '/api/premium/whats-new?days=1&news_limit=10',
+          premiumWhatsNewPro: '/api/premium/whats-new/pro?days=1&news_limit=10 (10 credits, AFTA-signed; pro tier of the morning brief. Same 24h base payload plus Claude Haiku 4.5 generated analyst summary, 1-5 cited key takeaways, and 1-3 recommended actions targeted by agent class. Every claim cites by stable basis ID; citations are server-side validated, so the agent never sees a hallucinated reference.)',
           premiumPolicyTimeline: '/api/premium/policy/timeline?days_back=&days_forward=&jurisdiction= (1 credit; forward + backward calendar over the AI policy registry with relative-to-now classification, next-3-milestones, days-until-effective per entry)',
           premiumEconomySeriesHistory: '/api/premium/economy/series/{bls|fred}/{series_id} (1 credit; full upstream history with YoY paired series, 3-month and 12-month moving averages, min/max, trend direction. Free /api/economy/* caps at 24 or 90 obs; this is the full archive plus compute.)',
           premiumPackagesPyPIMomentum: '/api/premium/packages/pypi/momentum (1 credit; momentum + velocity ratio per AI/ML PyPI package over the free trending snapshot, with direction classification, notable-movers, by-category counts. npm momentum follows once rolling snapshot history accumulates.)',

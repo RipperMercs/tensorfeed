@@ -1302,6 +1302,116 @@
     },
     {
       "resource": {
+        "url": "https://tensorfeed.ai/api/premium/whats-new/pro",
+        "description": "Pro tier of the agent morning brief. Same 24-hour delta payload as /api/premium/whats-new plus a Claude Haiku 4.5 generated analyst summary, 1 to 5 cited key takeaways, and 1 to 3 recommended actions targeted by agent class. Every claim cites by stable basis ID; citations are server-side validated.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "200000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-26T00:00:00Z",
+      "metadata": {
+        "name": "What's new Pro",
+        "description": "Pro tier of the agent morning brief. Same 24-hour delta payload as /api/premium/whats-new plus a Claude Haiku 4.5 generated analyst summary, 1 to 5 cited key takeaways, and 1 to 3 recommended actions targeted by agent class. Every claim cites by stable basis ID; citations are server-side validated.",
+        "tier": 2,
+        "credits": 10,
+        "category": "ai-agent-brief-pro"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "days": 1,
+                "news_limit": 10
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "tier": "pro",
+                "window": {
+                  "from": "2026-05-13",
+                  "to": "2026-05-14",
+                  "days": 1
+                },
+                "summary": {
+                  "total_pricing_changes": 1,
+                  "new_models": 1,
+                  "incidents": 1,
+                  "news_articles": 1
+                },
+                "data_ids": {
+                  "pricing_changes": { "c1": "Claude Opus 4.7|anthropic|inputPrice" },
+                  "new_models": { "m1": "Sonnet 4.7|anthropic" },
+                  "incidents": { "i1": "openai|Elevated latency for ChatGPT|2026-05-13T18:00:00Z" },
+                  "news": { "n1": "https://anthropic.com/news/opus-4-8" }
+                },
+                "pro": {
+                  "generated_by": "claude-haiku-4-5-20251001",
+                  "analyst_summary": "Anthropic cut Claude Opus 4.7 input pricing by 7 percent to 14 USD per million tokens. OpenAI experienced a minor 90 minute latency event on the ChatGPT API. New Sonnet 4.7 mid tier model announced.",
+                  "key_takeaways": [
+                    { "claim": "Anthropic cut Claude Opus 4.7 input pricing by 7 percent", "basis": ["c1"], "confidence": 0.98 },
+                    { "claim": "Anthropic announced a new Sonnet 4.7 mid tier model", "basis": ["m1", "n1"], "confidence": 0.95 }
+                  ],
+                  "recommended_actions": [
+                    { "for": "cost-bound", "action": "Re-evaluate Claude Opus as primary model given the price cut and capability parity", "priority": "monitor", "basis": ["c1"] }
+                  ]
+                },
+                "billing": { "credits_charged": 10, "credits_remaining": 40 }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string", "const": "http" },
+                  "method": { "type": "string", "enum": ["GET"] },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "days": { "type": "integer", "minimum": 1, "maximum": 7, "description": "Window length in days back from now. Default 1, max 7." },
+                      "news_limit": { "type": "integer", "minimum": 1, "maximum": 25, "description": "Max news headlines to return. Default 10, max 25." }
+                    }
+                  }
+                },
+                "required": ["type", "method"],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": { "type": { "type": "string" }, "example": { "type": "object" } },
+                "required": ["type"]
+              }
+            },
+            "required": ["input"]
+          }
+        }
+      }
+    },
+    {
+      "resource": {
         "url": "https://tensorfeed.ai/api/premium/policy/timeline",
         "description": "Forward and backward calendar over the AI policy registry. Each entry classified relative to now (past / active / upcoming), days-until-effective, with next-3-milestones for upcoming items. Filter by jurisdiction (EU, US, UK, etc) and time window. The \"what AI rules are about to bite\" feed.",
         "mimeType": "application/json"
