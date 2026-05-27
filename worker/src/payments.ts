@@ -69,10 +69,18 @@ const TIER_COSTS: Record<1 | 2 | 3 | 4, number> = { 1: 1, 2: 1, 3: 5, 4: 10 };
 // First-payment welcome bonus. Granted once per sender wallet, on the
 // first successful USDC payment from that address (credits flow OR
 // x402 fallback). Redeemed by writing a `pay:wallet-seen:{address}`
-// marker in TENSORFEED_CACHE; race conditions across simultaneous
-// payments from the same wallet are accepted (worst case: one extra
-// bonus, capped at $1 of value).
+// marker in TENSORFEED_CACHE. Race-safe under last-write-wins KV via
+// the stake-first check-write-recheck pattern in
+// checkAndMarkFirstPayment (2026-05-26, audit CR-2). The prior comment
+// here claimed "one extra bonus capped at $1" but the actual bound was
+// N parallel calls per wallet = N * $1; the stake-first fix prevents
+// double-mint under any number of concurrent confirms.
 const WELCOME_BONUS_CREDITS = 50;
+// TTL for a pending stake in pay:wallet-seen:{addr}. Bounds the
+// recovery window after a crash: if the winning request dies before
+// upgrading the marker to committed, a fresh confirm within 60s falls
+// through and the bonus minter can re-fire. Acceptable bounded edge.
+const WALLET_SEEN_STAKE_TTL_S = 60;
 
 // Volume tiers (credits per USD): higher tiers are cheaper per credit
 function creditsPerUsd(amountUsd: number): { rate: number; tier: string } {
@@ -1136,6 +1144,67 @@ export type ConfirmResult =
     }
   | { ok: false; error: string; reason?: string; status?: number };
 
+/**
+ * Stake-first check-write-recheck for the wallet-seen marker. Race-safe
+ * under last-write-wins KV.
+ *
+ * Two parallel confirms from the same wallet:
+ *   1. Both read the existing marker (none, or pending).
+ *   2. Both write THEIR OWN stake (different requestIds).
+ *   3. Both re-read. Last write wins; both see the SAME re-read value.
+ *   4. Only the request whose requestId matches the re-read value
+ *      claims first-payment status.
+ *
+ * Legacy backward compat: existing in-production markers are plain ISO
+ * date strings (the pre-2026-05-26 shape). Those parse as JSON-string,
+ * not JSON-object, and we treat them as terminal "committed" so an
+ * already-bonused wallet does NOT re-mint after the upgrade.
+ *
+ * Edge: if the winner crashes before upgrading the marker to
+ * `committed: true`, the pending stake expires in WALLET_SEEN_STAKE_TTL_S
+ * and a fresh confirm could re-mint. Bounded recovery window;
+ * acceptable per design.
+ *
+ * Exported testing surface lives in payments-welcome-bonus.test.ts.
+ */
+type WalletSeenMarker =
+  | { committed: true; at: string }
+  | { pending: string; at: string };
+
+function parseWalletSeen(raw: unknown): WalletSeenMarker | 'legacy' | null {
+  if (raw === null || raw === undefined) return null;
+  // Real Cloudflare KV returns a string from .get(key); some test mocks
+  // pre-parse on put and return the parsed object directly. Handle both
+  // so the function is defensive in production and works against the
+  // legacy makeKV mock without changing every existing test fixture.
+  let parsed: unknown = raw;
+  if (typeof raw === 'string') {
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      // Not JSON: legacy plain-string marker (e.g. ISO date pre-2026-05-26).
+      return 'legacy';
+    }
+  }
+  if (typeof parsed === 'string') {
+    // JSON-encoded string (e.g. legacy date written via JSON.stringify).
+    return 'legacy';
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return 'legacy';
+  }
+  const m = parsed as Record<string, unknown>;
+  if (m.committed === true && typeof m.at === 'string') {
+    return { committed: true, at: m.at };
+  }
+  if (typeof m.pending === 'string' && typeof m.at === 'string') {
+    return { pending: m.pending, at: m.at };
+  }
+  // Unrecognized shape: defensive-treat as legacy committed so we never
+  // accidentally re-mint a bonus for a wallet with corrupt marker state.
+  return 'legacy';
+}
+
 export async function checkAndMarkFirstPayment(
   env: Env,
   walletAddress: string | undefined,
@@ -1144,17 +1213,40 @@ export async function checkAndMarkFirstPayment(
     return { isFirstPayment: false, bonusCredits: 0 };
   }
   const key = `pay:wallet-seen:${walletAddress.toLowerCase()}`;
-  const seen = await env.TENSORFEED_CACHE.get(key);
-  if (seen) {
-    return { isFirstPayment: false, bonusCredits: 0 };
+
+  // Step 1: read existing state. Committed or legacy => not first.
+  const rawExisting = await env.TENSORFEED_CACHE.get(key);
+  const existing = parseWalletSeen(rawExisting);
+  if (existing === 'legacy') return { isFirstPayment: false, bonusCredits: 0 };
+  if (existing && 'committed' in existing) return { isFirstPayment: false, bonusCredits: 0 };
+
+  // Step 2: stake-first. Write our pending marker with a unique requestId.
+  const requestId = crypto.randomUUID();
+  const myStake = JSON.stringify({ pending: requestId, at: new Date().toISOString() });
+  await env.TENSORFEED_CACHE.put(key, myStake, { expirationTtl: WALLET_SEEN_STAKE_TTL_S });
+
+  // Step 3: re-read. Whichever stake landed LAST under last-write-wins is
+  // what every parallel caller now sees. Only the request whose stake
+  // survived gets the bonus.
+  const rawReread = await env.TENSORFEED_CACHE.get(key);
+  const reread = parseWalletSeen(rawReread);
+  if (reread === 'legacy') return { isFirstPayment: false, bonusCredits: 0 };
+  if (reread && 'committed' in reread) return { isFirstPayment: false, bonusCredits: 0 };
+  if (reread && 'pending' in reread && reread.pending === requestId) {
+    return { isFirstPayment: true, bonusCredits: WELCOME_BONUS_CREDITS };
   }
-  return { isFirstPayment: true, bonusCredits: WELCOME_BONUS_CREDITS };
+  // Lost the race to another concurrent stake.
+  return { isFirstPayment: false, bonusCredits: 0 };
 }
 
 export function markWalletSeen(env: Env, walletAddress: string): Promise<void> {
+  // Upgrade the marker to committed. No TTL: committed markers persist
+  // until manually cleared. Replaces any pending stake from this
+  // request (the winner of the stake-first race) or any concurrent
+  // stake that lost (the loser already returned isFirstPayment=false).
   return env.TENSORFEED_CACHE.put(
     `pay:wallet-seen:${walletAddress.toLowerCase()}`,
-    new Date().toISOString(),
+    JSON.stringify({ committed: true, at: new Date().toISOString() }),
   );
 }
 
