@@ -6,6 +6,7 @@ import { getAllBenchmarkSlugs } from '@/lib/benchmark-directory';
 import { getAllApiRefSlugs } from '@/lib/api-reference-directory';
 import { getAllHarnessSlugs } from '@/lib/harness-directory';
 import { getActiveCategoryIds } from '@/data/gear/products';
+import { AI_COMPANIES } from '@/data/ai-companies/companies';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://tensorfeed.ai';
@@ -190,6 +191,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/funding`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/funding/portfolio`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/ai-infrastructure`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${baseUrl}/ai-stocks`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    ...AI_COMPANIES.map((company) => ({
+      url: `${baseUrl}/ai-stocks/${company.ticker.toLowerCase()}`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.85,
+    })),
     { url: `${baseUrl}/a2a-x402`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/hyperliquid`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/cve-watch`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
