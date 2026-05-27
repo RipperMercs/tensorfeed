@@ -49,6 +49,15 @@ export interface Env {
   // zeros for hosted_endpoint (npm download counts remain the primary
   // signal).
   MCP_TOOL_CALLS_AE?: AnalyticsEngineDataset;
+  // CreditLedger Durable Object namespace. Per-token DO instance owns
+  // the canonical credit balance + daily-spend counter and serializes
+  // all read-modify-write operations to close H-1 + H-2 races from the
+  // 2026-05-26 audit. Phase 2 scaffold: binding is live but no
+  // production call site reaches it yet; Phase 3 cuts the wire-up.
+  // Optional so node-env test fixtures (KV-only Env mocks) don't need
+  // to stub a DurableObjectNamespace. In production deploy it is
+  // always present per wrangler.toml. See worker/src/credit-ledger.ts.
+  CREDIT_LEDGER?: DurableObjectNamespace;
   // Admin-only routes auth. REQUIRED in production. Set via:
   //   wrangler secret put ADMIN_KEY
   // Used by /api/admin/* and /api/refresh. Replaces the previous

@@ -361,6 +361,20 @@ dataset = "tf_honeypot_hits"
 binding = "MCP_TOOL_CALLS_AE"
 dataset = "tf_mcp_tool_calls"
 
+# CreditLedger Durable Object. Per-token DO instance owns the canonical
+# credit balance + daily-spend counter, serializing all read-modify-
+# write operations to close race conditions H-1 and H-2 from the
+# 2026-05-26 premium-backend audit. See worker/src/credit-ledger.ts +
+# tensorfeed-work/tier2-races/DESIGN.md. Phase 2 scaffold: binding is
+# live but no production code path calls it yet; Phase 3 wires it in.
+[[durable_objects.bindings]]
+name = "CREDIT_LEDGER"
+class_name = "CreditLedger"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["CreditLedger"]
+
 # Workers AI binding for news-history Phase B clustering. Free tier
 # allots 10K neurons/day which comfortably covers our daily 200-
 # article embedding pass via @cf/baai/bge-base-en-v1.5. Used by

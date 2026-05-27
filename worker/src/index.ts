@@ -1046,6 +1046,15 @@ async function premiumValidationFailure(
 
 // ─────────────────────────────────────────────────────────────────────
 
+// CreditLedger Durable Object class. Cloudflare instantiates a DO class
+// from a named export on the worker entrypoint matching the wrangler.toml
+// `class_name`. Phase 2 scaffold: the binding is live so Cloudflare can
+// allocate the class, but no production code path inside the default
+// fetch handler reaches the DO yet. Phase 3 wires it into the requirePayment
+// debit + spend-cap paths to close audit H-1 + H-2. See
+// worker/src/credit-ledger.ts + tensorfeed-work/tier2-races/DESIGN.md.
+export { CreditLedger } from './credit-ledger';
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
