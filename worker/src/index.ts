@@ -3088,24 +3088,56 @@ export default {
         return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
       }
       const kind = path.slice('/api/admin/snapshot/openalex/'.length);
+      // Monotonicity guard (audit M-4, 2026-05-26): reject the POST when
+      // its capturedAt is older than or equal to the snapshot currently in
+      // KV. Without this an attacker who captured an old admin POST body
+      // (or an out-of-order TF CC operator) could roll the snapshot back to
+      // a stale state. Comparison is ISO-string lexicographic, which is
+      // correct for the RFC 3339 capturedAt values these modules emit.
+      // 409 Conflict is the HTTP idiom for "current state of the resource
+      // forbids this write".
       if (kind === 'institutions') {
-        const { validateInstitutionsSnapshot, putInstitutionsSnapshot } = await import('./openalex-research');
+        const { validateInstitutionsSnapshot, putInstitutionsSnapshot, getInstitutionsSnapshot } = await import('./openalex-research');
         const v = validateInstitutionsSnapshot(raw);
         if (!v.ok) return jsonResponse({ ok: false, error: v.error, detail: v.detail }, 400);
+        const current = await getInstitutionsSnapshot(env);
+        if (current && v.snapshot.capturedAt <= current.capturedAt) {
+          return jsonResponse(
+            { ok: false, error: 'stale_write', detail: 'incoming capturedAt is older than or equal to the current snapshot', currentCapturedAt: current.capturedAt, incomingCapturedAt: v.snapshot.capturedAt },
+            409,
+            0,
+          );
+        }
         await putInstitutionsSnapshot(env, v.snapshot);
         return jsonResponse({ ok: true, kind, capturedAt: v.snapshot.capturedAt, count: v.snapshot.institutions.length }, 200, 0);
       }
       if (kind === 'authors') {
-        const { validateAuthorsSnapshot, putAuthorsSnapshot } = await import('./openalex-authors');
+        const { validateAuthorsSnapshot, putAuthorsSnapshot, getOpenAlexAIAuthors } = await import('./openalex-authors');
         const v = validateAuthorsSnapshot(raw);
         if (!v.ok) return jsonResponse({ ok: false, error: v.error, detail: v.detail }, 400);
+        const current = await getOpenAlexAIAuthors(env);
+        if (current && v.snapshot.capturedAt <= current.capturedAt) {
+          return jsonResponse(
+            { ok: false, error: 'stale_write', detail: 'incoming capturedAt is older than or equal to the current snapshot', currentCapturedAt: current.capturedAt, incomingCapturedAt: v.snapshot.capturedAt },
+            409,
+            0,
+          );
+        }
         await putAuthorsSnapshot(env, v.snapshot);
         return jsonResponse({ ok: true, kind, capturedAt: v.snapshot.capturedAt, count: v.snapshot.authors.length }, 200, 0);
       }
       if (kind === 'citation-velocity') {
-        const { validateCitationVelocitySnapshot, putCitationVelocitySnapshot } = await import('./openalex-citation-velocity');
+        const { validateCitationVelocitySnapshot, putCitationVelocitySnapshot, getOpenAlexAICitationVelocity } = await import('./openalex-citation-velocity');
         const v = validateCitationVelocitySnapshot(raw);
         if (!v.ok) return jsonResponse({ ok: false, error: v.error, detail: v.detail }, 400);
+        const current = await getOpenAlexAICitationVelocity(env);
+        if (current && v.snapshot.capturedAt <= current.capturedAt) {
+          return jsonResponse(
+            { ok: false, error: 'stale_write', detail: 'incoming capturedAt is older than or equal to the current snapshot', currentCapturedAt: current.capturedAt, incomingCapturedAt: v.snapshot.capturedAt },
+            409,
+            0,
+          );
+        }
         await putCitationVelocitySnapshot(env, v.snapshot);
         return jsonResponse({ ok: true, kind, capturedAt: v.snapshot.capturedAt, count: v.snapshot.papers.length }, 200, 0);
       }
@@ -6610,12 +6642,21 @@ export default {
 
       const parsed = parseFDAAggregateQuery(url);
       if (!parsed.ok) {
-        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+        return await premiumValidationFailure(
+          { ok: false, error: parsed.error, hint: parsed.hint },
+          payment,
+          request,
+          env,
+        );
       }
       const result = await fetchFDAAggregate(env, parsed.query);
       if (!result.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: result.error, attribution: result.attribution },
+          payment,
+          request,
+          env,
+          'upstream_failure',
           result.http_status === 429 ? 503 : 502,
         );
       }
@@ -7079,12 +7120,21 @@ export default {
 
       const parsed = parsePowerQuery(url, 'daily', { community: 'AG', maxRangeDays: 365 });
       if (!parsed.ok) {
-        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+        return await premiumValidationFailure(
+          { ok: false, error: parsed.error, hint: parsed.hint },
+          payment,
+          request,
+          env,
+        );
       }
       const result = await fetchPowerPoint(env, parsed.query);
       if (!result.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: result.error, attribution: result.attribution },
+          payment,
+          request,
+          env,
+          'upstream_failure',
           result.http_status === 429 ? 503 : 502,
         );
       }
@@ -7132,12 +7182,21 @@ export default {
 
       const parsed = parseEIAQuery(url);
       if (!parsed.ok) {
-        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+        return await premiumValidationFailure(
+          { ok: false, error: parsed.error, hint: parsed.hint },
+          payment,
+          request,
+          env,
+        );
       }
       const result = await fetchEIASeries(env, parsed.query);
       if (!result.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: result.error, attribution: result.attribution },
+          payment,
+          request,
+          env,
+          'upstream_failure',
           result.http_status === 429 ? 503 : result.http_status === 503 ? 503 : 502,
         );
       }
@@ -7184,16 +7243,25 @@ export default {
 
       const parsed = parsePowerQuery(url, 'hourly', { community: 'AG', maxRangeDays: 30 });
       if (!parsed.ok) {
-        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+        return await premiumValidationFailure(
+          { ok: false, error: parsed.error, hint: parsed.hint },
+          payment,
+          request,
+          env,
+        );
       }
       const result = await fetchPowerPoint(env, parsed.query);
       if (!result.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: result.error,
             attribution: result.attribution,
           },
+          payment,
+          request,
+          env,
+          'upstream_failure',
           result.http_status === 429 ? 503 : 502,
         );
       }

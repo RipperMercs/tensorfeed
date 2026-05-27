@@ -239,6 +239,18 @@ export async function putInstitutionsSnapshot(
   );
 }
 
+// Read the current KV snapshot (for the admin POST monotonicity guard).
+// Returns null when nothing has been written yet.
+export async function getInstitutionsSnapshot(env: Env): Promise<AIInstitutionsSnapshot | null> {
+  const raw = await env.TENSORFEED_CACHE.get(CURRENT_KEY, 'text');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AIInstitutionsSnapshot;
+  } catch {
+    return null;
+  }
+}
+
 // Light validation for the admin snapshot POST endpoint. Verifies the
 // top-level shape; trusts the entries inside because the writer is TF's
 // own local-fetch script. Returns ok or { error, detail }.
