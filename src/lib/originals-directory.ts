@@ -17,6 +17,26 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'altman-amodei-walk-back-jobs-apocalypse-ipo-pivot',
+    title:
+      'Altman and Amodei Walked Back the AI Jobs Apocalypse. The Subtext Is the IPO Calendar.',
+    author: 'Marcus Chen',
+    date: 'May 27, 2026',
+    readTime: '6 min read',
+    description:
+      "Fortune reported on May 26 that Sam Altman and Dario Amodei are softening their prior framing that AI would obliterate large swaths of white-collar work. Anthropic is closing a $30B round at $900B. OpenAI filed its S-1 four days earlier. The two largest AI capital events in history are converging on the same eight-week window and the labor-replacement prophecy both CEOs spent eighteen months building is being quietly retired. Inside what they said before, what they are saying now, why apocalypse framing was an asset at the private-capital tier but is a liability under the public-market disclosure regime, the Microsoft and Google tell (Big Tech never used the apocalypse framing in the first place), and the read for agent operators on what changes versus what does not.",
+  },
+  {
+    slug: 'anthropic-glasswing-update-mythos-public-release',
+    title:
+      'Mythos Just Logged 10,000 Critical Bugs in 30 Days. Anthropic Says the Public Release Is Next.',
+    author: 'Kira Nolan',
+    date: 'May 26, 2026',
+    readTime: '7 min read',
+    description:
+      "Anthropic posted the first operational update on Project Glasswing on May 25-26. Thirty days in, Mythos has flagged 23,019 potential vulnerabilities across 1,000+ open source projects, independent security firms validated 1,726 of them, and partner organizations have confirmed more than 10,000 high- or critical-severity bugs (Cloudflare alone: 2,000 total, 400 high/critical; Mozilla: 271 Firefox zero-days). The partner roster widened to roughly 50 organizations (AWS, Apple, Broadcom, Cisco, CrowdStrike, Google, JPMorgan Chase, Linux Foundation, Microsoft, NVIDIA, Palo Alto Networks as launch partners). Anthropic committed $100M in Mythos usage credits, $4M in direct donations to OSS security organizations, named U.S. and allied governments as the next Glasswing expansion target, and stated its intent to release Mythos-class models publicly once safeguards are stronger. Inside the 7.5 percent validation rate caveat on the flagged number, why the public-release line resets the policy conversation, the comparison to OpenAI Daybreak (the May 12 workflow-integrated counter), what the donation budget does to OSS maintainer triage capacity, and three signposts to watch over the next ninety days.",
+  },
+  {
     slug: 'agent-commerce-fee-floor-spacex-memo',
     title:
       "76% of AI Agent Payments Are Already Below Visa's Floor. Then Came the SpaceX Memo.",
