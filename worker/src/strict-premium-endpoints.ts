@@ -188,6 +188,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/sec/filings/ai-flagged',
   '/api/premium/sec/filings/by-form',
   '/api/premium/sec/filings/ai-disclosures',
+  // Wave 18 (2026-05-26). Pro-tier whats-new. Layers Haiku 4.5 analyst
+  // synthesis with per-field cited basis IDs on top of base whats-new.
+  // 10 credits ($0.05) vs base at 1 credit ($0.005). Parallel.ai-style
+  // tier ladder pattern.
+  '/api/premium/whats-new/pro',
 ];
 
 /**

@@ -2051,6 +2051,174 @@ function makeProviderTriagePilot(provider: string, displayName: string): BazaarP
 }
 
 /**
+ * /api/premium/whats-new/pro: Wave 18 (2026-05-26).
+ *
+ * Tier-ladder variant of the existing /api/premium/whats-new endpoint
+ * (Parallel.ai-style pattern). Same 24-hour delta payload plus Haiku 4.5
+ * generated analyst summary, cited key takeaways, and recommended
+ * actions targeted by agent class. Every claim cites by stable
+ * data_ids ID; citations are server-side validated.
+ *
+ * Priced at 10 credits to sit above base at 1 credit. Distinct catalog
+ * row from the base pilot so agents see the choice.
+ */
+const WHATS_NEW_PRO_PILOT: BazaarPilotConfig = {
+  description:
+    'Pro tier of the agent morning brief. Returns the same 24-hour delta as /api/premium/whats-new plus Claude Haiku 4.5 generated analyst synthesis: a narrative summary, 1-5 key takeaways, and 1-3 recommended actions targeted by agent class (inference-bound, training-bound, security-watchful, cost-bound, compliance-watchful). Every claim cites back to a stable basis ID assigned server-side BEFORE the model sees the data. Citations that do not resolve are rejected at validation, so the agent never sees a hallucinated reference. 10 credits vs base at 1 credit.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { days: 1, news_limit: 10 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            tier: 'pro',
+            window: { from: '2026-05-13', to: '2026-05-14', days: 1 },
+            computed_at: '2026-05-14T08:00:00Z',
+            summary: {
+              total_pricing_changes: 1,
+              new_models: 1,
+              removed_models: 0,
+              incidents: 1,
+              news_articles: 1,
+            },
+            pricing: {
+              changes: [
+                {
+                  model: 'Claude Opus 4.7',
+                  provider: 'anthropic',
+                  field: 'inputPrice',
+                  from: 15,
+                  to: 14,
+                  delta_pct: -6.6667,
+                },
+              ],
+              new_models: [
+                {
+                  model: 'Sonnet 4.7',
+                  provider: 'anthropic',
+                  input_per_1m: 3,
+                  output_per_1m: 15,
+                  tier: 'mid',
+                },
+              ],
+              removed_models: [],
+            },
+            status: {
+              incidents: [
+                {
+                  service: 'API',
+                  provider: 'openai',
+                  severity: 'minor',
+                  title: 'Elevated latency for ChatGPT',
+                  started_at: '2026-05-13T18:00:00Z',
+                  resolved_at: '2026-05-13T19:30:00Z',
+                  duration_minutes: 90,
+                },
+              ],
+              currently_operational: 12,
+              currently_degraded: 1,
+              currently_down: 0,
+              currently_unknown: 0,
+            },
+            news: [
+              {
+                title: 'Anthropic announces Claude Opus 4.8',
+                url: 'https://anthropic.com/news/opus-4-8',
+                source: 'Anthropic',
+                published_at: '2026-05-13T15:00:00Z',
+              },
+            ],
+            data_ids: {
+              pricing_changes: { c1: 'Claude Opus 4.7|anthropic|inputPrice' },
+              new_models: { m1: 'Sonnet 4.7|anthropic' },
+              removed_models: {},
+              incidents: { i1: 'openai|Elevated latency for ChatGPT|2026-05-13T18:00:00Z' },
+              news: { n1: 'https://anthropic.com/news/opus-4-8' },
+            },
+            pro: {
+              generated_by: 'claude-haiku-4-5-20251001',
+              generated_at: '2026-05-14T08:00:00Z',
+              analyst_summary: 'Anthropic cut Claude Opus 4.7 input pricing by 7 percent to 14 USD per million tokens in the window, the latest in a sequence of cohort price reductions. OpenAI experienced a minor 90 minute latency event on the ChatGPT API; no other carrier grade incidents. Cohort wide inference cost continues to trend down.',
+              key_takeaways: [
+                {
+                  claim: 'Anthropic cut Claude Opus 4.7 input pricing by 7 percent',
+                  basis: ['c1'],
+                  confidence: 0.98,
+                },
+                {
+                  claim: 'Anthropic announced a new Sonnet 4.7 mid tier model',
+                  basis: ['m1', 'n1'],
+                  confidence: 0.95,
+                },
+              ],
+              recommended_actions: [
+                {
+                  for: 'cost-bound',
+                  action: 'Re-evaluate Claude Opus as primary model given the price cut and capability parity',
+                  priority: 'monitor',
+                  basis: ['c1'],
+                },
+                {
+                  for: 'inference-bound',
+                  action: 'Test Sonnet 4.7 in low risk workloads as a cost effective mid tier alternative',
+                  priority: 'monitor',
+                  basis: ['m1'],
+                },
+              ],
+            },
+            billing: { credits_charged: 10, credits_remaining: 40 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  days: {
+                    type: 'integer',
+                    minimum: 1,
+                    maximum: 7,
+                    description: 'Window length in days back from now. Default 1, max 7.',
+                  },
+                  news_limit: {
+                    type: 'integer',
+                    minimum: 1,
+                    maximum: 25,
+                    description: 'Max news headlines to return. Default 10, max 25.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
  * /api/premium/sec/filings/ai-flagged: Wave 17 (2026-05-26).
  * Full AI-flagged SEC filings cohort from DP CC Qwen-on-5090 extraction
  * over the 14 AI bellwether companies (silicon, hyperscaler, ai-native,
@@ -2971,6 +3139,11 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // cataloged (low catalog value for a one-record lookup).
   '/api/premium/sec/filings/ai-flagged': SEC_FILINGS_AI_FLAGGED_PILOT,
   '/api/premium/sec/filings/by-form': SEC_FILINGS_BY_FORM_PILOT,
+  // Wave 18 (2026-05-26): pro-tier whats-new. First TF tier-ladder
+  // endpoint. Layers Haiku 4.5 analyst synthesis with per-field cited
+  // basis IDs on top of the existing base whats-new payload. Parallel.ai
+  // pattern. 10 credits ($0.05) catalog row sits next to base at 1 credit.
+  '/api/premium/whats-new/pro': WHATS_NEW_PRO_PILOT,
   // Wave 14: path-param templates. Lookup helpers below match concrete
   // request paths against these templates so the request still routes
   // through CDP for first-pay cataloging.

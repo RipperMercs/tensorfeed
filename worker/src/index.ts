@@ -10123,6 +10123,50 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: WHATS-NEW PRO TIER (Tier 2, 10 credits) ============
+    // /api/premium/whats-new/pro?days=1&news_limit=10
+    //
+    // Tier ladder variant of /api/premium/whats-new. Layers Haiku 4.5
+    // generated analyst synthesis on top of the base payload:
+    //   - analyst_summary (200-1500 chars narrative)
+    //   - key_takeaways (1-5 items, each with cited basis IDs + confidence)
+    //   - recommended_actions (1-3 items targeted by agent class)
+    // Every claim cites back to a stable data_ids ID assigned server-side
+    // BEFORE Haiku sees the payload. Citations that don't resolve fail
+    // validation; agent never sees a hallucinated reference.
+    //
+    // Pattern: Parallel.ai-style tier ladder. Same product, deeper output,
+    // higher price (10 credits = $0.05 vs base at 1 credit = $0.005).
+    //
+    // Caching: 6h TTL keyed on window + SHA-256(base data). Expected
+    // 85%+ hit rate; uncached calls cost ~$0.01 Haiku, cached calls cost
+    // ~$0.0000005 KV read. Synthesis failure = no charge (deferred-debit
+    // honors premiumValidationFailure path).
+    if (path === '/api/premium/whats-new/pro') {
+      const payment = await requirePayment(request, env, 10);
+      if (!payment.paid) return payment.response!;
+
+      const daysParam = parseInt(url.searchParams.get('days') ?? '', 10);
+      const newsLimitParam = parseInt(url.searchParams.get('news_limit') ?? '', 10);
+      const { computeWhatsNewPro } = await import('./premium-whats-new-pro');
+      const result = await computeWhatsNewPro(env, {
+        ...(Number.isFinite(daysParam) ? { days: daysParam } : {}),
+        ...(Number.isFinite(newsLimitParam) ? { newsLimit: newsLimitParam } : {}),
+      });
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          result as unknown as Record<string, unknown>,
+          payment,
+          request,
+          env,
+        );
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/whats-new/pro', request.headers.get('User-Agent') || 'unknown', 10, payment.token),
+      );
+      return await premiumResponse(result, payment, 10, request, env);
+    }
+
     // === PAID PREMIUM: RECENT WINDOW (Tier 1, 1 credit) ===
     // /api/premium/recent?minutes=N (5-1440, default 60). Sub-daily variant of
     // /whats-new for agents that boot frequently and want a "what happened in
