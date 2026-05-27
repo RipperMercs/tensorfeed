@@ -784,6 +784,14 @@ async function premiumResponse(
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Cache-Control': 'no-store',
+    // Belt-and-suspenders cache partitioning (audit M-fix 2026-05-26):
+    // Cache-Control: no-store should already prevent any caching, but Vary
+    // makes the per-token contract explicit for proxies/CDNs that ignore
+    // no-store, and for any downstream agent client cache. /api/premium/*
+    // response bodies are token-scoped (X-Payment-Token-Balance, AFTA
+    // receipt-bound to the bearer, optional new-token mint), so the cache
+    // key MUST partition on Authorization and X-Payment-Token at minimum.
+    Vary: 'Authorization, X-Payment-Token, X-Payment',
   };
   if (payment.token) headers['X-Payment-Token-Balance'] = String(commit.balanceAfter);
   if (payment.newToken && payment.token) {
@@ -984,6 +992,14 @@ async function premiumValidationFailure(
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Cache-Control': 'no-store',
+    // Belt-and-suspenders cache partitioning (audit M-fix 2026-05-26):
+    // Cache-Control: no-store should already prevent any caching, but Vary
+    // makes the per-token contract explicit for proxies/CDNs that ignore
+    // no-store, and for any downstream agent client cache. /api/premium/*
+    // response bodies are token-scoped (X-Payment-Token-Balance, AFTA
+    // receipt-bound to the bearer, optional new-token mint), so the cache
+    // key MUST partition on Authorization and X-Payment-Token at minimum.
+    Vary: 'Authorization, X-Payment-Token, X-Payment',
   };
   if (payment.token) headers['X-Payment-Token-Balance'] = String(commit.balanceAfter);
   if (payment.newToken && payment.token) {
@@ -11037,9 +11053,16 @@ export default {
       const credKey = `pay:credits:${token}`;
       const before = await env.TENSORFEED_CACHE.get(credKey, 'json') as { balance?: number } | null;
       await env.TENSORFEED_CACHE.delete(credKey);
+      // Don't echo any token entropy beyond the public 'tf_live_' prefix in the
+      // response (audit M-fix 2026-05-26). Prior versions returned slice(0, 16)
+      // which surfaced 8 hex chars worth of token bytes; whoever held the
+      // ADMIN_KEY at burn time already knew the full token, but the response
+      // would have ended up in their request logs and a subsequent log breach
+      // would have surfaced enough prefix for /api/agents/reputation/by-token
+      // (9-16 char prefix lookup) to deanonymize the agent.
       return jsonResponse({
         ok: true,
-        burned: token.slice(0, 16) + '...',
+        burned: 'tf_live_***',
         previous_balance: before?.balance ?? 0,
         message: 'Token credits record deleted. Any further premium call with this token will be rejected.',
       }, 200, 0);
