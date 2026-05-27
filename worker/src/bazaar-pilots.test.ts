@@ -84,6 +84,8 @@ const PILOT_PATHS = [
   '/api/premium/clean/epss/:id',
   '/api/premium/clean/openrouter/:model_id',
   '/api/premium/security/verified/:id',
+  // Wave 19 (per-ticker AI-company envelope — Robinhood Agentic Trading launch)
+  '/api/premium/ai-companies/:ticker',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

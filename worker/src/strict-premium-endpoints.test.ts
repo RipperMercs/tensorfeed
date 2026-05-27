@@ -248,14 +248,15 @@ describe('isStrictPremiumPath', () => {
       expect(STRICT_PREMIUM_PATHS).toHaveLength(58);
       expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(58); // no duplicates
     });
-    it('exposes 6 prefix paths (providers + 5 Wave 14 path-param pilots)', () => {
-      expect(STRICT_PREMIUM_PREFIXES).toHaveLength(6);
+    it('exposes 7 prefix paths (providers + 5 Wave 14 path-param pilots + Wave 19 ai-companies)', () => {
+      expect(STRICT_PREMIUM_PREFIXES).toHaveLength(7);
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/providers/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/clean/cve/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/clean/kev/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/clean/epss/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/clean/openrouter/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/security/verified/');
+      expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/ai-companies/');
     });
     it('every exact path starts with /api/premium/', () => {
       for (const path of STRICT_PREMIUM_PATHS) {

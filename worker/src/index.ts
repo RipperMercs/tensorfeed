@@ -9411,6 +9411,69 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: AI COMPANIES PER-TICKER ENVELOPE (Tier 1, 1 credit) ===
+    // /api/premium/ai-companies/{ticker}
+    //
+    // Single-call aggregated intelligence envelope for one AI bellwether.
+    // Composes four free siblings into one captured-at snapshot: latest
+    // 10 SEC filings (from data.sec.gov, public domain), latest 10 news
+    // mentions filtered by curated aliases (so PLTR does not match
+    // "palantir cookies"), strategic and equity rounds where the
+    // company is a lead or notable investor in TF's funding registry,
+    // and cohort metadata (display name, CIK, category, AI angle).
+    //
+    // Worth a credit because a Robinhood-Agentic-Trading agent doing
+    // pre-trade context for NVDA otherwise issues 3 separate free
+    // calls plus its own alias filter, then races 3 different freshness
+    // boundaries. The envelope is one call, alias-filtered, one SLA.
+    //
+    // Strict-premium prefix /api/premium/ai-companies/ is registered in
+    // strict-premium-endpoints.ts, so anonymous Bazaar probes see a 402
+    // challenge instead of the free-trial pool.
+    const aiCompanyMatch = path.match(/^\/api\/premium\/ai-companies\/([A-Za-z]{1,10})$/);
+    if (aiCompanyMatch) {
+      const ticker = aiCompanyMatch[1].toUpperCase();
+
+      const { isInCohort, getAiCompanyEnvelope } = await import('./premium-ai-companies');
+      if (!isInCohort(ticker)) {
+        // No-payment 404 BEFORE requirePayment so off-cohort tickers
+        // never debit. Cohort hint follows the SEC sibling's pattern.
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'ticker_not_in_cohort',
+            ticker,
+            hint: 'TensorFeed tracks a curated AI bellwether cohort. See cohort_tickers in /api/sec/filings/recent for the supported list.',
+          },
+          404,
+        );
+      }
+
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const envelope = await getAiCompanyEnvelope(env, ticker);
+      if (envelope === null) {
+        // Belt-and-suspenders: cohort check passed but envelope build
+        // failed (would only happen on a race or KV outage). 503 not
+        // 404; deferred-debit means no charge.
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'envelope_unavailable',
+            ticker,
+            hint: 'Envelope build failed unexpectedly. Retry after the next cron tick at :05 UTC of any 6-hour boundary.',
+          },
+          503,
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-companies', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(envelope, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: CVE BATCH LOOKUP (Tier 1, 1 credit, param-required) ===
     // /api/premium/ai-cves/batch?ids=CVE-A,CVE-B,...
     // Up to 10 CVE ids per call, 1 credit flat. Reads the persistent

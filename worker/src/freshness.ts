@@ -155,6 +155,13 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/gpu/pricing/series': NULL_SLA,
   // Watch registration: pure write, no capture concept.
   '/api/premium/watches': NULL_SLA,
+  // AI-companies per-ticker envelope: composes SEC filings (6h cron),
+  // news (10-min refresh), funding (in-Worker static). The 6h SEC
+  // cadence is the loose boundary, so 9h SLA = cadence + 50% headroom
+  // for a single missed run. Resolves under the /api/premium/ai-companies
+  // prefix so concrete /api/premium/ai-companies/NVDA paths match via
+  // resolveSLA's path-prefix walk.
+  '/api/premium/ai-companies': { maxAgeSeconds: 9 * 60 * 60 },
 };
 
 /**

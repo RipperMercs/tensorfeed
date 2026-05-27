@@ -3015,6 +3015,124 @@ const AI_CVES_CVE_LOOKUP_PILOT: BazaarPilotConfig = {
 };
 
 /**
+ * /api/premium/ai-companies/:ticker: Wave 19 (2026-05-27).
+ *
+ * Per-ticker AI-company intelligence envelope for the 14 AI bellwethers
+ * (NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL,
+ * META, TSLA). Aggregates four free siblings into one paid call: latest
+ * 10 SEC filings (public domain), latest 10 news mentions filtered by
+ * curated aliases, funding rounds where the company is a lead or notable
+ * investor in TF's registry, plus cohort metadata. Shipped the same day
+ * Robinhood Agentic Trading + Agentic Credit Card launched, so a paid
+ * agent doing pre-trade context on one ticker can issue one envelope
+ * call instead of three free calls plus its own alias filter.
+ */
+const AI_COMPANIES_AGGREGATE_PILOT: BazaarPilotConfig = {
+  description:
+    'Per-ticker AI intelligence envelope. Pass an AI bellwether ticker (NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA) as the URL path segment. Returns latest 10 SEC filings, latest 10 news mentions filtered by curated aliases, strategic and equity rounds where the company is a lead or notable investor, plus cohort metadata. One call replaces four free siblings (sec/filings, news, funding, cohort registry) plus the agent-side alias filter. Single captured-at timestamp, one freshness SLA across all four buckets.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          pathParams: { ticker: 'NVDA' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-27T18:00:00Z',
+            ticker: 'NVDA',
+            cohort_size: 14,
+            company: {
+              ticker: 'NVDA',
+              cik: '0001045810',
+              display_name: 'NVIDIA',
+              category: 'silicon',
+              ai_angle: 'The dominant supplier of AI training and inference GPUs.',
+              exchange: 'NASDAQ',
+            },
+            filings: {
+              count: 10,
+              items: [
+                {
+                  accession_number: '0001045810-26-000052',
+                  form: '10-Q',
+                  filing_date: '2026-05-20',
+                  primary_doc_url: 'https://www.sec.gov/Archives/edgar/data/1045810/...',
+                },
+              ],
+              source: 'data.sec.gov/submissions',
+              license: 'Public domain (17 USC 105). SEC EDGAR.',
+            },
+            news: {
+              count: 4,
+              items: [
+                {
+                  id: 'abc123',
+                  title: 'NVIDIA announces Rubin successor at GTC',
+                  url: 'https://example.com/nvda-rubin',
+                  source: 'TechCrunch AI',
+                  publishedAt: '2026-05-27T14:00:00Z',
+                  matched_aliases: ['NVIDIA'],
+                },
+              ],
+              aliases_used: ['NVIDIA', 'Nvidia'],
+              sanitization: 'enabled',
+            },
+            funding_as_investor: {
+              count: 0,
+              items: [],
+              description:
+                'Strategic and equity rounds where this company is listed as a lead or notable investor in TensorFeed funding registry.',
+            },
+            attribution: {
+              sources: [
+                'SEC EDGAR (data.sec.gov/submissions). Public domain (17 USC 105).',
+                'TensorFeed.ai news aggregator (sanitized for agents).',
+                'TensorFeed.ai funding registry (editorial).',
+              ],
+              notes:
+                'Envelope captured at one moment in time; filings refresh every 6 hours, news every 10 minutes. Freshness SLA: 9h.',
+            },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              pathParams: {
+                type: 'object',
+                properties: {
+                  ticker: {
+                    type: 'string',
+                    description:
+                      'AI bellwether ticker (NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA). Case-insensitive.',
+                  },
+                },
+                required: ['ticker'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+      routeTemplate: '/api/premium/ai-companies/:ticker',
+    },
+  },
+};
+
+/**
  * Path-to-config map. Add new entries here (and only here) when expanding
  * the pilot. Per the migration plan, only add waves after the previous
  * wave's endpoints are cataloged and reading clean in CDP /discovery.
@@ -3075,6 +3193,13 @@ const AI_CVES_CVE_LOOKUP_PILOT: BazaarPilotConfig = {
  * paths against the template at request time. Endpoints: providers/:name
  * + the 5 single-CVE-id and 1 model-id LLM-ready surfaces. Total pilot
  * count: 28 -> 34.
+ *
+ * Wave 19 (2026-05-27): per-ticker AI-company intelligence envelope
+ * (/api/premium/ai-companies/:ticker). Shipped the same day Robinhood
+ * Agentic Trading + Agentic Credit Card launched. Composes SEC filings,
+ * news, funding, and cohort metadata into one paid call per ticker for
+ * the 14 AI bellwethers. Wave numbering jumps past Waves 15 to 18
+ * (already in the map) to keep the Robinhood-event launch grouped.
  */
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
@@ -3153,6 +3278,13 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/clean/epss/:id': CLEAN_EPSS_PILOT,
   '/api/premium/clean/openrouter/:model_id': CLEAN_OPENROUTER_PILOT,
   '/api/premium/security/verified/:id': SECURITY_VERIFIED_PILOT,
+  // Wave 19 (2026-05-27): per-ticker AI-company envelope. Shipped the same
+  // day Robinhood Agentic Trading launched, which gives third-party AI
+  // agents a brokerage account and a budgeted credit card. The envelope
+  // is the supply-side answer to that demand event: one paid call replaces
+  // four free siblings plus an alias-filter, so a trading agent in a hot
+  // path can issue one round trip per ticker.
+  '/api/premium/ai-companies/:ticker': AI_COMPANIES_AGGREGATE_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

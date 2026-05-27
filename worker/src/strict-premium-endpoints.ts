@@ -221,6 +221,12 @@ export const STRICT_PREMIUM_PREFIXES: ReadonlyArray<string> = [
   '/api/premium/clean/epss/',
   '/api/premium/clean/openrouter/',
   '/api/premium/security/verified/',
+  // Wave 19 Bazaar path-param pilot (2026-05-27). Per-ticker AI-company
+  // intelligence envelope. Ticker is a required path segment that must
+  // match the AI bellwether cohort, so anonymous Bazaar crawler probes
+  // would otherwise hit the free-trial pool, miss the 402, and CDP
+  // would never observe the settlement that catalogs the endpoint.
+  '/api/premium/ai-companies/',
 ];
 
 /**
