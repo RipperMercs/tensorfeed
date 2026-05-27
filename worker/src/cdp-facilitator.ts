@@ -421,10 +421,17 @@ export async function cdpSettle(
       .extensions;
   const enrichedPayload: EnrichablePayload = {
     ...buyerPayload,
-    resource: buyerPayload.resource ?? {
-      url: requirements.resource,
-      mimeType: 'application/json',
-    },
+    // PaymentRequirements.resource is optional (x402-facilitator.ts:185). When
+    // it's missing we skip enriching the payload's resource field rather than
+    // assign `url: undefined`, which would have type-failed at the EnrichablePayload
+    // shape and at the runtime contract some catalog validators check. In practice
+    // every TF call path builds requirements with a defined resource URL, so the
+    // undefined branch is defensive.
+    resource:
+      buyerPayload.resource ??
+      (requirements.resource
+        ? { url: requirements.resource, mimeType: 'application/json' }
+        : undefined),
     ...(buyerPayload.extensions
       ? {}
       : reqExtensions && Object.keys(reqExtensions).length > 0
