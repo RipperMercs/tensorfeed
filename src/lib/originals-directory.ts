@@ -17,6 +17,26 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'robinhood-agentic-trading-mcp-brokerage-account',
+    title:
+      'Robinhood Just Gave AI Agents a Brokerage Account. The Floor Below x402 Has a New Lane.',
+    author: 'Kira Nolan',
+    date: 'May 27, 2026',
+    readTime: '6 min read',
+    description:
+      "Robinhood announced Agentic Trading and an Agentic Credit Card on May 27, 2026. AI agents can now trade equities in a dedicated sub-account isolated from the user's main portfolio (beta, with options, crypto, event contracts, futures, and prediction markets to follow). The Agentic Credit Card pairs a virtual Robinhood Gold card with a spending limit and 3 percent cash back, and the agent connects through Robinhood Banking's MCP server. This is the first mainstream U.S. retail broker to open direct agent access at the account tier. Inside what shipped, why the MCP server is the load-bearing detail (a regulated U.S. banking subsidiary in the consumer tier), why the sub-account architecture is a compliance posture rather than a UX choice (FINRA 2090, FINRA 2111, discretionary-account ambiguity sidestepped), how this card lane lands on top of the agent-commerce micropayment lane from earlier in the week (Keyrock 76 percent below the 30-cent fee floor, Nick Prince SpaceX memo on x402), and three signposts for what Plaid, Stripe, and the rest of the consumer financial stack do in response over the next ninety days.",
+  },
+  {
+    slug: 'four-frontier-labs-acqui-hire-consolidation',
+    title:
+      'Four Frontier Lab Acqui-Hires in Eight Days. The Quiet Consolidation Is Already Here.',
+    author: 'Marcus Chen',
+    date: 'May 27, 2026',
+    readTime: '6 min read',
+    description:
+      "Mistral announced May 26 that it is acquiring Vienna's Emmi AI, a 30-person physics-simulation lab. That is the fourth frontier-lab acqui-hire in eight business days, after Anthropic bought Stainless for $300M+ on May 18 and Google DeepMind paid $80M to $90M to license Contextual AI and lift its team (including co-founder Douwe Kiela) on May 19. Meta's Dreamer absorption from March completes the quarter. Three of the four are structured as licensing-plus-talent transfers rather than clean acquisitions, the same shape Microsoft used with Inflection and Amazon with Adept, designed to slip past Hart-Scott-Rodino and EU Phase I review. Inside what each lab was actually buying (Mistral plugging physics simulation for European industrial sales, DeepMind plugging a credentialed RAG researcher into Gemini Enterprise, Anthropic taking MCP server tooling away from OpenAI and Google, Meta installing three platform operators into MSL), why Anthropic's deal was the only clean acquisition and what the dev-tooling ownership signal means, where the structure leaves the mid-tier specialty AI startups (Mistral-Emmi is now VC shorthand for realistic upside), and three signposts (whether OpenAI does the fifth deal, whether regulators move on one of these structures, whether xAI runs the play) over the next 90 days.",
+  },
+  {
     slug: 'pope-leo-magnifica-humanitas-anthropic-olah',
     title:
       "Pope Leo XIV Just Wrote a 235-Page Encyclical on AI. Anthropic's Co-Founder Was Standing Next to Him.",
