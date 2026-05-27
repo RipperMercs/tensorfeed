@@ -99,6 +99,17 @@ describe('validateExtraction', () => {
     if (!r.ok) expect(r.error).toBe('bad_extracted_at');
   });
 
+  it('accepts +00:00 UTC offset (Python isoformat default)', () => {
+    const r = validateExtraction(baseFiling({ extracted_at: '2026-05-26T23:20:46+00:00' }));
+    expect(r.ok).toBe(true);
+  });
+
+  it('rejects non-zero timezone offset', () => {
+    const r = validateExtraction(baseFiling({ extracted_at: '2026-05-26T23:20:46-08:00' }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe('bad_extracted_at');
+  });
+
   it('rejects em dash in context strings', () => {
     const f = baseFiling({
       ai_capex_mentions: [

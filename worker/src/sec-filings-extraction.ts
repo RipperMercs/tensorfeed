@@ -198,7 +198,12 @@ export const MAX_CONTEXT_LEN = 1000;
 const ACCESSION_RE = /^\d{10}-\d{2}-\d{6}$/;
 const CIK_RE = /^\d{10}$/;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+// Accepts both 'Z' and '+00:00' UTC forms. Python's datetime.utcnow()
+// produces 'Z' (post-pyfix) and datetime.now(timezone.utc).isoformat()
+// produces '+00:00'; DataPal's rollup uses the latter via Python stdlib
+// defaults, so we accept either canonical UTC form. Non-zero offsets
+// (e.g. '-08:00') are rejected so a local-timezone slip can't sneak in.
+const ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|\+00:00)$/;
 // TF anti-AI-detection rule: extracted text MUST NOT contain em dashes
 // even if SEC filings do (DataPal's normalize.py is responsible for
 // stripping these before handoff, but we double-check here as defense
