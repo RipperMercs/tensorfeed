@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'starlette-badhost-critical-cve-agent-stack-audit',
+    title:
+      'Starlette Just Shipped a Critical CVE. If Your Agent Has FastAPI Anywhere in Its Stack, This Is Yours.',
+    author: 'Ripper',
+    date: 'May 27, 2026',
+    readTime: '4 min read',
+    description:
+      "Ars Technica reported on May 26 that a critical vulnerability nicknamed BadHost was found in Starlette, the ASGI toolkit that ships inside roughly every FastAPI deployment and is downloaded 325 million times a week. The CVE imperils millions of AI agents because FastAPI is the default backend for agent servers, MCP gateways, and tool-calling middleware across the cohort. Inside: why agents got hit disproportionately (the standardization speed), the five-minute operator audit (uv tree, version pin, exposure triage, log the work), the TF security feeds that confirm exposure across a portfolio in one call (/api/ai-cves/latest, /api/security/ai-supply-chain-iocs.json, /api/premium/ai-cves/batch), and the structural lesson about dependency concentration when the asset value on top of the graph is the spend on a model API key.",
+  },
+  {
     slug: 'altman-amodei-walk-back-jobs-apocalypse-ipo-pivot',
     title:
       'Altman and Amodei Walked Back the AI Jobs Apocalypse. The Subtext Is the IPO Calendar.',
