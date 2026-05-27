@@ -180,7 +180,7 @@ export default function AnthropicGlasswingUpdateMythosPublicReleasePage() {
         <p>
           The 10,000+ partner figure is a different measure. Those are the bugs partners themselves
           confirmed in their own systems, where the partner already had the engineering context to
-          triage. That is a higher signal than open source scan output. It is also where Cloudflare's
+          triage. That is a higher signal than open source scan output. It is also where Cloudflare&apos;s
           2,000 number lives. Mythos is not finding 2,000 bugs in Cloudflare from cold. Mythos is
           accelerating a Cloudflare security team that already knew where to look by an order of
           magnitude.

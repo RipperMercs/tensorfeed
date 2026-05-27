@@ -3254,7 +3254,7 @@ export function pilotCatalogStatus(
     // For templated paths, match by template (any cataloged concrete
     // path that matches the template counts the template as cataloged).
     if (path.includes(':')) {
-      const hit = [...cataloged].some((c) => matchesTemplate(c, path));
+      const hit = Array.from(cataloged).some((c) => matchesTemplate(c, path));
       return { path, cataloged: hit };
     }
     return { path, cataloged: cataloged.has(path) };
