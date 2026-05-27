@@ -547,19 +547,16 @@ function isAuthorizedAdmin(env: Env, supplied: string | null): boolean {
   return constantTimeEqual(supplied, env.ADMIN_KEY);
 }
 
-// Privilege-separated ingest auth for /api/admin/ai-cves/ingest (DP CC's
-// POST surface). Prefers INGEST_KEY; falls back to ADMIN_KEY during the
-// rollout so DP CC's existing config keeps working until Evan provisions
-// INGEST_KEY and updates the contract. Once INGEST_KEY is set, ADMIN_KEY
-// loses ingest privileges (so a leaked telemetry key cannot inject papers).
+// Privilege-separated ingest auth for /api/admin/*/ingest POST surfaces
+// (ai-cves and sec-filings-extraction). INGEST_KEY-exclusive: a leaked
+// ADMIN_KEY (telemetry, dashboards, refresh scripts) cannot inject papers
+// or filings into production KV. The ADMIN_KEY transition fallback was
+// removed 2026-05-26 (audit L-6) after INGEST_KEY was confirmed
+// provisioned in production. Default-deny if INGEST_KEY is unset.
 function isAuthorizedIngest(env: Env, supplied: string | null): boolean {
-  if (env.INGEST_KEY && env.INGEST_KEY.length > 0) {
-    if (!supplied) return false;
-    return constantTimeEqual(supplied, env.INGEST_KEY);
-  }
-  // Transition fallback. Once env.INGEST_KEY is provisioned, this branch
-  // is dead and ADMIN_KEY no longer authorizes ingest.
-  return isAuthorizedAdmin(env, supplied);
+  if (!env.INGEST_KEY || env.INGEST_KEY.length === 0) return false;
+  if (!supplied) return false;
+  return constantTimeEqual(supplied, env.INGEST_KEY);
 }
 
 // Least-privilege auth for POST /api/admin/recon-email. Authorizes ONLY
@@ -2981,12 +2978,13 @@ export default {
     // batch_id (re-POSTing the same id overwrites in place). Inherits the
     // hoisted /api/admin rate-limit + ADMIN_KEY pre-check.
     if (path === '/api/admin/ai-cves/ingest' && request.method === 'POST') {
-      // Narrower auth than the hoisted /api/admin pre-check: ingest accepts
-      // INGEST_KEY only (with ADMIN_KEY transition fallback while INGEST_KEY
-      // is unset). Post-rollout, a leaked ADMIN_KEY cannot inject papers.
+      // Narrower auth than the hoisted /api/admin pre-check: ingest
+      // requires INGEST_KEY only. The ADMIN_KEY transition fallback was
+      // retired 2026-05-26 (audit L-6) so a leaked ADMIN_KEY cannot
+      // inject papers.
       if (!isAuthorizedIngest(env, url.searchParams.get('key'))) {
         return jsonResponse(
-          { ok: false, error: 'unauthorized', message: 'ai-cves ingest requires INGEST_KEY (or ADMIN_KEY during transition).' },
+          { ok: false, error: 'unauthorized', message: 'ai-cves ingest requires a valid INGEST_KEY.' },
           401,
           0,
         );
@@ -3014,12 +3012,12 @@ export default {
     // Idempotent on accession_number (re-POSTing replaces in-place);
     // batch_id is a free-form identifier for operator telemetry.
     // Inherits the hoisted /api/admin rate-limit + admin-class pre-check.
-    // Narrower auth: INGEST_KEY only (with ADMIN_KEY transition fallback
-    // while INGEST_KEY is unset), matching the ai-cves ingest pattern.
+    // Narrower auth: INGEST_KEY only (transition fallback retired 2026-05-26),
+    // matching the ai-cves ingest pattern.
     if (path === '/api/admin/sec-filings-extraction/ingest' && request.method === 'POST') {
       if (!isAuthorizedIngest(env, url.searchParams.get('key'))) {
         return jsonResponse(
-          { ok: false, error: 'unauthorized', message: 'sec-filings-extraction ingest requires INGEST_KEY (or ADMIN_KEY during transition).' },
+          { ok: false, error: 'unauthorized', message: 'sec-filings-extraction ingest requires a valid INGEST_KEY.' },
           401,
           0,
         );
@@ -9150,21 +9148,25 @@ export default {
     // so anonymous probes see 402 not 400.
 
     if (path === '/api/premium/ai-cves/cve') {
+      // requirePayment FIRST so anonymous strict-premium probes see a clean
+      // 402 challenge before any param validation. Missing-param 400 BEFORE
+      // payment was the pay-skills #68 failure mode (audit CR-1, 2026-05-26).
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
       const id = url.searchParams.get('id');
       if (!id || !/^CVE-\d{4}-\d{4,7}$/i.test(id.trim())) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'missing_params',
             hint: 'Pass id=CVE-YYYY-NNNNN. CVE IDs are case-insensitive (normalized to uppercase internally).',
           },
-          400,
-          0,
+          payment,
+          request,
+          env,
         );
       }
-
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
 
       const { lookupCve } = await import('./premium-ai-cves');
       const result = await lookupCve(env, id);
@@ -9233,21 +9235,23 @@ export default {
     // (top 3 by ai_relevance_score). Param-required so anonymous Bazaar
     // crawlers see clean 402 not partial 200.
     if (path === '/api/premium/sec/filings/by-form') {
+      // requirePayment FIRST (audit CR-1, 2026-05-26).
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
       const form = url.searchParams.get('form');
       if (!form || form.trim().length === 0) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'missing_params',
             hint: 'Pass form=10-K (or 8-K, 10-Q, S-1, DEF 14A, etc).',
           },
-          400,
-          0,
+          payment,
+          request,
+          env,
         );
       }
-
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
 
       const { getByFormResponse, parseTickerFilter, parseFormFilter } = await import('./premium-sec-filings');
       const result = await getByFormResponse(env, {
@@ -9268,21 +9272,23 @@ export default {
     // for one accession_number (Qwen-extracted AI mentions + verbatim
     // key_quotes). Param-required so strict-premium gating is mandatory.
     if (path === '/api/premium/sec/filings/ai-disclosures') {
+      // requirePayment FIRST (audit CR-1, 2026-05-26).
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
       const accession = url.searchParams.get('accession');
       if (!accession || !/^\d{10}-\d{2}-\d{6}$/.test(accession.trim())) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'missing_params',
             hint: 'Pass accession=NNNNNNNNNN-NN-NNNNNN (SEC EDGAR accession number).',
           },
-          400,
-          0,
+          payment,
+          request,
+          env,
         );
       }
-
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
 
       const { lookupFiling } = await import('./premium-sec-filings');
       const result = await lookupFiling(env, accession.trim());
@@ -9305,18 +9311,20 @@ export default {
     // round-trips for the same 1-credit cost as a single lookup.
 
     if (path === '/api/premium/ai-cves/batch') {
+      // requirePayment FIRST (audit CR-1, 2026-05-26).
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
       const { parseBatchIdsParam } = await import('./premium-ai-cves');
       const parsed = parseBatchIdsParam(url.searchParams.get('ids'));
       if (!parsed.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: parsed.error, hint: parsed.hint },
-          400,
-          0,
+          payment,
+          request,
+          env,
         );
       }
-
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
 
       const { lookupCvesBatch } = await import('./premium-ai-cves');
       const result = await lookupCvesBatch(env, parsed.ids);
@@ -11052,8 +11060,27 @@ export default {
     }
 
     // === FORCE REFRESH (protected) ===
+    //
+    // Audit H-4 (2026-05-26): /api/refresh sits outside the hoisted
+    // /api/admin/* pre-check despite being conceptually admin-only. Pair
+    // it with the same per-IP rate limiter so a leaked ADMIN_KEY cannot
+    // be brute-forced freely (and so KV-budget DoS via refresh-task spam
+    // is bounded). Limiter runs BEFORE the auth check so bad-key attempts
+    // also count against the cap.
 
-    if (path === '/api/refresh' && isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+    if (path === '/api/refresh') {
+      const refreshIp = getClientIP(request);
+      const refreshRate = checkAdminIPRateLimit(refreshIp);
+      if (!refreshRate.allowed) {
+        return rateLimitedResponse(refreshRate);
+      }
+      if (!isAuthorizedAdmin(env, url.searchParams.get('key'))) {
+        return jsonResponse(
+          { ok: false, error: 'unauthorized', message: '/api/refresh requires a valid ?key= param' },
+          401,
+          0,
+        );
+      }
       const task = url.searchParams.get('task');
       if (task === 'history') {
         const result = await captureHistory(env);

@@ -193,6 +193,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // 10 credits ($0.05) vs base at 1 credit ($0.005). Parallel.ai-style
   // tier ladder pattern.
   '/api/premium/whats-new/pro',
+  // Audit H-5 (2026-05-26): decision-verified premium news endpoints
+  // are param-required (cluster_id+date for lookup; q for search) but
+  // weren't on the strict list. Anonymous crawler probes were burning
+  // free-trial slots then 400'ing on missing params, same pay-skills
+  // #68 pattern that strict-premium was created to fix.
+  '/api/premium/news/decision-verified',
+  '/api/premium/news/decision-verified/search',
 ];
 
 /**

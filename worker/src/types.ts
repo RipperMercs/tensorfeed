@@ -55,14 +55,14 @@ export interface Env {
   // ?key=ENVIRONMENT pattern, which was unsafe once the repo went
   // public (ENVIRONMENT="production" lives in wrangler.toml).
   ADMIN_KEY?: string;
-  // Separate key for the high-blast-radius /api/admin/ai-cves/ingest
-  // endpoint (DP CC's POST surface). Privilege-separated from ADMIN_KEY
-  // 2026-05-25 so a leaked ADMIN_KEY (telemetry, dashboards, refresh
-  // scripts) cannot inject papers into production KV. Transition: while
-  // INGEST_KEY is unset, ai-cves ingest falls back to ADMIN_KEY so the
-  // rollout doesn't break DP CC's existing config. Once Evan provisions
-  // INGEST_KEY via `wrangler secret put INGEST_KEY <value>` and updates
-  // DP CC's contract, the fallback is dead code.
+  // Separate key for the high-blast-radius /api/admin/*/ingest POST
+  // surfaces (ai-cves and sec-filings-extraction; the Qwen-on-5090
+  // pipeline drop point). Privilege-separated from ADMIN_KEY 2026-05-25
+  // so a leaked ADMIN_KEY (telemetry, dashboards, refresh scripts)
+  // cannot inject papers or filings into production KV. The ADMIN_KEY
+  // transition fallback was removed 2026-05-26 (audit L-6) after this
+  // secret was confirmed provisioned. INGEST_KEY is now mandatory for
+  // ingest; default-deny if unset.
   INGEST_KEY?: string;
   // Least-privilege key for POST /api/admin/recon-email. Authorizes ONLY
   // that endpoint (sending plain-text email via Resend to a configured
