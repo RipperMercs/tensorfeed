@@ -4026,6 +4026,7 @@ export default {
           statusIncidentsTriage: '/api/status/incidents/triage?limit= (free, capped at 25; Haiku-triaged AI provider status incidents. Per card: triage_summary, impact_classification (informational/minor/major/critical), affected_capabilities, recommended_action (no_action/monitor/retry_later/failover_now/escalate). Refreshed every 2h.)',
           secFilingsRecent: '/api/sec/filings/recent?form=&ticker=&limit= (free, capped 50; recent EDGAR filings for the AI bellwether cohort: NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA. Source data.sec.gov, public domain. Refreshed every 6h.)',
           secFilingsByCik: '/api/sec/filings/{cik}/recent (free; per-company recent filings, CIK must be from cohort. Returns 404 with cohort hint otherwise.)',
+          secInsiderTrades: '/api/sec/insider-trades?ticker=&limit= (free, capped 100; Form 4 insider-trade filings for one AI bellwether ticker, lazy-fetched from EDGAR with 6h KV cache. V1 returns filing metadata (accession, date, URL); structured reporting-owner + transaction parsing queued behind DataPal Qwen. Source data.sec.gov, public domain.)',
           premiumAiCompaniesByTicker: '/api/premium/ai-companies/{ticker} (1 credit, AFTA-signed; per-ticker AI intelligence envelope for the 14 AI bellwethers. One paid call returns latest 10 SEC filings, latest 10 news mentions filtered by curated aliases, strategic and equity funding rounds where the company is a lead or notable investor, plus cohort metadata. Single captured-at timestamp, 9h freshness SLA. Composes four free siblings (/api/sec/filings, /api/news, /api/funding, cohort registry) into one round trip.)',
           premiumStatusIncidentsTriage: '/api/premium/status/incidents/triage?provider=&impact=&recommended_action=&capability=&ongoing_only= (1 credit, AFTA-signed; full incident cohort + provider substring + impact/action exact filters + capability membership filter + ongoing_only flag. Sort priority: impact > recommended_action > started_at. Summary rollups by_provider, by_impact, by_recommended_action, by_capability, cards_with_failover_action.)',
           premiumNewsActionCards: '/api/premium/news/action-cards?capability=&urgency=&min_cost_impact=&min_security_impact=&query= (1 credit, AFTA-signed; full cohort + capability/urgency exact filters + impact "at-or-above" threshold filters + title/source substring search. Sort priority: urgency > security_impact > cost_impact > published. Summary rollups by_capability, by_urgency, by_cost_impact, by_security_impact, cards_with_migration_recommendation.)',
@@ -8922,6 +8923,57 @@ export default {
     // === SEC FILINGS BY CIK (free, cached 1800s) ===
     // /api/sec/filings/{cik}/recent
     // Per-company recent filings. CIK must be from the cohort.
+
+    // === SEC INSIDER TRADES (Form 4, free, lazy-fetched) ===
+    // /api/sec/insider-trades?ticker=&limit=
+    //
+    // Form 4 insider-trade filings for the AI bellwether cohort. Lazy
+    // fetched from EDGAR's per-company Atom feed with a 6h KV cache.
+    // V1 returns filing metadata only (accession_number, filing_date,
+    // filing_url, form_name). Agents that need parsed reporting owner +
+    // transactions can fetch filing_url and parse the Form 4 XBRL
+    // themselves; structured extraction is queued behind DataPal Qwen.
+    // Public domain SEC data, license preserved on every response.
+
+    if (path === '/api/sec/insider-trades') {
+      const ticker = url.searchParams.get('ticker');
+      if (!ticker || ticker.trim().length === 0) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'Pass ticker=NVDA (or any AI bellwether). Supported: NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA.',
+          },
+          400,
+        );
+      }
+      const { isInCohort, getInsiderTradesResponse, parseLimitParam } = await import('./sec-insider-trades');
+      if (!isInCohort(ticker.trim())) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'ticker_not_in_cohort',
+            ticker: ticker.trim().toUpperCase(),
+            hint: 'TensorFeed tracks a curated AI bellwether cohort. See cohort_tickers in /api/sec/filings/recent for the supported list.',
+          },
+          404,
+        );
+      }
+      const limit = parseLimitParam(url.searchParams.get('limit'));
+      const response = await getInsiderTradesResponse(env, ticker.trim(), limit);
+      if (response === null) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'edgar_unreachable',
+            hint: 'EDGAR upstream is unavailable and no cached snapshot exists for this ticker yet. Retry in a few minutes.',
+          },
+          503,
+          0,
+        );
+      }
+      return jsonResponse(response, 200, 1800);
+    }
 
     if (path.startsWith('/api/sec/filings/') && path.endsWith('/recent') && path !== '/api/sec/filings/recent') {
       const cikRaw = path.slice('/api/sec/filings/'.length, -'/recent'.length);
