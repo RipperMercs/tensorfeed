@@ -80,3 +80,13 @@
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=3600
   Content-Type: application/json; charset=utf-8
+
+# Next.js opengraph-image.tsx convention emits the PNG at /<route>/opengraph-image
+# with no file extension. Cloudflare Pages can't infer Content-Type without an
+# extension and falls back to application/octet-stream, which X/Twitter and
+# other unfurlers reject for image previews. Force image/png so the social
+# card actually renders.
+/originals/*/opengraph-image
+  Content-Type: image/png
+  Cache-Control: public, max-age=3600
+  Access-Control-Allow-Origin: *
