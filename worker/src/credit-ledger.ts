@@ -182,6 +182,14 @@ export class CreditLedger {
       balance: nextBalance,
       daily_spend: nextSpend,
     });
+    // Auto-mirror after a successful debit so the legacy KV reader paths
+    // (the public /api/payment/balance endpoint + the upstream
+    // checkSpendCap pre-flight) see fresh data. Adds ~10ms to the
+    // commit hot path; tolerable trade-off for keeping both readers
+    // correct without a separate ctx.waitUntil from the caller (which
+    // commitPayment does not have access to). KV is eventually
+    // consistent but the DO is source of truth.
+    await this.mirrorToKV(token);
     return { ok: true, balance: nextBalance };
   }
 
@@ -199,13 +207,26 @@ export class CreditLedger {
 
   /**
    * Mirror current state to KV so the public balance endpoint
-   * (`/api/payment/balance` read path) continues to serve fresh data
-   * without paying DO read cost on every request. Eventually
-   * consistent; the DO is source of truth.
+   * (`/api/payment/balance` read path) and the legacy `checkSpendCap`
+   * reader continue to serve fresh data without paying DO read cost
+   * on every request. Eventually consistent; the DO is source of
+   * truth.
+   *
+   * Writes TWO KV keys when daily_spend is non-null:
+   *   - `pay:credits:{token}` (balance + daily_cap, merged with existing
+   *     fields so we preserve `created`, `agent_ua`, `total_purchased`)
+   *   - `pay:spend:{token}:{date}` (daily_spent for the current bucket)
+   *
+   * The legacy `checkSpendCap` reader hits the spend key on every
+   * pre-flight; without the mirror, post-Phase-3 deploys would see a
+   * stale spend counter and let over-cap requests through pre-flight
+   * (the DO would still reject at commit time, but that wastes a
+   * handler invocation). The mirror keeps both readers correct.
    */
   async mirrorToKV(token: string): Promise<void> {
     const balance = (await this.state.storage.get<number>('balance')) ?? 0;
     const daily_cap = (await this.state.storage.get<number | null>('daily_cap')) ?? null;
+    const daily_spend = await this.state.storage.get<DailySpend>('daily_spend');
     // Read existing CreditsRecord so we preserve fields we don't own
     // (created, last_used, agent_ua, total_purchased, etc).
     const existing = (await this.env.TENSORFEED_CACHE.get(`pay:credits:${token}`, 'json')) as
@@ -215,7 +236,22 @@ export class CreditLedger {
     merged.balance = balance;
     if (daily_cap !== null) merged.daily_cap = daily_cap;
     merged.last_used = new Date().toISOString();
-    await this.env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(merged));
+    const writes: Promise<void>[] = [
+      this.env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(merged)),
+    ];
+    if (daily_spend) {
+      // Mirror the daily spend counter to the legacy KV key so the
+      // best-effort `checkSpendCap` upstream reader sees fresh data.
+      // 48h TTL matches the legacy `pay:spend:{token}:{date}` shape.
+      writes.push(
+        this.env.TENSORFEED_CACHE.put(
+          `pay:spend:${token}:${daily_spend.date}`,
+          JSON.stringify({ daily_spent: daily_spend.amount }),
+          { expirationTtl: 48 * 60 * 60 },
+        ),
+      );
+    }
+    await Promise.all(writes);
   }
 
   // ─── HTTP fetch router (production entry point) ──────────────────

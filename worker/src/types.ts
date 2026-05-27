@@ -52,12 +52,21 @@ export interface Env {
   // CreditLedger Durable Object namespace. Per-token DO instance owns
   // the canonical credit balance + daily-spend counter and serializes
   // all read-modify-write operations to close H-1 + H-2 races from the
-  // 2026-05-26 audit. Phase 2 scaffold: binding is live but no
-  // production call site reaches it yet; Phase 3 cuts the wire-up.
-  // Optional so node-env test fixtures (KV-only Env mocks) don't need
-  // to stub a DurableObjectNamespace. In production deploy it is
-  // always present per wrangler.toml. See worker/src/credit-ledger.ts.
+  // 2026-05-26 audit. Phase 2 scaffold + Phase 3 wire-up shipped
+  // 2026-05-26. Production activation gated on CREDIT_LEDGER_ENABLED
+  // below. Optional so node-env test fixtures (KV-only Env mocks)
+  // don't need to stub a DurableObjectNamespace. In production deploy
+  // it is always present per wrangler.toml. See worker/src/credit-ledger.ts.
   CREDIT_LEDGER?: DurableObjectNamespace;
+  // Feature flag for the CreditLedger DO debit path. When 'true' AND
+  // CREDIT_LEDGER is bound, commitPayment routes through the DO for
+  // race-safe debit + cap enforcement. Otherwise falls back to legacy
+  // KV read-modify-write. Default-off in wrangler.toml [vars] so the
+  // Phase 3 deploy doesn't activate anything; the flip to 'true' is
+  // a deliberate ops step after the deploy bakes and per-token rollout
+  // is validated. Phase 4 (planned) removes the legacy path once the
+  // flag has been on in production for the grace window.
+  CREDIT_LEDGER_ENABLED?: string;
   // Admin-only routes auth. REQUIRED in production. Set via:
   //   wrangler secret put ADMIN_KEY
   // Used by /api/admin/* and /api/refresh. Replaces the previous

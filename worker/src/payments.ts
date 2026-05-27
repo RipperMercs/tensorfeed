@@ -2998,6 +2998,88 @@ export async function commitPayment(
     };
   }
 
+  // === Tier 2 Phase 3 (2026-05-26): CreditLedger DO debit path ====
+  //
+  // When CREDIT_LEDGER_ENABLED='true' AND the CREDIT_LEDGER DO binding
+  // is present, route the debit + daily-spend update through the DO.
+  // Cloudflare serializes per-instance access so the read-modify-write
+  // on the credit balance is race-safe by construction, closing audit
+  // findings H-1 (credit-debit TOCTOU) and H-2 (daily spend-cap parallel
+  // bypass) atomically. The DO auto-mirrors back to `pay:credits:{token}`
+  // + `pay:spend:{token}:{date}` so the public balance endpoint and the
+  // legacy `checkSpendCap` upstream reader continue to serve fresh data.
+  //
+  // Falls back to the legacy KV read-modify-write path on flag-off,
+  // missing binding, or any DO error so we degrade to the prior behavior
+  // (with its known bounded race) rather than fail a paid request.
+  // Phase 4 (planned) removes the legacy path once the flag has been on
+  // in production for the grace window.
+  if (
+    cost > 0 &&
+    env.CREDIT_LEDGER_ENABLED === 'true' &&
+    env.CREDIT_LEDGER !== undefined
+  ) {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const id = env.CREDIT_LEDGER.idFromName(payment.token);
+      const stub = env.CREDIT_LEDGER.get(id);
+      const res = await stub.fetch(
+        new Request('https://credit-ledger.do/debit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ token: payment.token, amount: cost, today }),
+        }),
+      );
+      if (res.ok) {
+        const data = (await res.json()) as {
+          ok: boolean;
+          balance: number;
+          reason?: 'insufficient_credits' | 'cap_exceeded' | 'not_initialized';
+        };
+        if (data.ok) {
+          // DO succeeded. Anomaly detection still runs (independent of
+          // the debit mechanism) so the rolling 7-day hourly buffer
+          // stays accurate.
+          try {
+            await recordAnomalySpend(env, payment.token, cost);
+          } catch (err) {
+            console.error('recordAnomalySpend failed:', err);
+          }
+          return { creditsCharged: cost, balanceAfter: data.balance, noChargeReason: null };
+        }
+        // DO rejected (insufficient_credits or cap_exceeded). This
+        // should be rare because requirePayment already pre-checks
+        // balance and the upstream checkSpendCap pre-checks the cap.
+        // A reject here means a race between pre-flight and commit
+        // (e.g. parallel calls drained the balance below cost between
+        // the pre-check and this debit, or the cap got hit). Treat as
+        // a no-charge stale-data event so the agent isn't billed for a
+        // call that didn't successfully debit.
+        const reason: NoChargeReason = 'stale_data';
+        await logNoChargeEvent(env, reason, endpoint, cost, payment.token);
+        return {
+          creditsCharged: 0,
+          balanceAfter: data.balance,
+          noChargeReason: reason,
+        };
+      }
+      // Non-2xx from the DO. Fall through to legacy KV path so the
+      // paid request still gets debited (with the known bounded race).
+      console.warn('credit-ledger DO returned non-2xx, falling back to legacy KV path:', res.status);
+    } catch (err) {
+      // DO call threw (transient binding issue, network, etc). Fall
+      // through to legacy. Logged as warn because the legacy path
+      // covers the request; only persistent DO failure becomes
+      // operationally meaningful.
+      console.warn('credit-ledger DO debit failed, falling back to legacy KV path:', err);
+    }
+  }
+
+  // === Legacy KV-only debit path (default until CREDIT_LEDGER_ENABLED) ==
+  //
+  // Has the bounded TOCTOU described in audit H-1. Circuit breaker caps
+  // burst at ~100/min/token; race-y but bounded. Will be removed in
+  // Phase 4 after the DO path has soaked in production.
   const record = (await env.TENSORFEED_CACHE.get(`pay:credits:${payment.token}`, 'json')) as CreditsRecord | null;
   if (!record) {
     // Token disappeared (admin burn, race). Treat as no-charge so the
