@@ -1,9 +1,10 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Network } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
+import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
   title:
@@ -67,6 +68,14 @@ export default function RobinhoodAgenticTradingPage() {
       <ShareBar
         path="/originals/robinhood-agentic-trading-mcp-brokerage-account"
         title="Robinhood Just Gave AI Agents a Brokerage Account. The Floor Below x402 Has a New Lane."
+      />
+
+      <ArticleHero
+        mode="graphic"
+        icon={Network}
+        gradientFrom="#134e4a"
+        gradientTo="#042f2e"
+        eyebrow="AGENT STACK"
       />
 
       {/* Article body */}
