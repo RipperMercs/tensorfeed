@@ -285,4 +285,48 @@ describe('buildRouteVerdict', () => {
     expect(json).not.toContain('—'); // em dash
     expect(json.includes('--')).toBe(false); // double hyphen
   });
+
+  it('capability floor: a much weaker model never wins even when cheapest and fastest', () => {
+    const inputs: RouteVerdictInputs = {
+      pricing: {
+        lastUpdated: '2026-05-28T08:00:00Z',
+        providers: [
+          { id: 'anthropic', name: 'anthropic', models: [{ id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', inputPrice: 3, outputPrice: 15, contextWindow: 200000, openSource: false }] },
+          { id: 'cheaplab', name: 'cheaplab', models: [{ id: 'cheap-weak', name: 'Cheap Weak', inputPrice: 0.05, outputPrice: 0.15, contextWindow: 32000, openSource: true }] },
+        ],
+      },
+      benchmarks: {
+        lastUpdated: '2026-05-28T08:00:00Z',
+        models: [
+          { model: 'Claude Sonnet 4.6', provider: 'anthropic', scores: { swe_bench: 75, human_eval: 97, mmlu_pro: 90 } },
+          { model: 'Cheap Weak', provider: 'cheaplab', scores: { swe_bench: 30, human_eval: 40, mmlu_pro: 35 } },
+        ],
+      },
+      services: [{ name: 'Anthropic API', provider: 'anthropic', status: 'operational', lastChecked: '2026-05-28T11:50:00Z' }],
+      // cheap-weak is the CHEAPEST and the FASTEST (200ms vs 1800ms).
+      probe: latest([probeAgg('anthropic', 1800), probeAgg('cheaplab', 200)]),
+      triage: triageSnap([]),
+      usage: [],
+      benchmarkRegistry: [bench('swe-bench-verified', 'medium', 'active'), bench('humaneval', 'high', 'saturated'), bench('mmlu-pro', 'medium', 'active')],
+      deprecations: [],
+    };
+    const r = buildRouteVerdict(inputs, CODE, NOW);
+    expect(r.verdict).not.toBeNull();
+    expect(r.verdict!.model.id).toBe('claude-sonnet-4-6'); // capability leads
+    const ids = [r.verdict!, ...r.runners_up].map((c) => c.model.id);
+    expect(ids).not.toContain('cheap-weak'); // excluded by the capability floor
+    expect(r.candidates_considered).toBe(2);
+    expect(r.notes.some((n) => n.includes('capability floor'))).toBe(true);
+  });
+
+  it('matches a provider whose status name differs from the catalog name (fuzzy join)', () => {
+    const inputs = baseInputs({
+      // Status feed spells it "Anthropic AI" while the catalog uses "anthropic".
+      services: [{ name: 'Anthropic API', provider: 'Anthropic AI', status: 'operational', lastChecked: '2026-05-28T11:50:00Z' }],
+    });
+    const r = buildRouteVerdict(inputs, CODE, NOW);
+    const sonnet = [r.verdict!, ...r.runners_up].find((c) => c.model.id === 'claude-sonnet-4-6')!;
+    expect(sonnet.operational.source).toBe('live_status');
+    expect(sonnet.operational.ok).toBe(true);
+  });
 });

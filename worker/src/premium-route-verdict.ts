@@ -141,15 +141,24 @@ const STATUS_MULTIPLIER: Record<BenchmarkMeta['status'], number> = {
   deprecated: 0.7,
 };
 
-// Composite weighting. Bumps latency vs the free routing preview because
-// route-verdict uses MEASURED latency rather than a placeholder, and
-// splits availability out into a live operational component.
+// Composite weighting. Capability-first: quality leads, and cost,
+// latency, and operational state break ties among the strong models that
+// clear the capability floor below.
 const COMPOSITE_WEIGHTS = {
-  quality: 0.4,
-  cost: 0.25,
-  latency: 0.2,
+  quality: 0.5,
+  cost: 0.2,
+  latency: 0.15,
   operational: 0.15,
 };
+
+// Capability floor (capability-first). The verdict and runners-up are
+// chosen ONLY from candidates whose trust-discounted quality is within
+// this ratio of the best candidate's. A "best for code" query therefore
+// never returns a model far below the frontier just because it is cheap
+// and fast; cost and latency only break ties among the strongest models.
+// Models below the floor are reported in the notes but excluded from the
+// ranking.
+const CAPABILITY_FLOOR_RATIO = 0.9;
 
 const OPERATIONAL_SCORE: Record<string, number> = {
   operational: 1.0,
@@ -357,21 +366,36 @@ export function buildRouteVerdict(
     }
   }
 
-  // Provider operational state: status list, then override to failover_now
-  // if an ongoing incident-triage card recommends it.
-  const statusByProvider = new Map<string, ServiceStatus>();
+  // Provider operational state. Status and triage joins use FUZZY
+  // provider-name matching (mirrors routing.ts statusForProvider) because
+  // the status feed and the model catalog do not always spell a provider
+  // identically (e.g. "mistral" in the catalog vs "Mistral AI" in status).
+  // Exact-only matching left real providers showing operational: unknown.
   let statusAnchor: string | null = null;
   for (const s of services) {
-    statusByProvider.set(s.provider.toLowerCase(), s);
     if (s.lastChecked && (statusAnchor === null || s.lastChecked < statusAnchor)) statusAnchor = s.lastChecked;
   }
-  const failoverProviders = new Set<string>();
-  if (inputs.triage) {
+  function providerMatch(a: string, b: string): boolean {
+    return a === b || a.includes(b) || b.includes(a);
+  }
+  function findService(providerKey: string): ServiceStatus | null {
+    for (const s of services) {
+      if (providerMatch(s.provider.toLowerCase(), providerKey)) return s;
+    }
+    return null;
+  }
+  function isFailover(providerKey: string): boolean {
+    if (!inputs.triage) return false;
     for (const card of inputs.triage.cards) {
-      if (card.ongoing && card.recommended_action === 'failover_now') {
-        failoverProviders.add(card.provider.toLowerCase());
+      if (
+        card.ongoing &&
+        card.recommended_action === 'failover_now' &&
+        providerMatch(card.provider.toLowerCase(), providerKey)
+      ) {
+        return true;
       }
     }
+    return false;
   }
 
   // Deprecation lookup: best-effort match by model id or display name.
@@ -415,15 +439,15 @@ export function buildRouteVerdict(
       let operationalStatus: ScratchCandidate['operationalStatus'];
       let operationalOk: boolean | null;
       let operationalSource: OperationalSource;
-      if (failoverProviders.has(providerKey)) {
+      const svc = findService(providerKey);
+      if (isFailover(providerKey)) {
         operationalStatus = 'failover_now';
         operationalOk = false;
         operationalSource = 'live_status';
-      } else if (statusByProvider.has(providerKey)) {
-        const st = statusByProvider.get(providerKey)!;
-        operationalStatus = st.status;
-        operationalOk = st.status === 'operational' ? true : st.status === 'unknown' ? null : false;
-        operationalSource = st.status === 'unknown' ? 'unknown' : 'live_status';
+      } else if (svc) {
+        operationalStatus = svc.status;
+        operationalOk = svc.status === 'operational' ? true : svc.status === 'unknown' ? null : false;
+        operationalSource = svc.status === 'unknown' ? 'unknown' : 'live_status';
       } else {
         operationalStatus = 'unknown';
         operationalOk = null;
@@ -472,18 +496,32 @@ export function buildRouteVerdict(
     filtered = filtered.filter((c) => c.measuredP95 === null || c.measuredP95 <= maxLatency);
   }
 
-  // Normalize cost and latency across the surviving set.
-  const prices = filtered.map((c) => c.blended);
+  // Capability floor (capability-first): keep only candidates within
+  // CAPABILITY_FLOOR_RATIO of the best trust-discounted quality. Cost,
+  // latency, and operational state then break ties AMONG these strong
+  // models, so a materially weaker model never wins on price alone.
+  let belowFloorCount = 0;
+  let eligible = filtered;
+  if (filtered.length > 0) {
+    const maxQ = Math.max(...filtered.map((c) => c.discountedQuality));
+    const floor = maxQ * CAPABILITY_FLOOR_RATIO;
+    const passed = filtered.filter((c) => c.discountedQuality >= floor);
+    belowFloorCount = filtered.length - passed.length;
+    eligible = passed;
+  }
+
+  // Normalize cost and latency across the eligible capability-tier set.
+  const prices = eligible.map((c) => c.blended);
   const minPrice = prices.length ? Math.min(...prices) : 0;
   const maxPrice = prices.length ? Math.max(...prices) : 0;
   const priceRange = maxPrice - minPrice;
 
-  const measured = filtered.map((c) => c.measuredP95).filter((v): v is number => v !== null);
+  const measured = eligible.map((c) => c.measuredP95).filter((v): v is number => v !== null);
   const minLat = measured.length ? Math.min(...measured) : 0;
   const maxLat = measured.length ? Math.max(...measured) : 0;
   const latRange = maxLat - minLat;
 
-  const scored = filtered.map((c) => {
+  const scored = eligible.map((c) => {
     const cost = priceRange === 0 ? 1.0 : 1 - (c.blended - minPrice) / priceRange;
     const latency =
       c.measuredP95 === null ? 0.6 : latRange === 0 ? 1.0 : 1 - (c.measuredP95 - minLat) / latRange;
@@ -528,15 +566,16 @@ export function buildRouteVerdict(
   const verdict = scored.length > 0 ? toVerdict(scored[0], 1) : null;
   const runners_up = scored.slice(1, 4).map((s, i) => toVerdict(s, i + 2));
 
-  // Trust + layer summaries.
-  const anyMeasured = filtered.some((c) => c.measuredP95 !== null);
-  const allMeasured = filtered.length > 0 && filtered.every((c) => c.measuredP95 !== null);
-  const anyOperational = filtered.some((c) => c.operationalSource === 'live_status');
-  const allOperational = filtered.length > 0 && filtered.every((c) => c.operationalSource === 'live_status');
+  // Trust + layer summaries (over the eligible capability-tier set, the
+  // candidates the verdict actually ranks).
+  const anyMeasured = eligible.some((c) => c.measuredP95 !== null);
+  const allMeasured = eligible.length > 0 && eligible.every((c) => c.measuredP95 !== null);
+  const anyOperational = eligible.some((c) => c.operationalSource === 'live_status');
+  const allOperational = eligible.length > 0 && eligible.every((c) => c.operationalSource === 'live_status');
 
   let contaminationSummary: RouteVerdictResult['trust']['benchmark_contamination'] = 'unknown';
   if (verdict) {
-    const worst = filtered.length ? filtered.map((c) => c.contaminationNote).some((n) => n !== null) : false;
+    const worst = eligible.length ? eligible.map((c) => c.contaminationNote).some((n) => n !== null) : false;
     contaminationSummary = worst ? 'mixed' : 'low';
   }
 
@@ -544,6 +583,11 @@ export function buildRouteVerdict(
   else if (!allMeasured) notes.push('Measured latency covers a subset of candidates (the probed first-party labs); others scored neutral and flagged latency_source unknown.');
   if (!anyOperational) notes.push('No live operational state available; operational gate could not be applied.');
   if (requireOperational && filtered.length < scratch.length) notes.push('require_operational dropped candidates known to be down or in failover.');
+  if (belowFloorCount > 0) {
+    notes.push(
+      `${belowFloorCount} candidate(s) below the capability floor (more than 10 percent under the top trust-discounted quality) were excluded from the verdict. Cost and latency only break ties among the strongest models.`,
+    );
+  }
   notes.push('Measured latency is TensorFeed probe-vantage end-to-end p95, not the calling agent geographic region.');
   notes.push('This is a ranking over public signals, not a provider SLA guarantee.');
 
