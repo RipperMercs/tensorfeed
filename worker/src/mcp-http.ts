@@ -86,7 +86,7 @@ import { parseFDAQuery, fetchFDAQuery, FDA_CATEGORIES } from './health-fda';
 
 const PROTOCOL_VERSION = '2024-11-05';
 const SERVER_NAME = 'tensorfeed';
-const SERVER_VERSION = '1.0.0';
+const SERVER_VERSION = '1.1.0';
 
 // JSON-RPC 2.0 standard error codes
 const ERR_PARSE = -32700;
@@ -1184,6 +1184,58 @@ const TOOLS: McpToolDef[] = [
       };
     },
   },
+  // ─── Premium tools (V2): require Authorization: Bearer tf_live_... ──
+  // Premium tool handlers relay an internal fetch to the worker's own
+  // /api/premium/* REST endpoint with the caller's bearer, so the entire
+  // audited payment path (requirePayment, deferred commit, AFTA receipt)
+  // runs once in one place. No payment logic or signing lives in the MCP
+  // layer. The dispatch gate already 402s a premium tool with no bearer.
+  {
+    name: 'route_verdict',
+    description:
+      'PREMIUM (1 credit, Authorization: Bearer tf_live_... required). The signed model-routing decision: for a task (code, reasoning, creative, general) or a named model, returns the single best model to use right now, fusing pricing, benchmark capability discounted for contamination, real production usage, measured p95 latency, and live operational state, with runners-up and an AFTA-signed receipt over the inputs. No token yet? Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        task: { type: 'string', description: 'One of code, reasoning, creative, general. Provide task or model.' },
+        model: { type: 'string', description: 'Canonical model id or display name to narrow the verdict to one model.' },
+        max_latency_p95_ms: { type: 'number', description: 'Drop candidates whose measured p95 latency exceeds this floor.' },
+        require_operational: { type: 'string', description: 'Default true. Pass "false" to keep candidates known down or in failover.' },
+        exclude_deprecated: { type: 'string', description: 'Default true. Pass "false" to keep deprecated or sunsetted models.' },
+      },
+    },
+    tier: 'premium',
+    handler: async (_env, args, ctx) => {
+      const params = new URLSearchParams();
+      const task = getStringArg(args, 'task');
+      const model = getStringArg(args, 'model');
+      if (task) params.set('task', task);
+      if (model) params.set('model', model);
+      const maxLat = getNumberArg(args, 'max_latency_p95_ms');
+      if (maxLat !== null) params.set('max_latency_p95_ms', String(maxLat));
+      const reqOp = getStringArg(args, 'require_operational');
+      if (reqOp !== null) params.set('require_operational', reqOp);
+      const exDep = getStringArg(args, 'exclude_deprecated');
+      if (exDep !== null) params.set('exclude_deprecated', exDep);
+      const res = await fetch(`https://tensorfeed.ai/api/premium/route-verdict?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${ctx?.bearerToken ?? ''}`,
+          'User-Agent': 'tensorfeed-mcp/route_verdict',
+        },
+      });
+      const data = await res.json().catch(() => ({ ok: false, error: 'upstream_parse_error' }));
+      if (res.status === 402) {
+        return {
+          ok: false,
+          error: 'payment_required',
+          detail:
+            'Token rejected or out of credits. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment), or top up at https://tensorfeed.ai/developers/agent-payments.',
+          upstream: data,
+        };
+      }
+      return data;
+    },
+  },
 ];
 
 // ── Method handlers ─────────────────────────────────────────────────
@@ -1213,7 +1265,7 @@ async function handleInitialize(): Promise<unknown> {
       'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
       'EIA Open Data series, USGS recent earthquakes, NWS US weather alerts, AI papers (arXiv recent + AI trending + HF daily), ' +
       'and the daily agent-ecosystem opportunities scan. ' +
-      'Premium tools require an Authorization: Bearer tf_live_... token; buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
+      'Premium tools (e.g. route_verdict, the signed model-routing decision) require an Authorization: Bearer tf_live_... token. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC), or buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
       'License posture: most data is US Government public domain; commercial redistribution permitted; attribution preserved on every response.',
   };
 }
@@ -1250,7 +1302,7 @@ async function handleToolCall(
   }
   if (tool.tier === 'premium' && !ctx.bearerToken) {
     return mcpToolError(
-      'authentication_required: this tool requires an Authorization: Bearer tf_live_... header. Buy credits at https://tensorfeed.ai/developers/agent-payments.',
+      'authentication_required: this tool requires an Authorization: Bearer tf_live_... header. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC), or buy credits at https://tensorfeed.ai/developers/agent-payments.',
     );
   }
   const startMs = Date.now();

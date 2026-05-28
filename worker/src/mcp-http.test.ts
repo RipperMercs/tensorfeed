@@ -104,6 +104,70 @@ describe('tools/list', () => {
   });
 });
 
+describe('route_verdict premium tool', () => {
+  function authedCall(args: Record<string, unknown>, token: string): Request {
+    return new Request('https://tensorfeed.ai/api/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'route_verdict', arguments: args } }),
+    });
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('is listed as a premium tool', () => {
+    const tool = MCP_HTTP_TOOLS.find((t) => t.name === 'route_verdict');
+    expect(tool).toBeDefined();
+    expect(tool!.tier).toBe('premium');
+  });
+
+  it('requires a bearer token and points to the faucet', async () => {
+    const env = makeEnv();
+    const resp = await handleMcpHttpRequest(
+      rpcRequest('tools/call', { name: 'route_verdict', arguments: { task: 'code' } }),
+      env,
+    );
+    const body = (await resp.json()) as { result: { content: { text: string }[]; isError?: boolean } };
+    expect(body.result.isError).toBe(true);
+    expect(body.result.content[0].text).toContain('authentication_required');
+    expect(body.result.content[0].text).toContain('trial-credits');
+  });
+
+  it('relays the upstream verdict to the premium REST endpoint with the bearer', async () => {
+    const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, verdict: { model: { name: 'Claude Sonnet 4.6' } }, billing: { credits_charged: 1 } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const resp = await handleMcpHttpRequest(authedCall({ task: 'code' }, 'tf_live_testtoken'), env);
+    const body = (await resp.json()) as { result: { content: { text: string }[] } };
+    expect(body.result.content[0].text).toContain('Claude Sonnet 4.6');
+    const calledUrl = fetchSpy.mock.calls[0][0] as string;
+    expect(calledUrl).toContain('/api/premium/route-verdict');
+    expect(calledUrl).toContain('task=code');
+    const init = fetchSpy.mock.calls[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tf_live_testtoken');
+  });
+
+  it('surfaces payment_required and the faucet when the upstream returns 402', async () => {
+    const env = makeEnv();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: false, error: 'payment_required' }), {
+        status: 402,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const resp = await handleMcpHttpRequest(authedCall({ task: 'code' }, 'tf_live_broke'), env);
+    const body = (await resp.json()) as { result: { content: { text: string }[] } };
+    expect(body.result.content[0].text).toContain('payment_required');
+    expect(body.result.content[0].text).toContain('trial-credits');
+  });
+});
+
 describe('tools/call', () => {
   it('returns error for unknown tool', async () => {
     const env = makeEnv();
