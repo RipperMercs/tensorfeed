@@ -15,6 +15,12 @@ function mockKv() {
     put: vi.fn(async (key: string, value: string) => {
       store.set(key, value);
     }),
+    list: vi.fn(async ({ prefix }: { prefix: string }) => ({
+      keys: Array.from(store.keys())
+        .filter((k) => k.startsWith(prefix))
+        .map((name) => ({ name })),
+      list_complete: true,
+    })),
   };
 }
 
@@ -154,13 +160,9 @@ describe('getRecent', () => {
 });
 
 describe('getPublishers', () => {
-  it('lists publishers with their wallets and totals from KV', async () => {
+  it('lists publishers with their wallets and totals from KV via list prefix', async () => {
     const kv = mockKv();
     const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
-    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({
-      '0xaaa': 'tensorfeed.ai',
-      '0xbbb': 'terminalfeed.io',
-    }));
     kv.store.set(kvKeyPublisher('tensorfeed.ai'), JSON.stringify({
       domain: 'tensorfeed.ai',
       manifest_url: 'https://tensorfeed.ai/.well-known/x402.json',
@@ -186,6 +188,63 @@ describe('getPublishers', () => {
       pay_to_wallets: ['0xaaa'],
       last_event_at: '2026-05-27T11:00:00.000Z',
     });
+  });
+
+  it('surfaces errored publishers too (last_crawl_error not null), not just successful crawls', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    // Successful publisher (also lives in the wallet map).
+    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({ '0xaaa': 'tensorfeed.ai' }));
+    kv.store.set(kvKeyPublisher('tensorfeed.ai'), JSON.stringify({
+      domain: 'tensorfeed.ai',
+      manifest_url: 'https://tensorfeed.ai/.well-known/x402.json',
+      pay_to_wallets: ['0xaaa'],
+      first_seen: '2026-05-01T00:00:00.000Z',
+      last_crawled: '2026-05-28T06:35:00.000Z',
+      last_crawl_error: null,
+      last_event_at: null,
+    }));
+
+    // Errored publisher: its record IS in KV but it is NOT in the wallet map
+    // (refreshAllPublishers excludes errored crawls from the map). The fixed
+    // getPublishers must still surface it so operators can see why the
+    // publisher is missing from the allowlist.
+    kv.store.set(kvKeyPublisher('terminalfeed.io'), JSON.stringify({
+      domain: 'terminalfeed.io',
+      manifest_url: 'https://terminalfeed.io/.well-known/x402.json',
+      pay_to_wallets: [],
+      first_seen: '2026-05-28T06:35:00.000Z',
+      last_crawled: '2026-05-28T06:35:00.000Z',
+      last_crawl_error: 'HTTP 404',
+      last_event_at: null,
+    }));
+
+    const result = await getPublishers(env);
+    expect(result.count).toBe(2);
+    const tf = result.publishers.find((p) => p.domain === 'tensorfeed.ai');
+    const errored = result.publishers.find((p) => p.domain === 'terminalfeed.io');
+    expect(tf?.last_crawl_error).toBeNull();
+    expect(errored?.last_crawl_error).toBe('HTTP 404');
+    expect(errored?.pay_to_wallets).toEqual([]);
+  });
+
+  it('returns publishers sorted by domain ascending', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    for (const domain of ['zzz.com', 'aaa.com', 'mmm.com']) {
+      kv.store.set(kvKeyPublisher(domain), JSON.stringify({
+        domain,
+        manifest_url: `https://${domain}/.well-known/x402.json`,
+        pay_to_wallets: [],
+        first_seen: '2026-05-28T00:00:00.000Z',
+        last_crawled: '2026-05-28T00:00:00.000Z',
+        last_crawl_error: null,
+        last_event_at: null,
+      }));
+    }
+    const result = await getPublishers(env);
+    expect(result.publishers.map((p) => p.domain)).toEqual(['aaa.com', 'mmm.com', 'zzz.com']);
   });
 });
 

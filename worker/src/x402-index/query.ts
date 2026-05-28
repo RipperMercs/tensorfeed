@@ -146,12 +146,18 @@ export interface PublishersResult {
 }
 
 export async function getPublishers(env: Env, now: Date = new Date()): Promise<PublishersResult> {
-  const walletMap = ((await env.TENSORFEED_CACHE.get(KV_KEY_PUBLISHERS, 'json')) as Record<string, string> | null) ?? {};
-  const domains = Array.from(new Set(Object.values(walletMap)));
+  // List every per-publisher record (both successful and errored crawls).
+  // The wallet map x402-idx:publishers deliberately excludes errored crawls,
+  // so deriving the publisher set from it hides any publisher whose manifest
+  // crawl is currently failing. Enumerating KV by prefix surfaces all of them
+  // and lets callers see last_crawl_error to understand why a given publisher
+  // is not actively contributing to the wallet allowlist.
+  const list = await env.TENSORFEED_CACHE.list({ prefix: 'x402-idx:publisher:' });
   const publishers = await Promise.all(
-    domains.map(async (d) => (await env.TENSORFEED_CACHE.get(kvKeyPublisher(d), 'json')) as PublisherRecord | null),
+    list.keys.map((k) => env.TENSORFEED_CACHE.get(k.name, 'json') as Promise<PublisherRecord | null>),
   );
   const filtered = publishers.filter((p): p is PublisherRecord => p !== null);
+  filtered.sort((a, b) => a.domain.localeCompare(b.domain));
   return { captured_at: now.toISOString(), count: filtered.length, publishers: filtered };
 }
 
