@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeBlockRange, decodeTransferLog, type RpcLog } from './indexer';
+import { computeBlockRange, decodeTransferLog, type RpcLog, addDecimal, compareDecimal, toMicroUnits, fromMicroUnits } from './indexer';
 
 describe('computeBlockRange', () => {
   it('returns range from cursor+1 to current-30 when current is far ahead', () => {
@@ -65,5 +65,34 @@ describe('decodeTransferLog', () => {
     };
     const event = decodeTransferLog(bigLog, '2026-05-27T12:00:00.000Z', { '0xbbb0000000000000000000000000000000000002': 'example.com' });
     expect(event!.amount_usdc).toBe('1000.000000');
+  });
+});
+
+describe('decimal arithmetic helpers', () => {
+  it('toMicroUnits parses 6dp decimal string to bigint micro', () => {
+    expect(toMicroUnits('0.02')).toBe(20000n);
+    expect(toMicroUnits('0.020000')).toBe(20000n);
+    expect(toMicroUnits('1.5')).toBe(1500000n);
+    expect(toMicroUnits('0')).toBe(0n);
+    expect(toMicroUnits('1000')).toBe(1000000000n);
+  });
+
+  it('fromMicroUnits formats bigint micro to 6dp string', () => {
+    expect(fromMicroUnits(20000n)).toBe('0.020000');
+    expect(fromMicroUnits(1500000n)).toBe('1.500000');
+    expect(fromMicroUnits(0n)).toBe('0.000000');
+    expect(fromMicroUnits(1000000000n)).toBe('1000.000000');
+  });
+
+  it('addDecimal sums two 6dp strings without floating-point drift', () => {
+    expect(addDecimal('0.02', '0.02')).toBe('0.040000');
+    expect(addDecimal('1.5', '0.02')).toBe('1.520000');
+    expect(addDecimal('0.000001', '0.000001')).toBe('0.000002');
+  });
+
+  it('compareDecimal returns -1, 0, 1 correctly', () => {
+    expect(compareDecimal('1.0', '2.0')).toBe(-1);
+    expect(compareDecimal('2.0', '1.0')).toBe(1);
+    expect(compareDecimal('1.0', '1.0')).toBe(0);
   });
 });

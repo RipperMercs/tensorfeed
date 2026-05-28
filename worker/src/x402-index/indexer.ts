@@ -59,3 +59,29 @@ export function formatDecimal(value: bigint, decimals: number): string {
   const frac = value % divisor;
   return `${whole.toString()}.${frac.toString().padStart(decimals, '0')}`;
 }
+
+export function toMicroUnits(s: string): bigint {
+  const [whole, frac = ''] = s.split('.');
+  const fracPadded = (frac + '000000').slice(0, 6);
+  return BigInt(whole) * 1_000_000n + BigInt(fracPadded);
+}
+
+export function fromMicroUnits(v: bigint): string {
+  // Equivalent to formatDecimal(v, 6); kept as a named helper for callsite clarity
+  // so indexer code reads in domain language (microUnits) rather than generic decimals.
+  const whole = v / 1_000_000n;
+  const frac = v % 1_000_000n;
+  return `${whole.toString()}.${frac.toString().padStart(6, '0')}`;
+}
+
+export function addDecimal(a: string, b: string): string {
+  return fromMicroUnits(toMicroUnits(a) + toMicroUnits(b));
+}
+
+export function compareDecimal(a: string, b: string): -1 | 0 | 1 {
+  const am = toMicroUnits(a);
+  const bm = toMicroUnits(b);
+  if (am < bm) return -1;
+  if (am > bm) return 1;
+  return 0;
+}
