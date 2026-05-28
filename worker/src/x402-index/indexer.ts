@@ -1,5 +1,5 @@
-import { REORG_SAFETY_BLOCKS, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent } from './constants';
-import type { SettlementEvent, DailyRollup, PublisherDailyRollup } from './types';
+import { REORG_SAFETY_BLOCKS, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent, DEFAULT_BASE_RPC, KV_KEY_CURSOR, KV_KEY_PUBLISHERS, USDC_BASE_CONTRACT } from './constants';
+import type { SettlementEvent, DailyRollup, PublisherDailyRollup, IndexerCursor } from './types';
 import type { Env } from '../types';
 
 export interface BlockRange {
@@ -148,4 +148,130 @@ function recomputeTopPublishers(
     return a.domain.localeCompare(b.domain);
   });
   return arr.slice(0, TOP_PUBLISHERS_LIMIT);
+}
+
+// ---------------------------------------------------------------------------
+// Full tick orchestration
+// ---------------------------------------------------------------------------
+
+type IndexerResult =
+  | { events: number; from: number; to: number }
+  | { skipped: true; reason: 'cursor_initialized' | 'no_blocks_to_process' | 'no_publishers' };
+
+export async function runIndexerTick(
+  env: Env,
+  rpcUrl: string = DEFAULT_BASE_RPC,
+  fetchFn: typeof fetch = fetch,
+): Promise<IndexerResult> {
+  const cursorRaw = (await env.TENSORFEED_CACHE.get(KV_KEY_CURSOR, 'json')) as IndexerCursor | null;
+  const currentBlock = await getCurrentBlock(rpcUrl, fetchFn);
+
+  if (!cursorRaw) {
+    const nowStr = new Date().toISOString();
+    await env.TENSORFEED_CACHE.put(
+      KV_KEY_CURSOR,
+      JSON.stringify({ block: currentBlock, ts: nowStr, last_run_at: nowStr }),
+    );
+    return { skipped: true, reason: 'cursor_initialized' };
+  }
+
+  const range = computeBlockRange(cursorRaw.block, currentBlock);
+  if (!range) return { skipped: true, reason: 'no_blocks_to_process' };
+
+  const walletMap = (await env.TENSORFEED_CACHE.get(KV_KEY_PUBLISHERS, 'json')) as Record<string, string> | null;
+  if (!walletMap || Object.keys(walletMap).length === 0) {
+    return { skipped: true, reason: 'no_publishers' };
+  }
+
+  const wallets = Object.keys(walletMap);
+  const logs = await getTransferLogsForWallets(rpcUrl, range.fromBlock, range.toBlock, wallets, fetchFn);
+
+  const uniqueBlockNumbers = Array.from(new Set(logs.map((l) => l.blockNumber)));
+  const blockTsMap = uniqueBlockNumbers.length > 0
+    ? await getBlockTimestamps(rpcUrl, uniqueBlockNumbers, fetchFn)
+    : {};
+
+  let count = 0;
+  for (const log of logs) {
+    const ts = blockTsMap[log.blockNumber];
+    if (!ts) continue;
+    const event = decodeTransferLog(log, ts, walletMap);
+    if (!event) continue;
+    await applyEventToRollups(env, event);
+    count++;
+  }
+
+  const nowStr = new Date().toISOString();
+  await env.TENSORFEED_CACHE.put(
+    KV_KEY_CURSOR,
+    JSON.stringify({ block: range.toBlock, ts: nowStr, last_run_at: nowStr }),
+  );
+
+  return { events: count, from: range.fromBlock, to: range.toBlock };
+}
+
+async function getCurrentBlock(rpcUrl: string, fetchFn: typeof fetch): Promise<number> {
+  const res = await fetchFn(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
+  });
+  const data = (await res.json()) as { result: string };
+  return parseInt(data.result, 16);
+}
+
+async function getTransferLogsForWallets(
+  rpcUrl: string,
+  fromBlock: number,
+  toBlock: number,
+  wallets: string[],
+  fetchFn: typeof fetch,
+): Promise<RpcLog[]> {
+  const paddedWallets = wallets.map((w) => '0x' + w.toLowerCase().replace(/^0x/, '').padStart(64, '0'));
+  const res = await fetchFn(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'eth_getLogs',
+      params: [{
+        address: USDC_BASE_CONTRACT,
+        topics: [TRANSFER_TOPIC, null, paddedWallets],
+        fromBlock: '0x' + fromBlock.toString(16),
+        toBlock: '0x' + toBlock.toString(16),
+      }],
+      id: 1,
+    }),
+  });
+  const data = (await res.json()) as { result: RpcLog[]; error?: { message: string } };
+  if (data.error) throw new Error(`eth_getLogs failed: ${data.error.message}`);
+  return data.result;
+}
+
+async function getBlockTimestamps(
+  rpcUrl: string,
+  blockNumbers: string[],
+  fetchFn: typeof fetch,
+): Promise<Record<string, string>> {
+  const map: Record<string, string> = {};
+  const batch = blockNumbers.map((bn, idx) => ({
+    jsonrpc: '2.0',
+    method: 'eth_getBlockByNumber',
+    params: [bn, false],
+    id: idx,
+  }));
+  const res = await fetchFn(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(batch),
+  });
+  const data = (await res.json()) as Array<{ id: number; result: { number: string; timestamp: string } | null }>;
+  for (const item of data) {
+    const block = item.result;
+    if (block) {
+      const ts = new Date(parseInt(block.timestamp, 16) * 1000).toISOString();
+      map[block.number] = ts;
+    }
+  }
+  return map;
 }

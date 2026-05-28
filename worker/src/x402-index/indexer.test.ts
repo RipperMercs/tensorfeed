@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { computeBlockRange, decodeTransferLog, type RpcLog, addDecimal, compareDecimal, toMicroUnits, fromMicroUnits, applyEventToRollups } from './indexer';
+import { computeBlockRange, decodeTransferLog, type RpcLog, addDecimal, compareDecimal, toMicroUnits, fromMicroUnits, applyEventToRollups, runIndexerTick } from './indexer';
 import {
   KV_KEY_RECENT,
   kvKeyDayRollup,
   kvKeyPubDayRollup,
   kvKeyEvent,
+  KV_KEY_CURSOR,
+  KV_KEY_PUBLISHERS,
 } from './constants';
 import type { SettlementEvent } from './types';
 
@@ -198,5 +200,91 @@ describe('applyEventToRollups', () => {
     const recent = await kv.get(KV_KEY_RECENT, 'json') as SettlementEvent[];
     expect(recent.length).toBe(100);
     expect(recent[0].tx_hash).toBe('0x68'); // i=104, newest first
+  });
+});
+
+describe('runIndexerTick', () => {
+  it('initializes cursor on first run and reports skipped', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const mockFetch = vi.fn(async () => ({ json: async () => ({ result: '0x100' }) })) as unknown as typeof fetch;
+
+    const result = await runIndexerTick(env, 'https://rpc.example', mockFetch);
+    expect(result).toEqual({ skipped: true, reason: 'cursor_initialized' });
+
+    const cursor = await kv.get(KV_KEY_CURSOR, 'json') as { block: number };
+    expect(cursor.block).toBe(256);
+  });
+
+  it('skips when no blocks past safety window', async () => {
+    const kv = mockKv();
+    kv.store.set(KV_KEY_CURSOR, JSON.stringify({ block: 1000, ts: '2026-05-27T00:00:00.000Z', last_run_at: '2026-05-27T00:00:00.000Z' }));
+    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({ '0xpub': 'example.com' }));
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const mockFetch = vi.fn(async () => ({ json: async () => ({ result: '0x3F0' }) })) as unknown as typeof fetch; // 1008, safe_to=978, <=1000
+
+    const result = await runIndexerTick(env, 'https://rpc.example', mockFetch);
+    expect(result).toEqual({ skipped: true, reason: 'no_blocks_to_process' });
+  });
+
+  it('skips when publisher map is empty', async () => {
+    const kv = mockKv();
+    kv.store.set(KV_KEY_CURSOR, JSON.stringify({ block: 1000, ts: '2026-05-27T00:00:00.000Z', last_run_at: '2026-05-27T00:00:00.000Z' }));
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const mockFetch = vi.fn(async () => ({ json: async () => ({ result: '0x10000' }) })) as unknown as typeof fetch;
+
+    const result = await runIndexerTick(env, 'https://rpc.example', mockFetch);
+    expect(result).toEqual({ skipped: true, reason: 'no_publishers' });
+  });
+
+  it('processes matching logs and advances cursor on success', async () => {
+    const kv = mockKv();
+    kv.store.set(KV_KEY_CURSOR, JSON.stringify({ block: 1000, ts: '2026-05-27T00:00:00.000Z', last_run_at: '2026-05-27T00:00:00.000Z' }));
+    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({ '0xbbb0000000000000000000000000000000000002': 'example.com' }));
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    let call = 0;
+    const mockFetch = vi.fn(async (_url: string, _opts?: RequestInit) => {
+      call++;
+      if (call === 1) {
+        return { json: async () => ({ result: '0x10000' }) } as unknown as Response;
+      }
+      if (call === 2) {
+        return {
+          json: async () => ({
+            result: [
+              {
+                address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                topics: [
+                  '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                  '0x000000000000000000000000aaa0000000000000000000000000000000000001',
+                  '0x000000000000000000000000bbb0000000000000000000000000000000000002',
+                ],
+                data: '0x0000000000000000000000000000000000000000000000000000000000004e20',
+                blockNumber: '0xfa0',
+                transactionHash: '0xtxhash1',
+              },
+            ],
+          }),
+        } as unknown as Response;
+      }
+      return {
+        json: async () => [
+          {
+            id: 0,
+            result: {
+              number: '0xfa0',
+              timestamp: (Math.floor(Date.parse('2026-05-27T12:00:00Z') / 1000)).toString(16),
+            },
+          },
+        ],
+      } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+    const result = await runIndexerTick(env, 'https://rpc.example', mockFetch);
+    expect(result).toMatchObject({ events: 1 });
+
+    const cursor = await kv.get(KV_KEY_CURSOR, 'json') as { block: number };
+    expect(cursor.block).toBe(65506); // 0x10000 - 30 = 65506
   });
 });
