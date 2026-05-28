@@ -1,5 +1,63 @@
 import { describe, it, expect, vi } from 'vitest';
-import { crawlPublisherManifest } from './publisher-registry';
+import { crawlPublisherManifest, isValidPublisherDomain } from './publisher-registry';
+
+describe('isValidPublisherDomain (SSRF guard)', () => {
+  it('rejects localhost and loopback IPs', () => {
+    expect(isValidPublisherDomain('localhost')).toBe(false);
+    expect(isValidPublisherDomain('app.localhost')).toBe(false);
+    expect(isValidPublisherDomain('127.0.0.1')).toBe(false);
+    expect(isValidPublisherDomain('0.0.0.0')).toBe(false);
+  });
+
+  it('rejects private network IPv4 literals', () => {
+    expect(isValidPublisherDomain('10.0.0.1')).toBe(false);
+    expect(isValidPublisherDomain('172.16.0.1')).toBe(false);
+    expect(isValidPublisherDomain('192.168.1.1')).toBe(false);
+    expect(isValidPublisherDomain('169.254.169.254')).toBe(false);
+  });
+
+  it('rejects mDNS and internal TLDs', () => {
+    expect(isValidPublisherDomain('printer.local')).toBe(false);
+    expect(isValidPublisherDomain('vault.internal')).toBe(false);
+  });
+
+  it('rejects userinfo, scheme, path, and query smuggling', () => {
+    expect(isValidPublisherDomain('attacker.com@victim.com')).toBe(false);
+    expect(isValidPublisherDomain('https://evil.com')).toBe(false);
+    expect(isValidPublisherDomain('evil.com/path')).toBe(false);
+    expect(isValidPublisherDomain('evil.com?q=1')).toBe(false);
+    expect(isValidPublisherDomain('evil.com#frag')).toBe(false);
+  });
+
+  it('rejects single-label hostnames and empty input', () => {
+    expect(isValidPublisherDomain('mailhost')).toBe(false);
+    expect(isValidPublisherDomain('')).toBe(false);
+    expect(isValidPublisherDomain('a'.repeat(254))).toBe(false);
+  });
+
+  it('accepts well-formed public domains', () => {
+    expect(isValidPublisherDomain('tensorfeed.ai')).toBe(true);
+    expect(isValidPublisherDomain('terminalfeed.io')).toBe(true);
+    expect(isValidPublisherDomain('api.example.co.uk')).toBe(true);
+  });
+});
+
+describe('crawlPublisherManifest SSRF integration', () => {
+  it('returns invalid_domain error for SSRF-blocked input without making any HTTP call', async () => {
+    const mockFetch = vi.fn();
+    const rec = await crawlPublisherManifest('127.0.0.1', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
+    expect(rec.last_crawl_error).toBe('invalid_domain');
+    expect(rec.pay_to_wallets).toEqual([]);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('treats a 3xx redirect response as an error rather than following it', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({ ok: false, status: 302, json: async () => ({}) });
+    const rec = await crawlPublisherManifest('example.com', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
+    expect(rec.last_crawl_error).toBe('redirect_302');
+    expect(rec.pay_to_wallets).toEqual([]);
+  });
+});
 
 describe('crawlPublisherManifest', () => {
   it('extracts payTo wallets from a V2 manifest items[].accepts[]', async () => {

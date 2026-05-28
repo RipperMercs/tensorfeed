@@ -13,6 +13,30 @@ interface X402Manifest {
 
 const BASE_NETWORK_TAGS = new Set(['base', 'base-mainnet', 'eip155:8453']);
 
+export function isValidPublisherDomain(domain: string): boolean {
+  if (!domain || domain.length === 0 || domain.length > 253) return false;
+  if (domain.includes('://') || domain.includes('/') || domain.includes('?') || domain.includes('#')) return false;
+  if (domain.includes('@')) return false;
+
+  let url: URL;
+  try {
+    url = new URL('https://' + domain);
+  } catch {
+    return false;
+  }
+
+  const host = url.hostname.toLowerCase().replace(/\.$/, '');
+
+  if (host === 'localhost' || host.endsWith('.localhost')) return false;
+  if (host.endsWith('.local')) return false;
+  if (host.endsWith('.internal')) return false;
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+  if (host.includes(':') || host.startsWith('[')) return false;
+  if (!host.includes('.')) return false;
+
+  return true;
+}
+
 export async function crawlPublisherManifest(
   domain: string,
   now: () => string = () => new Date().toISOString(),
@@ -21,11 +45,20 @@ export async function crawlPublisherManifest(
   const manifestUrl = `https://${domain}/.well-known/x402.json`;
   const nowStr = now();
 
+  if (!isValidPublisherDomain(domain)) {
+    return baseRecord(domain, manifestUrl, nowStr, 'invalid_domain');
+  }
+
   try {
     const res = await fetchFn(manifestUrl, {
       headers: { 'User-Agent': 'tensorfeed-x402-indexer/1.0' },
       signal: AbortSignal.timeout(10_000),
+      redirect: 'manual',
     });
+
+    if (res.status >= 300 && res.status < 400) {
+      return baseRecord(domain, manifestUrl, nowStr, `redirect_${res.status}`);
+    }
 
     if (!res.ok) {
       return baseRecord(domain, manifestUrl, nowStr, `HTTP ${res.status}`);
