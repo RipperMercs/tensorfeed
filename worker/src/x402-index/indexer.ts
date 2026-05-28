@@ -1,4 +1,5 @@
-import { REORG_SAFETY_BLOCKS } from './constants';
+import { REORG_SAFETY_BLOCKS, TRANSFER_TOPIC, USDC_DECIMALS } from './constants';
+import type { SettlementEvent } from './types';
 
 export interface BlockRange {
   fromBlock: number;
@@ -12,4 +13,49 @@ export function computeBlockRange(cursorBlock: number, currentBlock: number): Bl
     fromBlock: cursorBlock + 1,
     toBlock: safeTo,
   };
+}
+
+export interface RpcLog {
+  address: string;
+  topics: string[];
+  data: string;
+  blockNumber: string;
+  transactionHash: string;
+}
+
+export function decodeTransferLog(
+  log: RpcLog,
+  blockTs: string,
+  walletToDomain: Record<string, string>,
+): SettlementEvent | null {
+  if (log.topics.length !== 3) return null;
+  if (log.topics[0].toLowerCase() !== TRANSFER_TOPIC) return null;
+
+  const fromAddr = '0x' + log.topics[1].slice(26).toLowerCase();
+  const toAddr = '0x' + log.topics[2].slice(26).toLowerCase();
+
+  const publisherDomain = walletToDomain[toAddr];
+  if (!publisherDomain) return null;
+
+  const amountWei = BigInt(log.data);
+  const amountUsdc = formatDecimal(amountWei, USDC_DECIMALS);
+
+  return {
+    tx_hash: log.transactionHash.toLowerCase(),
+    block: parseInt(log.blockNumber, 16),
+    ts: blockTs,
+    from_address: fromAddr,
+    to_address: toAddr,
+    amount_usdc: amountUsdc,
+    publisher_domain: publisherDomain,
+    asset: 'USDC',
+    chain: 'base',
+  };
+}
+
+export function formatDecimal(value: bigint, decimals: number): string {
+  const divisor = 10n ** BigInt(decimals);
+  const whole = value / divisor;
+  const frac = value % divisor;
+  return `${whole.toString()}.${frac.toString().padStart(decimals, '0')}`;
 }
