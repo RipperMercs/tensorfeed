@@ -13026,6 +13026,38 @@
           "routeTemplate": "/api/premium/x402-index/series"
         }
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/route-verdict",
+        "description": "The signed model-routing decision. For ?task=code|reasoning|creative|general or ?model=<id-or-name>, returns the single best model to use right now, fusing pricing, contamination-discounted benchmark capability, real production usage, measured p95 latency probes, and live incident-triage operational state, plus runners-up and an AFTA-signed receipt over the inputs. 30-minute operational freshness SLA, no-charge when the live layer is stale.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-28T00:00:00Z",
+      "metadata": {
+        "name": "Route Verdict",
+        "description": "The signed model-routing decision: the single best model to use right now, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state, plus runners-up and an AFTA-signed receipt. A free top-verdict-only taste lives at /api/preview/route-verdict.",
+        "tier": 2,
+        "credits": 1,
+        "category": "ai-model-routing"
+      }
     }
   ],
   "freeEndpoints": [

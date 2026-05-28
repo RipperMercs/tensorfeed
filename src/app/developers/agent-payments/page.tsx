@@ -289,6 +289,57 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/route-verdict',
+    description: 'The signed model-routing decision. For ?task=code|reasoning|creative|general or ?model=<id-or-name>, returns the single best model to use right now, fusing pricing, benchmark capability discounted for contamination, real production usage, measured p95 latency probes, and live incident-triage operational state, plus runners-up and an AFTA-signed receipt over the inputs. Optional ?max_latency_p95_ms=, ?require_operational=, ?exclude_deprecated=. 30-minute operational freshness SLA, no-charge when the live layer is stale. A free top-verdict-only taste (no runners-up, no receipt) lives at /api/preview/route-verdict, 10 calls per IP per day.',
+    cost: '1 credit per call',
+    example: `// Header: Authorization: Bearer tf_live_...
+// Query: ?task=code&max_latency_p95_ms=2000
+{
+  "ok": true,
+  "query": { "task": "code", "model": null },
+  "capturedAt": "2026-05-28T14:42:00Z",
+  "verdict": {
+    "rank": 1,
+    "model": { "id": "claude-sonnet-4-6", "name": "Claude Sonnet 4.6", "provider": "anthropic", "openSource": false, "contextWindow": 200000 },
+    "pricing": { "input": 3, "output": 15, "blended": 9, "currency": "USD", "unit": "per 1M tokens" },
+    "quality": { "task_score": 0.87, "trust_discounted": 0.83, "contamination_note": "HumanEval (high contamination, saturated)" },
+    "usage": { "corroborated": true, "rank": 1, "share_pct": 18.4, "trend": "flat" },
+    "latency": { "measured_p95_ms": 1180, "source": "measured_probe" },
+    "operational": { "ok": true, "status": "operational", "source": "live_status" },
+    "deprecation": { "flagged": false, "status": null, "sunset_date": null },
+    "composite_score": 0.78,
+    "why": "code quality 0.83 after trust discount; corroborated by real usage (rank 1, 18.4% share, flat); measured p95 1180 ms; operational; blended $9 / 1M"
+  },
+  "runners_up": [
+    { "rank": 2, "model": { "name": "GPT-5.5", "provider": "openai" }, "composite_score": 0.74 }
+  ],
+  "trust": { "usage_corroborated": true, "benchmark_contamination": "mixed", "operational_layer": "partial", "latency_layer": "partial" },
+  "billing": { "credits_charged": 1, "credits_remaining": 48 },
+  "receipt": { "id": "rcpt_...", "signing_alg": "EdDSA", "signing_curve": "Ed25519", "signature": "<base64url>" }
+}`,
+  },
+  {
+    method: 'POST',
+    path: '/api/payment/trial-credits',
+    description: 'Free, zero-setup on-ramp. Sign an EIP-191 message proving you control a wallet (no on-chain transaction, no USDC, no gas), POST { message, signature }, and receive a bearer token preloaded with 25 trial credits. One grant per wallet, OFAC-screened, single-use nonce, 30-day expiry. Top up the same token later via /api/payment/buy-credits.',
+    cost: 'Free',
+    example: `// POST body: { message, signature }. The wallet signs this EIP-191 message:
+//   I am requesting TensorFeed trial credits for this wallet.
+//
+//   wallet: 0xYourEoa
+//   timestamp: 2026-05-28T14:42:00.000Z
+//   nonce: 9f3c1ab27de40581
+{
+  "ok": true,
+  "token": "tf_live_<64-hex-chars>",
+  "credits": 25,
+  "expires_at": "2026-06-27T14:42:00.000Z",
+  "wallet": "0xYourEoa",
+  "how_to_use": "Send Authorization: Bearer <token> on any /api/premium/* call until the balance or the expiry runs out. Top up the same token via /api/payment/buy-credits."
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/history/pricing/series',
     description: 'Daily price points for one model across a date range, with min/max/delta summary and changes-detected count. Range capped at 90 days, default 30 days back.',
     cost: '1 credit per call',
