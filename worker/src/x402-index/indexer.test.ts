@@ -1,5 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { computeBlockRange, decodeTransferLog, type RpcLog, addDecimal, compareDecimal, toMicroUnits, fromMicroUnits } from './indexer';
+import { describe, it, expect, vi } from 'vitest';
+import { computeBlockRange, decodeTransferLog, type RpcLog, addDecimal, compareDecimal, toMicroUnits, fromMicroUnits, applyEventToRollups } from './indexer';
+import {
+  KV_KEY_RECENT,
+  kvKeyDayRollup,
+  kvKeyPubDayRollup,
+  kvKeyEvent,
+} from './constants';
+import type { SettlementEvent } from './types';
 
 describe('computeBlockRange', () => {
   it('returns range from cursor+1 to current-30 when current is far ahead', () => {
@@ -94,5 +101,102 @@ describe('decimal arithmetic helpers', () => {
     expect(compareDecimal('1.0', '2.0')).toBe(-1);
     expect(compareDecimal('2.0', '1.0')).toBe(1);
     expect(compareDecimal('1.0', '1.0')).toBe(0);
+  });
+});
+
+function mockKv() {
+  const store = new Map<string, string>();
+  return {
+    store,
+    get: vi.fn(async (key: string, type?: 'json') => {
+      const raw = store.get(key);
+      if (raw === undefined) return null;
+      return type === 'json' ? JSON.parse(raw) : raw;
+    }),
+    put: vi.fn(async (key: string, value: string, _opts?: { expirationTtl?: number }) => {
+      store.set(key, value);
+    }),
+  };
+}
+
+const baseEvent: SettlementEvent = {
+  tx_hash: '0xaaa',
+  block: 1,
+  ts: '2026-05-27T12:00:00.000Z',
+  from_address: '0xfromfromfrom',
+  to_address: '0xtotototo',
+  amount_usdc: '0.02',
+  publisher_domain: 'tensorfeed.ai',
+  asset: 'USDC',
+  chain: 'base',
+};
+
+describe('applyEventToRollups', () => {
+  it('initializes daily + per-publisher rollups + recent ring on first event', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    await applyEventToRollups(env, baseEvent);
+
+    const daily = await kv.get(kvKeyDayRollup('2026-05-27'), 'json');
+    expect(daily).toMatchObject({
+      date: '2026-05-27',
+      volume_usdc: '0.020000',
+      count: 1,
+      top_publishers: [{ domain: 'tensorfeed.ai', volume_usdc: '0.020000', count: 1 }],
+    });
+
+    const pubDaily = await kv.get(kvKeyPubDayRollup('tensorfeed.ai', '2026-05-27'), 'json');
+    expect(pubDaily).toMatchObject({
+      date: '2026-05-27',
+      domain: 'tensorfeed.ai',
+      volume_usdc: '0.020000',
+      count: 1,
+    });
+
+    const ev = await kv.get(kvKeyEvent('0xaaa'), 'json');
+    expect(ev).toEqual(baseEvent);
+
+    const recent = await kv.get(KV_KEY_RECENT, 'json');
+    expect(recent).toEqual([baseEvent]);
+  });
+
+  it('increments existing daily rollup on second event same day same publisher', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    await applyEventToRollups(env, baseEvent);
+    await applyEventToRollups(env, { ...baseEvent, tx_hash: '0xbbb', amount_usdc: '0.05' });
+
+    const daily = await kv.get(kvKeyDayRollup('2026-05-27'), 'json');
+    expect(daily).toMatchObject({
+      volume_usdc: '0.070000',
+      count: 2,
+      top_publishers: [{ domain: 'tensorfeed.ai', volume_usdc: '0.070000', count: 2 }],
+    });
+  });
+
+  it('builds top_publishers sorted by volume desc, count desc tie-break, domain asc tie-break', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    await applyEventToRollups(env, { ...baseEvent, tx_hash: '0x1', publisher_domain: 'zzz.com', amount_usdc: '1.0' });
+    await applyEventToRollups(env, { ...baseEvent, tx_hash: '0x2', publisher_domain: 'aaa.com', amount_usdc: '1.0' });
+    await applyEventToRollups(env, { ...baseEvent, tx_hash: '0x3', publisher_domain: 'mmm.com', amount_usdc: '2.0' });
+
+    const daily = await kv.get(kvKeyDayRollup('2026-05-27'), 'json') as { top_publishers: Array<{ domain: string; volume_usdc: string; count: number }> };
+    expect(daily.top_publishers).toEqual([
+      { domain: 'mmm.com', volume_usdc: '2.000000', count: 1 },
+      { domain: 'aaa.com', volume_usdc: '1.000000', count: 1 },
+      { domain: 'zzz.com', volume_usdc: '1.000000', count: 1 },
+    ]);
+  });
+
+  it('caps recent feed at RECENT_FEED_SIZE (100)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    for (let i = 0; i < 105; i++) {
+      await applyEventToRollups(env, { ...baseEvent, tx_hash: `0x${i.toString(16)}` });
+    }
+    const recent = await kv.get(KV_KEY_RECENT, 'json') as SettlementEvent[];
+    expect(recent.length).toBe(100);
+    expect(recent[0].tx_hash).toBe('0x68'); // i=104, newest first
   });
 });
