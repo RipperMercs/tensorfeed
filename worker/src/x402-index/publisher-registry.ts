@@ -223,10 +223,23 @@ export async function refreshAllPublishers(
     await env.TENSORFEED_CACHE.put(kvKeyPublisher(domain), JSON.stringify(merged));
   }
 
+  // First-wins wallet attribution. Two publishers can legitimately declare
+  // the same payTo wallet under AFTA federation (TensorFeed + TerminalFeed
+  // share 0x549c82e6...). We do not double-count: the first publisher in
+  // SEED_PUBLISHERS iteration order keeps the wallet attribution. Federation
+  // partners listed later still appear in /api/x402-index/publishers via the
+  // per-publisher KV records, but their settlements attribute to the canonical
+  // primary owner of the wallet to preserve revenue analytics for the leader.
+  // Collisions are logged for ops visibility so federation pairings are
+  // observable in wrangler tail.
   const walletMap: Record<string, string> = {};
   for (const rec of records) {
     if (rec.last_crawl_error !== null) continue;
     for (const wallet of rec.pay_to_wallets) {
+      if (walletMap[wallet] && walletMap[wallet] !== rec.domain) {
+        console.log(`[x402-index] wallet collision: ${wallet} claimed by ${walletMap[wallet]}, also declared by ${rec.domain} (federation, first-wins)`);
+        continue;
+      }
       walletMap[wallet] = rec.domain;
     }
   }

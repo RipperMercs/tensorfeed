@@ -448,4 +448,43 @@ describe('refreshAllPublishers', () => {
       '0xaaa0000000000000000000000000000000000001': 'tensorfeed.ai',
     });
   });
+
+  it('uses first-wins attribution when two publishers declare the same wallet (AFTA federation)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    // Both publishers declare the SAME wallet, as TF + TerminalFeed do under
+    // the AFTA federation. The first publisher in iteration order must keep
+    // the wallet attribution; the second publisher still gets a per-publisher
+    // KV record but contributes nothing to the wallet map.
+    const sharedWallet = '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1';
+    const mockFetch = vi.fn(async (url: string | URL) => {
+      const u = url.toString();
+      const body = {
+        items: [{ accepts: [{ scheme: 'exact', network: 'eip155:8453', payTo: sharedWallet }] }],
+      };
+      if (u === 'https://tensorfeed.ai/.well-known/x402.json' || u === 'https://terminalfeed.io/.well-known/x402.json') {
+        return { ok: true, headers: { get: () => null }, text: async () => JSON.stringify(body) };
+      }
+      return { ok: false, status: 404, headers: { get: () => null }, text: async () => '' };
+    }) as unknown as typeof fetch;
+
+    const result = await refreshAllPublishers(env, ['tensorfeed.ai', 'terminalfeed.io'], () => '2026-05-28T00:00:00.000Z', mockFetch);
+
+    expect(result.count).toBe(2);
+    expect(result.errors).toBe(0);
+
+    // Wallet map should attribute to the FIRST publisher in iteration order.
+    const walletMap = await kv.get(KV_KEY_PUBLISHERS, 'json');
+    expect(walletMap).toEqual({ [sharedWallet]: 'tensorfeed.ai' });
+
+    // Both per-publisher records must still be in KV; getPublishers reads from
+    // the prefix list so both show up in the public /publishers endpoint.
+    const tf = await kv.get(kvKeyPublisher('tensorfeed.ai'), 'json') as PublisherRecord;
+    const tfd = await kv.get(kvKeyPublisher('terminalfeed.io'), 'json') as PublisherRecord;
+    expect(tf.pay_to_wallets).toEqual([sharedWallet]);
+    expect(tfd.pay_to_wallets).toEqual([sharedWallet]);
+    expect(tf.last_crawl_error).toBeNull();
+    expect(tfd.last_crawl_error).toBeNull();
+  });
 });
