@@ -6223,6 +6223,82 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === BENCHMARK TRUST VERDICT PREVIEW (free, rate-limited) ===
+    // Free taste: trust band + score per benchmark, no per-signal detail
+    // or recommendation (those are premium). Optional ?benchmark=, ?category=.
+    if (path === '/api/preview/benchmark-trust-verdict') {
+      const btIp = getClientIP(request);
+      const { computeBenchmarkTrust, checkBenchmarkTrustPreviewRateLimit } = await import('./premium-benchmark-trust');
+      const btLimit = await checkBenchmarkTrustPreviewRateLimit(env, btIp, 10);
+      if (!btLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: btLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/benchmark-trust-verdict',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/benchmark-trust-verdict adds per-signal detail (ceiling proximity, frontier compression, contamination, status), the down-weight recommendation with an alternative benchmark, an AFTA-signed receipt, and no rate limit.',
+          },
+          429,
+        );
+      }
+      const btResult = await computeBenchmarkTrust(env, {
+        benchmark: url.searchParams.get('benchmark'),
+        category: url.searchParams.get('category'),
+      });
+      const slim = btResult.verdicts.slice(0, 8).map((v) => ({
+        id: v.id,
+        name: v.name,
+        category: v.category,
+        trust_band: v.trust_band,
+        trust_score: v.trust_score,
+      }));
+      return jsonResponse(
+        {
+          ok: true,
+          preview: true,
+          filter: btResult.filter,
+          count: btResult.count,
+          verdicts: slim,
+          claim: btResult.claim,
+          rate_limit: { limit: btLimit.limit, remaining: btLimit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/benchmark-trust-verdict',
+            adds: ['per-signal detail (ceiling proximity, frontier compression, contamination, status)', 'down-weight recommendation + alternative benchmark', 'AFTA-signed receipt', 'no rate limit'],
+          },
+        },
+        200,
+        0,
+      );
+    }
+
+    // === PAID PREMIUM ENDPOINT: BENCHMARK TRUST VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/benchmark-trust-verdict
+    // Is a benchmark a trustworthy capability signal right now, or
+    // saturated / contaminated / near-ceiling so a high score should be
+    // down-weighted? Pure deterministic compute over the benchmark registry
+    // plus the live cross-model scores (frontier compression). No required
+    // params (returns all benchmarks); strict-premium for Bazaar crawler
+    // hygiene. AFTA-signed.
+    if (path === '/api/premium/benchmark-trust-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { computeBenchmarkTrust } = await import('./premium-benchmark-trust');
+      const result = await computeBenchmarkTrust(env, {
+        benchmark: url.searchParams.get('benchmark'),
+        category: url.searchParams.get('category'),
+      });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/benchmark-trust-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM ENDPOINTS: HISTORY SERIES (Tier 1, 1 credit each) ===
     // Derived/aggregated views over the daily history:* snapshots captured
     // by Phase 0. Single-date snapshots stay free at /api/history; these

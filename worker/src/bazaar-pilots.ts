@@ -3349,6 +3349,76 @@ const STACK_SAFETY_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 22 (2026-05-28): benchmark-trust-verdict. Is an AI benchmark a
+// trustworthy capability signal, or saturated/contaminated/near-ceiling.
+// Pure compute over the benchmark registry plus live model scores.
+// Total pilot count: 46 -> 47.
+const BENCHMARK_TRUST_PILOT: BazaarPilotConfig = {
+  description:
+    'Benchmark Trust Verdict. Is an AI benchmark a trustworthy capability signal right now, or is it saturated, contaminated, or near its ceiling so a high score is a floor and not a differentiator? Returns a trust band and a 0-100 trust score per benchmark, fusing the registry contamination and saturation flags with the live spread of the top model scores (frontier compression), plus a down-weight recommendation and an alternative benchmark to use instead. Optional ?benchmark= or ?category= filter. AFTA-signed. The "should I trust this SOTA claim" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { category: 'code' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-28T08:00:00Z',
+            filter: { benchmark: null, category: 'code' },
+            count: 1,
+            verdicts: [
+              {
+                id: 'humaneval',
+                name: 'HumanEval',
+                category: 'code',
+                status: 'saturated',
+                contamination_risk: 'high',
+                frontier_score: '~97%',
+                score_range: '0-100% pass@1',
+                trust_band: 'contaminated',
+                trust_score: 12,
+                signals: { ceiling_proximity: 'at_ceiling', frontier_compression: 'unknown', top_score_spread: null, models_scored: 0 },
+                recommendation: 'Down-weight scores on this benchmark (high training-contamination risk, marked saturated, frontier score is near the ceiling). A high score is closer to a capability floor than a differentiator. Prefer LiveCodeBench for current code signal.',
+                leaderboard_url: 'https://paperswithcode.com/sota/code-generation-on-humaneval',
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  benchmark: { type: 'string', description: 'Optional registry id or name to narrow to one benchmark (e.g. swe-bench-verified).' },
+                  category: { type: 'string', description: 'Optional category filter: knowledge, math, code, multimodal, agents, long-context, safety.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -3437,6 +3507,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/route-verdict': ROUTE_VERDICT_PILOT,
   // Wave 21 (2026-05-28): stack-safety-verdict. GO/HOLD/BLOCK deploy gate.
   '/api/premium/stack-safety-verdict': STACK_SAFETY_PILOT,
+  // Wave 22 (2026-05-28): benchmark-trust-verdict. Benchmark trustworthiness.
+  '/api/premium/benchmark-trust-verdict': BENCHMARK_TRUST_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

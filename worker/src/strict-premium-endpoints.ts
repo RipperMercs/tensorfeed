@@ -63,6 +63,12 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // required (?packages=), so strict-premium gates anonymous crawlers to a
   // clean 402. Free taste at /api/preview/stack-safety-verdict.
   '/api/premium/stack-safety-verdict',
+  // Benchmark Trust Verdict (2026-05-28). Is a benchmark a trustworthy
+  // capability signal, or saturated/contaminated/near-ceiling so a high
+  // score should be down-weighted. No required params (returns all), but
+  // Bazaar-piloted, so strict-premium for anonymous-crawler hygiene (CDP
+  // must see a 402, not a free-trial 200).
+  '/api/premium/benchmark-trust-verdict',
   // Parameter-required historical + security routes. Without strict-premium
   // designation, anonymous probes from x402-surface-check (pay-skills) and
   // similar tools were granted a free-trial slot, then immediately rejected

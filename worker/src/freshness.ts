@@ -38,6 +38,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // pipeline cadence) joined to CISA KEV. 10-day SLA matches the ai-cves
   // batch SLA, so a stale CVE batch triggers a no-charge.
   '/api/premium/stack-safety-verdict': { maxAgeSeconds: 10 * 24 * 60 * 60 },
+  // Benchmark trust verdict: pure compute over the editorial benchmark
+  // registry plus the daily benchmark scores. No staleness signal applies
+  // (the registry updates on redeploy), same shape as model-deprecations.
+  '/api/premium/benchmark-trust-verdict': NULL_SLA,
   // Cost projection: pure compute.
   '/api/premium/cost/projection': NULL_SLA,
   // Compare models: pure aggregation over current pricing/benchmarks.
@@ -270,6 +274,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/routing': 'computed live from current pricing',
     '/api/premium/route-verdict': 'fuses live latency probes + incident triage + status; charges only when the operational layer is fresh (within 30 min)',
     '/api/premium/stack-safety-verdict': 'GO/HOLD/BLOCK deploy gate over the ingested AI-CVE batch joined to CISA KEV; charges only when the CVE batch is fresh (within 10 days)',
+    '/api/premium/benchmark-trust-verdict': 'pure compute over the editorial benchmark registry plus daily benchmark scores; no staleness signal applies',
     '/api/premium/cost/projection': 'computed live from current pricing',
     '/api/premium/compare/models': 'live aggregation over current pricing/benchmarks',
     '/api/premium/providers': 'live aggregation, ~24h freshness on cataloged data',

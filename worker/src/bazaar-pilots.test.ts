@@ -90,6 +90,8 @@ const PILOT_PATHS = [
   '/api/premium/route-verdict',
   // Wave 21 (stack-safety-verdict: deploy gate)
   '/api/premium/stack-safety-verdict',
+  // Wave 22 (benchmark-trust-verdict)
+  '/api/premium/benchmark-trust-verdict',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.
