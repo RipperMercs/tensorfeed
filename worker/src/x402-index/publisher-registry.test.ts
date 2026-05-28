@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { crawlPublisherManifest, isValidPublisherDomain } from './publisher-registry';
+import { crawlPublisherManifest, isValidPublisherDomain, refreshAllPublishers } from './publisher-registry';
+import { KV_KEY_PUBLISHERS, kvKeyPublisher } from './constants';
+import type { PublisherRecord } from './types';
 
 describe('isValidPublisherDomain (SSRF guard)', () => {
   it('rejects localhost and loopback hostnames', () => {
@@ -307,5 +309,143 @@ describe('crawlPublisherManifest manifest-content hardening', () => {
     });
     const rec = await crawlPublisherManifest('example.com', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
     expect(rec.pay_to_wallets).toEqual(['0xabc0000000000000000000000000000000000002']);
+  });
+});
+
+function mockKv() {
+  const store = new Map<string, string>();
+  return {
+    store,
+    get: vi.fn(async (key: string, type?: 'json') => {
+      const raw = store.get(key);
+      if (raw === undefined) return null;
+      return type === 'json' ? JSON.parse(raw) : raw;
+    }),
+    put: vi.fn(async (key: string, value: string, _opts?: { expirationTtl?: number }) => {
+      store.set(key, value);
+    }),
+  };
+}
+
+describe('refreshAllPublishers', () => {
+  it('crawls each seed, writes wallet map + per-publisher records to KV', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    const mockFetch = vi.fn(async (url: string | URL) => {
+      const u = url.toString();
+      if (u === 'https://tensorfeed.ai/.well-known/x402.json') {
+        return {
+          ok: true,
+          headers: { get: () => null },
+          text: async () => JSON.stringify({
+            items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xaaa0000000000000000000000000000000000001' }] }],
+          }),
+        };
+      }
+      if (u === 'https://terminalfeed.io/.well-known/x402.json') {
+        return {
+          ok: true,
+          headers: { get: () => null },
+          text: async () => JSON.stringify({
+            items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xbbb0000000000000000000000000000000000001' }] }],
+          }),
+        };
+      }
+      return { ok: false, status: 404, headers: { get: () => null }, text: async () => '' };
+    }) as unknown as typeof fetch;
+
+    const result = await refreshAllPublishers(env, ['tensorfeed.ai', 'terminalfeed.io'], () => '2026-05-27T00:00:00.000Z', mockFetch);
+
+    expect(result.count).toBe(2);
+    expect(result.errors).toBe(0);
+
+    const walletMap = await kv.get(KV_KEY_PUBLISHERS, 'json');
+    expect(walletMap).toEqual({
+      '0xaaa0000000000000000000000000000000000001': 'tensorfeed.ai',
+      '0xbbb0000000000000000000000000000000000001': 'terminalfeed.io',
+    });
+
+    const tfRec = await kv.get(kvKeyPublisher('tensorfeed.ai'), 'json') as PublisherRecord;
+    expect(tfRec.domain).toBe('tensorfeed.ai');
+    expect(tfRec.pay_to_wallets).toEqual(['0xaaa0000000000000000000000000000000000001']);
+    expect(tfRec.first_seen).toBe('2026-05-27T00:00:00.000Z');
+  });
+
+  it('preserves first_seen across re-crawls (merge with existing KV record)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    // Pre-seed an existing record from a prior crawl 30 days ago.
+    kv.store.set(kvKeyPublisher('tensorfeed.ai'), JSON.stringify({
+      domain: 'tensorfeed.ai',
+      manifest_url: 'https://tensorfeed.ai/.well-known/x402.json',
+      pay_to_wallets: ['0xaaa0000000000000000000000000000000000001'],
+      first_seen: '2026-04-27T00:00:00.000Z',
+      last_crawled: '2026-05-26T00:00:00.000Z',
+      last_crawl_error: null,
+      last_event_at: null,
+    }));
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: { get: () => null },
+      text: async () => JSON.stringify({
+        items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xaaa0000000000000000000000000000000000001' }] }],
+      }),
+    });
+
+    await refreshAllPublishers(env, ['tensorfeed.ai'], () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
+
+    const rec = await kv.get(kvKeyPublisher('tensorfeed.ai'), 'json') as PublisherRecord;
+    expect(rec.first_seen).toBe('2026-04-27T00:00:00.000Z'); // PRESERVED from the original
+    expect(rec.last_crawled).toBe('2026-05-27T00:00:00.000Z'); // BUT last_crawled advances
+  });
+
+  it('records crawl failure in the publisher record and reports errors count', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      headers: { get: () => null },
+      text: async () => '',
+    });
+
+    const result = await refreshAllPublishers(env, ['tensorfeed.ai'], () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
+
+    expect(result.errors).toBe(1);
+
+    const rec = await kv.get(kvKeyPublisher('tensorfeed.ai'), 'json') as PublisherRecord;
+    expect(rec.last_crawl_error).toBe('HTTP 503');
+    expect(rec.last_crawled).toBe('2026-05-27T00:00:00.000Z');
+  });
+
+  it('skips wallets for publishers that errored when building wallet map', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    const mockFetch = vi.fn(async (url: string | URL) => {
+      const u = url.toString();
+      if (u === 'https://tensorfeed.ai/.well-known/x402.json') {
+        return {
+          ok: true,
+          headers: { get: () => null },
+          text: async () => JSON.stringify({
+            items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xaaa0000000000000000000000000000000000001' }] }],
+          }),
+        };
+      }
+      return { ok: false, status: 500, headers: { get: () => null }, text: async () => '' };
+    }) as unknown as typeof fetch;
+
+    await refreshAllPublishers(env, ['tensorfeed.ai', 'broken.example'], () => '2026-05-27T00:00:00.000Z', mockFetch);
+
+    const walletMap = await kv.get(KV_KEY_PUBLISHERS, 'json');
+    // broken.example contributed no wallets because its crawl failed
+    expect(walletMap).toEqual({
+      '0xaaa0000000000000000000000000000000000001': 'tensorfeed.ai',
+    });
   });
 });

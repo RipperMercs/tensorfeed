@@ -1,4 +1,6 @@
 import type { PublisherRecord } from './types';
+import type { Env } from '../types';
+import { KV_KEY_PUBLISHERS, kvKeyPublisher, SEED_PUBLISHERS } from './constants';
 
 interface X402ManifestAccept {
   scheme?: string;
@@ -187,4 +189,49 @@ function normalizeAddress(addr: string): string | null {
   const lower = addr.toLowerCase();
   if (!/^0x[a-f0-9]{40}$/.test(lower)) return null;
   return lower;
+}
+
+/**
+ * Refresh all publisher manifests and write the wallet allowlist plus per-publisher
+ * records to KV. Preserves `first_seen` across re-crawls by merging with the
+ * existing KV record if one exists.
+ *
+ * Called by the daily 06:30 UTC cron. Safe to call repeatedly.
+ */
+export async function refreshAllPublishers(
+  env: Env,
+  domains: string[] = SEED_PUBLISHERS,
+  now: () => string = () => new Date().toISOString(),
+  fetchFn: typeof fetch = fetch,
+): Promise<{ count: number; errors: number }> {
+  const records: PublisherRecord[] = [];
+  let errors = 0;
+
+  for (const domain of domains) {
+    const existing = (await env.TENSORFEED_CACHE.get(kvKeyPublisher(domain), 'json')) as PublisherRecord | null;
+    const fresh = await crawlPublisherManifest(domain, now, fetchFn);
+
+    // Merge: preserve first_seen from the existing record if one was already
+    // stored. crawlPublisherManifest always sets first_seen to nowStr because
+    // it cannot know prior discovery time; we restore it here.
+    const merged: PublisherRecord = existing
+      ? { ...fresh, first_seen: existing.first_seen, last_event_at: existing.last_event_at }
+      : fresh;
+
+    records.push(merged);
+    if (merged.last_crawl_error !== null) errors++;
+    await env.TENSORFEED_CACHE.put(kvKeyPublisher(domain), JSON.stringify(merged));
+  }
+
+  const walletMap: Record<string, string> = {};
+  for (const rec of records) {
+    if (rec.last_crawl_error !== null) continue;
+    for (const wallet of rec.pay_to_wallets) {
+      walletMap[wallet] = rec.domain;
+    }
+  }
+
+  await env.TENSORFEED_CACHE.put(KV_KEY_PUBLISHERS, JSON.stringify(walletMap));
+
+  return { count: records.length, errors };
 }
