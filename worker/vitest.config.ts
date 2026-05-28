@@ -1,6 +1,11 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  css: {
+    // Prevent vite from walking up to the root postcss.config.mjs (which
+    // requires tailwindcss that is not installed in the worker subtree).
+    postcss: { plugins: [] },
+  },
   test: {
     include: ['src/**/*.test.ts'],
     environment: 'node',
