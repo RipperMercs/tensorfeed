@@ -42,6 +42,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // registry plus the daily benchmark scores. No staleness signal applies
   // (the registry updates on redeploy), same shape as model-deprecations.
   '/api/premium/benchmark-trust-verdict': NULL_SLA,
+  // Failover verdict: fuses the same live operational signals as route-
+  // verdict (incident triage + status + measured latency). 30-min SLA on
+  // the operational layer; a stale live signal no-charges.
+  '/api/premium/failover-verdict': { maxAgeSeconds: 30 * 60 },
   // Cost projection: pure compute.
   '/api/premium/cost/projection': NULL_SLA,
   // Compare models: pure aggregation over current pricing/benchmarks.
@@ -275,6 +279,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/route-verdict': 'fuses live latency probes + incident triage + status; charges only when the operational layer is fresh (within 30 min)',
     '/api/premium/stack-safety-verdict': 'GO/HOLD/BLOCK deploy gate over the ingested AI-CVE batch joined to CISA KEV; charges only when the CVE batch is fresh (within 10 days)',
     '/api/premium/benchmark-trust-verdict': 'pure compute over the editorial benchmark registry plus daily benchmark scores; no staleness signal applies',
+    '/api/premium/failover-verdict': 'confirms the degraded provider against live incident triage then ranks operational alternatives; charges only when the operational layer is fresh (within 30 min)',
     '/api/premium/cost/projection': 'computed live from current pricing',
     '/api/premium/compare/models': 'live aggregation over current pricing/benchmarks',
     '/api/premium/providers': 'live aggregation, ~24h freshness on cataloged data',

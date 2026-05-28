@@ -3419,6 +3419,79 @@ const BENCHMARK_TRUST_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 23 (2026-05-28): failover-verdict. Provider A degraded, recommend the
+// best operational failover target for a task. Reuses the route-verdict
+// fusion with the degraded + failing providers excluded. Total pilot count: 47 -> 48.
+const FAILOVER_PILOT: BazaarPilotConfig = {
+  description:
+    'Failover Verdict. Provider A is degraded, which operational provider do I fail over to for this task right now? Confirms A against the live incident-triage feed, then runs the capability-first route verdict with A and any provider flagged failover_now excluded, returning the recommended destination model plus the incident reason plus ranked alternatives plus an AFTA-signed receipt. Pass ?from=<provider> and optional ?task= or ?model=. The "A just broke, where do I send it" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: 'anthropic', task: 'code' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            from: {
+              provider: 'anthropic',
+              in_incident: true,
+              incident: { title: 'Anthropic API elevated errors', service: 'Anthropic API', impact_classification: 'critical', recommended_action: 'failover_now', started_at: '2026-05-28T11:00:00Z', triage_summary: 'Anthropic API returning elevated 5xx for Messages.' },
+            },
+            query: { task: 'code', model: null },
+            capturedAt: '2026-05-28T11:55:00Z',
+            excluded_providers: ['anthropic'],
+            failover_to: {
+              rank: 1,
+              model: { id: 'gpt-5-5', name: 'GPT-5.5', provider: 'openai', openSource: false, contextWindow: 400000 },
+              pricing: { input: 5, output: 15, blended: 10, currency: 'USD', unit: 'per 1M tokens' },
+              quality: { task_score: 0.86, trust_discounted: 0.83, contamination_note: null },
+              usage: { corroborated: true, rank: 2, share_pct: 14.6, trend: 'up' },
+              latency: { measured_p95_ms: 1200, source: 'measured_probe' },
+              operational: { ok: true, status: 'operational', source: 'live_status' },
+              deprecation: { flagged: false, status: null, sunset_date: null },
+              composite_score: 0.79,
+              why: 'code quality 0.83 after trust discount; corroborated by real usage (rank 2, 14.6% share, up); measured p95 1200 ms; operational; blended $10 / 1M',
+            },
+            alternatives: [],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: { type: 'string', description: 'The degraded provider to fail over from (e.g. anthropic, openai, google).' },
+                  task: { type: 'string', enum: ['code', 'reasoning', 'creative', 'general'], description: 'Optional task profile.' },
+                  model: { type: 'string', description: 'Optional model to narrow the failover target.' },
+                },
+                required: ['from'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -3509,6 +3582,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/stack-safety-verdict': STACK_SAFETY_PILOT,
   // Wave 22 (2026-05-28): benchmark-trust-verdict. Benchmark trustworthiness.
   '/api/premium/benchmark-trust-verdict': BENCHMARK_TRUST_PILOT,
+  // Wave 23 (2026-05-28): failover-verdict. Best operational failover target.
+  '/api/premium/failover-verdict': FAILOVER_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

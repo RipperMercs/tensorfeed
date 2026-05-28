@@ -178,6 +178,7 @@ export interface RouteVerdictOptions {
   maxLatencyP95Ms?: number; // drop candidates whose MEASURED p95 exceeds this
   requireOperational?: boolean; // default true: drop candidates known down / failover_now
   excludeDeprecated?: boolean; // default true: drop matched deprecated / sunsetted models
+  excludeProviders?: string[]; // drop candidates on these providers (fuzzy match); used by failover-verdict
 }
 
 export type LatencySource = 'measured_probe' | 'unknown';
@@ -340,6 +341,7 @@ export function buildRouteVerdict(
       ? options.maxLatencyP95Ms
       : null;
   const modelNeedle = options.model ? normName(options.model) : null;
+  const excludeProviders = (options.excludeProviders ?? []).map((p) => p.toLowerCase().trim()).filter(Boolean);
 
   const pricing = inputs.pricing ?? { providers: [] };
   const benchmarks = inputs.benchmarks ?? { models: [] };
@@ -495,6 +497,13 @@ export function buildRouteVerdict(
   if (maxLatency !== null) {
     filtered = filtered.filter((c) => c.measuredP95 === null || c.measuredP95 <= maxLatency);
   }
+  if (excludeProviders.length > 0) {
+    const before = filtered.length;
+    filtered = filtered.filter((c) => !excludeProviders.some((ex) => providerMatch(c.provider, ex)));
+    if (filtered.length < before) {
+      notes.push(`Excluded ${before - filtered.length} candidate(s) on the excluded provider(s): ${excludeProviders.join(', ')}.`);
+    }
+  }
 
   // Capability floor (capability-first): keep only candidates within
   // CAPABILITY_FLOOR_RATIO of the best trust-discounted quality. Cost,
@@ -637,7 +646,8 @@ export function buildRouteVerdict(
 
 // ─── Loader: read live data and compute ────────────────────────────
 
-export async function computeRouteVerdict(env: Env, options: RouteVerdictOptions): Promise<RouteVerdictResult> {
+/** Load the live inputs the route verdict (and the failover verdict) fuse. */
+export async function loadRouteVerdictInputs(env: Env): Promise<RouteVerdictInputs> {
   const [pricing, benchmarks, services, probe, triage] = await Promise.all([
     env.TENSORFEED_CACHE.get('models', 'json') as Promise<PricingData | null>,
     env.TENSORFEED_CACHE.get('benchmarks', 'json') as Promise<BenchmarksData | null>,
@@ -645,21 +655,21 @@ export async function computeRouteVerdict(env: Env, options: RouteVerdictOptions
     getLatestSummary(env),
     getIncidentTriageSnapshot(env),
   ]);
+  return {
+    pricing,
+    benchmarks,
+    services,
+    probe,
+    triage,
+    usage: USAGE_RANKINGS,
+    benchmarkRegistry: BENCHMARK_REGISTRY,
+    deprecations: MODEL_DEPRECATIONS,
+  };
+}
 
-  return buildRouteVerdict(
-    {
-      pricing,
-      benchmarks,
-      services,
-      probe,
-      triage,
-      usage: USAGE_RANKINGS,
-      benchmarkRegistry: BENCHMARK_REGISTRY,
-      deprecations: MODEL_DEPRECATIONS,
-    },
-    options,
-    new Date(),
-  );
+export async function computeRouteVerdict(env: Env, options: RouteVerdictOptions): Promise<RouteVerdictResult> {
+  const inputs = await loadRouteVerdictInputs(env);
+  return buildRouteVerdict(inputs, options, new Date());
 }
 
 /**

@@ -6301,6 +6301,91 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === FAILOVER VERDICT PREVIEW (free, rate-limited) ===
+    // Free taste: the recommended failover destination + the from incident,
+    // without the full candidate detail, ranked alternatives, or receipt.
+    if (path === '/api/preview/failover-verdict') {
+      const foIp = getClientIP(request);
+      const { computeFailoverVerdict, checkFailoverPreviewRateLimit } = await import('./premium-failover-verdict');
+      const foLimit = await checkFailoverPreviewRateLimit(env, foIp, 10);
+      if (!foLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: foLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/failover-verdict',
+            message: 'Free preview limited to 10 calls/day per IP. The paid /api/premium/failover-verdict adds the full failover candidate (pricing, measured latency, quality), the ranked alternatives, an AFTA-signed receipt, and no rate limit.',
+          },
+          429,
+        );
+      }
+      const foFrom = url.searchParams.get('from');
+      if (!foFrom || !foFrom.trim()) {
+        return jsonResponse({ ok: false, error: 'missing_params', hint: 'Pass ?from=<provider> (the degraded provider), e.g. ?from=anthropic&task=code.' }, 400);
+      }
+      const foTaskParam = url.searchParams.get('task');
+      const foTask: RoutingTask | undefined =
+        foTaskParam === 'code' || foTaskParam === 'reasoning' || foTaskParam === 'creative' || foTaskParam === 'general' ? foTaskParam : undefined;
+      const foResult = await computeFailoverVerdict(env, { from: foFrom.trim(), task: foTask, model: url.searchParams.get('model') ?? undefined });
+      const slimDest = foResult.failover_to
+        ? { model: foResult.failover_to.model, operational: foResult.failover_to.operational, composite_score: foResult.failover_to.composite_score }
+        : null;
+      return jsonResponse(
+        {
+          ok: true,
+          preview: true,
+          from: foResult.from,
+          query: foResult.query,
+          excluded_providers: foResult.excluded_providers,
+          failover_to: slimDest,
+          why: foResult.why,
+          claim: foResult.claim,
+          rate_limit: { limit: foLimit.limit, remaining: foLimit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/failover-verdict',
+            adds: ['full failover candidate (pricing, measured latency, quality)', 'ranked alternatives', 'AFTA-signed receipt', 'no rate limit'],
+          },
+        },
+        200,
+        0,
+      );
+    }
+
+    // === PAID PREMIUM ENDPOINT: FAILOVER VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/failover-verdict
+    // Provider A is degraded, which operational provider do I fail over to
+    // for this task right now? Confirms A against the live incident-triage
+    // feed, then runs the Route Verdict fusion with A (and any provider
+    // flagged failover_now) excluded. Param-required (?from=), so strict-
+    // premium. 30-minute operational freshness SLA. AFTA-signed.
+    if (path === '/api/premium/failover-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const foFrom = url.searchParams.get('from');
+      if (!foFrom || !foFrom.trim()) {
+        return premiumValidationFailure(
+          { ok: false, error: 'missing_params', hint: 'Pass ?from=<provider> (the degraded provider to fail over from), e.g. ?from=anthropic&task=code.' },
+          payment,
+          request,
+          env,
+        );
+      }
+      const foTaskParam = url.searchParams.get('task');
+      const foTask: RoutingTask | undefined =
+        foTaskParam === 'code' || foTaskParam === 'reasoning' || foTaskParam === 'creative' || foTaskParam === 'general' ? foTaskParam : undefined;
+      const { computeFailoverVerdict } = await import('./premium-failover-verdict');
+      const result = await computeFailoverVerdict(env, { from: foFrom.trim(), task: foTask, model: url.searchParams.get('model') ?? undefined });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/failover-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM ENDPOINTS: HISTORY SERIES (Tier 1, 1 credit each) ===
     // Derived/aggregated views over the daily history:* snapshots captured
     // by Phase 0. Single-date snapshots stay free at /api/history; these
