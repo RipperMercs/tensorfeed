@@ -115,3 +115,76 @@ describe('getLeaderboard', () => {
     expect(result.leaders.length).toBeLessThanOrEqual(25);
   });
 });
+
+describe('getRecent', () => {
+  it('returns up to N most recent events with base explorer URLs', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const ev: SettlementEvent = {
+      tx_hash: '0xabc', block: 1, ts: '2026-05-27T00:00:00.000Z',
+      from_address: '0xfff', to_address: '0xttt', amount_usdc: '0.02',
+      publisher_domain: 'tensorfeed.ai', asset: 'USDC', chain: 'base',
+    };
+    kv.store.set(KV_KEY_RECENT, JSON.stringify([ev, ev, ev]));
+
+    const result = await getRecent(env, 2);
+    expect(result.events.length).toBe(2);
+    expect(result.events[0].base_explorer_url).toBe('https://basescan.org/tx/0xabc');
+  });
+
+  it('clamps limit to max 50', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(KV_KEY_RECENT, JSON.stringify(Array(100).fill({
+      tx_hash: '0xa', block: 1, ts: '2026-05-27T00:00:00.000Z',
+      from_address: '0xf', to_address: '0xt', amount_usdc: '0.02',
+      publisher_domain: 'x.com', asset: 'USDC', chain: 'base',
+    })));
+    const result = await getRecent(env, 999);
+    expect(result.events.length).toBe(50);
+  });
+
+  it('returns empty events when KV has no recent data', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const result = await getRecent(env, 10);
+    expect(result.events).toEqual([]);
+    expect(result.count).toBe(0);
+  });
+});
+
+describe('getPublishers', () => {
+  it('lists publishers with their wallets and totals from KV', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({
+      '0xaaa': 'tensorfeed.ai',
+      '0xbbb': 'terminalfeed.io',
+    }));
+    kv.store.set(kvKeyPublisher('tensorfeed.ai'), JSON.stringify({
+      domain: 'tensorfeed.ai',
+      manifest_url: 'https://tensorfeed.ai/.well-known/x402.json',
+      pay_to_wallets: ['0xaaa'],
+      first_seen: '2026-05-01T00:00:00.000Z',
+      last_crawled: '2026-05-27T00:00:00.000Z',
+      last_crawl_error: null,
+      last_event_at: '2026-05-27T11:00:00.000Z',
+    }));
+    kv.store.set(kvKeyPublisher('terminalfeed.io'), JSON.stringify({
+      domain: 'terminalfeed.io',
+      manifest_url: 'https://terminalfeed.io/.well-known/x402.json',
+      pay_to_wallets: ['0xbbb'],
+      first_seen: '2026-05-10T00:00:00.000Z',
+      last_crawled: '2026-05-27T00:00:00.000Z',
+      last_crawl_error: null,
+      last_event_at: null,
+    }));
+
+    const result = await getPublishers(env);
+    expect(result.count).toBe(2);
+    expect(result.publishers.find((p) => p.domain === 'tensorfeed.ai')).toMatchObject({
+      pay_to_wallets: ['0xaaa'],
+      last_event_at: '2026-05-27T11:00:00.000Z',
+    });
+  });
+});

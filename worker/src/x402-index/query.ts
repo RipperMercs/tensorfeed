@@ -123,6 +123,38 @@ export async function getLeaderboard(env: Env, window: Window, limit: number, no
   return { window, captured_at: now.toISOString(), leaders };
 }
 
+export interface RecentResult {
+  captured_at: string;
+  count: number;
+  events: Array<SettlementEvent & { base_explorer_url: string }>;
+}
+
+export async function getRecent(env: Env, limit: number, now: Date = new Date()): Promise<RecentResult> {
+  const clampedLimit = Math.min(Math.max(limit, 1), 50);
+  const raw = (await env.TENSORFEED_CACHE.get(KV_KEY_RECENT, 'json')) as SettlementEvent[] | null;
+  const events = (raw ?? []).slice(0, clampedLimit).map((e) => ({
+    ...e,
+    base_explorer_url: `https://basescan.org/tx/${e.tx_hash}`,
+  }));
+  return { captured_at: now.toISOString(), count: events.length, events };
+}
+
+export interface PublishersResult {
+  captured_at: string;
+  count: number;
+  publishers: PublisherRecord[];
+}
+
+export async function getPublishers(env: Env, now: Date = new Date()): Promise<PublishersResult> {
+  const walletMap = ((await env.TENSORFEED_CACHE.get(KV_KEY_PUBLISHERS, 'json')) as Record<string, string> | null) ?? {};
+  const domains = Array.from(new Set(Object.values(walletMap)));
+  const publishers = await Promise.all(
+    domains.map(async (d) => (await env.TENSORFEED_CACHE.get(kvKeyPublisher(d), 'json')) as PublisherRecord | null),
+  );
+  const filtered = publishers.filter((p): p is PublisherRecord => p !== null);
+  return { captured_at: now.toISOString(), count: filtered.length, publishers: filtered };
+}
+
 function pctChangeDecimal(prior: string, current: string): number {
   const p = toMicroUnits(prior);
   const c = toMicroUnits(current);
