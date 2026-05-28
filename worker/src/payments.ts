@@ -202,6 +202,41 @@ function generateNonce(): string {
   return `tf-${toHex(bytes)}`;
 }
 
+// === Trial credits faucet (zero-payment on-ramp) ===
+//
+// The faucet mints a small, one-time, expiring credits grant to an agent
+// that proves control of a wallet via an EIP-191 signature (no on-chain
+// transaction, no USDC, no gas). It is the conversion on-ramp: a new
+// agent can taste the premium endpoints before funding. The grant is an
+// ordinary pay:credits token (total_purchased: 0) with a 30-day KV TTL,
+// so it spends and debits exactly like a purchased token and expires on
+// its own. Orchestration (signature verify, OFAC screen, single-use
+// nonce, one-grant-per-wallet) lives in faucet.ts; the mint itself lives
+// here next to the other token-minting paths so all credit creation is
+// in one audited module.
+export const TRIAL_FAUCET_CREDITS = 25;
+export const TRIAL_FAUCET_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
+
+export async function mintTrialCredits(
+  env: Env,
+  agentUa: string,
+): Promise<{ token: string; credits: number; expiresAt: string }> {
+  const token = generateToken();
+  const now = new Date();
+  const record: CreditsRecord = {
+    balance: TRIAL_FAUCET_CREDITS,
+    created: now.toISOString(),
+    last_used: now.toISOString(),
+    agent_ua: agentUa,
+    total_purchased: 0,
+  };
+  await env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(record), {
+    expirationTtl: TRIAL_FAUCET_TTL_SECONDS,
+  });
+  const expiresAt = new Date(now.getTime() + TRIAL_FAUCET_TTL_SECONDS * 1000).toISOString();
+  return { token, credits: TRIAL_FAUCET_CREDITS, expiresAt };
+}
+
 /**
  * Normalize the Bazaar extension block for CDP's indexer. CDP's hosted
  * indexer at api.cdp.coinbase.com/platform/v2/x402/discovery/resources
@@ -2838,6 +2873,13 @@ function paymentRequiredResponse(
         x402_v2: 'Sign an EIP-3009 transferWithAuthorization for the exact `amount` above against USDC on Base mainnet, base64-encode the PaymentPayload, retry with X-PAYMENT header. AgentCore Payments and @coinbase/x402 do this automatically.',
         recommended: 'Buy credits once via /api/payment/buy-credits, get a bearer token, use Authorization: Bearer <token> for all future calls (50ms latency).',
         x402_legacy: 'Pre-broadcast USDC on Base, retry this request with X-Payment-Tx + X-Payment-Quote headers. TensorFeed-specific fallback; agents on AgentCore Payments use X-PAYMENT instead.',
+      },
+      faucet: {
+        endpoint: '/api/payment/trial-credits',
+        method: 'POST',
+        credits: TRIAL_FAUCET_CREDITS,
+        cost: 'free',
+        how: `No payment, no USDC, no gas. Sign an EIP-191 message proving you control a wallet, POST { message, signature }, and receive a bearer token preloaded with ${TRIAL_FAUCET_CREDITS} trial credits. One grant per wallet. Use it to evaluate any premium endpoint, then top up the same token via /api/payment/buy-credits.`,
       },
     },
     402,

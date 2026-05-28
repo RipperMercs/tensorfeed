@@ -5614,6 +5614,81 @@ export default {
       return jsonResponse(result, result.ok ? 200 : 400, 0);
     }
 
+    // === TRIAL CREDITS FAUCET (free conversion on-ramp) ===
+    // POST /api/payment/trial-credits
+    // An agent signs an EIP-191 message proving wallet control (no
+    // on-chain transaction, no USDC, no gas) and receives a bearer token
+    // preloaded with trial credits. One grant per wallet, OFAC-screened
+    // (fail-closed), single-use nonce, signed-at window. The zero-setup
+    // on-ramp: taste the premium endpoints before funding, then top up the
+    // same token via /api/payment/buy-credits. Orchestration in faucet.ts.
+    if (path === '/api/payment/trial-credits' && request.method === 'POST') {
+      let faucetBody: unknown;
+      try {
+        faucetBody = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const faucetIp = getClientIP(request);
+      // Bound the sybil-mint rate per IP. The counter increments only on a
+      // successful grant, so invalid attempts never consume a legit
+      // caller's quota. 10 grants per IP per UTC day.
+      const faucetCapKey = `pay:faucet-ip:${new Date().toISOString().slice(0, 10)}:${faucetIp}`;
+      const faucetCap = (await env.TENSORFEED_CACHE.get(faucetCapKey, 'json')) as { count: number } | null;
+      if ((faucetCap?.count ?? 0) >= 10) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'faucet_ip_cap',
+            message: 'This IP reached the daily trial-credit grant cap. Fund via /api/payment/buy-credits or retry after the UTC day rolls over.',
+          },
+          429,
+        );
+      }
+      const faucetUa = request.headers.get('User-Agent') || 'unknown';
+      const { handleFaucetClaim } = await import('./faucet');
+      const faucetOutcome = await handleFaucetClaim(
+        env,
+        faucetBody as { message?: unknown; signature?: unknown },
+        faucetUa,
+      );
+      if (faucetOutcome.ok && faucetOutcome.status === 'granted') {
+        ctx.waitUntil(
+          env.TENSORFEED_CACHE.put(
+            faucetCapKey,
+            JSON.stringify({ count: (faucetCap?.count ?? 0) + 1 }),
+            { expirationTtl: 48 * 60 * 60 },
+          ),
+        );
+        return jsonResponse(
+          {
+            ok: true,
+            token: faucetOutcome.token,
+            credits: faucetOutcome.credits,
+            expires_at: faucetOutcome.expires_at,
+            wallet: faucetOutcome.wallet,
+            how_to_use: 'Send Authorization: Bearer <token> on any /api/premium/* call until the balance or the expiry runs out. Top up the same token via /api/payment/buy-credits.',
+          },
+          200,
+        );
+      }
+      const faucetStatus =
+        faucetOutcome.status === 'bad_request'
+          ? 400
+          : faucetOutcome.status === 'already_claimed'
+            ? 409
+            : faucetOutcome.status === 'rejected'
+              ? faucetOutcome.reason === 'signature_invalid'
+                ? 401
+                : faucetOutcome.reason === 'nonce_replayed'
+                  ? 409
+                  : 400
+              : faucetOutcome.status === 'banned'
+                ? 403
+                : 503; // retry_later
+      return jsonResponse(faucetOutcome, faucetStatus);
+    }
+
     if (path === '/api/payment/buy-credits' && request.method === 'POST') {
       // Geo-IP block for comprehensively sanctioned jurisdictions. Refuse
       // to even quote a credit purchase. Wallet-level screening on
