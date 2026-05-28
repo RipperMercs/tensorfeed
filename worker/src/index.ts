@@ -3088,6 +3088,39 @@ export default {
       return jsonResponse(result, 200, 0);
     }
 
+    // POST /api/admin/sec-guidance-delta/ingest?key=<INGEST_KEY>
+    //
+    // DP CC's Phi-4-on-5090 extraction pipeline POSTs validated
+    // guidance-delta batches here (the periodic-filing same-form delta
+    // lane). See For_DP_CC_guidance_delta_contract.md for the schema +
+    // workflow. Idempotent on accession_number. INGEST_KEY only, matching
+    // the ai-cves + sec-filings-extraction ingest pattern.
+    if (path === '/api/admin/sec-guidance-delta/ingest' && request.method === 'POST') {
+      if (!isAuthorizedIngest(env, extractAdminKey(request, url))) {
+        return jsonResponse(
+          { ok: false, error: 'unauthorized', message: 'sec-guidance-delta ingest requires a valid INGEST_KEY.' },
+          401,
+          0,
+        );
+      }
+      let raw: unknown;
+      try {
+        raw = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+      }
+      const { validateBatch, writeBatch } = await import('./sec-guidance-delta');
+      const v = validateBatch(raw);
+      if (!v.ok) {
+        return jsonResponse(
+          { ok: false, error: v.error, detail: v.detail, ...(v.index !== undefined ? { delta_index: v.index } : {}) },
+          400,
+        );
+      }
+      const result = await writeBatch(env, v.value);
+      return jsonResponse(result, 200, 0);
+    }
+
     // /api/admin/snapshot/openalex/{institutions|authors|citation-velocity}
     // POST a pre-built OpenAlex snapshot to KV. Used as a fallback when
     // the Worker's cron path is blocked by OpenAlex's per-IP throttle on
