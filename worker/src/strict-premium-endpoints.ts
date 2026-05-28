@@ -51,6 +51,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/routing',
   '/api/premium/compare/models',
   '/api/premium/cost/projection',
+  // Route Verdict (2026-05-28). Signed model-routing decision fusing
+  // pricing + contamination-discounted benchmarks + real usage + measured
+  // latency probes + live incident-triage operational state + deprecation
+  // flags. Param-required (?task= or ?model=), so strict-premium gates
+  // anonymous crawlers to a clean 402 rather than a free-trial 200 on the
+  // premium verdict. Free taste lives at /api/preview/route-verdict.
+  '/api/premium/route-verdict',
   // Parameter-required historical + security routes. Without strict-premium
   // designation, anonymous probes from x402-surface-check (pay-skills) and
   // similar tools were granted a free-trial slot, then immediately rejected

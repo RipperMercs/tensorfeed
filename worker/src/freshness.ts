@@ -28,6 +28,12 @@ const NULL_SLA = null;
 export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // Routing engine: pure compute over current pricing.
   '/api/premium/routing': NULL_SLA,
+  // Route verdict: unlike routing (pure compute), the verdict fuses LIVE
+  // operational signals (measured latency probes refreshed every 15 min,
+  // incident triage, status). 30-min SLA keys to that operational layer,
+  // so a stale live signal triggers a no-charge. The daily quality and
+  // price snapshots do not gate billing.
+  '/api/premium/route-verdict': { maxAgeSeconds: 30 * 60 },
   // Cost projection: pure compute.
   '/api/premium/cost/projection': NULL_SLA,
   // Compare models: pure aggregation over current pricing/benchmarks.
@@ -258,6 +264,7 @@ export function checkStaleness(
 export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: number | null; reason: string }> {
   const reasons: Record<string, string> = {
     '/api/premium/routing': 'computed live from current pricing',
+    '/api/premium/route-verdict': 'fuses live latency probes + incident triage + status; charges only when the operational layer is fresh (within 30 min)',
     '/api/premium/cost/projection': 'computed live from current pricing',
     '/api/premium/compare/models': 'live aggregation over current pricing/benchmarks',
     '/api/premium/providers': 'live aggregation, ~24h freshness on cataloged data',

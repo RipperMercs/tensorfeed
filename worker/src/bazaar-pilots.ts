@@ -3200,7 +3200,86 @@ const AI_COMPANIES_AGGREGATE_PILOT: BazaarPilotConfig = {
  * news, funding, and cohort metadata into one paid call per ticker for
  * the 14 AI bellwethers. Wave numbering jumps past Waves 15 to 18
  * (already in the map) to keep the Robinhood-event launch grouped.
+ *
+ * Wave 20 (2026-05-28): route-verdict. Signed model-routing decision
+ * fusing pricing, contamination-discounted benchmarks, real usage,
+ * measured latency probes, live incident-triage operational state, and
+ * deprecation flags into one verdict with an AFTA-signed receipt. The
+ * decision layer above the free /api/preview/route-verdict taste. Total
+ * pilot count: 44 -> 45.
  */
+const ROUTE_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'Signed model routing decision. One paid call returns the best model for a task (code, reasoning, creative, general) or a named model, fusing pricing, benchmark capability discounted for contamination, real production usage, measured p95 latency from active probes, live incident-triage operational state, and deprecation flags into a single verdict with runners-up and an AFTA-signed receipt over the inputs. Optional filters: max_latency_p95_ms, require_operational, exclude_deprecated. The "which model right now" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { task: 'code' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            query: { task: 'code', model: null },
+            capturedAt: '2026-05-28T11:55:00Z',
+            verdict: {
+              rank: 1,
+              model: { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic', openSource: false, contextWindow: 200000 },
+              pricing: { input: 3, output: 15, blended: 9, currency: 'USD', unit: 'per 1M tokens' },
+              quality: { task_score: 0.87, trust_discounted: 0.83, contamination_note: 'HumanEval (high contamination, saturated)' },
+              usage: { corroborated: true, rank: 1, share_pct: 18.4, trend: 'flat' },
+              latency: { measured_p95_ms: 1820, source: 'measured_probe' },
+              operational: { ok: true, status: 'operational', source: 'live_status' },
+              deprecation: { flagged: false, status: null, sunset_date: null },
+              composite_score: 0.78,
+              why: 'code quality 0.83 after trust discount; corroborated by real usage (rank 1, 18.4% share, flat); measured p95 1820 ms; operational; blended $9 / 1M',
+            },
+            runners_up: [],
+            trust: { usage_corroborated: true, benchmark_contamination: 'mixed', operational_layer: 'partial', latency_layer: 'partial' },
+            filters_applied: { max_latency_p95_ms: null, require_operational: true, exclude_deprecated: true },
+            candidates_considered: 8,
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  task: { type: 'string', enum: ['code', 'reasoning', 'creative', 'general'], description: 'Task profile to rank models for. Provide task or model.' },
+                  model: { type: 'string', description: 'Canonical model id or display name to narrow the verdict to one model.' },
+                  max_latency_p95_ms: { type: 'integer', minimum: 1, description: 'Drop candidates whose measured p95 latency exceeds this floor.' },
+                  require_operational: { type: 'string', enum: ['true', 'false'], description: 'Default true. Drop candidates known to be down or in failover.' },
+                  exclude_deprecated: { type: 'string', enum: ['true', 'false'], description: 'Default true. Drop models flagged deprecated or sunsetted.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -3285,6 +3364,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // four free siblings plus an alias-filter, so a trading agent in a hot
   // path can issue one round trip per ticker.
   '/api/premium/ai-companies/:ticker': AI_COMPANIES_AGGREGATE_PILOT,
+  // Wave 20 (2026-05-28): route-verdict. Signed model-routing decision.
+  '/api/premium/route-verdict': ROUTE_VERDICT_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

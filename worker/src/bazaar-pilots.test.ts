@@ -86,6 +86,8 @@ const PILOT_PATHS = [
   '/api/premium/security/verified/:id',
   // Wave 19 (per-ticker AI-company envelope — Robinhood Agentic Trading launch)
   '/api/premium/ai-companies/:ticker',
+  // Wave 20 (route-verdict: signed model-routing decision)
+  '/api/premium/route-verdict',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

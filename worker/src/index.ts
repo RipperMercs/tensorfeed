@@ -5964,6 +5964,109 @@ export default {
       );
     }
 
+    // === ROUTE VERDICT PREVIEW (free, rate-limited) ===
+    // Free taste of the signed Route Verdict: the top verdict only, no
+    // runners-up and no signed receipt. 10 calls/day per IP. The paid
+    // /api/premium/route-verdict adds runners-up, the AFTA-signed receipt
+    // (the citeable provenance an agent staples to its own decision), the
+    // filter params, and no rate limit.
+    if (path === '/api/preview/route-verdict') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const { computeRouteVerdict, checkRouteVerdictPreviewRateLimit } = await import('./premium-route-verdict');
+      const limit = await checkRouteVerdictPreviewRateLimit(env, ip, 10);
+      if (!limit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: limit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/route-verdict',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/route-verdict (full runners-up, AFTA-signed receipt, filter params, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const taskParam = url.searchParams.get('task');
+      const modelParam = url.searchParams.get('model');
+      const task: RoutingTask | undefined =
+        taskParam === 'code' || taskParam === 'reasoning' || taskParam === 'creative' || taskParam === 'general'
+          ? taskParam
+          : undefined;
+      if (!task && !modelParam) {
+        return jsonResponse(
+          { ok: false, error: 'missing_params', hint: 'provide ?task=code|reasoning|creative|general or ?model=<id-or-name>' },
+          400,
+        );
+      }
+      const result = await computeRouteVerdict(env, { task, model: modelParam ?? undefined });
+      return jsonResponse(
+        {
+          ok: true,
+          preview: true,
+          query: result.query,
+          verdict: result.verdict,
+          trust: result.trust,
+          data_freshness: result.data_freshness,
+          claim: result.claim,
+          rate_limit: { limit: limit.limit, remaining: limit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/route-verdict',
+            adds: ['runners_up', 'AFTA-signed receipt', 'filter params', 'no rate limit'],
+          },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
+    }
+
+    // === PAID PREMIUM ENDPOINT: ROUTE VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/route-verdict
+    // One signed routing decision. Fuses model pricing, benchmark
+    // capability discounted for contamination and saturation, real
+    // production usage, MEASURED p95 latency from the active probes, live
+    // incident-triage operational state, and model deprecation flags into
+    // a single verdict plus runners-up, with an AFTA-signed receipt over
+    // the inputs. The decision layer above the free
+    // /api/preview/route-verdict taste. Param-required (?task= or
+    // ?model=), so strict-premium. 30-minute freshness SLA keyed to the
+    // operational signal: a stale live layer triggers a no-charge.
+    if (path === '/api/premium/route-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const taskParam = url.searchParams.get('task');
+      const modelParam = url.searchParams.get('model');
+      const task: RoutingTask | undefined =
+        taskParam === 'code' || taskParam === 'reasoning' || taskParam === 'creative' || taskParam === 'general'
+          ? taskParam
+          : undefined;
+      if (!task && !modelParam) {
+        return premiumValidationFailure(
+          { error: 'missing_params', hint: 'provide ?task=code|reasoning|creative|general or ?model=<id-or-name>' },
+          payment,
+          request,
+          env,
+        );
+      }
+      const maxLatRaw = parseInt(url.searchParams.get('max_latency_p95_ms') ?? '', 10);
+      const { computeRouteVerdict } = await import('./premium-route-verdict');
+      const result = await computeRouteVerdict(env, {
+        task,
+        model: modelParam ?? undefined,
+        maxLatencyP95Ms: Number.isFinite(maxLatRaw) ? maxLatRaw : undefined,
+        requireOperational: url.searchParams.get('require_operational') !== 'false',
+        excludeDeprecated: url.searchParams.get('exclude_deprecated') !== 'false',
+      });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/route-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM ENDPOINTS: HISTORY SERIES (Tier 1, 1 credit each) ===
     // Derived/aggregated views over the daily history:* snapshots captured
     // by Phase 0. Single-date snapshots stay free at /api/history; these
