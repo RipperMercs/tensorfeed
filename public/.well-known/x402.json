@@ -13090,6 +13090,38 @@
         "credits": 1,
         "category": "ai-stack-security"
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/benchmark-trust-verdict",
+        "description": "Is an AI benchmark a trustworthy capability signal, or saturated/contaminated/near-ceiling so a high score should be down-weighted? Trust band + 0-100 score per benchmark.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-28T00:00:00Z",
+      "metadata": {
+        "name": "Benchmark Trust Verdict",
+        "description": "Trust band + 0-100 score per AI benchmark, fusing contamination and saturation flags with live frontier compression. A free band-only preview lives at /api/preview/benchmark-trust-verdict.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-benchmark-trust"
+      }
     }
   ],
   "freeEndpoints": [

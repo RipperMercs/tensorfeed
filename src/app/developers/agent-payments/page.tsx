@@ -350,6 +350,30 @@ const ENDPOINTS: PremiumEndpoint[] = [
 }`,
   },
   {
+    method: 'GET',
+    path: '/api/premium/benchmark-trust-verdict',
+    description: 'Is an AI benchmark a trustworthy capability signal right now, or saturated, contaminated, or near its ceiling so a high score is a floor and not a differentiator? Returns a trust band and a 0-100 trust score per benchmark, fusing the registry contamination and saturation flags with the live spread of the top model scores (frontier compression), plus a down-weight recommendation and an alternative benchmark. Optional ?benchmark= or ?category=. A free band-and-score-only preview lives at /api/preview/benchmark-trust-verdict, 10 calls per IP per day.',
+    cost: '1 credit per call',
+    example: `// Query: ?category=code
+{
+  "ok": true,
+  "capturedAt": "2026-05-28T08:00:00Z",
+  "filter": { "benchmark": null, "category": "code" },
+  "count": 7,
+  "verdicts": [
+    {
+      "id": "humaneval", "name": "HumanEval", "category": "code", "status": "saturated", "contamination_risk": "high",
+      "frontier_score": "~97%", "score_range": "0-100% pass@1", "trust_band": "contaminated", "trust_score": 12,
+      "signals": { "ceiling_proximity": "at_ceiling", "frontier_compression": "unknown", "top_score_spread": null, "models_scored": 0 },
+      "recommendation": "Down-weight scores on this benchmark (high training-contamination risk, marked saturated, frontier score is near the ceiling). A high score is closer to a capability floor than a differentiator. Prefer LiveCodeBench for current code signal.",
+      "leaderboard_url": "https://paperswithcode.com/sota/code-generation-on-humaneval"
+    }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 48 },
+  "receipt": { "id": "rcpt_...", "signing_alg": "EdDSA", "signing_curve": "Ed25519", "signature": "<base64url>" }
+}`,
+  },
+  {
     method: 'POST',
     path: '/api/payment/trial-credits',
     description: 'Free, zero-setup on-ramp. Sign an EIP-191 message proving you control a wallet (no on-chain transaction, no USDC, no gas), POST { message, signature }, and receive a bearer token preloaded with 25 trial credits. One grant per wallet, OFAC-screened, single-use nonce, 30-day expiry. Top up the same token later via /api/payment/buy-credits.',
