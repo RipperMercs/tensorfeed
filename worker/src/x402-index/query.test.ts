@@ -231,3 +231,44 @@ describe('getPublisherReceipts', () => {
     expect(result).toBeNull();
   });
 });
+
+describe('getSeries', () => {
+  it('returns daily-granularity volume series across date range (ecosystem)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    kv.store.set(kvKeyDayRollup('2026-05-27'), JSON.stringify({
+      date: '2026-05-27', volume_usdc: '5.0', count: 50, top_publishers: [],
+    }));
+    kv.store.set(kvKeyDayRollup('2026-05-26'), JSON.stringify({
+      date: '2026-05-26', volume_usdc: '3.0', count: 30, top_publishers: [],
+    }));
+
+    const result = await getSeries(env, { metric: 'volume', granularity: 'day', from: '2026-05-26', to: '2026-05-27' });
+
+    expect(result.series).toEqual([
+      { ts: '2026-05-26', value: '3.000000' },
+      { ts: '2026-05-27', value: '5.000000' },
+    ]);
+  });
+
+  it('returns count series when metric=count', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(kvKeyDayRollup('2026-05-27'), JSON.stringify({
+      date: '2026-05-27', volume_usdc: '5.0', count: 50, top_publishers: [],
+    }));
+    const result = await getSeries(env, { metric: 'count', granularity: 'day', from: '2026-05-27', to: '2026-05-27' });
+    expect(result.series).toEqual([{ ts: '2026-05-27', value: 50 }]);
+  });
+
+  it('returns per-publisher series when domain filter provided', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(kvKeyPubDayRollup('tensorfeed.ai', '2026-05-27'), JSON.stringify({
+      date: '2026-05-27', domain: 'tensorfeed.ai', volume_usdc: '2.0', count: 20,
+    }));
+    const result = await getSeries(env, { metric: 'volume', granularity: 'day', from: '2026-05-27', to: '2026-05-27', domain: 'tensorfeed.ai' });
+    expect(result.series).toEqual([{ ts: '2026-05-27', value: '2.000000' }]);
+  });
+});

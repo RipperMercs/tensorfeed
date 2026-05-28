@@ -230,6 +230,66 @@ export async function getPublisherReceipts(
   };
 }
 
+export interface SeriesParams {
+  metric: 'volume' | 'count';
+  granularity: 'day' | 'hour';
+  from: string;
+  to: string;
+  domain?: string;
+}
+
+export interface SeriesResult {
+  metric: 'volume' | 'count';
+  granularity: 'day' | 'hour';
+  window: { from: string; to: string };
+  series: Array<{ ts: string; value: string | number }>;
+  attribution: string;
+}
+
+export async function getSeries(env: Env, params: SeriesParams): Promise<SeriesResult> {
+  const { metric, granularity, from, to, domain } = params;
+
+  if (granularity === 'hour') {
+    return {
+      metric,
+      granularity,
+      window: { from, to },
+      series: [],
+      attribution: 'Hour granularity not yet available in MVP; use granularity=day',
+    };
+  }
+
+  const dates = datesBetween(from, to);
+  const series = await Promise.all(
+    dates.map(async (date) => {
+      if (domain) {
+        const r = (await env.TENSORFEED_CACHE.get(kvKeyPubDayRollup(domain, date), 'json')) as PublisherDailyRollup | null;
+        return {
+          ts: date,
+          value: metric === 'volume'
+            ? (r ? fromMicroUnits(toMicroUnits(r.volume_usdc)) : '0.000000')
+            : (r?.count ?? 0),
+        };
+      }
+      const r = (await env.TENSORFEED_CACHE.get(kvKeyDayRollup(date), 'json')) as DailyRollup | null;
+      return {
+        ts: date,
+        value: metric === 'volume'
+          ? (r ? fromMicroUnits(toMicroUnits(r.volume_usdc)) : '0.000000')
+          : (r?.count ?? 0),
+      };
+    }),
+  );
+
+  return {
+    metric,
+    granularity,
+    window: { from, to },
+    series,
+    attribution: 'TensorFeed x402 settlement index over public Base mainnet on-chain data',
+  };
+}
+
 function pctChangeDecimal(prior: string, current: string): number {
   const p = toMicroUnits(prior);
   const c = toMicroUnits(current);
