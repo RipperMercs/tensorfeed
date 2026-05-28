@@ -302,6 +302,20 @@ crons = [
   # uptime stats served on /x402/health. :27 slot picked to avoid
   # the :00/:10/:15/:30/:45 clusters other crons use.
   "27 * * * *",
+  # Daily 06:35 UTC: crawl every seed publisher's /.well-known/x402.json,
+  # merge first_seen across re-crawls, write the wallet allowlist +
+  # per-publisher records to KV (worker/src/x402-index/publisher-registry.ts).
+  # Powers the wallet filter used by the 5-min indexer tick. Slot is 06:35
+  # rather than 06:30 because 06:30 is already held by the CISA KEV cron;
+  # 06:35 is unused by any other cron in this file.
+  "35 6 * * *",
+  # Every 5 min: read the block cursor, fetch USDC Transfer logs from Base
+  # mainnet filtered to the wallet allowlist, decode each event, apply to
+  # daily + per-publisher rollups, advance cursor on success
+  # (worker/src/x402-index/indexer.ts). 5-min cadence matches the ~6-min
+  # worst-case settlement-to-indexed latency (30-block reorg safety) so
+  # the 10-min freshness SLA always holds with one tick of margin.
+  "*/5 * * * *",
 ]
 
 [[kv_namespaces]]

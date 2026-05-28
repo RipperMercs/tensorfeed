@@ -12217,6 +12217,23 @@ export default {
       // and record latency + validity. Rolls up to 24h + 7d uptime
       // stats served on /x402/health.
       await run('runX402StatusCheck', () => runX402StatusCheck(env, env.SITE_URL || 'https://tensorfeed.ai'));
+    } else if (cron === '35 6 * * *') {
+      // Daily 06:35 UTC: crawl every seed publisher's /.well-known/x402.json,
+      // merge first_seen across re-crawls, write the wallet allowlist +
+      // per-publisher records to KV. Slot is 06:35 because 06:30 is held
+      // by the CISA KEV cron; 06:35 is unused by any other cron.
+      const { refreshAllPublishers } = await import('./x402-index/publisher-registry');
+      const result = await refreshAllPublishers(env);
+      console.log('[x402-index] publisher refresh:', JSON.stringify(result));
+      return;
+    } else if (cron === '*/5 * * * *') {
+      // Every 5 min: read the block cursor, fetch USDC Transfer logs from
+      // Base mainnet filtered to the wallet allowlist, decode each event,
+      // apply to daily + per-publisher rollups, advance cursor on success.
+      const { runIndexerTick } = await import('./x402-index/indexer');
+      const result = await runIndexerTick(env);
+      console.log('[x402-index] indexer tick:', JSON.stringify(result));
+      return;
     }
 
     // Record RSS poll history for the daily summary digest
