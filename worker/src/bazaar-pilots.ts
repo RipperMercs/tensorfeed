@@ -3280,6 +3280,75 @@ const ROUTE_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 21 (2026-05-28): stack-safety-verdict. GO/HOLD/BLOCK deploy gate
+// over a package list, fusing the ingested AI-CVE batch with CISA KEV.
+// Free taste at /api/preview/stack-safety-verdict. Total pilot count: 45 -> 46.
+const STACK_SAFETY_PILOT: BazaarPilotConfig = {
+  description:
+    'Stack Safety Verdict. A GET deploy gate: pass packages=name@version,name@version (up to 10) from your AI stack and get GO / HOLD / BLOCK per package plus an overall gate, fusing TensorFeed\'s ingested AI-CVE batch (GHSA plus vendor advisories) with the CISA KEV catalog for exploitation status. Each verdict carries the matched CVE ids, affected ranges, fixed versions, and KEV status, plus an AFTA-signed receipt. Never-false-confirm: BLOCK only on exploited with no fix, HOLD when the version must be verified, PASS on no AI-stack match, UNKNOWN outside the cohort. The "is my AI stack safe to ship" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { packages: 'langchain@0.3.27,vllm@0.6.0' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            gate: 'HOLD',
+            extracted_at: '2026-05-27T09:00:00Z',
+            counts: { block: 0, hold: 1, pass: 1, unknown: 0 },
+            packages: [
+              {
+                package: 'vllm',
+                version: '0.6.0',
+                verdict: 'HOLD',
+                in_cohort: true,
+                exploited: false,
+                fix_available: true,
+                category: 'inference-stack',
+                matched_cves: [
+                  { cve_id: 'CVE-2026-1234', on_kev: false, exploited_in_wild: 'stated_no', severity_label: 'high', affected_version_ranges: ['< 0.6.1'], fixed_versions: ['0.6.1'], source_url: 'https://github.com/advisories/GHSA-xxxx' },
+                ],
+                reason: 'A known CVE applies to this package (not confirmed exploited). Verify your pinned version against the surfaced ranges and fixes.',
+              },
+              { package: 'langchain', version: '0.3.27', verdict: 'PASS', in_cohort: true, exploited: false, fix_available: false, category: 'agent-framework', matched_cves: [], reason: 'No AI-stack CVE matched this package name. Not a full vulnerability scan.' },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  packages: { type: 'string', description: 'Comma-separated name@version list (version optional), up to 10. Example: langchain@0.3.27,vllm@0.6.0' },
+                },
+                required: ['packages'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -3366,6 +3435,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/ai-companies/:ticker': AI_COMPANIES_AGGREGATE_PILOT,
   // Wave 20 (2026-05-28): route-verdict. Signed model-routing decision.
   '/api/premium/route-verdict': ROUTE_VERDICT_PILOT,
+  // Wave 21 (2026-05-28): stack-safety-verdict. GO/HOLD/BLOCK deploy gate.
+  '/api/premium/stack-safety-verdict': STACK_SAFETY_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

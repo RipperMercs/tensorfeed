@@ -6145,6 +6145,77 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === STACK SAFETY VERDICT PREVIEW (free, rate-limited) ===
+    // Free taste of the deploy gate: the per-package verdict and overall
+    // gate, capped at 3 packages, with the matched-CVE evidence stripped
+    // (premium carries the CVE ids, ranges, fixes, and KEV status).
+    if (path === '/api/preview/stack-safety-verdict') {
+      const ssIp = getClientIP(request);
+      const { computeStackSafetyVerdict, parsePackagesParam, checkStackSafetyPreviewRateLimit } = await import('./premium-stack-safety');
+      const ssLimit = await checkStackSafetyPreviewRateLimit(env, ssIp, 10);
+      if (!ssLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: ssLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/stack-safety-verdict',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/stack-safety-verdict adds the matched-CVE evidence (ids, ranges, fixes, KEV status), an AFTA-signed receipt, up to 10 packages, and no rate limit.',
+          },
+          429,
+        );
+      }
+      const ssParsed = parsePackagesParam(url.searchParams.get('packages'));
+      if (!ssParsed.ok) return jsonResponse({ ok: false, error: ssParsed.error, hint: ssParsed.hint }, 400);
+      const ssResult = await computeStackSafetyVerdict(env, ssParsed.packages.slice(0, 3));
+      const slim = ssResult.packages.map(({ matched_cves, ...rest }) => ({ ...rest, matched_cve_count: matched_cves.length }));
+      return jsonResponse(
+        {
+          ok: true,
+          preview: true,
+          gate: ssResult.gate,
+          counts: ssResult.counts,
+          packages: slim,
+          extracted_at: ssResult.extracted_at,
+          claim: ssResult.claim,
+          rate_limit: { limit: ssLimit.limit, remaining: ssLimit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/stack-safety-verdict',
+            adds: ['matched CVE evidence (ids, ranges, fixes, KEV status)', 'AFTA-signed receipt', 'up to 10 packages', 'no rate limit'],
+          },
+        },
+        200,
+        0,
+      );
+    }
+
+    // === PAID PREMIUM ENDPOINT: STACK SAFETY VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/stack-safety-verdict
+    // GO / HOLD / BLOCK deploy gate per package, fusing the ingested AI-CVE
+    // batch with the CISA KEV catalog. Param-required (?packages=), so
+    // strict-premium. Never-false-confirm: BLOCK only on exploited with no
+    // fix, HOLD when the version must be verified, PASS on no AI-stack
+    // match, UNKNOWN outside the curated cohort.
+    if (path === '/api/premium/stack-safety-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { computeStackSafetyVerdict, parsePackagesParam } = await import('./premium-stack-safety');
+      const ssParsed = parsePackagesParam(url.searchParams.get('packages'));
+      if (!ssParsed.ok) {
+        return premiumValidationFailure({ ok: false, error: ssParsed.error, hint: ssParsed.hint }, payment, request, env);
+      }
+      const result = await computeStackSafetyVerdict(env, ssParsed.packages);
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/stack-safety-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM ENDPOINTS: HISTORY SERIES (Tier 1, 1 credit each) ===
     // Derived/aggregated views over the daily history:* snapshots captured
     // by Phase 0. Single-date snapshots stay free at /api/history; these

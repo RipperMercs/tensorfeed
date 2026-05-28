@@ -58,6 +58,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // anonymous crawlers to a clean 402 rather than a free-trial 200 on the
   // premium verdict. Free taste lives at /api/preview/route-verdict.
   '/api/premium/route-verdict',
+  // Stack Safety Verdict (2026-05-28). GO/HOLD/BLOCK deploy gate over a
+  // package list, fusing the ingested AI-CVE batch + CISA KEV. Param-
+  // required (?packages=), so strict-premium gates anonymous crawlers to a
+  // clean 402. Free taste at /api/preview/stack-safety-verdict.
+  '/api/premium/stack-safety-verdict',
   // Parameter-required historical + security routes. Without strict-premium
   // designation, anonymous probes from x402-surface-check (pay-skills) and
   // similar tools were granted a free-trial slot, then immediately rejected
