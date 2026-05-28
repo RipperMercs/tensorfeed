@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'opus-4-8-workflow-orchestration-primitive',
+    title:
+      'Opus 4.8 Shipped a Workflow Primitive. Agent Orchestration Just Moved Into the Model.',
+    author: 'Ripper',
+    date: 'May 28, 2026',
+    readTime: '6 min read',
+    description:
+      "Anthropic shipped Claude Opus 4.8 this week, and the part agent operators are talking about is not the quality bump. It is Workflow, a primitive that turns deterministic multi-agent orchestration (fan-out, pipelines, judge panels, adversarial verification) into a first-class feature of the model tool itself, not an app-layer framework you bolt on. Inside what actually shipped, why moving orchestration from the framework into the runtime shifts the default behavior of the median agent builder, the cost and latency math that changes when fan-out becomes one line to express (a ten-way parallel step quietly costs ten times the tokens), the pipeline-versus-barrier latency trap, and how the agent-framework market splits along the multi-model line once orchestration ergonomics stop being a moat.",
+  },
+  {
     slug: 'robinhood-agentic-trading-mcp-brokerage-account',
     title:
       'Robinhood Just Gave AI Agents a Brokerage Account. The Floor Below x402 Has a New Lane.',

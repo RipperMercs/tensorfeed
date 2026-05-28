@@ -238,6 +238,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/security/corroborated`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/opus-4-8-workflow-orchestration-primitive`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/robinhood-agentic-trading-mcp-brokerage-account`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/four-frontier-labs-acqui-hire-consolidation`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/pope-leo-magnifica-humanitas-anthropic-olah`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
