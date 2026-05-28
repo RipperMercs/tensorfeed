@@ -13122,6 +13122,38 @@
         "credits": 1,
         "category": "ai-benchmark-trust"
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/failover-verdict",
+        "description": "Provider A is degraded, which operational provider do I fail over to for this task right now? Confirms A against live incident triage, then recommends the best operational alternative. Pass ?from=<provider>.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-28T00:00:00Z",
+      "metadata": {
+        "name": "Failover Verdict",
+        "description": "Best operational failover target when a provider degrades: confirms the incident, then recommends the alternative by the capability-first route verdict. Free destination-only preview at /api/preview/failover-verdict.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-failover-routing"
+      }
     }
   ],
   "freeEndpoints": [

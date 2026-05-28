@@ -374,6 +374,24 @@ const ENDPOINTS: PremiumEndpoint[] = [
 }`,
   },
   {
+    method: 'GET',
+    path: '/api/premium/failover-verdict',
+    description: 'Provider A is degraded, which operational provider do I fail over to for this task right now? Confirms A against the live incident-triage feed, then runs the capability-first route verdict with A and any provider flagged failover_now excluded, returning the recommended destination, the incident reason, and ranked alternatives. Param-required (?from=), optional ?task= or ?model=. A free destination-and-reason-only preview lives at /api/preview/failover-verdict, 10 calls per IP per day.',
+    cost: '1 credit per call',
+    example: `// Query: ?from=anthropic&task=code
+{
+  "ok": true,
+  "from": { "provider": "anthropic", "in_incident": true, "incident": { "title": "Anthropic API elevated errors", "service": "Anthropic API", "impact_classification": "critical", "recommended_action": "failover_now", "started_at": "2026-05-28T11:00:00Z", "triage_summary": "Anthropic API returning elevated 5xx for Messages." } },
+  "query": { "task": "code", "model": null },
+  "capturedAt": "2026-05-28T11:55:00Z",
+  "excluded_providers": ["anthropic"],
+  "failover_to": { "rank": 1, "model": { "id": "gpt-5-5", "name": "GPT-5.5", "provider": "openai", "openSource": false, "contextWindow": 400000 }, "pricing": { "input": 5, "output": 15, "blended": 10, "currency": "USD", "unit": "per 1M tokens" }, "quality": { "task_score": 0.86, "trust_discounted": 0.83, "contamination_note": null }, "usage": { "corroborated": true, "rank": 2, "share_pct": 14.6, "trend": "up" }, "latency": { "measured_p95_ms": 1200, "source": "measured_probe" }, "operational": { "ok": true, "status": "operational", "source": "live_status" }, "deprecation": { "flagged": false, "status": null, "sunset_date": null }, "composite_score": 0.79, "why": "code quality 0.83 after trust discount; corroborated by real usage (rank 2, 14.6% share, up); measured p95 1200 ms; operational; blended $10 / 1M" },
+  "alternatives": [],
+  "billing": { "credits_charged": 1, "credits_remaining": 48 },
+  "receipt": { "id": "rcpt_...", "signing_alg": "EdDSA", "signing_curve": "Ed25519", "signature": "<base64url>" }
+}`,
+  },
+  {
     method: 'POST',
     path: '/api/payment/trial-credits',
     description: 'Free, zero-setup on-ramp. Sign an EIP-191 message proving you control a wallet (no on-chain transaction, no USDC, no gas), POST { message, signature }, and receive a bearer token preloaded with 25 trial credits. One grant per wallet, OFAC-screened, single-use nonce, 30-day expiry. Top up the same token later via /api/payment/buy-credits.',
