@@ -13058,6 +13058,38 @@
         "credits": 1,
         "category": "ai-model-routing"
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/stack-safety-verdict",
+        "description": "GO / HOLD / BLOCK deploy gate for your AI stack, fusing the ingested AI-CVE batch with CISA KEV. Pass packages=name@version (up to 10).",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-28T00:00:00Z",
+      "metadata": {
+        "name": "Stack Safety Verdict",
+        "description": "A GO / HOLD / BLOCK deploy gate for your AI stack, fusing the ingested AI-CVE batch (GHSA plus vendor advisories) with the CISA KEV catalog. Pass packages=name@version (up to 10). Never-false-confirm: BLOCK only on exploited with no fix, HOLD when the version must be verified, PASS on no match, UNKNOWN outside the cohort. A free gate-only preview lives at /api/preview/stack-safety-verdict.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-stack-security"
+      }
     }
   ],
   "freeEndpoints": [
