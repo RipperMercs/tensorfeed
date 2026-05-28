@@ -44,6 +44,9 @@ export const metadata: Metadata = {
     'machine payable API',
     'USDC on Base',
     'Coinbase x402',
+    'Coinbase Base MCP',
+    'Base MCP',
+    'mcp.base.org',
     'AWS x402',
     'Amazon Bedrock AgentCore Payments',
     'AgentCore Payments',
@@ -63,6 +66,11 @@ const FAQS = [
     question: 'How does x402 work in one round trip?',
     answer:
       'Client requests a paid endpoint. Server responds 402 Payment Required with a JSON body containing x402Version, resource, and an accepts array (scheme, network, amount, asset, payTo, maxTimeoutSeconds). For the Coinbase reference exact scheme on EVM networks like Base, the client signs an EIP-3009 transferWithAuthorization (gasless from the agent’s side), wraps it as a PaymentPayload (signature plus authorization fields from, to, value, validAfter, validBefore, nonce), and base64-encodes the result. The client retries with header X-PAYMENT set to that base64 string. The server’s facilitator broadcasts the authorization, verifies on-chain settlement, and returns 200 with the data plus a PAYMENT-RESPONSE header containing the settlement receipt. No accounts, no API keys for billing, no signup form, no invoice cycle.',
+  },
+  {
+    question: 'How does Coinbase Base MCP fit into x402?',
+    answer:
+      'Base MCP (mcp.base.org, launched May 2026) is Coinbase\'s official transact-side MCP server. It connects an agent to a Base Account and lets the agent propose swaps, transfers, and x402 payments that the user approves in-wallet. From an x402 perspective, Base MCP is the canonical agent-side wallet client: it handles the EIP-3009 signature, the X-PAYMENT header, and the per-payment maxPayment approval modal without the agent ever holding private keys. Discovery still happens upstream of Base MCP: the user or upstream agent supplies the endpoint URL, and Base MCP detects the x402 payment requirement by reading the 402 response. It does not crawl Bazaar or x402scan. On the publisher side, the merchant API still needs an x402-compliant /.well-known/x402 manifest and a canonical 402 Payment Required response. TensorFeed pairs with Base MCP cleanly: TF\'s premium endpoints publish a canonical V2 manifest, Base MCP signs the payment, and the @tensorfeed/x402-base-mcp verify MCP independently confirms settlement on-chain.',
   },
   {
     question: 'Who actually uses x402 today?',
