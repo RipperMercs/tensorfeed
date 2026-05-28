@@ -9527,6 +9527,131 @@ export default {
       return await premiumResponse(envelope, payment, 1, request, env);
     }
 
+    // === FREE: x402 SETTLEMENT INDEX (Wave 20) ===
+    // Ecosystem-level index of x402 USDC settlements on Base mainnet.
+    // The indexer cron writes daily + per-publisher rollups to KV; these
+    // routes serve them. Dynamic import() so cold-start cost of the
+    // x402-index query module is deferred until the first call lands.
+
+    if (path === '/api/x402-index/summary') {
+      const window = (url.searchParams.get('window') ?? '24h') as '24h' | '7d' | '30d';
+      if (window !== '24h' && window !== '7d' && window !== '30d') {
+        return jsonResponse({ ok: false, error: 'invalid_window', hint: 'window must be one of: 24h, 7d, 30d' }, 400, 0);
+      }
+      const { getSummary } = await import('./x402-index/query');
+      const result = await getSummary(env, window);
+      return jsonResponse({ ok: true, ...result }, 200, 60);
+    }
+
+    if (path === '/api/x402-index/publishers') {
+      const { getPublishers } = await import('./x402-index/query');
+      const result = await getPublishers(env);
+      return jsonResponse({ ok: true, ...result }, 200, 300);
+    }
+
+    if (path === '/api/x402-index/leaderboard') {
+      const window = (url.searchParams.get('window') ?? '24h') as '24h' | '7d' | '30d';
+      if (window !== '24h' && window !== '7d' && window !== '30d') {
+        return jsonResponse({ ok: false, error: 'invalid_window', hint: 'window must be one of: 24h, 7d, 30d' }, 400, 0);
+      }
+      const limitParam = parseInt(url.searchParams.get('limit') ?? '10', 10);
+      const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 25) : 10;
+      const { getLeaderboard } = await import('./x402-index/query');
+      const result = await getLeaderboard(env, window, limit);
+      return jsonResponse({ ok: true, ...result }, 200, 60);
+    }
+
+    if (path === '/api/x402-index/recent') {
+      const limitParam = parseInt(url.searchParams.get('limit') ?? '20', 10);
+      const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 20;
+      const { getRecent } = await import('./x402-index/query');
+      const result = await getRecent(env, limit);
+      return jsonResponse({ ok: true, ...result }, 200, 30);
+    }
+
+    // === PAID PREMIUM: x402 SETTLEMENT INDEX (Wave 20, 1 credit each) ===
+    // Both routes are param-required so strict-premium-endpoints.ts
+    // (registered in Task 15) gates anonymous Bazaar probes to a clean
+    // 402 challenge. Follows the AI-companies pattern: requirePayment
+    // returns PaymentResult with .paid + .response, NOT a Response
+    // instance check.
+
+    const xIdxPubMatch = path.match(/^\/api\/premium\/x402-index\/publisher\/([A-Za-z0-9._-]+)$/);
+    if (xIdxPubMatch) {
+      const domain = xIdxPubMatch[1];
+      const from = url.searchParams.get('from');
+      const to = url.searchParams.get('to');
+      if (!from || !to) {
+        return jsonResponse(
+          { ok: false, error: 'missing_params', required: ['from', 'to'], hint: 'Both from and to required, YYYY-MM-DD format.' },
+          400,
+          0,
+        );
+      }
+
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getPublisherReceipts } = await import('./x402-index/query');
+      const result = await getPublisherReceipts(env, domain, from, to);
+      if (result === null) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'unknown_publisher',
+            domain,
+            hint: 'Domain not present in the x402 publisher registry. See /api/x402-index/publishers for the indexed set.',
+          },
+          404,
+          0,
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/x402-index/publisher', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse({ ok: true, ...result }, payment, 1, request, env);
+    }
+
+    if (path === '/api/premium/x402-index/series') {
+      const metricParam = url.searchParams.get('metric');
+      const granularityParam = url.searchParams.get('granularity');
+      const from = url.searchParams.get('from');
+      const to = url.searchParams.get('to');
+      const domain = url.searchParams.get('domain') ?? undefined;
+      if (!metricParam || !granularityParam || !from || !to) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_params',
+            required: ['metric', 'granularity', 'from', 'to'],
+            hint: 'metric=volume|count, granularity=day|hour, from/to in YYYY-MM-DD.',
+          },
+          400,
+          0,
+        );
+      }
+      if (metricParam !== 'volume' && metricParam !== 'count') {
+        return jsonResponse({ ok: false, error: 'invalid_metric', hint: 'metric must be volume or count' }, 400, 0);
+      }
+      if (granularityParam !== 'day' && granularityParam !== 'hour') {
+        return jsonResponse({ ok: false, error: 'invalid_granularity', hint: 'granularity must be day or hour' }, 400, 0);
+      }
+      const metric: 'volume' | 'count' = metricParam;
+      const granularity: 'day' | 'hour' = granularityParam;
+
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { getSeries } = await import('./x402-index/query');
+      const result = await getSeries(env, { metric, granularity, from, to, domain });
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/x402-index/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse({ ok: true, ...result }, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: CVE BATCH LOOKUP (Tier 1, 1 credit, param-required) ===
     // /api/premium/ai-cves/batch?ids=CVE-A,CVE-B,...
     // Up to 10 CVE ids per call, 1 credit flat. Reads the persistent
