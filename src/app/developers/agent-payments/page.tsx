@@ -1436,6 +1436,63 @@ const ENDPOINTS: PremiumEndpoint[] = [
   "billing": { "credits_charged": 1, "credits_remaining": 38 }
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/premium/x402-index/publisher/{domain}',
+    description:
+      "Per-publisher receipt feed for one x402-compliant domain across an inclusive from/to date range. Returns publisher meta (domain, pay_to_wallets, first_seen) plus the window rollup (volume_usdc, count, avg_amount, daily_series of per-day rows for the entire range, zeros included). Forensic and compliance lane for any caller building dashboards over x402 settlement data on Base mainnet. Required params: from, to (YYYY-MM-DD). Strict-premium path; anonymous Bazaar probes see a clean 402 challenge before the param check. Returns 404 with a hint when the domain is not present in the x402 publisher registry (see /api/x402-index/publishers for the indexed set). Wave 20 Bazaar pilot.",
+    cost: '1 credit per call',
+    example: `// GET /api/premium/x402-index/publisher/tensorfeed.ai?from=2026-05-21&to=2026-05-27
+{
+  "ok": true,
+  "publisher": {
+    "domain": "tensorfeed.ai",
+    "pay_to_wallets": ["0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1"],
+    "first_seen": "2026-05-28T00:00:00Z"
+  },
+  "window": { "from": "2026-05-21", "to": "2026-05-27", "days": 7 },
+  "rollup": {
+    "volume_usdc": "287.420000",
+    "count": 1342,
+    "avg_amount": "0.214172",
+    "daily_series": [
+      { "date": "2026-05-21", "volume_usdc": "32.180000", "count": 156 },
+      { "date": "2026-05-22", "volume_usdc": "41.260000", "count": 198 },
+      { "date": "2026-05-23", "volume_usdc": "38.940000", "count": 182 },
+      { "date": "2026-05-24", "volume_usdc": "44.180000", "count": 211 },
+      { "date": "2026-05-25", "volume_usdc": "39.620000", "count": 188 },
+      { "date": "2026-05-26", "volume_usdc": "47.860000", "count": 219 },
+      { "date": "2026-05-27", "volume_usdc": "43.380000", "count": 188 }
+    ]
+  },
+  "attribution": "TensorFeed x402 settlement index over public Base mainnet on-chain data",
+  "license": "CC BY 4.0",
+  "billing": { "credits_charged": 1, "credits_remaining": 37 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/x402-index/series',
+    description:
+      "Time-series of ecosystem-level or per-publisher x402 USDC settlement volume or count across a from/to date range. Chart-feeding shape. Required params: metric (volume | count), granularity (day | hour), from, to (YYYY-MM-DD). Optional domain filter (omit for ecosystem-level series). MVP supports granularity=day; granularity=hour returns an empty series with an attribution note that hour granularity is not yet available. Each series row is { ts, value }: value is a USDC decimal string when metric=volume, an integer when metric=count. Strict-premium path; anonymous Bazaar probes see a clean 402 challenge before the param check. Wave 20 Bazaar pilot.",
+    cost: '1 credit per call',
+    example: `// GET /api/premium/x402-index/series?metric=volume&granularity=day&from=2026-05-23&to=2026-05-27
+{
+  "ok": true,
+  "metric": "volume",
+  "granularity": "day",
+  "window": { "from": "2026-05-23", "to": "2026-05-27" },
+  "series": [
+    { "ts": "2026-05-23", "value": "38.940000" },
+    { "ts": "2026-05-24", "value": "52.180000" },
+    { "ts": "2026-05-25", "value": "47.620000" },
+    { "ts": "2026-05-26", "value": "58.860000" },
+    { "ts": "2026-05-27", "value": "54.380000" }
+  ],
+  "attribution": "TensorFeed x402 settlement index over public Base mainnet on-chain data",
+  "billing": { "credits_charged": 1, "credits_remaining": 36 }
+}`,
+  },
 ];
 
 const PYTHON_QUICKSTART = `from tensorfeed import TensorFeed

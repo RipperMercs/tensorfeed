@@ -1006,6 +1006,108 @@ const ENDPOINTS: Endpoint[] = [
   "source_attribution": "GitHub Advisory Database (github.com/advisories) + vendor advisories"
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/x402-index/summary',
+    description:
+      'Ecosystem-level x402 USDC settlement rollup on Base mainnet across the AI agent payments economy. Returns volume_usdc, count, unique_publishers, and change_vs_prior_window for one window (24h | 7d | 30d, default 24h). Forward-only index from 2026-05-28 onward, indexer cron every 5 minutes with a 30-block reorg safety margin (~6 minute worst-case freshness, 10 minute SLA). Source: Base mainnet USDC Transfer events filtered to wallets self-published in publisher /.well-known/x402.json manifests. License: CC BY 4.0 (TensorFeed editorial layer over public on-chain data).',
+    params: '?window=24h|7d|30d',
+    cache: 'Cache for 60 seconds',
+    example: `// Query: ?window=7d
+{
+  "ok": true,
+  "window": "7d",
+  "captured_at": "2026-05-27T18:00:00Z",
+  "volume_usdc": "412.840000",
+  "count": 1873,
+  "unique_publishers": 6,
+  "change_vs_prior_window": {
+    "volume_pct": 18.42,
+    "count_pct": 11.07
+  }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/x402-index/publishers',
+    description:
+      'Canonical list of x402-compliant publishers TensorFeed is currently indexing, auto-discovered from /.well-known/x402.json crawls. Daily manifest refresh at 06:35 UTC. Each entry: domain, pay_to_wallets, first_seen, last_crawled, last_event_at, last_crawl_error. Use this to enumerate which publishers can be queried via the premium per-publisher endpoint at /api/premium/x402-index/publisher/{domain}. License: CC BY 4.0.',
+    cache: 'Cache for 5 minutes',
+    example: `{
+  "ok": true,
+  "captured_at": "2026-05-27T18:00:00Z",
+  "count": 6,
+  "publishers": [
+    {
+      "domain": "tensorfeed.ai",
+      "manifest_url": "https://tensorfeed.ai/.well-known/x402.json",
+      "pay_to_wallets": ["0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1"],
+      "first_seen": "2026-05-28T00:00:00Z",
+      "last_crawled": "2026-05-27T06:35:00Z",
+      "last_event_at": "2026-05-27T17:58:14Z",
+      "last_crawl_error": null
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/x402-index/leaderboard',
+    description:
+      'Top publishers by x402 USDC settlement volume across the window (24h | 7d | 30d). Each leader: rank, domain, volume_usdc, count, share_pct of the sliced total. Limit clamped 1 to 25 (default 10). Aggregated from per-day top_publishers within each DailyRollup. License: CC BY 4.0.',
+    params: '?window=24h|7d|30d&limit=1-25',
+    cache: 'Cache for 60 seconds',
+    example: `// Query: ?window=7d&limit=5
+{
+  "ok": true,
+  "window": "7d",
+  "captured_at": "2026-05-27T18:00:00Z",
+  "leaders": [
+    {
+      "rank": 1,
+      "domain": "tensorfeed.ai",
+      "volume_usdc": "287.420000",
+      "count": 1342,
+      "share_pct": 69.61
+    },
+    {
+      "rank": 2,
+      "domain": "terminalfeed.io",
+      "volume_usdc": "84.180000",
+      "count": 421,
+      "share_pct": 20.39
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/x402-index/recent',
+    description:
+      'Most recent x402 USDC settlement events newest-first. Each event: tx_hash, block, ts, from_address, to_address, amount_usdc, publisher_domain, base_explorer_url (basescan.org). Limit clamped 1 to 50 (default 20). Backed by a 100-entry KV ring buffer updated on every indexer cron tick (every 5 min). License: CC BY 4.0.',
+    params: '?limit=1-50',
+    cache: 'Cache for 30 seconds',
+    example: `// Query: ?limit=2
+{
+  "ok": true,
+  "captured_at": "2026-05-27T18:00:00Z",
+  "count": 2,
+  "events": [
+    {
+      "tx_hash": "0xabc123...",
+      "block": 23048517,
+      "ts": "2026-05-27T17:58:14Z",
+      "from_address": "0xagent...",
+      "to_address": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+      "amount_usdc": "0.020000",
+      "publisher_domain": "tensorfeed.ai",
+      "asset": "USDC",
+      "chain": "base",
+      "base_explorer_url": "https://basescan.org/tx/0xabc123..."
+    }
+  ]
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news

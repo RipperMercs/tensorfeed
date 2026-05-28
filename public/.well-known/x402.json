@@ -12768,6 +12768,264 @@
           "routeTemplate": "/api/premium/ai-companies/:ticker"
         }
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/x402-index/publisher/{domain}",
+        "description": "Per-publisher receipt feed for one x402-compliant domain across an inclusive from/to date range. Returns publisher meta (domain, pay_to_wallets, first_seen), window rollup (volume_usdc, count, avg_amount, daily_series of per-day rows), attribution, and CC BY 4.0 license. Forensic and compliance lane for callers building dashboards over x402 settlement data on Base mainnet.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-27T00:00:00Z",
+      "metadata": {
+        "name": "x402 Index: per-publisher receipt feed",
+        "description": "Per-publisher x402 USDC settlement receipt feed on Base mainnet. One paid call returns publisher meta, the windowed rollup (volume_usdc, count, avg_amount), and a per-day daily_series across the inclusive from/to range. Built for forensic and compliance dashboards over x402 settlement data.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-x402-index-publisher"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "pathParams": {
+                "domain": "tensorfeed.ai"
+              },
+              "queryParams": {
+                "from": "2026-05-21",
+                "to": "2026-05-27"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "publisher": {
+                  "domain": "tensorfeed.ai",
+                  "pay_to_wallets": ["0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1"],
+                  "first_seen": "2026-05-28T00:00:00Z"
+                },
+                "window": { "from": "2026-05-21", "to": "2026-05-27", "days": 7 },
+                "rollup": {
+                  "volume_usdc": "287.420000",
+                  "count": 1342,
+                  "avg_amount": "0.214172",
+                  "daily_series": [
+                    { "date": "2026-05-21", "volume_usdc": "32.180000", "count": 156 }
+                  ]
+                },
+                "attribution": "TensorFeed x402 settlement index over public Base mainnet on-chain data",
+                "license": "CC BY 4.0"
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": ["GET"]
+                  },
+                  "pathParams": {
+                    "type": "object",
+                    "properties": {
+                      "domain": {
+                        "type": "string",
+                        "description": "x402-compliant publisher domain present in the TensorFeed publisher registry. See /api/x402-index/publishers for the indexed set."
+                      }
+                    },
+                    "required": ["domain"]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "description": "Range start, YYYY-MM-DD. Required."
+                      },
+                      "to": {
+                        "type": "string",
+                        "description": "Range end, YYYY-MM-DD inclusive. Required."
+                      }
+                    },
+                    "required": ["from", "to"]
+                  }
+                },
+                "required": ["type", "method"],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": ["type"]
+              }
+            },
+            "required": ["input"]
+          },
+          "routeTemplate": "/api/premium/x402-index/publisher/:domain"
+        }
+      }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/x402-index/series",
+        "description": "Time-series of ecosystem-level or per-publisher x402 USDC settlement volume or count across a from/to date range. Required: metric (volume|count), granularity (day|hour), from, to (YYYY-MM-DD). Optional domain filter (omit for ecosystem). MVP supports granularity=day; granularity=hour returns an empty series with an attribution note.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-27T00:00:00Z",
+      "metadata": {
+        "name": "x402 Index: time-series",
+        "description": "Time-series of x402 USDC settlement volume or count across a date range, ecosystem-level or filtered to one publisher. Chart-feeding shape. metric=volume|count, granularity=day|hour, from + to in YYYY-MM-DD. domain optional. MVP day-granularity.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-x402-index-series"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "metric": "volume",
+                "granularity": "day",
+                "from": "2026-05-23",
+                "to": "2026-05-27"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "metric": "volume",
+                "granularity": "day",
+                "window": { "from": "2026-05-23", "to": "2026-05-27" },
+                "series": [
+                  { "ts": "2026-05-23", "value": "38.940000" },
+                  { "ts": "2026-05-24", "value": "52.180000" },
+                  { "ts": "2026-05-25", "value": "47.620000" },
+                  { "ts": "2026-05-26", "value": "58.860000" },
+                  { "ts": "2026-05-27", "value": "54.380000" }
+                ],
+                "attribution": "TensorFeed x402 settlement index over public Base mainnet on-chain data"
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": ["GET"]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "metric": {
+                        "type": "string",
+                        "enum": ["volume", "count"],
+                        "description": "What to plot: volume (USDC decimal string) or count (integer event count)."
+                      },
+                      "granularity": {
+                        "type": "string",
+                        "enum": ["day", "hour"],
+                        "description": "Series bucket size. MVP supports day; hour returns an empty series with an attribution note."
+                      },
+                      "from": {
+                        "type": "string",
+                        "description": "Range start, YYYY-MM-DD. Required."
+                      },
+                      "to": {
+                        "type": "string",
+                        "description": "Range end, YYYY-MM-DD inclusive. Required."
+                      },
+                      "domain": {
+                        "type": "string",
+                        "description": "Optional. Restrict the series to one x402-compliant publisher domain. Omit for ecosystem-level."
+                      }
+                    },
+                    "required": ["metric", "granularity", "from", "to"]
+                  }
+                },
+                "required": ["type", "method"],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": ["type"]
+              }
+            },
+            "required": ["input"]
+          },
+          "routeTemplate": "/api/premium/x402-index/series"
+        }
+      }
     }
   ],
   "freeEndpoints": [
