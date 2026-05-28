@@ -227,6 +227,11 @@ export const STRICT_PREMIUM_PREFIXES: ReadonlyArray<string> = [
   // would otherwise hit the free-trial pool, miss the 402, and CDP
   // would never observe the settlement that catalogs the endpoint.
   '/api/premium/ai-companies/',
+  // x402 settlement index (2026-05-27). Settlement ID is a required path
+  // segment; anonymous Bazaar crawler probes would otherwise hit the
+  // free-trial pool, miss the 402, and CDP would never observe the
+  // settlement that catalogs the endpoint.
+  '/api/premium/x402-index/',
 ];
 
 /**

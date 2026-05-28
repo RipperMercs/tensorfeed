@@ -162,6 +162,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // prefix so concrete /api/premium/ai-companies/NVDA paths match via
   // resolveSLA's path-prefix walk.
   '/api/premium/ai-companies': { maxAgeSeconds: 9 * 60 * 60 },
+  // x402 settlement index. Indexer cron every 5 min, 30-block reorg safety.
+  // Total time from settlement to indexed = ~6 min. SLA = 10 min headroom.
+  '/api/premium/x402-index': { maxAgeSeconds: 10 * 60 },
+  '/api/x402-index': { maxAgeSeconds: 10 * 60 },
 };
 
 /**
