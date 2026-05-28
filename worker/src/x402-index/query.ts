@@ -155,6 +155,81 @@ export async function getPublishers(env: Env, now: Date = new Date()): Promise<P
   return { captured_at: now.toISOString(), count: filtered.length, publishers: filtered };
 }
 
+export function datesBetween(from: string, to: string): string[] {
+  const out: string[] = [];
+  const start = new Date(from + 'T00:00:00.000Z');
+  const end = new Date(to + 'T00:00:00.000Z');
+  for (let d = new Date(start); d.getTime() <= end.getTime(); d.setUTCDate(d.getUTCDate() + 1)) {
+    out.push(d.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+export interface PublisherReceiptsResult {
+  publisher: { domain: string; pay_to_wallets: string[]; first_seen: string };
+  window: { from: string; to: string; days: number };
+  rollup: {
+    volume_usdc: string;
+    count: number;
+    avg_amount: string;
+    daily_series: Array<{ date: string; volume_usdc: string; count: number }>;
+  };
+  attribution: string;
+  license: string;
+}
+
+export async function getPublisherReceipts(
+  env: Env,
+  domain: string,
+  from: string,
+  to: string,
+): Promise<PublisherReceiptsResult | null> {
+  const pubRec = (await env.TENSORFEED_CACHE.get(kvKeyPublisher(domain), 'json')) as PublisherRecord | null;
+  if (!pubRec) return null;
+
+  const dates = datesBetween(from, to);
+  const perDay = await Promise.all(
+    dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyPubDayRollup(domain, d), 'json') as Promise<PublisherDailyRollup | null>),
+  );
+
+  const daily_series = dates.map((date, idx) => {
+    const r = perDay[idx];
+    return {
+      date,
+      volume_usdc: r ? fromMicroUnits(toMicroUnits(r.volume_usdc)) : '0.000000',
+      count: r?.count ?? 0,
+    };
+  });
+
+  let totalVolume = '0';
+  let totalCount = 0;
+  for (const r of perDay) {
+    if (!r) continue;
+    totalVolume = addDecimal(totalVolume, r.volume_usdc);
+    totalCount += r.count;
+  }
+  const avg = totalCount === 0
+    ? '0.000000'
+    : fromMicroUnits(toMicroUnits(totalVolume) / BigInt(totalCount));
+
+  return {
+    publisher: {
+      domain: pubRec.domain,
+      pay_to_wallets: pubRec.pay_to_wallets,
+      first_seen: pubRec.first_seen,
+    },
+    window: { from, to, days: dates.length },
+    rollup: {
+      volume_usdc: fromMicroUnits(toMicroUnits(totalVolume)),
+      count: totalCount,
+      avg_amount: avg,
+      daily_series,
+    },
+    attribution: 'TensorFeed x402 settlement index over public Base mainnet on-chain data',
+    license: 'CC BY 4.0',
+  };
+}
+
 function pctChangeDecimal(prior: string, current: string): number {
   const p = toMicroUnits(prior);
   const c = toMicroUnits(current);

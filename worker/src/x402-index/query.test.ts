@@ -188,3 +188,46 @@ describe('getPublishers', () => {
     });
   });
 });
+
+describe('getPublisherReceipts', () => {
+  it('returns publisher meta + window rollup + daily series', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    kv.store.set(kvKeyPublisher('tensorfeed.ai'), JSON.stringify({
+      domain: 'tensorfeed.ai',
+      manifest_url: 'https://tensorfeed.ai/.well-known/x402.json',
+      pay_to_wallets: ['0xaaa'],
+      first_seen: '2026-05-01T00:00:00.000Z',
+      last_crawled: '2026-05-27T00:00:00.000Z',
+      last_crawl_error: null,
+      last_event_at: '2026-05-27T11:00:00.000Z',
+    }));
+    kv.store.set(kvKeyPubDayRollup('tensorfeed.ai', '2026-05-27'), JSON.stringify({
+      date: '2026-05-27', domain: 'tensorfeed.ai', volume_usdc: '0.04', count: 2,
+    }));
+    kv.store.set(kvKeyPubDayRollup('tensorfeed.ai', '2026-05-26'), JSON.stringify({
+      date: '2026-05-26', domain: 'tensorfeed.ai', volume_usdc: '0.02', count: 1,
+    }));
+
+    const result = await getPublisherReceipts(env, 'tensorfeed.ai', '2026-05-26', '2026-05-27');
+
+    expect(result).not.toBeNull();
+    expect(result!.publisher.domain).toBe('tensorfeed.ai');
+    expect(result!.window.days).toBe(2);
+    expect(result!.rollup.volume_usdc).toBe('0.060000');
+    expect(result!.rollup.count).toBe(3);
+    expect(result!.rollup.avg_amount).toBe('0.020000');
+    expect(result!.rollup.daily_series).toEqual([
+      { date: '2026-05-26', volume_usdc: '0.020000', count: 1 },
+      { date: '2026-05-27', volume_usdc: '0.040000', count: 2 },
+    ]);
+  });
+
+  it('returns null when publisher is unknown', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const result = await getPublisherReceipts(env, 'unknown.com', '2026-05-26', '2026-05-27');
+    expect(result).toBeNull();
+  });
+});
