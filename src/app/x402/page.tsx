@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { FAQPageJsonLd, BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
 import AdoptersPreview from './AdoptersPreview';
+import X402IndexTicker from './X402IndexTicker';
 
 export const metadata: Metadata = {
   title: 'x402: The Open HTTP Standard for AI Agent Payments',
@@ -246,6 +247,37 @@ export default function X402HubPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Live x402 settlement index */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-text-primary mb-4">
+          Live: x402 settlement index
+        </h2>
+        <p className="text-text-secondary leading-relaxed mb-2 max-w-3xl">
+          TensorFeed indexes every x402 USDC settlement on Base mainnet, auto-discovered via
+          /.well-known/x402.json publisher manifests. Forward-only from 2026-05-28; cron refresh
+          every 5 minutes. Pulled live from{' '}
+          <a
+            href="https://tensorfeed.ai/api/x402-index/summary"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-primary hover:underline font-mono"
+          >
+            /api/x402-index/summary
+          </a>
+          {' '}+{' '}
+          <a
+            href="https://tensorfeed.ai/api/x402-index/leaderboard"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent-primary hover:underline font-mono"
+          >
+            /leaderboard
+          </a>
+          .
+        </p>
+        <X402IndexTicker />
       </section>
 
       {/* Live adopters */}
