@@ -549,7 +549,12 @@ function extractAdminKey(request: Request, url: URL): string | null {
     const m = auth.match(/^Bearer\s+(.+)$/);
     if (m && m[1].length > 0) return m[1].trim();
   }
-  return extractAdminKey(request, url);
+  // Fallback: ?key= query param (the documented /api/refresh?key= form and
+  // the older ingest path). A prior edit made this line recurse into
+  // extractAdminKey, which infinite-loops and crashes whenever no
+  // Authorization header is present. Read the query param as intended.
+  const k = url.searchParams.get('key');
+  return k && k.length > 0 ? k : null;
 }
 
 // Admin-route auth. Returns true only if env.ADMIN_KEY is configured
