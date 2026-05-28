@@ -1,7 +1,7 @@
 import type { Env } from '../types';
-import type { DailyRollup } from './types';
-import { kvKeyDayRollup } from './constants';
-import { addDecimal, fromMicroUnits, toMicroUnits } from './indexer';
+import type { DailyRollup, PublisherDailyRollup, PublisherRecord, SettlementEvent } from './types';
+import { kvKeyDayRollup, KV_KEY_RECENT, KV_KEY_PUBLISHERS, kvKeyPublisher, kvKeyPubDayRollup } from './constants';
+import { addDecimal, fromMicroUnits, toMicroUnits, compareDecimal } from './indexer';
 
 export type Window = '24h' | '7d' | '30d';
 
@@ -68,6 +68,59 @@ export async function getSummary(env: Env, window: Window, now: Date = new Date(
       count_pct: pctChangeNum(priorCount, count),
     },
   };
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  domain: string;
+  volume_usdc: string;
+  count: number;
+  share_pct: number;
+}
+
+export interface LeaderboardResult {
+  window: Window;
+  captured_at: string;
+  leaders: LeaderboardEntry[];
+}
+
+export async function getLeaderboard(env: Env, window: Window, limit: number, now: Date = new Date()): Promise<LeaderboardResult> {
+  const clampedLimit = Math.min(Math.max(limit, 1), 25);
+  const dates = datesInWindow(window, now);
+  const rollups = await Promise.all(
+    dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyDayRollup(d), 'json') as Promise<DailyRollup | null>),
+  );
+
+  const byDomain = new Map<string, { volume_usdc: string; count: number }>();
+  for (const r of rollups) {
+    if (!r) continue;
+    for (const p of r.top_publishers) {
+      const cur = byDomain.get(p.domain) ?? { volume_usdc: '0', count: 0 };
+      cur.volume_usdc = addDecimal(cur.volume_usdc, p.volume_usdc);
+      cur.count += p.count;
+      byDomain.set(p.domain, cur);
+    }
+  }
+
+  const arr = Array.from(byDomain.entries()).map(([domain, v]) => ({ domain, ...v }));
+  arr.sort((a, b) => {
+    const cmp = compareDecimal(b.volume_usdc, a.volume_usdc);
+    if (cmp !== 0) return cmp;
+    if (b.count !== a.count) return b.count - a.count;
+    return a.domain.localeCompare(b.domain);
+  });
+
+  const sliced = arr.slice(0, clampedLimit);
+  const totalMicro = sliced.reduce((acc, e) => acc + toMicroUnits(e.volume_usdc), 0n);
+  const leaders: LeaderboardEntry[] = sliced.map((e, idx) => ({
+    rank: idx + 1,
+    domain: e.domain,
+    volume_usdc: fromMicroUnits(toMicroUnits(e.volume_usdc)),
+    count: e.count,
+    share_pct: totalMicro === 0n ? 0 : Math.round(Number((toMicroUnits(e.volume_usdc) * 10000n) / totalMicro)) / 100,
+  }));
+
+  return { window, captured_at: now.toISOString(), leaders };
 }
 
 function pctChangeDecimal(prior: string, current: string): number {

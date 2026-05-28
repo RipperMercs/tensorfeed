@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getSummary } from './query';
-import { kvKeyDayRollup } from './constants';
+import { getSummary, getLeaderboard, getRecent, getPublishers, getPublisherReceipts, getSeries } from './query';
+import { kvKeyDayRollup, KV_KEY_RECENT, KV_KEY_PUBLISHERS, kvKeyPublisher, kvKeyPubDayRollup } from './constants';
+import type { SettlementEvent } from './types';
 
 function mockKv() {
   const store = new Map<string, string>();
@@ -66,5 +67,51 @@ describe('getSummary', () => {
     const result = await getSummary(env, '24h', now);
     expect(result.change_vs_prior_window.volume_pct).toBe(100);
     expect(result.change_vs_prior_window.count_pct).toBe(100);
+  });
+});
+
+describe('getLeaderboard', () => {
+  it('aggregates per-publisher across window, sorts, computes shares', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const now = new Date('2026-05-27T00:00:00.000Z');
+
+    kv.store.set(kvKeyDayRollup('2026-05-27'), JSON.stringify({
+      date: '2026-05-27', volume_usdc: '3.0', count: 30,
+      top_publishers: [
+        { domain: 'tensorfeed.ai', volume_usdc: '2.0', count: 20 },
+        { domain: 'terminalfeed.io', volume_usdc: '1.0', count: 10 },
+      ],
+    }));
+    kv.store.set(kvKeyDayRollup('2026-05-26'), JSON.stringify({
+      date: '2026-05-26', volume_usdc: '1.0', count: 5,
+      top_publishers: [
+        { domain: 'tensorfeed.ai', volume_usdc: '1.0', count: 5 },
+      ],
+    }));
+
+    const result = await getLeaderboard(env, '7d', 10, now);
+
+    expect(result.leaders[0]).toMatchObject({
+      rank: 1,
+      domain: 'tensorfeed.ai',
+      volume_usdc: '3.000000',
+      count: 25,
+    });
+    expect(result.leaders[1]).toMatchObject({
+      rank: 2,
+      domain: 'terminalfeed.io',
+      volume_usdc: '1.000000',
+      count: 10,
+    });
+    expect(result.leaders[0].share_pct).toBe(75);
+    expect(result.leaders[1].share_pct).toBe(25);
+  });
+
+  it('clamps limit to max 25', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const result = await getLeaderboard(env, '24h', 999, new Date('2026-05-27T00:00:00.000Z'));
+    expect(result.leaders.length).toBeLessThanOrEqual(25);
   });
 });
