@@ -37,17 +37,25 @@ export function isValidPublisherDomain(domain: string): boolean {
   return true;
 }
 
+// Note: callers are responsible for preserving `first_seen` across re-crawls.
+// This function always sets first_seen to the current timestamp because it has
+// no access to any prior PublisherRecord. The cron caller must merge with the
+// existing KV record to keep first_seen stable after initial discovery.
 export async function crawlPublisherManifest(
   domain: string,
   now: () => string = () => new Date().toISOString(),
   fetchFn: typeof fetch = fetch,
 ): Promise<PublisherRecord> {
-  const manifestUrl = `https://${domain}/.well-known/x402.json`;
   const nowStr = now();
 
   if (!isValidPublisherDomain(domain)) {
-    return baseRecord(domain, manifestUrl, nowStr, 'invalid_domain');
+    // manifest_url left empty: do not construct a URL string from unvalidated
+    // input, otherwise downstream KV consumers could trust an attacker-shaped
+    // URL on display surfaces.
+    return baseRecord(domain, '', nowStr, 'invalid_domain');
   }
+
+  const manifestUrl = `https://${domain}/.well-known/x402.json`;
 
   try {
     const res = await fetchFn(manifestUrl, {

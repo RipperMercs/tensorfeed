@@ -2,18 +2,26 @@ import { describe, it, expect, vi } from 'vitest';
 import { crawlPublisherManifest, isValidPublisherDomain } from './publisher-registry';
 
 describe('isValidPublisherDomain (SSRF guard)', () => {
-  it('rejects localhost and loopback IPs', () => {
+  it('rejects localhost and loopback hostnames', () => {
     expect(isValidPublisherDomain('localhost')).toBe(false);
     expect(isValidPublisherDomain('app.localhost')).toBe(false);
-    expect(isValidPublisherDomain('127.0.0.1')).toBe(false);
-    expect(isValidPublisherDomain('0.0.0.0')).toBe(false);
   });
 
-  it('rejects private network IPv4 literals', () => {
+  it('rejects all IPv4 literals (public and private alike), since a publisher domain should always be a hostname', () => {
+    expect(isValidPublisherDomain('127.0.0.1')).toBe(false);
+    expect(isValidPublisherDomain('0.0.0.0')).toBe(false);
     expect(isValidPublisherDomain('10.0.0.1')).toBe(false);
     expect(isValidPublisherDomain('172.16.0.1')).toBe(false);
     expect(isValidPublisherDomain('192.168.1.1')).toBe(false);
     expect(isValidPublisherDomain('169.254.169.254')).toBe(false);
+    expect(isValidPublisherDomain('8.8.8.8')).toBe(false);
+    expect(isValidPublisherDomain('1.1.1.1')).toBe(false);
+  });
+
+  it('rejects IPv6 literals (loopback and global alike)', () => {
+    expect(isValidPublisherDomain('[::1]')).toBe(false);
+    expect(isValidPublisherDomain('[2001:db8::1]')).toBe(false);
+    expect(isValidPublisherDomain('[fe80::1]')).toBe(false);
   });
 
   it('rejects mDNS and internal TLDs', () => {
@@ -48,6 +56,14 @@ describe('crawlPublisherManifest SSRF integration', () => {
     const rec = await crawlPublisherManifest('127.0.0.1', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
     expect(rec.last_crawl_error).toBe('invalid_domain');
     expect(rec.pay_to_wallets).toEqual([]);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('does NOT construct a manifest_url from unvalidated input (log-injection guard)', async () => {
+    const mockFetch = vi.fn();
+    const rec = await crawlPublisherManifest('http://evil.com/path?x=1', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
+    expect(rec.last_crawl_error).toBe('invalid_domain');
+    expect(rec.manifest_url).toBe('');
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
