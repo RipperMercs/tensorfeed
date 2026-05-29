@@ -10,6 +10,7 @@ import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatest
 import { captureHistory, listHistory, readHistory } from './history';
 import { cdpListDiscoveryResources } from './cdp-facilitator';
 import { bazaarPilotPaths, pilotCatalogStatus } from './bazaar-pilots';
+import { cachedFetch } from './edge-cache';
 import {
   readNewsDaily,
   readSourceHealth,
@@ -10214,13 +10215,17 @@ export default {
         return jsonResponse({ ok: false, error: 'invalid_window', hint: 'window must be one of: 24h, 7d, 30d' }, 400, 0);
       }
       const { getSummary } = await import('./x402-index/query');
-      const result = await getSummary(env, window);
+      // Cache-API read layer: a hit serves the computed summary with ZERO KV
+      // gets (vs up to 2x30 day-rollup reads on a cold miss). captured_at is
+      // cursor-sourced (audit #15), so a <=60s cached value still reflects real
+      // index freshness. Falls through to a live read in unit tests.
+      const result = await cachedFetch(`x402idx:summary:${window}`, 60, () => getSummary(env, window));
       return jsonResponse({ ok: true, ...result }, 200, 60);
     }
 
     if (path === '/api/x402-index/publishers') {
       const { getPublishers } = await import('./x402-index/query');
-      const result = await getPublishers(env);
+      const result = await cachedFetch('x402idx:publishers', 300, () => getPublishers(env));
       return jsonResponse({ ok: true, ...result }, 200, 300);
     }
 
@@ -10232,7 +10237,10 @@ export default {
       const limitParam = parseInt(url.searchParams.get('limit') ?? '10', 10);
       const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 25) : 10;
       const { getLeaderboard } = await import('./x402-index/query');
-      const result = await getLeaderboard(env, window, limit);
+      // Cache key includes window AND the clamped limit (both shape leaders[]).
+      // A hit serves the result with ZERO KV gets, which matters most here since
+      // the full-rollup aggregation fans out (publisher count) x (window days).
+      const result = await cachedFetch(`x402idx:leaderboard:${window}:${limit}`, 60, () => getLeaderboard(env, window, limit));
       return jsonResponse({ ok: true, ...result }, 200, 60);
     }
 
@@ -10240,7 +10248,7 @@ export default {
       const limitParam = parseInt(url.searchParams.get('limit') ?? '20', 10);
       const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 20;
       const { getRecent } = await import('./x402-index/query');
-      const result = await getRecent(env, limit);
+      const result = await cachedFetch(`x402idx:recent:${limit}`, 30, () => getRecent(env, limit));
       return jsonResponse({ ok: true, ...result }, 200, 30);
     }
 
