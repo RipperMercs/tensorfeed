@@ -105,3 +105,6 @@ scripts/mcp-registry/
 # Local-only weekly-update notes + widget debug screenshots (housekeeping)
 WEEKLY_UPDATE_*.md
 widget-fix-*.png
+
+# Transient work / file-handoff directory (Drive-backed scratch, never source)
+tensorfeed-work/
