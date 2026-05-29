@@ -13154,6 +13154,38 @@
         "credits": 1,
         "category": "ai-failover-routing"
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/sec/filings/guidance-delta",
+        "description": "Did this periodic SEC filing (10-K or 10-Q) materially change guidance, segment outlook, or risk language versus the prior same-form filing, with the exact changed sentences quoted? Pass ?ticker=NVDA&form=10-Q or ?accession=.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-28T00:00:00Z",
+      "metadata": {
+        "name": "Guidance Delta",
+        "description": "Signed periodic-filing guidance diff: what materially changed in a 10-K or 10-Q versus the prior same-form filing, with verbatim quotes. Free summary-only preview at /api/preview/sec/filings/guidance-delta.",
+        "tier": 1,
+        "credits": 1,
+        "category": "sec-filings-intelligence"
+      }
     }
   ],
   "freeEndpoints": [

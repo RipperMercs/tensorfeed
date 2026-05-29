@@ -392,6 +392,29 @@ const ENDPOINTS: PremiumEndpoint[] = [
 }`,
   },
   {
+    method: 'GET',
+    path: '/api/premium/sec/filings/guidance-delta',
+    description: 'Did this periodic SEC filing (10-K or 10-Q) materially change guidance, segment outlook, or risk language versus the prior same-form filing, with the exact changed sentences quoted? Pass ?ticker=NVDA&form=10-Q for the latest same-form delta, or ?accession= for one specific filing. Returns a deterministic materiality_summary (counts by materiality, category, change type, and direction, plus a one-line headline) and the full changes array with verbatim prior and current quotes, values, and section. Input-keyed freshness: a filed 10-K or 10-Q is immutable, so the call no-charges only when a newer same-form filing has superseded the served delta. A free summary-only preview (quotes redacted) lives at /api/preview/sec/filings/guidance-delta, 10 calls per IP per day.',
+    cost: '1 credit per call',
+    example: `// Query: ?ticker=NVDA&form=10-Q
+{
+  "ok": true,
+  "ticker": "NVDA",
+  "company_name": "NVIDIA CORP",
+  "form": "10-Q",
+  "accession_number": "0001045810-26-000052",
+  "prior_accession_number": "0001045810-25-000230",
+  "filing_date": "2026-05-20",
+  "prior_filing_date": "2025-11-19",
+  "materiality_summary": { "total_changes": 10, "by_materiality": { "material": 3, "minor": 6, "boilerplate": 1 }, "by_category": { "revenue_guidance": 1, "segment_outlook": 2, "risk_factor": 4, "other": 3 }, "by_change_type": { "reworded": 8, "initiated": 1, "raised": 1 }, "by_direction": { "neutral": 8, "unclear": 1, "up": 1 }, "headline": "FY26 revenue guidance raised; Investments in Fiscal Year 2027 initiated; 4 risk factor wordings revised" },
+  "changes": [ { "topic": "Investments in Fiscal Year 2027", "prior_text": "", "current_text": "In the first quarter of fiscal year 2027, we made the following investments: 18.6 billion dollars in private companies and infrastructure funds.", "prior_value": null, "current_value": "18.6 billion", "section": "Management's Discussion and Analysis", "category": "other", "change_type": "initiated", "direction": "unclear", "materiality": "material" } ],
+  "freshness": { "model": "input_keyed", "superseded": false },
+  "capturedAt": "2026-05-28T00:00:00Z",
+  "billing": { "credits_charged": 1, "credits_remaining": 48 },
+  "receipt": { "id": "rcpt_...", "signing_alg": "EdDSA", "signing_curve": "Ed25519", "signature": "<base64url>" }
+}`,
+  },
+  {
     method: 'POST',
     path: '/api/payment/trial-credits',
     description: 'Free, zero-setup on-ramp. Sign an EIP-191 message proving you control a wallet (no on-chain transaction, no USDC, no gas), POST { message, signature }, and receive a bearer token preloaded with 25 trial credits. One grant per wallet, OFAC-screened, single-use nonce, 30-day expiry. Top up the same token later via /api/payment/buy-credits.',
