@@ -29,7 +29,7 @@ export default function PrivacyPage() {
           <Shield className="w-7 h-7 text-accent-primary" />
           <h1 className="text-3xl font-bold text-text-primary">Privacy Policy</h1>
         </div>
-        <p className="text-text-muted text-sm">Last updated: April 28, 2026</p>
+        <p className="text-text-muted text-sm">Last updated: May 29, 2026</p>
       </div>
 
       <div className="space-y-8 text-text-secondary leading-relaxed">
@@ -107,6 +107,34 @@ export default function PrivacyPage() {
               </p>
             </div>
 
+            <div className="bg-bg-secondary border border-border rounded-lg p-4">
+              <p className="text-text-primary font-medium mb-1">Advertising Cookies</p>
+              <p className="text-sm">
+                TensorFeed.ai serves ads through Google AdSense. Google and its advertising partners use
+                cookies and similar technologies to serve and measure ads, including ads informed by your
+                prior visits to this site and other sites. You can opt out of personalized advertising in{' '}
+                <a
+                  href="https://www.google.com/settings/ads"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent-primary hover:underline"
+                >
+                  Google Ads Settings
+                </a>
+                , and learn how Google uses cookies in advertising at{' '}
+                <a
+                  href="https://policies.google.com/technologies/ads"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent-primary hover:underline"
+                >
+                  Google&apos;s advertising policies
+                </a>
+                . For visitors in the EEA and UK, we request consent for advertising cookies before serving
+                personalized ads.
+              </p>
+            </div>
+
           </div>
 
           <p className="mt-3">
@@ -134,10 +162,29 @@ export default function PrivacyPage() {
               </a>.
             </p>
             <p>
-              <span className="text-text-primary font-medium">Ad networks:</span> TensorFeed runs no
-              third-party display ad networks as of the date listed above. If that changes, this
-              section will list the providers and link to their privacy policies; the cookie consent
-              banner will be updated accordingly.
+              <span className="text-text-primary font-medium">Google AdSense:</span> We use Google AdSense
+              to display advertising. Google, as a third-party vendor, uses cookies to serve ads based on a
+              visitor&apos;s prior visits to TensorFeed.ai and other sites. Third-party vendors and ad
+              networks partnered with Google may also serve ads on this site. You can manage ad
+              personalization in{' '}
+              <a
+                href="https://www.google.com/settings/ads"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent-primary hover:underline"
+              >
+                Google Ads Settings
+              </a>{' '}
+              and review how Google handles data on partner sites at{' '}
+              <a
+                href="https://policies.google.com/technologies/partner-sites"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent-primary hover:underline"
+              >
+                Google&apos;s partner sites policy
+              </a>
+              .
             </p>
             <p>
               <span className="text-text-primary font-medium">Resend:</span> If you subscribe to outage

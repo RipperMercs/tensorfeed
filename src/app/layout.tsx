@@ -10,6 +10,7 @@ import CookieConsent from '@/components/CookieConsent';
 import LiveTicker from '@/components/home/LiveTicker';
 import StatusAlertBar from '@/components/home/StatusAlertBar';
 import JsonLd from '@/components/seo/JsonLd';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: {
@@ -58,6 +59,7 @@ export const metadata: Metadata = {
     },
   },
   other: {
+    'google-adsense-account': 'ca-pub-7224757913262984',
     'ai-content-type': 'news-aggregator',
     'ai-data-freshness': '10-minutes',
     'ai-structured-data': 'true',
@@ -125,6 +127,12 @@ export default function RootLayout({
             </ChromeGate>
           </ViewModeProvider>
         </ThemeProvider>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7224757913262984"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
