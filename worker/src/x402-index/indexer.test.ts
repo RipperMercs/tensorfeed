@@ -201,6 +201,28 @@ describe('applyEventToRollups', () => {
     expect(recent.length).toBe(100);
     expect(recent[0].tx_hash).toBe('0x68'); // i=104, newest first
   });
+
+  it('is idempotent on tx_hash: re-processing the same settlement does not double-count rollups or duplicate the recent ring', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    // Same tx applied twice, as happens when a tick's cursor write fails mid-run,
+    // the worker restarts, or two ticks process an overlapping block range.
+    await applyEventToRollups(env, baseEvent);
+    await applyEventToRollups(env, baseEvent);
+
+    const daily = await kv.get(kvKeyDayRollup('2026-05-27'), 'json');
+    expect(daily).toMatchObject({
+      volume_usdc: '0.020000',
+      count: 1,
+      top_publishers: [{ domain: 'tensorfeed.ai', volume_usdc: '0.020000', count: 1 }],
+    });
+
+    const pubDaily = await kv.get(kvKeyPubDayRollup('tensorfeed.ai', '2026-05-27'), 'json');
+    expect(pubDaily).toMatchObject({ volume_usdc: '0.020000', count: 1 });
+
+    const recent = await kv.get(KV_KEY_RECENT, 'json') as SettlementEvent[];
+    expect(recent).toEqual([baseEvent]);
+  });
 });
 
 describe('runIndexerTick', () => {

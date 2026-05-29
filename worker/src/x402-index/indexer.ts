@@ -88,6 +88,14 @@ export function compareDecimal(a: string, b: string): -1 | 0 | 1 {
 }
 
 export async function applyEventToRollups(env: Env, event: SettlementEvent): Promise<void> {
+  // Idempotency guard: skip a settlement we have already applied. The per-tx event
+  // record (written below) is our durable marker, so if a re-processed block range
+  // (cursor write failed mid-tick, a worker restart, or two overlapping ticks) feeds
+  // the same tx_hash back in, we neither double-count the rollups it bills against nor
+  // duplicate it in the recent ticker.
+  const alreadyApplied = await env.TENSORFEED_CACHE.get(kvKeyEvent(event.tx_hash));
+  if (alreadyApplied) return;
+
   const date = event.ts.slice(0, 10);
 
   const dailyKey = kvKeyDayRollup(date);
