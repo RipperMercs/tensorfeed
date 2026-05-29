@@ -467,3 +467,22 @@ function pctChangeNum(prior: number, current: number): number {
   if (prior === 0) return current === 0 ? 0 : 100;
   return Math.round(((current - prior) / prior) * 10000) / 100;
 }
+
+// Edge-cache keys for the paid x402-index endpoints. They key ONLY on the inputs
+// that determine the response (canonicalized domain plus date window plus
+// metric/granularity), never on the caller. The index data is public and
+// identical per query, so one cached value is shared across all callers while
+// requirePayment and premiumResponse still run per request. Domain is
+// canonicalized so Example.com, example.com, and example.com. share a single
+// entry, matching how getPublisherReceipts and getSeries normalize it. Field
+// order is fixed and a colon cannot appear in a validated domain or a YYYY-MM-DD
+// date, so distinct queries never collide onto the same key. The trailing empty
+// domain field on a series key unambiguously marks an ecosystem (no-domain) query.
+export function publisherReceiptsCacheKey(rawDomain: string, from: string, to: string): string {
+  return `x402idx:receipts:${canonDomain(rawDomain)}:${from}:${to}`;
+}
+
+export function seriesCacheKey(params: SeriesParams): string {
+  const domain = params.domain ? canonDomain(params.domain) : '';
+  return `x402idx:series:${params.metric}:${params.granularity}:${params.from}:${params.to}:${domain}`;
+}

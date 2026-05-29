@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getSummary, getLeaderboard, getRecent, getPublishers, getPublisherReceipts, getSeries, validateRange, MAX_SERIES_RANGE_DAYS } from './query';
+import { getSummary, getLeaderboard, getRecent, getPublishers, getPublisherReceipts, getSeries, validateRange, MAX_SERIES_RANGE_DAYS, publisherReceiptsCacheKey, seriesCacheKey } from './query';
 import { kvKeyDayRollup, KV_KEY_RECENT, KV_KEY_PUBLISHERS, kvKeyPublisher, kvKeyPubDayRollup } from './constants';
 import type { SettlementEvent } from './types';
 
@@ -494,5 +494,40 @@ describe('x402-index hardening (captured_at, has_data, honesty)', () => {
     const result = await getSummary(env, '24h', new Date('2026-05-28T12:00:00.000Z'));
     expect(result.change_vs_prior_window.prior_window_empty).toBe(true);
     expect(result.change_vs_prior_window.volume_pct).toBe(100);
+  });
+});
+
+describe('premium x402-index cache keys', () => {
+  it('publisherReceiptsCacheKey is distinct per (domain, from, to) and canonicalizes the domain', () => {
+    const a = publisherReceiptsCacheKey('example.com', '2026-05-01', '2026-05-31');
+    // Same logical query in mixed case or with a trailing dot must share one entry.
+    expect(publisherReceiptsCacheKey('Example.com', '2026-05-01', '2026-05-31')).toBe(a);
+    expect(publisherReceiptsCacheKey('example.com.', '2026-05-01', '2026-05-31')).toBe(a);
+    // A different domain or a different date bound must NOT collide.
+    expect(publisherReceiptsCacheKey('other.com', '2026-05-01', '2026-05-31')).not.toBe(a);
+    expect(publisherReceiptsCacheKey('example.com', '2026-05-02', '2026-05-31')).not.toBe(a);
+    expect(publisherReceiptsCacheKey('example.com', '2026-05-01', '2026-05-30')).not.toBe(a);
+  });
+
+  it('seriesCacheKey keys on every result-affecting param', () => {
+    const base = { metric: 'volume', granularity: 'day', from: '2026-05-01', to: '2026-05-31' } as const;
+    const eco = seriesCacheKey({ ...base });
+    expect(seriesCacheKey({ ...base, metric: 'count' })).not.toBe(eco);
+    expect(seriesCacheKey({ ...base, granularity: 'hour' })).not.toBe(eco);
+    expect(seriesCacheKey({ ...base, from: '2026-04-01' })).not.toBe(eco);
+    expect(seriesCacheKey({ ...base, to: '2026-06-01' })).not.toBe(eco);
+    // Identical params produce the identical key, so the cache actually hits.
+    expect(seriesCacheKey({ ...base })).toBe(eco);
+  });
+
+  it('seriesCacheKey never collides an ecosystem query with a per-publisher one', () => {
+    const base = { metric: 'volume', granularity: 'day', from: '2026-05-01', to: '2026-05-31' } as const;
+    const eco = seriesCacheKey({ ...base }); // no domain: ecosystem
+    const perPub = seriesCacheKey({ ...base, domain: 'example.com' });
+    expect(perPub).not.toBe(eco);
+    // Domain canonicalization mirrors the query function.
+    expect(seriesCacheKey({ ...base, domain: 'Example.com.' })).toBe(perPub);
+    // Two different publishers never share a key.
+    expect(seriesCacheKey({ ...base, domain: 'other.com' })).not.toBe(perPub);
   });
 });

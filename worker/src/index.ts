@@ -10281,7 +10281,7 @@ export default {
         );
       }
 
-      const { getPublisherReceipts, validateRange } = await import('./x402-index/query');
+      const { getPublisherReceipts, validateRange, publisherReceiptsCacheKey } = await import('./x402-index/query');
       const range = validateRange(from, to);
       if (!range.ok) {
         return await premiumValidationFailure(
@@ -10292,7 +10292,17 @@ export default {
         );
       }
 
-      const result = await getPublisherReceipts(env, domain, from, to);
+      // Cache-API read layer over the per-day KV fan-out. The cached value is the
+      // public index data (identical per query), so it is shared across callers;
+      // requirePayment above and premiumResponse below still run per request, and a
+      // cached captured_at can only be older than live, so the freshness SLA can
+      // only no-charge earlier, never wrong-charge. 60s TTL sits far inside the
+      // 10-min x402-index SLA. An unknown publisher (null) is not effectively cached.
+      const result = await cachedFetch(
+        publisherReceiptsCacheKey(domain, from, to),
+        60,
+        () => getPublisherReceipts(env, domain, from, to),
+      );
       if (result === null) {
         return await premiumValidationFailure(
           {
@@ -10367,14 +10377,23 @@ export default {
         );
       }
 
-      const { getSeries, validateRange } = await import('./x402-index/query');
+      const { getSeries, validateRange, seriesCacheKey } = await import('./x402-index/query');
       // Bound the per-day KV fan-out (audit #4). Only day granularity reaches
       // here now (hour returned above), so validateRange always applies.
       const range = validateRange(from, to);
       if (!range.ok) {
         return await premiumValidationFailure({ error: range.error, hint: range.hint }, payment, request, env);
       }
-      const result = await getSeries(env, { metric, granularity, from, to, domain });
+      // Same Cache-API read layer as the publisher-receipts route: cache the
+      // public per-query series behind the per-request billing gate. Only day
+      // granularity reaches here (hour is rejected above), 60s TTL sits inside the
+      // 10-min SLA, and a cached captured_at can only ever no-charge earlier.
+      const seriesParams = { metric, granularity, from, to, domain };
+      const result = await cachedFetch(
+        seriesCacheKey(seriesParams),
+        60,
+        () => getSeries(env, seriesParams),
+      );
 
       // Empty/uncovered window (pre-2026-05-28 dates, or a quiet domain): return
       // the empty series for free rather than charging for a no-data answer.
