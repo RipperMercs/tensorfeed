@@ -77,48 +77,68 @@ describe('getSummary', () => {
 });
 
 describe('getLeaderboard', () => {
-  it('aggregates per-publisher across window, sorts, computes shares', async () => {
+  const pubRec = (domain: string) => JSON.stringify({
+    domain, manifest_url: '', pay_to_wallets: [],
+    first_seen: '2026-05-01T00:00:00.000Z', last_crawled: '2026-05-27T00:00:00.000Z',
+    last_crawl_error: null, last_event_at: null,
+  });
+
+  it('aggregates per-publisher across the window from full pub-day rollups, sorts, computes shares', async () => {
     const kv = mockKv();
     const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
     const now = new Date('2026-05-27T00:00:00.000Z');
 
-    kv.store.set(kvKeyDayRollup('2026-05-27'), JSON.stringify({
-      date: '2026-05-27', volume_usdc: '3.0', count: 30,
-      top_publishers: [
-        { domain: 'tensorfeed.ai', volume_usdc: '2.0', count: 20 },
-        { domain: 'terminalfeed.io', volume_usdc: '1.0', count: 10 },
-      ],
-    }));
-    kv.store.set(kvKeyDayRollup('2026-05-26'), JSON.stringify({
-      date: '2026-05-26', volume_usdc: '1.0', count: 5,
-      top_publishers: [
-        { domain: 'tensorfeed.ai', volume_usdc: '1.0', count: 5 },
-      ],
-    }));
+    kv.store.set(kvKeyPublisher('tensorfeed.ai'), pubRec('tensorfeed.ai'));
+    kv.store.set(kvKeyPublisher('terminalfeed.io'), pubRec('terminalfeed.io'));
+    kv.store.set(kvKeyPubDayRollup('tensorfeed.ai', '2026-05-27'), JSON.stringify({ date: '2026-05-27', domain: 'tensorfeed.ai', volume_usdc: '2.0', count: 20 }));
+    kv.store.set(kvKeyPubDayRollup('tensorfeed.ai', '2026-05-26'), JSON.stringify({ date: '2026-05-26', domain: 'tensorfeed.ai', volume_usdc: '1.0', count: 5 }));
+    kv.store.set(kvKeyPubDayRollup('terminalfeed.io', '2026-05-27'), JSON.stringify({ date: '2026-05-27', domain: 'terminalfeed.io', volume_usdc: '1.0', count: 10 }));
 
     const result = await getLeaderboard(env, '7d', 10, now);
 
-    expect(result.leaders[0]).toMatchObject({
-      rank: 1,
-      domain: 'tensorfeed.ai',
-      volume_usdc: '3.000000',
-      count: 25,
-    });
-    expect(result.leaders[1]).toMatchObject({
-      rank: 2,
-      domain: 'terminalfeed.io',
-      volume_usdc: '1.000000',
-      count: 10,
-    });
-    expect(result.leaders[0].share_pct).toBe(75);
+    expect(result.leaders[0]).toMatchObject({ rank: 1, domain: 'tensorfeed.ai', volume_usdc: '3.000000', count: 25 });
+    expect(result.leaders[1]).toMatchObject({ rank: 2, domain: 'terminalfeed.io', volume_usdc: '1.000000', count: 10 });
+    expect(result.leaders[0].share_pct).toBe(75); // 3.0 / 4.0 ecosystem
     expect(result.leaders[1].share_pct).toBe(25);
+    expect(result.window_volume_usdc).toBe('4.000000');
+  });
+
+  it('counts a publisher below a day top-10 cap (the numeric-correctness-1 undercount case)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const now = new Date('2026-05-28T00:00:00.000Z');
+    // 12 publishers settle the same day; the 12th would be dropped by a per-day
+    // top-10 cap but must still surface from the full pub-day rollups.
+    for (let i = 1; i <= 12; i++) {
+      const d = `pub${String(i).padStart(2, '0')}.com`;
+      kv.store.set(kvKeyPublisher(d), pubRec(d));
+      kv.store.set(kvKeyPubDayRollup(d, '2026-05-28'), JSON.stringify({ date: '2026-05-28', domain: d, volume_usdc: `${13 - i}.0`, count: 13 - i }));
+    }
+    const result = await getLeaderboard(env, '24h', 25, now);
+    expect(result.leaders.length).toBe(12);
+    expect(result.leaders.find((l) => l.domain === 'pub12.com')).toBeDefined();
+  });
+
+  it('ignores a registry record with no in-window settlements (e.g. an errored crawl)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(kvKeyPublisher('active.com'), pubRec('active.com'));
+    kv.store.set(kvKeyPublisher('quiet.com'), pubRec('quiet.com'));
+    kv.store.set(kvKeyPubDayRollup('active.com', '2026-05-28'), JSON.stringify({ date: '2026-05-28', domain: 'active.com', volume_usdc: '1.0', count: 1 }));
+    const result = await getLeaderboard(env, '24h', 25, new Date('2026-05-28T12:00:00.000Z'));
+    expect(result.leaders.map((l) => l.domain)).toEqual(['active.com']);
   });
 
   it('clamps limit to max 25', async () => {
     const kv = mockKv();
     const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
-    const result = await getLeaderboard(env, '24h', 999, new Date('2026-05-27T00:00:00.000Z'));
+    kv.store.set(kvKeyPublisher('a.com'), pubRec('a.com'));
+    kv.store.set(kvKeyPublisher('b.com'), pubRec('b.com'));
+    kv.store.set(kvKeyPubDayRollup('a.com', '2026-05-28'), JSON.stringify({ date: '2026-05-28', domain: 'a.com', volume_usdc: '2.0', count: 2 }));
+    kv.store.set(kvKeyPubDayRollup('b.com', '2026-05-28'), JSON.stringify({ date: '2026-05-28', domain: 'b.com', volume_usdc: '1.0', count: 1 }));
+    const result = await getLeaderboard(env, '24h', 999, new Date('2026-05-28T12:00:00.000Z'));
     expect(result.leaders.length).toBeLessThanOrEqual(25);
+    expect(result.leaders.length).toBe(2);
   });
 });
 
@@ -455,14 +475,11 @@ describe('x402-index hardening (captured_at, has_data, honesty)', () => {
   it('getLeaderboard share_pct uses the full ecosystem window volume, not the displayed slice', async () => {
     const kv = mockKv();
     const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
-    kv.store.set(kvKeyDayRollup('2026-05-28'), JSON.stringify({
-      date: '2026-05-28', volume_usdc: '10.0', count: 10,
-      top_publishers: [
-        { domain: 'a.com', volume_usdc: '5.0', count: 5 },
-        { domain: 'b.com', volume_usdc: '3.0', count: 3 },
-        { domain: 'c.com', volume_usdc: '2.0', count: 2 },
-      ],
-    }));
+    const rec = (d: string) => JSON.stringify({ domain: d, manifest_url: '', pay_to_wallets: [], first_seen: '2026-05-01T00:00:00.000Z', last_crawled: '2026-05-28T00:00:00.000Z', last_crawl_error: null, last_event_at: null });
+    for (const [d, vol, cnt] of [['a.com', '5.0', 5], ['b.com', '3.0', 3], ['c.com', '2.0', 2]] as Array<[string, string, number]>) {
+      kv.store.set(kvKeyPublisher(d), rec(d));
+      kv.store.set(kvKeyPubDayRollup(d, '2026-05-28'), JSON.stringify({ date: '2026-05-28', domain: d, volume_usdc: vol, count: cnt }));
+    }
     const result = await getLeaderboard(env, '24h', 1, new Date('2026-05-28T12:00:00.000Z'));
     expect(result.leaders.length).toBe(1);
     expect(result.leaders[0].domain).toBe('a.com');

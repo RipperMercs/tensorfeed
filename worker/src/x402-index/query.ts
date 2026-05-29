@@ -130,21 +130,43 @@ export interface LeaderboardResult {
 export async function getLeaderboard(env: Env, window: Window, limit: number, now: Date = new Date()): Promise<LeaderboardResult> {
   const clampedLimit = Math.min(Math.max(limit, 1), 25);
   const dates = datesInWindow(window, now);
-  const [rollups, capturedAt] = await Promise.all([
-    Promise.all(dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyDayRollup(d), 'json') as Promise<DailyRollup | null>)),
+
+  // Enumerate the publisher universe (the indexed domains) and aggregate from the
+  // FULL per-publisher-day rollups, NOT each DailyRollup.top_publishers, which the
+  // indexer caps at TOP_PUBLISHERS_LIMIT per day. The capped top-N source silently
+  // dropped any publisher below a day's top tier from its windowed total, both
+  // omitting it from a limit>10 board and undercounting a publisher that ranked
+  // outside the top tier on a busy day (audit numeric-correctness-1). Fan-out is
+  // (publisher count) x (window days, <= 30), bounded by the registry size the
+  // index controls, the same shape getSeries(domain) uses. As the registry grows,
+  // the deferred Cache-API read layer bounds the free-endpoint KV cost.
+  const PUB_PREFIX = 'x402-idx:publisher:';
+  const [pubList, capturedAt] = await Promise.all([
+    env.TENSORFEED_CACHE.list({ prefix: PUB_PREFIX }),
     readCursorCapturedAt(env),
   ]);
+  const domains = pubList.keys
+    .map((k) => k.name.slice(PUB_PREFIX.length))
+    .filter((d) => d.length > 0);
 
   const byDomain = new Map<string, { volume_usdc: string; count: number }>();
-  for (const r of rollups) {
-    if (!r) continue;
-    for (const p of r.top_publishers) {
-      const cur = byDomain.get(p.domain) ?? { volume_usdc: '0', count: 0 };
-      cur.volume_usdc = addDecimal(cur.volume_usdc, p.volume_usdc);
-      cur.count += p.count;
-      byDomain.set(p.domain, cur);
-    }
-  }
+  await Promise.all(
+    domains.map(async (domain) => {
+      const perDay = await Promise.all(
+        dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyPubDayRollup(domain, d), 'json') as Promise<PublisherDailyRollup | null>),
+      );
+      let vol = '0';
+      let cnt = 0;
+      for (const r of perDay) {
+        if (!r) continue;
+        vol = addDecimal(vol, r.volume_usdc);
+        cnt += r.count;
+      }
+      // Only publishers with real settlements in the window appear; a registry
+      // record with no in-window rollups (e.g. an errored crawl) contributes nothing.
+      if (cnt > 0) byDomain.set(domain, { volume_usdc: vol, count: cnt });
+    }),
+  );
 
   const arr = Array.from(byDomain.entries()).map(([domain, v]) => ({ domain, ...v }));
   arr.sort((a, b) => {
@@ -173,7 +195,7 @@ export async function getLeaderboard(env: Env, window: Window, limit: number, no
     leaders,
     window_volume_usdc: fromMicroUnits(windowMicro),
     coverage_note:
-      'Ranking aggregates each day\'s top publishers; a publisher outside a given day\'s top tier is not counted in that day\'s contribution to the windowed total.',
+      'Aggregated from full per-publisher daily settlement rollups across the window; no per-day top-N truncation. window_volume_usdc carries the share_pct denominator.',
     attribution: INDEX_ATTRIBUTION,
     license: INDEX_LICENSE,
   };
