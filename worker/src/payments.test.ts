@@ -22,6 +22,8 @@ import {
   commitInternal,
   isValidSenderWallet,
   createQuote,
+  getBalance,
+  buildHeaderExtensions,
 } from './payments';
 import type { Env } from './types';
 
@@ -776,6 +778,57 @@ describe('lifetime traction counter', () => {
     const a = await backfillLifetimeFromRollups(env);
     expect(a.premium_calls).toBe(2);
     expect(a.total_credits_charged).toBe(2);
+  });
+});
+
+describe('getBalance', () => {
+  it('returns balance and a credits_remaining alias (same value)', async () => {
+    const env = makeEnv();
+    seedCredits(env, 25);
+    const r = await getBalance(env, FIXTURE);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.balance).toBe(25);
+      expect(r.credits_remaining).toBe(25);
+    }
+  });
+  it('rejects an unknown token', async () => {
+    const env = makeEnv();
+    const r = await getBalance(env, 'tf_live_unknownunknownunknownunknownunknownunknownunknownunkn00');
+    expect(r.ok).toBe(false);
+  });
+});
+
+describe('buildHeaderExtensions (402 header schema, audit + x402scan)', () => {
+  const fullExt = {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: { task: 'code' }, queryFields: { task: { type: 'string' } } },
+        output: { type: 'json', example: { ok: true, verdict: { model: 'x', why: 'long explanation '.repeat(30) } } },
+      },
+      schema: { $schema: 'https://json-schema.org/draft/2020-12/schema', type: 'object', properties: { task: { type: 'string', description: 'a'.repeat(300) } } },
+      routeTemplate: '/api/premium/providers/:name',
+    },
+  };
+  it('keeps only bazaar.info.input (plus routeTemplate), drops the heavy output + schema', () => {
+    const h = buildHeaderExtensions(fullExt) as { bazaar: { info: { input: unknown; output?: unknown }; schema?: unknown; routeTemplate?: unknown } };
+    expect(h.bazaar.info.input).toEqual(fullExt.bazaar.info.input);
+    expect(h.bazaar.info.output).toBeUndefined();
+    expect(h.bazaar.schema).toBeUndefined();
+    expect(h.bazaar.routeTemplate).toBe('/api/premium/providers/:name');
+  });
+  it('returns {} for non-pilot (empty) extensions', () => {
+    expect(buildHeaderExtensions({})).toEqual({});
+  });
+  it('returns {} when there is no bazaar.info.input', () => {
+    expect(buildHeaderExtensions({ bazaar: { info: {} } })).toEqual({});
+  });
+  it('falls back to {} when the input is too large for the header cap (no overflow)', () => {
+    const big = { bazaar: { info: { input: { type: 'http', blob: 'x'.repeat(9000) } } } };
+    expect(buildHeaderExtensions(big)).toEqual({});
+  });
+  it('the input-only block stays well under the cap', () => {
+    expect(btoa(JSON.stringify(buildHeaderExtensions(fullExt))).length).toBeLessThan(5000);
   });
 });
 

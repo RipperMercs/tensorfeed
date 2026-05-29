@@ -1538,7 +1538,7 @@ export async function confirmPayment(
 }
 
 export type BalanceResult =
-  | { ok: true; balance: number; created: string; last_used: string; total_purchased: number }
+  | { ok: true; balance: number; credits_remaining: number; created: string; last_used: string; total_purchased: number }
   | { ok: false; error: string };
 
 export async function getBalance(env: Env, token: string): Promise<BalanceResult> {
@@ -1552,6 +1552,10 @@ export async function getBalance(env: Env, token: string): Promise<BalanceResult
   return {
     ok: true,
     balance: record.balance,
+    // Alias so agents and SDKs that read the per-call billing field name
+    // (billing.credits_remaining) get the same value from this endpoint too.
+    // Same number, two names, no breakage for readers of either.
+    credits_remaining: record.balance,
     created: record.created,
     last_used: record.last_used,
     total_purchased: record.total_purchased,
@@ -2770,6 +2774,31 @@ export async function requirePayment(
   };
 }
 
+/**
+ * Build the COMPACT extensions block for the 402 PAYMENT-REQUIRED header.
+ * Keeps only bazaar.info.input (the param schema catalog validators such as
+ * x402scan read from the header) plus routeTemplate, dropping the heavy
+ * bazaar.info.output.example and the full JSON Schema. The base64 of the
+ * canonical PaymentRequired is emitted in BOTH PAYMENT-REQUIRED and
+ * WWW-Authenticate, so it counts twice against undici's 16KB header cap; the
+ * input descriptor is well under 1KB, but we size-check the compact block and
+ * return {} if a pathological pilot's input is too large, so buyer SDKs never
+ * hit a Headers Overflow Error. The full extensions stay in the response BODY.
+ */
+export function buildHeaderExtensions(
+  extensions: Record<string, unknown>,
+  maxB64Len = 5000,
+): Record<string, unknown> {
+  const fullExt = extensions as { bazaar?: { info?: { input?: unknown }; routeTemplate?: unknown } };
+  const bzInput = fullExt?.bazaar?.info?.input;
+  if (!bzInput || typeof bzInput !== 'object') return {};
+  const compactBazaar: Record<string, unknown> = { info: { input: bzInput } };
+  if (fullExt.bazaar?.routeTemplate) compactBazaar.routeTemplate = fullExt.bazaar.routeTemplate;
+  const compact = { bazaar: compactBazaar };
+  if (btoa(JSON.stringify(compact)).length > maxB64Len) return {};
+  return compact;
+}
+
 function paymentRequiredResponse(
   env: Env,
   creditsRequired: number,
@@ -2874,18 +2903,22 @@ function paymentRequiredResponse(
   // amounts), so btoa is safe. Use TextEncoder->String.fromCharCode if we
   // ever introduce Unicode in resource/description fields.
   //
-  // Header version OMITS the bazaar extensions block. Discovery: the body
-  // already carries the full extensions for catalog crawlers (agentic.market,
-  // CDP /discovery) which read the body. The header copy serves buyer SDKs
-  // (AgentCore Payments, @x402/fetch, etc.) which only need `accepts` to
-  // sign EIP-3009. Some bazaar pilots carry deeply-nested schema + example
-  // payloads (status/triage, news/action-cards, ai-velocity, etc.) whose
-  // base64 inflates the header past undici's default 16KB cap, producing
-  // "Headers Overflow Error" on Node fetch and silently breaking buyer-side
-  // settle retries. Bug found 2026-05-25 while debugging the 4 endpoints
-  // that wouldn't settle during the catalog sweep; verified via repro
-  // (tensorfeed-work/buyer-debug.mjs). Body kept untouched.
-  const headerCanonical = { ...canonicalPaymentRequired, extensions: {} };
+  // Header carries a COMPACT input-only extensions block via
+  // buildHeaderExtensions: just bazaar.info.input (the param schema that
+  // catalog validators reading the HEADER, not the body, need; x402scan
+  // reported "missing input schema" when we stripped extensions entirely).
+  // The heavy bazaar.info.output.example + full JSON Schema stay body-only,
+  // so the body still serves crawlers that read it (agentic.market, CDP
+  // /discovery). The 16KB-overflow guard is preserved inside the helper:
+  // this base64 is emitted in BOTH PAYMENT-REQUIRED and WWW-Authenticate, so
+  // it counts twice, and a pathological oversized input falls back to {}.
+  // Original overflow bug found 2026-05-25 debugging the 4 endpoints that
+  // would not settle (repro tensorfeed-work/buyer-debug.mjs); restored input
+  // discovery here without reintroducing it (audit, x402scan).
+  const headerCanonical = {
+    ...canonicalPaymentRequired,
+    extensions: buildHeaderExtensions(canonicalPaymentRequired.extensions as Record<string, unknown>),
+  };
   const canonicalB64 = btoa(JSON.stringify(headerCanonical));
 
   return jsonResponse(
