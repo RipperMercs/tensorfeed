@@ -54,7 +54,7 @@ function styleForError(): BadgeStyle {
 /**
  * Estimate text width in SVG units for a given font size. Real shields.io
  * pre-renders text via a font-metric service; for our purposes a coarse
- * 7px-per-char heuristic for 11px sans-serif is close enough — badges
+ * 7px-per-char heuristic for 11px sans-serif is close enough. Badges
  * are not pixel-perfect documents, and any slight over-allocation just
  * adds harmless padding.
  */

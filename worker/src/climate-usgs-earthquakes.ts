@@ -37,7 +37,7 @@ const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 500;
 
 const ATTRIBUTION = {
-  source: 'USGS Earthquake Hazards Program — Real-time Feed',
+  source: 'USGS Earthquake Hazards Program, Real-time Feed',
   source_url: 'https://earthquake.usgs.gov/earthquakes/feed/',
   publisher: 'United States Geological Survey',
   license: 'US Government work in the public domain (17 USC §105)',

@@ -175,10 +175,10 @@ for r in projection["ranked_cheapest_monthly"]:
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Recommended TensorFeed endpoints (in priority order)</h2>
         <ul className="space-y-2 list-disc list-inside ml-4">
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/cost/projection</code></Link> — workload cost across 1-10 models, 4 horizons</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/watches</code></Link> — realtime price-drop notifications</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/payment/usage</code></Link> — per-token audit log (free with bearer token)</li>
-          <li><Link href="/account" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/account</code></Link> — human-facing dashboard for the same data</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/cost/projection</code></Link>: workload cost across 1-10 models, 4 horizons</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/watches</code></Link>: realtime price-drop notifications</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/payment/usage</code></Link>: per-token audit log (free with bearer token)</li>
+          <li><Link href="/account" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/account</code></Link>: human-facing dashboard for the same data</li>
         </ul>
 
         <div className="bg-bg-secondary border border-border rounded-xl p-5 mt-8">

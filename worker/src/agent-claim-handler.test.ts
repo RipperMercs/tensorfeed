@@ -243,7 +243,7 @@ describe('handleClaimApplication: Chainalysis OFAC', () => {
       expect(r.status).toBe('retry_later');
       expect((r as any).reason).toBe('ofac_oracle_unreachable');
     }
-    // No ban record, no claim written, no nonce burnt — caller can retry
+    // No ban record, no claim written, no nonce burnt. Caller can retry
     expect(kv.store.has(BAN_KEY_PREFIX + TEST_WALLET.toLowerCase())).toBe(false);
     expect(kv.store.has(CLAIM_KEY_PREFIX + 'claim:' + TEST_WALLET.toLowerCase())).toBe(false);
   });

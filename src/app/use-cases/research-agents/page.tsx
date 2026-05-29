@@ -183,11 +183,11 @@ profile = tf.provider_deepdive("anthropic")
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Recommended TensorFeed endpoints (in priority order)</h2>
         <ul className="space-y-2 list-disc list-inside ml-4">
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/whats-new</code></Link> — boot-time morning brief</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/news/search</code></Link> — full-text search with date/provider filters</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/providers/&#123;name&#125;</code></Link> — one-call provider deep-dive</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/compare/models</code></Link> — side-by-side comparison with normalized benchmarks</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/watches</code></Link> with <code className="font-mono text-sm">type:&quot;digest&quot;</code> — set-and-forget weekly summaries</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/whats-new</code></Link>: boot-time morning brief</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/news/search</code></Link>: full-text search with date/provider filters</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/providers/&#123;name&#125;</code></Link>: one-call provider deep-dive</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/compare/models</code></Link>: side-by-side comparison with normalized benchmarks</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/watches</code></Link> with <code className="font-mono text-sm">type:&quot;digest&quot;</code>: set-and-forget weekly summaries</li>
         </ul>
 
         <div className="bg-bg-secondary border border-border rounded-xl p-5 mt-8">

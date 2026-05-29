@@ -110,17 +110,17 @@ export default function AgentTrafficClient() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
           label="Today"
-          value={data ? data.today_count.toLocaleString() : '—'}
+          value={data ? data.today_count.toLocaleString() : '-'}
           hint="bot requests since 00:00 UTC"
         />
         <StatCard
           label="Recent buffer"
-          value={data ? data.recent.length.toLocaleString() : '—'}
+          value={data ? data.recent.length.toLocaleString() : '-'}
           hint="last 50 hits we kept"
         />
         <StatCard
           label="Distinct bots seen"
-          value={data ? breakdown.length.toLocaleString() : '—'}
+          value={data ? breakdown.length.toLocaleString() : '-'}
           hint="across the recent buffer"
         />
       </div>

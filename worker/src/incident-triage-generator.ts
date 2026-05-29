@@ -280,7 +280,7 @@ export async function refreshIncidentTriage(env: Env): Promise<IncidentTriageSna
 
   const incidents = (await env.TENSORFEED_STATUS.get('incidents', 'json')) as Incident[] | null;
   if (!incidents || incidents.length === 0) {
-    // No incidents to triage — write an empty snapshot so the endpoint
+    // No incidents to triage. Write an empty snapshot so the endpoint
     // returns a successful "all clear" rather than 503.
     const snapshot: IncidentTriageSnapshot = {
       capturedAt: new Date().toISOString(),

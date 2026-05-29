@@ -231,8 +231,8 @@ export default function LeaderboardClient({ initialData }: Props) {
               {entries.map((e: LeaderboardEntry) => {
                 // A provider with polls but zero decisive samples (everything
                 // came back unknown) means our worker couldn't get a real
-                // status read — usually a fetch / parse bug for that source.
-                // Show "—" instead of misleading 0.00% so it's obviously a
+                // status read, usually a fetch / parse bug for that source.
+                // Show "-" instead of misleading 0.00% so it's obviously a
                 // data gap, not a real outage.
                 const decisive = e.operational_polls + e.degraded_polls + e.down_polls;
                 const noData = decisive === 0;
@@ -274,7 +274,7 @@ export default function LeaderboardClient({ initialData }: Props) {
                     <td className="px-4 py-3.5 text-right">
                       {noData ? (
                         <span className="font-mono text-text-muted" title="No decisive status data captured yet for this window">
-                          —
+                          -
                         </span>
                       ) : (
                         <div className="inline-flex items-center gap-2 justify-end">

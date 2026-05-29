@@ -1,5 +1,5 @@
 /**
- * GitHub Security Advisories — AI-filtered firehose.
+ * GitHub Security Advisories: AI-filtered firehose.
  *
  * Broader companion to the narrower /api/security/ai-supply-chain-iocs
  * feed. Where that endpoint only surfaces npm/pip MALWARE advisories,

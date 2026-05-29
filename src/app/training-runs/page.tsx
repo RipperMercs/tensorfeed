@@ -87,7 +87,7 @@ export default function TrainingRunsPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold font-mono text-text-primary">
-                    {r.estimatedCostMillionUSD !== null ? `$${r.estimatedCostMillionUSD}M` : '—'}
+                    {r.estimatedCostMillionUSD !== null ? `$${r.estimatedCostMillionUSD}M` : '-'}
                   </div>
                   <div className="text-xs text-text-muted">{r.costSource}</div>
                 </div>
@@ -97,7 +97,7 @@ export default function TrainingRunsPage() {
                 <div>
                   <div className="text-text-muted uppercase tracking-wide">Params</div>
                   <div className="font-mono text-text-primary">
-                    {r.activeParamsB ? `${r.activeParamsB}B / ${r.totalParamsB}B` : (r.totalParamsB ? `${r.totalParamsB}B` : '—')}
+                    {r.activeParamsB ? `${r.activeParamsB}B / ${r.totalParamsB}B` : (r.totalParamsB ? `${r.totalParamsB}B` : '-')}
                   </div>
                 </div>
                 <div>
@@ -110,7 +110,7 @@ export default function TrainingRunsPage() {
                 </div>
                 <div>
                   <div className="text-text-muted uppercase tracking-wide">Compute</div>
-                  <div className="font-mono text-text-secondary">{r.computeHours || '—'}</div>
+                  <div className="font-mono text-text-secondary">{r.computeHours || '-'}</div>
                 </div>
               </div>
             </div>

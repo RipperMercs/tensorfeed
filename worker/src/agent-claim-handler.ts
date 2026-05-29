@@ -153,7 +153,7 @@ export async function handleClaimApplication(
     // screening_not_configured, network failure, non-200 status) is
     // fail-closed. Caller should retry after the oracle is healthy.
     // The nonce has already been burned, so the retry must use a
-    // fresh signed message with a new nonce — this is intentional:
+    // fresh signed message with a new nonce. This is intentional:
     // it forces a fresh proof of the operator's intent rather than
     // letting them silently reuse an old signed message.
     return { ok: false, status: 'retry_later', reason: 'ofac_oracle_unreachable' };

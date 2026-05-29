@@ -376,21 +376,21 @@ export default function ForAIAgentsPage() {
               We Validated Agent Payments End-to-End on Base Mainnet
             </Link>
             {' '}
-            <span className="text-text-muted text-sm">— the actual tx hash, the five steps, what worked first try</span>
+            <span className="text-text-muted text-sm">: the actual tx hash, the five steps, what worked first try</span>
           </li>
           <li>
             <Link href="/originals/why-usdc-over-stripe" className="text-accent-primary hover:underline">
               Why We Picked USDC on Base Over Stripe for Agent Payments
             </Link>
             {' '}
-            <span className="text-text-muted text-sm">— the architectural choice, what we gave up, what we got</span>
+            <span className="text-text-muted text-sm">: the architectural choice, what we gave up, what we got</span>
           </li>
           <li>
             <Link href="/originals/15-paid-endpoints-24-hours" className="text-accent-primary hover:underline">
               15 Paid AI Agent API Endpoints in 24 Hours: What Made It Possible
             </Link>
             {' '}
-            <span className="text-text-muted text-sm">— the build velocity retrospective</span>
+            <span className="text-text-muted text-sm">: the build velocity retrospective</span>
           </li>
         </ul>
       </section>

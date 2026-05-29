@@ -262,7 +262,7 @@ export async function captureEpochSnapshot(env: Env): Promise<CaptureResult> {
     // Decode explicitly as UTF-8. res.text() infers charset from the
     // response and the Epoch CSV served without one decodes multibyte
     // chars as Latin-1 (model/org names with U+00D7 etc. mojibake into
-    // "Ã—"). Numeric fields are ASCII so unaffected, but the served
+    // a two-character Latin-1 sequence). Numeric fields are ASCII so unaffected, but the served
     // strings must be clean.
     csv = new TextDecoder('utf-8').decode(new Uint8Array(await res.arrayBuffer()));
   } catch (err) {

@@ -137,10 +137,10 @@ export default function MCPGlossaryPage() {
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Further reading</h2>
         <ul className="space-y-1 list-disc list-inside ml-4">
-          <li><a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">modelcontextprotocol.io</a> — official spec</li>
-          <li><a href="https://github.com/modelcontextprotocol/servers" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">github.com/modelcontextprotocol/servers</a> — community servers list</li>
+          <li><a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">modelcontextprotocol.io</a>: official spec</li>
+          <li><a href="https://github.com/modelcontextprotocol/servers" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">github.com/modelcontextprotocol/servers</a>: community servers list</li>
           <li><a href="https://github.com/RipperMercs/tensorfeed/tree/main/mcp-server" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">TensorFeed MCP server source</a></li>
-          <li><Link href="/for-ai-agents" className="text-accent-primary hover:underline">TensorFeed for AI agents</Link> — discovery surfaces and integration paths</li>
+          <li><Link href="/for-ai-agents" className="text-accent-primary hover:underline">TensorFeed for AI agents</Link>: discovery surfaces and integration paths</li>
         </ul>
       </div>
     </article>

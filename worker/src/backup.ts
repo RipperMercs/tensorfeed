@@ -8,7 +8,7 @@
  * a compressed snapshot to R2 under a date-stamped prefix.
  *
  * The R2 bucket lives in the same Cloudflare account but on a different
- * service — partial protection at zero ongoing cost. Layers 2 (mirror
+ * service. Partial protection at zero ongoing cost. Layers 2 (mirror
  * to a separate provider) and 3 (operator pulls a local copy) are
  * follow-ups.
  *
@@ -65,7 +65,7 @@ export interface BackupManifest {
 
 /**
  * Walk one KV namespace and stream its contents directly through gzip
- * into R2. No in-memory buffering of the JSONL — values flow from KV
+ * into R2. No in-memory buffering of the JSONL; values flow from KV
  * through a ReadableStream, through CompressionStream('gzip'), and
  * straight into R2.put as a streamed body.
  *
@@ -127,7 +127,7 @@ async function streamNamespaceToR2(
 
   try {
     // R2.put requires bodies of known length. Stream the JSONL source
-    // through gzip (this is where the win is — no 54MB string ever
+    // through gzip (this is where the win is: no 54MB string ever
     // exists in memory), then collect the COMPRESSED bytes into a
     // single Uint8Array for the upload. Compressed size is roughly
     // 10% of source for typical JSON, so 54MB uncompressed -> ~5MB

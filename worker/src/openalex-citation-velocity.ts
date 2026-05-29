@@ -5,7 +5,7 @@ import { fetchOpenAlexWithRetry } from './openalex-fetch';
  * AI/ML research papers ranked by citation velocity (OpenAlex).
  *
  * Answers the question "which recent AI papers are gaining citations
- * fastest right now?" — the inverse of the usual top-cited lists which
+ * fastest right now?" This is the inverse of the usual top-cited lists which
  * are dominated by older foundational papers.
  *
  * Velocity definition: for a paper, velocity_ratio is the share of its

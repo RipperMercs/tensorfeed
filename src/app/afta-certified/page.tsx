@@ -270,7 +270,7 @@ export default function AftaCertifiedPage() {
         <p className="text-sm text-text-muted mt-4 leading-relaxed">
           The badge is free for any publisher, certified or not. If you score 6/6, the badge
           renders &quot;Certified 6/6&quot; in green. Below 6/6 it shows the partial score so
-          your visitors know what they&apos;re looking at — the score is always live and
+          your visitors know what they&apos;re looking at. The score is always live and
           falsifiable.
         </p>
       </section>

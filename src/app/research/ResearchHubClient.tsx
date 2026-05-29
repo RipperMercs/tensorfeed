@@ -154,7 +154,7 @@ export default function ResearchHubClient() {
       </section>
       <ResearchSubNav />
 
-      {/* Milestone papers — highest signal section, leads */}
+      {/* Milestone papers, highest signal section, leads */}
       <section className="mb-12">
         <SectionHeader icon={Award} title="Milestone Papers (Last 30 Days)" href="/research/milestones" />
         {!milestones ? (

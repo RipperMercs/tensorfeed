@@ -187,7 +187,7 @@ describe('Google Cloud incidents parser (Vertex Gemini)', () => {
   it('reports operational when there are no active incidents touching the configured products', () => {
     const result = aggregateGcpStatus(
       [
-        // Resolved incident (has end date) — ignored
+        // Resolved incident (has end date), ignored
         {
           id: '1',
           begin: '2026-04-01T00:00:00Z',
@@ -195,7 +195,7 @@ describe('Google Cloud incidents parser (Vertex Gemini)', () => {
           severity: 'high',
           affected_products: [{ id: VERTEX_GEMINI_ID, title: 'Vertex Gemini API' }],
         },
-        // Active incident affecting an unrelated product — ignored
+        // Active incident affecting an unrelated product, ignored
         {
           id: '2',
           begin: '2026-05-04T00:00:00Z',

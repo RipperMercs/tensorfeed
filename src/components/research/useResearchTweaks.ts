@@ -5,17 +5,17 @@ import { useEffect, useState } from 'react';
 /**
  * Reads three URL search params used to tune the /research hub:
  *
- *   ?motion=0..3   — multiplier passed to HeroConstellation and
+ *   ?motion=0..3   : multiplier passed to HeroConstellation and
  *                    KnowledgeLandscape rAF speeds. 0 = freeze the
  *                    rendered scene (cheaper than reduced-motion since
  *                    no media-query gate, just no time advancement).
  *
- *   ?bg=on|off     — toggles the canvas particle field behind all
+ *   ?bg=on|off     : toggles the canvas particle field behind all
  *                    content. Off makes the page render-time leaner,
  *                    useful for low-power mobile or embeds.
  *
  *   ?palette=default|mono|vibrant
- *                  — applied via CSS `filter` on the page root so all
+ *                  : applied via CSS `filter` on the page root so all
  *                    category colors shift uniformly without touching
  *                    the color resolution chain. mono drops saturation
  *                    to ~10%; vibrant boosts saturation and adds a small

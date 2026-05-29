@@ -54,7 +54,7 @@ const PROVIDER_COLORS: Record<string, string> = {
 };
 
 function formatTPS(tps: number | null): string {
-  if (tps === null) return '—';
+  if (tps === null) return '-';
   return `${tps} t/s`;
 }
 

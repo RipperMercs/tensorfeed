@@ -227,7 +227,7 @@ export default function EmbeddingsPage() {
                     </span>
                   </td>
                   <td className="py-3 px-3 text-right font-mono text-text-primary">
-                    {m.dimensions ?? <span className="text-text-muted">—</span>}
+                    {m.dimensions ?? <span className="text-text-muted">-</span>}
                   </td>
                   <td className="py-3 px-3 text-right font-mono text-text-secondary">
                     {m.maxInputTokens.toLocaleString()}
@@ -242,7 +242,7 @@ export default function EmbeddingsPage() {
                     )}
                   </td>
                   <td className="py-3 px-3 text-right font-mono">
-                    {m.mtebAvg !== null ? <span className="text-text-primary">{m.mtebAvg.toFixed(1)}</span> : <span className="text-text-muted">—</span>}
+                    {m.mtebAvg !== null ? <span className="text-text-primary">{m.mtebAvg.toFixed(1)}</span> : <span className="text-text-muted">-</span>}
                   </td>
                   <td className="py-3 px-3 text-xs text-text-secondary">
                     {m.openSource && <span className="text-emerald-400 mr-1 font-mono">OSS</span>}

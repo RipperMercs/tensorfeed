@@ -288,7 +288,7 @@ function failPV(error: string, detail: string): ProValidationErr {
 
 /**
  * Strict validator for the Haiku-emitted Pro block. Exported for testing.
- * The dataIds set comes from assignDataIds(base) — every basis entry
+ * The dataIds set comes from assignDataIds(base); every basis entry
  * must match one of those IDs.
  */
 export function validateProBlock(raw: unknown, dataIds: DataIds): ProValidationResult {

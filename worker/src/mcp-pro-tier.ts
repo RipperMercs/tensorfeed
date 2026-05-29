@@ -48,7 +48,7 @@ export const MCP_PRO_TIER: McpProTier = {
     'Cancel anytime; pro-rated refund on remaining days',
   ],
   notIncluded: [
-    'Direct REST API access via Authorization: Bearer (use the credits flow for that — different rate model)',
+    'Direct REST API access via Authorization: Bearer (use the credits flow for that, different rate model)',
     'Bulk data exports (use /api/data-licensing for those)',
     'Sister-site federation calls beyond TensorFeed (TerminalFeed federation requires its own subscription)',
     'Reselling tokens or proxying the API surface (acceptable-use policy applies)',
@@ -90,7 +90,7 @@ export function mcpProTierPayload(): {
       {
         step: 2,
         description:
-          'Pay $25 USDC on Base to the published TF payment wallet (cross-checked at /api/payment/info, /llms.txt, /.well-known/x402.json — verify all three before sending).',
+          'Pay $25 USDC on Base to the published TF payment wallet (cross-checked at /api/payment/info, /llms.txt, /.well-known/x402.json; verify all three before sending).',
       },
       {
         step: 3,

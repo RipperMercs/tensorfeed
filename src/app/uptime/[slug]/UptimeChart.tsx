@@ -155,7 +155,7 @@ export default function UptimeChart({ slug, initialData }: Props) {
             className="font-mono text-2xl font-bold"
             style={{ color: uptimeColor(summary.uptime_pct) }}
           >
-            {summary.uptime_pct === null ? '—' : `${summary.uptime_pct.toFixed(2)}%`}
+            {summary.uptime_pct === null ? '-' : `${summary.uptime_pct.toFixed(2)}%`}
           </div>
           <div className="text-xs text-text-muted mt-1 inline-flex items-center gap-1.5">
             {refreshing && <RefreshCw className="w-3 h-3 animate-spin" />}
@@ -282,7 +282,7 @@ export default function UptimeChart({ slug, initialData }: Props) {
                   fontFamily="var(--font-mono, monospace)"
                   opacity={0.7}
                 >
-                  {noData ? '—' : `${d.uptime_pct?.toFixed(1)}%`}
+                  {noData ? '-' : `${d.uptime_pct?.toFixed(1)}%`}
                 </text>
               </g>
             );

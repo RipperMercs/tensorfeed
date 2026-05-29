@@ -5,7 +5,7 @@
  * model: hedge funds tracking AI ecosystem signals, research firms with
  * proprietary models, training-data buyers, news/dataset aggregators.
  *
- * Surface on /api/data-licensing — read-only catalog of available
+ * Surface on /api/data-licensing: read-only catalog of available
  * datasets, suggested pricing, refresh cadence, and license terms.
  * Actual fulfillment is manual for v1: buyers email contact@tensorfeed.ai
  * with the dataset they want, we negotiate, deliver via signed S3 URLs
@@ -15,7 +15,7 @@
  * scheduled cron, auto-deliver via per-customer signed URLs, charge
  * via the credits flow with a higher per-unit cost.
  *
- * Everything below is OUR data — no third-party redistribution. License
+ * Everything below is OUR data, no third-party redistribution. License
  * type is enterprise/commercial, distinct from the inference-only
  * license on the per-call premium API.
  */

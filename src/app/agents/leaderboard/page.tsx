@@ -206,7 +206,7 @@ export default function LeaderboardPage() {
           <div className="mb-4 flex items-baseline justify-between text-sm">
             <p className="text-text-muted">
               <span className="font-mono text-text-primary">{data.results.length}</span> of{' '}
-              <span className="font-mono text-text-primary">{data.total}</span> agents shown. Free tier capped at 25 —
+              <span className="font-mono text-text-primary">{data.total}</span> agents shown. Free tier capped at 25,
               full cohort on{' '}
               <a
                 href="/developers/agent-payments"

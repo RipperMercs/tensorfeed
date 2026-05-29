@@ -327,7 +327,7 @@ export default function HarnessesPage() {
                       {typeof v === 'number' && Number.isFinite(v) ? (
                         <span className="text-text-primary">{v.toFixed(1)}</span>
                       ) : (
-                        <span className="text-text-muted">—</span>
+                        <span className="text-text-muted">-</span>
                       )}
                     </td>
                   );

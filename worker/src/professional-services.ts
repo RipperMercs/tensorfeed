@@ -1,5 +1,5 @@
 /**
- * Professional services offering — paid engagements for x402, AFTA,
+ * Professional services offering: paid engagements for x402, AFTA,
  * and agent-payments implementation work.
  *
  * Catalog of consulting/implementation offerings that don't fit the
@@ -17,7 +17,7 @@ export interface ServiceOffering {
   shortDescription: string;
   /** Who this engagement is for. */
   audience: string;
-  /** Concrete deliverables — what the buyer gets. */
+  /** Concrete deliverables: what the buyer gets. */
   deliverables: string[];
   /** Suggested price band in USD. Negotiable based on scope. */
   priceBand: { fromUsd: number; toUsd: number };
@@ -131,7 +131,7 @@ export function servicesPayload(): {
     count: SERVICE_OFFERINGS.length,
     payment: {
       accepted: ['USDC on Base', 'USDC over x402', 'USDC direct (Coinbase, MetaMask, any wallet)', 'wire transfer'],
-      default: 'USDC on Base — lowest friction, no platform fees, instant settlement',
+      default: 'USDC on Base: lowest friction, no platform fees, instant settlement',
     },
     note:
       'Price bands are starting points. Engagements are scoped against your actual stack on intake. Email contact@tensorfeed.ai with the offering id and a paragraph describing your situation; we confirm scope and pricing before any commitment.',

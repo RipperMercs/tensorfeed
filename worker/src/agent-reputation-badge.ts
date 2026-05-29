@@ -1,5 +1,5 @@
 /**
- * Agent Reputation Bureau — embeddable SVG badge.
+ * Agent Reputation Bureau: embeddable SVG badge.
  *
  * v0 Week 2, step 8 of the spec at
  * C:\Users\rippe\Desktop\tensorfeed-agent-rep-bureau-spec.md.

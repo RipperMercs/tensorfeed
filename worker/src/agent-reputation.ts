@@ -1,5 +1,5 @@
 /**
- * Agent Reputation Bureau — schema + pure metric calculators.
+ * Agent Reputation Bureau: schema + pure metric calculators.
  *
  * v0 Week 1, step 1 of the spec at
  * C:\Users\rippe\Desktop\tensorfeed-agent-rep-bureau-spec.md.
@@ -14,7 +14,7 @@
  * under concurrent ranking. No env access, no fetch, no Date.now()
  * inside the calculators (callers pass "now" in).
  *
- * Per spec section "Cadence: slow+verify, NOT fast+ship" — every
+ * Per spec section "Cadence: slow+verify, NOT fast+ship", every
  * calculator below ships with a corresponding test in
  * agent-reputation.test.ts.
  */
@@ -302,7 +302,7 @@ function previousUtcDate(d: string): string {
  * Sub-score definitions:
  *   reliability: reliability_pct as-is (already 0-100)
  *   activity:    min(active_days, 30) / 30 * 100  (cap at 30d for v0)
- *   spend:       see computeSpendScore — paid * 5 + free, normalized vs cohort_cap
+ *   spend:       see computeSpendScore, paid * 5 + free, normalized vs cohort_cap
  *   streak:      min(current_streak_days, 30) / 30 * 100
  *
  * The cohort_cap for spend is the 95th-percentile spend across the

@@ -434,13 +434,13 @@ describe('selectTriageableIncidents', () => {
 
   it('custom lookbackHours respected', () => {
     const incs = [
-      // resolved 5h ago — outside 1h window, inside 24h default
+      // resolved 5h ago, outside 1h window, inside 24h default
       makeIncident({
         id: 'a',
         startedAt: '2026-05-24T06:00:00.000Z',
         resolvedAt: '2026-05-24T07:00:00.000Z',
       }),
-      // resolved 30min ago — inside 1h window
+      // resolved 30min ago, inside 1h window
       makeIncident({
         id: 'b',
         startedAt: '2026-05-24T11:00:00.000Z',

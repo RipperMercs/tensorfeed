@@ -112,7 +112,7 @@ export default function AuthorsPanel({ authors, href = '/research/authors' }: Pr
                       <span className="font-mono text-text-secondary text-xs tabular-nums w-8 text-right">{h}</span>
                     </div>
                   ) : (
-                    <span className="font-mono text-text-muted text-xs">—</span>
+                    <span className="font-mono text-text-muted text-xs">-</span>
                   )}
                 </td>
               </tr>

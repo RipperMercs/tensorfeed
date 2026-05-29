@@ -4,16 +4,16 @@
    Single CSS file. No host-page dependencies.
    ============================================================ */
 
-/* Fonts — engineering should swap to next/font with these families/weights. */
+/* Fonts: engineering should swap to next/font with these families/weights. */
 
 /* ----- design tokens ----- */
 :root {
-  /* Accent schemes — switched by [data-accent="blue|green"] on .tf-widget */
+  /* Accent schemes, switched by [data-accent="blue|green"] on .tf-widget */
   --tf-accent:        #3a9fd6;                      /* blue (default) deeper, bluer than the design cyan per owner direction */
   --tf-accent-dim:    rgba(58, 159, 214, 0.18);
   --tf-accent-deep:   #205f8a;                      /* gradient bottom of spine */
 
-  /* Status palette — used regardless of accent scheme */
+  /* Status palette, used regardless of accent scheme */
   --tf-nominal:       #4ee0a4;
   --tf-nominal-dim:   rgba(78, 224, 164, 0.16);
   --tf-degraded:      #ffc845;                      /* yellow */
@@ -64,11 +64,11 @@
 }
 
 /* ============================================================
-   Background stage (host page) — purely decorative
+   Background stage (host page): purely decorative
    The widget itself does NOT require any of these layers; they
    are for the standalone /widget/status route.
    Embedded inside an iframe, host page can drop these or keep
-   them — they're independent of widget rendering.
+   them; they're independent of widget rendering.
    ============================================================ */
 .tf-stage {
   position: relative;
@@ -92,7 +92,7 @@
     linear-gradient(180deg, #060a14 0%, #02040a 100%);
 }
 
-/* Perspective grid floor — CSS only, very faint */
+/* Perspective grid floor: CSS only, very faint */
 .tf-grid {
   position: fixed; inset: 0; z-index: -3; pointer-events: none;
   perspective: 600px;
@@ -122,7 +122,7 @@
   to   { background-position: 0 72px; }
 }
 
-/* Warp particle streaks — JS-driven canvas (see WarpField in JSX).
+/* Warp particle streaks: JS-driven canvas (see WarpField in JSX).
    When JS is disabled, the .tf-grid + .tf-nebula carry the look alone. */
 .tf-warp {
   position: fixed; inset: 0; z-index: -2;
@@ -695,7 +695,7 @@
 
 .tf-row[data-state="degraded"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 4.2s ease-in-out infinite; }
 .tf-row[data-state="critical"] .tf-r-status .tf-r-dot { animation: tf-pulse-crit 3.6s ease-in-out infinite; }
-/* downgraded dot is steady — a stable, intentional state */
+/* downgraded dot is steady, a stable, intentional state */
 
 .tf-r-name {
   font-family: var(--tf-font-display);
@@ -901,10 +901,10 @@
 .tf-alert-strip .tf-alert-incident { color: var(--tf-fg-dim); }
 
 /* ============================================================
-   RESPONSIVE — widget supports 320px to ∞
+   RESPONSIVE: widget supports 320px to ∞
    ============================================================ */
 
-/* ≤ 720px — collapse Detail column, tighten paddings */
+/* ≤ 720px: collapse Detail column, tighten paddings */
 @media (max-width: 720px) {
   .tf-widget { border-radius: 4px 18px 18px 4px; }
   .tf-klaxon, .tf-head, .tf-tabs, .tf-filter, .tf-foot, .tf-alert-strip { padding-left: 64px; }
@@ -918,7 +918,7 @@
   .tf-corners::before, .tf-corners::after { left: 50px; }
 }
 
-/* ≤ 480px — drop sparkline, condense further */
+/* ≤ 480px: drop sparkline, condense further */
 @media (max-width: 480px) {
   .tf-widget { border-radius: 4px 14px 14px 4px; }
   .tf-klaxon, .tf-head, .tf-tabs, .tf-filter, .tf-foot, .tf-alert-strip { padding-left: 52px; }
@@ -937,7 +937,7 @@
   .tf-klaxon-status { display: none; }
 }
 
-/* ≤ 360px — most compact, klaxon clock hides */
+/* ≤ 360px: most compact, klaxon clock hides */
 @media (max-width: 360px) {
   .tf-klaxon-clock { display: none; }
   .tf-r-name { font-size: 14px; }

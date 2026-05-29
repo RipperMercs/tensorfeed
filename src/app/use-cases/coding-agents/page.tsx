@@ -192,11 +192,11 @@ for r in rec["recommendations"]:
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Recommended TensorFeed endpoints (in priority order)</h2>
         <ul className="space-y-2 list-disc list-inside ml-4">
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/routing</code></Link> — top-N model picker, pass <code>task=code</code></li>
-          <li><Link href="/benchmarks/swe_bench" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/benchmarks/swe_bench</code></Link> — public leaderboard, free</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/history/benchmarks/series</code></Link> — daily SWE-bench score evolution per model</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/watches</code></Link> — price-drop and benchmark-change webhooks</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/cost/projection</code></Link> — workload cost across models</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/routing</code></Link>: top-N model picker, pass <code>task=code</code></li>
+          <li><Link href="/benchmarks/swe_bench" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/benchmarks/swe_bench</code></Link>: public leaderboard, free</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/history/benchmarks/series</code></Link>: daily SWE-bench score evolution per model</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/watches</code></Link>: price-drop and benchmark-change webhooks</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/premium/cost/projection</code></Link>: workload cost across models</li>
         </ul>
 
         <div className="bg-bg-secondary border border-border rounded-xl p-5 mt-8">

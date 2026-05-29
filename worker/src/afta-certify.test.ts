@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { certifyDomain } from './afta-certify';
 
-describe('certifyDomain — domain validation', () => {
+describe('certifyDomain: domain validation', () => {
   it('rejects empty input', async () => {
     const r = await certifyDomain('');
     expect(r.ok).toBe(false);

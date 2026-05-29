@@ -158,11 +158,11 @@ export default function AgentPaymentsGlossaryPage() {
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Further reading</h2>
         <ul className="space-y-1 list-disc list-inside ml-4">
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline">TensorFeed agent payments docs</Link> — the full TensorFeed implementation</li>
-          <li><Link href="/originals/validating-agent-payments-mainnet" className="text-accent-primary hover:underline">Mainnet validation post</Link> — the actual tx hash and five-step flow</li>
-          <li><Link href="/originals/why-usdc-over-stripe" className="text-accent-primary hover:underline">Why USDC on Base over Stripe</Link> — the architectural argument</li>
-          <li><a href="https://www.x402.org" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">x402.org</a> — the protocol</li>
-          <li><a href="https://docs.cdp.coinbase.com/x402/welcome" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">CDP Bazaar</a> — Coinbase&apos;s x402 facilitator and discovery layer</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline">TensorFeed agent payments docs</Link>: the full TensorFeed implementation</li>
+          <li><Link href="/originals/validating-agent-payments-mainnet" className="text-accent-primary hover:underline">Mainnet validation post</Link>: the actual tx hash and five-step flow</li>
+          <li><Link href="/originals/why-usdc-over-stripe" className="text-accent-primary hover:underline">Why USDC on Base over Stripe</Link>: the architectural argument</li>
+          <li><a href="https://www.x402.org" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">x402.org</a>: the protocol</li>
+          <li><a href="https://docs.cdp.coinbase.com/x402/welcome" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">CDP Bazaar</a>: Coinbase&apos;s x402 facilitator and discovery layer</li>
         </ul>
       </div>
     </article>

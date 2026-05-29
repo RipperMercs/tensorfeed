@@ -268,7 +268,7 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
   if (eligible) {
     nextStep = `All AFTA checks pass. Email contact@tensorfeed.ai with subject "AFTA Certification: ${normalized}" and your payTo wallet address to begin the listing review. Annual fee is $100 USDC over x402; once paid we add you to /x402-adopters with afta_certified: true.`;
   } else if (federationParent) {
-    nextStep = `${normalized} appears to be a federation member of ${federationParent} per its agent-fair-trade.json. Federation members typically delegate the x402 manifest to the federation host and will not pass the manifest checks above on their own surface — that's by design. For certification, email contact@tensorfeed.ai with the federation host listed; we certify federation members through the host's certification + manual review.`;
+    nextStep = `${normalized} appears to be a federation member of ${federationParent} per its agent-fair-trade.json. Federation members typically delegate the x402 manifest to the federation host and will not pass the manifest checks above on their own surface; that's by design. For certification, email contact@tensorfeed.ai with the federation host listed; we certify federation members through the host's certification + manual review.`;
   } else {
     nextStep = `${max - score} check(s) need work. Fix the failing items above and re-run /api/afta-certify/check?domain=${normalized}. Re-checks are free and idempotent.`;
   }

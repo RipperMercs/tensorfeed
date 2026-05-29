@@ -144,10 +144,10 @@ export default function AttentionPage() {
             We sum four weighted signals per provider, then normalize the highest in the response to 100:
           </p>
           <ul className="list-disc list-inside space-y-1 ml-2">
-            <li><span className="font-mono text-text-primary">news_24h * 4.0</span> — articles mentioning the provider in the last 24 hours</li>
-            <li><span className="font-mono text-text-primary">news_7d * 1.0</span> — articles in the last 7 days</li>
-            <li><span className="font-mono text-text-primary">trending_repos * 2.0</span> — currently trending GitHub repos matching the provider</li>
-            <li><span className="font-mono text-text-primary">agent_hits * 0.05</span> — bot/agent hits to provider-related TensorFeed endpoints</li>
+            <li><span className="font-mono text-text-primary">news_24h * 4.0</span>: articles mentioning the provider in the last 24 hours</li>
+            <li><span className="font-mono text-text-primary">news_7d * 1.0</span>: articles in the last 7 days</li>
+            <li><span className="font-mono text-text-primary">trending_repos * 2.0</span>: currently trending GitHub repos matching the provider</li>
+            <li><span className="font-mono text-text-primary">agent_hits * 0.05</span>: bot/agent hits to provider-related TensorFeed endpoints</li>
           </ul>
           <p>
             We do not persist the score. We recompute on every request from the free endpoints (<code className="font-mono">/api/news</code>, <code className="font-mono">/api/trending-repos</code>, <code className="font-mono">/api/agents/activity</code>) and cache for 5 minutes. Same data is served as JSON at{' '}
@@ -218,8 +218,8 @@ export default function AttentionPage() {
                   {p.top_articles.map((a, i) => (
                     <div key={i} className="text-xs text-text-secondary truncate">
                       <span className="text-text-muted mr-1">·</span>
-                      {a.title}{' '}
-                      <span className="text-text-muted">— {a.source}{a.published_at && `, ${timeAgo(a.published_at)}`}</span>
+                      {a.title}
+                      <span className="text-text-muted">, {a.source}{a.published_at && `, ${timeAgo(a.published_at)}`}</span>
                     </div>
                   ))}
                 </div>

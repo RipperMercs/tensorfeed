@@ -94,7 +94,7 @@ export default function AuthorsClient() {
                     )}
                   </td>
                   <td className="px-3 py-3 text-sm text-text-secondary">
-                    {a.primary_affiliation.display_name ?? <span className="text-text-muted">—</span>}
+                    {a.primary_affiliation.display_name ?? <span className="text-text-muted">-</span>}
                     {a.primary_affiliation.country_code && (
                       <span className="ml-2 text-[10px] font-mono text-text-muted">
                         {a.primary_affiliation.country_code}
@@ -105,13 +105,13 @@ export default function AuthorsClient() {
                     {a.ai_works_last_year}
                   </td>
                   <td className="px-3 py-3 text-right font-mono text-text-secondary text-sm tabular-nums">
-                    {a.h_index ?? '—'}
+                    {a.h_index ?? '-'}
                   </td>
                   <td className="px-3 py-3 text-right font-mono text-text-secondary text-sm tabular-nums">
-                    {a.cited_by_count != null ? a.cited_by_count.toLocaleString() : '—'}
+                    {a.cited_by_count != null ? a.cited_by_count.toLocaleString() : '-'}
                   </td>
                   <td className="px-3 py-3 text-right font-mono text-text-secondary text-sm tabular-nums">
-                    {a.ai_share_pct != null ? `${a.ai_share_pct.toFixed(0)}%` : '—'}
+                    {a.ai_share_pct != null ? `${a.ai_share_pct.toFixed(0)}%` : '-'}
                   </td>
                   <td className="px-3 py-3 text-right">
                     <a

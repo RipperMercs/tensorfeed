@@ -45,7 +45,7 @@ const ATTRIBUTION = {
   license: 'US Government work in the public domain (17 USC §105)',
   redistribution: 'commercial-permitted',
   notice:
-    'Active alerts only — expired alerts fall off automatically. Coverage is US states, territories, and marine zones; NWS does not cover international locations. Severity scale: Extreme | Severe | Moderate | Minor | Unknown. Use the web URL for the canonical NWS detail page; areas listed in areaDesc are NWS county or zone names.',
+    'Active alerts only. Expired alerts fall off automatically. Coverage is US states, territories, and marine zones; NWS does not cover international locations. Severity scale: Extreme | Severe | Moderate | Minor | Unknown. Use the web URL for the canonical NWS detail page; areas listed in areaDesc are NWS county or zone names.',
 };
 
 export interface NWSAlertsQuery {

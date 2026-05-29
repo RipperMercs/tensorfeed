@@ -146,8 +146,8 @@ export default function VoiceLeaderboardsPage() {
                       </td>
                       <td className="py-2 px-2 text-text-secondary text-xs">{r.provider}</td>
                       <td className="py-2 px-2 text-right font-mono text-text-primary">{r.englishWER.toFixed(1)}%</td>
-                      <td className="py-2 px-2 text-right font-mono text-text-secondary">{r.multilingualWER ? `${r.multilingualWER.toFixed(1)}%` : '—'}</td>
-                      <td className="py-2 px-2 text-right font-mono text-text-secondary">{r.rtf !== null ? r.rtf.toFixed(2) : '—'}</td>
+                      <td className="py-2 px-2 text-right font-mono text-text-secondary">{r.multilingualWER ? `${r.multilingualWER.toFixed(1)}%` : '-'}</td>
+                      <td className="py-2 px-2 text-right font-mono text-text-secondary">{r.rtf !== null ? r.rtf.toFixed(2) : '-'}</td>
                       <td className="py-2 px-2">{r.openWeights && <span className="text-xs text-emerald-400 font-mono">OSS</span>}</td>
                     </tr>
                   ))}

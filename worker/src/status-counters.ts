@@ -7,7 +7,7 @@
  * accurate than the legacy day-granular snapshot (which captured a single
  * status reading per provider per day at the captureHistory cron).
  *
- * KV layout — one key per day, all providers in one object:
+ * KV layout: one key per day, all providers in one object:
  *
  *   daycount:2026-05-04 = {
  *     "OpenAI API":  { polls: 720, operational: 715, degraded: 3, down: 0, unknown: 2 },

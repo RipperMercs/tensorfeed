@@ -207,11 +207,11 @@ curl https://tensorfeed.ai/api/premium/routing?task=code \\
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Recommended endpoints (in priority order)</h2>
         <ul className="space-y-2 list-disc list-inside ml-4">
-          <li><a className="text-accent-primary hover:underline" href="https://tensorfeed.ai/api/payment/info"><code className="font-mono text-sm">/api/payment/info</code></a> — wallet, pricing, supported flows, attestation</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/payment/buy-credits</code></Link> — quote a credit purchase</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/payment/confirm</code></Link> — verify USDC tx on-chain, mint bearer token</li>
-          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/payment/balance</code></Link> — check remaining credits</li>
-          <li><Link href="/.well-known/x402" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/.well-known/x402</code></Link> — x402 V2 discovery manifest with all paid endpoints</li>
+          <li><a className="text-accent-primary hover:underline" href="https://tensorfeed.ai/api/payment/info"><code className="font-mono text-sm">/api/payment/info</code></a>: wallet, pricing, supported flows, attestation</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/payment/buy-credits</code></Link>: quote a credit purchase</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/payment/confirm</code></Link>: verify USDC tx on-chain, mint bearer token</li>
+          <li><Link href="/developers/agent-payments" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/api/payment/balance</code></Link>: check remaining credits</li>
+          <li><Link href="/.well-known/x402" className="text-accent-primary hover:underline"><code className="font-mono text-sm">/.well-known/x402</code></Link>: x402 V2 discovery manifest with all paid endpoints</li>
         </ul>
 
         <div className="bg-bg-secondary border border-border rounded-xl p-5 mt-8">

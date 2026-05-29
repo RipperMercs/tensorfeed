@@ -32,10 +32,10 @@ const OFFERINGS = [
     id: 'x402_implementation_sprint',
     icon: Zap,
     name: 'x402 Implementation Sprint',
-    priceBand: '$4.5k – $9.5k',
+    priceBand: '$4.5k to $9.5k',
     duration: '1-2 weeks',
     engagement: 'Fixed-fee',
-    audience: 'API publishers (10–1M monthly calls) who want to accept x402-native agent payments',
+    audience: 'API publishers (10 to 1M monthly calls) who want to accept x402-native agent payments',
     description:
       'Add canonical Coinbase x402 V2 to your existing HTTP API. End-to-end: 402 response shape, EIP-3009 verification, broadcaster wallet, AFTA-style signed receipts, /.well-known/x402 manifest.',
     deliverables: [
@@ -54,7 +54,7 @@ const OFFERINGS = [
     id: 'afta_codesign_session',
     icon: Wrench,
     name: 'AFTA Co-Design Session',
-    priceBand: '$1.5k – $3.5k',
+    priceBand: '$1.5k to $3.5k',
     duration: '4-8 hours over 1-3 days',
     engagement: 'Fixed-fee',
     audience: 'API publishers that want the AFTA badge for credibility with agent operators',
@@ -74,7 +74,7 @@ const OFFERINGS = [
     id: 'agent_payments_office_hours',
     icon: Calendar,
     name: 'Agent Payments Office Hours',
-    priceBand: '$2.5k – $4.5k / month',
+    priceBand: '$2.5k to $4.5k / month',
     duration: 'Monthly retainer',
     engagement: 'Retainer',
     audience: 'Engineering teams shipping agent-payment infrastructure',
@@ -93,7 +93,7 @@ const OFFERINGS = [
     id: 'agentcore_payments_integration',
     icon: Cloud,
     name: 'AgentCore Payments Integration',
-    priceBand: '$6.5k – $14k',
+    priceBand: '$6.5k to $14k',
     duration: '2-3 weeks',
     engagement: 'Fixed-fee',
     audience: 'Teams building AI agents on AWS Bedrock AgentCore',
@@ -227,7 +227,7 @@ export default function ServicesPage() {
           Payment accepted
         </div>
         <ul className="space-y-1 text-sm text-text-secondary">
-          <li>USDC on Base (default — lowest friction, no platform fees, instant settlement)</li>
+          <li>USDC on Base (default, lowest friction, no platform fees, instant settlement)</li>
           <li>USDC over x402 (we accept our own rail)</li>
           <li>USDC direct from any wallet (Coinbase, MetaMask, etc.)</li>
           <li>Wire transfer for engagements over $10k</li>

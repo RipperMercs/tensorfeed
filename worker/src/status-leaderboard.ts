@@ -28,7 +28,7 @@ import {
 
 // Our public-facing poll cadence. Consumed here to convert poll counts into
 // minute-equivalent downtime. If wrangler.toml's status cron changes, update
-// this constant — it's the only canonical place that maps polls to minutes.
+// this constant; it's the only canonical place that maps polls to minutes.
 const POLL_INTERVAL_MINUTES = 2;
 
 export interface LeaderboardEntry {

@@ -168,15 +168,15 @@ export default function HarnessDetailPage({ params }: { params: { slug: string }
                     {p.benchmark.name} <ExternalLink className="w-3 h-3 text-text-muted" />
                   </a>
                 </td>
-                <td className="py-3 px-3 text-text-secondary">{p.model || '—'}</td>
+                <td className="py-3 px-3 text-text-secondary">{p.model || '-'}</td>
                 <td className="py-3 px-3 text-right font-mono">
-                  {typeof p.score === 'number' ? <span className="text-text-primary">{p.score.toFixed(1)}</span> : <span className="text-text-muted">—</span>}
+                  {typeof p.score === 'number' ? <span className="text-text-primary">{p.score.toFixed(1)}</span> : <span className="text-text-muted">-</span>}
                 </td>
                 <td className="py-3 px-3 text-right font-mono">
                   {p.rank ? (
                     <span className="text-text-primary">#{p.rank} <span className="text-text-muted text-xs">/ {p.total}</span></span>
                   ) : (
-                    <span className="text-text-muted">—</span>
+                    <span className="text-text-muted">-</span>
                   )}
                 </td>
               </tr>

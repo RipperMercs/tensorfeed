@@ -45,7 +45,7 @@ function buildMessage(overrides: Record<string, string | undefined> = {}): strin
 }
 
 // ┌──────────────────────────────────────────────────────────────────┐
-// │ parseClaimMessage — required fields                              │
+// │ parseClaimMessage: required fields                               │
 // └──────────────────────────────────────────────────────────────────┘
 
 describe('parseClaimMessage: required fields', () => {
@@ -161,7 +161,7 @@ describe('parseClaimMessage: required fields', () => {
 });
 
 // ┌──────────────────────────────────────────────────────────────────┐
-// │ parseClaimMessage — optional fields                              │
+// │ parseClaimMessage: optional fields                               │
 // └──────────────────────────────────────────────────────────────────┘
 
 describe('parseClaimMessage: optional fields', () => {
@@ -212,7 +212,7 @@ describe('parseClaimMessage: optional fields', () => {
 });
 
 // ┌──────────────────────────────────────────────────────────────────┐
-// │ parseClaimMessage — directory fields                             │
+// │ parseClaimMessage: directory fields                              │
 // └──────────────────────────────────────────────────────────────────┘
 
 describe('parseClaimMessage: directory fields', () => {

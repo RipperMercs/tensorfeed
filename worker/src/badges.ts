@@ -2,7 +2,7 @@
  * Shields.io-compatible uptime badges.
  *
  * Returns an SVG badge per provider showing the live 7-day uptime % from
- * the leaderboard counters. Self-contained — no dependency on shields.io
+ * the leaderboard counters. Self-contained, no dependency on shields.io
  * or any external rendering service. Aggressively edge-cached because
  * the underlying data only changes every 2 min and the badge URL is
  * embedded in third-party READMEs/docs (high traffic, low staleness
@@ -61,7 +61,7 @@ export function resolveProviderSlug(slug: string): string | null {
 }
 
 // Verdana 11pt is what shields.io uses. Character widths approximated
-// from Bravura/standard tables — close enough that our badges render
+// from Bravura/standard tables, close enough that our badges render
 // proportionally in any context that displays SVG.
 function approxTextWidth(s: string): number {
   let w = 0;

@@ -115,7 +115,7 @@ export interface AvidSnapshot {
 }
 
 /**
- * Normalize one upstream entry. Defensive against missing fields — the
+ * Normalize one upstream entry. Defensive against missing fields: the
  * AVID schema has versioned drift across 2022-2026 entries (data_version
  * 0.1 -> 0.3.3) so we never assume any nested field is present.
  */

@@ -98,7 +98,7 @@ function formatCost(cost: number): string {
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function formatReleased(released: string): string {
-  if (!released) return '—';
+  if (!released) return '-';
   const parts = released.split('-');
   if (parts.length < 2) return released;
   const year = parseInt(parts[0], 10);

@@ -37,7 +37,7 @@ const INCLUDED = [
 ];
 
 const NOT_INCLUDED = [
-  'Direct REST API access via Authorization: Bearer (use the credits flow for that — different rate model)',
+  'Direct REST API access via Authorization: Bearer (use the credits flow for that, different rate model)',
   'Bulk data exports (use /data-licensing for those)',
   'Sister-site federation calls beyond TensorFeed (TerminalFeed federation requires its own subscription)',
   'Reselling tokens or proxying the API surface (acceptable-use policy applies)',

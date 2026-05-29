@@ -28,7 +28,7 @@ const FAQS = [
   {
     question: 'Where do the download counts come from?',
     answer:
-      'npm: api.npmjs.org/downloads — the documented public download stats endpoint, used commercially everywhere from npmtrends to libraries.io. PyPI: pypistats.org JSON API, which serves aggregates derived from the public PyPI BigQuery dataset published by the Linehaul project (Python Software Foundation). Both are clean upstream sources free to redistribute.',
+      'npm: api.npmjs.org/downloads, the documented public download stats endpoint, used commercially everywhere from npmtrends to libraries.io. PyPI: pypistats.org JSON API, which serves aggregates derived from the public PyPI BigQuery dataset published by the Linehaul project (Python Software Foundation). Both are clean upstream sources free to redistribute.',
   },
   {
     question: 'How were the package lists chosen?',

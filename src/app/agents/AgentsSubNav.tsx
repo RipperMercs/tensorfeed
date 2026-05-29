@@ -12,7 +12,7 @@ interface NavItem {
 }
 
 // Self-directory entry (/agents/hireable) intentionally omitted from the
-// nav — parked 2026-05-13 for zero buyer demand; reachable by direct URL.
+// nav, parked 2026-05-13 for zero buyer demand; reachable by direct URL.
 // Revisit nav inclusion as a product decision, not a styling one.
 const NAV: NavItem[] = [
   {

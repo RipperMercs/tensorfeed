@@ -159,7 +159,7 @@ export function composeDirectoryEntry(
  *
  * (The earlier verified-hireable-first tier was removed when the $5
  * paywall was dropped. The verified_hireable field still exists on the
- * entry shape — pre-set to false for everyone in v0 — so the directory
+ * entry shape (pre-set to false for everyone in v0) so the directory
  * v1 rev tier can re-enable the tiered sort without a schema change.)
  */
 export function compareDirectoryEntries(a: DirectorySearchEntry, b: DirectorySearchEntry): number {

@@ -62,18 +62,18 @@ const PILOT_PATHS = [
   '/api/premium/ai-cves/ai-stack-cves',
   '/api/premium/ai-cves/exploited-in-wild',
   '/api/premium/ai-cves/cve',
-  // Wave 15 (ai-cves batch — AgentMail messages/batch-get translation)
+  // Wave 15 (ai-cves batch: AgentMail messages/batch-get translation)
   '/api/premium/ai-cves/batch',
-  // Wave 16 (per-provider incident triage — AgentMail scoped+flat translation)
+  // Wave 16 (per-provider incident triage: AgentMail scoped+flat translation)
   '/api/premium/status/openai/incidents/triage',
   '/api/premium/status/anthropic/incidents/triage',
   '/api/premium/status/google/incidents/triage',
   '/api/premium/status/aws/incidents/triage',
   '/api/premium/status/azure/incidents/triage',
-  // Wave 17 (SEC filings AI-extraction — Phase 3f.3)
+  // Wave 17 (SEC filings AI-extraction: Phase 3f.3)
   '/api/premium/sec/filings/ai-flagged',
   '/api/premium/sec/filings/by-form',
-  // Wave 18 (pro-tier whats-new — Parallel.ai tier-ladder pattern)
+  // Wave 18 (pro-tier whats-new: Parallel.ai tier-ladder pattern)
   '/api/premium/whats-new/pro',
   // Wave 14 (path-param templates). Listed here in template form because
   // bazaarPilotPaths() returns the map keys. The template-match lookup is
@@ -84,7 +84,7 @@ const PILOT_PATHS = [
   '/api/premium/clean/epss/:id',
   '/api/premium/clean/openrouter/:model_id',
   '/api/premium/security/verified/:id',
-  // Wave 19 (per-ticker AI-company envelope — Robinhood Agentic Trading launch)
+  // Wave 19 (per-ticker AI-company envelope: Robinhood Agentic Trading launch)
   '/api/premium/ai-companies/:ticker',
   // Wave 20 (route-verdict: signed model-routing decision)
   '/api/premium/route-verdict',

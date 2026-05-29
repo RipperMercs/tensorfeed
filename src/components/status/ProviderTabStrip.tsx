@@ -155,7 +155,7 @@ export default function ProviderTabStrip({ services, selectedName, onSelect }: P
                 <div className="flex items-center justify-between mt-1 text-[10px] font-mono text-text-muted">
                   <span>{c.rack}</span>
                   <span className="tabular-nums">
-                    {c.norm === 'down' ? '—' : `${c.latency}ms`}
+                    {c.norm === 'down' ? '-' : `${c.latency}ms`}
                   </span>
                 </div>
                 <div style={{ height: 14, margin: '4px -1px 0' }}>

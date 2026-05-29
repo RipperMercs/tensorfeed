@@ -1476,7 +1476,7 @@ export default {
     //  - npm downloads (primary; covers the dominant stdio install path)
     //  - Hosted /api/mcp tool-call counters from KV (secondary)
     // Cached at the edge for 5 minutes; npm fetches inside are cached 1 hr.
-    // AFTA Certified badge — SVG renderer. Publishers embed
+    // AFTA Certified badge: SVG renderer. Publishers embed
     //   <img src="https://tensorfeed.ai/api/afta/badge?domain=X" />
     // and the badge reflects their live AFTA score. Errors gracefully.
     if (path === '/api/afta/badge' || path === '/api/afta/badge.svg') {
@@ -2977,7 +2977,7 @@ export default {
       // Optional concurrency guard: admin can pass the nonce of the pending
       // claim they actually reviewed. If a new pending claim landed between
       // review and approve, the nonces won't match and we reject with
-      // claim_changed_since_review — protecting the admin from approving a
+      // claim_changed_since_review, protecting the admin from approving a
       // different claim than the one they saw.
       if (typeof body.expected_nonce === 'string' && body.expected_nonce !== pending.nonce) {
         return jsonResponse(
@@ -4114,7 +4114,7 @@ export default {
           agentsBadgeByToken: '/api/agents/badge/by-token/{prefix}.svg (free; same shape, indexed by tf_live_ token prefix)',
           agentsClaim: 'POST /api/agents/claim with { message, signature } (free; EIP-191 signed claim binding a wallet to a display name + optional directory fields. Chainalysis-screened, Llama Guard pre-flighted, brand-allowlist gated. Returns approved | queued | banned | rejected | retry_later.)',
           agentsClaimRead: 'GET /api/agents/claim/{wallet} (free; read the verified operator claim record for a wallet)',
-          agentsDirectorySearch: 'GET /api/agents/directory/search?skill=&service_area=&language=&available=true|false&max_rate=&min_experience=&verified=true&limit=1-25 (free; agent self-directory search. Verified-hireable members sort first. Operators self-describe; TF publishes the listing. Off-platform transactions only — TF is publisher, not facilitator.)',
+          agentsDirectorySearch: 'GET /api/agents/directory/search?skill=&service_area=&language=&available=true|false&max_rate=&min_experience=&verified=true&limit=1-25 (free; agent self-directory search. Verified-hireable members sort first. Operators self-describe; TF publishes the listing. Off-platform transactions only. TF is publisher, not facilitator.)',
           agentsDirectorySkills: 'GET /api/agents/directory/skills (free; tally of skill tags across the active directory cohort, sorted by count desc)',
           agentsDirectoryCategories: 'GET /api/agents/directory/categories (free; tally of service_area tags across the active directory cohort)',
           premiumAgentsLeaderboardFull: '/api/premium/agents/leaderboard/full?metric=&window= (1 credit, AFTA-signed; untruncated reputation leaderboard with full cards for every ranked agent. Free /api/agents/leaderboard caps at 25.)',
@@ -5654,7 +5654,7 @@ export default {
       return jsonResponse(servicesPayload(), 200, 600);
     }
 
-    // MCP Pro Tier offering — monthly subscription for unlimited
+    // MCP Pro Tier offering: monthly subscription for unlimited
     // premium-endpoint calls via the TensorFeed MCP server. Catalog
     // surface; manual fulfillment via contact@tensorfeed.ai for v1.
     if (path === '/api/mcp/pro-tier') {
@@ -5681,7 +5681,7 @@ export default {
       }
       const { certifyDomain } = await import('./afta-certify');
       const result = await certifyDomain(domain);
-      // Don't cache certification checks — publishers may re-run after
+      // Don't cache certification checks; publishers may re-run after
       // shipping fixes and need fresh state.
       return jsonResponse(result, result.ok ? 200 : 400, 0);
     }
@@ -8610,7 +8610,7 @@ export default {
     // === CLIMATE: NWS Active Weather Alerts (free) ===
     // Lazy-proxy to NWS active alerts endpoint, refreshed in real time
     // upstream. License: US Government public domain (17 USC §105).
-    // Coverage is US states, territories, and marine zones — NWS is
+    // Coverage is US states, territories, and marine zones; NWS is
     // US-only. Each unique filter combo is cached in KV with a 60s TTL
     // since active-alerts state changes minute by minute.
 
@@ -11315,7 +11315,7 @@ export default {
     }
 
     // === PAID PREMIUM: GHSA AI FIREHOSE (Tier 1, 1 credit) ===
-    // /api/premium/security/ghsa/ai-feed — broader companion to the
+    // /api/premium/security/ghsa/ai-feed: broader companion to the
     // free /api/security/ai-supply-chain-iocs.json. Covers all GHSA
     // types (reviewed, unreviewed, malware) across all ecosystems
     // (npm, pip, RubyGems, Maven, Go, Composer, NuGet, Rust, etc.),
@@ -11347,7 +11347,7 @@ export default {
     }
 
     // === PAID PREMIUM: OPENALEX AI AUTHORS (Tier 1, 1 credit) ===
-    // /api/premium/research/authors — top 100 AI authors by AI publication
+    // /api/premium/research/authors: top 100 AI authors by AI publication
     // volume in the trailing 365 days, enriched with h_index, cited_by_count,
     // primary affiliation, ORCID, and derived ai_share_pct (AI works as a
     // share of total works). Companion to /api/premium/research/velocity
@@ -11377,7 +11377,7 @@ export default {
     }
 
     // === PAID PREMIUM: OPENALEX AI CITATION VELOCITY (Tier 1, 1 credit) ===
-    // /api/premium/research/citation-velocity — top 100 recent AI papers ranked
+    // /api/premium/research/citation-velocity: top 100 recent AI papers ranked
     // by the share of their total citations that arrived in the most recent
     // calendar year. Filters to papers published in the last 2 years so the
     // ranking reflects current attention not historical staples. Includes
@@ -11406,7 +11406,7 @@ export default {
     }
 
     // === PAID PREMIUM: APIs.GURU AI WATCH (Tier 1, 1 credit) ===
-    // /api/premium/apis-guru/ai-feed — AI-relevant entries from the
+    // /api/premium/apis-guru/ai-feed: AI-relevant entries from the
     // APIs.guru public API directory (2400+ entries, CC-BY-SA 4.0).
     // Filtered with the shared AI keyword list + API-specific extensions
     // (model provider domains, service categories, generic tokens). Each

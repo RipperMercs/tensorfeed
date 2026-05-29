@@ -623,7 +623,7 @@ function SubmissionOutcome({ result, message }: { result: ClaimResponse; message
         Error: <span className="font-mono">{result.error}</span>
         {result.reason && (
           <>
-            {' '}— <span className="font-mono">{result.reason}</span>
+            {': '}<span className="font-mono">{result.reason}</span>
           </>
         )}
         .

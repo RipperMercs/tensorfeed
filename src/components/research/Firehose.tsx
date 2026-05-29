@@ -22,15 +22,15 @@ interface Props {
 }
 
 function formatTime(iso: string | null | undefined): string {
-  if (!iso) return '—';
+  if (!iso) return '-';
   try {
     const d = new Date(iso);
-    if (isNaN(d.getTime())) return '—';
+    if (isNaN(d.getTime())) return '-';
     const hh = String(d.getUTCHours()).padStart(2, '0');
     const mm = String(d.getUTCMinutes()).padStart(2, '0');
     return `${hh}:${mm}`;
   } catch {
-    return '—';
+    return '-';
   }
 }
 

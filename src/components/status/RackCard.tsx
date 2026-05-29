@@ -190,7 +190,7 @@ export default function RackCard({ service, probe, rackIndex }: RackCardProps) {
             p95 latency
           </div>
           <div className="font-mono text-[22px] text-text-primary tabular-nums leading-none">
-            {norm === 'down' ? '—' : latency}
+            {norm === 'down' ? '-' : latency}
             {norm !== 'down' && (
               <span className="text-[11px] text-text-muted ml-1 font-normal">ms</span>
             )}

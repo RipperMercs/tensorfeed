@@ -249,7 +249,7 @@ export function dedupAndRank(opps: AgentOpportunity[]): AgentOpportunity[] {
   const result: AgentOpportunity[] = [];
   const usedNames = new Set<string>();
 
-  // Pass 1: MIN quota — take up to PER_SIGNAL_MIN per signal that has
+  // Pass 1: MIN quota. Take up to PER_SIGNAL_MIN per signal that has
   // any results. Guarantees every populated signal appears in the
   // output (subject to MIN <= MAX <= FINAL_TOP_N).
   for (const [, sigList] of bySignal) {
@@ -262,7 +262,7 @@ export function dedupAndRank(opps: AgentOpportunity[]): AgentOpportunity[] {
     }
   }
 
-  // Pass 2: MAX cap — fill from the top of the global composite-score
+  // Pass 2: MAX cap. Fill from the top of the global composite-score
   // ranking, respecting both the MAX and the FINAL_TOP_N total.
   const perSignalCount: Record<string, number> = {};
   for (const o of result) {
@@ -279,7 +279,7 @@ export function dedupAndRank(opps: AgentOpportunity[]): AgentOpportunity[] {
     }
   }
 
-  // Pass 3: overflow — if MAX cap kept us under FINAL_TOP_N, fill the
+  // Pass 3: overflow. If MAX cap kept us under FINAL_TOP_N, fill the
   // remainder from anything not yet used, ignoring the MAX cap.
   if (result.length < FINAL_TOP_N) {
     for (const o of list) {

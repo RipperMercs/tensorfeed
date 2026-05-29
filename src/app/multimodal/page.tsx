@@ -40,7 +40,7 @@ function formatPrice(m: MultimodalModel): string {
   if (m.pricingAmount === null || m.pricingAmount === 0) {
     if (m.pricingUnit === 'per_subscription_month') return 'Subscription only';
     if (m.pricingAmount === 0) return 'Free / open weights';
-    return '—';
+    return '-';
   }
   const v = m.pricingAmount;
   if (v < 0.01) return `$${v.toFixed(4)}`;

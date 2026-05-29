@@ -77,7 +77,7 @@ export interface DigestWatchSpec {
  * - changes: fires on any rank change
  *
  * The provider field accepts both display names ("Claude API") and
- * slugs ("claude") — the worker normalizes via the same SLUG_TO_PROVIDER
+ * slugs ("claude"); the worker normalizes via the same SLUG_TO_PROVIDER
  * map used by the badges and uptime pages.
  */
 export interface LeaderboardRankWatchSpec {
@@ -903,7 +903,7 @@ export async function dispatchStatusWatches(
  * Dispatch leaderboard rank-change watches for a list of rank transitions.
  * Caller computes transitions by diffing the current 7-day leaderboard
  * against the previous one stored at `watch:prev:leaderboard`. Pure
- * dispatch — does not read or write the previous state itself; that
+ * dispatch: does not read or write the previous state itself; that
  * orchestration lives in runLeaderboardWatchCycle().
  */
 export async function dispatchLeaderboardWatches(

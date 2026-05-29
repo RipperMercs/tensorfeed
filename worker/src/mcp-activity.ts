@@ -4,12 +4,12 @@
  * Powers the public /mcp/activity page + the /api/mcp/activity JSON
  * endpoint. Two signal sources:
  *
- *  1. npm download stats (primary signal) — covers stdio agents who
+ *  1. npm download stats (primary signal) covers stdio agents who
  *     install via `npx -y @tensorfeed/...`. This is the dominant
  *     install path for Claude Desktop / Claude Code / Cline users.
  *     Fetched from api.npmjs.org with 1-hour cache.
  *
- *  2. Hosted /api/mcp tool calls (secondary signal) — covers clients
+ *  2. Hosted /api/mcp tool calls (secondary signal) covers clients
  *     using the streamable-http transport (claude.ai, x402scan, etc).
  *     Counted in KV via recordHostedToolCall() called from mcp-http
  *     dispatchers. Best-effort: races between isolates may lose a

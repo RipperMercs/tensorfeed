@@ -467,7 +467,7 @@ for (const m of models) console.log(\`\${m.name}: \${m.pricingAmount}/sec\`);`,
     intro:
       "Active US weather alerts from the National Weather Service: tornado warnings, severe thunderstorm warnings, flood warnings, winter storm warnings, heat advisories, fire weather watches, etc. The active-alerts endpoint always reflects the currently-in-effect set; expired alerts fall off automatically. TensorFeed proxies it with a 60-second KV cache since active-alert state changes minute by minute.",
     whenToUse:
-      "When an agent needs to know what severe weather is currently in effect anywhere in the US — for travel decisions, location-aware briefings, alert routing, or pairing with population/news feeds. Filter by 2-letter state code (area), exact event name (e.g. 'Tornado Warning', 'Heat Advisory'), severity, urgency, or status. Coverage is US states, territories, and marine zones; NWS is US-only.",
+      "When an agent needs to know what severe weather is currently in effect anywhere in the US: for travel decisions, location-aware briefings, alert routing, or pairing with population/news feeds. Filter by 2-letter state code (area), exact event name (e.g. 'Tornado Warning', 'Heat Advisory'), severity, urgency, or status. Coverage is US states, territories, and marine zones; NWS is US-only.",
     params: [
       { name: 'area', in: 'query', type: 'string', description: '2-letter US state or territory code (CA, TX, PR, etc)', example: 'CA' },
       { name: 'event', in: 'query', type: 'string', description: 'Exact NWS event name', example: 'Tornado Warning' },
@@ -564,7 +564,7 @@ for (const a of alerts) console.log(\`[\${a.severity}] \${a.event}: \${a.area_de
     intro:
       "Recent earthquakes from the USGS Earthquake Hazards Program pre-built summary feeds. The upstream feeds refresh every minute. TensorFeed proxies them with a per-(magnitude, period) KV cache whose TTL scales with the feed window (60s for the hour feeds, 900s for the month feeds). The response flattens the upstream GeoJSON FeatureCollection into a plain earthquakes list so most agents can consume it without geometry-processing knowledge.",
     whenToUse:
-      "When an agent needs the most recent earthquake activity globally — for situational-awareness briefs, climate/disaster reporting, alert routing for tsunami-flagged events, or pairing with population/news feeds. Choose the magnitude bucket (significant means 'noteworthy by USGS criteria,' the numeric buckets are M-or-above thresholds, 'all' returns every detected event) and the time window (hour, day, week, month).",
+      "When an agent needs the most recent earthquake activity globally: for situational-awareness briefs, climate/disaster reporting, alert routing for tsunami-flagged events, or pairing with population/news feeds. Choose the magnitude bucket (significant means 'noteworthy by USGS criteria,' the numeric buckets are M-or-above thresholds, 'all' returns every detected event) and the time window (hour, day, week, month).",
     params: [
       { name: 'magnitude', in: 'query', type: 'string', description: 'significant | 4.5 | 2.5 | 1.0 | all', example: '4.5' },
       { name: 'period', in: 'query', type: 'string', description: 'hour | day | week | month', example: 'day' },
@@ -604,7 +604,7 @@ for (const a of alerts) console.log(\`[\${a.severity}] \${a.event}: \${a.area_de
     }
   ],
   "attribution": {
-    "source": "USGS Earthquake Hazards Program — Real-time Feed",
+    "source": "USGS Earthquake Hazards Program, Real-time Feed",
     "license": "US Government work in the public domain (17 USC §105)",
     "redistribution": "commercial-permitted"
   },
@@ -630,7 +630,7 @@ for (const q of earthquakes) console.log(\`M\${q.magnitude} \${q.place}\`);`,
       },
       {
         q: 'How fresh is the data?',
-        a: 'USGS regenerates each summary feed once per minute. TensorFeed caches each (magnitude, period) tuple in KV with a TTL scaled to the feed window — 60 seconds for the hour feeds, 120 seconds for the day feeds, 300 seconds for the week feeds, 900 seconds for the month feeds.',
+        a: 'USGS regenerates each summary feed once per minute. TensorFeed caches each (magnitude, period) tuple in KV with a TTL scaled to the feed window: 60 seconds for the hour feeds, 120 seconds for the day feeds, 300 seconds for the week feeds, 900 seconds for the month feeds.',
       },
       {
         q: 'What is the tsunami flag?',
@@ -1802,7 +1802,7 @@ const c = await tf.compareModels({ ids: ['Claude Opus 4.7', 'GPT-5.5'] });`,
     faqs: [
       {
         q: 'Why are benchmarks normalized to union-of-keys with null?',
-        a: 'So downstream code can iterate the keys without TypeErrors on undefined values. If GPT-5.5 has no MMLU-Pro score and Opus does, both show mmlu_pro in the benchmarks object — Opus with the score, GPT-5.5 with null. Predictable shape, no special-casing.',
+        a: 'So downstream code can iterate the keys without TypeErrors on undefined values. If GPT-5.5 has no MMLU-Pro score and Opus does, both show mmlu_pro in the benchmarks object: Opus with the score, GPT-5.5 with null. Predictable shape, no special-casing.',
       },
     ],
   },

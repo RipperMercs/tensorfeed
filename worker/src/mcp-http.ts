@@ -1359,9 +1359,9 @@ function mcpToolError(message: string): { result: unknown } {
 
 /**
  * Distinguishes intentional validation errors raised by tool handlers
- * (caller passed bad input — message is safe to surface verbatim) from
+ * (caller passed bad input, message is safe to surface verbatim) from
  * unexpected runtime exceptions (KV errors, upstream timeouts, JSON
- * parse failures — message may contain implementation detail). Tool
+ * parse failures, message may contain implementation detail). Tool
  * handlers `throw new ValidationError(...)` for the safe path; the
  * catch surface checks instanceof and routes accordingly.
  */

@@ -320,7 +320,7 @@ export async function confirmVerifyHireable(
 
   // Write the replay-protection / audit record AFTER the claim update
   // succeeds. If we crash between these two writes, the operator gets
-  // a free renewal — preferable to charging for one and not granting it.
+  // a free renewal, preferable to charging for one and not granting it.
   const txRec: VerifyHireableTxRecord = {
     amount_usd: VERIFY_HIREABLE_PRICE_USD,
     amount_base_units: verified.amountBaseUnits,

@@ -147,9 +147,9 @@ export default function AIHardwarePage() {
                   <td className="py-3 px-3 text-right font-mono text-text-primary">{h.memoryGB} GB</td>
                   <td className="py-3 px-3 text-right font-mono text-text-secondary">{h.memoryBandwidthTBs.toFixed(1)} TB/s</td>
                   <td className="py-3 px-3 text-right font-mono text-text-primary">{h.fp16TFLOPS.toLocaleString()}</td>
-                  <td className="py-3 px-3 text-right font-mono text-text-secondary">{h.fp8TFLOPS ? h.fp8TFLOPS.toLocaleString() : '—'}</td>
-                  <td className="py-3 px-3 text-right font-mono text-text-secondary">{h.fp4TFLOPS ? h.fp4TFLOPS.toLocaleString() : '—'}</td>
-                  <td className="py-3 px-3 text-right font-mono text-text-secondary">{h.tdpWatts ? `${h.tdpWatts}W` : '—'}</td>
+                  <td className="py-3 px-3 text-right font-mono text-text-secondary">{h.fp8TFLOPS ? h.fp8TFLOPS.toLocaleString() : '-'}</td>
+                  <td className="py-3 px-3 text-right font-mono text-text-secondary">{h.fp4TFLOPS ? h.fp4TFLOPS.toLocaleString() : '-'}</td>
+                  <td className="py-3 px-3 text-right font-mono text-text-secondary">{h.tdpWatts ? `${h.tdpWatts}W` : '-'}</td>
                   <td className="py-3 px-3 text-xs text-text-muted">{h.interconnect}</td>
                   <td className="py-3 px-3 text-right">
                     <a href={h.url} target="_blank" rel="noopener noreferrer" className="text-text-muted hover:text-accent-primary inline-flex items-center gap-0.5">

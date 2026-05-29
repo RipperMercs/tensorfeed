@@ -200,7 +200,7 @@ export default function BenchmarkLeaderboardPage({ params }: { params: { name: s
                       {row.score}%
                     </td>
                     <td className="px-4 py-2.5 text-right text-text-muted text-xs">
-                      {row.released ?? '—'}
+                      {row.released ?? '-'}
                     </td>
                   </tr>
                 ))}
@@ -257,8 +257,8 @@ export default function BenchmarkLeaderboardPage({ params }: { params: { name: s
           <li>
             <Link href="/developers/agent-payments" className="text-accent-primary hover:underline">
               <code className="font-mono text-sm">/api/premium/history/benchmarks/series?model=&benchmark={meta.slug}</code>
-            </Link>{' '}
-            — daily score evolution for one model on this benchmark, 1 credit per call
+            </Link>
+            : daily score evolution for one model on this benchmark, 1 credit per call
           </li>
         </ul>
       </section>

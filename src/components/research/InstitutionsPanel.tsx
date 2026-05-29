@@ -70,7 +70,7 @@ export default function InstitutionsPanel({ institutions, href = '/research/inst
                 <td className="px-3 py-2 align-top">
                   <div className="text-text-primary font-medium text-sm">{inst.display_name}</div>
                   <div className="text-[10px] font-mono text-text-muted mt-0.5">
-                    {[inst.country_code, inst.type].filter(Boolean).join(' · ') || '—'}
+                    {[inst.country_code, inst.type].filter(Boolean).join(' · ') || '-'}
                   </div>
                   <div className="mt-1.5">
                     <span

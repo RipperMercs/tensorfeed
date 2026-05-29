@@ -6,7 +6,7 @@ import type { Env } from './types';
 //
 // Cloudflare's runtime gives the DO a `state.storage` interface with
 // get/put/delete/list. We mock it with a Map. Cloudflare's real
-// runtime guarantees serialized access to a single DO instance — that
+// runtime guarantees serialized access to a single DO instance; that
 // guarantee is what makes the production code race-safe. Our mock is
 // already inherently single-threaded under JS event-loop semantics, so
 // tests run serial method calls and verify each method's logic is

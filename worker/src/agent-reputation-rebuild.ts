@@ -1,5 +1,5 @@
 /**
- * Agent Reputation Bureau — daily rebuild orchestrator.
+ * Agent Reputation Bureau: daily rebuild orchestrator.
  *
  * v0 Week 1, step 4 (guts) of the spec at
  * C:\Users\rippe\Desktop\tensorfeed-agent-rep-bureau-spec.md. This file

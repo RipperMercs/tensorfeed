@@ -119,7 +119,7 @@ export default function TrainingDatasetsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-mono text-text-primary font-semibold">{d.tokens || d.items || '—'}</div>
+                  <div className="font-mono text-text-primary font-semibold">{d.tokens || d.items || '-'}</div>
                   {d.tokens && d.items && <div className="text-xs text-text-muted">{d.items}</div>}
                 </div>
               </div>
