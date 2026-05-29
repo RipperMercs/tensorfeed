@@ -362,9 +362,9 @@ describe('redactGuidanceDeltaForPreview', () => {
     expect(preview.materiality_summary.total_changes).toBe(2);
     for (const c of preview.changes) {
       expect(Object.keys(c).sort()).toEqual(['category', 'change_type', 'direction', 'materiality']);
-      expect((c as Record<string, unknown>).prior_text).toBeUndefined();
-      expect((c as Record<string, unknown>).current_text).toBeUndefined();
-      expect((c as Record<string, unknown>).prior_value).toBeUndefined();
+      expect((c as unknown as Record<string, unknown>).prior_text).toBeUndefined();
+      expect((c as unknown as Record<string, unknown>).current_text).toBeUndefined();
+      expect((c as unknown as Record<string, unknown>).prior_value).toBeUndefined();
     }
     // The verbatim sentences must not leak into the serialized preview.
     expect(JSON.stringify(preview)).not.toContain('We now expect full-year revenue');

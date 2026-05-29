@@ -104,7 +104,7 @@ describe('crawlPublisherManifest SSRF integration', () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 302,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => '',
     });
     const rec = await crawlPublisherManifest('example.com', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
@@ -117,7 +117,7 @@ describe('crawlPublisherManifest', () => {
   it('extracts payTo wallets from a V2 manifest items[].accepts[]', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({
         items: [
           {
@@ -145,7 +145,7 @@ describe('crawlPublisherManifest', () => {
   it('returns empty wallets when accepts has no Base network entries', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({
         items: [
           { accepts: [{ scheme: 'exact', network: 'solana', payTo: '0xabc0000000000000000000000000000000000001' }] },
@@ -160,7 +160,7 @@ describe('crawlPublisherManifest', () => {
   it('handles V1 flat accepts[] shape', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({
         accepts: [{ scheme: 'exact', network: 'base', payTo: '0xa1a0000000000000000000000000000000000001' }],
       }),
@@ -173,7 +173,7 @@ describe('crawlPublisherManifest', () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 404,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => '',
     });
     const rec = await crawlPublisherManifest('example.com', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
@@ -190,7 +190,7 @@ describe('crawlPublisherManifest', () => {
   it('dedupes duplicate wallets across multiple accepts entries', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({
         items: [
           {
@@ -211,7 +211,7 @@ describe('crawlPublisherManifest record-storage hardening', () => {
   it('stores the normalized hostname on the record, not the raw domain argument', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({ items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xABC0000000000000000000000000000000000001' }] }] }),
     });
     // Valid input but with mixed case + trailing dot
@@ -244,7 +244,7 @@ describe('crawlPublisherManifest manifest-content hardening', () => {
     const huge = 'x'.repeat(1_000_001);
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => huge,
     });
     const rec = await crawlPublisherManifest('example.com', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
@@ -254,7 +254,7 @@ describe('crawlPublisherManifest manifest-content hardening', () => {
   it('handles JSON parse errors gracefully', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => 'not json {{{',
     });
     const rec = await crawlPublisherManifest('example.com', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
@@ -264,7 +264,7 @@ describe('crawlPublisherManifest manifest-content hardening', () => {
   it('skips payTo values that do not match the Ethereum address regex', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({
         items: [{
           accepts: [
@@ -287,7 +287,7 @@ describe('crawlPublisherManifest manifest-content hardening', () => {
     }));
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({ items: [{ accepts }] }),
     });
     const rec = await crawlPublisherManifest('example.com', () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
@@ -297,7 +297,7 @@ describe('crawlPublisherManifest manifest-content hardening', () => {
   it('only counts accepts with scheme=exact', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({
         items: [{
           accepts: [
@@ -337,7 +337,7 @@ describe('refreshAllPublishers', () => {
       if (u === 'https://tensorfeed.ai/.well-known/x402.json') {
         return {
           ok: true,
-          headers: { get: () => null },
+          headers: { get: (): string | null => null },
           text: async () => JSON.stringify({
             items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xaaa0000000000000000000000000000000000001' }] }],
           }),
@@ -346,13 +346,13 @@ describe('refreshAllPublishers', () => {
       if (u === 'https://terminalfeed.io/.well-known/x402.json') {
         return {
           ok: true,
-          headers: { get: () => null },
+          headers: { get: (): string | null => null },
           text: async () => JSON.stringify({
             items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xbbb0000000000000000000000000000000000001' }] }],
           }),
         };
       }
-      return { ok: false, status: 404, headers: { get: () => null }, text: async () => '' };
+      return { ok: false, status: 404, headers: { get: (): string | null => null }, text: async () => '' };
     }) as unknown as typeof fetch;
 
     const result = await refreshAllPublishers(env, ['tensorfeed.ai', 'terminalfeed.io'], () => '2026-05-27T00:00:00.000Z', mockFetch, []);
@@ -389,7 +389,7 @@ describe('refreshAllPublishers', () => {
 
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({
         items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xaaa0000000000000000000000000000000000001' }] }],
       }),
@@ -409,7 +409,7 @@ describe('refreshAllPublishers', () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 503,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => '',
     });
 
@@ -431,13 +431,13 @@ describe('refreshAllPublishers', () => {
       if (u === 'https://tensorfeed.ai/.well-known/x402.json') {
         return {
           ok: true,
-          headers: { get: () => null },
+          headers: { get: (): string | null => null },
           text: async () => JSON.stringify({
             items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xaaa0000000000000000000000000000000000001' }] }],
           }),
         };
       }
-      return { ok: false, status: 500, headers: { get: () => null }, text: async () => '' };
+      return { ok: false, status: 500, headers: { get: (): string | null => null }, text: async () => '' };
     }) as unknown as typeof fetch;
 
     await refreshAllPublishers(env, ['tensorfeed.ai', 'broken.example'], () => '2026-05-27T00:00:00.000Z', mockFetch, []);
@@ -464,9 +464,9 @@ describe('refreshAllPublishers', () => {
         items: [{ accepts: [{ scheme: 'exact', network: 'eip155:8453', payTo: sharedWallet }] }],
       };
       if (u === 'https://tensorfeed.ai/.well-known/x402.json' || u === 'https://terminalfeed.io/.well-known/x402.json') {
-        return { ok: true, headers: { get: () => null }, text: async () => JSON.stringify(body) };
+        return { ok: true, headers: { get: (): string | null => null }, text: async () => JSON.stringify(body) };
       }
-      return { ok: false, status: 404, headers: { get: () => null }, text: async () => '' };
+      return { ok: false, status: 404, headers: { get: (): string | null => null }, text: async () => '' };
     }) as unknown as typeof fetch;
 
     const result = await refreshAllPublishers(env, ['tensorfeed.ai', 'terminalfeed.io'], () => '2026-05-28T00:00:00.000Z', mockFetch, []);
@@ -497,7 +497,7 @@ describe('refreshAllPublishers', () => {
     // 402 challenge of its paid endpoint.
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      headers: { get: () => null },
+      headers: { get: (): string | null => null },
       text: async () => JSON.stringify({
         items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xaaa0000000000000000000000000000000000001' }] }],
       }),

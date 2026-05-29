@@ -103,6 +103,7 @@ export const RECESSION_WATCH_ATTRIBUTION: RecessionWatchAttribution = {
 
 export interface RecessionWatchResult {
   ok: true;
+  capturedAt: string | null;
   computed_at: string;
   data_freshness: {
     bls_captured_at: string | null;

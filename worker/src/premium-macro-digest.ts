@@ -233,7 +233,7 @@ export const MACRO_DIGEST_ATTRIBUTION: MacroDigestAttribution = {
 
 export interface MacroDigestResult {
   ok: true;
-  capturedAt: string;
+  capturedAt: string | null;
   data_freshness: {
     bls_captured_at: string | null;
     bls_indicator_count: number;
