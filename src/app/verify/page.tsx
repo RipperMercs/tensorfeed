@@ -3,14 +3,14 @@ import { BreadcrumbListJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
 import VerifyClient from './VerifyClient';
 
 export const metadata: Metadata = {
-  title: 'Verify an x402 Publisher — Live AFTA Scorecard',
+  title: 'Verify an x402 Publisher: Live AFTA Scorecard',
   description:
     "Paste any domain to instantly check its x402 + AFTA compliance. Live scorecard of canonical Coinbase x402 V2 manifest, EIP-712 domain hints, AFTA fair-trade declarations, signed-receipt key publication, federation status, and the published payTo wallet on Base. Powers TensorFeed's federation. Free, no auth, agent-friendly.",
   alternates: { canonical: 'https://tensorfeed.ai/verify' },
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/verify',
-    title: 'Verify an x402 Publisher — Live AFTA Scorecard',
+    title: 'Verify an x402 Publisher: Live AFTA Scorecard',
     description:
       'Paste a domain. Get a live x402 + AFTA scorecard with the published payTo wallet and on-chain settlement check. Free, no auth.',
     siteName: 'TensorFeed.ai',
@@ -42,7 +42,7 @@ const FAQS = [
   {
     question: 'Is this trustless?',
     answer:
-      "The HTTP checks run on TensorFeed servers; you trust us not to lie about what we saw. The on-chain Base mainnet verification is fully trustless if you want to re-run it yourself — install @tensorfeed/x402-base-mcp and call verify_x402_settlement or parse_x402_manifest directly from your own machine. Same logic, different trust anchor.",
+      "The HTTP checks run on TensorFeed servers; you trust us not to lie about what we saw. The on-chain Base mainnet verification is fully trustless if you want to re-run it yourself. Install @tensorfeed/x402-base-mcp and call verify_x402_settlement or parse_x402_manifest directly from your own machine. Same logic, different trust anchor.",
   },
   {
     question: "What if a domain scores 6/6?",

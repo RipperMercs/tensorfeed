@@ -3,14 +3,14 @@ import { BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
 import HealthClient from './HealthClient';
 
 export const metadata: Metadata = {
-  title: 'x402 Publisher Status — Live Manifest + Uptime Monitor',
+  title: 'x402 Publisher Status: Live Manifest + Uptime Monitor',
   description:
     "Live status of every known x402 publisher's /.well-known/x402.json manifest, monitored hourly by TensorFeed. Manifest validity, fetch latency, 24h and 7d uptime. Agent-friendly JSON at /api/x402/status. Free, no auth. The neutral, citation-ready source of truth for x402 publisher reliability.",
   alternates: { canonical: 'https://tensorfeed.ai/x402/health' },
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/x402/health',
-    title: 'x402 Publisher Status — Live Manifest + Uptime Monitor',
+    title: 'x402 Publisher Status: Live Manifest + Uptime Monitor',
     description:
       'Hourly checks on every known x402 publisher manifest. Uptime, latency, validity. Free, no auth.',
     siteName: 'TensorFeed.ai',

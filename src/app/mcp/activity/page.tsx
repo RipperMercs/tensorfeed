@@ -3,14 +3,14 @@ import { BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
 import ActivityClient from './ActivityClient';
 
 export const metadata: Metadata = {
-  title: 'TensorFeed MCP Activity — Live Install + Tool Call Counts',
+  title: 'TensorFeed MCP Activity: Live Install + Tool Call Counts',
   description:
     "Live install counts for @tensorfeed/mcp-server and @tensorfeed/x402-base-mcp pulled from npm, plus hosted endpoint tool-call telemetry from TensorFeed's /api/mcp surface. Updated every 5 minutes. Free, no auth, agent-friendly. Powered by the same MCP infrastructure the data describes.",
   alternates: { canonical: 'https://tensorfeed.ai/mcp/activity' },
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/mcp/activity',
-    title: 'TensorFeed MCP Activity — Live Install + Tool Call Counts',
+    title: 'TensorFeed MCP Activity: Live Install + Tool Call Counts',
     description:
       'Live npm install counts + hosted tool-call telemetry for the TensorFeed MCP servers. Updated every 5 minutes.',
     siteName: 'TensorFeed.ai',

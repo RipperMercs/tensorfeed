@@ -13,3 +13,16 @@ if git diff --cached | grep -qE "$PATTERNS"; then
   echo "Remove the key from the diff, move it behind process.env / wrangler secret put, then retry."
   exit 1
 fi
+
+# Em-dash gate (audit #6, 2026-05-28): the no-em-dash rule is strictest on
+# indexed and user-facing surfaces, where a U+2014 is the clearest AI tell.
+# Block staged ADDITIONS containing an em dash in the frontend, the MCP
+# server, and the public text feeds. EMDASH is built via printf so this hook
+# itself stays em-dash-free. Worker source is excluded on purpose: it holds
+# the legitimate EM_DASH detector constants the validators grep against.
+EMDASH=$(printf '\xe2\x80\x94')
+if git diff --cached --diff-filter=d -- 'src/app' 'mcp-server/src' 'public/llms.txt' 'public/originals.xml' | grep -E '^\+' | grep -q "$EMDASH"; then
+  echo "COMMIT BLOCKED: em dash (U+2014) in a staged user-facing change."
+  echo "Replace it with a colon, period, comma, or parentheses (project rule #1), then retry."
+  exit 1
+fi
