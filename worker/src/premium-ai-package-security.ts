@@ -246,7 +246,7 @@ export function buildRadar(
 
   return {
     ok: true,
-    capturedAt: now.toISOString(),
+    capturedAt: snapshot.capturedAt,
     snapshot_captured_at: snapshot.capturedAt,
     source: 'osv.dev',
     filter: { ecosystem: filter.ecosystem, category: filter.category, min_risk_score: filter.min_risk_score, package: filter.package },

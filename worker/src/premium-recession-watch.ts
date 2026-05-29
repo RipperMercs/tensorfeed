@@ -318,8 +318,19 @@ export async function computeRecessionWatch(env: Env): Promise<RecessionWatchRes
   if (!bls) notes.push('BLS snapshot missing; Sahm rule unavailable.');
   if (!fred) notes.push('FRED snapshot missing; yield-curve signal unavailable.');
 
+  // capturedAt is the freshness boundary premiumResponse bills against. The
+  // watch is only as fresh as its STALEST input, so use the OLDEST of the
+  // available BLS / FRED snapshot times (ISO strings compare lexicographically).
+  // Null only when both are missing. Without this field the endpoint never
+  // no-charged on stale macro data (computed_at is not read by the extractor).
+  const macroTimes = [bls?.capturedAt, fred?.capturedAt].filter(
+    (t): t is string => typeof t === 'string',
+  );
+  const recessionCapturedAt = macroTimes.length > 0 ? macroTimes.reduce((a, b) => (a < b ? a : b)) : null;
+
   return {
     ok: true,
+    capturedAt: recessionCapturedAt,
     computed_at: new Date().toISOString(),
     data_freshness: {
       bls_captured_at: bls?.capturedAt ?? null,

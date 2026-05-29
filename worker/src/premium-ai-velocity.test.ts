@@ -320,6 +320,21 @@ describe('buildVelocity: empty snapshot', () => {
   });
 });
 
+// ── buildVelocity: capturedAt freshness (audit HIGH-2 regression) ──
+
+describe('buildVelocity: capturedAt freshness', () => {
+  it('capturedAt is the snapshot data time, not build time', () => {
+    const snapshot = makeSnapshot([makeHf({ id: 'org/m', name: 'm', likes: 5 })], [], '2026-05-20T03:00:00.000Z');
+    const r = buildVelocity(snapshot, DEFAULT_FILTER);
+    // Regression for the federation capturedAt footgun: the handler used to
+    // set capturedAt to new Date() (build time), which defeated the AFTA
+    // stale no-charge. It must equal the upstream snapshot capture time so
+    // premiumResponse can detect a stale federated snapshot and no-charge.
+    expect(r.capturedAt).toBe('2026-05-20T03:00:00.000Z');
+    expect(r.capturedAt).toBe(snapshot.capturedAt);
+  });
+});
+
 // ── buildVelocity: sorting + caps ──────────────────────────────────
 
 describe('buildVelocity: top sorting + cap', () => {

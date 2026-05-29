@@ -143,7 +143,7 @@ export function buildCardsResponse(
 
   return {
     ok: true,
-    capturedAt: new Date().toISOString(),
+    capturedAt: snapshot.capturedAt,
     snapshot_captured_at: snapshot.capturedAt,
     source: 'tensorfeed.ai news + Claude Haiku 4.5',
     filter,

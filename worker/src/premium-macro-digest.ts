@@ -484,9 +484,19 @@ export async function computeMacroDigest(env: Env): Promise<MacroDigestResult | 
   if (!bls) notes.push('BLS snapshot unavailable; inflation and employment sections incomplete.');
   if (!fred) notes.push('FRED snapshot unavailable; rates, growth, and FX/commodities sections incomplete.');
 
+  // capturedAt is the freshness boundary premiumResponse bills against. The
+  // digest is only as fresh as its STALEST input, so use the OLDEST of the
+  // available BLS / FRED snapshot times (ISO strings compare lexicographically,
+  // so the min is the oldest). Null only when both snapshots are missing. This
+  // is the data-capture time, NOT build time.
+  const macroTimes = [bls?.capturedAt, fred?.capturedAt].filter(
+    (t): t is string => typeof t === 'string',
+  );
+  const macroCapturedAt = macroTimes.length > 0 ? macroTimes.reduce((a, b) => (a < b ? a : b)) : null;
+
   return {
     ok: true,
-    capturedAt: new Date().toISOString(),
+    capturedAt: macroCapturedAt,
     data_freshness: {
       bls_captured_at: bls?.capturedAt ?? null,
       bls_indicator_count: bls?.count ?? 0,

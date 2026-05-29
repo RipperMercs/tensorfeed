@@ -209,7 +209,7 @@ export function buildVelocity(
 
   return {
     ok: true,
-    capturedAt: new Date().toISOString(),
+    capturedAt: snapshot.capturedAt,
     snapshot_captured_at: snapshot.capturedAt,
     source: 'terminalfeed.io federation cross-call',
     filter: { pipeline: filter.pipeline, language: filter.language, min_traction: filter.min_traction, cross_only: filter.cross_only },

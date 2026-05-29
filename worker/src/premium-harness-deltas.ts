@@ -310,7 +310,7 @@ export function buildDeltasResponse(
 
   return {
     ok: true,
-    capturedAt: new Date().toISOString(),
+    capturedAt: current.capturedAt,
     current_captured_at: current.capturedAt,
     prior_captured_at: prior.capturedAt,
     days_between_snapshots,

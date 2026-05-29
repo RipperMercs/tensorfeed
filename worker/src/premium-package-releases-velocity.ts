@@ -207,7 +207,7 @@ export function buildVelocity(
 
   return {
     ok: true,
-    capturedAt: now.toISOString(),
+    capturedAt: snapshot.capturedAt,
     snapshot_captured_at: snapshot.capturedAt,
     filter: { ecosystem: filter.ecosystem, category: filter.category, package: filter.package, min_releases_7d: filter.min_releases_7d },
     packages_in_snapshot: filtered.length,

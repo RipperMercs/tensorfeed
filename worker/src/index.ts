@@ -757,14 +757,29 @@ async function premiumResponse(
   creditsRequested: number,
   request: Request,
   env: Env,
+  forcedNoChargeReason: NoChargeReason = null,
+  dataCapturedAt: string | null = null,
 ): Promise<Response> {
   const url = new URL(request.url);
   const endpoint = url.pathname;
 
-  // Extract captured_at from the result if the handler surfaced one.
-  // Convention: result.capturedAt OR result.captured_at OR result.snapshot.capturedAt.
+  // Extract the DATA-CAPTURE time the AFTA staleness no-charge bills against.
+  // This MUST be when the underlying data was captured, NEVER build time.
+  // Precedence (audit HIGH 2/3, 2026-05-28): an explicit dataCapturedAt arg
+  // wins; then the real-data side fields the federation and snapshot endpoints
+  // emit (snapshot_captured_at, current_captured_at) are preferred OVER a
+  // top-level capturedAt, because several handlers historically set capturedAt
+  // to new Date() (build time) while stashing the true age in the side field,
+  // which silently defeated every stale no-charge. Only those side fields and
+  // the explicit arg take priority; otherwise fall back to capturedAt,
+  // captured_at, snapshot.capturedAt. If you add a derived premium endpoint,
+  // set capturedAt to the upstream data time or pass dataCapturedAt; do not
+  // pass new Date().
   const r = result as Record<string, unknown>;
   const candidateCapturedAt =
+    (typeof dataCapturedAt === 'string' && dataCapturedAt) ||
+    (typeof r.snapshot_captured_at === 'string' && r.snapshot_captured_at) ||
+    (typeof r.current_captured_at === 'string' && r.current_captured_at) ||
     (typeof r.capturedAt === 'string' && r.capturedAt) ||
     (typeof r.captured_at === 'string' && r.captured_at) ||
     (typeof r.snapshot === 'object' &&
@@ -778,6 +793,13 @@ async function premiumResponse(
   let noChargeReason: NoChargeReason = null;
   if (staleness.applies && staleness.stale) {
     noChargeReason = 'stale_data';
+  }
+  // Handler-driven no-charge. Used when staleness is not wall-clock
+  // (e.g. the guidance-delta endpoint's input-keyed supersession: the
+  // served delta is behind a newer same-form filing). Takes precedence
+  // over the SLA check; the handler has already decided this call is free.
+  if (forcedNoChargeReason !== null) {
+    noChargeReason = forcedNoChargeReason;
   }
 
   // Commit the deferred debit. Returns the actual creditsCharged and
@@ -9925,6 +9947,194 @@ export default {
         logPremiumUsage(env, '/api/premium/sec/filings/ai-disclosures', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === GUIDANCE-DELTA PREVIEW (free, rate-limited) ===
+    // /api/preview/sec/filings/guidance-delta?accession= OR ?ticker=&form=
+    //
+    // Free taste of the periodic-filing guidance delta: the deterministic
+    // materiality_summary (counts plus a one-line headline) and the
+    // per-change {category, change_type, direction, materiality} profile,
+    // WITHOUT the verbatim prior/current quotes, the prior/current values,
+    // or the AFTA-signed receipt. 10 calls/day per IP. The paid endpoint
+    // adds the quotes (the citeable evidence), the values, and the receipt.
+    if (path === '/api/preview/sec/filings/guidance-delta') {
+      const gdIp = getClientIP(request);
+      const {
+        getGuidanceDelta,
+        resolveLatestDelta,
+        checkGuidanceDeltaSupersession,
+        buildGuidanceDeltaResponse,
+        redactGuidanceDeltaForPreview,
+        checkGuidanceDeltaPreviewRateLimit,
+      } = await import('./sec-guidance-delta');
+      const gdLimit = await checkGuidanceDeltaPreviewRateLimit(env, gdIp, 10);
+      if (!gdLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: gdLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/sec/filings/guidance-delta',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/sec/filings/guidance-delta adds the verbatim prior and current quotes, the prior and current values, an AFTA-signed receipt, and no rate limit.',
+          },
+          429,
+        );
+      }
+      const gdAccession = url.searchParams.get('accession');
+      const gdTicker = url.searchParams.get('ticker');
+      const gdForm = url.searchParams.get('form');
+      let gdDelta: Awaited<ReturnType<typeof getGuidanceDelta>> = null;
+      if (gdAccession) {
+        if (!/^\d{10}-\d{2}-\d{6}$/.test(gdAccession.trim())) {
+          return jsonResponse({ ok: false, error: 'bad_accession', hint: 'accession=NNNNNNNNNN-NN-NNNNNN' }, 400, 0);
+        }
+        gdDelta = await getGuidanceDelta(env, gdAccession.trim());
+      } else if (gdTicker && gdForm) {
+        gdDelta = await resolveLatestDelta(env, gdTicker, gdForm);
+      } else {
+        return jsonResponse(
+          { ok: false, error: 'missing_params', hint: 'provide ?accession=NNNNNNNNNN-NN-NNNNNN or ?ticker=NVDA&form=10-Q' },
+          400,
+          0,
+        );
+      }
+      if (!gdDelta) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'not_found',
+            message: 'No guidance delta available for that query yet.',
+            query: { accession: gdAccession, ticker: gdTicker, form: gdForm },
+          },
+          404,
+          0,
+        );
+      }
+      const gdSupersession = gdAccession
+        ? { superseded: false, checked: false, latest_same_form_accession: null, latest_same_form_filing_date: null }
+        : await checkGuidanceDeltaSupersession(env, gdDelta);
+      const gdFull = buildGuidanceDeltaResponse(gdDelta, gdSupersession);
+      const gdPreview = redactGuidanceDeltaForPreview(gdFull);
+      return jsonResponse(
+        {
+          ...gdPreview,
+          rate_limit: { limit: gdLimit.limit, remaining: gdLimit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/sec/filings/guidance-delta',
+            adds: [
+              'verbatim prior and current quotes',
+              'prior and current values',
+              'section labels',
+              'AFTA-signed receipt',
+              'no rate limit',
+            ],
+          },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
+    }
+
+    // === PAID PREMIUM: GUIDANCE DELTA (Tier 1, 1 credit, param-required) ===
+    // /api/premium/sec/filings/guidance-delta?accession= OR ?ticker=&form=
+    //
+    // One signed verified decision for a finance agent: did this periodic
+    // SEC filing (10-K or 10-Q) materially change guidance, segment outlook,
+    // or risk language versus the prior same-form filing, with the exact
+    // changed sentences quoted. Reads the DP CC Phi-4 extraction from the
+    // sec-guidance-delta KV layout (verbatim prior/current text plus values
+    // plus section, deterministic enums). Returns provenance, the full
+    // changes array with the verbatim quotes, a deterministic
+    // materiality_summary (counts plus a one-line headline that never
+    // asserts an unreliable risk added/removed count), and an AFTA-signed
+    // receipt over the inputs.
+    //
+    // Freshness is INPUT-KEYED, not wall-clock: a filed 10-Q does not
+    // change, so per-accession data is immutable (mapped to NULL_SLA). In
+    // ?ticker=&form= mode the handler checks EDGAR for a newer same-form
+    // filing; if one exists that has not been processed yet, the served
+    // delta is behind the latest filing and the call is no-charge
+    // (stale_data). Param-required, so strict-premium.
+    if (path === '/api/premium/sec/filings/guidance-delta') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const {
+        getGuidanceDelta,
+        resolveLatestDelta,
+        checkGuidanceDeltaSupersession,
+        buildGuidanceDeltaResponse,
+      } = await import('./sec-guidance-delta');
+
+      const gdAccession = url.searchParams.get('accession');
+      const gdTicker = url.searchParams.get('ticker');
+      const gdForm = url.searchParams.get('form');
+
+      let gdDelta: Awaited<ReturnType<typeof getGuidanceDelta>> = null;
+      let gdLatestMode = false;
+      if (gdAccession) {
+        if (!/^\d{10}-\d{2}-\d{6}$/.test(gdAccession.trim())) {
+          return await premiumValidationFailure(
+            { error: 'bad_accession', hint: 'accession=NNNNNNNNNN-NN-NNNNNN (SEC EDGAR accession number)' },
+            payment,
+            request,
+            env,
+          );
+        }
+        gdDelta = await getGuidanceDelta(env, gdAccession.trim());
+      } else if (gdTicker && gdForm) {
+        gdLatestMode = true;
+        gdDelta = await resolveLatestDelta(env, gdTicker, gdForm);
+      } else {
+        return await premiumValidationFailure(
+          { error: 'missing_params', hint: 'provide ?accession=NNNNNNNNNN-NN-NNNNNN or ?ticker=NVDA&form=10-Q' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      if (!gdDelta) {
+        // Valid request, but no delta exists for it yet (cohort not
+        // extracted, or off-cohort ticker). No-charge: there is no answer
+        // to sell. upstream_failure marks it free on the AFTA ledger.
+        return await premiumValidationFailure(
+          {
+            error: 'not_found',
+            message: 'No guidance delta available for that query yet.',
+            query: { accession: gdAccession, ticker: gdTicker, form: gdForm },
+          },
+          payment,
+          request,
+          env,
+          'upstream_failure',
+          404,
+        );
+      }
+
+      const gdSupersession = gdLatestMode
+        ? await checkGuidanceDeltaSupersession(env, gdDelta)
+        : { superseded: false, checked: false, latest_same_form_accession: null, latest_same_form_filing_date: null };
+      const gdResult = buildGuidanceDeltaResponse(gdDelta, gdSupersession);
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/sec/filings/guidance-delta', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      // Input-keyed no-charge: if a newer same-form filing supersedes this
+      // delta, the agent's "latest" request cannot be honestly fulfilled, so
+      // do not charge. Otherwise charge the credit normally.
+      return await premiumResponse(
+        gdResult,
+        payment,
+        1,
+        request,
+        env,
+        gdSupersession.superseded ? 'stale_data' : null,
+      );
     }
 
     // === PAID PREMIUM: AI COMPANIES PER-TICKER ENVELOPE (Tier 1, 1 credit) ===

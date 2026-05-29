@@ -164,7 +164,7 @@ export function buildTriageResponse(
 
   return {
     ok: true,
-    capturedAt: new Date().toISOString(),
+    capturedAt: snapshot.capturedAt,
     snapshot_captured_at: snapshot.capturedAt,
     source: 'tensorfeed.ai status incidents + Claude Haiku 4.5',
     filter,

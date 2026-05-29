@@ -2627,6 +2627,51 @@ export async function requirePayment(
       };
     }
 
+    // Mint-dedup (audit HIGH-1, 2026-05-28). settleX402Payment / cdpSettle are
+    // idempotent on BROADCAST (one tx per (from, nonce) within the 7-day auth
+    // window), but the mint below is not. Without this gate, replaying the same
+    // still-valid X-PAYMENT header would mint a SECOND full-credit token for one
+    // on-chain payment. Gate the mint on the same (from, nonce) identity the
+    // settle idempotency uses: if this authorization already minted a token,
+    // return that original token (a lost-response retry gets its token back; a
+    // deliberate replay gets no free credits). Covers both the self-broadcast
+    // and CDP-routed paths, since settle is unified above.
+    const mintDedupKey = `pay:x402mint:${payerAddress}:${payload.payload.authorization.nonce}`;
+    const MINT_DEDUP_TTL_SECONDS = 7 * 24 * 60 * 60; // matches X402_AUTH_TTL_SECONDS, the auth-claim replay window
+    const priorMint = (await env.TENSORFEED_CACHE.get(mintDedupKey, 'json')) as { token: string } | null;
+    if (priorMint && typeof priorMint.token === 'string') {
+      const priorRecord = (await env.TENSORFEED_CACHE.get(`pay:credits:${priorMint.token}`, 'json')) as CreditsRecord | null;
+      if (priorRecord) {
+        if (priorRecord.balance < cost) {
+          return {
+            paid: false,
+            response: jsonResponse(
+              {
+                x402Version: 2,
+                success: false,
+                errorReason: 'insufficient_funds',
+                message: `This authorization already minted a credits token, which now has ${priorRecord.balance} credits, fewer than the ${cost} this call requires. Use that token via Authorization: Bearer, top up at /api/payment/buy-credits, or send a new payment.`,
+              },
+              402,
+            ),
+          };
+        }
+        // Already minted for this authorization: return the original token,
+        // do NOT mint again and do NOT re-charge.
+        return {
+          paid: true,
+          token: priorMint.token,
+          cost,
+          currentBalance: priorRecord.balance,
+          tokenRemaining: priorRecord.balance - cost,
+          newToken: true,
+          paymentResponseHeader: encodeSettlementHeader(settle),
+        };
+      }
+      // Marker present but the token record is gone (manual purge): fall
+      // through and mint a fresh token; the marker is overwritten below.
+    }
+
     // Mint a credits token from the settled amount. The "exact" scheme
     // means auth.value === requirements.amount, so this token starts with
     // exactly enough credits for THIS call (plus any first-payment
@@ -2662,6 +2707,7 @@ export async function requirePayment(
 
     await Promise.all([
       env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(tokenRecord)),
+      env.TENSORFEED_CACHE.put(mintDedupKey, JSON.stringify({ token }), { expirationTtl: MINT_DEDUP_TTL_SECONDS }),
       logRevenue(env, amountUsd, request.headers.get('User-Agent') || 'unknown'),
       appendTokenPurchase(env, token, {
         tx_hash: settle.transaction!,

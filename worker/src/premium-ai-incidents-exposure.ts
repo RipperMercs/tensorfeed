@@ -278,7 +278,7 @@ export function buildExposure(
   const { entries, cutoff_date } = filterEntries(snapshot, filter, now);
   return {
     ok: true,
-    capturedAt: now.toISOString(),
+    capturedAt: snapshot.capturedAt,
     snapshot_captured_at: snapshot.capturedAt,
     source: 'avidml/avid-db',
     source_license: 'MIT',

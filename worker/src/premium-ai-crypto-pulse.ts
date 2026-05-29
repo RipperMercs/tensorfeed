@@ -278,7 +278,7 @@ export function buildPulse(
 
   return {
     ok: true,
-    capturedAt: new Date().toISOString(),
+    capturedAt: snapshot.capturedAt,
     snapshot_captured_at: snapshot.capturedAt,
     source: 'terminalfeed.io federation cross-call',
     filter: { token: filter.token, setup: filter.setup, min_abs_change_pct: filter.min_abs_change_pct },
