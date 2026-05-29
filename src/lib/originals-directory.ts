@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'tavily-x402-search-discovery-layer-gap',
+    title:
+      'Coinbase Put Tavily Search on x402. The Pay Rail Shipped; the Discovery Rail Did Not.',
+    author: 'Marcus Chen',
+    date: 'May 29, 2026',
+    readTime: '6 min read',
+    description:
+      "Coinbase and Tavily brought agentic web search to x402: an agent pays per request from a Base wallet, no API key, $0.01 an advanced search in USDC. Probing the live service, the payment rail is clean and works exactly as advertised, but the discovery rail is missing: no published payment manifest at the well-known path, no catalog or discovery listing, no agent card, just a bare health check at the root. So an agent only learns the endpoint, its price, and its input shape from Tavily's human documentation. The launch solved how an agent pays and left how an agent finds unsolved. Inside what actually shipped, why the x402 payment layer has converged while the discovery layer fragments across three competing conventions, why that caps autonomy at the discovery step no matter how good the payments are, and three signposts over the next ninety days.",
+  },
+  {
     slug: 'opus-4-8-workflow-orchestration-primitive',
     title:
       'Opus 4.8 Shipped a Workflow Primitive. Agent Orchestration Just Moved Into the Model.',
