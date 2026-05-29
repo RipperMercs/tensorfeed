@@ -180,6 +180,12 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // prefix so concrete /api/premium/ai-companies/NVDA paths match via
   // resolveSLA's path-prefix walk.
   '/api/premium/ai-companies': { maxAgeSeconds: 9 * 60 * 60 },
+  // Guidance-delta: a filed 10-K / 10-Q is immutable, so per-accession data
+  // never goes stale by wall clock (NULL_SLA). Freshness is INPUT-KEYED and
+  // handled in the route: in ?ticker=&form= mode it checks EDGAR for a newer
+  // same-form filing and no-charges (stale_data) when the served delta is
+  // superseded. No time-based SLA applies.
+  '/api/premium/sec/filings/guidance-delta': NULL_SLA,
   // x402 settlement index. Indexer cron every 5 min, 30-block reorg safety.
   // Total time from settlement to indexed = ~6 min. SLA = 10 min headroom.
   '/api/premium/x402-index': { maxAgeSeconds: 10 * 60 },
@@ -320,6 +326,8 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/probe/series': 'historical immutable',
     '/api/gpu/pricing/series': 'historical immutable',
     '/api/premium/watches': 'registration write, no capture concept',
+    '/api/premium/sec/filings/guidance-delta':
+      'periodic filings are immutable once filed (no wall-clock staleness); freshness is input-keyed, the endpoint no-charges when a newer same-form filing has superseded the served delta',
   };
   return Object.entries(ENDPOINT_FRESHNESS).map(([endpoint, sla]) => ({
     endpoint,

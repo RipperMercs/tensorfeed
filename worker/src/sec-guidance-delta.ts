@@ -31,6 +31,8 @@
  */
 
 import type { Env } from './types';
+import { safePut } from './kill-switch';
+import { getCompanyFilingsSnapshot } from './sec-filings-fetcher';
 
 // ─── KV schema ──────────────────────────────────────────────────────
 
@@ -527,4 +529,294 @@ export async function getLatest(env: Env): Promise<{ batch_id: string; extracted
 
 export function publicAttribution(): { source_license: string; source_attribution: string } {
   return { source_license: SOURCE_LICENSE, source_attribution: SOURCE_ATTRIBUTION };
+}
+
+// ─── Read-side derivation (premium + preview endpoints) ──────────────
+//
+// The premium endpoint sells the verbatim quotes plus an AFTA-signed
+// receipt; the free preview sells the materiality_summary plus the
+// per-change enum profile WITHOUT the quotes. Both share the summary
+// computation below so the two responses cannot drift.
+
+export interface MaterialitySummary {
+  total_changes: number;
+  by_materiality: Record<string, number>;
+  by_category: Record<string, number>;
+  by_change_type: Record<string, number>;
+  by_direction: Record<string, number>;
+  // One-line deterministic headline. F1 safety: it NEVER asserts a
+  // risk-factor added/removed count, because that signal is unreliable
+  // under the v1 Phi-4 section-narrowing path (the prior and current
+  // Risk Factors sections are narrowed independently, so a sentence
+  // narrowed out of the prior reads as a spurious add). Those are dropped
+  // at the source for v1; the exclusion here is defense in depth.
+  headline: string;
+}
+
+function changeTypeVerb(ct: ChangeType): string {
+  switch (ct) {
+    case 'raised':
+      return 'raised';
+    case 'lowered':
+      return 'lowered';
+    case 'reaffirmed':
+      return 'reaffirmed';
+    case 'initiated':
+      return 'initiated';
+    case 'withdrawn':
+      return 'withdrawn';
+    case 'widened':
+      return 'widened';
+    case 'narrowed':
+      return 'narrowed';
+    case 'added':
+      return 'added';
+    case 'removed':
+      return 'removed';
+    case 'reworded':
+      return 'reworded';
+    default:
+      return 'changed';
+  }
+}
+
+export function buildMaterialitySummary(delta: GuidanceDelta): MaterialitySummary {
+  const byMateriality: Record<string, number> = { material: 0, minor: 0, boilerplate: 0 };
+  const byCategory: Record<string, number> = {};
+  const byChangeType: Record<string, number> = {};
+  const byDirection: Record<string, number> = { up: 0, down: 0, neutral: 0, unclear: 0 };
+  for (const c of delta.changes) {
+    byMateriality[c.materiality] = (byMateriality[c.materiality] ?? 0) + 1;
+    byCategory[c.category] = (byCategory[c.category] ?? 0) + 1;
+    byChangeType[c.change_type] = (byChangeType[c.change_type] ?? 0) + 1;
+    byDirection[c.direction] = (byDirection[c.direction] ?? 0) + 1;
+  }
+
+  // Headline phrases come from MATERIAL changes only, excluding risk-factor
+  // added/removed (the F1-unreliable signal). Capped at 3 so the headline
+  // stays one line.
+  const headlineMaterial = delta.changes.filter(
+    (c) =>
+      c.materiality === 'material' &&
+      !(c.category === 'risk_factor' && (c.change_type === 'added' || c.change_type === 'removed')),
+  );
+  const phrases = headlineMaterial.slice(0, 3).map((c) => `${c.topic} ${changeTypeVerb(c.change_type)}`);
+
+  // Reworded risk language IS reliable, so a count of it is honest.
+  const rewordedRisk = delta.changes.filter(
+    (c) => c.category === 'risk_factor' && c.change_type === 'reworded',
+  ).length;
+  if (rewordedRisk > 0) {
+    phrases.push(`${rewordedRisk} risk factor ${rewordedRisk === 1 ? 'wording' : 'wordings'} revised`);
+  }
+
+  const headline =
+    phrases.length > 0
+      ? phrases.join('; ')
+      : `No material guidance change found versus the prior ${delta.form} (${delta.prior_accession_number}).`;
+
+  return {
+    total_changes: delta.changes.length,
+    by_materiality: byMateriality,
+    by_category: byCategory,
+    by_change_type: byChangeType,
+    by_direction: byDirection,
+    headline,
+  };
+}
+
+export interface SupersessionInfo {
+  superseded: boolean;
+  checked: boolean;
+  latest_same_form_accession: string | null;
+  latest_same_form_filing_date: string | null;
+}
+
+/**
+ * Input-keyed freshness check. A delta is current until a newer same-form
+ * filing supersedes it. This reads the SEC filings snapshot (the same feed
+ * /api/sec/filings/{cik}/recent serves) for the CIK and looks for a newer
+ * same-form filing than the delta's accession. If one exists, the served
+ * delta is behind EDGAR and the premium handler no-charges. When the
+ * snapshot is unavailable, we cannot prove supersession, so we report
+ * checked: false and treat the delta as current (do not punish billing for
+ * missing metadata, matching checkStaleness's conservative default).
+ */
+export async function checkGuidanceDeltaSupersession(
+  env: Env,
+  delta: GuidanceDelta,
+): Promise<SupersessionInfo> {
+  const snap = await getCompanyFilingsSnapshot(env, delta.cik);
+  if (!snap || !Array.isArray(snap.filings)) {
+    return { superseded: false, checked: false, latest_same_form_accession: null, latest_same_form_filing_date: null };
+  }
+  const sameForm = snap.filings.filter((f) => f.form === delta.form);
+  if (sameForm.length === 0) {
+    return { superseded: false, checked: true, latest_same_form_accession: null, latest_same_form_filing_date: null };
+  }
+  let latest = sameForm[0];
+  for (const f of sameForm) {
+    if (f.filing_date > latest.filing_date) latest = f;
+  }
+  const superseded =
+    latest.accession_number !== delta.accession_number && latest.filing_date > delta.filing_date;
+  return {
+    superseded,
+    checked: true,
+    latest_same_form_accession: latest.accession_number,
+    latest_same_form_filing_date: latest.filing_date,
+  };
+}
+
+/**
+ * Resolve the latest same-form delta for a ticker. The index is sorted by
+ * filing_date desc, so the first matching entry is the most recent. Returns
+ * null when no delta has been ingested for that (ticker, form) pair yet.
+ */
+export async function resolveLatestDelta(
+  env: Env,
+  ticker: string,
+  form: string,
+): Promise<GuidanceDelta | null> {
+  const wantTicker = ticker.trim().toUpperCase();
+  const wantForm = form.trim().toUpperCase();
+  const index = await getIndex(env);
+  const entry = index.find(
+    (e) => e.ticker.toUpperCase() === wantTicker && e.form.toUpperCase() === wantForm,
+  );
+  if (!entry) return null;
+  return getGuidanceDelta(env, entry.accession_number);
+}
+
+export interface GuidanceDeltaFreshness {
+  model: 'input_keyed';
+  superseded: boolean;
+  superseded_note: string;
+  latest_same_form_accession: string | null;
+  latest_same_form_filing_date: string | null;
+}
+
+export interface GuidanceDeltaResponse {
+  ok: true;
+  ticker: string;
+  company_name: string;
+  cik: string;
+  form: string;
+  accession_number: string;
+  prior_accession_number: string;
+  filing_date: string;
+  prior_filing_date: string;
+  materiality_summary: MaterialitySummary;
+  changes: GuidanceChange[];
+  freshness: GuidanceDeltaFreshness;
+  capturedAt: string;
+  extracted_by: string;
+  source_license: string;
+  source_attribution: string;
+}
+
+/** Build the full premium response: provenance, the verbatim changes, the
+ * deterministic materiality_summary, the input-keyed freshness block, and
+ * the capturedAt (= the delta's extracted_at, surfaced for the receipt). */
+export function buildGuidanceDeltaResponse(
+  delta: GuidanceDelta,
+  supersession: SupersessionInfo,
+): GuidanceDeltaResponse {
+  const attribution = publicAttribution();
+  return {
+    ok: true,
+    ticker: delta.ticker,
+    company_name: delta.company_name,
+    cik: delta.cik,
+    form: delta.form,
+    accession_number: delta.accession_number,
+    prior_accession_number: delta.prior_accession_number,
+    filing_date: delta.filing_date,
+    prior_filing_date: delta.prior_filing_date,
+    materiality_summary: buildMaterialitySummary(delta),
+    changes: delta.changes,
+    freshness: {
+      model: 'input_keyed',
+      superseded: supersession.superseded,
+      superseded_note: supersession.superseded
+        ? `A newer ${delta.form} (${supersession.latest_same_form_accession}, filed ${supersession.latest_same_form_filing_date}) exists on EDGAR and has not been processed yet, so this delta is behind the latest filing. This call is no-charge.`
+        : 'This delta reflects the latest same-form filing TensorFeed has processed.',
+      latest_same_form_accession: supersession.latest_same_form_accession,
+      latest_same_form_filing_date: supersession.latest_same_form_filing_date,
+    },
+    capturedAt: delta.extracted_at,
+    extracted_by: delta.extracted_by,
+    source_license: attribution.source_license,
+    source_attribution: attribution.source_attribution,
+  };
+}
+
+export interface GuidanceDeltaPreviewChange {
+  category: GuidanceCategory;
+  change_type: ChangeType;
+  direction: Direction;
+  materiality: Materiality;
+}
+
+export interface GuidanceDeltaPreview {
+  ok: true;
+  preview: true;
+  ticker: string;
+  company_name: string;
+  cik: string;
+  form: string;
+  accession_number: string;
+  prior_accession_number: string;
+  filing_date: string;
+  prior_filing_date: string;
+  materiality_summary: MaterialitySummary;
+  changes: GuidanceDeltaPreviewChange[];
+  freshness: GuidanceDeltaFreshness;
+  capturedAt: string;
+}
+
+/** Redact the full response for the free preview: keep the summary and the
+ * per-change enum profile, drop the verbatim prior_text / current_text /
+ * prior_value / current_value / section (those quotes are the paid evidence). */
+export function redactGuidanceDeltaForPreview(full: GuidanceDeltaResponse): GuidanceDeltaPreview {
+  return {
+    ok: true,
+    preview: true,
+    ticker: full.ticker,
+    company_name: full.company_name,
+    cik: full.cik,
+    form: full.form,
+    accession_number: full.accession_number,
+    prior_accession_number: full.prior_accession_number,
+    filing_date: full.filing_date,
+    prior_filing_date: full.prior_filing_date,
+    materiality_summary: full.materiality_summary,
+    changes: full.changes.map((c) => ({
+      category: c.category,
+      change_type: c.change_type,
+      direction: c.direction,
+      materiality: c.materiality,
+    })),
+    freshness: full.freshness,
+    capturedAt: full.capturedAt,
+  };
+}
+
+/**
+ * Per-IP daily rate limit for the free preview. Distinct KV key from the
+ * other previews so they do not share a budget. 1 read plus (0 or 1) writes
+ * per call; the write is skipped under the kill switch via safePut.
+ */
+export async function checkGuidanceDeltaPreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:guidance-delta-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }

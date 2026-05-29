@@ -12,6 +12,11 @@ import {
   KEY_LATEST,
   KEY_BY_ACCESSION_PREFIX,
   MAX_TOPIC_LEN,
+  buildMaterialitySummary,
+  buildGuidanceDeltaResponse,
+  redactGuidanceDeltaForPreview,
+  resolveLatestDelta,
+  checkGuidanceDeltaSupersession,
   type GuidanceDelta,
   type GuidanceChange,
 } from './sec-guidance-delta';
@@ -262,5 +267,186 @@ describe('writeBatch', () => {
     expect(result.indexed_total).toBe(1);
     const stored = await getGuidanceDelta(env, '0001045810-25-000200');
     expect(stored?.company_name).toBe('NVIDIA Corporation');
+  });
+});
+
+// ── Read-side derivation (premium + preview endpoints) ───────────────
+
+// KV mock that parses on get(key, 'json') like the real Workers KV, used
+// for the cache reads (getCompanyFilingsSnapshot + the preview rate limit).
+// The module's own reads use the untyped string form, which this also
+// supports (returns the raw string when no type is passed).
+class JsonFakeKV {
+  store = new Map<string, string>();
+  async get(key: string, type?: string): Promise<unknown> {
+    const raw = this.store.has(key) ? this.store.get(key)! : null;
+    if (raw === null) return null;
+    return type === 'json' ? JSON.parse(raw) : raw;
+  }
+  async put(key: string, value: string, _opts?: { expirationTtl?: number }): Promise<void> {
+    this.store.set(key, value);
+  }
+  async delete(key: string): Promise<void> {
+    this.store.delete(key);
+  }
+}
+
+function envWithCache(cache: JsonFakeKV): Env {
+  return { TENSORFEED_CACHE: cache } as unknown as Env;
+}
+
+describe('buildMaterialitySummary', () => {
+  it('counts changes by materiality, category, change_type, direction', () => {
+    const s = buildMaterialitySummary(baseDelta());
+    expect(s.total_changes).toBe(2);
+    expect(s.by_materiality.material).toBe(1);
+    expect(s.by_materiality.minor).toBe(1);
+    expect(s.by_category.revenue_guidance).toBe(1);
+    expect(s.by_category.risk_factor).toBe(1);
+    expect(s.by_change_type.raised).toBe(1);
+    expect(s.by_change_type.reworded).toBe(1);
+    expect(s.by_direction.up).toBe(1);
+    expect(s.by_direction.neutral).toBe(1);
+  });
+
+  it('headline names the material guidance change with its verb', () => {
+    const s = buildMaterialitySummary(baseDelta());
+    expect(s.headline).toContain('Full-year revenue outlook raised');
+  });
+
+  it('headline NEVER asserts a risk added or removed count (F1 safety)', () => {
+    const delta = baseDelta({
+      changes: [
+        baseChange({
+          topic: 'New regulatory risk', prior_text: '', current_text: 'A new risk has emerged.',
+          prior_value: null, current_value: null, section: 'Risk Factors', category: 'risk_factor',
+          change_type: 'added', direction: 'neutral', materiality: 'material',
+        }),
+        baseChange({
+          topic: 'Retired risk', prior_text: 'An old risk applied.', current_text: '',
+          prior_value: null, current_value: null, section: 'Risk Factors', category: 'risk_factor',
+          change_type: 'removed', direction: 'neutral', materiality: 'material',
+        }),
+      ],
+    });
+    const s = buildMaterialitySummary(delta);
+    // The raw counts still reflect the data.
+    expect(s.by_change_type.added).toBe(1);
+    expect(s.by_change_type.removed).toBe(1);
+    // But the sellable headline must not advertise an added/removed count.
+    expect(s.headline.toLowerCase()).not.toContain('added');
+    expect(s.headline.toLowerCase()).not.toContain('removed');
+    expect(s.headline).toContain('No material guidance change');
+  });
+
+  it('reports the reworded-risk count in the headline (reliable signal)', () => {
+    const delta = baseDelta({
+      changes: [
+        baseChange({ section: 'Risk Factors', category: 'risk_factor', change_type: 'reworded', materiality: 'minor', direction: 'neutral', prior_value: null, current_value: null }),
+        baseChange({ topic: 'Another risk', section: 'Risk Factors', category: 'risk_factor', change_type: 'reworded', materiality: 'minor', direction: 'neutral', prior_value: null, current_value: null }),
+      ],
+    });
+    const s = buildMaterialitySummary(delta);
+    expect(s.headline).toContain('2 risk factor wordings revised');
+  });
+});
+
+describe('redactGuidanceDeltaForPreview', () => {
+  it('strips verbatim quotes and values, keeps the enum profile and summary', () => {
+    const full = buildGuidanceDeltaResponse(baseDelta(), {
+      superseded: false, checked: true,
+      latest_same_form_accession: '0001045810-25-000200', latest_same_form_filing_date: '2025-12-12',
+    });
+    const preview = redactGuidanceDeltaForPreview(full);
+    expect(preview.preview).toBe(true);
+    expect(preview.materiality_summary.total_changes).toBe(2);
+    for (const c of preview.changes) {
+      expect(Object.keys(c).sort()).toEqual(['category', 'change_type', 'direction', 'materiality']);
+      expect((c as Record<string, unknown>).prior_text).toBeUndefined();
+      expect((c as Record<string, unknown>).current_text).toBeUndefined();
+      expect((c as Record<string, unknown>).prior_value).toBeUndefined();
+    }
+    // The verbatim sentences must not leak into the serialized preview.
+    expect(JSON.stringify(preview)).not.toContain('We now expect full-year revenue');
+  });
+});
+
+describe('buildGuidanceDeltaResponse', () => {
+  it('surfaces capturedAt as the delta extracted_at and keeps verbatim changes', () => {
+    const full = buildGuidanceDeltaResponse(baseDelta(), {
+      superseded: false, checked: true, latest_same_form_accession: null, latest_same_form_filing_date: null,
+    });
+    expect(full.capturedAt).toBe('2026-05-28T00:00:00Z');
+    expect(full.changes[0].current_text).toContain('We now expect full-year revenue');
+    expect(full.freshness.model).toBe('input_keyed');
+    expect(full.freshness.superseded).toBe(false);
+  });
+});
+
+describe('resolveLatestDelta', () => {
+  it('returns the latest same-form delta for a ticker', async () => {
+    const kv = new FakeKV();
+    const env = envWith(kv);
+    const older = baseDelta({ accession_number: '0001045810-24-000150', prior_accession_number: '0001045810-23-000090', filing_date: '2024-12-13', prior_filing_date: '2023-12-10' });
+    const newer = baseDelta({ accession_number: '0001045810-25-000200', prior_accession_number: '0001045810-24-000150', filing_date: '2025-12-12', prior_filing_date: '2024-12-13' });
+    const v = validateBatch(batchOf([older, newer]));
+    if (!v.ok) return;
+    await writeBatch(env, v.value);
+    const got = await resolveLatestDelta(env, 'nvda', '10-K');
+    expect(got?.accession_number).toBe('0001045810-25-000200');
+  });
+
+  it('returns null when no delta exists for the ticker or form', async () => {
+    const kv = new FakeKV();
+    const env = envWith(kv);
+    const v = validateBatch(batchOf([baseDelta()]));
+    if (!v.ok) return;
+    await writeBatch(env, v.value);
+    expect(await resolveLatestDelta(env, 'AMD', '10-K')).toBeNull();
+    expect(await resolveLatestDelta(env, 'NVDA', '10-Q')).toBeNull();
+  });
+});
+
+describe('checkGuidanceDeltaSupersession', () => {
+  it('flags superseded when a newer same-form filing exists on EDGAR', async () => {
+    const cache = new JsonFakeKV();
+    const env = envWithCache(cache);
+    const delta = baseDelta({ accession_number: '0001045810-25-000200', form: '10-K', filing_date: '2025-12-12' });
+    await cache.put('sec-filings:by-cik:0001045810', JSON.stringify({
+      capturedAt: '2026-05-28T00:00:00Z', cik: '0001045810', ticker: 'NVDA', company_name: 'NVIDIA',
+      filings: [
+        { accession_number: '0001045810-26-000300', form: '10-K', filing_date: '2026-12-11' },
+        { accession_number: '0001045810-25-000200', form: '10-K', filing_date: '2025-12-12' },
+        { accession_number: '0001045810-26-000050', form: '10-Q', filing_date: '2026-05-20' },
+      ],
+    }));
+    const s = await checkGuidanceDeltaSupersession(env, delta);
+    expect(s.checked).toBe(true);
+    expect(s.superseded).toBe(true);
+    expect(s.latest_same_form_accession).toBe('0001045810-26-000300');
+  });
+
+  it('is not superseded when the served delta is the latest same-form filing', async () => {
+    const cache = new JsonFakeKV();
+    const env = envWithCache(cache);
+    const delta = baseDelta({ accession_number: '0001045810-25-000200', form: '10-K', filing_date: '2025-12-12' });
+    await cache.put('sec-filings:by-cik:0001045810', JSON.stringify({
+      capturedAt: '2026-05-28T00:00:00Z', cik: '0001045810', ticker: 'NVDA', company_name: 'NVIDIA',
+      filings: [
+        { accession_number: '0001045810-25-000200', form: '10-K', filing_date: '2025-12-12' },
+        { accession_number: '0001045810-26-000050', form: '10-Q', filing_date: '2026-05-20' },
+      ],
+    }));
+    const s = await checkGuidanceDeltaSupersession(env, delta);
+    expect(s.superseded).toBe(false);
+    expect(s.latest_same_form_accession).toBe('0001045810-25-000200');
+  });
+
+  it('reports checked false and not superseded when the SEC snapshot is missing', async () => {
+    const cache = new JsonFakeKV();
+    const env = envWithCache(cache);
+    const s = await checkGuidanceDeltaSupersession(env, baseDelta());
+    expect(s.checked).toBe(false);
+    expect(s.superseded).toBe(false);
   });
 });

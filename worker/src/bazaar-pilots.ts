@@ -3492,6 +3492,102 @@ const FAILOVER_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 24 (2026-05-28): guidance-delta. Did this periodic SEC filing
+// materially change guidance, segment outlook, or risk language versus the
+// prior same-form filing, with the exact changed sentences quoted. Reads the
+// DP CC Phi-4 extraction. Free taste at /api/preview/sec/filings/guidance-delta.
+// Total pilot count: 48 -> 49.
+const GUIDANCE_DELTA_PILOT: BazaarPilotConfig = {
+  description:
+    'Guidance Delta. Did this periodic SEC filing (10-K or 10-Q) materially change guidance, segment outlook, or risk language versus the prior same-form filing, with the exact changed sentences quoted? Pass ?ticker=NVDA&form=10-Q for the latest, or ?accession= for one filing. Returns a deterministic materiality_summary, the full verbatim changes (prior and current quotes, values, section), and an AFTA-signed receipt. The signed verified-decision a finance agent reads before acting on an earnings filing.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { ticker: 'NVDA', form: '10-Q' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            ticker: 'NVDA',
+            company_name: 'NVIDIA CORP',
+            cik: '0001045810',
+            form: '10-Q',
+            accession_number: '0001045810-26-000052',
+            prior_accession_number: '0001045810-25-000230',
+            filing_date: '2026-05-20',
+            prior_filing_date: '2025-11-19',
+            materiality_summary: {
+              total_changes: 10,
+              by_materiality: { material: 3, minor: 6, boilerplate: 1 },
+              by_category: { revenue_guidance: 1, segment_outlook: 2, risk_factor: 4, other: 3 },
+              by_change_type: { reworded: 8, initiated: 1, raised: 1 },
+              by_direction: { neutral: 8, unclear: 1, up: 1 },
+              headline:
+                'FY26 revenue guidance raised; Investments in Fiscal Year 2027 initiated; 4 risk factor wordings revised',
+            },
+            changes: [
+              {
+                topic: 'Investments in Fiscal Year 2027',
+                prior_text: '',
+                current_text:
+                  'In the first quarter of fiscal year 2027, we made the following investments: 18.6 billion dollars in private companies and infrastructure funds.',
+                prior_value: null,
+                current_value: '18.6 billion',
+                section: "Management's Discussion and Analysis",
+                category: 'other',
+                change_type: 'initiated',
+                direction: 'unclear',
+                materiality: 'material',
+              },
+            ],
+            freshness: {
+              model: 'input_keyed',
+              superseded: false,
+              superseded_note: 'This delta reflects the latest same-form filing TensorFeed has processed.',
+              latest_same_form_accession: '0001045810-26-000052',
+              latest_same_form_filing_date: '2026-05-20',
+            },
+            capturedAt: '2026-05-28T00:00:00Z',
+            extracted_by: 'phi-4-Q6_K.gguf@dp-cc',
+            source_license: 'US Government public domain (17 USC 105)',
+            source_attribution: 'SEC EDGAR (data.sec.gov) + Phi-4 verbatim extraction + deterministic normalize',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  accession: { type: 'string', description: 'A specific current filing accession (NNNNNNNNNN-NN-NNNNNN). Use this OR ticker plus form.' },
+                  ticker: { type: 'string', description: 'AI bellwether ticker (NVDA, AMD, AVGO, and the rest of the 14). With form, resolves the latest same-form delta.' },
+                  form: { type: 'string', description: 'Periodic form type: 10-K or 10-Q. Required when ticker is used.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -3584,6 +3680,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/benchmark-trust-verdict': BENCHMARK_TRUST_PILOT,
   // Wave 23 (2026-05-28): failover-verdict. Best operational failover target.
   '/api/premium/failover-verdict': FAILOVER_PILOT,
+  // Wave 24 (2026-05-28): guidance-delta. Signed periodic-filing guidance diff.
+  '/api/premium/sec/filings/guidance-delta': GUIDANCE_DELTA_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

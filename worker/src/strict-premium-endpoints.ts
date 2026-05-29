@@ -211,6 +211,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/sec/filings/ai-flagged',
   '/api/premium/sec/filings/by-form',
   '/api/premium/sec/filings/ai-disclosures',
+  // Guidance-delta (2026-05-28). Param-required (?accession= or
+  // ?ticker=&form=); anonymous Bazaar probes must see a 402 challenge, not
+  // a free-trial 400 missing_params, so catalog validators read it as paid.
+  '/api/premium/sec/filings/guidance-delta',
   // Wave 18 (2026-05-26). Pro-tier whats-new. Layers Haiku 4.5 analyst
   // synthesis with per-field cited basis IDs on top of base whats-new.
   // 10 credits ($0.05) vs base at 1 credit ($0.005). Parallel.ai-style
