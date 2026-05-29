@@ -13,6 +13,31 @@ export const SEED_PUBLISHERS: string[] = [
   'terminalfeed.io',
 ];
 
+export interface ManualPublisher {
+  domain: string;
+  wallets: string[];
+  note: string;
+}
+
+// Publishers with known Base payTo wallets that do NOT expose a crawlable
+// /.well-known/x402.json manifest (discovery-dark). The daily crawl cannot
+// find them, so their wallets are seeded here by hand from the live 402
+// challenge of their paid endpoint. Attribution is only as strong as that
+// observation: if a publisher routes through a shared facilitator wallet rather
+// than a dedicated one, settlements to it may include other merchants. Verify
+// each wallet against the live 402 before adding, and re-verify on dispute.
+export const MANUAL_PUBLISHERS: ManualPublisher[] = [
+  {
+    domain: 'x402.tavily.com',
+    // Sourced 2026-05-29 from the 402 challenge of POST https://x402.tavily.com/search
+    // (scheme exact, eip155:8453, USDC, 10000 micro = $0.01 advanced search).
+    // Tavily exposes no /.well-known/x402.json, /discovery/resources, or
+    // agent-card, so the manifest crawl returns HTTP 404 for it.
+    wallets: ['0xc78f83c13ba79be3781e7c5f658d1341729515b0'],
+    note: 'Manually seeded from the live x402.tavily.com 402 challenge (no public manifest). Attribution is observation-based; re-verify on dispute.',
+  },
+];
+
 export const KV_KEY_CURSOR = 'x402-idx:cursor';
 export const KV_KEY_PUBLISHERS = 'x402-idx:publishers';
 export const KV_KEY_RECENT = 'x402-idx:recent';

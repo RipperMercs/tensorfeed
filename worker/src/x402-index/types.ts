@@ -12,6 +12,13 @@ export interface PublisherRecord {
   last_crawled: string;
   last_crawl_error: string | null;
   last_event_at: string | null;
+  // How this publisher's wallets were discovered. 'manifest' (default) means a
+  // /.well-known/x402.json crawl. 'manual' means a hand-seeded discovery-dark
+  // publisher whose wallet came from its live 402 challenge, not a manifest.
+  source?: 'manifest' | 'manual';
+  // Free-text provenance, set for manually-seeded publishers so the public
+  // /publishers endpoint can disclose that the attribution is observation-based.
+  note?: string | null;
 }
 
 export interface DailyRollup {

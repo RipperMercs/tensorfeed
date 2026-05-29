@@ -1,6 +1,6 @@
 import type { PublisherRecord } from './types';
 import type { Env } from '../types';
-import { KV_KEY_PUBLISHERS, kvKeyPublisher, SEED_PUBLISHERS } from './constants';
+import { KV_KEY_PUBLISHERS, kvKeyPublisher, SEED_PUBLISHERS, MANUAL_PUBLISHERS, type ManualPublisher } from './constants';
 
 interface X402ManifestAccept {
   scheme?: string;
@@ -132,6 +132,7 @@ export async function crawlPublisherManifest(
       last_crawled: nowStr,
       last_crawl_error: null,
       last_event_at: null,
+      source: 'manifest',
     };
   } catch (e) {
     return baseRecord(safeDomain, manifestUrl, nowStr, e instanceof Error ? e.message : 'unknown');
@@ -147,6 +148,40 @@ function baseRecord(domain: string, manifestUrl: string, nowStr: string, err: st
     last_crawled: nowStr,
     last_crawl_error: err,
     last_event_at: null,
+    source: 'manifest',
+  };
+}
+
+/**
+ * Build a PublisherRecord for a hand-seeded discovery-dark publisher (one with
+ * a known Base payTo wallet but no crawlable /.well-known/x402.json). The domain
+ * is validated with the same SSRF guard as the crawl path, and each wallet is
+ * normalized + deduped with the same Ethereum-address regex, so a malformed
+ * manual entry cannot inject unvalidated input into KV or /publishers. Records
+ * are tagged source: 'manual' and carry the entry's provenance note so the
+ * public surface discloses that the attribution is observation-based.
+ */
+function manualRecord(entry: ManualPublisher, nowStr: string): PublisherRecord {
+  if (!isValidPublisherDomain(entry.domain)) {
+    return { ...baseRecord('', '', nowStr, 'invalid_domain'), source: 'manual', note: entry.note };
+  }
+  const safeDomain = new URL('https://' + entry.domain).hostname.toLowerCase().replace(/\.$/, '');
+  const wallets: string[] = [];
+  for (const w of entry.wallets) {
+    const normalized = normalizeAddress(w);
+    if (normalized && !wallets.includes(normalized)) wallets.push(normalized);
+    if (wallets.length >= MAX_WALLETS) break;
+  }
+  return {
+    domain: safeDomain,
+    manifest_url: '',
+    pay_to_wallets: wallets,
+    first_seen: nowStr,
+    last_crawled: nowStr,
+    last_crawl_error: null,
+    last_event_at: null,
+    source: 'manual',
+    note: entry.note,
   };
 }
 
@@ -203,6 +238,7 @@ export async function refreshAllPublishers(
   domains: string[] = SEED_PUBLISHERS,
   now: () => string = () => new Date().toISOString(),
   fetchFn: typeof fetch = fetch,
+  manualPublishers: ManualPublisher[] = MANUAL_PUBLISHERS,
 ): Promise<{ count: number; errors: number }> {
   const records: PublisherRecord[] = [];
   let errors = 0;
@@ -221,6 +257,23 @@ export async function refreshAllPublishers(
     records.push(merged);
     if (merged.last_crawl_error !== null) errors++;
     await env.TENSORFEED_CACHE.put(kvKeyPublisher(domain), JSON.stringify(merged));
+  }
+
+  // Hand-seeded discovery-dark publishers (no crawlable manifest). Same
+  // first_seen-preserving merge as the crawl path; they flow into the wallet
+  // map below exactly like crawled records (last_crawl_error null). Seeded
+  // after the crawl loop so a crawled publisher keeps first-wins on any wallet
+  // they happen to share.
+  for (const entry of manualPublishers) {
+    const fresh = manualRecord(entry, now());
+    if (!fresh.domain) continue; // invalid manual domain: skip, never write an empty key
+    const existing = (await env.TENSORFEED_CACHE.get(kvKeyPublisher(fresh.domain), 'json')) as PublisherRecord | null;
+    const merged: PublisherRecord = existing
+      ? { ...fresh, first_seen: existing.first_seen, last_event_at: existing.last_event_at }
+      : fresh;
+    records.push(merged);
+    if (merged.last_crawl_error !== null) errors++;
+    await env.TENSORFEED_CACHE.put(kvKeyPublisher(fresh.domain), JSON.stringify(merged));
   }
 
   // First-wins wallet attribution. Two publishers can legitimately declare

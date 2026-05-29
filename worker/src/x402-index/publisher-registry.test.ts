@@ -355,7 +355,7 @@ describe('refreshAllPublishers', () => {
       return { ok: false, status: 404, headers: { get: () => null }, text: async () => '' };
     }) as unknown as typeof fetch;
 
-    const result = await refreshAllPublishers(env, ['tensorfeed.ai', 'terminalfeed.io'], () => '2026-05-27T00:00:00.000Z', mockFetch);
+    const result = await refreshAllPublishers(env, ['tensorfeed.ai', 'terminalfeed.io'], () => '2026-05-27T00:00:00.000Z', mockFetch, []);
 
     expect(result.count).toBe(2);
     expect(result.errors).toBe(0);
@@ -395,7 +395,7 @@ describe('refreshAllPublishers', () => {
       }),
     });
 
-    await refreshAllPublishers(env, ['tensorfeed.ai'], () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
+    await refreshAllPublishers(env, ['tensorfeed.ai'], () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch, []);
 
     const rec = await kv.get(kvKeyPublisher('tensorfeed.ai'), 'json') as PublisherRecord;
     expect(rec.first_seen).toBe('2026-04-27T00:00:00.000Z'); // PRESERVED from the original
@@ -413,7 +413,7 @@ describe('refreshAllPublishers', () => {
       text: async () => '',
     });
 
-    const result = await refreshAllPublishers(env, ['tensorfeed.ai'], () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch);
+    const result = await refreshAllPublishers(env, ['tensorfeed.ai'], () => '2026-05-27T00:00:00.000Z', mockFetch as unknown as typeof fetch, []);
 
     expect(result.errors).toBe(1);
 
@@ -440,7 +440,7 @@ describe('refreshAllPublishers', () => {
       return { ok: false, status: 500, headers: { get: () => null }, text: async () => '' };
     }) as unknown as typeof fetch;
 
-    await refreshAllPublishers(env, ['tensorfeed.ai', 'broken.example'], () => '2026-05-27T00:00:00.000Z', mockFetch);
+    await refreshAllPublishers(env, ['tensorfeed.ai', 'broken.example'], () => '2026-05-27T00:00:00.000Z', mockFetch, []);
 
     const walletMap = await kv.get(KV_KEY_PUBLISHERS, 'json');
     // broken.example contributed no wallets because its crawl failed
@@ -469,7 +469,7 @@ describe('refreshAllPublishers', () => {
       return { ok: false, status: 404, headers: { get: () => null }, text: async () => '' };
     }) as unknown as typeof fetch;
 
-    const result = await refreshAllPublishers(env, ['tensorfeed.ai', 'terminalfeed.io'], () => '2026-05-28T00:00:00.000Z', mockFetch);
+    const result = await refreshAllPublishers(env, ['tensorfeed.ai', 'terminalfeed.io'], () => '2026-05-28T00:00:00.000Z', mockFetch, []);
 
     expect(result.count).toBe(2);
     expect(result.errors).toBe(0);
@@ -486,5 +486,44 @@ describe('refreshAllPublishers', () => {
     expect(tfd.pay_to_wallets).toEqual([sharedWallet]);
     expect(tf.last_crawl_error).toBeNull();
     expect(tfd.last_crawl_error).toBeNull();
+  });
+
+  it('seeds manually-listed discovery-dark publishers into the wallet map without crawling them', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    // The crawled seed has a manifest; the manual entry does not (its
+    // /.well-known/x402.json would 404), but its wallet is known from the live
+    // 402 challenge of its paid endpoint.
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: { get: () => null },
+      text: async () => JSON.stringify({
+        items: [{ accepts: [{ scheme: 'exact', network: 'base', payTo: '0xaaa0000000000000000000000000000000000001' }] }],
+      }),
+    });
+
+    // Wallet passed in mixed case to prove normalization runs on manual entries too.
+    const manual = [
+      { domain: 'x402.example.com', wallets: ['0xC78F83C13BA79BE3781E7C5F658D1341729515B0'], note: 'seeded from live 402' },
+    ];
+    const result = await refreshAllPublishers(env, ['tensorfeed.ai'], () => '2026-05-29T00:00:00.000Z', mockFetch as unknown as typeof fetch, manual);
+
+    expect(result.count).toBe(2); // crawled seed + manual entry
+    expect(result.errors).toBe(0);
+    expect(mockFetch).toHaveBeenCalledTimes(1); // only the crawled seed, the manual entry is never fetched
+
+    const walletMap = await kv.get(KV_KEY_PUBLISHERS, 'json');
+    expect(walletMap).toEqual({
+      '0xaaa0000000000000000000000000000000000001': 'tensorfeed.ai',
+      '0xc78f83c13ba79be3781e7c5f658d1341729515b0': 'x402.example.com',
+    });
+
+    const rec = await kv.get(kvKeyPublisher('x402.example.com'), 'json') as PublisherRecord;
+    expect(rec.source).toBe('manual');
+    expect(rec.manifest_url).toBe('');
+    expect(rec.last_crawl_error).toBeNull();
+    expect(rec.pay_to_wallets).toEqual(['0xc78f83c13ba79be3781e7c5f658d1341729515b0']);
+    expect(rec.note).toBe('seeded from live 402');
   });
 });
