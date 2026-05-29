@@ -101,3 +101,7 @@ scripts/push-via-gh-api.py
 scripts/mint-test-token.ps1
 scripts/phase-2-premium-audit.ps1
 scripts/mcp-registry/
+
+# Local-only weekly-update notes + widget debug screenshots (housekeeping)
+WEEKLY_UPDATE_*.md
+widget-fix-*.png
