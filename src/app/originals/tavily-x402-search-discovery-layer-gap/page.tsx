@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock, Coins } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import { AdPlaceholder } from '@/components/AdPlaceholder';
 import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
@@ -114,8 +113,6 @@ export default function TavilyX402DiscoveryGapPage() {
           the Base settlement. A buyer SDK that handles one x402 endpoint handles this one.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
-
         <h2 className="text-2xl font-semibold text-text-primary pt-4">The discovery rail did not ship</h2>
 
         <p>
@@ -183,7 +180,6 @@ export default function TavilyX402DiscoveryGapPage() {
           that does not exist. The pennies are flowing. The map is the part still being drawn.
         </p>
 
-        <AdPlaceholder format="horizontal" className="mt-10" />
       </div>
 
       <footer className="mt-12 pt-8 border-t border-border">
