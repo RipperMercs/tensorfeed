@@ -238,6 +238,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/security/corroborated`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/trump-pulled-federal-ai-review-order`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/openai-frontier-governance-framework-compliance-era`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/tavily-x402-search-discovery-layer-gap`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/opus-4-8-workflow-orchestration-primitive`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/robinhood-agentic-trading-mcp-brokerage-account`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },

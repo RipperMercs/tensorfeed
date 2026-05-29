@@ -17,6 +17,26 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'trump-pulled-federal-ai-review-order',
+    title:
+      'Trump Pulled the Federal AI Review Order at the Last Minute. The Rules Now Come From Sacramento and Brussels.',
+    author: 'Marcus Chen',
+    date: 'May 29, 2026',
+    readTime: '6 min read',
+    description:
+      "The administration was hours from signing an executive order creating a voluntary federal review of frontier AI models before release, with agencies given up to 90 days to inspect them, when calls from David Sacks, Elon Musk, and Mark Zuckerberg killed it. The competitiveness framing misses the structural point: scrapping the one shot at a single national standard does not deregulate frontier AI, it hands the binding rules to California SB 53, the EU AI Act, and the compliance frameworks the labs publish themselves. Inside what the order would have done, who stopped it and why, what it changes for the model-release pipeline, and three signposts over the next ninety days.",
+  },
+  {
+    slug: 'openai-frontier-governance-framework-compliance-era',
+    title:
+      'OpenAI Mapped Its Safety Stack to the Law. Frontier AI Just Crossed From Voluntary to Mandatory.',
+    author: 'Kira Nolan',
+    date: 'May 29, 2026',
+    readTime: '7 min read',
+    description:
+      "OpenAI published its Frontier Governance Framework this week, a public document that maps its internal safety practices to named statutes: California's Transparency in Frontier AI Act (SB 53) and the EU AI Act Code of Practice for general purpose AI. It builds on the Preparedness Framework but carves out the subset a regulator can actually hold the company to. The structural move worth watching is the split each major lab now runs: a voluntary best-practices policy it can edit at will (OpenAI's Preparedness, Anthropic's Responsible Scaling Policy, Google DeepMind's Frontier Safety Framework) and a statute-facing compliance framework it cannot quietly walk back (OpenAI's Frontier Governance Framework, Anthropic's Frontier Compliance Framework). Inside what shipped, the SB 53 obligations underneath it (10^26 FLOP threshold, $500M revenue line, pre-deployment transparency reports, OES incident reporting, $1M-per-violation penalty), why the voluntary-versus-mandatory split is good news in the short run and a hiding place in the long run, three concrete reads for agent builders, and three signposts over the next ninety days.",
+  },
+  {
     slug: 'tavily-x402-search-discovery-layer-gap',
     title:
       'Coinbase Put Tavily Search on x402. The Pay Rail Shipped; the Discovery Rail Did Not.',
