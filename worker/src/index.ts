@@ -10254,31 +10254,49 @@ export default {
     const xIdxPubMatch = path.match(/^\/api\/premium\/x402-index\/publisher\/([A-Za-z0-9._-]+)$/);
     if (xIdxPubMatch) {
       const domain = xIdxPubMatch[1];
-      const from = url.searchParams.get('from');
-      const to = url.searchParams.get('to');
-      if (!from || !to) {
-        return jsonResponse(
-          { ok: false, error: 'missing_params', required: ['from', 'to'], hint: 'Both from and to required, YYYY-MM-DD format.' },
-          400,
-          0,
-        );
-      }
 
+      // requirePayment FIRST: strict-premium, so an anonymous probe sees the
+      // 402 challenge, not a 400. Param + range validation runs after as a
+      // no-charge premiumValidationFailure, BEFORE the per-day KV fan-out
+      // (audit #4: a wide range would otherwise issue thousands of reads).
       const payment = await requirePayment(request, env, 1);
       if (!payment.paid) return payment.response!;
 
-      const { getPublisherReceipts } = await import('./x402-index/query');
+      const from = url.searchParams.get('from');
+      const to = url.searchParams.get('to');
+      if (!from || !to) {
+        return await premiumValidationFailure(
+          { error: 'missing_params', required: ['from', 'to'], hint: 'Both from and to required, YYYY-MM-DD format.' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const { getPublisherReceipts, validateRange } = await import('./x402-index/query');
+      const range = validateRange(from, to);
+      if (!range.ok) {
+        return await premiumValidationFailure(
+          { error: range.error, hint: range.hint },
+          payment,
+          request,
+          env,
+        );
+      }
+
       const result = await getPublisherReceipts(env, domain, from, to);
       if (result === null) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
-            ok: false,
             error: 'unknown_publisher',
             domain,
             hint: 'Domain not present in the x402 publisher registry. See /api/x402-index/publishers for the indexed set.',
           },
+          payment,
+          request,
+          env,
+          'upstream_failure',
           404,
-          0,
         );
       }
 
@@ -10289,36 +10307,48 @@ export default {
     }
 
     if (path === '/api/premium/x402-index/series') {
+      // requirePayment FIRST: strict-premium, so an anonymous probe sees the
+      // 402 challenge, not a 400. Validation (incl. the range cap that bounds
+      // the per-day KV fan-out, audit #4) runs after as a no-charge
+      // premiumValidationFailure.
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
       const metricParam = url.searchParams.get('metric');
       const granularityParam = url.searchParams.get('granularity');
       const from = url.searchParams.get('from');
       const to = url.searchParams.get('to');
       const domain = url.searchParams.get('domain') ?? undefined;
       if (!metricParam || !granularityParam || !from || !to) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
-            ok: false,
             error: 'missing_params',
             required: ['metric', 'granularity', 'from', 'to'],
             hint: 'metric=volume|count, granularity=day|hour, from/to in YYYY-MM-DD.',
           },
-          400,
-          0,
+          payment,
+          request,
+          env,
         );
       }
       if (metricParam !== 'volume' && metricParam !== 'count') {
-        return jsonResponse({ ok: false, error: 'invalid_metric', hint: 'metric must be volume or count' }, 400, 0);
+        return await premiumValidationFailure({ error: 'invalid_metric', hint: 'metric must be volume or count' }, payment, request, env);
       }
       if (granularityParam !== 'day' && granularityParam !== 'hour') {
-        return jsonResponse({ ok: false, error: 'invalid_granularity', hint: 'granularity must be day or hour' }, 400, 0);
+        return await premiumValidationFailure({ error: 'invalid_granularity', hint: 'granularity must be day or hour' }, payment, request, env);
       }
       const metric: 'volume' | 'count' = metricParam;
       const granularity: 'day' | 'hour' = granularityParam;
 
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const { getSeries } = await import('./x402-index/query');
+      const { getSeries, validateRange } = await import('./x402-index/query');
+      // Bound the per-day fan-out for day granularity. Hour short-circuits to
+      // an empty series in getSeries (MVP), so it does no per-day reads.
+      if (granularity === 'day') {
+        const range = validateRange(from, to);
+        if (!range.ok) {
+          return await premiumValidationFailure({ error: range.error, hint: range.hint }, payment, request, env);
+        }
+      }
       const result = await getSeries(env, { metric, granularity, from, to, domain });
 
       ctx.waitUntil(
@@ -12523,6 +12553,21 @@ export default {
       }
     }
 
+    // x402-index settlement indexer (audit #5). Runs every 5 minutes, gated on
+    // the fired wall-clock minute rather than event.cron. The dedicated
+    // "*/5 * * * *" trigger shares minutes with */10, */15, and */2, and
+    // Cloudflare surfaces only the first-registered matching pattern in
+    // event.cron, so the old "else if (cron === '*/5')" branch was shadowed and
+    // the tick ran only about 4 times an hour. Gating on the minute is immune
+    // to that: scheduled() fires at every multiple-of-5 minute (the */5 trigger
+    // covers :05/:25/:35/:55, */10 and */15 cover the rest), so this runs the
+    // tick exactly once at each. `start` is Date.now() captured when this
+    // scheduled() invocation began, so its UTC minute is the fired minute.
+    if (new Date(start).getUTCMinutes() % 5 === 0) {
+      const { runIndexerTick } = await import('./x402-index/indexer');
+      await run('x402IndexerTick', () => runIndexerTick(env));
+    }
+
     if (cron === '*/10 * * * *') {
       rssResult = await run('pollRSSFeeds', () => pollRSSFeeds(env));
       // Premium leaderboard rank-change watches. Computed from the same
@@ -12900,14 +12945,6 @@ export default {
       const { refreshAllPublishers } = await import('./x402-index/publisher-registry');
       const result = await refreshAllPublishers(env);
       console.log('[x402-index] publisher refresh:', JSON.stringify(result));
-      return;
-    } else if (cron === '*/5 * * * *') {
-      // Every 5 min: read the block cursor, fetch USDC Transfer logs from
-      // Base mainnet filtered to the wallet allowlist, decode each event,
-      // apply to daily + per-publisher rollups, advance cursor on success.
-      const { runIndexerTick } = await import('./x402-index/indexer');
-      const result = await runIndexerTick(env);
-      console.log('[x402-index] indexer tick:', JSON.stringify(result));
       return;
     }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getSummary, getLeaderboard, getRecent, getPublishers, getPublisherReceipts, getSeries } from './query';
+import { getSummary, getLeaderboard, getRecent, getPublishers, getPublisherReceipts, getSeries, validateRange, MAX_SERIES_RANGE_DAYS } from './query';
 import { kvKeyDayRollup, KV_KEY_RECENT, KV_KEY_PUBLISHERS, kvKeyPublisher, kvKeyPubDayRollup } from './constants';
 import type { SettlementEvent } from './types';
 
@@ -329,5 +329,41 @@ describe('getSeries', () => {
     }));
     const result = await getSeries(env, { metric: 'volume', granularity: 'day', from: '2026-05-27', to: '2026-05-27', domain: 'tensorfeed.ai' });
     expect(result.series).toEqual([{ ts: '2026-05-27', value: '2.000000' }]);
+  });
+});
+
+describe('validateRange (audit #4 KV-budget guard)', () => {
+  it('accepts a normal window and returns the inclusive day count', () => {
+    const r = validateRange('2026-05-01', '2026-05-10');
+    expect(r.ok).toBe(true);
+    expect(r.days).toBe(10);
+  });
+  it('accepts a single-day window', () => {
+    const r = validateRange('2026-05-01', '2026-05-01');
+    expect(r.ok).toBe(true);
+    expect(r.days).toBe(1);
+  });
+  it('rejects a non-ISO date format', () => {
+    expect(validateRange('2026/05/01', '2026-05-10').ok).toBe(false);
+    expect(validateRange('garbage', '2026-05-10').error).toBe('invalid_date_format');
+  });
+  it('rejects an inverted range (from after to)', () => {
+    const r = validateRange('2026-05-10', '2026-05-01');
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('inverted_range');
+  });
+  it('rejects a range wider than the cap (the unbounded fan-out vector)', () => {
+    const r = validateRange('2000-01-01', '2030-01-01');
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('range_too_large');
+  });
+  it('accepts exactly the max span and rejects one day over', () => {
+    const startMs = new Date('2026-01-01T00:00:00.000Z').getTime();
+    const okEnd = new Date(startMs + (MAX_SERIES_RANGE_DAYS - 1) * 86400000).toISOString().slice(0, 10);
+    const overEnd = new Date(startMs + MAX_SERIES_RANGE_DAYS * 86400000).toISOString().slice(0, 10);
+    const okR = validateRange('2026-01-01', okEnd);
+    expect(okR.ok).toBe(true);
+    expect(okR.days).toBe(MAX_SERIES_RANGE_DAYS);
+    expect(validateRange('2026-01-01', overEnd).ok).toBe(false);
   });
 });

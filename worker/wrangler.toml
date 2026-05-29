@@ -4,7 +4,7 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 # Routes must live at the root of wrangler.toml (above any [section]
-# header) — TOML scoping rules attach later keys to whichever table
+# header), because TOML scoping rules attach later keys to whichever table
 # header was last seen. Earlier this lived under [observability] by
 # accident and wrangler warned "Unexpected fields found in observability
 # field: routes", which silently meant our route changes never reached
@@ -309,12 +309,16 @@ crons = [
   # rather than 06:30 because 06:30 is already held by the CISA KEV cron;
   # 06:35 is unused by any other cron in this file.
   "35 6 * * *",
-  # Every 5 min: read the block cursor, fetch USDC Transfer logs from Base
-  # mainnet filtered to the wallet allowlist, decode each event, apply to
-  # daily + per-publisher rollups, advance cursor on success
-  # (worker/src/x402-index/indexer.ts). 5-min cadence matches the ~6-min
-  # worst-case settlement-to-indexed latency (30-block reorg safety) so
-  # the 10-min freshness SLA always holds with one tick of margin.
+  # Every 5 min: a bare trigger whose only job is to make scheduled() fire at
+  # :05/:25/:35/:55, the multiples of 5 that no other cron covers. The
+  # x402-index settlement indexer (cursor read, Base USDC Transfer logs
+  # filtered to the wallet allowlist, daily + per-publisher rollups, cursor
+  # advance; worker/src/x402-index/indexer.ts) runs on a wall-clock minute
+  # gate in _runScheduled (every multiple-of-5 minute), NOT on a dispatch
+  # branch for this pattern: event.cron only carries the first-registered
+  # match when crons collide, so "*/5" was shadowed by */10, */15, and */2
+  # and the tick ran ~4x/hour (audit #5). 5-min cadence keeps the 10-min
+  # freshness SLA with one tick of margin.
   "*/5 * * * *",
 ]
 

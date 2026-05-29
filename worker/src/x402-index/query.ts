@@ -171,6 +171,47 @@ export function datesBetween(from: string, to: string): string[] {
   return out;
 }
 
+// Max inclusive span for a from/to window. getSeries and getPublisherReceipts
+// fan out one KV read per day, so an unbounded range (e.g. 2000 to 2030) would
+// issue ~11,000 reads per single paid call, roughly 11% of the daily free-tier
+// KV budget (audit #4). One year of daily points is the natural ceiling for a
+// daily-granularity chart and bounds the fan-out to <= 366 reads per call.
+export const MAX_SERIES_RANGE_DAYS = 366;
+
+const RANGE_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export interface RangeValidation {
+  ok: boolean;
+  error?: string;
+  hint?: string;
+  days?: number;
+}
+
+/**
+ * Validate a from/to YYYY-MM-DD window before any per-day KV fan-out: both
+ * well-formed real dates, from on or before to, and the inclusive span within
+ * maxDays. Returns a structured failure the handler turns into a no-charge
+ * premiumValidationFailure, so a crafted wide range cannot burn the KV budget.
+ */
+export function validateRange(from: string, to: string, maxDays = MAX_SERIES_RANGE_DAYS): RangeValidation {
+  if (!RANGE_DATE_RE.test(from) || !RANGE_DATE_RE.test(to)) {
+    return { ok: false, error: 'invalid_date_format', hint: 'from and to must be YYYY-MM-DD.' };
+  }
+  const start = new Date(from + 'T00:00:00.000Z').getTime();
+  const end = new Date(to + 'T00:00:00.000Z').getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return { ok: false, error: 'invalid_date', hint: 'from and to must be real calendar dates in YYYY-MM-DD.' };
+  }
+  if (start > end) {
+    return { ok: false, error: 'inverted_range', hint: 'from must be on or before to.' };
+  }
+  const days = Math.floor((end - start) / 86400000) + 1;
+  if (days > maxDays) {
+    return { ok: false, error: 'range_too_large', hint: `Window spans ${days} days; the max is ${maxDays}. Narrow the from/to range.`, days };
+  }
+  return { ok: true, days };
+}
+
 export interface PublisherReceiptsResult {
   publisher: { domain: string; pay_to_wallets: string[]; first_seen: string };
   window: { from: string; to: string; days: number };
