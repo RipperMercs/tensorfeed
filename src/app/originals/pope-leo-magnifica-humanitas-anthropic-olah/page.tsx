@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock, Scale } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 import ShareBar from '@/components/originals/ShareBar';
@@ -355,8 +354,6 @@ export default function PopeLeoMagnificaHumanitasPage() {
           procurement at one that did not.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
-
         <h2 className="text-2xl font-semibold text-text-primary pt-4">
           The Counter-Read
         </h2>
@@ -460,8 +457,6 @@ export default function PopeLeoMagnificaHumanitasPage() {
           </Link>
           . Watch the citations.
         </p>
-
-        <AdPlaceholder format="horizontal" className="mt-10" />
       </div>
 
       {/* Related */}

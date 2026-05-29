@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock, Coins } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import { AdPlaceholder } from '@/components/AdPlaceholder';
 import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
@@ -134,8 +133,6 @@ export default function AltmanAmodeiJobsApocalypseIpoPivotPage() {
           you can see the volume on the apocalypse storyline dropping in real time.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
-
         <h2 className="text-2xl font-semibold text-text-primary pt-4">The Capital Markets Math</h2>
 
         <p>
@@ -248,8 +245,6 @@ export default function AltmanAmodeiJobsApocalypseIpoPivotPage() {
           political weather around AI labor. Build assuming the augmentation framing is the truce,
           not the truth, and price for the day the truce ends.
         </p>
-
-        <AdPlaceholder format="horizontal" className="mt-10" />
       </div>
 
       {/* Related */}

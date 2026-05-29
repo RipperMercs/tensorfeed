@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Clock, Network } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
-import { AdPlaceholder } from '@/components/AdPlaceholder';
 import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
@@ -146,8 +145,6 @@ export default function Opus48WorkflowOrchestrationPrimitivePage() {
           and the median is what shapes a market.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
-
         <h2 className="text-2xl font-semibold text-text-primary pt-4">The Cost and Latency Math Changes</h2>
 
         <p>
@@ -226,8 +223,6 @@ export default function Opus48WorkflowOrchestrationPrimitivePage() {
           with judges who actually disagree, and watch the token meter like it is real money, because
           it is. The primitive is here. What you do with it is still on you.
         </p>
-
-        <AdPlaceholder format="horizontal" className="mt-10" />
       </div>
 
       {/* Related */}
