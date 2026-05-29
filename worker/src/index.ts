@@ -4340,7 +4340,7 @@ export default {
         },
         agent_fair_trade: {
           description: 'Agent Fair-Trade Agreement (AFTA): code-enforced no-charge guarantees, Ed25519-signed receipts on every paid call, public on-chain payment rail (USDC on Base). Combined: every dollar that flows through TensorFeed has two independent attestations (the Base RPC tx record, immutable and public, and our signed receipt, verifiable and non-forgeable).',
-          no_charge_guarantees: ['5xx', 'circuit_breaker', 'schema_validation_failure', 'upstream_failure', 'stale_data'],
+          no_charge_guarantees: ['5xx', 'circuit_breaker', 'schema_validation_failure', 'upstream_failure', 'stale_data', 'empty_result'],
           receipts: receiptStatus(env),
           freshness_slas: describeSLAs(),
           standard_manifest: '/.well-known/agent-fair-trade.json',
@@ -10300,6 +10300,14 @@ export default {
         );
       }
 
+      // Known publisher but zero settlements in the window (a quiet publisher, or
+      // a window before the 2026-05-28 forward-only index start): return the
+      // empty receipt for free rather than charging for a no-data answer. has_data
+      // is true iff at least one day in the window had a stored rollup (audit #16).
+      if (!result.has_data) {
+        return await premiumResponse({ ok: true, ...result }, payment, 1, request, env, 'empty_result');
+      }
+
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/x402-index/publisher', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
@@ -10340,16 +10348,32 @@ export default {
       const metric: 'volume' | 'count' = metricParam;
       const granularity: 'day' | 'hour' = granularityParam;
 
+      // Hour granularity is not built in the MVP. Route it to a no-charge rather
+      // than billing 1 credit for a guaranteed-empty apology series (audit #16).
+      if (granularity === 'hour') {
+        return await premiumValidationFailure(
+          { error: 'granularity_unavailable', granularity: 'hour', hint: 'Hour granularity is not yet available in the MVP; use granularity=day.' },
+          payment,
+          request,
+          env,
+        );
+      }
+
       const { getSeries, validateRange } = await import('./x402-index/query');
-      // Bound the per-day fan-out for day granularity. Hour short-circuits to
-      // an empty series in getSeries (MVP), so it does no per-day reads.
-      if (granularity === 'day') {
-        const range = validateRange(from, to);
-        if (!range.ok) {
-          return await premiumValidationFailure({ error: range.error, hint: range.hint }, payment, request, env);
-        }
+      // Bound the per-day KV fan-out (audit #4). Only day granularity reaches
+      // here now (hour returned above), so validateRange always applies.
+      const range = validateRange(from, to);
+      if (!range.ok) {
+        return await premiumValidationFailure({ error: range.error, hint: range.hint }, payment, request, env);
       }
       const result = await getSeries(env, { metric, granularity, from, to, domain });
+
+      // Empty/uncovered window (pre-2026-05-28 dates, or a quiet domain): return
+      // the empty series for free rather than charging for a no-data answer.
+      // has_data is true iff at least one day had a stored rollup (audit #16).
+      if (!result.has_data) {
+        return await premiumResponse({ ok: true, ...result }, payment, 1, request, env, 'empty_result');
+      }
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/x402-index/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token),

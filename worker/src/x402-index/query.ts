@@ -1,11 +1,38 @@
 import type { Env } from '../types';
-import type { DailyRollup, PublisherDailyRollup, PublisherRecord, SettlementEvent } from './types';
-import { kvKeyDayRollup, KV_KEY_RECENT, KV_KEY_PUBLISHERS, kvKeyPublisher, kvKeyPubDayRollup } from './constants';
+import type { DailyRollup, PublisherDailyRollup, PublisherRecord, SettlementEvent, IndexerCursor } from './types';
+import { kvKeyDayRollup, KV_KEY_RECENT, kvKeyPublisher, kvKeyPubDayRollup, KV_KEY_CURSOR } from './constants';
 import { addDecimal, fromMicroUnits, toMicroUnits, compareDecimal } from './indexer';
 
 export type Window = '24h' | '7d' | '30d';
 
 const WINDOW_DAYS: Record<Window, number> = { '24h': 1, '7d': 7, '30d': 30 };
+
+// Shared agent-facing provenance for every x402-index response. The whole
+// family describes the same public CC BY 4.0 on-chain data, so attribution and
+// license are uniform across summary, leaderboard, recent, publishers, series,
+// and publisher-receipts (agent-contract consistency).
+const INDEX_ATTRIBUTION = 'TensorFeed x402 settlement index over public Base mainnet on-chain data';
+const INDEX_LICENSE = 'CC BY 4.0';
+
+// captured_at on every response is the index's real freshness: the cursor's
+// last_run_at, NOT the request clock. runIndexerTick advances last_run_at on
+// every block-processing tick and on init, and intentionally NOT on an empty
+// tick, so it marks the last moment index data could have changed. Returns null
+// when the index has never run (cold cursor); the freshness layer treats a null
+// captured_at as "fresh, metadata missing" rather than punishing billing. This
+// is what makes the 10-minute freshness SLA on the paid endpoints actually fire.
+async function readCursorCapturedAt(env: Env): Promise<string | null> {
+  const c = (await env.TENSORFEED_CACHE.get(KV_KEY_CURSOR, 'json')) as IndexerCursor | null;
+  return c?.last_run_at ?? null;
+}
+
+// Canonicalize a caller-supplied publisher domain to the form the indexer stores
+// (lowercased, trailing-dot stripped). refreshAllPublishers keys records by the
+// normalized hostname, so a mixed-case or trailing-dot domain must collapse to
+// the same string or every per-publisher KV read misses.
+function canonDomain(d: string): string {
+  return d.trim().toLowerCase().replace(/\.$/, '');
+}
 
 export function datesInWindow(window: Window, now: Date): string[] {
   const days = WINDOW_DAYS[window];
@@ -20,18 +47,21 @@ export function datesInWindow(window: Window, now: Date): string[] {
 
 export interface SummaryResult {
   window: Window;
-  captured_at: string;
+  captured_at: string | null;
   volume_usdc: string;
   count: number;
   unique_publishers: number;
-  change_vs_prior_window: { volume_pct: number; count_pct: number };
+  change_vs_prior_window: { volume_pct: number; count_pct: number; prior_window_empty: boolean };
+  attribution: string;
+  license: string;
 }
 
 export async function getSummary(env: Env, window: Window, now: Date = new Date()): Promise<SummaryResult> {
   const dates = datesInWindow(window, now);
-  const rollups = await Promise.all(
-    dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyDayRollup(d), 'json') as Promise<DailyRollup | null>),
-  );
+  const [rollups, capturedAt] = await Promise.all([
+    Promise.all(dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyDayRollup(d), 'json') as Promise<DailyRollup | null>)),
+    readCursorCapturedAt(env),
+  ]);
 
   let volumeStr = '0';
   let count = 0;
@@ -57,16 +87,25 @@ export async function getSummary(env: Env, window: Window, now: Date = new Date(
     priorCount += r.count;
   }
 
+  // prior_window_empty distinguishes "new activity from a zero baseline" from a
+  // real +100% growth. The index is forward-only from 2026-05-28, so the prior
+  // window is empty for every query in the first 24h/7d/30d after launch; without
+  // this flag the volume_pct=100 sentinel reads as misleading growth.
+  const priorWindowEmpty = priorVolumeStr === '0' && priorCount === 0;
+
   return {
     window,
-    captured_at: now.toISOString(),
+    captured_at: capturedAt,
     volume_usdc: fromMicroUnits(toMicroUnits(volumeStr)),
     count,
     unique_publishers: publishers.size,
     change_vs_prior_window: {
       volume_pct: pctChangeDecimal(priorVolumeStr, volumeStr),
       count_pct: pctChangeNum(priorCount, count),
+      prior_window_empty: priorWindowEmpty,
     },
+    attribution: INDEX_ATTRIBUTION,
+    license: INDEX_LICENSE,
   };
 }
 
@@ -80,16 +119,21 @@ export interface LeaderboardEntry {
 
 export interface LeaderboardResult {
   window: Window;
-  captured_at: string;
+  captured_at: string | null;
   leaders: LeaderboardEntry[];
+  window_volume_usdc: string;
+  coverage_note: string;
+  attribution: string;
+  license: string;
 }
 
 export async function getLeaderboard(env: Env, window: Window, limit: number, now: Date = new Date()): Promise<LeaderboardResult> {
   const clampedLimit = Math.min(Math.max(limit, 1), 25);
   const dates = datesInWindow(window, now);
-  const rollups = await Promise.all(
-    dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyDayRollup(d), 'json') as Promise<DailyRollup | null>),
-  );
+  const [rollups, capturedAt] = await Promise.all([
+    Promise.all(dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyDayRollup(d), 'json') as Promise<DailyRollup | null>)),
+    readCursorCapturedAt(env),
+  ]);
 
   const byDomain = new Map<string, { volume_usdc: string; count: number }>();
   for (const r of rollups) {
@@ -110,55 +154,77 @@ export async function getLeaderboard(env: Env, window: Window, limit: number, no
     return a.domain.localeCompare(b.domain);
   });
 
+  // share_pct denominator is the full windowed volume across ALL aggregated
+  // publishers (the pre-slice set), not just the returned slice, so each leader's
+  // share is its true ecosystem share and the top N do not always sum to ~100%.
+  const windowMicro = arr.reduce((acc, e) => acc + toMicroUnits(e.volume_usdc), 0n);
   const sliced = arr.slice(0, clampedLimit);
-  const totalMicro = sliced.reduce((acc, e) => acc + toMicroUnits(e.volume_usdc), 0n);
   const leaders: LeaderboardEntry[] = sliced.map((e, idx) => ({
     rank: idx + 1,
     domain: e.domain,
     volume_usdc: fromMicroUnits(toMicroUnits(e.volume_usdc)),
     count: e.count,
-    share_pct: totalMicro === 0n ? 0 : Math.round(Number((toMicroUnits(e.volume_usdc) * 10000n) / totalMicro)) / 100,
+    share_pct: windowMicro === 0n ? 0 : Math.round(Number((toMicroUnits(e.volume_usdc) * 10000n) / windowMicro)) / 100,
   }));
 
-  return { window, captured_at: now.toISOString(), leaders };
+  return {
+    window,
+    captured_at: capturedAt,
+    leaders,
+    window_volume_usdc: fromMicroUnits(windowMicro),
+    coverage_note:
+      'Ranking aggregates each day\'s top publishers; a publisher outside a given day\'s top tier is not counted in that day\'s contribution to the windowed total.',
+    attribution: INDEX_ATTRIBUTION,
+    license: INDEX_LICENSE,
+  };
 }
 
 export interface RecentResult {
-  captured_at: string;
+  captured_at: string | null;
   count: number;
   events: Array<SettlementEvent & { base_explorer_url: string }>;
+  attribution: string;
+  license: string;
 }
 
-export async function getRecent(env: Env, limit: number, now: Date = new Date()): Promise<RecentResult> {
+export async function getRecent(env: Env, limit: number): Promise<RecentResult> {
   const clampedLimit = Math.min(Math.max(limit, 1), 50);
-  const raw = (await env.TENSORFEED_CACHE.get(KV_KEY_RECENT, 'json')) as SettlementEvent[] | null;
+  const [raw, capturedAt] = await Promise.all([
+    env.TENSORFEED_CACHE.get(KV_KEY_RECENT, 'json') as Promise<SettlementEvent[] | null>,
+    readCursorCapturedAt(env),
+  ]);
   const events = (raw ?? []).slice(0, clampedLimit).map((e) => ({
     ...e,
     base_explorer_url: `https://basescan.org/tx/${e.tx_hash}`,
   }));
-  return { captured_at: now.toISOString(), count: events.length, events };
+  return { captured_at: capturedAt, count: events.length, events, attribution: INDEX_ATTRIBUTION, license: INDEX_LICENSE };
 }
 
 export interface PublishersResult {
-  captured_at: string;
+  captured_at: string | null;
   count: number;
   publishers: PublisherRecord[];
+  attribution: string;
+  license: string;
 }
 
-export async function getPublishers(env: Env, now: Date = new Date()): Promise<PublishersResult> {
+export async function getPublishers(env: Env): Promise<PublishersResult> {
   // List every per-publisher record (both successful and errored crawls).
   // The wallet map x402-idx:publishers deliberately excludes errored crawls,
   // so deriving the publisher set from it hides any publisher whose manifest
   // crawl is currently failing. Enumerating KV by prefix surfaces all of them
   // and lets callers see last_crawl_error to understand why a given publisher
   // is not actively contributing to the wallet allowlist.
-  const list = await env.TENSORFEED_CACHE.list({ prefix: 'x402-idx:publisher:' });
+  const [list, capturedAt] = await Promise.all([
+    env.TENSORFEED_CACHE.list({ prefix: 'x402-idx:publisher:' }),
+    readCursorCapturedAt(env),
+  ]);
   const publishers = await Promise.all(
     list.keys.map((k) => env.TENSORFEED_CACHE.get(k.name, 'json') as Promise<PublisherRecord | null>),
   );
   const filtered = publishers.filter((p): p is PublisherRecord => p !== null);
   filtered.sort((a, b) => a.domain.localeCompare(b.domain));
-  return { captured_at: now.toISOString(), count: filtered.length, publishers: filtered };
+  return { captured_at: capturedAt, count: filtered.length, publishers: filtered, attribution: INDEX_ATTRIBUTION, license: INDEX_LICENSE };
 }
 
 export function datesBetween(from: string, to: string): string[] {
@@ -189,9 +255,10 @@ export interface RangeValidation {
 
 /**
  * Validate a from/to YYYY-MM-DD window before any per-day KV fan-out: both
- * well-formed real dates, from on or before to, and the inclusive span within
- * maxDays. Returns a structured failure the handler turns into a no-charge
- * premiumValidationFailure, so a crafted wide range cannot burn the KV budget.
+ * well-formed real calendar dates, from on or before to, and the inclusive span
+ * within maxDays. Returns a structured failure the handler turns into a
+ * no-charge premiumValidationFailure, so a crafted wide range cannot burn the
+ * KV budget.
  */
 export function validateRange(from: string, to: string, maxDays = MAX_SERIES_RANGE_DAYS): RangeValidation {
   if (!RANGE_DATE_RE.test(from) || !RANGE_DATE_RE.test(to)) {
@@ -200,6 +267,12 @@ export function validateRange(from: string, to: string, maxDays = MAX_SERIES_RAN
   const start = new Date(from + 'T00:00:00.000Z').getTime();
   const end = new Date(to + 'T00:00:00.000Z').getTime();
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return { ok: false, error: 'invalid_date', hint: 'from and to must be real calendar dates in YYYY-MM-DD.' };
+  }
+  // Reject calendar-overflow dates (2026-02-30, 2026-04-31) that V8 silently
+  // rolls over to the next month instead of rejecting; otherwise datesBetween
+  // would start from a date the caller never asked for.
+  if (new Date(start).toISOString().slice(0, 10) !== from || new Date(end).toISOString().slice(0, 10) !== to) {
     return { ok: false, error: 'invalid_date', hint: 'from and to must be real calendar dates in YYYY-MM-DD.' };
   }
   if (start > end) {
@@ -221,26 +294,36 @@ export interface PublisherReceiptsResult {
     avg_amount: string;
     daily_series: Array<{ date: string; volume_usdc: string; count: number }>;
   };
+  captured_at: string | null;
+  // has_data is true iff at least one day in the window has a stored rollup. The
+  // indexer only writes a rollup when an event lands, so rollup-presence is the
+  // clean boundary between "no settlements indexed for this window" (no-charge)
+  // and a real measured (possibly tiny) result (billable).
+  has_data: boolean;
   attribution: string;
   license: string;
 }
 
 export async function getPublisherReceipts(
   env: Env,
-  domain: string,
+  rawDomain: string,
   from: string,
   to: string,
 ): Promise<PublisherReceiptsResult | null> {
+  const domain = canonDomain(rawDomain);
   const pubRec = (await env.TENSORFEED_CACHE.get(kvKeyPublisher(domain), 'json')) as PublisherRecord | null;
   if (!pubRec) return null;
 
   const dates = datesBetween(from, to);
-  const perDay = await Promise.all(
-    dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyPubDayRollup(domain, d), 'json') as Promise<PublisherDailyRollup | null>),
-  );
+  const [perDay, capturedAt] = await Promise.all([
+    Promise.all(dates.map((d) => env.TENSORFEED_CACHE.get(kvKeyPubDayRollup(domain, d), 'json') as Promise<PublisherDailyRollup | null>)),
+    readCursorCapturedAt(env),
+  ]);
 
+  let hasData = false;
   const daily_series = dates.map((date, idx) => {
     const r = perDay[idx];
+    if (r) hasData = true;
     return {
       date,
       volume_usdc: r ? fromMicroUnits(toMicroUnits(r.volume_usdc)) : '0.000000',
@@ -272,8 +355,10 @@ export async function getPublisherReceipts(
       avg_amount: avg,
       daily_series,
     },
-    attribution: 'TensorFeed x402 settlement index over public Base mainnet on-chain data',
-    license: 'CC BY 4.0',
+    captured_at: capturedAt,
+    has_data: hasData,
+    attribution: INDEX_ATTRIBUTION,
+    license: INDEX_LICENSE,
   };
 }
 
@@ -290,11 +375,15 @@ export interface SeriesResult {
   granularity: 'day' | 'hour';
   window: { from: string; to: string };
   series: Array<{ ts: string; value: string | number }>;
+  captured_at: string | null;
+  has_data: boolean;
   attribution: string;
+  license: string;
 }
 
 export async function getSeries(env: Env, params: SeriesParams): Promise<SeriesResult> {
-  const { metric, granularity, from, to, domain } = params;
+  const { metric, granularity, from, to } = params;
+  const domain = params.domain ? canonDomain(params.domain) : undefined;
 
   if (granularity === 'hour') {
     return {
@@ -302,38 +391,46 @@ export async function getSeries(env: Env, params: SeriesParams): Promise<SeriesR
       granularity,
       window: { from, to },
       series: [],
+      captured_at: await readCursorCapturedAt(env),
+      has_data: false,
       attribution: 'Hour granularity not yet available in MVP; use granularity=day',
+      license: INDEX_LICENSE,
     };
   }
 
   const dates = datesBetween(from, to);
-  const series = await Promise.all(
-    dates.map(async (date) => {
-      if (domain) {
-        const r = (await env.TENSORFEED_CACHE.get(kvKeyPubDayRollup(domain, date), 'json')) as PublisherDailyRollup | null;
-        return {
-          ts: date,
-          value: metric === 'volume'
-            ? (r ? fromMicroUnits(toMicroUnits(r.volume_usdc)) : '0.000000')
-            : (r?.count ?? 0),
-        };
-      }
-      const r = (await env.TENSORFEED_CACHE.get(kvKeyDayRollup(date), 'json')) as DailyRollup | null;
-      return {
-        ts: date,
-        value: metric === 'volume'
-          ? (r ? fromMicroUnits(toMicroUnits(r.volume_usdc)) : '0.000000')
-          : (r?.count ?? 0),
-      };
-    }),
-  );
+  const [perDay, capturedAt] = await Promise.all([
+    Promise.all(
+      dates.map((date) =>
+        domain
+          ? (env.TENSORFEED_CACHE.get(kvKeyPubDayRollup(domain, date), 'json') as Promise<PublisherDailyRollup | null>)
+          : (env.TENSORFEED_CACHE.get(kvKeyDayRollup(date), 'json') as Promise<DailyRollup | null>),
+      ),
+    ),
+    readCursorCapturedAt(env),
+  ]);
+
+  let hasData = false;
+  const series = dates.map((date, idx) => {
+    const r = perDay[idx];
+    if (r) hasData = true;
+    return {
+      ts: date,
+      value: metric === 'volume'
+        ? (r ? fromMicroUnits(toMicroUnits(r.volume_usdc)) : '0.000000')
+        : (r?.count ?? 0),
+    };
+  });
 
   return {
     metric,
     granularity,
     window: { from, to },
     series,
-    attribution: 'TensorFeed x402 settlement index over public Base mainnet on-chain data',
+    captured_at: capturedAt,
+    has_data: hasData,
+    attribution: INDEX_ATTRIBUTION,
+    license: INDEX_LICENSE,
   };
 }
 

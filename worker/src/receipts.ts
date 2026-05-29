@@ -30,6 +30,7 @@ export type NoChargeReason =
   | 'upstream_failure'
   | 'stale_data'
   | 'free_trial'
+  | 'empty_result'
   | null;
 
 /**

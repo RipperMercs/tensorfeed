@@ -366,4 +366,116 @@ describe('validateRange (audit #4 KV-budget guard)', () => {
     expect(okR.days).toBe(MAX_SERIES_RANGE_DAYS);
     expect(validateRange('2026-01-01', overEnd).ok).toBe(false);
   });
+
+  it('rejects an overflow calendar date (2026-02-30) instead of silently rolling it over', () => {
+    const r = validateRange('2026-02-30', '2026-03-05');
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('invalid_date');
+  });
+
+  it('rejects April 31 (overflow day)', () => {
+    expect(validateRange('2026-04-30', '2026-04-31').error).toBe('invalid_date');
+  });
+});
+
+describe('x402-index hardening (captured_at, has_data, honesty)', () => {
+  const CURSOR_KEY = 'x402-idx:cursor';
+  const cursor = (lastRunAt: string) => JSON.stringify({ block: 100, ts: lastRunAt, last_run_at: lastRunAt });
+
+  it('getSeries surfaces captured_at from the cursor last_run_at and has_data=true on a populated window', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(CURSOR_KEY, cursor('2026-05-29T00:00:00.000Z'));
+    kv.store.set(kvKeyDayRollup('2026-05-28'), JSON.stringify({ date: '2026-05-28', volume_usdc: '2.0', count: 5, top_publishers: [] }));
+    const result = await getSeries(env, { metric: 'volume', granularity: 'day', from: '2026-05-28', to: '2026-05-28' });
+    expect(result.captured_at).toBe('2026-05-29T00:00:00.000Z');
+    expect(result.has_data).toBe(true);
+  });
+
+  it('getSeries reports has_data=false for an all-miss (pre-index-start) window so the handler can no-charge', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(CURSOR_KEY, cursor('2026-05-29T00:00:00.000Z'));
+    const result = await getSeries(env, { metric: 'volume', granularity: 'day', from: '2026-04-01', to: '2026-04-03' });
+    expect(result.has_data).toBe(false);
+    expect(result.series.every((p) => p.value === '0.000000')).toBe(true);
+  });
+
+  it('getSeries hour granularity carries captured_at and has_data=false (unsupported, no-charge path)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(CURSOR_KEY, cursor('2026-05-29T01:02:03.000Z'));
+    const result = await getSeries(env, { metric: 'count', granularity: 'hour', from: '2026-05-28', to: '2026-05-28' });
+    expect(result.series).toEqual([]);
+    expect(result.has_data).toBe(false);
+    expect(result.captured_at).toBe('2026-05-29T01:02:03.000Z');
+  });
+
+  it('getSeries captured_at is null when the index has never run (cold cursor preserves treat-as-fresh)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const result = await getSeries(env, { metric: 'volume', granularity: 'day', from: '2026-05-28', to: '2026-05-28' });
+    expect(result.captured_at).toBeNull();
+  });
+
+  it('getSeries canonicalizes a mixed-case + trailing-dot domain to the stored lowercase rollup key', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(kvKeyPubDayRollup('tensorfeed.ai', '2026-05-28'), JSON.stringify({ date: '2026-05-28', domain: 'tensorfeed.ai', volume_usdc: '1.0', count: 3 }));
+    const result = await getSeries(env, { metric: 'count', granularity: 'day', from: '2026-05-28', to: '2026-05-28', domain: 'TensorFeed.AI.' });
+    expect(result.series).toEqual([{ ts: '2026-05-28', value: 3 }]);
+    expect(result.has_data).toBe(true);
+  });
+
+  it('getPublisherReceipts reports has_data=false for a known but quiet publisher window', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(kvKeyPublisher('tensorfeed.ai'), JSON.stringify({
+      domain: 'tensorfeed.ai', manifest_url: '', pay_to_wallets: ['0xaaa'],
+      first_seen: '2026-05-01T00:00:00.000Z', last_crawled: '2026-05-28T00:00:00.000Z', last_crawl_error: null, last_event_at: null,
+    }));
+    const result = await getPublisherReceipts(env, 'tensorfeed.ai', '2026-04-01', '2026-04-03');
+    expect(result).not.toBeNull();
+    expect(result!.has_data).toBe(false);
+    expect(result!.rollup.count).toBe(0);
+  });
+
+  it('getPublisherReceipts canonicalizes a mixed-case domain to find the stored record', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(kvKeyPublisher('tensorfeed.ai'), JSON.stringify({
+      domain: 'tensorfeed.ai', manifest_url: '', pay_to_wallets: ['0xaaa'],
+      first_seen: '2026-05-01T00:00:00.000Z', last_crawled: '2026-05-28T00:00:00.000Z', last_crawl_error: null, last_event_at: null,
+    }));
+    const result = await getPublisherReceipts(env, 'TensorFeed.ai', '2026-05-28', '2026-05-28');
+    expect(result).not.toBeNull();
+    expect(result!.publisher.domain).toBe('tensorfeed.ai');
+  });
+
+  it('getLeaderboard share_pct uses the full ecosystem window volume, not the displayed slice', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(kvKeyDayRollup('2026-05-28'), JSON.stringify({
+      date: '2026-05-28', volume_usdc: '10.0', count: 10,
+      top_publishers: [
+        { domain: 'a.com', volume_usdc: '5.0', count: 5 },
+        { domain: 'b.com', volume_usdc: '3.0', count: 3 },
+        { domain: 'c.com', volume_usdc: '2.0', count: 2 },
+      ],
+    }));
+    const result = await getLeaderboard(env, '24h', 1, new Date('2026-05-28T12:00:00.000Z'));
+    expect(result.leaders.length).toBe(1);
+    expect(result.leaders[0].domain).toBe('a.com');
+    expect(result.leaders[0].share_pct).toBe(50); // 5.0 / 10.0 ecosystem, NOT 100 of the slice
+    expect(result.window_volume_usdc).toBe('10.000000');
+  });
+
+  it('getSummary flags prior_window_empty when there is no prior baseline (forward-only launch window)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    kv.store.set(kvKeyDayRollup('2026-05-28'), JSON.stringify({ date: '2026-05-28', volume_usdc: '4.0', count: 8, top_publishers: [] }));
+    const result = await getSummary(env, '24h', new Date('2026-05-28T12:00:00.000Z'));
+    expect(result.change_vs_prior_window.prior_window_empty).toBe(true);
+    expect(result.change_vs_prior_window.volume_pct).toBe(100);
+  });
 });
