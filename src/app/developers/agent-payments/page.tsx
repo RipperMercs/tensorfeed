@@ -415,6 +415,44 @@ const ENDPOINTS: PremiumEndpoint[] = [
 }`,
   },
   {
+    method: 'GET',
+    path: '/api/premium/provider-reliability-verdict',
+    description: 'Which frontier AI provider is the most dependable to build on right now, and which is the riskiest? Ranks the providers TensorFeed actively probes by measured operational reliability, fusing availability (ok rate) and tail consistency (p50 over p95) from its own latency probes into one dependability score. The thesis: an agent retry loop feels the tail of the latency distribution, not the median, so the score rewards a tight tail alongside raw availability rather than crowning whoever wins the median. Returns the most-dependable and riskiest picks, the full per-provider ranking, and an AFTA-signed receipt. No params. 30-minute freshness SLA keyed to the probe computed_at, no-charge when stale. A free picks-only preview (no ranking, no receipt) lives at /api/preview/provider-reliability-verdict, 10 calls per IP per day.',
+    cost: '1 credit per call',
+    example: `// Header: Authorization: Bearer tf_live_...
+{
+  "ok": true,
+  "capturedAt": "2026-05-29T11:55:00Z",
+  "window_label": "last_24h",
+  "verdict": { "most_dependable": "anthropic", "riskiest": "deepseek" },
+  "ranking": [
+    { "rank": 1, "provider": "anthropic", "ok_pct": 0.99, "total_p50_ms": 500, "total_p95_ms": 900, "total_p99_ms": 1400, "spread_ratio": 1.8, "reliability_score": 0.7728, "measured": true, "note": "measured availability 99 percent, p50 500 ms, p95 900 ms, p95 over p50 spread 1.8x" }
+  ],
+  "coverage": { "providers_ranked": 3, "fully_measured": 3, "availability_only": 0 },
+  "billing": { "credits_charged": 1, "credits_remaining": 48 },
+  "receipt": { "id": "rcpt_...", "signing_alg": "EdDSA", "signing_curve": "Ed25519", "signature": "<base64url>" }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/x402-settlement-verdict',
+    description: 'Is the Base x402 USDC settlement market growing, is it concentrated or a real market, and who leads? Rules over TensorFeed\'s own on-chain settlement index: momentum versus the prior window of equal length (expanding, steady, contracting, or nascent), concentration by the Herfindahl index (concentrated, moderate, or diversified), and the leading publisher, plus the full per-publisher volume ranking and the ecosystem totals with the window-over-window change. Optional ?window=24h|7d|30d (default 7d). Coverage is the Base settlements TensorFeed indexes, forward-only from launch: not all of x402 and not other chains. 10-minute freshness SLA keyed to the index cursor last_run_at, no-charge when stale. A free classifications-only preview lives at /api/preview/x402-settlement-verdict, 10 calls per IP per day.',
+    cost: '1 credit per call',
+    example: `// Query: ?window=7d
+{
+  "ok": true,
+  "capturedAt": "2026-05-29T17:54:00Z",
+  "window_label": "7d",
+  "verdict": { "momentum": "expanding", "concentration": "concentrated", "leading_publisher": "pay.example.com" },
+  "ecosystem": { "volume_usdc": "1234.500000", "count": 42, "unique_publishers": 3, "volume_change_pct": 30, "count_change_pct": 25, "prior_window_empty": false, "top_publisher_share_pct": 64.8, "hhi": 4908 },
+  "ranking": [
+    { "rank": 1, "domain": "pay.example.com", "volume_usdc": "800.000000", "count": 25, "share_pct": 64.8 }
+  ],
+  "billing": { "credits_charged": 1, "credits_remaining": 48 },
+  "receipt": { "id": "rcpt_...", "signing_alg": "EdDSA", "signing_curve": "Ed25519", "signature": "<base64url>" }
+}`,
+  },
+  {
     method: 'POST',
     path: '/api/payment/trial-credits',
     description: 'Free, zero-setup on-ramp. Sign an EIP-191 message proving you control a wallet (no on-chain transaction, no USDC, no gas), POST { message, signature }, and receive a bearer token preloaded with 25 trial credits. One grant per wallet, OFAC-screened, single-use nonce, 30-day expiry. Top up the same token later via /api/payment/buy-credits.',

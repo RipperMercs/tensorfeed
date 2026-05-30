@@ -13061,6 +13061,70 @@
     },
     {
       "resource": {
+        "url": "https://tensorfeed.ai/api/premium/provider-reliability-verdict",
+        "description": "Which frontier AI provider is the most dependable to build on right now, and which is the riskiest? Ranks the providers TensorFeed actively probes by measured operational reliability, fusing availability and tail consistency (p50 over p95) from its own latency probes into one dependability score, names the most dependable and the riskiest, and returns the full per-provider ranking with an AFTA-signed receipt. 30-minute freshness SLA, no-charge when stale.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-29T00:00:00Z",
+      "metadata": {
+        "name": "Provider Reliability Verdict",
+        "description": "Ranks the frontier providers TensorFeed probes by measured operational reliability (availability plus tail consistency, p50 over p95), names the most dependable and the riskiest, and ships the full per-provider ranking with an AFTA-signed receipt. A free picks-only taste lives at /api/preview/provider-reliability-verdict.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-provider-reliability"
+      }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/x402-settlement-verdict",
+        "description": "Is the Base x402 USDC settlement market growing, is it concentrated or a real market, and who leads? Rules over TensorFeed's own on-chain settlement index: momentum versus the prior window of equal length, concentration by the Herfindahl index, and the leading publisher, plus the full per-publisher volume ranking. Optional window=24h|7d|30d (default 7d). Coverage is the Base settlements TensorFeed indexes, forward-only from launch. 10-minute freshness SLA, no-charge when stale.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-05-29T00:00:00Z",
+      "metadata": {
+        "name": "x402 Settlement Verdict",
+        "description": "Rules on the Base x402 USDC settlement market over TensorFeed's own on-chain settlement index: momentum versus the prior window, concentration by the Herfindahl index, and the leading publisher, plus the full per-publisher ranking. Coverage is the Base settlements TensorFeed indexes, forward-only from launch. A free classifications-only taste lives at /api/preview/x402-settlement-verdict.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-x402-settlement"
+      }
+    },
+    {
+      "resource": {
         "url": "https://tensorfeed.ai/api/premium/stack-safety-verdict",
         "description": "GO / HOLD / BLOCK deploy gate for your AI stack, fusing the ingested AI-CVE batch with CISA KEV. Pass packages=name@version (up to 10).",
         "mimeType": "application/json"
