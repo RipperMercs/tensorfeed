@@ -10,7 +10,7 @@ import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatest
 import { captureHistory, listHistory, readHistory } from './history';
 import { cdpListDiscoveryResources } from './cdp-facilitator';
 import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
-import { deriveUsageEvent, recordUsageEvent } from './usage-meter';
+import { deriveUsageEvent, recordUsageEvent, buildUsageReport } from './usage-meter';
 import { cachedFetch } from './edge-cache';
 import {
   readNewsDaily,
@@ -4367,7 +4367,7 @@ export default {
           receiptVerify: '/api/receipt/verify',
         },
         admin: {
-          usage: '/api/admin/usage?date=YYYY-MM-DD&key=<ADMIN_KEY>',
+          usage: '/api/admin/usage?window=today|7d|30d&key=<ADMIN_KEY> (paid summary + AE funnel when provisioned; legacy ?date=YYYY-MM-DD still returns one day raw rollup)',
           statsBackfill: '/api/admin/stats/backfill?key=<ADMIN_KEY> (GET; one-time/idempotent seed of the /api/stats lifetime counter from the persisted daily rollups)',
           usageDates: '/api/admin/usage/dates?key=<ADMIN_KEY>',
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
@@ -12148,12 +12148,23 @@ export default {
     // /api/admin/agents/claim/pending handler.)
 
     if (path === '/api/admin/usage' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
-      const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
-      const rollup = await getRollup(env, date);
-      if (!rollup) {
-        return jsonResponse({ ok: false, error: 'no_data_for_date', date }, 404);
+      // Legacy form: ?date=YYYY-MM-DD returns that single day's raw paid
+      // rollup (unchanged, for callers and dashboards that pin a date).
+      const dateParam = url.searchParams.get('date');
+      if (dateParam) {
+        const rollup = await getRollup(env, dateParam);
+        if (!rollup) {
+          return jsonResponse({ ok: false, error: 'no_data_for_date', date: dateParam }, 404);
+        }
+        return jsonResponse({ ok: true, ...rollup }, 200, 0);
       }
-      return jsonResponse({ ok: true, ...rollup }, 200, 0);
+      // Agent Usage Meter view: ?window=today|7d|30d returns the shaped paid
+      // summary (top paid endpoints + payers) plus the AE full funnel when a
+      // CF_ANALYTICS_TOKEN is provisioned. The funnel degrades to
+      // "unavailable" without the token; the paid summary still ships.
+      const window = url.searchParams.get('window') || 'today';
+      const report = await buildUsageReport(env, window);
+      return jsonResponse({ ok: true, ...report }, 200, 0);
     }
 
     if (path === '/api/admin/usage/dates' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
