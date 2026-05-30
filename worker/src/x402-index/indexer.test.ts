@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { computeBlockRange, chunkBlockRange, decodeTransferLog, type RpcLog, addDecimal, compareDecimal, toMicroUnits, fromMicroUnits, applyEventToRollups, runIndexerTick } from './indexer';
 import {
   TRANSFER_TOPIC,
+  MAX_GETLOGS_CALLS_PER_TICK,
   KV_KEY_RECENT,
   kvKeyDayRollup,
   kvKeyPubDayRollup,
@@ -537,14 +538,17 @@ describe('runIndexerTick', () => {
     const env = { TENSORFEED_CACHE: kv, BASE_RPC_GETLOGS_SPAN: '10' } as unknown as import('../types').Env;
 
     // head far ahead -> range capped at MAX_BLOCKS_PER_TICK (2000) = [1001,3000]
-    // = 200 windows at span 10. Only MAX_GETLOGS_CALLS_PER_TICK (50) run per tick;
-    // the cursor advances 500 blocks and the next tick continues from there.
+    // = 200 windows at span 10, which exceeds the per-tick call cap. Only
+    // MAX_GETLOGS_CALLS_PER_TICK windows run; the cursor advances that many * span
+    // blocks and the next tick continues from there. (Valid while the cap is below
+    // MAX_BLOCKS_PER_TICK / span = 200.)
     const { fetchFn, getLogsCalls } = makeRpcMock(100000, {});
     const result = await runIndexerTick(env, 'https://small.example/rpc', fetchFn);
 
-    expect(getLogsCalls).toHaveLength(50);
-    expect(result).toMatchObject({ to: 1500 });
+    expect(getLogsCalls).toHaveLength(MAX_GETLOGS_CALLS_PER_TICK);
+    const expectedTo = 1000 + MAX_GETLOGS_CALLS_PER_TICK * 10;
+    expect(result).toMatchObject({ to: expectedTo });
     const cursor = await kv.get(KV_KEY_CURSOR, 'json') as { block: number };
-    expect(cursor.block).toBe(1500);
+    expect(cursor.block).toBe(expectedTo);
   });
 });

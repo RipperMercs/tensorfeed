@@ -25,8 +25,11 @@ export const DEFAULT_GETLOGS_BLOCK_SPAN = 2000;
 // risking the cron wall-clock budget and the RPC rate limit. Capping the calls
 // bounds each tick to a fast, reliably-checkpointed unit of work; the next tick
 // resumes from the new cursor. On a wide-span RPC each tick is a single call, so
-// this cap is never reached.
-export const MAX_GETLOGS_CALLS_PER_TICK = 50;
+// this cap is never reached. Sized from measured production wall-time once the
+// concurrent-dispatch bug was fixed: a clean 50-call tick ran ~5.8s (20ms CPU) at
+// ~8.6 calls/sec without throttling, so 120 calls is ~14s wall at the same safe
+// rate, well within the cron budget, and roughly halves backfill time vs 50.
+export const MAX_GETLOGS_CALLS_PER_TICK = 120;
 export const RECENT_FEED_SIZE = 100;
 export const EVENT_TTL_SECONDS = 90 * 24 * 60 * 60;
 export const PUBLISHER_DELIST_GRACE_DAYS = 7;
