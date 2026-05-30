@@ -23,6 +23,15 @@ export interface Env {
   PAYMENT_WALLET: string;
   PAYMENT_ENABLED: string;
   BASE_RPC_URL?: string;
+  // Dedicated RPC for the x402 settlement indexer's wide eth_getLogs scans, kept
+  // separate from BASE_RPC_URL (the payments/facilitator RPC) because a keyed
+  // payments endpoint can cap getLogs spans, which would stall the indexer.
+  // Defaults to the public Base node (10,000-block getLogs limit).
+  BASE_INDEXER_RPC_URL?: string;
+  // Max blocks per single eth_getLogs the indexer requests. Set this to match a
+  // small-limit indexer RPC; the indexer windows each tick into chunks this size.
+  // Defaults to DEFAULT_GETLOGS_BLOCK_SPAN (2000).
+  BASE_RPC_GETLOGS_SPAN?: string;
   // Cross-Worker validate-and-charge (sister-site integration)
   SHARED_INTERNAL_SECRET?: string;
   // Pages Functions middleware -> Worker bot-hit ingest auth

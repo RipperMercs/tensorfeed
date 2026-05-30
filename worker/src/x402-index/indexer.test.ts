@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { computeBlockRange, decodeTransferLog, type RpcLog, addDecimal, compareDecimal, toMicroUnits, fromMicroUnits, applyEventToRollups, runIndexerTick } from './indexer';
+import { computeBlockRange, chunkBlockRange, decodeTransferLog, type RpcLog, addDecimal, compareDecimal, toMicroUnits, fromMicroUnits, applyEventToRollups, runIndexerTick } from './indexer';
 import {
+  TRANSFER_TOPIC,
   KV_KEY_RECENT,
   kvKeyDayRollup,
   kvKeyPubDayRollup,
@@ -34,6 +35,38 @@ describe('computeBlockRange', () => {
 
   it('does not cap when the gap is smaller than MAX_BLOCKS_PER_TICK', () => {
     expect(computeBlockRange(1000, 2500)).toEqual({ fromBlock: 1001, toBlock: 2470 });
+  });
+});
+
+describe('chunkBlockRange', () => {
+  it('returns a single window when the span fits in maxSpan', () => {
+    expect(chunkBlockRange(1001, 3000, 2000)).toEqual([{ fromBlock: 1001, toBlock: 3000 }]);
+  });
+
+  it('splits a range into contiguous windows of at most maxSpan blocks', () => {
+    expect(chunkBlockRange(1001, 1030, 10)).toEqual([
+      { fromBlock: 1001, toBlock: 1010 },
+      { fromBlock: 1011, toBlock: 1020 },
+      { fromBlock: 1021, toBlock: 1030 },
+    ]);
+  });
+
+  it('makes the final window short when the range is not a multiple of maxSpan', () => {
+    expect(chunkBlockRange(1001, 1025, 10)).toEqual([
+      { fromBlock: 1001, toBlock: 1010 },
+      { fromBlock: 1011, toBlock: 1020 },
+      { fromBlock: 1021, toBlock: 1025 },
+    ]);
+  });
+
+  it('returns one single-block window when from equals to', () => {
+    expect(chunkBlockRange(1001, 1001, 10)).toEqual([{ fromBlock: 1001, toBlock: 1001 }]);
+  });
+
+  it('never returns a window wider than maxSpan', () => {
+    for (const w of chunkBlockRange(1, 95, 10)) {
+      expect(w.toBlock - w.fromBlock + 1).toBeLessThanOrEqual(10);
+    }
   });
 });
 
@@ -130,6 +163,52 @@ function mockKv() {
     put: vi.fn(async (key: string, value: string, _opts?: { expirationTtl?: number }) => {
       store.set(key, value);
     }),
+  };
+}
+
+type RpcReq = { jsonrpc: string; method: string; params: unknown[]; id: number };
+
+// A realistic Base-RPC mock that dispatches by JSON-RPC method (not call order),
+// so a test can assert how the indexer windows eth_getLogs across a block range.
+// logsByBlock maps a block number to the logs the RPC returns when that block is
+// inside the requested [fromBlock, toBlock] window.
+function makeRpcMock(head: number, logsByBlock: Record<number, RpcLog[]> = {}) {
+  const getLogsCalls: { fromBlock: number; toBlock: number }[] = [];
+  const fetchFn = vi.fn(async (_url: string, opts?: RequestInit) => {
+    const parsed = JSON.parse(String(opts?.body)) as RpcReq | RpcReq[];
+    if (Array.isArray(parsed)) {
+      return {
+        json: async () => parsed.map((req) => ({
+          id: req.id,
+          result: { number: req.params[0] as string, timestamp: Math.floor(Date.parse('2026-05-29T00:00:00Z') / 1000).toString(16) },
+        })),
+      } as unknown as Response;
+    }
+    if (parsed.method === 'eth_blockNumber') {
+      return { json: async () => ({ result: '0x' + head.toString(16) }) } as unknown as Response;
+    }
+    if (parsed.method === 'eth_getLogs') {
+      const p = parsed.params[0] as { fromBlock: string; toBlock: string };
+      const from = parseInt(p.fromBlock, 16);
+      const to = parseInt(p.toBlock, 16);
+      getLogsCalls.push({ fromBlock: from, toBlock: to });
+      const result: RpcLog[] = [];
+      for (let b = from; b <= to; b++) if (logsByBlock[b]) result.push(...logsByBlock[b]);
+      return { json: async () => ({ result }) } as unknown as Response;
+    }
+    throw new Error('unexpected RPC method: ' + parsed.method);
+  }) as unknown as typeof fetch;
+  return { fetchFn, getLogsCalls };
+}
+
+function mkTransferLog(block: number, tx: string, toWallet: string): RpcLog {
+  const pad = (a: string) => '0x' + '0'.repeat(24) + a.toLowerCase().replace(/^0x/, '');
+  return {
+    address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    topics: [TRANSFER_TOPIC, pad('aaa0000000000000000000000000000000000001'), pad(toWallet)],
+    data: '0x' + (20000).toString(16).padStart(64, '0'), // 0.02 USDC (6 decimals)
+    blockNumber: '0x' + block.toString(16),
+    transactionHash: tx,
   };
 }
 
@@ -324,19 +403,98 @@ describe('runIndexerTick', () => {
     expect(cursor.block).toBe(3000);
   });
 
-  it('uses env.BASE_RPC_URL when no explicit rpcUrl arg is passed', async () => {
+  it('uses env.BASE_INDEXER_RPC_URL and never the payments BASE_RPC_URL', async () => {
     const kv = mockKv();
     const seenUrls: string[] = [];
-    const env = { TENSORFEED_CACHE: kv, BASE_RPC_URL: 'https://keyed.example/rpc' } as unknown as import('../types').Env;
+    const env = {
+      TENSORFEED_CACHE: kv,
+      BASE_INDEXER_RPC_URL: 'https://indexer.example/rpc',
+      BASE_RPC_URL: 'https://payments.example/rpc',
+    } as unknown as import('../types').Env;
     const mockFetch = vi.fn(async (url: string) => {
       seenUrls.push(url);
       return { json: async () => ({ result: '0x100' }) } as unknown as Response;
     }) as unknown as typeof fetch;
 
-    // No cursor yet, so this initializes and only calls getCurrentBlock, which is
-    // enough to prove the configured keyed RPC is the URL used (not the public
-    // default). Before BASE_RPC_URL was wired in, this hit mainnet.base.org.
     await runIndexerTick(env, undefined, mockFetch);
-    expect(seenUrls).toContain('https://keyed.example/rpc');
+    expect(seenUrls).toContain('https://indexer.example/rpc');
+    // The indexer must NEVER borrow the payments/facilitator RPC: that endpoint
+    // can cap eth_getLogs spans, which is exactly what froze the cursor.
+    expect(seenUrls).not.toContain('https://payments.example/rpc');
+  });
+
+  it('falls back to the public Base node (not the payments RPC) when no indexer RPC is set', async () => {
+    const kv = mockKv();
+    const seenUrls: string[] = [];
+    const env = {
+      TENSORFEED_CACHE: kv,
+      BASE_RPC_URL: 'https://payments.example/rpc',
+    } as unknown as import('../types').Env;
+    const mockFetch = vi.fn(async (url: string) => {
+      seenUrls.push(url);
+      return { json: async () => ({ result: '0x100' }) } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+    await runIndexerTick(env, undefined, mockFetch);
+    expect(seenUrls).toContain('https://mainnet.base.org');
+    expect(seenUrls).not.toContain('https://payments.example/rpc');
+  });
+
+  it('windows a tick into <=span eth_getLogs calls and aggregates events across windows', async () => {
+    const kv = mockKv();
+    kv.store.set(KV_KEY_CURSOR, JSON.stringify({ block: 1000, ts: '2026-05-29T00:00:00.000Z', last_run_at: '2026-05-29T00:00:00.000Z' }));
+    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({ '0xbbb0000000000000000000000000000000000002': 'example.com' }));
+    const env = { TENSORFEED_CACHE: kv, BASE_RPC_GETLOGS_SPAN: '10' } as unknown as import('../types').Env;
+
+    // head 1055 -> safeTo 1025 -> range [1001,1025]; span 10 -> 3 windows.
+    // Logs sit in the first (1005) and last (1023) window to prove aggregation.
+    const { fetchFn, getLogsCalls } = makeRpcMock(1055, {
+      1005: [mkTransferLog(1005, '0xtxA', 'bbb0000000000000000000000000000000000002')],
+      1023: [mkTransferLog(1023, '0xtxB', 'bbb0000000000000000000000000000000000002')],
+    });
+
+    const result = await runIndexerTick(env, 'https://small.example/rpc', fetchFn);
+
+    expect(result).toMatchObject({ events: 2, to: 1025 });
+    expect(getLogsCalls).toHaveLength(3);
+    for (const c of getLogsCalls) {
+      expect(c.toBlock - c.fromBlock + 1).toBeLessThanOrEqual(10);
+    }
+    const cursor = await kv.get(KV_KEY_CURSOR, 'json') as { block: number };
+    expect(cursor.block).toBe(1025);
+  });
+
+  it('checkpoints the cursor to the last good window when a later window errors, then surfaces the error', async () => {
+    const kv = mockKv();
+    kv.store.set(KV_KEY_CURSOR, JSON.stringify({ block: 1000, ts: '2026-05-29T00:00:00.000Z', last_run_at: '2026-05-29T00:00:00.000Z' }));
+    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({ '0xbbb0000000000000000000000000000000000002': 'example.com' }));
+    const env = { TENSORFEED_CACHE: kv, BASE_RPC_GETLOGS_SPAN: '10' } as unknown as import('../types').Env;
+
+    // range [1001,1025], 3 windows. The 2nd window ([1011,1020]) errors.
+    const fetchFn = vi.fn(async (_url: string, opts?: RequestInit) => {
+      const parsed = JSON.parse(String(opts?.body)) as { method?: string; params?: Array<{ fromBlock: string }> } | unknown[];
+      if (Array.isArray(parsed)) {
+        return { json: async () => [] } as unknown as Response;
+      }
+      const body = parsed as { method?: string; params?: Array<{ fromBlock: string }> };
+      if (body.method === 'eth_blockNumber') {
+        return { json: async () => ({ result: '0x' + (1055).toString(16) }) } as unknown as Response;
+      }
+      if (body.method === 'eth_getLogs') {
+        const from = parseInt(body.params![0].fromBlock, 16);
+        if (from === 1011) {
+          return { json: async () => ({ error: { message: 'over rate limit' } }) } as unknown as Response;
+        }
+        return { json: async () => ({ result: [] }) } as unknown as Response;
+      }
+      throw new Error('unexpected');
+    }) as unknown as typeof fetch;
+
+    await expect(runIndexerTick(env, 'https://small.example/rpc', fetchFn)).rejects.toThrow(/over rate limit/);
+
+    const cursor = await kv.get(KV_KEY_CURSOR, 'json') as { block: number };
+    // First window [1001,1010] succeeded and is checkpointed; the failing 2nd
+    // window did not advance the cursor past 1010, and it is not stuck at 1000.
+    expect(cursor.block).toBe(1010);
   });
 });

@@ -1,4 +1,4 @@
-import { REORG_SAFETY_BLOCKS, MAX_BLOCKS_PER_TICK, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent, DEFAULT_BASE_RPC, KV_KEY_CURSOR, KV_KEY_PUBLISHERS, USDC_BASE_CONTRACT } from './constants';
+import { REORG_SAFETY_BLOCKS, MAX_BLOCKS_PER_TICK, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent, DEFAULT_BASE_RPC, DEFAULT_GETLOGS_BLOCK_SPAN, KV_KEY_CURSOR, KV_KEY_PUBLISHERS, USDC_BASE_CONTRACT } from './constants';
 import type { SettlementEvent, DailyRollup, PublisherDailyRollup, IndexerCursor } from './types';
 import type { Env } from '../types';
 
@@ -21,6 +21,21 @@ export function computeBlockRange(cursorBlock: number, currentBlock: number): Bl
     fromBlock: cursorBlock + 1,
     toBlock,
   };
+}
+
+// Split a block range into contiguous windows of at most maxSpan blocks each.
+// A single tick's range can exceed the per-call eth_getLogs span limit of the
+// configured RPC, so each window is fetched separately and the results are
+// aggregated. Windows are inclusive and never overlap.
+export function chunkBlockRange(fromBlock: number, toBlock: number, maxSpan: number): BlockRange[] {
+  const chunks: BlockRange[] = [];
+  let start = fromBlock;
+  while (start <= toBlock) {
+    const end = Math.min(toBlock, start + maxSpan - 1);
+    chunks.push({ fromBlock: start, toBlock: end });
+    start = end + 1;
+  }
+  return chunks;
 }
 
 export interface RpcLog {
@@ -178,12 +193,17 @@ export async function runIndexerTick(
   rpcUrl?: string,
   fetchFn: typeof fetch = fetch,
 ): Promise<IndexerResult> {
-  // Prefer an explicit arg (tests), then the configured BASE_RPC_URL secret or
-  // var (a keyed endpoint with its own rate budget, immune to the shared
-  // Cloudflare egress throttling that hits the public node), then the public
-  // default. The scheduled call site passes no arg, so production honors
-  // BASE_RPC_URL when set and falls back to the public RPC when it is not.
-  const rpc = rpcUrl ?? env.BASE_RPC_URL ?? DEFAULT_BASE_RPC;
+  // Prefer an explicit arg (tests), then BASE_INDEXER_RPC_URL, then the public
+  // default. The indexer deliberately does NOT fall back to BASE_RPC_URL: that
+  // is the payments/facilitator RPC, and a keyed payments endpoint can cap
+  // eth_getLogs spans (some free tiers allow only 10 blocks), which silently
+  // froze this cursor. The public Base node allows 10,000-block spans, which the
+  // per-tick cap already respects. Point BASE_INDEXER_RPC_URL at a logs-friendly
+  // keyed endpoint for production rate budget, and set BASE_RPC_GETLOGS_SPAN if
+  // that endpoint caps the span below DEFAULT_GETLOGS_BLOCK_SPAN.
+  const rpc = rpcUrl ?? env.BASE_INDEXER_RPC_URL ?? DEFAULT_BASE_RPC;
+  const parsedSpan = env.BASE_RPC_GETLOGS_SPAN ? parseInt(env.BASE_RPC_GETLOGS_SPAN, 10) : NaN;
+  const getLogsSpan = Number.isFinite(parsedSpan) && parsedSpan > 0 ? parsedSpan : DEFAULT_GETLOGS_BLOCK_SPAN;
   const cursorRaw = (await env.TENSORFEED_CACHE.get(KV_KEY_CURSOR, 'json')) as IndexerCursor | null;
   const currentBlock = await getCurrentBlock(rpc, fetchFn);
 
@@ -205,30 +225,58 @@ export async function runIndexerTick(
   }
 
   const wallets = Object.keys(walletMap);
-  const logs = await getTransferLogsForWallets(rpc, range.fromBlock, range.toBlock, wallets, fetchFn);
+  const windows = chunkBlockRange(range.fromBlock, range.toBlock, getLogsSpan);
 
-  const uniqueBlockNumbers = Array.from(new Set(logs.map((l) => l.blockNumber)));
-  const blockTsMap = uniqueBlockNumbers.length > 0
-    ? await getBlockTimestamps(rpc, uniqueBlockNumbers, fetchFn)
-    : {};
-
+  // Walk the range one bounded window at a time, checkpointing the cursor after
+  // each fully-processed window. A window failure (rate limit, oversized span on
+  // a misconfigured RPC) stops the tick but never loses ground: the next tick
+  // resumes from the last good window instead of re-scanning from a frozen
+  // cursor forever (the death-spiral this whole module guards against).
+  let lastProcessed = cursorRaw.block;
   let count = 0;
-  for (const log of logs) {
-    const ts = blockTsMap[log.blockNumber];
-    if (!ts) continue;
-    const event = decodeTransferLog(log, ts, walletMap);
-    if (!event) continue;
-    await applyEventToRollups(env, event);
-    count++;
+  let tickError: unknown = null;
+
+  for (const window of windows) {
+    try {
+      const logs = await getTransferLogsForWallets(rpc, window.fromBlock, window.toBlock, wallets, fetchFn);
+
+      const uniqueBlockNumbers = Array.from(new Set(logs.map((l) => l.blockNumber)));
+      const blockTsMap = uniqueBlockNumbers.length > 0
+        ? await getBlockTimestamps(rpc, uniqueBlockNumbers, fetchFn)
+        : {};
+
+      for (const log of logs) {
+        const ts = blockTsMap[log.blockNumber];
+        if (!ts) continue;
+        const event = decodeTransferLog(log, ts, walletMap);
+        if (!event) continue;
+        await applyEventToRollups(env, event);
+        count++;
+      }
+
+      // Advance only after the window is fully applied, so the cursor never skips
+      // an unscanned window. applyEventToRollups is idempotent, so re-running a
+      // window whose error landed mid-apply does not double-count.
+      lastProcessed = window.toBlock;
+    } catch (err) {
+      tickError = err;
+      break;
+    }
   }
 
-  const nowStr = new Date().toISOString();
-  await env.TENSORFEED_CACHE.put(
-    KV_KEY_CURSOR,
-    JSON.stringify({ block: range.toBlock, ts: nowStr, last_run_at: nowStr }),
-  );
+  if (lastProcessed > cursorRaw.block) {
+    const nowStr = new Date().toISOString();
+    await env.TENSORFEED_CACHE.put(
+      KV_KEY_CURSOR,
+      JSON.stringify({ block: lastProcessed, ts: nowStr, last_run_at: nowStr }),
+    );
+  }
 
-  return { events: count, from: range.fromBlock, to: range.toBlock };
+  // Surface the failure so the cron logs it, but only after the partial progress
+  // is durably checkpointed above.
+  if (tickError) throw tickError;
+
+  return { events: count, from: range.fromBlock, to: lastProcessed };
 }
 
 async function getCurrentBlock(rpcUrl: string, fetchFn: typeof fetch): Promise<number> {

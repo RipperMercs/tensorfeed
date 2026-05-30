@@ -12,6 +12,14 @@ export const REORG_SAFETY_BLOCKS = 30;
 // ~5-minute cadence on ~2-second Base blocks, normal operation accrues ~150
 // blocks per tick, so this 2,000 ceiling is only ever hit while catching up.
 export const MAX_BLOCKS_PER_TICK = 2000;
+// Max blocks per single eth_getLogs request. Distinct from MAX_BLOCKS_PER_TICK
+// (how far the cursor advances per tick): some RPC providers cap the span of one
+// getLogs call (a few keyed free tiers allow only 10 blocks). The indexer windows
+// each tick's range into chunks of this size, so it stays within whatever limit
+// the configured RPC enforces. The public Base node allows 10,000, so this 2,000
+// default is a single call per tick there; lower it via BASE_RPC_GETLOGS_SPAN to
+// match a small-limit RPC.
+export const DEFAULT_GETLOGS_BLOCK_SPAN = 2000;
 export const RECENT_FEED_SIZE = 100;
 export const EVENT_TTL_SECONDS = 90 * 24 * 60 * 60;
 export const PUBLISHER_DELIST_GRACE_DAYS = 7;
