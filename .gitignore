@@ -83,6 +83,8 @@ sdk/python/PUBLISHING.md
 
 # Local-only spec / planning files (public-repo policy)
 specs/
+plans/
+docs/superpowers/
 
 # Stray build / prebuild stdout dumps (not source)
 build-output.txt
