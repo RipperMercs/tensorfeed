@@ -4228,12 +4228,16 @@ export default {
           benchmarkTrustPreview: '/api/preview/benchmark-trust-verdict (free, 10/IP/day; trust band + score per benchmark, no per-signal detail or recommendation)',
           failoverPreview: '/api/preview/failover-verdict?from= (free, 10/IP/day; the failover destination + incident reason, no full candidate detail or alternatives)',
           guidanceDeltaPreview: '/api/preview/sec/filings/guidance-delta?accession= or ?ticker=&form= (free, 10/IP/day; the materiality_summary + per-change category/type/direction/materiality, with the verbatim quotes and values redacted)',
+          providerReliabilityPreview: '/api/preview/provider-reliability-verdict (free, 10/IP/day; the most-dependable and riskiest picks only, no full per-provider ranking or signed receipt)',
+          x402SettlementPreview: '/api/preview/x402-settlement-verdict (free, 10/IP/day; the momentum, concentration, and leading-publisher verdict only, no full publisher ranking or signed receipt)',
           premiumRouting: '/api/premium/routing',
           premiumRouteVerdict: '/api/premium/route-verdict?task=code|reasoning|creative|general or ?model= (1 credit, AFTA-signed; the single best model to use right now, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state, plus runners-up and a signed receipt. Optional ?max_latency_p95_ms=, ?require_operational=, ?exclude_deprecated=. 30-min freshness SLA, no-charge when stale.)',
           stackSafetyVerdict: '/api/premium/stack-safety-verdict?packages=name@version,... (1 credit, AFTA-signed; GO/HOLD/BLOCK deploy gate per AI-stack package, fusing the ingested AI-CVE batch + CISA KEV. Up to 10 packages. Never-false-confirm: BLOCK only on exploited with no fix, HOLD on version-ambiguous, PASS on no match, UNKNOWN outside the cohort.)',
           benchmarkTrustVerdict: '/api/premium/benchmark-trust-verdict?benchmark= or ?category= (1 credit, AFTA-signed; is an AI benchmark a trustworthy capability signal or saturated/contaminated/near-ceiling, so down-weight a high score. Trust band + 0-100 score per benchmark, fusing contamination and saturation flags with live frontier compression, plus a down-weight recommendation and an alternative benchmark.)',
           failoverVerdict: '/api/premium/failover-verdict?from=<provider>&task= (1 credit, AFTA-signed; provider A degraded, recommend the best operational failover target for a task. Confirms A against live incident triage, then runs the route verdict with A and any failover_now provider excluded. Returns destination + incident reason + ranked alternatives.)',
           guidanceDeltaVerdict: '/api/premium/sec/filings/guidance-delta?accession= or ?ticker=&form= (1 credit, AFTA-signed; did this periodic 10-K/10-Q materially change guidance, segment outlook, or risk language vs the prior same-form filing, with the exact changed sentences quoted. Deterministic materiality_summary + full verbatim changes. Input-keyed freshness, no-charge when a newer same-form filing supersedes the delta.)',
+          providerReliabilityVerdict: '/api/premium/provider-reliability-verdict (1 credit, AFTA-signed; ranks the frontier providers TensorFeed probes by measured operational reliability, fusing availability and tail consistency (p50 over p95) into one dependability ranking. Names the most dependable and the riskiest, ships the full per-provider ranking and a signed receipt. 30-min freshness SLA, no-charge when stale.)',
+          x402SettlementVerdict: '/api/premium/x402-settlement-verdict?window=24h|7d|30d (1 credit, AFTA-signed; rules on the Base x402 USDC settlement market over TensorFeed\'s own settlement index: momentum vs the prior window of equal length, concentration by the Herfindahl index, and the leading publisher, plus the full per-publisher ranking. 10-min freshness SLA, no-charge when stale.)',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
           premiumBenchmarkSeries: '/api/premium/history/benchmarks/series?model=&benchmark=&from=&to=',
           premiumStatusUptime: '/api/premium/history/status/uptime?provider=&from=&to=',
@@ -6210,6 +6214,147 @@ export default {
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/route-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // Free taste of the Provider Reliability Verdict: the most-dependable
+    // and riskiest picks only, no full ranking and no signed receipt. 10
+    // calls/day per IP. The paid /api/premium/provider-reliability-verdict
+    // adds the full per-provider ranking and the AFTA-signed receipt.
+    if (path === '/api/preview/provider-reliability-verdict') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const { computeReliabilityVerdict, checkReliabilityVerdictPreviewRateLimit } = await import('./premium-provider-reliability-verdict');
+      const limit = await checkReliabilityVerdictPreviewRateLimit(env, ip, 10);
+      if (!limit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: limit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/provider-reliability-verdict',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/provider-reliability-verdict (full per-provider ranking, AFTA-signed receipt, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const result = await computeReliabilityVerdict(env);
+      return jsonResponse(
+        {
+          ok: true,
+          preview: true,
+          verdict: result.verdict,
+          coverage: result.coverage,
+          captured_at: result.capturedAt,
+          claim: result.claim,
+          rate_limit: { limit: limit.limit, remaining: limit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/provider-reliability-verdict',
+            adds: ['full per-provider ranking', 'AFTA-signed receipt', 'no rate limit'],
+          },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
+    }
+
+    // === PAID PREMIUM ENDPOINT: PROVIDER RELIABILITY VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/provider-reliability-verdict
+    // One signed dependability ruling over TensorFeed's OWN measured probes:
+    // ranks the probed frontier providers by availability and tail
+    // consistency (p50 over p95), names the most dependable and the riskiest,
+    // and ships the full per-provider ranking with an AFTA-signed receipt. The
+    // decision layer above the raw /api/probe/latest aggregates and the free
+    // /api/preview/provider-reliability-verdict taste. No params (ranks all
+    // probed providers); strict-premium so anonymous Bazaar crawlers see a
+    // clean 402. 30-minute freshness SLA keyed to the probe computed_at: a
+    // stale probe layer triggers a no-charge.
+    if (path === '/api/premium/provider-reliability-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      const { computeReliabilityVerdict } = await import('./premium-provider-reliability-verdict');
+      const result = await computeReliabilityVerdict(env);
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/provider-reliability-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // Free taste of the x402 Settlement Verdict: the three classifications
+    // (momentum, concentration, leading publisher) only, no full publisher
+    // ranking and no signed receipt. 10 calls/day per IP. The paid
+    // /api/premium/x402-settlement-verdict adds the full ranking, the ecosystem
+    // totals and HHI, and the AFTA-signed receipt.
+    if (path === '/api/preview/x402-settlement-verdict') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const { computeX402SettlementVerdict, checkX402SettlementVerdictPreviewRateLimit } = await import('./premium-x402-settlement-verdict');
+      const limit = await checkX402SettlementVerdictPreviewRateLimit(env, ip, 10);
+      if (!limit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: limit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/x402-settlement-verdict',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/x402-settlement-verdict (full publisher ranking, ecosystem totals and HHI, AFTA-signed receipt, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const result = await computeX402SettlementVerdict(env, '7d');
+      return jsonResponse(
+        {
+          ok: true,
+          preview: true,
+          verdict: result.verdict,
+          window_label: result.window_label,
+          captured_at: result.capturedAt,
+          claim: result.claim,
+          rate_limit: { limit: limit.limit, remaining: limit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/x402-settlement-verdict',
+            adds: [
+              'full per-publisher ranking with volume share',
+              'ecosystem totals, change percentages, and the Herfindahl index',
+              'AFTA-signed receipt',
+              'no rate limit',
+              'optional window (24h, 7d, 30d)',
+            ],
+          },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
+    }
+
+    // === PAID PREMIUM ENDPOINT: X402 SETTLEMENT VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/x402-settlement-verdict?window=24h|7d|30d (default 7d)
+    // One signed ruling over TensorFeed's OWN x402 settlement index: classifies
+    // the Base x402 USDC market momentum (versus the prior window of equal
+    // length), concentration (Herfindahl index over publisher volume share), and
+    // names the leading publisher, plus the full per-publisher ranking and an
+    // AFTA-signed receipt. The decision layer above the raw /api/x402-index/summary
+    // and /api/x402-index/leaderboard, and the free /api/preview/x402-settlement-verdict
+    // taste. Reads optional ?window=, so strict-premium: anonymous Bazaar crawlers
+    // see a clean 402, not a free trial. 10-minute freshness SLA keyed to the
+    // index cursor last_run_at: a stale index (a real indexer outage) triggers a
+    // no-charge.
+    if (path === '/api/premium/x402-settlement-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      const windowParam = url.searchParams.get('window');
+      const window: '24h' | '7d' | '30d' =
+        windowParam === '24h' || windowParam === '30d' ? windowParam : '7d';
+      const { computeX402SettlementVerdict } = await import('./premium-x402-settlement-verdict');
+      const result = await computeX402SettlementVerdict(env, window);
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/x402-settlement-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }

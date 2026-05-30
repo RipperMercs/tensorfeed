@@ -96,6 +96,10 @@ const PILOT_PATHS = [
   '/api/premium/failover-verdict',
   // Wave 24 (guidance-delta: signed periodic-filing guidance diff)
   '/api/premium/sec/filings/guidance-delta',
+  // Wave 25 (provider-reliability-verdict: ranked over TF measured probes)
+  '/api/premium/provider-reliability-verdict',
+  // Wave 25 (x402-settlement-verdict: ruling over TF x402 settlement index)
+  '/api/premium/x402-settlement-verdict',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

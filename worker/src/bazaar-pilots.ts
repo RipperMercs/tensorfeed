@@ -3280,6 +3280,94 @@ const ROUTE_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Verdict endpoint track (2026-05-29): provider-reliability-verdict. Signed
+// dependability ranking over TensorFeed's own measured probes (availability
+// plus tail consistency). Free taste at /api/preview/provider-reliability-verdict.
+// Total pilot count: 49 -> 50.
+const PROVIDER_RELIABILITY_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'Provider Reliability Verdict. One paid call ranks the frontier AI providers TensorFeed actively probes by measured operational reliability, fusing availability (ok rate) and tail consistency (p50 over p95) from its own latency probes into a single dependability ranking. Returns the most dependable and riskiest providers, the full per-provider ranking (availability, p50/p95/p99, spread ratio, score), and an AFTA-signed receipt. The thesis: an agent retry loop feels the tail, not the median. The "which provider can I depend on right now" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-29T11:55:00Z',
+            window_label: 'last_24h',
+            verdict: { most_dependable: 'anthropic', riskiest: 'deepseek' },
+            ranking: [
+              {
+                rank: 1,
+                provider: 'anthropic',
+                ok_pct: 0.99,
+                total_p50_ms: 500,
+                total_p95_ms: 900,
+                total_p99_ms: 1400,
+                spread_ratio: 1.8,
+                reliability_score: 0.7728,
+                measured: true,
+                note: 'measured availability 99 percent, p50 500 ms, p95 900 ms, p95 over p50 spread 1.8x',
+              },
+            ],
+            coverage: { providers_ranked: 3, fully_measured: 3, availability_only: 0 },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+// Verdict endpoint track (2026-05-29): x402-settlement-verdict. Signed ruling
+// over TensorFeed's own x402 settlement index (Base USDC market momentum,
+// concentration by Herfindahl index, and the leading publisher). Free taste at
+// /api/preview/x402-settlement-verdict. Total pilot count: 50 -> 51.
+const X402_SETTLEMENT_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'x402 Settlement Verdict. One paid call rules on the state of the x402 USDC settlement market on Base, computed over TensorFeed\'s own on-chain settlement index. Returns the market momentum (expanding, steady, contracting, or nascent versus the prior window of equal length), the concentration by Herfindahl index (concentrated, moderate, or diversified), the leading publisher, the full per-publisher volume ranking, ecosystem totals with the window-over-window change, and an AFTA-signed receipt. Optional window (24h, 7d, 30d). The "is x402 settlement growing and who leads" call, over the Base settlements TensorFeed measures, not a market-wide claim.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-29T17:54:00Z',
+            window_label: '7d',
+            verdict: { momentum: 'expanding', concentration: 'concentrated', leading_publisher: 'pay.example.com' },
+            ecosystem: {
+              volume_usdc: '1234.500000',
+              count: 42,
+              unique_publishers: 3,
+              volume_change_pct: 30,
+              count_change_pct: 25,
+              prior_window_empty: false,
+              top_publisher_share_pct: 64.8,
+              hhi: 4908,
+            },
+            ranking: [
+              { rank: 1, domain: 'pay.example.com', volume_usdc: '800.000000', count: 25, share_pct: 64.8 },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
 // Wave 21 (2026-05-28): stack-safety-verdict. GO/HOLD/BLOCK deploy gate
 // over a package list, fusing the ingested AI-CVE batch with CISA KEV.
 // Free taste at /api/preview/stack-safety-verdict. Total pilot count: 45 -> 46.
@@ -3674,6 +3762,10 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/ai-companies/:ticker': AI_COMPANIES_AGGREGATE_PILOT,
   // Wave 20 (2026-05-28): route-verdict. Signed model-routing decision.
   '/api/premium/route-verdict': ROUTE_VERDICT_PILOT,
+  // Verdict endpoint track (2026-05-29): provider-reliability-verdict.
+  '/api/premium/provider-reliability-verdict': PROVIDER_RELIABILITY_VERDICT_PILOT,
+  // Verdict endpoint track (2026-05-29): x402-settlement-verdict.
+  '/api/premium/x402-settlement-verdict': X402_SETTLEMENT_VERDICT_PILOT,
   // Wave 21 (2026-05-28): stack-safety-verdict. GO/HOLD/BLOCK deploy gate.
   '/api/premium/stack-safety-verdict': STACK_SAFETY_PILOT,
   // Wave 22 (2026-05-28): benchmark-trust-verdict. Benchmark trustworthiness.

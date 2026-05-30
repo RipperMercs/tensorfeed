@@ -239,15 +239,16 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 63 exact paths', () => {
+    it('exposes all 65 exact paths', () => {
       // 24 pre-Wave-2 + 9 Wave 2 + 1 each Waves 3..12 + 3 Wave 13 (ai-cves trio)
       // + 1 Wave 15 (ai-cves batch) + 5 Wave 16 (per-provider triage)
       // + 3 Wave 17 (SEC filings AI-extraction) + 1 Wave 18 (pro-tier
       // whats-new) + 2 audit H-5 (decision-verified) + 1 Wave 20
-      // (route-verdict) + 1 Wave 24 (guidance-delta). funding/exposure +
+      // (route-verdict) + 2 verdict-track (provider-reliability-verdict,
+      // x402-settlement-verdict) + 1 Wave 24 (guidance-delta). funding/exposure +
       // packages/pypi/momentum were already strict.
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(63);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(63); // no duplicates
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(65);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(65); // no duplicates
     });
     it('exposes 8 prefix paths (providers + 5 Wave 14 path-param pilots + Wave 19 ai-companies + x402-index)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(8);

@@ -58,6 +58,16 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // anonymous crawlers to a clean 402 rather than a free-trial 200 on the
   // premium verdict. Free taste lives at /api/preview/route-verdict.
   '/api/premium/route-verdict',
+  // Provider reliability verdict (2026-05-29). Signed dependability ranking
+  // over TensorFeed's own measured probes (availability + tail consistency).
+  // No params, but Bazaar-piloted, so strict-premium gates anonymous crawlers
+  // to a clean 402. Free taste at /api/preview/provider-reliability-verdict.
+  '/api/premium/provider-reliability-verdict',
+  // x402 settlement verdict (2026-05-29). Signed ruling over TensorFeed's own
+  // x402 settlement index: Base USDC market momentum, concentration (HHI), and
+  // the leading publisher. Reads optional ?window=, so strict-premium gates
+  // anonymous crawlers to a clean 402. Free taste at /api/preview/x402-settlement-verdict.
+  '/api/premium/x402-settlement-verdict',
   // Stack Safety Verdict (2026-05-28). GO/HOLD/BLOCK deploy gate over a
   // package list, fusing the ingested AI-CVE batch + CISA KEV. Param-
   // required (?packages=), so strict-premium gates anonymous crawlers to a
