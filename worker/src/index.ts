@@ -9,7 +9,7 @@ import { pollTrendingRepos } from './trending';
 import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatestSnapshot } from './snapshots';
 import { captureHistory, listHistory, readHistory } from './history';
 import { cdpListDiscoveryResources } from './cdp-facilitator';
-import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
+import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath, shouldMeterPilotPaidCall } from './bazaar-pilots';
 import { deriveUsageEvent, recordUsageEvent, buildUsageReport } from './usage-meter';
 import { cachedFetch } from './edge-cache';
 import {
@@ -950,11 +950,12 @@ async function premiumResponse(
 
   const finalResponse = new Response(JSON.stringify(responseBody), { status: 200, headers });
   // Tag the Response for the Agent Usage Meter when this call actually
-  // debited credits, so the central AE hook records outcome 'paid'. A
-  // no-charge premium 200 (stale data, free-trial quota) leaves the tag
-  // unset and records as 'served_free'.
+  // debited credits, so the central AE hook records outcome 'paid', attributes
+  // the AE data point to the payer wallet, and (for pilots) feeds the KV paid
+  // rollup. A no-charge premium 200 (stale data, free-trial quota) leaves the
+  // tag unset and records as 'served_free'.
   if (commit.creditsCharged > 0) {
-    markResponseCharged(finalResponse);
+    markResponseCharged(finalResponse, { wallet: payment.payerWallet, credits: creditsRequested });
   }
   return finalResponse;
 }
@@ -1111,27 +1112,40 @@ export { CreditLedger } from './credit-ledger';
 // Agent Usage Meter charge signal. The central AE hook in fetch needs to
 // know whether a premium 200 actually settled a payment this invocation so
 // it can classify the data point as outcome 'paid' rather than 'served_free'
-// (a free-quota or stale-no-charge premium 200 also returns status 200).
-// Threading a boolean across the _handleRoute boundary would touch every
-// handler; instead the paid-response builders tag the Response object here
-// and the hook reads the tag off the same object. A WeakSet keyed on the
-// Response is per-request, never serializes to the wire, and is garbage
-// collected with the Response, so it adds no state to track or clean up.
-const CHARGED_RESPONSES = new WeakSet<Response>();
+// (a free-quota or stale-no-charge premium 200 also returns status 200), and
+// it needs the on-chain payer wallet plus credit cost so the AE funnel and
+// the KV paid rollup both attribute the call to whoever paid. Threading those
+// across the _handleRoute boundary would touch every handler; instead the
+// paid-response builders tag the Response object here and the hook reads the
+// tag off the same object. A WeakMap keyed on the Response is per-request,
+// never serializes to the wire, and is garbage collected with the Response,
+// so it adds no state to track or clean up.
+interface ChargedResponseTag {
+  // On-chain payer address surfaced at settle (PaymentResult.payerWallet).
+  // Undefined for a bearer-token reuse charge (that wallet paid earlier).
+  wallet?: string;
+  // Credits this paid call debited. Used to feed the pilot KV rollup so the
+  // per-endpoint paid totals match what the named handlers record.
+  credits: number;
+}
 
-function markResponseCharged(response: Response): void {
+const CHARGED_RESPONSES = new WeakMap<Response, ChargedResponseTag>();
+
+function markResponseCharged(response: Response, tag: ChargedResponseTag): void {
   try {
-    CHARGED_RESPONSES.add(response);
+    CHARGED_RESPONSES.set(response, tag);
   } catch {
     // best-effort: the charge tag must never affect the response path
   }
 }
 
-function responseWasCharged(response: Response): boolean {
+// Returns the stored charge tag for a paid Response, or null when the
+// Response was never tagged (free, 402, no-charge premium 200).
+function chargedResponseTag(response: Response): ChargedResponseTag | null {
   try {
-    return CHARGED_RESPONSES.has(response);
+    return CHARGED_RESPONSES.get(response) ?? null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -1201,13 +1215,39 @@ export default {
     // not fan out across query params or concrete path params; non-pilot premium
     // and tracked-free paths keep their own pathname.
     try {
-      const charged = responseWasCharged(response);
+      const tag = chargedResponseTag(response);
+      const charged = tag !== null;
       const meterPath = pilotTemplatePath(path) ?? path;
       const evt = deriveUsageEvent(meterPath, response.status, charged);
       if (evt) {
         evt.ua = request.headers.get('User-Agent') || '';
         evt.country = request.cf?.country as string | undefined;
+        // Attribute the AE data point to the on-chain payer for EVERY paid
+        // premium call, named and pilot. The wallet rides the charge tag the
+        // paid-response builders set; it is undefined on a bearer-token reuse
+        // charge (that wallet paid on an earlier call), which records as ''.
+        if (tag) evt.wallet = tag.wallet;
         recordUsageEvent(env, evt);
+      }
+      // KV paid rollup coverage for bazaar pilots. The NAMED premium handlers
+      // (verdict, history, routing) call logPremiumUsage themselves, but the
+      // generic pilot dispatch does not, so without this the bulk of the
+      // catalog (and the endpoint that first converted on 2026-05-30) would be
+      // absent from top_paid_endpoints / top_payers. Gated strictly to charged
+      // pilots: shouldMeterPilotPaidCall is false for named premium, free, and
+      // unpaid paths, so there is no double-count. meterPath is the stable
+      // BAZAAR_PILOTS template key, matching how named handlers log.
+      if (tag && shouldMeterPilotPaidCall(path, charged)) {
+        ctx.waitUntil(
+          logPremiumUsage(
+            env,
+            meterPath,
+            request.headers.get('User-Agent') || 'unknown',
+            tag.credits,
+            undefined,
+            tag.wallet,
+          ),
+        );
       }
     } catch {
       // best-effort: telemetry must never affect the response path
@@ -6174,7 +6214,9 @@ export default {
       );
       // This handler builds its paid 200 inline rather than via
       // premiumResponse, so tag it for the Agent Usage Meter charge signal.
-      markResponseCharged(routingResponse);
+      // Routing is a flat 1-credit endpoint; carry the payer wallet so the AE
+      // funnel attributes it like every other paid call.
+      markResponseCharged(routingResponse, { wallet: payment.payerWallet, credits: 1 });
       return routingResponse;
     }
 

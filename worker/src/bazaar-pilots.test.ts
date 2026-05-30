@@ -17,6 +17,7 @@ import {
   bazaarPilotPaths,
   pilotCatalogStatus,
   pilotTemplatePath,
+  shouldMeterPilotPaidCall,
 } from './bazaar-pilots';
 
 // Pilot paths currently in BAZAAR_PILOTS. Wave 1 (2026-05-14) added
@@ -509,6 +510,38 @@ describe('pilotTemplatePath', () => {
     expect(pilotTemplatePath('/api/premium/macro/digest')).toBeNull();
     expect(pilotTemplatePath('/api/news')).toBeNull();
     expect(pilotTemplatePath('/api/premium/clean/cve')).toBeNull();
+  });
+});
+
+describe('shouldMeterPilotPaidCall', () => {
+  // This is the gate the central usage-meter hook uses to decide whether to
+  // KV-log a paid call as a pilot. It must fire ONLY for charged pilots: named
+  // premium handlers already log themselves (double-count risk), and a 402
+  // probe must never count as paid revenue.
+  it('returns true for a charged pilot path (flat or with query params)', () => {
+    expect(shouldMeterPilotPaidCall('/api/premium/research/emerging-keywords', true)).toBe(true);
+    // The 2026-05-30 converter carried query params; it must still meter.
+    expect(
+      shouldMeterPilotPaidCall('/api/premium/research/emerging-keywords?text=x&targetLanguage=French', true),
+    ).toBe(true);
+    // A concrete Wave 14 path param folds to its template and still meters.
+    expect(shouldMeterPilotPaidCall('/api/premium/clean/cve/CVE-2024-3094', true)).toBe(true);
+  });
+
+  it('returns false for a charged NAMED premium path (those log themselves)', () => {
+    // macro/digest is a named handler with its own logPremiumUsage call, not a
+    // pilot, so the hook must not double-log it.
+    expect(shouldMeterPilotPaidCall('/api/premium/macro/digest', true)).toBe(false);
+  });
+
+  it('returns false for an unpaid pilot path (charged=false)', () => {
+    expect(shouldMeterPilotPaidCall('/api/premium/research/emerging-keywords', false)).toBe(false);
+    expect(shouldMeterPilotPaidCall('/api/premium/clean/cve/CVE-2024-3094', false)).toBe(false);
+  });
+
+  it('returns false for a non-pilot / free path even when charged', () => {
+    expect(shouldMeterPilotPaidCall('/api/news', true)).toBe(false);
+    expect(shouldMeterPilotPaidCall('/api/premium/clean/cve', true)).toBe(false);
   });
 });
 
