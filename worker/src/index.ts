@@ -9,7 +9,7 @@ import { pollTrendingRepos } from './trending';
 import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatestSnapshot } from './snapshots';
 import { captureHistory, listHistory, readHistory } from './history';
 import { cdpListDiscoveryResources } from './cdp-facilitator';
-import { bazaarPilotPaths, pilotCatalogStatus } from './bazaar-pilots';
+import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
 import { deriveUsageEvent, recordUsageEvent } from './usage-meter';
 import { cachedFetch } from './edge-cache';
 import {
@@ -948,7 +948,15 @@ async function premiumResponse(
     responseBody.receipt_status = 'pending_key_bootstrap';
   }
 
-  return new Response(JSON.stringify(responseBody), { status: 200, headers });
+  const finalResponse = new Response(JSON.stringify(responseBody), { status: 200, headers });
+  // Tag the Response for the Agent Usage Meter when this call actually
+  // debited credits, so the central AE hook records outcome 'paid'. A
+  // no-charge premium 200 (stale data, free-trial quota) leaves the tag
+  // unset and records as 'served_free'.
+  if (commit.creditsCharged > 0) {
+    markResponseCharged(finalResponse);
+  }
+  return finalResponse;
 }
 
 /**
@@ -1100,6 +1108,33 @@ async function premiumValidationFailure(
 // worker/src/credit-ledger.ts + tensorfeed-work/tier2-races/DESIGN.md.
 export { CreditLedger } from './credit-ledger';
 
+// Agent Usage Meter charge signal. The central AE hook in fetch needs to
+// know whether a premium 200 actually settled a payment this invocation so
+// it can classify the data point as outcome 'paid' rather than 'served_free'
+// (a free-quota or stale-no-charge premium 200 also returns status 200).
+// Threading a boolean across the _handleRoute boundary would touch every
+// handler; instead the paid-response builders tag the Response object here
+// and the hook reads the tag off the same object. A WeakSet keyed on the
+// Response is per-request, never serializes to the wire, and is garbage
+// collected with the Response, so it adds no state to track or clean up.
+const CHARGED_RESPONSES = new WeakSet<Response>();
+
+function markResponseCharged(response: Response): void {
+  try {
+    CHARGED_RESPONSES.add(response);
+  } catch {
+    // best-effort: the charge tag must never affect the response path
+  }
+}
+
+function responseWasCharged(response: Response): boolean {
+  try {
+    return CHARGED_RESPONSES.has(response);
+  } catch {
+    return false;
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -1157,11 +1192,18 @@ export default {
     const response = await this._handleRoute(request, env, ctx, url, path);
 
     // Agent Usage Meter: one AE data point per premium / tracked-free API response.
-    // `charged` is true only when this request settled a payment this invocation.
-    // It is threaded as false here for now; the bazaar-pilot settle path (a later
-    // task) sets the real charge signal so premium 200s classify as paid vs free.
+    // `charged` is true only when this request settled a payment this invocation,
+    // read off the Response tag the paid-response builders set (premiumResponse
+    // and the inline routing handler). A premium 200 that ran on the free-trial
+    // quota or returned stale-no-charge data is NOT charged, so it correctly
+    // records as 'served_free' rather than 'paid'. Pilot paths are metered under
+    // their stable BAZAAR_PILOTS template key so per-endpoint aggregation does
+    // not fan out across query params or concrete path params; non-pilot premium
+    // and tracked-free paths keep their own pathname.
     try {
-      const evt = deriveUsageEvent(path, response.status, false);
+      const charged = responseWasCharged(response);
+      const meterPath = pilotTemplatePath(path) ?? path;
+      const evt = deriveUsageEvent(meterPath, response.status, charged);
       if (evt) {
         evt.ua = request.headers.get('User-Agent') || '';
         evt.country = request.cf?.country as string | undefined;
@@ -6119,7 +6161,7 @@ export default {
       }
       if (payment.paymentResponseHeader) headers['PAYMENT-RESPONSE'] = payment.paymentResponseHeader;
 
-      return new Response(
+      const routingResponse = new Response(
         JSON.stringify({
           ...result,
           billing: {
@@ -6130,6 +6172,10 @@ export default {
         }),
         { status: 200, headers },
       );
+      // This handler builds its paid 200 inline rather than via
+      // premiumResponse, so tag it for the Agent Usage Meter charge signal.
+      markResponseCharged(routingResponse);
+      return routingResponse;
     }
 
     // === ROUTE VERDICT PREVIEW (free, rate-limited) ===

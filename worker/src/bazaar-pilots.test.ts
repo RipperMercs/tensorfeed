@@ -16,6 +16,7 @@ import {
   bazaarDescriptionFor,
   bazaarPilotPaths,
   pilotCatalogStatus,
+  pilotTemplatePath,
 } from './bazaar-pilots';
 
 // Pilot paths currently in BAZAAR_PILOTS. Wave 1 (2026-05-14) added
@@ -464,6 +465,50 @@ describe('bazaarPilotPaths', () => {
       expect(isBazaarPilotPath(p)).toBe(true);
       expect(getBazaarPilotConfig(p)).not.toBeNull();
     }
+  });
+});
+
+describe('pilotTemplatePath', () => {
+  // Maps a raw request path (which may carry a query string or a concrete
+  // path param) to its stable BAZAAR_PILOTS key, so the usage meter
+  // aggregates per template instead of fanning out across params. This is
+  // the path the converter carried on 2026-05-30: a flat pilot reached with
+  // query params must still fold into the bare template key.
+  it('returns the flat template key for an exact-match pilot path', () => {
+    expect(pilotTemplatePath('/api/premium/research/emerging-keywords')).toBe(
+      '/api/premium/research/emerging-keywords',
+    );
+    expect(pilotTemplatePath('/api/premium/whats-new')).toBe('/api/premium/whats-new');
+  });
+
+  it('ignores a trailing query string when matching the template', () => {
+    expect(
+      pilotTemplatePath('/api/premium/research/emerging-keywords?text=x&targetLanguage=French'),
+    ).toBe('/api/premium/research/emerging-keywords');
+    expect(pilotTemplatePath('/api/premium/routing?task=code&top_n=3')).toBe(
+      '/api/premium/routing',
+    );
+  });
+
+  it('folds a concrete Wave 14 path param into its template key', () => {
+    for (const { concrete, template } of WAVE_14_CONCRETE_PATHS) {
+      expect(pilotTemplatePath(concrete), `pilotTemplatePath(${concrete})`).toBe(template);
+    }
+  });
+
+  it('folds a concrete path param plus a query string into its template key', () => {
+    expect(pilotTemplatePath('/api/premium/clean/epss/CVE-2026-44580?series=true')).toBe(
+      '/api/premium/clean/epss/:id',
+    );
+    expect(pilotTemplatePath('/api/premium/ai-companies/NVDA?fields=pricing')).toBe(
+      '/api/premium/ai-companies/:ticker',
+    );
+  });
+
+  it('returns null for a non-pilot path', () => {
+    expect(pilotTemplatePath('/api/premium/macro/digest')).toBeNull();
+    expect(pilotTemplatePath('/api/news')).toBeNull();
+    expect(pilotTemplatePath('/api/premium/clean/cve')).toBeNull();
   });
 });
 

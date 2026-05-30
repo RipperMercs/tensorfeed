@@ -3803,6 +3803,32 @@ export function isBazaarPilotPath(path: string): boolean {
 }
 
 /**
+ * Maps a raw request path to the stable BAZAAR_PILOTS key it routes to,
+ * or null when the path is not a pilot. A trailing query string is dropped
+ * before matching, and a concrete Wave 14+ path param (e.g.
+ * "/api/premium/clean/cve/CVE-2024-3094") folds back to its template key
+ * (e.g. "/api/premium/clean/cve/:id").
+ *
+ * The usage meter aggregates per endpoint by this key so a flat pilot
+ * reached with query params (the converter on 2026-05-30 carried
+ * "?text=...&targetLanguage=...") and a parametric pilot reached with many
+ * distinct param values both fold into one row instead of fanning out.
+ * Pure function: no network, no env, fully unit-testable.
+ */
+export function pilotTemplatePath(rawPath: string): string | null {
+  // Drop a query string (and any fragment) so "/path?x=1" matches "/path".
+  const pathname = rawPath.split(/[?#]/)[0];
+  if (Object.prototype.hasOwnProperty.call(BAZAAR_PILOTS, pathname)) {
+    return pathname;
+  }
+  for (const key of Object.keys(BAZAAR_PILOTS)) {
+    if (!key.includes(':')) continue;
+    if (matchesTemplate(pathname, key)) return key;
+  }
+  return null;
+}
+
+/**
  * Returns the bazaar config for a pilot path, or null if not piloted.
  * Fast path: exact match on the Wave 0-13 flat URLs. Slow path: walk
  * the Wave 14+ templates and match by segment.
