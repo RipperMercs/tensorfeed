@@ -379,6 +379,15 @@ dataset = "tf_honeypot_hits"
 binding = "MCP_TOOL_CALLS_AE"
 dataset = "tf_mcp_tool_calls"
 
+# tf_usage: agent-usage-meter full-funnel telemetry. One datapoint per
+# premium / tracked-free API response (free hits, 402 probes, paid calls).
+# AE writes are unmetered against the KV budget, so the high-volume funnel
+# never competes for the 100k/day KV op bundle. Read via the SQL API from
+# the ADMIN_KEY-gated /api/admin/usage view.
+[[analytics_engine_datasets]]
+binding = "USAGE_AE"
+dataset = "tf_usage"
+
 # CreditLedger Durable Object. Per-token DO instance owns the canonical
 # credit balance + daily-spend counter, serializing all read-modify-
 # write operations to close race conditions H-1 and H-2 from the

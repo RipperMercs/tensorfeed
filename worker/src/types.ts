@@ -58,6 +58,21 @@ export interface Env {
   // zeros for hosted_endpoint (npm download counts remain the primary
   // signal).
   MCP_TOOL_CALLS_AE?: AnalyticsEngineDataset;
+  // Agent Usage Meter: full-funnel telemetry (free hits, 402 probes, paid
+  // calls). One AE datapoint per premium / tracked-free API response via a
+  // single choke point in the fetch handler, so the high-volume funnel never
+  // touches the KV op budget. Read via the SQL API from /api/admin/usage.
+  // Optional to mirror the sibling AE bindings (HONEYPOT_AE, MCP_TOOL_CALLS_AE):
+  // recordUsageEvent guards on presence and no-ops when unbound, so node-env
+  // test fixtures that build a KV-only Env do not need to stub it. In a
+  // production deploy it is always present per wrangler.toml.
+  USAGE_AE?: AnalyticsEngineDataset;
+  // AE READ credentials for the admin usage view. Optional: the view degrades
+  // to the KV paid summary and marks the funnel unavailable when absent (see
+  // usage-meter buildUsageReport). CF_ANALYTICS_TOKEN is an Account Analytics
+  // Read API token; CF_ACCOUNT_ID is the Cloudflare account id for the SQL URL.
+  CF_ANALYTICS_TOKEN?: string;
+  CF_ACCOUNT_ID?: string;
   // CreditLedger Durable Object namespace. Per-token DO instance owns
   // the canonical credit balance + daily-spend counter and serializes
   // all read-modify-write operations to close H-1 + H-2 races from the
