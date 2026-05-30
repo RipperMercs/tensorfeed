@@ -12749,17 +12749,17 @@ export default {
       }
     }
 
-    // x402-index settlement indexer (audit #5). Runs every 5 minutes, gated on
-    // the fired wall-clock minute rather than event.cron. The dedicated
-    // "*/5 * * * *" trigger shares minutes with */10, */15, and */2, and
-    // Cloudflare surfaces only the first-registered matching pattern in
-    // event.cron, so the old "else if (cron === '*/5')" branch was shadowed and
-    // the tick ran only about 4 times an hour. Gating on the minute is immune
-    // to that: scheduled() fires at every multiple-of-5 minute (the */5 trigger
-    // covers :05/:25/:35/:55, */10 and */15 cover the rest), so this runs the
-    // tick exactly once at each. `start` is Date.now() captured when this
-    // scheduled() invocation began, so its UTC minute is the fired minute.
-    if (new Date(start).getUTCMinutes() % 5 === 0) {
+    // x402-index settlement indexer (audit #5). Runs once every 5 minutes, gated
+    // on the dedicated "*/5 * * * *" trigger. Cloudflare fires scheduled() once
+    // PER matching cron pattern, so at minutes shared by */2, */10, and */15 the
+    // handler runs several times concurrently. The prior gate on the wall-clock
+    // minute (minute % 5 === 0) therefore ran the indexer 2-3x at once, bursting
+    // the RPC rate limit and racing on the cursor. Verified 2026-05-30 from worker
+    // logs that a "*/5" invocation fires at every multiple-of-5 minute (8
+    // consecutive, no gaps), so this branch runs the tick exactly once per cycle.
+    // An earlier comment claimed "*/5" was shadowed at collision minutes; that is
+    // not the observed behavior.
+    if (cron === '*/5 * * * *') {
       const { runIndexerTick } = await import('./x402-index/indexer');
       await run('x402IndexerTick', () => runIndexerTick(env));
     }
