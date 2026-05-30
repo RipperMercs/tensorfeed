@@ -2043,6 +2043,13 @@ export interface PaymentResult {
   // headers, IP under daily cap). Causes commitPayment to log a no-charge
   // event with reason='free_trial' and skip credit/wallet I/O entirely.
   freeTrial?: FreeTrialQuota;
+  // On-chain payer address (auth.from) surfaced only when this invocation
+  // settled a fresh on-chain payment this request: the X-PAYMENT (Coinbase
+  // x402 V2) settle and the X-Payment-Tx fallback. Threaded into
+  // logPremiumUsage so the KV paid rollup's top_payers reflects who paid.
+  // Bearer-token reuse does not set this: that wallet paid on an earlier
+  // call, not this one, so attributing it here would double-count.
+  payerWallet?: string;
 }
 
 export async function requirePayment(
@@ -2478,6 +2485,7 @@ export async function requirePayment(
       currentBalance: tokenRecord.balance,
       tokenRemaining: tokenRecord.balance - cost,
       newToken: true,
+      payerWallet: verified.senderAddress,
     };
   }
 
@@ -2724,6 +2732,7 @@ export async function requirePayment(
           tokenRemaining: priorRecord.balance - cost,
           newToken: true,
           paymentResponseHeader: encodeSettlementHeader(settle),
+          payerWallet: payerAddress,
         };
       }
       // Marker present but the token record is gone (manual purge): fall
@@ -2785,6 +2794,7 @@ export async function requirePayment(
       tokenRemaining: tokenRecord.balance - cost,
       newToken: true,
       paymentResponseHeader: encodeSettlementHeader(settle),
+      payerWallet: payerAddress,
     };
   }
 

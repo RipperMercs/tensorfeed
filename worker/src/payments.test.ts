@@ -183,6 +183,23 @@ describe('logPremiumUsage (payer-wallet rollup)', () => {
     expect(rollup.by_endpoint['/api/premium/y'].calls).toBe(1);
     expect(Object.keys(rollup.top_payers || {})).toHaveLength(0);
   });
+
+  // Pilot-settle contract (Task 5 Step 4). A bazaar-pilot premium 200 that
+  // settled a fresh on-chain payment threads the authorizer address from
+  // requirePayment (PaymentResult.payerWallet) into logPremiumUsage as the
+  // sixth argument, so the KV paid rollup attributes the credits under the
+  // stable BAZAAR_PILOTS template key, not just to Analytics Engine. This
+  // mirrors how every pilot handler now calls the logger on a paid settle.
+  it('attributes a pilot settle to its payer under the template key', async () => {
+    const env = makeEnv();
+    const template = '/api/premium/research/emerging-keywords';
+    await logPremiumUsage(env, template, 'agent/1', 1, 'tf_live_x', '0xPILOT_PAYER');
+
+    const rollup = await readRollupFromKv(env, new Date().toISOString().slice(0, 10));
+    expect(rollup.by_endpoint[template].calls).toBe(1);
+    expect(rollup.by_endpoint[template].distinct_payers).toBe(1);
+    expect(rollup.top_payers?.['0xpilot_payer'].credits_charged).toBe(1);
+  });
 });
 
 describe('getTokenUsage', () => {
