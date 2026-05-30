@@ -1,4 +1,4 @@
-import { REORG_SAFETY_BLOCKS, MAX_BLOCKS_PER_TICK, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent, DEFAULT_BASE_RPC, DEFAULT_GETLOGS_BLOCK_SPAN, KV_KEY_CURSOR, KV_KEY_PUBLISHERS, USDC_BASE_CONTRACT } from './constants';
+import { REORG_SAFETY_BLOCKS, MAX_BLOCKS_PER_TICK, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent, DEFAULT_BASE_RPC, DEFAULT_GETLOGS_BLOCK_SPAN, MAX_GETLOGS_CALLS_PER_TICK, KV_KEY_CURSOR, KV_KEY_PUBLISHERS, USDC_BASE_CONTRACT } from './constants';
 import type { SettlementEvent, DailyRollup, PublisherDailyRollup, IndexerCursor } from './types';
 import type { Env } from '../types';
 
@@ -193,15 +193,16 @@ export async function runIndexerTick(
   rpcUrl?: string,
   fetchFn: typeof fetch = fetch,
 ): Promise<IndexerResult> {
-  // Prefer an explicit arg (tests), then BASE_INDEXER_RPC_URL, then the public
-  // default. The indexer deliberately does NOT fall back to BASE_RPC_URL: that
-  // is the payments/facilitator RPC, and a keyed payments endpoint can cap
-  // eth_getLogs spans (some free tiers allow only 10 blocks), which silently
-  // froze this cursor. The public Base node allows 10,000-block spans, which the
-  // per-tick cap already respects. Point BASE_INDEXER_RPC_URL at a logs-friendly
-  // keyed endpoint for production rate budget, and set BASE_RPC_GETLOGS_SPAN if
-  // that endpoint caps the span below DEFAULT_GETLOGS_BLOCK_SPAN.
-  const rpc = rpcUrl ?? env.BASE_INDEXER_RPC_URL ?? DEFAULT_BASE_RPC;
+  // RPC precedence: explicit arg (tests), then a dedicated BASE_INDEXER_RPC_URL,
+  // then the keyed BASE_RPC_URL (payments RPC), then the public node. The public
+  // node throttles the Worker's shared Cloudflare egress, so an anonymous default
+  // is the LEAST reliable choice for a cron that must run unattended; a keyed
+  // endpoint the Worker can actually reach is preferred. A keyed payments RPC may
+  // cap eth_getLogs spans (some allow only 10 blocks), but the indexer now windows
+  // each tick to BASE_RPC_GETLOGS_SPAN, so that cap is handled by chunking rather
+  // than by avoiding the endpoint. For best results point BASE_INDEXER_RPC_URL at
+  // a logs-friendly keyed endpoint (10k-span) and set BASE_RPC_GETLOGS_SPAN high.
+  const rpc = rpcUrl ?? env.BASE_INDEXER_RPC_URL ?? env.BASE_RPC_URL ?? DEFAULT_BASE_RPC;
   const parsedSpan = env.BASE_RPC_GETLOGS_SPAN ? parseInt(env.BASE_RPC_GETLOGS_SPAN, 10) : NaN;
   const getLogsSpan = Number.isFinite(parsedSpan) && parsedSpan > 0 ? parsedSpan : DEFAULT_GETLOGS_BLOCK_SPAN;
   const cursorRaw = (await env.TENSORFEED_CACHE.get(KV_KEY_CURSOR, 'json')) as IndexerCursor | null;
@@ -225,7 +226,11 @@ export async function runIndexerTick(
   }
 
   const wallets = Object.keys(walletMap);
-  const windows = chunkBlockRange(range.fromBlock, range.toBlock, getLogsSpan);
+  // Bound the eth_getLogs calls per tick. On a small-span RPC the range can fan
+  // out to hundreds of windows; processing at most MAX_GETLOGS_CALLS_PER_TICK of
+  // them keeps the tick inside the cron wall-clock budget and lets the cursor
+  // checkpoint reliably. The remaining windows are picked up by the next tick.
+  const windows = chunkBlockRange(range.fromBlock, range.toBlock, getLogsSpan).slice(0, MAX_GETLOGS_CALLS_PER_TICK);
 
   // Walk the range one bounded window at a time, checkpointing the cursor after
   // each fully-processed window. A window failure (rate limit, oversized span on
@@ -285,8 +290,15 @@ async function getCurrentBlock(rpcUrl: string, fetchFn: typeof fetch): Promise<n
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
   });
-  const data = (await res.json()) as { result: string };
-  return parseInt(data.result, 16);
+  const data = (await res.json()) as { result?: string; error?: { message?: string } };
+  // Validate explicitly. A throttled or rate-limited node returns a JSON-RPC
+  // error (or a body with no `result`); blindly parseInt-ing it yields NaN, which
+  // would flow into computeBlockRange as a NaN range, produce zero windows, and
+  // freeze the cursor with no error logged. Throw instead so the cron surfaces it.
+  if (data.error) throw new Error(`eth_blockNumber failed: ${data.error.message ?? 'rpc error'}`);
+  const block = typeof data.result === 'string' ? parseInt(data.result, 16) : NaN;
+  if (!Number.isFinite(block)) throw new Error(`eth_blockNumber failed: unparseable result ${JSON.stringify(data.result)}`);
+  return block;
 }
 
 async function getTransferLogsForWallets(

@@ -20,6 +20,13 @@ export const MAX_BLOCKS_PER_TICK = 2000;
 // default is a single call per tick there; lower it via BASE_RPC_GETLOGS_SPAN to
 // match a small-limit RPC.
 export const DEFAULT_GETLOGS_BLOCK_SPAN = 2000;
+// Max eth_getLogs calls a single tick will make. On a small-span RPC (10-block
+// limit) a 2000-block tick would otherwise fan out to 200 sequential calls,
+// risking the cron wall-clock budget and the RPC rate limit. Capping the calls
+// bounds each tick to a fast, reliably-checkpointed unit of work; the next tick
+// resumes from the new cursor. On a wide-span RPC each tick is a single call, so
+// this cap is never reached.
+export const MAX_GETLOGS_CALLS_PER_TICK = 50;
 export const RECENT_FEED_SIZE = 100;
 export const EVENT_TTL_SECONDS = 90 * 24 * 60 * 60;
 export const PUBLISHER_DELIST_GRACE_DAYS = 7;

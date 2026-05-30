@@ -423,7 +423,7 @@ describe('runIndexerTick', () => {
     expect(seenUrls).not.toContain('https://payments.example/rpc');
   });
 
-  it('falls back to the public Base node (not the payments RPC) when no indexer RPC is set', async () => {
+  it('falls back to the reachable BASE_RPC_URL when no dedicated indexer RPC is set', async () => {
     const kv = mockKv();
     const seenUrls: string[] = [];
     const env = {
@@ -435,9 +435,25 @@ describe('runIndexerTick', () => {
       return { json: async () => ({ result: '0x100' }) } as unknown as Response;
     }) as unknown as typeof fetch;
 
+    // The public node throttles the Worker's shared Cloudflare egress, so the
+    // indexer prefers the keyed BASE_RPC_URL (which the Worker can reach) over
+    // the public default. Wide-span safety comes from chunking, not the RPC.
+    await runIndexerTick(env, undefined, mockFetch);
+    expect(seenUrls).toContain('https://payments.example/rpc');
+    expect(seenUrls).not.toContain('https://mainnet.base.org');
+  });
+
+  it('falls back to the public node only when no RPC is configured at all', async () => {
+    const kv = mockKv();
+    const seenUrls: string[] = [];
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    const mockFetch = vi.fn(async (url: string) => {
+      seenUrls.push(url);
+      return { json: async () => ({ result: '0x100' }) } as unknown as Response;
+    }) as unknown as typeof fetch;
+
     await runIndexerTick(env, undefined, mockFetch);
     expect(seenUrls).toContain('https://mainnet.base.org');
-    expect(seenUrls).not.toContain('https://payments.example/rpc');
   });
 
   it('windows a tick into <=span eth_getLogs calls and aggregates events across windows', async () => {
@@ -496,5 +512,39 @@ describe('runIndexerTick', () => {
     // First window [1001,1010] succeeded and is checkpointed; the failing 2nd
     // window did not advance the cursor past 1010, and it is not stuck at 1000.
     expect(cursor.block).toBe(1010);
+  });
+
+  it('surfaces an RPC failure on eth_blockNumber instead of silently no-oping', async () => {
+    const kv = mockKv();
+    kv.store.set(KV_KEY_CURSOR, JSON.stringify({ block: 1000, ts: '2026-05-29T00:00:00.000Z', last_run_at: '2026-05-29T00:00:00.000Z' }));
+    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({ '0xbbb0000000000000000000000000000000000002': 'example.com' }));
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    // A throttled public node returns a JSON-RPC error (no `result`). The tick
+    // must throw so the cron logs it, never compute a NaN range and silently
+    // freeze the cursor (the bug that hid a multi-day outage).
+    const mockFetch = vi.fn(async () => ({ json: async () => ({ error: { message: 'over rate limit' } }) }) as unknown as Response) as unknown as typeof fetch;
+
+    await expect(runIndexerTick(env, 'https://throttled.example/rpc', mockFetch)).rejects.toThrow(/over rate limit/);
+
+    const cursor = await kv.get(KV_KEY_CURSOR, 'json') as { block: number };
+    expect(cursor.block).toBe(1000);
+  });
+
+  it('caps eth_getLogs calls per tick so a small-span RPC stays within the cron time budget', async () => {
+    const kv = mockKv();
+    kv.store.set(KV_KEY_CURSOR, JSON.stringify({ block: 1000, ts: '2026-05-29T00:00:00.000Z', last_run_at: '2026-05-29T00:00:00.000Z' }));
+    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({ '0xbbb0000000000000000000000000000000000002': 'example.com' }));
+    const env = { TENSORFEED_CACHE: kv, BASE_RPC_GETLOGS_SPAN: '10' } as unknown as import('../types').Env;
+
+    // head far ahead -> range capped at MAX_BLOCKS_PER_TICK (2000) = [1001,3000]
+    // = 200 windows at span 10. Only MAX_GETLOGS_CALLS_PER_TICK (50) run per tick;
+    // the cursor advances 500 blocks and the next tick continues from there.
+    const { fetchFn, getLogsCalls } = makeRpcMock(100000, {});
+    const result = await runIndexerTick(env, 'https://small.example/rpc', fetchFn);
+
+    expect(getLogsCalls).toHaveLength(50);
+    expect(result).toMatchObject({ to: 1500 });
+    const cursor = await kv.get(KV_KEY_CURSOR, 'json') as { block: number };
+    expect(cursor.block).toBe(1500);
   });
 });
