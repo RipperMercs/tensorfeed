@@ -10,6 +10,7 @@ import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatest
 import { captureHistory, listHistory, readHistory } from './history';
 import { cdpListDiscoveryResources } from './cdp-facilitator';
 import { bazaarPilotPaths, pilotCatalogStatus } from './bazaar-pilots';
+import { deriveUsageEvent, recordUsageEvent } from './usage-meter';
 import { cachedFetch } from './edge-cache';
 import {
   readNewsDaily,
@@ -1154,6 +1155,22 @@ export default {
     }
 
     const response = await this._handleRoute(request, env, ctx, url, path);
+
+    // Agent Usage Meter: one AE data point per premium / tracked-free API response.
+    // `charged` is true only when this request settled a payment this invocation.
+    // It is threaded as false here for now; the bazaar-pilot settle path (a later
+    // task) sets the real charge signal so premium 200s classify as paid vs free.
+    try {
+      const evt = deriveUsageEvent(path, response.status, false);
+      if (evt) {
+        evt.ua = request.headers.get('User-Agent') || '';
+        evt.country = request.cf?.country as string | undefined;
+        recordUsageEvent(env, evt);
+      }
+    } catch {
+      // best-effort: telemetry must never affect the response path
+    }
+
     return rateInfo ? applyRateLimitHeaders(response, rateInfo) : response;
   },
 
