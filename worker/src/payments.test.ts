@@ -131,6 +131,60 @@ describe('logPremiumUsage (per-token path)', () => {
   });
 });
 
+// ── Payer-wallet rollup extension (Agent Usage Meter, Task 4) ────────
+//
+// logPremiumUsage gains an optional payerWallet param. When present it
+// accumulates a per-wallet paid total (top_payers, keyed by lowercased
+// wallet) and counts distinct payers per endpoint, without changing any
+// behavior on the UA-only call path used by every existing call site.
+
+// The daily rollup lives at pay:rollup:{date}. The makeKV mock parses the
+// JSON on put, so a direct get returns the object. Mirrors the direct-KV
+// reads the other tests in this file already use.
+interface RollupPayer {
+  calls: number;
+  credits_charged: number;
+  first_seen: string;
+  last_seen: string;
+}
+interface RollupForTest {
+  by_endpoint: Record<
+    string,
+    { calls: number; credits_charged: number; distinct_payers?: number }
+  >;
+  top_payers?: Record<string, RollupPayer>;
+}
+
+async function readRollupFromKv(env: Env, date: string): Promise<RollupForTest> {
+  const r = (await env.TENSORFEED_CACHE.get(`pay:rollup:${date}`, 'json')) as RollupForTest | null;
+  return r ?? { by_endpoint: {}, top_payers: {} };
+}
+
+describe('logPremiumUsage (payer-wallet rollup)', () => {
+  it('accumulates top_payers and distinct payers per endpoint when a wallet is passed', async () => {
+    const env = makeEnv();
+    await logPremiumUsage(env, '/api/premium/x', 'axios/1', 1, 'tok', '0xWALLET_A');
+    await logPremiumUsage(env, '/api/premium/x', 'axios/1', 1, 'tok', '0xWALLET_A');
+    await logPremiumUsage(env, '/api/premium/x', 'curl/8', 2, 'tok', '0xWALLET_B');
+
+    const rollup = await readRollupFromKv(env, new Date().toISOString().slice(0, 10));
+    expect(rollup.top_payers).toBeDefined();
+    if (!rollup.top_payers) return;
+    expect(rollup.top_payers['0xwallet_a'].calls).toBe(2);
+    expect(rollup.top_payers['0xwallet_a'].credits_charged).toBe(2);
+    expect(rollup.top_payers['0xwallet_b'].credits_charged).toBe(2);
+    expect(rollup.by_endpoint['/api/premium/x'].distinct_payers).toBe(2);
+  });
+
+  it('is unchanged when no wallet is passed (UA-only, backward compatible)', async () => {
+    const env = makeEnv();
+    await logPremiumUsage(env, '/api/premium/y', 'axios/1', 1, 'tok');
+    const rollup = await readRollupFromKv(env, new Date().toISOString().slice(0, 10));
+    expect(rollup.by_endpoint['/api/premium/y'].calls).toBe(1);
+    expect(Object.keys(rollup.top_payers || {})).toHaveLength(0);
+  });
+});
+
 describe('getTokenUsage', () => {
   it('returns null for unknown tokens', async () => {
     const env = makeEnv();

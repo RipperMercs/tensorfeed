@@ -173,7 +173,16 @@ interface DailyRollup {
   unique_agents: string[]; // capped at 100
   by_endpoint: Record<
     string,
-    { calls: number; credits_charged: number; first_seen: string; last_seen: string }
+    {
+      calls: number;
+      credits_charged: number;
+      first_seen: string;
+      last_seen: string;
+      // Distinct paying wallets seen on this endpoint today. Optional for
+      // backward compat with rollups written before the usage meter; the
+      // accumulator treats a missing value as zero.
+      distinct_payers?: number;
+    }
   >;
   top_agents: Array<{
     agent_ua: string;
@@ -182,6 +191,18 @@ interface DailyRollup {
     purchased_usd: number;
     last_seen: string;
   }>; // capped at 25, sorted by calls desc
+  // Per-wallet paid totals for the day, keyed by lowercased wallet address.
+  // Populated only when a payer wallet is surfaced at settle time; the
+  // UA-only call path leaves this undefined (backward compatible).
+  top_payers?: Record<
+    string,
+    { calls: number; credits_charged: number; first_seen: string; last_seen: string }
+  >;
+  // Persisted dedupe ledger for distinct_payers, keyed by "endpoint|wallet".
+  // Lives in the daily rollup so it resets with the day. Lets us increment a
+  // per-endpoint distinct-payer count only the first time a wallet hits that
+  // endpoint today, without storing the full payer list per endpoint.
+  _payer_seen?: Record<string, boolean>;
 }
 
 // === Helpers ===
@@ -802,6 +823,11 @@ async function logRevenue(env: Env, amountUsd: number, agentUa: string): Promise
  *      so /api/payment/usage and the human-facing /account dashboard can
  *      show "you spent N credits across these endpoints" without scanning
  *      every daily rollup.
+ *
+ * payerWallet is optional and best-effort: when the paying wallet is
+ * surfaced at settle time, it accumulates a per-wallet paid total
+ * (top_payers, keyed by lowercased wallet) and counts distinct payers per
+ * endpoint. The UA-only call path (no wallet) is unchanged.
  */
 export async function logPremiumUsage(
   env: Env,
@@ -809,6 +835,7 @@ export async function logPremiumUsage(
   agentUa: string,
   creditsCharged: number,
   token?: string,
+  payerWallet?: string,
 ): Promise<void> {
   try {
     const date = new Date().toISOString().slice(0, 10);
@@ -825,10 +852,37 @@ export async function logPremiumUsage(
       credits_charged: 0,
       first_seen: now,
       last_seen: now,
+      distinct_payers: 0,
     };
     slot.calls += 1;
     slot.credits_charged += creditsCharged;
     slot.last_seen = now;
+
+    if (payerWallet) {
+      const w = payerWallet.toLowerCase();
+      rollup.top_payers = rollup.top_payers || {};
+      const payer = rollup.top_payers[w] || {
+        calls: 0,
+        credits_charged: 0,
+        first_seen: now,
+        last_seen: now,
+      };
+      payer.calls += 1;
+      payer.credits_charged += creditsCharged;
+      payer.last_seen = now;
+      rollup.top_payers[w] = payer;
+
+      // distinct_payers: increment only the first time this wallet hits this
+      // endpoint today. The seen ledger persists in the daily rollup and
+      // resets with the day.
+      const seenKey = `${endpoint}|${w}`;
+      rollup._payer_seen = rollup._payer_seen || {};
+      if (!rollup._payer_seen[seenKey]) {
+        slot.distinct_payers = (slot.distinct_payers || 0) + 1;
+        rollup._payer_seen[seenKey] = true;
+      }
+    }
+
     rollup.by_endpoint[endpoint] = slot;
 
     await writeRollup(env, rollup);
