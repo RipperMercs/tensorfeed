@@ -1,4 +1,4 @@
-import { REORG_SAFETY_BLOCKS, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent, DEFAULT_BASE_RPC, KV_KEY_CURSOR, KV_KEY_PUBLISHERS, USDC_BASE_CONTRACT } from './constants';
+import { REORG_SAFETY_BLOCKS, MAX_BLOCKS_PER_TICK, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent, DEFAULT_BASE_RPC, KV_KEY_CURSOR, KV_KEY_PUBLISHERS, USDC_BASE_CONTRACT } from './constants';
 import type { SettlementEvent, DailyRollup, PublisherDailyRollup, IndexerCursor } from './types';
 import type { Env } from '../types';
 
@@ -10,9 +10,16 @@ export interface BlockRange {
 export function computeBlockRange(cursorBlock: number, currentBlock: number): BlockRange | null {
   const safeTo = currentBlock - REORG_SAFETY_BLOCKS;
   if (safeTo <= cursorBlock) return null;
+  // Never scan more than MAX_BLOCKS_PER_TICK in one eth_getLogs. A wider span is
+  // rejected by the public Base RPC (10,000-block limit) and is the first query
+  // rate limited from the shared Cloudflare egress, which is exactly what stalls
+  // the cursor: once the gap grows past the limit, every tick re-requests the
+  // whole oversized span and fails forever. Capping the span lets the indexer
+  // walk the backlog forward one bounded, accepted window per tick.
+  const toBlock = Math.min(safeTo, cursorBlock + MAX_BLOCKS_PER_TICK);
   return {
     fromBlock: cursorBlock + 1,
-    toBlock: safeTo,
+    toBlock,
   };
 }
 
@@ -168,11 +175,17 @@ type IndexerResult =
 
 export async function runIndexerTick(
   env: Env,
-  rpcUrl: string = DEFAULT_BASE_RPC,
+  rpcUrl?: string,
   fetchFn: typeof fetch = fetch,
 ): Promise<IndexerResult> {
+  // Prefer an explicit arg (tests), then the configured BASE_RPC_URL secret or
+  // var (a keyed endpoint with its own rate budget, immune to the shared
+  // Cloudflare egress throttling that hits the public node), then the public
+  // default. The scheduled call site passes no arg, so production honors
+  // BASE_RPC_URL when set and falls back to the public RPC when it is not.
+  const rpc = rpcUrl ?? env.BASE_RPC_URL ?? DEFAULT_BASE_RPC;
   const cursorRaw = (await env.TENSORFEED_CACHE.get(KV_KEY_CURSOR, 'json')) as IndexerCursor | null;
-  const currentBlock = await getCurrentBlock(rpcUrl, fetchFn);
+  const currentBlock = await getCurrentBlock(rpc, fetchFn);
 
   if (!cursorRaw) {
     const nowStr = new Date().toISOString();
@@ -192,11 +205,11 @@ export async function runIndexerTick(
   }
 
   const wallets = Object.keys(walletMap);
-  const logs = await getTransferLogsForWallets(rpcUrl, range.fromBlock, range.toBlock, wallets, fetchFn);
+  const logs = await getTransferLogsForWallets(rpc, range.fromBlock, range.toBlock, wallets, fetchFn);
 
   const uniqueBlockNumbers = Array.from(new Set(logs.map((l) => l.blockNumber)));
   const blockTsMap = uniqueBlockNumbers.length > 0
-    ? await getBlockTimestamps(rpcUrl, uniqueBlockNumbers, fetchFn)
+    ? await getBlockTimestamps(rpc, uniqueBlockNumbers, fetchFn)
     : {};
 
   let count = 0;

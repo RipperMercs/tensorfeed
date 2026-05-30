@@ -3,6 +3,15 @@ export const USDC_DECIMALS = 6;
 export const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 export const DEFAULT_BASE_RPC = 'https://mainnet.base.org';
 export const REORG_SAFETY_BLOCKS = 30;
+// Max blocks a single tick will scan in one eth_getLogs call. The public Base
+// RPC rejects eth_getLogs spans wider than 10,000 blocks (error -32614), and a
+// wide span is also the heaviest query, the first to be rate limited from the
+// shared Cloudflare egress. Capping the per-tick span keeps every query small
+// and accepted, and lets the indexer catch up incrementally over several ticks
+// after an outage instead of stalling forever on one oversized request. At a
+// ~5-minute cadence on ~2-second Base blocks, normal operation accrues ~150
+// blocks per tick, so this 2,000 ceiling is only ever hit while catching up.
+export const MAX_BLOCKS_PER_TICK = 2000;
 export const RECENT_FEED_SIZE = 100;
 export const EVENT_TTL_SECONDS = 90 * 24 * 60 * 60;
 export const PUBLISHER_DELIST_GRACE_DAYS = 7;

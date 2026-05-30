@@ -23,6 +23,18 @@ describe('computeBlockRange', () => {
   it('returns single-block range when current is exactly 31 ahead of cursor', () => {
     expect(computeBlockRange(1000, 1031)).toEqual({ fromBlock: 1001, toBlock: 1001 });
   });
+
+  it('caps the span at MAX_BLOCKS_PER_TICK so an oversized backlog is walked incrementally', () => {
+    // A multi-hour stall leaves the cursor tens of thousands of blocks behind.
+    // Without the cap this returns a span the public RPC rejects (the death
+    // spiral that stalls the cursor forever). Capped, the tick advances at most
+    // MAX_BLOCKS_PER_TICK (2000) and the next tick continues from there.
+    expect(computeBlockRange(1000, 1_000_000)).toEqual({ fromBlock: 1001, toBlock: 3000 });
+  });
+
+  it('does not cap when the gap is smaller than MAX_BLOCKS_PER_TICK', () => {
+    expect(computeBlockRange(1000, 2500)).toEqual({ fromBlock: 1001, toBlock: 2470 });
+  });
 });
 
 describe('decodeTransferLog', () => {
@@ -283,7 +295,7 @@ describe('runIndexerTick', () => {
                   '0x000000000000000000000000bbb0000000000000000000000000000000000002',
                 ],
                 data: '0x0000000000000000000000000000000000000000000000000000000000004e20',
-                blockNumber: '0xfa0',
+                blockNumber: '0x9c4',
                 transactionHash: '0xtxhash1',
               },
             ],
@@ -295,7 +307,7 @@ describe('runIndexerTick', () => {
           {
             id: 0,
             result: {
-              number: '0xfa0',
+              number: '0x9c4',
               timestamp: (Math.floor(Date.parse('2026-05-27T12:00:00Z') / 1000)).toString(16),
             },
           },
@@ -307,6 +319,24 @@ describe('runIndexerTick', () => {
     expect(result).toMatchObject({ events: 1 });
 
     const cursor = await kv.get(KV_KEY_CURSOR, 'json') as { block: number };
-    expect(cursor.block).toBe(65506); // 0x10000 - 30 = 65506
+    // Capped: 1000 + MAX_BLOCKS_PER_TICK (2000). The ~64k-block gap is not
+    // scanned in one oversized eth_getLogs; it is walked 2000 blocks per tick.
+    expect(cursor.block).toBe(3000);
+  });
+
+  it('uses env.BASE_RPC_URL when no explicit rpcUrl arg is passed', async () => {
+    const kv = mockKv();
+    const seenUrls: string[] = [];
+    const env = { TENSORFEED_CACHE: kv, BASE_RPC_URL: 'https://keyed.example/rpc' } as unknown as import('../types').Env;
+    const mockFetch = vi.fn(async (url: string) => {
+      seenUrls.push(url);
+      return { json: async () => ({ result: '0x100' }) } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+    // No cursor yet, so this initializes and only calls getCurrentBlock, which is
+    // enough to prove the configured keyed RPC is the URL used (not the public
+    // default). Before BASE_RPC_URL was wired in, this hit mainnet.base.org.
+    await runIndexerTick(env, undefined, mockFetch);
+    expect(seenUrls).toContain('https://keyed.example/rpc');
   });
 });
