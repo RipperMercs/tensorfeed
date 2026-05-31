@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'california-30-ai-bills-crossover-july-sprint',
+    title:
+      'Thirty AI Bills Just Survived in Sacramento. The Next Four Weeks Set the US Floor.',
+    author: 'Kira Nolan',
+    date: 'May 31, 2026',
+    readTime: '7 min read',
+    description:
+      "Nearly all of California's roughly 30 active AI bills cleared their chamber of origin before the May 29 crossover deadline. With no federal standard sitting above them and a July 2 summer adjournment looming, the application layer of US AI regulation gets written in the next four weeks. SB 53 already covered the model layer (large frontier developers, $500M revenue, governance and incident reporting enforced by the California AG). This crop covers the deployment layer: customer-service and companion chatbots (AB 1609, AB 1988, AB 2023, SB 1119, SB 300, SB 867), workplace surveillance and automated decision systems (AB 1883, SB 947, SB 719), AI in healthcare and therapy (AB 1979, AB 2575, SB 903), provenance (AB 2713), a proposed AI Standards and Safety Commission (SB 813), and natural-person mandates for teachers. Inside the bills worth tracking, why a federal vacuum guarantees a strictest-standard patchwork (Illinois SB 315, Colorado chatbot and psychotherapy bills moving the same week), and three signposts over the next ninety days.",
+  },
+  {
     slug: 'x402-batch-settlement-base-mcp-distribution-layer',
     title:
       "A Claude Agent Reads the Day's News for 10 Cents Now. x402 Just Had Its Distribution Week.",
