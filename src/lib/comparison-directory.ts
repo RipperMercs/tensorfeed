@@ -781,6 +781,45 @@ export const COMPARISONS: ComparisonMeta[] = [
       'Teams standardized on the Llama family for fine-tuning continuity',
     ],
   },
+  // ── Added May 31, 2026 ──────────────────────────────────────────────
+  {
+    slug: 'claude-opus-4-8-vs-claude-opus-4-7',
+    modelA: 'claude-opus-4-8',
+    modelB: 'claude-opus-4-7',
+    nameA: 'Claude Opus 4.8',
+    nameB: 'Claude Opus 4.7',
+    providerA: 'Anthropic',
+    providerB: 'Anthropic',
+    benchmarkNameA: 'Claude Opus 4.8',
+    benchmarkNameB: 'Claude Opus 4.7',
+    seoTitle: 'Claude Opus 4.8 vs 4.7: What Actually Changed',
+    seoDescription:
+      'Claude Opus 4.8 vs 4.7 compared. Same $15/$75 pricing, same 1M context, sharper agentic coding, a cheaper fast mode, and more honesty. Full generational diff on TensorFeed.',
+    intro:
+      'Anthropic released Claude Opus 4.8 on May 28, 2026, just six weeks after Opus 4.7. Pricing held steady at $15 input and $75 output per million tokens, and the 1 million token context window carries over unchanged. The gains are in capability and economics: Anthropic\'s own numbers put agentic coding at 69.2% (up from 64.3%), knowledge work at 1890 (up from 1753), and agentic financial analysis at 53.9% (up from 51.5%), while the new fast mode runs roughly 2.5x quicker and about three times cheaper than before. Anthropic also frames 4.8 as more honest about its own progress and better at working independently for longer. Here is the full generational diff.',
+    verdicts: [
+      { category: 'Agentic coding', winner: 'A', reason: 'Opus 4.8 scores 69.2% vs 4.7 at 64.3% on Anthropic\'s agentic coding measure' },
+      { category: 'Knowledge work', winner: 'A', reason: 'Opus 4.8 posts 1890 vs 4.7 at 1753 on Anthropic\'s knowledge work score' },
+      { category: 'Reasoning with tools', winner: 'A', reason: 'Opus 4.8 reaches 57.9% vs 4.7 at 54.7% on multidisciplinary reasoning with tools' },
+      { category: 'Agentic computer use', winner: 'A', reason: 'Opus 4.8 reaches 83.4% vs 4.7 at 82.8%' },
+      { category: 'Agentic financial analysis', winner: 'A', reason: 'Opus 4.8 improves to 53.9% from 4.7 at 51.5%' },
+      { category: 'Fast mode', winner: 'A', reason: 'Opus 4.8 fast mode is roughly 2.5x faster and about 3x cheaper than the previous fast mode' },
+      { category: 'Pricing', winner: 'tie', reason: 'Both cost $15 input and $75 output per 1M tokens' },
+      { category: 'Context window', winner: 'tie', reason: 'Both ship a 1 million token context window' },
+    ],
+    chooseA: [
+      'Agentic coding and long-running asynchronous workflows',
+      'Tasks that benefit from higher effort settings (extra or max)',
+      'Workloads where the cheaper, faster fast mode lowers cost',
+      'Teams that want the most honest progress reporting',
+    ],
+    chooseB: [
+      'Existing prompts and evals already tuned to 4.7 behavior',
+      'Version-pinned enterprise contracts',
+      'Regression testing against the prior generation',
+      'Workloads where 4.7 already meets quality and latency targets',
+    ],
+  },
 ];
 
 export function getComparisonBySlug(slug: string): ComparisonMeta | undefined {

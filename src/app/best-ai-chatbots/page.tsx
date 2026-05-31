@@ -38,13 +38,13 @@ const chatbots = [
   {
     name: 'Claude',
     company: 'Anthropic',
-    model: 'Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5',
+    model: 'Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5',
     pricing: 'Free / Pro $20/mo / Team $30/user/mo',
-    contextWindow: '1M tokens (Opus 4.7)',
+    contextWindow: '1M tokens (Opus 4.8)',
     strengths: [
       'Best-in-class writing quality and nuance',
       'Exceptional at following complex instructions',
-      '1M token context window on Opus 4.7',
+      '1M token context window on Opus 4.8',
       'Strong coding and analysis capabilities',
       'Artifacts feature for rich content creation',
       'More careful and honest about uncertainty',
@@ -165,7 +165,7 @@ export default function BestAIChatbotsPage() {
         title="AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini"
         description="Honest 2026 AI chatbot comparison across pricing, context window, benchmarks, free tier, and best use case. With live API status for each provider."
         datePublished="2025-08-01"
-        dateModified="2026-05-23"
+        dateModified="2026-05-31"
       />
       <BreadcrumbListJsonLd
         items={[
@@ -175,7 +175,7 @@ export default function BestAIChatbotsPage() {
         ]}
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: May 23, 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: May 31, 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini

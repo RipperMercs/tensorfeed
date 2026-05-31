@@ -33,12 +33,12 @@ export const PROVIDERS: ProviderMeta[] = [
     seoDescription:
       'Everything about Anthropic and Claude. Model lineup, API pricing, benchmark scores, and status monitoring. Updated daily on TensorFeed.',
     intro:
-      'Anthropic is the AI safety company behind the Claude family of models. Founded in 2021 by former OpenAI researchers Dario and Daniela Amodei, Anthropic has built a reputation for producing models that lead on reasoning and code generation benchmarks while emphasizing safety research. Their current flagship, Claude Opus 4.7, shipped on April 17, 2026 with a 1 million token context window at the same price as Opus 4.6. In late April 2026 the company secured up to $25 billion in additional Amazon investment (April 21) and up to $40 billion in compute and capital from Google (April 24), bringing combined hyperscaler commitments past $65 billion at a $350 to $380 billion valuation. Their Model Context Protocol (MCP) has become foundational infrastructure for AI agents.',
+      'Anthropic is the AI safety company behind the Claude family of models. Founded in 2021 by former OpenAI researchers Dario and Daniela Amodei, Anthropic has built a reputation for producing models that lead on reasoning and code generation benchmarks while emphasizing safety research. Their current flagship, Claude Opus 4.8, shipped on May 28, 2026, just six weeks after Opus 4.7. It keeps the 1 million token context window and the $15 input / $75 output pricing while improving agentic coding (64.3% to 69.2% on Anthropic\'s own measure), honesty about its own progress, and long-horizon autonomy, with a fast mode that is roughly 2.5x quicker and three times cheaper than before. In late April 2026 the company secured up to $25 billion in additional Amazon investment (April 21) and up to $40 billion in compute and capital from Google (April 24), bringing combined hyperscaler commitments past $65 billion at a $350 to $380 billion valuation. Their Model Context Protocol (MCP) has become foundational infrastructure for AI agents.',
     founded: '2021',
     headquarters: 'San Francisco, CA',
     ceo: 'Dario Amodei',
-    keyProducts: ['Claude Opus 4.7', 'Claude Opus 4.6', 'Claude Sonnet 4.6', 'Claude Haiku 4.5', 'Claude Code', 'Model Context Protocol (MCP)'],
-    strengths: ['Leading benchmark performance', 'Safety-focused development', '1M context on Opus 4.7', 'Strong code generation', 'MCP ecosystem for agents'],
+    keyProducts: ['Claude Opus 4.8', 'Claude Opus 4.7', 'Claude Sonnet 4.6', 'Claude Haiku 4.5', 'Claude Code', 'Model Context Protocol (MCP)'],
+    strengths: ['Leading benchmark performance', 'Safety-focused development', '1M context on Opus 4.8', 'Stronger agentic coding and honesty', 'MCP ecosystem for agents'],
     statusSlug: 'is-claude-down',
   },
   {
