@@ -58,11 +58,18 @@ describe('getSummary', () => {
     expect(result.change_vs_prior_window.volume_pct).toBe(0);
   });
 
-  it('computes change_vs_prior_window correctly', async () => {
+  it('computes change_vs_prior_window over completed UTC days (excludes today partial)', async () => {
     const kv = mockKv();
     const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
-    const now = new Date('2026-05-27T00:00:00.000Z');
+    // now is mid-day on 2026-05-28, so the partial current day (05-28) must be
+    // excluded from the comparison: current window = [05-27] (last completed
+    // day), prior window = [05-26]. The 05-28 partial rollup is deliberately
+    // populated to prove it does NOT feed change_vs_prior_window.
+    const now = new Date('2026-05-28T06:00:00.000Z');
 
+    kv.store.set(kvKeyDayRollup('2026-05-28'), JSON.stringify({
+      date: '2026-05-28', volume_usdc: '99.0', count: 999, top_publishers: [],
+    }));
     kv.store.set(kvKeyDayRollup('2026-05-27'), JSON.stringify({
       date: '2026-05-27', volume_usdc: '2.0', count: 10, top_publishers: [],
     }));
@@ -71,8 +78,37 @@ describe('getSummary', () => {
     }));
 
     const result = await getSummary(env, '24h', now);
+    // 05-27 (2.0 / 10) vs 05-26 (1.0 / 5) = +100%, NOT touched by the 05-28 partial.
     expect(result.change_vs_prior_window.volume_pct).toBe(100);
     expect(result.change_vs_prior_window.count_pct).toBe(100);
+    expect(result.change_vs_prior_window.prior_window_empty).toBe(false);
+  });
+
+  it('shows no false decline for a fully-flat settlement history (the partial-current-day bias fix)', async () => {
+    const kv = mockKv();
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    // Every completed UTC day carries identical settlement volume/count, and the
+    // current UTC day (05-28) is only partially filled. Before the completed-day
+    // anchoring this produced a perpetual false decline early in each UTC day
+    // (partial today vs full prior). With both comparison windows anchored on
+    // completed days, a flat history reads as exactly 0% change.
+    const now = new Date('2026-05-28T06:00:00.000Z');
+    const flat = (date: string, vol: string, cnt: number) =>
+      kv.store.set(kvKeyDayRollup(date), JSON.stringify({ date, volume_usdc: vol, count: cnt, top_publishers: [] }));
+    // 05-28 is the partial current day; keep it small so a naive partial-vs-full
+    // comparison would read as a steep decline.
+    flat('2026-05-28', '0.3', 3);
+    // Completed days, all identical.
+    for (const d of ['2026-05-27', '2026-05-26', '2026-05-25', '2026-05-24', '2026-05-23', '2026-05-22', '2026-05-21', '2026-05-20', '2026-05-19', '2026-05-18', '2026-05-17', '2026-05-16', '2026-05-15', '2026-05-14']) {
+      flat(d, '5.0', 50);
+    }
+
+    for (const window of ['24h', '7d'] as const) {
+      const result = await getSummary(env, window, now);
+      expect(result.change_vs_prior_window.volume_pct).toBe(0);
+      expect(result.change_vs_prior_window.count_pct).toBe(0);
+      expect(result.change_vs_prior_window.prior_window_empty).toBe(false);
+    }
   });
 });
 
@@ -490,8 +526,11 @@ describe('x402-index hardening (captured_at, has_data, honesty)', () => {
   it('getSummary flags prior_window_empty when there is no prior baseline (forward-only launch window)', async () => {
     const kv = mockKv();
     const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+    // Data only on the last COMPLETED day (05-28), queried mid-day on 05-29. The
+    // comparison's current window is [05-28] and the prior window [05-27] is empty,
+    // so the launch-window sentinel still fires: prior_window_empty + volume_pct=100.
     kv.store.set(kvKeyDayRollup('2026-05-28'), JSON.stringify({ date: '2026-05-28', volume_usdc: '4.0', count: 8, top_publishers: [] }));
-    const result = await getSummary(env, '24h', new Date('2026-05-28T12:00:00.000Z'));
+    const result = await getSummary(env, '24h', new Date('2026-05-29T12:00:00.000Z'));
     expect(result.change_vs_prior_window.prior_window_empty).toBe(true);
     expect(result.change_vs_prior_window.volume_pct).toBe(100);
   });

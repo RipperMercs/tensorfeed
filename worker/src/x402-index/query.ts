@@ -73,11 +73,37 @@ export async function getSummary(env: Env, window: Window, now: Date = new Date(
     for (const p of r.top_publishers) publishers.add(p.domain);
   }
 
-  const priorOffsetMs = WINDOW_DAYS[window] * 24 * 60 * 60 * 1000;
-  const priorDates = datesInWindow(window, new Date(now.getTime() - priorOffsetMs));
-  const priorRollups = await Promise.all(
-    priorDates.map((d) => env.TENSORFEED_CACHE.get(kvKeyDayRollup(d), 'json') as Promise<DailyRollup | null>),
-  );
+  // change_vs_prior_window must compare like-for-like, so both windows are built
+  // from COMPLETED UTC days only. Daily rollups are keyed by UTC event day, so
+  // today's rollup (index 0 of datesInWindow(window, now)) is a partial,
+  // still-accumulating day. Including it in the current side while the prior side
+  // is all complete days biased every reading toward a false decline (worst at
+  // window=24h: a 06:00 UTC query compared ~6h of today against a full 24h
+  // yesterday). The headline volume_usdc/count/unique_publishers above stay the
+  // true current rolling totals (the honest so-far figures the leaderboard and
+  // series also serve); only this comparison is anchored on completed days.
+  //
+  // Anchor the current comparison window on the last COMPLETED UTC day (now minus
+  // one day) so today's partial day is excluded, then shift the prior window by
+  // one more full window so the two windows are equal-length and equally
+  // complete. For window=24h: current = [yesterday], prior = [day before].
+  const dayMs = 24 * 60 * 60 * 1000;
+  const windowMs = WINDOW_DAYS[window] * dayMs;
+  const lastCompletedDay = new Date(now.getTime() - dayMs);
+  const currentDates = datesInWindow(window, lastCompletedDay);
+  const priorDates = datesInWindow(window, new Date(lastCompletedDay.getTime() - windowMs));
+  const [currentRollups, priorRollups] = await Promise.all([
+    Promise.all(currentDates.map((d) => env.TENSORFEED_CACHE.get(kvKeyDayRollup(d), 'json') as Promise<DailyRollup | null>)),
+    Promise.all(priorDates.map((d) => env.TENSORFEED_CACHE.get(kvKeyDayRollup(d), 'json') as Promise<DailyRollup | null>)),
+  ]);
+
+  let currentVolumeStr = '0';
+  let currentCount = 0;
+  for (const r of currentRollups) {
+    if (!r) continue;
+    currentVolumeStr = addDecimal(currentVolumeStr, r.volume_usdc);
+    currentCount += r.count;
+  }
 
   let priorVolumeStr = '0';
   let priorCount = 0;
@@ -100,8 +126,8 @@ export async function getSummary(env: Env, window: Window, now: Date = new Date(
     count,
     unique_publishers: publishers.size,
     change_vs_prior_window: {
-      volume_pct: pctChangeDecimal(priorVolumeStr, volumeStr),
-      count_pct: pctChangeNum(priorCount, count),
+      volume_pct: pctChangeDecimal(priorVolumeStr, currentVolumeStr),
+      count_pct: pctChangeNum(priorCount, currentCount),
       prior_window_empty: priorWindowEmpty,
     },
     attribution: INDEX_ATTRIBUTION,
