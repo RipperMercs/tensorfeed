@@ -2702,6 +2702,27 @@ export default {
       return jsonResponse({ ok: true, backfilled }, 200, 0);
     }
 
+    // One-time read-only backfill of past USDC settlements for the curated
+    // x402 publisher wallets. Replays each wallet's inbound USDC transfer
+    // history into the per-publisher-day and per-day settlement rollups.
+    // Idempotent: every transfer is deduped on its event key before it is
+    // applied, so re-running (or overlapping with the forward indexer) never
+    // double-counts. This reads on-chain transfer history and writes
+    // settlement rollups only; it does NOT touch the payment/settle money
+    // path. Inherits the hoisted /api/admin rate-limit + ADMIN_KEY pre-check.
+    // days defaults to 30 and is clamped to the 1 to 90 range.
+    if (
+      path === '/api/admin/x402-backfill' &&
+      request.method === 'GET' &&
+      isAuthorizedAdmin(env, extractAdminKey(request, url))
+    ) {
+      const parsed = parseInt(url.searchParams.get('days') ?? '', 10);
+      const days = Math.min(90, Math.max(1, parsed || 30));
+      const { backfillCuratedWallets } = await import('./x402-index/backfill');
+      const result = await backfillCuratedWallets(env, days);
+      return jsonResponse({ ok: true, days, ...result }, 200, 0);
+    }
+
     if (path === '/api/admin/agents/claim/pending' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100), 500);
       const pending = await listPendingClaims(env, limit);
