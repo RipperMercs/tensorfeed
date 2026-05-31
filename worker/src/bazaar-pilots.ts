@@ -3676,6 +3676,356 @@ const GUIDANCE_DELTA_PILOT: BazaarPilotConfig = {
   },
 };
 
+/**
+ * Wave 26 (2026-05-30): agent news-search + brief cluster. The x402
+ * distribution week (batch settlement GA, Base MCP, the Tavily ten-cent news
+ * agent) made agent-payable news search and short-window briefs the hottest
+ * discovery categories. These four live named handlers were the highest-value
+ * premium endpoints still absent from the CDP Bazaar catalog.
+ */
+
+/** /api/premium/news/decision-verified/search: full-text search over signed verified-decision news clusters. q is required. */
+const DECISION_VERIFIED_SEARCH_PILOT: BazaarPilotConfig = {
+  description:
+    'Full-text search over TensorFeed signed verified-decision news clusters. One paid call returns matching story clusters ranked by corroboration, each with a verification tier (single through widely-reported), source count, source-diversity score, and the underlying articles. The agent-facing "how broadly is this story confirmed" search.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { q: 'openai restructuring', min_sources: 4 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            mode: 'search',
+            query: { q: 'openai restructuring', since: '2026-04-30', until: null, min_sources: 4, limit: 25 },
+            scanned_dates: 30,
+            total_clusters_scanned: 612,
+            matched: 3,
+            returned: 1,
+            results: [
+              {
+                cluster_id: 'c-2026-05-12-0007',
+                date: '2026-05-12',
+                claim_proxy: 'OpenAI completes for-profit restructuring under nonprofit parent',
+                hero_url: 'https://www.reuters.com/technology/openai-restructuring',
+                verification: {
+                  tier: 'broadly-verified',
+                  source_count: 11,
+                  article_count: 14,
+                  source_diversity_score: 0.7857,
+                  time_span_hours: 9.4,
+                  first_seen_at: '2026-05-12T08:05:00Z',
+                  last_seen_at: '2026-05-12T17:29:00Z',
+                  corroboration_band: 'broad',
+                },
+                sources: [
+                  { source: 'Reuters', article_count: 2, first_published: null },
+                  { source: 'Bloomberg', article_count: 1, first_published: null },
+                ],
+                articles: [
+                  {
+                    id: 'art-9f21',
+                    title: 'OpenAI completes for-profit restructuring under nonprofit parent',
+                    url: 'https://www.reuters.com/technology/openai-restructuring',
+                    source: 'Reuters',
+                    publishedAt: '2026-05-12T08:05:00Z',
+                  },
+                ],
+              },
+            ],
+            attribution: {
+              source: 'TensorFeed.ai daily news clustering over 100+ public RSS sources.',
+              derivation:
+                'RSS articles are embedded with Workers AI then single-link clustered per UTC day. The verification scores (tier, source_diversity_score, time_span_hours) are TensorFeed-derived structural metrics over corroboration count and source diversity; they do not make truth claims. Treat the linked article URLs as authoritative.',
+              license:
+                'RSS-syndicated headlines used under news fair-use. Verification scores are TensorFeed-derived. Receipts are Ed25519-signed per the AFTA spec.',
+            },
+            billing: { credits_charged: 1, credits_remaining: 247 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  q: { type: 'string', minLength: 3, maxLength: 200, description: 'Search query, required. Matched against the cluster claim text.' },
+                  since: { type: 'string', description: 'ISO date YYYY-MM-DD lower bound. Defaults to ~30 days back; lookback capped at 90 days.' },
+                  until: { type: 'string', description: 'ISO date YYYY-MM-DD upper bound.' },
+                  min_sources: { type: 'integer', minimum: 1, maximum: 50, description: 'Minimum distinct sources a cluster needs to be returned. Default 2.' },
+                  limit: { type: 'integer', minimum: 1, maximum: 100, description: 'Max clusters to return. Default 25.' },
+                },
+                required: ['q'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/** /api/premium/news/decision-verified: signed corroboration lookup for one cluster. cluster_id + date required. */
+const DECISION_VERIFIED_LOOKUP_PILOT: BazaarPilotConfig = {
+  description:
+    'Verified-decision lookup for one news cluster. Given a cluster_id and date, returns the signed corroboration record: verification tier (single through widely-reported), source count, source-diversity score, time span, and the underlying articles. The "how broadly confirmed is this exact story" call. Discover cluster_ids via /api/history/news/clusters?date=.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { cluster_id: 'c-2026-05-12-0007', date: '2026-05-12' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            mode: 'cluster_lookup',
+            cluster_id: 'c-2026-05-12-0007',
+            date: '2026-05-12',
+            claim_proxy: 'OpenAI completes for-profit restructuring under nonprofit parent',
+            hero_url: 'https://www.reuters.com/technology/openai-restructuring',
+            verification: {
+              tier: 'broadly-verified',
+              source_count: 11,
+              article_count: 14,
+              source_diversity_score: 0.7857,
+              time_span_hours: 9.4,
+              first_seen_at: '2026-05-12T08:05:00Z',
+              last_seen_at: '2026-05-12T17:29:00Z',
+              corroboration_band: 'broad',
+            },
+            sources: [{ source: 'Reuters', article_count: 2, first_published: null }],
+            articles: [
+              {
+                id: 'art-9f21',
+                title: 'OpenAI completes for-profit restructuring under nonprofit parent',
+                url: 'https://www.reuters.com/technology/openai-restructuring',
+                source: 'Reuters',
+                publishedAt: '2026-05-12T08:05:00Z',
+              },
+            ],
+            attribution: {
+              source: 'TensorFeed.ai daily news clustering over 100+ public RSS sources.',
+              derivation:
+                'RSS articles are embedded with Workers AI then single-link clustered per UTC day. The verification scores are TensorFeed-derived structural metrics over corroboration count and source diversity; they do not make truth claims. Treat the linked article URLs as authoritative.',
+              license:
+                'RSS-syndicated headlines used under news fair-use. Verification scores are TensorFeed-derived. Receipts are Ed25519-signed per the AFTA spec.',
+            },
+            billing: { credits_charged: 1, credits_remaining: 246 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  cluster_id: { type: 'string', minLength: 4, maxLength: 64, description: 'Cluster id, required. From /api/history/news/clusters?date=.' },
+                  date: { type: 'string', description: 'ISO date YYYY-MM-DD of the cluster, required.' },
+                },
+                required: ['cluster_id', 'date'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/** /api/premium/research/topic-search: faceted search over the Qwen-extracted arXiv AI index. No required params. */
+const TOPIC_SEARCH_PILOT: BazaarPilotConfig = {
+  description:
+    'Faceted search over the TensorFeed Qwen-extracted arXiv AI research index. Filter recent papers by subfield_tag and methodology_bucket (a taxonomy arXiv categories cannot express), date window, and milestone flag. Each paper carries its subfield, methodology bucket, milestone flag, affiliations, and a one-sentence summary. The "find the recent AI papers in this exact niche" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { subfield_tag: 'agents', methodology_bucket: 'reinforcement-learning', since: '2026-05-01', limit: 25 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-29',
+            query: { subfield_tag: 'agents', methodology_bucket: 'reinforcement-learning', since: '2026-05-01', until: null, milestone_only: false, limit: 25, offset: 0 },
+            total_matches: 18,
+            returned: 1,
+            papers: [
+              {
+                arxiv_id: '2605.01234',
+                date: '2026-05-21',
+                title: 'Self-Improving Tool-Use Agents via Online Preference Distillation',
+                subfield_tag: 'agents',
+                methodology_bucket: 'reinforcement-learning',
+                is_milestone_candidate: true,
+                affiliations: ['DeepMind', 'UC Berkeley'],
+                summary: 'Introduces an online preference-distillation loop that lets tool-use agents improve from their own rollouts without human labels.',
+              },
+            ],
+            attribution: {
+              source: 'arXiv preprint metadata plus TensorFeed Qwen-extracted analytical fields',
+              source_url: 'https://arxiv.org',
+              license:
+                'arXiv title, abstract, authors, and categories are freely usable for research and derived works. Per-paper subfield_tag, methodology_bucket, milestone flag, and summary are TensorFeed derivations from the abstract.',
+              derivation:
+                'A local Qwen 3.6 27B reads each abstract and emits structured fields that are deterministically rolled up into KV snapshots. The corpus is fetched once via the public arXiv API and processed on TensorFeed infrastructure.',
+            },
+            billing: { credits_charged: 1, credits_remaining: 245 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  subfield_tag: { type: 'string', description: 'Filter to a subfield tag from the snapshot taxonomy (agents, reasoning, vision, etc). Invalid values return the valid list.' },
+                  methodology_bucket: { type: 'string', description: 'Filter to a methodology bucket from the snapshot taxonomy (reinforcement-learning, supervised, etc).' },
+                  since: { type: 'string', description: 'ISO date YYYY-MM-DD lower bound on paper date.' },
+                  until: { type: 'string', description: 'ISO date YYYY-MM-DD upper bound on paper date.' },
+                  milestone_only: { type: 'boolean', description: 'Return only milestone-candidate papers. Default false.' },
+                  limit: { type: 'integer', minimum: 1, maximum: 100, description: 'Max papers to return. Default 25.' },
+                  offset: { type: 'integer', minimum: 0, description: 'Pagination offset. Default 0.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/** /api/premium/recent: sub-hourly what-just-happened brief over a minutes window. No required params. */
+const RECENT_PILOT: BazaarPilotConfig = {
+  description:
+    'Sub-hourly "what just happened" brief. Like the morning brief but over a short rolling window (minutes, 5 to 1440): new service-status incidents, current operational counts, and the latest news headlines. The endpoint an agent polls between full daily briefs. Pricing diffs are daily-resolution, so they are omitted on sub-day windows.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { minutes: 60, news_limit: 10 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            window: { from: '2026-05-30T13:00:00Z', to: '2026-05-30T14:00:00Z', days: 0, minutes: 60 },
+            computed_at: '2026-05-30T14:00:03Z',
+            summary: { total_pricing_changes: 0, new_models: 0, removed_models: 0, incidents: 1, news_articles: 3 },
+            pricing: { changes: [], new_models: [], removed_models: [] },
+            status: {
+              incidents: [
+                {
+                  service: 'API',
+                  provider: 'Anthropic',
+                  severity: 'minor',
+                  title: 'Elevated error rates on the messages endpoint',
+                  started_at: '2026-05-30T13:24:00Z',
+                  resolved_at: null,
+                  duration_minutes: null,
+                },
+              ],
+              currently_operational: 41,
+              currently_degraded: 1,
+              currently_down: 0,
+              currently_unknown: 2,
+            },
+            news: [
+              {
+                title: 'Mistral ships a 3B on-device model under Apache 2.0',
+                url: 'https://techcrunch.com/mistral-3b-ondevice',
+                source: 'TechCrunch',
+                source_domain: 'techcrunch.com',
+                published_at: '2026-05-30T13:41:00Z',
+                snippet: 'Mistral released a 3B-parameter on-device model under Apache 2.0, targeting laptop and phone inference.',
+                categories: ['models', 'open-source'],
+              },
+            ],
+            news_attribution: {
+              policy: 'RSS-syndicated headlines and snippets capped at 200 characters with mandatory link and source name.',
+              snippet_max_chars: 200,
+              link_required: true,
+              source_required: true,
+            },
+            data_freshness: { pricing: '2026-05-30T05:00:00Z', status: '2026-05-30T13:59:30Z', incidents_count: 1, news_total_corpus: 4131 },
+            notes: ['Sub-daily window: pricing diff skipped (history snapshots are daily-resolution).'],
+            billing: { credits_charged: 1, credits_remaining: 243 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  minutes: { type: 'integer', minimum: 5, maximum: 1440, description: 'Rolling window length in minutes back from now. Default 60, range 5 to 1440.' },
+                  news_limit: { type: 'integer', minimum: 1, maximum: 25, description: 'Max news headlines to return. Default 10, max 25.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -3774,6 +4124,15 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/failover-verdict': FAILOVER_PILOT,
   // Wave 24 (2026-05-28): guidance-delta. Signed periodic-filing guidance diff.
   '/api/premium/sec/filings/guidance-delta': GUIDANCE_DELTA_PILOT,
+  // Wave 26 (2026-05-30): agent news-search + brief cluster. Rode the x402
+  // distribution week. The decision-verified pair was already strict-premium;
+  // topic-search and recent were promoted to strict-premium in the same change
+  // (Wave 26 block in strict-premium-endpoints.ts) so the anonymous CDP crawler
+  // sees a clean 402 instead of a free-trial 200.
+  '/api/premium/news/decision-verified/search': DECISION_VERIFIED_SEARCH_PILOT,
+  '/api/premium/news/decision-verified': DECISION_VERIFIED_LOOKUP_PILOT,
+  '/api/premium/research/topic-search': TOPIC_SEARCH_PILOT,
+  '/api/premium/recent': RECENT_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

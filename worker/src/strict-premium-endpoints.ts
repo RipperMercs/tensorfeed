@@ -237,6 +237,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // #68 pattern that strict-premium was created to fix.
   '/api/premium/news/decision-verified',
   '/api/premium/news/decision-verified/search',
+  // Wave 26 (2026-05-30): topic-search + recent promoted to strict-premium so
+  // the anonymous CDP Bazaar crawler sees a clean 402 (required for cataloging).
+  // Both join already-strict, already-piloted siblings: topic-search sits with
+  // research/velocity|authors|milestones|emerging-keywords; recent is the
+  // sub-hourly sibling of the strict whats-new brief.
+  '/api/premium/research/topic-search',
+  '/api/premium/recent',
 ];
 
 /**

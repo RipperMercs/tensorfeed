@@ -101,6 +101,11 @@ const PILOT_PATHS = [
   '/api/premium/provider-reliability-verdict',
   // Wave 25 (x402-settlement-verdict: ruling over TF x402 settlement index)
   '/api/premium/x402-settlement-verdict',
+  // Wave 26 (2026-05-30): agent news-search + brief cluster
+  '/api/premium/news/decision-verified/search',
+  '/api/premium/news/decision-verified',
+  '/api/premium/research/topic-search',
+  '/api/premium/recent',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.
@@ -412,6 +417,54 @@ describe('Wave 2 pilot AJV validation', () => {
   ];
 
   for (const path of wave2Paths) {
+    it(`${path} info validates against its declared schema`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const valid = validate(bazaar.info);
+      if (!valid) {
+        throw new Error(
+          `${path} bazaar extension info failed schema validation: ${JSON.stringify(
+            validate.errors,
+            null,
+            2,
+          )}`,
+        );
+      }
+      expect(valid).toBe(true);
+    });
+
+    it(`${path} rejects info with wrong input.method (negative control)`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const tampered = JSON.parse(JSON.stringify(bazaar.info));
+      tampered.input.method = 'POST';
+      expect(validate(tampered)).toBe(false);
+    });
+
+    it(`${path} has a description longer than 40 chars`, () => {
+      const config = getBazaarPilotConfig(path);
+      expect(config).not.toBeNull();
+      expect(config!.description.length).toBeGreaterThan(40);
+    });
+  }
+});
+
+describe('Wave 26 pilot AJV validation', () => {
+  // Wave 26 (2026-05-30): agent news-search + brief cluster. Same load-bearing
+  // AJV check as earlier waves: if any of these regress, the endpoint silently
+  // fails to catalog in Bazaar (CDP runs the same validation on its side).
+  const wave26Paths = [
+    '/api/premium/news/decision-verified/search',
+    '/api/premium/news/decision-verified',
+    '/api/premium/research/topic-search',
+    '/api/premium/recent',
+  ];
+
+  for (const path of wave26Paths) {
     it(`${path} info validates against its declared schema`, () => {
       const ext = bazaarExtensionsFor(path);
       const bazaar = ext.bazaar as Record<string, any>;
