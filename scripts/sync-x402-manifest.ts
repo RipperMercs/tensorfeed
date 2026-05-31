@@ -291,10 +291,43 @@ function resolveSplitParent(concretePath: string): string | null {
   return null;
 }
 
+// ── Canonical outputSchema from a pilot config ─────────────────────
+//
+// x402scan and spec-compliant indexers read the param schema from the
+// canonical accepts[].outputSchema (the coinbase x402 DiscoveryInfo shape:
+// { input, output? }), NOT from the non-standard extensions.bazaar.info key.
+// Every pilot's extension.bazaar.info already IS a DiscoveryInfo, so derive
+// the full { input, output? } form for the static manifest accepts entry,
+// mirroring the Worker's runtime 402 body. Returns undefined when a pilot
+// has no info.input (then accepts carries no outputSchema, same as runtime).
+function outputSchemaFor(pilot: BazaarPilotConfig): { input: unknown; output?: unknown } | undefined {
+  const info = (pilot.extension as { bazaar?: { info?: { input?: unknown; output?: unknown } } })
+    ?.bazaar?.info;
+  if (!info || info.input === undefined) return undefined;
+  return {
+    input: info.input,
+    ...(info.output !== undefined ? { output: info.output } : {}),
+  };
+}
+
+// Attach (or refresh) accepts[0].outputSchema in place so existing manifest
+// items pick up the canonical schema on the next prebuild run. Idempotent.
+function applyOutputSchema(item: ManifestItem, pilot: BazaarPilotConfig): void {
+  const schema = outputSchemaFor(pilot);
+  if (Array.isArray(item.accepts) && item.accepts.length > 0) {
+    if (schema) {
+      item.accepts[0].outputSchema = schema;
+    } else {
+      delete item.accepts[0].outputSchema;
+    }
+  }
+}
+
 // ── Build a manifest item from a pilot path + config ──────────────
 
 function buildItem(pilotPath: string, pilot: BazaarPilotConfig, meta: PilotMeta, today: string): ManifestItem {
   const amount = String(meta.credits * CENTS_PER_CREDIT * Math.pow(10, USDC_DECIMALS - 2));
+  const outputSchema = outputSchemaFor(pilot);
   return {
     resource: {
       url: `${SITE_URL}${pilotPath}`,
@@ -313,6 +346,9 @@ function buildItem(pilotPath: string, pilot: BazaarPilotConfig, meta: PilotMeta,
         payTo: PAYMENT_WALLET,
         maxTimeoutSeconds: 60,
         extra: { name: 'USD Coin', version: '2' },
+        // Canonical x402 DiscoveryInfo so x402scan + spec indexers find the
+        // input schema at the standard location. Present on piloted paths.
+        ...(outputSchema ? { outputSchema } : {}),
       },
     ],
     lastUpdated: today,
@@ -390,12 +426,19 @@ function main(): void {
       // Refresh the bazaar extension block + description so single-source-of-truth
       // updates in bazaar-pilots.ts propagate to the manifest. Leave everything else.
       const item = manifest.items[existingIdx];
-      const before = JSON.stringify(item.extensions ?? null) + '|' + (item.metadata?.description ?? '');
+      const before =
+        JSON.stringify(item.extensions ?? null) +
+        '|' + (item.metadata?.description ?? '') +
+        '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       item.extensions = pilot.extension;
+      applyOutputSchema(item, pilot);
       if (item.metadata) {
         item.metadata.description = pilot.description;
       }
-      const after = JSON.stringify(item.extensions) + '|' + item.metadata.description;
+      const after =
+        JSON.stringify(item.extensions) +
+        '|' + item.metadata.description +
+        '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       if (before !== after) {
         item.lastUpdated = today;
         refreshed++;
@@ -429,14 +472,21 @@ function main(): void {
     const existingIdx = existingByPath.get(inst.concretePath);
     if (existingIdx !== undefined) {
       const item = manifest.items[existingIdx];
-      const before = JSON.stringify(item.extensions ?? null) + '|' + (item.metadata?.description ?? '');
+      const before =
+        JSON.stringify(item.extensions ?? null) +
+        '|' + (item.metadata?.description ?? '') +
+        '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       item.extensions = parentPilot.extension;
+      applyOutputSchema(item, parentPilot);
       if (item.metadata) {
         item.metadata.description = parentPilot.description;
         item.metadata.name = inst.name;
         item.metadata.category = inst.category;
       }
-      const after = JSON.stringify(item.extensions) + '|' + item.metadata.description;
+      const after =
+        JSON.stringify(item.extensions) +
+        '|' + item.metadata.description +
+        '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       if (before !== after) {
         item.lastUpdated = today;
         splitRefreshed++;

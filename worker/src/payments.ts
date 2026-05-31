@@ -2984,6 +2984,32 @@ function paymentRequiredResponse(
   // GitHub #2207 on 2026-05-14 and corroborated by inspecting cataloged
   // endpoints (blockrun.ai emits both `payment-required` and
   // `WWW-Authenticate: X402 requirements="..."` headers).
+  // The canonical x402 input/output schema lives at accepts[].outputSchema
+  // per the coinbase x402 DiscoveryInfo shape ({ input, output? }). x402scan
+  // and spec-compliant indexers read the param schema from THERE, not from
+  // our non-standard extensions.bazaar.info key (which serves CDP / Bazaar).
+  // TF already computes exactly a DiscoveryInfo at extensions.bazaar.info, so
+  // surface it canonically too. Guard for non-pilot paths (no bazaar config),
+  // where the normalized extensions carry no bazaar.info and outputSchema is
+  // omitted entirely. The CDP-only typing additions (queryFields, schema, ...)
+  // ride along harmlessly; the canonical readers key off input.type/method/
+  // queryParams which are always present on a piloted DiscoveryInfo.
+  const canonicalExtensions = normalizeBazaarExtensionsForCDP(
+    bazaarExtensionsFor(url.pathname),
+    resourceUrl,
+  );
+  const bazaarInfo = (
+    (canonicalExtensions as { bazaar?: { info?: unknown } })?.bazaar?.info
+  ) as { input?: unknown; output?: unknown } | undefined;
+  // Full DiscoveryInfo for the BODY (no size limit): input + output.
+  const bodyOutputSchema =
+    bazaarInfo && bazaarInfo.input
+      ? {
+          input: bazaarInfo.input,
+          ...(bazaarInfo.output ? { output: bazaarInfo.output } : {}),
+        }
+      : undefined;
+
   const canonicalPaymentRequired = {
     x402Version: 2,
     error: 'payment_required',
@@ -3012,12 +3038,11 @@ function paymentRequiredResponse(
           version: x402Config.domain.version,
           resource: resourceUrl,
         },
+        // Canonical x402 DiscoveryInfo. Present only on piloted paths.
+        ...(bodyOutputSchema ? { outputSchema: bodyOutputSchema } : {}),
       },
     ],
-    extensions: normalizeBazaarExtensionsForCDP(
-      bazaarExtensionsFor(url.pathname),
-      resourceUrl,
-    ),
+    extensions: canonicalExtensions,
   };
 
   // Base64-encode canonical PaymentRequired for the headers. JSON output is
@@ -3037,8 +3062,24 @@ function paymentRequiredResponse(
   // Original overflow bug found 2026-05-25 debugging the 4 endpoints that
   // would not settle (repro tensorfeed-work/buyer-debug.mjs); restored input
   // discovery here without reintroducing it (audit, x402scan).
+  // Header accepts entry: keep accepts[0].outputSchema INPUT-ONLY. The heavy
+  // part of a DiscoveryInfo is info.output.example, which can run kilobytes;
+  // the header rides in BOTH PAYMENT-REQUIRED and WWW-Authenticate (counts
+  // twice) under a 16KB overflow guard, so we mirror buildHeaderExtensions'
+  // input-only compaction philosophy. x402scan reads the input schema from
+  // the header; the full DiscoveryInfo (with output) stays in the body for
+  // crawlers that read it. Non-pilot paths have no outputSchema, so the entry
+  // is passed through unchanged.
+  const headerAccepts = canonicalPaymentRequired.accepts.map((entry) => {
+    const e = entry as { outputSchema?: { input?: unknown; output?: unknown } };
+    if (e.outputSchema && e.outputSchema.input) {
+      return { ...entry, outputSchema: { input: e.outputSchema.input } };
+    }
+    return entry;
+  });
   const headerCanonical = {
     ...canonicalPaymentRequired,
+    accepts: headerAccepts,
     extensions: buildHeaderExtensions(canonicalPaymentRequired.extensions as Record<string, unknown>),
   };
   const canonicalB64 = btoa(JSON.stringify(headerCanonical));

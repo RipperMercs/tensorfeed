@@ -278,3 +278,100 @@ describe('index.ts router money path (integration)', () => {
     expect(res.json?.note as string).not.toContain('credit-debited premium API calls only');
   });
 });
+
+// Canonical accepts[].outputSchema so x402scan and spec-compliant x402
+// indexers find the input schema at the standard location (the coinbase
+// x402 DiscoveryInfo shape: outputSchema = { input, output? }). Long-
+// standing x402scan rejection was "parseResponse: Missing input schema"
+// because TF only carried the schema under the non-standard
+// extensions.bazaar.info key. These tests lock in the canonical surface
+// on BOTH the 402 body (full input + output) and the size-bounded headers
+// (input-only, well under the 16KB overflow guard).
+describe('canonical accepts[].outputSchema (x402scan registration)', () => {
+  // Decode the base64 PAYMENT-REQUIRED header into the canonical object.
+  function decodeHeader(b64: string | null): Record<string, unknown> {
+    if (!b64) throw new Error('missing PAYMENT-REQUIRED header');
+    return JSON.parse(
+      Buffer.from(b64, 'base64').toString('utf-8'),
+    ) as Record<string, unknown>;
+  }
+
+  it('BODY: accepts[0].outputSchema carries the full DiscoveryInfo (input + output)', async () => {
+    const env = await makeEnv();
+    // /api/premium/routing is strict-premium AND a Bazaar pilot with both
+    // info.input and info.output, so its 402 body must surface the full
+    // DiscoveryInfo at accepts[0].outputSchema.
+    const res = await call(env, '/api/premium/routing?task=code', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+    const accepts = res.json?.accepts as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(accepts)).toBe(true);
+    const outputSchema = accepts?.[0]?.outputSchema as Record<string, unknown> | undefined;
+    expect(outputSchema).toBeDefined();
+
+    const input = outputSchema?.input as Record<string, unknown> | undefined;
+    expect(input).toBeDefined();
+    expect(input?.type).toBe('http');
+    expect(typeof input?.method).toBe('string');
+    expect(input?.queryParams).toBeDefined();
+    expect(typeof input?.queryParams).toBe('object');
+
+    // The full body form also carries output.
+    expect(outputSchema?.output).toBeDefined();
+    expect((outputSchema?.output as Record<string, unknown>)?.type).toBe('json');
+  });
+
+  it('HEADER: PAYMENT-REQUIRED accepts[0].outputSchema is input-only and stays under 16KB', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/routing?task=code', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+    const b64 = res.headers.get('PAYMENT-REQUIRED');
+    expect(b64).not.toBeNull();
+    // The same base64 rides BOTH PAYMENT-REQUIRED and WWW-Authenticate, so
+    // the per-header budget is what matters; assert it well under the guard.
+    expect((b64 as string).length).toBeLessThan(16000);
+
+    const decoded = decodeHeader(b64);
+    const accepts = decoded.accepts as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(accepts)).toBe(true);
+    const outputSchema = accepts?.[0]?.outputSchema as Record<string, unknown> | undefined;
+    expect(outputSchema).toBeDefined();
+
+    // Input present (the schema x402scan reads from the header).
+    const input = outputSchema?.input as Record<string, unknown> | undefined;
+    expect(input).toBeDefined();
+    expect(input?.type).toBe('http');
+
+    // Output ABSENT in the header form: the heavy example stays body-only.
+    expect(outputSchema?.output).toBeUndefined();
+
+    // WWW-Authenticate carries the identical base64 challenge.
+    const wwwAuth = res.headers.get('WWW-Authenticate');
+    expect(wwwAuth).toContain(b64 as string);
+  });
+
+  it('a strict-premium path with NO bazaar config yields a valid 402 with no outputSchema and does not throw', async () => {
+    const env = await makeEnv();
+    // /api/premium/history/news/full is strict-premium but NOT a Bazaar
+    // pilot, so bazaarExtensionsFor returns {} and there is no info to
+    // derive an outputSchema from. The 402 must still be well-formed.
+    const res = await call(env, '/api/premium/history/news/full', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.error).toBe('payment_required');
+    const accepts = res.json?.accepts as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(accepts)).toBe(true);
+    // No bazaar config means no outputSchema is attached.
+    expect(accepts?.[0]?.outputSchema).toBeUndefined();
+
+    // The header still encodes (no throw) and decodes to a valid challenge.
+    const b64 = res.headers.get('PAYMENT-REQUIRED');
+    expect(b64).not.toBeNull();
+    const decoded = decodeHeader(b64);
+    const decodedAccepts = decoded.accepts as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(decodedAccepts)).toBe(true);
+    expect(decodedAccepts?.[0]?.outputSchema).toBeUndefined();
+  });
+});

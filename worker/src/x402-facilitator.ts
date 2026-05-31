@@ -195,6 +195,12 @@ export interface PaymentRequirements {
   // never catalogs the endpoint. Populated from getBazaarPilotConfig(path)
   // for piloted paths; absent for non-pilot endpoints.
   extensions?: Record<string, unknown>;
+  // Canonical x402 DiscoveryInfo ({ input, output? }). x402scan and spec-
+  // compliant indexers read the param schema from accepts[].outputSchema,
+  // the standard location (NOT extensions.bazaar.info, which is CDP-only).
+  // Present on piloted paths; absent on non-pilot endpoints. Input-only when
+  // it rides a size-bounded header, full input+output in the response body.
+  outputSchema?: { input?: unknown; output?: unknown };
 }
 
 // Canonical x402 V2 error codes (do not invent custom names; spec-exact).
