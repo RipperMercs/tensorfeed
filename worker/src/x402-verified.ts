@@ -58,6 +58,47 @@ export function summarizeReceipts(rollup: { count: number; volume_usdc: string; 
   return { count: rollup.count, volume_usdc: rollup.volume_usdc, first_settled: first, last_settled: last };
 }
 
+// Convert a fixed 6-decimal USDC string ("4.420000") to integer micro units.
+// The volume_usdc contract is always "<whole>.<6 digits>", so this is exact and
+// avoids float drift when folding several summaries together.
+function microUnits(usdc: string): bigint {
+  const [whole, frac = ''] = usdc.split('.');
+  return BigInt(whole || '0') * 1_000_000n + BigInt((frac + '000000').slice(0, 6));
+}
+
+function fromMicro(micro: bigint): string {
+  const s = micro.toString().padStart(7, '0');
+  return s.slice(0, -6) + '.' + s.slice(-6);
+}
+
+// Fold several settlement summaries into one: counts and volume sum, first_settled
+// is the earliest non-null and last_settled the latest. Used to roll a publisher's
+// shared-wallet settlements (which the first-wins wallet map attributes to a
+// sibling domain) back onto every publisher that declares that wallet.
+export function aggregateSummaries(summaries: SettlementSummary[]): SettlementSummary {
+  let count = 0;
+  let micro = 0n;
+  let first: string | null = null;
+  let last: string | null = null;
+  for (const s of summaries) {
+    count += s.count;
+    micro += microUnits(s.volume_usdc);
+    if (s.first_settled && (first === null || s.first_settled < first)) first = s.first_settled;
+    if (s.last_settled && (last === null || s.last_settled > last)) last = s.last_settled;
+  }
+  return { count, volume_usdc: fromMicro(micro), first_settled: first, last_settled: last };
+}
+
+// Disclosure note for a publisher verified only through a Base payTo wallet it
+// shares with sibling domains. The on-chain proof is real, but settlements to a
+// co-owned wallet cannot be split between owners, so we name where they sit in the
+// index and keep any existing provenance note.
+export function sharedWalletNote(existing: string | null, sharedWith: string[]): string {
+  const who = sharedWith.slice().sort().join(', ');
+  const disclosure = `Verified through a Base payTo wallet shared with ${who}. On-chain settlements to a co-owned wallet cannot be split between owners, so the counts shown are the wallet total.`;
+  return existing && existing.trim().length > 0 ? `${existing} ${disclosure}` : disclosure;
+}
+
 export function classifyPublisher(record: PublisherRecord, s: SettlementSummary, nowMs: number): VerifiedPublisher {
   const source = record.source ?? 'manifest';
   let status: VerificationStatus;

@@ -3,11 +3,14 @@ import { getPublisherReceipts } from './query';
 import {
   classifyPublisher,
   summarizeReceipts,
+  aggregateSummaries,
+  sharedWalletNote,
   buildVerifiedDirectory,
+  type SettlementSummary,
   type VerifiedPublisher,
   type DirectoryResult,
 } from '../x402-verified';
-import { curatedDomains, kvKeyPublisher, KV_KEY_VERIFIED, KV_KEY_CURSOR } from './constants';
+import { curatedDomains, kvKeyPublisher, KV_KEY_VERIFIED, KV_KEY_CURSOR, KV_KEY_PUBLISHERS } from './constants';
 import type { IndexerCursor, PublisherRecord } from './types';
 import { safePut } from '../kill-switch';
 
@@ -45,18 +48,55 @@ export async function computeVerifiedDirectory(
   const fromStr = subtractDaysUtc(todayStr, WINDOW_LOOKBACK_DAYS);
   const nowMs = Date.parse(todayStr + 'T00:00:00Z');
 
+  // The wallet map attributes each Base payTo wallet to one settlement-holder
+  // domain (first-wins on collision), so a wallet co-owned by federation siblings
+  // maps to whichever domain the indexer registered first. Reading each holder's
+  // rollup lets every co-owner inherit that wallet's on-chain proof instead of the
+  // second co-owner reading as unverified. Keys are lowercase 0x addresses.
+  const walletMap = ((await env.TENSORFEED_CACHE.get(KV_KEY_PUBLISHERS, 'json')) as Record<string, string> | null) ?? {};
+
+  // Read each settlement-holder domain's rollup at most once, so a wallet shared by
+  // several publishers does not re-fetch the same per-publisher-day series.
+  const holderSummaries = new Map<string, SettlementSummary | null>();
+  const summaryForDomain = async (d: string): Promise<SettlementSummary | null> => {
+    if (holderSummaries.has(d)) return holderSummaries.get(d) ?? null;
+    const receipts = await getPublisherReceipts(env, d, fromStr, todayStr);
+    const s = receipts ? summarizeReceipts(receipts.rollup) : null;
+    holderSummaries.set(d, s);
+    return s;
+  };
+
   const list: VerifiedPublisher[] = [];
   for (const domain of domains) {
     const record = (await env.TENSORFEED_CACHE.get(kvKeyPublisher(domain), 'json')) as PublisherRecord | null;
     // A curated domain with no crawled or seeded record yet is skipped: there is
     // nothing to classify until the registry crawl or manual seed lands it.
     if (!record) continue;
-    const receipts = await getPublisherReceipts(env, domain, fromStr, todayStr);
-    // getPublisherReceipts returns null only when the publisher record is
-    // missing, which we already ruled out above; guard defensively anyway.
-    if (!receipts) continue;
-    const summary = summarizeReceipts(receipts.rollup);
-    list.push(classifyPublisher(record, summary, nowMs));
+
+    // Resolve which domains hold this publisher's wallets' settlements. A wallet
+    // absent from the map (not yet indexed) falls back to the publisher's own
+    // domain, preserving the prior behavior for non-shared publishers.
+    const holders = new Set<string>();
+    for (const w of record.pay_to_wallets) holders.add(walletMap[w.toLowerCase()] ?? domain);
+    if (holders.size === 0) holders.add(domain);
+
+    const parts: SettlementSummary[] = [];
+    for (const h of holders) {
+      const s = await summaryForDomain(h);
+      if (s) parts.push(s);
+    }
+    const summary: SettlementSummary = parts.length > 0
+      ? aggregateSummaries(parts)
+      : { count: 0, volume_usdc: '0.000000', first_settled: null, last_settled: null };
+
+    const vp = classifyPublisher(record, summary, nowMs);
+    // Only disclose a shared wallet when it actually produced the proof: a verified
+    // publisher whose settlements are attributed in-index to a sibling domain.
+    const sharedWith = [...holders].filter((h) => h !== domain);
+    if (sharedWith.length > 0 && vp.status === 'verified-settling') {
+      vp.note = sharedWalletNote(vp.note, sharedWith);
+    }
+    list.push(vp);
   }
 
   const cur = (await env.TENSORFEED_CACHE.get(KV_KEY_CURSOR, 'json')) as IndexerCursor | null;

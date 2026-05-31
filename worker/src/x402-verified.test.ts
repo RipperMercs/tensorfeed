@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SEED_PUBLISHERS, MANUAL_PUBLISHERS, curatedDomains } from './x402-index/constants';
 import { isValidPublisherDomain } from './x402-index/publisher-registry';
-import { summarizeReceipts, classifyPublisher, buildVerifiedDirectory } from './x402-verified';
+import { summarizeReceipts, classifyPublisher, buildVerifiedDirectory, aggregateSummaries, sharedWalletNote } from './x402-verified';
 import type { PublisherRecord } from './x402-index/types';
 
 describe('curated publisher lists are well-formed', () => {
@@ -101,5 +101,47 @@ describe('buildVerifiedDirectory', () => {
     const dir = buildVerifiedDirectory([], null);
     expect(dir.publishers).toEqual([]);
     expect(dir.summary.total).toBe(0);
+  });
+});
+
+describe('aggregateSummaries', () => {
+  it('sums counts and volume and spans first/last across summaries', () => {
+    const a = { count: 3, volume_usdc: '4.420000', first_settled: '2026-05-08', last_settled: '2026-05-29' };
+    const b = { count: 2, volume_usdc: '0.002000', first_settled: '2026-05-10', last_settled: '2026-05-31' };
+    expect(aggregateSummaries([a, b])).toEqual({
+      count: 5, volume_usdc: '4.422000', first_settled: '2026-05-08', last_settled: '2026-05-31',
+    });
+  });
+  it('is identity for a single summary and zero for none', () => {
+    const a = { count: 3, volume_usdc: '4.420000', first_settled: '2026-05-08', last_settled: '2026-05-29' };
+    expect(aggregateSummaries([a])).toEqual(a);
+    expect(aggregateSummaries([])).toEqual({ count: 0, volume_usdc: '0.000000', first_settled: null, last_settled: null });
+  });
+  it('ignores null first/last when spanning', () => {
+    const a = { count: 1, volume_usdc: '0.010000', first_settled: null, last_settled: null };
+    const b = { count: 1, volume_usdc: '0.010000', first_settled: '2026-05-15', last_settled: '2026-05-15' };
+    const agg = aggregateSummaries([a, b]);
+    expect(agg.first_settled).toBe('2026-05-15');
+    expect(agg.last_settled).toBe('2026-05-15');
+    expect(agg.volume_usdc).toBe('0.020000');
+  });
+});
+
+describe('sharedWalletNote', () => {
+  it('names the co-owners and keeps an existing note', () => {
+    const n = sharedWalletNote('Seeded from the live 402.', ['tensorfeed.ai']);
+    expect(n.startsWith('Seeded from the live 402. ')).toBe(true);
+    expect(n).toContain('shared with tensorfeed.ai');
+    expect(n).toContain('wallet total');
+  });
+  it('stands alone when there is no existing note, and sorts co-owners', () => {
+    const n = sharedWalletNote(null, ['z.io', 'a.io']);
+    expect(n.startsWith('Verified through')).toBe(true);
+    expect(n).toContain('shared with a.io, z.io');
+  });
+  it('contains no em dash or double hyphen', () => {
+    const n = sharedWalletNote(null, ['tensorfeed.ai']);
+    expect(n.includes('—')).toBe(false);
+    expect(n.includes('--')).toBe(false);
   });
 });
