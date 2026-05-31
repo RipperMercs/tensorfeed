@@ -39,7 +39,12 @@ export function tensorfeedStatusSrc(opts = {}) {
 
 function resolveHeight(h) {
   if (h == null || h === '') return '600px';
-  return /^\d+$/.test(String(h)) ? `${h}px` : String(h);
+  const s = String(h);
+  if (/^\d+$/.test(s)) return `${s}px`;
+  // Only accept a plain CSS length (number plus a known unit). Anything else
+  // falls back to the default so a host-set attribute cannot inject into the
+  // shadow-root style block.
+  return /^\d+(\.\d+)?(px|%|r?em|vh|vw)$/.test(s) ? s : '600px';
 }
 
 // Guarded base so `import`-ing this package never throws in Node / SSR

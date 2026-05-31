@@ -14,7 +14,7 @@
     "scripts": ["bg.js"]
   },
   "permissions": ["alarms"],
-  "host_permissions": ["https://tensorfeed.ai/*"],
+  "host_permissions": ["https://tensorfeed.ai/api/*"],
   "browser_specific_settings": {
     "gecko": {
       "id": "ai-status@tensorfeed.ai",
