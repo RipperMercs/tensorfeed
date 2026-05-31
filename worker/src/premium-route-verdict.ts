@@ -179,6 +179,8 @@ export interface RouteVerdictOptions {
   requireOperational?: boolean; // default true: drop candidates known down / failover_now
   excludeDeprecated?: boolean; // default true: drop matched deprecated / sunsetted models
   excludeProviders?: string[]; // drop candidates on these providers (fuzzy match); used by failover-verdict
+  budget?: number; // max blended USD per 1M tokens; drop candidates whose blended price exceeds this
+  minQuality?: number; // minimum trust-discounted quality in [0,1]; hard user gate applied before the capability floor
 }
 
 export type LatencySource = 'measured_probe' | 'unknown';
@@ -213,6 +215,8 @@ export interface RouteVerdictResult {
     max_latency_p95_ms: number | null;
     require_operational: boolean;
     exclude_deprecated: boolean;
+    budget: number | null;
+    min_quality: number | null;
   };
   candidates_considered: number;
   data_freshness: {
@@ -339,6 +343,14 @@ export function buildRouteVerdict(
   const maxLatency =
     typeof options.maxLatencyP95Ms === 'number' && Number.isFinite(options.maxLatencyP95Ms) && options.maxLatencyP95Ms > 0
       ? options.maxLatencyP95Ms
+      : null;
+  const budget =
+    typeof options.budget === 'number' && Number.isFinite(options.budget) && options.budget > 0
+      ? options.budget
+      : null;
+  const minQuality =
+    typeof options.minQuality === 'number' && Number.isFinite(options.minQuality) && options.minQuality > 0
+      ? options.minQuality
       : null;
   const modelNeedle = options.model ? normName(options.model) : null;
   const excludeProviders = (options.excludeProviders ?? []).map((p) => p.toLowerCase().trim()).filter(Boolean);
@@ -497,11 +509,29 @@ export function buildRouteVerdict(
   if (maxLatency !== null) {
     filtered = filtered.filter((c) => c.measuredP95 === null || c.measuredP95 <= maxLatency);
   }
+  if (budget !== null) {
+    const before = filtered.length;
+    filtered = filtered.filter((c) => c.blended <= budget);
+    if (filtered.length < before) {
+      notes.push(`Dropped ${before - filtered.length} candidate(s) over the $${round4(budget)} per 1M token budget.`);
+    }
+  }
   if (excludeProviders.length > 0) {
     const before = filtered.length;
     filtered = filtered.filter((c) => !excludeProviders.some((ex) => providerMatch(c.provider, ex)));
     if (filtered.length < before) {
       notes.push(`Excluded ${before - filtered.length} candidate(s) on the excluded provider(s): ${excludeProviders.join(', ')}.`);
+    }
+  }
+
+  // min_quality is a HARD user gate, applied BEFORE the capability floor
+  // so the agent's quality floor is honored even when it removes what
+  // would otherwise be the top capability tier.
+  if (minQuality !== null) {
+    const before = filtered.length;
+    filtered = filtered.filter((c) => c.discountedQuality >= minQuality);
+    if (filtered.length < before) {
+      notes.push(`Dropped ${before - filtered.length} candidate(s) below the min_quality floor of ${round4(minQuality)}.`);
     }
   }
 
@@ -616,6 +646,8 @@ export function buildRouteVerdict(
       max_latency_p95_ms: maxLatency,
       require_operational: requireOperational,
       exclude_deprecated: excludeDeprecated,
+      budget,
+      min_quality: minQuality,
     },
     candidates_considered: scratch.length,
     data_freshness: {

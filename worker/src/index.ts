@@ -6455,6 +6455,8 @@ export default {
         );
       }
       const maxLatRaw = parseInt(url.searchParams.get('max_latency_p95_ms') ?? '', 10);
+      const budgetRaw = parseFloat(url.searchParams.get('budget') ?? '');
+      const minQualityRaw = parseFloat(url.searchParams.get('min_quality') ?? '');
       const { computeRouteVerdict } = await import('./premium-route-verdict');
       const result = await computeRouteVerdict(env, {
         task,
@@ -6462,6 +6464,8 @@ export default {
         maxLatencyP95Ms: Number.isFinite(maxLatRaw) ? maxLatRaw : undefined,
         requireOperational: url.searchParams.get('require_operational') !== 'false',
         excludeDeprecated: url.searchParams.get('exclude_deprecated') !== 'false',
+        budget: Number.isFinite(budgetRaw) && budgetRaw > 0 ? budgetRaw : undefined,
+        minQuality: Number.isFinite(minQualityRaw) && minQualityRaw > 0 ? minQualityRaw : undefined,
       });
 
       ctx.waitUntil(

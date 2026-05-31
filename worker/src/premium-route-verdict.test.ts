@@ -319,6 +319,103 @@ describe('buildRouteVerdict', () => {
     expect(r.notes.some((n) => n.includes('capability floor'))).toBe(true);
   });
 
+  it('budget gate: drops candidates over the budget, leaves them when generous', () => {
+    // In baseInputs both Sonnet (blended 9) and DeepSeek (blended 0.3)
+    // clear the capability floor; DeepSeek wins on price and Sonnet is the
+    // runner-up. A budget of $5 drops Sonnet from the candidate set before
+    // the capability floor recomputes, so Sonnet appears nowhere in the
+    // result and a budget note is recorded.
+    const baseline = buildRouteVerdict(baseInputs(), CODE, NOW);
+    const baselineIds = [baseline.verdict!, ...baseline.runners_up].map((c) => c.model.id);
+    expect(baselineIds).toContain('claude-sonnet-4-6');
+
+    const tight = buildRouteVerdict(baseInputs(), { task: 'code', budget: 5 }, NOW);
+    const tightIds = [tight.verdict, ...tight.runners_up].filter(Boolean).map((c) => c!.model.id);
+    expect(tightIds).not.toContain('claude-sonnet-4-6'); // priced out at $5 budget
+    expect(tight.filters_applied.budget).toBe(5);
+    expect(tight.notes.some((n) => n.includes('budget'))).toBe(true);
+
+    // A generous budget changes nothing versus no budget at all.
+    const generous = buildRouteVerdict(baseInputs(), { task: 'code', budget: 1000 }, NOW);
+    expect(generous.verdict!.model.id).toBe(baseline.verdict!.model.id);
+    expect(generous.runners_up.map((c) => c.model.id)).toEqual(baseline.runners_up.map((c) => c.model.id));
+    expect(generous.filters_applied.budget).toBe(1000);
+  });
+
+  it('min_quality gate: excludes low-quality candidates, verdict clears the floor', () => {
+    // Two priced models: a strong one and a weak one. With a min_quality
+    // floor between them, only the strong model survives even though the
+    // capability floor would normally keep both relative to the top tier.
+    const inputs: RouteVerdictInputs = {
+      pricing: {
+        lastUpdated: '2026-05-28T08:00:00Z',
+        providers: [
+          { id: 'anthropic', name: 'anthropic', models: [{ id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', inputPrice: 3, outputPrice: 15, contextWindow: 200000, openSource: false }] },
+          { id: 'weaklab', name: 'weaklab', models: [{ id: 'weak-one', name: 'Weak One', inputPrice: 0.1, outputPrice: 0.2, contextWindow: 32000, openSource: true }] },
+        ],
+      },
+      benchmarks: {
+        lastUpdated: '2026-05-28T08:00:00Z',
+        models: [
+          { model: 'Claude Sonnet 4.6', provider: 'anthropic', scores: { swe_bench: 75, human_eval: 97, mmlu_pro: 90 } },
+          { model: 'Weak One', provider: 'weaklab', scores: { swe_bench: 40, human_eval: 45, mmlu_pro: 42 } },
+        ],
+      },
+      services: [{ name: 'Anthropic API', provider: 'anthropic', status: 'operational', lastChecked: '2026-05-28T11:50:00Z' }],
+      probe: latest([probeAgg('anthropic', 1800), probeAgg('weaklab', 300)]),
+      triage: triageSnap([]),
+      usage: [],
+      benchmarkRegistry: [bench('swe-bench-verified', 'low', 'active'), bench('humaneval', 'low', 'active'), bench('mmlu-pro', 'low', 'active')],
+      deprecations: [],
+    };
+    // No floor: both considered (weak one still excluded by capability floor here,
+    // but it scores around 0.42 vs sonnet ~0.87, so capability floor already cuts it).
+    // Set a floor at 0.5 to make the user gate the active constraint.
+    const r = buildRouteVerdict(inputs, { task: 'code', minQuality: 0.5 }, NOW);
+    expect(r.verdict).not.toBeNull();
+    expect(r.verdict!.model.id).toBe('claude-sonnet-4-6');
+    expect(r.verdict!.quality.trust_discounted).toBeGreaterThanOrEqual(0.5);
+    const ids = [r.verdict!, ...r.runners_up].map((c) => c.model.id);
+    expect(ids).not.toContain('weak-one');
+    expect(r.filters_applied.min_quality).toBe(0.5);
+    expect(r.notes.some((n) => n.includes('min_quality'))).toBe(true);
+  });
+
+  it('min_quality is a HARD gate applied before the capability floor', () => {
+    // If the user sets a min_quality above the TOP candidate's discounted
+    // quality, EVERY candidate is dropped (the capability floor never
+    // rescues anything), and the verdict is null with a note.
+    const r = buildRouteVerdict(baseInputs(), { task: 'code', minQuality: 0.99 }, NOW);
+    expect(r.verdict).toBeNull();
+    expect(r.runners_up).toEqual([]);
+    expect(r.notes.some((n) => n.includes('min_quality'))).toBe(true);
+  });
+
+  it('all-dropped: an impossibly low budget yields a null verdict with a note and never throws', () => {
+    const r = buildRouteVerdict(baseInputs(), { task: 'code', budget: 0.0001 }, NOW);
+    expect(r.ok).toBe(true);
+    expect(r.verdict).toBeNull();
+    expect(r.runners_up).toEqual([]);
+    expect(r.notes.some((n) => n.includes('budget'))).toBe(true);
+    // candidates_considered still reflects the scratch set, not the filtered one.
+    expect(r.candidates_considered).toBe(2);
+  });
+
+  it('filters_applied reflects the passed budget and min_quality, else null', () => {
+    const withFilters = buildRouteVerdict(baseInputs(), { task: 'code', budget: 50, minQuality: 0.3 }, NOW);
+    expect(withFilters.filters_applied.budget).toBe(50);
+    expect(withFilters.filters_applied.min_quality).toBe(0.3);
+
+    const without = buildRouteVerdict(baseInputs(), CODE, NOW);
+    expect(without.filters_applied.budget).toBeNull();
+    expect(without.filters_applied.min_quality).toBeNull();
+
+    // Non-positive / non-finite values resolve to null.
+    const zeroed = buildRouteVerdict(baseInputs(), { task: 'code', budget: 0, minQuality: -1 }, NOW);
+    expect(zeroed.filters_applied.budget).toBeNull();
+    expect(zeroed.filters_applied.min_quality).toBeNull();
+  });
+
   it('matches a provider whose status name differs from the catalog name (fuzzy join)', () => {
     const inputs = baseInputs({
       // Status feed spells it "Anthropic AI" while the catalog uses "anthropic".
