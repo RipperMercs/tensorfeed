@@ -2736,6 +2736,28 @@ export default {
       return jsonResponse({ ok: true, days, refreshed, ...result }, 200, 0);
     }
 
+    // Admin: on-demand capture of the Federal AI Spending snapshot, so the
+    // /funding/federal feed can be populated without waiting for the daily
+    // 14:00 UTC cron. Bounded by design (the fetcher is page-capped, has a
+    // per-request timeout, and walks a fixed 8-vendor cohort), so it cannot
+    // hang. Read-only over public USAspending data; writes only the
+    // fedspend:snapshot KV blob. Inherits the hoisted /api/admin rate-limit
+    // and ADMIN_KEY pre-check.
+    if (
+      path === '/api/admin/fedspend-refresh' &&
+      request.method === 'GET' &&
+      isAuthorizedAdmin(env, extractAdminKey(request, url))
+    ) {
+      const { captureFederalSpending, FED_SPEND_SNAPSHOT_KEY } = await import('./federal-spending-fetcher');
+      const snap = await captureFederalSpending(env);
+      await safePut(env, env.TENSORFEED_CACHE, FED_SPEND_SNAPSHOT_KEY, JSON.stringify(snap));
+      return jsonResponse(
+        { ok: true, captured_at: snap.captured_at, cohort_size: snap.cohort_size, total_usd: snap.total_usd, total_awards: snap.total_awards, vendors: snap.vendors.length },
+        200,
+        0,
+      );
+    }
+
     if (path === '/api/admin/agents/claim/pending' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10) || 100), 500);
       const pending = await listPendingClaims(env, limit);
