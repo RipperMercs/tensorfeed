@@ -4026,6 +4026,904 @@ const RECENT_PILOT: BazaarPilotConfig = {
   },
 };
 
+/**
+ * Wave 27 (2026-05-30): time-series data feeds. The "data library for agents"
+ * core. Daily historical series an agent pays once to pull a full window the
+ * free 7-day siblings cannot reach. All flat GET; parametric series
+ * (x402-index/publisher, economy/series) are deferred to a later batch.
+ */
+
+/**
+ * /api/premium/history/pricing/series: strict-premium tier 2 historical
+ * daily pricing time-series for one model. Full window (90-day max, 30-day
+ * default) vs the 7-day-capped free sibling. Required ?model=; optional
+ * ?from=&to=. The snapshot compounds daily and cannot be backfilled.
+ */
+const HISTORY_PRICING_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Daily input, output, and blended price history for one AI model across a full date window (90-day max). One paid call returns the per-day points plus a summary (first, latest, min, max, percent delta, changes detected). The pricing-trend feed the free 7-day sibling cannot reach.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { model: 'claude-opus-4-7', from: '2026-04-23', to: '2026-05-23' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            model: 'claude-opus-4-7',
+            provider: 'anthropic',
+            range: { from: '2026-04-23', to: '2026-05-23', days: 31 },
+            resolution: 'daily',
+            points: [
+              { date: '2026-04-23', input: 15, output: 75, blended: 45 },
+              { date: '2026-05-23', input: 14, output: 70, blended: 42 },
+            ],
+            attribution: { source: 'TensorFeed', license: 'derived' },
+            summary: {
+              first: { date: '2026-04-23', input: 15, output: 75, blended: 45 },
+              latest: { date: '2026-05-23', input: 14, output: 70, blended: 42 },
+              min_blended: 42,
+              max_blended: 45,
+              delta_pct_blended: -6.6667,
+              changes_detected: 1,
+              days_with_data: 31,
+              days_missing: 0,
+            },
+            billing: { credits_charged: 2, credits_remaining: 48 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  model: {
+                    type: 'string',
+                    description: 'Model id or display name to series (e.g. "claude-opus-4-7"). Required.',
+                  },
+                  from: {
+                    type: 'string',
+                    description: 'Inclusive start date YYYY-MM-DD. Optional; defaults to 30 days before to.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'Inclusive end date YYYY-MM-DD. Optional; defaults to today UTC. Window capped at 90 days.',
+                  },
+                },
+                required: ['model'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/history/benchmarks/series: strict-premium tier 2 historical
+ * daily benchmark-score time-series for one model on one benchmark key.
+ * Full window (90-day max, 30-day default). Required ?model=&benchmark=;
+ * optional ?from=&to=.
+ */
+const HISTORY_BENCHMARKS_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Daily benchmark-score history for one AI model on one benchmark (swe_bench, mmlu_pro, gpqa_diamond, math, human_eval) across a full date window (90-day max). Returns the per-day points plus a summary (first, latest, min, max, delta in percentage points). The capability-drift feed.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { model: 'claude-opus-4-7', benchmark: 'swe_bench', from: '2026-04-23', to: '2026-05-23' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            model: 'claude-opus-4-7',
+            benchmark: 'swe_bench',
+            range: { from: '2026-04-23', to: '2026-05-23', days: 31 },
+            points: [
+              { date: '2026-04-23', score: 0.72 },
+              { date: '2026-05-23', score: 0.74 },
+            ],
+            attribution: { source: 'TensorFeed', license: 'derived' },
+            summary: {
+              first: { date: '2026-04-23', score: 0.72 },
+              latest: { date: '2026-05-23', score: 0.74 },
+              min_score: 0.72,
+              max_score: 0.74,
+              delta_pp: 0.02,
+              days_with_data: 31,
+              days_missing: 0,
+            },
+            billing: { credits_charged: 2, credits_remaining: 48 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  model: {
+                    type: 'string',
+                    description: 'Model id or display name to series (e.g. "claude-opus-4-7"). Required.',
+                  },
+                  benchmark: {
+                    type: 'string',
+                    description: 'Benchmark key (swe_bench, mmlu_pro, gpqa_diamond, math, human_eval). Case-insensitive. Required.',
+                  },
+                  from: {
+                    type: 'string',
+                    description: 'Inclusive start date YYYY-MM-DD. Optional; defaults to 30 days before to.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'Inclusive end date YYYY-MM-DD. Optional; defaults to today UTC. Window capped at 90 days.',
+                  },
+                },
+                required: ['model', 'benchmark'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/history/status/uptime: strict-premium tier 2 historical
+ * uptime SLA report for one provider over a full date window (90-day max,
+ * 30-day default). Required ?provider=; optional ?from=&to=. Denominator
+ * excludes missing-capture days. Degraded days count as half-up.
+ */
+const HISTORY_STATUS_UPTIME_PILOT: BazaarPilotConfig = {
+  description:
+    'Historical uptime SLA report for one AI provider over a full date window (90-day max). Returns per-day operational, degraded, down, and unknown counts, a computed uptime percentage (degraded counts half), and the list of incident days. The "what was provider X SLA last quarter" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { provider: 'openai', from: '2026-04-23', to: '2026-05-23' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            provider: 'openai',
+            range: { from: '2026-04-23', to: '2026-05-23', days: 31 },
+            days_total: 31,
+            days_with_data: 31,
+            days_missing: 0,
+            days_operational: 29,
+            days_degraded: 1,
+            days_down: 1,
+            days_unknown: 0,
+            uptime_pct: 95.1613,
+            incident_days: [
+              { date: '2026-05-12', status: 'degraded' },
+              { date: '2026-05-18', status: 'down' },
+            ],
+            billing: { credits_charged: 2, credits_remaining: 48 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  provider: {
+                    type: 'string',
+                    description: 'Provider name or id (e.g. openai, anthropic, google). Case-insensitive substring match. Required.',
+                  },
+                  from: {
+                    type: 'string',
+                    description: 'Inclusive start date YYYY-MM-DD. Optional; defaults to 30 days before to.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'Inclusive end date YYYY-MM-DD. Optional; defaults to today UTC. Window capped at 90 days.',
+                  },
+                },
+                required: ['provider'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/probe/series: strict-premium tier 3 daily latency + uptime
+ * series from TensorFeed's own provider probes (we record the measurements
+ * ourselves, so the history is unique to TF). 90-day max, 30-day default.
+ * Required ?provider= (anthropic, openai, google, mistral, cohere);
+ * optional ?from=&to=.
+ */
+const PROBE_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Daily latency and uptime series from TensorFeed measured probes against one provider (anthropic, openai, google, mistral, cohere). Per-day ok percentage, uptime, TTFB and total-time p50/p95/p99, and incident hours, plus an overall summary. First-party measurement no other source has. 90-day window.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { provider: 'anthropic', from: '2026-04-23', to: '2026-05-23' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            provider: 'anthropic',
+            from: '2026-04-23',
+            to: '2026-05-23',
+            days: 31,
+            points: [
+              {
+                date: '2026-05-23',
+                count: 720,
+                ok_pct: 99.86,
+                uptime_pct: 99.86,
+                ttfb_p50: 210,
+                ttfb_p95: 540,
+                ttfb_p99: 880,
+                total_p50: 640,
+                total_p95: 1520,
+                total_p99: 2410,
+                incident_hours: 0,
+                has_data: true,
+              },
+            ],
+            summary: {
+              overall_uptime_pct: 99.74,
+              days_with_data: 31,
+              days_with_incidents: 2,
+            },
+            notes: [],
+            billing: { credits_charged: 3, credits_remaining: 47 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  provider: {
+                    type: 'string',
+                    enum: ['anthropic', 'openai', 'google', 'mistral', 'cohere'],
+                    description: 'Provider key to series. Required.',
+                  },
+                  from: {
+                    type: 'string',
+                    description: 'Inclusive start date YYYY-MM-DD. Optional; defaults to 30 days before to.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'Inclusive end date YYYY-MM-DD. Optional; defaults to today UTC. Window capped at 90 days.',
+                  },
+                },
+                required: ['provider'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/status/leaderboard: strict-premium tier 3 cross-provider
+ * uptime leaderboard. Heavy aggregation over high-resolution poll counters
+ * (~720 samples/provider/day) across a full date window, with premium-only
+ * incident_count + mttr_minutes per provider. No required params; optional
+ * ?from=&to= (90-day max, 30-day default).
+ */
+const STATUS_LEADERBOARD_PILOT: BazaarPilotConfig = {
+  description:
+    'Cross-provider uptime leaderboard over a full date window. Ranks every monitored AI provider by uptime percentage from high-resolution poll counters, with polls, downtime minutes, incident_count, and MTTR per provider. The premium tier adds incidents and mean-time-to-resolve the free 7-day sibling omits.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-04-23', to: '2026-05-23' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            range: { from: '2026-04-23', to: '2026-05-23', days: 31 },
+            generated_at: '2026-05-23T12:00:00Z',
+            entry_count: 12,
+            poll_interval_minutes: 2,
+            entries: [
+              {
+                provider: 'anthropic',
+                rank: 1,
+                uptime_pct: 99.9821,
+                polls: 22320,
+                operational_polls: 22312,
+                degraded_polls: 8,
+                down_polls: 0,
+                unknown_polls: 0,
+                downtime_minutes: 16,
+                hard_down_minutes: 0,
+                incident_count: 1,
+                mttr_minutes: 18.5,
+              },
+            ],
+            billing: { credits_charged: 3, credits_remaining: 47 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: {
+                    type: 'string',
+                    description: 'Inclusive start date YYYY-MM-DD. Optional; defaults to 30 days before to.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'Inclusive end date YYYY-MM-DD. Optional; defaults to today UTC. Window capped at 90 days.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/attention/series: per-provider attention time series.
+ * Daily attention_score, rank, news_24h, news_7d, trending_repos, and
+ * agent_hits for one provider over a date range, plus a summary block.
+ * Param-required (?provider=), from/to optional (default 30d, max 90d).
+ */
+const ATTENTION_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Per-provider attention time series. One paid call returns the daily attention_score, leaderboard rank, news_24h, news_7d, trending_repos, and agent_hits for one AI provider over a date range, plus a summary with first, last, delta, min, max, avg, and captured-day count. The "is this provider heating up or cooling off" feed.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { provider: 'anthropic', from: '2026-04-23', to: '2026-05-23' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            provider: 'anthropic',
+            range: { from: '2026-04-23', to: '2026-05-23', days: 31 },
+            summary: { first: 74.2, last: 81.6, delta: 7.4, min: 71.0, max: 83.1, avg: 78.4, captured_days: 29 },
+            series: [
+              {
+                date: '2026-05-23',
+                attention_score: 81.6,
+                rank: 1,
+                news_24h: 7,
+                news_7d: 41,
+                trending_repos: 12,
+                agent_hits: 318,
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  provider: {
+                    type: 'string',
+                    description: 'Provider id (anthropic, openai, google, meta, mistral, cohere, deepseek, xai, perplexity, nvidia, huggingface, cursor). Required.',
+                  },
+                  from: {
+                    type: 'string',
+                    description: 'Start date YYYY-MM-DD. Optional; defaults to 30 days before to.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'End date YYYY-MM-DD. Optional; defaults to today UTC. Range capped at 90 days.',
+                  },
+                },
+                required: ['provider'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/openrouter/series: daily OpenRouter catalog drift.
+ * Per-day catalog size, cheapest paid input/output USD-per-million floor,
+ * free-tier count, namespace breadth, plus day-over-day model add/remove
+ * churn and per-model price-change counts. OpenRouter serves only current
+ * state, so this history is TensorFeed-captured. No required params.
+ */
+const OPENROUTER_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Daily OpenRouter cross-provider catalog drift. Per-day model count, cheapest paid input and output USD-per-million floor, free-tier count, and namespace breadth, plus day-over-day model add and remove churn and per-model price-change counts. OpenRouter serves only current state, so this multi-day record is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-04-23', to: '2026-05-23' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            from: '2026-04-23',
+            to: '2026-05-23',
+            days: 31,
+            points: [
+              {
+                date: '2026-05-23',
+                total_models: 318,
+                cheapest_input_usd_per_m: 0.05,
+                cheapest_output_usd_per_m: 0.08,
+                free_tier_count: 24,
+                namespace_count: 41,
+                top_namespace: 'openai',
+                added: 2,
+                removed: 1,
+                price_changes: 5,
+                added_sample: ['anthropic/claude-opus-4.8'],
+                removed_sample: ['mistral/old-codestral'],
+                has_data: true,
+              },
+            ],
+            delta_in_window: {
+              start_total: 301,
+              end_total: 318,
+              net: 17,
+              cheapest_input_start: 0.06,
+              cheapest_input_end: 0.05,
+              cheapest_output_start: 0.1,
+              cheapest_output_end: 0.08,
+            },
+            attribution: {
+              source: 'OpenRouter',
+              source_url: 'https://openrouter.ai/api/v1/models',
+              license: 'Public catalog data; pricing and capabilities owned by OpenRouter and the underlying inference providers.',
+              note: 'OpenRouter serves only current state. This multi-day series is TensorFeed-captured and cannot be backfilled.',
+            },
+            notes: [],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: {
+                    type: 'string',
+                    description: 'Start date YYYY-MM-DD. Optional; defaults to 30 days before to.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'End date YYYY-MM-DD. Optional; defaults to today UTC. Range capped at 90 days.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/mcp/registry/series: daily MCP server registry drift.
+ * Per-day total_servers, total_versions, active_count, plus day-over-day
+ * added / removed / net churn over the official modelcontextprotocol.io
+ * registry. Current-state registry, so this record is TensorFeed-captured.
+ * No required params (from/to optional, default 30d, max 90d).
+ */
+const MCP_REGISTRY_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Daily MCP server registry drift. Per-day total_servers, total_versions, and active_count over the official modelcontextprotocol.io registry, plus day-over-day added, removed, and net churn and a window delta. The registry serves only current state, so this multi-day growth-and-churn record is TensorFeed-captured. Default 30 days, max 90.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-04-23', to: '2026-05-23' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            from: '2026-04-23',
+            to: '2026-05-23',
+            days: 31,
+            points: [
+              {
+                date: '2026-05-23',
+                total_servers: 21480,
+                total_versions: 34102,
+                active_count: 20911,
+                added: 38,
+                removed: 4,
+                net: 34,
+                has_data: true,
+              },
+            ],
+            delta_in_window: { start_total: 20104, end_total: 21480, net: 1376 },
+            attribution: {
+              source: 'modelcontextprotocol/registry',
+              source_url: 'https://registry.modelcontextprotocol.io/',
+              license: 'Apache-2.0 / MIT',
+              license_url: 'https://github.com/modelcontextprotocol/registry/blob/main/LICENSE',
+            },
+            notes: [],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: {
+                    type: 'string',
+                    description: 'Start date YYYY-MM-DD. Optional; defaults to 30 days before to.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'End date YYYY-MM-DD. Optional; defaults to today UTC. Range capped at 90 days.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/x402-registry/series: daily x402 publisher-registry drift.
+ * Per-day reachable vs erroring publisher counts, federation count, network
+ * breadth, paid + free endpoint totals, agent-fair-trade declarations, plus
+ * day-over-day domains added / removed, status flips, and payment-wallet
+ * changes (the security-relevant signal). No required params.
+ */
+const X402_REGISTRY_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Daily x402 publisher-registry drift. Per-day reachable vs erroring publisher counts, federation count, network breadth, paid and free endpoint totals, and agent-fair-trade declarations, plus day-over-day domains added and removed, crawl status flips, and payment-wallet changes (the security-relevant signal an agent paying a publisher wants to watch). A registry is current-state only, so this history is TensorFeed-captured. Default 30 days, max 90.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-04-23', to: '2026-05-23' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            from: '2026-04-23',
+            to: '2026-05-23',
+            days: 31,
+            points: [
+              {
+                date: '2026-05-23',
+                total: 42,
+                ok_count: 39,
+                error_count: 3,
+                federation_count: 2,
+                network_count: 2,
+                networks: ['base', 'base-sepolia'],
+                paid_endpoints_total: 318,
+                free_endpoints_total: 511,
+                agent_fair_trade_count: 6,
+                added: 1,
+                removed: 0,
+                status_flips: 2,
+                wallet_changes: 0,
+                added_sample: ['newpublisher.xyz'],
+                removed_sample: [],
+                wallet_change_sample: [],
+                has_data: true,
+              },
+            ],
+            delta_in_window: { start_total: 38, end_total: 42, net: 4, start_ok: 35, end_ok: 39 },
+            attribution: {
+              source: 'TensorFeed x402 Registry',
+              source_url: 'https://tensorfeed.ai/x402-registry',
+              license: 'TF-aggregated registry of x402 publishers. Underlying manifests are owned by their publishers and served at /.well-known/x402. TF surfaces a normalized view; inclusion is not an endorsement and agents should still verify wallet addresses on-chain and against publisher.validation.publishedAt before sending funds.',
+              source_url_per_entry: 'https://{domain}/.well-known/x402',
+              refresh_cadence: 'daily',
+            },
+            notes: [],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: {
+                    type: 'string',
+                    description: 'Start date YYYY-MM-DD. Optional; defaults to 30 days before to.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'End date YYYY-MM-DD. Optional; defaults to today UTC. Range capped at 90 days.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/x402-index/series: time series of x402 USDC settlement
+ * volume or count on Base mainnet over a date range. metric=volume|count,
+ * granularity=day (hour is MVP-unavailable and returns a no-charge),
+ * from/to in YYYY-MM-DD, optional domain (omit for ecosystem-wide).
+ * AFTA-signed. All four of metric, granularity, from, to are required.
+ */
+const X402_INDEX_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Time series of x402 USDC settlement on Base mainnet. One paid call returns per-day settlement volume (USDC) or transaction count across a date range, ecosystem-wide or scoped to a single publisher domain. Built over public Base on-chain data; CC BY 4.0. Required params metric, granularity, from, and to; granularity day only in the MVP.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { metric: 'volume', granularity: 'day', from: '2026-05-28', to: '2026-05-30' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            metric: 'volume',
+            granularity: 'day',
+            window: { from: '2026-05-28', to: '2026-05-30' },
+            series: [
+              { ts: '2026-05-28', value: '1240.500000' },
+              { ts: '2026-05-29', value: '1875.250000' },
+            ],
+            captured_at: '2026-05-30T11:00:00Z',
+            has_data: true,
+            attribution: 'TensorFeed x402 settlement index over public Base mainnet on-chain data',
+            license: 'CC BY 4.0',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  metric: {
+                    type: 'string',
+                    enum: ['volume', 'count'],
+                    description: 'volume returns per-period USDC settled; count returns per-period transaction count.',
+                  },
+                  granularity: {
+                    type: 'string',
+                    enum: ['day', 'hour'],
+                    description: 'Bucket size. Only day is built in the MVP; hour returns a no-charge granularity_unavailable.',
+                  },
+                  from: {
+                    type: 'string',
+                    description: 'Start date YYYY-MM-DD. Required. Range is capped server-side to bound per-day KV fan-out.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'End date YYYY-MM-DD. Required.',
+                  },
+                  domain: {
+                    type: 'string',
+                    description: 'Optional publisher domain to scope the series to one publisher. Omit for the ecosystem-wide series.',
+                  },
+                },
+                required: ['metric', 'granularity', 'from', 'to'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -4133,6 +5031,17 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/news/decision-verified': DECISION_VERIFIED_LOOKUP_PILOT,
   '/api/premium/research/topic-search': TOPIC_SEARCH_PILOT,
   '/api/premium/recent': RECENT_PILOT,
+  // Wave 27 (2026-05-30): time-series data feeds (the data-library core).
+  '/api/premium/history/pricing/series': HISTORY_PRICING_SERIES_PILOT,
+  '/api/premium/history/benchmarks/series': HISTORY_BENCHMARKS_SERIES_PILOT,
+  '/api/premium/history/status/uptime': HISTORY_STATUS_UPTIME_PILOT,
+  '/api/premium/probe/series': PROBE_SERIES_PILOT,
+  '/api/premium/status/leaderboard': STATUS_LEADERBOARD_PILOT,
+  '/api/premium/attention/series': ATTENTION_SERIES_PILOT,
+  '/api/premium/openrouter/series': OPENROUTER_SERIES_PILOT,
+  '/api/premium/mcp/registry/series': MCP_REGISTRY_SERIES_PILOT,
+  '/api/premium/x402-registry/series': X402_REGISTRY_SERIES_PILOT,
+  '/api/premium/x402-index/series': X402_INDEX_SERIES_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

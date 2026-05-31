@@ -244,6 +244,14 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // sub-hourly sibling of the strict whats-new brief.
   '/api/premium/research/topic-search',
   '/api/premium/recent',
+  // Wave 27 (2026-05-30): time-series data feeds promoted to strict-premium so
+  // the anonymous CDP crawler sees a 402. The other 6 Wave 27 series were
+  // already strict (history/pricing|benchmarks|status-uptime, probe/series,
+  // status/leaderboard) or matched by the x402-index prefix.
+  '/api/premium/attention/series',
+  '/api/premium/openrouter/series',
+  '/api/premium/mcp/registry/series',
+  '/api/premium/x402-registry/series',
 ];
 
 /**
