@@ -252,6 +252,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/openrouter/series',
   '/api/premium/mcp/registry/series',
   '/api/premium/x402-registry/series',
+  // Wave 28 (2026-05-30): security data feeds promoted to strict-premium so the
+  // anonymous CDP crawler sees a 402. The other 6 Wave 28 feeds were already
+  // strict (cve/range, kev/series, epss/series, corroborated,
+  // cve/kev-exploitation-timeline, sec/filings/ai-disclosures).
+  '/api/premium/security/kev/full',
+  '/api/premium/security/epss/top',
+  '/api/premium/security/ghsa/ai-feed',
 ];
 
 /**

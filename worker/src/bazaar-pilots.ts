@@ -4924,6 +4924,759 @@ const X402_INDEX_SERIES_PILOT: BazaarPilotConfig = {
   },
 };
 
+/**
+ * Wave 28 (2026-05-30): security data feeds. Cross-source CVE/KEV/EPSS/GHSA
+ * corroboration and exploitation intelligence over public-domain and
+ * permissively-licensed sources. All flat GET. The per-id clean/cve|kev|epss
+ * lookups are already cataloged (Wave 14); these are the bulk/series/dossier
+ * surfaces an agent pulls to drive those lookups.
+ */
+
+const SECURITY_CORROBORATED_PILOT: BazaarPilotConfig = {
+  description:
+    'Cross-source security corroboration for one package in a single paid call. For every GHSA advisory naming the package: the deterministic affected-package vs authoritative-OSV verdict (never-false-confirm), KEV/EPSS/SSVC/OSV enrichment joined only by a verbatim-verified CVE id, and verbatim version, severity, and exploited-in-wild context, each in an explicit provenance bucket. Loose package matching (commons-text resolves to Apache Commons Text). The endpoint that saves an agent from stitching GHSA, OSV, NVD, KEV, and EPSS itself.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { package: 'open-webui' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            package_query: 'open-webui',
+            matched_package: 'Open WebUI',
+            claim:
+              "Affected package corroborated against authoritative OSV, plus deterministic KEV/EPSS/CVSS/SSVC enrichment joined by a verbatim-verified CVE id. We do NOT verify the advisory's exploitation or severity claims; GHSA prose does not make them.",
+            provenance_legend: {
+              corroborated_claim:
+                "advisory's verbatim affected_products + deterministic product-vs-OSV verdict (never-false-confirm)",
+              deterministic_enrichment:
+                'KEV/EPSS/SSVC/OSV joined ONLY by a verbatim-verified CVE id; not an advisory claim',
+              verbatim_context:
+                'version/severity/exploited copied verbatim from the advisory; not corroborated, not a guarantee',
+            },
+            dataset_meta: {
+              dataset: 'security-xsource',
+              tier: 'premium',
+              generated_at: '2026-05-18T06:03:17Z',
+              advisories_total: 167,
+              packages_total: 85,
+              by_overall: { corroborated: 143, novel: 22, unverifiable: 2 },
+              attribution: {
+                advisory_source: 'GitHub Security Advisories (GHSA)',
+                corroboration_sources:
+                  'OSV.dev, CISA KEV, FIRST EPSS, NVD, CISA Vulnrichment (public)',
+                redistribution:
+                  'derived metadata + corroboration verdicts; advisory prose not republished',
+              },
+            },
+            advisory_count: 39,
+            advisories: [
+              {
+                source_url: 'https://github.com/advisories/GHSA-45m8-cpm2-3v65',
+                overall: 'corroborated',
+                corroborated_claim: {
+                  affected_products: ['Open WebUI'],
+                  product_corroboration: 'confirmed',
+                },
+                deterministic_enrichment: {
+                  cves_verbatim_verified: ['CVE-2026-44553'],
+                  kev_listed: false,
+                  epss_percentile: 0.08198,
+                  ssvc: null,
+                  osv_packages: ['open-webui'],
+                },
+                verbatim_context: {
+                  affected_version_ranges: ['current main branch (commit `6fdd19bf1`)'],
+                  fixed_versions: [],
+                  severity_label: 'unstated',
+                  exploited_in_wild: 'unstated',
+                },
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  package: {
+                    type: 'string',
+                    description:
+                      'Package name. Loose matching is supported (commons-text resolves to Apache Commons Text). Returns every corroborated GHSA advisory naming that package.',
+                  },
+                },
+                required: ['package'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const SECURITY_CVE_RANGE_PILOT: BazaarPilotConfig = {
+  description:
+    'CVE IDs added across a UTC date range in one paid call, capped at 30 days. Each day returns the full CVE-ID set TensorFeed indexed from the MITRE cvelistV5 commit history that UTC day, with a per-day count and a range total. The bulk-pull an agent uses to drive per-CVE record lookups or build exploitation-velocity trends. MITRE CVE Terms of Use; commercial redistribution permitted.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-05-01', to: '2026-05-07' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            from: '2026-05-01',
+            to: '2026-05-07',
+            days_returned: 7,
+            cves_total: 412,
+            days: [
+              {
+                date: '2026-05-01',
+                count: 2,
+                cve_ids: ['CVE-2026-31000', 'CVE-2026-31001'],
+              },
+            ],
+            attribution: {
+              source: 'MITRE CVE List',
+              source_url: 'https://www.cve.org',
+              license: 'MITRE CVE Terms of Use',
+              redistribution: 'commercial-permitted',
+              notice:
+                'Use of CVE Record data is subject to MITRE CVE Terms of Use. https://www.cve.org/Legal/TermsOfUse',
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: {
+                    type: 'string',
+                    pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+                    description: 'Range start, inclusive UTC date (YYYY-MM-DD).',
+                  },
+                  to: {
+                    type: 'string',
+                    pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+                    description:
+                      'Range end, inclusive UTC date (YYYY-MM-DD). Must be on or after from. Range is capped at 30 days.',
+                  },
+                },
+                required: ['from', 'to'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const SECURITY_KEV_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Daily CISA KEV catalog additions across a UTC date range in one paid call, capped at 90 days. Each day returns the full set of Known Exploited Vulnerability entries whose dateAdded fell on that day, plus a per-day count and a range total. The feed an agent uses to track exploitation velocity, build anomaly detectors, or pull weekly digests. CISA KEV is US Government public domain; commercial redistribution permitted.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-03-01', to: '2026-03-31' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            from: '2026-03-01',
+            to: '2026-03-31',
+            days_returned: 31,
+            total_added_in_range: 14,
+            days: [
+              {
+                date: '2026-03-03',
+                count: 1,
+                entries: [
+                  {
+                    cveID: 'CVE-2026-21042',
+                    vendorProject: 'Acme',
+                    product: 'Edge Gateway',
+                    vulnerabilityName: 'Acme Edge Gateway OS Command Injection Vulnerability',
+                    dateAdded: '2026-03-03',
+                    shortDescription:
+                      'Acme Edge Gateway contains an OS command injection vulnerability that allows remote code execution.',
+                    requiredAction:
+                      'Apply mitigations per vendor instructions or discontinue use of the product if mitigations are unavailable.',
+                    dueDate: '2026-03-24',
+                    knownRansomwareCampaignUse: 'Unknown',
+                    notes: 'https://www.acme.example/advisories/edge-gateway-2026',
+                    cwes: ['CWE-78'],
+                  },
+                ],
+              },
+            ],
+            attribution: {
+              source: 'CISA Known Exploited Vulnerabilities Catalog',
+              source_url:
+                'https://www.cisa.gov/known-exploited-vulnerabilities-catalog',
+              publisher:
+                'Cybersecurity and Infrastructure Security Agency (US Government)',
+              license: 'US Government public domain (17 USC 105)',
+              redistribution: 'commercial-permitted',
+              notice:
+                'CISA KEV is a US Government work in the public domain. No restrictions on use, reproduction, or distribution.',
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: {
+                    type: 'string',
+                    pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+                    description: 'Range start, inclusive UTC date (YYYY-MM-DD).',
+                  },
+                  to: {
+                    type: 'string',
+                    pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+                    description:
+                      'Range end, inclusive UTC date (YYYY-MM-DD). Must be on or after from. Range is capped at 90 days.',
+                  },
+                },
+                required: ['from', 'to'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const SECURITY_KEV_FULL_PILOT: BazaarPilotConfig = {
+  description:
+    'The complete untruncated CISA Known Exploited Vulnerabilities catalog (1500 plus entries) in one paid call. The free /api/security/kev tier returns only the 50 most-recent entries; this returns the full current catalog with catalog version and release date, no truncation. The bulk-export an agent uses to seed a local exploitation index. CISA KEV is US Government public domain; commercial redistribution permitted.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            catalog_version: '2026.05.29',
+            date_released: '2026-05-29T13:00:00.000Z',
+            total_entries: 1487,
+            vulnerabilities: [
+              {
+                cveID: 'CVE-2026-21042',
+                vendorProject: 'Acme',
+                product: 'Edge Gateway',
+                vulnerabilityName: 'Acme Edge Gateway OS Command Injection Vulnerability',
+                dateAdded: '2026-03-03',
+                shortDescription:
+                  'Acme Edge Gateway contains an OS command injection vulnerability that allows remote code execution.',
+                requiredAction:
+                  'Apply mitigations per vendor instructions or discontinue use of the product if mitigations are unavailable.',
+                dueDate: '2026-03-24',
+                knownRansomwareCampaignUse: 'Unknown',
+                notes: 'https://www.acme.example/advisories/edge-gateway-2026',
+                cwes: ['CWE-78'],
+              },
+            ],
+            attribution: {
+              source: 'CISA Known Exploited Vulnerabilities Catalog',
+              source_url:
+                'https://www.cisa.gov/known-exploited-vulnerabilities-catalog',
+              publisher:
+                'Cybersecurity and Infrastructure Security Agency (US Government)',
+              license: 'US Government public domain (17 USC 105)',
+              redistribution: 'commercial-permitted',
+              notice:
+                'CISA KEV is a US Government work in the public domain. No restrictions on use, reproduction, or distribution.',
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const SECURITY_EPSS_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Full historical EPSS time-series for one CVE in a single paid call. Returns the per-date exploit-prediction probability (0 to 1, likelihood of exploitation in the next 30 days) and percentile rank for the requested CVE across its entire scored history. The feed an agent uses to chart whether a vulnerability is heating up or cooling off over time. EPSS is maintained by the FIRST.org Special Interest Group; free for any use, commercial redistribution permitted.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { cve_id: 'CVE-2024-3094' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            cve_id: 'CVE-2024-3094',
+            fetched_at: '2026-05-29T12:00:00.000Z',
+            source: 'live',
+            score: {
+              cve: 'CVE-2024-3094',
+              epss: '0.943210000',
+              percentile: '0.998760000',
+              date: '2026-05-29',
+              'time-series': [
+                { epss: '0.940110000', percentile: '0.998500000', date: '2026-05-28' },
+                { epss: '0.121000000', percentile: '0.945000000', date: '2024-03-30' },
+              ],
+            },
+            attribution: {
+              source: 'EPSS (Exploit Prediction Scoring System)',
+              source_url: 'https://www.first.org/epss/',
+              publisher: 'FIRST.org EPSS Special Interest Group',
+              license: 'Free for any use per FIRST.org policy',
+              redistribution: 'commercial-permitted',
+              notice:
+                'EPSS scores are updated daily. The probability is the estimated likelihood of exploitation in the next 30 days. Percentile is the rank within the EPSS corpus on that date.',
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  cve_id: {
+                    type: 'string',
+                    pattern: '^CVE-\\d{4}-\\d{4,7}$',
+                    description:
+                      'CVE id to fetch the full EPSS history for (CVE-YYYY-NNNNN). The alias ?cve= is also accepted.',
+                  },
+                },
+                required: ['cve_id'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const SECURITY_EPSS_TOP_PILOT: BazaarPilotConfig = {
+  description:
+    'Top-N CVEs ranked by EPSS exploitation probability (the modeled chance of exploitation in the next 30 days), as of any UTC date. One paid call returns the current or historical exploitation leaderboard with each CVE probability and corpus percentile. FIRST.org EPSS, free for any use, commercial redistribution permitted.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { date: '2026-05-29', limit: 50 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            date: '2026-05-29',
+            fetched_at: '2026-05-30T08:00:00Z',
+            source: 'live',
+            count: 50,
+            top: [
+              {
+                cve: 'CVE-2026-44580',
+                epss: '0.97412',
+                percentile: '0.99987',
+                date: '2026-05-29',
+              },
+            ],
+            attribution: {
+              source: 'EPSS (Exploit Prediction Scoring System)',
+              source_url: 'https://www.first.org/epss/',
+              publisher: 'FIRST.org EPSS Special Interest Group',
+              license: 'Free for any use per FIRST.org policy',
+              redistribution: 'commercial-permitted',
+              notice:
+                'EPSS scores are updated daily. The probability is the estimated likelihood of exploitation in the next 30 days. Percentile is the rank within the EPSS corpus on that date.',
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  date: {
+                    type: 'string',
+                    description: 'UTC date (YYYY-MM-DD) for a historical EPSS leaderboard. Omit for the current top-N.',
+                  },
+                  limit: {
+                    type: 'integer',
+                    minimum: 1,
+                    maximum: 100,
+                    description: 'How many top CVEs to return. Default 50, max 100.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const SECURITY_GHSA_AI_FEED_PILOT: BazaarPilotConfig = {
+  description:
+    'AI-relevant GitHub Security Advisories firehose. One paid call returns all GHSA types (reviewed, unreviewed, malware) across every ecosystem (npm, pip, Maven, Go, RubyGems, NuGet, Rust, and more), filtered to a curated AI keyword list, with derived severity_band, age_days, and an ai_relevance confidence tier per advisory plus by_severity, by_ecosystem, and by_type rollups. Broader than the free supply-chain malware feed.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            generated_at: '2026-05-30T06:00:00Z',
+            total: 87,
+            by_severity: { critical: 9, high: 31, medium: 28, low: 14, unknown: 5 },
+            by_ecosystem: { pip: 41, npm: 33, maven: 8, go: 5 },
+            by_type: { reviewed: 62, unreviewed: 19, malware: 6 },
+            entries: [
+              {
+                advisory_id: 'GHSA-gx5p-jg67-6x7h',
+                cve_id: 'CVE-2026-44580',
+                type: 'reviewed',
+                severity_band: 'high',
+                package: { name: 'langchain', ecosystem: 'pip' },
+                vulnerable_version_range: '< 0.3.27',
+                first_patched_version: '0.3.27',
+                summary: 'Server-side request forgery in the LangChain document loader allows an attacker to reach internal endpoints.',
+                published_at: '2026-05-28T14:00:00Z',
+                age_days: 2,
+                cwes: ['CWE-918'],
+                references_count: 4,
+                url: 'https://github.com/advisories/GHSA-gx5p-jg67-6x7h',
+                ai_relevance: {
+                  matched_keywords: ['langchain'],
+                  confidence: 'high',
+                },
+              },
+            ],
+            sources: [
+              {
+                name: 'GitHub Security Advisories',
+                url: 'https://api.github.com/advisories',
+                license: 'GitHub Terms of Service. Attribution required.',
+              },
+            ],
+            posture:
+              'TensorFeed republishes already-public AI-relevant security advisories from GitHub Security Advisories. We filter, derive, and republish; we do not detect, attribute, or actively scan. Treat the listed primary source as authoritative.',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const CVE_KEV_EXPLOITATION_TIMELINE_PILOT: BazaarPilotConfig = {
+  description:
+    'One vendor exploited-in-the-wild timeline in a single paid call. For each CVE: original NVD disclosure date, days to CISA KEV listing, vulnerability class, CVSS score and severity, vendor patch status, public-exploit and ransomware signals, plus a per-vendor rollup (KEV count, mean and fastest disclosure-to-KEV lag, severity distribution). Built offline over NVD plus the CISA Known Exploited Vulnerabilities catalog, US Government public domain.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { vendor: 'microsoft' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            vendor_query: 'microsoft',
+            matched_vendor: 'Microsoft',
+            dataset_meta: {
+              dataset: 'cve-kev-2026',
+              source: 'kev-anchored (CISA KEV entries with kev_date_added in 2026, any registration year)',
+              generated_at: '2026-05-15T16:31:30Z',
+              cves_total: 200,
+              vendors_total: 91,
+              date_range: { earliest_published: '2007-02-03', latest_published: '2026-05-14' },
+              coverage: 'v1 capped slice (extract_limit 100 on the factory side); not the full kev-anchored-2026 corpus, expandable in later jobs',
+              attribution: {
+                source: 'NVD (NIST National Vulnerability Database) and CISA Known Exploited Vulnerabilities Catalog',
+                source_url: 'https://nvd.nist.gov/ , https://www.cisa.gov/known-exploited-vulnerabilities-catalog',
+                publisher: 'US Government (NIST, CISA)',
+                license: 'US Government public domain (17 USC 105)',
+                redistribution: 'commercial-permitted',
+              },
+            },
+            vendor: {
+              vendor_normalized: 'Microsoft',
+              cve_count: 32,
+              kev_count: 32,
+              ransomware_count: 1,
+              mean_days_disclosure_to_kev: 1680.2,
+              fastest_days_disclosure_to_kev: 0,
+              severity_distribution: { high: 25, critical: 3, medium: 4 },
+              timeline: [
+                {
+                  cve_id: 'CVE-2007-0671',
+                  published_date: '2007-02-03',
+                  kev_date_added: '2025-08-12',
+                  days_disclosure_to_kev: 6765,
+                  vulnerability_class: 'rce-auth',
+                  cvss_v3_score: 8.8,
+                  cvss_v3_severity: 'high',
+                  attack_vector: 'network',
+                  vendor_patch_status: 'patch-released',
+                  public_exploit_available_signal: true,
+                  ransomware_use_known: false,
+                  analyst_priority_signal: 'critical',
+                  is_milestone_candidate: false,
+                  summary_one_sentence: 'A remote code execution vulnerability in Microsoft Office Excel allows attackers to execute arbitrary code when a user opens a crafted file.',
+                },
+              ],
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  vendor: {
+                    type: 'string',
+                    description: 'Vendor name, one per call. Loose matching: "cisco" resolves to "Cisco Systems, Inc.". Known vendors include Microsoft, Adobe, Mozilla, Palo Alto Networks, D-Link, TP-Link, Juniper Networks.',
+                  },
+                },
+                required: ['vendor'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const SEC_FILINGS_AI_DISCLOSURES_PILOT: BazaarPilotConfig = {
+  description:
+    'Single SEC filing AI-disclosure dossier. Pass one EDGAR accession number and get the full structured AI extraction: capex, revenue, partnership, and chip mentions with context, newly announced AI products, AI workforce changes, and verbatim key quotes with the section they came from. Qwen-extracted over the AI bellwether cohort filings, deterministically normalized. SEC EDGAR, US Government public domain. Discover accessions via the free /api/sec/filings/extraction-index.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { accession: '0001045810-26-000052' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            accession_number: '0001045810-26-000052',
+            found: true,
+            filing: {
+              accession_number: '0001045810-26-000052',
+              cik: '0001045810',
+              ticker: 'NVDA',
+              company_name: 'NVIDIA Corporation',
+              form: '10-Q',
+              filing_date: '2026-05-20',
+              ai_relevant: true,
+              ai_relevance_score: 92,
+              ai_keyword_hits: ['data center', 'inference', 'accelerated computing'],
+              ai_capex_mentions: [
+                {
+                  amount_usd: null,
+                  range_low_usd: null,
+                  range_high_usd: null,
+                  context: 'We expect data center capital expenditures to increase materially to support accelerated computing demand.',
+                  forward_looking: true,
+                },
+              ],
+              ai_revenue_mentions: [],
+              ai_partnership_mentions: [],
+              ai_chip_mentions: [
+                {
+                  vendor: 'nvidia',
+                  chip_or_product: 'Blackwell',
+                  context: 'Blackwell architecture systems entered volume production during the quarter.',
+                },
+              ],
+              new_ai_products_announced: [],
+              ai_workforce_changes: [],
+              key_quotes: [
+                {
+                  quote: 'Demand for our accelerated computing platform remained strong across cloud and enterprise customers.',
+                  section: 'MD&A',
+                },
+              ],
+              extracted_by: 'qwen3.6-27b',
+              extracted_at: '2026-05-26T03:00:00Z',
+            },
+            source_license: 'US Government public domain (17 USC 105)',
+            source_attribution: 'SEC EDGAR (data.sec.gov) + Qwen 3.6 27B verbatim extraction + deterministic normalize',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  accession: {
+                    type: 'string',
+                    pattern: '^\\d{10}-\\d{2}-\\d{6}$',
+                    description: 'SEC EDGAR accession number in dashed form NNNNNNNNNN-NN-NNNNNN (e.g. 0001045810-26-000052). One per call. Find valid accessions via /api/sec/filings/extraction-index.',
+                  },
+                },
+                required: ['accession'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -5042,6 +5795,16 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/mcp/registry/series': MCP_REGISTRY_SERIES_PILOT,
   '/api/premium/x402-registry/series': X402_REGISTRY_SERIES_PILOT,
   '/api/premium/x402-index/series': X402_INDEX_SERIES_PILOT,
+  // Wave 28 (2026-05-30): security data feeds.
+  '/api/premium/security/corroborated': SECURITY_CORROBORATED_PILOT,
+  '/api/premium/security/cve/range': SECURITY_CVE_RANGE_PILOT,
+  '/api/premium/security/kev/series': SECURITY_KEV_SERIES_PILOT,
+  '/api/premium/security/kev/full': SECURITY_KEV_FULL_PILOT,
+  '/api/premium/security/epss/series': SECURITY_EPSS_SERIES_PILOT,
+  '/api/premium/security/epss/top': SECURITY_EPSS_TOP_PILOT,
+  '/api/premium/security/ghsa/ai-feed': SECURITY_GHSA_AI_FEED_PILOT,
+  '/api/premium/cve/kev-exploitation-timeline': CVE_KEV_EXPLOITATION_TIMELINE_PILOT,
+  '/api/premium/sec/filings/ai-disclosures': SEC_FILINGS_AI_DISCLOSURES_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

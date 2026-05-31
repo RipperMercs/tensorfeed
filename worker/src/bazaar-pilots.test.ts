@@ -117,6 +117,16 @@ const PILOT_PATHS = [
   '/api/premium/mcp/registry/series',
   '/api/premium/x402-registry/series',
   '/api/premium/x402-index/series',
+  // Wave 28 (2026-05-30): security data feeds
+  '/api/premium/security/corroborated',
+  '/api/premium/security/cve/range',
+  '/api/premium/security/kev/series',
+  '/api/premium/security/kev/full',
+  '/api/premium/security/epss/series',
+  '/api/premium/security/epss/top',
+  '/api/premium/security/ghsa/ai-feed',
+  '/api/premium/cve/kev-exploitation-timeline',
+  '/api/premium/sec/filings/ai-disclosures',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.
@@ -529,6 +539,58 @@ describe('Wave 27 pilot AJV validation', () => {
   ];
 
   for (const path of wave27Paths) {
+    it(`${path} info validates against its declared schema`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const valid = validate(bazaar.info);
+      if (!valid) {
+        throw new Error(
+          `${path} bazaar extension info failed schema validation: ${JSON.stringify(
+            validate.errors,
+            null,
+            2,
+          )}`,
+        );
+      }
+      expect(valid).toBe(true);
+    });
+
+    it(`${path} rejects info with wrong input.method (negative control)`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const tampered = JSON.parse(JSON.stringify(bazaar.info));
+      tampered.input.method = 'POST';
+      expect(validate(tampered)).toBe(false);
+    });
+
+    it(`${path} has a description longer than 40 chars`, () => {
+      const config = getBazaarPilotConfig(path);
+      expect(config).not.toBeNull();
+      expect(config!.description.length).toBeGreaterThan(40);
+    });
+  }
+});
+
+describe('Wave 28 pilot AJV validation', () => {
+  // Wave 28 (2026-05-30): security data feeds. Same load-bearing AJV check:
+  // if any regress, the endpoint silently fails to catalog in Bazaar.
+  const wave28Paths = [
+    '/api/premium/security/corroborated',
+    '/api/premium/security/cve/range',
+    '/api/premium/security/kev/series',
+    '/api/premium/security/kev/full',
+    '/api/premium/security/epss/series',
+    '/api/premium/security/epss/top',
+    '/api/premium/security/ghsa/ai-feed',
+    '/api/premium/cve/kev-exploitation-timeline',
+    '/api/premium/sec/filings/ai-disclosures',
+  ];
+
+  for (const path of wave28Paths) {
     it(`${path} info validates against its declared schema`, () => {
       const ext = bazaarExtensionsFor(path);
       const bazaar = ext.bazaar as Record<string, any>;

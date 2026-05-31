@@ -64,13 +64,17 @@ describe('isStrictPremiumPath', () => {
     it('matches /api/premium/health/fda/aggregate', () => {
       expect(isStrictPremiumPath('/api/premium/health/fda/aggregate')).toBe(true);
     });
-    it('does NOT match /api/premium/security/kev/full (no params, safe under trial)', () => {
-      // kev/full and epss/top do not require query params, so the trial layer
-      // returns a real 200 for them. They stay on the trial layer intentionally.
-      expect(isStrictPremiumPath('/api/premium/security/kev/full')).toBe(false);
+    it('matches /api/premium/security/kev/full (Wave 28: strict to catalog)', () => {
+      // kev/full and epss/top take no required params, so they were originally
+      // left on the trial layer (a free-trial 200 was safe; no pay-skills #68
+      // problem). Wave 28 promotes them to strict-premium so the anonymous CDP
+      // Bazaar crawler sees a 402 and the endpoint catalogs. This also protects
+      // premium value: a free-trial full-KEV-catalog or EPSS-leaderboard pull
+      // 100x/day undercuts the paid tier.
+      expect(isStrictPremiumPath('/api/premium/security/kev/full')).toBe(true);
     });
-    it('does NOT match /api/premium/security/epss/top (date optional, safe under trial)', () => {
-      expect(isStrictPremiumPath('/api/premium/security/epss/top')).toBe(false);
+    it('matches /api/premium/security/epss/top (Wave 28: strict to catalog)', () => {
+      expect(isStrictPremiumPath('/api/premium/security/epss/top')).toBe(true);
     });
   });
 
@@ -239,7 +243,7 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 71 exact paths', () => {
+    it('exposes all 74 exact paths', () => {
       // 24 pre-Wave-2 + 9 Wave 2 + 1 each Waves 3..12 + 3 Wave 13 (ai-cves trio)
       // + 1 Wave 15 (ai-cves batch) + 5 Wave 16 (per-provider triage)
       // + 3 Wave 17 (SEC filings AI-extraction) + 1 Wave 18 (pro-tier
@@ -247,10 +251,11 @@ describe('isStrictPremiumPath', () => {
       // (route-verdict) + 2 verdict-track (provider-reliability-verdict,
       // x402-settlement-verdict) + 1 Wave 24 (guidance-delta) + 2 Wave 26
       // (topic-search, recent) + 4 Wave 27 (attention, openrouter, mcp/registry,
-      // x402-registry series). funding/exposure + packages/pypi/momentum
-      // were already strict.
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(71);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(71); // no duplicates
+      // x402-registry series) + 3 Wave 28 (security kev/full, epss/top,
+      // ghsa/ai-feed). funding/exposure + packages/pypi/momentum were already
+      // strict.
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(74);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(74); // no duplicates
     });
     it('exposes 8 prefix paths (providers + 5 Wave 14 path-param pilots + Wave 19 ai-companies + x402-index)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(8);
