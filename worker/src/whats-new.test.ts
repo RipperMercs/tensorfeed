@@ -336,3 +336,37 @@ describe('computeWhatsNew: emit notes', () => {
     expect(r.notes.some(n => n.includes('No pricing snapshot'))).toBe(true);
   });
 });
+
+describe('computeWhatsNew: capturedAt (staleness no-charge basis)', () => {
+  it('surfaces the freshest real data-capture time across sources', async () => {
+    const today = todayUTC();
+    const yesterday = addDays(today, -1);
+    const env = makeEnv({
+      pricingHistorySnapshots: {
+        // pricingSnapshot stamps capturedAt = `${today}T07:00:00.000Z`
+        [`history:${yesterday}:models`]: pricingSnapshot(yesterday, [
+          { id: 'op', name: 'Opus 4.7', provider: 'Anthropic', inputPrice: 15, outputPrice: 75 },
+        ]),
+        [`history:${today}:models`]: pricingSnapshot(today, [
+          { id: 'op', name: 'Opus 4.7', provider: 'Anthropic', inputPrice: 15, outputPrice: 75 },
+        ]),
+      },
+      services: [
+        // Later than the 07:00 pricing snapshot, so this is the freshest.
+        { name: 'Anthropic', provider: 'anthropic', status: 'operational', lastChecked: `${today}T07:55:00.000Z` },
+      ],
+    });
+    const r = await computeWhatsNew(env);
+    if (!r.ok) return;
+    expect(r.capturedAt).toBe(`${today}T07:55:00.000Z`);
+    // Must NOT be build/request time (computed_at), which would defeat the SLA.
+    expect(r.capturedAt).not.toBe(r.computed_at);
+  });
+
+  it('falls back to null when no source surfaces a timestamp', async () => {
+    const env = makeEnv({});
+    const r = await computeWhatsNew(env);
+    if (!r.ok) return;
+    expect(r.capturedAt).toBeNull();
+  });
+});

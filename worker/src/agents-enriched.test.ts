@@ -271,4 +271,20 @@ describe('getEnrichedDirectory', () => {
     expect(result.total).toBe(0);
     expect(result.agents).toHaveLength(0);
   });
+
+  it('surfaces the real directory ingest time in data_freshness.directory (staleness no-charge basis)', async () => {
+    // The handler bills staleness against result.data_freshness.directory
+    // (the real upstream lastUpdated), NOT the top-level computed_at build
+    // time. Pin that the source lastUpdated reaches data_freshness.directory.
+    const env = makeEnv({
+      directory: DIRECTORY,
+      services: SERVICES,
+      articles: ARTICLES,
+      pricing: PRICING,
+    });
+    const result = await getEnrichedDirectory(env);
+    expect(result.data_freshness.directory).toBe('2026-04-27');
+    // computed_at is build time and must not be what staleness bills against.
+    expect(result.data_freshness.directory).not.toBe(result.computed_at);
+  });
 });

@@ -15,6 +15,7 @@ function baseFixture(over: Partial<WhatsNewResult> = {}): WhatsNewResult {
     ok: true,
     window: { from: '2026-05-26', to: '2026-05-27', days: 1 },
     computed_at: '2026-05-26T08:00:00Z',
+    capturedAt: '2026-05-26T07:55:00Z',
     summary: {
       total_pricing_changes: 1,
       new_models: 1,

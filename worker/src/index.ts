@@ -11687,7 +11687,9 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/whats-new', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Pass the freshest underlying data-capture time so the 1h staleness
+      // SLA can no-charge when the pricing/status/news crons stall.
+      return await premiumResponse(result, payment, 1, request, env, null, result.capturedAt);
     }
 
     // === PAID PREMIUM: WHATS-NEW PRO TIER (Tier 2, 10 credits) ============
@@ -11734,7 +11736,9 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/whats-new/pro', request.headers.get('User-Agent') || 'unknown', 10, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 10, request, env);
+      // Pass the freshest underlying data-capture time so the 6h staleness
+      // SLA can no-charge 10 credits when the base data crons stall.
+      return await premiumResponse(result, payment, 10, request, env, null, result.capturedAt);
     }
 
     // === PAID PREMIUM: RECENT WINDOW (Tier 1, 1 credit) ===
@@ -11780,7 +11784,9 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/recent', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Pass the freshest underlying data-capture time so the 1h staleness
+      // SLA can no-charge when the news/status crons stall.
+      return await premiumResponse(result, payment, 1, request, env, null, result.capturedAt);
     }
 
     // === PAID PREMIUM: GHSA AI FIREHOSE (Tier 1, 1 credit) ===
@@ -11989,6 +11995,26 @@ export default {
           payment, request, env,
         );
       }
+      // No-charge when there is no usable cost data: zero models matched the
+      // live pricing catalog (all-unmatched ids, or the 'models' KV is empty
+      // before first seed) means an empty ranking and no projections to bill
+      // for. cost/projection is NULL_SLA (pure compute), so the staleness
+      // no-charge can never fire; route this to premiumValidationFailure with
+      // 'empty_result' (HTTP 200) so the agent is not charged 1 credit for an
+      // empty answer, mirroring the !result.ok no-charge branch above.
+      if (result.ranked_cheapest_monthly.length === 0) {
+        return await premiumValidationFailure(
+          {
+            error: 'no_models_matched',
+            hint: 'None of the requested model ids matched the live pricing catalog. Confirm exact ids via /api/models. Not charged.',
+            workload: result.workload,
+            projections: result.projections,
+            attribution: result.attribution,
+            notes: result.notes,
+          },
+          payment, request, env, 'empty_result', 200,
+        );
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/cost/projection', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -12084,7 +12110,13 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/agents/directory', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Bill staleness against the real directory ingest time (the only
+      // top-level field on this result is computed_at = build time, invisible
+      // to the staleness check, so the 24h SLA could never fire). Pass the
+      // upstream directory age so a >24h ingest outage no-charges.
+      return await premiumResponse(
+        result, payment, 1, request, env, null, result.data_freshness.directory ?? null,
+      );
     }
 
     // === PAID PREMIUM: WATCHES (webhook alerts) ===

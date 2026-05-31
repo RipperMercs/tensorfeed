@@ -289,6 +289,11 @@ export async function getAiCompanyEnvelope(env: Env, ticker: string): Promise<Ai
   const rawArticles = (await env.TENSORFEED_NEWS.get('articles', 'json')) as Article[] | null;
   const articles = rawArticles ?? [];
 
-  const capturedAt = new Date().toISOString();
+  // Bill staleness against the REAL SEC filings snapshot capture time (the 6h
+  // cron), not build/request time. Stamping new Date() here defeated the 9h
+  // freshness no-charge: the staleness check always saw age ~= 0, so a stalled
+  // SEC cron still charged 1 credit per ticker for stale filings. Fall back to
+  // build time only when no snapshot exists (cold start before first cron run).
+  const capturedAt = filingsSnap?.capturedAt ?? new Date().toISOString();
   return buildAiCompanyEnvelope(ticker, filings, articles, FUNDING_ROUNDS, capturedAt);
 }

@@ -67,6 +67,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/news/search': { maxAgeSeconds: 30 * 60 },
   // What's new morning brief: rolls forward as news + status arrive, 1h.
   '/api/premium/whats-new': { maxAgeSeconds: 60 * 60 },
+  // Recent window: sub-daily variant of whats-new over the same news +
+  // status feeds (pricing diff omitted). 1h SLA mirrors whats-new so a
+  // stalled news/status cron no-charges this 1-credit endpoint too.
+  '/api/premium/recent': { maxAgeSeconds: 60 * 60 },
   // Pro tier: same base data as whats-new plus Haiku-derived analyst
   // synthesis. Synthesis is cached at 6h (per the design doc); the
   // synthesis layer is the staler boundary, so SLA = 6h.

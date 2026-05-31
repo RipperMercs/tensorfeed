@@ -229,6 +229,17 @@ describe('buildAiCompanyEnvelope', () => {
     expect(env?.ticker).toBe('NVDA');
   });
 
+  it('surfaces the passed capturedAt verbatim at the top level (staleness no-charge basis)', () => {
+    // getAiCompanyEnvelope now passes the REAL SEC filings snapshot capture
+    // time here (not new Date()), so the top-level capturedAt the staleness
+    // check reads reflects the 6h cron, not build time. Pin that pass-through.
+    const snapTime = '2026-05-27T06:00:00.000Z';
+    const env = buildAiCompanyEnvelope('NVDA', [], [], [], snapTime);
+    expect(env).not.toBeNull();
+    if (!env) return;
+    expect(env.capturedAt).toBe(snapTime);
+  });
+
   it('returns an envelope free of em dashes in description fields', () => {
     const env = buildAiCompanyEnvelope('NVDA', [], [], [], '2026-05-27T18:00:00Z');
     expect(env).not.toBeNull();

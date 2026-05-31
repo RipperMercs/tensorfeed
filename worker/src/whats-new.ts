@@ -131,6 +131,12 @@ export interface WhatsNewResult {
   ok: true;
   window: { from: string; to: string; days: number; minutes?: number };
   computed_at: string;
+  // Freshest underlying data-capture time across the pricing snapshot,
+  // status check, and incident feed. This is the real data age (NOT build
+  // time computed_at) that the AFTA staleness no-charge bills against, so
+  // the premium whats-new / whats-new/pro SLA can actually fire when an
+  // upstream cron stalls. Null only when no source surfaced a timestamp.
+  capturedAt: string | null;
   summary: {
     total_pricing_changes: number;
     new_models: number;
@@ -363,6 +369,22 @@ export async function computeWhatsNew(
     notes.push('No new incidents in the window. Provider stability is the norm.');
   }
 
+  // Freshest real data-capture time across the three live sources backing
+  // this result: the dated pricing snapshot's capture time (or the live
+  // pricing payload's lastUpdated when no dated snapshot exists), the
+  // status feed's last check, and nothing else carries a timestamp. The
+  // premium handlers pass this as dataCapturedAt so the staleness no-charge
+  // bills against real data age, not request/build time.
+  const captureCandidates = [
+    toSnap?.capturedAt ?? null,
+    pricingRaw?.lastUpdated ?? null,
+    services[0]?.lastChecked ?? null,
+  ].filter((t): t is string => typeof t === 'string' && Number.isFinite(Date.parse(t)));
+  const capturedAt =
+    captureCandidates.length > 0
+      ? captureCandidates.reduce((freshest, t) => (Date.parse(t) > Date.parse(freshest) ? t : freshest))
+      : null;
+
   return {
     ok: true,
     window: {
@@ -372,6 +394,7 @@ export async function computeWhatsNew(
       ...(subDaily ? { minutes: windowMinutes! } : {}),
     },
     computed_at: new Date().toISOString(),
+    capturedAt,
     summary: {
       total_pricing_changes: changes.length,
       new_models: newModels.length,

@@ -152,9 +152,29 @@ describe('computeCostProjection: ranking', () => {
       outputTokensPerDay: 50_000,
     });
     if (!r.ok) return;
+    // This empty-ranking condition is the exact gate the handler uses to
+    // no-charge (route to premiumValidationFailure instead of billing 1
+    // credit for a response with zero usable cost data). Keep ok:true +
+    // ranked_cheapest_monthly empty as the stable contract the handler reads.
+    expect(r.ok).toBe(true);
     expect(r.ranked_cheapest_monthly).toHaveLength(0);
     expect(r.projections.every(p => !p.matched)).toBe(true);
     expect(r.notes.some(n => n.includes('No requested models matched'))).toBe(true);
+  });
+
+  it('returns empty ranking (no-charge gate) when the pricing KV is missing', async () => {
+    // Cold start before the catalog is seeded: env.TENSORFEED_CACHE 'models'
+    // is null, so every requested id is unmatched and the handler must
+    // no-charge on ranked_cheapest_monthly.length === 0.
+    const env = makeEnv(null);
+    const r = await computeCostProjection(env, {
+      models: ['Claude Opus 4.7'],
+      inputTokensPerDay: 100_000,
+      outputTokensPerDay: 50_000,
+    });
+    if (!r.ok) return;
+    expect(r.ok).toBe(true);
+    expect(r.ranked_cheapest_monthly).toHaveLength(0);
   });
 });
 
