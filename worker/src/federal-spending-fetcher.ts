@@ -21,6 +21,8 @@
  * still count toward total spend and award count.
  */
 
+import type { Env } from './types';
+
 // Vendor cohort identity. `match` is a lowercase substring tested against
 // the lowercased recipient name. `search_text` is the human-facing query
 // string the network fetcher (Task 2) sends to USAspending.gov.
@@ -179,4 +181,179 @@ export function buildSnapshot(
     agencies: topAgencies(allAwards, 10),
     recent,
   };
+}
+
+// ── Network layer (USAspending.gov) ────────────────────────────────
+
+// USAspending Award Search endpoint. Validated against the live API; do
+// not change the request shape without re-validating.
+const USA_SPENDING_AWARD_URL = 'https://api.usaspending.gov/api/v2/search/spending_by_award/';
+const FETCH_TIMEOUT_MS = 15_000;
+const PAGE_LIMIT = 100;
+
+// Hard ceiling on pages per type per vendor. The cohort is small and the
+// 365 day window is bounded, so 5 pages (500 awards) per type is plenty;
+// the cap exists only to guarantee termination if hasNext misbehaves.
+export const MAX_PAGES = 5;
+
+// The two award type groups we pull, each tagged with the FedAward award_type.
+const AWARD_TYPE_GROUPS: { type: FedAward['award_type']; codes: string[] }[] = [
+  { type: 'contract', codes: ['A', 'B', 'C', 'D'] },
+  { type: 'grant', codes: ['02', '03', '04', '05'] },
+];
+
+// Upstream row shape. agency_slug and generated_internal_id ride along
+// automatically even though they are not in the requested `fields`.
+interface UsaSpendingRow {
+  'Award ID'?: string | null;
+  'Recipient Name'?: string | null;
+  'Award Amount'?: number | string | null;
+  'Awarding Agency'?: string | null;
+  agency_slug?: string | null;
+  generated_internal_id?: string | null;
+  'Start Date'?: string | null;
+  'Base Obligation Date'?: string | null;
+}
+
+interface UsaSpendingResponse {
+  results?: UsaSpendingRow[];
+  page_metadata?: { hasNext?: boolean };
+}
+
+// Map one upstream row into the normalized TF award shape for a given type.
+function mapRow(row: UsaSpendingRow, type: FedAward['award_type']): FedAward {
+  const rawDate = row['Start Date'] ?? row['Base Obligation Date'] ?? null;
+  const date = rawDate === null ? null : String(rawDate).slice(0, 10);
+  return {
+    award_id: String(row['Award ID'] ?? ''),
+    recipient: String(row['Recipient Name'] ?? ''),
+    amount: Number(row['Award Amount']) || 0,
+    agency: row['Awarding Agency'] ?? '',
+    agency_slug: row.agency_slug ?? '',
+    award_type: type,
+    internal_id: row.generated_internal_id ?? '',
+    date,
+  };
+}
+
+/**
+ * Fetch all in-window contract and grant awards for one vendor.
+ *
+ * Best effort by design: this never throws. On a non-ok response, an
+ * aborted or thrown fetch, or a JSON parse failure, it logs a structured
+ * warning and stops paginating that type, returning whatever it has
+ * collected so far. Rows whose recipient name fails matchesVendor are
+ * dropped to kill USAspending recipient_search_text fuzzy false positives.
+ */
+export async function fetchVendorAwards(
+  vendor: FedVendor,
+  fromDate: string,
+  toDate: string,
+  fetchFn: typeof fetch = fetch,
+): Promise<FedAward[]> {
+  const out: FedAward[] = [];
+
+  for (const group of AWARD_TYPE_GROUPS) {
+    const { type, codes } = group;
+
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const body = {
+        filters: {
+          recipient_search_text: [vendor.search_text],
+          award_type_codes: codes,
+          time_period: [{ start_date: fromDate, end_date: toDate }],
+        },
+        fields: [
+          'Award ID',
+          'Recipient Name',
+          'Award Amount',
+          'Awarding Agency',
+          'Start Date',
+          'Base Obligation Date',
+        ],
+        page,
+        limit: PAGE_LIMIT,
+        sort: 'Award Amount',
+        order: 'desc',
+      };
+
+      const ac = new AbortController();
+      const timer = setTimeout(() => ac.abort(), FETCH_TIMEOUT_MS);
+      let parsed: UsaSpendingResponse;
+      try {
+        const res = await fetchFn(USA_SPENDING_AWARD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: ac.signal,
+        });
+        if (!res.ok) {
+          console.warn(
+            JSON.stringify({
+              event: 'fedspend_fetch_error',
+              vendor: vendor.slug,
+              type,
+              message: `http ${res.status}`,
+            }),
+          );
+          break;
+        }
+        parsed = (await res.json()) as UsaSpendingResponse;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn(
+          JSON.stringify({ event: 'fedspend_fetch_error', vendor: vendor.slug, type, message }),
+        );
+        break;
+      } finally {
+        clearTimeout(timer);
+      }
+
+      const rows = parsed.results ?? [];
+      for (const row of rows) {
+        const awardItem = mapRow(row, type);
+        if (!matchesVendor(awardItem.recipient, vendor)) continue;
+        out.push(awardItem);
+      }
+
+      const hasNext = parsed.page_metadata?.hasNext === true;
+      if (!hasNext) break;
+
+      if (page === MAX_PAGES) {
+        console.warn(JSON.stringify({ event: 'fedspend_truncated', vendor: vendor.slug, type }));
+      }
+    }
+  }
+
+  return out;
+}
+
+/**
+ * Capture a full cohort-wide federal spending snapshot.
+ *
+ * Walks FED_AI_COHORT sequentially (one vendor at a time keeps us a polite
+ * USAspending client), fetches each vendor's awards over the active window,
+ * rolls them up, and assembles the snapshot. capturedAt is the live fetch
+ * time, which is the real data capture time for a fresh fetch. KV writes
+ * are intentionally left to a later task.
+ */
+export async function captureFederalSpending(
+  env: Env,
+  nowMs: number = Date.now(),
+  fetchFn: typeof fetch = fetch,
+): Promise<FedSnapshot> {
+  void env; // reserved for later tasks (KV write, config); unused here
+  const toDate = new Date(nowMs).toISOString().slice(0, 10);
+  const fromDate = new Date(nowMs - ACTIVE_WINDOW_DAYS * DAY_MS).toISOString().slice(0, 10);
+
+  const rollups: VendorRollup[] = [];
+  const allAwards: FedAward[] = [];
+
+  for (const vendor of FED_AI_COHORT) {
+    const awards = await fetchVendorAwards(vendor, fromDate, toDate, fetchFn);
+    rollups.push(rollupVendor(vendor, awards, nowMs));
+    for (const a of awards) allAwards.push(a);
+  }
+
+  return buildSnapshot(rollups, allAwards, new Date(nowMs).toISOString(), ACTIVE_WINDOW_DAYS);
 }
