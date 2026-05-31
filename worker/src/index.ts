@@ -4179,6 +4179,7 @@ export default {
           x402IndexPublishers: '/api/x402-index/publishers (free, capped to discovered count; canonical list of x402-compliant publishers TensorFeed is currently indexing, auto-discovered from /.well-known/x402.json crawls plus a small hand-seeded set of discovery-dark publishers that expose no manifest. Each entry: domain, pay_to_wallets, source (manifest or manual), first_seen, last_crawled, last_event_at, last_crawl_error. Use this to see which publishers can be queried via /api/premium/x402-index/publisher/{domain}.)',
           x402IndexLeaderboard: '/api/x402-index/leaderboard?window=24h|7d|30d&limit= (free, limit clamped 1 to 25; top publishers by x402 USDC settlement volume in the window, with rank, count, volume_usdc, and share_pct of the windowed ecosystem volume (window_volume_usdc carries the denominator). Aggregated from full per-publisher daily rollups, no per-day top-N truncation.)',
           x402IndexRecent: '/api/x402-index/recent?limit= (free, limit clamped 1 to 50; most recent x402 USDC settlement events newest-first, each with tx_hash, block, ts, from_address, to_address, amount_usdc, publisher_domain, base_explorer_url. Powers a live ticker for the /x402 hub.)',
+          x402IndexVerified: '/api/x402-index/verified (free; the verified-publisher directory: which curated x402 publishers have observed on-chain USDC settlements on Base, with verified/unverified status and metrics. Precomputed daily after the 06:35 UTC publisher refresh; each entry carries status (verified-settling, unverified, unreachable, no-base-payto), activity tier, settlement_count, volume_usdc, first/last_settled, pay_to_wallets, and source. Verification is a positive on-chain claim; absence of settlements is not a claim a publisher is fake.)',
           premiumAiCompaniesByTicker: '/api/premium/ai-companies/{ticker} (1 credit, AFTA-signed; per-ticker AI intelligence envelope for the 14 AI bellwethers. One paid call returns latest 10 SEC filings, latest 10 news mentions filtered by curated aliases, strategic and equity funding rounds where the company is a lead or notable investor, plus cohort metadata. Single captured-at timestamp, 9h freshness SLA. Composes four free siblings (/api/sec/filings, /api/news, /api/funding, cohort registry) into one round trip.)',
           premiumX402IndexPublisher: '/api/premium/x402-index/publisher/{domain}?from=YYYY-MM-DD&to=YYYY-MM-DD (1 credit, AFTA-signed; per-publisher receipt feed for one x402-compliant domain across the inclusive date range. Returns publisher meta (domain, pay_to_wallets, first_seen), window rollup (volume_usdc, count, avg_amount, daily_series), full attribution + CC BY 4.0 license. Forensic + compliance lane for any caller building dashboards over x402 settlement data. Strict-premium prefix; anonymous Bazaar probes see a clean 402 challenge.)',
           premiumX402IndexSeries: '/api/premium/x402-index/series?metric=volume|count&granularity=day|hour&from=&to=&domain= (1 credit, AFTA-signed; time-series of ecosystem or per-publisher x402 settlement volume / count across a date range. domain param optional (omit for ecosystem). MVP supports granularity=day only; hour returns an empty series with an attribution note. Wave 20 Bazaar pilot.)',
@@ -10514,6 +10515,14 @@ export default {
       return jsonResponse({ ok: true, ...result }, 200, 30);
     }
 
+    if (path === '/api/x402-index/verified') {
+      const blob = await env.TENSORFEED_CACHE.get('x402-idx:verified', 'json');
+      if (!blob) {
+        return jsonResponse({ ok: false, error: 'not_ready', hint: 'The verified directory precomputes daily; retry after the next 06:30 UTC cron.' }, 503, 0);
+      }
+      return jsonResponse(blob, 200, 300);
+    }
+
     // === PAID PREMIUM: x402 SETTLEMENT INDEX (Wave 20, 1 credit each) ===
     // Both routes are param-required so strict-premium-endpoints.ts
     // (registered in Task 15) gates anonymous Bazaar probes to a clean
@@ -13269,6 +13278,10 @@ export default {
       const { refreshAllPublishers } = await import('./x402-index/publisher-registry');
       const result = await refreshAllPublishers(env);
       console.log('[x402-index] publisher refresh:', JSON.stringify(result));
+      await run('x402VerifiedDirectory', async () => {
+        const { writeVerifiedDirectory } = await import('./x402-index/verified-precompute');
+        await writeVerifiedDirectory(env);
+      });
       return;
     }
 
