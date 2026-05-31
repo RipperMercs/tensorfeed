@@ -3275,12 +3275,28 @@ export default {
       } catch {
         return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
       }
-      const { validateBatch, writeBatch } = await import('./sec-guidance-delta');
+      const { validateBatch, writeBatch, getLatest } = await import('./sec-guidance-delta');
       const v = validateBatch(raw);
       if (!v.ok) {
         return jsonResponse(
           { ok: false, error: v.error, detail: v.detail, ...(v.index !== undefined ? { delta_index: v.index } : {}) },
           400,
+        );
+      }
+      // Stale-write guard (audit #9): read the current latest pointer and
+      // reject the POST when the incoming batch's extracted_at is older than
+      // or equal to the latest already written. Without this, a replayed or
+      // out-of-order admin POST could roll the guidance-delta KV back to a
+      // stale batch. Mirrors the OpenAlex snapshot monotonicity guard above.
+      // Comparison is ISO-string lexicographic, correct for the RFC 3339 UTC
+      // extracted_at values validateBatch enforces. 409 Conflict is the HTTP
+      // idiom for "current state of the resource forbids this write".
+      const currentLatest = await getLatest(env);
+      if (currentLatest && v.value.extracted_at <= currentLatest.extracted_at) {
+        return jsonResponse(
+          { ok: false, error: 'stale_write', detail: 'incoming batch extracted_at is older than or equal to the current latest batch', currentExtractedAt: currentLatest.extracted_at, incomingExtractedAt: v.value.extracted_at },
+          409,
+          0,
         );
       }
       const result = await writeBatch(env, v.value);
@@ -6202,10 +6218,42 @@ export default {
         if (!r || typeof r !== 'object') {
           return jsonResponse({ ok: false, error: 'receipt_required' }, 400);
         }
-        // Fetch our own public JWK to verify against. The key file is
-        // a static asset at /.well-known/tensorfeed-receipt-key.json,
-        // served by Cloudflare Pages on the same zone.
-        const keyRes = await fetch('https://tensorfeed.ai/.well-known/tensorfeed-receipt-key.json', {
+        // key_id-aware verification (audit #18). A federation receipt signed
+        // by a member (e.g. TerminalFeed) carries that member's kid, so we
+        // must verify against the member's published JWK, not TensorFeed's.
+        // RECEIPT_KEY_ALLOWLIST maps a receipt key_id (the JWK kid) to the
+        // well-known URL that publishes the matching public key. An absent
+        // key_id falls back to TF's key for v1 backward compatibility; a
+        // present-but-unknown key_id is rejected so we never fetch an
+        // attacker-named URL.
+        const TF_RECEIPT_KEY_URL = 'https://tensorfeed.ai/.well-known/tensorfeed-receipt-key.json';
+        // NOTE: confirm TerminalFeed's actual receipt key_id before relying
+        // on federation verification. The well-known URL is confirmed
+        // (afta-adopters.ts + test-afta-e2e.ps1), but TerminalFeed's kid
+        // value was not pinnable from this repo. Until the kid below is
+        // replaced with TerminalFeed's real kid, a TerminalFeed-signed
+        // receipt resolves through the unknown_key_id branch.
+        const TERMINALFEED_RECEIPT_KEY_URL = 'https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json';
+        const TERMINALFEED_RECEIPT_KID = 'TODO_TERMINALFEED_KID';
+        const RECEIPT_KEY_ALLOWLIST: Record<string, string> = {
+          // TF's own kid, mirrored from public/.well-known/tensorfeed-receipt-key.json.
+          'db1f1dc3dbf62c66': TF_RECEIPT_KEY_URL,
+          [TERMINALFEED_RECEIPT_KID]: TERMINALFEED_RECEIPT_KEY_URL,
+        };
+        const receiptKid = typeof r.key_id === 'string' ? r.key_id : null;
+        let keyUrl: string;
+        if (receiptKid === null) {
+          // v1 receipts predate kid rotation; default to TF's key.
+          keyUrl = TF_RECEIPT_KEY_URL;
+        } else if (receiptKid in RECEIPT_KEY_ALLOWLIST) {
+          keyUrl = RECEIPT_KEY_ALLOWLIST[receiptKid];
+        } else {
+          return jsonResponse({ ok: true, valid: false, error: 'unknown_key_id', key_id: receiptKid }, 200);
+        }
+        // Fetch the resolved public JWK to verify against. TF's key file is
+        // a static asset served by Cloudflare Pages on the same zone;
+        // federation members publish theirs on their own zone.
+        const keyRes = await fetch(keyUrl, {
           headers: { Accept: 'application/json' },
           signal: AbortSignal.timeout(5000),
         });
@@ -6223,7 +6271,9 @@ export default {
         return jsonResponse({
           ok: true,
           valid,
-          key_id: publicJwk.kid || null,
+          // Echo the receipt's own key_id (what the agent asked us to verify
+          // against), falling back to the fetched JWK's kid for v1 receipts.
+          key_id: receiptKid ?? publicJwk.kid ?? null,
           algorithm: 'EdDSA / Ed25519',
           canonical_form: 'tensorfeed-canonical-json-v1',
         });

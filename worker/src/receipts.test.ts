@@ -7,6 +7,9 @@ import {
   generateReceiptId,
   validateAgentNonce,
   AGENT_NONCE_LIMITS,
+  verifyReceiptSignature,
+  type ReceiptCore,
+  type SignedReceipt,
 } from './receipts';
 
 describe('canonicalJSON', () => {
@@ -203,5 +206,85 @@ describe('agent_nonce in canonical form', () => {
     const a = await hashResponse({ v: 2, id: 'x', agent_nonce: 'aaaaaaaa' });
     const b = await hashResponse({ v: 2, id: 'x', agent_nonce: 'bbbbbbbb' });
     expect(a).not.toBe(b);
+  });
+});
+
+// === verifyReceiptSignature against arbitrary publisher keys (audit #18) ===
+//
+// The /api/receipt/verify handler is key_id-aware: it selects WHICH
+// published JWK to verify against based on the receipt's key_id, so a
+// federation receipt (e.g. TerminalFeed-signed) verifies against the
+// member's key rather than TF's. The selection lives in the handler;
+// these tests lock the property the handler depends on: a signed receipt
+// verifies against its signer's public JWK and FAILS against any other
+// key. If this held only for TF's key the federation fix would be moot.
+
+function bytesToBase64Url(bytes: Uint8Array): string {
+  const b64 = btoa(String.fromCharCode(...bytes));
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+interface PublicJwk { kty: 'OKP'; crv: 'Ed25519'; x: string; kid?: string }
+
+async function makeSignedReceipt(
+  kid: string,
+): Promise<{ signed: SignedReceipt; publicJwk: PublicJwk }> {
+  const pair = (await crypto.subtle.generateKey(
+    { name: 'Ed25519' },
+    true,
+    ['sign', 'verify'],
+  )) as CryptoKeyPair;
+  const pubJwkRaw = (await crypto.subtle.exportKey('jwk', pair.publicKey)) as JsonWebKey;
+  const publicJwk: PublicJwk = { kty: 'OKP', crv: 'Ed25519', x: pubJwkRaw.x as string, kid };
+
+  const core: ReceiptCore = {
+    v: 2,
+    id: 'rcpt_0123456789abcdef',
+    endpoint: '/api/premium/example',
+    method: 'GET',
+    token_short: 'tf_live_aaaaaaaa...cccccccc',
+    credits_charged: 1,
+    credits_remaining: 4,
+    request_hash: 'sha256:' + 'a'.repeat(64),
+    response_hash: 'sha256:' + 'b'.repeat(64),
+    captured_at: '2026-05-29T00:00:00Z',
+    server_time: '2026-05-29T00:00:01Z',
+    no_charge_reason: null,
+    freshness_sla_seconds: 300,
+    agent_nonce: null,
+  };
+  const message = new TextEncoder().encode(canonicalJSON(core));
+  const sig = await crypto.subtle.sign({ name: 'Ed25519' }, pair.privateKey, message);
+  const signed: SignedReceipt = {
+    ...core,
+    signature: bytesToBase64Url(new Uint8Array(sig)),
+    key_id: kid,
+    signing_alg: 'EdDSA',
+    signing_curve: 'Ed25519',
+    canonical_form: 'tensorfeed-canonical-json-v1',
+    verify_doc: 'https://tensorfeed.ai/agent-fair-trade#receipts',
+  };
+  return { signed, publicJwk };
+}
+
+describe('verifyReceiptSignature key selection (federation)', () => {
+  it('verifies a receipt against its own publisher key', async () => {
+    const { signed, publicJwk } = await makeSignedReceipt('federation-member-kid');
+    expect(await verifyReceiptSignature(signed, publicJwk)).toBe(true);
+  });
+
+  it('fails when verified against a different publisher key (wrong kid selection)', async () => {
+    const { signed } = await makeSignedReceipt('member-a-kid');
+    const other = await makeSignedReceipt('member-b-kid');
+    // Same receipt, a different member's JWK: must NOT verify. This is the
+    // exact failure the key_id-aware handler avoids by routing each kid to
+    // its own well-known URL.
+    expect(await verifyReceiptSignature(signed, other.publicJwk)).toBe(false);
+  });
+
+  it('fails when the receipt body is tampered after signing', async () => {
+    const { signed, publicJwk } = await makeSignedReceipt('federation-member-kid');
+    const tampered: SignedReceipt = { ...signed, credits_charged: 0 };
+    expect(await verifyReceiptSignature(tampered, publicJwk)).toBe(false);
   });
 });

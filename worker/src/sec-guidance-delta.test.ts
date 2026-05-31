@@ -268,6 +268,56 @@ describe('writeBatch', () => {
     const stored = await getGuidanceDelta(env, '0001045810-25-000200');
     expect(stored?.company_name).toBe('NVIDIA Corporation');
   });
+
+  it('advances the latest pointer when a newer batch is written', async () => {
+    const kv = new FakeKV();
+    const env = envWith(kv);
+
+    const older = validateBatch({ batch_id: 'gd-older', extracted_at: '2026-05-28T00:00:00Z', deltas: [baseDelta()] });
+    if (!older.ok) return;
+    await writeBatch(env, older.value);
+
+    const newer = validateBatch({ batch_id: 'gd-newer', extracted_at: '2026-05-29T00:00:00Z', deltas: [baseDelta()] });
+    if (!newer.ok) return;
+    await writeBatch(env, newer.value);
+
+    const latest = await getLatest(env);
+    expect(latest?.batch_id).toBe('gd-newer');
+    expect(latest?.extracted_at).toBe('2026-05-29T00:00:00Z');
+  });
+});
+
+// ── Stale-write guard semantics (audit #9) ───────────────────────────
+//
+// The admin ingest handler reads getLatest before writing and rejects a
+// batch whose extracted_at is older than or equal to the current latest
+// (incoming <= current). These tests lock the building blocks the guard
+// relies on: getLatest reflects the most recent write, and the ISO-string
+// lexicographic comparison the handler uses orders UTC timestamps correctly.
+
+describe('guidance-delta stale-write guard building blocks', () => {
+  it('getLatest reflects the extracted_at the guard compares against', async () => {
+    const kv = new FakeKV();
+    const env = envWith(kv);
+    const v = validateBatch({ batch_id: 'gd-001', extracted_at: '2026-05-28T12:00:00Z', deltas: [baseDelta()] });
+    if (!v.ok) return;
+    await writeBatch(env, v.value);
+
+    const current = await getLatest(env);
+    expect(current).not.toBeNull();
+    // A replayed/older batch is stale: incoming <= current.
+    expect('2026-05-28T00:00:00Z' <= (current?.extracted_at ?? '')).toBe(true);
+    // An equal-timestamp batch is also stale (the <= boundary).
+    expect('2026-05-28T12:00:00Z' <= (current?.extracted_at ?? '')).toBe(true);
+    // A strictly newer batch is NOT stale and would be allowed to write.
+    expect('2026-05-29T00:00:00Z' <= (current?.extracted_at ?? '')).toBe(false);
+  });
+
+  it('returns null latest on a fresh namespace so the first ingest is never blocked', async () => {
+    const kv = new FakeKV();
+    const env = envWith(kv);
+    expect(await getLatest(env)).toBeNull();
+  });
 });
 
 // ── Read-side derivation (premium + preview endpoints) ───────────────
