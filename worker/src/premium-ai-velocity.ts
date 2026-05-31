@@ -145,6 +145,14 @@ export interface VelocityResponse {
     total_hf_likes: number;
     total_github_stars: number;
   };
+  /**
+   * Set when the underlying snapshot was a single-source (partial) fetch:
+   * one of HF / GitHub was unreachable and could not be back-filled from
+   * last-known-good (cold-start partial). The cross-join collapses with a
+   * source missing, so the premium handler serves this free (no-charge).
+   */
+  degraded?: boolean;
+  partial_sources?: string[];
   attribution: {
     source: string;
     license: string;
@@ -218,6 +226,7 @@ export function buildVelocity(
     github_top: ghSorted,
     cross_pollinated: crossPollinated,
     summary: { hf_by_pipeline, github_by_language, total_hf_likes, total_github_stars },
+    ...(snapshot.degraded ? { degraded: true, partial_sources: snapshot.partial_sources ?? [] } : {}),
     attribution: {
       source: 'TerminalFeed.io (AFTA federation member, sister site). Upstream data: HuggingFace + GitHub trending leaderboards, public.',
       license: 'Federation cross-call to TerminalFeed free endpoints; underlying HF and GitHub data carry their own terms. Each row has a direct url back to the upstream entry.',

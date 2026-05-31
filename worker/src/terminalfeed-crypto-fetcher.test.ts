@@ -4,7 +4,69 @@ import {
   inCohort,
   normalizeMover,
   normalizeFunding,
+  detectPartialCryptoSources,
+  buildCryptoSnapshot,
 } from './terminalfeed-crypto-fetcher';
+import type {
+  CryptoMoverEntry,
+  FundingEntry,
+  AiCryptoSnapshot,
+  MoversFetchResult,
+  FundingFetchResult,
+} from './terminalfeed-crypto-fetcher';
+
+// ── test fixtures (partial-fetch handling) ─────────────────────────
+
+function moverFixture(symbol: string): CryptoMoverEntry {
+  return {
+    symbol,
+    display_name: symbol,
+    thesis: 'test',
+    upstream_name: symbol,
+    price_usd: 100,
+    change_24h_percent: 2,
+    market_cap: 1_000_000,
+  };
+}
+
+function fundingFixture(symbol: string): FundingEntry {
+  return {
+    symbol,
+    display_name: symbol,
+    thesis: 'test',
+    venue: 'dYdX',
+    upstream_symbol: `${symbol}-PERP`,
+    period_hours: 8,
+    period_rate: 0.0001,
+    annualized_pct: 5,
+    mark_price: 100,
+  };
+}
+
+function moversResult(cohort: CryptoMoverEntry[], total: number): MoversFetchResult {
+  return { cohort, total };
+}
+
+function fundingResult(cohort: FundingEntry[], total: number, failed_venues: string[] = []): FundingFetchResult {
+  return { cohort, total, failed_venues };
+}
+
+function fullCachedCryptoSnapshot(): AiCryptoSnapshot {
+  return {
+    capturedAt: '2026-05-30T00:00:00.000Z',
+    source: 'terminalfeed.io',
+    upstream_endpoints: { movers: 'm', funding: 'f' },
+    source_license:
+      "Federation cross-call to TerminalFeed (free public endpoints). Upstream crypto market data carries the upstream provider's own terms.",
+    movers_cohort_size: 1,
+    movers_total_upstream: 50,
+    funding_cohort_size: 1,
+    funding_total_upstream: 30,
+    failed_venues: ['Bybit'],
+    movers: [moverFixture('TAO')],
+    funding: [fundingFixture('FET')],
+  };
+}
 
 // ── normalizeSymbol ────────────────────────────────────────────────
 
@@ -282,5 +344,98 @@ describe('normalizeFunding', () => {
       markPrice: 420.5,
     });
     expect(r!.venue).toBe('');
+  });
+});
+
+// ── detectPartialCryptoSources (audit 2026-05-31 #13/#14) ───────────
+
+describe('detectPartialCryptoSources', () => {
+  it('returns [] when both upstreams have rows', () => {
+    expect(
+      detectPartialCryptoSources(moversResult([moverFixture('TAO')], 50), fundingResult([fundingFixture('FET')], 30)),
+    ).toEqual([]);
+  });
+
+  it('returns [] when both upstreams are empty (full outage, not partial)', () => {
+    expect(detectPartialCryptoSources(moversResult([], 0), fundingResult([], 0))).toEqual([]);
+  });
+
+  it('flags funding when only funding upstream is empty', () => {
+    expect(detectPartialCryptoSources(moversResult([moverFixture('TAO')], 50), fundingResult([], 0))).toEqual([
+      'funding',
+    ]);
+  });
+
+  it('flags movers when only movers upstream is empty', () => {
+    expect(detectPartialCryptoSources(moversResult([], 0), fundingResult([fundingFixture('FET')], 30))).toEqual([
+      'movers',
+    ]);
+  });
+
+  it('treats a non-empty upstream with zero cohort hits as present (total drives detection)', () => {
+    // movers upstream returned 50 rows but none in cohort: NOT a source outage.
+    expect(detectPartialCryptoSources(moversResult([], 50), fundingResult([fundingFixture('FET')], 30))).toEqual([]);
+  });
+});
+
+// ── buildCryptoSnapshot (audit 2026-05-31 #13/#14) ──────────────────
+
+describe('buildCryptoSnapshot', () => {
+  const FIXED = new Date('2026-05-31T12:00:00.000Z');
+
+  it('is not degraded when both upstreams have rows', () => {
+    const snap = buildCryptoSnapshot(
+      moversResult([moverFixture('TAO')], 50),
+      fundingResult([fundingFixture('FET')], 30),
+      null,
+      FIXED,
+    );
+    expect(snap.degraded).toBeUndefined();
+    expect(snap.partial_sources).toBeUndefined();
+    expect(snap.movers_cohort_size).toBe(1);
+    expect(snap.funding_cohort_size).toBe(1);
+  });
+
+  it('flags degraded + partial_sources when funding empty at cold start (no cache)', () => {
+    const snap = buildCryptoSnapshot(moversResult([moverFixture('TAO')], 50), fundingResult([], 0), null, FIXED);
+    expect(snap.degraded).toBe(true);
+    expect(snap.partial_sources).toEqual(['funding']);
+    expect(snap.funding_cohort_size).toBe(0);
+  });
+
+  it('preserves last-known-good funding on a partial funding poll (does NOT overwrite)', () => {
+    const cached = fullCachedCryptoSnapshot();
+    const snap = buildCryptoSnapshot(moversResult([moverFixture('NMR')], 60), fundingResult([], 0), cached, FIXED);
+    // funding back-filled from cache
+    expect(snap.funding).toEqual(cached.funding);
+    expect(snap.funding_cohort_size).toBe(1);
+    expect(snap.funding_total_upstream).toBe(30);
+    expect(snap.failed_venues).toEqual(['Bybit']);
+    // movers is the fresh poll
+    expect(snap.movers[0].symbol).toBe('NMR');
+    // marked degraded
+    expect(snap.degraded).toBe(true);
+    expect(snap.partial_sources).toEqual(['funding']);
+  });
+
+  it('preserves last-known-good movers on a partial movers poll', () => {
+    const cached = fullCachedCryptoSnapshot();
+    const snap = buildCryptoSnapshot(moversResult([], 0), fundingResult([fundingFixture('GRT')], 40), cached, FIXED);
+    expect(snap.movers).toEqual(cached.movers);
+    expect(snap.movers_cohort_size).toBe(1);
+    expect(snap.movers_total_upstream).toBe(50);
+    expect(snap.funding[0].symbol).toBe('GRT');
+    expect(snap.degraded).toBe(true);
+    expect(snap.partial_sources).toEqual(['movers']);
+  });
+
+  it('stamps capturedAt from the injected now', () => {
+    const snap = buildCryptoSnapshot(
+      moversResult([moverFixture('TAO')], 50),
+      fundingResult([fundingFixture('FET')], 30),
+      null,
+      FIXED,
+    );
+    expect(snap.capturedAt).toBe('2026-05-31T12:00:00.000Z');
   });
 });

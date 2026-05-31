@@ -541,3 +541,22 @@ describe('buildVelocity: response shape', () => {
     expect(r.source).toBe('terminalfeed.io federation cross-call');
   });
 });
+
+// ── buildVelocity: degraded propagation (audit 2026-05-31 #13) ──────
+
+describe('buildVelocity: degraded snapshot', () => {
+  it('omits degraded fields when snapshot is not degraded', () => {
+    const r = buildVelocity(makeSnapshot([], []), DEFAULT_FILTER);
+    expect(r.degraded).toBeUndefined();
+    expect(r.partial_sources).toBeUndefined();
+  });
+
+  it('surfaces degraded + partial_sources when the snapshot is degraded', () => {
+    const snapshot = makeSnapshot([], []);
+    snapshot.degraded = true;
+    snapshot.partial_sources = ['github'];
+    const r = buildVelocity(snapshot, DEFAULT_FILTER);
+    expect(r.degraded).toBe(true);
+    expect(r.partial_sources).toEqual(['github']);
+  });
+});

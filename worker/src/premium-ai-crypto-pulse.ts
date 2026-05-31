@@ -199,6 +199,14 @@ export interface PulseResponse {
     breadth_pct_positive: number;     // 0-100, % of rows with positive 24h change
     median_change_24h_pct: number;     // across rows
   };
+  /**
+   * Set when the underlying snapshot was a single-source (partial) fetch:
+   * movers OR funding was unreachable and could not be back-filled from
+   * last-known-good (cold-start partial). The squeeze/chase join loses a
+   * side, so the premium handler serves this free (no-charge).
+   */
+  degraded?: boolean;
+  partial_sources?: string[];
   attribution: {
     source: string;
     license: string;
@@ -291,6 +299,7 @@ export function buildPulse(
     rows: filtered,
     notable_movers: { squeezes_up, squeezes_down, coiled, top_gainers, top_losers },
     summary: { by_setup, breadth_pct_positive, median_change_24h_pct },
+    ...(snapshot.degraded ? { degraded: true, partial_sources: snapshot.partial_sources ?? [] } : {}),
     attribution: {
       source: 'TerminalFeed.io (AFTA federation sister site). Upstream data: crypto market aggregators + perp funding venues (dYdX, Hyperliquid, Binance, Bybit) via TerminalFeed.',
       license: 'Federation cross-call to TerminalFeed free endpoints. Upstream market data carries the upstream provider\'s own terms; we link back via per-row venue field.',

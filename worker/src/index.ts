@@ -11003,6 +11003,16 @@ export default {
     // skew for squeeze/chase classification.
 
     if (path === '/api/ai-crypto-pulse') {
+      // Edge-cache the free response so a burst of agent requests on a cold
+      // snapshot does not each re-run the lazy KV refresh + KV write on the
+      // hot path (audit 2026-05-31 #20). Cache API is free/unlimited; only a
+      // miss falls through to the KV-backed snapshot refresh. 300s matches
+      // the snapshot TTL so the edge layer never serves staler-than-KV data.
+      const cryptoCacheKey = new Request('https://tensorfeed.ai/__cache/ai-crypto-pulse/v1');
+      const cryptoCache = caches.default;
+      const cryptoHit = await cryptoCache.match(cryptoCacheKey);
+      if (cryptoHit) return cryptoHit;
+
       const { getOrRefreshCryptoSnapshot } = await import('./terminalfeed-crypto-fetcher');
       const snap = await getOrRefreshCryptoSnapshot(env);
       if (!snap) {
@@ -11012,7 +11022,7 @@ export default {
           hint: 'TerminalFeed.io did not respond and we have no cached snapshot. Retry in a few minutes.',
         }, 503, 0);
       }
-      return jsonResponse({
+      const cryptoResponse = jsonResponse({
         ok: true,
         source: snap.source,
         capturedAt: snap.capturedAt,
@@ -11030,6 +11040,8 @@ export default {
           notes: 'Cohort filtered to TF-curated AI-thesis tokens. Premium derivative at /api/premium/ai-crypto-pulse joins price + funding for squeeze/chase classification.',
         },
       }, 200, 300);
+      ctx.waitUntil(cryptoCache.put(cryptoCacheKey, cryptoResponse.clone()));
+      return cryptoResponse;
     }
 
     // === PAID PREMIUM: AI CRYPTO PULSE (Tier 1, 1 credit) ===
@@ -11064,7 +11076,12 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-crypto-pulse', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Partial (single-source) snapshot: the squeeze/chase join is missing
+      // an entire side (movers or funding down) and could not be back-filled
+      // from last-known-good. Serve it free with the degraded marker rather
+      // than billing 1 credit for half the data (audit 2026-05-31 #13).
+      const cryptoNoCharge = snap.degraded ? 'empty_result' : null;
+      return await premiumResponse(result, payment, 1, request, env, cryptoNoCharge);
     }
 
     // === AI VELOCITY (free, cached 600s) ===
@@ -11077,6 +11094,20 @@ export default {
     // pollination, and rollups.
 
     if (path === '/api/ai-velocity') {
+      const limit = (() => {
+        const n = parseInt(url.searchParams.get('limit') ?? '', 10);
+        return Number.isFinite(n) && n > 0 ? Math.min(n, 30) : 15;
+      })();
+      // Edge-cache the free response so a burst of agent requests on a cold
+      // snapshot does not each re-run the lazy KV refresh + KV write on the
+      // hot path (audit 2026-05-31 #20). Key on the (clamped) limit so a
+      // limit=30 body is never served to a limit=15 caller. 600s matches
+      // the response max-age; the snapshot TTL (30m) bounds upstream freshness.
+      const velocityCacheKey = new Request(`https://tensorfeed.ai/__cache/ai-velocity/v1?limit=${limit}`);
+      const velocityCache = caches.default;
+      const velocityHit = await velocityCache.match(velocityCacheKey);
+      if (velocityHit) return velocityHit;
+
       const { getOrRefreshVelocitySnapshot } = await import('./terminalfeed-ai-velocity-fetcher');
       const snap = await getOrRefreshVelocitySnapshot(env);
       if (!snap) {
@@ -11086,11 +11117,7 @@ export default {
           hint: 'TerminalFeed.io did not respond and we have no cached snapshot. Retry in a few minutes.',
         }, 503, 0);
       }
-      const limit = (() => {
-        const n = parseInt(url.searchParams.get('limit') ?? '', 10);
-        return Number.isFinite(n) && n > 0 ? Math.min(n, 30) : 15;
-      })();
-      return jsonResponse({
+      const velocityResponse = jsonResponse({
         ok: true,
         source: snap.source,
         capturedAt: snap.capturedAt,
@@ -11103,6 +11130,8 @@ export default {
           notes: 'Capped at 15 per surface by default (max 30). Premium derivative at /api/premium/ai-velocity returns the full cohort + traction scoring + cross-pollination.',
         },
       }, 200, 600);
+      ctx.waitUntil(velocityCache.put(velocityCacheKey, velocityResponse.clone()));
+      return velocityResponse;
     }
 
     // === PAID PREMIUM: AI VELOCITY (Tier 1, 1 credit) ===
@@ -11137,7 +11166,12 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Partial (single-source) snapshot: the cross-join is missing an
+      // entire surface (HF or GitHub down) and could not be back-filled
+      // from last-known-good. Serve it free with the degraded marker rather
+      // than billing 1 credit for half the data (audit 2026-05-31 #13).
+      const velocityNoCharge = snap.degraded ? 'empty_result' : null;
+      return await premiumResponse(result, payment, 1, request, env, velocityNoCharge);
     }
 
     // === AI PACKAGE RELEASES (free, cached 600s) ===

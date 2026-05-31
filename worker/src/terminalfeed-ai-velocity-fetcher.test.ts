@@ -6,7 +6,53 @@ import {
   isAiGithubEntry,
   normalizeHfEntry,
   normalizeGhEntry,
+  detectPartialVelocitySources,
+  buildVelocitySnapshot,
 } from './terminalfeed-ai-velocity-fetcher';
+import type { HfEntry, GhEntry, AiVelocitySnapshot } from './terminalfeed-ai-velocity-fetcher';
+
+// ── test fixtures ──────────────────────────────────────────────────
+
+function hfFixture(name: string): HfEntry {
+  return {
+    id: `org/${name}`,
+    author: 'org',
+    name,
+    likes: 10,
+    downloads: 100,
+    pipeline: 'text-generation',
+    url: `https://huggingface.co/org/${name}`,
+    updated: null,
+    normalized_name: normalizeName(name),
+  };
+}
+
+function ghFixture(name: string): GhEntry {
+  return {
+    name,
+    fullName: `org/${name}`,
+    description: 'an llm toolkit',
+    language: 'Python',
+    stars: 50,
+    url: `https://github.com/org/${name}`,
+    matched_markers: ['llm'],
+    normalized_name: normalizeName(name),
+  };
+}
+
+function fullCachedSnapshot(): AiVelocitySnapshot {
+  return {
+    capturedAt: '2026-05-30T00:00:00.000Z',
+    source: 'terminalfeed.io',
+    upstream_endpoints: { hf: 'h', github: 'g' },
+    source_license:
+      'Federation cross-call to TerminalFeed (free public endpoints). Underlying HF and GitHub data carry their own terms; we link back via per-entry url.',
+    hf_count: 1,
+    github_count: 1,
+    hf: [hfFixture('cached-model')],
+    github: [ghFixture('cached-repo')],
+  };
+}
 
 // ── normalizeName ──────────────────────────────────────────────────
 
@@ -253,5 +299,75 @@ describe('normalizeGhEntry', () => {
   it('falls back to fullName-derived name when name missing', () => {
     const r = normalizeGhEntry({ fullName: 'org/derived' }, []);
     expect(r!.name).toBe('derived');
+  });
+});
+
+// ── detectPartialVelocitySources (audit 2026-05-31 #13/#14) ─────────
+
+describe('detectPartialVelocitySources', () => {
+  it('returns [] when both surfaces have data', () => {
+    expect(detectPartialVelocitySources([hfFixture('a')], [ghFixture('b')])).toEqual([]);
+  });
+
+  it('returns [] when both surfaces are empty (full outage, not partial)', () => {
+    expect(detectPartialVelocitySources([], [])).toEqual([]);
+  });
+
+  it('flags github when only github is empty', () => {
+    expect(detectPartialVelocitySources([hfFixture('a')], [])).toEqual(['github']);
+  });
+
+  it('flags hf when only hf is empty', () => {
+    expect(detectPartialVelocitySources([], [ghFixture('b')])).toEqual(['hf']);
+  });
+});
+
+// ── buildVelocitySnapshot (audit 2026-05-31 #13/#14) ────────────────
+
+describe('buildVelocitySnapshot', () => {
+  const FIXED = new Date('2026-05-31T12:00:00.000Z');
+
+  it('is not degraded when both surfaces have data', () => {
+    const snap = buildVelocitySnapshot([hfFixture('m')], [ghFixture('r')], null, FIXED);
+    expect(snap.degraded).toBeUndefined();
+    expect(snap.partial_sources).toBeUndefined();
+    expect(snap.hf_count).toBe(1);
+    expect(snap.github_count).toBe(1);
+  });
+
+  it('flags degraded + partial_sources when github is empty at cold start (no cache)', () => {
+    const snap = buildVelocitySnapshot([hfFixture('m')], [], null, FIXED);
+    expect(snap.degraded).toBe(true);
+    expect(snap.partial_sources).toEqual(['github']);
+    expect(snap.hf_count).toBe(1);
+    expect(snap.github_count).toBe(0);
+  });
+
+  it('preserves last-known-good github entries on a partial github poll (does NOT overwrite)', () => {
+    const cached = fullCachedSnapshot();
+    const snap = buildVelocitySnapshot([hfFixture('new-model')], [], cached, FIXED);
+    // The empty github surface is back-filled from the cached snapshot.
+    expect(snap.github).toEqual(cached.github);
+    expect(snap.github_count).toBe(1);
+    // The fresh hf surface is the new one.
+    expect(snap.hf[0].name).toBe('new-model');
+    // Still marked degraded so the handler can no-charge / disclose.
+    expect(snap.degraded).toBe(true);
+    expect(snap.partial_sources).toEqual(['github']);
+  });
+
+  it('preserves last-known-good hf entries on a partial hf poll', () => {
+    const cached = fullCachedSnapshot();
+    const snap = buildVelocitySnapshot([], [ghFixture('new-repo')], cached, FIXED);
+    expect(snap.hf).toEqual(cached.hf);
+    expect(snap.hf_count).toBe(1);
+    expect(snap.github[0].name).toBe('new-repo');
+    expect(snap.degraded).toBe(true);
+    expect(snap.partial_sources).toEqual(['hf']);
+  });
+
+  it('stamps capturedAt from the injected now', () => {
+    const snap = buildVelocitySnapshot([hfFixture('m')], [ghFixture('r')], null, FIXED);
+    expect(snap.capturedAt).toBe('2026-05-31T12:00:00.000Z');
   });
 });

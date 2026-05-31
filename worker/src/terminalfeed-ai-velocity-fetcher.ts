@@ -176,6 +176,17 @@ export interface AiVelocitySnapshot {
   github_count: number;
   hf: HfEntry[];
   github: GhEntry[];
+  /**
+   * True when exactly one upstream surface came back empty on this poll
+   * (single-source outage). The premium handler routes a degraded snapshot
+   * to a no-charge response so an agent never pays full price for a
+   * cross-join product that is missing an entire source. Absent / false
+   * means both surfaces had data (or both were empty, which is handled as
+   * an upstream failure upstream of this flag).
+   */
+  degraded?: boolean;
+  /** Which surface(s) were empty when degraded. e.g. ['github'] or ['hf']. */
+  partial_sources?: string[];
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────
@@ -301,11 +312,67 @@ async function fetchGh(): Promise<GhEntry[]> {
 }
 
 /**
+ * Detect a single-source (partial) fetch. Returns the list of surfaces
+ * that came back empty when EXACTLY one of the two surfaces is empty.
+ * Returns [] when both have data, and [] when both are empty (that is a
+ * full upstream outage handled separately, not a partial). Pure + tested.
+ */
+export function detectPartialVelocitySources(hf: HfEntry[], github: GhEntry[]): string[] {
+  const hfEmpty = hf.length === 0;
+  const ghEmpty = github.length === 0;
+  if (hfEmpty === ghEmpty) return []; // both empty or both full: not partial
+  return hfEmpty ? ['hf'] : ['github'];
+}
+
+/**
+ * Build the snapshot to persist + serve on a velocity refresh. On a
+ * partial fetch (exactly one surface empty) the empty surface is
+ * back-filled from the last-known-good cached snapshot so a transient
+ * single-source blip does not destroy the good cached data, and the
+ * snapshot is marked degraded so the premium handler can no-charge.
+ * Pure + tested. `now` is injectable for deterministic tests.
+ */
+export function buildVelocitySnapshot(
+  hf: HfEntry[],
+  github: GhEntry[],
+  cached: AiVelocitySnapshot | null,
+  now: Date = new Date(),
+): AiVelocitySnapshot {
+  const partial = detectPartialVelocitySources(hf, github);
+  let mergedHf = hf;
+  let mergedGithub = github;
+  if (partial.includes('hf') && cached) mergedHf = cached.hf ?? [];
+  if (partial.includes('github') && cached) mergedGithub = cached.github ?? [];
+
+  const snapshot: AiVelocitySnapshot = {
+    capturedAt: now.toISOString(),
+    source: 'terminalfeed.io',
+    upstream_endpoints: { hf: TERMINALFEED_HF_URL, github: TERMINALFEED_GH_URL },
+    source_license: 'Federation cross-call to TerminalFeed (free public endpoints). Underlying HF and GitHub data carry their own terms; we link back via per-entry url.',
+    hf_count: mergedHf.length,
+    github_count: mergedGithub.length,
+    hf: mergedHf,
+    github: mergedGithub,
+  };
+  if (partial.length > 0) {
+    snapshot.degraded = true;
+    snapshot.partial_sources = partial;
+  }
+  return snapshot;
+}
+
+/**
  * Lazy-refresh entry. Reads ai-velocity:current from KV; if it's been
  * less than TF_VELOCITY_TTL_SECONDS since capturedAt, returns cached.
  * Otherwise fetches both upstreams in parallel, writes a new snapshot
  * with a TTL slightly longer than our recency window (so a stale
  * snapshot is still served if upstream goes down briefly).
+ *
+ * Partial-fetch handling (audit 2026-05-31 #13/#14): when exactly one
+ * surface comes back empty (single-source outage), the empty surface is
+ * preserved from the last-known-good snapshot instead of overwriting it
+ * with [], and the snapshot is flagged `degraded` so the premium handler
+ * routes the call to a no-charge response.
  */
 export async function getOrRefreshVelocitySnapshot(env: Env): Promise<AiVelocitySnapshot | null> {
   const cached = (await env.TENSORFEED_CACHE.get(TF_VELOCITY_CURRENT_KEY, 'json')) as AiVelocitySnapshot | null;
@@ -317,20 +384,23 @@ export async function getOrRefreshVelocitySnapshot(env: Env): Promise<AiVelocity
 
   const [hf, github] = await Promise.all([fetchHf(), fetchGh()]);
   if (hf.length === 0 && github.length === 0) {
-    // Upstream down. Serve last known good if we have one.
+    // Both upstreams down. Serve last known good if we have one.
     return cached;
   }
 
-  const snapshot: AiVelocitySnapshot = {
-    capturedAt: new Date().toISOString(),
-    source: 'terminalfeed.io',
-    upstream_endpoints: { hf: TERMINALFEED_HF_URL, github: TERMINALFEED_GH_URL },
-    source_license: 'Federation cross-call to TerminalFeed (free public endpoints). Underlying HF and GitHub data carry their own terms; we link back via per-entry url.',
-    hf_count: hf.length,
-    github_count: github.length,
-    hf,
-    github,
-  };
+  const partial = detectPartialVelocitySources(hf, github);
+  if (partial.length > 0 && cached) {
+    // Single-source outage and we hold a prior snapshot: keep serving the
+    // last-known-good rather than poisoning the cache with a half-empty
+    // poll for the whole backup-TTL window. The premium handler still
+    // no-charges because the served snapshot here is the (older but full)
+    // cached one, not a degraded one, and the freshness SLA covers
+    // staleness. We deliberately skip the KV write to preserve the good
+    // snapshot and avoid a hot-path write on the degraded path.
+    return cached;
+  }
+
+  const snapshot = buildVelocitySnapshot(hf, github, cached, new Date());
   // Backup TTL of 2h so a partial outage still serves last-known-good.
   await env.TENSORFEED_CACHE.put(TF_VELOCITY_CURRENT_KEY, JSON.stringify(snapshot), {
     expirationTtl: 2 * 60 * 60,

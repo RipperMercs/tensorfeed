@@ -126,6 +126,17 @@ export interface AiCryptoSnapshot {
   failed_venues: string[];
   movers: CryptoMoverEntry[];
   funding: FundingEntry[];
+  /**
+   * True when exactly one upstream surface (movers OR funding) returned
+   * zero rows on this poll. The premium handler routes a degraded snapshot
+   * to a no-charge response so an agent never pays full price for a
+   * squeeze/chase join that is missing an entire side. Absent / false
+   * means both surfaces had data (or both were empty, handled as an
+   * upstream failure upstream of this flag).
+   */
+  degraded?: boolean;
+  /** Which surface(s) were empty when degraded. e.g. ['funding'] or ['movers']. */
+  partial_sources?: string[];
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -239,10 +250,84 @@ async function fetchFunding(): Promise<{ cohort: FundingEntry[]; total: number; 
   }
 }
 
+/** Result shape from the two crypto upstream fetches, for the pure builder. */
+export interface MoversFetchResult { cohort: CryptoMoverEntry[]; total: number }
+export interface FundingFetchResult { cohort: FundingEntry[]; total: number; failed_venues: string[] }
+
+/**
+ * Detect a single-source (partial) crypto fetch. A surface is considered
+ * down when its upstream returned zero rows (total === 0). Returns the
+ * list of empty surfaces only when EXACTLY one is empty; [] when both
+ * have data and [] when both are empty (full outage, handled separately).
+ * Pure + tested.
+ */
+export function detectPartialCryptoSources(movers: MoversFetchResult, funding: FundingFetchResult): string[] {
+  const moversEmpty = movers.total === 0;
+  const fundingEmpty = funding.total === 0;
+  if (moversEmpty === fundingEmpty) return []; // both empty or both full: not partial
+  return moversEmpty ? ['movers'] : ['funding'];
+}
+
+/**
+ * Build the snapshot to persist + serve on a crypto refresh. On a partial
+ * fetch (exactly one surface empty) the empty surface is back-filled from
+ * the last-known-good cached snapshot so a transient single-source blip
+ * does not destroy the good cached data, and the snapshot is marked
+ * degraded so the premium handler can no-charge. Pure + tested. `now` is
+ * injectable for deterministic tests.
+ */
+export function buildCryptoSnapshot(
+  movers: MoversFetchResult,
+  funding: FundingFetchResult,
+  cached: AiCryptoSnapshot | null,
+  now: Date = new Date(),
+): AiCryptoSnapshot {
+  const partial = detectPartialCryptoSources(movers, funding);
+
+  let moversCohort = movers.cohort;
+  let moversTotal = movers.total;
+  let fundingCohort = funding.cohort;
+  let fundingTotal = funding.total;
+  let failedVenues = funding.failed_venues;
+  if (partial.includes('movers') && cached) {
+    moversCohort = cached.movers ?? [];
+    moversTotal = cached.movers_total_upstream ?? moversCohort.length;
+  }
+  if (partial.includes('funding') && cached) {
+    fundingCohort = cached.funding ?? [];
+    fundingTotal = cached.funding_total_upstream ?? fundingCohort.length;
+    failedVenues = cached.failed_venues ?? failedVenues;
+  }
+
+  const snapshot: AiCryptoSnapshot = {
+    capturedAt: now.toISOString(),
+    source: 'terminalfeed.io',
+    upstream_endpoints: { movers: TERMINALFEED_MOVERS_URL, funding: TERMINALFEED_FUNDING_URL },
+    source_license: 'Federation cross-call to TerminalFeed (free public endpoints). Upstream crypto market data carries the upstream provider\'s own terms.',
+    movers_cohort_size: moversCohort.length,
+    movers_total_upstream: moversTotal,
+    funding_cohort_size: fundingCohort.length,
+    funding_total_upstream: fundingTotal,
+    failed_venues: failedVenues,
+    movers: moversCohort,
+    funding: fundingCohort,
+  };
+  if (partial.length > 0) {
+    snapshot.degraded = true;
+    snapshot.partial_sources = partial;
+  }
+  return snapshot;
+}
+
 /**
  * Lazy refresh entry. Same pattern as `terminalfeed-ai-velocity-fetcher`:
  * read cached snapshot, return if fresh enough, else fetch both upstreams
  * in parallel and write a new snapshot with backup TTL.
+ *
+ * Partial-fetch handling (audit 2026-05-31 #13/#14): when exactly one
+ * surface returns zero rows (single-source outage), the empty surface is
+ * preserved from the last-known-good snapshot instead of overwriting it,
+ * and the snapshot is flagged `degraded` so the premium handler no-charges.
  */
 export async function getOrRefreshCryptoSnapshot(env: Env): Promise<AiCryptoSnapshot | null> {
   const cached = (await env.TENSORFEED_CACHE.get(TF_CRYPTO_CURRENT_KEY, 'json')) as AiCryptoSnapshot | null;
@@ -257,19 +342,17 @@ export async function getOrRefreshCryptoSnapshot(env: Env): Promise<AiCryptoSnap
     return cached;
   }
 
-  const snapshot: AiCryptoSnapshot = {
-    capturedAt: new Date().toISOString(),
-    source: 'terminalfeed.io',
-    upstream_endpoints: { movers: TERMINALFEED_MOVERS_URL, funding: TERMINALFEED_FUNDING_URL },
-    source_license: 'Federation cross-call to TerminalFeed (free public endpoints). Upstream crypto market data carries the upstream provider\'s own terms.',
-    movers_cohort_size: movers.cohort.length,
-    movers_total_upstream: movers.total,
-    funding_cohort_size: funding.cohort.length,
-    funding_total_upstream: funding.total,
-    failed_venues: funding.failed_venues,
-    movers: movers.cohort,
-    funding: funding.cohort,
-  };
+  const partial = detectPartialCryptoSources(movers, funding);
+  if (partial.length > 0 && cached) {
+    // Single-source outage and we hold a prior snapshot: keep serving the
+    // last-known-good full snapshot rather than poisoning the cache with a
+    // half-empty poll for the backup-TTL window. Skip the KV write to
+    // preserve the good snapshot and avoid a hot-path write on the
+    // degraded path; freshness SLA covers any staleness.
+    return cached;
+  }
+
+  const snapshot = buildCryptoSnapshot(movers, funding, cached, new Date());
   // 30-min backup TTL so a brief TerminalFeed hiccup still serves last
   // known good. Premium freshness SLA on the consuming endpoint clamps
   // billable staleness so abusing the backup doesn't burn agent credits.
