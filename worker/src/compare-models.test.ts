@@ -115,6 +115,41 @@ describe('compareModels: validation', () => {
   });
 });
 
+describe('compareModels: no-data no-charge (audit #17)', () => {
+  it('returns ok:false / no_models_matched when none of the ids resolve', async () => {
+    const env = makeEnv({ pricing: PRICING, benchmarks: BENCHMARKS, services: SERVICES });
+    const r = await compareModels(env, { modelKeys: ['phantom-a', 'phantom-b'] });
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.error).toBe('no_models_matched');
+    expect(r.reason).toBe('no_models_matched');
+  });
+
+  it('returns ok:false / no_models_matched when the pricing KV is missing', async () => {
+    // No pricing key in KV at all -> pricingRaw is null -> zero matches.
+    const env = makeEnv({ benchmarks: BENCHMARKS, services: SERVICES });
+    const r = await compareModels(env, { modelKeys: ['opus-4-7', 'gpt-5-5'] });
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.error).toBe('no_models_matched');
+  });
+
+  it('still returns ok when at least one id resolves', async () => {
+    const env = makeEnv({ pricing: PRICING, benchmarks: BENCHMARKS, services: SERVICES });
+    const r = await compareModels(env, { modelKeys: ['opus-4-7', 'phantom-model'] });
+    expect(r.ok).toBe(true);
+  });
+});
+
+describe('compareModels: data_freshness surfaces pricing capture time (audit #16)', () => {
+  it('exposes pricing lastUpdated so the handler can bill staleness against it', async () => {
+    const env = makeEnv({ pricing: PRICING, benchmarks: BENCHMARKS, services: SERVICES });
+    const r = await compareModels(env, { modelKeys: ['opus-4-7', 'gpt-5-5'] });
+    if (!r.ok) return;
+    expect(r.data_freshness.pricing).toBe('2026-04-27');
+  });
+});
+
 describe('compareModels: matched vs unmatched', () => {
   it('returns matched and unmatched entries side by side', async () => {
     const env = makeEnv({ pricing: PRICING, benchmarks: BENCHMARKS, services: SERVICES });

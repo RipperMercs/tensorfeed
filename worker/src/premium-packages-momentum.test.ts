@@ -42,19 +42,38 @@ function makeEnv(initial: Record<string, unknown> = {}): Env {
 
 // ── Math helpers ───────────────────────────────────────────────────
 
-describe('momentumRatio', () => {
-  it('returns 1 when last_week equals weekly avg', () => {
+describe('momentumRatio (de-overlapped prior-3-week baseline)', () => {
+  // last_week and last_month are OVERLAPPING pypistats windows (7d subset
+  // of 30d), so the baseline is the prior 3 weeks: (last_month - last_week)
+  // / 3, NOT last_month / 4 (audit 2026-05-31 #8).
+  it('returns 1 when last_week matched the prior 3-week weekly pace', () => {
+    // prior3wk = 400 - 100 = 300; weeklyAvg = 100; 100 / 100 = 1
     expect(momentumRatio(100, 400)).toBe(1);
   });
-  it('returns above 1 when last_week is hotter', () => {
-    expect(momentumRatio(150, 400)).toBe(1.5);
+  it('returns above 1 when last_week outpaced the prior 3 weeks', () => {
+    // prior3wk = 400 - 150 = 250; weeklyAvg = 83.333...; 150 / 83.333 = 1.8
+    expect(momentumRatio(150, 400)).toBe(1.8);
   });
-  it('returns below 1 when last_week is colder', () => {
-    expect(momentumRatio(50, 400)).toBe(0.5);
+  it('returns below 1 when last_week lagged the prior 3 weeks', () => {
+    // prior3wk = 400 - 50 = 350; weeklyAvg = 116.666...; 50 / 116.666 = 0.4286
+    expect(momentumRatio(50, 400)).toBe(0.4286);
   });
-  it('returns null when last_month is zero', () => {
+  it('does NOT compress toward 1.0 the way the old overlapping baseline did', () => {
+    // A package whose whole month is its last week (a fresh surge) should
+    // read as a strong accelerator, not a muted ~1.x. Old formula
+    // (last_month / 4) gave 900 / (1000/4) = 3.6; de-overlapped:
+    // prior3wk = 1000 - 900 = 100; weeklyAvg = 33.333; 900 / 33.333 = 27.
+    expect(momentumRatio(900, 1000)).toBe(27);
+  });
+  it('returns null when there is no prior-3-week signal', () => {
+    // last_month === 0
     expect(momentumRatio(100, 0)).toBeNull();
     expect(momentumRatio(100, -1)).toBeNull();
+    // last_week === last_month: the entire month landed in the measured
+    // week, so prior3wk = 0 and there is no baseline to compare against.
+    expect(momentumRatio(500, 500)).toBeNull();
+    // last_week > last_month would imply negative prior weeks: no signal.
+    expect(momentumRatio(600, 500)).toBeNull();
   });
 });
 
@@ -105,7 +124,7 @@ const SAMPLE_SNAPSHOT = {
       description: 'OpenAI Python SDK',
       homepage: null,
       downloads_last_day: 50_000,
-      downloads_last_week: 350_000,         // weekly avg = 1M / 4 = 250K -> ratio 1.4 (accelerating)
+      downloads_last_week: 350_000,         // prior3wk = 650K, weekly avg = 216.7K -> ratio 1.6154 (accelerating)
       downloads_last_month: 1_000_000,
       rank: 1,
       rank_in_category: 1,
@@ -116,7 +135,7 @@ const SAMPLE_SNAPSHOT = {
       description: 'Anthropic Python SDK',
       homepage: null,
       downloads_last_day: 10_000,
-      downloads_last_week: 75_000,          // weekly avg = 100K / 4 = 25K -> 3.0
+      downloads_last_week: 75_000,          // prior3wk = 25K, weekly avg = 8.333K -> 9.0
       downloads_last_month: 100_000,
       rank: 4,
       rank_in_category: 2,
@@ -127,7 +146,7 @@ const SAMPLE_SNAPSHOT = {
       description: 'LangChain',
       homepage: null,
       downloads_last_day: 30_000,
-      downloads_last_week: 100_000,         // weekly avg = 400K / 4 = 100K -> 1.0 (steady)
+      downloads_last_week: 100_000,         // prior3wk = 300K, weekly avg = 100K -> 1.0 (steady)
       downloads_last_month: 400_000,
       rank: 2,
       rank_in_category: 1,
@@ -138,7 +157,7 @@ const SAMPLE_SNAPSHOT = {
       description: 'CrewAI',
       homepage: null,
       downloads_last_day: 5_000,
-      downloads_last_week: 30_000,          // weekly avg = 150K / 4 = 37.5K -> 0.8 (decelerating)
+      downloads_last_week: 30_000,          // prior3wk = 120K, weekly avg = 40K -> 0.75 (decelerating)
       downloads_last_month: 150_000,
       rank: 3,
       rank_in_category: 2,

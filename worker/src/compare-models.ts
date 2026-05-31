@@ -278,6 +278,16 @@ export async function compareModels(
   // Build rankings across matched models only
   const matched = entries.filter((e): e is CompareModelEntry => e.matched);
 
+  // No-charge guard (audit 2026-05-31 #17): if the pricing KV was missing
+  // (pricingRaw null) or none of the requested ids resolved to a tracked
+  // model, every entry is unmatched and the comparison has zero usable
+  // data. Returning ok:false routes the handler to premiumValidationFailure
+  // (the no-charge path), mirroring the cost-projection and federal-momentum
+  // siblings, so an agent is never billed for an empty comparison.
+  if (matched.length === 0) {
+    return { ok: false, error: 'no_models_matched', reason: 'no_models_matched' };
+  }
+
   const cheapest_blended = matched
     .slice()
     .sort((a, b) => a.pricing.blended - b.pricing.blended)

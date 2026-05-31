@@ -11580,7 +11580,11 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/packages/pypi/momentum', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 3, request, env);
+      // Pass the real PyPI snapshot time so the 24h staleness SLA can
+      // no-charge a stalled 03:45 UTC cron; the result surfaces the data
+      // age only as source_captured_at, which premiumResponse does not read
+      // on its own (audit 2026-05-31 #7).
+      return await premiumResponse(result, payment, 3, request, env, null, result.source_captured_at);
     }
 
     // === PAID PREMIUM: ECONOMY SERIES FULL HISTORY (Tier 1, 1 credit) ===
@@ -11926,15 +11930,24 @@ export default {
       const modelKeys = idsParam.split(',').map(s => s.trim()).filter(s => s.length > 0);
       const result = await compareModels(env, { modelKeys });
       if (!result.ok) {
+        // no_models_matched (pricing KV missing or zero ids resolved) is a
+        // no-data case, not malformed input: route it as empty_result so the
+        // agent is not billed for an empty comparison (audit 2026-05-31 #17).
+        // The param-count guards keep the default schema_validation_failure.
+        const noChargeReason = result.reason === 'no_models_matched' ? 'empty_result' : 'schema_validation_failure';
         return await premiumValidationFailure(
           result as unknown as Record<string, unknown>,
-          payment, request, env,
+          payment, request, env, noChargeReason,
         );
       }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/compare/models', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Pass the real pricing capture time so the 24h staleness SLA can
+      // no-charge stale pricing; the capture time lives nested under
+      // data_freshness.pricing, which premiumResponse does not read on its
+      // own (audit 2026-05-31 #16).
+      return await premiumResponse(result, payment, 1, request, env, null, result.data_freshness?.pricing ?? null);
     }
 
     // === PAID PREMIUM: PROVIDER DEEP-DIVE (Tier 3, 3 credits = $0.06) ===

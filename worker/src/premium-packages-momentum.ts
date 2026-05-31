@@ -10,10 +10,11 @@ import { Env } from './types';
  * breakdowns and a notable-movers extraction.
  *
  * Why PyPI works today: pypistats.org returns last_day + last_week +
- * last_month in a single response. Comparing last_week against the
- * weekly average across the prior month yields a momentum ratio
- * computable from a single snapshot, no historical accumulation
- * required.
+ * last_month in a single response. last_week and last_month are
+ * overlapping trailing windows, so comparing last_week against the
+ * weekly average over the PRIOR three weeks ((last_month - last_week)
+ * / 3) yields a de-overlapped momentum ratio computable from a single
+ * snapshot, no historical accumulation required.
  *
  * Why npm is deferred to a follow-up: the npm downloads endpoint
  * only returns last_week. True WoW requires either a second
@@ -22,7 +23,7 @@ import { Env } from './types';
  * the daily cron has run for a week). Both paths land later.
  *
  * Cost: 1 credit per call. Compute that justifies the gate:
- *   - momentum_ratio per package (last_week vs weekly avg over last_month)
+ *   - momentum_ratio per package (last_week vs weekly avg over the prior 3 weeks)
  *   - velocity_ratio per package (today annualized vs last_week pace)
  *   - momentum direction classification (accelerating / steady / decelerating)
  *   - notable-movers extraction (top 5 accelerating, top 5 decelerating)
@@ -64,8 +65,8 @@ export interface PackageMomentumEntry {
   downloads_last_day: number;
   downloads_last_week: number;
   downloads_last_month: number;
-  weekly_avg_in_last_month: number;
-  momentum_ratio: number | null;     // last_week / (last_month / 4)
+  weekly_avg_in_last_month: number;  // de-overlapped: (last_month - last_week) / 3
+  momentum_ratio: number | null;     // last_week / ((last_month - last_week) / 3)
   velocity_ratio: number | null;     // (last_day * 7) / last_week
   direction: MomentumDirection;
   rank_by_momentum: number;
@@ -83,7 +84,7 @@ export const PACKAGES_MOMENTUM_ATTRIBUTION: PackagesMomentumAttribution = {
   source_url: 'https://pypistats.org',
   upstream: 'PyPI BigQuery public dataset (Linehaul project, Python Software Foundation)',
   derivation:
-    'Momentum and velocity ratios computed from pypistats.org last_day / last_week / last_month per package. The free /api/packages/pypi/ai-trending endpoint serves the underlying ranks; this endpoint adds the momentum layer (acceleration vs deceleration vs steady) and notable-movers extraction.',
+    'Momentum and velocity ratios computed from pypistats.org last_day / last_week / last_month per package. last_week and last_month are overlapping trailing windows, so the momentum baseline de-overlaps to the prior three weeks ((last_month - last_week) / 3) rather than last_month / 4. The free /api/packages/pypi/ai-trending endpoint serves the underlying ranks; this endpoint adds the momentum layer (acceleration vs deceleration vs steady) and notable-movers extraction.',
 };
 
 export interface PackagesMomentumResult {
@@ -126,16 +127,23 @@ function round4(n: number): number {
 }
 
 /**
- * Momentum ratio: last_week downloads divided by the average week
- * within last_month. Values:
- *   1.0  = last week matched the four-week average (steady)
- *   1.2  = last week was 20% above average (accelerating)
- *   0.8  = last week was 20% below average (decelerating)
- * Returns null when last_month is 0 (no signal).
+ * Momentum ratio: last_week downloads divided by the average week over
+ * the PRIOR three weeks. pypistats last_week and last_month are
+ * overlapping trailing windows (7d and 30d), so last_week is a subset of
+ * last_month; using last_month / 4 as the baseline would fold the
+ * measured week into its own comparison and compress every ratio toward
+ * 1.0 (audit 2026-05-31 #8). The de-overlapped baseline is the prior
+ * three weeks: (last_month - last_week) / 3. Values:
+ *   1.0  = last week matched the prior 3-week weekly pace (steady)
+ *   1.2  = last week was 20% above the prior 3-week pace (accelerating)
+ *   0.8  = last week was 20% below the prior 3-week pace (decelerating)
+ * Returns null when there is no prior-3-week signal, i.e. when
+ * (last_month - last_week) <= 0.
  */
 export function momentumRatio(lastWeek: number, lastMonth: number): number | null {
-  if (lastMonth <= 0) return null;
-  const weeklyAvg = lastMonth / 4;
+  const priorThreeWeeks = lastMonth - lastWeek;
+  if (priorThreeWeeks <= 0) return null;
+  const weeklyAvg = priorThreeWeeks / 3;
   if (weeklyAvg === 0) return null;
   return round4(lastWeek / weeklyAvg);
 }
@@ -167,7 +175,11 @@ export function classifyDirection(ratio: number | null): MomentumDirection {
 
 function buildEntries(snapshot: PyPISnapshot): PackageMomentumEntry[] {
   const entries = snapshot.packages.map(p => {
-    const weeklyAvg = p.downloads_last_month > 0 ? round4(p.downloads_last_month / 4) : 0;
+    // De-overlapped weekly baseline: the prior 3 weeks within last_month
+    // (audit 2026-05-31 #8), not last_month / 4 which double-counts the
+    // measured week. 0 when there is no prior-3-week signal.
+    const priorThreeWeeks = p.downloads_last_month - p.downloads_last_week;
+    const weeklyAvg = priorThreeWeeks > 0 ? round4(priorThreeWeeks / 3) : 0;
     const ratio = momentumRatio(p.downloads_last_week, p.downloads_last_month);
     const velocity = velocityRatio(p.downloads_last_day, p.downloads_last_week);
     return {
