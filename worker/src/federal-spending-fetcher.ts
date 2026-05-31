@@ -207,8 +207,8 @@ interface UsaSpendingResponse {
 // Map one upstream row into the normalized TF award shape for a given type.
 // Date is the obligation date (when the award action committed the money), which
 // is always in the past, NOT the period-of-performance Start Date, which is often
-// future-dated for new contracts. Using the obligation date keeps the momentum
-// windows and the recent-awards list reflecting real recent federal activity.
+// future-dated for new contracts. Using the obligation date keeps the recent
+// awards list and the per-vendor award-recency marker reflecting real activity.
 function mapRow(row: UsaSpendingRow, type: FedAward['award_type']): FedAward {
   const rawDate = row['Base Obligation Date'] ?? row['Start Date'] ?? null;
   const date = rawDate === null ? null : String(rawDate).slice(0, 10);
