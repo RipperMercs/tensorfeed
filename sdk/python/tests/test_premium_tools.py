@@ -32,10 +32,10 @@ class SafeCallBehavior(unittest.TestCase):
 
     def test_payment_required_appends_credits_hint(self):
         def boom():
-            raise PaymentRequired(402, {"credits_required": 2})
+            raise PaymentRequired(402, {"credits_required": 1})
 
         out = pt.safe_call(boom, lambda r: "unreachable")
-        self.assertIn("2 credit", out)
+        self.assertIn("1 credit", out)
 
     def test_missing_token_value_error_returns_guidance(self):
         def boom():

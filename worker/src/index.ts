@@ -6947,7 +6947,7 @@ export default {
     }
 
     if (path === '/api/premium/history/pricing/series') {
-      // Strict-premium tier 2 ($0.04): full-window historical time-series,
+      // Strict-premium tier 2 ($0.02): full-window historical time-series,
       // no per-IP trial. See worker/src/strict-premium-endpoints.ts.
       const payment = await requirePayment(request, env, 2);
       if (!payment.paid) return payment.response!;
@@ -6983,7 +6983,7 @@ export default {
     }
 
     if (path === '/api/premium/history/benchmarks/series') {
-      // Strict-premium tier 2 ($0.04): full-window historical time-series.
+      // Strict-premium tier 2 ($0.02): full-window historical time-series.
       const payment = await requirePayment(request, env, 2);
       if (!payment.paid) return payment.response!;
 
@@ -7023,7 +7023,7 @@ export default {
     }
 
     if (path === '/api/premium/history/status/uptime') {
-      // Strict-premium tier 2 ($0.04): full-window historical time-series.
+      // Strict-premium tier 2 ($0.02): full-window historical time-series.
       const payment = await requirePayment(request, env, 2);
       if (!payment.paid) return payment.response!;
 

@@ -47,11 +47,11 @@ test('PaymentRequired resolves to guidance, never rejects', async () => {
 test('PaymentRequired appends a credits hint', async () => {
   const out = await safeCall(
     async () => {
-      throw new PaymentRequired({ credits_required: 2 });
+      throw new PaymentRequired({ credits_required: 1 });
     },
     () => 'unreachable',
   );
-  assert.match(out, /2 credit/);
+  assert.match(out, /1 credit/);
 });
 
 test('missing-token Error resolves to guidance', async () => {
