@@ -10,10 +10,13 @@
 #   powershell -ExecutionPolicy Bypass -File scripts\publish-to-mcp-registry.ps1
 #
 # Prereqs:
-#   - Domain auth login state established (one-time): from this dir, run
-#     ./.bin/mcp-publisher.exe login dns
-#     ...and follow the DNS TXT challenge prompts. Login state persists in
-#     the local mcp-publisher config until rotated.
+#   - Auth: the registry login token EXPIRES, so re-login before publishing if
+#     you see a 401 "Invalid or expired Registry JWT token". The login takes the
+#     Ed25519 signing key as a HEX seed via a flag, NOT the PEM file:
+#       ./.bin/mcp-publisher.exe login dns --domain tensorfeed.ai --private-key <hex-seed>
+#     The hex seed is the 32 byte Ed25519 private seed (64 hex chars) for the
+#     domain key whose public half lives in the tensorfeed.ai DNS TXT record.
+#     Keep the seed in your own credentials store; never commit it here.
 #   - npm version on registry.npmjs.org matches server.json version (the
 #     registry validates this on publish; mismatch = 422).
 
