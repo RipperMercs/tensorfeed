@@ -105,6 +105,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // Funding exposure: hand-curated registry, refreshed on redeploy when new
   // entries land. 7-day SLA so a stale snapshot triggers no-charge.
   '/api/premium/funding/exposure': { maxAgeSeconds: 7 * 24 * 60 * 60 },
+  // Federal AI spending momentum: derived over the daily USAspending.gov
+  // snapshot. 36h SLA = daily cron cadence + headroom for one missed run,
+  // so a stale snapshot (a real ingest outage) triggers a no-charge.
+  '/api/premium/funding/federal/momentum': { maxAgeSeconds: 36 * 60 * 60 },
   // Recession watch: synthesis over BLS + FRED daily snapshots. 24h
   // matches the cron cadence of underlying data.
   '/api/premium/economy/recession-watch': { maxAgeSeconds: 24 * 60 * 60 },

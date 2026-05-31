@@ -4344,6 +4344,9 @@ export default {
           policyAIRegistry: '/api/policy/ai/registry?jurisdiction=US-Federal|US-State|EU|UK|China|International&type=executive-order|statute|regulation|guidance|declaration|agency-action&status=active|phased|pending|rescinded|vetoed|proposed&scope=transparency|safety|high-risk|deepfakes|export-controls|...',
           fundingPortfolio: '/api/funding/portfolio?silicon_dependency=nvidia|tpu|trainium|mi400|maia|mixed&type=private-equity|public-equity|compute-commitment|capacity-partnership&from=&to=&since=&until= (free; hand-curated AI capital-commitment registry tagged with recipient silicon dependency. Sources: SEC filings, hyperscaler press releases, reputable trade reporting. Each entry carries source_urls. Returns summary aggregates by silicon dependency, type, and investor.)',
           premiumFundingExposure: '/api/premium/funding/exposure (1 credit; derived metrics over the free /api/funding/portfolio: silicon-vendor concentration shares, per-investor circular-loop classification (fully-circular / partial-loop / agnostic) using investor->silicon mapping for Nvidia/Google/Amazon/Microsoft/AMD, top recipients by inbound capital, co-investor pairs that both hold stakes in the same recipient.)',
+          fundingFederalSummary: '/api/funding/federal/summary (free; full federal AI spending snapshot for a curated AI-vendor cohort: per-vendor totals, award counts, recent-vs-prior 90-day momentum, top awarding agencies, plus cohort-wide totals and the top 25 recent awards. Source USAspending.gov, public domain under the DATA Act. Precomputed daily.)',
+          fundingFederalRecent: '/api/funding/federal/recent (free; the 25 newest dated federal contract and grant awards across the AI-vendor cohort, each with recipient, amount, awarding agency, award type, and date. Source USAspending.gov, public domain. Precomputed daily.)',
+          premiumFundingFederalMomentum: '/api/premium/funding/federal/momentum (1 credit, AFTA-signed; one signed ruling over the federal spending snapshot. Names the top 5 momentum gainers and losers by recent-vs-prior 90-day federal award flow, the cohort spend concentration in its top vendor, and the leading awarding agency, plus echoed cohort totals. 36h freshness SLA, no-charge when stale.)',
           routingPreview: '/api/preview/routing',
           routeVerdictPreview: '/api/preview/route-verdict?task=code|reasoning|creative|general or ?model= (free, 10/IP/day; the top Route Verdict only, no runners-up or signed receipt, so an agent can evaluate the shape before paying)',
           stackSafetyPreview: '/api/preview/stack-safety-verdict?packages= (free, 10/IP/day; the gate + per-package verdict only, no CVE evidence, capped at 3 packages)',
@@ -5201,6 +5204,46 @@ export default {
         until: url.searchParams.get('until') ?? undefined,
       });
       return jsonResponse(result, 200, 3600);
+    }
+
+    // === FREE: FEDERAL AI SPENDING ===
+    // Surfaces US federal contract and grant awards flowing to a curated
+    // AI-vendor cohort. The daily cron writes one precomputed snapshot blob
+    // to KV; these routes serve it. Same precomputed-KV read shape as
+    // /api/x402-index/verified: 503 not_ready when the blob is missing,
+    // 200 with a short cache otherwise. Source: USAspending.gov, public
+    // domain under the DATA Act.
+
+    if (path === '/api/funding/federal/summary') {
+      const { FED_SPEND_SNAPSHOT_KEY } = await import('./federal-spending-fetcher');
+      const snap = await env.TENSORFEED_CACHE.get(FED_SPEND_SNAPSHOT_KEY, 'json');
+      if (!snap) {
+        return jsonResponse(
+          { ok: false, error: 'not_ready', hint: 'The federal spending snapshot precomputes daily; retry after the next cron run.' },
+          503,
+          0,
+        );
+      }
+      return jsonResponse(snap, 200, 300);
+    }
+
+    if (path === '/api/funding/federal/recent') {
+      const { FED_SPEND_SNAPSHOT_KEY } = await import('./federal-spending-fetcher');
+      const snap = (await env.TENSORFEED_CACHE.get(FED_SPEND_SNAPSHOT_KEY, 'json')) as
+        | import('./federal-spending-fetcher').FedSnapshot
+        | null;
+      if (!snap) {
+        return jsonResponse(
+          { ok: false, error: 'not_ready', hint: 'The federal spending snapshot precomputes daily; retry after the next cron run.' },
+          503,
+          0,
+        );
+      }
+      return jsonResponse(
+        { ok: true, captured_at: snap.captured_at, source: snap.source, license: snap.license, recent: snap.recent },
+        200,
+        300,
+      );
     }
 
     // === FRED MACRO INDICATORS (free) ===
@@ -9532,6 +9575,80 @@ export default {
         logPremiumUsage(env, '/api/premium/funding/exposure', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 3, request, env);
+    }
+
+    // === PAID PREMIUM: FEDERAL AI SPENDING MOMENTUM (Tier 1, 1 credit) ===
+    // /api/premium/funding/federal/momentum
+    // One signed ruling over TensorFeed's own federal-spending snapshot:
+    // names the vendors whose recent 90-day federal award flow is rising
+    // and falling fastest (momentum), the cohort's spend concentration in
+    // its top vendor, and the leading awarding agency, plus echoed cohort
+    // totals. Regular premium (no params); the same premiumResponse signing
+    // path as the other verdicts. captured_at is the REAL snapshot data time
+    // so the freshness no-charge bills against actual data age, never build
+    // time. When the snapshot blob is missing it no-charges (upstream_failure),
+    // same posture as funding/exposure when its source is absent.
+    if (path === '/api/premium/funding/federal/momentum') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { FED_SPEND_SNAPSHOT_KEY } = await import('./federal-spending-fetcher');
+      const snap = (await env.TENSORFEED_CACHE.get(FED_SPEND_SNAPSHOT_KEY, 'json')) as
+        | import('./federal-spending-fetcher').FedSnapshot
+        | null;
+      if (!snap) {
+        return await premiumValidationFailure(
+          { error: 'not_ready', hint: 'The federal spending snapshot precomputes daily; retry after the next cron run.' },
+          payment, request, env, 'upstream_failure', 503,
+        );
+      }
+
+      const withMomentum = snap.vendors.filter((v) => v.momentum_pct !== null);
+      const shape = (v: import('./federal-spending-fetcher').VendorRollup) => ({
+        slug: v.slug,
+        name: v.name,
+        momentum_pct: v.momentum_pct,
+        recent_90d_usd: v.recent_90d_usd,
+        total_usd: v.total_usd,
+      });
+      const gainers = [...withMomentum]
+        .sort((a, b) => (b.momentum_pct as number) - (a.momentum_pct as number))
+        .slice(0, 5)
+        .map(shape);
+      const losers = [...withMomentum]
+        .sort((a, b) => (a.momentum_pct as number) - (b.momentum_pct as number))
+        .slice(0, 5)
+        .map(shape);
+
+      const topVendor = snap.vendors[0] ?? null;
+      const concentration_pct =
+        snap.total_usd > 0 && topVendor ? Math.round((topVendor.total_usd / snap.total_usd) * 100) : 0;
+      const leadingAgency = snap.agencies[0] ?? null;
+
+      const topGainer = gainers[0] ?? null;
+      const verdict = topGainer
+        ? `${topGainer.name} leads federal AI award momentum at ${topGainer.momentum_pct} percent over the prior 90 days, with ${leadingAgency ? leadingAgency.agency : 'no single agency'} the cohort's top awarding agency.`
+        : `No vendor in the cohort has enough dated prior-window awards to read momentum yet, with ${leadingAgency ? leadingAgency.agency : 'no single agency'} the cohort's top awarding agency.`;
+
+      const result = {
+        ok: true as const,
+        captured_at: snap.captured_at,
+        source: snap.source,
+        license: snap.license,
+        verdict,
+        gainers,
+        losers,
+        concentration_pct,
+        leading_agency: leadingAgency,
+        cohort_size: snap.cohort_size,
+        total_usd: snap.total_usd,
+        window_days: snap.window_days,
+      };
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/funding/federal/momentum', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === PAID PREMIUM: CVE KEV EXPLOITATION TIMELINE (Tier 1, 1 credit) ===
