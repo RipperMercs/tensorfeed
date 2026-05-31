@@ -119,12 +119,15 @@ class Formatters(unittest.TestCase):
                 ]
             },
             "tensorfeed_compare_models": {
-                "models": [{"name": "A", "pricing": {"inputPrice": 1, "outputPrice": 2},
-                            "context_window": 200000}],
+                "models": [
+                    {"name": "A", "pricing": {"input": 1, "output": 2, "blended": 1.5},
+                     "context_window": 200000},
+                    {"matched": False, "query": "ghost-model", "reason": "model_not_found"},
+                ],
                 "rankings": {"cheapest_blended": "A"},
             },
             "tensorfeed_cost_projection": {
-                "projections": [{"model": "A", "monthly": 12.5}],
+                "projections": [{"model": "A", "monthly_total": 12.5}],
                 "ranked_cheapest_monthly": [{"model": "A"}],
             },
             "tensorfeed_news_search": {
@@ -154,6 +157,26 @@ class Formatters(unittest.TestCase):
     def test_status_leaderboard_handles_no_data(self):
         out = pt.format_status_leaderboard({"entries": [], "error": "no_data"})
         self.assertIn("no_data", out)
+
+    def test_cost_projection_reads_monthly_total(self):
+        out = pt.format_cost_projection(
+            {"projections": [{"model": "A", "monthly_total": 12.5}]}
+        )
+        self.assertIn("12.5", out)
+        self.assertNotIn("None", out)
+
+    def test_model_comparison_pricing_fields_and_no_match(self):
+        out = pt.format_compare_models(
+            {
+                "models": [
+                    {"name": "A", "pricing": {"input": 1, "output": 2}, "context_window": 200000},
+                    {"matched": False, "query": "ghost-model", "reason": "model_not_found"},
+                ]
+            }
+        )
+        self.assertIn("in 1 / out 2", out)
+        self.assertIn("ghost-model: (no match)", out)
+        self.assertNotIn("?", out)
 
     def test_names_and_descriptions_and_formatters_align(self):
         self.assertEqual(set(pt.DESCRIPTIONS), set(pt.FORMATTERS))

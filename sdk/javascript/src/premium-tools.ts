@@ -303,14 +303,15 @@ function formatCompareModels(raw: unknown): string {
   const lines = [`Compared ${models.length} model(s):`];
   for (const mi of models.slice(0, 5)) {
     const m = obj(mi);
-    const name = str(m.name) || str(m.id) || '?';
-    if (m.unmatched) {
-      lines.push(`  ${name}: (no match)`);
+    if (m.matched === false) {
+      const label = str(m.query) || str(m.name) || str(m.id) || '?';
+      lines.push(`  ${label}: (no match)`);
       continue;
     }
+    const name = str(m.name) || str(m.id) || '?';
     const p = obj(m.pricing);
     lines.push(
-      `  ${name}: in ${str(p.inputPrice) || '?'} / out ${str(p.outputPrice) || '?'} per 1M, ctx ${str(m.context_window) || '?'}`,
+      `  ${name}: in ${str(p.input) || '?'} / out ${str(p.output) || '?'} per 1M, ctx ${str(m.context_window) || '?'}`,
     );
   }
   const rk = obj(r.rankings);
@@ -325,7 +326,7 @@ function formatCostProjection(raw: unknown): string {
   const lines = ['Cost projection (per model):'];
   for (const pi of proj.slice(0, 10)) {
     const p = obj(pi);
-    lines.push(`  ${str(p.model) || '?'}: ~${str(p.monthly ?? p.monthly_cost)}/month`);
+    lines.push(`  ${str(p.model) || '?'}: ~${str(p.monthly_total)}/month`);
   }
   const ranked = list(r.ranked_cheapest_monthly);
   if (ranked.length) {

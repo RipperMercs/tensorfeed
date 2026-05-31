@@ -167,12 +167,13 @@ test('each formatter produces non-empty text', () => {
     },
     tensorfeed_compare_models: {
       models: [
-        { name: 'A', pricing: { inputPrice: 1, outputPrice: 2 }, context_window: 200000 },
+        { name: 'A', pricing: { input: 1, output: 2, blended: 1.5 }, context_window: 200000 },
+        { matched: false, query: 'ghost-model', reason: 'model_not_found' },
       ],
       rankings: { cheapest_blended: 'A' },
     },
     tensorfeed_cost_projection: {
-      projections: [{ model: 'A', monthly: 12.5 }],
+      projections: [{ model: 'A', monthly_total: 12.5 }],
       ranked_cheapest_monthly: [{ model: 'A' }],
     },
     tensorfeed_news_search: {
@@ -203,6 +204,26 @@ test('each formatter produces non-empty text', () => {
 test('status leaderboard handles a no-data response', () => {
   const out = FORMATTERS.tensorfeed_status_leaderboard({ entries: [], error: 'no_data' });
   assert.match(out, /no_data/);
+});
+
+test('cost projection reads monthly_total', () => {
+  const out = FORMATTERS.tensorfeed_cost_projection({
+    projections: [{ model: 'A', monthly_total: 12.5 }],
+  });
+  assert.match(out, /12\.5/);
+  assert.ok(!out.includes('undefined'), out);
+});
+
+test('compare models reads pricing.input/output and detects unmatched via query', () => {
+  const out = FORMATTERS.tensorfeed_compare_models({
+    models: [
+      { name: 'A', pricing: { input: 1, output: 2 }, context_window: 200000 },
+      { matched: false, query: 'ghost-model', reason: 'model_not_found' },
+    ],
+  });
+  assert.match(out, /in 1 \/ out 2/);
+  assert.match(out, /ghost-model: \(no match\)/);
+  assert.ok(!out.includes('?'), out);
 });
 
 // ── Offline client integration ────────────────────────────────────────

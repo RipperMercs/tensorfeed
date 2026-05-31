@@ -243,14 +243,15 @@ def format_compare_models(r: dict[str, Any]) -> str:
     models = r.get("models", []) or []
     lines = [f"Compared {len(models)} model(s):"]
     for m in models[:5]:
-        name = m.get("name") or m.get("id") or "?"
-        if m.get("unmatched"):
-            lines.append(f"  {name}: (no match)")
+        if m.get("matched") is False:
+            label = m.get("query") or m.get("name") or m.get("id") or "?"
+            lines.append(f"  {label}: (no match)")
             continue
+        name = m.get("name") or m.get("id") or "?"
         pricing = m.get("pricing", {}) or {}
         lines.append(
-            f"  {name}: in {pricing.get('inputPrice', '?')} / "
-            f"out {pricing.get('outputPrice', '?')} per 1M, "
+            f"  {name}: in {pricing.get('input', '?')} / "
+            f"out {pricing.get('output', '?')} per 1M, "
             f"ctx {m.get('context_window', '?')}"
         )
     rankings = r.get("rankings", {}) or {}
@@ -266,7 +267,7 @@ def format_cost_projection(r: dict[str, Any]) -> str:
     lines = ["Cost projection (per model):"]
     for p in proj[:10]:
         name = p.get("model", "?")
-        monthly = p.get("monthly", p.get("monthly_cost"))
+        monthly = p.get("monthly_total")
         lines.append(f"  {name}: ~{monthly}/month")
     ranked = r.get("ranked_cheapest_monthly", []) or []
     if ranked:

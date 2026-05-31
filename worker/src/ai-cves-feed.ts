@@ -149,10 +149,17 @@ function validatePaper(p: unknown, idx: number): PaperOk | ValidationErr {
       return failV('validation_failed', `papers[${idx}].${k} must be an array.`);
     }
     for (let j = 0; j < (r[k] as unknown[]).length; j++) {
-      if (typeof (r[k] as unknown[])[j] !== 'string') {
+      const el = (r[k] as unknown[])[j];
+      if (typeof el !== 'string') {
         return failV(
           'validation_failed',
           `papers[${idx}].${k}[${j}] must be a string.`,
+        );
+      }
+      if (el.includes(EM_DASH) || el.includes('--')) {
+        return failV(
+          'validation_failed',
+          `papers[${idx}].${k}[${j}] contains em-dash or double-hyphen (post-processor should strip these).`,
         );
       }
     }

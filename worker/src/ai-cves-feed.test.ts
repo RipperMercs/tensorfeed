@@ -89,6 +89,18 @@ describe('validateBatch', () => {
     expect(r.ok).toBe(false);
   });
 
+  it('rejects em-dash in an affected_products element', () => {
+    const r = validateBatch(batch([paper({ affected_products: ['vLLM — server'] })]));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.detail).toMatch(/affected_products\[0\]/);
+  });
+
+  it('rejects double-hyphen in a fixed_versions element', () => {
+    const r = validateBatch(batch([paper({ fixed_versions: ['1.0.0--rc1'] })]));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.detail).toMatch(/fixed_versions\[0\]/);
+  });
+
   it('rejects non-https source_url', () => {
     const r = validateBatch(batch([paper({ source_url: 'http://example.com/x' })]));
     expect(r.ok).toBe(false);
