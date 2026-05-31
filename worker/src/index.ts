@@ -225,7 +225,7 @@ import {
   validateLabProductivityInput as validateArxivLabProductivityInput,
 } from './premium-research-arxiv';
 import { refreshX402Registry, getLatestX402Registry } from './x402-registry';
-import { getKillSwitchState, setKillSwitch, getKillSwitchAuditLog } from './kill-switch';
+import { getKillSwitchState, setKillSwitch, getKillSwitchAuditLog, safePut } from './kill-switch';
 import { computeRecessionWatch } from './premium-recession-watch';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
@@ -13192,6 +13192,19 @@ export default {
       // avoid a duplicate wrangler.toml trigger. Makes the "daily
       // snapshot" claim in /api/meta + llms.txt true.
       await run('captureEpochSnapshot', () => captureEpochSnapshot(env));
+      // Same 14:00 UTC slot: Federal AI Spending snapshot (US federal
+      // contract and grant awards flowing to the curated AI vendor
+      // cohort, pulled from USAspending.gov). Same class of daily
+      // external snapshot, co-located here to reuse this registered
+      // trigger and avoid a duplicate wrangler.toml cron. Backs free
+      // /api/funding/federal/summary and /recent.
+      await run('captureFederalSpending', async () => {
+        const { captureFederalSpending, FED_SPEND_SNAPSHOT_KEY } = await import(
+          './federal-spending-fetcher'
+        );
+        const snap = await captureFederalSpending(env);
+        await safePut(env, env.TENSORFEED_CACHE, FED_SPEND_SNAPSHOT_KEY, JSON.stringify(snap));
+      });
     } else if (cron === '15 14 * * *') {
       // Daily 14:15 UTC: capture HF Daily Papers (editor-curated set of
       // AI papers worth reading + community upvotes/comments). Single
