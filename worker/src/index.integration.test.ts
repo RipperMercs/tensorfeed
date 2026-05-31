@@ -219,4 +219,18 @@ describe('index.ts router money path (integration)', () => {
     // Balance unchanged: stale data is free.
     expect(await balanceOf(env, token)).toBe(100);
   });
+
+  // FREE SURFACE: the premium catalog is itself free, not gated. A no-token
+  // GET must return 200 with ok:true and a non-empty count, so an agent can
+  // discover what to buy before it has paid for anything.
+  it('serves /api/meta/premium free (no token) with ok:true and count > 0', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/meta/premium', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(typeof res.json?.count).toBe('number');
+    expect(res.json?.count as number).toBeGreaterThan(0);
+    expect(Array.isArray(res.json?.endpoints)).toBe(true);
+  });
 });

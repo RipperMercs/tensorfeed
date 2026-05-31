@@ -110,6 +110,7 @@ TensorFeed ships two complementary MCP servers under the @tensorfeed scope on np
 - [Podcasts API](https://tensorfeed.ai/api/podcasts): AI podcast episodes with audio URLs (?limit=)
 - [Health Check](https://tensorfeed.ai/api/health): Worker health and last update timestamps
 - [Endpoint Discovery](https://tensorfeed.ai/api/meta): Full endpoint map for automated integration
+- [Premium Catalog](https://tensorfeed.ai/api/meta/premium): Free, machine-readable catalog of every premium endpoint, one entry per payable path with its credit cost, query params, what it returns, free sibling, and strict-premium flag. The canonical "what can I buy" surface for agents: enumerate everything here, then decide what to pay for. Sorted by category, with per-category counts and the min/max credit range. Cached 1h.
 
 ## Historical Data
 - [History Index](https://tensorfeed.ai/api/history): List of available daily snapshot dates (pricing, models, benchmarks, status, agent activity)

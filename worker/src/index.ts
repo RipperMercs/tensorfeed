@@ -365,6 +365,7 @@ import {
   rateLimitedResponse,
 } from './rate-limit';
 import { isStrictPremiumPath } from './strict-premium-endpoints';
+import { buildPremiumCatalog } from './premium-catalog';
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
@@ -4178,6 +4179,16 @@ export default {
       }, 200, 300);
     }
 
+    // === PREMIUM CATALOG (free, machine-readable; cached 1h) ===
+    // The canonical "what can I buy" surface for agents: one free call
+    // enumerates every payable endpoint with its credit cost, params,
+    // returns, free sibling, and strict-premium flag. Compiled from the
+    // real handlers and guarded against drift by premium-catalog.test.ts.
+
+    if (path === '/api/meta/premium') {
+      return jsonResponse(buildPremiumCatalog(), 200, 3600);
+    }
+
     // === META ENDPOINT (cached 60s) ===
 
     if (path === '/api/meta') {
@@ -4188,6 +4199,8 @@ export default {
         description: 'AI news, model tracking, and real-time AI ecosystem data.',
         afta_self_description:
           'TensorFeed.ai is agent fair-trade certified: open pricing, automatic no-charge on 5xx, breaker, schema fail, and stale data, Ed25519-signed receipts on every paid call, inference-only license. Built with Claude (Anthropic). Standard at /.well-known/agent-fair-trade.json.',
+        metaPremium:
+          '/api/meta/premium (free; machine-readable catalog of every premium endpoint: path, credit cost, params, returns, free sibling, strict-premium flag. The canonical "what can I buy" surface for agents.)',
         feeds: {
           rss: '/api/feed.xml',
           json: '/api/feed.json',
