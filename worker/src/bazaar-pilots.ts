@@ -4949,29 +4949,15 @@ const SECURITY_CORROBORATED_PILOT: BazaarPilotConfig = {
             ok: true,
             package_query: 'open-webui',
             matched_package: 'Open WebUI',
-            claim:
-              "Affected package corroborated against authoritative OSV, plus deterministic KEV/EPSS/CVSS/SSVC enrichment joined by a verbatim-verified CVE id. We do NOT verify the advisory's exploitation or severity claims; GHSA prose does not make them.",
-            provenance_legend: {
-              corroborated_claim:
-                "advisory's verbatim affected_products + deterministic product-vs-OSV verdict (never-false-confirm)",
-              deterministic_enrichment:
-                'KEV/EPSS/SSVC/OSV joined ONLY by a verbatim-verified CVE id; not an advisory claim',
-              verbatim_context:
-                'version/severity/exploited copied verbatim from the advisory; not corroborated, not a guarantee',
-            },
             dataset_meta: {
               dataset: 'security-xsource',
-              tier: 'premium',
               generated_at: '2026-05-18T06:03:17Z',
               advisories_total: 167,
               packages_total: 85,
               by_overall: { corroborated: 143, novel: 22, unverifiable: 2 },
               attribution: {
                 advisory_source: 'GitHub Security Advisories (GHSA)',
-                corroboration_sources:
-                  'OSV.dev, CISA KEV, FIRST EPSS, NVD, CISA Vulnrichment (public)',
-                redistribution:
-                  'derived metadata + corroboration verdicts; advisory prose not republished',
+                corroboration_sources: 'OSV.dev, CISA KEV, FIRST EPSS, NVD (public)',
               },
             },
             advisory_count: 39,
@@ -4979,23 +4965,14 @@ const SECURITY_CORROBORATED_PILOT: BazaarPilotConfig = {
               {
                 source_url: 'https://github.com/advisories/GHSA-45m8-cpm2-3v65',
                 overall: 'corroborated',
-                corroborated_claim: {
-                  affected_products: ['Open WebUI'],
-                  product_corroboration: 'confirmed',
-                },
+                corroborated_claim: { affected_products: ['Open WebUI'], product_corroboration: 'confirmed' },
                 deterministic_enrichment: {
                   cves_verbatim_verified: ['CVE-2026-44553'],
                   kev_listed: false,
                   epss_percentile: 0.08198,
                   ssvc: null,
-                  osv_packages: ['open-webui'],
                 },
-                verbatim_context: {
-                  affected_version_ranges: ['current main branch (commit `6fdd19bf1`)'],
-                  fixed_versions: [],
-                  severity_label: 'unstated',
-                  exploited_in_wild: 'unstated',
-                },
+                verbatim_context: { severity_label: 'unstated', exploited_in_wild: 'unstated' },
               },
             ],
             billing: { credits_charged: 1, credits_remaining: 49 },

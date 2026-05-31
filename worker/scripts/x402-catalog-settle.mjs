@@ -223,7 +223,7 @@ async function settleOne(endpoint, account, dryRun) {
   // bare status code. The body is not read elsewhere, so consuming it is safe.
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    if (errText) console.log('  body:', errText.slice(0, 500));
+    if (errText) console.log('  body:', errText.slice(0, 1500));
   }
 
   const extResp = res.headers.get('EXTENSION-RESPONSES');
