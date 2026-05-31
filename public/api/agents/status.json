@@ -1,7 +1,7 @@
 {
   "ok": true,
   "source": "tensorfeed.ai",
-  "checked": "2026-05-23T22:59:12.519Z",
+  "checked": "2026-05-31T18:38:45.721Z",
   "services": [
     {
       "name": "Claude API",
@@ -34,7 +34,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.867Z"
+      "lastChecked": "2026-05-31T18:36:44.601Z"
     },
     {
       "name": "OpenAI API",
@@ -63,11 +63,11 @@
           "status": "operational"
         },
         {
-          "name": "Embeddings",
+          "name": "Files",
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.314Z"
+      "lastChecked": "2026-05-31T18:36:43.743Z"
     },
     {
       "name": "Google Gemini",
@@ -80,7 +80,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.323Z"
+      "lastChecked": "2026-05-31T18:36:43.501Z"
     },
     {
       "name": "GitHub Copilot",
@@ -113,7 +113,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.358Z"
+      "lastChecked": "2026-05-31T18:36:43.616Z"
     },
     {
       "name": "Perplexity",
@@ -126,7 +126,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.263Z"
+      "lastChecked": "2026-05-31T18:36:43.519Z"
     },
     {
       "name": "Groq",
@@ -159,7 +159,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.330Z"
+      "lastChecked": "2026-05-31T18:36:43.686Z"
     },
     {
       "name": "AWS Bedrock",
@@ -172,7 +172,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.530Z"
+      "lastChecked": "2026-05-31T18:36:43.999Z"
     },
     {
       "name": "Azure OpenAI",
@@ -185,7 +185,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.365Z"
+      "lastChecked": "2026-05-31T18:36:43.575Z"
     },
     {
       "name": "Hugging Face",
@@ -198,7 +198,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.405Z"
+      "lastChecked": "2026-05-31T18:36:44.182Z"
     },
     {
       "name": "Replicate",
@@ -231,7 +231,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.756Z"
+      "lastChecked": "2026-05-31T18:36:44.611Z"
     },
     {
       "name": "Cohere",
@@ -264,7 +264,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.459Z"
+      "lastChecked": "2026-05-31T18:36:43.890Z"
     },
     {
       "name": "Mistral",
@@ -277,7 +277,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.459Z"
+      "lastChecked": "2026-05-31T18:36:43.796Z"
     },
     {
       "name": "DeepSeek",
@@ -285,7 +285,7 @@
       "status": "unknown",
       "statusPageUrl": "https://status.deepseek.com",
       "components": [],
-      "lastChecked": "2026-05-23T22:58:38.835Z"
+      "lastChecked": "2026-05-31T18:36:44.422Z"
     },
     {
       "name": "Together AI",
@@ -298,7 +298,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.702Z"
+      "lastChecked": "2026-05-31T18:36:44.291Z"
     },
     {
       "name": "Fireworks AI",
@@ -311,7 +311,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.573Z"
+      "lastChecked": "2026-05-31T18:36:44.338Z"
     },
     {
       "name": "OpenRouter",
@@ -324,7 +324,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.728Z"
+      "lastChecked": "2026-05-31T18:36:44.449Z"
     },
     {
       "name": "ElevenLabs",
@@ -357,7 +357,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.641Z"
+      "lastChecked": "2026-05-31T18:36:44.313Z"
     },
     {
       "name": "Stability AI",
@@ -370,7 +370,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.640Z"
+      "lastChecked": "2026-05-31T18:36:44.338Z"
     },
     {
       "name": "Runway",
@@ -399,7 +399,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.821Z"
+      "lastChecked": "2026-05-31T18:36:44.422Z"
     },
     {
       "name": "Luma",
@@ -412,7 +412,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.781Z"
+      "lastChecked": "2026-05-31T18:36:44.511Z"
     },
     {
       "name": "Hyperliquid",
@@ -433,7 +433,7 @@
           "status": "operational"
         }
       ],
-      "lastChecked": "2026-05-23T22:58:37.858Z"
+      "lastChecked": "2026-05-31T18:36:44.787Z"
     }
   ]
 }
