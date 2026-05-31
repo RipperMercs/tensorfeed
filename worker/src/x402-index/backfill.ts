@@ -15,6 +15,16 @@ import type { Env } from '../types';
 // transfer scan starts from.
 const BLOCKS_PER_DAY = 43200;
 
+// Bound the per-wallet transfer scan so a high-traffic address (one receiving lots
+// of inbound USDC beyond x402 settlements) cannot walk pages without end. Eight
+// pages at 1000 transfers each is far more than any real x402 publisher accrues in
+// a 30 day window, and it caps a pathological wallet instead of hanging the run.
+const DEFAULT_MAX_PAGES = 8;
+
+// Abort a single Alchemy page request that stalls, so one unresponsive call breaks
+// the wallet scan instead of hanging the whole backfill on an open socket.
+const PAGE_TIMEOUT_MS = 15_000;
+
 // An asset transfer as returned by alchemy_getAssetTransfers. Only the fields the
 // backfill consumes are typed; the upstream payload carries more.
 interface AssetTransfer {
@@ -68,7 +78,8 @@ export async function backfillWallet(
   domain: string,
   fromBlock: number,
   fetchFn: typeof fetch = fetch,
-): Promise<{ applied: number; scanned: number }> {
+  maxPages: number = DEFAULT_MAX_PAGES,
+): Promise<{ applied: number; scanned: number; truncated: boolean }> {
   // RPC precedence mirrors runIndexerTick: a dedicated BASE_INDEXER_RPC_URL first,
   // then the keyed BASE_RPC_URL (payments RPC), then the public node. This method is
   // alchemy_getAssetTransfers, an Alchemy-namespaced call. BASE_RPC_URL is a
@@ -79,6 +90,8 @@ export async function backfillWallet(
   const rpc = env.BASE_INDEXER_RPC_URL ?? env.BASE_RPC_URL ?? DEFAULT_BASE_RPC;
   let applied = 0;
   let scanned = 0;
+  let pages = 0;
+  let truncated = false;
   let pageKey: string | undefined;
 
   // Paginate the address-filtered transfer history. Tolerate a page failure
@@ -98,6 +111,8 @@ export async function backfillWallet(
     if (pageKey) params.pageKey = pageKey;
 
     let data: RpcResponse;
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), PAGE_TIMEOUT_MS);
     try {
       const res = await fetchFn(rpc, {
         method: 'POST',
@@ -108,6 +123,7 @@ export async function backfillWallet(
           params: [params],
           id: 1,
         }),
+        signal: ac.signal,
       });
       if (!res.ok) {
         // Surface the silent no-op in wrangler tail. Still best-effort: break and
@@ -117,9 +133,13 @@ export async function backfillWallet(
       }
       data = (await res.json()) as RpcResponse;
     } catch (err) {
+      // A timed-out (aborted) page lands here too, surfaced as the same best-effort
+      // break so a stalled call never hangs the run.
       const message = err instanceof Error ? err.message : String(err);
       console.warn(JSON.stringify({ event: 'backfill_rpc_error', wallet, message }));
       break;
+    } finally {
+      clearTimeout(timer);
     }
     if (data.error || !data.result) {
       console.warn(JSON.stringify({ event: 'backfill_rpc_error', wallet, message: data.error?.message ?? 'missing result' }));
@@ -157,11 +177,19 @@ export async function backfillWallet(
       applied += 1;
     }
 
+    pages += 1;
     pageKey = data.result.pageKey;
     if (!pageKey) break;
+    if (pages >= maxPages) {
+      // Page ceiling hit: a high-traffic wallet. Stop with what we have rather than
+      // scan unbounded; the per-event dedup makes a later re-run safe and resumable.
+      console.warn(JSON.stringify({ event: 'backfill_truncated', wallet, pages, scanned }));
+      truncated = true;
+      break;
+    }
   }
 
-  return { applied, scanned };
+  return { applied, scanned, truncated };
 }
 
 // Backfill every curated wallet from roughly `days` days before the current
@@ -170,22 +198,37 @@ export async function backfillWallet(
 export async function backfillCuratedWallets(
   env: Env,
   days = 30,
-): Promise<{ wallets: number; applied: number }> {
+  deadlineMs = 45_000,
+): Promise<{ wallets: number; completed: number; applied: number; scanned: number; truncated: number }> {
   const walletMap = (await env.TENSORFEED_CACHE.get(KV_KEY_PUBLISHERS, 'json')) as Record<string, string> | null;
   if (!walletMap || Object.keys(walletMap).length === 0) {
-    return { wallets: 0, applied: 0 };
+    return { wallets: 0, completed: 0, applied: 0, scanned: 0, truncated: 0 };
   }
 
   const cursor = (await env.TENSORFEED_CACHE.get(KV_KEY_CURSOR, 'json')) as IndexerCursor | null;
   const cursorBlock = cursor?.block ?? 0;
   const fromBlock = Math.max(0, cursorBlock - days * BLOCKS_PER_DAY);
 
+  // Overall wall-clock budget so the one-shot always returns inside a single
+  // request. Wallets not reached before the deadline are backfilled on the next
+  // run; the per-event dedup makes that safe, resumable, and free of double-counts.
+  const start = Date.now();
   let applied = 0;
+  let scanned = 0;
+  let truncated = 0;
+  let completed = 0;
   const entries = Object.entries(walletMap);
   for (const [wallet, domain] of entries) {
+    if (Date.now() - start > deadlineMs) {
+      console.warn(JSON.stringify({ event: 'backfill_deadline', completed, total: entries.length }));
+      break;
+    }
     const r = await backfillWallet(env, wallet, domain, fromBlock);
     applied += r.applied;
+    scanned += r.scanned;
+    if (r.truncated) truncated += 1;
+    completed += 1;
   }
 
-  return { wallets: entries.length, applied };
+  return { wallets: entries.length, completed, applied, scanned, truncated };
 }
