@@ -69,7 +69,14 @@ export async function backfillWallet(
   fromBlock: number,
   fetchFn: typeof fetch = fetch,
 ): Promise<{ applied: number; scanned: number }> {
-  const rpc = env.BASE_RPC_URL ?? DEFAULT_BASE_RPC;
+  // RPC precedence mirrors runIndexerTick: a dedicated BASE_INDEXER_RPC_URL first,
+  // then the keyed BASE_RPC_URL (payments RPC), then the public node. This method is
+  // alchemy_getAssetTransfers, an Alchemy-namespaced call. BASE_RPC_URL is a
+  // small-limit non-Alchemy payments RPC and the public DEFAULT_BASE_RPC does not
+  // implement the method at all, so resolving to either of those silently returns
+  // zero transfers. BASE_INDEXER_RPC_URL is the keyed Alchemy endpoint documented in
+  // wrangler.toml and is the only one that actually supports this scan.
+  const rpc = env.BASE_INDEXER_RPC_URL ?? env.BASE_RPC_URL ?? DEFAULT_BASE_RPC;
   let applied = 0;
   let scanned = 0;
   let pageKey: string | undefined;
@@ -102,12 +109,22 @@ export async function backfillWallet(
           id: 1,
         }),
       });
-      if (!res.ok) break;
+      if (!res.ok) {
+        // Surface the silent no-op in wrangler tail. Still best-effort: break and
+        // return progress, do not throw.
+        console.warn(JSON.stringify({ event: 'backfill_rpc_error', wallet, message: `http ${res.status}` }));
+        break;
+      }
       data = (await res.json()) as RpcResponse;
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(JSON.stringify({ event: 'backfill_rpc_error', wallet, message }));
       break;
     }
-    if (data.error || !data.result) break;
+    if (data.error || !data.result) {
+      console.warn(JSON.stringify({ event: 'backfill_rpc_error', wallet, message: data.error?.message ?? 'missing result' }));
+      break;
+    }
 
     const transfers = data.result.transfers ?? [];
     for (const t of transfers) {
