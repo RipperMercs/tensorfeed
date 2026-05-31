@@ -4,6 +4,46 @@ JavaScript/TypeScript SDK for the [TensorFeed.ai](https://tensorfeed.ai) API.
 
 Free endpoints (news, status, models, benchmarks, history, routing preview) need no auth. The premium tier (top-N model routing, more endpoints landing later) is paid via USDC on Base. No accounts, no API keys, no traditional payment processors.
 
+## Featured: Route Verdict
+
+The single best model to use right now, as one signed call. Route Verdict fuses live pricing, contamination-discounted benchmark capability, real production usage, measured p95 latency probes, live incident state, and deprecation flags into one ranked decision, with an AFTA-signed receipt over the exact inputs. Instead of stitching together pricing pages, benchmark leaderboards, status dashboards, and your own latency tests, you get a current, defensible routing answer in one request.
+
+### Zero install, no key, one command (works today)
+
+```bash
+curl -s -A "tensorfeed-cc-quickstart" "https://tensorfeed.ai/api/preview/route-verdict?task=code"
+```
+
+Swap `task` for `reasoning`, `creative`, or `general`, or pass `?model=<id-or-name>` to score a specific model. The free preview is 10 calls per day per IP, no token. Abridged real response:
+
+```json
+{
+  "verdict": {
+    "rank": 1,
+    "model": { "name": "Gemini 2.5 Pro", "provider": "google" },
+    "pricing": { "blended": 5.625, "unit": "per 1M tokens" },
+    "latency": { "measured_p95_ms": 1223, "source": "measured_probe" },
+    "operational": { "ok": true, "status": "operational" },
+    "composite_score": 0.8449,
+    "why": "code quality 0.6498 after trust discount; corroborated by real usage (rank 5, 6.5% share, flat); measured p95 1223 ms; operational; blended $5.625 / 1M"
+  },
+  "rate_limit": { "limit": 10, "remaining": 9, "scope": "per IP per UTC day" },
+  "upgrade": { "premium_endpoint": "/api/premium/route-verdict", "adds": ["runners_up", "AFTA-signed receipt", "filter params", "no rate limit"] }
+}
+```
+
+The premium version (`/api/premium/route-verdict`, 1 credit) adds ranked runners-up, the constraint filters (`max_latency_p95_ms`, `budget`, `min_quality`, `require_operational`, `exclude_deprecated`), the AFTA-signed receipt, and no rate limit. It needs a token; credits come from [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
+
+### The agent path (MCP)
+
+With the [`@tensorfeed/mcp-server`](https://www.npmjs.com/package/@tensorfeed/mcp-server) MCP server installed, an agent gets two tools: `route_verdict_preview` (free, the pick plus reasoning) and `route_verdict` (1 credit, ranked runners-up, constraint filters, and the AFTA-signed receipt it can audit).
+
+This JavaScript SDK exposes the older `tf.routingPreview()` and `tf.routing()` model-routing methods (documented below). The signed Route Verdict endpoint is available today via the curl above and via the MCP server; a dedicated SDK method may follow in a later release.
+
+### Why it matters
+
+Models, prices, and latency move week to week. Route Verdict is one signed call an agent can act on now and later prove why it routed the way it did, without rebuilding the comparison from scratch each time.
+
 ## Install
 
 ```bash
