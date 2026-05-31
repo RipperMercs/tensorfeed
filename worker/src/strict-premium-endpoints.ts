@@ -259,6 +259,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/security/kev/full',
   '/api/premium/security/epss/top',
   '/api/premium/security/ghsa/ai-feed',
+  // Wave 29 (2026-05-30): Wave B tail promoted to strict-premium for cataloging.
+  '/api/premium/research/lab-productivity',
+  '/api/premium/hf/velocity',
+  '/api/premium/agents/leaderboard/full',
+  '/api/premium/jobs',
 ];
 
 /**
@@ -291,6 +296,9 @@ export const STRICT_PREMIUM_PREFIXES: ReadonlyArray<string> = [
   // free-trial pool, miss the 402, and CDP would never observe the
   // settlement that catalogs the endpoint.
   '/api/premium/x402-index/',
+  // Wave 29 (2026-05-30): per-series economic history (parametric source/id).
+  // Param-required, so strict gates anonymous crawlers to a clean 402.
+  '/api/premium/economy/series/',
 ];
 
 /**

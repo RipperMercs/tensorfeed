@@ -5654,6 +5654,374 @@ const SEC_FILINGS_AI_DISCLOSURES_PILOT: BazaarPilotConfig = {
   },
 };
 
+/**
+ * Wave 29 (2026-05-30): the Wave B tail. Research productivity, HF velocity,
+ * the full agent reputation leaderboard, the jobs cohort, and two parametric
+ * series (per-publisher x402 receipts, per-series economic history).
+ */
+
+const RESEARCH_LAB_PRODUCTIVITY_PILOT: BazaarPilotConfig = {
+  description:
+    'Top AI labs ranked by paper count over rolling 30, 90, and 365-day windows. Built on TensorFeed normalized affiliation extraction from the offline Qwen pass over arXiv abstracts. Filter by window and by affiliation_type (industry, academia, government, nonprofit, mixed). arXiv has no native concept of normalized lab attribution.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { window: '30d', affiliation_type: 'industry', limit: 25 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-05-28T00:00:00Z',
+            query: { window: '30d', affiliation_type: 'industry', limit: 25 },
+            windows: {
+              '30d': [
+                { affiliation: 'Google DeepMind', papers: 41, type: 'industry' },
+              ],
+            },
+            attribution: {
+              source: 'arXiv (preprint metadata) + TensorFeed Qwen-extracted analytical fields',
+              source_url: 'https://arxiv.org',
+              license: 'arXiv metadata is freely usable for derived works; per-paper analytical fields are TF derivations.',
+              derivation: 'Local Qwen 3.6 27B reads each abstract and emits structured YAML, deterministically rolled up into KV snapshots.',
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const HF_VELOCITY_PILOT: BazaarPilotConfig = {
+  description:
+    'Daily Hugging Face download-velocity over a trailing window (default 30 days, max 90). Per-day top models and datasets by download delta, top Spaces by likes delta among the daily top-30, top-set entered and exited churn, plus window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is TensorFeed-computed and cannot be backfilled.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-04-29', to: '2026-05-28' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            from: '2026-04-29',
+            to: '2026-05-28',
+            days: 30,
+            points: [
+              {
+                date: '2026-05-28',
+                model_count: 30,
+                dataset_count: 30,
+                space_count: 30,
+                models_entered: 2,
+                models_exited: 2,
+                datasets_entered: 1,
+                datasets_exited: 1,
+                top_models_by_download_delta: [
+                  { id: 'meta-llama/Llama-4', downloads: 9100000, download_delta: 120000 },
+                ],
+                top_datasets_by_download_delta: [],
+                top_spaces_by_likes_delta: [],
+                has_data: true,
+              },
+            ],
+            window: {
+              top_model_gainers: [
+                { id: 'meta-llama/Llama-4', downloads: 9100000, download_delta: 540000 },
+              ],
+              top_dataset_gainers: [],
+              model_count_start: 30,
+              model_count_end: 30,
+            },
+            attribution: {
+              source: 'Hugging Face',
+              source_url: 'https://huggingface.co/api/models',
+              license: 'Public Hugging Face listing data, owned by HF and the respective repository owners.',
+              note: 'Day-over-day velocity over the daily top-30 capture is TF-computed and cannot be backfilled.',
+            },
+            notes: [],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const AGENTS_LEADERBOARD_FULL_PILOT: BazaarPilotConfig = {
+  description:
+    'Untruncated agent reputation leaderboard with the full reputation card for every ranked agent. The free leaderboard caps at 25; this returns the entire cohort ranked by reliability, spend, activity, streak, or composite over a 24h, 7d, 30d, or all-time window. Each card carries trust grade, flags, metrics, and per-metric ranks. AFTA-signed.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { metric: 'composite', window: 'all' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            metric: 'composite',
+            window: 'all',
+            total: 1,
+            results: [
+              {
+                id: '0x55a15d',
+                card: {
+                  ok: true,
+                  wallet: '0x55a15d',
+                  display_name: 'tf-agent',
+                  verified: true,
+                  ofac_clean: true,
+                  banned: false,
+                  trust_grade: 'A',
+                  flags: [],
+                  wallet_age_days: 31,
+                  metrics: {
+                    total_calls: 1200,
+                    successful_calls: 1188,
+                    reliability_pct: 99,
+                    total_credits_spent: 950,
+                    active_days: 28,
+                    current_streak_days: 12,
+                    unique_endpoints_used: 34,
+                  },
+                  ranks: {
+                    reliability: { rank: 1, total: 50, pct: 98 },
+                    composite: { rank: 1, total: 50, pct: 98 },
+                  },
+                },
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const JOBS_PILOT: BazaarPilotConfig = {
+  description:
+    'Full and filtered TensorFeed Jobs cohort. The free tier caps at 25 active listings; this returns the untruncated set with category, free-text q, and status (active, filled, closed, expired) filters. Removed listings are never served. AFTA-signed. Listings are third-party content; TensorFeed is a listing and discovery service, not a party to any transaction.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { status: 'active', category: 'data-labeling', q: 'rust', limit: 200 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            status: 'active',
+            category: 'data-labeling',
+            q: 'rust',
+            count: 1,
+            jobs: [
+              {
+                id: 'gig_a1b2c3',
+                status: 'active',
+                title: 'Label 5k Rust diffs for an SWE eval',
+                body: 'Need a careful annotator for a Rust code-review dataset.',
+                category: 'data-labeling',
+                budget_note: '300 USDC, milestone-based',
+                poster_addr: '0x55a15d',
+                poster_x402: 'https://example.com/.well-known/x402',
+                created_at: 1748390400,
+                expires_at: 1750982400,
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const X402_INDEX_PUBLISHER_PILOT: BazaarPilotConfig = {
+  description:
+    'Per-publisher x402 settlement receipts from the TensorFeed index of Base USDC settlements. Pass the publisher domain as the URL path segment, plus from and to (YYYY-MM-DD) query params for the window. Returns the registered payTo wallets, a windowed rollup (total volume_usdc, count, avg_amount) and a per-day series. A known publisher with no settlements in the window returns an empty receipt for free; an unindexed domain returns 404 with a hint.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          pathParams: { domain: 'tensorfeed.ai' },
+          queryParams: { from: '2026-05-28', to: '2026-05-29' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            publisher: {
+              domain: 'tensorfeed.ai',
+              pay_to_wallets: ['0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1'],
+              first_seen: '2026-05-28',
+            },
+            window: { from: '2026-05-28', to: '2026-05-29', days: 2 },
+            rollup: {
+              volume_usdc: '1.020000',
+              count: 51,
+              avg_amount: '0.020000',
+              daily_series: [
+                { date: '2026-05-28', volume_usdc: '1.020000', count: 51 },
+              ],
+            },
+            captured_at: '2026-05-29T18:00:00Z',
+            has_data: true,
+            attribution: 'TensorFeed x402 settlement index (Base USDC, forward-only from 2026-05-28).',
+            license: 'TensorFeed.ai editorial index. Attribution required.',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              pathParams: {
+                type: 'object',
+                properties: {
+                  domain: {
+                    type: 'string',
+                    description:
+                      'Publisher domain as a single path segment (e.g. tensorfeed.ai). Canonicalized server-side; case-insensitive. Must be present in the x402 publisher registry (see /api/x402-index/publishers).',
+                  },
+                },
+                required: ['domain'],
+              },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: { type: 'string', description: 'Window start, YYYY-MM-DD. Required.' },
+                  to: { type: 'string', description: 'Window end, YYYY-MM-DD. Required.' },
+                },
+                required: ['from', 'to'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+      routeTemplate: '/api/premium/x402-index/publisher/:domain',
+    },
+  },
+};
+
+const ECONOMY_SERIES_PILOT: BazaarPilotConfig = {
+  description:
+    'Full upstream history for any BLS or FRED economic series, normalized into a canonical observation shape with TensorFeed-computed YoY pairing per observation, 3-month and 12-month moving averages, min and max identification, and a 3-observation trend direction. Pass source (bls or fred) and the series id as two URL path segments. Free /api/economy/* caps at 24 (BLS) or 90 (FRED) observations; this is the full archive plus compute. FRED requires the FRED_API_KEY secret; BLS works keyless.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          pathParams: { source: 'bls', id: 'LNS14000000' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            source: 'bls',
+            series_id: 'LNS14000000',
+            computed_at: '2026-05-29T18:00:00Z',
+            observations_count: 120,
+            date_range: { from: '2016-05-01', to: '2026-04-01' },
+            observations: [
+              {
+                date: '2026-04-01',
+                period_label: 'Apr 2026',
+                value: 4.1,
+                yoy_pct: 5.13,
+                ma_3: 4.07,
+                ma_12: 3.98,
+              },
+            ],
+            summary: {
+              latest: {
+                date: '2026-04-01',
+                period_label: 'Apr 2026',
+                value: 4.1,
+                yoy_pct: 5.13,
+                ma_3: 4.07,
+                ma_12: 3.98,
+              },
+              min: null,
+              max: null,
+              trend_3obs: 'up',
+            },
+            attribution: {
+              source: 'U.S. Bureau of Labor Statistics',
+              source_url: 'https://www.bls.gov/data/',
+              license: 'Public domain (US Federal government work)',
+              derivation: 'Full upstream history with TF-computed YoY, 3 and 12 month moving averages, min/max, and 3-observation trend.',
+            },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              pathParams: {
+                type: 'object',
+                properties: {
+                  source: {
+                    type: 'string',
+                    enum: ['bls', 'fred'],
+                    description: 'Upstream data source: bls or fred. Case-insensitive.',
+                  },
+                  id: {
+                    type: 'string',
+                    description:
+                      'Series id, 2 to 40 chars of [A-Z0-9_-], case-insensitive (e.g. LNS14000000 for BLS, CPIAUCSL for FRED).',
+                  },
+                },
+                required: ['source', 'id'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+      routeTemplate: '/api/premium/economy/series/:source/:id',
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -5782,6 +6150,13 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/security/ghsa/ai-feed': SECURITY_GHSA_AI_FEED_PILOT,
   '/api/premium/cve/kev-exploitation-timeline': CVE_KEV_EXPLOITATION_TIMELINE_PILOT,
   '/api/premium/sec/filings/ai-disclosures': SEC_FILINGS_AI_DISCLOSURES_PILOT,
+  // Wave 29 (2026-05-30): Wave B tail (research, agents, jobs, parametric series).
+  '/api/premium/research/lab-productivity': RESEARCH_LAB_PRODUCTIVITY_PILOT,
+  '/api/premium/hf/velocity': HF_VELOCITY_PILOT,
+  '/api/premium/agents/leaderboard/full': AGENTS_LEADERBOARD_FULL_PILOT,
+  '/api/premium/jobs': JOBS_PILOT,
+  '/api/premium/x402-index/publisher/:domain': X402_INDEX_PUBLISHER_PILOT,
+  '/api/premium/economy/series/:source/:id': ECONOMY_SERIES_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

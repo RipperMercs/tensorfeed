@@ -243,7 +243,7 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 74 exact paths', () => {
+    it('exposes all 78 exact paths', () => {
       // 24 pre-Wave-2 + 9 Wave 2 + 1 each Waves 3..12 + 3 Wave 13 (ai-cves trio)
       // + 1 Wave 15 (ai-cves batch) + 5 Wave 16 (per-provider triage)
       // + 3 Wave 17 (SEC filings AI-extraction) + 1 Wave 18 (pro-tier
@@ -252,13 +252,14 @@ describe('isStrictPremiumPath', () => {
       // x402-settlement-verdict) + 1 Wave 24 (guidance-delta) + 2 Wave 26
       // (topic-search, recent) + 4 Wave 27 (attention, openrouter, mcp/registry,
       // x402-registry series) + 3 Wave 28 (security kev/full, epss/top,
-      // ghsa/ai-feed). funding/exposure + packages/pypi/momentum were already
-      // strict.
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(74);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(74); // no duplicates
+      // ghsa/ai-feed) + 4 Wave 29 (lab-productivity, hf/velocity,
+      // agents/leaderboard/full, jobs). funding/exposure + packages/pypi/momentum
+      // were already strict.
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(78);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(78); // no duplicates
     });
-    it('exposes 8 prefix paths (providers + 5 Wave 14 path-param pilots + Wave 19 ai-companies + x402-index)', () => {
-      expect(STRICT_PREMIUM_PREFIXES).toHaveLength(8);
+    it('exposes 9 prefix paths (providers + 5 Wave 14 path-param pilots + Wave 19 ai-companies + x402-index + Wave 29 economy/series)', () => {
+      expect(STRICT_PREMIUM_PREFIXES).toHaveLength(9);
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/providers/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/clean/cve/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/clean/kev/');

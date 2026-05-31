@@ -127,6 +127,13 @@ const PILOT_PATHS = [
   '/api/premium/security/ghsa/ai-feed',
   '/api/premium/cve/kev-exploitation-timeline',
   '/api/premium/sec/filings/ai-disclosures',
+  // Wave 29 (2026-05-30): Wave B tail (4 flat + 2 parametric template keys)
+  '/api/premium/research/lab-productivity',
+  '/api/premium/hf/velocity',
+  '/api/premium/agents/leaderboard/full',
+  '/api/premium/jobs',
+  '/api/premium/x402-index/publisher/:domain',
+  '/api/premium/economy/series/:source/:id',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.
@@ -138,6 +145,9 @@ const WAVE_14_CONCRETE_PATHS: Array<{ concrete: string; template: string }> = [
   { concrete: '/api/premium/clean/epss/CVE-2026-44580', template: '/api/premium/clean/epss/:id' },
   { concrete: '/api/premium/clean/openrouter/anthropic%2Fclaude-haiku-4.5', template: '/api/premium/clean/openrouter/:model_id' },
   { concrete: '/api/premium/security/verified/CVE-2024-3094', template: '/api/premium/security/verified/:id' },
+  // Wave 29 (2026-05-30): parametric series. publisher (1 param), economy series (2 params).
+  { concrete: '/api/premium/x402-index/publisher/tensorfeed.ai', template: '/api/premium/x402-index/publisher/:domain' },
+  { concrete: '/api/premium/economy/series/bls/LNS14000000', template: '/api/premium/economy/series/:source/:id' },
 ];
 
 // Premium paths that are intentionally NOT in BAZAAR_PILOTS. Used for
@@ -591,6 +601,55 @@ describe('Wave 28 pilot AJV validation', () => {
   ];
 
   for (const path of wave28Paths) {
+    it(`${path} info validates against its declared schema`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const valid = validate(bazaar.info);
+      if (!valid) {
+        throw new Error(
+          `${path} bazaar extension info failed schema validation: ${JSON.stringify(
+            validate.errors,
+            null,
+            2,
+          )}`,
+        );
+      }
+      expect(valid).toBe(true);
+    });
+
+    it(`${path} rejects info with wrong input.method (negative control)`, () => {
+      const ext = bazaarExtensionsFor(path);
+      const bazaar = ext.bazaar as Record<string, any>;
+      const ajv = new Ajv({ strict: false, allErrors: true });
+      const validate = ajv.compile(bazaar.schema);
+      const tampered = JSON.parse(JSON.stringify(bazaar.info));
+      tampered.input.method = 'POST';
+      expect(validate(tampered)).toBe(false);
+    });
+
+    it(`${path} has a description longer than 40 chars`, () => {
+      const config = getBazaarPilotConfig(path);
+      expect(config).not.toBeNull();
+      expect(config!.description.length).toBeGreaterThan(40);
+    });
+  }
+});
+
+describe('Wave 29 pilot AJV validation', () => {
+  // Wave 29 (2026-05-30): Wave B tail, including 2 parametric configs whose
+  // info carries pathParams. Same load-bearing AJV check.
+  const wave29Paths = [
+    '/api/premium/research/lab-productivity',
+    '/api/premium/hf/velocity',
+    '/api/premium/agents/leaderboard/full',
+    '/api/premium/jobs',
+    '/api/premium/x402-index/publisher/:domain',
+    '/api/premium/economy/series/:source/:id',
+  ];
+
+  for (const path of wave29Paths) {
     it(`${path} info validates against its declared schema`, () => {
       const ext = bazaarExtensionsFor(path);
       const bazaar = ext.bazaar as Record<string, any>;
