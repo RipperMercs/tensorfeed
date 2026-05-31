@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'x402-batch-settlement-base-mcp-distribution-layer',
+    title:
+      "A Claude Agent Reads the Day's News for 10 Cents Now. x402 Just Had Its Distribution Week.",
+    author: 'Kira Nolan',
+    date: 'May 30, 2026',
+    readTime: '6 min read',
+    description:
+      "An AI agent now pays ten cents to assemble a daily news brief on x402 and Tavily, and it settles itself. That is the demand proof under a busy week: batch settlement went generally available on the Coinbase facilitator, Base MCP gave agents a Base wallet that can clear a 402, and Visa added x402 to its developer CLI. The payment rail was always the easy part. The settlement economics that make sub-cent pricing viable and the discovery layer that lets an agent find what to buy are what actually moved this week, and discovery still runs through a single Coinbase-run catalog.",
+  },
+  {
     slug: 'trump-pulled-federal-ai-review-order',
     title:
       'Trump Pulled the Federal AI Review Order at the Last Minute. The Rules Now Come From Sacramento and Brussels.',
