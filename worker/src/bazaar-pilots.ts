@@ -3828,23 +3828,6 @@ export function pilotTemplatePath(rawPath: string): string | null {
   return null;
 }
 
-/**
- * Decides whether a request should be KV-logged as a paid pilot call from the
- * central usage-meter hook. Returns true only when BOTH the path resolves to a
- * BAZAAR_PILOTS template (pilotTemplatePath is not null) AND the request
- * actually settled a payment this invocation (charged).
- *
- * Gating on pilotTemplatePath keeps the hook from double-counting: the NAMED
- * premium handlers (verdict, history, routing) already call logPremiumUsage
- * themselves and pilotTemplatePath returns null for every non-pilot path, so
- * only pilots (served by the generic dispatch, which never calls
- * logPremiumUsage) reach the KV paid rollup through the hook. An unpaid 402
- * probe (charged=false) is never logged as paid. Pure: no network, no env.
- */
-export function shouldMeterPilotPaidCall(rawPath: string, charged: boolean): boolean {
-  if (!charged) return false;
-  return pilotTemplatePath(rawPath) !== null;
-}
 
 /**
  * Returns the bazaar config for a pilot path, or null if not piloted.

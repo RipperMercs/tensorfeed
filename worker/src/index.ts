@@ -9,7 +9,7 @@ import { pollTrendingRepos } from './trending';
 import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatestSnapshot } from './snapshots';
 import { captureHistory, listHistory, readHistory } from './history';
 import { cdpListDiscoveryResources } from './cdp-facilitator';
-import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath, shouldMeterPilotPaidCall } from './bazaar-pilots';
+import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
 import { deriveUsageEvent, recordUsageEvent, buildUsageReport } from './usage-meter';
 import { cachedFetch } from './edge-cache';
 import {
@@ -1229,26 +1229,14 @@ export default {
         if (tag) evt.wallet = tag.wallet;
         recordUsageEvent(env, evt);
       }
-      // KV paid rollup coverage for bazaar pilots. The NAMED premium handlers
-      // (verdict, history, routing) call logPremiumUsage themselves, but the
-      // generic pilot dispatch does not, so without this the bulk of the
-      // catalog (and the endpoint that first converted on 2026-05-30) would be
-      // absent from top_paid_endpoints / top_payers. Gated strictly to charged
-      // pilots: shouldMeterPilotPaidCall is false for named premium, free, and
-      // unpaid paths, so there is no double-count. meterPath is the stable
-      // BAZAAR_PILOTS template key, matching how named handlers log.
-      if (tag && shouldMeterPilotPaidCall(path, charged)) {
-        ctx.waitUntil(
-          logPremiumUsage(
-            env,
-            meterPath,
-            request.headers.get('User-Agent') || 'unknown',
-            tag.credits,
-            undefined,
-            tag.wallet,
-          ),
-        );
-      }
+      // Pilots are intentionally NOT logged to the KV rollup here. Every
+      // premium endpoint, pilots included, already calls logPremiumUsage
+      // exactly once inside its named handler (the per-provider incident
+      // triage logs via a `${provider}` template literal; parametric routes
+      // log their bare path). A second call here double-counted all 51 pilots
+      // in the rollup (call_count, total_credits_charged, lifetime counters,
+      // top_payers). Removed 2026-05-30. The AE datapoint above is the only
+      // telemetry this hook owns; do not re-add per-pilot KV logging here.
     } catch {
       // best-effort: telemetry must never affect the response path
     }
