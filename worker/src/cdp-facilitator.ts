@@ -387,11 +387,22 @@ export async function cdpVerify(
  * The EXTENSION-RESPONSES header indicates whether CDP accepted our
  * Bazaar metadata ("processing") or rejected it ("rejected"). We surface
  * this so the route handler can log when validation fails.
+ *
+ * @param resourceDescription Optional human-readable description threaded
+ *   into paymentPayload.resource.description. CDP catalogs the resource
+ *   object from the settle body, so without this the cataloged row is
+ *   metadata-blank and capability search never surfaces the endpoint. The
+ *   402 challenge already carries top-level resource.{url, description,
+ *   mimeType}; passing the same description here makes the settle resource
+ *   object spec-complete ({ url, description, mimeType } per x402 v2).
+ *   OPTIONAL and backward compatible: omitting it keeps the exact prior
+ *   { url, mimeType } shape.
  */
 export async function cdpSettle(
   env: Env,
   payload: PaymentPayload,
   requirements: PaymentRequirements,
+  resourceDescription?: string,
 ): Promise<CdpSettleResult> {
   const path = `${CDP_BASE_PATH}/settle`;
   const headers = await authHeaders(env, 'POST', path);
@@ -404,7 +415,11 @@ export async function cdpSettle(
   //      schemas/index.d.mts:315-389). Buyer SDKs frequently omit it.
   //      (An earlier attempt set this to a plain URL string and CDP
   //      responded 400 `'paymentPayload' is invalid: must match one of
-  //      [x402V2Pay...]` — the field MUST be an object.)
+  //      [x402V2Pay...]`, so the field MUST be an object.) CDP catalogs the
+  //      Bazaar row FROM this object, so when a resourceDescription is
+  //      supplied we make it spec-complete ({ url, description, mimeType }):
+  //      without the description the cataloged row is metadata-blank and
+  //      capability search never surfaces the endpoint.
   //   2. paymentPayload.extensions: the bazaar extension echoed back from
   //      the 402 challenge. CDP interprets missing paymentPayload.extensions
   //      as "no bazaar opt-in" and skips bazaar processing entirely, which
@@ -419,19 +434,27 @@ export async function cdpSettle(
   const reqExtensions =
     (requirements as PaymentRequirements & { extensions?: Record<string, unknown> })
       .extensions;
+  // Build the spec-complete resource object when we have a URL. The
+  // description is included only when provided (optional + backward
+  // compatible: omitting resourceDescription reproduces the exact prior
+  // { url, mimeType } shape). PaymentRequirements.resource is optional
+  // (x402-facilitator.ts:185); when it's missing we skip enriching the
+  // payload's resource field rather than assign `url: undefined`, which
+  // would have type-failed at the EnrichablePayload shape and at the
+  // runtime contract some catalog validators check. In practice every TF
+  // call path builds requirements with a defined resource URL, so the
+  // undefined branch is defensive.
+  const enrichedResource: { url: string; description?: string; mimeType?: string } | undefined =
+    requirements.resource
+      ? {
+          url: requirements.resource,
+          ...(resourceDescription ? { description: resourceDescription } : {}),
+          mimeType: 'application/json',
+        }
+      : undefined;
   const enrichedPayload: EnrichablePayload = {
     ...buyerPayload,
-    // PaymentRequirements.resource is optional (x402-facilitator.ts:185). When
-    // it's missing we skip enriching the payload's resource field rather than
-    // assign `url: undefined`, which would have type-failed at the EnrichablePayload
-    // shape and at the runtime contract some catalog validators check. In practice
-    // every TF call path builds requirements with a defined resource URL, so the
-    // undefined branch is defensive.
-    resource:
-      buyerPayload.resource ??
-      (requirements.resource
-        ? { url: requirements.resource, mimeType: 'application/json' }
-        : undefined),
+    resource: buyerPayload.resource ?? enrichedResource,
     ...(buyerPayload.extensions
       ? {}
       : reqExtensions && Object.keys(reqExtensions).length > 0

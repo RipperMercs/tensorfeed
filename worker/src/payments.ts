@@ -27,6 +27,7 @@ import {
   isBazaarPilotPath,
   bazaarExtensionsFor,
   bazaarDescriptionFor,
+  getBazaarPilotConfig,
 } from './bazaar-pilots';
 
 /**
@@ -2658,8 +2659,20 @@ export async function requirePayment(
     // performs the broadcast (paying gas); for everything else our
     // self-broadcast module uses the X402_BROADCAST_KEY hot wallet.
     // Both return a SettleResult-shaped object.
+    // Thread the pilot's Bazaar description into the CDP /settle resource
+    // object so the cataloged row carries a searchable description. CDP
+    // catalogs from the settle paymentPayload.resource; without a
+    // description the row is metadata-blank and capability search never
+    // surfaces TF. Null for non-pilot paths (cdpSettle is only called on
+    // pilot paths here, but keep it defensive: undefined preserves the
+    // prior { url, mimeType } resource shape).
     const settle = viaCDP
-      ? await cdpSettle(env, payload, requirements)
+      ? await cdpSettle(
+          env,
+          payload,
+          requirements,
+          getBazaarPilotConfig(url.pathname)?.description,
+        )
       : await settleX402Payment(payload, env);
     // Bazaar pilot observability. CDP's EXTENSION-RESPONSES header indicates
     // whether our bazaar metadata was accepted ("processing"/"indexed") or

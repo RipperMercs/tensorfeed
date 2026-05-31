@@ -438,6 +438,66 @@ describe('cdpSettle response mapping', () => {
     expect(result.bazaarStatus).toBeUndefined();
   });
 
+  // ---- resource.description enrichment (Bazaar catalog metadata) ----
+
+  // A requirements object that carries a resource URL + bazaar extension,
+  // mirroring what payments.ts builds for a pilot path. DUMMY_REQUIREMENTS
+  // omits resource, so use this when asserting on the resource object.
+  const PILOT_REQUIREMENTS: PaymentRequirements & {
+    resource: string;
+    extensions: Record<string, unknown>;
+  } = {
+    ...DUMMY_REQUIREMENTS,
+    resource: 'https://tensorfeed.ai/api/premium/whats-new',
+    extensions: { bazaar: { info: { input: { type: 'http', method: 'GET' } } } },
+  };
+
+  function parseSettleBody(
+    init: RequestInit | undefined,
+  ): {
+    paymentPayload: {
+      resource?: { url?: string; description?: string; mimeType?: string };
+      extensions?: Record<string, unknown>;
+    };
+  } {
+    return JSON.parse((init?.body as string) ?? '{}');
+  }
+
+  it('sets paymentPayload.resource.description from the provided description (object form preserved)', async () => {
+    const { captures } = installFetchMock({ success: true, transaction: '0xdef' });
+    const description =
+      'Agent morning brief. One paid call returns the last 24 hours of AI changes.';
+    await cdpSettle(mockEnv(), DUMMY_PAYLOAD, PILOT_REQUIREMENTS, description);
+
+    const body = parseSettleBody(captures[0].init);
+    // Object form, not a string.
+    expect(typeof body.paymentPayload.resource).toBe('object');
+    expect(body.paymentPayload.resource?.url).toBe(PILOT_REQUIREMENTS.resource);
+    expect(body.paymentPayload.resource?.description).toBe(description);
+    expect(body.paymentPayload.resource?.mimeType).toBe('application/json');
+  });
+
+  it('still echoes the bazaar extension into paymentPayload.extensions when a description is set', async () => {
+    const { captures } = installFetchMock({ success: true, transaction: '0xdef' });
+    await cdpSettle(mockEnv(), DUMMY_PAYLOAD, PILOT_REQUIREMENTS, 'A searchable description.');
+
+    const body = parseSettleBody(captures[0].init);
+    expect(body.paymentPayload.extensions).toEqual(PILOT_REQUIREMENTS.extensions);
+  });
+
+  it('omits resource.description and keeps the { url, mimeType } shape when no description is provided (backward compatible)', async () => {
+    const { captures } = installFetchMock({ success: true, transaction: '0xdef' });
+    await cdpSettle(mockEnv(), DUMMY_PAYLOAD, PILOT_REQUIREMENTS);
+
+    const body = parseSettleBody(captures[0].init);
+    expect(typeof body.paymentPayload.resource).toBe('object');
+    expect(body.paymentPayload.resource?.url).toBe(PILOT_REQUIREMENTS.resource);
+    expect(body.paymentPayload.resource?.description).toBeUndefined();
+    expect(body.paymentPayload.resource?.mimeType).toBe('application/json');
+    // Extension echo unaffected by the description being absent.
+    expect(body.paymentPayload.extensions).toEqual(PILOT_REQUIREMENTS.extensions);
+  });
+
   it('maps 5xx HTTP error to unexpected_settle_error', async () => {
     const mock = installFetchMock();
     mock.setResponse({ error: 'oops' }, { status: 500 });
