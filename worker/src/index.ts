@@ -2710,7 +2710,12 @@ export default {
     // double-counts. This reads on-chain transfer history and writes
     // settlement rollups only; it does NOT touch the payment/settle money
     // path. Inherits the hoisted /api/admin rate-limit + ADMIN_KEY pre-check.
-    // days defaults to 30 and is clamped to the 1 to 90 range.
+    // days defaults to 30 and is clamped to the 1 to 90 range. Self-contained:
+    // it refreshes the publisher registry first (so the curated wallets are in
+    // the KV wallet map the backfill reads), then backfills, then recomputes the
+    // verified-directory blob so the backfilled settlements surface immediately
+    // instead of waiting for the next daily 06:35 precompute. Pass refresh=0 to
+    // skip the registry refresh when the daily cron has already run it.
     if (
       path === '/api/admin/x402-backfill' &&
       request.method === 'GET' &&
@@ -2718,9 +2723,17 @@ export default {
     ) {
       const parsed = parseInt(url.searchParams.get('days') ?? '', 10);
       const days = Math.min(90, Math.max(1, parsed || 30));
+      const doRefresh = url.searchParams.get('refresh') !== '0';
+      let refreshed: unknown = 'skipped';
+      if (doRefresh) {
+        const { refreshAllPublishers } = await import('./x402-index/publisher-registry');
+        refreshed = await refreshAllPublishers(env);
+      }
       const { backfillCuratedWallets } = await import('./x402-index/backfill');
       const result = await backfillCuratedWallets(env, days);
-      return jsonResponse({ ok: true, days, ...result }, 200, 0);
+      const { writeVerifiedDirectory } = await import('./x402-index/verified-precompute');
+      await writeVerifiedDirectory(env);
+      return jsonResponse({ ok: true, days, refreshed, ...result }, 200, 0);
     }
 
     if (path === '/api/admin/agents/claim/pending' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
