@@ -6894,20 +6894,24 @@ export default {
 
       const model = url.searchParams.get('model')?.trim();
       if (!model) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'model_required', hint: 'Pass ?model=<id-or-name>' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const range = resolveRange(url.searchParams.get('from'), url.searchParams.get('to'));
       if (!range.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: range.error,
             limits: { max_range_days: MAX_RANGE_DAYS, default_range_days: DEFAULT_RANGE_DAYS },
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
 
@@ -6926,24 +6930,28 @@ export default {
       const model = url.searchParams.get('model')?.trim();
       const benchmark = url.searchParams.get('benchmark')?.trim();
       if (!model || !benchmark) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'model_and_benchmark_required',
             hint: 'Pass ?model=<name>&benchmark=<key> (e.g. swe_bench, mmlu_pro, gpqa_diamond, math, human_eval)',
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const range = resolveRange(url.searchParams.get('from'), url.searchParams.get('to'));
       if (!range.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: range.error,
             limits: { max_range_days: MAX_RANGE_DAYS, default_range_days: DEFAULT_RANGE_DAYS },
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
 
@@ -6961,20 +6969,24 @@ export default {
 
       const provider = url.searchParams.get('provider')?.trim();
       if (!provider) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'provider_required', hint: 'Pass ?provider=<name>' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const range = resolveRange(url.searchParams.get('from'), url.searchParams.get('to'));
       if (!range.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: range.error,
             limits: { max_range_days: MAX_RANGE_DAYS, default_range_days: DEFAULT_RANGE_DAYS },
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
 
@@ -7187,7 +7199,12 @@ export default {
 
       if (date) {
         if (!isISODate(date)) {
-          return jsonResponse({ ok: false, error: 'invalid_date', hint: 'date must be YYYY-MM-DD' }, 400);
+          return await premiumValidationFailure(
+            { ok: false, error: 'invalid_date', hint: 'date must be YYYY-MM-DD' },
+            payment,
+            request,
+            env,
+          );
         }
         const clusters = await readClustersForDate(env, date);
         ctx.waitUntil(
@@ -7210,28 +7227,37 @@ export default {
       }
 
       if (!fromParam || !toParam) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'missing_params',
             hint: 'pass ?date=YYYY-MM-DD or ?from=YYYY-MM-DD&to=YYYY-MM-DD',
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       if (!isISODate(fromParam) || !isISODate(toParam)) {
-        return jsonResponse({ ok: false, error: 'invalid_date_range' }, 400);
+        return await premiumValidationFailure({ ok: false, error: 'invalid_date_range' }, payment, request, env);
       }
       const fromMs = Date.parse(fromParam + 'T00:00:00Z');
       const toMs = Date.parse(toParam + 'T00:00:00Z');
       if (!(toMs >= fromMs)) {
-        return jsonResponse({ ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' }, 400);
+        return await premiumValidationFailure(
+          { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' },
+          payment,
+          request,
+          env,
+        );
       }
       const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
       if (dayCount > 30) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'range_too_large', hint: 'range must be at most 30 days', limits: { max_range_days: 30 } },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const dates = enumerateDates(fromParam, toParam);
@@ -7290,7 +7316,7 @@ export default {
 
       if (date) {
         if (!isISODate(date)) {
-          return jsonResponse({ ok: false, error: 'invalid_date' }, 400);
+          return await premiumValidationFailure({ ok: false, error: 'invalid_date' }, payment, request, env);
         }
         const all = await readClustersForDate(env, date);
         const verified = filter(all);
@@ -7322,28 +7348,32 @@ export default {
       }
 
       if (!fromParam || !toParam) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'missing_params',
             hint: 'pass ?date=YYYY-MM-DD or ?from=YYYY-MM-DD&to=YYYY-MM-DD with optional ?min_sources=2-50 (default 4)',
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       if (!isISODate(fromParam) || !isISODate(toParam)) {
-        return jsonResponse({ ok: false, error: 'invalid_date_range' }, 400);
+        return await premiumValidationFailure({ ok: false, error: 'invalid_date_range' }, payment, request, env);
       }
       const fromMs = Date.parse(fromParam + 'T00:00:00Z');
       const toMs = Date.parse(toParam + 'T00:00:00Z');
       if (!(toMs >= fromMs)) {
-        return jsonResponse({ ok: false, error: 'invalid_date_range' }, 400);
+        return await premiumValidationFailure({ ok: false, error: 'invalid_date_range' }, payment, request, env);
       }
       const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
       if (dayCount > 30) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'range_too_large', hint: 'range must be at most 30 days', limits: { max_range_days: 30 } },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const dates = enumerateDates(fromParam, toParam);
@@ -7906,12 +7936,21 @@ export default {
       const category = cleanFdaMatch[1];
       const parsed = parseFDAQuery(category, url);
       if (!parsed.ok) {
-        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+        return await premiumValidationFailure(
+          { ok: false, error: parsed.error, hint: parsed.hint },
+          payment,
+          request,
+          env,
+        );
       }
       const result = await fetchFDAQuery(env, parsed.query);
       if (!result.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: result.error, attribution: result.attribution },
+          payment,
+          request,
+          env,
+          'upstream_failure',
           result.http_status === 429 ? 503 : 502,
         );
       }
@@ -8146,16 +8185,28 @@ export default {
 
       const cveIdParam = url.searchParams.get('cve_id') ?? url.searchParams.get('cve');
       if (!cveIdParam) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'cve_id_required', hint: 'pass ?cve_id=CVE-YYYY-NNNNN' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const result = await fetchEPSSSeries(env, cveIdParam);
       if (!result.ok) {
         const status = result.error === 'cve_not_in_epss' ? 404 : result.error === 'invalid_cve_id' ? 400 : 502;
-        return jsonResponse(
+        const reason: NoChargeReason =
+          result.error === 'cve_not_in_epss'
+            ? 'empty_result'
+            : result.error === 'invalid_cve_id'
+              ? 'schema_validation_failure'
+              : 'upstream_failure';
+        return await premiumValidationFailure(
           { ok: false, error: result.error, cve_id: result.cve_id, attribution: result.attribution },
+          payment,
+          request,
+          env,
+          reason,
           status,
         );
       }
@@ -8196,9 +8247,11 @@ export default {
 
       const dateParam = url.searchParams.get('date');
       if (dateParam && !isISODate(dateParam)) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'invalid_date', hint: 'date must be YYYY-MM-DD' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const requested = parseInt(url.searchParams.get('limit') ?? '50', 10);
@@ -8206,8 +8259,12 @@ export default {
 
       const result = await fetchEPSSTop(env, limit, dateParam);
       if (!result.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: result.error ?? 'first_api_unavailable', attribution: result.attribution },
+          payment,
+          request,
+          env,
+          'upstream_failure',
           502,
         );
       }
@@ -8248,10 +8305,13 @@ export default {
       if (!payment.paid) return payment.response!;
       const catalog = await readKEVCurrent(env);
       if (!catalog) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'not_yet_captured' },
+          payment,
+          request,
+          env,
+          'upstream_failure',
           503,
-          60,
         );
       }
       ctx.waitUntil(
@@ -8293,36 +8353,44 @@ export default {
       const fromParam = url.searchParams.get('from');
       const toParam = url.searchParams.get('to');
       if (!fromParam || !toParam) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'missing_params', hint: 'pass ?from=YYYY-MM-DD&to=YYYY-MM-DD' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       if (!isISODate(fromParam) || !isISODate(toParam)) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const fromMs = Date.parse(fromParam + 'T00:00:00Z');
       const toMs = Date.parse(toParam + 'T00:00:00Z');
       if (!(toMs >= fromMs)) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
       const KEV_SERIES_MAX_DAYS = 90;
       if (dayCount > KEV_SERIES_MAX_DAYS) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'range_too_large',
             hint: `range must be at most ${KEV_SERIES_MAX_DAYS} days`,
             limits: { max_range_days: KEV_SERIES_MAX_DAYS },
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
 
@@ -8373,36 +8441,44 @@ export default {
       const fromParam = url.searchParams.get('from');
       const toParam = url.searchParams.get('to');
       if (!fromParam || !toParam) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'missing_params', hint: 'pass ?from=YYYY-MM-DD&to=YYYY-MM-DD' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       if (!isISODate(fromParam) || !isISODate(toParam)) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const fromMs = Date.parse(fromParam + 'T00:00:00Z');
       const toMs = Date.parse(toParam + 'T00:00:00Z');
       if (!(toMs >= fromMs)) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' },
-          400,
+          payment,
+          request,
+          env,
         );
       }
       const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
       const CVE_RANGE_MAX_DAYS = 30;
       if (dayCount > CVE_RANGE_MAX_DAYS) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: 'range_too_large',
             hint: `range must be at most ${CVE_RANGE_MAX_DAYS} days`,
             limits: { max_range_days: CVE_RANGE_MAX_DAYS },
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
 
@@ -9357,7 +9433,7 @@ export default {
 
       const range = resolveHFVelRange(url.searchParams.get('from'), url.searchParams.get('to'));
       if (!range.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: range.error,
@@ -9366,7 +9442,9 @@ export default {
               default_range_days: HFVEL_DEFAULT_RANGE_DAYS,
             },
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
 
@@ -9391,15 +9469,20 @@ export default {
 
       const provider = url.searchParams.get('provider')?.trim();
       if (!provider) {
-        return jsonResponse({
-          ok: false,
-          error: 'provider_required',
-          hint: 'Pass ?provider=<name> (anthropic, openai, google, mistral, cohere)',
-        }, 400);
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'provider_required',
+            hint: 'Pass ?provider=<name> (anthropic, openai, google, mistral, cohere)',
+          },
+          payment,
+          request,
+          env,
+        );
       }
       const range = resolveProbeRange(url.searchParams.get('from'), url.searchParams.get('to'));
       if (!range.ok) {
-        return jsonResponse(
+        return await premiumValidationFailure(
           {
             ok: false,
             error: range.error,
@@ -9408,7 +9491,9 @@ export default {
               default_range_days: PROBE_DEFAULT_RANGE_DAYS,
             },
           },
-          400,
+          payment,
+          request,
+          env,
         );
       }
 
@@ -12183,10 +12268,10 @@ export default {
       try {
         body = await request.json();
       } catch {
-        return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+        return await premiumValidationFailure({ ok: false, error: 'invalid_json' }, payment, request, env);
       }
       if (typeof body.callback_url !== 'string') {
-        return jsonResponse({ ok: false, error: 'callback_url_required' }, 400);
+        return await premiumValidationFailure({ ok: false, error: 'callback_url_required' }, payment, request, env);
       }
       const result = await createWatch(env, payment.token, {
         spec: body.spec as never,
@@ -12195,7 +12280,7 @@ export default {
         ...(typeof body.fire_cap === 'number' ? { fire_cap: body.fire_cap } : {}),
       });
       if (!result.ok) {
-        return jsonResponse(result, 400);
+        return await premiumValidationFailure(result as unknown as Record<string, unknown>, payment, request, env);
       }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/watches', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
