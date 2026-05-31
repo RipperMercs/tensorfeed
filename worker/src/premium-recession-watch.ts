@@ -194,8 +194,11 @@ export function computeSahm(unemp: BLSEntry | null): {
   if (currentAvg === null) return { three_mo_avg: null, twelve_mo_low: null, sahm: null };
 
   // Build 12 trailing 3-mo averages, ending one month before the current.
+  // The current 3-mo window covers indices len-3..len-1, so the first
+  // trailing window must end at index len-2 (indices len-4..len-2) and the
+  // loop walks back exactly 12 windows to the one ending at index len-13.
   const trailing: number[] = [];
-  for (let endIdx = values.length - 4; endIdx >= 0 && trailing.length < 12; endIdx--) {
+  for (let endIdx = values.length - 2; endIdx >= 0 && trailing.length < 12; endIdx--) {
     if (endIdx + 1 >= 3) {
       const window = values.slice(endIdx - 2, endIdx + 1);
       trailing.push(window.reduce((a, b) => a + b, 0) / 3);

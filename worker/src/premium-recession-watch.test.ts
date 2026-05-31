@@ -104,6 +104,46 @@ describe('computeSahm', () => {
     const r = computeSahm(null);
     expect(r.sahm).toBeNull();
   });
+
+  it('includes the two most-recent trailing windows in the 12-month low', () => {
+    // The corrected loop must start the first trailing window at index len-2
+    // (one month before current), not len-4. Construct a series whose true
+    // 12-month low sits in one of the two windows the old off-by-two loop
+    // skipped, so the bug would have over-counted twelve_mo_low and
+    // under-reported the Sahm value.
+    // len = 16. Current 3-mo window = indices 13..15.
+    // The low 3.0 appears at index 13, which only the window ending at
+    // index 14 (indices 12..14) or 13 (11..13) can capture. The buggy loop
+    // started at endIdx = len-4 = 12 (window 10..12), missing index 13.
+    const series = [
+      4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0,
+      4.0, 3.0, 4.5, 5.0,
+    ];
+    const r = computeSahm(unempEntry(series));
+    // Current 3-mo avg = (4.0 + 3.0 + 4.5... wait current = idx 13,14,15)
+    // = (3.0 + 4.5 + 5.0) / 3 = 4.1667
+    expect(r.three_mo_avg).toBeCloseTo(4.17, 2);
+    // First trailing window ends at index 14 (indices 12..14) = (4.0+3.0+4.5)/3 = 3.8333,
+    // next ends at 13 (indices 11..13) = (4.0+4.0+3.0)/3 = 3.6667 -> the true low.
+    expect(r.twelve_mo_low).toBeCloseTo(3.67, 2);
+    expect(r.sahm).toBeCloseTo(0.5, 2);
+  });
+
+  it('produces 12 trailing windows that stop at index len-13', () => {
+    // len = 25. The 12 trailing windows end at indices len-2 (23) down to
+    // len-13 (12); the oldest index any of them reads is 12-2 = 10. A dip
+    // at index 9 is therefore out of span and must not lower the low, while
+    // a dip at index 12 is in span and must lower it.
+    const base = new Array(25).fill(5.0);
+    base[9] = 1.0; // out of the trailing span (oldest covered index is 10)
+    const rOut = computeSahm(unempEntry(base));
+    expect(rOut.twelve_mo_low).toBeCloseTo(5.0, 2);
+
+    const base2 = new Array(25).fill(5.0);
+    base2[12] = 1.0; // index len-13: read by the oldest trailing window
+    const rIn = computeSahm(unempEntry(base2));
+    expect(rIn.twelve_mo_low).toBeLessThan(5.0);
+  });
 });
 
 describe('classifySahmSignal', () => {
