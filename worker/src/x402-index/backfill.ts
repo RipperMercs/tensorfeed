@@ -16,10 +16,15 @@ import type { Env } from '../types';
 const BLOCKS_PER_DAY = 43200;
 
 // Bound the per-wallet transfer scan so a high-traffic address (one receiving lots
-// of inbound USDC beyond x402 settlements) cannot walk pages without end. Eight
-// pages at 1000 transfers each is far more than any real x402 publisher accrues in
-// a 30 day window, and it caps a pathological wallet instead of hanging the run.
-const DEFAULT_MAX_PAGES = 8;
+// of inbound USDC beyond x402 settlements) cannot walk pages without end. A few
+// small pages are plenty to confirm a wallet settles; the hard deadline below is
+// the real guard, this just keeps each wallet's inner loop short.
+const DEFAULT_MAX_PAGES = 5;
+
+// Transfers per Alchemy page. Deliberately small: every transfer costs one
+// sequential KV dedup read, so a 1000-row page on a busy address is exactly what
+// hung the scan. 100 keeps a single page cheap and the deadline check frequent.
+const PAGE_SIZE = '0x64';
 
 // Abort a single Alchemy page request that stalls, so one unresponsive call breaks
 // the wallet scan instead of hanging the whole backfill on an open socket.
@@ -79,6 +84,7 @@ export async function backfillWallet(
   fromBlock: number,
   fetchFn: typeof fetch = fetch,
   maxPages: number = DEFAULT_MAX_PAGES,
+  deadlineAt: number = Infinity,
 ): Promise<{ applied: number; scanned: number; truncated: boolean }> {
   // RPC precedence mirrors runIndexerTick: a dedicated BASE_INDEXER_RPC_URL first,
   // then the keyed BASE_RPC_URL (payments RPC), then the public node. This method is
@@ -98,6 +104,12 @@ export async function backfillWallet(
   // (HTTP error, RPC error, malformed body) by returning what has been applied
   // so far: the backfill is re-runnable and the dedup guard makes a retry safe.
   for (;;) {
+    // Hard wall-clock budget, checked before each page so a busy wallet cannot run
+    // past the deadline the orchestrator shares across all wallets.
+    if (Date.now() > deadlineAt) {
+      truncated = true;
+      break;
+    }
     const params: Record<string, unknown> = {
       fromBlock: '0x' + fromBlock.toString(16),
       toBlock: 'latest',
@@ -106,7 +118,7 @@ export async function backfillWallet(
       category: ['erc20'],
       withMetadata: true,
       excludeZeroValue: true,
-      maxCount: '0x3e8',
+      maxCount: PAGE_SIZE,
     };
     if (pageKey) params.pageKey = pageKey;
 
@@ -147,8 +159,16 @@ export async function backfillWallet(
     }
 
     const transfers = data.result.transfers ?? [];
+    let hitDeadline = false;
     for (const t of transfers) {
       scanned += 1;
+      // Re-check the budget inside the page. The dedup read below is the per-transfer
+      // cost and Date.now() advances on it, so this bounds a single page too.
+      if ((scanned & 31) === 0 && Date.now() > deadlineAt) {
+        truncated = true;
+        hitDeadline = true;
+        break;
+      }
       const ts = t.metadata?.blockTimestamp;
       if (!ts) continue;
       const tx = String(t.hash).toLowerCase();
@@ -177,6 +197,7 @@ export async function backfillWallet(
       applied += 1;
     }
 
+    if (hitDeadline) break;
     pages += 1;
     pageKey = data.result.pageKey;
     if (!pageKey) break;
@@ -198,7 +219,7 @@ export async function backfillWallet(
 export async function backfillCuratedWallets(
   env: Env,
   days = 30,
-  deadlineMs = 45_000,
+  deadlineMs = 40_000,
 ): Promise<{ wallets: number; completed: number; applied: number; scanned: number; truncated: number }> {
   const walletMap = (await env.TENSORFEED_CACHE.get(KV_KEY_PUBLISHERS, 'json')) as Record<string, string> | null;
   if (!walletMap || Object.keys(walletMap).length === 0) {
@@ -209,21 +230,22 @@ export async function backfillCuratedWallets(
   const cursorBlock = cursor?.block ?? 0;
   const fromBlock = Math.max(0, cursorBlock - days * BLOCKS_PER_DAY);
 
-  // Overall wall-clock budget so the one-shot always returns inside a single
-  // request. Wallets not reached before the deadline are backfilled on the next
-  // run; the per-event dedup makes that safe, resumable, and free of double-counts.
-  const start = Date.now();
+  // One absolute wall-clock deadline shared by this loop AND passed into each wallet
+  // scan, so neither the wallet sequence nor any single wallet's inner loop can run
+  // past it. Wallets not reached are backfilled on the next run; the per-event dedup
+  // makes that safe, resumable, and free of double-counts.
+  const deadlineAt = Date.now() + deadlineMs;
   let applied = 0;
   let scanned = 0;
   let truncated = 0;
   let completed = 0;
   const entries = Object.entries(walletMap);
   for (const [wallet, domain] of entries) {
-    if (Date.now() - start > deadlineMs) {
+    if (Date.now() > deadlineAt) {
       console.warn(JSON.stringify({ event: 'backfill_deadline', completed, total: entries.length }));
       break;
     }
-    const r = await backfillWallet(env, wallet, domain, fromBlock);
+    const r = await backfillWallet(env, wallet, domain, fromBlock, fetch, DEFAULT_MAX_PAGES, deadlineAt);
     applied += r.applied;
     scanned += r.scanned;
     if (r.truncated) truncated += 1;

@@ -52,3 +52,15 @@ it('caps pagination on a high-volume wallet instead of scanning unbounded', asyn
   expect(calls).toBe(3); // stopped at the 3-page cap, did not loop forever
   expect(r.applied).toBe(3);
 });
+
+it('stops immediately when the wall-clock deadline has already passed', async () => {
+  const kv = memKV();
+  const env = { TENSORFEED_CACHE: kv } as any;
+  const fetchFn = vi.fn(async () => new Response(JSON.stringify({ result: { transfers: [] } }), { status: 200 }));
+  // deadlineAt = 0 (epoch, far in the past): the per-page guard fires before the
+  // first fetch, so the scan never starts.
+  const r = await backfillWallet(env, '0x' + '3'.repeat(40), 'late.com', 1000, fetchFn as any, 5, 0);
+  expect(r.truncated).toBe(true);
+  expect(r.applied).toBe(0);
+  expect(fetchFn).not.toHaveBeenCalled();
+});
