@@ -10516,9 +10516,10 @@ export default {
     }
 
     if (path === '/api/x402-index/verified') {
-      const blob = await env.TENSORFEED_CACHE.get('x402-idx:verified', 'json');
+      const { KV_KEY_VERIFIED } = await import('./x402-index/constants');
+      const blob = await env.TENSORFEED_CACHE.get(KV_KEY_VERIFIED, 'json');
       if (!blob) {
-        return jsonResponse({ ok: false, error: 'not_ready', hint: 'The verified directory precomputes daily; retry after the next 06:30 UTC cron.' }, 503, 0);
+        return jsonResponse({ ok: false, error: 'not_ready', hint: 'The verified directory precomputes daily; retry after the next 06:35 UTC cron.' }, 503, 0);
       }
       return jsonResponse(blob, 200, 300);
     }
