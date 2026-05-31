@@ -5,7 +5,7 @@ import { Bot, Zap, BookText, Code, ExternalLink, Wallet } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'TensorFeed for AI Agents: Discovery, MCP, x402 Payments, SDKs',
   description:
-    'TensorFeed.ai is built for AI agents. Free discovery via llms.txt, MCP server with 59 tools, x402 V2 discovery manifest at /.well-known/x402, Python and TypeScript SDKs, pay-per-call premium tier in USDC on Base. Everything an autonomous agent needs to consume real-time AI industry data.',
+    'TensorFeed.ai is built for AI agents. Free discovery via llms.txt, MCP server with 61 tools, x402 V2 discovery manifest at /.well-known/x402, Python and TypeScript SDKs, pay-per-call premium tier in USDC on Base. Everything an autonomous agent needs to consume real-time AI industry data.',
   alternates: { canonical: 'https://tensorfeed.ai/for-ai-agents' },
   openGraph: {
     type: 'website',
@@ -78,7 +78,7 @@ const FAQ_JSONLD = {
       name: 'Is TensorFeed compatible with Claude Desktop and Claude Code?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. The @tensorfeed/mcp-server npm package exposes all 59 tools (36 free, 23 premium) through the Model Context Protocol. Add it to your Claude Desktop config with `npx -y @tensorfeed/mcp-server`. Pass your tf_live_ bearer token via the TENSORFEED_TOKEN env var to enable premium tools.',
+        text: 'Yes. The @tensorfeed/mcp-server npm package exposes all 61 tools (37 free, 24 premium) through the Model Context Protocol. Add it to your Claude Desktop config with `npx -y @tensorfeed/mcp-server`. Pass your tf_live_ bearer token via the TENSORFEED_TOKEN env var to enable premium tools.',
       },
     },
     {
@@ -249,7 +249,7 @@ export default function ForAIAgentsPage() {
           <DiscoveryCard
             href="https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
             title="server.json (MCP registry)"
-            description="MCP server manifest. Registered in the official MCP registry as ai.tensorfeed/mcp-server. Includes all 59 tools split into freeTools and premiumTools."
+            description="MCP server manifest. Registered in the official MCP registry as ai.tensorfeed/mcp-server. Includes all 61 tools split into freeTools and premiumTools."
             external
           />
         </div>
@@ -276,9 +276,9 @@ export default function ForAIAgentsPage() {
 }`}</code></pre>
         <p className="text-text-muted text-sm mt-3">
           The <code className="text-accent-primary font-mono">TENSORFEED_TOKEN</code> env var is
-          optional. Without it, the 36 free tools (<code>get_ai_news</code>,
+          optional. Without it, the 37 free tools (<code>get_ai_news</code>,
           {' '}<code>get_ai_status</code>, <code>is_service_down</code>,
-          {' '}<code>get_model_pricing</code>, <code>get_ai_today</code>, and more) work. With it, the 23
+          {' '}<code>get_model_pricing</code>, <code>get_ai_today</code>, and more) work. With it, the 24
           premium tools unlock.
         </p>
       </section>

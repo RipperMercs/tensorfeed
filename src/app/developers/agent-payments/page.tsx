@@ -2307,7 +2307,7 @@ curl -H "X-TensorFeed-Simulate-Latency: 2500" https://tensorfeed.ai/api/status`}
         <div className="bg-bg-secondary border border-border rounded-xl p-5">
           <h2 className="text-lg font-semibold text-text-primary mb-2">Model Context Protocol (MCP)</h2>
           <p className="text-text-secondary text-sm mb-4">
-            TensorFeed ships two MCP transports for two distinct deployment shapes. The npx stdio server carries the full 59-tool set; the hosted HTTP endpoint serves a curated 32-tool subset.
+            TensorFeed ships two MCP transports for two distinct deployment shapes. The npx stdio server carries the full 61-tool set; the hosted HTTP endpoint serves a curated 32-tool subset.
           </p>
 
           <h3 className="text-sm font-semibold text-text-primary mb-2">Hosted HTTP MCP (Streamable HTTP, MCP 2024-11-05)</h3>

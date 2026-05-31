@@ -1260,7 +1260,7 @@ async function handleInitialize(): Promise<unknown> {
       version: SERVER_VERSION,
     },
     instructions:
-      'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp serves a curated subset of 32 tools; the full 59-tool set ships on the npx stdio server @tensorfeed/mcp-server. ' +
+      'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp serves a curated subset of 32 tools; the full 61-tool set ships on the npx stdio server @tensorfeed/mcp-server. ' +
       'Free tier (31 tools on this hosted endpoint): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
       'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
       'EIA Open Data series, USGS recent earthquakes, NWS US weather alerts, AI papers (arXiv recent + AI trending + HF daily), ' +
@@ -1415,7 +1415,7 @@ export async function handleMcpHttpRequest(request: Request, env: Env): Promise<
         spec: 'https://modelcontextprotocol.io/specification/2024-11-05/basic/transports',
         tools_count: TOOLS.length,
         full_tool_set:
-          'The npx stdio server @tensorfeed/mcp-server exposes the full 59-tool set; this hosted HTTP endpoint serves a curated subset.',
+          'The npx stdio server @tensorfeed/mcp-server exposes the full 61-tool set; this hosted HTTP endpoint serves a curated subset.',
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     );
