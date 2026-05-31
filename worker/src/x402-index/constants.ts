@@ -30,6 +30,12 @@ export const DEFAULT_GETLOGS_BLOCK_SPAN = 2000;
 // ~8.6 calls/sec without throttling, so 120 calls is ~14s wall at the same safe
 // rate, well within the cron budget, and roughly halves backfill time vs 50.
 export const MAX_GETLOGS_CALLS_PER_TICK = 120;
+// Abort a single indexer RPC call that stalls. The hot 5-minute cron makes up to
+// MAX_GETLOGS_CALLS_PER_TICK sequential getLogs+getBlockByNumber pairs per tick;
+// without a per-call timeout one stalled-but-accepting RPC socket burns the whole
+// cron invocation budget and freezes forward progress until the RPC recovers.
+// Matches backfill.ts PAGE_TIMEOUT_MS so both paths fail fast at the same bound.
+export const RPC_TIMEOUT_MS = 15_000;
 export const RECENT_FEED_SIZE = 100;
 export const EVENT_TTL_SECONDS = 90 * 24 * 60 * 60;
 export const PUBLISHER_DELIST_GRACE_DAYS = 7;

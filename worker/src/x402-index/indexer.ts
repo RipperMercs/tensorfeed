@@ -1,4 +1,4 @@
-import { REORG_SAFETY_BLOCKS, MAX_BLOCKS_PER_TICK, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent, DEFAULT_BASE_RPC, DEFAULT_GETLOGS_BLOCK_SPAN, MAX_GETLOGS_CALLS_PER_TICK, KV_KEY_CURSOR, KV_KEY_PUBLISHERS, USDC_BASE_CONTRACT } from './constants';
+import { REORG_SAFETY_BLOCKS, MAX_BLOCKS_PER_TICK, TRANSFER_TOPIC, USDC_DECIMALS, EVENT_TTL_SECONDS, KV_KEY_RECENT, RECENT_FEED_SIZE, TOP_PUBLISHERS_LIMIT, kvKeyDayRollup, kvKeyPubDayRollup, kvKeyEvent, DEFAULT_BASE_RPC, DEFAULT_GETLOGS_BLOCK_SPAN, MAX_GETLOGS_CALLS_PER_TICK, KV_KEY_CURSOR, KV_KEY_PUBLISHERS, USDC_BASE_CONTRACT, RPC_TIMEOUT_MS } from './constants';
 import type { SettlementEvent, DailyRollup, PublisherDailyRollup, IndexerCursor } from './types';
 import type { Env } from '../types';
 
@@ -285,11 +285,22 @@ export async function runIndexerTick(
 }
 
 async function getCurrentBlock(rpcUrl: string, fetchFn: typeof fetch): Promise<number> {
-  const res = await fetchFn(rpcUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
-  });
+  // Bound the call: this runs before the per-window try/catch and before any
+  // cursor checkpoint, so a stalled RPC here kills the whole tick with zero
+  // progress. A timeout lets the call fail fast and the next tick recover.
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), RPC_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetchFn(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
+      signal: ac.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
   const data = (await res.json()) as { result?: string; error?: { message?: string } };
   // Validate explicitly. A throttled or rate-limited node returns a JSON-RPC
   // error (or a body with no `result`); blindly parseInt-ing it yields NaN, which
@@ -309,23 +320,43 @@ async function getTransferLogsForWallets(
   fetchFn: typeof fetch,
 ): Promise<RpcLog[]> {
   const paddedWallets = wallets.map((w) => '0x' + w.toLowerCase().replace(/^0x/, '').padStart(64, '0'));
-  const res = await fetchFn(rpcUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      method: 'eth_getLogs',
-      params: [{
-        address: USDC_BASE_CONTRACT,
-        topics: [TRANSFER_TOPIC, null, paddedWallets],
-        fromBlock: '0x' + fromBlock.toString(16),
-        toBlock: '0x' + toBlock.toString(16),
-      }],
-      id: 1,
-    }),
-  });
-  const data = (await res.json()) as { result: RpcLog[]; error?: { message: string } };
+  // Bound the call so a stalled RPC fails fast within the tick instead of
+  // burning the cron budget. The thrown abort is caught by the tick's per-window
+  // try/catch, which checkpoints prior progress before surfacing the error.
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), RPC_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetchFn(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_getLogs',
+        params: [{
+          address: USDC_BASE_CONTRACT,
+          topics: [TRANSFER_TOPIC, null, paddedWallets],
+          fromBlock: '0x' + fromBlock.toString(16),
+          toBlock: '0x' + toBlock.toString(16),
+        }],
+        id: 1,
+      }),
+      signal: ac.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+  const data = (await res.json()) as { result?: RpcLog[]; error?: { message: string } };
   if (data.error) throw new Error(`eth_getLogs failed: ${data.error.message}`);
+  // Validate the result like getCurrentBlock does. A throttled or proxy node can
+  // return HTTP 200 with neither an `error` nor an array `result`; returning that
+  // undefined would make the caller's logs.map throw a bare TypeError, which the
+  // tick catches but leaves the cursor frozen on this window forever (the
+  // stuck-cursor death spiral). A descriptive throw surfaces the malformed node
+  // and still flows through the existing checkpoint-then-throw error path.
+  if (!Array.isArray(data.result)) {
+    throw new Error('eth_getLogs failed: non-array result ' + JSON.stringify(data.result));
+  }
   return data.result;
 }
 
@@ -341,11 +372,22 @@ async function getBlockTimestamps(
     params: [bn, false],
     id: idx,
   }));
-  const res = await fetchFn(rpcUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(batch),
-  });
+  // Bound the batch call so a stalled RPC fails fast within the tick. The thrown
+  // abort lands in the tick's per-window try/catch, which checkpoints prior
+  // progress before surfacing the error.
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), RPC_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetchFn(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(batch),
+      signal: ac.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
   const data = (await res.json()) as Array<{ id: number; result: { number: string; timestamp: string } | null }>;
   for (const item of data) {
     const block = item.result;

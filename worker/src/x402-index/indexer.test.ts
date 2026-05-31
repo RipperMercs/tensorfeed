@@ -531,6 +531,40 @@ describe('runIndexerTick', () => {
     expect(cursor.block).toBe(1000);
   });
 
+  it('throws a descriptive error (not a bare TypeError) when eth_getLogs returns a non-array result, and does not freeze the cursor', async () => {
+    const kv = mockKv();
+    kv.store.set(KV_KEY_CURSOR, JSON.stringify({ block: 1000, ts: '2026-05-29T00:00:00.000Z', last_run_at: '2026-05-29T00:00:00.000Z' }));
+    kv.store.set(KV_KEY_PUBLISHERS, JSON.stringify({ '0xbbb0000000000000000000000000000000000002': 'example.com' }));
+    const env = { TENSORFEED_CACHE: kv } as unknown as import('../types').Env;
+
+    // A throttled/proxy node returns HTTP 200 with neither `error` nor an array
+    // `result` (here a null result). Without the guard the caller's logs.map
+    // throws a bare TypeError; with it the indexer throws a descriptive error
+    // that flows through the same checkpoint-then-throw path as any window error.
+    const mockFetch = vi.fn(async (_url: string, opts?: RequestInit) => {
+      const parsed = JSON.parse(String(opts?.body)) as { method?: string } | unknown[];
+      if (Array.isArray(parsed)) {
+        return { json: async () => [] } as unknown as Response;
+      }
+      const body = parsed as { method?: string };
+      if (body.method === 'eth_blockNumber') {
+        return { json: async () => ({ result: '0x10000' }) } as unknown as Response;
+      }
+      if (body.method === 'eth_getLogs') {
+        // Malformed 200: no error, result is null instead of an array.
+        return { json: async () => ({ result: null }) } as unknown as Response;
+      }
+      throw new Error('unexpected');
+    }) as unknown as typeof fetch;
+
+    await expect(runIndexerTick(env, 'https://malformed.example/rpc', mockFetch)).rejects.toThrow(/non-array result/);
+
+    // The first window failed, so the cursor stays at 1000 (no phantom advance)
+    // and the failure surfaces as a logged throw rather than a silent TypeError.
+    const cursor = await kv.get(KV_KEY_CURSOR, 'json') as { block: number };
+    expect(cursor.block).toBe(1000);
+  });
+
   it('caps eth_getLogs calls per tick so a small-span RPC stays within the cron time budget', async () => {
     const kv = mockKv();
     kv.store.set(KV_KEY_CURSOR, JSON.stringify({ block: 1000, ts: '2026-05-29T00:00:00.000Z', last_run_at: '2026-05-29T00:00:00.000Z' }));
