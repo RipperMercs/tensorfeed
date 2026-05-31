@@ -140,10 +140,52 @@ const GATE_SEVERITY: Record<StackVerdict, number> = { BLOCK: 3, HOLD: 2, UNKNOWN
 const CLAIM =
   'Stack Safety Verdict matches each package name against TensorFeed\'s ingested AI-stack CVE batch (GHSA plus vendor advisories) and joins the CISA KEV catalog for exploitation status. It does NOT parse your pinned version against affected ranges in v1, so verdicts are conservative: BLOCK only when an exploited CVE has no fix; HOLD whenever a known CVE applies and you must verify your version against the surfaced ranges and fixes; PASS when no AI-stack CVE matches the package name (this is the AI-stack batch, not a full vulnerability scan); UNKNOWN when the package is outside the curated AI-stack cohort. AFTA-signed over the inputs.';
 
-/** A paper affects a package if any affected_product contains the package name (case-insensitive). */
-function paperAffects(paper: AiCvesPaper, nameLower: string): boolean {
+/**
+ * Normalize a package identifier to a comparable token: lowercased, scope
+ * prefix dropped (@langchain/core becomes langchain/core), and the common
+ * separators (hyphen, underscore, dot, whitespace) folded to a single dash
+ * so torch_vision, torch-vision and "torch vision" compare equal while
+ * staying distinct from torch. Empty / falsy inputs return ''.
+ */
+function normalizePackageToken(raw: string): string {
+  let s = raw.toLowerCase().trim();
+  if (s.startsWith('@')) s = s.slice(1);
+  s = s.replace(/[\s_.]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return s;
+}
+
+/**
+ * Split a free-form advisory affected_product string into candidate
+ * package tokens. Advisory strings are heterogeneous (GHSA names, vendor
+ * product blurbs), so we both keep the whole string as one normalized
+ * token (covers "xz-utils", "llama-index") and split on whitespace and
+ * common package-name delimiters to recover the package token out of a
+ * longer phrase (covers "PyTorch Lightning", "vLLM server"). Slashes are
+ * preserved inside a token so scoped names like langchain/core survive.
+ */
+function affectedProductTokens(product: string): Set<string> {
+  const tokens = new Set<string>();
+  const whole = normalizePackageToken(product);
+  if (whole) tokens.add(whole);
+  for (const piece of product.split(/[\s,;/()\[\]]+/)) {
+    const t = normalizePackageToken(piece);
+    if (t) tokens.add(t);
+  }
+  return tokens;
+}
+
+/**
+ * A paper affects a package only on a normalized EXACT-token match: the
+ * package name (normalized) must equal the whole normalized affected_product
+ * OR one of its split package tokens. This replaces the old naive substring
+ * test so "torch" no longer matches "pytorch-lightning" and a 2-char name
+ * like "ai" no longer matches arbitrary advisories, while true same-name
+ * matches (case and hyphen/underscore insensitive) still fire.
+ */
+function paperAffects(paper: AiCvesPaper, normalizedName: string): boolean {
+  if (!normalizedName) return false;
   for (const prod of paper.affected_products) {
-    if (prod.toLowerCase().includes(nameLower)) return true;
+    if (affectedProductTokens(prod).has(normalizedName)) return true;
   }
   return false;
 }
@@ -166,7 +208,7 @@ export function buildStackSafetyVerdict(
   }
 
   const out: PackageVerdict[] = packages.map((pkg) => {
-    const nameLower = pkg.name.toLowerCase();
+    const normalizedName = normalizePackageToken(pkg.name);
     const category = classifyProduct(pkg.name);
     const inCohort = category !== null;
 
@@ -184,7 +226,7 @@ export function buildStackSafetyVerdict(
       };
     }
 
-    const matched = papers!.filter((p) => paperAffects(p, nameLower));
+    const matched = papers!.filter((p) => paperAffects(p, normalizedName));
     const matched_cves: MatchedCve[] = [];
     let exploited = false;
     let fixAvailable = false;

@@ -18,7 +18,7 @@ import type {
   PackageReleaseRecord,
   Ecosystem,
 } from './ai-package-releases-fetcher';
-import { classifyBump, type BumpKind } from './ai-package-releases-fetcher';
+import { classifyBump, RECENT_VERSIONS_KEPT, type BumpKind } from './ai-package-releases-fetcher';
 
 // ─── Filter ────────────────────────────────────────────────────────
 
@@ -83,6 +83,15 @@ export interface PackageVelocityRow {
   releases_24h: number;
   releases_7d: number;
   releases_30d: number;
+  /**
+   * True when the snapshot truncated this package's version history (it
+   * retained exactly RECENT_VERSIONS_KEPT versions and the oldest retained
+   * one is still inside the 30-day window), so releases_30d is a FLOOR, not
+   * an exact count. The package shipped at least releases_30d times in the
+   * last 30 days and possibly more. Almost always false; fires only for the
+   * rare hyperactive publisher.
+   */
+  releases_30d_is_lower_bound: boolean;
   versions_known_total: number;
   /** Bump kind of latest version vs the second-most-recent. */
   latest_bump_kind: BumpKind;
@@ -96,6 +105,7 @@ export function buildVelocityRow(record: PackageReleaseRecord, now: Date): Packa
   let releases_24h = 0;
   let releases_7d = 0;
   let releases_30d = 0;
+  let oldestRetainedWithin30d = false;
   for (const v of versions) {
     const d = daysSince(v.published_at, now);
     if (d === null) continue;
@@ -103,6 +113,16 @@ export function buildVelocityRow(record: PackageReleaseRecord, now: Date): Packa
     if (d <= 7) releases_7d++;
     if (d <= 30) releases_30d++;
   }
+  // If the snapshot kept exactly the cap AND the oldest retained version is
+  // still within 30 days, older releases were truncated and may also fall in
+  // the window, so releases_30d is a lower bound rather than an exact count.
+  const oldest = versions[versions.length - 1];
+  if (oldest) {
+    const dOldest = daysSince(oldest.published_at, now);
+    oldestRetainedWithin30d = dOldest !== null && dOldest <= 30;
+  }
+  const releases_30d_is_lower_bound =
+    versions.length >= RECENT_VERSIONS_KEPT && oldestRetainedWithin30d;
   const previous = versions[1] ?? null;
   const latest_bump_kind: BumpKind = previous ? classifyBump(previous.version, record.latest_version) : 'unknown';
   const days_since_latest = daysSince(record.latest_published_at, now);
@@ -118,6 +138,7 @@ export function buildVelocityRow(record: PackageReleaseRecord, now: Date): Packa
     releases_24h,
     releases_7d,
     releases_30d,
+    releases_30d_is_lower_bound,
     versions_known_total: record.versions_known_total,
     latest_bump_kind,
     previous_version: previous ? previous.version : null,
@@ -146,6 +167,12 @@ export interface VelocityResponse {
     total_releases_7d: number;
     total_releases_30d: number;
     breaking_changes_30d: number;
+    /**
+     * How many filtered rows have releases_30d_is_lower_bound==true. When > 0
+     * the fastest_cadence_30d ranking may under-differentiate those rows (the
+     * true 30d count is floored). Normally 0.
+     */
+    releases_30d_lower_bound_count: number;
   };
   attribution: {
     source: string;
@@ -196,6 +223,7 @@ export function buildVelocity(
   let total_releases_7d = 0;
   let total_releases_30d = 0;
   let breaking_changes_30d = 0;
+  let releases_30d_lower_bound_count = 0;
   for (const r of filtered) {
     by_ecosystem[r.ecosystem]++;
     by_category[r.category] = (by_category[r.category] ?? 0) + 1;
@@ -203,6 +231,7 @@ export function buildVelocity(
     total_releases_7d += r.releases_7d;
     total_releases_30d += r.releases_30d;
     if (r.is_breaking_recent) breaking_changes_30d++;
+    if (r.releases_30d_is_lower_bound) releases_30d_lower_bound_count++;
   }
 
   return {
@@ -220,6 +249,7 @@ export function buildVelocity(
       total_releases_7d,
       total_releases_30d,
       breaking_changes_30d,
+      releases_30d_lower_bound_count,
     },
     attribution: {
       source: 'pypi.org and registry.npmjs.org public JSON endpoints',

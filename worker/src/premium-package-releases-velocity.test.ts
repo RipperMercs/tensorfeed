@@ -13,6 +13,7 @@ import type {
   PackageReleaseRecord,
   PackageVersion,
 } from './ai-package-releases-fetcher';
+import { RECENT_VERSIONS_KEPT } from './ai-package-releases-fetcher';
 
 // Shared reference clock. UTC midnight to keep day math exact.
 const REFERENCE_NOW = new Date('2026-05-24T00:00:00Z');
@@ -345,6 +346,90 @@ describe('buildVelocityRow', () => {
     const row = buildVelocityRow(record, REFERENCE_NOW);
     expect(row.latest_bump_kind).toBe('major');
     expect(row.is_breaking_recent).toBe(true);
+  });
+});
+
+// ── buildVelocityRow: releases_30d cap honesty (#19) ───────────────
+
+describe('buildVelocityRow: releases_30d_is_lower_bound', () => {
+  it('counts more than 10 releases in 30d now that the snapshot cap is raised', () => {
+    // 15 releases spread across the last 28 days. Under the old cap of 10 this
+    // would have saturated at 10; the raised cap lets the true count through.
+    expect(RECENT_VERSIONS_KEPT).toBeGreaterThanOrEqual(15);
+    const versions: PackageVersion[] = [];
+    for (let i = 0; i < 15; i++) {
+      versions.push({ version: `1.0.${i}`, published_at: daysAgoIso(28 - i) });
+    }
+    versions.sort((a, b) => b.published_at.localeCompare(a.published_at));
+    const record = makeRecord({
+      package: 'hyperactive',
+      ecosystem: 'PyPI',
+      latest_version: versions[0].version,
+      latest_published_at: versions[0].published_at,
+      versions_recent: versions,
+    });
+    const row = buildVelocityRow(record, REFERENCE_NOW);
+    expect(row.releases_30d).toBe(15);
+    // Not at the cap, so the count is exact (not a floor).
+    expect(row.releases_30d_is_lower_bound).toBe(false);
+  });
+
+  it('flags releases_30d as a lower bound when the snapshot is capped and oldest retained is within 30d', () => {
+    // Exactly RECENT_VERSIONS_KEPT versions, all within the last 30 days, so
+    // older in-window releases were truncated: the 30d count is a floor.
+    const versions: PackageVersion[] = [];
+    for (let i = 0; i < RECENT_VERSIONS_KEPT; i++) {
+      // Spread evenly across the last ~29 days so the oldest retained is < 30d.
+      const daysAgo = (i / RECENT_VERSIONS_KEPT) * 29;
+      versions.push({ version: `2.0.${i}`, published_at: daysAgoIso(daysAgo) });
+    }
+    versions.sort((a, b) => b.published_at.localeCompare(a.published_at));
+    const record = makeRecord({
+      package: 'firehose',
+      ecosystem: 'npm',
+      latest_version: versions[0].version,
+      latest_published_at: versions[0].published_at,
+      versions_recent: versions,
+      versions_known_total: 500,
+    });
+    const row = buildVelocityRow(record, REFERENCE_NOW);
+    expect(row.releases_30d).toBe(RECENT_VERSIONS_KEPT);
+    expect(row.releases_30d_is_lower_bound).toBe(true);
+  });
+
+  it('does NOT flag a lower bound when the oldest retained version is older than 30d', () => {
+    // Snapshot at the cap, but the oldest retained release is 200 days old, so
+    // the 30d window is fully covered and the count is exact.
+    const versions: PackageVersion[] = [];
+    for (let i = 0; i < RECENT_VERSIONS_KEPT; i++) {
+      const daysAgo = i === RECENT_VERSIONS_KEPT - 1 ? 200 : i; // oldest is 200d
+      versions.push({ version: `3.0.${i}`, published_at: daysAgoIso(daysAgo) });
+    }
+    versions.sort((a, b) => b.published_at.localeCompare(a.published_at));
+    const record = makeRecord({
+      package: 'steady',
+      ecosystem: 'PyPI',
+      latest_version: versions[0].version,
+      latest_published_at: versions[0].published_at,
+      versions_recent: versions,
+    });
+    const row = buildVelocityRow(record, REFERENCE_NOW);
+    expect(row.releases_30d_is_lower_bound).toBe(false);
+  });
+
+  it('does NOT flag a lower bound for a normal under-cap package', () => {
+    const record = makeRecord({
+      package: 'normal',
+      ecosystem: 'PyPI',
+      latest_version: '1.2.0',
+      latest_published_at: daysAgoIso(1),
+      versions_recent: [
+        { version: '1.2.0', published_at: daysAgoIso(1) },
+        { version: '1.1.0', published_at: daysAgoIso(10) },
+      ],
+    });
+    const row = buildVelocityRow(record, REFERENCE_NOW);
+    expect(row.releases_30d_is_lower_bound).toBe(false);
   });
 });
 
@@ -959,6 +1044,36 @@ describe('buildVelocity: summary', () => {
       REFERENCE_NOW,
     );
     expect(r.summary.breaking_changes_30d).toBe(1);
+  });
+
+  it('releases_30d_lower_bound_count counts capped-and-in-window rows', () => {
+    // One capped firehose package (lower bound) + one normal package.
+    const fireVersions: PackageVersion[] = [];
+    for (let i = 0; i < RECENT_VERSIONS_KEPT; i++) {
+      fireVersions.push({ version: `2.0.${i}`, published_at: daysAgoIso((i / RECENT_VERSIONS_KEPT) * 29) });
+    }
+    fireVersions.sort((a, b) => b.published_at.localeCompare(a.published_at));
+    const firehose = makeRecord({
+      package: 'firehose',
+      ecosystem: 'npm',
+      latest_version: fireVersions[0].version,
+      latest_published_at: fireVersions[0].published_at,
+      versions_recent: fireVersions,
+    });
+    const normal = makeRecord({
+      package: 'normal',
+      ecosystem: 'PyPI',
+      latest_version: '1.0.0',
+      latest_published_at: daysAgoIso(3),
+      versions_recent: [{ version: '1.0.0', published_at: daysAgoIso(3) }],
+    });
+    const snapshot = makeSnapshot([firehose, normal]);
+    const r = buildVelocity(
+      snapshot,
+      { ecosystem: null, category: null, package: null, min_releases_7d: 0 },
+      REFERENCE_NOW,
+    );
+    expect(r.summary.releases_30d_lower_bound_count).toBe(1);
   });
 });
 

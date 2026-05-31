@@ -151,6 +151,111 @@ describe('buildStackSafetyVerdict', () => {
     expect(r.notes.some((n) => n.includes('unavailable'))).toBe(true);
   });
 
+  it('does not match a substring-only collision (torch must NOT hit pytorch-lightning)', () => {
+    const r = buildStackSafetyVerdict(
+      [paper({ affected_products: ['pytorch-lightning'], exploited_in_wild: 'stated_yes', fixed_versions: [] })],
+      [pkg('torch', '2.3.0')],
+      NO_KEV,
+      TS,
+    );
+    // "torch" is a substring of "pytorch-lightning" but a different package,
+    // so the advisory must NOT match and the gate must NOT be BLOCK/HOLD.
+    // Under the OLD substring logic this returned a false BLOCK.
+    expect(r.packages[0].matched_cves).toHaveLength(0);
+    expect(r.packages[0].verdict).not.toBe('BLOCK');
+    expect(r.packages[0].verdict).not.toBe('HOLD');
+    expect(r.gate).not.toBe('BLOCK');
+    expect(r.gate).not.toBe('HOLD');
+  });
+
+  it('a real pytorch package DOES still match pytorch-lightning by token (true positive preserved)', () => {
+    const r = buildStackSafetyVerdict(
+      [paper({ affected_products: ['pytorch-lightning'], tf_ai_category: 'training-stack' })],
+      [pkg('pytorch-lightning', '2.1.0')],
+      NO_KEV,
+      TS,
+    );
+    expect(r.packages[0].matched_cves).toHaveLength(1);
+    expect(r.packages[0].verdict).toBe('HOLD');
+  });
+
+  it('does not match a short common-substring name (ai must NOT hit unrelated advisories)', () => {
+    const r = buildStackSafetyVerdict(
+      [
+        paper({ affected_products: ['chromadb'], exploited_in_wild: 'stated_yes', fixed_versions: [] }),
+        paper({ affected_products: ['some-ai-gateway thing'], cve_ids: ['CVE-2026-0002'] }),
+      ],
+      [pkg('ai', '1.0')],
+      NO_KEV,
+      TS,
+    );
+    // "ai" substring-hits "chromadb" (no) and is a token only as part of
+    // "some-ai-gateway", never standalone, so nothing matches.
+    expect(r.packages[0].matched_cves).toHaveLength(0);
+    expect(['PASS', 'UNKNOWN']).toContain(r.packages[0].verdict);
+    expect(r.gate).not.toBe('BLOCK');
+    expect(r.gate).not.toBe('HOLD');
+  });
+
+  it('still matches an exact same-name CVE (true positive preserved)', () => {
+    const r = buildStackSafetyVerdict(
+      [paper({ affected_products: ['vllm'], exploited_in_wild: 'stated_yes', fixed_versions: [] })],
+      [pkg('vllm', '0.6.0')],
+      NO_KEV,
+      TS,
+    );
+    expect(r.packages[0].verdict).toBe('BLOCK');
+    expect(r.packages[0].matched_cves).toHaveLength(1);
+  });
+
+  it('matches case- and separator-insensitively (LangChain == langchain, llama_index == llama-index)', () => {
+    const r1 = buildStackSafetyVerdict(
+      [paper({ affected_products: ['LangChain'], tf_ai_category: 'agent-framework' })],
+      [pkg('langchain', '0.3.0')],
+      NO_KEV,
+      TS,
+    );
+    expect(r1.packages[0].matched_cves).toHaveLength(1);
+    expect(r1.packages[0].verdict).toBe('HOLD');
+
+    const r2 = buildStackSafetyVerdict(
+      [paper({ affected_products: ['llama_index'], tf_ai_category: 'agent-framework' })],
+      [pkg('llama-index', '0.10.0')],
+      NO_KEV,
+      TS,
+    );
+    expect(r2.packages[0].matched_cves).toHaveLength(1);
+  });
+
+  it('matches a package token embedded in a longer advisory phrase (PyTorch in "PyTorch Lightning")', () => {
+    const r = buildStackSafetyVerdict(
+      [paper({ affected_products: ['PyTorch Lightning'], tf_ai_category: 'training-stack' })],
+      [pkg('lightning', '2.1.0')],
+      NO_KEV,
+      TS,
+    );
+    // "lightning" is a standalone token in "PyTorch Lightning", so it matches;
+    // but "pytorch" would also match that phrase, and a bare "torch" would not.
+    expect(r.packages[0].matched_cves).toHaveLength(1);
+    const rTorch = buildStackSafetyVerdict(
+      [paper({ affected_products: ['PyTorch Lightning'], tf_ai_category: 'training-stack' })],
+      [pkg('torch', '2.1.0')],
+      NO_KEV,
+      TS,
+    );
+    expect(rTorch.packages[0].matched_cves).toHaveLength(0);
+  });
+
+  it('matches a scoped npm name against a slash-qualified advisory product', () => {
+    const r = buildStackSafetyVerdict(
+      [paper({ affected_products: ['@langchain/core'], tf_ai_category: 'agent-framework' })],
+      [pkg('@langchain/core', '0.3.1')],
+      NO_KEV,
+      TS,
+    );
+    expect(r.packages[0].matched_cves).toHaveLength(1);
+  });
+
   it('emits zero em dashes and zero double hyphens', () => {
     const r = buildStackSafetyVerdict(
       [paper({ affected_products: ['vllm'], exploited_in_wild: 'stated_yes', fixed_versions: [] })],

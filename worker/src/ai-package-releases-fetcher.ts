@@ -14,12 +14,14 @@
  * snyk, libraries.io, npmtrends, etc. No auth required.
  *
  * Free   /api/packages/releases?ecosystem=&category=&package=&within_days=
- *        Recent normalized records (latest version + last 10 versions per
- *        package).
+ *        Recent normalized records (latest version + the most recent
+ *        versions per package, capped at RECENT_VERSIONS_KEPT).
  * Paid   /api/premium/packages/releases/velocity (1 credit)
  *        Derived velocity rollups, major-bump radar, acceleration signal.
  *
- * Snapshot size: ~80 packages × ~10 recent versions × ~60 bytes ≈ 48KB.
+ * Snapshot size: ~80 packages, up to 40 recent versions each, ~60 bytes per
+ * version, so a worst-case ~192KB and a typical far smaller. Well under the
+ * KV value limit.
  */
 
 import type { Env } from './types';
@@ -28,7 +30,12 @@ import { CURATED_PACKAGES as CURATED_NPM_PACKAGES } from './npm-ai-packages';
 
 const POLITE_UA = 'tensorfeed-releases/1.0 (mailto:evan@tensorfeed.ai; +https://tensorfeed.ai)';
 const FETCH_TIMEOUT_MS = 12_000;
-const RECENT_VERSIONS_KEPT = 10;
+// Keep enough recent versions to cover 30 days of even the fastest-cadence
+// AI packages so releases_30d (and the fastest_cadence_30d ranking that
+// reads it) is not capped. At ~80 packages and ~60 bytes per version the
+// worst-case snapshot is still well under the KV value limit. Exported so
+// the velocity layer can flag the rare publisher that exceeds even this.
+export const RECENT_VERSIONS_KEPT = 40;
 
 export const PKG_RELEASES_CURRENT_KEY = 'pkg-releases:current';
 export const PKG_RELEASES_INDEX_KEY = 'pkg-releases:index';
