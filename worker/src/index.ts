@@ -6227,14 +6227,11 @@ export default {
         // present-but-unknown key_id is rejected so we never fetch an
         // attacker-named URL.
         const TF_RECEIPT_KEY_URL = 'https://tensorfeed.ai/.well-known/tensorfeed-receipt-key.json';
-        // NOTE: confirm TerminalFeed's actual receipt key_id before relying
-        // on federation verification. The well-known URL is confirmed
-        // (afta-adopters.ts + test-afta-e2e.ps1), but TerminalFeed's kid
-        // value was not pinnable from this repo. Until the kid below is
-        // replaced with TerminalFeed's real kid, a TerminalFeed-signed
-        // receipt resolves through the unknown_key_id branch.
+        // TerminalFeed federation receipt key. kid pinned 2026-05-31 by reading
+        // the live well-known (kty OKP, crv Ed25519). If TerminalFeed rotates,
+        // refetch the kid from the URL below and update this constant.
         const TERMINALFEED_RECEIPT_KEY_URL = 'https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json';
-        const TERMINALFEED_RECEIPT_KID = 'TODO_TERMINALFEED_KID';
+        const TERMINALFEED_RECEIPT_KID = '512774f98d56bb02';
         const RECEIPT_KEY_ALLOWLIST: Record<string, string> = {
           // TF's own kid, mirrored from public/.well-known/tensorfeed-receipt-key.json.
           'db1f1dc3dbf62c66': TF_RECEIPT_KEY_URL,
