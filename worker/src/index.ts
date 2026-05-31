@@ -13313,6 +13313,16 @@ export default {
       const { refreshAllPublishers } = await import('./x402-index/publisher-registry');
       const result = await refreshAllPublishers(env);
       console.log('[x402-index] publisher refresh:', JSON.stringify(result));
+      // Bounded daily reconciliation backfill: replays curated-wallet USDC history
+      // so any settlement the forward indexer missed (e.g. during an indexer outage)
+      // gets captured, and day-one history fills in across runs. Idempotent and
+      // time-bounded, so it is a cheap no-op once caught up. Best-effort via run() so
+      // a failure can never block the directory precompute below.
+      await run('x402IndexBackfill', async () => {
+        const { backfillCuratedWallets } = await import('./x402-index/backfill');
+        const b = await backfillCuratedWallets(env);
+        console.log('[x402-index] backfill:', JSON.stringify(b));
+      });
       await run('x402VerifiedDirectory', async () => {
         const { writeVerifiedDirectory } = await import('./x402-index/verified-precompute');
         await writeVerifiedDirectory(env);
