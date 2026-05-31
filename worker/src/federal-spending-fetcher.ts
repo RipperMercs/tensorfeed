@@ -31,19 +31,22 @@ export interface FedVendor {
   category: 'ai-native' | 'defense-ai' | 'frontier-lab' | 'silicon';
 }
 
+// Refined from a live USAspending pilot (2026-05-31): every vendor here has real,
+// provable standard award records. Dropped vendors whose standard-award total was
+// zero AND whose true federal footprint is reported elsewhere, so a zero would
+// mislead: OpenAI and NVIDIA (federal AI work flows through OTA agreements and
+// hardware integrators, not direct prime awards in this dataset), plus Rebellion
+// Defense and Primer (no observed awards). They can return via the phase-2 keyword
+// sweep or when they win a trackable prime award.
 export const FED_AI_COHORT: FedVendor[] = [
-  { slug: 'palantir',          name: 'Palantir',          search_text: 'Palantir',            match: 'palantir',  category: 'ai-native' },
-  { slug: 'anduril',           name: 'Anduril',           search_text: 'Anduril',             match: 'anduril',   category: 'defense-ai' },
-  { slug: 'scale-ai',          name: 'Scale AI',          search_text: 'Scale AI',            match: 'scale ai',  category: 'ai-native' },
-  { slug: 'shield-ai',         name: 'Shield AI',         search_text: 'Shield AI',           match: 'shield ai', category: 'defense-ai' },
-  { slug: 'rebellion-defense', name: 'Rebellion Defense', search_text: 'Rebellion Defense',   match: 'rebellion', category: 'defense-ai' },
-  { slug: 'vannevar-labs',     name: 'Vannevar Labs',     search_text: 'Vannevar',            match: 'vannevar',  category: 'defense-ai' },
-  { slug: 'primer',            name: 'Primer AI',         search_text: 'Primer Technologies', match: 'primer',    category: 'ai-native' },
-  { slug: 'saronic',           name: 'Saronic',           search_text: 'Saronic',             match: 'saronic',   category: 'defense-ai' },
-  { slug: 'skydio',            name: 'Skydio',            search_text: 'Skydio',              match: 'skydio',    category: 'defense-ai' },
-  { slug: 'openai',            name: 'OpenAI',            search_text: 'OpenAI',              match: 'openai',    category: 'frontier-lab' },
-  { slug: 'anthropic',         name: 'Anthropic',         search_text: 'Anthropic',           match: 'anthropic', category: 'frontier-lab' },
-  { slug: 'nvidia',            name: 'NVIDIA',            search_text: 'NVIDIA',              match: 'nvidia',    category: 'silicon' },
+  { slug: 'palantir',      name: 'Palantir',      search_text: 'Palantir',  match: 'palantir',  category: 'ai-native' },
+  { slug: 'anduril',       name: 'Anduril',       search_text: 'Anduril',   match: 'anduril',   category: 'defense-ai' },
+  { slug: 'shield-ai',     name: 'Shield AI',     search_text: 'Shield AI', match: 'shield ai', category: 'defense-ai' },
+  { slug: 'vannevar-labs', name: 'Vannevar Labs', search_text: 'Vannevar',  match: 'vannevar',  category: 'defense-ai' },
+  { slug: 'scale-ai',      name: 'Scale AI',      search_text: 'Scale AI',  match: 'scale ai',  category: 'ai-native' },
+  { slug: 'skydio',        name: 'Skydio',        search_text: 'Skydio',    match: 'skydio',    category: 'defense-ai' },
+  { slug: 'saronic',       name: 'Saronic',       search_text: 'Saronic',   match: 'saronic',   category: 'defense-ai' },
+  { slug: 'anthropic',     name: 'Anthropic',     search_text: 'Anthropic', match: 'anthropic', category: 'frontier-lab' },
 ];
 
 // Normalized TF shape for a single award.
@@ -69,7 +72,7 @@ export interface FedSnapshot {
 }
 
 export const FED_SPEND_SNAPSHOT_KEY = 'fedspend:snapshot';
-export const FED_SOURCE = 'USAspending.gov (US federal spending, public domain under the DATA Act)';
+export const FED_SOURCE = 'USAspending.gov (US federal contract and grant awards, public domain under the DATA Act). Coverage is standard award records; some vehicles such as OTA agreements are reported separately and may not appear, so totals are a verifiable floor.';
 export const FED_LICENSE = 'Public domain (US Government work). TensorFeed editorial aggregation and derivation.';
 export const ACTIVE_WINDOW_DAYS = 365;
 

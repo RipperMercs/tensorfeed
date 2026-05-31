@@ -42,22 +42,27 @@ function award(partial: Partial<FedAward>): FedAward {
 }
 
 describe('cohort + constants', () => {
-  it('has 12 vendors with the expected exact slugs', () => {
-    expect(FED_AI_COHORT).toHaveLength(12);
+  it('has the 8 pilot-validated vendors with the expected exact slugs', () => {
+    expect(FED_AI_COHORT).toHaveLength(8);
     expect(FED_AI_COHORT.map((v) => v.slug)).toEqual([
       'palantir',
       'anduril',
-      'scale-ai',
       'shield-ai',
-      'rebellion-defense',
       'vannevar-labs',
-      'primer',
-      'saronic',
+      'scale-ai',
       'skydio',
-      'openai',
+      'saronic',
       'anthropic',
-      'nvidia',
     ]);
+  });
+
+  it('every cohort vendor has a non-empty match token and valid category', () => {
+    const cats = new Set(['ai-native', 'defense-ai', 'frontier-lab', 'silicon']);
+    for (const v of FED_AI_COHORT) {
+      expect(v.match.length).toBeGreaterThan(0);
+      expect(v.match).toBe(v.match.toLowerCase());
+      expect(cats.has(v.category)).toBe(true);
+    }
   });
 
   it('exports the KV key, source, license, and window constants', () => {
