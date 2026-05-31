@@ -2,6 +2,12 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 2.2.0 - 2026-05-31
+
+### Added
+- Native Route Verdict methods. `tf.routeVerdictPreview({ task, model })` (free, 10 calls/day per IP, no token) returns the top signed routing verdict so an agent can taste the shape before paying. `tf.routeVerdict({ task, model, maxLatencyP95Ms, budget, minQuality, requireOperational, excludeDeprecated })` (1 credit, requires a token) returns the full verdict plus ranked runners-up, the constraint filters, and the AFTA-signed receipt. Exactly one of `task` or `model` is required. Previously the signed Route Verdict was reachable only via curl and the MCP server.
+- New exported types `RouteVerdictCandidate`, `RouteVerdictPreviewResponse`, and `RouteVerdictResponse`.
+
 ## 1.25.0 - 2026-05-05
 
 ### Added

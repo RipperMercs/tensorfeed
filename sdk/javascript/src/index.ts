@@ -10,7 +10,7 @@
  */
 
 const DEFAULT_BASE_URL = 'https://tensorfeed.ai/api';
-const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/1.15';
+const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/2.2';
 
 // ── Error types ─────────────────────────────────────────────────────
 
@@ -219,6 +219,63 @@ export interface RoutingResponse {
     new_token_issued?: boolean;
     token?: string;
   };
+}
+
+// ── Route Verdict (free preview + premium) ─────────────────────────
+
+export interface RouteVerdictCandidate {
+  rank: number;
+  model: { id: string; name: string; provider: string; openSource: boolean; contextWindow: number };
+  pricing: { input: number; output: number; blended: number; currency: 'USD'; unit: 'per 1M tokens' };
+  quality: { task_score: number; trust_discounted: number; contamination_note: string | null };
+  usage: { corroborated: boolean; rank: number | null; share_pct: number | null; trend: string | null };
+  latency: { measured_p95_ms: number | null; source: 'measured_probe' | 'unknown' };
+  operational: { ok: boolean | null; status: string; source: 'live_status' | 'unknown' };
+  deprecation: { flagged: boolean; status: string | null; sunset_date: string | null };
+  composite_score: number;
+  why: string;
+}
+
+export interface RouteVerdictPreviewResponse {
+  ok: boolean;
+  preview: true;
+  query: { task: RoutingTask | null; model: string | null };
+  capturedAt: string | null;
+  verdict: RouteVerdictCandidate | null;
+  trust: {
+    usage_corroborated: boolean;
+    benchmark_contamination: 'low' | 'medium' | 'high' | 'mixed' | 'unknown';
+    operational_layer: 'live' | 'partial' | 'unavailable';
+    latency_layer: 'measured' | 'partial' | 'unavailable';
+  };
+  claim: string;
+  rate_limit: { limit: number; remaining: number; scope: string };
+  upgrade: { premium_endpoint: string; adds: string[] };
+}
+
+export interface RouteVerdictResponse {
+  ok: boolean;
+  query: { task: RoutingTask | null; model: string | null };
+  capturedAt: string | null;
+  verdict: RouteVerdictCandidate | null;
+  runners_up: RouteVerdictCandidate[];
+  trust: {
+    usage_corroborated: boolean;
+    benchmark_contamination: 'low' | 'medium' | 'high' | 'mixed' | 'unknown';
+    operational_layer: 'live' | 'partial' | 'unavailable';
+    latency_layer: 'measured' | 'partial' | 'unavailable';
+  };
+  filters_applied: {
+    max_latency_p95_ms: number | null;
+    require_operational: boolean;
+    exclude_deprecated: boolean;
+  };
+  candidates_considered: number;
+  data_freshness: Record<string, string | null>;
+  claim: string;
+  notes: string[];
+  attribution: { sources: string[]; license: string };
+  billing?: { credits_charged: number; credits_remaining?: number };
 }
 
 // ── Premium: history series ────────────────────────────────────────
@@ -1455,6 +1512,35 @@ export class TensorFeed {
     });
   }
 
+  // ── Free: route verdict preview (rate-limited) ─────────────────
+
+  /**
+   * The signed Route Verdict, free preview. 10 calls per UTC day per IP.
+   *
+   * Route Verdict is TensorFeed's single signed model-routing decision:
+   * the one best model to use right now plus the reasoning, fusing live
+   * pricing, contamination-discounted benchmark capability, real
+   * production usage, measured p95 latency probes, live incident state,
+   * and deprecation flags into one ranked answer. This free preview
+   * returns the top verdict only (no runners-up and no AFTA receipt), so
+   * an agent can taste the shape before paying. For ranked runners-up,
+   * the constraint filters, and the AFTA-signed receipt, use
+   * routeVerdict() with credits.
+   *
+   * Exactly one of `task` or `model` is required.
+   *
+   * @throws RateLimited after 10 free preview calls in a UTC day from your IP
+   */
+  async routeVerdictPreview(options?: {
+    task?: RoutingTask;
+    model?: string;
+  }): Promise<RouteVerdictPreviewResponse> {
+    return this.get<RouteVerdictPreviewResponse>('/preview/route-verdict', {
+      task: options?.task,
+      model: options?.model,
+    });
+  }
+
   // ── Payment flow ───────────────────────────────────────────────
 
   /** Wallet, pricing, supported flows. Free. Use to verify the wallet address. */
@@ -1563,6 +1649,54 @@ export class TensorFeed {
       if (w.latency !== undefined) params.w_latency = w.latency;
     }
     return this.request<RoutingResponse>('GET', '/premium/routing', {
+      params,
+      requireToken: true,
+    });
+  }
+
+  // ── Paid: route verdict (Tier 1, 1 credit per call) ───────────
+
+  /**
+   * The signed Route Verdict in full. Costs 1 credit per call.
+   *
+   * The decision layer on top of the free routeVerdictPreview() taste.
+   * Returns the single best model to use right now plus ranked
+   * runners-up, fusing live pricing, contamination-discounted benchmark
+   * capability, real production usage, measured p95 latency from the
+   * active probes, live incident-triage operational state, and model
+   * deprecation flags into one verdict, with an AFTA-signed receipt over
+   * the exact inputs so the routing decision is cryptographically
+   * attestable.
+   *
+   * Exactly one of `task` or `model` is required.
+   *
+   * @throws Error if no token is set on the client
+   * @throws PaymentRequired if the token has insufficient credits
+   */
+  async routeVerdict(options?: {
+    task?: RoutingTask;
+    model?: string;
+    maxLatencyP95Ms?: number;
+    budget?: number;
+    minQuality?: number;
+    requireOperational?: boolean;
+    excludeDeprecated?: boolean;
+  }): Promise<RouteVerdictResponse> {
+    this.requireToken('routeVerdict');
+    const params: Record<string, unknown> = {
+      task: options?.task,
+      model: options?.model,
+      max_latency_p95_ms: options?.maxLatencyP95Ms,
+      budget: options?.budget,
+      min_quality: options?.minQuality,
+    };
+    if (options?.requireOperational !== undefined) {
+      params.require_operational = options.requireOperational ? 'true' : 'false';
+    }
+    if (options?.excludeDeprecated !== undefined) {
+      params.exclude_deprecated = options.excludeDeprecated ? 'true' : 'false';
+    }
+    return this.request<RouteVerdictResponse>('GET', '/premium/route-verdict', {
       params,
       requireToken: true,
     });

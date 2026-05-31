@@ -18,7 +18,7 @@ from typing import Any  # noqa: F401  (re-exported by purchase_credits return ty
 
 
 DEFAULT_BASE_URL = "https://tensorfeed.ai/api"
-DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/1.19"
+DEFAULT_USER_AGENT = "TensorFeed-SDK-Python/2.2"
 
 
 class TensorFeedError(Exception):
@@ -554,6 +554,39 @@ class TensorFeed:
             min_quality=min_quality,
         )
 
+    # ── Free: route verdict preview (rate-limited) ─────────────────
+
+    def route_verdict_preview(
+        self,
+        *,
+        task: str | None = None,
+        model: str | None = None,
+    ) -> dict[str, Any]:
+        """The signed Route Verdict, free preview. 10 calls/day per IP.
+
+        Route Verdict is TensorFeed's single signed model-routing
+        decision: the one best model to use right now plus the reasoning,
+        fusing live pricing, contamination-discounted benchmark
+        capability, real production usage, measured p95 latency probes,
+        live incident state, and deprecation flags into one ranked
+        answer. This free preview returns the top verdict only (no
+        runners-up and no AFTA receipt), so an agent can taste the shape
+        before paying. For ranked runners-up, the constraint filters, and
+        the AFTA-signed receipt, use ``route_verdict()`` with credits.
+
+        Exactly one of ``task`` or ``model`` is required.
+
+        Args:
+            task: code, reasoning, creative, or general. The task to
+                route for.
+            model: a model id or display name (e.g. "claude-opus-4-7")
+                to score a single model instead of routing a task.
+
+        Raises:
+            RateLimited: after 10 free preview calls per UTC day from an IP
+        """
+        return self._get("/preview/route-verdict", task=task, model=model)
+
     # ── Payment flow ───────────────────────────────────────────────
 
     def payment_info(self) -> dict[str, Any]:
@@ -753,6 +786,76 @@ class TensorFeed:
                     params[f"w_{key}"] = weights[key]
         return self._request(
             "GET", "/premium/routing", params=params, require_token=True
+        )
+
+    # ── Paid: route verdict (Tier 1, 1 credit/call) ────────────────
+
+    def route_verdict(
+        self,
+        *,
+        task: str | None = None,
+        model: str | None = None,
+        max_latency_p95_ms: float | None = None,
+        budget: float | None = None,
+        min_quality: float | None = None,
+        require_operational: bool | None = None,
+        exclude_deprecated: bool | None = None,
+    ) -> dict[str, Any]:
+        """The signed Route Verdict in full. 1 credit per call.
+
+        The decision layer on top of the free ``route_verdict_preview()``
+        taste. Returns the single best model to use right now plus ranked
+        runners-up, fusing live pricing, contamination-discounted
+        benchmark capability, real production usage, measured p95 latency
+        from the active probes, live incident-triage operational state,
+        and model deprecation flags into one verdict, with an AFTA-signed
+        receipt over the exact inputs so the routing decision is
+        cryptographically attestable.
+
+        Requires a token from ``confirm()`` or passed to the constructor.
+        Exactly one of ``task`` or ``model`` is required.
+
+        Args:
+            task: code, reasoning, creative, or general. The task to
+                route for.
+            model: a model id or display name to score a single model
+                instead of routing a task.
+            max_latency_p95_ms: drop candidates whose measured p95
+                exceeds this many milliseconds.
+            budget: optional max blended USD per 1M tokens.
+            min_quality: optional minimum quality score in [0, 1].
+            require_operational: default True server-side; drop candidates
+                known to be down or in failover.
+            exclude_deprecated: default True server-side; drop matched
+                deprecated or sunsetted models.
+
+        Returns:
+            Dict with ``query``, ``verdict``, ``runners_up``, ``trust``,
+            ``filters_applied``, ``data_freshness``, ``claim``, ``notes``,
+            ``attribution``, the AFTA ``receipt``, and ``billing``.
+
+        Raises:
+            ValueError: if no token is set on the client
+            PaymentRequired: if the token has insufficient credits
+        """
+        self._require_token("route_verdict")
+        params: dict[str, Any] = {}
+        if task is not None:
+            params["task"] = task
+        if model is not None:
+            params["model"] = model
+        if max_latency_p95_ms is not None:
+            params["max_latency_p95_ms"] = max_latency_p95_ms
+        if budget is not None:
+            params["budget"] = budget
+        if min_quality is not None:
+            params["min_quality"] = min_quality
+        if require_operational is not None:
+            params["require_operational"] = "true" if require_operational else "false"
+        if exclude_deprecated is not None:
+            params["exclude_deprecated"] = "true" if exclude_deprecated else "false"
+        return self._request(
+            "GET", "/premium/route-verdict", params=params, require_token=True
         )
 
     # ── Paid: history series (Tier 1, 1 credit/call) ───────────────

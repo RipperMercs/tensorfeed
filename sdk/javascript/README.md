@@ -34,11 +34,29 @@ Swap `task` for `reasoning`, `creative`, or `general`, or pass `?model=<id-or-na
 
 The premium version (`/api/premium/route-verdict`, 1 credit) adds ranked runners-up, the constraint filters (`max_latency_p95_ms`, `budget`, `min_quality`, `require_operational`, `exclude_deprecated`), the AFTA-signed receipt, and no rate limit. It needs a token; credits come from [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+### Native SDK call
+
+```ts
+import { TensorFeed } from 'tensorfeed';
+
+const tf = new TensorFeed();
+
+// Free preview: the top verdict only, no token. 10 calls/day per IP.
+const preview = await tf.routeVerdictPreview({ task: 'code' });
+console.log(preview.verdict?.model.name, preview.verdict?.why);
+
+// Premium: runners-up, constraint filters, and the AFTA-signed receipt.
+// Needs a token (see the payment quickstart below).
+const tfPaid = new TensorFeed({ token: 'YOUR_TOKEN' });
+const verdict = await tfPaid.routeVerdict({ task: 'code', maxLatencyP95Ms: 1500 });
+console.log(verdict.verdict, verdict.runners_up);
+```
+
+Pass `model: '<id-or-name>'` instead of `task` to score one model. Both methods accept exactly one of the two selectors.
+
 ### The agent path (MCP)
 
 With the [`@tensorfeed/mcp-server`](https://www.npmjs.com/package/@tensorfeed/mcp-server) MCP server installed, an agent gets two tools: `route_verdict_preview` (free, the pick plus reasoning) and `route_verdict` (1 credit, ranked runners-up, constraint filters, and the AFTA-signed receipt it can audit).
-
-This JavaScript SDK exposes the older `tf.routingPreview()` and `tf.routing()` model-routing methods (documented below). The signed Route Verdict endpoint is available today via the curl above and via the MCP server; a dedicated SDK method may follow in a later release.
 
 ### Why it matters
 
