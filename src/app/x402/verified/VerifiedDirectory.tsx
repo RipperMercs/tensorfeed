@@ -276,6 +276,11 @@ export default function VerifiedDirectory() {
                           {p.domain}
                           <ExternalLink className="w-3 h-3 text-text-muted" />
                         </a>
+                        {p.note ? (
+                          <span className="block mt-1 max-w-xs whitespace-normal text-xs font-normal text-text-muted">
+                            {p.note}
+                          </span>
+                        ) : null}
                       </th>
                       <td className="px-4 py-3">
                         <ActivityBadge activity={p.activity} />
@@ -328,6 +333,9 @@ export default function VerifiedDirectory() {
                       {p.last_settled ? formatTimestamp(p.last_settled) : 'pending'}
                     </dd>
                   </dl>
+                  {p.note ? (
+                    <p className="mt-2 text-xs text-text-muted">{p.note}</p>
+                  ) : null}
                 </article>
               ))}
             </div>
