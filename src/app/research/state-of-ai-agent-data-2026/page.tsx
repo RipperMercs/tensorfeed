@@ -126,7 +126,7 @@ export default function StateOfAIAgentData2026Page() {
         <div className="grid sm:grid-cols-2 gap-4">
           <StatCard
             value="19,434"
-            label="Paid agent API calls TF served in 28 days, each returning a signed AFTA receipt."
+            label="Premium responses TF served in 28 days, each returning a signed AFTA receipt."
             source="/api/stats"
           />
           <StatCard

@@ -20,7 +20,7 @@ function timeAgo(timestamp: string): string {
 export default function AgentActivity() {
   const [count, setCount] = useState<number | null>(null);
   const [recent, setRecent] = useState<AgentHit[]>([]);
-  const [paidCalls, setPaidCalls] = useState<number | null>(null);
+  const [responsesServed, setResponsesServed] = useState<number | null>(null);
   const [receiptsActive, setReceiptsActive] = useState(false);
 
   // Fetch real data and refresh every 30 seconds. The two endpoints are
@@ -40,7 +40,11 @@ export default function AgentActivity() {
         const res = await fetch('https://tensorfeed.ai/api/stats');
         if (!res.ok) return;
         const data = await res.json();
-        setPaidCalls(data.premium_calls_served ?? 0);
+        // premium_responses_served counts every served premium response
+        // (including free-trial-served calls and TF's own testing), so it is
+        // labeled as responses served, not external paid demand. Fall back to
+        // the legacy key for resilience if the alias is ever absent.
+        setResponsesServed(data.premium_responses_served ?? data.premium_calls_served ?? 0);
         setReceiptsActive(Boolean(data.each_call_returns_signed_afta_receipt));
       } catch {}
     }
@@ -69,9 +73,9 @@ export default function AgentActivity() {
         </span>
       </div>
 
-      {paidCalls !== null && (
+      {responsesServed !== null && (
         <p className="text-text-secondary text-sm mb-1">
-          <span className="text-text-primary font-semibold">{paidCalls.toLocaleString()}</span> verifiable paid agent API calls served
+          <span className="text-text-primary font-semibold">{responsesServed.toLocaleString()}</span> premium responses served
           {receiptsActive && ', each with a signed AFTA receipt'}
         </p>
       )}

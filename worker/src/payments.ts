@@ -707,17 +707,41 @@ const LIFETIME_KEY = 'pay:stats:lifetime';
 export interface LifetimeStats {
   premium_calls: number;
   total_credits_charged: number;
+  // Real-money signal. usd_received is the gross USD settled across all
+  // credit purchases; paid_settlements is the number of settled purchases.
+  // These come from logRevenue (the settle path), not from served calls,
+  // so they reflect actual revenue rather than served-response volume.
+  usd_received: number;
+  paid_settlements: number;
   first_at: string | null;
   last_at: string | null;
 }
 
 function emptyLifetime(): LifetimeStats {
-  return { premium_calls: 0, total_credits_charged: 0, first_at: null, last_at: null };
+  return {
+    premium_calls: 0,
+    total_credits_charged: 0,
+    usd_received: 0,
+    paid_settlements: 0,
+    first_at: null,
+    last_at: null,
+  };
 }
 
 export async function getLifetimeStats(env: Env): Promise<LifetimeStats> {
-  const v = (await env.TENSORFEED_CACHE.get(LIFETIME_KEY, 'json')) as LifetimeStats | null;
-  return v ?? emptyLifetime();
+  const v = (await env.TENSORFEED_CACHE.get(LIFETIME_KEY, 'json')) as Partial<LifetimeStats> | null;
+  if (!v) return emptyLifetime();
+  // Coalesce fields that may be absent on values persisted before they
+  // existed (usd_received / paid_settlements), so callers always get a
+  // fully populated object instead of undefined.
+  return {
+    premium_calls: v.premium_calls ?? 0,
+    total_credits_charged: v.total_credits_charged ?? 0,
+    usd_received: v.usd_received ?? 0,
+    paid_settlements: v.paid_settlements ?? 0,
+    first_at: v.first_at ?? null,
+    last_at: v.last_at ?? null,
+  };
 }
 
 async function bumpLifetime(env: Env, creditsCharged: number, atIso: string): Promise<void> {
@@ -726,6 +750,17 @@ async function bumpLifetime(env: Env, creditsCharged: number, atIso: string): Pr
   s.total_credits_charged += creditsCharged;
   if (!s.first_at) s.first_at = atIso;
   s.last_at = atIso;
+  await env.TENSORFEED_CACHE.put(LIFETIME_KEY, JSON.stringify(s));
+}
+
+// Real-money sibling of bumpLifetime. Best-effort, same fire-and-forget
+// posture: tallies gross USD settled and the count of settlements into the
+// single lifetime counter so /api/stats can lead with actual revenue rather
+// than served-response volume. Called from logRevenue inside its try/catch.
+async function bumpLifetimeRevenue(env: Env, amountUsd: number): Promise<void> {
+  const s = await getLifetimeStats(env);
+  s.usd_received = parseFloat((s.usd_received + amountUsd).toFixed(2));
+  s.paid_settlements += 1;
   await env.TENSORFEED_CACHE.put(LIFETIME_KEY, JSON.stringify(s));
 }
 
@@ -740,6 +775,8 @@ export async function backfillLifetimeFromRollups(env: Env): Promise<LifetimeSta
   let cursor: string | undefined;
   let calls = 0;
   let credits = 0;
+  let usd = 0;
+  let settlements = 0;
   let minDate: string | null = null;
   let maxDate: string | null = null;
   const prefix = 'pay:rollup:';
@@ -754,6 +791,8 @@ export async function backfillLifetimeFromRollups(env: Env): Promise<LifetimeSta
       if (!r || typeof r.call_count !== 'number') continue;
       calls += r.call_count || 0;
       credits += r.total_credits_charged || 0;
+      usd += r.total_usd || 0;
+      settlements += r.tx_count || 0;
       if (!minDate || date < minDate) minDate = date;
       if (!maxDate || date > maxDate) maxDate = date;
     }
@@ -763,6 +802,8 @@ export async function backfillLifetimeFromRollups(env: Env): Promise<LifetimeSta
   const s: LifetimeStats = {
     premium_calls: calls,
     total_credits_charged: credits,
+    usd_received: parseFloat(usd.toFixed(2)),
+    paid_settlements: settlements,
     first_at: minDate ? `${minDate}T00:00:00.000Z` : null,
     last_at: maxDate ? `${maxDate}T23:59:59.999Z` : null,
   };
@@ -800,7 +841,7 @@ function bumpTopAgent(
   }
 }
 
-async function logRevenue(env: Env, amountUsd: number, agentUa: string): Promise<void> {
+export async function logRevenue(env: Env, amountUsd: number, agentUa: string): Promise<void> {
   try {
     const date = new Date().toISOString().slice(0, 10);
     const rollup = await readRollup(env, date);
@@ -809,6 +850,10 @@ async function logRevenue(env: Env, amountUsd: number, agentUa: string): Promise
     noteUniqueAgent(rollup, agentUa);
     bumpTopAgent(rollup, agentUa, { purchased_usd: amountUsd });
     await writeRollup(env, rollup);
+
+    // Lifetime real-money counter. Same best-effort path as the rollup
+    // write above; surfaced on /api/stats as the actual revenue signal.
+    await bumpLifetimeRevenue(env, amountUsd);
   } catch (e) {
     console.error('logRevenue failed:', e);
   }

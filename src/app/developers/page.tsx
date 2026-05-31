@@ -177,16 +177,19 @@ const ENDPOINTS: Endpoint[] = [
     method: 'GET',
     path: '/api/stats',
     description:
-      'Lifetime count of successful, credit-debited premium API calls served, each returning a signed AFTA receipt when the receipt key is provisioned. Counts paid agent calls only: it excludes free endpoints and crawler/bot traffic, so it cannot be inflated the way raw bot counts can. Free, no auth.',
+      'Lifetime traction counter. usd_received and paid_settlements are the real-money figures: gross USD settled and the number of settlements, gross of our own test purchases. premium_responses_served counts every premium response served, including free-trial-served calls and our own automated testing, so it is not a measure of external paid demand. Each response returns a signed AFTA receipt when the receipt key is provisioned. Free, no auth.',
     cache: 'Cache for 60 seconds',
     example: `{
   "ok": true,
   "premium_calls_served": 1342,
-  "each_call_returns_signed_afta_receipt": true,
   "total_credits_charged": 1810,
+  "usd_received": 184.5,
+  "paid_settlements": 37,
+  "premium_responses_served": 1342,
+  "each_call_returns_signed_afta_receipt": true,
   "first_at": "2026-04-27T00:00:00.000Z",
   "last_at": "2026-05-17T16:44:09.512Z",
-  "headline": "1342 verifiable paid agent API calls served, each returning a signed AFTA receipt"
+  "headline": "$184.5 received across 37 settlements; 1342 premium responses served, each returning a signed AFTA receipt"
 }`,
   },
   {

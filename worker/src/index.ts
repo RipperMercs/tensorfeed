@@ -1271,30 +1271,42 @@ export default {
 
     // Public traction headline. Reads ONLY the single O(1) lifetime
     // counter (pay:stats:lifetime), never the dated rollups, so it is
-    // KV-budget-safe. Counts successful, credit-debited premium calls
-    // only: not requests, not free endpoints, not crawler traffic, so
-    // it cannot be inflated the way the raw bot counter could. Each
-    // such call also returns a signed AFTA receipt whenever the receipt
-    // key is provisioned; the headline states that only when true so it
-    // never overclaims. Edge-cached 60s.
+    // KV-budget-safe. It leads with the real-money figures (usd_received,
+    // paid_settlements) accumulated on the settle path. The served-call
+    // figure (premium_responses_served) counts every premium response,
+    // including free-trial-served calls and TF's own automated testing, so
+    // it is reported as responses served, not as external paid demand. Each
+    // such response returns a signed AFTA receipt whenever the receipt key
+    // is provisioned; the headline states that only when true so it never
+    // overclaims. Edge-cached 60s.
     if (path === '/api/stats') {
       const s = await getLifetimeStats(env);
       const receiptsActive =
         typeof env.RECEIPT_PRIVATE_KEY_JWK === 'string' &&
         env.RECEIPT_PRIVATE_KEY_JWK.length > 0;
-      const headline = receiptsActive
-        ? `${s.premium_calls} verifiable paid agent API calls served, each returning a signed AFTA receipt`
-        : `${s.premium_calls} paid premium API calls served`;
+      const usdReceived = s.usd_received ?? 0;
+      const paidSettlements = s.paid_settlements ?? 0;
+      const responsesServed = s.premium_calls;
+      const receiptClause = receiptsActive
+        ? ', each returning a signed AFTA receipt'
+        : '';
+      const headline = `$${usdReceived} received across ${paidSettlements} settlements; ${responsesServed} premium responses served${receiptClause}`;
       return jsonResponse(
         {
           ok: true,
+          // Backward-compatible keys (this is a public endpoint).
           premium_calls_served: s.premium_calls,
-          each_call_returns_signed_afta_receipt: receiptsActive,
           total_credits_charged: s.total_credits_charged,
+          // Real-money signal: gross of TensorFeed's own test purchases.
+          usd_received: usdReceived,
+          paid_settlements: paidSettlements,
+          // Honest alias for the served-call count.
+          premium_responses_served: s.premium_calls,
+          each_call_returns_signed_afta_receipt: receiptsActive,
           first_at: s.first_at,
           last_at: s.last_at,
           headline,
-          note: 'Successful credit-debited premium API calls only. Excludes free endpoints and crawler/bot traffic. AFTA receipts are not stored server-side (zero custody); receipt issuance is deterministic in receipt-key presence, surfaced here as each_call_returns_signed_afta_receipt.',
+          note: "usd_received and paid_settlements are the real-money figures: gross USD settled and the number of settlements, gross of TensorFeed's own test purchases. premium_responses_served counts every premium response served, including free-trial-served calls and TensorFeed's own automated testing, so it is not a measure of external paid demand. AFTA receipts are not stored server-side (zero custody); receipt issuance is deterministic in receipt-key presence, surfaced here as each_call_returns_signed_afta_receipt.",
           generated_at: new Date().toISOString(),
         },
         200,

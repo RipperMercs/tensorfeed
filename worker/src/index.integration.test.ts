@@ -233,4 +233,25 @@ describe('index.ts router money path (integration)', () => {
     expect(res.json?.count as number).toBeGreaterThan(0);
     expect(Array.isArray(res.json?.endpoints)).toBe(true);
   });
+
+  // PUBLIC STATS: /api/stats must surface the real-money figures
+  // (usd_received, paid_settlements) and an honest served-call alias
+  // (premium_responses_served), and the note must no longer claim the
+  // served-call count is credit-debited premium calls only.
+  it('serves /api/stats with the real-money keys and an honest note', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/stats', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json).toHaveProperty('usd_received');
+    expect(res.json).toHaveProperty('paid_settlements');
+    expect(res.json).toHaveProperty('premium_responses_served');
+    // Backward-compatible keys remain.
+    expect(res.json).toHaveProperty('premium_calls_served');
+    expect(res.json).toHaveProperty('total_credits_charged');
+    // The misleading legacy note text must be gone.
+    expect(typeof res.json?.note).toBe('string');
+    expect(res.json?.note as string).not.toContain('credit-debited premium API calls only');
+  });
 });

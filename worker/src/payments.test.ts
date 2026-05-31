@@ -12,6 +12,7 @@ import {
   logPremiumUsage,
   getLifetimeStats,
   backfillLifetimeFromRollups,
+  logRevenue,
   getTokenUsage,
   validateAndCharge,
   screenWalletOFAC,
@@ -812,9 +813,69 @@ describe('lifetime traction counter', () => {
     expect(s).toEqual({
       premium_calls: 0,
       total_credits_charged: 0,
+      usd_received: 0,
+      paid_settlements: 0,
       first_at: null,
       last_at: null,
     });
+  });
+
+  it('getLifetimeStats coalesces a stored value lacking the new fields to 0', async () => {
+    // Simulate a counter persisted before usd_received / paid_settlements
+    // existed: the stored JSON has only the original four fields.
+    const env = makeEnv({
+      'pay:stats:lifetime': {
+        premium_calls: 12,
+        total_credits_charged: 12,
+        first_at: '2026-05-01T00:00:00.000Z',
+        last_at: '2026-05-20T00:00:00.000Z',
+      },
+    });
+    const s = await getLifetimeStats(env);
+    expect(s.premium_calls).toBe(12);
+    expect(s.usd_received).toBe(0);
+    expect(s.paid_settlements).toBe(0);
+  });
+
+  it('logRevenue bumps usd_received and paid_settlements in the lifetime counter', async () => {
+    const env = makeEnv();
+    await logRevenue(env, 5.5, 'agent/1');
+    await logRevenue(env, 4.25, 'agent/2');
+    const s = await getLifetimeStats(env);
+    expect(s.usd_received).toBe(9.75);
+    expect(s.paid_settlements).toBe(2);
+    // logRevenue is the real-money path and must not touch the served-call
+    // counters; those belong to logPremiumUsage.
+    expect(s.premium_calls).toBe(0);
+    expect(s.total_credits_charged).toBe(0);
+  });
+
+  it('backfill populates usd_received and paid_settlements from rollup total_usd and tx_count', async () => {
+    const env = makeEnv({
+      'pay:rollup:2026-05-15': {
+        date: '2026-05-15',
+        call_count: 4,
+        total_credits_charged: 6,
+        total_usd: 10.5,
+        tx_count: 2,
+      },
+      'pay:rollup:2026-05-16': {
+        date: '2026-05-16',
+        call_count: 3,
+        total_credits_charged: 5,
+        total_usd: 4.5,
+        tx_count: 1,
+      },
+    });
+    const a = await backfillLifetimeFromRollups(env);
+    expect(a.usd_received).toBe(15);
+    expect(a.paid_settlements).toBe(3);
+    // Served-call sums remain correct alongside the new revenue sums.
+    expect(a.premium_calls).toBe(7);
+    expect(a.total_credits_charged).toBe(11);
+    const s = await getLifetimeStats(env);
+    expect(s.usd_received).toBe(15);
+    expect(s.paid_settlements).toBe(3);
   });
 
   it('backfill sums persisted dated rollups and is idempotent', async () => {
