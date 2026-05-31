@@ -4346,7 +4346,7 @@ export default {
           premiumFundingExposure: '/api/premium/funding/exposure (1 credit; derived metrics over the free /api/funding/portfolio: silicon-vendor concentration shares, per-investor circular-loop classification (fully-circular / partial-loop / agnostic) using investor->silicon mapping for Nvidia/Google/Amazon/Microsoft/AMD, top recipients by inbound capital, co-investor pairs that both hold stakes in the same recipient.)',
           fundingFederalSummary: '/api/funding/federal/summary (free; full federal AI spending snapshot for a curated AI-vendor cohort: per-vendor totals, award counts, recent-vs-prior 90-day momentum, top awarding agencies, plus cohort-wide totals and the top 25 recent awards. Source USAspending.gov, public domain under the DATA Act. Precomputed daily.)',
           fundingFederalRecent: '/api/funding/federal/recent (free; the 25 newest dated federal contract and grant awards across the AI-vendor cohort, each with recipient, amount, awarding agency, award type, and date. Source USAspending.gov, public domain. Precomputed daily.)',
-          premiumFundingFederalMomentum: '/api/premium/funding/federal/momentum (1 credit, AFTA-signed; one signed ruling over the federal spending snapshot. Names the top 5 momentum gainers and losers by recent-vs-prior 90-day federal award flow, the cohort spend concentration in its top vendor, and the leading awarding agency, plus echoed cohort totals. 36h freshness SLA, no-charge when stale.)',
+          premiumFundingFederalMomentum: '/api/premium/funding/federal/momentum (1 credit, AFTA-signed; one signed leadership and concentration ruling over the federal spending snapshot. Names the cohort leader and its share of total tracked federal AI award dollars, the top-2 spend concentration, the leading awarding agency, and the vendors with a dated award inside the last 120 days, plus echoed cohort totals. 36h freshness SLA, no-charge when stale.)',
           routingPreview: '/api/preview/routing',
           routeVerdictPreview: '/api/preview/route-verdict?task=code|reasoning|creative|general or ?model= (free, 10/IP/day; the top Route Verdict only, no runners-up or signed receipt, so an agent can evaluate the shape before paying)',
           stackSafetyPreview: '/api/preview/stack-safety-verdict?packages= (free, 10/IP/day; the gate + per-package verdict only, no CVE evidence, capped at 3 packages)',
@@ -9577,17 +9577,22 @@ export default {
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 3, request, env);
     }
 
-    // === PAID PREMIUM: FEDERAL AI SPENDING MOMENTUM (Tier 1, 1 credit) ===
+    // === PAID PREMIUM: FEDERAL AI SPENDING LEADERSHIP (Tier 1, 1 credit) ===
     // /api/premium/funding/federal/momentum
     // One signed ruling over TensorFeed's own federal-spending snapshot:
-    // names the vendors whose recent 90-day federal award flow is rising
-    // and falling fastest (momentum), the cohort's spend concentration in
-    // its top vendor, and the leading awarding agency, plus echoed cohort
-    // totals. Regular premium (no params); the same premiumResponse signing
-    // path as the other verdicts. captured_at is the REAL snapshot data time
-    // so the freshness no-charge bills against actual data age, never build
-    // time. When the snapshot blob is missing it no-charges (upstream_failure),
-    // same posture as funding/exposure when its source is absent.
+    // names the cohort leader and its share of total tracked federal AI
+    // award dollars, the top-2 spend concentration, the leading awarding
+    // agency, and the vendors with a dated award inside the last 120 days
+    // (award recency). A live USAspending pilot proved the old recent-vs-
+    // prior 90-day momentum metric is lag-biased: the source under-reports
+    // the most recent roughly 60 days, so active vendors falsely read as
+    // collapsing. This verdict is leadership + concentration + recency,
+    // which the source supports cleanly. Regular premium (no params); the
+    // same premiumResponse signing path as the other verdicts. captured_at
+    // is the REAL snapshot data time so the freshness no-charge bills
+    // against actual data age, never build time. When the snapshot blob is
+    // missing it no-charges (upstream_failure), same posture as
+    // funding/exposure when its source is absent.
     if (path === '/api/premium/funding/federal/momentum') {
       const payment = await requirePayment(request, env, 1);
       if (!payment.paid) return payment.response!;
@@ -9603,32 +9608,50 @@ export default {
         );
       }
 
-      const withMomentum = snap.vendors.filter((v) => v.momentum_pct !== null);
-      const shape = (v: import('./federal-spending-fetcher').VendorRollup) => ({
-        slug: v.slug,
-        name: v.name,
-        momentum_pct: v.momentum_pct,
-        recent_90d_usd: v.recent_90d_usd,
-        total_usd: v.total_usd,
-      });
-      const gainers = [...withMomentum]
-        .sort((a, b) => (b.momentum_pct as number) - (a.momentum_pct as number))
-        .slice(0, 5)
-        .map(shape);
-      const losers = [...withMomentum]
-        .sort((a, b) => (a.momentum_pct as number) - (b.momentum_pct as number))
-        .slice(0, 5)
-        .map(shape);
+      // Inline compact-USD for the verdict sentence, e.g. $1.6B, $340.0M.
+      const usdCompact = (n: number): string => {
+        const v = Math.abs(n);
+        if (v >= 1_000_000_000) return `$${(v / 1_000_000_000).toFixed(1)}B`;
+        if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+        if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
+        return `$${Math.round(v).toLocaleString()}`;
+      };
 
-      const topVendor = snap.vendors[0] ?? null;
-      const concentration_pct =
-        snap.total_usd > 0 && topVendor ? Math.round((topVendor.total_usd / snap.total_usd) * 100) : 0;
-      const leadingAgency = snap.agencies[0] ?? null;
+      const total = snap.total_usd;
+      const vendors = snap.vendors;
 
-      const topGainer = gainers[0] ?? null;
-      const verdict = topGainer
-        ? `${topGainer.name} leads federal AI award momentum at ${topGainer.momentum_pct} percent over the prior 90 days, with ${leadingAgency ? leadingAgency.agency : 'no single agency'} the cohort's top awarding agency.`
-        : `No vendor in the cohort has enough dated prior-window awards to read momentum yet, with ${leadingAgency ? leadingAgency.agency : 'no single agency'} the cohort's top awarding agency.`;
+      const leader = vendors[0]
+        ? {
+            slug: vendors[0].slug,
+            name: vendors[0].name,
+            total_usd: vendors[0].total_usd,
+            share_pct: total > 0 ? Math.round((vendors[0].total_usd / total) * 1000) / 10 : 0,
+          }
+        : null;
+
+      const top2_concentration_pct =
+        total > 0
+          ? Math.round((((vendors[0]?.total_usd ?? 0) + (vendors[1]?.total_usd ?? 0)) / total) * 100)
+          : 0;
+
+      const leading_agency = snap.agencies[0] ?? null;
+
+      const capturedMs = Date.parse(snap.captured_at);
+      const recently_active = vendors
+        .filter(
+          (v) =>
+            v.last_award_date !== null &&
+            capturedMs - Date.parse(v.last_award_date + 'T00:00:00Z') <= 120 * 86_400_000,
+        )
+        .sort((a, b) => (b.last_award_date as string).localeCompare(a.last_award_date as string))
+        .map((v) => ({
+          slug: v.slug,
+          name: v.name,
+          last_award_date: v.last_award_date,
+          total_usd: v.total_usd,
+        }));
+
+      const verdict = `${leader ? leader.name : 'No vendor'} leads tracked federal AI awards with ${usdCompact(leader?.total_usd ?? 0)} (${leader?.share_pct ?? 0}% of ${usdCompact(total)} across ${snap.cohort_size} vendors). ${snap.agencies[0] ? snap.agencies[0].agency : 'No agency'} is the top federal buyer.`;
 
       const result = {
         ok: true as const,
@@ -9636,12 +9659,12 @@ export default {
         source: snap.source,
         license: snap.license,
         verdict,
-        gainers,
-        losers,
-        concentration_pct,
-        leading_agency: leadingAgency,
+        leader,
+        top2_concentration_pct,
+        leading_agency,
+        recently_active,
         cohort_size: snap.cohort_size,
-        total_usd: snap.total_usd,
+        total_usd: total,
         window_days: snap.window_days,
       };
 

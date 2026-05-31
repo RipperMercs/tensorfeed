@@ -6,7 +6,7 @@ import FederalSpending from './FederalSpending';
 
 const TITLE = 'Federal AI Spending: US Contract and Grant Awards to the AI Vendor Cohort';
 const DESCRIPTION =
-  'US federal contract and grant awards flowing to a curated AI vendor cohort, the public-money side of the AI map. Sourced from USAspending.gov (public domain under the DATA Act). Cohort totals, 90-day momentum, top agencies, and recent awards, refreshed daily. Free JSON for agents. The public-money companion to the private-capital funding portfolio.';
+  'US federal contract and grant awards flowing to a curated AI vendor cohort, the public-money side of the AI map. Sourced from USAspending.gov (public domain under the DATA Act). Cohort totals, federal award leadership and concentration, top agencies, and recent awards, refreshed daily. Free JSON for agents. The public-money companion to the private-capital funding portfolio.';
 const URL = 'https://tensorfeed.ai/funding/federal';
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     url: URL,
     title: TITLE,
     description:
-      'The public-money side of the AI map. US federal contract and grant awards to a curated AI vendor cohort, from USAspending.gov, with cohort totals, 90-day momentum, and top agencies. Refreshed daily.',
+      'The public-money side of the AI map. US federal contract and grant awards to a curated AI vendor cohort, from USAspending.gov, with cohort totals, federal award leadership and concentration, and top agencies. Refreshed daily.',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: TITLE,
     description:
-      'US federal contract and grant awards to a curated AI vendor cohort, from USAspending.gov. Cohort totals, 90-day momentum, top agencies, refreshed daily. Free JSON.',
+      'US federal contract and grant awards to a curated AI vendor cohort, from USAspending.gov. Cohort totals, federal award leadership and concentration, top agencies, refreshed daily. Free JSON.',
   },
   keywords: [
     'federal AI spending',
@@ -53,7 +53,7 @@ const DATASET_JSONLD = {
   '@type': 'Dataset',
   name: 'Federal AI Spending: US Contract and Grant Awards to the AI Vendor Cohort',
   description:
-    'US federal contract and grant awards flowing to a curated cohort of AI vendors (AI-native, defense-AI, frontier labs, silicon), aggregated from USAspending.gov. Each vendor carries total obligated dollars, award count, a recent-versus-prior 90-day momentum read, and its top awarding agencies. Refreshed daily on a cron from the TensorFeed federal spending capture.',
+    'US federal contract and grant awards flowing to a curated cohort of AI vendors (AI-native, defense-AI, frontier labs, silicon), aggregated from USAspending.gov. Each vendor carries total obligated dollars, award count, the date of its most recent award, and its top awarding agencies, supporting a federal award leadership and concentration read. Refreshed daily on a cron from the TensorFeed federal spending capture.',
   url: URL,
   license: 'https://www.usa.gov/government-works',
   isAccessibleForFree: true,
@@ -101,7 +101,7 @@ export default function FundingFederalPage() {
           US federal contract and grant awards flowing to a curated AI vendor cohort, the
           public-money side of the AI map. Where private capital tracks who is betting on whom, this
           tracks who the US government is actually paying: defense-AI primes, frontier labs, and the
-          silicon underneath them. Cohort totals, a recent-versus-prior 90-day momentum read, top
+          silicon underneath them. Cohort totals, federal award leadership and concentration, top
           awarding agencies, and the newest awards, refreshed daily.
         </p>
 
@@ -167,8 +167,8 @@ export default function FundingFederalPage() {
             </a>
             , the official US federal spending data source published under the DATA Act. Federal
             spending data is a US Government work in the public domain. The TensorFeed cohort
-            selection, normalization, and momentum derivation are editorial. The machine-readable
-            feed lives at{' '}
+            selection, normalization, and leadership and concentration derivation are editorial. The
+            machine-readable feed lives at{' '}
             <a
               href="https://tensorfeed.ai/api/funding/federal/summary"
               target="_blank"
@@ -177,9 +177,9 @@ export default function FundingFederalPage() {
             >
               /api/funding/federal/summary
             </a>
-            , free and no auth, so an agent can read cohort totals, per-vendor momentum, and recent
-            awards directly. Absence of an award is not evidence of anything; it only means we
-            observed none in the window.
+            , free and no auth, so an agent can read cohort totals, per-vendor leadership and award
+            recency, and recent awards directly. Absence of an award is not evidence of anything; it
+            only means we observed none in the window.
           </div>
         </div>
       </section>

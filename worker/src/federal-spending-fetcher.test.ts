@@ -98,56 +98,41 @@ describe('rollupVendor', () => {
       award({ amount: 2000, date: daysAgo(20) }),
       award({ amount: 5000, date: null }),
     ];
-    const r = rollupVendor(palantir, awards, NOW_MS);
+    const r = rollupVendor(palantir, awards);
     expect(r.total_usd).toBe(8000);
     expect(r.award_count).toBe(3);
   });
 
-  it('excludes null-date awards from both windows but keeps them in the total', () => {
+  it('keeps null-date awards in the total but they never set last_award_date', () => {
     const awards = [
-      award({ amount: 1000, date: daysAgo(10) }), // recent
-      award({ amount: 9999, date: null }), // neither window
+      award({ amount: 1000, date: daysAgo(10) }),
+      award({ amount: 9999, date: null }),
     ];
-    const r = rollupVendor(palantir, awards, NOW_MS);
-    expect(r.recent_90d_usd).toBe(1000);
-    expect(r.prior_90d_usd).toBe(0);
+    const r = rollupVendor(palantir, awards);
     expect(r.total_usd).toBe(10999);
+    expect(r.award_count).toBe(2);
+    expect(r.last_award_date).toBe(daysAgo(10));
   });
 
-  it('computes a positive momentum_pct when recent exceeds prior', () => {
+  it('sets last_award_date to the maximum non-null award date', () => {
     const awards = [
-      award({ amount: 3000, date: daysAgo(30) }), // recent 90d
-      award({ amount: 1000, date: daysAgo(120) }), // prior 90d
+      award({ amount: 100, date: daysAgo(120) }),
+      award({ amount: 200, date: daysAgo(5) }), // most recent
+      award({ amount: 300, date: daysAgo(40) }),
     ];
-    const r = rollupVendor(palantir, awards, NOW_MS);
-    expect(r.recent_90d_usd).toBe(3000);
-    expect(r.prior_90d_usd).toBe(1000);
-    // (3000 - 1000) / 1000 * 100 = 200
-    expect(r.momentum_pct).toBe(200);
+    const r = rollupVendor(palantir, awards);
+    expect(r.last_award_date).toBe(daysAgo(5));
   });
 
-  it('computes a negative momentum_pct when recent is below prior', () => {
+  it('returns null last_award_date when every award has a null date', () => {
     const awards = [
-      award({ amount: 500, date: daysAgo(30) }), // recent
-      award({ amount: 1000, date: daysAgo(120) }), // prior
+      award({ amount: 100, date: null }),
+      award({ amount: 200, date: null }),
     ];
-    const r = rollupVendor(palantir, awards, NOW_MS);
-    // (500 - 1000) / 1000 * 100 = -50
-    expect(r.momentum_pct).toBe(-50);
-  });
-
-  it('returns null momentum_pct when prior window is zero', () => {
-    const awards = [award({ amount: 1000, date: daysAgo(10) })];
-    const r = rollupVendor(palantir, awards, NOW_MS);
-    expect(r.prior_90d_usd).toBe(0);
-    expect(r.momentum_pct).toBeNull();
-  });
-
-  it('treats day 90 as outside the recent window (recent is strictly < 90 days)', () => {
-    const awards = [award({ amount: 1000, date: daysAgo(95) })];
-    const r = rollupVendor(palantir, awards, NOW_MS);
-    expect(r.recent_90d_usd).toBe(0);
-    expect(r.prior_90d_usd).toBe(1000);
+    const r = rollupVendor(palantir, awards);
+    expect(r.last_award_date).toBeNull();
+    expect(r.total_usd).toBe(300);
+    expect(r.award_count).toBe(2);
   });
 
   it('returns top 3 agencies sorted by summed usd desc', () => {
@@ -158,7 +143,7 @@ describe('rollupVendor', () => {
       award({ amount: 300, agency: 'Army', agency_slug: 'army' }),
       award({ amount: 999, agency: 'CIA', agency_slug: 'cia' }),
     ];
-    const r = rollupVendor(palantir, awards, NOW_MS);
+    const r = rollupVendor(palantir, awards);
     expect(r.top_agencies).toHaveLength(3);
     expect(r.top_agencies.map((a) => a.agency_slug)).toEqual(['cia', 'army', 'navy']);
     expect(r.top_agencies[0]).toEqual({ agency: 'CIA', agency_slug: 'cia', usd: 999 });
@@ -167,21 +152,21 @@ describe('rollupVendor', () => {
   });
 
   it('carries through vendor identity fields', () => {
-    const r = rollupVendor(anthropic, [], NOW_MS);
+    const r = rollupVendor(anthropic, []);
     expect(r.slug).toBe('anthropic');
     expect(r.name).toBe('Anthropic');
     expect(r.category).toBe('frontier-lab');
     expect(r.total_usd).toBe(0);
     expect(r.award_count).toBe(0);
     expect(r.top_agencies).toEqual([]);
-    expect(r.momentum_pct).toBeNull();
+    expect(r.last_award_date).toBeNull();
   });
 });
 
 describe('buildSnapshot', () => {
   it('sorts vendors by total_usd desc and sums totals', () => {
-    const small = rollupVendor(anthropic, [award({ amount: 1000, recipient: 'Anthropic PBC' })], NOW_MS);
-    const big = rollupVendor(palantir, [award({ amount: 9000 })], NOW_MS);
+    const small = rollupVendor(anthropic, [award({ amount: 1000, recipient: 'Anthropic PBC' })]);
+    const big = rollupVendor(palantir, [award({ amount: 9000 })]);
     const snap = buildSnapshot([small, big], [], '2026-05-31T00:00:00.000Z', 365);
     expect(snap.vendors.map((v) => v.slug)).toEqual(['palantir', 'anthropic']);
     expect(snap.total_usd).toBe(10000);

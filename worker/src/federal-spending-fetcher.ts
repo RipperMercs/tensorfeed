@@ -11,14 +11,13 @@
  * cohort, types, and PURE aggregation functions only. The network fetcher
  * that calls USAspending.gov and writes KV lands in a follow-up task.
  *
- * Time discipline: every aggregation function takes the current time as a
- * `nowMs: number` argument. No Date.now() inside, so the windows are fully
- * deterministic and unit-testable.
- *
- * Windows: recent is the last 90 days before nowMs (strictly within 90
- * days). Prior is the 90 to 180 day band before nowMs. Momentum compares
- * the two. Awards with no usable date are excluded from both windows but
- * still count toward total spend and award count.
+ * Leadership over momentum: a live USAspending pilot proved that the source
+ * under-reports the most recent roughly 60 days, so an active vendor's
+ * recent-vs-prior window reads as a collapse even while it is winning huge
+ * awards. We dropped the 90-day momentum metric in favor of a defensible
+ * read: total spend, cohort leadership and concentration, and an award
+ * recency marker (the most recent dated award per vendor). Awards with no
+ * usable date still count toward total spend and award count.
  */
 
 import type { Env } from './types';
@@ -58,7 +57,7 @@ export interface FedAward {
 export interface VendorRollup {
   slug: string; name: string; category: string;
   total_usd: number; award_count: number;
-  recent_90d_usd: number; prior_90d_usd: number; momentum_pct: number | null;
+  last_award_date: string | null;
   top_agencies: { agency: string; agency_slug: string; usd: number }[];
 }
 
@@ -77,15 +76,6 @@ export const FED_LICENSE = 'Public domain (US Government work). TensorFeed edito
 export const ACTIVE_WINDOW_DAYS = 365;
 
 const DAY_MS = 86_400_000;
-const WINDOW_90_MS = 90 * DAY_MS;
-const WINDOW_180_MS = 180 * DAY_MS;
-
-// Parse a YYYY-MM-DD award date into epoch ms, or null when absent/unparseable.
-function awardTimeMs(date: string | null): number | null {
-  if (!date) return null;
-  const t = Date.parse(date + 'T00:00:00Z');
-  return Number.isNaN(t) ? null : t;
-}
 
 // Accumulate agency usd into a map, returning the top N agencies by usd desc.
 function topAgencies(
@@ -113,30 +103,23 @@ export function matchesVendor(recipientName: string, vendor: FedVendor): boolean
 }
 
 /**
- * Roll a vendor's awards into totals plus a recent-vs-prior momentum read.
- * Recent window: dated strictly within 90 days of nowMs. Prior window:
- * dated 90 to 180 days before nowMs. Null-date awards count in total_usd
- * and award_count but in neither window.
+ * Roll a vendor's awards into totals plus an award-recency marker.
+ * total_usd sums every award amount, award_count is the raw count, and
+ * last_award_date is the most recent non-null award date (lexicographic
+ * max of YYYY-MM-DD strings, which is also chronological order), or null
+ * when the vendor has no dated awards. Null-date awards still count toward
+ * total_usd and award_count.
  */
-export function rollupVendor(vendor: FedVendor, awards: FedAward[], nowMs: number): VendorRollup {
+export function rollupVendor(vendor: FedVendor, awards: FedAward[]): VendorRollup {
   let total_usd = 0;
-  let recent_90d_usd = 0;
-  let prior_90d_usd = 0;
+  let last_award_date: string | null = null;
 
   for (const a of awards) {
     total_usd += a.amount;
-    const t = awardTimeMs(a.date);
-    if (t === null) continue;
-    const age = nowMs - t;
-    if (age >= 0 && age < WINDOW_90_MS) {
-      recent_90d_usd += a.amount;
-    } else if (age >= WINDOW_90_MS && age < WINDOW_180_MS) {
-      prior_90d_usd += a.amount;
+    if (a.date !== null && (last_award_date === null || a.date > last_award_date)) {
+      last_award_date = a.date;
     }
   }
-
-  const momentum_pct =
-    prior_90d_usd > 0 ? Math.round(((recent_90d_usd - prior_90d_usd) / prior_90d_usd) * 100) : null;
 
   return {
     slug: vendor.slug,
@@ -144,9 +127,7 @@ export function rollupVendor(vendor: FedVendor, awards: FedAward[], nowMs: numbe
     category: vendor.category,
     total_usd,
     award_count: awards.length,
-    recent_90d_usd,
-    prior_90d_usd,
-    momentum_pct,
+    last_award_date,
     top_agencies: topAgencies(awards, 3),
   };
 }
@@ -224,8 +205,12 @@ interface UsaSpendingResponse {
 }
 
 // Map one upstream row into the normalized TF award shape for a given type.
+// Date is the obligation date (when the award action committed the money), which
+// is always in the past, NOT the period-of-performance Start Date, which is often
+// future-dated for new contracts. Using the obligation date keeps the momentum
+// windows and the recent-awards list reflecting real recent federal activity.
 function mapRow(row: UsaSpendingRow, type: FedAward['award_type']): FedAward {
-  const rawDate = row['Start Date'] ?? row['Base Obligation Date'] ?? null;
+  const rawDate = row['Base Obligation Date'] ?? row['Start Date'] ?? null;
   const date = rawDate === null ? null : String(rawDate).slice(0, 10);
   return {
     award_id: String(row['Award ID'] ?? ''),
@@ -354,7 +339,7 @@ export async function captureFederalSpending(
 
   for (const vendor of FED_AI_COHORT) {
     const awards = await fetchVendorAwards(vendor, fromDate, toDate, fetchFn);
-    rollups.push(rollupVendor(vendor, awards, nowMs));
+    rollups.push(rollupVendor(vendor, awards));
     for (const a of awards) allAwards.push(a);
   }
 

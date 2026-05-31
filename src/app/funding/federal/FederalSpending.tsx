@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Banknote, FileText, Building2, ExternalLink, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Banknote, FileText, Building2, ExternalLink, TrendingUp } from 'lucide-react';
 
 // API response shapes (mirror worker/src/federal-spending-fetcher FedSnapshot).
 
@@ -17,9 +17,7 @@ interface VendorRollup {
   category: string;
   total_usd: number;
   award_count: number;
-  recent_90d_usd: number;
-  prior_90d_usd: number;
-  momentum_pct: number | null;
+  last_award_date: string | null;
   top_agencies: AgencyUsd[];
 }
 
@@ -114,36 +112,10 @@ function CategoryBadge({ category }: { category: string }) {
   );
 }
 
-function MomentumCell({ pct }: { pct: number | null }) {
-  if (pct === null) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-text-muted font-mono">
-        <Minus className="w-3 h-3" />
-        n/a
-      </span>
-    );
-  }
-  if (pct > 0) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-mono">
-        <TrendingUp className="w-3 h-3" />+{pct}%
-      </span>
-    );
-  }
-  if (pct < 0) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-rose-400 font-mono">
-        <TrendingDown className="w-3 h-3" />
-        {pct}%
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 text-xs text-text-muted font-mono">
-      <Minus className="w-3 h-3" />
-      0%
-    </span>
-  );
+// Vendor share of the cohort total as a 1 dp percent string, e.g. 42.7%.
+function sharePct(vendorUsd: number, totalUsd: number): string {
+  if (!Number.isFinite(totalUsd) || totalUsd <= 0) return 'n/a';
+  return `${(Math.round((vendorUsd / totalUsd) * 1000) / 10).toFixed(1)}%`;
 }
 
 // Skeleton
@@ -279,8 +251,8 @@ export default function FederalSpending() {
         </h2>
         <p className="text-text-secondary leading-relaxed mb-5 max-w-3xl">
           Total federal contract and grant dollars obligated to each cohort vendor over the trailing
-          window, with a recent-versus-prior 90-day momentum read and the vendor top awarding agency.
-          Sorted by total dollars, as received from the feed.
+          window, with that vendor share of the cohort total, the date of its most recent award, and
+          its top awarding agency. Sorted by total dollars, as received from the feed.
         </p>
 
         {vendors.length === 0 ? (
@@ -308,7 +280,10 @@ export default function FederalSpending() {
                       Total obligated
                     </th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">
-                      90d momentum
+                      Share
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">
+                      Last award
                     </th>
                     <th scope="col" className="px-4 py-3 font-medium">
                       Top agency
@@ -333,8 +308,11 @@ export default function FederalSpending() {
                       <td className="px-4 py-3 text-right font-mono text-text-secondary">
                         {formatUsdCompact(v.total_usd)}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <MomentumCell pct={v.momentum_pct} />
+                      <td className="px-4 py-3 text-right font-mono text-text-secondary">
+                        {sharePct(v.total_usd, total_usd)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-text-secondary">
+                        {v.last_award_date ?? 'n/a'}
                       </td>
                       <td className="px-4 py-3 text-text-secondary text-xs">
                         {v.top_agencies.length > 0 ? (
@@ -376,9 +354,13 @@ export default function FederalSpending() {
                     <dd className="font-mono text-text-secondary text-right">
                       {v.award_count.toLocaleString()}
                     </dd>
-                    <dt className="text-text-muted">90d momentum</dt>
-                    <dd className="text-right">
-                      <MomentumCell pct={v.momentum_pct} />
+                    <dt className="text-text-muted">Share</dt>
+                    <dd className="font-mono text-text-secondary text-right">
+                      {sharePct(v.total_usd, total_usd)}
+                    </dd>
+                    <dt className="text-text-muted">Last award</dt>
+                    <dd className="font-mono text-text-secondary text-right">
+                      {v.last_award_date ?? 'n/a'}
                     </dd>
                     <dt className="text-text-muted">Top agency</dt>
                     <dd className="text-text-secondary text-right break-words">
