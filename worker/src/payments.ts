@@ -28,6 +28,8 @@ import {
   bazaarExtensionsFor,
   bazaarDescriptionFor,
   getBazaarPilotConfig,
+  canonicalDiscoveryInput,
+  canonicalDiscoveryOutput,
 } from './bazaar-pilots';
 
 /**
@@ -3002,11 +3004,21 @@ function paymentRequiredResponse(
     (canonicalExtensions as { bazaar?: { info?: unknown } })?.bazaar?.info
   ) as { input?: unknown; output?: unknown } | undefined;
   // Full DiscoveryInfo for the BODY (no size limit): input + output.
+  // canonicalExtensions.bazaar.info carries CDP/Bazaar typing extras
+  // (queryFields, pathFields, derived output.schema) and, after CDP
+  // normalization, possibly discoverable + url. Those belong in the
+  // extensions.bazaar block (which CDP reads, unchanged), but the canonical
+  // accepts[].outputSchema discovery surface that x402scan reads must contain
+  // ONLY the coinbase x402 QueryInput fields. Pick the canonical-only copy so
+  // a strict indexer cannot reject the registration on unknown keys. We clean
+  // the COPY here, never the source.
   const bodyOutputSchema =
     bazaarInfo && bazaarInfo.input
       ? {
-          input: bazaarInfo.input,
-          ...(bazaarInfo.output ? { output: bazaarInfo.output } : {}),
+          input: canonicalDiscoveryInput(bazaarInfo.input as Record<string, unknown>),
+          ...(bazaarInfo.output
+            ? { output: canonicalDiscoveryOutput(bazaarInfo.output as Record<string, unknown>) }
+            : {}),
         }
       : undefined;
 

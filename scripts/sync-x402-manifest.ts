@@ -37,6 +37,8 @@ import * as path from 'path';
 import {
   bazaarPilotPaths,
   getBazaarPilotConfig,
+  canonicalDiscoveryInput,
+  canonicalDiscoveryOutput,
   type BazaarPilotConfig,
 } from '../worker/src/bazaar-pilots';
 
@@ -304,9 +306,16 @@ function outputSchemaFor(pilot: BazaarPilotConfig): { input: unknown; output?: u
   const info = (pilot.extension as { bazaar?: { info?: { input?: unknown; output?: unknown } } })
     ?.bazaar?.info;
   if (!info || info.input === undefined) return undefined;
+  // Emit ONLY the canonical coinbase x402 QueryInput fields into the manifest's
+  // accepts[].outputSchema so a strict x402scan-style indexer cannot reject the
+  // registration on unknown keys (queryFields, and any CDP discoverable/url
+  // extras). The full extensions.bazaar.info block is emitted untouched
+  // elsewhere for CDP/Bazaar; this cleans only the canonical discovery copy.
   return {
-    input: info.input,
-    ...(info.output !== undefined ? { output: info.output } : {}),
+    input: canonicalDiscoveryInput(info.input as Record<string, unknown>),
+    ...(info.output !== undefined
+      ? { output: canonicalDiscoveryOutput(info.output as Record<string, unknown>) }
+      : {}),
   };
 }
 

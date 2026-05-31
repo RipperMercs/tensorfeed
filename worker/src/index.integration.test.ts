@@ -316,6 +316,15 @@ describe('canonical accepts[].outputSchema (x402scan registration)', () => {
     expect(input?.queryParams).toBeDefined();
     expect(typeof input?.queryParams).toBe('object');
 
+    // Canonical-only QueryInput: the body outputSchema.input must carry ONLY
+    // the coinbase x402 fields { type, method, queryParams, pathParams?,
+    // headers? }. The CDP/Bazaar typing extra queryFields and the
+    // CDP-normalization extras discoverable + url must NOT leak into the
+    // canonical discovery surface a strict x402scan indexer reads.
+    expect(input).not.toHaveProperty('queryFields');
+    expect(input).not.toHaveProperty('discoverable');
+    expect(input).not.toHaveProperty('url');
+
     // The full body form also carries output.
     expect(outputSchema?.output).toBeDefined();
     expect((outputSchema?.output as Record<string, unknown>)?.type).toBe('json');
@@ -342,6 +351,13 @@ describe('canonical accepts[].outputSchema (x402scan registration)', () => {
     const input = outputSchema?.input as Record<string, unknown> | undefined;
     expect(input).toBeDefined();
     expect(input?.type).toBe('http');
+
+    // Canonical-only QueryInput in the header form too. The header input is
+    // derived from the body's outputSchema.input, so the queryFields/CDP
+    // extras must already be gone here.
+    expect(input).not.toHaveProperty('queryFields');
+    expect(input).not.toHaveProperty('discoverable');
+    expect(input).not.toHaveProperty('url');
 
     // Output ABSENT in the header form: the heavy example stays body-only.
     expect(outputSchema?.output).toBeUndefined();

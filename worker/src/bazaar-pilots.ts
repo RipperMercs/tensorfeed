@@ -6241,6 +6241,48 @@ export function bazaarExtensionsFor(path: string): Record<string, unknown> {
 }
 
 /**
+ * Pick ONLY the canonical coinbase x402 QueryInput fields from a discovery
+ * input object. The canonical QueryInput (coinbase/x402 Go type) is exactly
+ * { type, method, queryParams, pathParams?, headers? }. Our CDP/Bazaar path
+ * decorates info.input with non-canonical extras (queryFields, pathFields for
+ * typed catalog UIs, and after CDP normalization possibly discoverable + url),
+ * which a strict x402scan-style indexer can reject. This returns a fresh,
+ * canonical-only copy for the accepts[].outputSchema discovery surface WITHOUT
+ * mutating the source: extensions.bazaar.info keeps its extras for CDP.
+ *
+ * Pure function. Picks present keys only (omits undefined), so it never
+ * widens the shape with explicit-undefined fields.
+ */
+export function canonicalDiscoveryInput(
+  input: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const k of ['type', 'method', 'queryParams', 'pathParams', 'headers'] as const) {
+    if (input[k] !== undefined) out[k] = input[k];
+  }
+  return out;
+}
+
+/**
+ * Canonical x402 discovery OUTPUT picker, sibling to canonicalDiscoveryInput.
+ * The canonical DiscoveryInfo output is { type, format?, example? }. TF's
+ * output is already { type, example } today, so this is mostly a safety pick
+ * (it also drops the derived `schema` that normalizeBazaarExtensionsForCDP
+ * adds for CDP). Included for symmetry with the input picker.
+ *
+ * Pure function. Picks present keys only.
+ */
+export function canonicalDiscoveryOutput(
+  output: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const k of ['type', 'format', 'example'] as const) {
+    if (output[k] !== undefined) out[k] = output[k];
+  }
+  return out;
+}
+
+/**
  * Returns the description string for the 402 `resource.description` field.
  * Pilots get their endpoint-specific description; non-pilots get the
  * generic "TensorFeed premium API" fallback used today.

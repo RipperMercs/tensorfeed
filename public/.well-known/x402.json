@@ -9765,11 +9765,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
@@ -9924,11 +9924,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
@@ -10083,11 +10083,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
@@ -10242,11 +10242,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
@@ -10401,11 +10401,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
@@ -10560,11 +10560,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
@@ -10719,11 +10719,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
@@ -10878,11 +10878,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
@@ -11037,11 +11037,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
@@ -11196,11 +11196,11 @@
             "input": {
               "type": "http",
               "method": "GET",
-              "pathParams": {
-                "id": "CVE-2024-3094"
-              },
               "queryParams": {
                 "series": false
+              },
+              "pathParams": {
+                "id": "CVE-2024-3094"
               }
             },
             "output": {
