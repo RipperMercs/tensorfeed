@@ -175,8 +175,29 @@ describe('parseXPaymentHeader', () => {
     expect(parseXPaymentHeader(btoa(JSON.stringify(bad)))).toBeNull();
   });
 
-  it('returns null for oversized payload', () => {
-    expect(parseXPaymentHeader('a'.repeat(9000))).toBeNull();
+  it('parses a valid payload carrying a large bazaar extension (cataloging settle)', async () => {
+    // Cataloging settles echo the endpoint's full bazaar extension verbatim,
+    // which pushes the X-PAYMENT base64 past the old 8KB bound (a real Wave 26
+    // settle measured 9424 chars). A valid payload in that range must parse.
+    const payload = await buildValidPayload();
+    const big = {
+      bazaar: {
+        info: {
+          input: { type: 'http', method: 'GET' },
+          output: { type: 'json', example: { pad: 'x'.repeat(7000) } },
+        },
+      },
+    };
+    const encoded = encode({ ...payload, extensions: big } as PaymentPayload);
+    expect(encoded.length).toBeGreaterThan(8192);
+    expect(encoded.length).toBeLessThan(16384);
+    const parsed = parseXPaymentHeader(encoded);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.x402Version).toBe(2);
+  });
+
+  it('returns null for oversized payload (over the 16KB bound)', () => {
+    expect(parseXPaymentHeader('a'.repeat(20000))).toBeNull();
   });
 });
 

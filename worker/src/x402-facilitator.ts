@@ -241,9 +241,15 @@ export interface SettleResult {
  */
 export function parseXPaymentHeader(headerValue: string): PaymentPayload | null {
   if (!headerValue || typeof headerValue !== 'string') return null;
-  // Reasonable upper bound: a 65-byte sig + 6-field auth + envelope
-  // base64-encodes to well under 4KB. Reject larger inputs without parse.
-  if (headerValue.length > 8192) return null;
+  // Upper bound guards against unbounded parse work. A bare settle (65-byte
+  // sig + 6-field auth + envelope) is well under 4KB, but a cataloging settle
+  // echoes the endpoint's full bazaar extension (info.input + output.example +
+  // schema), which can push the base64 past 8KB (a real Wave 26 settle measured
+  // 9424 chars, and a real agent that copies the extension into its payload hits
+  // the same size). 16KB keeps a sane DoS bound, stays well under Cloudflare's
+  // header limit, and admits legitimate richly-cataloged pilots. Reject larger
+  // inputs without parse.
+  if (headerValue.length > 16384) return null;
   let json: string;
   try {
     json = atob(headerValue.trim());

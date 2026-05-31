@@ -218,6 +218,14 @@ async function settleOne(endpoint, account, dryRun) {
   const ms = Date.now() - t0;
   console.log(`  HTTP ${res.status} (${ms} ms)`);
 
+  // On a non-2xx, print the response body so the failure reason is visible
+  // (e.g. invalid_payload, missing params, snapshot_not_ready) instead of a
+  // bare status code. The body is not read elsewhere, so consuming it is safe.
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    if (errText) console.log('  body:', errText.slice(0, 500));
+  }
+
   const extResp = res.headers.get('EXTENSION-RESPONSES');
   if (extResp) {
     console.log('  EXTENSION-RESPONSES:', extResp);
