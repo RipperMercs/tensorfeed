@@ -4377,7 +4377,7 @@ export default {
           guidanceDeltaPreview: '/api/preview/sec/filings/guidance-delta?accession= or ?ticker=&form= (free, 10/IP/day; the materiality_summary + per-change category/type/direction/materiality, with the verbatim quotes and values redacted)',
           providerReliabilityPreview: '/api/preview/provider-reliability-verdict (free, 10/IP/day; the most-dependable and riskiest picks only, no full per-provider ranking or signed receipt)',
           x402SettlementPreview: '/api/preview/x402-settlement-verdict (free, 10/IP/day; the momentum, concentration, and leading-publisher verdict only, no full publisher ranking or signed receipt)',
-          premiumRouting: '/api/premium/routing',
+          premiumRouting: '/api/premium/routing?task=code|reasoning|creative|general (1 credit; top-5 ranked models with full score breakdown, pricing, status, and component-level detail. Optional ?budget=, ?min_quality=, ?top_n=1-10, and custom weights ?w_quality=, ?w_availability=, ?w_cost=, ?w_latency=.)',
           premiumRouteVerdict: '/api/premium/route-verdict?task=code|reasoning|creative|general or ?model= (1 credit, AFTA-signed; the single best model to use right now, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state, plus runners-up and a signed receipt. Optional ?max_latency_p95_ms=, ?require_operational=, ?exclude_deprecated=. 30-min freshness SLA, no-charge when stale.)',
           stackSafetyVerdict: '/api/premium/stack-safety-verdict?packages=name@version,... (1 credit, AFTA-signed; GO/HOLD/BLOCK deploy gate per AI-stack package, fusing the ingested AI-CVE batch + CISA KEV. Up to 10 packages. Never-false-confirm: BLOCK only on exploited with no fix, HOLD on version-ambiguous, PASS on no match, UNKNOWN outside the cohort.)',
           benchmarkTrustVerdict: '/api/premium/benchmark-trust-verdict?benchmark= or ?category= (1 credit, AFTA-signed; is an AI benchmark a trustworthy capability signal or saturated/contaminated/near-ceiling, so down-weight a high score. Trust band + 0-100 score per benchmark, fusing contamination and saturation flags with live frontier compression, plus a down-weight recommendation and an alternative benchmark.)',
@@ -6232,10 +6232,13 @@ export default {
       }
     }
 
-    // === PAID PREMIUM ENDPOINT: ROUTING (Tier 2, requires credits) ===
+    // === PAID PREMIUM ENDPOINT: ROUTING (1 credit per call) ===
+    // Top-5 ranked models with full score breakdown, pricing, status, and
+    // component detail. Advertised at 1 credit (public/llms.txt + every
+    // billing field), so the gate, the debit, and the docs all settle on 1.
 
     if (path === '/api/premium/routing') {
-      const payment = await requirePayment(request, env, 2);
+      const payment = await requirePayment(request, env, 1);
       if (!payment.paid) {
         return payment.response!;
       }
@@ -6277,35 +6280,14 @@ export default {
         logPremiumUsage(env, '/api/premium/routing', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
 
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-store',
-      };
-      if (payment.token) headers['X-Payment-Token-Balance'] = String(payment.tokenRemaining ?? 0);
-      if (payment.newToken && payment.token) {
-        headers['X-Payment-Token'] = payment.token;
-        headers['X-Payment-Token-Note'] = 'Save this token; use Authorization: Bearer <token> for future calls.';
-      }
-      if (payment.paymentResponseHeader) headers['PAYMENT-RESPONSE'] = payment.paymentResponseHeader;
-
-      const routingResponse = new Response(
-        JSON.stringify({
-          ...result,
-          billing: {
-            credits_charged: 1,
-            credits_remaining: payment.tokenRemaining,
-            ...(payment.newToken ? { new_token_issued: true, token: payment.token } : {}),
-          },
-        }),
-        { status: 200, headers },
-      );
-      // This handler builds its paid 200 inline rather than via
-      // premiumResponse, so tag it for the Agent Usage Meter charge signal.
-      // Routing is a flat 1-credit endpoint; carry the payer wallet so the AE
-      // funnel attributes it like every other paid call.
-      markResponseCharged(routingResponse, { wallet: payment.payerWallet, credits: 1 });
-      return routingResponse;
+      // Route the paid 200 through premiumResponse so the deferred debit
+      // actually commits (commitPayment runs there), the billing block and
+      // receipt reflect the REAL charged amount, and markResponseCharged is
+      // tagged centrally for the Agent Usage Meter. computeRouting always
+      // returns ok: true, including an empty-recommendations result when the
+      // caller's filters match nothing (that is a valid paid answer, not an
+      // upstream failure), so there is no no-charge branch here.
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === ROUTE VERDICT PREVIEW (free, rate-limited) ===

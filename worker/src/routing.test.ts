@@ -19,6 +19,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { computeRouting, hoursUntilUTCRollover } from './routing';
+import { commitPayment, type PaymentResult } from './payments';
 import type { Env } from './types';
 
 // ── Mock infrastructure ───────────────────────────────────────────
@@ -403,5 +404,86 @@ describe('hoursUntilUTCRollover', () => {
     const h = hoursUntilUTCRollover();
     expect(h).toBeGreaterThanOrEqual(1);
     expect(h).toBeLessThanOrEqual(24);
+  });
+});
+
+// ── /api/premium/routing debit path ───────────────────────────────
+//
+// Regression guard for the billing bug fixed on the backend-hardening
+// branch: the routing handler used to build its paid 200 inline and never
+// call commitPayment, so the caller's balance was never decremented (a free
+// paid endpoint). The handler now routes its 200 through premiumResponse,
+// which calls the same commitPayment exercised here. The endpoint is
+// advertised at 1 credit (public/llms.txt and every billing field), so the
+// committed debit MUST be exactly 1.
+
+// Store-backed KV so the read-modify-write debit in commitPayment is real
+// (the makeKV above uses a no-op put on purpose for the pure routing logic).
+function makeStoreKV(initial: Record<string, unknown> = {}) {
+  const store = new Map<string, unknown>(Object.entries(initial));
+  return {
+    get: async (key: string) => store.get(key) ?? null,
+    put: async (key: string, value: string) => {
+      try {
+        store.set(key, JSON.parse(value));
+      } catch {
+        store.set(key, value);
+      }
+    },
+    delete: async (key: string) => {
+      store.delete(key);
+    },
+    list: async () => ({ keys: Array.from(store.keys()).map(name => ({ name })) }),
+  };
+}
+
+function makePaymentEnv(seed: Record<string, unknown> = {}): Env {
+  return {
+    TENSORFEED_NEWS: makeStoreKV() as unknown as KVNamespace,
+    TENSORFEED_STATUS: makeStoreKV() as unknown as KVNamespace,
+    TENSORFEED_CACHE: makeStoreKV(seed) as unknown as KVNamespace,
+    ENVIRONMENT: 'test',
+    SITE_URL: 'https://tensorfeed.ai',
+    INDEXNOW_KEY: '',
+    X_API_KEY: '',
+    X_API_SECRET: '',
+    X_ACCESS_TOKEN: '',
+    X_ACCESS_SECRET: '',
+    GITHUB_TOKEN: '',
+    RESEND_API_KEY: '',
+    ALERT_EMAIL_TO: '',
+    ALERT_EMAIL_FROM: '',
+    PAYMENT_WALLET: '0x0',
+    PAYMENT_ENABLED: 'true',
+  } as unknown as Env;
+}
+
+const ROUTING_TOKEN = 'tf_live_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+
+describe('/api/premium/routing debit path', () => {
+  it('commits a 1-credit debit through commitPayment (was a free paid endpoint)', async () => {
+    const env = makePaymentEnv({
+      [`pay:credits:${ROUTING_TOKEN}`]: {
+        balance: 10,
+        created: '2026-05-30T00:00:00Z',
+        last_used: '2026-05-30T00:00:00Z',
+        agent_ua: 'vitest',
+        total_purchased: 10,
+      },
+    });
+    const payment: PaymentResult = {
+      paid: true,
+      token: ROUTING_TOKEN,
+      cost: 1,
+      currentBalance: 10,
+      tokenRemaining: 9,
+    };
+    const commit = await commitPayment(env, payment, '/api/premium/routing', null);
+    expect(commit.creditsCharged).toBe(1);
+    expect(commit.balanceAfter).toBe(9);
+    expect(commit.noChargeReason).toBeNull();
+    // Confirm the balance KV write actually fired (the inline handler never did).
+    const record = (await env.TENSORFEED_CACHE.get(`pay:credits:${ROUTING_TOKEN}`, 'json')) as { balance: number } | null;
+    expect(record?.balance).toBe(9);
   });
 });
