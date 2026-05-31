@@ -15,6 +15,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { makeEnv, seedToken, balanceOf, call } from './test-harness';
+import { isInternalTraffic } from './usage-meter';
 
 // Unique-ish suffixes so token and IP state never collide across tests.
 let seq = 0;
@@ -218,6 +219,28 @@ describe('index.ts router money path (integration)', () => {
 
     // Balance unchanged: stale data is free.
     expect(await balanceOf(env, token)).toBe(100);
+  });
+
+  // INTERNAL TAG: a premium request carrying X-TF-Internal: <key> is TF's own
+  // automated caller. The tag only affects AE telemetry (the request is excluded
+  // from the external-demand funnel); it must NOT change the HTTP outcome. So an
+  // internal-tagged strict-premium call returns the same canonical 402 challenge
+  // as the un-tagged equivalent.
+  it('handles an internal-tagged premium request identically to the un-tagged one', async () => {
+    const env = await makeEnv();
+
+    const plain = await call(env, '/api/premium/routing?task=code', { ip: uniqueIp() });
+    const tagged = await call(env, '/api/premium/routing?task=code', { ip: uniqueIp(), internal: true });
+
+    // Same status, same x402 challenge shape: the tag is telemetry-only.
+    expect(tagged.status).toBe(plain.status);
+    expect(tagged.status).toBe(402);
+    expect(tagged.json?.x402Version).toBe(2);
+    expect(tagged.json?.error).toBe('payment_required');
+
+    // The header the harness sends equals the env secret, so the pure helper
+    // the metering hook calls would classify it as internal.
+    expect(isInternalTraffic(env.INTERNAL_TRAFFIC_KEY ?? null, env.INTERNAL_TRAFFIC_KEY)).toBe(true);
   });
 
   // FREE SURFACE: the premium catalog is itself free, not gated. A no-token

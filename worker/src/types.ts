@@ -73,6 +73,10 @@ export interface Env {
   // Read API token; CF_ACCOUNT_ID is the Cloudflare account id for the SQL URL.
   CF_ANALYTICS_TOKEN?: string;
   CF_ACCOUNT_ID?: string;
+  // Shared secret: requests sending header `X-TF-Internal` equal to it are
+  // TensorFeed's own automated callers and are excluded from external-demand
+  // funnel metrics. Optional, so unset = nothing tagged.
+  INTERNAL_TRAFFIC_KEY?: string;
   // CreditLedger Durable Object namespace. Per-token DO instance owns
   // the canonical credit balance + daily-spend counter and serializes
   // all read-modify-write operations to close H-1 + H-2 races from the

@@ -4,6 +4,7 @@ import {
   normalizeUaFamily,
   recordUsageEvent,
   buildUsageReport,
+  isInternalTraffic,
 } from './usage-meter';
 import type { Env } from './types';
 
@@ -38,6 +39,22 @@ describe('normalizeUaFamily', () => {
   });
 });
 
+describe('isInternalTraffic', () => {
+  it('returns true when the header value exactly matches the key', () => {
+    expect(isInternalTraffic('s3cret-key', 's3cret-key')).toBe(true);
+  });
+  it('returns false when the key is set but the header is null', () => {
+    expect(isInternalTraffic(null, 's3cret-key')).toBe(false);
+  });
+  it('returns false when the key is set but the header mismatches', () => {
+    expect(isInternalTraffic('wrong', 's3cret-key')).toBe(false);
+  });
+  it('returns false when the key is undefined even if a header is present', () => {
+    expect(isInternalTraffic('anything', undefined)).toBe(false);
+    expect(isInternalTraffic(null, undefined)).toBe(false);
+  });
+});
+
 describe('recordUsageEvent', () => {
   it('writes one AE data point with the expected shape', () => {
     const writeDataPoint = vi.fn();
@@ -46,8 +63,25 @@ describe('recordUsageEvent', () => {
     expect(writeDataPoint).toHaveBeenCalledOnce();
     const dp = writeDataPoint.mock.calls[0][0];
     expect(dp.indexes).toEqual(['/api/premium/x']);
-    expect(dp.blobs).toEqual(['/api/premium/x', 'premium', 'paid', '0xabc', 'axios', 'US']);
+    expect(dp.blobs).toEqual(['/api/premium/x', 'premium', 'paid', '0xabc', 'axios', 'US', '0']);
     expect(dp.doubles).toEqual([1]);
+  });
+  it('writes blob7 = 1 when the event is tagged internal', () => {
+    const writeDataPoint = vi.fn();
+    const env = { USAGE_AE: { writeDataPoint } } as unknown as import('./types').Env;
+    recordUsageEvent(env, { path: '/api/premium/x', tier: 'premium', outcome: 'paid', ua: 'axios/1', internal: true });
+    const dp = writeDataPoint.mock.calls[0][0];
+    expect(dp.blobs[6]).toBe('1');
+    // The first 6 blobs keep their order so blob1/blob3 reads are unaffected.
+    expect(dp.blobs.slice(0, 6)).toEqual(['/api/premium/x', 'premium', 'paid', '', 'axios', '']);
+  });
+  it('writes blob7 = 0 when internal is false or absent', () => {
+    const writeDataPoint = vi.fn();
+    const env = { USAGE_AE: { writeDataPoint } } as unknown as import('./types').Env;
+    recordUsageEvent(env, { path: '/api/news', tier: 'free', outcome: 'served_free', ua: '', internal: false });
+    expect(writeDataPoint.mock.calls[0][0].blobs[6]).toBe('0');
+    recordUsageEvent(env, { path: '/api/news', tier: 'free', outcome: 'served_free', ua: '' });
+    expect(writeDataPoint.mock.calls[1][0].blobs[6]).toBe('0');
   });
   it('never throws when the binding is missing (best-effort)', () => {
     const env = {} as unknown as import('./types').Env;

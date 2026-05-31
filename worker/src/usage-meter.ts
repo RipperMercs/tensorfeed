@@ -12,6 +12,7 @@ export interface UsageEvent {
   ua: string;
   country?: string;
   credits?: number;
+  internal?: boolean;
 }
 
 // Tracked free path prefixes (premiumization-signal endpoints). All /api/premium/*
@@ -23,6 +24,13 @@ export function normalizeUaFamily(ua: string): string {
   // Take the token before the first slash or space, lowercased, bounded length.
   const head = ua.split(/[/\s]/)[0].toLowerCase().trim();
   return head ? head.slice(0, 40) : 'unknown';
+}
+
+// Pure: is this request one of TensorFeed's own automated callers? True only
+// when the shared secret is configured AND the request's X-TF-Internal header
+// value equals it. When the secret is unset, nothing is ever internal.
+export function isInternalTraffic(headerValue: string | null, key: string | undefined): boolean {
+  return !!key && headerValue === key;
 }
 
 // Pure: decide whether a request is metered, and how. Returns null to skip.
@@ -53,6 +61,7 @@ export function recordUsageEvent(env: Env, evt: UsageEvent): void {
         evt.wallet ?? '',
         normalizeUaFamily(evt.ua),
         evt.country ?? '',
+        evt.internal ? '1' : '0',
       ],
       doubles: [evt.credits ?? 0],
     });
@@ -226,7 +235,12 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
 }
 
 // Analytics Engine SQL read. Returns null (graceful degrade) when the token or
-// account id are absent, or when the query fails. Never throws.
+// account id are absent, or when the query fails. Never throws. The funnel is
+// external-only: events tagged internal (blob7 = '1', TF's own automated
+// callers carrying X-TF-Internal) are excluded so the funnel measures external
+// agent demand, not TF's own smoke / test / integration traffic. The exclusion
+// is NULL-tolerant: events written before blob7 existed (blob7 absent or empty)
+// still count, so the funnel never silently drops historical data points.
 export async function queryUsageFunnel(
   env: Env,
   days: number,
@@ -237,7 +251,7 @@ export async function queryUsageFunnel(
       sum(if(blob3='served_free',1,0)) AS free_hits,
       sum(if(blob3='unpaid_402',1,0)) AS unpaid_402,
       sum(if(blob3='paid',1,0)) AS paid
-      FROM tf_usage WHERE timestamp > now() - INTERVAL '${days}' DAY GROUP BY endpoint ORDER BY paid DESC LIMIT 100`;
+      FROM tf_usage WHERE timestamp > now() - INTERVAL '${days}' DAY AND (blob7 IS NULL OR blob7 != '1') GROUP BY endpoint ORDER BY paid DESC LIMIT 100`;
     const resp = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/analytics_engine/sql`,
       {

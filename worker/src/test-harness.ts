@@ -177,6 +177,11 @@ export async function makeEnv(opts: MakeEnvOptions = {}): Promise<Env> {
     ADMIN_KEY: 'test-admin-key',
     INGEST_KEY: 'test-ingest-key',
 
+    // Shared secret for the internal-traffic tag. A call() made with
+    // `{ internal: true }` sends `X-TF-Internal: <this>`, which the metering
+    // hook classifies as TF's own caller and excludes from the AE funnel.
+    INTERNAL_TRAFFIC_KEY: 'test-internal-key',
+
     // Real Ed25519 receipt-signing key so signReceipt() runs (not just
     // pending_key_bootstrap). The signature only needs to not throw.
     RECEIPT_PRIVATE_KEY_JWK: receiptJwk,
@@ -296,6 +301,13 @@ export interface CallOptions {
   ip?: string;
   /** Await ctx.waitUntil promises before returning. Default false. */
   settle?: boolean;
+  /**
+   * Tag the request as TensorFeed's own automated traffic. When true, sends
+   * `X-TF-Internal: <env.INTERNAL_TRAFFIC_KEY>` so the metering hook flags the
+   * AE datapoint internal (excluded from the external-demand funnel). Omit it
+   * to send no such header (the default, external-agent behavior).
+   */
+  internal?: boolean;
 }
 
 export interface CallResult {
@@ -321,6 +333,9 @@ export async function call(env: Env, path: string, opts: CallOptions = {}): Prom
   if (opts.token) headers.set('Authorization', `Bearer ${opts.token}`);
   headers.set('CF-Connecting-IP', opts.ip ?? '203.0.113.7');
   if (!headers.has('User-Agent')) headers.set('User-Agent', 'tensorfeed-integration-test/1.0');
+  // Internal-traffic tag: send the shared secret so the metering hook flags
+  // the AE datapoint internal. Only when the env has the secret configured.
+  if (opts.internal && env.INTERNAL_TRAFFIC_KEY) headers.set('X-TF-Internal', env.INTERNAL_TRAFFIC_KEY);
 
   let body: BodyInit | undefined;
   const method = opts.method ?? 'GET';

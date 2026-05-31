@@ -10,7 +10,7 @@ import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatest
 import { captureHistory, listHistory, readHistory } from './history';
 import { cdpListDiscoveryResources } from './cdp-facilitator';
 import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
-import { deriveUsageEvent, recordUsageEvent, buildUsageReport } from './usage-meter';
+import { deriveUsageEvent, recordUsageEvent, buildUsageReport, isInternalTraffic } from './usage-meter';
 import { cachedFetch } from './edge-cache';
 import {
   readNewsDaily,
@@ -1223,6 +1223,11 @@ export default {
       if (evt) {
         evt.ua = request.headers.get('User-Agent') || '';
         evt.country = request.cf?.country as string | undefined;
+        // TF's own automated callers (integration tests, smoke scripts,
+        // scheduled verification runs, the x402 catalog-settle script) should
+        // send `X-TF-Internal: <INTERNAL_TRAFFIC_KEY>` so they are excluded
+        // from external-demand funnel metrics. Unset secret = nothing tagged.
+        evt.internal = isInternalTraffic(request.headers.get('X-TF-Internal'), env.INTERNAL_TRAFFIC_KEY);
         // Attribute the AE data point to the on-chain payer for EVERY paid
         // premium call, named and pilot. The wallet rides the charge tag the
         // paid-response builders set; it is undefined on a bearer-token reuse
