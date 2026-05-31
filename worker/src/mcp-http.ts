@@ -86,7 +86,7 @@ import { parseFDAQuery, fetchFDAQuery, FDA_CATEGORIES } from './health-fda';
 
 const PROTOCOL_VERSION = '2024-11-05';
 const SERVER_NAME = 'tensorfeed';
-const SERVER_VERSION = '1.1.0';
+const SERVER_VERSION = '1.36.2';
 
 // JSON-RPC 2.0 standard error codes
 const ERR_PARSE = -32700;
@@ -1260,8 +1260,8 @@ async function handleInitialize(): Promise<unknown> {
       version: SERVER_VERSION,
     },
     instructions:
-      'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp. ' +
-      'Free tier (23 tools): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
+      'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp serves a curated subset of 32 tools; the full 59-tool set ships on the npx stdio server @tensorfeed/mcp-server. ' +
+      'Free tier (31 tools on this hosted endpoint): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
       'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
       'EIA Open Data series, USGS recent earthquakes, NWS US weather alerts, AI papers (arXiv recent + AI trending + HF daily), ' +
       'and the daily agent-ecosystem opportunities scan. ' +
@@ -1414,6 +1414,8 @@ export async function handleMcpHttpRequest(request: Request, env: Env): Promise<
         body: 'JSON-RPC 2.0 envelope per MCP spec',
         spec: 'https://modelcontextprotocol.io/specification/2024-11-05/basic/transports',
         tools_count: TOOLS.length,
+        full_tool_set:
+          'The npx stdio server @tensorfeed/mcp-server exposes the full 59-tool set; this hosted HTTP endpoint serves a curated subset.',
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     );

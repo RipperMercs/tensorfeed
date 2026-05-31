@@ -2307,15 +2307,15 @@ curl -H "X-TensorFeed-Simulate-Latency: 2500" https://tensorfeed.ai/api/status`}
         <div className="bg-bg-secondary border border-border rounded-xl p-5">
           <h2 className="text-lg font-semibold text-text-primary mb-2">Model Context Protocol (MCP)</h2>
           <p className="text-text-secondary text-sm mb-4">
-            TensorFeed ships two MCP transports for two distinct deployment shapes. Same tool surface, different connection model.
+            TensorFeed ships two MCP transports for two distinct deployment shapes. The npx stdio server carries the full 59-tool set; the hosted HTTP endpoint serves a curated 32-tool subset.
           </p>
 
           <h3 className="text-sm font-semibold text-text-primary mb-2">Hosted HTTP MCP (Streamable HTTP, MCP 2024-11-05)</h3>
           <p className="text-text-secondary text-sm mb-2">
             The canonical entry for hosted-marketplace listings (Anthropic vertical agent repos, claude.ai connectors, third-party MCP catalogs).
             POST a JSON-RPC 2.0 envelope to <code className="text-accent-primary font-mono">https://mcp.tensorfeed.ai/mcp</code>;
-            GET returns discovery info. CORS open for cross-origin agent fetches. 12 tools in V1 spanning AI news, model pricing, AI service status,
-            MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR (search + submissions + ticker lookup), and EIA Open Data.
+            GET returns discovery info. CORS open for cross-origin agent fetches. A curated subset of 32 tools spanning AI news, model pricing, AI service status,
+            MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR (search + submissions + ticker lookup), openFDA, EIA Open Data, USGS earthquakes, NWS weather alerts, AI papers, the agent-ecosystem opportunities scan, and the signed route_verdict premium tool.
             The legacy <code className="font-mono">https://tensorfeed.ai/api/mcp</code> path still works for backward compatibility.
           </p>
           <pre className="bg-bg-tertiary/50 border border-border rounded p-3 text-xs font-mono text-text-secondary overflow-x-auto whitespace-pre leading-relaxed mb-3">

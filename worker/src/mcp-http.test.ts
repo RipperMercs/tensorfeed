@@ -44,8 +44,12 @@ describe('handleMcpHttpRequest GET', () => {
     expect(resp.status).toBe(200);
     const body = (await resp.json()) as Record<string, unknown>;
     expect(body.name).toBe('tensorfeed');
+    expect(body.version).toBe('1.36.2');
     expect(body.protocolVersion).toBe('2024-11-05');
     expect(body.tools_count).toBe(MCP_TOOLS_COUNT);
+    expect(typeof body.full_tool_set).toBe('string');
+    expect(body.full_tool_set).toContain('@tensorfeed/mcp-server');
+    expect(body.full_tool_set).toContain('59');
   });
 });
 
@@ -56,7 +60,7 @@ describe('initialize', () => {
     expect(resp.status).toBe(200);
     const body = (await resp.json()) as { result: Record<string, unknown> };
     expect(body.result.protocolVersion).toBe('2024-11-05');
-    expect(body.result.serverInfo).toMatchObject({ name: 'tensorfeed' });
+    expect(body.result.serverInfo).toMatchObject({ name: 'tensorfeed', version: '1.36.2' });
     expect(body.result.capabilities).toHaveProperty('tools');
   });
 });
