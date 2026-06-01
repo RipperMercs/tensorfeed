@@ -1813,6 +1813,373 @@
         },
         "x-payment-required": true
       }
+    },
+    "/api/premium/route-verdict": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Single best model to use right now (signed routing decision)",
+        "operationId": "getPremiumRouteVerdict",
+        "description": "The signed model-routing decision. For ?task=code|reasoning|creative|general or ?model=<id-or-name>, returns the single best model to use right now, fusing pricing, contamination-discounted benchmark capability, real production usage, measured p95 latency probes, and live incident-triage operational state, plus runners-up and an AFTA-signed receipt over the inputs. 30-minute operational freshness SLA, no-charge when the live layer is stale.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "task",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "code",
+                "reasoning",
+                "creative",
+                "general"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "model",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_latency_p95_ms",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "require_operational",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "exclude_deprecated",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed verdict with AFTA receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required; returns the x402 challenge."
+          }
+        },
+        "x-payment-required": true
+      }
+    },
+    "/api/premium/provider-reliability-verdict": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Most dependable frontier provider to build on right now",
+        "operationId": "getPremiumProviderReliabilityVerdict",
+        "description": "Which frontier AI provider is the most dependable to build on right now, and which is the riskiest? Ranks the providers TensorFeed actively probes by measured operational reliability, fusing availability and tail consistency (p50 over p95) from its own latency probes into one dependability score, names the most dependable and the riskiest, and returns the full per-provider ranking with an AFTA-signed receipt. 30-minute freshness SLA, no-charge when stale.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
+        },
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Signed verdict with AFTA receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required; returns the x402 challenge."
+          }
+        },
+        "x-payment-required": true
+      }
+    },
+    "/api/premium/x402-settlement-verdict": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Ruling on the Base x402 USDC settlement market",
+        "operationId": "getPremiumX402SettlementVerdict",
+        "description": "Is the Base x402 USDC settlement market growing, is it concentrated or a real market, and who leads? Rules over TensorFeed's own on-chain settlement index: momentum versus the prior window of equal length, concentration by the Herfindahl index, and the leading publisher, plus the full per-publisher volume ranking. Optional window=24h|7d|30d (default 7d). Coverage is the Base settlements TensorFeed indexes, forward-only from launch. 10-minute freshness SLA, no-charge when stale.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "window",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "24h",
+                "7d",
+                "30d"
+              ],
+              "default": "7d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed verdict with AFTA receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required; returns the x402 challenge."
+          }
+        },
+        "x-payment-required": true
+      }
+    },
+    "/api/premium/stack-safety-verdict": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "GO/HOLD/BLOCK deploy gate per AI-stack package",
+        "operationId": "getPremiumStackSafetyVerdict",
+        "description": "GO / HOLD / BLOCK deploy gate for your AI stack, fusing the ingested AI-CVE batch with CISA KEV. Pass packages=name@version (up to 10).",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "packages",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "vllm@0.5.0,transformers@4.40.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed verdict with AFTA receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required; returns the x402 challenge."
+          }
+        },
+        "x-payment-required": true
+      }
+    },
+    "/api/premium/benchmark-trust-verdict": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Trust band and 0-100 score per AI benchmark",
+        "operationId": "getPremiumBenchmarkTrustVerdict",
+        "description": "Is an AI benchmark a trustworthy capability signal, or saturated/contaminated/near-ceiling so a high score should be down-weighted? Trust band + 0-100 score per benchmark.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "benchmark",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed verdict with AFTA receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required; returns the x402 challenge."
+          }
+        },
+        "x-payment-required": true
+      }
+    },
+    "/api/premium/failover-verdict": {
+      "get": {
+        "tags": [
+          "Premium"
+        ],
+        "summary": "Best operational failover target when a provider degrades",
+        "operationId": "getPremiumFailoverVerdict",
+        "description": "Provider A is degraded, which operational provider do I fail over to for this task right now? Confirms A against live incident triage, then recommends the best operational alternative. Pass ?from=<provider>.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "task",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "code",
+                "reasoning",
+                "creative",
+                "general"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed verdict with AFTA receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required; returns the x402 challenge."
+          }
+        },
+        "x-payment-required": true
+      }
     }
   },
   "components": {
