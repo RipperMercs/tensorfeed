@@ -13393,6 +13393,15 @@ export default {
       // pricing, models, benchmarks, status, agent activity. Runs after
       // updateDailyData so the snapshot reflects freshly-updated data.
       await run('captureHistory', () => captureHistory(env));
+      // Daily TFII (model Intelligence Index) snapshot. Computes the composite
+      // from the freshly-updated benchmarks and writes latest + dated keys so
+      // the premium history series accrues. Runs after captureHistory so the
+      // benchmarks KV is current. See worker/src/model-intelligence.ts.
+      await run('captureIntelligenceSnapshot', async () => {
+        const { captureIntelligenceSnapshot } = await import('./model-intelligence');
+        const res = await captureIntelligenceSnapshot(env, new Date().toISOString());
+        if (!res.ok) throw new Error(`intelligence snapshot skipped: ${res.error}`);
+      });
       // Daily AI Attention Index snapshot. Compounds into a multi-month
       // series of per-provider attention. Backs /api/attention/history
       // (free) and /api/premium/attention/series (1 credit).
