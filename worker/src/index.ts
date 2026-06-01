@@ -1953,11 +1953,51 @@ export default {
       // Try new 'models' key first, fall back to legacy 'pricing' key
       let cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'models', 300);
       if (!cached) cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'pricing', 300);
+      // Merge the free TFII headline per model from the latest index snapshot.
+      // Direct KV read (not cachedKVGet) to avoid sharing a request-scoped cache
+      // key with the 'models' read above. The snapshot is small and the whole
+      // /api/models response is already edge-cached for 300s.
+      const snap = (await env.TENSORFEED_CACHE.get('intelligence:snapshot:latest', 'json')) as
+        | import('./model-intelligence').IntelligenceSnapshot
+        | null;
+      let body = (cached as Record<string, unknown>) || {};
+      if (snap && body && Array.isArray((body as { providers?: unknown }).providers)) {
+        const { enrichModelsWithIntelligence } = await import('./model-intelligence');
+        body = enrichModelsWithIntelligence(body as { providers: Array<{ models: Array<{ name?: string }> }> }, snap) as Record<string, unknown>;
+      }
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
-        ...(cached as Record<string, unknown> || {}),
+        ...body,
       }, 200, 300);
+    }
+
+    if (path === '/api/intelligence') {
+      const snap = (await cachedKVGet(request, env.TENSORFEED_CACHE, 'intelligence:snapshot:latest', 300)) as
+        | import('./model-intelligence').IntelligenceSnapshot
+        | null;
+      if (!snap) {
+        return jsonResponse(
+          { ok: false, error: 'index_not_yet_populated', hint: 'The daily TFII snapshot runs at 07:00 UTC.' },
+          503,
+        );
+      }
+      const models = snap.models
+        .filter(m => !m.trust.low_coverage)
+        .sort((a, b) => a.rank - b.rank)
+        .map(m => ({ model_id: m.model_id, name: m.name, provider: m.provider, tfii: m.tfii, rank: m.rank }));
+      return jsonResponse(
+        {
+          ok: true,
+          as_of: snap.as_of,
+          methodology_version: snap.methodology_version,
+          methodology_url: 'https://tensorfeed.ai/intelligence',
+          count: models.length,
+          models,
+        },
+        200,
+        300,
+      );
     }
 
     // === BENCHMARKS ENDPOINT (cached 300s) ===
