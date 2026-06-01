@@ -12,6 +12,7 @@ const NAV = [
   { href: '/research/topics', label: 'Emerging Topics' },
   { href: '/research/institutions', label: 'Institutions' },
   { href: '/research/conference-acceptances', label: 'Conferences' },
+  { href: '/research/nlp-proceedings', label: 'NLP Papers' },
 ];
 
 /**

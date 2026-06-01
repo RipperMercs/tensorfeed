@@ -299,3 +299,32 @@ export function useConferenceAcceptances() {
   }, []);
   return state;
 }
+
+export interface NlpPaper {
+  title: string;
+  authors: string[];
+  venue_group: string;
+  abstract_snippet: string;
+  url: string;
+  doi: string | null;
+}
+
+// ACL Anthology recent NLP/CL proceedings (ACL, EMNLP, NAACL). Source:
+// /api/research/nlp-proceedings (free).
+export function useNlpProceedings() {
+  const [state, setState] = useState<{ papers: NlpPaper[] | null; venues: string[]; capturedAt: string | null }>(
+    { papers: null, venues: [], capturedAt: null },
+  );
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; capturedAt?: string; venues?: string[]; papers?: NlpPaper[] }>(
+        `${API}/api/research/nlp-proceedings`,
+      );
+      if (cancelled) return;
+      setState({ papers: data?.papers ?? [], venues: data?.venues ?? [], capturedAt: data?.capturedAt ?? null });
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return state;
+}
