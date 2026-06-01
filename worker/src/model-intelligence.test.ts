@@ -5,6 +5,8 @@ import {
   enrichModelsWithIntelligence,
   registryMap,
   normalizeId,
+  taskQuality,
+  trustForTask,
   METHODOLOGY_VERSION,
   type IntelligenceSnapshot,
 } from './model-intelligence';
@@ -97,5 +99,18 @@ describe('enrichModelsWithIntelligence', () => {
 describe('normalizeId', () => {
   it('lowercases and hyphenates', () => {
     expect(normalizeId('Claude Opus 4.7')).toBe('claude-opus-4.7');
+  });
+});
+
+describe('shared scoring is the source of truth', () => {
+  it('taskQuality and trustForTask are exported and composable for a known fixture', () => {
+    const scores = { mmlu_pro: 90, human_eval: 80, swe_bench: 70 };
+    const q = taskQuality('code', scores);
+    const trust = trustForTask('code', scores, registryMap());
+    const discounted = q * trust.multiplier;
+    expect(q).toBeGreaterThan(0);
+    expect(trust.multiplier).toBeGreaterThan(0);
+    expect(trust.multiplier).toBeLessThanOrEqual(1);
+    expect(discounted).toBeLessThanOrEqual(q);
   });
 });

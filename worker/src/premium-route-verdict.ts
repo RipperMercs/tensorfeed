@@ -56,6 +56,7 @@ import {
   type BenchmarkMeta,
 } from './benchmark-registry';
 import { MODEL_DEPRECATIONS, type ModelDeprecation } from './model-deprecations';
+import { TASKS, taskQuality, trustForTask } from './model-intelligence';
 
 // ─── Local shapes for the two KV blobs and the status list ─────────
 // Declared locally to keep this module free of cross-imports into
@@ -101,45 +102,6 @@ interface ServiceStatus {
   status: 'operational' | 'degraded' | 'down' | 'unknown';
   lastChecked?: string;
 }
-
-// ─── Task weighting (mirrors routing.ts TASK_BENCHMARK_WEIGHTS) ────
-// Kept local because route-verdict applies a contamination discount on
-// top of the raw score, which is a different computation from the free
-// routing preview. The benchmark keys here are the underscored score
-// keys stored in the benchmarks KV.
-
-const TASKS: RoutingTask[] = ['code', 'reasoning', 'creative', 'general'];
-
-const TASK_BENCHMARK_WEIGHTS: Record<RoutingTask, Record<string, number>> = {
-  code: { human_eval: 0.4, swe_bench: 0.4, mmlu_pro: 0.2 },
-  reasoning: { gpqa_diamond: 0.4, math: 0.4, mmlu_pro: 0.2 },
-  creative: { mmlu_pro: 0.5, human_eval: 0.25, math: 0.25 },
-  general: { mmlu_pro: 0.25, human_eval: 0.25, gpqa_diamond: 0.15, math: 0.15, swe_bench: 0.2 },
-};
-
-// Maps the underscored benchmark score keys to the hyphenated ids used
-// in BENCHMARK_REGISTRY, so contamination and saturation state can be
-// joined to each weighted benchmark. A key absent from this map simply
-// contributes no trust adjustment (treated as neutral).
-const SCORE_KEY_TO_REGISTRY_ID: Record<string, string> = {
-  human_eval: 'humaneval',
-  swe_bench: 'swe-bench-verified',
-  mmlu_pro: 'mmlu-pro',
-  gpqa_diamond: 'gpqa-diamond',
-  math: 'math',
-};
-
-const CONTAMINATION_MULTIPLIER: Record<BenchmarkMeta['contaminationRisk'], number> = {
-  low: 1.0,
-  medium: 0.92,
-  high: 0.78,
-};
-
-const STATUS_MULTIPLIER: Record<BenchmarkMeta['status'], number> = {
-  active: 1.0,
-  saturated: 0.85,
-  deprecated: 0.7,
-};
 
 // Composite weighting. Capability-first: quality leads, and cost,
 // latency, and operational state break ties among the strong models that
@@ -254,59 +216,6 @@ function round4(n: number): number {
 /** Normalize a model name for fuzzy cross-source matching. */
 function normName(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-/**
- * Base quality for a task: weighted, renormalized average of the task's
- * benchmark scores (each 0..1). Mirrors routing.ts computeQualityForTask.
- */
-function taskQuality(task: RoutingTask, scores: Record<string, number>): number {
-  const weights = TASK_BENCHMARK_WEIGHTS[task];
-  let total = 0;
-  let applied = 0;
-  for (const [bench, w] of Object.entries(weights)) {
-    const score = scores[bench];
-    if (typeof score === 'number' && score > 0) {
-      total += (score / 100) * w;
-      applied += w;
-    }
-  }
-  return applied === 0 ? 0 : total / applied;
-}
-
-/**
- * Trust multiplier in (0, 1]: weighted average of contamination x status
- * multipliers over the task's benchmarks that the model actually scored.
- * Also returns the worst contamination tier seen for the note.
- */
-function trustForTask(
-  task: RoutingTask,
-  scores: Record<string, number>,
-  registryById: Map<string, BenchmarkMeta>,
-): { multiplier: number; worstContamination: BenchmarkMeta['contaminationRisk'] | null; flagged: string[] } {
-  const weights = TASK_BENCHMARK_WEIGHTS[task];
-  let total = 0;
-  let applied = 0;
-  let worst: BenchmarkMeta['contaminationRisk'] | null = null;
-  const flagged: string[] = [];
-  const rank: Record<BenchmarkMeta['contaminationRisk'], number> = { low: 0, medium: 1, high: 2 };
-  for (const [bench, w] of Object.entries(weights)) {
-    const score = scores[bench];
-    if (typeof score !== 'number' || score <= 0) continue;
-    const regId = SCORE_KEY_TO_REGISTRY_ID[bench];
-    const meta = regId ? registryById.get(regId) : undefined;
-    const cMult = meta ? CONTAMINATION_MULTIPLIER[meta.contaminationRisk] : 1.0;
-    const sMult = meta ? STATUS_MULTIPLIER[meta.status] : 1.0;
-    total += cMult * sMult * w;
-    applied += w;
-    if (meta) {
-      if (worst === null || rank[meta.contaminationRisk] > rank[worst]) worst = meta.contaminationRisk;
-      if (meta.contaminationRisk === 'high' || meta.status === 'saturated' || meta.status === 'deprecated') {
-        flagged.push(`${meta.name} (${meta.contaminationRisk} contamination, ${meta.status})`);
-      }
-    }
-  }
-  return { multiplier: applied === 0 ? 1.0 : total / applied, worstContamination: worst, flagged };
 }
 
 // ─── The pure verdict builder ──────────────────────────────────────
