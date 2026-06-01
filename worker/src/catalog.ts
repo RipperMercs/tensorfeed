@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { isCatalogNoise, humanizeModelName } from './catalog-clean';
 
 /**
  * Daily data updater for AI models/pricing, benchmarks, and agents directory.
@@ -155,6 +156,8 @@ const LITELLM_PROVIDER_MAP: Record<string, string> = {
 
 const TRACKED_MODELS: Record<string, { providerId: string; ourId: string; name: string }> = {
   'claude-opus-4-8': { providerId: 'anthropic', ourId: 'claude-opus-4-8', name: 'Claude Opus 4.8' },
+  'claude-sonnet-4-5': { providerId: 'anthropic', ourId: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5' },
+  'claude-opus-4-1': { providerId: 'anthropic', ourId: 'claude-opus-4-1', name: 'Claude Opus 4.1' },
   'claude-opus-4-7': { providerId: 'anthropic', ourId: 'claude-opus-4-7', name: 'Claude Opus 4.7' },
   'claude-opus-4-6': { providerId: 'anthropic', ourId: 'claude-opus-4-6', name: 'Claude Opus 4.6' },
   'claude-sonnet-4-6': { providerId: 'anthropic', ourId: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
@@ -271,10 +274,9 @@ function mergePricing(current: PricingData, litellm: Record<string, unknown>): {
     const maxTokens = (entry['max_input_tokens'] || entry['max_tokens']) as number | undefined;
 
     if (key.includes(':') || key.includes('/latest')) continue;
-    // Skip dated snapshot keys (e.g. "claude-opus-4-7-20260416"). They are
-    // pinned variants of a base model and would pollute the catalog with a
-    // slug name and a near-duplicate row.
-    if (/-\d{6,8}$/.test(key)) continue;
+    // Skip catalog noise (dated snapshots, non-chat modalities like
+    // tts/audio/image/embedding). Keeps the auto-add to current chat LLMs.
+    if (isCatalogNoise(key)) continue;
     if (inputPerToken === undefined || outputPerToken === undefined) continue;
 
     const cleanKey = key.replace('gemini/', '').replace('mistral/', '');
@@ -293,7 +295,7 @@ function mergePricing(current: PricingData, litellm: Record<string, unknown>): {
 
     const newModel: ModelEntry = {
       id: cleanKey,
-      name: cleanKey,
+      name: humanizeModelName(cleanKey),
       inputPrice: parseFloat((inputPerToken * 1_000_000).toFixed(2)),
       outputPrice: parseFloat((outputPerToken * 1_000_000).toFixed(2)),
       contextWindow: maxTokens || 128000,
@@ -307,20 +309,25 @@ function mergePricing(current: PricingData, litellm: Record<string, unknown>): {
     changed = true;
   }
 
-  // Prune dated-snapshot duplicates that earlier runs persisted (e.g.
-  // "claude-opus-4-7-20260416" while the canonical "claude-opus-4-7" exists).
-  // Conservative: only drop a dated variant when its de-dated base id is also
-  // present in the same provider, so a standalone dated id is never lost.
+  // Clean untracked entries: prune noise (dated snapshots, non-chat
+  // modalities) and humanize any slug-form display name. Only touches entries
+  // whose name still equals their id (untracked LiteLLM adds); tracked and
+  // curated baseline models carry hand-written names and are left untouched.
   for (const provider of current.providers) {
-    const ids = new Set(provider.models.map(m => m.id));
     const before = provider.models.length;
-    provider.models = provider.models.filter(m => {
-      const dated = /^(.+)-\d{6,8}$/.exec(m.id);
-      return !(dated && ids.has(dated[1]));
-    });
+    provider.models = provider.models.filter(m => !(m.name === m.id && isCatalogNoise(m.id)));
     if (provider.models.length !== before) {
-      console.log(`Pruned ${before - provider.models.length} dated duplicate(s) from ${provider.name}`);
+      console.log(`Pruned ${before - provider.models.length} noise entries from ${provider.name}`);
       changed = true;
+    }
+    for (const m of provider.models) {
+      if (m.name === m.id) {
+        const humanized = humanizeModelName(m.id);
+        if (humanized !== m.name) {
+          m.name = humanized;
+          changed = true;
+        }
+      }
     }
   }
 
