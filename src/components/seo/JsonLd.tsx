@@ -48,7 +48,7 @@ export function WebApplicationJsonLd({
     name,
     description,
     url,
-    applicationCategory: 'Monitoring',
+    applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
     publisher: {
       '@type': 'Organization',
