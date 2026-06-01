@@ -8,7 +8,7 @@ import ViewModeProvider from '@/components/ViewModeProvider';
 import AgentView from '@/components/AgentView';
 import CookieConsent from '@/components/CookieConsent';
 import LiveTicker from '@/components/home/LiveTicker';
-import StatusAlertBar from '@/components/home/StatusAlertBar';
+import TopAlertBar from '@/components/home/TopAlertBar';
 import JsonLd from '@/components/seo/JsonLd';
 import Script from 'next/script';
 
@@ -116,7 +116,7 @@ export default function RootLayout({
           <ViewModeProvider>
             <ChromeGate>
               <LiveTicker />
-              <StatusAlertBar services={[]} />
+              <TopAlertBar />
             </ChromeGate>
             <Navbar />
             <main className="flex-1">{children}</main>
