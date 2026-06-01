@@ -375,6 +375,7 @@ import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chai
 import { getGhsaAiFeed, refreshGhsaAiFeed } from './ghsa-ai-feed';
 import { getOpenAlexAIAuthors, refreshOpenAlexAIAuthors } from './openalex-authors';
 import { getOpenAlexAICitationVelocity, refreshOpenAlexAICitationVelocity } from './openalex-citation-velocity';
+import { getOpenReviewAcceptances, refreshOpenReviewAcceptances } from './openreview';
 import { getApisGuruAIWatch, refreshApisGuruAIWatch } from './apis-guru-ai-watch';
 import { rebuildAllReputationCards } from './agent-reputation-rebuild';
 import {
@@ -4653,7 +4654,7 @@ export default {
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
           breaking: '/api/admin/breaking?key=<ADMIN_KEY> (GET = raw alert + is_live + audit; POST {headline, href, ttl_hours?} sets; POST {clear:true} clears. Public read at /api/breaking.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -5570,6 +5571,19 @@ export default {
         );
       }
       const clipped = { ...snapshot, papers: (snapshot.papers ?? []).slice(0, 25) };
+      return jsonResponse({ ok: true, ...clipped }, 200, 1800);
+    }
+
+    if (path === '/api/research/conference-acceptances') {
+      const snapshot = await getOpenReviewAcceptances(env);
+      if (!snapshot) {
+        return jsonResponse(
+          { ok: false, error: 'no_snapshot_yet', hint: 'OpenReview conference-acceptances snapshot has not yet been refreshed. Cron runs daily; retry shortly, or trigger task=openreview.' },
+          503,
+          60,
+        );
+      }
+      const clipped = { ...snapshot, papers: (snapshot.papers ?? []).slice(0, 50) };
       return jsonResponse({ ok: true, ...clipped }, 200, 1800);
     }
 
@@ -13279,6 +13293,10 @@ export default {
         const result = await refreshOpenAlexAIAuthors(env);
         return jsonResponse({ message: 'OpenAlex AI authors refreshed', ...result });
       }
+      if (task === 'openreview') {
+        const result = await refreshOpenReviewAcceptances(env);
+        return jsonResponse({ message: 'OpenReview conference acceptances refreshed', ...result });
+      }
       if (task === 'openalex-citation-velocity') {
         const result = await refreshOpenAlexAICitationVelocity(env);
         return jsonResponse({ message: 'OpenAlex AI citation-velocity refreshed', ...result });
@@ -13956,6 +13974,10 @@ export default {
       // OpenAlex polite-pool quota easily absorbs three calls per day.
       await run('refreshOpenAlexAIAuthors', () => refreshOpenAlexAIAuthors(env));
       await run('refreshOpenAlexAICitationVelocity', () => refreshOpenAlexAICitationVelocity(env));
+      // OpenReview notable-tier conference acceptances (Track A2). Independent
+      // host, not subject to the OpenAlex CF-egress throttle, so it is safe in
+      // the same daily branch and succeeds even when OpenAlex is throttled.
+      await run('refreshOpenReviewAcceptances', () => refreshOpenReviewAcceptances(env));
       // APIs.guru AI watch: filter the 2400-entry directory to AI-relevant
       // APIs, preserve first_seen_at from the prior snapshot. Single fetch,
       // single KV write. Runs on the same daily tick to consolidate
