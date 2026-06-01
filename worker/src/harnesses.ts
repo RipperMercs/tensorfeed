@@ -126,11 +126,11 @@ export const HARNESSES_DATA: HarnessesData = {
  * Per-harness rollup: best score on each benchmark across all base models
  * the harness was tested with. Useful for quick "which harness wins X" queries.
  */
-export function harnessRollups() {
-  return HARNESSES_DATA.harnesses.map(h => {
-    const myResults = HARNESSES_DATA.results.filter(r => r.harness === h.id);
+export function harnessRollups(data: HarnessesData = HARNESSES_DATA) {
+  return data.harnesses.map(h => {
+    const myResults = data.results.filter(r => r.harness === h.id);
     const best: Record<string, { model: string; score: number } | null> = {};
-    for (const b of HARNESSES_DATA.benchmarks) {
+    for (const b of data.benchmarks) {
       const candidates = myResults
         .map(r => ({ model: r.model, score: r.scores[b.id] }))
         .filter((x): x is { model: string; score: number } => typeof x.score === 'number' && Number.isFinite(x.score));

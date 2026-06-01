@@ -158,7 +158,7 @@ export default function HarnessesPage() {
         name: 'Which harness leads SWE-bench Verified?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'As of the latest snapshot on this page, Claude Code paired with Claude Opus 4.7 leads SWE-bench Verified, followed closely by Codex CLI on GPT-5.5 and Amp on Claude Sonnet 4.6. The full ranked table updates as we ingest new vendor-published scores.',
+          text: 'The leading combination is shown at the top of the SWE-bench Verified leaderboard on this page, and it shifts as harness vendors publish new scores. Harness choice alone can move the same base model by 5 to 15 points, so the leader is usually a strong harness paired with the current frontier model rather than whichever model has the highest raw score.',
         },
       },
       {

@@ -61,7 +61,12 @@ export function datasetFreshness(args: {
   const { dataset, lastUpdated, coveredModelNames, pricing, slaDays, now } = args;
   const flagship = newestFlagship(pricing);
   const covered = new Set(coveredModelNames.map(n => n.toLowerCase().trim()));
-  const predates = flagship ? !covered.has(flagship.name.toLowerCase().trim()) : false;
+  // A covered model "covers" the flagship if it is the flagship name or a
+  // reasoning-effort variant of it. Federation boards suffix model names, so
+  // "Claude Opus 4.8 Thinking" covers the catalog flagship "Claude Opus 4.8".
+  const flag = flagship ? flagship.name.toLowerCase().trim() : '';
+  const coversFlagship = flagship ? [...covered].some(c => c === flag || c.startsWith(`${flag} `)) : true;
+  const predates = flagship ? !coversFlagship : false;
   const age = lastUpdated ? daysSince(lastUpdated, now) : null;
   const ageStale = typeof age === 'number' && age > slaDays;
   const stale = predates || ageStale;
@@ -91,12 +96,22 @@ export async function checkDataFreshness(env: Env, now: string): Promise<Freshne
     | { lastUpdated?: string; models?: { model?: string }[] }
     | null;
   const { HARNESSES_DATA } = await import('./harnesses');
+  // Mirror /api/harnesses: the harnesses dataset is served as the federation
+  // overlay when the TerminalFeed snapshot is present, so the freshness check
+  // must measure that same view (board date + live models), not the static.
+  const { getHarnessSnapshot } = await import('./terminalfeed-harnesses-fetcher');
+  const { buildHarnessesView } = await import('./harnesses-view');
+  const harnSnap = await getHarnessSnapshot(env);
+  const harnView =
+    harnSnap && Array.isArray(harnSnap.benchmarks) && harnSnap.benchmarks.length > 0
+      ? buildHarnessesView(harnSnap, HARNESSES_DATA)
+      : HARNESSES_DATA;
 
   const modelNames = (pricing?.providers ?? []).flatMap(p => (p.models ?? []).map(m => m.name ?? '')).filter(Boolean);
   const reports: FreshnessReport[] = [
     datasetFreshness({ dataset: 'models', lastUpdated: pricing?.lastUpdated ?? null, coveredModelNames: modelNames, pricing, slaDays: 7, now }),
     datasetFreshness({ dataset: 'benchmarks', lastUpdated: benchmarks?.lastUpdated ?? null, coveredModelNames: (benchmarks?.models ?? []).map(m => m.model ?? '').filter(Boolean), pricing, slaDays: 14, now }),
-    datasetFreshness({ dataset: 'harnesses', lastUpdated: HARNESSES_DATA.lastUpdated, coveredModelNames: HARNESSES_DATA.results.map(r => r.model), pricing, slaDays: 14, now }),
+    datasetFreshness({ dataset: 'harnesses', lastUpdated: harnView.lastUpdated, coveredModelNames: harnView.results.map(r => r.model), pricing, slaDays: 14, now }),
   ];
 
   const stale = reports.filter(r => r.stale);

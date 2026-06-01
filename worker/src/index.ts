@@ -2706,27 +2706,43 @@ export default {
     // Cross-harness leaderboard for agentic-coding harnesses (Claude Code,
     // Cursor, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf, Amp,
     // Continue, Roo Code) on SWE-bench Verified, Terminal-Bench, Aider
-    // Polyglot, and SWE-Lancer. Editorial snapshot served from baked-in
-    // module data; refreshed on redeploy.
+    // Polyglot, and SWE-Lancer. Live scores for the major harnesses come
+    // from the TerminalFeed federation snapshot (refreshed daily at 05:25
+    // UTC by refreshHarnessSnapshot), overlaid on TF's editorial harness
+    // defs and benchmark columns. Harnesses the board does not cover keep
+    // TF's static rows; the static HARNESSES_DATA is the fallback when the
+    // snapshot is absent.
 
     if (path === '/api/harnesses') {
       const { HARNESSES_DATA, harnessRollups } = await import('./harnesses');
+      const { getHarnessSnapshot } = await import('./terminalfeed-harnesses-fetcher');
+      const { buildHarnessesView } = await import('./harnesses-view');
+      const snapshot = await getHarnessSnapshot(env);
+      const usingFederation = !!(snapshot && Array.isArray(snapshot.benchmarks) && snapshot.benchmarks.length > 0);
+      const view = usingFederation ? buildHarnessesView(snapshot!, HARNESSES_DATA) : HARNESSES_DATA;
       const harnPricing = await env.TENSORFEED_CACHE.get('models', 'json') as { providers?: unknown[] } | null;
       const { datasetFreshness } = await import('./data-freshness');
       const harnessFreshness = datasetFreshness({
         dataset: 'harnesses',
-        lastUpdated: HARNESSES_DATA.lastUpdated,
-        coveredModelNames: HARNESSES_DATA.results.map(r => r.model),
+        lastUpdated: view.lastUpdated,
+        coveredModelNames: view.results.map(r => r.model),
         pricing: harnPricing as Parameters<typeof datasetFreshness>[0]['pricing'],
         slaDays: 14,
         now: new Date().toISOString(),
       });
       return jsonResponse({
         ok: true,
-        source: 'tensorfeed.ai',
-        ...HARNESSES_DATA,
-        rollups: harnessRollups(),
+        source: usingFederation ? 'terminalfeed.io' : 'tensorfeed.ai',
+        ...view,
+        rollups: harnessRollups(view),
         freshness: harnessFreshness,
+        attribution: usingFederation
+          ? {
+              source: 'Live agentic-coding harness scores via the TerminalFeed federation board. Underlying benchmark scores carry their own per-source terms; see each upstream benchmark.',
+              upstream_generated_at: snapshot!.upstream_generated_at,
+              captured_at: snapshot!.capturedAt,
+            }
+          : undefined,
       }, 200, 300);
     }
 
