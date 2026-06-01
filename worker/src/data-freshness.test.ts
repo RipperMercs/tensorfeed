@@ -77,4 +77,44 @@ describe('datasetFreshness', () => {
     });
     expect(r.predates_flagship).toBe(false);
   });
+
+  it('covers a slug-form flagship from a display-form board name (cross-format)', () => {
+    // The live catalog can carry an id-style flagship name while the
+    // federation board uses the display form with a reasoning-effort suffix.
+    const r = datasetFreshness({
+      dataset: 'harnesses',
+      lastUpdated: '2026-06-01',
+      coveredModelNames: ['Claude Opus 4.8 Thinking', 'Claude Sonnet 4.6'],
+      pricing: { providers: [{ models: [{ id: 'claude-opus-4-8', name: 'claude-opus-4-8', released: '2026-05', tier: 'flagship' }] }] },
+      slaDays: 14,
+      now: '2026-06-01T07:00:00.000Z',
+    });
+    expect(r.newest_catalog_flagship).toBe('claude-opus-4-8');
+    expect(r.predates_flagship).toBe(false);
+    expect(r.stale).toBe(false);
+  });
+
+  it('treats a reasoning-effort suffix variant as covering the flagship', () => {
+    const r = datasetFreshness({
+      dataset: 'harnesses',
+      lastUpdated: '2026-06-01',
+      coveredModelNames: ['Claude Opus 4.8 Thinking'],
+      pricing: PRICING,
+      slaDays: 14,
+      now: '2026-06-01T07:00:00.000Z',
+    });
+    expect(r.predates_flagship).toBe(false);
+  });
+
+  it('does not false-match a different model that merely shares a prefix', () => {
+    const r = datasetFreshness({
+      dataset: 'harnesses',
+      lastUpdated: '2026-06-01',
+      coveredModelNames: ['Claude Opus 4.7 Thinking'],
+      pricing: PRICING,
+      slaDays: 14,
+      now: '2026-06-01T07:00:00.000Z',
+    });
+    expect(r.predates_flagship).toBe(true);
+  });
 });

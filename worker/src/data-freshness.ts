@@ -60,11 +60,15 @@ export function datasetFreshness(args: {
 }): FreshnessReport {
   const { dataset, lastUpdated, coveredModelNames, pricing, slaDays, now } = args;
   const flagship = newestFlagship(pricing);
-  const covered = new Set(coveredModelNames.map(n => n.toLowerCase().trim()));
-  // A covered model "covers" the flagship if it is the flagship name or a
-  // reasoning-effort variant of it. Federation boards suffix model names, so
-  // "Claude Opus 4.8 Thinking" covers the catalog flagship "Claude Opus 4.8".
-  const flag = flagship ? flagship.name.toLowerCase().trim() : '';
+  // Canonicalize names so separator and suffix differences do not block a
+  // match. The catalog may carry an id-style flagship name ("claude-opus-4-8")
+  // while a federation board uses the display form with a reasoning-effort
+  // suffix ("Claude Opus 4.8 Thinking"). Collapsing hyphens, dots, underscores
+  // and spaces to one separator lets the suffixed variant start with the
+  // flagship token sequence.
+  const canon = (s: string) => s.toLowerCase().replace(/[\s._-]+/g, ' ').trim();
+  const covered = new Set(coveredModelNames.map(canon));
+  const flag = flagship ? canon(flagship.name) : '';
   const coversFlagship = flagship ? [...covered].some(c => c === flag || c.startsWith(`${flag} `)) : true;
   const predates = flagship ? !coversFlagship : false;
   const age = lastUpdated ? daysSince(lastUpdated, now) : null;
