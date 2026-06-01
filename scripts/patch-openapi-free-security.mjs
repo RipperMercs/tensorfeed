@@ -35,6 +35,14 @@ const YAML_PATH = resolve(__dirname, '..', 'public', 'openapi.yaml');
 
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'];
 
+// Operations that require a bearer token even though they are not x402-paid
+// (they have no x-payment-info): per-user data reads gated by the credit
+// token. They MUST keep `security: [{ BearerAuth: [] }]` and never be
+// downgraded to `[]`, or the spec would advertise an authenticated endpoint
+// as public. getPaymentBalance returns the caller's own credit balance and
+// returns 401 without a token.
+const AUTH_REQUIRED_IDS = new Set(['getPaymentBalance']);
+
 function isOperation(method) {
   return HTTP_METHODS.includes(method.toLowerCase());
 }
@@ -53,7 +61,10 @@ function patchJson() {
     for (const [method, op] of Object.entries(ops || {})) {
       if (typeof op !== 'object' || op === null) continue;
       if (!isOperation(method)) continue;
-      if ('x-payment-info' in op) {
+      const wantsAuth =
+        'x-payment-info' in op || (op.operationId && AUTH_REQUIRED_IDS.has(op.operationId));
+      if (wantsAuth) {
+        op.security = [{ BearerAuth: [] }];
         premium += 1;
         premiumOps.push(`${method.toUpperCase()} ${path}`);
         continue;
@@ -115,8 +126,8 @@ function patchYaml() {
     if (m) {
       out.push(line);
       const opId = m[2].replace(/^['"]|['"]$/g, '');
-      if (premiumIds.has(opId)) {
-        // Premium: restore its BearerAuth security right after operationId.
+      if (premiumIds.has(opId) || AUTH_REQUIRED_IDS.has(opId)) {
+        // Premium (x-payment-info) or auth-required (allowlist): keep BearerAuth.
         out.push(`${OP_INDENT}security: [{ BearerAuth: [] }]`);
         premium += 1;
         premiumOps.push(opId);

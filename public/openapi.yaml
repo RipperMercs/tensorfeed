@@ -712,7 +712,7 @@ paths:
       tags: [Payment]
       summary: Token balance and usage
       operationId: getPaymentBalance
-      security: []
+      security: [{ BearerAuth: [] }]
       responses:
         '200':
           description: Credits remaining, total spent, recent calls.
