@@ -4653,7 +4653,7 @@ export default {
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
           breaking: '/api/admin/breaking?key=<ADMIN_KEY> (GET = raw alert + is_live + audit; POST {headline, href, ttl_hours?} sets; POST {clear:true} clears. Public read at /api/breaking.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -13189,6 +13189,14 @@ export default {
               }
             : { ok: false, message: 'Harness snapshot refresh failed (upstream unavailable or empty); kept last-known-good' },
         );
+      }
+      if (task === 'models') {
+        // Full daily catalog refresh (models + benchmarks + agent staleness),
+        // including the LiteLLM price merge that repairs tracked display names
+        // and prunes dated snapshot duplicates. Lets an admin land a catalog
+        // fix without waiting for the 07:00 UTC cron.
+        const result = await updateDailyData(env);
+        return jsonResponse({ message: 'Daily catalog refresh ran (models, benchmarks, agents)', ...result });
       }
       if (task === 'opportunities') {
         const result = await captureAgentOpportunities(env);
