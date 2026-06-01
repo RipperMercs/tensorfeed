@@ -205,6 +205,16 @@ function mergePricing(current: PricingData, litellm: Record<string, unknown>): {
     const model = provider.models.find(m => m.id === tracked.ourId);
     if (!model) continue;
 
+    // Enforce the canonical display name from TRACKED_MODELS. A pre-tracking
+    // run may have added this model from a raw LiteLLM key with a slug name
+    // (e.g. "claude-opus-4-8"); the tracked entry is the source of truth, so a
+    // later run repairs the persisted name rather than leaving the slug.
+    if (tracked.name && model.name !== tracked.name) {
+      console.log(`Name fix: ${model.name} -> ${tracked.name}`);
+      model.name = tracked.name;
+      changed = true;
+    }
+
     const inputPerToken = entry['input_cost_per_token'] as number | undefined;
     const outputPerToken = entry['output_cost_per_token'] as number | undefined;
     const maxTokens = entry['max_input_tokens'] as number | undefined;
@@ -261,6 +271,10 @@ function mergePricing(current: PricingData, litellm: Record<string, unknown>): {
     const maxTokens = (entry['max_input_tokens'] || entry['max_tokens']) as number | undefined;
 
     if (key.includes(':') || key.includes('/latest')) continue;
+    // Skip dated snapshot keys (e.g. "claude-opus-4-7-20260416"). They are
+    // pinned variants of a base model and would pollute the catalog with a
+    // slug name and a near-duplicate row.
+    if (/-\d{6,8}$/.test(key)) continue;
     if (inputPerToken === undefined || outputPerToken === undefined) continue;
 
     const cleanKey = key.replace('gemini/', '').replace('mistral/', '');
@@ -291,6 +305,23 @@ function mergePricing(current: PricingData, litellm: Record<string, unknown>): {
     console.log(`New model detected: ${provider.name} / ${newModel.name}`);
     provider.models.push(newModel);
     changed = true;
+  }
+
+  // Prune dated-snapshot duplicates that earlier runs persisted (e.g.
+  // "claude-opus-4-7-20260416" while the canonical "claude-opus-4-7" exists).
+  // Conservative: only drop a dated variant when its de-dated base id is also
+  // present in the same provider, so a standalone dated id is never lost.
+  for (const provider of current.providers) {
+    const ids = new Set(provider.models.map(m => m.id));
+    const before = provider.models.length;
+    provider.models = provider.models.filter(m => {
+      const dated = /^(.+)-\d{6,8}$/.exec(m.id);
+      return !(dated && ids.has(dated[1]));
+    });
+    if (provider.models.length !== before) {
+      console.log(`Pruned ${before - provider.models.length} dated duplicate(s) from ${provider.name}`);
+      changed = true;
+    }
   }
 
   if (changed) {
