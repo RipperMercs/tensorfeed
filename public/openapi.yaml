@@ -66,6 +66,7 @@ paths:
       tags: [Discovery]
       summary: Canonical endpoint catalog and self-description
       operationId: getMeta
+      security: []
       description: |
         The authoritative listing of every public endpoint, including AFTA self-description, freshness SLAs, rate limits, chaos-engineering headers, and the supportive-sites network. The first thing an agent should read.
       responses:
@@ -80,6 +81,7 @@ paths:
       tags: [Discovery]
       summary: Service health and freshness summary
       operationId: getHealth
+      security: []
       responses:
         '200':
           description: Counts and last-updated timestamps for every data subsystem
@@ -100,6 +102,7 @@ paths:
       tags: [News]
       summary: Aggregated AI news articles
       operationId: getNews
+      security: []
       parameters:
         - in: query
           name: category
@@ -128,6 +131,7 @@ paths:
       tags: [News, Agents]
       summary: Agent-friendly compact news payload
       operationId: getAgentsNews
+      security: []
       description: Lighter article payload tuned for LLM context windows. Same source data as /api/news.
       responses:
         '200':
@@ -141,6 +145,7 @@ paths:
       tags: [News]
       summary: RSS 2.0 feed of all AI news
       operationId: getFeedRss
+      security: []
       responses:
         '200':
           description: RSS XML
@@ -152,6 +157,7 @@ paths:
       tags: [News]
       summary: JSON Feed 1.1
       operationId: getFeedJson
+      security: []
       responses:
         '200':
           description: JSON Feed
@@ -163,6 +169,7 @@ paths:
       tags: [Status]
       summary: Operational status for major AI services
       operationId: getStatus
+      security: []
       responses:
         '200':
           description: Per-service status with components
@@ -181,6 +188,7 @@ paths:
       tags: [Status]
       summary: Lightweight status counts for dashboards
       operationId: getStatusSummary
+      security: []
       responses:
         '200':
           description: Counts of operational, degraded, and down services
@@ -203,6 +211,7 @@ paths:
       tags: [Models]
       summary: AI model pricing and specs
       operationId: getModels
+      security: []
       description: Input/output cost per 1M tokens, context window, capabilities, across 200+ models from major labs.
       responses:
         '200':
@@ -223,6 +232,7 @@ paths:
       tags: [Models]
       summary: Agent-friendly compact pricing payload
       operationId: getAgentsPricing
+      security: []
       responses:
         '200':
           description: Compact pricing list
@@ -235,6 +245,7 @@ paths:
       tags: [Models]
       summary: Public benchmark scores for major models
       operationId: getBenchmarks
+      security: []
       responses:
         '200':
           description: Benchmark catalog with per-model scores
@@ -247,6 +258,7 @@ paths:
       tags: [Agents]
       summary: Curated directory of AI agents and frameworks
       operationId: getAgentsDirectory
+      security: []
       responses:
         '200':
           description: Categorized directory of production-grade agents.
@@ -265,6 +277,7 @@ paths:
       tags: [Agents]
       summary: Live AI bot traffic on TensorFeed
       operationId: getAgentActivity
+      security: []
       description: Last hits per known AI bot user-agent (ClaudeBot, GPTBot, Applebot, etc). Useful for understanding crawler adoption.
       responses:
         '200':
@@ -290,6 +303,7 @@ paths:
       tags: [News]
       summary: Recent AI podcast episodes
       operationId: getPodcasts
+      security: []
       responses:
         '200':
           description: Episode list with show, title, published date.
@@ -302,6 +316,7 @@ paths:
       tags: [News]
       summary: Trending GitHub repos in AI
       operationId: getTrendingRepos
+      security: []
       responses:
         '200':
           description: Top repos by recent star velocity in AI/ML topics.
@@ -314,6 +329,7 @@ paths:
       tags: [GPU]
       summary: Current GPU rental pricing snapshot
       operationId: getGpuPricing
+      security: []
       responses:
         '200':
           description: Aggregated pricing across cloud GPU marketplaces.
@@ -326,6 +342,7 @@ paths:
       tags: [GPU]
       summary: Cheapest current offer for a canonical GPU
       operationId: getGpuPricingCheapest
+      security: []
       parameters:
         - in: query
           name: gpu
@@ -347,6 +364,7 @@ paths:
       tags: [MCP]
       summary: Daily MCP server registry summary
       operationId: getMcpRegistrySnapshot
+      security: []
       description: Today's count + 1-day delta of the official MCP server registry. Refreshed daily.
       responses:
         '200':
@@ -360,6 +378,7 @@ paths:
       tags: [Probe]
       summary: Last 24h of LLM endpoint latency probes
       operationId: getProbeLatest
+      security: []
       description: Active probe results (TTFB, total) per provider. Refreshed every 15 min.
       responses:
         '200':
@@ -373,6 +392,7 @@ paths:
       tags: [Papers]
       summary: Daily citation-ranked AI/ML papers from Semantic Scholar
       operationId: getPapersAITrending
+      security: []
       description: Five fan-out queries (LLM, transformer, RLHF, AI agents, diffusion), deduped by paperId, top 30 by citation count. Refreshed daily at 11:00 UTC.
       responses:
         '200':
@@ -386,6 +406,7 @@ paths:
       tags: [Papers]
       summary: Most recent arXiv submissions (cs.AI / cs.LG / cs.CL / cs.CV)
       operationId: getPapersArxivRecent
+      security: []
       description: Top 50 recent submissions by date, deduped by arxivId. Refreshed daily at 11:30 UTC.
       responses:
         '200':
@@ -399,6 +420,7 @@ paths:
       tags: [Hugging Face]
       summary: Top HF models, datasets, and Spaces
       operationId: getHFTrending
+      security: []
       description: Daily snapshot against the public HF API. Models + datasets ranked by downloads (top 30 each); Spaces ranked by likes (top 30). Day-over-day deltas across the dated keys yield a true trending signal once multiple snapshots accumulate. Refreshed daily at 12:00 UTC.
       responses:
         '200':
@@ -412,6 +434,7 @@ paths:
       tags: [GitHub]
       summary: Currently-hot GitHub issues across AI repos
       operationId: getHotIssues
+      security: []
       description: Five fan-out keyword-phrase searches ("large language model", "AI agent", transformer, "machine learning", LLM), is:issue is:open comments>=10 updated within the last 7 days, deduped by URL, top 30 by comment count. Refreshed daily at 12:30 UTC. Companion to /api/trending-repos.
       responses:
         '200':
@@ -425,6 +448,7 @@ paths:
       tags: [Reddit]
       summary: Currently-hot AI threads on Reddit
       operationId: getRedditTrending
+      security: []
       description: Daily snapshot of hot threads from 7 AI-relevant subreddits (LocalLLaMA, MachineLearning, ClaudeAI, OpenAI, singularity, artificial, AI_Agents). Stickied and NSFW posts filtered, deduped by post id, top 30 by score. Titles sanitized at capture time. Refreshed daily at 13:00 UTC. Companion to /api/issues/hot.
       responses:
         '200':
@@ -438,6 +462,7 @@ paths:
       tags: [Composite]
       summary: AI ecosystem today (composite brief)
       operationId: getToday
+      security: []
       description: Single edge-cached endpoint that fans out across every daily TensorFeed feed (news, 3 paper feeds, HF models/datasets/Spaces, hot GitHub issues, Reddit threads, OpenRouter catalog summary, provider status) and returns a structured response. Saves a client from orchestrating 9 separate calls. Optional ?sections=news,papers,hf,community,inference,status and ?limit=1-10 (default 3 items per section).
       parameters:
         - in: query
@@ -460,6 +485,7 @@ paths:
       tags: [Papers]
       summary: HF Daily Papers (editor-curated AI papers with community signal)
       operationId: getPapersHFDaily
+      security: []
       description: Hugging Face's editor-curated daily AI/ML papers feed, layered with community upvotes and discussion counts. Different signal from /api/papers/arxiv-recent (firehose) and /api/papers/ai-trending (citation-ranked). Refreshed daily at 14:30 UTC. Titles sanitized at capture time.
       responses:
         '200':
@@ -473,6 +499,7 @@ paths:
       tags: [OpenRouter]
       summary: Cross-provider AI model catalog snapshot
       operationId: getOpenRouterModels
+      security: []
       description: Daily snapshot of OpenRouter's normalized cross-provider model catalog. 200+ models across 50+ inference providers with comparable per-token pricing, context window, modality, and provider metadata. Pairs with /api/models (curated frontier-lab catalog) by surfacing the long tail of OSS models on cloud inference. Refreshed daily at 14:00 UTC.
       responses:
         '200':
@@ -486,6 +513,7 @@ paths:
       tags: [History]
       summary: Index of historical daily snapshots
       operationId: getHistoryIndex
+      security: []
       responses:
         '200':
           description: Available date ranges per snapshot type.
@@ -498,6 +526,7 @@ paths:
       tags: [History]
       summary: Read one historical snapshot
       operationId: getHistorySnapshot
+      security: []
       parameters:
         - in: path
           name: date
@@ -520,6 +549,7 @@ paths:
       tags: [AFTA]
       summary: Machine-readable AFTA adopter directory
       operationId: getAftaAdopters
+      security: []
       description: Public list of sites that publish a /.well-known/agent-fair-trade.json manifest. Not authoritative; agents should verify each manifest directly.
       responses:
         '200':
@@ -533,6 +563,7 @@ paths:
       tags: [Catalogs]
       summary: AI model deprecation calendar
       operationId: getModelDeprecations
+      security: []
       description: |
         Provider-by-provider registry of model retirements and
         deprecation announcements (OpenAI, Anthropic, Google, Cohere,
@@ -593,6 +624,7 @@ paths:
       tags: [Payment]
       summary: Wallet, pricing, and operator info
       operationId: getPaymentInfo
+      security: []
       responses:
         '200':
           description: Payment metadata for buying credits.
@@ -613,6 +645,7 @@ paths:
         sender_wallet bound here, which closes the public-mempool tx
         sniping vector.
       operationId: postBuyCredits
+      security: []
       requestBody:
         required: true
         content:
@@ -648,6 +681,7 @@ paths:
         sender_wallet bound to the quote at /api/payment/buy-credits;
         a mismatch returns `{ ok: false, error: "sender_mismatch" }`.
       operationId: postPaymentConfirm
+      security: []
       requestBody:
         required: true
         content:
@@ -678,7 +712,7 @@ paths:
       tags: [Payment]
       summary: Token balance and usage
       operationId: getPaymentBalance
-      security: [{ BearerAuth: [] }]
+      security: []
       responses:
         '200':
           description: Credits remaining, total spent, recent calls.
@@ -691,6 +725,7 @@ paths:
       tags: [AFTA, Payment]
       summary: Public no-charge counter (AFTA evidence)
       operationId: getNoChargeStats
+      security: []
       description: Aggregate count of paid calls that were waived under AFTA guarantees (5xx, breaker, schema fail, stale data).
       responses:
         '200':
@@ -704,6 +739,7 @@ paths:
       tags: [AFTA]
       summary: Verify an Ed25519-signed receipt
       operationId: postReceiptVerify
+      security: []
       requestBody:
         required: true
         content:
@@ -725,6 +761,7 @@ paths:
       tags: [Premium]
       summary: Public preview of premium model routing
       operationId: getRoutingPreview
+      security: []
       description: Free preview of the premium routing endpoint. Returns top-1 recommendation only. Use /api/premium/routing for ranked top-N with full reasoning.
       responses:
         '200':
@@ -946,8 +983,8 @@ paths:
       tags: [Premium]
       summary: Single best model to use right now (signed routing decision)
       operationId: getPremiumRouteVerdict
-      description: "The signed model-routing decision. For ?task=code|reasoning|creative|general or ?model=<id-or-name>, returns the single best model to use right now, fusing pricing, contamination-discounted benchmark capability, real production usage, measured p95 latency probes, and live incident-triage operational state, plus runners-up and an AFTA-signed receipt over the inputs. 30-minute operational freshness SLA, no-charge when the live layer is stale."
       security: [{ BearerAuth: [] }]
+      description: "The signed model-routing decision. For ?task=code|reasoning|creative|general or ?model=<id-or-name>, returns the single best model to use right now, fusing pricing, contamination-discounted benchmark capability, real production usage, measured p95 latency probes, and live incident-triage operational state, plus runners-up and an AFTA-signed receipt over the inputs. 30-minute operational freshness SLA, no-charge when the live layer is stale."
       x-payment-info:
         price:
           mode: fixed
@@ -985,8 +1022,8 @@ paths:
       tags: [Premium]
       summary: Most dependable frontier provider to build on right now
       operationId: getPremiumProviderReliabilityVerdict
-      description: "Which frontier AI provider is the most dependable to build on right now, and which is the riskiest? Ranks the providers TensorFeed actively probes by measured operational reliability, fusing availability and tail consistency (p50 over p95) from its own latency probes into one dependability score, names the most dependable and the riskiest, and returns the full per-provider ranking with an AFTA-signed receipt. 30-minute freshness SLA, no-charge when stale."
       security: [{ BearerAuth: [] }]
+      description: "Which frontier AI provider is the most dependable to build on right now, and which is the riskiest? Ranks the providers TensorFeed actively probes by measured operational reliability, fusing availability and tail consistency (p50 over p95) from its own latency probes into one dependability score, names the most dependable and the riskiest, and returns the full per-provider ranking with an AFTA-signed receipt. 30-minute freshness SLA, no-charge when stale."
       x-payment-info:
         price:
           mode: fixed
@@ -1009,8 +1046,8 @@ paths:
       tags: [Premium]
       summary: Ruling on the Base x402 USDC settlement market
       operationId: getPremiumX402SettlementVerdict
-      description: "Is the Base x402 USDC settlement market growing, is it concentrated or a real market, and who leads? Rules over TensorFeed's own on-chain settlement index: momentum versus the prior window of equal length, concentration by the Herfindahl index, and the leading publisher, plus the full per-publisher volume ranking. Optional window=24h|7d|30d (default 7d). Coverage is the Base settlements TensorFeed indexes, forward-only from launch. 10-minute freshness SLA, no-charge when stale."
       security: [{ BearerAuth: [] }]
+      description: "Is the Base x402 USDC settlement market growing, is it concentrated or a real market, and who leads? Rules over TensorFeed's own on-chain settlement index: momentum versus the prior window of equal length, concentration by the Herfindahl index, and the leading publisher, plus the full per-publisher volume ranking. Optional window=24h|7d|30d (default 7d). Coverage is the Base settlements TensorFeed indexes, forward-only from launch. 10-minute freshness SLA, no-charge when stale."
       x-payment-info:
         price:
           mode: fixed
@@ -1036,8 +1073,8 @@ paths:
       tags: [Premium]
       summary: GO/HOLD/BLOCK deploy gate per AI-stack package
       operationId: getPremiumStackSafetyVerdict
-      description: "GO / HOLD / BLOCK deploy gate for your AI stack, fusing the ingested AI-CVE batch with CISA KEV. Pass packages=name@version (up to 10)."
       security: [{ BearerAuth: [] }]
+      description: "GO / HOLD / BLOCK deploy gate for your AI stack, fusing the ingested AI-CVE batch with CISA KEV. Pass packages=name@version (up to 10)."
       x-payment-info:
         price:
           mode: fixed
@@ -1064,8 +1101,8 @@ paths:
       tags: [Premium]
       summary: Trust band and 0-100 score per AI benchmark
       operationId: getPremiumBenchmarkTrustVerdict
-      description: "Is an AI benchmark a trustworthy capability signal, or saturated/contaminated/near-ceiling so a high score should be down-weighted? Trust band + 0-100 score per benchmark."
       security: [{ BearerAuth: [] }]
+      description: "Is an AI benchmark a trustworthy capability signal, or saturated/contaminated/near-ceiling so a high score should be down-weighted? Trust band + 0-100 score per benchmark."
       x-payment-info:
         price:
           mode: fixed
@@ -1094,8 +1131,8 @@ paths:
       tags: [Premium]
       summary: Best operational failover target when a provider degrades
       operationId: getPremiumFailoverVerdict
-      description: "Provider A is degraded, which operational provider do I fail over to for this task right now? Confirms A against live incident triage, then recommends the best operational alternative. Pass ?from=<provider>."
       security: [{ BearerAuth: [] }]
+      description: "Provider A is degraded, which operational provider do I fail over to for this task right now? Confirms A against live incident triage, then recommends the best operational alternative. Pass ?from=<provider>."
       x-payment-info:
         price:
           mode: fixed

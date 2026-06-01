@@ -109,7 +109,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/health": {
@@ -151,7 +152,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/news": {
@@ -211,7 +213,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/agents/news": {
@@ -234,7 +237,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/feed.xml": {
@@ -255,7 +259,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/feed.json": {
@@ -276,7 +281,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/status": {
@@ -308,7 +314,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/status/summary": {
@@ -351,7 +358,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/models": {
@@ -387,7 +395,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/agents/pricing": {
@@ -408,7 +417,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/benchmarks": {
@@ -440,7 +450,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/agents/directory": {
@@ -481,7 +492,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/agents/activity": {
@@ -530,7 +542,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/podcasts": {
@@ -551,7 +564,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/trending-repos": {
@@ -572,7 +586,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/gpu/pricing": {
@@ -593,7 +608,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/gpu/pricing/cheapest": {
@@ -638,7 +654,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/mcp/registry/snapshot": {
@@ -668,7 +685,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/probe/latest": {
@@ -690,7 +708,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/papers/ai-trending": {
@@ -720,7 +739,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/papers/arxiv-recent": {
@@ -750,7 +770,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/hf/trending": {
@@ -780,7 +801,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/issues/hot": {
@@ -810,7 +832,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/reddit/trending": {
@@ -840,7 +863,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/today": {
@@ -882,7 +906,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/papers/hf-daily": {
@@ -912,7 +937,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/openrouter/models": {
@@ -942,7 +968,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/history": {
@@ -963,7 +990,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/history/{date}/{type}": {
@@ -1016,7 +1044,8 @@
           "404": {
             "description": "Snapshot not found"
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/afta/adopters": {
@@ -1038,7 +1067,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/model-deprecations": {
@@ -1158,7 +1188,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/payment/info": {
@@ -1179,7 +1210,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/payment/buy-credits": {
@@ -1231,7 +1263,8 @@
           "400": {
             "description": "Returned if amount_usd is out of range or sender_wallet is missing/malformed."
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/payment/confirm": {
@@ -1282,7 +1315,8 @@
           "400": {
             "description": "Possible errors include `nonce_required`, `quote_not_found_or_expired`, `quote_expired`, `sender_mismatch`, `tx_already_claimed`, `verification_failed`."
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/payment/balance": {
@@ -1292,11 +1326,7 @@
         ],
         "summary": "Token balance and usage",
         "operationId": "getPaymentBalance",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
+        "security": [],
         "responses": {
           "200": {
             "description": "Credits remaining, total spent, recent calls.",
@@ -1331,7 +1361,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/receipt/verify": {
@@ -1382,7 +1413,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/preview/routing": {
@@ -1404,7 +1436,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/premium/routing": {
