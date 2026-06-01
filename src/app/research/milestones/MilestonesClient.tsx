@@ -4,15 +4,16 @@ import { useMemo } from 'react';
 import { Award } from 'lucide-react';
 import ResearchHero from '@/components/research/ResearchHero';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
-import { useMilestones } from '@/components/research/useResearchData';
+import { useMilestonesSnapshot } from '@/components/research/useResearchData';
 import { categoryForSubfield, CategoryKey } from '@/components/research/categories';
+import DataAsOf from '@/components/research/DataAsOf';
 import SearchFilterBar, {
   applyQuery,
   useFilterState,
 } from '@/components/research/SearchFilterBar';
 
 export default function MilestonesClient() {
-  const papers = useMilestones(100);
+  const { papers, capturedAt } = useMilestonesSnapshot(100);
   const filter = useFilterState('latest');
 
   // Map subfield_tag → CategoryKey once so the filter can run on the
@@ -52,9 +53,11 @@ export default function MilestonesClient() {
       <ResearchHero
         tag="/ RESEARCH / MILESTONES"
         title="AI Milestone Papers"
-        subtitle="Papers from the last 30 days of arXiv flagged as milestone candidates by the TensorFeed offline extraction. Each carries the named benchmark plus quantified delta, model release, or novel architecture that triggered the flag. Conservative by design: false positives are worse than false negatives."
+        subtitle="arXiv papers flagged as milestone candidates by the TensorFeed offline extraction. Each carries the named benchmark plus quantified delta, model release, or novel architecture that triggered the flag. Conservative by design: false positives are worse than false negatives. This view is a periodic snapshot; the capture date is shown below."
       />
       <ResearchSubNav />
+
+      <DataAsOf capturedAt={capturedAt} cadenceLabel="a periodic extraction snapshot" staleAfterDays={45} />
 
       <SearchFilterBar
         query={filter.query}

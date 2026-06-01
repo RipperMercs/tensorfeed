@@ -154,6 +154,30 @@ export function useMilestones(limit = 12) {
   return papers;
 }
 
+// Snapshot variant: returns the milestone rows plus the snapshot capturedAt
+// date so the page can show how fresh the data actually is. The array-only
+// useMilestones hook above stays untouched for the /research hub.
+export function useMilestonesSnapshot(limit = 100) {
+  const [state, setState] = useState<{ papers: MilestonePaper[] | null; capturedAt: string | null }>(
+    { papers: null, capturedAt: null },
+  );
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; capturedAt?: string; papers?: MilestonePaper[] }>(
+        `${API}/api/research/milestones`,
+      );
+      if (cancelled) return;
+      setState({
+        papers: data?.papers?.slice(0, limit) ?? [],
+        capturedAt: data?.capturedAt ?? null,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [limit]);
+  return state;
+}
+
 export function useAuthors(limit = 15) {
   const [rows, setRows] = useState<AuthorRow[] | null>(null);
   useEffect(() => {
@@ -200,6 +224,30 @@ export function useEmergingKeywords(limit = 30) {
     return () => { cancelled = true; };
   }, [limit]);
   return keywords;
+}
+
+// Snapshot variant: returns the keyword rows plus the snapshot capturedAt
+// date so the page can show how fresh the data actually is. The array-only
+// useEmergingKeywords hook above stays untouched for the /research hub.
+export function useEmergingKeywordsSnapshot(limit = 100) {
+  const [state, setState] = useState<{ keywords: EmergingKeyword[] | null; capturedAt: string | null }>(
+    { keywords: null, capturedAt: null },
+  );
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; capturedAt?: string; keywords?: EmergingKeyword[] }>(
+        `${API}/api/research/emerging-keywords`,
+      );
+      if (cancelled) return;
+      setState({
+        keywords: data?.keywords?.slice(0, limit) ?? [],
+        capturedAt: data?.capturedAt ?? null,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [limit]);
+  return state;
 }
 
 export function useInstitutions(limit = 10) {

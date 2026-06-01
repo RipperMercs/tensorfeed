@@ -118,10 +118,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/research`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${baseUrl}/research/papers`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/research/state-of-ai-agent-data-2026`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
-    { url: `${baseUrl}/research/milestones`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/research/milestones`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/research/authors`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/research/citation-velocity`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
-    { url: `${baseUrl}/research/topics`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/research/topics`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     // raw, unverified arXiv firehose; honestly labeled, not a quality product, not promoted.
     { url: `${baseUrl}/research/firehose`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${baseUrl}/podcasts`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },

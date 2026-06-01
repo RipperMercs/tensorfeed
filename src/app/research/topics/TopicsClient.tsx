@@ -3,20 +3,23 @@
 import { Sparkles, ExternalLink, TrendingUp } from 'lucide-react';
 import ResearchHero from '@/components/research/ResearchHero';
 import ResearchSubNav from '@/components/research/ResearchSubNav';
-import { useEmergingKeywords } from '@/components/research/useResearchData';
+import { useEmergingKeywordsSnapshot } from '@/components/research/useResearchData';
 import { categoryForSeed } from '@/components/research/categories';
+import DataAsOf from '@/components/research/DataAsOf';
 
 export default function TopicsClient() {
-  const keywords = useEmergingKeywords(100);
+  const { keywords, capturedAt } = useEmergingKeywordsSnapshot(100);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <ResearchHero
         tag="/ RESEARCH / EMERGING TOPICS"
         title="Emerging AI Research Topics"
-        subtitle="Top multi-word keyphrases across recent arXiv AI abstracts ranked by recent-vs-baseline lift. Captures emerging research terminology before it shows up in citation counts. Refreshed weekly from the TensorFeed offline extraction."
+        subtitle="Top multi-word keyphrases across arXiv AI abstracts ranked by recent-vs-baseline lift. Captures emerging research terminology before it shows up in citation counts. Built from a periodic TensorFeed offline extraction snapshot; the capture date is shown below."
       />
       <ResearchSubNav />
+
+      <DataAsOf capturedAt={capturedAt} cadenceLabel="a periodic extraction snapshot" staleAfterDays={45} />
 
       <div className="mb-6 flex items-center gap-2 text-text-muted">
         <Sparkles className="w-4 h-4 text-accent-primary" />
