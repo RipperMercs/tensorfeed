@@ -14,6 +14,8 @@
  * relative paths here AND gated again at render.
  */
 
+import type { Env } from './types';
+
 export interface BreakingAlert {
   id: string;
   headline: string;
@@ -108,4 +110,61 @@ export function filterActiveAlert(raw: unknown, now: Date): BreakingAlert | null
   const exp = Date.parse(raw.expires_at);
   if (!Number.isFinite(exp) || now.getTime() > exp) return null;
   return raw;
+}
+
+// KV + Cache API (direct writes, mirrors kill-switch.ts)
+
+function breakingCacheRequest(): Request {
+  // Must match the synthetic key cachedKVGet builds for KV key 'breaking:current'.
+  return new Request(`https://tensorfeed-kv-cache.internal/__kv_cache/${encodeURIComponent(KV_KEY)}`);
+}
+
+async function purgeBreakingCache(): Promise<void> {
+  try {
+    const cache = caches.default;
+    await cache.delete(breakingCacheRequest());
+  } catch {
+    /* cache unavailable in some contexts */
+  }
+}
+
+async function appendAudit(env: Env, entry: BreakingAuditEntry): Promise<void> {
+  try {
+    const raw = await env.TENSORFEED_CACHE.get(AUDIT_KEY);
+    const history: BreakingAuditEntry[] = raw ? JSON.parse(raw) : [];
+    history.push(entry);
+    if (history.length > AUDIT_CAP) history.splice(0, history.length - AUDIT_CAP);
+    await env.TENSORFEED_CACHE.put(AUDIT_KEY, JSON.stringify(history));
+  } catch {
+    /* audit is non-blocking */
+  }
+}
+
+/** Raw stored alert (including expired). Used by the admin observability GET. */
+export async function readRawBreaking(env: Env): Promise<BreakingAlert | null> {
+  const raw = (await env.TENSORFEED_CACHE.get(KV_KEY, 'json')) as unknown;
+  return looksLikeAlert(raw) ? raw : null;
+}
+
+/** Set the alert. DIRECT KV write (not safePut) so it is controllable during a kill switch. */
+export async function setBreaking(env: Env, alert: BreakingAlert): Promise<void> {
+  await env.TENSORFEED_CACHE.put(KV_KEY, JSON.stringify(alert));
+  await appendAudit(env, { at: new Date().toISOString(), action: 'set', id: alert.id, headline: alert.headline });
+  await purgeBreakingCache();
+}
+
+/** Clear the alert. DIRECT delete (bypasses safePut) so a takedown always works. */
+export async function clearBreaking(env: Env): Promise<void> {
+  await env.TENSORFEED_CACHE.delete(KV_KEY);
+  await appendAudit(env, { at: new Date().toISOString(), action: 'clear' });
+  await purgeBreakingCache();
+}
+
+export async function getBreakingAudit(env: Env): Promise<BreakingAuditEntry[]> {
+  try {
+    const raw = await env.TENSORFEED_CACHE.get(AUDIT_KEY);
+    return raw ? (JSON.parse(raw) as BreakingAuditEntry[]) : [];
+  } catch {
+    return [];
+  }
 }

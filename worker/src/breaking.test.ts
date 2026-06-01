@@ -1,11 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import {
   validateHeadline,
   validateHref,
   buildAlert,
   filterActiveAlert,
   HEADLINE_MAX,
+  setBreaking,
+  clearBreaking,
+  readRawBreaking,
+  getBreakingAudit,
 } from './breaking';
+import { installFakeCache, InstalledCache } from './edge-cache-test-helpers';
 
 const EM_DASH = String.fromCharCode(0x2014);
 const EN_DASH = String.fromCharCode(0x2013);
@@ -81,5 +86,57 @@ describe('filterActiveAlert', () => {
     expect(filterActiveAlert(null, new Date())).toBeNull();
     expect(filterActiveAlert({ id: 5 } as unknown, new Date())).toBeNull();
     expect(filterActiveAlert({ id: 'x', expires_at: 'not-a-date' } as unknown, new Date())).toBeNull();
+  });
+});
+
+class MemKV {
+  store = new Map<string, string>();
+  async get(key: string, type?: string) {
+    const v = this.store.get(key);
+    if (v === undefined) return null;
+    return type === 'json' ? JSON.parse(v) : v;
+  }
+  async put(key: string, value: string) { this.store.set(key, value); }
+  async delete(key: string) { this.store.delete(key); }
+}
+function makeBreakingEnv() {
+  return {
+    TENSORFEED_CACHE: new MemKV(),
+    TENSORFEED_NEWS: new MemKV(),
+    TENSORFEED_STATUS: new MemKV(),
+  } as unknown as import('./types').Env;
+}
+
+describe('setBreaking / readRawBreaking / clearBreaking / audit', () => {
+  let installedCache: InstalledCache;
+  beforeEach(() => {
+    installedCache = installFakeCache();
+  });
+  afterEach(() => {
+    installedCache.uninstall();
+  });
+
+  it('writes the alert directly to KV and records a set audit entry', async () => {
+    const env = makeBreakingEnv();
+    const alert = buildAlert('Headline', '/x', 24, new Date('2026-06-01T10:00:00.000Z'), 'r1');
+    await setBreaking(env, alert);
+    expect((await readRawBreaking(env))?.id).toBe(alert.id);
+    const audit = await getBreakingAudit(env);
+    expect(audit.at(-1)?.action).toBe('set');
+    expect(audit.at(-1)?.id).toBe(alert.id);
+  });
+
+  it('clear deletes the key and records a clear audit entry', async () => {
+    const env = makeBreakingEnv();
+    await setBreaking(env, buildAlert('H', '/x', 24, new Date(), 'r2'));
+    await clearBreaking(env);
+    expect(await readRawBreaking(env)).toBeNull();
+    expect((await getBreakingAudit(env)).at(-1)?.action).toBe('clear');
+  });
+
+  it('audit ring buffer is capped', async () => {
+    const env = makeBreakingEnv();
+    for (let i = 0; i < 130; i++) await clearBreaking(env);
+    expect((await getBreakingAudit(env)).length).toBeLessThanOrEqual(100);
   });
 });
