@@ -154,6 +154,7 @@ const LITELLM_PROVIDER_MAP: Record<string, string> = {
 };
 
 const TRACKED_MODELS: Record<string, { providerId: string; ourId: string; name: string }> = {
+  'claude-opus-4-8': { providerId: 'anthropic', ourId: 'claude-opus-4-8', name: 'Claude Opus 4.8' },
   'claude-opus-4-7': { providerId: 'anthropic', ourId: 'claude-opus-4-7', name: 'Claude Opus 4.7' },
   'claude-opus-4-6': { providerId: 'anthropic', ourId: 'claude-opus-4-6', name: 'Claude Opus 4.6' },
   'claude-sonnet-4-6': { providerId: 'anthropic', ourId: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
@@ -329,11 +330,12 @@ async function pingIndexNow(env: Env): Promise<void> {
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-04-17',
+  lastUpdated: '2026-06-01',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
       models: [
+        { id: 'claude-opus-4-8', name: 'Claude Opus 4.8', inputPrice: 5.00, outputPrice: 25.00, contextWindow: 1000000, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'claude-opus-4-7', name: 'Claude Opus 4.7', inputPrice: 15.00, outputPrice: 75.00, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', inputPrice: 15.00, outputPrice: 75.00, contextWindow: 200000, released: '2026-03', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'mid' },
         { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', inputPrice: 3.00, outputPrice: 15.00, contextWindow: 200000, released: '2026-03', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'mid' },
