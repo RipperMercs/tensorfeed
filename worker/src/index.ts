@@ -6540,6 +6540,94 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM ENDPOINT: MODEL INTELLIGENCE BREAKDOWN (Tier 1, 1 credit) ===
+    // /api/premium/model-intelligence
+    // The full per-model TFII breakdown over the latest daily snapshot:
+    // headline score, per-task subscores, and the trust block (contamination
+    // tier, benchmarks used, coverage, flagged). Optional ?model= narrows to a
+    // single model. Param-capable, so strict-premium gates anonymous crawlers
+    // to a clean 402. capturedAt = snap.as_of drives the 48h stale no-charge.
+    if (path === '/api/premium/model-intelligence') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      const snap = (await env.TENSORFEED_CACHE.get('intelligence:snapshot:latest', 'json')) as
+        | import('./model-intelligence').IntelligenceSnapshot
+        | null;
+      if (!snap) {
+        return await premiumResponse(
+          { ok: false, error: 'index_not_yet_populated' },
+          payment,
+          1,
+          request,
+          env,
+          'empty_result',
+        );
+      }
+      const { normalizeId } = await import('./model-intelligence');
+      const modelParam = url.searchParams.get('model')?.trim();
+      let result: Record<string, unknown>;
+      if (modelParam) {
+        const target = normalizeId(modelParam);
+        const found = snap.models.find(
+          m => m.model_id === target || m.name.toLowerCase().trim() === modelParam.toLowerCase().trim(),
+        );
+        if (!found) {
+          return await premiumValidationFailure(
+            { ok: false, error: 'model_not_found', hint: 'See /api/intelligence for valid model names.' },
+            payment,
+            request,
+            env,
+          );
+        }
+        result = { ok: true, capturedAt: snap.as_of, methodology_version: snap.methodology_version, model: found };
+      } else {
+        result = {
+          ok: true,
+          capturedAt: snap.as_of,
+          methodology_version: snap.methodology_version,
+          count: snap.models.length,
+          models: snap.models,
+        };
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/model-intelligence', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM ENDPOINT: MODEL INTELLIGENCE HISTORY (Tier 2, 2 credits) ===
+    // /api/premium/model-intelligence/history
+    // A single model's TFII time-series across the dated snapshots within the
+    // requested window. Param-required (?model=), optional ?from=&to=. Immutable
+    // past data, so no freshness SLA; an empty range no-charges. Strict-premium
+    // gates anonymous crawlers to a clean 402.
+    if (path === '/api/premium/model-intelligence/history') {
+      const payment = await requirePayment(request, env, 2);
+      if (!payment.paid) return payment.response!;
+      const model = url.searchParams.get('model')?.trim();
+      if (!model) {
+        return await premiumValidationFailure(
+          { ok: false, error: 'model_required', hint: 'Pass ?model=<id-or-name>' },
+          payment,
+          request,
+          env,
+        );
+      }
+      const { resolveDateRange, buildIntelligenceHistory } = await import('./model-intelligence');
+      const range = resolveDateRange(url.searchParams.get('from'), url.searchParams.get('to'));
+      if (!range.ok) {
+        return await premiumValidationFailure({ ok: false, error: range.error }, payment, request, env);
+      }
+      const series = await buildIntelligenceHistory(env, model, range.from, range.to);
+      if (series.points.length === 0) {
+        return await premiumResponse(series, payment, 2, request, env, 'empty_result');
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/model-intelligence/history', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(series, payment, 2, request, env);
+    }
+
     // Free taste of the Provider Reliability Verdict: the most-dependable
     // and riskiest picks only, no full ranking and no signed receipt. 10
     // calls/day per IP. The paid /api/premium/provider-reliability-verdict

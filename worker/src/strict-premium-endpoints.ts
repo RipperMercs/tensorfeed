@@ -264,6 +264,9 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/hf/velocity',
   '/api/premium/agents/leaderboard/full',
   '/api/premium/jobs',
+  // 2026-06-01: Model Intelligence Index (TFII) premium depth + history.
+  '/api/premium/model-intelligence',
+  '/api/premium/model-intelligence/history',
 ];
 
 /**

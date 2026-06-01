@@ -34,6 +34,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // so a stale live signal triggers a no-charge. The daily quality and
   // price snapshots do not gate billing.
   '/api/premium/route-verdict': { maxAgeSeconds: 30 * 60 },
+  // TFII breakdown reflects the daily snapshot; stale beyond 48h yields no-charge.
+  '/api/premium/model-intelligence': { maxAgeSeconds: 48 * 60 * 60 },
+  // History is immutable past data; no freshness SLA (handler no-charges empty ranges).
+  '/api/premium/model-intelligence/history': NULL_SLA,
   // Provider reliability verdict: ranks providers over the measured probe
   // layer (15-min probe cron). 30-min SLA matches that operational layer, so a
   // stale probe summary triggers a no-charge, same posture as route-verdict.

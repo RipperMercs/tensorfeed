@@ -256,6 +256,32 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'verdict',
   },
 
+  // === INTELLIGENCE ===
+  {
+    path: '/api/premium/model-intelligence',
+    credits: 1,
+    strict_premium: true,
+    params: [{ name: 'model', required: false }],
+    returns: 'Full per-model TFII breakdown over the latest daily snapshot: headline score, per-task subscores, and the trust block; ?model= narrows to one model.',
+    free_sibling: '/api/intelligence',
+    signed: true,
+    category: 'intelligence',
+  },
+  {
+    path: '/api/premium/model-intelligence/history',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'model', required: true },
+      { name: 'from', required: false },
+      { name: 'to', required: false },
+    ],
+    returns: 'A single model TFII time series across the dated snapshots within the requested window.',
+    free_sibling: '/api/intelligence',
+    signed: true,
+    category: 'intelligence',
+  },
+
   // === SECURITY ===
   {
     path: '/api/premium/security/cve/range',
