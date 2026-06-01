@@ -286,6 +286,31 @@ export default function AftaNetworkPage() {
           .
         </p>
       </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: 'AFTA Network Directory',
+            url: 'https://tensorfeed.ai/afta-network',
+            description:
+              'Informational, non-authoritative directory of known Agent Fair-Trade Agreement (AFTA) adopters. Each adopter\'s own /.well-known/agent-fair-trade.json is the source of truth.',
+            isPartOf: { '@type': 'WebSite', name: 'TensorFeed.ai', url: 'https://tensorfeed.ai' },
+            mainEntity: {
+              '@type': 'ItemList',
+              numberOfItems: AFTA_ADOPTERS.length,
+              itemListElement: AFTA_ADOPTERS.map((a, i) => ({
+                '@type': 'ListItem',
+                position: i + 1,
+                url: a.url,
+                name: a.site,
+              })),
+            },
+          }),
+        }}
+      />
     </div>
   );
 }

@@ -23,6 +23,10 @@
  *
  * Failure modes are intentionally informative, not gatekeeping. A 5/6
  * score is still useful; we tell the publisher exactly what to fix.
+ *
+ * Abuse note: this endpoint aims an outbound fetch at a caller-supplied
+ * domain, so the route handler rate limits it and normalizeDomain below
+ * rejects private-network / service-discovery hosts (SSRF guard).
  */
 
 export interface AftaCheck {
@@ -51,9 +55,36 @@ export interface AftaCertifyResult {
   applied_to_directory: boolean;
   /** Set when this domain is a federation member; certification routes through the host. */
   federation_parent?: string;
+  /** True only when TensorFeed can verify the membership against its own federation roster (vs a self-declared claim). */
+  federation_verified?: boolean;
 }
 
 const FETCH_TIMEOUT_MS = 8000;
+
+// TensorFeed's authoritative federation roster. We host this federation, so a
+// domain's membership claim can be verified against our own records instead of
+// trusting its self-declaration. Keep in sync with
+// public/.well-known/agent-fair-trade.json -> adoption.network_federation.
+const TF_FEDERATION_ROSTER: Record<string, string[]> = {
+  'tensorfeed.ai': ['tensorfeed.ai', 'terminalfeed.io'],
+};
+
+// Private-network and service-discovery suffixes we refuse to certify-fetch.
+// Allowing them would let an unauthenticated caller aim the Worker's fetch at
+// internal infrastructure (SSRF). The Workers runtime has no route to a VPC or
+// cloud-metadata endpoint, so this is defense in depth on top of the route's
+// rate limit.
+const SSRF_FORBIDDEN_SUFFIXES = [
+  '.internal',
+  '.local',
+  '.localhost',
+  '.localdomain',
+  '.lan',
+  '.intranet',
+  '.corp',
+  '.consul',
+  '.home.arpa',
+];
 
 async function tryFetchJson(url: string): Promise<{ ok: boolean; data?: unknown; status?: number; error?: string }> {
   try {
@@ -77,14 +108,37 @@ async function tryFetchJson(url: string): Promise<{ ok: boolean; data?: unknown;
   }
 }
 
+/**
+ * Validate that fetched JSON actually carries usable public-key material, not
+ * just a key-shaped field. OKP/EC keys carry a non-empty `x`, RSA carries `n`;
+ * a non-empty generic `publicKey` (PEM-ish) is also accepted. Guards against a
+ * publisher "passing" the receipt-key check with an empty or junk JWK.
+ */
+function looksLikeJwk(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  const nonEmpty = (v: unknown): boolean => typeof v === 'string' && v.length > 0;
+  const kty = typeof d.kty === 'string' ? d.kty : null;
+  if (kty === 'OKP' || kty === 'EC') return nonEmpty(d.x);
+  if (kty === 'RSA') return nonEmpty(d.n);
+  return nonEmpty(d.publicKey);
+}
+
 function normalizeDomain(input: string): string | null {
   const trimmed = input.trim().toLowerCase();
   if (!trimmed) return null;
   // Strip protocol and trailing slash if user pasted a URL
   const stripped = trimmed.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-  // Basic shape check: at least one dot, only allowed chars
-  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(stripped)) return null;
-  return stripped;
+  // Drop any embedded credentials or port (user:pass@host or host:port)
+  const hostOnly = stripped.replace(/^[^@/]*@/, '').replace(/:\d+$/, '');
+  // Basic shape check: at least one dot, only allowed chars. The [a-z]{2,} TLD
+  // requirement also rejects bare IPv4 literals (numeric final label).
+  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(hostOnly)) return null;
+  // Reject IPv4 literals explicitly (defense in depth; the regex blocks most).
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostOnly)) return null;
+  // Reject private-network / service-discovery suffixes (SSRF guard).
+  if (SSRF_FORBIDDEN_SUFFIXES.some(s => hostOnly.endsWith(s))) return null;
+  return hostOnly;
 }
 
 export async function certifyDomain(domain: string): Promise<AftaCertifyResult> {
@@ -99,7 +153,7 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
       max: 0,
       verdict: 'not-yet-eligible',
       afta_certified: false,
-      next_step: 'Provide a valid hostname (e.g. example.com or api.example.com).',
+      next_step: 'Provide a valid public hostname (e.g. example.com or api.example.com). Private-network and service-discovery hosts are not accepted.',
       applied_to_directory: false,
     };
   }
@@ -175,7 +229,9 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
     passed: allHaveExtra,
     details: allHaveExtra
       ? 'Every accepts entry includes extra.name and extra.version.'
-      : `Item ${badItem ?? '(?)'} is missing extra.name or extra.version. Reminder: Base mainnet uses name="USD Coin"; Base Sepolia uses name="USDC".`,
+      : itemsWithAccepts.length === 0
+        ? 'No paid items with an accepts[] block to check (see the previous check).'
+        : `Item ${badItem ?? '(?)'} is missing extra.name or extra.version. Reminder: Base mainnet uses name="USD Coin"; Base Sepolia uses name="USDC".`,
     fixUrl: 'https://tensorfeed.ai/x402#manifest',
   });
 
@@ -210,19 +266,37 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
     fixUrl: 'https://tensorfeed.ai/agent-fair-trade',
   });
 
-  // Check 6: published receipt public key (Ed25519 or similar) at one of the
-  // common .well-known locations
+  // Check 6: published receipt public key (Ed25519 or similar).
+  // Authoritative source: the receipts.public_key_url the AFTA manifest above
+  // already declared. We accept that URL only if it stays on the publisher's
+  // own domain, so a crafted manifest cannot redirect our fetch off-host. Then
+  // a brand-prefixed candidate derived from the domain (e.g. terminalfeed.io ->
+  // terminalfeed-receipt-key.json), then the generic well-known candidates.
+  // This fixes the false-negative where a publisher names its key after its
+  // brand rather than one of the three hard-coded filenames, and looksLikeJwk
+  // rejects a key-shaped-but-empty file.
+  const declaredKeyUrl =
+    receiptsField &&
+    typeof receiptsField.public_key_url === 'string' &&
+    (receiptsField.public_key_url as string).startsWith(`${base}/`)
+      ? (receiptsField.public_key_url as string)
+      : null;
+  const brandSlug = normalized.split('.')[0];
+  const keyUrls: string[] = [];
+  if (declaredKeyUrl) keyUrls.push(declaredKeyUrl);
+  keyUrls.push(`${base}/.well-known/${brandSlug}-receipt-key.json`);
+  for (const c of receiptKeyCandidates) {
+    if (!keyUrls.includes(c)) keyUrls.push(c);
+  }
+
   let receiptKeyOk = false;
   let receiptKeyUrl: string | null = null;
-  for (const u of receiptKeyCandidates) {
+  for (const u of keyUrls) {
     const r = await tryFetchJson(u);
-    if (r.ok && r.data && typeof r.data === 'object') {
-      const d = r.data as Record<string, unknown>;
-      if (typeof d.kty === 'string' || typeof d.publicKey === 'string' || typeof d.x === 'string') {
-        receiptKeyOk = true;
-        receiptKeyUrl = u;
-        break;
-      }
+    if (r.ok && looksLikeJwk(r.data)) {
+      receiptKeyOk = true;
+      receiptKeyUrl = u;
+      break;
     }
   }
   checks.push({
@@ -231,7 +305,7 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
     passed: receiptKeyOk,
     details: receiptKeyOk
       ? `Found a public key JWK at ${receiptKeyUrl}.`
-      : `No public key found at any of: ${receiptKeyCandidates.join(', ')}. Publishers should expose a JWK so agents can verify response receipts.`,
+      : `No usable public key JWK found at any of: ${keyUrls.join(', ')}. Declare receipts.public_key_url in your AFTA manifest and serve a JWK (kty + key material) so agents can verify response receipts.`,
     fixUrl: 'https://tensorfeed.ai/agent-fair-trade#receipts',
   });
 
@@ -240,7 +314,13 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
   // we record it. Federation members typically delegate the x402
   // manifest to the federation host and won't pass checks 1-4 on their
   // own surface; manual review is the path for them.
+  //
+  // The membership claim is self-declared by the target. We can only VERIFY
+  // it for federations TensorFeed itself hosts, by cross-checking our own
+  // roster. For any other host we still surface the claim but mark it
+  // unverified, so a domain cannot fake a TensorFeed endorsement.
   let federationParent: string | null = null;
+  let federationVerified = false;
   if (afta.ok && afta.data && typeof afta.data === 'object') {
     const d = afta.data as Record<string, unknown>;
     const adoption = (d.adoption as Record<string, unknown>) ?? {};
@@ -251,6 +331,7 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
       const members = Array.isArray(f.members) ? (f.members as unknown[]).map(String) : [];
       if (host && members.includes(normalized) && host !== normalized) {
         federationParent = host;
+        federationVerified = (TF_FEDERATION_ROSTER[host] ?? []).includes(normalized);
         break;
       }
     }
@@ -267,8 +348,10 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
   let nextStep: string;
   if (eligible) {
     nextStep = `All AFTA checks pass. Email contact@tensorfeed.ai with subject "AFTA Certification: ${normalized}" and your payTo wallet address to begin the listing review. Annual fee is $100 USDC over x402; once paid we add you to /x402-adopters with afta_certified: true.`;
+  } else if (federationParent && federationVerified) {
+    nextStep = `${normalized} is a verified member of the ${federationParent} AFTA federation. Federation members may delegate the x402 manifest to the host and will not always pass the manifest checks above on their own surface; that is by design. For certification, email contact@tensorfeed.ai referencing ${federationParent}; we certify verified federation members through the host's certification plus manual review.`;
   } else if (federationParent) {
-    nextStep = `${normalized} appears to be a federation member of ${federationParent} per its agent-fair-trade.json. Federation members typically delegate the x402 manifest to the federation host and will not pass the manifest checks above on their own surface; that's by design. For certification, email contact@tensorfeed.ai with the federation host listed; we certify federation members through the host's certification + manual review.`;
+    nextStep = `${normalized} self-declares membership in a federation hosted by ${federationParent}, but that is not a federation TensorFeed hosts or can verify, so we treat it as unverified. Fix the ${max - score} failing check(s) above and re-run /api/afta-certify/check?domain=${normalized}. Re-checks are free and idempotent.`;
   } else {
     nextStep = `${max - score} check(s) need work. Fix the failing items above and re-run /api/afta-certify/check?domain=${normalized}. Re-checks are free and idempotent.`;
   }
@@ -284,6 +367,6 @@ export async function certifyDomain(domain: string): Promise<AftaCertifyResult> 
     afta_certified: false,
     next_step: nextStep,
     applied_to_directory: false,
-    ...(federationParent ? { federation_parent: federationParent } : {}),
+    ...(federationParent ? { federation_parent: federationParent, federation_verified: federationVerified } : {}),
   };
 }

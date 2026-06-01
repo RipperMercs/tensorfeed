@@ -189,7 +189,7 @@ export default function X402AdoptersPage() {
 
       <div className="bg-bg-secondary border border-border rounded-lg p-4 text-sm text-text-secondary">
         <p>For agents: same data at{' '}
-          <Link href="/api-reference/x402-adopters" className="text-accent-primary hover:underline font-mono">/api/x402-adopters</Link>. Filter with <code className="font-mono">?category=publisher|sdk|gateway|reference|spec</code> or <code className="font-mono">?status=live|announced|sdk|gateway</code>. Free, no auth, cached 10 min. Spec at <a href="https://x402.org" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">x402.org</a>.
+          <a href="/api/x402-adopters" className="text-accent-primary hover:underline font-mono">/api/x402-adopters</a>. Filter with <code className="font-mono">?category=publisher|sdk|gateway|reference|spec</code> or <code className="font-mono">?status=live|announced|sdk|gateway</code>. Free, no auth, cached 10 min. Spec at <a href="https://x402.org" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">x402.org</a>.
         </p>
       </div>
 

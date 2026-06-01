@@ -5916,6 +5916,32 @@ export default {
           400,
         );
       }
+      // Dedicated abuse limit. This route fans out up to ~5 outbound fetches to
+      // a caller-supplied domain, so it must not ride only the generic per-IP
+      // limit. 25/day/IP is plenty for a publisher iterating on fixes, and caps
+      // the fetch-amplification surface. Mirrors the route-verdict preview limiter.
+      const certifyIp =
+        request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const certifyRlKey = `rate:afta-certify:${new Date().toISOString().slice(0, 10)}:${certifyIp}`;
+      const certifyRl = (await env.TENSORFEED_CACHE.get(certifyRlKey, 'json')) as { count: number } | null;
+      const certifyCount = certifyRl?.count ?? 0;
+      if (certifyCount >= 25) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: 25,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            message:
+              'AFTA certification self-check is limited to 25 calls/day per IP. Re-checks are free; come back after the daily UTC reset.',
+          },
+          429,
+        );
+      }
+      await safePut(env, env.TENSORFEED_CACHE, certifyRlKey, JSON.stringify({ count: certifyCount + 1 }), {
+        expirationTtl: 60 * 60 * 48,
+      });
       const { certifyDomain } = await import('./afta-certify');
       const result = await certifyDomain(domain);
       // Don't cache certification checks; publishers may re-run after
