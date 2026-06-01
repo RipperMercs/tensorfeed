@@ -1935,6 +1935,16 @@ export default {
       }, 200, 120);
     }
 
+    // Breaking-alert banner, public read. Cache-API-first read of the single
+    // global alert, filtered to active (well-formed and not expired) or null.
+    // Written only by the ADMIN_KEY-gated POST /api/admin/breaking below.
+    if (path === '/api/breaking') {
+      const { filterActiveAlert, CACHE_TTL_SECONDS } = await import('./breaking');
+      const raw = await cachedKVGet(request, env.TENSORFEED_CACHE, 'breaking:current', CACHE_TTL_SECONDS);
+      const alert = filterActiveAlert(raw, new Date());
+      return jsonResponse({ ok: true, source: 'tensorfeed.ai', alert }, 200, CACHE_TTL_SECONDS);
+    }
+
     // === PRICING ENDPOINT (cached 300s) ===
 
     if (path === '/api/agents/pricing' || path === '/api/pricing' || path === '/api/agents/pricing.json') {
@@ -2778,6 +2788,50 @@ export default {
           0,
         );
       }
+    }
+
+    // Breaking-alert banner control. Narrow ADMIN_KEY-only (the hoisted gate
+    // above accepts INGEST_KEY/RECON_EMAIL_KEY; this must not). POST {headline,
+    // href, ttl_hours?} sets; POST {clear:true} clears (direct delete, works even
+    // during a cost kill switch); GET returns the raw stored alert + is_live + audit.
+    // Qualifying bar (operator discipline): raise only for a frontier model GA, a
+    // lab IPO milestone, an actively-exploited CVE in the agent stack, or a major
+    // provider-policy/operational event. Default to not raising.
+    if (path === '/api/admin/breaking' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      const breaking = await import('./breaking');
+      if (request.method === 'POST') {
+        let body: { headline?: unknown; href?: unknown; ttl_hours?: unknown; clear?: unknown } = {};
+        try {
+          body = (await request.json()) as typeof body;
+        } catch {
+          return jsonResponse({ ok: false, error: 'invalid_json' }, 400, 0);
+        }
+        if (body.clear === true) {
+          await breaking.clearBreaking(env);
+          return jsonResponse({ ok: true, cleared: true }, 200, 0);
+        }
+        const h = breaking.validateHeadline(body.headline);
+        if (!h.ok) return jsonResponse({ ok: false, error: h.error }, 400, 0);
+        const href = breaking.validateHref(body.href);
+        if (!href.ok) return jsonResponse({ ok: false, error: href.error }, 400, 0);
+        let ttl = breaking.TTL_DEFAULT_HOURS;
+        if (body.ttl_hours !== undefined) {
+          const n = Number(body.ttl_hours);
+          if (!Number.isFinite(n) || n < breaking.TTL_MIN_HOURS || n > breaking.TTL_MAX_HOURS) {
+            return jsonResponse({ ok: false, error: 'invalid_ttl_hours', limits: { min: breaking.TTL_MIN_HOURS, max: breaking.TTL_MAX_HOURS } }, 400, 0);
+          }
+          ttl = n;
+        }
+        const rand = crypto.getRandomValues(new Uint8Array(6)).reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
+        const alert = breaking.buildAlert(h.value, href.value, ttl, new Date(), rand);
+        await breaking.setBreaking(env, alert);
+        return jsonResponse({ ok: true, alert }, 200, 0);
+      }
+      // GET: observability
+      const raw = await breaking.readRawBreaking(env);
+      const isLive = breaking.filterActiveAlert(raw, new Date()) !== null;
+      const audit = await breaking.getBreakingAudit(env);
+      return jsonResponse({ ok: true, raw, is_live: isLive, audit: audit.slice(-10).reverse() }, 200, 0);
     }
 
     // One-time / idempotent: seed the lifetime traction counter from the
@@ -4348,6 +4402,7 @@ export default {
           codingHarnessesLatest: '/api/coding-harnesses/latest (free; third AFTA federation cross-call. Latest snapshot of TerminalFeed coding-harness leaderboard (SWE-bench Verified, Terminal-Bench, Aider Polyglot, etc). Refreshed daily 05:25 UTC.)',
           newsActionCards: '/api/news/action-cards?limit= (free, capped at 25; Haiku-derived structured agent action cards over the news feed. Per article: action_summary, migration_recommendation, affected_capability, cost_impact, security_impact, urgency. Daily 08:00 UTC refresh.)',
           statusIncidentsTriage: '/api/status/incidents/triage?limit= (free, capped at 25; Haiku-triaged AI provider status incidents. Per card: triage_summary, impact_classification (informational/minor/major/critical), affected_capabilities, recommended_action (no_action/monitor/retry_later/failover_now/escalate). Refreshed every 2h.)',
+          breaking: '/api/breaking',
           secFilingsRecent: '/api/sec/filings/recent?form=&ticker=&limit= (free, capped 50; recent EDGAR filings for the AI bellwether cohort: NVDA, AMD, AVGO, TSM, ARM, MSFT, GOOGL, AMZN, ORCL, PLTR, SMCI, AAPL, META, TSLA. Source data.sec.gov, public domain. Refreshed every 6h.)',
           secFilingsByCik: '/api/sec/filings/{cik}/recent (free; per-company recent filings, CIK must be from cohort. Returns 404 with cohort hint otherwise.)',
           secInsiderTrades: '/api/sec/insider-trades?ticker=&limit= (free, capped 100; Form 4 insider-trade filings for one AI bellwether ticker, lazy-fetched from EDGAR with 6h KV cache. V1 returns filing metadata (accession, date, URL); structured reporting-owner + transaction parsing queued behind DataPal Qwen. Source data.sec.gov, public domain.)',
@@ -4581,6 +4636,7 @@ export default {
           burnToken: '/api/admin/burn-token?token=tf_live_...&key=<ADMIN_KEY>',
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
+          breaking: '/api/admin/breaking?key=<ADMIN_KEY> (GET = raw alert + is_live + audit; POST {headline, href, ttl_hours?} sets; POST {clear:true} clears. Public read at /api/breaking.)',
           refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
         },
         chaos_engineering: {

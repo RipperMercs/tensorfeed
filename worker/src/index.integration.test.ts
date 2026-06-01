@@ -391,3 +391,63 @@ describe('canonical accepts[].outputSchema (x402scan registration)', () => {
     expect(decodedAccepts?.[0]?.outputSchema).toBeUndefined();
   });
 });
+
+const EM_DASH_HEADLINE = 'A ' + String.fromCharCode(0x2014) + ' B';
+
+describe('breaking alert endpoints', () => {
+  it('GET /api/breaking returns null alert when none set', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/breaking', { ip: uniqueIp() });
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.alert ?? null).toBeNull();
+  });
+
+  it('POST /api/admin/breaking requires ADMIN_KEY, rejects INGEST_KEY', async () => {
+    const env = await makeEnv();
+    const denied = await call(env, '/api/admin/breaking', {
+      method: 'POST', token: 'test-ingest-key', body: { headline: 'x', href: '/x' }, ip: uniqueIp(),
+    });
+    expect([401, 404]).toContain(denied.status);
+    const ok = await call(env, '/api/admin/breaking', {
+      method: 'POST', token: 'test-admin-key', body: { headline: 'Anthropic filed an S-1', href: '/originals/x' }, ip: uniqueIp(),
+    });
+    expect(ok.status).toBe(200);
+    expect(ok.json?.ok).toBe(true);
+  });
+
+  it('rejects a bad href and an em-dash headline with 400', async () => {
+    const env = await makeEnv();
+    const badHref = await call(env, '/api/admin/breaking', {
+      method: 'POST', token: 'test-admin-key', body: { headline: 'ok', href: 'https://evil.example' }, ip: uniqueIp(),
+    });
+    expect(badHref.status).toBe(400);
+    const emDash = await call(env, '/api/admin/breaking', {
+      method: 'POST', token: 'test-admin-key', body: { headline: EM_DASH_HEADLINE, href: '/x' }, ip: uniqueIp(),
+    });
+    expect(emDash.status).toBe(400);
+  });
+
+  it('set then GET returns the active alert; clear removes it', async () => {
+    const env = await makeEnv();
+    await call(env, '/api/admin/breaking', {
+      method: 'POST', token: 'test-admin-key', body: { headline: 'Live now', href: '/originals/x' }, ip: uniqueIp(), settle: true,
+    });
+    const live = await call(env, '/api/breaking', { ip: uniqueIp() });
+    expect((live.json?.alert as Record<string, unknown> | undefined)?.headline).toBe('Live now');
+    await call(env, '/api/admin/breaking', { method: 'POST', token: 'test-admin-key', body: { clear: true }, ip: uniqueIp(), settle: true });
+    const raw = await env.TENSORFEED_CACHE.get('breaking:current');
+    expect(raw).toBeNull();
+  });
+
+  it('admin GET shows raw + is_live + audit', async () => {
+    const env = await makeEnv();
+    await call(env, '/api/admin/breaking', {
+      method: 'POST', token: 'test-admin-key', body: { headline: 'h', href: '/x' }, ip: uniqueIp(), settle: true,
+    });
+    const admin = await call(env, '/api/admin/breaking', { token: 'test-admin-key', ip: uniqueIp() });
+    expect(admin.json?.is_live).toBe(true);
+    expect((admin.json?.raw as Record<string, unknown> | undefined)?.headline).toBe('h');
+    expect(Array.isArray(admin.json?.audit)).toBe(true);
+  });
+});
