@@ -4653,7 +4653,7 @@ export default {
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
           breaking: '/api/admin/breaking?key=<ADMIN_KEY> (GET = raw alert + is_live + audit; POST {headline, href, ttl_hours?} sets; POST {clear:true} clears. Public read at /api/breaking.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -13170,6 +13170,25 @@ export default {
       if (task === 'history') {
         const result = await captureHistory(env);
         return jsonResponse({ message: 'History snapshot captured', ...result });
+      }
+      if (task === 'harnesses') {
+        // On-demand pull of the TerminalFeed federation harness board, so the
+        // /api/harnesses overlay can land a fresh upstream (e.g. a new flagship)
+        // without waiting for the daily 05:25 UTC cron. Writes the snapshot KV.
+        const { refreshHarnessSnapshot } = await import('./terminalfeed-harnesses-fetcher');
+        const snap = await refreshHarnessSnapshot(env);
+        return jsonResponse(
+          snap
+            ? {
+                ok: true,
+                message: 'TerminalFeed harness snapshot refreshed',
+                upstream_generated_at: snap.upstream_generated_at,
+                captured_at: snap.capturedAt,
+                benchmark_count: snap.benchmark_count,
+                total_results: snap.total_results,
+              }
+            : { ok: false, message: 'Harness snapshot refresh failed (upstream unavailable or empty); kept last-known-good' },
+        );
       }
       if (task === 'opportunities') {
         const result = await captureAgentOpportunities(env);
