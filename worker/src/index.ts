@@ -1965,10 +1965,21 @@ export default {
         const { enrichModelsWithIntelligence } = await import('./model-intelligence');
         body = enrichModelsWithIntelligence(body as { providers: Array<{ models: Array<{ name?: string }> }> }, snap) as Record<string, unknown>;
       }
+      // Catalog-driven freshness signal (additive), computed from the same body.
+      const { datasetFreshness } = await import('./data-freshness');
+      const modelsFreshness = datasetFreshness({
+        dataset: 'models',
+        lastUpdated: (body?.lastUpdated as string | undefined) ?? null,
+        coveredModelNames: ((body?.providers ?? []) as { models?: { name?: string }[] }[]).flatMap(p => (p.models ?? []).map(m => m.name ?? '')).filter(Boolean),
+        pricing: body as Parameters<typeof datasetFreshness>[0]['pricing'],
+        slaDays: 7,
+        now: new Date().toISOString(),
+      });
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
         ...body,
+        freshness: modelsFreshness,
       }, 200, 300);
     }
 
@@ -2004,10 +2015,22 @@ export default {
 
     if (path === '/api/benchmarks') {
       const cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'benchmarks', 300);
+      const benchData = cached as { lastUpdated?: string; models?: { model?: string }[] } | null;
+      const pricing = await env.TENSORFEED_CACHE.get('models', 'json') as { providers?: unknown[] } | null;
+      const { datasetFreshness } = await import('./data-freshness');
+      const benchFreshness = datasetFreshness({
+        dataset: 'benchmarks',
+        lastUpdated: benchData?.lastUpdated ?? null,
+        coveredModelNames: (benchData?.models ?? []).map(m => m.model ?? '').filter(Boolean),
+        pricing: pricing as Parameters<typeof datasetFreshness>[0]['pricing'],
+        slaDays: 14,
+        now: new Date().toISOString(),
+      });
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
-        ...(cached as Record<string, unknown> || {}),
+        ...(benchData || {}),
+        freshness: benchFreshness,
       }, 200, 300);
     }
 
@@ -2678,11 +2701,22 @@ export default {
 
     if (path === '/api/harnesses') {
       const { HARNESSES_DATA, harnessRollups } = await import('./harnesses');
+      const harnPricing = await env.TENSORFEED_CACHE.get('models', 'json') as { providers?: unknown[] } | null;
+      const { datasetFreshness } = await import('./data-freshness');
+      const harnessFreshness = datasetFreshness({
+        dataset: 'harnesses',
+        lastUpdated: HARNESSES_DATA.lastUpdated,
+        coveredModelNames: HARNESSES_DATA.results.map(r => r.model),
+        pricing: harnPricing as Parameters<typeof datasetFreshness>[0]['pricing'],
+        slaDays: 14,
+        now: new Date().toISOString(),
+      });
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
         ...HARNESSES_DATA,
         rollups: harnessRollups(),
+        freshness: harnessFreshness,
       }, 200, 300);
     }
 
@@ -13535,6 +13569,13 @@ export default {
       // (free) and /api/premium/attention/series (1 credit).
       const { captureAttentionSnapshot } = await import('./attention-history');
       await run('captureAttentionSnapshot', () => captureAttentionSnapshot(env));
+      // Catalog-driven freshness check: flags model/benchmark/harness datasets
+      // that predate the newest flagship or have exceeded their SLA. Emails
+      // an alert when any dataset is stale.
+      await run('checkDataFreshness', async () => {
+        const { checkDataFreshness } = await import('./data-freshness');
+        await checkDataFreshness(env, new Date().toISOString());
+      });
       // Premium webhook watches: fire price-change webhooks based on the
       // diff between the last seen pricing and the freshly-updated payload.
       await run('runPriceWatchCycle', () => runPriceWatchCycle(env));
