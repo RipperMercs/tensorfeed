@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-confidential-s1-ipo',
+    title:
+      'Anthropic Filed to Go Public. A Confidential S-1 at a $965 Billion Valuation Is an Option, Not a Date.',
+    author: 'Marcus Chen',
+    date: 'June 1, 2026',
+    readTime: '7 min read',
+    description:
+      "On June 1, 2026 Anthropic confidentially submitted a draft Form S-1 to the SEC, the first formal step toward an IPO. The company says the number of shares and the price are not set, the offering depends on market conditions, and the submission gives it the option to go public after the SEC finishes its review. The number underneath it is a $965 billion private valuation from a $65 billion round, with reporting putting annualized revenue near a $47 billion run rate. What a confidential draft S-1 actually commits to (almost nothing), what it signals (almost everything), the frontier-AI IPO race it joins, and the one figure in the eventual prospectus that matters more than the valuation: inference gross margin.",
+  },
+  {
     slug: 'california-30-ai-bills-crossover-july-sprint',
     title:
       'Thirty AI Bills Just Survived in Sacramento. The Next Four Weeks Set the US Floor.',
