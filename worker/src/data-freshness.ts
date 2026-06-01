@@ -11,6 +11,7 @@
  */
 import type { Env } from './types';
 import { sendEmail } from './alerts';
+import { safePut } from './kill-switch';
 
 export interface FreshnessReport {
   dataset: string;
@@ -99,12 +100,22 @@ export async function checkDataFreshness(env: Env, now: string): Promise<Freshne
   ];
 
   const stale = reports.filter(r => r.stale);
-  if (stale.length > 0) {
+  // Alert only when the stale set CHANGES, so a persistently stale board does not
+  // email on every daily run. Re-alerts when a new dataset goes stale or a reason
+  // changes, and resets the marker once everything is fresh so a later regression
+  // alerts again. The signature is the sorted dataset:reason set.
+  const SIG_KEY = 'data-freshness:last-alert-signature';
+  const signature = stale.map(r => `${r.dataset}:${r.reason ?? ''}`).sort().join('|');
+  const lastSignature = (await env.TENSORFEED_CACHE.get(SIG_KEY)) as string | null;
+  if (stale.length > 0 && signature !== lastSignature) {
     const lines = stale.map(r => `- ${r.dataset}: ${r.reason} (last updated ${r.last_updated ?? 'unknown'})`).join('\n');
     const flagship = reports[0].newest_catalog_flagship ?? 'the latest flagship';
     const text = `TensorFeed data freshness alert.\n\nStale datasets:\n${lines}\n\nThe catalog's newest flagship is ${flagship}. Update the flagged datasets (or wire their auto-pull) to clear this.`;
     const html = `<p>TensorFeed data freshness alert.</p><p>Stale datasets:</p><pre>${lines}</pre><p>The catalog's newest flagship is ${flagship}.</p>`;
     await sendEmail(env, `TensorFeed data freshness: ${stale.length} stale dataset(s)`, html, text);
+    await safePut(env, env.TENSORFEED_CACHE, SIG_KEY, signature);
+  } else if (stale.length === 0 && lastSignature) {
+    await safePut(env, env.TENSORFEED_CACHE, SIG_KEY, '');
   }
   return reports;
 }
