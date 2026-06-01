@@ -16,6 +16,7 @@ interface ModelEntry {
   openSource?: boolean;
   license?: string;
   tier?: string;
+  intelligence?: { tfii: number; methodology_version: string; as_of: string };
 }
 
 interface ProviderEntry {
@@ -186,8 +187,12 @@ export default function ModelsDataSection({ initialData }: Props) {
       {/* Pricing Comparison Table */}
       <section className="mb-14">
         <h2 className="text-2xl font-semibold text-text-primary mb-2">Pricing Comparison</h2>
-        <p className="text-text-muted text-sm mb-6">
+        <p className="text-text-muted text-sm mb-2">
           Prices in USD per 1M tokens. Last updated {pricingData.lastUpdated}.
+        </p>
+        <p className="text-text-muted text-xs mb-6">
+          TFII is the TensorFeed Intelligence Index (0 to 100), a composite over public benchmarks. See the{' '}
+          <Link href="/intelligence" className="text-accent-primary hover:underline">methodology</Link>.
         </p>
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-left">
@@ -198,6 +203,9 @@ export default function ModelsDataSection({ initialData }: Props) {
                 </th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   Model
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
+                  TFII
                 </th>
                 <th className="px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
                   Input / 1M
@@ -226,6 +234,13 @@ export default function ModelsDataSection({ initialData }: Props) {
                         </Link>
                       ) : (
                         model.name
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right">
+                      {typeof model.intelligence?.tfii === 'number' ? (
+                        <span className="text-accent-cyan font-medium font-mono">{model.intelligence.tfii.toFixed(1)}</span>
+                      ) : (
+                        <span className="text-text-muted">n/a</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-right">
