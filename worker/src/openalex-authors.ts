@@ -255,17 +255,23 @@ export async function refreshOpenAlexAIAuthors(env: Env): Promise<RefreshAuthors
   try {
     aggregates = await fetchAuthorAggregate();
   } catch (err) {
-    return { ok: false, error: `aggregate: ${(err as Error).message}` };
+    const error = `aggregate: ${(err as Error).message}`;
+    console.warn(`[openalex-authors] refresh skipped, snapshot NOT written (likely OpenAlex CF-egress throttle): ${error}`);
+    return { ok: false, error };
   }
   if (aggregates.length === 0) {
-    return { ok: false, error: 'aggregate returned 0 groups' };
+    const error = 'aggregate returned 0 groups';
+    console.warn(`[openalex-authors] refresh skipped, snapshot NOT written (likely OpenAlex CF-egress throttle): ${error}`);
+    return { ok: false, error };
   }
 
   let details: Map<string, OpenAlexAuthor>;
   try {
     details = await fetchAuthorDetails(aggregates.map(a => a.openalex_id));
   } catch (err) {
-    return { ok: false, error: `details: ${(err as Error).message}` };
+    const error = `details: ${(err as Error).message}`;
+    console.warn(`[openalex-authors] refresh skipped, snapshot NOT written (likely OpenAlex CF-egress throttle): ${error}`);
+    return { ok: false, error };
   }
 
   const snapshot = buildSnapshot(aggregates, details);
@@ -275,12 +281,14 @@ export async function refreshOpenAlexAIAuthors(env: Env): Promise<RefreshAuthors
 
 // Write a pre-built snapshot to KV. Used by refreshOpenAlexAIAuthors AND
 // by the admin POST endpoint that accepts a snapshot built from a
-// non-throttled IP. 7-day TTL matches the cron cadence; if the cron
-// stops firing for a week the read endpoint returns no_snapshot_yet.
+// non-throttled IP. No TTL: the last successful snapshot persists as
+// last-known-good, matching putInstitutionsSnapshot in openalex-research.ts.
+// A previous 7-day TTL meant that when OpenAlex throttled the Cloudflare
+// shared-egress IP for more than a week the key expired and the read
+// endpoint fell to no_snapshot_yet permanently. Persisting indefinitely
+// degrades a long throttle to stale data, never to a dead endpoint.
 export async function putAuthorsSnapshot(env: Env, snapshot: AIAuthorsSnapshot): Promise<void> {
-  await env.TENSORFEED_CACHE.put(CURRENT_KEY, JSON.stringify(snapshot), {
-    expirationTtl: 60 * 60 * 24 * 7,
-  });
+  await env.TENSORFEED_CACHE.put(CURRENT_KEY, JSON.stringify(snapshot));
 }
 
 // Light validation for the admin snapshot POST endpoint.

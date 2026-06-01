@@ -233,7 +233,14 @@ export async function refreshOpenAlexAICitationVelocity(env: Env): Promise<Refre
   try {
     works = await fetchRecentCitedAIWorks();
   } catch (err) {
-    return { ok: false, error: (err as Error).message };
+    const error = (err as Error).message;
+    console.warn(`[openalex-citation-velocity] refresh skipped, snapshot NOT written (likely OpenAlex CF-egress throttle): ${error}`);
+    return { ok: false, error };
+  }
+  if (works.length === 0) {
+    const error = 'works fetch returned 0 results';
+    console.warn(`[openalex-citation-velocity] refresh skipped, snapshot NOT written (likely OpenAlex CF-egress throttle): ${error}`);
+    return { ok: false, error };
   }
   const snapshot = buildVelocitySnapshot(works);
   await putCitationVelocitySnapshot(env, snapshot);
@@ -242,11 +249,14 @@ export async function refreshOpenAlexAICitationVelocity(env: Env): Promise<Refre
 
 // Write a pre-built snapshot to KV. Used by refreshOpenAlexAICitationVelocity
 // AND by the admin POST endpoint that accepts a snapshot built from a
-// non-throttled IP. 7-day TTL matches cron cadence.
+// non-throttled IP. No TTL: the last successful snapshot persists as
+// last-known-good, matching putInstitutionsSnapshot in openalex-research.ts.
+// A previous 7-day TTL meant that when OpenAlex throttled the Cloudflare
+// shared-egress IP for more than a week the key expired and the read
+// endpoint fell to no_snapshot_yet permanently. Persisting indefinitely
+// degrades a long throttle to stale data, never to a dead endpoint.
 export async function putCitationVelocitySnapshot(env: Env, snapshot: CitationVelocitySnapshot): Promise<void> {
-  await env.TENSORFEED_CACHE.put(CURRENT_KEY, JSON.stringify(snapshot), {
-    expirationTtl: 60 * 60 * 24 * 7,
-  });
+  await env.TENSORFEED_CACHE.put(CURRENT_KEY, JSON.stringify(snapshot));
 }
 
 // Light validation for the admin snapshot POST endpoint.

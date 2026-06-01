@@ -91,8 +91,8 @@ describe('buildSnapshot', () => {
 
   it('always populates the concept block', () => {
     const snap = buildSnapshot([], new Map());
-    expect(snap.concept.id).toBe('C154945302');
-    expect(snap.concept.name).toBe('Artificial intelligence');
+    expect(snap.concept.id).toBe('C119857082|C108583219');
+    expect(snap.concept.name).toBe('Machine learning + Deep learning');
   });
 });
 
@@ -101,7 +101,7 @@ describe('buildSnapshot', () => {
 const SAMPLE_SNAPSHOT: AIInstitutionsSnapshot = {
   capturedAt: '2026-05-06T03:30:00Z',
   window_days: 365,
-  concept: { id: 'C154945302', name: 'Artificial intelligence' },
+  concept: { id: 'C119857082|C108583219', name: 'Machine learning + Deep learning' },
   institutions: [
     { rank: 1, openalex_id: 'I27837315', display_name: 'MIT', country_code: 'US', type: 'education', ai_works_last_year: 5000, total_works_count: 250000 },
     { rank: 2, openalex_id: 'I97018004', display_name: 'Stanford', country_code: 'US', type: 'education', ai_works_last_year: 4500, total_works_count: 220000 },

@@ -26,10 +26,24 @@ import { fetchOpenAlexWithRetry } from './openalex-fetch';
  */
 
 const OPENALEX_BASE = 'https://api.openalex.org';
-// "Artificial intelligence" concept in OpenAlex's concept hierarchy.
-// Captures the broad AI body of work (machine learning, NLP, vision,
-// etc. all roll up under this).
-const AI_CONCEPT_ID = 'C154945302';
+// Curated set of AI-subfield concepts in OpenAlex's concept hierarchy,
+// joined with the pipe (OR) operator. We deliberately do NOT use the
+// broad level-1 "Artificial intelligence" parent (C154945302): that tag
+// is inherited so liberally that a fusion-physics institute and a
+// microorganism culture collection (plasma, spectroscopy and taxonomy
+// works that pick up an incidental AI label) outrank real AI labs. The
+// pair below (Machine learning + Deep learning) tracks genuine AI output
+// and keeps the ranking sane (CAS, Tsinghua, SJTU, Zhejiang, Peking ...).
+//   C119857082 = Machine learning (level 1)
+//   C108583219 = Deep learning (level 2)
+// Excluded on purpose because they re-import the over-tagging artifact:
+//   C50644808 (Artificial neural network) and C31972630 (Computer vision)
+//   both re-rank the fusion institute to the top; C204321447 (NLP)
+//   re-ranks the microorganism collection near the top.
+const AI_CONCEPT_ID = 'C119857082|C108583219';
+// Human-readable label for the snapshot's concept block. Mirrors the
+// curated AI_CONCEPT_ID set above.
+const AI_CONCEPT_NAME = 'Machine learning + Deep learning';
 // Polite-pool email signal in the User-Agent. OpenAlex docs recommend
 // including a contact so they can reach out if something goes wrong;
 // not required, no auth, just goodwill that gets faster responses.
@@ -183,7 +197,7 @@ export function buildSnapshot(
   return {
     capturedAt: new Date().toISOString(),
     window_days: 365,
-    concept: { id: AI_CONCEPT_ID, name: 'Artificial intelligence' },
+    concept: { id: AI_CONCEPT_ID, name: AI_CONCEPT_NAME },
     institutions: rows,
     notes,
   };
@@ -281,7 +295,7 @@ export const OPENALEX_ATTRIBUTION: OpenAlexAttribution = {
   license: 'CC0 1.0 Universal (Public Domain Dedication)',
   license_url: 'https://creativecommons.org/publicdomain/zero/1.0/',
   notes:
-    'OpenAlex data is released under CC0; attribution is appreciated but not required. The TensorFeed snapshot is a derived aggregate (top institutions by AI-tagged publications in the last 365 days, OpenAlex concept C154945302) of the underlying public-domain dataset.',
+    'OpenAlex data is released under CC0; attribution is appreciated but not required. The TensorFeed snapshot is a derived aggregate (top institutions by AI-tagged publications in the last 365 days, OpenAlex concepts C119857082 Machine learning and C108583219 Deep learning) of the underlying public-domain dataset.',
 };
 
 export interface AIInstitutionsResponse {
