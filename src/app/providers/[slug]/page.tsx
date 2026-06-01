@@ -33,6 +33,9 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
       title: meta.seoTitle,
       description: meta.seoDescription,
     },
+    alternates: {
+      canonical: `https://tensorfeed.ai/providers/${meta.slug}`,
+    },
   };
 }
 
@@ -42,7 +45,7 @@ function formatContext(ctx: number): string {
 }
 
 function formatPrice(price: number): string {
-  return price === 0 ? 'Free' : `$${price.toFixed(2)}`;
+  return price === 0 ? 'Free' : `${price.toFixed(2)}`;
 }
 
 export default function ProviderPage({ params }: { params: { slug: string } }) {

@@ -11,6 +11,7 @@ export const metadata: Metadata = {
       'Compare the best open source LLMs: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R.',
     url: 'https://tensorfeed.ai/best-open-source-llms',
   },
+  alternates: { canonical: 'https://tensorfeed.ai/best-open-source-llms' },
 };
 
 const models = [

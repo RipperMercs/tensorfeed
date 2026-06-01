@@ -11,6 +11,7 @@ export const metadata: Metadata = {
       'A curated guide to the best AI tools in 2026 across chatbots, coding, image generation, video, writing, research, and productivity.',
     url: 'https://tensorfeed.ai/best-ai-tools',
   },
+  alternates: { canonical: 'https://tensorfeed.ai/best-ai-tools' },
 };
 
 interface Tool {

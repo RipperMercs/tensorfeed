@@ -22,6 +22,7 @@ export const metadata: Metadata = {
     description:
       'Free, no-auth JSON API for AI news, service status, model pricing, and agent data. CORS enabled, no API key needed. Documentation and code examples for JavaScript and Python.',
   },
+  alternates: { canonical: 'https://tensorfeed.ai/developers' },
 };
 
 interface Endpoint {

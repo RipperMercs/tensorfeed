@@ -12,6 +12,7 @@ export const metadata: Metadata = {
       'Compare AI API pricing across OpenAI, Anthropic, Google, Mistral, and more. Cost calculators, free tiers, and optimization tips.',
     url: 'https://tensorfeed.ai/ai-api-pricing-guide',
   },
+  alternates: { canonical: 'https://tensorfeed.ai/ai-api-pricing-guide' },
 };
 
 export default function AIAPIPricingGuidePage() {

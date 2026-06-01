@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     title: 'Agent Reputation Leaderboard',
     description: 'TensorFeed Agent Reputation Bureau ranks every agent that interacts with TF.',
   },
+  alternates: { canonical: 'https://tensorfeed.ai/agents/leaderboard' },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

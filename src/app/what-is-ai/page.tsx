@@ -11,6 +11,7 @@ export const metadata: Metadata = {
       'Learn what artificial intelligence is, how it works, the different types of AI, and where the field is headed.',
     url: 'https://tensorfeed.ai/what-is-ai',
   },
+  alternates: { canonical: 'https://tensorfeed.ai/what-is-ai' },
 };
 
 export default function WhatIsAIPage() {

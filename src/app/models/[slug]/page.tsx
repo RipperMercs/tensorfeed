@@ -33,6 +33,9 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
       title: meta.seoTitle,
       description: meta.seoDescription,
     },
+    alternates: {
+      canonical: `https://tensorfeed.ai/models/${meta.slug}`,
+    },
   };
 }
 

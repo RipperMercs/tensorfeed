@@ -11,6 +11,7 @@ export const metadata: Metadata = {
       'Comprehensive guide to AI agents: how they work, major frameworks, real-world use cases, and the future of agentic AI.',
     url: 'https://tensorfeed.ai/what-are-ai-agents',
   },
+  alternates: { canonical: 'https://tensorfeed.ai/what-are-ai-agents' },
 };
 
 export default function WhatAreAIAgentsPage() {

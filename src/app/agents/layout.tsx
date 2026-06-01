@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
   },
+  alternates: { canonical: 'https://tensorfeed.ai/agents' },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

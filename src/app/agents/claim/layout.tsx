@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     title: 'Claim Your Wallet · TensorFeed',
     description: 'Bind a wallet to your TensorFeed agent reputation profile via signed EIP-191 message.',
   },
+  alternates: { canonical: 'https://tensorfeed.ai/agents/claim' },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
