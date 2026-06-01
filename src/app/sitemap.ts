@@ -140,6 +140,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/is-bedrock-down`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/is-azure-openai-down`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/is-deepseek-down`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
+    { url: `${baseUrl}/is-groq-down`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
     { url: `${baseUrl}/is-together-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
     { url: `${baseUrl}/is-fireworks-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
     { url: `${baseUrl}/is-openrouter-down`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
