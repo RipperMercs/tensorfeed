@@ -28,7 +28,7 @@ export const METHODOLOGY_VERSION = '1.0';
 // weighting's benchmarks is flagged low_coverage and excluded from the ranking.
 const COVERAGE_FLOOR = 0.6;
 
-// --- Moved verbatim from premium-route-verdict.ts (now the shared home) ---
+// ─── Moved verbatim from premium-route-verdict.ts (now the shared home) ───
 
 export const TASKS: RoutingTask[] = ['code', 'reasoning', 'creative', 'general'];
 
@@ -115,7 +115,7 @@ export function trustForTask(
   return { multiplier: applied === 0 ? 1.0 : total / applied, worstContamination: worst, flagged };
 }
 
-// --- The Intelligence Index ---
+// ─── The Intelligence Index ───
 
 export interface ModelIntelligenceCore {
   tfii: number;
@@ -211,7 +211,7 @@ export function buildIntelligenceSnapshot(data: BenchmarksData, asOf: string): I
   return { as_of: asOf, methodology_version: METHODOLOGY_VERSION, models };
 }
 
-// --- Free /api/models enrichment ---
+// ─── Free /api/models enrichment ───
 
 interface PricingLike {
   providers: Array<{ models: Array<{ name?: string } & Record<string, unknown>> } & Record<string, unknown>>;
@@ -233,7 +233,7 @@ export function enrichModelsWithIntelligence<T extends PricingLike>(pricing: T, 
   };
 }
 
-// --- Snapshot capture (cron) + history (premium) ---
+// ─── Snapshot capture (cron) + history (premium) ───
 
 const SNAPSHOT_LATEST_KEY = 'intelligence:snapshot:latest';
 const SNAPSHOT_INDEX_KEY = 'intelligence:snapshot:index';
@@ -265,6 +265,8 @@ export async function captureIntelligenceSnapshot(
   return { ok: true, models: snapshot.models.length, date };
 }
 
+// History caps a query window at 1 year. Intentionally shorter than
+// MAX_INDEX_DATES retention so the public window stays bounded.
 const MAX_RANGE_DAYS = 365;
 
 /** Resolve a from/to YYYY-MM-DD range with sane defaults and a max window. */
