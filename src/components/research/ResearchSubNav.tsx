@@ -11,6 +11,7 @@ const NAV = [
   { href: '/research/citation-velocity', label: 'Citation Velocity' },
   { href: '/research/topics', label: 'Emerging Topics' },
   { href: '/research/institutions', label: 'Institutions' },
+  { href: '/research/conference-acceptances', label: 'Conferences' },
 ];
 
 /**

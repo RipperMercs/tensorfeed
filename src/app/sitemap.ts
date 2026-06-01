@@ -121,6 +121,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/research/milestones`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/research/authors`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/research/citation-velocity`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${baseUrl}/research/conference-acceptances`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
     { url: `${baseUrl}/research/topics`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     // raw, unverified arXiv firehose; honestly labeled, not a quality product, not promoted.
     { url: `${baseUrl}/research/firehose`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },

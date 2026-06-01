@@ -265,3 +265,37 @@ export function useInstitutions(limit = 10) {
   }, [limit]);
   return rows;
 }
+
+export interface ConferencePaper {
+  title: string;
+  authors: string[];
+  venue_group: string;
+  tier: string;
+  primary_area: string | null;
+  keywords: string[];
+  abstract_snippet: string;
+  forum_url: string;
+  pdf_url: string | null;
+  accepted_at: string | null;
+}
+
+// OpenReview notable-tier acceptances. Returns the rows plus the snapshot
+// venues and capturedAt so the page can offer a venue filter and a freshness
+// line. Source: /api/research/conference-acceptances (free).
+export function useConferenceAcceptances() {
+  const [state, setState] = useState<{ papers: ConferencePaper[] | null; venues: string[]; capturedAt: string | null }>(
+    { papers: null, venues: [], capturedAt: null },
+  );
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; capturedAt?: string; venues?: string[]; papers?: ConferencePaper[] }>(
+        `${API}/api/research/conference-acceptances`,
+      );
+      if (cancelled) return;
+      setState({ papers: data?.papers ?? [], venues: data?.venues ?? [], capturedAt: data?.capturedAt ?? null });
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return state;
+}
