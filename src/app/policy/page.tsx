@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { Scale } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import PolicyRegistryWidget from '@/components/policy/PolicyRegistryWidget';
 
 export const metadata: Metadata = {
@@ -54,6 +55,16 @@ export default function PolicyPage() {
         name="TensorFeed AI Policy Registry"
         description="Editorial catalog of significant AI policy actions across six jurisdictions: US Federal, US State, EU, UK, China, and International."
         url="https://tensorfeed.ai/policy"
+        jsonUrl="/api/policy/ai/registry"
+        keywords={[
+          'ai policy registry',
+          'ai executive orders',
+          'eu ai act',
+          'ai regulation tracker',
+          'us state ai law',
+          'ai export controls',
+          'ai safety declarations',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
 
@@ -68,6 +79,7 @@ export default function PolicyPage() {
           Significant AI policy actions across the US, EU, UK, China, and international forums.
           Editorial, structured, source-linked.
         </p>
+        <MachineReadableLink endpoint="/api/policy/ai/registry" className="mt-2" />
         <div className="text-text-secondary leading-relaxed max-w-3xl space-y-3 text-sm">
           <p>
             The other &ldquo;AI policy tracker&rdquo; resources online tend to be either expert paywalls or

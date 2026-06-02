@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import { ArticleJsonLd, FAQPageJsonLd, ItemListJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: 'Best Open Source LLMs in 2026: Llama, DeepSeek V4, Mistral, Qwen, Cohere Command A+ & More | TensorFeed',
   description:
@@ -224,6 +224,13 @@ export default function BestOpenSourceLLMsPage() {
         description="Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R. Includes benchmarks, licensing, and how to run locally."
         datePublished="2025-05-01"
         dateModified="2026-05-24"
+      />
+
+      <ItemListJsonLd
+        name="Best Open Source LLMs in 2026"
+        description="A curated comparison of the leading open source large language models in 2026, covering parameters, architecture, context window, and licensing."
+        url="https://tensorfeed.ai/best-open-source-llms"
+        items={models.map((model) => ({ name: model.name }))}
       />
 
       <p className="text-text-muted text-sm mb-4">Last Updated: May 2026</p>

@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { CreditCard, ExternalLink } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Adopter {
   id: string;
@@ -95,6 +97,7 @@ export default function X402AdoptersPage() {
           <a href="https://github.com/RipperMercs/tensorfeed/issues" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">GitHub issues</a>{' '}
           with a verifiable link. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/x402-adopters" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap items-center">
@@ -192,6 +195,14 @@ export default function X402AdoptersPage() {
           <a href="/api/x402-adopters" className="text-accent-primary hover:underline font-mono">/api/x402-adopters</a>. Filter with <code className="font-mono">?category=publisher|sdk|gateway|reference|spec</code> or <code className="font-mono">?status=live|announced|sdk|gateway</code>. Free, no auth, cached 10 min. Spec at <a href="https://x402.org" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">x402.org</a>.
         </p>
       </div>
+
+      <DatasetJsonLd
+        name="x402 Adopters Tracker"
+        description="Curated catalog of who actually speaks the x402 HTTP-payment protocol today: live production publishers, canonical SDKs, deployable gateways, and reference implementations, each tagged with networks, tokens, x402 methods, and a last-verified date."
+        url="https://tensorfeed.ai/x402-adopters"
+        jsonUrl="/api/x402-adopters"
+        keywords={['x402', 'http payment protocol', 'x402 adopters', 'agent payments', 'usdc', 'payment gateways', 'x402 sdks']}
+      />
 
       <script
         type="application/ld+json"

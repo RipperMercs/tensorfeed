@@ -53,6 +53,15 @@ export default function IntelligencePage() {
         name="TensorFeed Intelligence Index (TFII)"
         description="Composite AI model intelligence scores derived from public benchmarks, discounted for contamination and saturation."
         url="https://tensorfeed.ai/intelligence"
+        keywords={[
+          'ai model intelligence index',
+          'composite benchmark score',
+          'mmlu-pro',
+          'humaneval',
+          'gpqa diamond',
+          'swe-bench',
+          'model capability ranking',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
       <BreadcrumbListJsonLd items={BREADCRUMBS} />

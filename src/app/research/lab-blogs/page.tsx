@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import LabBlogsClient from './LabBlogsClient';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 export const metadata: Metadata = {
   title: 'AI Research Blogs: DeepMind, Google Research, BAIR, MIT | TensorFeed',
@@ -29,6 +31,24 @@ export default function LabBlogsPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSONLD) }} />
+      <DatasetJsonLd
+        name="AI Research Lab Blogs Feed"
+        description="Recent posts aggregated from major AI lab and academic research blogs (Google DeepMind, Google Research, Berkeley BAIR, MIT News AI, Hugging Face). Each entry carries a title, short snippet, source label, publish date, and a link to the original post. Refreshed daily."
+        url="https://tensorfeed.ai/research/lab-blogs"
+        jsonUrl="/api/research/lab-blogs"
+        keywords={[
+          'ai research blogs',
+          'google deepmind blog',
+          'google research blog',
+          'berkeley bair',
+          'mit news ai',
+          'hugging face blog',
+          'ai lab posts',
+        ]}
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <MachineReadableLink endpoint="/api/research/lab-blogs" className="mt-2" />
+      </div>
       <LabBlogsClient />
     </>
   );

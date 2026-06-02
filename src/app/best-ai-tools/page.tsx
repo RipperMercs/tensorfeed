@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArticleJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import { ArticleJsonLd, FAQPageJsonLd, ItemListJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: 'Best AI Tools in 2026: The Definitive Guide | TensorFeed',
   description:
@@ -251,6 +251,15 @@ export default function BestAIToolsPage() {
         description="A curated guide to the best AI tools in 2026 across chatbots, coding, image generation, video, writing, research, and productivity."
         datePublished="2025-09-01"
         dateModified="2026-03-28"
+      />
+
+      <ItemListJsonLd
+        name="Best AI Tools in 2026"
+        description="A curated list of the best AI tools in 2026 across chatbots, coding assistants, image generation, video generation, writing, research, and productivity."
+        url="https://tensorfeed.ai/best-ai-tools"
+        items={categories.flatMap((category) =>
+          category.tools.map((tool) => ({ name: tool.name, url: tool.url }))
+        )}
       />
 
       <p className="text-text-muted text-sm mb-4">Last Updated: March 2026</p>

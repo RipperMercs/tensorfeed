@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { AlertTriangle, Database, FileText, ExternalLink } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 export const metadata: Metadata = {
   title: 'AI Research Firehose: raw, unverified arXiv AI/ML feed | TensorFeed',
@@ -74,6 +75,16 @@ export default function ResearchFirehosePage() {
         name="AI Research Firehose (raw, unverified arXiv AI/ML)"
         description={CAVEAT}
         url="https://tensorfeed.ai/research/firehose"
+        jsonUrl="https://tensorfeed.ai/api/papers/arxiv-recent"
+        keywords={[
+          'arxiv ai papers',
+          'arxiv ml feed',
+          'recent ai preprints',
+          'cs.ai cs.lg cs.cl cs.cv',
+          'raw research firehose',
+          'machine readable arxiv json',
+          'unranked ai paper stream',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
 
@@ -82,6 +93,7 @@ export default function ResearchFirehosePage() {
         <p className="text-text-secondary text-base">
           Recent arXiv AI/ML, raw, fast, unverified. One static file. No login, no paywall.
         </p>
+        <MachineReadableLink endpoint="/api/papers/arxiv-recent" className="mt-2" />
       </header>
 
       <section aria-label="Caveat" className="mb-10">

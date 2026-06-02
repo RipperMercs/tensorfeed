@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Activity, TrendingUp, RefreshCw } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface ProviderSignal {
   id: string;
@@ -123,6 +125,21 @@ export default function AttentionPage() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGE_JSONLD) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
+      <DatasetJsonLd
+        name="TensorFeed AI Attention Index"
+        description="Live per-provider attention score derived from news article volume (24h and 7d), GitHub trending repos, and bot/agent traffic on TensorFeed. Normalized 0 to 100, recomputed on every request, cached 5 minutes. Includes raw signal counts per provider."
+        url="https://tensorfeed.ai/attention"
+        jsonUrl="/api/attention"
+        keywords={[
+          'ai attention index',
+          'ai hype index',
+          'provider attention score',
+          'news volume signal',
+          'github trending repos',
+          'agent traffic',
+          'anthropic openai google',
+        ]}
+      />
 
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
@@ -134,6 +151,7 @@ export default function AttentionPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Live attention score per AI provider, derived from news volume, GitHub trending, and agent traffic on TensorFeed. Higher score means more mentions, more trending repos, more inbound agent traffic. The signal beneath the noise.
         </p>
+        <MachineReadableLink endpoint="/api/attention" className="mt-2" />
       </div>
 
       {/* Methodology */}

@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Cpu, ExternalLink, FileText, Code as CodeIcon, Play } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Entry {
   id: string;
@@ -77,6 +79,7 @@ export default function EmbodiedAIPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Vision-language-action foundation models, humanoid platforms, real-world and sim training datasets, and physics simulators driving the embodied AI wave. Each entry: org, parameters where applicable, license, release date, paper, code, demo. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/embodied-ai" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -151,6 +154,22 @@ export default function EmbodiedAIPage() {
       <div className="bg-bg-secondary border border-border rounded-lg p-4 text-sm text-text-secondary">
         <p>For agents: same data at{' '}<Link href="/api-reference/embodied-ai" className="text-accent-primary hover:underline font-mono">/api/embodied-ai</Link>. Filter with <code className="font-mono">?category=foundation_model|humanoid|dataset|simulator</code>. Free, no auth, cached 10 min. Daily snapshot in the{' '}<Link href="/datasets" className="text-accent-primary hover:underline">Hugging Face dataset</Link>.</p>
       </div>
+
+      <DatasetJsonLd
+        name="Embodied AI Catalog"
+        description="Curated catalog of embodied AI: vision-language-action foundation models, humanoid robot platforms, real-world and simulated training datasets, and physics simulators. Each entry lists org, parameters where applicable, license, release date, and links to paper, code, and demo."
+        url="https://tensorfeed.ai/embodied-ai"
+        jsonUrl="/api/embodied-ai"
+        keywords={[
+          'embodied ai',
+          'vision-language-action models',
+          'humanoid robots',
+          'robot training datasets',
+          'physics simulators',
+          'foundation models',
+          'robotics',
+        ]}
+      />
 
       <script
         type="application/ld+json"

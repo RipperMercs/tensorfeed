@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Image as ImageIcon, ExternalLink, Video, Mic, AudioLines } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 type Modality = 'image' | 'video' | 'tts' | 'stt';
 
@@ -130,6 +132,13 @@ export default function MultimodalPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGE_JSONLD) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
+      <DatasetJsonLd
+        name="TensorFeed Multimodal AI Model Catalog"
+        description="Catalog of production image generation, video generation, text-to-speech, and speech-to-text models with pricing in modality-native units (per image, per second, per 1k characters, per minute), provider, release date, API availability, and feature tags."
+        url="https://tensorfeed.ai/multimodal"
+        jsonUrl="/api/multimodal"
+        keywords={['ai image generation', 'video generation', 'text to speech', 'speech to text', 'multimodal model pricing', 'flux', 'elevenlabs', 'whisper']}
+      />
 
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
@@ -141,6 +150,7 @@ export default function MultimodalPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Image generation, video generation, text-to-speech, and speech-to-text catalog. Pricing in modality-native units (per image, per second, per 1k characters, per minute). {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/multimodal" className="mt-2" />
       </div>
 
       {/* Modality tabs */}

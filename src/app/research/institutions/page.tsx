@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { GraduationCap, ArrowLeft } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import InstitutionsWidget from '@/components/research/InstitutionsWidget';
 
 export const metadata: Metadata = {
@@ -55,6 +56,16 @@ export default function ResearchInstitutionsPage() {
         name="TensorFeed AI Research Institutions"
         description="Top institutions worldwide ranked by AI-tagged publications in the last 365 days, sourced from OpenAlex (CC0 public domain)."
         url="https://tensorfeed.ai/research/institutions"
+        jsonUrl="/api/research/institutions/ai"
+        keywords={[
+          'ai research institutions',
+          'openalex',
+          'ai publications leaderboard',
+          'university ai research',
+          'corporate ai labs',
+          'ai publication counts',
+          'institution rankings',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
 
@@ -72,6 +83,7 @@ export default function ResearchInstitutionsPage() {
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">AI Research Institutions</h1>
         </div>
+        <MachineReadableLink endpoint="/api/research/institutions/ai" className="mt-2" />
         <p className="text-text-secondary text-lg max-w-2xl mb-4">
           Where AI research is actually happening. Top universities, labs, and companies ranked
           by AI-tagged publications in the last 365 days.

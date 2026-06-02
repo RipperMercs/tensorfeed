@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { Server } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import GpuPricingTable from '@/components/gpu-pricing/GpuPricingTable';
 
 export const metadata: Metadata = {
@@ -55,6 +56,16 @@ export default function GpuPricingPage() {
         name="TensorFeed GPU Rental Pricing"
         description="Live GPU rental pricing aggregated across cloud GPU marketplaces, refreshed every 4 hours, with daily historical snapshots."
         url="https://tensorfeed.ai/gpu-pricing"
+        jsonUrl="/api/gpu/pricing"
+        keywords={[
+          'gpu rental pricing',
+          'cloud gpu marketplace',
+          'h100 hourly rate',
+          'a100 pricing',
+          'spot gpu price',
+          'on-demand gpu',
+          'runpod lambda labs',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
 
@@ -68,6 +79,7 @@ export default function GpuPricingPage() {
         <p className="text-text-secondary text-lg max-w-2xl mb-4">
           Live cheapest hourly rates across the cloud GPU marketplaces. Refreshed every 4 hours.
         </p>
+        <MachineReadableLink endpoint="/api/gpu/pricing" className="mt-2" />
         <div className="text-text-secondary leading-relaxed max-w-3xl space-y-3 text-sm">
           <p>
             GPU prices move. A100s that cost $4 an hour on a hyperscaler can be $0.80 on a marketplace

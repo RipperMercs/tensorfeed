@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Network, ExternalLink } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface EmbeddingModel {
   id: string;
@@ -134,6 +136,21 @@ export default function EmbeddingsPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGE_JSONLD) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
+      <DatasetJsonLd
+        name="TensorFeed AI Embedding Model Catalog"
+        description="Production embedding and reranker models with pricing, output dimensions, max input tokens, MTEB average score, open-source status, and licensing. The machine-readable catalog RAG agents need to choose an embedding model and budget storage."
+        url="https://tensorfeed.ai/embeddings"
+        jsonUrl="/api/embeddings"
+        keywords={[
+          'ai embeddings',
+          'embedding models',
+          'rag',
+          'reranker',
+          'mteb',
+          'vector embeddings',
+          'embedding pricing',
+        ]}
+      />
 
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
@@ -145,6 +162,7 @@ export default function EmbeddingsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Every production embedding and reranker model with pricing, dimensions, max input tokens, MTEB score, and licensing. The catalog every RAG agent needs and nobody else publishes in machine-readable form. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/embeddings" className="mt-2" />
       </div>
 
       {/* Editorial intro */}

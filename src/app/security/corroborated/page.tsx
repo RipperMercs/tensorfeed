@@ -67,6 +67,15 @@ export default function SecurityCorroboratedPage() {
         name="Corroborated Security Advisories (GHSA cross-source)"
         description={CLAIM}
         url="https://tensorfeed.ai/security/corroborated"
+        keywords={[
+          'ghsa advisory',
+          'osv corroboration',
+          'cve verification',
+          'kev known exploited',
+          'epss percentile',
+          'ssvc enrichment',
+          'security agent feed',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
 

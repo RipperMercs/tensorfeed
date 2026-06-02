@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, TrendingUp, Building2, Cpu, Cloud, Server, Sparkles } from 'lucide-react';
-import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import { DatasetJsonLd, FAQPageJsonLd, ItemListJsonLd } from '@/components/seo/JsonLd';
 import { AI_COMPANIES } from '@/data/ai-companies/companies';
 import { CATEGORY_LABEL, type AICompanyCategory } from '@/data/ai-companies/types';
 
@@ -99,6 +99,15 @@ export default function AIStocksHub() {
         name="TensorFeed AI Stocks Hub"
         description="Curated AI-relevant public-company cohort with SEC filings, news, and editorial coverage."
         url="https://tensorfeed.ai/ai-stocks"
+      />
+      <ItemListJsonLd
+        name="TensorFeed AI Stocks Cohort"
+        description="Hand-curated list of AI-relevant public companies tracked by TensorFeed, each linking to a per-company intelligence page."
+        url="https://tensorfeed.ai/ai-stocks"
+        items={AI_COMPANIES.map((company) => ({
+          name: `${company.display_name} (${company.ticker})`,
+          url: `/ai-stocks/${company.ticker.toLowerCase()}`,
+        }))}
       />
       <FAQPageJsonLd faqs={FAQS} />
 

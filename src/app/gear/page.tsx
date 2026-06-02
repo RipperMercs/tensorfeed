@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import JsonLd, { BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
+import JsonLd, { BreadcrumbListJsonLd, DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import { GEAR_CATEGORIES } from '@/data/gear/categories';
 import { PRODUCTS, getCategoryCounts } from '@/data/gear/products';
 import { SPOTLIGHT } from '@/data/gear/spotlight';
@@ -74,8 +75,30 @@ export default function GearHubPage() {
         ]}
       />
       <JsonLd data={itemList} />
+      <DatasetJsonLd
+        name="TensorFeed AI Gear"
+        description="Curated, human-reviewed catalog of AI-relevant consumer hardware: laptops capable of local language models, discrete GPUs, AR glasses, robotics, and edge accelerators. The machine-readable JSON twin strips affiliate plumbing so agents read clean vendor URLs."
+        url="https://tensorfeed.ai/gear"
+        jsonUrl="/api/gear"
+        keywords={[
+          'ai gear',
+          'local llm hardware',
+          'gpu catalog',
+          'ar glasses',
+          'edge accelerators',
+          'robotics hardware',
+          'consumer ai hardware',
+        ]}
+        license="CC-BY-4.0"
+      />
 
       <GearHero stats={stats} />
+
+      <section className="gear-section" style={{ paddingTop: 16, paddingBottom: 0 }}>
+        <div className="container">
+          <MachineReadableLink endpoint="/api/gear" className="mt-2" />
+        </div>
+      </section>
 
       <section className="gear-section" id="spotlight" style={{ paddingTop: 40 }}>
         <div className="container">

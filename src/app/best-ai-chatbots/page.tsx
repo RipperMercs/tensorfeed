@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArticleJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
+import { ArticleJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd, ItemListJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
   title: 'AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini (Honest Review)',
   description:
@@ -161,6 +161,11 @@ const chatbots = [
 export default function BestAIChatbotsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ItemListJsonLd
+        name="Best AI Chatbots 2026: Claude, ChatGPT, Gemini, Perplexity, Copilot, Grok, Llama"
+        url="https://tensorfeed.ai/best-ai-chatbots"
+        items={chatbots.map((bot) => ({ name: bot.name }))}
+      />
       <ArticleJsonLd
         title="AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini"
         description="Honest 2026 AI chatbot comparison across pricing, context window, benchmarks, free tier, and best use case. With live API status for each provider."

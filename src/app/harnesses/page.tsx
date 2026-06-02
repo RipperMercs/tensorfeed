@@ -5,6 +5,8 @@ import { Wrench, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import fallbackData from '@/../data/harnesses.json';
 import { HARNESS_DIRECTORY } from '@/lib/harness-directory';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface BenchmarkDef {
   id: string;
@@ -176,6 +178,13 @@ export default function HarnessesPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGE_JSONLD) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
+      <DatasetJsonLd
+        name="TensorFeed AI Coding Harness Leaderboard"
+        description="Cross-harness benchmark scores for the major agentic-coding harnesses (Claude Code, Cursor Agent, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf, Amp, Continue, Roo Code) on SWE-bench Verified, Terminal-Bench, Aider Polyglot, and SWE-Lancer. Vendor-published scores, aggregated and renormalized."
+        url="https://tensorfeed.ai/harnesses"
+        jsonUrl="/api/harnesses"
+        keywords={['ai coding harness', 'swe-bench verified', 'terminal-bench', 'aider polyglot', 'swe-lancer', 'claude code', 'codex cli', 'agentic coding benchmark']}
+      />
 
       {/* Header */}
       <div className="mb-8">
@@ -188,6 +197,7 @@ export default function HarnessesPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           The same model can score 15 points apart on the same benchmark depending on which agent harness wraps it. This page tracks how the major coding harnesses (Claude Code, Cursor, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf, Amp, Continue, Roo Code) perform across SWE-bench Verified, Terminal-Bench, Aider Polyglot, and SWE-Lancer. Last updated {data.lastUpdated}.
         </p>
+        <MachineReadableLink endpoint="/api/harnesses" className="mt-2" />
       </div>
 
       {/* Editorial intro */}

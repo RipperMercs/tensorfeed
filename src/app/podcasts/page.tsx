@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { Headphones, Clock, ExternalLink, Mail } from 'lucide-react';
 import PodcastPlayer from '@/components/podcasts/PodcastPlayer';
 import type { PodcastEpisode } from '@/lib/types';
-import JsonLd from '@/components/seo/JsonLd';
+import JsonLd, { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 
 const PODCAST_COLORS: Record<string, { bg: string; border: string }> = {
@@ -96,6 +97,21 @@ export default function PodcastsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <JsonLd data={schema} />
+      <DatasetJsonLd
+        name="AI Podcasts Feed"
+        description="A continuously updated feed of recent AI podcast episodes aggregated from top shows including AI Daily Brief, Practical AI, Latent Space, Last Week in AI, Hard Fork, and the Dwarkesh Podcast. Each entry includes the episode title, show name, publish time, duration, and audio link."
+        url="https://tensorfeed.ai/podcasts"
+        jsonUrl="/api/podcasts"
+        keywords={[
+          'ai podcasts',
+          'ai daily brief',
+          'practical ai',
+          'latent space',
+          'last week in ai',
+          'podcast episodes',
+          'ai news audio',
+        ]}
+      />
 
       {/*
         Hero with photo background. Recording studio at night with a
@@ -142,6 +158,7 @@ export default function PodcastsPage() {
         <p className="text-text-secondary text-lg drop-shadow">
           Listen to the latest AI news and analysis from top podcasts, all in one place.
         </p>
+        <MachineReadableLink endpoint="/api/podcasts" className="mt-2" />
       </section>
 
       {/* Add or request a podcast */}

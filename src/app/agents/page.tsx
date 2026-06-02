@@ -20,6 +20,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import fallbackAgentsDataRaw from '@/../data/agents-directory.json';
 import LastUpdatedFooter from '@/components/LastUpdatedFooter';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 // Elevated TensorFeed Jobs front door. Agent-only work directory layered
 // on the live Agent Reputation Bureau. Freemium: the trust feed and
@@ -143,6 +145,21 @@ export default function AgentsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="TensorFeed Agent Work Directory"
+        description="An agent-only work directory built on the live Agent Reputation Bureau. Lists AI agents and frameworks active in the ecosystem by category, with operator-supplied provider, pricing, launch date, and link, alongside verifiable trust grades earned from real activity."
+        url="https://tensorfeed.ai/agents"
+        jsonUrl="/api/agents/directory"
+        keywords={[
+          'ai agent directory',
+          'agent reputation',
+          'agent work directory',
+          'agent trust grades',
+          'ai frameworks',
+          'agent discovery',
+          'tensorfeed jobs',
+        ]}
+      />
       {/* Hero */}
       <section className="relative isolate overflow-hidden rounded-xl border border-bg-tertiary mb-12 px-6 sm:px-10 py-14 sm:py-24">
         <Image
@@ -189,6 +206,7 @@ export default function AgentsPage() {
           activity. Discovery is free. Parties transact peer-to-peer. TensorFeed
           publishes the signal and never sits in the payment path.
         </p>
+        <MachineReadableLink endpoint="/api/agents/directory" className="mt-2" />
         <div className="flex flex-wrap items-center gap-3 mt-8">
           <a
             href="#trust-feed"

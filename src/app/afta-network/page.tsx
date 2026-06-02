@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Network, AlertCircle, GitFork, FileText, ExternalLink } from 'lucide-react';
 import { AFTA_ADOPTERS } from '@/lib/afta-adopters';
+import { ItemListJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'AFTA Network Directory, TensorFeed',
@@ -40,6 +41,12 @@ const ROLE_COLOR: Record<string, string> = {
 export default function AftaNetworkPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ItemListJsonLd
+        name="AFTA Network Directory"
+        description="Informational, non-authoritative directory of known Agent Fair-Trade Agreement (AFTA) adopters. Each adopter publishes a conforming manifest at their own /.well-known/agent-fair-trade.json, which is the source of truth."
+        url="https://tensorfeed.ai/afta-network"
+        items={AFTA_ADOPTERS.map((a) => ({ name: a.site, url: a.url }))}
+      />
       <header className="mb-10">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">

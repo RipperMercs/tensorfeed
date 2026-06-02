@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Database, ExternalLink, Check } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface VectorDB {
   id: string;
@@ -129,6 +131,13 @@ export default function VectorDBsPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGE_JSONLD) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
+      <DatasetJsonLd
+        name="TensorFeed Vector Database Catalog"
+        description="Curated catalog of production vector databases and self-hostable engines for RAG agents, with pricing, free tiers, hybrid search support, metadata filtering, multi-tenancy, serverless, license, and hosting options."
+        url="https://tensorfeed.ai/vector-dbs"
+        jsonUrl="/api/vector-dbs"
+        keywords={['vector database', 'rag infrastructure', 'pinecone', 'qdrant', 'weaviate', 'pgvector', 'hybrid search', 'vector search']}
+      />
 
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
@@ -140,6 +149,7 @@ export default function VectorDBsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Production vector databases and self-hostable engines with pricing, free tiers, hybrid search, multi-tenancy, license, and hosting options. The RAG infrastructure layer every vector-search agent has to pick from. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/vector-dbs" className="mt-2" />
       </div>
 
       {/* Filter */}

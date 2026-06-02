@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Server, ExternalLink, Award } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface ProviderOffer {
   provider: string;
@@ -133,6 +135,13 @@ export default function InferenceProvidersPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGE_JSONLD) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
+      <DatasetJsonLd
+        name="TensorFeed Inference Provider Pricing Matrix"
+        description="Cross-provider pricing matrix for open-weight models across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate, Anyscale, and first-party APIs. Includes per-model output tokens per second, context window, and feature flags, with the cheapest blended offer marked per model."
+        url="https://tensorfeed.ai/inference-providers"
+        jsonUrl="/api/inference-providers"
+        keywords={['inference pricing', 'together ai', 'fireworks', 'groq', 'deepinfra', 'openrouter', 'open weight models', 'blended token price']}
+      />
 
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
@@ -144,6 +153,7 @@ export default function InferenceProvidersPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Same open-weight model, different price across Together, Fireworks, Groq, DeepInfra, OpenRouter, Replicate, Anyscale, and first-party APIs. The price spread on a single model can be 3-10x for the same nominal weights. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/inference-providers" className="mt-2" />
       </div>
 
       <div className="max-w-4xl mb-8 text-text-secondary leading-relaxed space-y-3">

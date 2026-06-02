@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Cpu, ExternalLink } from 'lucide-react';
 import fallbackPricingData from '@/../data/pricing.json';
 import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 import ModelsDataSection, { PricingData } from '@/components/models/ModelsDataSection';
 
@@ -55,6 +56,16 @@ export default function ModelsPage() {
         name="TensorFeed AI Model Pricing & Releases"
         description="Comprehensive AI model pricing comparison, release tracking, and specifications across all major providers."
         url="https://tensorfeed.ai/models"
+        jsonUrl="/api/models"
+        keywords={[
+          'ai model pricing',
+          'llm token pricing',
+          'model release tracker',
+          'context window comparison',
+          'tensorfeed intelligence index',
+          'provider api pricing',
+          'benchmark leaderboards',
+        ]}
       />
       {/*
         Hero with photo background. Circuit-board with floating token-coins
@@ -100,6 +111,7 @@ export default function ModelsPage() {
         <p className="text-text-secondary text-lg max-w-2xl mb-4 drop-shadow">
           Track releases, compare pricing, and benchmark scores across all major providers.
         </p>
+        <MachineReadableLink endpoint="/api/models" className="mt-2" />
         <div className="text-text-secondary leading-relaxed max-w-3xl space-y-3 text-sm">
           <p>
             The AI model landscape changes fast. New releases ship weekly, pricing drops without warning,

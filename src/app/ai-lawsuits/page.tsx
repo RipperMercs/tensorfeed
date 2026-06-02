@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Scale, ExternalLink, AlertTriangle } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Lawsuit {
   id: string;
@@ -97,6 +99,7 @@ export default function AILawsuitsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Structured catalog of active and notable AI litigation: training-data copyright cases, voice-cloning, music, code, antitrust, product liability, and regulatory inquiries. Each entry has parties, court, case number, claims, current stage, and primary-source citations. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/ai-lawsuits" className="mt-2" />
       </div>
 
       <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 mb-6 text-sm text-amber-300/90 flex gap-3 items-start">
@@ -194,6 +197,22 @@ export default function AILawsuitsPage() {
           <Link href="/datasets" className="text-accent-primary hover:underline">Hugging Face dataset</Link>.
         </p>
       </div>
+
+      <DatasetJsonLd
+        name="AI Lawsuits Tracker"
+        description="Structured catalog of active and notable AI litigation: training-data copyright cases, voice-cloning, music, code, antitrust, product liability, and regulatory inquiries. Each entry lists parties, court, case number, claims, current stage, and primary-source citations."
+        url="https://tensorfeed.ai/ai-lawsuits"
+        jsonUrl="/api/ai-lawsuits"
+        keywords={[
+          'ai lawsuits',
+          'ai litigation',
+          'training data copyright',
+          'generative ai legal cases',
+          'ai antitrust',
+          'ai regulatory investigations',
+          'court filings tracker',
+        ]}
+      />
 
       <script
         type="application/ld+json"

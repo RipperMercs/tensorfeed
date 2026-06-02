@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { Package } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import PackageTrendingWidget from '@/components/packages/PackageTrendingWidget';
 
 export const metadata: Metadata = {
@@ -77,6 +78,16 @@ export default function PackagesPage() {
         name="TensorFeed AI/ML Package Trending"
         description="Curated AI/ML library trending across npm and PyPI ecosystems, ranked by recent downloads."
         url="https://tensorfeed.ai/packages"
+        jsonUrl="/api/packages/npm/ai-trending"
+        keywords={[
+          'ai package trending',
+          'npm ai libraries',
+          'pypi ai libraries',
+          'llm sdk downloads',
+          'agent framework adoption',
+          'rag inference mcp',
+          'package download rankings',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
 
@@ -91,6 +102,7 @@ export default function PackagesPage() {
           Which libraries are agents and developers actually reaching for. Curated trending
           across npm and PyPI.
         </p>
+        <MachineReadableLink endpoint="/api/packages/npm/ai-trending" className="mt-2" />
         <div className="text-text-secondary leading-relaxed max-w-3xl space-y-3 text-sm">
           <p>
             Two free upstream sources give us the package ecosystem signal cleanly: npm&apos;s

@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { CheckCircle2, Layers, Code2, Zap, ShieldCheck, Sparkles } from 'lucide-react';
-import { FAQPageJsonLd } from '@/components/seo/JsonLd';
+import { FAQPageJsonLd, DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 export const metadata: Metadata = {
   title: 'The Verified Feed: Cross-Source Story Corroboration for AI Agents | TensorFeed',
@@ -82,6 +83,20 @@ export default function VerifiedFeedPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
       <FAQPageJsonLd faqs={FAQS} />
+      <DatasetJsonLd
+        name="TensorFeed Verified Feed: cross-source news story clusters"
+        description="Story-level news clusters grouped by embedding-based cosine similarity across 12+ AI-relevant sources TensorFeed polls hourly. Each cluster carries a source_count and a corroboration_band tag (single, limited, broad). The free endpoint returns up to 25 clusters for one UTC date."
+        url="https://tensorfeed.ai/verified-feed"
+        jsonUrl="/api/history/news/clusters"
+        keywords={[
+          'news verification',
+          'story clustering',
+          'cross-source corroboration',
+          'ai news sources',
+          'embedding similarity',
+          'agent trust layer',
+        ]}
+      />
 
       {/* Hero */}
       <header className="mb-12 text-center">
@@ -97,6 +112,9 @@ export default function VerifiedFeedPage() {
           AI-relevant news sources. Every cluster carries a <code className="font-mono text-accent-primary">corroboration_band</code> tag and an
           explicit <code className="font-mono text-accent-primary">source_count</code>.
         </p>
+        <div className="flex justify-center mb-4">
+          <MachineReadableLink endpoint="/api/history/news/clusters" className="mt-2" />
+        </div>
         <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
           <Link
             href="/api/history/news/clusters"

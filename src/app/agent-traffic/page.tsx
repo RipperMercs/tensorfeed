@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Bot } from 'lucide-react';
 import AgentTrafficClient from './AgentTrafficClient';
 import JsonLd, { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 export const metadata: Metadata = {
   title: 'Live AI Bot Traffic on TensorFeed: GPTBot, ClaudeBot, PerplexityBot Stats',
@@ -89,6 +90,16 @@ export default function AgentTrafficPage() {
         name="TensorFeed AI Bot Traffic"
         description="Real-time and daily aggregate counts of AI agent and crawler hits against TensorFeed.ai endpoints, broken down by user-agent string. Updated continuously."
         url="https://tensorfeed.ai/agent-traffic"
+        jsonUrl="https://tensorfeed.ai/api/agents/activity"
+        keywords={[
+          'ai bot traffic',
+          'ai crawler stats',
+          'gptbot traffic',
+          'claudebot crawl rate',
+          'perplexitybot traffic',
+          'agent activity feed',
+          'user agent breakdown',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
       <JsonLd data={breadcrumb} />
@@ -102,6 +113,7 @@ export default function AgentTrafficPage() {
           Which AI agents and crawlers are pulling data from TensorFeed right now. Most sites hide
           this; we publish it because TensorFeed.ai was built for AI agents.
         </p>
+        <MachineReadableLink endpoint="/api/agents/activity" className="mt-2" />
       </header>
 
       <AgentTrafficClient />

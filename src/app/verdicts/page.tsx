@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Gavel, ArrowRight } from 'lucide-react';
 import { VERDICTS } from '@/lib/verdicts-directory';
+import { ItemListJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'TF Verdicts | Signed, Data-Grounded Rulings on the AI Ecosystem',
@@ -33,6 +34,15 @@ const confidenceLabel: Record<string, string> = {
 export default function VerdictsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ItemListJsonLd
+        name="TF Verdicts"
+        description="Signed, opinionated rulings on specific AI-ecosystem questions, reasoned from cited public data points."
+        url="https://tensorfeed.ai/verdicts"
+        items={VERDICTS.map((v) => ({
+          name: v.ruling,
+          url: `/verdicts/${v.slug}`,
+        }))}
+      />
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-2">
           <Gavel className="w-7 h-7 text-accent-primary" />

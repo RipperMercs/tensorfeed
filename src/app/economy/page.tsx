@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { LineChart } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import IndicatorsWidget from '@/components/economy/IndicatorsWidget';
 
 export const metadata: Metadata = {
@@ -54,6 +55,16 @@ export default function EconomyPage() {
         name="TensorFeed Macro Economic Indicators"
         description="US macro economic indicators (BLS + FRED, public-domain government data) in one agent-friendly JSON API."
         url="https://tensorfeed.ai/economy"
+        jsonUrl="/api/economy/bls/indicators"
+        keywords={[
+          'macro economic indicators',
+          'bls indicators',
+          'fred indicators',
+          'cpi unemployment payrolls',
+          'federal funds rate treasuries',
+          'public domain government data',
+          'agent json api',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
 
@@ -67,6 +78,7 @@ export default function EconomyPage() {
         <p className="text-text-secondary text-lg max-w-2xl mb-4">
           US macro indicators for agents. BLS and FRED in one place, public-domain, free JSON.
         </p>
+        <MachineReadableLink endpoint="/api/economy/bls/indicators" className="mt-2" />
         <div className="text-text-secondary leading-relaxed max-w-3xl space-y-3 text-sm">
           <p>
             Two of the cleanest free data sources in the US ecosystem are BLS and FRED. Both are

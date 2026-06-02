@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ShieldCheck, ArrowRight, ExternalLink } from 'lucide-react';
-import JsonLd, { BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
+import JsonLd, { BreadcrumbListJsonLd, DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import VerifiedDirectory from './VerifiedDirectory';
 
 const TITLE = 'x402 Verified Directory: Which x402 Publishers Actually Settle on Base';
@@ -71,6 +72,15 @@ const DATASET_JSONLD = {
   ],
   measurementTechnique:
     'On-chain observation of USDC settlements on Base mainnet matched against wallets declared in each publisher x402 manifest.',
+  keywords: [
+    'x402 verified publishers',
+    'x402 settlement directory',
+    'usdc on base settlement',
+    'on-chain payment verification',
+    'agent payments',
+    'x402 index',
+    'verified settling publishers',
+  ],
 };
 
 export default function X402VerifiedPage() {
@@ -80,6 +90,13 @@ export default function X402VerifiedPage() {
       <BreadcrumbListJsonLd items={BREADCRUMBS} />
 
       {/* Hero */}
+      <DatasetJsonLd
+        name="x402 Verified Publisher Directory"
+        description="Curated x402 publishers with on-chain USDC settlements observed on Base mainnet, ranked by recent activity and volume, plus publishers with no settlement observed yet. Verified from chain data against publisher-declared wallets."
+        url="https://tensorfeed.ai/x402/verified"
+        jsonUrl="/api/x402-index/verified"
+        keywords={['x402 publishers', 'usdc settlement', 'base mainnet', 'on-chain verification', 'agent payments', 'x402 directory']}
+      />
       <header className="mb-10">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -94,6 +111,7 @@ export default function X402VerifiedPage() {
             </span>
           </div>
         </div>
+        <MachineReadableLink endpoint="https://tensorfeed.ai/api/x402-index/verified" className="mt-2" />
         <p className="text-text-secondary text-lg max-w-3xl leading-relaxed">
           TensorFeed verifies which curated x402 publishers have observed on-chain USDC settlements
           on Base mainnet. Each verified entry is backed by a real settlement on a wallet the

@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Landmark, ArrowRight, ExternalLink, Banknote } from 'lucide-react';
-import JsonLd, { BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
+import JsonLd, { BreadcrumbListJsonLd, DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import FederalSpending from './FederalSpending';
 
 const TITLE = 'Federal AI Spending: US Contract and Grant Awards to the AI Vendor Cohort';
@@ -82,6 +83,22 @@ export default function FundingFederalPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <JsonLd data={DATASET_JSONLD} />
+      <DatasetJsonLd
+        name="Federal AI Spending: US Contract and Grant Awards to the AI Vendor Cohort"
+        description="US federal contract and grant awards flowing to a curated AI vendor cohort, aggregated from USAspending.gov over a rolling 365-day window. Per-vendor obligated dollars, award counts, most recent award dates, top awarding agencies, cohort totals, and recent awards, refreshed daily. Free JSON for agents."
+        url="https://tensorfeed.ai/funding/federal"
+        jsonUrl="/api/funding/federal/summary"
+        license="https://www.usa.gov/government-works"
+        keywords={[
+          'federal ai spending',
+          'ai government contracts',
+          'usaspending ai',
+          'defense ai contracts',
+          'ai vendor cohort',
+          'federal grants ai',
+          'public money ai',
+        ]}
+      />
       <BreadcrumbListJsonLd items={BREADCRUMBS} />
 
       {/* Hero */}
@@ -97,6 +114,7 @@ export default function FundingFederalPage() {
             </span>
           </div>
         </div>
+        <MachineReadableLink endpoint="/api/funding/federal/summary" className="mt-2" />
         <p className="text-text-secondary text-lg max-w-3xl leading-relaxed">
           US federal contract and grant awards flowing to a curated AI vendor cohort, the
           public-money side of the AI map. Where private capital tracks who is betting on whom, this

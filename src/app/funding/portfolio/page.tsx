@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Banknote, ArrowLeft } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import FundingRegistryWidget from '@/components/funding/FundingRegistryWidget';
 
 export const metadata: Metadata = {
@@ -61,6 +62,16 @@ export default function FundingPortfolioPage() {
         name="TensorFeed AI Funding Portfolio Tracker"
         description="Hand-curated registry of disclosed AI capital commitments tagged with recipient silicon dependency."
         url="https://tensorfeed.ai/funding/portfolio"
+        jsonUrl="/api/funding/portfolio"
+        keywords={[
+          'ai funding portfolio',
+          'corporate equity stakes',
+          'compute commitments',
+          'capacity partnerships',
+          'silicon dependency',
+          'customer investor loop',
+          'nvidia openai stake',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
 
@@ -118,6 +129,7 @@ export default function FundingPortfolioPage() {
           Disclosed AI corporate equity stakes, compute commitments, and capacity partnerships, each
           tagged with the recipient silicon dependency.
         </p>
+        <MachineReadableLink endpoint="/api/funding/portfolio" className="mt-2" />
       </section>
 
       <div className="mb-10">

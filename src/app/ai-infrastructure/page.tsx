@@ -140,6 +140,15 @@ export default function AIInfrastructurePage() {
         name="TensorFeed AI Infrastructure Tracker"
         description="Hand-curated registry of major AI data center campuses, nuclear PPAs, gigawatt-class buildouts, and long-dated compute commitments."
         url="https://tensorfeed.ai/ai-infrastructure"
+        keywords={[
+          'ai data centers',
+          'hyperscaler buildout',
+          'gigawatt class compute',
+          'nuclear ppa',
+          'frontier lab compute farms',
+          'gpu cloud capacity',
+          'ai infrastructure tracker',
+        ]}
       />
       <FAQPageJsonLd faqs={FAQS} />
 
