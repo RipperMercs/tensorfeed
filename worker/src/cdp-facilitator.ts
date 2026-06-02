@@ -167,7 +167,7 @@ export function decodeBazaarStatus(raw: string | undefined): string | undefined 
   const trimmed = raw.trim();
   if (!trimmed) return undefined;
 
-  // base64(JSON) — the post-fix format verified on hyperD.
+  // base64(JSON), the post-fix format verified on hyperD.
   try {
     const status = extractBazaarStatus(JSON.parse(base64ToUtf8(trimmed)));
     if (status) return status;
