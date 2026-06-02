@@ -69,8 +69,14 @@ export default function VelocityClient() {
                   {v.first_three_authors.map((a) => a.display_name).join(', ')}
                 </p>
               )}
+              {v.s2?.tldr && (
+                <p className="text-[11px] text-text-secondary italic leading-snug mb-1">{v.s2.tldr}</p>
+              )}
               <div className="flex items-center justify-between gap-2 mt-2 text-[10px] font-mono text-text-muted">
-                <span className="truncate">{v.venue ?? 'No venue'}</span>
+                <span className="truncate">
+                  {v.venue ?? 'No venue'}
+                  {v.s2?.influential_citation_count != null ? ` · ${v.s2.influential_citation_count.toLocaleString()} influential (S2)` : ''}
+                </span>
                 <span className="inline-flex items-center gap-1">
                   Open <ExternalLink className="w-3 h-3" />
                 </span>

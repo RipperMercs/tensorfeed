@@ -378,6 +378,7 @@ import { getOpenAlexAICitationVelocity, refreshOpenAlexAICitationVelocity } from
 import { getOpenReviewAcceptances, refreshOpenReviewAcceptances } from './openreview';
 import { getAclProceedings, refreshAclProceedings } from './acl-anthology';
 import { getResearchBlogs, refreshResearchBlogs } from './research-blogs';
+import { enrichVelocityWithS2 } from './semantic-scholar';
 import { getApisGuruAIWatch, refreshApisGuruAIWatch } from './apis-guru-ai-watch';
 import { rebuildAllReputationCards } from './agent-reputation-rebuild';
 import {
@@ -4656,7 +4657,7 @@ export default {
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
           breaking: '/api/admin/breaking?key=<ADMIN_KEY> (GET = raw alert + is_live + audit; POST {headline, href, ttl_hours?} sets; POST {clear:true} clears. Public read at /api/breaking.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|s2|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -13333,6 +13334,10 @@ export default {
         const result = await refreshResearchBlogs(env);
         return jsonResponse({ message: 'Research blogs refreshed', ...result });
       }
+      if (task === 's2') {
+        const result = await enrichVelocityWithS2(env);
+        return jsonResponse({ message: 'Citation-velocity Semantic Scholar enrichment ran', ...result });
+      }
       if (task === 'openalex-citation-velocity') {
         const result = await refreshOpenAlexAICitationVelocity(env);
         return jsonResponse({ message: 'OpenAlex AI citation-velocity refreshed', ...result });
@@ -14010,6 +14015,10 @@ export default {
       // OpenAlex polite-pool quota easily absorbs three calls per day.
       await run('refreshOpenAlexAIAuthors', () => refreshOpenAlexAIAuthors(env));
       await run('refreshOpenAlexAICitationVelocity', () => refreshOpenAlexAICitationVelocity(env));
+      // Semantic Scholar cross-check: enrich the velocity snapshot with S2's
+      // influential-citation count + tldr (separate host, runs even when the
+      // OpenAlex velocity fetch above was throttled and kept last-known-good).
+      await run('enrichVelocityWithS2', () => enrichVelocityWithS2(env));
       // OpenReview notable-tier conference acceptances (Track A2). Independent
       // host, not subject to the OpenAlex CF-egress throttle, so it is safe in
       // the same daily branch and succeeds even when OpenAlex is throttled.

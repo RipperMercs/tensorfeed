@@ -61,6 +61,13 @@ export interface VelocityPaper {
   landing_page_url: string | null;
   first_three_authors: Array<{ openalex_id: string | null; display_name: string }>;
   primary_affiliation: { openalex_id: string | null; display_name: string | null };
+  s2?: {
+    influential_citation_count: number | null;
+    s2_citation_count: number | null;
+    fields_of_study: string[];
+    tldr: string | null;
+    s2_url: string | null;
+  };
 }
 
 export interface EmergingKeyword {
