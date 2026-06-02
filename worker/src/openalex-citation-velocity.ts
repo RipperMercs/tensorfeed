@@ -95,6 +95,46 @@ export interface CitationVelocitySnapshot {
   source: { name: string; url: string; license: string };
 }
 
+// ── Quality filter ─────────────────────────────────────────────────
+// The velocity ranking is gamed by predatory journals (notably IJISRT) that
+// tag papers with AI concepts and farm citations: a 2-year-old paper shows
+// near-100% of its citations arriving in a single year (share ~0.99) on a
+// large total, which is non-organic accrual. We exclude known predatory venues
+// and that citation-farm signature. Brand-new papers (published in the current
+// year) are exempt from the share test, since an all-this-year share is organic
+// when the paper is that new (legit hot papers here top out around 0.56).
+
+export const PREDATORY_VELOCITY_VENUES = [
+  'International Journal of Innovative Science and Research Technology',
+];
+
+function isPredatoryVenue(venue: string | null): boolean {
+  if (!venue) return false;
+  const v = venue.toLowerCase();
+  return PREDATORY_VELOCITY_VENUES.some((p) => v.includes(p.toLowerCase()));
+}
+
+function isCitationFarmSignature(
+  p: Pick<CitationVelocityEntry, 'publication_year' | 'citations_latest_year_share' | 'cited_by_count'>,
+  currentYear: number,
+): boolean {
+  return (
+    currentYear - p.publication_year >= 1 &&
+    p.citations_latest_year_share >= 0.95 &&
+    p.cited_by_count >= 100
+  );
+}
+
+/** Pure: drop predatory-venue and citation-farm papers, then re-rank 1..N. */
+export function filterVelocityPapers(
+  papers: CitationVelocityEntry[],
+  currentYear: number,
+): CitationVelocityEntry[] {
+  return papers
+    .filter((p) => !isPredatoryVenue(p.venue) && !isCitationFarmSignature(p, currentYear))
+    .map((p, i) => ({ ...p, rank: i + 1 }));
+}
+
 // ── Fetch + compute ────────────────────────────────────────────────
 
 async function fetchRecentCitedAIWorks(): Promise<OpenAlexWork[]> {
@@ -177,13 +217,13 @@ export function buildVelocitySnapshot(works: OpenAlexWork[]): CitationVelocitySn
   }
   scored.sort((a, b) => b.share - a.share);
 
-  const papers: CitationVelocityEntry[] = [];
-  for (let i = 0; i < Math.min(scored.length, TOP_N); i++) {
+  const allPapers: CitationVelocityEntry[] = [];
+  for (let i = 0; i < scored.length; i++) {
     const { work, share, latest } = scored[i];
     const id = work.id;
     if (!id) continue;
     const bare = id.startsWith('http') ? id.split('/').pop()! : id;
-    papers.push({
+    allPapers.push({
       rank: i + 1,
       openalex_id: bare,
       title: work.display_name ?? '(no title)',
@@ -198,6 +238,9 @@ export function buildVelocitySnapshot(works: OpenAlexWork[]): CitationVelocitySn
       primary_affiliation: pickPrimaryAffiliation(work),
     });
   }
+  // Drop predatory venues + citation-farm signatures, then keep the top N.
+  const papers = filterVelocityPapers(allPapers, currentYear).slice(0, TOP_N);
+  notes.push('Predatory venues and citation-farm-signature papers (a large citation total with near-all of it arriving in a single recent year on an older paper) are excluded from this ranking.');
   if (papers.length === 0) {
     notes.push('No papers met the minimum-citations threshold; check OpenAlex availability and concept filter.');
   }

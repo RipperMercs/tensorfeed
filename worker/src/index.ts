@@ -375,7 +375,7 @@ import { deleteWantlistItem, listWantlist, listWantlistForAdmin, submitWantlistI
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import { getGhsaAiFeed, refreshGhsaAiFeed } from './ghsa-ai-feed';
 import { getOpenAlexAIAuthors, refreshOpenAlexAIAuthors } from './openalex-authors';
-import { getOpenAlexAICitationVelocity, refreshOpenAlexAICitationVelocity } from './openalex-citation-velocity';
+import { getOpenAlexAICitationVelocity, refreshOpenAlexAICitationVelocity, filterVelocityPapers } from './openalex-citation-velocity';
 import { getOpenReviewAcceptances, refreshOpenReviewAcceptances } from './openreview';
 import { getAclProceedings, refreshAclProceedings } from './acl-anthology';
 import { getResearchBlogs, refreshResearchBlogs } from './research-blogs';
@@ -5583,7 +5583,10 @@ export default {
           60,
         );
       }
-      const clipped = { ...snapshot, papers: (snapshot.papers ?? []).slice(0, 25) };
+      // Filter predatory venues + citation-farm signatures at read time, since
+      // the stored snapshot may predate the filter (seed-script source).
+      const cleaned = filterVelocityPapers(snapshot.papers ?? [], new Date().getUTCFullYear());
+      const clipped = { ...snapshot, papers: cleaned.slice(0, 25) };
       return jsonResponse({ ok: true, ...clipped }, 200, 1800);
     }
 
@@ -12394,7 +12397,8 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/research/citation-velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env);
+      const cleanedPaid = filterVelocityPapers(snapshot.papers ?? [], new Date().getUTCFullYear());
+      return await premiumResponse({ ok: true, ...snapshot, papers: cleanedPaid }, payment, 1, request, env);
     }
 
     // === PAID PREMIUM: APIs.GURU AI WATCH (Tier 1, 1 credit) ===
