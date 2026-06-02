@@ -300,6 +300,17 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     type: 'html',
   },
   {
+    name: 'Midjourney',
+    provider: 'Midjourney',
+    // Atlassian Statuspage. The custom domain status.midjourney.com fronts the
+    // statuspage.io host but does not expose /api/v2; the .statuspage.io host
+    // serves the summary JSON. Components: Image Generation (Fast & Turbo,
+    // Relax), Billing, Web, Bot, API.
+    url: 'https://midjourney.statuspage.io/api/v2/summary.json',
+    statusPageUrl: 'https://status.midjourney.com',
+    type: 'statuspage',
+  },
+  {
     // Hyperliquid: perps DEX on Hyperliquid L1, the venue where most AI
     // trading agents settle USDC collateral. Added 2026-05-14 after
     // Coinbase became the official treasury deployer of USDC on Hyperliquid

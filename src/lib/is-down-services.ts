@@ -56,6 +56,67 @@ export function buildIsDownMetadata(s: IsDownService): Metadata {
 }
 
 export const IS_DOWN_SERVICES: Record<string, IsDownService> = {
+  "midjourney": {
+    "slug": "midjourney",
+    "displayName": "Midjourney",
+    "statusServiceName": "Midjourney",
+    "providerName": "Midjourney",
+    "providerUrl": "https://www.midjourney.com",
+    "statusPageUrl": "https://status.midjourney.com",
+    "metaTitle": "Is Midjourney Down? Live Midjourney Status",
+    "metaDescription": "Check if Midjourney is down right now. Live Midjourney status with per-component detail for image generation (Fast, Turbo, Relax), the web app, the Discord bot, and billing, plus what to do during an outage.",
+    "serviceDescription": "Midjourney is a generative image service used through its web app and a Discord bot, with Fast, Turbo, and Relax generation modes plus a billing and account layer.",
+    "faqs": [
+      {
+        "question": "Is Midjourney down right now?",
+        "answer": "The live indicator at the top of this page reflects Midjourney's official status page, polled every two minutes. Green means all systems operational, amber means degraded performance on at least one component, and red means a confirmed outage. The component list below shows which parts (image generation, web, the Discord bot, billing) are affected."
+      },
+      {
+        "question": "How do I check if Midjourney is down?",
+        "answer": "Three places: this page, which polls the official Midjourney status page every two minutes and breaks it out by component; status.midjourney.com directly; and the announcements and status channels in the Midjourney Discord, where the team posts during incidents. This page adds component detail and cross-provider comparison the Discord does not."
+      },
+      {
+        "question": "What do I do when Midjourney is down?",
+        "answer": "Midjourney has no public API, so you cannot reroute programmatically, but you can switch generator for the moment: hosted options include DALL-E 3, Ideogram, and Adobe Firefly, and open-weight options like FLUX or Stable Diffusion run on inference providers such as Replicate, Fireworks, or Together. Queue your prompts and retry on Midjourney once the status page is green again."
+      },
+      {
+        "question": "Why is Midjourney slow instead of fully down?",
+        "answer": "Midjourney separates Fast, Turbo, and Relax modes, and degraded performance usually hits one mode or the queue rather than the whole service. During peak demand the Relax queue lengthens and Fast hours are consumed faster. The component breakdown on this page shows whether it is a true outage or just a busy queue."
+      },
+      {
+        "question": "Does a Discord outage take Midjourney down?",
+        "answer": "Partly. Midjourney is used heavily through its Discord bot, so a Discord-side incident can block bot commands even when Midjourney's own generation is healthy. The web app at midjourney.com is the fallback path when the bot is the problem, which is why the Bot and Web components are tracked separately here."
+      },
+      {
+        "question": "Where can I see Midjourney incident history?",
+        "answer": "Midjourney publishes incidents and uptime history at status.midjourney.com. The TensorFeed incidents feed aggregates incidents across every tracked AI service, so you can compare Midjourney reliability against other image and model providers over time."
+      }
+    ],
+    "failover": [
+      {
+        "title": "Switch to another image generator",
+        "text": "Midjourney has no public API, so the practical fallback during an outage is a different generator. Hosted: DALL-E 3, Ideogram, Adobe Firefly. Open-weight: FLUX and Stable Diffusion run on inference providers you can call directly.",
+        "links": [
+          { "label": "Inference providers", "href": "/inference-providers" },
+          { "label": "Open-weights models", "href": "/open-weights" }
+        ]
+      },
+      {
+        "title": "Use the web app if the Discord bot is the problem",
+        "text": "Much of Midjourney runs through its Discord bot. When the Bot component is degraded but generation is healthy, the web app at midjourney.com is the alternate path to the same service.",
+        "links": [
+          { "label": "Multimodal model catalog", "href": "/multimodal" }
+        ]
+      },
+      {
+        "title": "Get notified when status changes",
+        "text": "Subscribe to TensorFeed outage alerts to get an email the moment Midjourney (or any tracked AI service) goes degraded or down, and again when it recovers. Free, no account required.",
+        "links": [
+          { "label": "TensorFeed outage alerts", "href": "/alerts" }
+        ]
+      }
+    ]
+  },
   "bedrock": {
     "slug": "bedrock",
     "displayName": "AWS Bedrock",
