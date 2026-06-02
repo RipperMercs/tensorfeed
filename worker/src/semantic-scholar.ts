@@ -64,6 +64,12 @@ function clip(s: string, n: number): string {
   return s.length <= n ? s : `${s.slice(0, n - 3).trimEnd()}...`;
 }
 
+/** Bare DOI for the S2 `DOI:` id form. OpenAlex returns full doi.org URLs. */
+export function normDoi(doi: string | null | undefined): string {
+  if (typeof doi !== 'string') return '';
+  return doi.trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
+}
+
 /** Pure: zip S2 batch results (same order as the input DOIs, null if unfound) into a doi->enrichment map. */
 export function mergeEnrichments(dois: string[], results: (S2Paper | null)[]): Record<string, S2Enrichment> {
   const map: Record<string, S2Enrichment> = {};
@@ -85,7 +91,7 @@ export function mergeEnrichments(dois: string[], results: (S2Paper | null)[]): R
 export function applyEnrichments(papers: VelocityPaperLike[], map: Record<string, S2Enrichment>): number {
   let n = 0;
   for (const p of papers) {
-    const doi = typeof p.doi === 'string' ? p.doi.toLowerCase() : null;
+    const doi = normDoi(p.doi).toLowerCase();
     if (doi && map[doi]) {
       p.s2 = map[doi];
       n++;
@@ -131,7 +137,7 @@ export async function enrichVelocityWithS2(env: Env): Promise<EnrichResult> {
     return { ok: false, error: 'velocity_snapshot_parse_failed' };
   }
   const papers = Array.isArray(snap.papers) ? snap.papers : [];
-  const dois = papers.map((p) => (typeof p.doi === 'string' ? p.doi : '')).filter(Boolean).slice(0, BATCH_CAP);
+  const dois = papers.map((p) => normDoi(p.doi)).filter(Boolean).slice(0, BATCH_CAP);
   if (dois.length === 0) {
     console.warn('[semantic-scholar] velocity snapshot has no DOIs to enrich');
     return { ok: false, error: 'no_dois' };

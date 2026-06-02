@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { mergeEnrichments, applyEnrichments } from './semantic-scholar';
+import { mergeEnrichments, applyEnrichments, normDoi } from './semantic-scholar';
+
+describe('normDoi', () => {
+  it('strips the doi.org prefix (OpenAlex returns full URLs)', () => {
+    expect(normDoi('https://doi.org/10.1/A')).toBe('10.1/A');
+    expect(normDoi('http://dx.doi.org/10.2/b')).toBe('10.2/b');
+    expect(normDoi('10.3/c')).toBe('10.3/c');
+    expect(normDoi(null)).toBe('');
+    expect(normDoi(undefined)).toBe('');
+  });
+});
 
 describe('mergeEnrichments', () => {
   it('zips S2 results to DOIs by order and skips nulls', () => {
@@ -33,7 +43,7 @@ describe('mergeEnrichments', () => {
 describe('applyEnrichments', () => {
   it('attaches enrichment to papers by DOI (case-insensitive) and counts hits', () => {
     const papers = [
-      { doi: '10.1/A', cited_by_count: 1 },
+      { doi: 'https://doi.org/10.1/A', cited_by_count: 1 }, // full URL normalizes to 10.1/a and matches
       { doi: null, cited_by_count: 2 },
       { doi: '10.9/missing', cited_by_count: 3 },
     ];
