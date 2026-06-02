@@ -267,6 +267,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // 2026-06-01: Model Intelligence Index (TFII) premium depth + history.
   '/api/premium/model-intelligence',
   '/api/premium/model-intelligence/history',
+  // AI Crawler Access Map changes (2026-06-02). Param-required (?from=&to=,
+  // domain optional): anonymous probes must see a clean 402 challenge, not a
+  // free-trial 400 missing_params, so catalog validators read it as paid. The
+  // /full sibling stays premium-with-trial (no required params).
+  '/api/premium/ai-crawler-access/changes',
 ];
 
 /**

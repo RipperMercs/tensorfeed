@@ -10760,6 +10760,74 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === FREE: AI CRAWLER ACCESS MAP, SUMMARY ===
+    // /api/ai-crawler-access/summary.json
+    // Aggregate map of which AI bots curated domains allow or block in
+    // robots.txt, plus llms.txt and ai.txt adoption. No params. We report
+    // stated policy, not enforcement.
+    if (path === '/api/ai-crawler-access/summary.json') {
+      const { readSnapshot } = await import('./ai-crawler-access-feed');
+      const { buildSummaryResponse, SEED_COUNT } = await import('./premium-ai-crawler-access');
+      const snap = await readSnapshot(env);
+      return jsonResponse(buildSummaryResponse(snap, SEED_COUNT), 200, 6 * 60 * 60);
+    }
+
+    // === FREE: AI CRAWLER ACCESS MAP, SITE ===
+    // /api/ai-crawler-access/site?domain=
+    // Per-site robots.txt verdict for each tracked AI bot, plus llms.txt
+    // and ai.txt presence, for one domain. Param-required: domain.
+    if (path === '/api/ai-crawler-access/site') {
+      const domain = url.searchParams.get('domain');
+      if (!domain) return jsonResponse({ ok: false, error: 'missing_domain', hint: 'Pass ?domain=example.com' }, 400);
+      const { readSnapshot } = await import('./ai-crawler-access-feed');
+      const { buildSiteResponse } = await import('./premium-ai-crawler-access');
+      const snap = await readSnapshot(env);
+      return jsonResponse(buildSiteResponse(snap, domain), 200, 6 * 60 * 60);
+    }
+
+    // === PAID PREMIUM: AI CRAWLER ACCESS MAP, FULL (Tier 1, 1 credit) ===
+    // /api/premium/ai-crawler-access/full
+    // Every tracked domain with per-bot robots.txt verdicts and
+    // llms.txt/ai.txt flags, plus sector rollups. captured_at carries the
+    // real data-capture time (snapshot.dataCapturedAt); a null snapshot
+    // passes empty_result so an empty call is never billed.
+    if (path === '/api/premium/ai-crawler-access/full') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      const { readSnapshot } = await import('./ai-crawler-access-feed');
+      const { buildFullResponse } = await import('./premium-ai-crawler-access');
+      const snap = await readSnapshot(env);
+      const result = buildFullResponse(snap);
+      ctx.waitUntil(logPremiumUsage(env, '/api/premium/ai-crawler-access/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
+      // captured_at carries the real data time; null snapshot => empty_result no-charge
+      return await premiumResponse(result, payment, 1, request, env, snap ? null : 'empty_result');
+    }
+
+    // === PAID PREMIUM: AI CRAWLER ACCESS MAP, CHANGES (Tier 1, 1 credit) ===
+    // /api/premium/ai-crawler-access/changes?domain=&from=&to=
+    // Historical flip log: when a site changed a bot from allowed to
+    // blocked (or back) or published llms.txt, within a date range.
+    // Param-required (from, to; domain optional), so strict-premium gates
+    // anonymous crawlers to a clean 402 instead of a 400. captured_at
+    // carries the real data-capture time; no matching flips pass
+    // empty_result so an empty window is never billed.
+    if (path === '/api/premium/ai-crawler-access/changes') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      const from = url.searchParams.get('from');
+      const to = url.searchParams.get('to');
+      const domain = url.searchParams.get('domain');  // optional
+      if (!from || !to) {
+        return premiumValidationFailure({ ok: false, error: 'missing_params', hint: 'Pass ?from=YYYY-MM-DD&to=YYYY-MM-DD (domain optional)' }, payment, request, env);
+      }
+      const { readFlips, readSnapshot } = await import('./ai-crawler-access-feed');
+      const { buildChangesResponse } = await import('./premium-ai-crawler-access');
+      const [flips, snap] = await Promise.all([readFlips(env), readSnapshot(env)]);
+      const result = buildChangesResponse(flips, domain, from, to, snap?.dataCapturedAt ?? null);
+      ctx.waitUntil(logPremiumUsage(env, '/api/premium/ai-crawler-access/changes', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
+      return await premiumResponse(result, payment, 1, request, env, result.has_data ? null : 'empty_result');
+    }
+
     // === FREE: SEC FILINGS EXTRACTION INDEX ===
     // /api/sec/filings/extraction-index?limit=&offset=
     // Lightweight discovery surface over the DP CC Qwen-extracted cohort.

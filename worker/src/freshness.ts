@@ -165,6 +165,13 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // is the most-recent batch that saw the CVE, so freshness is roughly the
   // batch ingest rate; same 10-day SLA as the bulk endpoints.
   '/api/premium/ai-cves/cve': { maxAgeSeconds: 10 * 24 * 60 * 60 },
+  // AI Crawler Access Map: rolling daily crawl refreshes ~1/7 of the seed
+  // universe per run, so the oldest domain in a full snapshot is up to 7
+  // days old by design (dataCapturedAt is that honest floor). 8-day SLA = the
+  // 7-day rolling window + 1 day headroom for a single missed cron run, so a
+  // stalled crawl triggers a no-charge.
+  '/api/premium/ai-crawler-access/full': { maxAgeSeconds: 8 * 24 * 60 * 60 },
+  '/api/premium/ai-crawler-access/changes': { maxAgeSeconds: 8 * 24 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

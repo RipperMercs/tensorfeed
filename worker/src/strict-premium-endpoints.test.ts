@@ -255,9 +255,10 @@ describe('isStrictPremiumPath', () => {
       // ghsa/ai-feed) + 4 Wave 29 (lab-productivity, hf/velocity,
       // agents/leaderboard/full, jobs). funding/exposure + packages/pypi/momentum
       // were already strict. + 2 (2026-06-01) Model Intelligence Index (TFII)
-      // breakdown + history.
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(80);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(80); // no duplicates
+      // breakdown + history. + 1 (2026-06-02) AI Crawler Access Map changes
+      // (param-required ?from=&to=).
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(81);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(81); // no duplicates
     });
     it('exposes 9 prefix paths (providers + 5 Wave 14 path-param pilots + Wave 19 ai-companies + x402-index + Wave 29 economy/series)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(9);
