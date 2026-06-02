@@ -64,24 +64,73 @@ export function DatasetJsonLd({
   name,
   description,
   url,
+  jsonUrl,
+  keywords,
+  license,
 }: {
   name: string;
   description: string;
   url: string;
+  /** Relative or absolute URL of the machine-readable JSON twin. Emitted as a schema.org distribution (DataDownload). */
+  jsonUrl?: string;
+  keywords?: string[];
+  license?: string;
 }) {
-  const data = {
+  const abs = (u: string) => (u.startsWith('http') ? u : `https://tensorfeed.ai${u}`);
+  const data: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     name,
     description,
     url,
-    license: 'https://tensorfeed.ai/about',
+    license: license || 'https://tensorfeed.ai/about',
+    isAccessibleForFree: true,
     creator: {
       '@type': 'Organization',
       name: 'TensorFeed.ai',
       url: 'https://tensorfeed.ai',
     },
   };
+  if (keywords && keywords.length) data.keywords = keywords;
+  if (jsonUrl) {
+    data.distribution = [
+      {
+        '@type': 'DataDownload',
+        encodingFormat: 'application/json',
+        contentUrl: abs(jsonUrl),
+      },
+    ];
+  }
+
+  return <JsonLd data={data} />;
+}
+
+export function ItemListJsonLd({
+  name,
+  description,
+  url,
+  items,
+}: {
+  name: string;
+  description?: string;
+  url?: string;
+  items: { name: string; url?: string }[];
+}) {
+  const abs = (u: string) => (u.startsWith('http') ? u : `https://tensorfeed.ai${u}`);
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    numberOfItems: items.length,
+    itemListElement: items.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: it.name,
+      ...(it.url ? { url: abs(it.url) } : {}),
+    })),
+  };
+  if (description) data.description = description;
+  if (url) data.url = url;
 
   return <JsonLd data={data} />;
 }
