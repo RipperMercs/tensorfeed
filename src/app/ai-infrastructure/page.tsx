@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Server, ArrowRight, Zap, Droplet, Factory, AlertTriangle, Satellite } from 'lucide-react';
 import { DatasetJsonLd, FAQPageJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 import projectsData from '../../../data/ai-infrastructure-projects.json';
 
@@ -140,6 +141,7 @@ export default function AIInfrastructurePage() {
         name="TensorFeed AI Infrastructure Tracker"
         description="Hand-curated registry of major AI data center campuses, nuclear PPAs, gigawatt-class buildouts, and long-dated compute commitments."
         url="https://tensorfeed.ai/ai-infrastructure"
+        jsonUrl="/api/ai-infrastructure/projects.json"
         keywords={[
           'ai data centers',
           'hyperscaler buildout',
@@ -198,6 +200,7 @@ export default function AIInfrastructurePage() {
           The physical buildout behind the AI ecosystem: gigawatt-class data centers, nuclear power
           deals, hyperscaler campuses, and the long-dated compute commitments backing them.
         </p>
+        <MachineReadableLink endpoint="/api/ai-infrastructure/projects.json" className="mt-2" />
         <div className="text-text-secondary leading-relaxed max-w-3xl space-y-3 text-sm">
           <p>
             We cover the model layer at{' '}

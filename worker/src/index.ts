@@ -12,6 +12,7 @@ import { cdpListDiscoveryResources } from './cdp-facilitator';
 import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
 import { deriveUsageEvent, recordUsageEvent, buildUsageReport, isInternalTraffic } from './usage-meter';
 import { cachedFetch } from './edge-cache';
+import aiInfraProjects from '../../data/ai-infrastructure-projects.json';
 import {
   readNewsDaily,
   readSourceHealth,
@@ -1579,6 +1580,15 @@ export default {
         );
       }
       return jsonResponse({ ok: true, ...snapshot }, 200, 60 * 60);
+    }
+
+    // AI Infrastructure project registry. Static editorial data bundled into the
+    // worker (the canonical data/ai-infrastructure-projects.json that the
+    // /ai-infrastructure page also imports). The page advertises this endpoint as
+    // its free JSON twin, so it must be served here (the worker captures all
+    // /api/*; a static public/api file would never reach the client).
+    if (path === '/api/ai-infrastructure/projects.json' || path === '/api/ai-infrastructure') {
+      return jsonResponse(aiInfraProjects, 200, 60 * 60);
     }
 
     // Public MCP activity dashboard data. Two signal sources:
