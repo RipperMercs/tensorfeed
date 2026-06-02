@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Trophy, ExternalLink, Check } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Leaderboard {
   id: string;
@@ -80,6 +82,13 @@ export default function PublicLeaderboardsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="Public AI Leaderboards Index"
+        description="A curated index of live, public AI model leaderboards across domains: chat arenas, code, math, reasoning, multimodal, agent, voice, image, video, long context, and open models, with publisher, score type, update cadence, and API availability for each."
+        url="https://tensorfeed.ai/public-leaderboards"
+        jsonUrl="/api/public-leaderboards"
+        keywords={['ai leaderboards', 'model rankings', 'chatbot arena', 'swe-bench', 'benchmark leaderboards', 'open llm leaderboard', 'reasoning benchmarks', 'multimodal evaluation']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -90,6 +99,7 @@ export default function PublicLeaderboardsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Pointers to every live, public AI model leaderboard. LMSYS Chatbot Arena, Artificial Analysis, HF Open LLM Leaderboard, SWE-bench Verified, Aider Polyglot, LiveCodeBench, BigCodeBench, Terminal-Bench, ARC Prize, MMLU-Pro, HLE, MMMU, Video Arena, Image Arena, TTS Arena, Open ASR, RULER, GAIA, WebArena, OSWorld. Different from <Link href="/benchmark-registry" className="text-accent-primary hover:underline">/benchmark-registry</Link> (the eval suites themselves); this is where to find the live rankings. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/public-leaderboards" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">

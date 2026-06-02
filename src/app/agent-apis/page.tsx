@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Plug, ExternalLink, Check } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Api {
   id: string;
@@ -68,6 +70,13 @@ export default function AgentApisPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="Agent API Directory"
+        description="A curated catalog of non-LLM APIs that AI agents wire in for tasks beyond text generation: web search, web scraping, weather, finance, maps, email, SMS, payments, code execution, and OCR. Each entry lists pricing, free tier, and whether an MCP server exists."
+        url="https://tensorfeed.ai/agent-apis"
+        jsonUrl="/api/agent-apis"
+        keywords={['agent apis', 'mcp servers', 'web search api', 'payments api', 'web scraping', 'maps and location', 'pricing and free tier', 'non-llm tools']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -78,6 +87,7 @@ export default function AgentApisPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           The non-LLM APIs AI agents wire in for everything that is not text generation: web search, scraping, weather, finance, maps, email, SMS, payments, code execution, OCR. Each entry has pricing, free tier, and whether an MCP server exists. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/agent-apis" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-3 flex-wrap items-center">

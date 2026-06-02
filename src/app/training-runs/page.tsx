@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { DollarSign, ExternalLink } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Run {
   id: string;
@@ -51,6 +53,13 @@ export default function TrainingRunsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="Frontier Training Run Economics Tracker"
+        description="A catalog of notable frontier and open-weights AI training runs with disclosed and estimated cost in millions of dollars, parameter counts, training tokens, GPU hours, and hardware for each model."
+        url="https://tensorfeed.ai/training-runs"
+        jsonUrl="/api/training-runs"
+        keywords={['ai training run costs', 'frontier model compute', 'gpu training hours', 'training tokens', 'model parameter counts', 'open weights models', 'training run economics']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -61,6 +70,7 @@ export default function TrainingRunsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           What AI training runs actually cost. Disclosed and estimated parameter count, training tokens, GPU hours, hardware, and dollar cost for every notable frontier and open-weights run. Disclosed numbers come from papers and model cards; estimated numbers are reverse-engineered from public hints. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/training-runs" className="mt-2" />
       </div>
 
       <div className="flex items-center gap-2 mb-6">

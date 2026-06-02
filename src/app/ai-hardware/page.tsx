@@ -4,6 +4,8 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Microchip, ExternalLink } from 'lucide-react';
 import LastUpdatedFooter from '@/components/LastUpdatedFooter';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Hardware {
   id: string;
@@ -71,6 +73,13 @@ export default function AIHardwarePage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="AI Hardware and Accelerator Catalog"
+        description="Specifications for AI accelerators and chips: NVIDIA Blackwell and Hopper, AMD Instinct, Google TPU, AWS Trainium and Inferentia, Apple Silicon, Cerebras WSE-3, and Groq LPU. Covers FP16, FP8, and FP4 TFLOPS, VRAM, memory bandwidth, interconnect, and TDP."
+        url="https://tensorfeed.ai/ai-hardware"
+        jsonUrl="/api/ai-hardware"
+        keywords={['ai hardware specs', 'ai accelerators', 'gpu tflops', 'nvidia blackwell', 'google tpu', 'aws trainium', 'cerebras wse', 'memory bandwidth']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -81,6 +90,7 @@ export default function AIHardwarePage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           The chips behind every AI workload. NVIDIA Blackwell + Hopper, AMD Instinct, Google TPU, AWS Trainium / Inferentia, Apple Silicon, Cerebras WSE-3, Groq LPU. FLOPS, VRAM, memory bandwidth, interconnect, TDP. Companion to <Link href="/gpu-pricing" className="text-accent-primary hover:underline">/gpu-pricing</Link> (rental rates). {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/ai-hardware" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">

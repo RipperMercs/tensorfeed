@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Calendar, ExternalLink, MapPin } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Conference {
   id: string;
@@ -73,6 +75,13 @@ export default function ConferencesPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="AI Conference Calendar"
+        description="A tracked calendar of major AI research and industry conferences (NeurIPS, ICLR, ICML, COLM, CVPR, AAAI, ACL, EMNLP, Google I/O, AWS re:Invent, NVIDIA GTC, OpenAI DevDay, Anthropic Builder Day) with dates, locations, formats, paper submission deadlines, and registration status."
+        url="https://tensorfeed.ai/conferences"
+        jsonUrl="/api/conferences"
+        keywords={['ai conferences', 'machine learning conferences', 'paper submission deadlines', 'neurips iclr icml', 'developer keynotes', 'research events calendar', 'ai industry events']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10"><Calendar className="w-7 h-7 text-accent-primary" /></div>
@@ -81,6 +90,7 @@ export default function ConferencesPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           AI research and industry events: NeurIPS, ICLR, ICML, COLM, CVPR, AAAI, ACL, EMNLP, plus Google I/O, AWS re:Invent, NVIDIA GTC, OpenAI DevDay, Anthropic Builder Day. Dates, locations, paper submission deadlines. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/conferences" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-3 flex-wrap items-center">

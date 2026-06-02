@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Cpu, ExternalLink } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Quant {
   id: string;
@@ -67,6 +69,13 @@ export default function OpenWeightsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="Open-Weights Model Deployment Catalog"
+        description="Self-hosting requirements for major open-weights LLMs (Llama, DeepSeek, Mistral, Qwen, Gemma, Phi): VRAM per quantization (FP16, FP8, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, context window, and capabilities."
+        url="https://tensorfeed.ai/open-weights"
+        jsonUrl="/api/open-weights"
+        keywords={['open-weights models', 'self-hosting llms', 'vram requirements', 'model quantization', 'gpu recommendations', 'open source ai models', 'llm licenses']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -77,6 +86,7 @@ export default function OpenWeightsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           What you actually need to self-host the major open-weights models. VRAM per quantization (FP16, FP8, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, capabilities. The &ldquo;I want to run this myself&rdquo; companion to <Link href="/inference-providers" className="text-accent-primary hover:underline">/inference-providers</Link> (hosted pricing). {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/open-weights" className="mt-2" />
       </div>
 
       {error && (

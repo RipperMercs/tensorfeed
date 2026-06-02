@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Plug, ExternalLink, Copy, Check } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface MCPServer {
   id: string;
@@ -98,6 +100,13 @@ export default function MCPServersPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="MCP Server Catalog"
+        description="Curated catalog of production Model Context Protocol servers organized by capability: filesystem, web search, browser, GitHub, Slack, Notion, databases, cloud providers, and observability. Each entry lists vendor, language, license, install command, and first-party status."
+        url="https://tensorfeed.ai/mcp-servers"
+        jsonUrl="/api/mcp-servers"
+        keywords={['mcp servers', 'model context protocol', 'agent tools', 'first-party mcp', 'mcp install commands', 'capability catalog', 'mcp registry']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -108,6 +117,7 @@ export default function MCPServersPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Curated catalog of production MCP servers organized by capability. Filesystem, web search, browser, GitHub, Slack, Notion, databases, cloud providers, observability. Each entry has the install command and license. Different from <Link href="/api/mcp/registry/snapshot" className="text-accent-primary hover:underline font-mono">/api/mcp/registry/snapshot</Link> (count snapshot of the official registry); this is the editorial starter pack. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/mcp-servers" className="mt-2" />
       </div>
 
       <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-lg p-4 text-sm text-text-secondary mb-6">

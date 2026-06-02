@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Boxes, ExternalLink } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Model {
   id: string;
@@ -77,6 +79,13 @@ export default function SpecializedModelsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="Specialized Domain Model Catalog"
+        description="A catalog of production AI models built for vertical domains: code, medical, legal, finance, music and audio, 3D generation, and retrieval. Each entry lists publisher, parameters, license, pricing, open weights status, benchmarks, and capabilities."
+        url="https://tensorfeed.ai/specialized-models"
+        jsonUrl="/api/specialized-models"
+        keywords={['specialized ai models', 'domain specific models', 'code models', 'medical ai models', 'legal ai models', 'music generation models', 'retrieval models', 'open weights']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -87,6 +96,7 @@ export default function SpecializedModelsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Production AI models built for a vertical domain. Code (Codestral, DeepSeek Coder, Qwen Coder, StarCoder 2), medical (Med-Gemini, Meditron, BioMistral), legal (SaulLM), finance (FinGPT, BloombergGPT), music (Suno, Udio, MusicGen, Stable Audio), 3D (TRELLIS, Hunyuan3D), retrieval (ColPali, SPLADE). The &ldquo;I need a model good at X&rdquo; surface beyond the general-chat catalog. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/specialized-models" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-3 flex-wrap items-center">

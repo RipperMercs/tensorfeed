@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Zap, ExternalLink, Check, Clock, HelpCircle } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Entry {
   id: string;
@@ -103,6 +105,13 @@ export default function AgentProvisioningPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="Agent Provisioning Provider Directory"
+        description="Directory tracking which of the 32 Cloudflare and Stripe agent provisioning launch partners shipped support, who is absent, and who is unconfirmed, across hosting, CDN, database, auth, observability, jobs, AI infrastructure, and email categories with per agent monthly caps."
+        url="https://tensorfeed.ai/agent-provisioning"
+        jsonUrl="/api/agent-provisioning"
+        keywords={['agent provisioning', 'cloudflare stripe protocol', 'launch partners', 'infrastructure providers', 'autonomous agent accounts', 'hosting and database', 'monthly spend caps']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -113,6 +122,7 @@ export default function AgentProvisioningPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           On April 30, 2026 Cloudflare and Stripe shipped an open protocol that lets AI agents create accounts, register domains, start paid subscriptions, and deploy to production across 32 launch partners. This page tracks who shipped support, who has not, and who agents will route around. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/agent-provisioning" className="mt-2" />
       </div>
 
       {data && (

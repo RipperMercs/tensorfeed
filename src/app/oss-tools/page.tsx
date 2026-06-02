@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Wrench, ExternalLink, Star } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Tool {
   id: string;
@@ -75,6 +77,13 @@ export default function OSSToolsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="Open-Source AI Tooling Catalog"
+        description="A curated catalog of production open-source AI tools developers and agents install: model runtimes (Ollama, llama.cpp, MLX), inference servers (vLLM, SGLang, TGI), fine-tuning toolkits, UIs, and evaluation harnesses, each with stars, license, language, and version."
+        url="https://tensorfeed.ai/oss-tools"
+        jsonUrl="/api/oss-tools"
+        keywords={['open-source ai tools', 'model runtimes', 'inference servers', 'vllm', 'fine-tuning toolkits', 'evaluation harnesses', 'llm tooling catalog']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10"><Wrench className="w-7 h-7 text-accent-primary" /></div>
@@ -83,6 +92,7 @@ export default function OSSToolsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Production open-source AI tools agents and developers actually install: model runtimes (Ollama, LM Studio, llama.cpp, MLX), inference servers (vLLM, SGLang, TGI, TEI), fine-tuning toolkits (Unsloth, Axolotl, TorchTune), UIs (Open WebUI, LibreChat, ComfyUI), evals (lm-eval-harness, Inspect AI). {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/oss-tools" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">

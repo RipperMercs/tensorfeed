@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Database, ExternalLink } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Dataset {
   id: string;
@@ -69,6 +71,13 @@ export default function TrainingDatasetsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="AI Training Dataset Catalog"
+        description="A catalog of open-source AI training datasets across stages: pretraining corpora, instruction-tuning (SFT) sets, DPO preference data, RLHF data, and multimodal data, with size, license, languages, and content type for each entry."
+        url="https://tensorfeed.ai/training-datasets"
+        jsonUrl="/api/training-datasets"
+        keywords={['ai training datasets', 'pretraining corpora', 'instruction tuning datasets', 'dpo preference data', 'rlhf data', 'multimodal datasets', 'open source datasets', 'dataset licenses']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -79,6 +88,7 @@ export default function TrainingDatasetsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           AI pretraining corpora, instruction-tuning datasets, DPO preference data, and multimodal data the open-source community uses to train and fine-tune models. Each entry: size, license, languages, content type. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/training-datasets" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">

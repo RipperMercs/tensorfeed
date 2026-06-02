@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Boxes, ExternalLink, Star } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Framework {
   id: string;
@@ -81,6 +83,13 @@ export default function FrameworksPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="AI Agent Framework Catalog"
+        description="A catalog of production AI agent frameworks and SDKs, with language, license, GitHub stars, weekly install volume, version, release date, category, and feature flags for each entry. Covers orchestration, RAG, multi-agent, workflow, voice, and browser agent layers."
+        url="https://tensorfeed.ai/frameworks"
+        jsonUrl="/api/frameworks"
+        keywords={['ai agent frameworks', 'agent sdks', 'agent orchestration', 'rag frameworks', 'multi-agent', 'llm application frameworks', 'github stars', 'weekly installs']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -91,6 +100,7 @@ export default function FrameworksPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Production AI agent frameworks and SDKs with language, license, GitHub stars, weekly install volume, version, and feature flags. The framework layer agents are built on. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/frameworks" className="mt-2" />
       </div>
 
       {/* Category filter */}

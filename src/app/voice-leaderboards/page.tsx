@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Mic, AudioLines, ExternalLink, TrendingUp, TrendingDown, Minus, Sparkles } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface TTSEntry {
   rank: number;
@@ -58,6 +60,13 @@ export default function VoiceLeaderboardsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="Voice AI Leaderboards"
+        description="Live rankings for voice and speech AI models: TTS Arena Elo from human pairwise votes and Open ASR Leaderboard word error rates across LibriSpeech, Common Voice, AMI, and GigaSpeech, with provider, trend, and open weights tags."
+        url="https://tensorfeed.ai/voice-leaderboards"
+        jsonUrl="/api/voice-leaderboards"
+        keywords={['tts arena', 'open asr leaderboard', 'text to speech', 'speech to text', 'word error rate', 'voice model ranking', 'speech recognition benchmark']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -68,6 +77,7 @@ export default function VoiceLeaderboardsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Live rankings for text-to-speech (TTS Arena Elo from human pairwise votes) and speech-to-text (Open ASR Leaderboard WER on LibriSpeech + Common Voice + AMI + GigaSpeech). Companion to <Link href="/multimodal" className="text-accent-primary hover:underline">/multimodal</Link> which is the pricing + spec catalog. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/voice-leaderboards" className="mt-2" />
       </div>
 
       {error && <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-4 text-rose-400 text-sm mb-6">Error: {error}</div>}

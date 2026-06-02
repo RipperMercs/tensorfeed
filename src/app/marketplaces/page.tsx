@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Store, ExternalLink, Check } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Marketplace {
   id: string;
@@ -72,6 +74,13 @@ export default function MarketplacesPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DatasetJsonLd
+        name="AI Marketplace Directory"
+        description="A directory of AI marketplaces where humans and agents browse, install, and monetize AI products: OpenAI GPTs, Claude Skills, Hugging Face models and spaces, Replicate, the MCP Registry, CrewAI, Apify Store, Replit, Vercel, and Glama. Each entry tracks item count, monetization, publishing model, and API discoverability."
+        url="https://tensorfeed.ai/marketplaces"
+        jsonUrl="/api/marketplaces"
+        keywords={['ai marketplaces', 'gpt store', 'claude skills', 'hugging face models', 'mcp registry', 'agent marketplace', 'model monetization', 'ai product directory']}
+      />
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-lg bg-accent-primary/10">
@@ -82,6 +91,7 @@ export default function MarketplacesPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           Where humans and agents browse, install, and monetize AI products. GPTs (OpenAI), Skills (Claude), Models + Spaces (Hugging Face), Replicate, MCP Registry, CrewAI Marketplace, Apify Store, Replit, Vercel, Glama. Each entry: item count, monetization model, publishing model, API discoverability. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
+        <MachineReadableLink endpoint="/api/marketplaces" className="mt-2" />
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">

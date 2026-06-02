@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 export const metadata: Metadata = {
   title: 'AI Model Deprecation Calendar - When Each Model Gets Retired',
@@ -91,6 +93,21 @@ export default async function ModelDeprecationsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+      <DatasetJsonLd
+        name="AI Model Deprecation Tracker"
+        description="A maintained registry of model retirement and deprecation announcements across OpenAI, Anthropic, Google, Cohere, and other providers, with status, announced, deprecation, and sunset dates, recommended replacement models, and links to each provider's source announcement."
+        url="https://tensorfeed.ai/model-deprecations"
+        jsonUrl="/api/model-deprecations"
+        keywords={[
+          'model deprecation',
+          'model retirement',
+          'ai model sunset',
+          'replacement model',
+          'openai anthropic google cohere',
+          'model lifecycle',
+          'deprecation calendar',
+        ]}
+      />
       <Link
         href="/"
         className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-accent-primary transition-colors mb-6"
@@ -117,6 +134,7 @@ export default async function ModelDeprecationsPage() {
           When each provider retires each model, with the recommended replacement and a source
           link to verify the announcement. Updated as new deprecations are published.
         </p>
+        <MachineReadableLink endpoint="/api/model-deprecations" className="mt-2" />
       </header>
 
       {deprecations.length === 0 ? (

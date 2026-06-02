@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { TrendingUp, TrendingDown, Minus, Sparkles, BarChart2, ExternalLink } from 'lucide-react';
+import { DatasetJsonLd } from '@/components/seo/JsonLd';
+import MachineReadableLink from '@/components/MachineReadableLink';
 
 interface Ranking {
   rank: number;
@@ -85,6 +87,13 @@ export default function UsageRankingsPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
+      <DatasetJsonLd
+        name="AI Model Usage Rankings"
+        description="Weekly ranking of AI models by real production usage, sourced from OpenRouter public rankings. Tracks rolling 7-day token volume, market share, and trend (up, down, flat, new) per model and provider."
+        url="https://tensorfeed.ai/usage-rankings"
+        jsonUrl="/api/usage-rankings"
+        keywords={['ai model usage rankings', 'openrouter token volume', 'production model adoption', 'llm market share', 'model usage trends', 'frontier and open-weight models', 'agent model defaults']}
+      />
 
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-3">
@@ -96,6 +105,7 @@ export default function UsageRankingsPage() {
         <p className="text-text-secondary text-lg max-w-3xl">
           What AI models are actually being used in production. Sourced from OpenRouter, the model-agnostic aggregator handling hundreds of millions of tokens per day. The market signal beneath the leaderboard noise. {data?.lastUpdated && `Updated ${data.lastUpdated}, rolling 7-day window.`}
         </p>
+        <MachineReadableLink endpoint="/api/usage-rankings" className="mt-2" />
       </div>
 
       {error && (
