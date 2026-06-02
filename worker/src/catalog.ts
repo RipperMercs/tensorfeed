@@ -479,7 +479,7 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
   ],
 };
 
-const BASELINE_AGENTS: AgentsData = {
+export const BASELINE_AGENTS: AgentsData = {
   lastUpdated: '2026-03-28',
   categories: [
     { id: 'coding', name: 'Coding Agents', description: 'AI-powered tools that write, review, and debug code directly in your development workflow.' },
