@@ -13241,6 +13241,20 @@ export default {
         const result = await updateDailyData(env);
         return jsonResponse({ message: 'Daily catalog refresh ran (models, benchmarks, agents)', ...result });
       }
+      if (task === 'intelligence') {
+        // Capture the daily TFII (Intelligence Index) snapshot on demand so
+        // /api/intelligence can be repopulated without waiting for the 07:00 UTC
+        // cron. Reads the current benchmarks KV (run task=models first if it is
+        // stale); writes intelligence:snapshot:latest plus the dated key. Returns
+        // the capture error verbatim (503) when benchmarks are unavailable, so a
+        // missing snapshot is diagnosable rather than silent.
+        const { captureIntelligenceSnapshot } = await import('./model-intelligence');
+        const result = await captureIntelligenceSnapshot(env, new Date().toISOString());
+        return jsonResponse(
+          { message: result.ok ? 'Intelligence (TFII) snapshot captured' : 'Intelligence snapshot skipped', ...result },
+          result.ok ? 200 : 503,
+        );
+      }
       if (task === 'opportunities') {
         const result = await captureAgentOpportunities(env);
         let alertResult = null;
