@@ -134,6 +134,9 @@ const PILOT_PATHS = [
   '/api/premium/jobs',
   '/api/premium/x402-index/publisher/:domain',
   '/api/premium/economy/series/:source/:id',
+  // Wave 30 (2026-06-02): AI Crawler Access Map (robots.txt policy + llms.txt/ai.txt)
+  '/api/premium/ai-crawler-access/full',
+  '/api/premium/ai-crawler-access/changes',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.
