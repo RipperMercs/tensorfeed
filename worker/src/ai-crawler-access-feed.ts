@@ -202,7 +202,9 @@ async function crawlDomain(seed: { domain: string; sector: string }, at: string)
   };
 }
 
-export async function captureAiCrawlerAccessMap(env: Env): Promise<void> {
+export async function captureAiCrawlerAccessMap(
+  env: Env,
+): Promise<{ crawled: number; flips: number; domains: number; captured_at: string }> {
   const at = new Date().toISOString();
   const total = SEED_DOMAINS.length;
   const batchSize = Math.ceil(total / 7);
@@ -240,4 +242,10 @@ export async function captureAiCrawlerAccessMap(env: Env): Promise<void> {
   await appendFlips(env, flips);
   await writeCursor(env, (start + batchSize) % total, at);
   console.log(`ai-crawler-access: crawled ${crawled.length}, flips ${flips.length}, domains ${Object.keys(byDomain).length}`);
+  return {
+    crawled: crawled.length,
+    flips: flips.length,
+    domains: Object.keys(byDomain).length,
+    captured_at: snapshot.dataCapturedAt,
+  };
 }

@@ -4678,7 +4678,7 @@ export default {
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
           breaking: '/api/admin/breaking?key=<ADMIN_KEY> (GET = raw alert + is_live + audit; POST {headline, href, ttl_hours?} sets; POST {clear:true} clears. Public read at /api/breaking.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|s2|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|s2|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch|crawler-access]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -13448,6 +13448,11 @@ export default {
       if (task === 'openalex-citation-velocity') {
         const result = await refreshOpenAlexAICitationVelocity(env);
         return jsonResponse({ message: 'OpenAlex AI citation-velocity refreshed', ...result });
+      }
+      if (task === 'crawler-access') {
+        const { captureAiCrawlerAccessMap } = await import('./ai-crawler-access-feed');
+        const result = await captureAiCrawlerAccessMap(env);
+        return jsonResponse({ message: 'AI Crawler Access Map rolling crawl ran', ...result });
       }
       if (task === 'apis-guru-ai') {
         try {
