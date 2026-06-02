@@ -3551,7 +3551,14 @@ export default {
           );
         }
         await putCitationVelocitySnapshot(env, v.snapshot);
-        return jsonResponse({ ok: true, kind, capturedAt: v.snapshot.capturedAt, count: v.snapshot.papers.length }, 200, 0);
+        // Re-run the Semantic Scholar enrichment immediately. The seeded snapshot
+        // arrives without s2 fields, so without this the cross-check stays blank
+        // until the next 04:00 cron (and a re-seed silently wipes prior s2).
+        // enrichVelocityWithS2 reads the snapshot we just wrote, enriches it, and
+        // writes it back. It never throws (returns {ok:false} on S2 failure), so
+        // the seed still succeeds when S2 is unavailable.
+        const enrich = await enrichVelocityWithS2(env);
+        return jsonResponse({ ok: true, kind, capturedAt: v.snapshot.capturedAt, count: v.snapshot.papers.length, s2: enrich }, 200, 0);
       }
       return jsonResponse({ ok: false, error: 'unknown_snapshot_kind', kind, allowed: ['institutions', 'authors', 'citation-velocity'] }, 400);
     }
