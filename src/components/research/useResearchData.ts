@@ -328,3 +328,31 @@ export function useNlpProceedings() {
   }, []);
   return state;
 }
+
+export interface BlogPost {
+  title: string;
+  url: string;
+  source: string;
+  snippet: string;
+  published_at: string | null;
+}
+
+// AI lab + academic research blogs, aggregated. Source:
+// /api/research/lab-blogs (free).
+export function useResearchBlogs() {
+  const [state, setState] = useState<{ posts: BlogPost[] | null; sources: string[]; capturedAt: string | null }>(
+    { posts: null, sources: [], capturedAt: null },
+  );
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const data = await safeFetch<{ ok: boolean; capturedAt?: string; sources?: string[]; posts?: BlogPost[] }>(
+        `${API}/api/research/lab-blogs`,
+      );
+      if (cancelled) return;
+      setState({ posts: data?.posts ?? [], sources: data?.sources ?? [], capturedAt: data?.capturedAt ?? null });
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return state;
+}
