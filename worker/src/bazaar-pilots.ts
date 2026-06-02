@@ -6022,6 +6022,159 @@ const ECONOMY_SERIES_PILOT: BazaarPilotConfig = {
   },
 };
 
+/**
+ * Wave 30 (2026-06-02): AI Crawler Access Map. The robots.txt policy feed.
+ * /api/premium/ai-crawler-access/full returns every tracked domain with its
+ * per-bot robots.txt verdict (allowed/blocked/partial/unknown) plus llms.txt
+ * and ai.txt presence and sector rollups. No params; flat GET. We report
+ * stated policy, not enforcement.
+ */
+const AI_CRAWLER_ACCESS_FULL_PILOT: BazaarPilotConfig = {
+  description:
+    'AI Crawler Access Map, full dataset. One paid call returns every tracked domain with its per-bot robots.txt verdict (allowed, blocked, partial, or unknown) across the tracked AI bots (GPTBot, ClaudeBot, PerplexityBot, CCBot, Google-Extended, and more), plus llms.txt and ai.txt presence flags, sector rollups, and aggregate blocked/allowed percentages. Built by parsing each domain public robots.txt, llms.txt, and ai.txt on a daily rolling crawl. We report stated policy, not enforcement.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: {},
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-01T09:53:00Z',
+            domains: [
+              {
+                domain: 'nytimes.com',
+                sector: 'publishing',
+                checkedAt: '2026-06-01T09:53:00Z',
+                robotsStatus: 200,
+                bots: { GPTBot: 'blocked', ClaudeBot: 'blocked', CCBot: 'blocked', PerplexityBot: 'partial' },
+                hasLlmsTxt: false,
+                hasAiTxt: false,
+                llmsTxtBytes: null,
+              },
+            ],
+            stats: {
+              domainsWithData: 300,
+              botBlockedPct: { ClaudeBot: 69, GPTBot: 62 },
+              botAllowedPct: { ClaudeBot: 28, GPTBot: 35 },
+              llmsTxtAdoptionPct: 11,
+              aiTxtAdoptionPct: 3,
+              bySector: { publishing: { domains: 35, llmsTxt: 2 } },
+            },
+            source_attribution:
+              'TensorFeed AI Crawler Access Map. Daily rolling crawl of curated domains, parsing public robots.txt, llms.txt, and ai.txt. We report stated policy, not enforcement.',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: { type: 'object', additionalProperties: false },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+/**
+ * /api/premium/ai-crawler-access/changes: the historical flip log over the
+ * AI Crawler Access Map. Each entry records when a tracked domain changed a
+ * bot from allowed to blocked (or back) or published or removed llms.txt or
+ * ai.txt, within a date range. from and to are required; domain is optional
+ * (omit to scan all tracked domains). Strict-premium, AFTA-signed.
+ */
+const AI_CRAWLER_ACCESS_CHANGES_PILOT: BazaarPilotConfig = {
+  description:
+    'AI Crawler Access Map, change history. One paid call returns the flip log over a date range: when a tracked domain changed a bot from allowed to blocked (or back), or first published or removed llms.txt or ai.txt. Each entry is domain, field (a bot name or llms.txt or ai.txt), from, to, and at. Required params from and to (YYYY-MM-DD); optional domain to scope to one site. We report stated policy, not enforcement.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-05-01', to: '2026-06-01', domain: 'nytimes.com' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-01T09:53:00Z',
+            domain: 'nytimes.com',
+            from: '2026-05-01',
+            to: '2026-06-01',
+            changes: [
+              { domain: 'nytimes.com', field: 'PerplexityBot', from: 'allowed', to: 'blocked', at: '2026-05-18T09:53:00Z' },
+              { domain: 'nytimes.com', field: 'llms.txt', from: 'absent', to: 'present', at: '2026-05-24T09:53:00Z' },
+            ],
+            has_data: true,
+            source_attribution:
+              'TensorFeed AI Crawler Access Map. Daily rolling crawl of curated domains, parsing public robots.txt, llms.txt, and ai.txt. We report stated policy, not enforcement.',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: {
+                    type: 'string',
+                    description: 'Start date YYYY-MM-DD. Required. Inclusive lower bound of the change window.',
+                  },
+                  to: {
+                    type: 'string',
+                    description: 'End date YYYY-MM-DD. Required. Inclusive upper bound of the change window.',
+                  },
+                  domain: {
+                    type: 'string',
+                    description: 'Optional domain to scope the flip log to one site. Omit to scan all tracked domains.',
+                  },
+                },
+                required: ['from', 'to'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -6157,6 +6310,11 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/jobs': JOBS_PILOT,
   '/api/premium/x402-index/publisher/:domain': X402_INDEX_PUBLISHER_PILOT,
   '/api/premium/economy/series/:source/:id': ECONOMY_SERIES_PILOT,
+  // Wave 30 (2026-06-02): AI Crawler Access Map. robots.txt policy per AI bot
+  // across curated domains, plus llms.txt and ai.txt presence. Full is the
+  // flat per-domain dataset; changes is the strict-premium flip log.
+  '/api/premium/ai-crawler-access/full': AI_CRAWLER_ACCESS_FULL_PILOT,
+  '/api/premium/ai-crawler-access/changes': AI_CRAWLER_ACCESS_CHANGES_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

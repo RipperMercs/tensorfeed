@@ -1112,6 +1112,52 @@ const ENDPOINTS: Endpoint[] = [
   ]
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/ai-crawler-access/summary.json',
+    description:
+      'Aggregate map of which AI bots curated domains allow or block in robots.txt, plus llms.txt and ai.txt adoption percentages. We report stated policy, not enforcement. The crawl is rolling (about one seventh of the domain set per day), so domains_with_data climbs toward domains_tracked over the first week. No parameters.',
+    cache: 'Cache for 6 hours',
+    example: `{
+  "ok": true,
+  "captured_at": "2026-06-01T09:53:00Z",
+  "domains_tracked": 300,
+  "domains_with_data": 300,
+  "bot_blocked_pct": { "ClaudeBot": 69, "GPTBot": 62, "CCBot": 71 },
+  "bot_allowed_pct": { "ClaudeBot": 28, "GPTBot": 35, "CCBot": 26 },
+  "llms_txt_adoption_pct": 11,
+  "ai_txt_adoption_pct": 3,
+  "by_sector": { "ai-media": { "domains": 40, "llmsTxt": 6 } },
+  "snapshot_ready": true,
+  "source_attribution": "TensorFeed AI Crawler Access Map. Daily rolling crawl of curated domains, parsing public robots.txt, llms.txt, and ai.txt. We report stated policy, not enforcement."
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/ai-crawler-access/site',
+    description:
+      'Per-site robots.txt verdict for each tracked AI bot (allowed, blocked, partial, or unknown), plus llms.txt and ai.txt presence, for one domain. Pass a bare registrable domain such as example.com. Verdicts reflect stated robots.txt policy, not enforcement.',
+    params: '?domain=example.com',
+    cache: 'Cache for 6 hours',
+    example: `// Query: ?domain=nytimes.com
+{
+  "ok": true,
+  "domain": "nytimes.com",
+  "found": true,
+  "captured_at": "2026-06-01T09:53:00Z",
+  "record": {
+    "domain": "nytimes.com",
+    "sector": "publishing",
+    "checkedAt": "2026-06-01T09:53:00Z",
+    "robotsStatus": 200,
+    "bots": { "GPTBot": "blocked", "ClaudeBot": "blocked", "CCBot": "blocked" },
+    "hasLlmsTxt": false,
+    "hasAiTxt": false,
+    "llmsTxtBytes": null
+  },
+  "source_attribution": "TensorFeed AI Crawler Access Map. Daily rolling crawl of curated domains, parsing public robots.txt, llms.txt, and ai.txt. We report stated policy, not enforcement."
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news

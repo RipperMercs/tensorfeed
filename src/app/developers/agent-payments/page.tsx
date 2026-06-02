@@ -1678,6 +1678,61 @@ const ENDPOINTS: PremiumEndpoint[] = [
   "billing": { "credits_charged": 1, "credits_remaining": 36 }
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/premium/ai-crawler-access/full',
+    description:
+      'The full AI Crawler Access Map dataset in one call: every tracked domain with its per-bot robots.txt verdict (allowed, blocked, partial, or unknown) across the tracked AI bots (GPTBot, ClaudeBot, PerplexityBot, CCBot, Google-Extended, and more), plus llms.txt and ai.txt presence flags, plus precomputed sector rollups and aggregate blocked/allowed percentages. We report stated robots.txt policy, not enforcement. The free /api/ai-crawler-access/summary.json gives the aggregate view; this returns the per-domain rows. captured_at carries the oldest checkedAt across the set, so a stale snapshot is honest; 8-day freshness SLA, no-charge when stale.',
+    cost: '1 credit per call',
+    example: `// Header: Authorization: Bearer tf_live_...
+{
+  "ok": true,
+  "captured_at": "2026-06-01T09:53:00Z",
+  "domains": [
+    {
+      "domain": "nytimes.com",
+      "sector": "publishing",
+      "checkedAt": "2026-06-01T09:53:00Z",
+      "robotsStatus": 200,
+      "bots": { "GPTBot": "blocked", "ClaudeBot": "blocked", "CCBot": "blocked", "PerplexityBot": "partial" },
+      "hasLlmsTxt": false,
+      "hasAiTxt": false,
+      "llmsTxtBytes": null
+    }
+  ],
+  "stats": {
+    "domainsWithData": 300,
+    "botBlockedPct": { "ClaudeBot": 69, "GPTBot": 62 },
+    "botAllowedPct": { "ClaudeBot": 28, "GPTBot": 35 },
+    "llmsTxtAdoptionPct": 11,
+    "aiTxtAdoptionPct": 3,
+    "bySector": { "publishing": { "domains": 35, "llmsTxt": 2 } }
+  },
+  "source_attribution": "TensorFeed AI Crawler Access Map. Daily rolling crawl of curated domains, parsing public robots.txt, llms.txt, and ai.txt. We report stated policy, not enforcement."
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/ai-crawler-access/changes',
+    description:
+      'The historical flip log over the AI Crawler Access Map: when a tracked domain changed a bot from allowed to blocked (or back), or first published or removed llms.txt or ai.txt, within a date range. Each entry is { domain, field, from, to, at }, where field is a bot name or llms.txt or ai.txt. Required params: from, to (YYYY-MM-DD). Optional domain filter (omit to scan all tracked domains). Strict-premium path; anonymous Bazaar probes see a clean 402 challenge before the param check. has_data is false and the call is not charged when nothing in the window matches. captured_at carries the snapshot data time.',
+    cost: '1 credit per call',
+    example: `// Header: Authorization: Bearer tf_live_...
+// GET /api/premium/ai-crawler-access/changes?domain=nytimes.com&from=2026-05-01&to=2026-06-01
+{
+  "ok": true,
+  "captured_at": "2026-06-01T09:53:00Z",
+  "domain": "nytimes.com",
+  "from": "2026-05-01",
+  "to": "2026-06-01",
+  "changes": [
+    { "domain": "nytimes.com", "field": "PerplexityBot", "from": "allowed", "to": "blocked", "at": "2026-05-18T09:53:00Z" },
+    { "domain": "nytimes.com", "field": "llms.txt", "from": "absent", "to": "present", "at": "2026-05-24T09:53:00Z" }
+  ],
+  "has_data": true,
+  "source_attribution": "TensorFeed AI Crawler Access Map. Daily rolling crawl of curated domains, parsing public robots.txt, llms.txt, and ai.txt. We report stated policy, not enforcement."
+}`,
+  },
 ];
 
 const PYTHON_QUICKSTART = `from tensorfeed import TensorFeed

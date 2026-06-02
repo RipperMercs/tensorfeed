@@ -16835,6 +16835,70 @@
         "credits": 1,
         "category": "sec-filings-intelligence"
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/ai-crawler-access/full",
+        "description": "AI Crawler Access Map, full dataset. Every tracked domain with its per-bot robots.txt verdict (allowed, blocked, partial, or unknown) across GPTBot, ClaudeBot, PerplexityBot, CCBot, Google-Extended, and more, plus llms.txt and ai.txt presence flags, sector rollups, and aggregate blocked/allowed percentages. We report stated policy, not enforcement.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-06-02T00:00:00Z",
+      "metadata": {
+        "name": "AI Crawler Access Map, Full Dataset",
+        "description": "Every tracked domain with per-bot robots.txt verdicts and llms.txt/ai.txt flags, plus sector rollups, in one call. Aggregate view at the free /api/ai-crawler-access/summary.json. We report stated policy, not enforcement.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-crawler-access"
+      }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/ai-crawler-access/changes",
+        "description": "AI Crawler Access Map, change history. The flip log over a date range: when a tracked domain changed a bot from allowed to blocked (or back), or published or removed llms.txt or ai.txt. Pass ?from=YYYY-MM-DD&to=YYYY-MM-DD (domain optional). We report stated policy, not enforcement.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-06-02T00:00:00Z",
+      "metadata": {
+        "name": "AI Crawler Access Map, Changes",
+        "description": "Historical flip log of robots.txt access changes per AI bot, plus llms.txt and ai.txt publish/remove events, within a date range. Required params from and to; domain optional. Strict-premium. We report stated policy, not enforcement.",
+        "tier": 1,
+        "credits": 1,
+        "category": "ai-crawler-access"
+      }
     }
   ],
   "freeEndpoints": [

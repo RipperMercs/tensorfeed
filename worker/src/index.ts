@@ -4665,6 +4665,10 @@ export default {
           paymentRevoke: 'POST /api/payment/revoke',
           paymentNoChargeStats: '/api/payment/no-charge-stats',
           receiptVerify: '/api/receipt/verify',
+          aiCrawlerAccessSummary: '/api/ai-crawler-access/summary.json (free; aggregate AI crawler access map across curated domains: per-bot allow/block percentages (GPTBot, ClaudeBot, PerplexityBot, CCBot, and more), plus llms.txt and ai.txt adoption. We report stated robots.txt policy, not enforcement. No parameters.)',
+          aiCrawlerAccessSite: '/api/ai-crawler-access/site?domain= (free; per-site robots.txt verdict for each tracked AI bot, plus llms.txt and ai.txt presence, for one domain. Required param: domain.)',
+          premiumAiCrawlerAccessFull: '/api/premium/ai-crawler-access/full (1 credit, AFTA-signed; full dataset: every tracked domain with per-bot robots.txt verdicts (allowed/blocked/partial/unknown) and llms.txt/ai.txt flags, plus sector rollups. 8-day freshness SLA, no-charge when stale.)',
+          premiumAiCrawlerAccessChanges: '/api/premium/ai-crawler-access/changes?domain=&from=&to= (1 credit, AFTA-signed, strict-premium; historical flip log: when a site changed a bot from allowed to blocked (or back) or published llms.txt, within a date range. Required params: from, to (domain optional).)',
         },
         admin: {
           usage: '/api/admin/usage?window=today|7d|30d&key=<ADMIN_KEY> (paid summary + AE funnel when provisioned; legacy ?date=YYYY-MM-DD still returns one day raw rollup)',
