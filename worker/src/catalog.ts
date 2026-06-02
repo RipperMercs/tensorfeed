@@ -426,8 +426,8 @@ const BASELINE_PRICING: PricingData = {
   },
 };
 
-const BASELINE_BENCHMARKS: BenchmarksData = {
-  lastUpdated: '2026-04-17',
+export const BASELINE_BENCHMARKS: BenchmarksData = {
+  lastUpdated: '2026-05-24',
   benchmarks: [
     { id: 'mmlu_pro', name: 'MMLU-Pro', description: 'General knowledge and reasoning across 57 subjects', maxScore: 100 },
     { id: 'human_eval', name: 'HumanEval', description: 'Python code generation and problem solving', maxScore: 100 },
@@ -436,6 +436,9 @@ const BASELINE_BENCHMARKS: BenchmarksData = {
     { id: 'swe_bench', name: 'SWE-bench', description: 'Real-world software engineering tasks from GitHub issues', maxScore: 100 },
   ],
   models: [
+    { model: 'GPT-5.5', provider: 'OpenAI', released: '2026-04', scores: { mmlu_pro: 94.2, human_eval: 97.1, gpqa_diamond: 78.3, math: 95.8, swe_bench: 68.7 } },
+    { model: 'DeepSeek V4 Pro', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 91.5, human_eval: 94.8, gpqa_diamond: 73.1, math: 92.4, swe_bench: 63.8 } },
+    { model: 'DeepSeek V4 Flash', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 85.2, human_eval: 89.4, gpqa_diamond: 58.7, math: 82.1, swe_bench: 48.9 } },
     { model: 'Claude Opus 4.7', provider: 'Anthropic', released: '2026-04', scores: { mmlu_pro: 93.8, human_eval: 96.2, gpqa_diamond: 76.5, math: 93.1, swe_bench: 65.4 } },
     { model: 'Claude Opus 4.6', provider: 'Anthropic', released: '2026-03', scores: { mmlu_pro: 92.4, human_eval: 95.1, gpqa_diamond: 74.2, math: 91.8, swe_bench: 62.3 } },
     { model: 'Claude Sonnet 4.6', provider: 'Anthropic', released: '2026-02', scores: { mmlu_pro: 88.7, human_eval: 92.0, gpqa_diamond: 65.8, math: 85.4, swe_bench: 55.7 } },
@@ -558,38 +561,23 @@ export async function updateDailyData(env: Env): Promise<DailyUpdateResult> {
   }
 
   // --- 2. Benchmarks ---
-  let benchmarks = await env.TENSORFEED_CACHE.get('benchmarks', 'json') as BenchmarksData | null;
-  if (!benchmarks) {
-    console.log('Seeding benchmarks from baseline');
-    benchmarks = BASELINE_BENCHMARKS;
-  }
-
-  // Backfill: add any new benchmark entries present in baseline but missing from KV
-  {
-    let backfilled = false;
-    for (const baseModel of BASELINE_BENCHMARKS.models) {
-      if (!benchmarks.models.find((m) => m.model === baseModel.model)) {
-        benchmarks.models.unshift(baseModel);
-        backfilled = true;
-      }
-    }
-    if (backfilled) {
-      benchmarks.lastUpdated = BASELINE_BENCHMARKS.lastUpdated;
-      result.benchmarksChanged = true;
-      console.log('Benchmarks baseline backfill added new models');
-    }
-  }
-
-  // Benchmark scores are editorial; updates land on redeploy via
-  // BASELINE_BENCHMARKS, not from a third-party leaderboard ingest.
+  // Benchmark scores are editorial: BASELINE_BENCHMARKS is the single source of
+  // truth (it mirrors data/benchmarks.json, enforced by
+  // catalog-benchmarks-sync.test.ts). Adopt the baseline wholesale so model
+  // additions, score revisions, and the lastUpdated date all propagate on
+  // redeploy, not just models absent from KV (the old backfill only added
+  // missing models, so a re-synced baseline with edited scores never landed).
+  // No third-party leaderboard writes this key, so the baseline is canonical.
+  // Write only when the serialized value changed, to respect the KV write budget.
+  const existingBenchmarks = await env.TENSORFEED_CACHE.get('benchmarks', 'json') as BenchmarksData | null;
+  const benchmarks = BASELINE_BENCHMARKS;
   result.benchmarkModelCount = benchmarks.models.length;
-
-  // Write only if changed or first seed
-  if (result.benchmarksChanged || !await env.TENSORFEED_CACHE.get('benchmarks')) {
+  if (!existingBenchmarks || JSON.stringify(existingBenchmarks) !== JSON.stringify(benchmarks)) {
+    result.benchmarksChanged = true;
     await env.TENSORFEED_CACHE.put('benchmarks', JSON.stringify(benchmarks), {
       metadata: { updatedAt: new Date().toISOString() },
     });
-    console.log('Benchmarks KV updated');
+    console.log('Benchmarks KV updated from baseline');
   }
 
   // --- 3. Agents directory: seed if needed, set staleness timestamp ---
