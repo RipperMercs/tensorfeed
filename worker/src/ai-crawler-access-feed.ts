@@ -4,6 +4,8 @@
 
 import type { Env } from './types';
 import { TRACKED_BOTS } from './ai-crawler-access-bots';
+import { SEED_DOMAINS } from './ai-crawler-access-seeds';
+import { parseRobotsTxt, verdictForBot } from './ai-crawler-access-robots';
 
 export type BotVerdict = 'allowed' | 'blocked' | 'partial' | 'unknown';
 
@@ -154,4 +156,88 @@ export async function readCursor(env: Env): Promise<number> {
 
 export async function writeCursor(env: Env, index: number, ts: string): Promise<void> {
   await env.TENSORFEED_CACHE.put(CURSOR_KEY, JSON.stringify({ index, ts }));
+}
+
+// crawl engine (rolling daily refresh of ~1/7 of the seed universe)
+const FETCH_TIMEOUT_MS = 5000;
+const CONCURRENCY = 8;
+const CRAWLER_UA = 'tensorfeed-crawler-access/1.0 (+https://tensorfeed.ai/ai-crawler-access)';
+
+async function fetchText(domain: string, file: string): Promise<{ status: number | null; body: string | null }> {
+  try {
+    const res = await fetch(`https://${domain}/${file}`, {
+      headers: { 'User-Agent': CRAWLER_UA },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      redirect: 'follow',
+    });
+    if (!res.ok) return { status: res.status, body: null };
+    return { status: res.status, body: await res.text() };
+  } catch {
+    return { status: null, body: null };
+  }
+}
+
+async function crawlDomain(seed: { domain: string; sector: string }, at: string): Promise<DomainRecord> {
+  const [robots, llms, ai] = await Promise.all([
+    fetchText(seed.domain, 'robots.txt'),
+    fetchText(seed.domain, 'llms.txt'),
+    fetchText(seed.domain, 'ai.txt'),
+  ]);
+  const bots: Record<string, BotVerdict> = {};
+  if (robots.body !== null) {
+    const groups = parseRobotsTxt(robots.body);
+    for (const bot of TRACKED_BOTS) bots[bot] = verdictForBot(groups, bot);
+  } else {
+    for (const bot of TRACKED_BOTS) bots[bot] = 'unknown';
+  }
+  return {
+    domain: seed.domain,
+    sector: seed.sector,
+    checkedAt: at,
+    robotsStatus: robots.status,
+    bots,
+    hasLlmsTxt: llms.body !== null && llms.body.trim().length > 0,
+    hasAiTxt: ai.body !== null && ai.body.trim().length > 0,
+    llmsTxtBytes: llms.body !== null ? llms.body.length : null,
+  };
+}
+
+export async function captureAiCrawlerAccessMap(env: Env): Promise<void> {
+  const at = new Date().toISOString();
+  const total = SEED_DOMAINS.length;
+  const batchSize = Math.ceil(total / 7);
+  const start = (await readCursor(env)) % total;
+
+  const slice: typeof SEED_DOMAINS = [];
+  for (let i = 0; i < batchSize; i++) slice.push(SEED_DOMAINS[(start + i) % total]);
+
+  // bounded concurrency crawl
+  const crawled: DomainRecord[] = [];
+  for (let i = 0; i < slice.length; i += CONCURRENCY) {
+    const chunk = slice.slice(i, i + CONCURRENCY);
+    const recs = await Promise.all(chunk.map((s) => crawlDomain(s, at)));
+    crawled.push(...recs);
+  }
+
+  // merge into the existing snapshot
+  const prev = await readSnapshot(env);
+  const byDomain: Record<string, DomainRecord> = { ...(prev?.byDomain ?? {}) };
+  const flips: FlipLogEntry[] = [];
+  for (const rec of crawled) {
+    flips.push(...detectFlips(byDomain[rec.domain], rec, at));
+    byDomain[rec.domain] = rec;
+  }
+
+  const snapshot: Snapshot = {
+    dataCapturedAt: oldestCheckedAt(byDomain),
+    generatedAt: at,
+    botCount: TRACKED_BOTS.length,
+    byDomain,
+    stats: computeStats(byDomain, TRACKED_BOTS.length),
+  };
+
+  await writeSnapshot(env, snapshot);
+  await appendFlips(env, flips);
+  await writeCursor(env, (start + batchSize) % total, at);
+  console.log(`ai-crawler-access: crawled ${crawled.length}, flips ${flips.length}, domains ${Object.keys(byDomain).length}`);
 }
