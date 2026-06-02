@@ -367,7 +367,7 @@ async function pingIndexNow(env: Env): Promise<void> {
 
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
-const BASELINE_PRICING: PricingData = {
+export const BASELINE_PRICING: PricingData = {
   lastUpdated: '2026-06-01',
   providers: [
     {
@@ -383,6 +383,7 @@ const BASELINE_PRICING: PricingData = {
     {
       id: 'openai', name: 'OpenAI', logo: '/images/providers/openai.png', url: 'https://openai.com',
       models: [
+        { id: 'gpt-5-5', name: 'GPT-5.5', inputPrice: 5, outputPrice: 30, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'gpt-4o', name: 'GPT-4o', inputPrice: 2.50, outputPrice: 10.00, contextWindow: 128000, released: '2024-05', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'gpt-4o-mini', name: 'GPT-4o-mini', inputPrice: 0.15, outputPrice: 0.60, contextWindow: 128000, released: '2024-07', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'budget' },
         { id: 'o1', name: 'o1', inputPrice: 15.00, outputPrice: 60.00, contextWindow: 200000, released: '2024-12', capabilities: ['text', 'reasoning', 'code'], tier: 'flagship' },
@@ -392,6 +393,8 @@ const BASELINE_PRICING: PricingData = {
     {
       id: 'google', name: 'Google', logo: '/images/providers/google.png', url: 'https://ai.google.dev',
       models: [
+        { id: 'gemini-3-5-flash', name: 'Gemini 3.5 Flash', inputPrice: 1.5, outputPrice: 9, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
+        { id: 'gemini-3-1-flash-lite', name: 'Gemini 3.1 Flash-Lite', inputPrice: 0.25, outputPrice: 1.5, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'gemini-2-5-pro', name: 'Gemini 2.5 Pro', inputPrice: 1.25, outputPrice: 10.00, contextWindow: 1000000, released: '2025-03', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'gemini-2-0-flash', name: 'Gemini 2.0 Flash', inputPrice: 0.10, outputPrice: 0.40, contextWindow: 1000000, released: '2025-02', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'budget' },
       ],
@@ -415,6 +418,25 @@ const BASELINE_PRICING: PricingData = {
       models: [
         { id: 'command-r-plus', name: 'Command R+', inputPrice: 2.50, outputPrice: 10.00, contextWindow: 128000, released: '2024-04', capabilities: ['text', 'tool-use', 'RAG'], tier: 'flagship' },
         { id: 'command-r', name: 'Command R', inputPrice: 0.15, outputPrice: 0.60, contextWindow: 128000, released: '2024-03', capabilities: ['text', 'tool-use', 'RAG'], tier: 'mid' },
+      ],
+    },
+    {
+      id: 'deepseek', name: 'DeepSeek', logo: '/images/providers/deepseek.png', url: 'https://www.deepseek.com',
+      models: [
+        { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', inputPrice: 1.74, outputPrice: 3.48, contextWindow: 1000000, released: '2026-04', openSource: true, license: 'MIT', capabilities: ['text', 'vision', 'code', 'reasoning'], tier: 'flagship' },
+        { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', inputPrice: 0.14, outputPrice: 0.28, contextWindow: 1000000, released: '2026-04', openSource: true, license: 'MIT', capabilities: ['text', 'vision', 'code'], tier: 'budget' },
+      ],
+    },
+    {
+      id: 'alibaba', name: 'Alibaba', logo: '/images/providers/alibaba.png', url: 'https://qwenlm.ai',
+      models: [
+        { id: 'qwen3-7-max', name: 'Qwen3.7-Max', inputPrice: 2.5, outputPrice: 7.5, contextWindow: 1000000, released: '2026-05', capabilities: ['text', 'code', 'reasoning', 'tool-use'], tier: 'flagship' },
+      ],
+    },
+    {
+      id: 'nvidia', name: 'NVIDIA', logo: '/images/providers/nvidia.png', url: 'https://www.nvidia.com/en-us/ai/',
+      models: [
+        { id: 'nemotron-3-nano-omni', name: 'Nemotron 3 Nano Omni', inputPrice: 0, outputPrice: 0, contextWindow: 256000, released: '2026-04', openSource: true, license: 'NVIDIA Open Model License', capabilities: ['text', 'vision', 'audio', 'video', 'code', 'reasoning', 'tool-use'], tier: 'mid' },
       ],
     },
   ],
