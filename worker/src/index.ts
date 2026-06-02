@@ -14142,6 +14142,15 @@ export default {
       return;
     }
 
+    // Daily 09:53 UTC: AI Crawler Access Map rolling refresh. Independent
+    // top-level if (not chained into the else-if above) so it dispatches on
+    // its own dedicated slot. Crawls ~1/7 of the seed universe, merges into
+    // the R2 snapshot, appends flips, advances the KV cursor.
+    if (cron === '53 9 * * *') {
+      const { captureAiCrawlerAccessMap } = await import('./ai-crawler-access-feed');
+      await run('captureAiCrawlerAccessMap', () => captureAiCrawlerAccessMap(env));
+    }
+
     // Record RSS poll history for the daily summary digest
     if (rssResult) {
       await run('recordPollRun', () => recordPollRun(env, cron, rssResult!));

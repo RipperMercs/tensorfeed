@@ -66,6 +66,17 @@ crons = [
   # registry.modelcontextprotocol.io. Powers /api/mcp/registry/snapshot
   # (free) and /api/premium/mcp/registry/series (1 credit).
   "30 9 * * *",
+  # Daily 09:53 UTC: AI Crawler Access Map rolling refresh
+  # (worker/src/ai-crawler-access-feed.ts). Crawls ~1/7 of the curated
+  # seed list per run, parses each site's robots.txt for per-bot allow/
+  # block verdicts plus llms.txt/ai.txt presence, merges into one R2
+  # snapshot, appends a flip-log on verdict changes, advances the KV
+  # cursor. Powers free /api/ai-crawler-access/* and premium
+  # /api/premium/ai-crawler-access/*. Slot 09:53 is collision-free:
+  # minute 53 is odd (dodges */2), not a multiple of 5 (dodges */5,
+  # */10, */15), not minute 0 (dodges 0 * * * *), and no other daily
+  # cron fires at 09:53.
+  "53 9 * * *",
   # Daily 11:00 AM UTC: capture top AI/ML papers from Semantic Scholar
   # (worker/src/papers.ts). Five fan-out queries, dedup, rank by citation
   # count. Powers free /api/papers/ai-trending plus a future premium
