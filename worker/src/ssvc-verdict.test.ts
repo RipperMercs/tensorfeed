@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION, parseSsvcFromVulnrichment, buildSsvcVerdict, redactSsvcVerdictForPreview } from './ssvc-verdict';
+import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION, parseSsvcFromVulnrichment, buildSsvcVerdict, redactSsvcVerdictForPreview, checkSsvcVerdictPreviewRateLimit } from './ssvc-verdict';
+import { makeEnv } from './test-harness';
 
 // The authoritative 36-row CISA SSVC Coordinator v2.0.3 table. Verified three
 // independent ways and adversarially audited (2026-06-03). This fixture pins
@@ -209,5 +210,20 @@ describe('redactSsvcVerdictForPreview', () => {
     expect(preview.decision_primary).toBeUndefined();
     expect(preview.decision_envelope).toBeUndefined();
     expect(preview.reasoning).toBeUndefined();
+  });
+});
+
+describe('checkSsvcVerdictPreviewRateLimit', () => {
+  it('allows up to max then blocks, on its own KV key', async () => {
+    const env = await makeEnv();
+    const ip = '198.51.100.42';
+    let last = { allowed: true, remaining: 0, limit: 0 };
+    for (let i = 0; i < 3; i++) last = await checkSsvcVerdictPreviewRateLimit(env, ip, 3);
+    expect(last).toMatchObject({ allowed: true, remaining: 0, limit: 3 });
+    const blocked = await checkSsvcVerdictPreviewRateLimit(env, ip, 3);
+    expect(blocked.allowed).toBe(false);
+    // A different IP is unaffected.
+    const other = await checkSsvcVerdictPreviewRateLimit(env, '198.51.100.43', 3);
+    expect(other.allowed).toBe(true);
   });
 });

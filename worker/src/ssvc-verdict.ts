@@ -18,6 +18,7 @@
  */
 
 import type { Env } from './types';
+import { safePut } from './kill-switch';
 
 export type Exploitation = 'none' | 'poc' | 'active';
 export type Automatable = 'no' | 'yes';
@@ -239,4 +240,23 @@ export function redactSsvcVerdictForPreview(full: SsvcVerdict): SsvcVerdictPrevi
     scored_at: full.scored_at,
     source: full.source,
   };
+}
+
+/**
+ * Per-IP daily rate limit for the free preview. Its own KV key prefix so it
+ * does not share a budget with the other previews. 1 read plus (0 or 1) writes
+ * per call; the write is skipped under the kill switch via safePut.
+ */
+export async function checkSsvcVerdictPreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:ssvc-verdict-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }
