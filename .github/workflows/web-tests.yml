@@ -14,6 +14,7 @@ on:
     branches: [main]
     paths:
       - 'src/**'
+      - 'public/llms.txt'
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'
@@ -21,6 +22,7 @@ on:
   pull_request:
     paths:
       - 'src/**'
+      - 'public/llms.txt'
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'

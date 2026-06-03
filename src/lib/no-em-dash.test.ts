@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,6 +16,12 @@ import { fileURLToPath } from 'node:url';
 const SRC = dirname(dirname(fileURLToPath(import.meta.url))); // src
 const FORBIDDEN = [0x2013, 0x2014, 0x2015]; // en dash, em dash, horizontal bar
 const RE = new RegExp('[' + FORBIDDEN.map(c => '\\u' + c.toString(16).padStart(4, '0')).join('') + ']');
+
+// Hand-maintained public text files that LLMs and agents ingest directly. The
+// generated llms-full.txt is excluded (it is regenerated each build from source
+// that this rule already covers).
+const REPO_ROOT = dirname(SRC); // src to repo root
+const PUBLIC_TEXT_FILES = ['public/llms.txt'];
 
 function collect(dir: string, out: string[]): void {
   for (const name of readdirSync(dir)) {
@@ -47,6 +53,26 @@ describe('no em dash in source (anti-AI-detection rule)', () => {
     expect(
       offenders,
       `dash-family chars found (use commas, periods, or parentheses instead): ${offenders.join(' | ')}`,
+    ).toEqual([]);
+  });
+
+  it('has zero dash-family chars in the hand-maintained public text (llms.txt)', () => {
+    const offenders: string[] = [];
+    for (const rel of PUBLIC_TEXT_FILES) {
+      const file = join(REPO_ROOT, rel);
+      if (!existsSync(file)) continue;
+      const lines = readFileSync(file, 'utf8').split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const m = lines[i].match(RE);
+        if (m) {
+          const hex = m[0].charCodeAt(0).toString(16).toUpperCase();
+          offenders.push(`${rel}:${i + 1} U+${hex}`);
+        }
+      }
+    }
+    expect(
+      offenders,
+      `dash-family chars in public text (use commas, periods, or parentheses instead): ${offenders.join(' | ')}`,
     ).toEqual([]);
   });
 });
