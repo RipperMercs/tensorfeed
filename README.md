@@ -17,9 +17,9 @@ Real-time AI ecosystem intelligence built for humans **and** AI agents. News fro
 
 2. **Two networks already federated.** TensorFeed.ai and [TerminalFeed.io](https://terminalfeed.io) accept each other's bearer tokens via a server-to-server validate + commit rail. One token, two sites. Other publishers can self-adopt by publishing a conforming `/.well-known/agent-fair-trade.json`.
 
-3. **x402 from day one.** No subscription, no signup, no email-me-the-API-key. Send USDC on Base, get a token, agent uses it. Compatible with [Stripe Link Agents](https://link.com/agents) (April 2026 release) — same x402 protocol, different scheme.
+3. **x402 from day one.** No subscription, no signup, no email-me-the-API-key. Send USDC on Base, get a token, agent uses it. Compatible with [Stripe Link Agents](https://link.com/agents) (April 2026 release): same x402 protocol, different scheme.
 
-> **Want to AFTA-ify your own API?** [`afta-gateway`](https://github.com/RipperMercs/afta-gateway) is a drop-in Cloudflare Worker template — fork, set 3 secrets, deploy. MIT, no protocol fee.
+> **Want to AFTA-ify your own API?** [`afta-gateway`](https://github.com/RipperMercs/afta-gateway) is a drop-in Cloudflare Worker template. Fork, set 3 secrets, deploy. MIT, no protocol fee.
 
 ## Drop-in MCP server
 
@@ -39,7 +39,7 @@ The fastest way to plug an AI agent into TensorFeed is the official MCP server. 
 
 Restart your client and ask: *"What's happening in AI today?"* or *"Compare pricing between Claude Opus and GPT-4o."*
 
-The MCP server has its own dedicated repo: **[github.com/RipperMercs/tensorfeed-mcp](https://github.com/RipperMercs/tensorfeed-mcp)** ⭐ — full tool catalog, premium config, and example queries live there.
+The MCP server has its own dedicated repo: **[github.com/RipperMercs/tensorfeed-mcp](https://github.com/RipperMercs/tensorfeed-mcp)** ⭐ full tool catalog, premium config, and example queries live there.
 
 ## Try the API in 30 seconds
 

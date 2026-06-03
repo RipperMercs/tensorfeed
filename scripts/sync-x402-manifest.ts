@@ -415,7 +415,7 @@ function main(): void {
       const u = new URL(urlStr);
       existingByPath.set(u.pathname, idx);
     } catch {
-      // Item with non-URL resource — skip indexing
+      // Item with non-URL resource, skip indexing
     }
   });
 

@@ -15,16 +15,16 @@ The backup system writes a full KV dump to R2 every Sunday at 06:00 UTC, and ad-
 
 Per `worker/src/backup.ts`:
 
-- `TENSORFEED_NEWS` — news snapshots, RSS poll history, source health
-- `TENSORFEED_STATUS` — service status snapshots
-- `TENSORFEED_CACHE` — credits, payments, watches, anomaly events, all hot caches
-- `OFAC_AUDIT_LOG` — sanctions block audit trail
+- `TENSORFEED_NEWS`: news snapshots, RSS poll history, source health
+- `TENSORFEED_STATUS`: service status snapshots
+- `TENSORFEED_CACHE`: credits, payments, watches, anomaly events, all hot caches
+- `OFAC_AUDIT_LOG`: sanctions block audit trail
 
-Workers-internal secrets (`wrangler secret put`-managed) are NOT backed up here. Receipt-signing keys, API keys, the ADMIN_KEY itself — those live in the credentials folder per `[[reference_credential_files]]` and are operator-managed.
+Workers-internal secrets (`wrangler secret put`-managed) are NOT backed up here. Receipt-signing keys, API keys, the ADMIN_KEY itself: those live in the credentials folder per `[[reference_credential_files]]` and are operator-managed.
 
 ## Restore procedure
 
-### Step 1 — Identify the dump you want
+### Step 1: Identify the dump you want
 
 ```powershell
 # List recent backup dates from R2
@@ -34,7 +34,7 @@ Invoke-RestMethod "https://tensorfeed.ai/api/admin/backup/list?key=$ADMIN_KEY" |
 
 Pick the date you want to restore from. Typically the most recent Sunday backup, or an ad-hoc one if you triggered one before the incident.
 
-### Step 2 — Pull the manifest to verify integrity
+### Step 2: Pull the manifest to verify integrity
 
 ```powershell
 $DATE = '2026-05-12'
@@ -43,11 +43,11 @@ Invoke-RestMethod "https://tensorfeed.ai/api/admin/backup/manifest?key=$ADMIN_KE
 
 Inspect:
 
-- `namespaces[].key_count` — sane numbers? (Production should have thousands of keys per namespace, not zero.)
-- `namespaces[].sha256_hex` — write these down. You'll verify after decompression.
-- `namespaces[].error` — any non-empty error means that namespace failed to back up. Pick a different date if you need a clean copy.
+- `namespaces[].key_count`: sane numbers? (Production should have thousands of keys per namespace, not zero.)
+- `namespaces[].sha256_hex`: write these down. You'll verify after decompression.
+- `namespaces[].error`: any non-empty error means that namespace failed to back up. Pick a different date if you need a clean copy.
 
-### Step 3 — Download the dumps locally
+### Step 3: Download the dumps locally
 
 Get presigned R2 URLs (the `/url` endpoint hands out 1-hour-valid signed download URLs):
 
@@ -61,7 +61,7 @@ foreach ($NS in $NAMESPACES) {
 
 For the v1 of this system, use `wrangler r2 object get` directly until the presigned-URL admin endpoint ships (planned for Layer 2 work).
 
-### Step 4 — Verify sha256
+### Step 4: Verify sha256
 
 ```powershell
 foreach ($NS in $NAMESPACES) {
@@ -76,7 +76,7 @@ foreach ($NS in $NAMESPACES) {
 
 If a hash mismatches the manifest, the dump was corrupted in transit. Re-download.
 
-### Step 5 — Choose restore granularity
+### Step 5: Choose restore granularity
 
 **Surgical restore** (a few specific keys lost):
 
@@ -118,7 +118,7 @@ Get-Content "./restore/TENSORFEED_CACHE.jsonl" | ForEach-Object {
 npx wrangler kv bulk put $TARGET --namespace-id 4de30d8becd24b3bba9556b98bad8e69
 ```
 
-### Step 6 — Validate post-restore
+### Step 6: Validate post-restore
 
 Run the premium API audit to confirm all paid endpoints still gate correctly:
 
@@ -126,9 +126,9 @@ Run the premium API audit to confirm all paid endpoints still gate correctly:
 node worker/scripts/premium-audit.mjs
 ```
 
-Should print `Pass: 44 / Fail: 0`. If anything fails, check the specific endpoint against the dump — values may be stored under a different key prefix than expected.
+Should print `Pass: 44 / Fail: 0`. If anything fails, check the specific endpoint against the dump; values may be stored under a different key prefix than expected.
 
-### Step 7 — Rotate
+### Step 7: Rotate
 
 If the restore was triggered by suspected credential compromise:
 
@@ -139,9 +139,9 @@ If the restore was triggered by suspected credential compromise:
 
 ## What's NOT in this runbook
 
-- **Restoring source code** — already on GitHub. `git clone https://github.com/RipperMercs/tensorfeed.git` and run `wrangler deploy` from `worker/`.
-- **Restoring secrets** — `wrangler secret put` for each. The values themselves live in the operator credentials folder, NOT in the R2 backup.
-- **Restoring the R2 bucket itself** — if R2 itself is lost, you need Layer 2 (cross-provider mirror) or Layer 3 (operator local pull). Not yet shipped.
+- **Restoring source code**: already on GitHub. `git clone https://github.com/RipperMercs/tensorfeed.git` and run `wrangler deploy` from `worker/`.
+- **Restoring secrets**: `wrangler secret put` for each. The values themselves live in the operator credentials folder, NOT in the R2 backup.
+- **Restoring the R2 bucket itself**: if R2 itself is lost, you need Layer 2 (cross-provider mirror) or Layer 3 (operator local pull). Not yet shipped.
 
 ## Testing this runbook
 

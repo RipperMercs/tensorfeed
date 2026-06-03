@@ -132,7 +132,7 @@ async function main() {
   const payToHits = [];
   // Diagnostic: top N most recently updated entries
   const recentSorted = [];
-  // Collect from a re-scan — items were not retained per page in the
+  // Collect from a re-scan: items were not retained per page in the
   // outer loop. Re-walk one more pass with a smaller limit.
 
   // Actually we need to re-fetch since we didn't accumulate items.

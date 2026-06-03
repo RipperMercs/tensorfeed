@@ -12,11 +12,11 @@ The goal is simple: TensorFeed publishes in a human voice. Smart readers spot LL
 
 Substitute contextually with whichever reads most natural:
 
-- **Period** (split into two sentences) — works for asides that are really their own thought.
-- **Comma** — works when the aside is short and the sentence flow tolerates it.
-- **Colon** — works when the aside expands or specifies what came before.
-- **Parentheses** — works when the aside is a clarifying enumeration or genuinely parenthetical.
-- **Rewrite to drop the aside entirely** — often the best move when the em dash was load-bearing.
+- **Period** (split into two sentences): works for asides that are really their own thought.
+- **Comma**: works when the aside is short and the sentence flow tolerates it.
+- **Colon**: works when the aside expands or specifies what came before.
+- **Parentheses**: works when the aside is a clarifying enumeration or genuinely parenthetical.
+- **Rewrite to drop the aside entirely**: often the best move when the em dash was load-bearing.
 
 Do not default to one substitute. Pick per sentence.
 

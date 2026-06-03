@@ -6,9 +6,9 @@
  * validators can recognize our paid endpoints at the OpenAPI layer.
  *
  * Required by:
- *   - pay.sh (solana-foundation/pay-skills) — the catalog validator marks
+ *   - pay.sh (solana-foundation/pay-skills): the catalog validator marks
  *     endpoints as "FREE" if they have no x-payment-required tag.
- *   - x402scan.com — per memory project_x402_canonical_schema, needs
+ *   - x402scan.com: per memory project_x402_canonical_schema, needs
  *     x-payment-info on paid ops for indexing.
  *
  * Price source of truth: /.well-known/x402.json items list (amount field).
