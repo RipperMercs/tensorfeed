@@ -4670,6 +4670,9 @@ export default {
           aiCrawlerAccessCheck: '/api/ai-crawler-access/check?domain= (free; live on-demand robots.txt verdict for any public domain not in the tracked set: per-bot allowed/blocked/partial/unknown plus llms.txt/ai.txt presence. Rate-limited 120/min/IP, cached 1h.)',
           premiumAiCrawlerAccessFull: '/api/premium/ai-crawler-access/full (1 credit, AFTA-signed; full dataset: every tracked domain with per-bot robots.txt verdicts (allowed/blocked/partial/unknown) and llms.txt/ai.txt flags, plus sector rollups. 8-day freshness SLA, no-charge when stale.)',
           premiumAiCrawlerAccessChanges: '/api/premium/ai-crawler-access/changes?domain=&from=&to= (1 credit, AFTA-signed, strict-premium; historical flip log: when a site changed a bot from allowed to blocked (or back) or published llms.txt, within a date range. Required params: from, to (domain optional).)',
+          agentReadySummary: '/api/agent-ready/summary.json (free; agentic-web readiness across curated domains: per-surface adoption (x402 manifest, agent.json, openapi, llms.txt, AI-bot-crawlable, ai.txt), readiness-tier distribution, and a top-25 leaderboard. Derived from the crawler-access crawl. No parameters.)',
+          agentReadySite: '/api/agent-ready/site?domain= (free; per-domain agent-readiness profile: a transparent 0-100 score, tier, and which agent surfaces the site exposes. Required param: domain.)',
+          premiumAgentReadyFull: '/api/premium/agent-ready/full (1 credit, AFTA-signed; full per-domain agent-readiness dataset with scores and surface flags. 8-day freshness SLA, no-charge when stale.)',
         },
         admin: {
           usage: '/api/admin/usage?window=today|7d|30d&key=<ADMIN_KEY> (paid summary + AE funnel when provisioned; legacy ?date=YYYY-MM-DD still returns one day raw rollup)',
@@ -10856,6 +10859,42 @@ export default {
       const result = buildChangesResponse(flips, domain, from, to, snap?.dataCapturedAt ?? null);
       ctx.waitUntil(logPremiumUsage(env, '/api/premium/ai-crawler-access/changes', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
       return await premiumResponse(result, payment, 1, request, env, result.has_data ? null : 'empty_result');
+    }
+
+    // === AGENT-READY WEB MAP (derived over the crawler-access snapshot) ===
+    // Free summary: agentic-web readiness across curated domains. Per-surface
+    // adoption, tier distribution, and a top-25 leaderboard. No params.
+    if (path === '/api/agent-ready/summary.json') {
+      const { readSnapshot } = await import('./ai-crawler-access-feed');
+      const { buildAgentReadySummary } = await import('./agent-ready');
+      const { SEED_COUNT } = await import('./premium-ai-crawler-access');
+      const snap = await readSnapshot(env);
+      return jsonResponse(buildAgentReadySummary(snap, SEED_COUNT), 200, 6 * 60 * 60);
+    }
+
+    // Free per-domain readiness profile (0-100 score, tier, surface flags).
+    if (path === '/api/agent-ready/site') {
+      const domain = url.searchParams.get('domain');
+      if (!domain) return jsonResponse({ ok: false, error: 'missing_domain', hint: 'Pass ?domain=example.com' }, 400);
+      const { readSnapshot } = await import('./ai-crawler-access-feed');
+      const { buildAgentReadySite } = await import('./agent-ready');
+      const snap = await readSnapshot(env);
+      return jsonResponse(buildAgentReadySite(snap, domain), 200, 6 * 60 * 60);
+    }
+
+    // Premium full dataset: every profiled domain with score and surface flags.
+    // captured_at carries the real data-capture time (snapshot.dataCapturedAt),
+    // never wall-clock; an absent snapshot passes empty_result so a payer is
+    // never billed for nothing. 8-day freshness SLA, no-charge when stale.
+    if (path === '/api/premium/agent-ready/full') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      const { readSnapshot } = await import('./ai-crawler-access-feed');
+      const { buildAgentReadyFull } = await import('./agent-ready');
+      const snap = await readSnapshot(env);
+      const result = buildAgentReadyFull(snap);
+      ctx.waitUntil(logPremiumUsage(env, '/api/premium/agent-ready/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
+      return await premiumResponse(result, payment, 1, request, env, snap ? null : 'empty_result');
     }
 
     // === FREE: SEC FILINGS EXTRACTION INDEX ===

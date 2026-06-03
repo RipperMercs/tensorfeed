@@ -1052,6 +1052,16 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'misc',
   },
   {
+    path: '/api/premium/agent-ready/full',
+    credits: 1,
+    strict_premium: false,
+    params: [],
+    returns: 'Full per-domain agent-readiness dataset: a transparent 0-100 score, tier, and which agent surfaces (x402, agent.json, openapi, llms.txt, crawlable, ai.txt) each domain exposes.',
+    free_sibling: '/api/agent-ready/summary.json',
+    signed: true,
+    category: 'misc',
+  },
+  {
     path: '/api/premium/coding-harnesses/weekly-deltas',
     credits: 1,
     strict_premium: true,

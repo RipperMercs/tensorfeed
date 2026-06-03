@@ -172,6 +172,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // stalled crawl triggers a no-charge.
   '/api/premium/ai-crawler-access/full': { maxAgeSeconds: 8 * 24 * 60 * 60 },
   '/api/premium/ai-crawler-access/changes': { maxAgeSeconds: 8 * 24 * 60 * 60 },
+  // Agent-Ready Web Map full dataset is derived from the same rolling crawl
+  // snapshot, so it inherits the 8-day SLA (7-day window + 1 day headroom).
+  '/api/premium/agent-ready/full': { maxAgeSeconds: 8 * 24 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,
