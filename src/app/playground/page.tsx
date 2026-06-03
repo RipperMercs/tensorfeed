@@ -203,13 +203,14 @@ export default function PlaygroundPage() {
                   <div className="space-y-3">
                     {active.params.map(p => (
                       <div key={p.name} className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 items-start">
-                        <label className="text-sm text-text-secondary pt-2">
+                        <label htmlFor={`param-${active.slug}-${p.name}`} className="text-sm text-text-secondary pt-2">
                           <span className="font-mono text-text-primary">{p.name}</span>
                           {p.required && <span className="text-rose-400 ml-1">*</span>}
                           <div className="text-xs text-text-muted">{p.in} · {p.type}</div>
                         </label>
                         <div>
                           <input
+                            id={`param-${active.slug}-${p.name}`}
                             type="text"
                             value={values[p.name] || ''}
                             onChange={(e) => setParamValue(active.slug, p.name, e.target.value)}

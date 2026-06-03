@@ -142,6 +142,8 @@ export default function Navbar() {
             <div className="relative" ref={guidesRef}>
               <button
                 onClick={() => setGuidesOpen(!guidesOpen)}
+                aria-expanded={guidesOpen}
+                aria-haspopup="true"
                 className={`relative flex items-center gap-1 px-3 py-1.5 rounded text-sm transition-colors ${
                   isGuideActive
                     ? 'text-accent-cyan'
