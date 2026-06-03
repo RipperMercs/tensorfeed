@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "tsx scripts/fetch-feeds.ts && tsx scripts/generate-llms-full.ts && tsx scripts/sync-x402-manifest.ts",
+    "prebuild": "tsx scripts/fetch-feeds.ts && tsx scripts/generate-llms-full.ts && tsx scripts/sync-x402-manifest.ts && tsx scripts/generate-crawler-domains.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
