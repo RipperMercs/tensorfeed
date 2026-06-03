@@ -1,6 +1,6 @@
 // worker/src/ai-crawler-access-feed.test.ts
 import { describe, it, expect } from 'vitest';
-import { computeStats, detectFlips, oldestCheckedAt, verdictsFromRobots, looksLikeJson, looksLikeText } from './ai-crawler-access-feed';
+import { computeStats, detectFlips, oldestCheckedAt, verdictsFromRobots, looksLikeJson, looksLikeText, isSafeCrawlTarget } from './ai-crawler-access-feed';
 import type { DomainRecord } from './ai-crawler-access-feed';
 
 describe('looksLikeJson', () => {
@@ -111,5 +111,86 @@ describe('oldestCheckedAt', () => {
       'b.com': rec({ domain: 'b.com', checkedAt: '2026-05-30T05:00:00Z' }),
     };
     expect(oldestCheckedAt(byDomain)).toBe('2026-05-30T05:00:00Z');
+  });
+});
+
+describe('isSafeCrawlTarget (crawler SSRF guard)', () => {
+  it('allows ordinary https public hosts and their redirect targets', () => {
+    expect(isSafeCrawlTarget('https://openai.com/robots.txt')).toBe(true);
+    expect(isSafeCrawlTarget('https://www.anthropic.com/llms.txt')).toBe(true);
+    expect(isSafeCrawlTarget('https://api.example.co.uk/.well-known/x402.json')).toBe(true);
+  });
+
+  it('does NOT block public domains that merely start with fc / fd', () => {
+    // Regression guard: the IPv6 unique-local prefix check (fc00::/7) must only
+    // fire on bracketed IPv6 literals, never on hostnames like these.
+    expect(isSafeCrawlTarget('https://fcbarcelona.com/robots.txt')).toBe(true);
+    expect(isSafeCrawlTarget('https://fd-example.com/robots.txt')).toBe(true);
+    expect(isSafeCrawlTarget('https://feedly.com/ai.txt')).toBe(true);
+  });
+
+  it('blocks the https-to-http downgrade and exotic schemes', () => {
+    expect(isSafeCrawlTarget('http://example.com/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('ftp://example.com/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('file:///etc/passwd')).toBe(false);
+  });
+
+  it('blocks localhost and loopback', () => {
+    expect(isSafeCrawlTarget('https://localhost/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://api.localhost/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://127.0.0.1/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://127.99.4.1/robots.txt')).toBe(false);
+  });
+
+  it('blocks the trailing-dot FQDN-root form of internal names', () => {
+    // Regression: "localhost." resolves to loopback but escapes the bare-name
+    // guards without trailing-dot normalization (adversarial audit, 2026-06).
+    expect(isSafeCrawlTarget('https://localhost./robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://localhost../robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://api.localhost./robots.txt')).toBe(false);
+    // A legit public host with a trailing dot stays allowed (no over-block).
+    expect(isSafeCrawlTarget('https://example.com./robots.txt')).toBe(true);
+  });
+
+  it('blocks RFC1918 private, CGNAT, and reserved IPv4 literals', () => {
+    expect(isSafeCrawlTarget('https://10.0.0.1/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://172.16.5.9/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://172.31.255.255/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://192.168.1.1/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://100.64.0.1/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://0.0.0.0/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://239.0.0.1/robots.txt')).toBe(false);
+  });
+
+  it('does NOT over-block public IPv4 adjacent to private ranges', () => {
+    expect(isSafeCrawlTarget('https://172.15.0.1/robots.txt')).toBe(true); // just below 172.16/12
+    expect(isSafeCrawlTarget('https://172.32.0.1/robots.txt')).toBe(true); // just above 172.16/12
+    expect(isSafeCrawlTarget('https://100.63.0.1/robots.txt')).toBe(true); // just below CGNAT
+    expect(isSafeCrawlTarget('https://8.8.8.8/robots.txt')).toBe(true);
+  });
+
+  it('blocks the cloud metadata link-local address', () => {
+    expect(isSafeCrawlTarget('https://169.254.169.254/latest/meta-data/')).toBe(false);
+    expect(isSafeCrawlTarget('https://169.254.0.1/robots.txt')).toBe(false);
+  });
+
+  it('blocks integer / hex obfuscated IPv4 (new URL normalizes to dotted-quad)', () => {
+    expect(isSafeCrawlTarget('https://2130706433/robots.txt')).toBe(false); // 127.0.0.1
+    expect(isSafeCrawlTarget('https://0x7f000001/robots.txt')).toBe(false); // 127.0.0.1
+  });
+
+  it('blocks private / loopback / link-local IPv6 literals but allows global IPv6', () => {
+    expect(isSafeCrawlTarget('https://[::1]/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://[::]/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://[fe80::1]/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://[fc00::1]/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://[fd12:3456::1]/robots.txt')).toBe(false);
+    expect(isSafeCrawlTarget('https://[::ffff:127.0.0.1]/robots.txt')).toBe(false); // v4-mapped
+    expect(isSafeCrawlTarget('https://[2606:4700::1]/robots.txt')).toBe(true); // global
+  });
+
+  it('rejects unparseable input', () => {
+    expect(isSafeCrawlTarget('not a url')).toBe(false);
+    expect(isSafeCrawlTarget('')).toBe(false);
   });
 });

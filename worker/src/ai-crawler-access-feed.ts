@@ -163,16 +163,89 @@ export async function writeCursor(env: Env, index: number, ts: string): Promise<
 const FETCH_TIMEOUT_MS = 5000;
 const CONCURRENCY = 8;
 const CRAWLER_UA = 'tensorfeed-crawler-access/1.0 (+https://tensorfeed.ai/ai-crawler-access)';
+const MAX_REDIRECT_HOPS = 4;
 
-async function fetchText(domain: string, file: string): Promise<{ status: number | null; body: string | null }> {
+// SSRF guard for the crawler. The seed list is curated and Cloudflare Workers
+// fetch already refuses RFC1918 / link-local egress, but a compromised seed
+// could 30x-redirect a crawl, so fetchText revalidates every hop against this
+// allow-by-shape check: the target must be https and its host must not be a
+// loopback / private / link-local / reserved IP literal. We do not DNS-resolve
+// (Workers cannot cheaply), so a hostname that resolves to a private IP is left
+// to the platform's own egress restrictions; this blocks the literal-IP shapes
+// and the https-to-http downgrade. new URL() normalizes integer / hex / octal
+// IPv4 obfuscation (e.g. https://2130706433) to dotted-quad before we test it.
+export function isSafeCrawlTarget(rawUrl: string): boolean {
+  let u: URL;
   try {
-    const res = await fetch(`https://${domain}/${file}`, {
-      headers: { 'User-Agent': CRAWLER_UA },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      redirect: 'follow',
-    });
-    if (!res.ok) return { status: res.status, body: null };
-    return { status: res.status, body: await res.text() };
+    u = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+  if (u.protocol !== 'https:') return false;
+
+  const rawHost = u.hostname.toLowerCase();
+  // IPv6 literals arrive bracketed (e.g. [::1]); a domain name never contains
+  // a colon. Detect the bracketed form so the IPv6 prefix checks below never
+  // fire on a hostname like fcbarcelona.com or fd-example.com.
+  const isIpv6 = rawHost.startsWith('[') && rawHost.endsWith(']');
+  // Strip trailing dot(s): "localhost." / "foo.localhost." is the FQDN-root
+  // form and resolves identically to the dotless name, but would otherwise
+  // slip past the exact-string / endsWith name guards below. (WHATWG already
+  // strips the trailing dot from IP-shaped hosts, so this only matters for the
+  // name path; on IPv6 it is a no-op.)
+  const host = (isIpv6 ? rawHost.slice(1, -1) : rawHost).replace(/\.+$/, '');
+  if (!host) return false;
+
+  if (isIpv6) {
+    if (host === '::1' || host === '::') return false;          // loopback / unspecified
+    if (host.startsWith('fe80:')) return false;                 // link-local
+    if (host.startsWith('fc') || host.startsWith('fd')) return false; // fc00::/7 unique-local
+    if (host.startsWith('::ffff:')) return false;               // IPv4-mapped
+    return true;
+  }
+
+  if (host === 'localhost' || host.endsWith('.localhost')) return false;
+  const v4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (v4) {
+    const a = Number(v4[1]);
+    const b = Number(v4[2]);
+    if (a === 0) return false;                          // 0.0.0.0/8
+    if (a === 10) return false;                         // 10.0.0.0/8 private
+    if (a === 127) return false;                        // loopback
+    if (a === 169 && b === 254) return false;           // link-local incl. 169.254.169.254 metadata
+    if (a === 172 && b >= 16 && b <= 31) return false;  // 172.16.0.0/12 private
+    if (a === 192 && b === 168) return false;           // 192.168.0.0/16 private
+    if (a === 100 && b >= 64 && b <= 127) return false; // 100.64.0.0/10 CGNAT
+    if (a >= 224) return false;                          // 224.0.0.0/4 multicast + 240/4 reserved
+  }
+  return true;
+}
+
+// Fetch a crawl surface, following redirects MANUALLY so each hop is
+// revalidated by isSafeCrawlTarget before it is requested. Returns no body on
+// an unsafe hop, a non-2xx, too many hops, or any error. Legit https
+// apex-to-www and path redirects pass through; an https-to-http downgrade or a
+// redirect to a private-IP literal is dropped.
+async function fetchText(domain: string, file: string): Promise<{ status: number | null; body: string | null }> {
+  let target = `https://${domain}/${file}`;
+  try {
+    for (let hop = 0; hop <= MAX_REDIRECT_HOPS; hop += 1) {
+      if (!isSafeCrawlTarget(target)) return { status: null, body: null };
+      const res = await fetch(target, {
+        headers: { 'User-Agent': CRAWLER_UA },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        redirect: 'manual',
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get('location');
+        if (!loc) return { status: res.status, body: null };
+        target = new URL(loc, target).toString(); // resolve relative redirects
+        continue;
+      }
+      if (!res.ok) return { status: res.status, body: null };
+      return { status: res.status, body: await res.text() };
+    }
+    return { status: null, body: null }; // exceeded MAX_REDIRECT_HOPS
   } catch {
     return { status: null, body: null };
   }
