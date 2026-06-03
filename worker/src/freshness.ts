@@ -198,6 +198,14 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/clean/cve': NULL_SLA,
   '/api/premium/clean/kev': { maxAgeSeconds: 36 * 60 * 60 },
   '/api/premium/clean/epss': { maxAgeSeconds: 36 * 60 * 60 },
+  // GHSA AI firehose: cron refreshes every 6h, so 9h SLA = cadence plus
+  // 50% headroom for one missed run. The handler passes dataCapturedAt =
+  // snapshot.generated_at (the last successful refresh write), so a
+  // stalled cron stops billing once the snapshot ages past 9h.
+  '/api/premium/security/ghsa/ai-feed': { maxAgeSeconds: 9 * 60 * 60 },
+  // APIs.guru AI watch: daily cron, so 36h SLA = cadence plus one-run
+  // headroom. Same generated_at capture-time contract as the GHSA feed.
+  '/api/premium/apis-guru/ai-feed': { maxAgeSeconds: 36 * 60 * 60 },
   '/api/premium/history/news/clusters/full': NULL_SLA,
   '/api/premium/history/news/verified': NULL_SLA,
   '/api/premium/mcp/registry/series': NULL_SLA,
@@ -348,6 +356,8 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/clean/cve': 'LLM-ready transform of immutable CVE Record',
     '/api/premium/clean/kev': 'LLM-ready transform of CISA KEV catalog entry; SLA tracks the 36h KEV cron headroom',
     '/api/premium/clean/epss': 'LLM-ready transform of EPSS score; SLA tracks the 36h EPSS cache headroom',
+    '/api/premium/security/ghsa/ai-feed': 'GHSA AI-relevant advisory firehose refreshed every 6h; charges only when fresh (within 9h of the last successful refresh)',
+    '/api/premium/apis-guru/ai-feed': 'APIs.guru AI-API watch refreshed daily; charges only when fresh (within 36h of the last successful refresh)',
     '/api/premium/history/news/clusters/full': 'historical immutable',
     '/api/premium/history/news/verified': 'historical immutable',
     '/api/premium/mcp/registry/series': 'historical immutable',

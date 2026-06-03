@@ -11982,7 +11982,12 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/security/ghsa/ai-feed', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env);
+      // Pass generated_at (the last successful refresh write) as the
+      // billing capture time so the 9h freshness SLA can no-charge when
+      // the 6h cron stalls. The snapshot spreads generated_at into the
+      // body, but premiumResponse does not probe that field name, so the
+      // explicit arg is required.
+      return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env, null, snapshot.generated_at);
     }
 
     // === PAID PREMIUM: OPENALEX AI AUTHORS (Tier 1, 1 credit) ===
@@ -12073,7 +12078,10 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/apis-guru/ai-feed', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env);
+      // generated_at = last successful daily refresh. Surfaced as the
+      // billing capture time so the 36h freshness SLA no-charges a stalled
+      // snapshot (premiumResponse does not probe generated_at by name).
+      return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env, null, snapshot.generated_at);
     }
 
     // === PAID PREMIUM: COMPARE MODELS (Tier 1, 1 credit) ===

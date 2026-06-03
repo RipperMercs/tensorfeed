@@ -111,4 +111,11 @@ describe('paid daily-snapshot endpoints have a billing-freshness SLA', () => {
     expect(resolveSLA('/api/premium/research/authors')?.maxAgeSeconds).toBe(36 * 60 * 60);
     expect(resolveSLA('/api/premium/research/citation-velocity')?.maxAgeSeconds).toBe(36 * 60 * 60);
   });
+
+  it('the generated_at-stamped ai-feeds resolve to a finite SLA (no stale-bill gap)', () => {
+    // Both feeds surface their capture time as generated_at and pass it as
+    // dataCapturedAt; without a finite SLA the stale no-charge can never fire.
+    expect(resolveSLA('/api/premium/security/ghsa/ai-feed')?.maxAgeSeconds).toBe(9 * 60 * 60);
+    expect(resolveSLA('/api/premium/apis-guru/ai-feed')?.maxAgeSeconds).toBe(36 * 60 * 60);
+  });
 });
