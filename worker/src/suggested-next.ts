@@ -243,19 +243,6 @@ const SUGGESTION_MAP: Record<string, SuggestionTemplate[]> = {
     },
   ],
 
-  // === Macro / economy ===
-  '/api/premium/macro/digest': [
-    {
-      path: '/api/premium/economy/recession-watch',
-      why: 'Composite recession-risk signal across yield curve + Sahm rule.',
-      credits: ONE_CREDIT,
-    },
-    {
-      path: '/api/premium/economy/series/{source}/{series_id}',
-      why: 'Full upstream history for any FRED or BLS series with deltas + moving averages.',
-      credits: ONE_CREDIT,
-    },
-  ],
 
   // === Agents directory ===
   '/api/premium/agents/directory': [

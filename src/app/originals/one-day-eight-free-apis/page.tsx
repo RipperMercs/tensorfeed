@@ -293,10 +293,10 @@ export default function OneDayEightFreeApisPage() {
         <p>
           The next session is the first premium derived endpoint. Something like{' '}
           <code className="bg-bg-tertiary px-1.5 py-0.5 rounded text-accent-primary text-xs">
-            /api/premium/macro/digest
+            /api/premium/whats-new
           </code>{' '}
-          that joins BLS and FRED into a single agent-shaped morning brief: rates trend,
-          inflation trend, employment trend, week-over-week movement, in one paid call. That
+          that joins the day&apos;s news, pricing, and status changes into a single agent-shaped
+          morning brief: what launched, what repriced, what degraded, in one paid call. That
           validates the &ldquo;premium = compute we add&rdquo; thesis on the foundation we
           built today.
         </p>

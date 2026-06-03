@@ -938,44 +938,6 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
-    path: '/api/premium/clean/fda/{category}',
-    description:
-      'LLM-ready OpenFDA query results. Same five categories as the free /api/health/fda/{category} (drug/events, drug/labels, drug/recalls, food/recalls, device/events) with per-category flat schemas. Drug events flatten patient demo + drugs + reactions + outcomes + seriousness flags. Drug labels surface brand/generic/manufacturer + section text. Recalls expose classification + reason + voluntary flag. Device events extract primary device + outcomes + truncated narrative. License: CC0 1.0 Universal Dedication.',
-    cost: '1 credit per call',
-    example: `// GET /api/premium/clean/fda/drug/events?search=patient.drug.medicinalproduct:aspirin&limit=2
-{
-  "ok": true,
-  "source_format": "openfda_v1",
-  "target_format": "tensorfeed_llm_ready_v1",
-  "schema_version": "1.0",
-  "cleaning_version": "1.0",
-  "data": {
-    "category": "drug/events",
-    "upstream_total": 609465,
-    "count": 2,
-    "results": [
-      {
-        "id": "10003304",
-        "country": "US",
-        "received_at": "2014-03-12",
-        "serious": true,
-        "seriousness_flags": ["hospitalization"],
-        "patient_age": 65,
-        "patient_sex": "female",
-        "drugs": ["ASPIRIN"],
-        "reactions": ["NAUSEA", "HEADACHE"],
-        "primary_drug": "ASPIRIN",
-        "primary_reaction": "NAUSEA",
-        "drug_count": 1,
-        "reaction_count": 2
-      }
-    ]
-  },
-  "billing": { "credits_charged": 1, "credits_remaining": 33 }
-}`,
-  },
-  {
-    method: 'GET',
     path: '/api/premium/status/leaderboard',
     description:
       'Cross-provider uptime ranking. Computed from minute-resolution counters (one sample every 2 minutes per provider, ~720 samples per provider per day). Each entry includes uptime_pct, polls, operational/degraded/down/unknown buckets, downtime_minutes, hard_down_minutes (excludes degraded), incident_count, and mttr_minutes (mean time to recover from resolved incidents). Sorted by uptime % DESC with hard_down_minutes as tie-breaker. Custom date range up to 90 days. Aimed at SRE/ops/procurement teams comparing AI vendor reliability.',

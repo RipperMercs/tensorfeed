@@ -122,10 +122,6 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // probing the URL directly (Tate Lyman / x402-surface-check@0.2.3
   // followup on solana-foundation/pay-skills #68, 2026-05-14) reads
   // them as paid-route-shaped rather than broken.
-  '/api/premium/clean/eia/series',
-  '/api/premium/clean/power/daily',
-  '/api/premium/climate/power/hourly',
-  '/api/premium/health/fda/aggregate',
   // Wave 2 Bazaar pilots (2026-05-24). Promoted from premium-with-trial to
   // strict-premium so CDP's Bazaar crawler + x402scan see the canonical 402
   // challenge on anonymous probes rather than a free-trial 200. Each path
@@ -140,7 +136,6 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/research/citation-velocity',
   '/api/premium/research/milestones',
   '/api/premium/research/emerging-keywords',
-  '/api/premium/economy/recession-watch',
   '/api/premium/policy/timeline',
   '/api/premium/apis-guru/ai-feed',
   // Wave 3 Bazaar pilot (2026-05-24). Model-deprecations timeline:
@@ -295,7 +290,6 @@ export const STRICT_PREMIUM_PREFIXES: ReadonlyArray<string> = [
   '/api/premium/clean/cve/',
   '/api/premium/clean/kev/',
   '/api/premium/clean/epss/',
-  '/api/premium/clean/openrouter/',
   '/api/premium/security/verified/',
   // Wave 19 Bazaar path-param pilot (2026-05-27). Per-ticker AI-company
   // intelligence envelope. Ticker is a required path segment that must
@@ -310,7 +304,6 @@ export const STRICT_PREMIUM_PREFIXES: ReadonlyArray<string> = [
   '/api/premium/x402-index/',
   // Wave 29 (2026-05-30): per-series economic history (parametric source/id).
   // Param-required, so strict gates anonymous crawlers to a clean 402.
-  '/api/premium/economy/series/',
 ];
 
 /**

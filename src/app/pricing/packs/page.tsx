@@ -64,8 +64,6 @@ const PACKS = [
     useCase:
       'Agents tracking macro/economic conditions, recession risk, and AI policy timelines for investment thesis, commentary, or scheduled briefings.',
     highlightedEndpoints: [
-      '/api/premium/economy/recession-watch',
-      '/api/premium/economy/series/{source}/{series_id}',
       '/api/premium/policy/timeline',
     ],
   },

@@ -80,23 +80,6 @@ export const PAYMENT_PACKS: PaymentPack[] = [
       'GET /api/premium/routing?task=code&budget=5&min_quality=0.7&top_n=3. Returns top-3 ranked model recommendations with composite scores across quality/availability/cost/latency, joined live from pricing/benchmarks/status.',
   },
   {
-    id: 'macro',
-    name: 'Macro Pack',
-    useCase:
-      'Agents tracking macro/economic conditions, recession risk, and AI policy timelines for investment thesis, commentary, or scheduled briefings.',
-    suggestedUsd: 20,
-    approxCredits: creditsFor(20),
-    highlightedEndpoints: [
-      '/api/premium/macro/digest',
-      '/api/premium/economy/recession-watch',
-      '/api/premium/economy/series/{source}/{series_id}',
-      '/api/premium/policy/timeline',
-    ],
-    pairsWithFree: ['/api/economy/bls/indicators', '/api/economy/fred/indicators', '/api/policy/ai/registry'],
-    sampleCall:
-      'GET /api/premium/macro/digest. One agent-shaped morning brief: rates with yield-curve regime, inflation regime, employment regime, growth + money + FX, plus 2-3 sentence overall narrative. Compute is the gate; raw data stays free.',
-  },
-  {
     id: 'research_velocity',
     name: 'Research Velocity Pack',
     useCase:

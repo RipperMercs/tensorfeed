@@ -854,54 +854,6 @@ const RESEARCH_EMERGING_KEYWORDS_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/economy/recession-watch: composite recession-risk signal
- * across yield curve + Sahm rule. red/yellow/green classification.
- */
-const RECESSION_WATCH_PILOT: BazaarPilotConfig = {
-  description:
-    'Composite recession-risk signal. Yield-curve inversion (10Y minus 2Y) and Sahm-rule unemployment trigger, each classified red / yellow / green with an explanation, plus a composite verdict and brief synthesis. BLS + FRED public-domain data; TensorFeed-derived classification.',
-  extension: {
-    bazaar: {
-      info: {
-        input: { type: 'http', method: 'GET', queryParams: {} },
-        output: {
-          type: 'json',
-          example: {
-            ok: true,
-            computed_at: '2026-05-23T12:00:00Z',
-            data_freshness: {
-              bls_captured_at: '2026-05-23T05:00:00Z',
-              fred_captured_at: '2026-05-23T05:30:00Z',
-            },
-            yield_curve: {
-              spread_10y_2y: -0.18,
-              level: 'yellow',
-              explanation: '10Y-2Y spread at -0.18pp: mildly inverted. Watching for sustained inversion.',
-            },
-            sahm_rule: {
-              unemp_3mo_avg: 4.2,
-              unemp_12mo_low: 3.8,
-              sahm_value: 0.4,
-              threshold_pp: 0.5,
-              level: 'yellow',
-              explanation: 'Sahm value 0.40pp: approaching the 0.5pp Sahm threshold. Watch.',
-            },
-            composite: {
-              level: 'yellow',
-              score: 50,
-              explanation: 'Mixed signals. At least one indicator is in the watch zone but neither has fully triggered.',
-            },
-            brief: 'Watch zone: at least one indicator is in transition.',
-            billing: { credits_charged: 1, credits_remaining: 49 },
-          },
-        },
-      },
-      schema: flatGetSchema(),
-    },
-  },
-};
-
-/**
  * /api/premium/policy/timeline: forward + backward calendar over the AI
  * policy registry. Optional ?days_back=, ?days_forward=, ?jurisdiction= with
  * sane defaults.
@@ -2754,62 +2706,6 @@ const CLEAN_EPSS_PILOT: BazaarPilotConfig = {
         required: ['input'],
       },
       routeTemplate: '/api/premium/clean/epss/:id',
-    },
-  },
-};
-
-const CLEAN_OPENROUTER_PILOT: BazaarPilotConfig = {
-  description:
-    'One model from the daily 367-entry OpenRouter catalog as an LLM-ready fact card. Pricing normalized to USD per million tokens with a derived blended_5_to_1 mix. Capability flags (tools, vision, structured_outputs, reasoning) extracted from supported_parameters plus modality. Pass the model id (URL-encoded if it contains a slash) as the URL path segment.',
-  extension: {
-    bazaar: {
-      info: {
-        input: {
-          type: 'http',
-          method: 'GET',
-          pathParams: { model_id: 'anthropic/claude-haiku-4.5' },
-        },
-        output: {
-          type: 'json',
-          example: {
-            ok: true,
-            source_format: 'openrouter_models_v1',
-            target_format: 'tensorfeed_llm_ready_v1',
-            model_id: 'anthropic/claude-haiku-4.5',
-            provider: 'anthropic',
-            input_usd_per_million: 1.0,
-            output_usd_per_million: 5.0,
-            blended_5_to_1: 1.67,
-            context_length: 200000,
-            capabilities: { tools: true, vision: true, structured_outputs: true, reasoning: false },
-            modality: ['text', 'image'],
-            attribution: { source: 'OpenRouter model catalog', license: 'OpenRouter Terms of Service' },
-          },
-        },
-      },
-      schema: {
-        $schema: 'https://json-schema.org/draft/2020-12/schema',
-        type: 'object',
-        properties: {
-          input: {
-            type: 'object',
-            properties: {
-              type: { type: 'string', const: 'http' },
-              method: { type: 'string', enum: ['GET'] },
-              pathParams: {
-                type: 'object',
-                properties: { model_id: { type: 'string', description: 'OpenRouter model id, URL-encoded. Format: provider/model-slug.' } },
-                required: ['model_id'],
-              },
-            },
-            required: ['type', 'method'],
-            additionalProperties: false,
-          },
-          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
-        },
-        required: ['input'],
-      },
-      routeTemplate: '/api/premium/clean/openrouter/:model_id',
     },
   },
 };
@@ -5932,96 +5828,6 @@ const X402_INDEX_PUBLISHER_PILOT: BazaarPilotConfig = {
   },
 };
 
-const ECONOMY_SERIES_PILOT: BazaarPilotConfig = {
-  description:
-    'Full upstream history for any BLS or FRED economic series, normalized into a canonical observation shape with TensorFeed-computed YoY pairing per observation, 3-month and 12-month moving averages, min and max identification, and a 3-observation trend direction. Pass source (bls or fred) and the series id as two URL path segments. Free /api/economy/* caps at 24 (BLS) or 90 (FRED) observations; this is the full archive plus compute. FRED requires the FRED_API_KEY secret; BLS works keyless.',
-  extension: {
-    bazaar: {
-      info: {
-        input: {
-          type: 'http',
-          method: 'GET',
-          pathParams: { source: 'bls', id: 'LNS14000000' },
-        },
-        output: {
-          type: 'json',
-          example: {
-            ok: true,
-            source: 'bls',
-            series_id: 'LNS14000000',
-            computed_at: '2026-05-29T18:00:00Z',
-            observations_count: 120,
-            date_range: { from: '2016-05-01', to: '2026-04-01' },
-            observations: [
-              {
-                date: '2026-04-01',
-                period_label: 'Apr 2026',
-                value: 4.1,
-                yoy_pct: 5.13,
-                ma_3: 4.07,
-                ma_12: 3.98,
-              },
-            ],
-            summary: {
-              latest: {
-                date: '2026-04-01',
-                period_label: 'Apr 2026',
-                value: 4.1,
-                yoy_pct: 5.13,
-                ma_3: 4.07,
-                ma_12: 3.98,
-              },
-              min: null,
-              max: null,
-              trend_3obs: 'up',
-            },
-            attribution: {
-              source: 'U.S. Bureau of Labor Statistics',
-              source_url: 'https://www.bls.gov/data/',
-              license: 'Public domain (US Federal government work)',
-              derivation: 'Full upstream history with TF-computed YoY, 3 and 12 month moving averages, min/max, and 3-observation trend.',
-            },
-          },
-        },
-      },
-      schema: {
-        $schema: 'https://json-schema.org/draft/2020-12/schema',
-        type: 'object',
-        properties: {
-          input: {
-            type: 'object',
-            properties: {
-              type: { type: 'string', const: 'http' },
-              method: { type: 'string', enum: ['GET'] },
-              pathParams: {
-                type: 'object',
-                properties: {
-                  source: {
-                    type: 'string',
-                    enum: ['bls', 'fred'],
-                    description: 'Upstream data source: bls or fred. Case-insensitive.',
-                  },
-                  id: {
-                    type: 'string',
-                    description:
-                      'Series id, 2 to 40 chars of [A-Z0-9_-], case-insensitive (e.g. LNS14000000 for BLS, CPIAUCSL for FRED).',
-                  },
-                },
-                required: ['source', 'id'],
-              },
-            },
-            required: ['type', 'method'],
-            additionalProperties: false,
-          },
-          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
-        },
-        required: ['input'],
-      },
-      routeTemplate: '/api/premium/economy/series/:source/:id',
-    },
-  },
-};
-
 /**
  * Wave 30 (2026-06-02): AI Crawler Access Map. The robots.txt policy feed.
  * /api/premium/ai-crawler-access/full returns every tracked domain with its
@@ -6322,7 +6128,6 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/research/citation-velocity': RESEARCH_CITATION_VELOCITY_PILOT,
   '/api/premium/research/milestones': RESEARCH_MILESTONES_PILOT,
   '/api/premium/research/emerging-keywords': RESEARCH_EMERGING_KEYWORDS_PILOT,
-  '/api/premium/economy/recession-watch': RECESSION_WATCH_PILOT,
   '/api/premium/policy/timeline': POLICY_TIMELINE_PILOT,
   '/api/premium/apis-guru/ai-feed': APIS_GURU_AI_PILOT,
   // Wave 3
@@ -6383,7 +6188,6 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/clean/cve/:id': CLEAN_CVE_PILOT,
   '/api/premium/clean/kev/:id': CLEAN_KEV_PILOT,
   '/api/premium/clean/epss/:id': CLEAN_EPSS_PILOT,
-  '/api/premium/clean/openrouter/:model_id': CLEAN_OPENROUTER_PILOT,
   '/api/premium/security/verified/:id': SECURITY_VERIFIED_PILOT,
   // Wave 19 (2026-05-27): per-ticker AI-company envelope. Shipped the same
   // day Robinhood Agentic Trading launched, which gives third-party AI
@@ -6442,7 +6246,6 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/agents/leaderboard/full': AGENTS_LEADERBOARD_FULL_PILOT,
   '/api/premium/jobs': JOBS_PILOT,
   '/api/premium/x402-index/publisher/:domain': X402_INDEX_PUBLISHER_PILOT,
-  '/api/premium/economy/series/:source/:id': ECONOMY_SERIES_PILOT,
   // Wave 30 (2026-06-02): AI Crawler Access Map. robots.txt policy per AI bot
   // across curated domains, plus llms.txt and ai.txt presence. Full is the
   // flat per-domain dataset; changes is the strict-premium flip log.

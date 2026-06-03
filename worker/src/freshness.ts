@@ -81,7 +81,6 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/whats-new/pro': { maxAgeSeconds: 6 * 60 * 60 },
   // Macro digest: synthesis over BLS + FRED daily snapshots. 24h matches
   // the cadence of underlying data (BLS daily 05:00 UTC, FRED 05:30 UTC).
-  '/api/premium/macro/digest': { maxAgeSeconds: 24 * 60 * 60 },
   // Policy timeline: pure compute over an editorial registry that updates
   // on redeploy. No staleness signal applies; classified as historical
   // immutable (the relative-to-now math runs at request time).
@@ -89,7 +88,6 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // Economy series history: per-request live fetch with 6h KV cache.
   // 6h matches the cache TTL so the staleness check never fires false
   // positives during normal operation.
-  '/api/premium/economy/series': { maxAgeSeconds: 6 * 60 * 60 },
   // Packages momentum: synthesis over the daily /api/packages/pypi
   // snapshot. 24h matches the cron cadence.
   '/api/premium/packages/pypi/momentum': { maxAgeSeconds: 24 * 60 * 60 },
@@ -119,7 +117,6 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/funding/federal/momentum': { maxAgeSeconds: 36 * 60 * 60 },
   // Recession watch: synthesis over BLS + FRED daily snapshots. 24h
   // matches the cron cadence of underlying data.
-  '/api/premium/economy/recession-watch': { maxAgeSeconds: 24 * 60 * 60 },
   // Model-deprecations timeline: pure compute over a hand-curated registry
   // that updates on redeploy. No staleness signal applies; the relative-to-
   // now math runs at request time. Same shape as policy/timeline.
@@ -190,14 +187,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/security/kev/series': NULL_SLA,
   '/api/premium/security/epss/series': { maxAgeSeconds: 36 * 60 * 60 },
   '/api/premium/security/epss/top': { maxAgeSeconds: 36 * 60 * 60 },
-  '/api/premium/climate/power/hourly': { maxAgeSeconds: 7 * 24 * 60 * 60 },
-  '/api/premium/health/fda/aggregate': { maxAgeSeconds: 24 * 60 * 60 },
   '/api/premium/clean/cve': NULL_SLA,
   '/api/premium/clean/kev': { maxAgeSeconds: 36 * 60 * 60 },
   '/api/premium/clean/epss': { maxAgeSeconds: 36 * 60 * 60 },
-  '/api/premium/clean/power/daily': { maxAgeSeconds: 7 * 24 * 60 * 60 },
-  '/api/premium/clean/eia/series': { maxAgeSeconds: 24 * 60 * 60 },
-  '/api/premium/clean/fda': { maxAgeSeconds: 24 * 60 * 60 },
   '/api/premium/history/news/clusters/full': NULL_SLA,
   '/api/premium/history/news/verified': NULL_SLA,
   '/api/premium/mcp/registry/series': NULL_SLA,
@@ -329,13 +321,10 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/agents/directory': 'cataloged data, refreshed ~24h',
     '/api/premium/news/search': 'news refreshes every 10 min',
     '/api/premium/whats-new': 'aggregates last 1-7 days of news + status',
-    '/api/premium/macro/digest': 'synthesis over BLS + FRED daily snapshots',
     '/api/premium/policy/timeline': 'compute over editorial registry, no staleness signal',
-    '/api/premium/economy/series': 'per-request live fetch with 6h KV cache',
     '/api/premium/packages/pypi/momentum': 'synthesis over the daily PyPI trending snapshot',
     '/api/premium/research/velocity': 'baseline + fresh 30-day OpenAlex fetch with 24h cache',
     '/api/premium/research/lab-productivity': 'offline Qwen extraction rolled up into 30/90/365-day lab counts; uploaded weekly',
-    '/api/premium/economy/recession-watch': 'synthesis over BLS + FRED daily snapshots',
     '/api/premium/history/pricing/series': 'historical immutable',
     '/api/premium/history/benchmarks/series': 'historical immutable',
     '/api/premium/history/status/uptime': 'historical immutable',
@@ -346,14 +335,9 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/security/kev/series': 'historical immutable',
     '/api/premium/security/epss/series': 'EPSS scores update daily at FIRST.org; SLA matches the 36h cache headroom',
     '/api/premium/security/epss/top': 'EPSS scores update daily at FIRST.org; SLA matches the 36h cache headroom',
-    '/api/premium/climate/power/hourly': 'NASA POWER lazy-proxy with 7-day KV cache; SLA matches cache TTL',
-    '/api/premium/health/fda/aggregate': 'OpenFDA lazy-proxy with 24h KV cache; SLA matches cache TTL',
     '/api/premium/clean/cve': 'LLM-ready transform of immutable CVE Record',
     '/api/premium/clean/kev': 'LLM-ready transform of CISA KEV catalog entry; SLA tracks the 36h KEV cron headroom',
     '/api/premium/clean/epss': 'LLM-ready transform of EPSS score; SLA tracks the 36h EPSS cache headroom',
-    '/api/premium/clean/power/daily': 'LLM-ready transform of NASA POWER point query; SLA tracks the 7d KV cache TTL',
-    '/api/premium/clean/eia/series': 'LLM-ready transform of EIA series; SLA tracks the 24h cache TTL',
-    '/api/premium/clean/fda': 'LLM-ready transform of OpenFDA query results; SLA tracks the 24h cache TTL',
     '/api/premium/history/news/clusters/full': 'historical immutable',
     '/api/premium/history/news/verified': 'historical immutable',
     '/api/premium/mcp/registry/series': 'historical immutable',

@@ -34,13 +34,6 @@ if (!TOKEN || !TOKEN.startsWith('tf_live_')) {
 const tests = [
   // New 2026-05-06 derived premium endpoints (the seven tonight)
   {
-    id: 'macro-digest',
-    name: 'Macro digest',
-    path: '/api/premium/macro/digest',
-    happyKeys: ['rates', 'inflation', 'employment', 'growth_money', 'fx_commodities', 'brief', 'attribution'],
-    okErrors: ['no_snapshots_yet'],
-  },
-  {
     id: 'policy-timeline',
     name: 'AI policy timeline',
     path: '/api/premium/policy/timeline',
@@ -55,43 +48,6 @@ const tests = [
     expectStatus: 400,
     expectBodyError: 'invalid_days_back',
     expectNoCharge: 'schema_validation_failure',
-  },
-  {
-    id: 'economy-series-bls',
-    name: 'Economy series history (BLS CPI)',
-    path: '/api/premium/economy/series/bls/CUUR0000SA0',
-    happyKeys: ['observations', 'summary', 'attribution', 'date_range'],
-    okErrors: ['series_not_found', 'upstream_fetch_failed'],
-  },
-  {
-    id: 'economy-series-fred',
-    name: 'Economy series history (FRED DFF)',
-    path: '/api/premium/economy/series/fred/DFF',
-    happyKeys: ['observations', 'summary', 'attribution', 'date_range'],
-    okErrors: ['fred_key_unset', 'series_not_found', 'upstream_fetch_failed'],
-  },
-  {
-    id: 'economy-series-bad-source',
-    name: 'Economy series invalid source',
-    path: '/api/premium/economy/series/cps/X',
-    expectStatus: 400,
-    expectBodyError: 'invalid_source',
-    expectNoCharge: 'schema_validation_failure',
-  },
-  {
-    id: 'economy-series-bad-id',
-    name: 'Economy series invalid series id',
-    path: '/api/premium/economy/series/bls/drop%20tables;',
-    expectStatus: 400,
-    expectBodyError: 'invalid_series_id',
-    expectNoCharge: 'schema_validation_failure',
-  },
-  {
-    id: 'recession-watch',
-    name: 'Recession watch',
-    path: '/api/premium/economy/recession-watch',
-    happyKeys: ['yield_curve', 'sahm_rule', 'composite', 'brief', 'attribution'],
-    okErrors: ['no_snapshots_yet'],
   },
   {
     id: 'research-velocity',

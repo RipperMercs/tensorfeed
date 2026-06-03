@@ -36,7 +36,6 @@ const PILOT_PATHS = [
   '/api/premium/research/citation-velocity',
   '/api/premium/research/milestones',
   '/api/premium/research/emerging-keywords',
-  '/api/premium/economy/recession-watch',
   '/api/premium/policy/timeline',
   '/api/premium/apis-guru/ai-feed',
   // Wave 3
@@ -83,7 +82,6 @@ const PILOT_PATHS = [
   '/api/premium/clean/cve/:id',
   '/api/premium/clean/kev/:id',
   '/api/premium/clean/epss/:id',
-  '/api/premium/clean/openrouter/:model_id',
   '/api/premium/security/verified/:id',
   // Wave 19 (per-ticker AI-company envelope: Robinhood Agentic Trading launch)
   '/api/premium/ai-companies/:ticker',
@@ -133,7 +131,6 @@ const PILOT_PATHS = [
   '/api/premium/agents/leaderboard/full',
   '/api/premium/jobs',
   '/api/premium/x402-index/publisher/:domain',
-  '/api/premium/economy/series/:source/:id',
   // Wave 30 (2026-06-02): AI Crawler Access Map (robots.txt policy + llms.txt/ai.txt)
   '/api/premium/ai-crawler-access/full',
   '/api/premium/ai-crawler-access/changes',
@@ -150,11 +147,9 @@ const WAVE_14_CONCRETE_PATHS: Array<{ concrete: string; template: string }> = [
   { concrete: '/api/premium/clean/cve/CVE-2024-3094', template: '/api/premium/clean/cve/:id' },
   { concrete: '/api/premium/clean/kev/CVE-2024-3094', template: '/api/premium/clean/kev/:id' },
   { concrete: '/api/premium/clean/epss/CVE-2026-44580', template: '/api/premium/clean/epss/:id' },
-  { concrete: '/api/premium/clean/openrouter/anthropic%2Fclaude-haiku-4.5', template: '/api/premium/clean/openrouter/:model_id' },
   { concrete: '/api/premium/security/verified/CVE-2024-3094', template: '/api/premium/security/verified/:id' },
   // Wave 29 (2026-05-30): parametric series. publisher (1 param), economy series (2 params).
   { concrete: '/api/premium/x402-index/publisher/tensorfeed.ai', template: '/api/premium/x402-index/publisher/:domain' },
-  { concrete: '/api/premium/economy/series/bls/LNS14000000', template: '/api/premium/economy/series/:source/:id' },
 ];
 
 // Premium paths that are intentionally NOT in BAZAAR_PILOTS. Used for
@@ -412,7 +407,6 @@ describe('Wave 2 pilot AJV validation', () => {
     '/api/premium/research/citation-velocity',
     '/api/premium/research/milestones',
     '/api/premium/research/emerging-keywords',
-    '/api/premium/economy/recession-watch',
     '/api/premium/policy/timeline',
     '/api/premium/apis-guru/ai-feed',
     // Wave 3 (2026-05-24)
@@ -653,7 +647,6 @@ describe('Wave 29 pilot AJV validation', () => {
     '/api/premium/agents/leaderboard/full',
     '/api/premium/jobs',
     '/api/premium/x402-index/publisher/:domain',
-    '/api/premium/economy/series/:source/:id',
   ];
 
   for (const path of wave29Paths) {

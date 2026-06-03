@@ -2099,75 +2099,6 @@ console.log(\`Confirmed by \${v.data.corroboration_count}/5 sources\`);`,
   },
 
   {
-    slug: 'premium-clean-openrouter',
-    name: 'Premium LLM-Ready OpenRouter Model',
-    path: '/api/premium/clean/openrouter/{model_id}',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'models',
-    seoTitle: 'TensorFeed OpenRouter Model API: One Model, 99% Token Reduction',
-    seoDescription:
-      'TensorFeed /api/premium/clean/openrouter/{model_id} returns one model from the 367-entry OpenRouter catalog as an LLM-ready fact card. Pricing per million tokens, capability flags, ~99.8% token reduction. 1 credit.',
-    intro:
-      'The /api/premium/clean/openrouter/{model_id} endpoint pulls one model from the daily OpenRouter catalog snapshot and returns an LLM-ready fact card. Pricing is normalized to USD per million tokens (the universal agent convention) with a derived blended_5_to_1 mix capturing the typical 5:1 input:output ratio. Capability flags (tools, vision, structured_outputs, reasoning, response_format) are extracted from supported_parameters + modality so agents can boolean-filter. is_free_tier and created_iso are pre-computed.',
-    whenToUse:
-      'When an agent needs facts about one specific model from the OpenRouter catalog (367+ entries, no per-id filter on the upstream public endpoint). Saves the ~270KB ingestion required to find one entry; delivers ~500B per call. The compression headline is the most dramatic in the suite.',
-    params: [
-      { name: 'model_id', in: 'path', required: true, type: 'string', description: 'OpenRouter catalog id with namespace, URL-encoded slash (e.g. anthropic%2Fclaude-haiku-4.5)', example: 'anthropic/claude-haiku-4.5' },
-    ],
-    exampleResponse: `{
-  "ok": true,
-  "source_format": "openrouter_v1_models",
-  "target_format": "tensorfeed_llm_ready_v1",
-  "compression_stats": { "source_bytes": 274816, "cleaned_bytes": 542, "reduction_pct": 99.8, "approx_tokens_saved": 67429 },
-  "data": {
-    "id": "anthropic/claude-haiku-4.5",
-    "name": "Anthropic Claude Haiku 4.5",
-    "namespace": "anthropic",
-    "context_length": 200000,
-    "modality": "text+image->text",
-    "pricing_per_million_tokens": { "prompt": 1, "completion": 5, "blended_5_to_1": 1.67, "image_per_image": null, "request_per_call": null },
-    "capabilities": { "tools": true, "vision": true, "structured_outputs": true, "reasoning": false, "response_format": true },
-    "max_output_tokens": 64000,
-    "is_moderated": true,
-    "is_free_tier": false,
-    "created_iso": "2026-04-15"
-  },
-  "catalog_meta": { "captured_at": "2026-05-09T14:00:00Z", "total_models_in_catalog": 367 },
-  "billing": { "credits_charged": 1, "credits_remaining": 49 }
-}`,
-    pythonExample: `from tensorfeed import TensorFeed
-
-tf = TensorFeed(token="tf_live_...")
-m = tf._get("/premium/clean/openrouter/anthropic/claude-haiku-4.5")
-p = m["data"]["pricing_per_million_tokens"]
-print(f"\${p['prompt']}/M input + \${p['completion']}/M output, {m['compression_stats']['approx_tokens_saved']} tokens saved")`,
-    typescriptExample: `const res = await fetch(
-  "https://tensorfeed.ai/api/premium/clean/openrouter/anthropic%2Fclaude-haiku-4.5",
-  { headers: { Authorization: "Bearer tf_live_..." } }
-);
-const m = await res.json();
-console.log(m.data.pricing_per_million_tokens.blended_5_to_1);`,
-    mcpTool: null,
-    relatedSlugs: ['premium-compare-models', 'premium-cost-projection'],
-    faqs: [
-      {
-        q: 'Why is blended_5_to_1 useful?',
-        a: 'Most agent workloads run a 5:1 input:output token ratio. Comparing models by prompt-only or completion-only price misses the real cost surface. blended_5_to_1 = prompt_per_million * (5/6) + completion_per_million * (1/6) and is what an agent should actually compare on.',
-      },
-      {
-        q: 'What if the model id is not in the catalog?',
-        a: 'Returns 404 with the requested id, the current catalog_size, and the captured_at timestamp echoed back so you can audit whether the model was removed in a recent snapshot or was never present. Use /api/openrouter/models to list the current catalog.',
-      },
-      {
-        q: 'How fresh is the snapshot?',
-        a: 'Captured daily at 14:00 UTC. The capturedAt field is included so agents can decide whether the freshness fits their use case. No staleness guarantee at the AFTA level (catalog moves slowly enough that 24h freshness is adequate).',
-      },
-    ],
-  },
-
-  {
     slug: 'premium-history-news-verified',
     name: 'Premium Verified News Feed',
     path: '/api/premium/history/news/verified',
@@ -2585,28 +2516,6 @@ console.log(lb.leaderboard.slice(0, 5));`,
     relatedSlugs: ['premium-history-status-uptime', 'premium-status-leaderboard'],
     faqs: [
       { q: 'What is the budget cap?', a: 'Each probe invocation has a per-provider daily budget; once exhausted, samples drop to zero for that day. Budget consumption is reported alongside the latency stats.' },
-    ],
-  },
-  {
-    slug: 'premium-economy-recession-watch',
-    name: 'Premium Recession Watch',
-    path: '/api/premium/economy/recession-watch',
-    method: 'GET',
-    tier: 'premium',
-    cost: '1 credit',
-    category: 'macro',
-    seoTitle: 'TensorFeed Recession Watch API: Composite Recession Probability',
-    seoDescription: 'TensorFeed /api/premium/economy/recession-watch composes BLS + FRED indicators into a recession-probability fact card.',
-    intro: 'Composite recession-watch indicator built on top of BLS unemployment, JOLTS, claims, and FRED yield-curve data. Returns probability score (0-100), regime classification, and the contributing series.',
-    whenToUse: 'For agents that need a one-shot "recession risk" signal instead of pulling 8 raw FRED/BLS series and computing the composite themselves.',
-    params: [],
-    exampleResponse: `{ "ok": true, "as_of": "2026-05-08", "probability_pct": 23, "regime": "expansion", "components": { "yield_curve_inversion": false, "unemployment_trend": "flat", "claims_trend": "rising_slow" }, "billing": { "credits_charged": 1, "credits_remaining": 49 } }`,
-    pythonExample: `tf._get("/premium/economy/recession-watch")`,
-    typescriptExample: `await fetch("https://tensorfeed.ai/api/premium/economy/recession-watch", { headers: { Authorization: "Bearer tf_live_..." } });`,
-    mcpTool: null,
-    relatedSlugs: ['premium-policy-timeline'],
-    faqs: [
-      { q: 'What is the methodology?', a: 'Heuristic composite of yield-curve inversion (T10Y2Y), Sahm-rule unemployment trigger, claims trend, JOLTS hires/separations, and PMI direction. Documented in worker/src/recession-watch.ts.' },
     ],
   },
   {
