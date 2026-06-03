@@ -20,6 +20,7 @@
 
 import { privateKeyToAccount } from 'viem/accounts';
 import { randomBytes } from 'crypto';
+import { internalHeaders } from './_tf-internal.mjs';
 
 const TYPES = {
   TransferWithAuthorization: [
@@ -59,7 +60,7 @@ async function main() {
   const probeUrl = args.endpoint + args.query;
   console.log('=== Step 1: probing for 402 ===');
   console.log('GET', probeUrl);
-  const probe = await fetch(probeUrl, { method: 'GET', headers: { 'User-Agent': 'tf-cross-host-smoke/1.0' } });
+  const probe = await fetch(probeUrl, { method: 'GET', headers: { 'User-Agent': 'tf-cross-host-smoke/1.0', ...internalHeaders(probeUrl) } });
   console.log('HTTP', probe.status);
   if (probe.status !== 402) {
     console.error(`Expected 402, got ${probe.status}. Body:`);
@@ -142,7 +143,7 @@ async function main() {
   const t0 = Date.now();
   const res = await fetch(probeUrl, {
     method: 'GET',
-    headers: { 'X-PAYMENT': xPaymentHeader, 'User-Agent': 'tf-cross-host-smoke/1.0' },
+    headers: { 'X-PAYMENT': xPaymentHeader, 'User-Agent': 'tf-cross-host-smoke/1.0', ...internalHeaders(probeUrl) },
   });
   const elapsed = Date.now() - t0;
   console.log(`\nHTTP ${res.status} (${elapsed} ms)`);

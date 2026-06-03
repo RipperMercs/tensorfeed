@@ -11,6 +11,8 @@
  * Endpoints with path params get a known-valid substitution.
  */
 
+import { internalHeaders } from './_tf-internal.mjs';
+
 const BASE = 'https://tensorfeed.ai';
 
 const ENDPOINTS = [
@@ -68,7 +70,7 @@ async function audit(path) {
   try {
     const res = await fetch(url, {
       method: 'GET',
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', ...internalHeaders(url) },
       redirect: 'manual',
     });
     const status = res.status;

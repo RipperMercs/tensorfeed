@@ -43,6 +43,7 @@
 
 import { privateKeyToAccount } from 'viem/accounts';
 import { randomBytes } from 'crypto';
+import { internalHeaders } from './_tf-internal.mjs';
 
 // eip155:<chainId> -> chain id integer. The 402 carries the CAIP-2
 // network string; we only need the integer for the EIP-712 domain.
@@ -89,7 +90,7 @@ function usage() {
 async function read402(endpoint) {
   const res = await fetch(endpoint, {
     method: 'GET',
-    headers: { 'User-Agent': 'tensorfeed-x402-catalog-settle/1.0' },
+    headers: { 'User-Agent': 'tensorfeed-x402-catalog-settle/1.0', ...internalHeaders(endpoint) },
   });
   if (res.status !== 402) {
     const txt = await res.text().catch(() => '');
@@ -213,7 +214,7 @@ async function settleOne(endpoint, account, dryRun) {
   const t0 = Date.now();
   const res = await fetch(endpoint, {
     method: 'GET',
-    headers: { 'X-PAYMENT': xPayment, 'User-Agent': 'tensorfeed-x402-catalog-settle/1.0' },
+    headers: { 'X-PAYMENT': xPayment, 'User-Agent': 'tensorfeed-x402-catalog-settle/1.0', ...internalHeaders(endpoint) },
   });
   const ms = Date.now() - t0;
   console.log(`  HTTP ${res.status} (${ms} ms)`);

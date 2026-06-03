@@ -30,6 +30,7 @@
 
 import { privateKeyToAccount } from 'viem/accounts';
 import { randomBytes } from 'crypto';
+import { internalHeaders } from './_tf-internal.mjs';
 
 // Domain `name` differs per chain on the deployed Circle USDC contracts:
 //   - Base mainnet  USDC.name() = "USD Coin"
@@ -298,7 +299,7 @@ async function main() {
   const t0 = Date.now();
   const res = await fetch(args.endpoint, {
     method: 'GET',
-    headers: { 'X-PAYMENT': xPaymentHeader, 'User-Agent': 'tensorfeed-x402-smoke-test/1.0' },
+    headers: { 'X-PAYMENT': xPaymentHeader, 'User-Agent': 'tensorfeed-x402-smoke-test/1.0', ...internalHeaders(args.endpoint) },
   });
   const elapsed = Date.now() - t0;
   console.log(`\nHTTP ${res.status} (${elapsed} ms)`);

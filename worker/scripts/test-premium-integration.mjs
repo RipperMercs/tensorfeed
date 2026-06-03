@@ -19,6 +19,8 @@
 // (correct behavior pre-snapshot). Happy-path verification requires
 // snapshots to be populated (rerun after 06:00 UTC).
 
+import { internalHeaders } from './_tf-internal.mjs';
+
 const TOKEN = process.argv[2];
 const BASE = process.argv[3] || process.env.TF_BASE || 'https://tensorfeed.ai';
 
@@ -196,7 +198,7 @@ async function runOne(t) {
   let res, body;
   try {
     res = await fetch(url, {
-      headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json', ...internalHeaders(url) },
     });
     const text = await res.text();
     try {
@@ -238,7 +240,7 @@ async function runOne(t) {
   if (res.status === 503) {
     const errStr = body.error || '';
     if (t.okErrors.includes(errStr)) {
-      return { id: t.id, name: t.name, pass: true, reason: `503 (${errStr}) — expected pre-snapshot`, ms, awaitingData: true };
+      return { id: t.id, name: t.name, pass: true, reason: `503 (${errStr}), expected pre-snapshot`, ms, awaitingData: true };
     }
     return { id: t.id, name: t.name, pass: false, reason: `503 with unexpected error: ${errStr}`, ms, body };
   }
@@ -246,7 +248,7 @@ async function runOne(t) {
     // Some validation paths arrive at non-validation endpoints; check ok-errors
     const errStr = body.error || '';
     if (t.okErrors.includes(errStr)) {
-      return { id: t.id, name: t.name, pass: true, reason: `${res.status} (${errStr}) — expected`, ms, awaitingData: true };
+      return { id: t.id, name: t.name, pass: true, reason: `${res.status} (${errStr}), expected`, ms, awaitingData: true };
     }
     return { id: t.id, name: t.name, pass: false, reason: `unexpected ${res.status}: ${errStr || body._raw || 'no body'}`, ms, body };
   }
@@ -304,7 +306,7 @@ const fails = results.filter(r => !r.pass).length;
 console.log();
 console.log(color(`Results: ${passes}/${results.length} passing  (${awaits} awaiting overnight cron data)`, 'bold'));
 if (fails > 0) {
-  console.log(color(`        ${fails} failed — see output above`, 'red'));
+  console.log(color(`        ${fails} failed, see output above`, 'red'));
   process.exit(1);
 }
 process.exit(0);
