@@ -1160,6 +1160,8 @@ export interface TensorFeedOptions {
   /** Bearer token for premium endpoints. Auto-set after a successful confirm(). */
   token?: string;
   userAgent?: string;
+  /** Per-request timeout in milliseconds. Defaults to 15000 (matches the Python SDK). */
+  timeoutMs?: number;
 }
 
 // ── Client ──────────────────────────────────────────────────────────
@@ -1167,6 +1169,7 @@ export interface TensorFeedOptions {
 export class TensorFeed {
   private baseUrl: string;
   private userAgent: string;
+  private timeoutMs: number;
   /** Bearer token used on premium endpoints and balance(). Mutable so confirm() can populate it. */
   public token: string | undefined;
 
@@ -1174,6 +1177,7 @@ export class TensorFeed {
     this.baseUrl = options?.baseUrl ?? DEFAULT_BASE_URL;
     this.token = options?.token;
     this.userAgent = options?.userAgent ?? DEFAULT_USER_AGENT;
+    this.timeoutMs = options?.timeoutMs ?? 15000;
   }
 
   private async request<T>(
@@ -1206,7 +1210,22 @@ export class TensorFeed {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const res = await fetch(url, { method, headers, body });
+    let res: Response;
+    try {
+      res = await fetch(url, { method, headers, body, signal: AbortSignal.timeout(this.timeoutMs) });
+    } catch (err) {
+      // AbortSignal.timeout fires a TimeoutError; a dropped connection fires a
+      // TypeError. Surface both as TensorFeedError(0, ...) so callers get the
+      // SDK's own error type (with statusCode 0 = no HTTP response) instead of
+      // a raw DOMException, and never hang indefinitely on a stalled request.
+      const isTimeout = err instanceof Error && err.name === 'TimeoutError';
+      throw new TensorFeedError(0, {
+        error: isTimeout ? 'timeout' : 'network_error',
+        message: isTimeout
+          ? `request to ${path} timed out after ${this.timeoutMs}ms`
+          : `network error calling ${path}: ${err instanceof Error ? err.message : String(err)}`,
+      });
+    }
     let payload: unknown;
     try {
       payload = await res.json();
