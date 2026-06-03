@@ -1158,6 +1158,32 @@ const ENDPOINTS: Endpoint[] = [
   "source_attribution": "TensorFeed AI Crawler Access Map. Daily rolling crawl of curated domains, parsing public robots.txt, llms.txt, and ai.txt. We report stated policy, not enforcement."
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/ai-crawler-access/check',
+    description:
+      'Live, on-demand robots.txt verdict for any public domain that is not already in the tracked set. We crawl the domain at request time, parse its robots.txt, llms.txt, and ai.txt, and return the same per-bot record shape as the site endpoint (allowed, blocked, partial, or unknown). This reflects stated robots.txt policy, not bot traffic and not enforcement. Result is cached for one hour per domain. Pass a bare registrable hostname such as example.com; IP literals and internal hosts are rejected.',
+    params: '?domain=example.com',
+    cache: 'Cache for 1 hour',
+    example: `// Query: ?domain=example.com
+{
+  "ok": true,
+  "domain": "example.com",
+  "found": true,
+  "tracked": false,
+  "record": {
+    "domain": "example.com",
+    "sector": "on-demand",
+    "checkedAt": "2026-06-02T14:21:09Z",
+    "robotsStatus": 200,
+    "bots": { "GPTBot": "allowed", "ClaudeBot": "allowed", "CCBot": "blocked" },
+    "hasLlmsTxt": false,
+    "hasAiTxt": false,
+    "llmsTxtBytes": null
+  },
+  "source_attribution": "TensorFeed AI Crawler Access Map. Live robots.txt, llms.txt, and ai.txt crawl. We report stated policy, not enforcement."
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news

@@ -2,7 +2,18 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Shield, FileText, Search, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import {
+  Shield,
+  FileText,
+  Search,
+  ExternalLink,
+  ShieldCheck,
+  ShieldX,
+  ShieldAlert,
+  HelpCircle,
+} from 'lucide-react';
+import { CRAWLER_DOMAIN_SET } from '@/data/ai-crawler-access/domains';
 
 // Mirrors the worker SummaryResponse envelope from
 // worker/src/premium-ai-crawler-access.ts. Keep these in lockstep: if the
@@ -54,6 +65,38 @@ const SECTOR_LABELS: Record<string, string> = {
   publishing: 'Publishing',
 };
 
+// Verdict styling for the inline live-check result. Mirrors the per-domain
+// SiteVerdictClient so a freshly crawled untracked domain reads identically to
+// a tracked one.
+const VERDICT_META: Record<
+  string,
+  { label: string; dot: string; text: string; Icon: typeof ShieldCheck }
+> = {
+  allowed: { label: 'Allowed', dot: 'bg-accent-green', text: 'text-accent-green', Icon: ShieldCheck },
+  blocked: { label: 'Blocked', dot: 'bg-accent-red', text: 'text-accent-red', Icon: ShieldX },
+  partial: { label: 'Partial', dot: 'bg-accent-amber', text: 'text-accent-amber', Icon: ShieldAlert },
+  unknown: { label: 'Unknown', dot: 'bg-text-muted', text: 'text-text-muted', Icon: HelpCircle },
+};
+
+function verdictMeta(v: string) {
+  return VERDICT_META[v] || VERDICT_META.unknown;
+}
+
+// Shape of the /api/ai-crawler-access/check response (untracked domains only).
+interface CheckRecord {
+  bots: Record<string, string>;
+  hasLlmsTxt: boolean;
+  hasAiTxt: boolean;
+}
+
+interface CheckResponse {
+  ok: boolean;
+  domain: string;
+  found: boolean;
+  tracked: boolean;
+  record: CheckRecord;
+}
+
 function metaFor(bot: string) {
   return BOT_META[bot] || { color: 'var(--accent-primary)', vendor: 'Unknown' };
 }
@@ -74,10 +117,14 @@ function formatCapturedAt(iso: string | null): string {
 }
 
 export default function AICrawlerAccessClient() {
+  const router = useRouter();
   const [data, setData] = useState<SummaryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [domainQuery, setDomainQuery] = useState('');
+  const [check, setCheck] = useState<CheckResponse | null>(null);
+  const [checkErr, setCheckErr] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,9 +181,40 @@ export default function AICrawlerAccessClient() {
     .replace(/^https?:\/\//, '')
     .replace(/^www\./, '')
     .replace(/\/.*$/, '');
-  const siteHref = cleanDomain
-    ? `https://tensorfeed.ai/api/ai-crawler-access/site?domain=${encodeURIComponent(cleanDomain)}`
-    : null;
+
+  // Hybrid lookup. A domain already in the tracked set routes to its static,
+  // indexable per-domain page. Anything else is crawled live on demand through
+  // the free /check endpoint and rendered inline, labeled as not tracked.
+  async function onCheck() {
+    const d = cleanDomain;
+    if (!d) return;
+    if (CRAWLER_DOMAIN_SET.has(d)) {
+      router.push(`/ai-crawler-access/${d}`);
+      return;
+    }
+    setCheck(null);
+    setCheckErr(null);
+    setChecking(true);
+    try {
+      const res = await fetch(
+        `https://tensorfeed.ai/api/ai-crawler-access/check?domain=${encodeURIComponent(d)}`,
+        { cache: 'no-store' },
+      );
+      if (!res.ok) {
+        setCheckErr(
+          res.status === 400
+            ? 'Enter a valid public domain (for example, example.com).'
+            : `HTTP ${res.status}`,
+        );
+        return;
+      }
+      setCheck((await res.json()) as CheckResponse);
+    } catch {
+      setCheckErr('Live check failed, try again.');
+    } finally {
+      setChecking(false);
+    }
+  }
 
   if (loading && !data) {
     return <SkeletonState />;
@@ -318,26 +396,27 @@ export default function AICrawlerAccessClient() {
         )}
       </section>
 
-      {/* Per-site lookup */}
+      {/* Check your site (hybrid lookup) */}
       <section>
         <h2 className="text-text-primary font-semibold text-lg mb-1 flex items-center gap-2">
           <Search className="w-4 h-4 text-accent-primary" />
-          Look up one domain
+          Check any site
         </h2>
         <p className="text-text-muted text-xs mb-4">
-          Pull the per-bot robots.txt verdict plus llms.txt and ai.txt presence for a single tracked
-          domain. Returns the raw JSON record.
+          Type a domain to see which AI bots it allows or blocks in robots.txt, plus llms.txt and
+          ai.txt presence. If it is in the tracked set you go straight to its page; if not, we crawl
+          it live right here. We report stated policy, not enforcement.
         </p>
         <div className="bg-bg-secondary border border-border rounded-xl p-4">
           <form
             className="flex flex-col sm:flex-row gap-3"
             onSubmit={(e) => {
               e.preventDefault();
-              if (siteHref) window.open(siteHref, '_blank', 'noopener,noreferrer');
+              void onCheck();
             }}
           >
             <label htmlFor="domain-lookup" className="sr-only">
-              Domain to look up
+              Domain to check
             </label>
             <input
               id="domain-lookup"
@@ -348,27 +427,92 @@ export default function AICrawlerAccessClient() {
               onChange={(e) => setDomainQuery(e.target.value)}
               className="flex-1 bg-bg-tertiary border border-border rounded-lg px-3 py-2 text-sm text-text-primary font-mono placeholder:text-text-muted focus:outline-none focus:border-accent-primary"
             />
-            <a
-              href={siteHref || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-disabled={!siteHref}
+            <button
+              type="submit"
+              disabled={!cleanDomain || checking}
               className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                siteHref
+                cleanDomain && !checking
                   ? 'bg-accent-primary text-bg-primary hover:opacity-90'
-                  : 'bg-bg-tertiary text-text-muted pointer-events-none'
+                  : 'bg-bg-tertiary text-text-muted cursor-not-allowed'
               }`}
-              onClick={(e) => {
-                if (!siteHref) e.preventDefault();
-              }}
             >
-              Look up
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+              {checking ? 'Crawling...' : 'Check'}
+              <Search className="w-3.5 h-3.5" />
+            </button>
           </form>
-          {cleanDomain && (
+
+          {checkErr && (
+            <p className="text-accent-red text-xs mt-3" role="alert">
+              {checkErr}
+            </p>
+          )}
+
+          {check && check.record && (
+            <div className="mt-4 border-t border-border pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <span className="text-text-primary font-mono text-sm break-all">{check.domain}</span>
+                <span className="text-text-muted text-[11px] inline-flex items-center gap-1.5">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent-green" />
+                  </span>
+                  Not in the tracked set; crawled live just now.
+                </span>
+              </div>
+              <div className="bg-bg-tertiary/40 border border-border rounded-lg overflow-hidden">
+                {Object.entries(check.record.bots)
+                  .sort((a, b) => a[0].localeCompare(b[0]))
+                  .map(([bot, verdict], idx) => {
+                    const meta = verdictMeta(verdict);
+                    const Icon = meta.Icon;
+                    return (
+                      <div
+                        key={bot}
+                        className={`flex items-center justify-between gap-3 px-4 py-2.5 ${
+                          idx > 0 ? 'border-t border-border' : ''
+                        }`}
+                      >
+                        <span className="text-text-primary font-mono text-sm truncate">{bot}</span>
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-sm font-medium ${meta.text}`}
+                        >
+                          <Icon className="w-3.5 h-3.5" aria-hidden />
+                          <span
+                            className={`w-2 h-2 rounded-full ${meta.dot} flex-shrink-0`}
+                            aria-hidden
+                          />
+                          {meta.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+              <div className="flex flex-wrap gap-3 mt-3 text-xs">
+                <span
+                  className={`inline-flex items-center gap-1.5 ${
+                    check.record.hasLlmsTxt ? 'text-accent-green' : 'text-text-muted'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" aria-hidden />
+                  llms.txt {check.record.hasLlmsTxt ? 'present' : 'absent'}
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1.5 ${
+                    check.record.hasAiTxt ? 'text-accent-green' : 'text-text-muted'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" aria-hidden />
+                  ai.txt {check.record.hasAiTxt ? 'present' : 'absent'}
+                </span>
+              </div>
+              <p className="text-text-muted text-[11px] mt-3 font-mono break-all">
+                GET /api/ai-crawler-access/check?domain={check.domain}
+              </p>
+            </div>
+          )}
+
+          {cleanDomain && !check && !checkErr && (
             <p className="text-text-muted text-xs mt-3 font-mono break-all">
-              GET /api/ai-crawler-access/site?domain={cleanDomain}
+              GET /api/ai-crawler-access/check?domain={cleanDomain}
             </p>
           )}
         </div>

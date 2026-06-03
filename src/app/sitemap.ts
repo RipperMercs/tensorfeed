@@ -7,6 +7,7 @@ import { getAllApiRefSlugs } from '@/lib/api-reference-directory';
 import { getAllHarnessSlugs } from '@/lib/harness-directory';
 import { getActiveCategoryIds } from '@/data/gear/products';
 import { AI_COMPANIES } from '@/data/ai-companies/companies';
+import { CRAWLER_DOMAINS } from '@/data/ai-crawler-access/domains';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://tensorfeed.ai';
@@ -69,6 +70,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.75,
     })
   );
+
+  // Per-domain AI crawler access pages (one static page per tracked domain)
+  const crawlerDomainPages: MetadataRoute.Sitemap = CRAWLER_DOMAINS.map(d => ({
+    url: `${baseUrl}/ai-crawler-access/${d.domain}`,
+    lastModified: now,
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }));
 
   return [
     // Core pages (update frequently)
@@ -377,6 +386,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/datasets`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${baseUrl}/agent-traffic`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
     { url: `${baseUrl}/ai-crawler-access`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
+    ...crawlerDomainPages,
     { url: `${baseUrl}/glossary`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/glossary/x402`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${baseUrl}/glossary/mcp`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },

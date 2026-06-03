@@ -5,6 +5,7 @@ import { DatasetJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd } from '@/components
 import MachineReadableLink from '@/components/MachineReadableLink';
 import LastUpdatedFooter from '@/components/LastUpdatedFooter';
 import AICrawlerAccessClient from './AICrawlerAccessClient';
+import { CRAWLER_DOMAINS } from '@/data/ai-crawler-access/domains';
 
 const TRACKED_BOTS = [
   'GPTBot',
@@ -66,6 +67,35 @@ const FAQS = [
   },
 ];
 
+const SECTOR_LABELS: Record<string, string> = {
+  'ai-media': 'AI media',
+  'dev-docs': 'Developer docs',
+  saas: 'SaaS',
+  'ai-company': 'AI companies',
+  ecommerce: 'E-commerce',
+  reference: 'Reference',
+  government: 'Government',
+  publishing: 'Publishing',
+};
+
+// Group the tracked domains by sector once, sorted by size then name, so the
+// hub renders a stable, crawlable index that links to all per-domain pages.
+function domainsBySector(): { sector: string; label: string; domains: string[] }[] {
+  const groups = new Map<string, string[]>();
+  for (const d of CRAWLER_DOMAINS) {
+    const list = groups.get(d.sector) || [];
+    list.push(d.domain);
+    groups.set(d.sector, list);
+  }
+  return Array.from(groups.entries())
+    .map(([sector, domains]) => ({
+      sector,
+      label: SECTOR_LABELS[sector] || sector,
+      domains: domains.sort((a, b) => a.localeCompare(b)),
+    }))
+    .sort((a, b) => b.domains.length - a.domains.length || a.label.localeCompare(b.label));
+}
+
 export const metadata: Metadata = {
   title: 'AI Crawler Access Map: Who Blocks GPTBot, ClaudeBot, PerplexityBot | TensorFeed',
   description:
@@ -101,6 +131,7 @@ export const metadata: Metadata = {
 };
 
 export default function AICrawlerAccessPage() {
+  const sectorGroups = domainsBySector();
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <DatasetJsonLd
@@ -218,6 +249,44 @@ export default function AICrawlerAccessPage() {
               moment you called.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* By-sector index. Internal links to every tracked per-domain page so the
+          full set is crawlable from the hub. Grouped by sector for scannability. */}
+      <section className="mt-12 border-t border-bg-tertiary pt-8">
+        <h2 className="text-xl font-semibold text-text-primary mb-2 flex items-center gap-2">
+          <Bot className="w-5 h-5 text-accent-primary" />
+          Every tracked domain, by sector
+        </h2>
+        <p className="text-text-muted text-sm mb-6 max-w-3xl">
+          Each domain below has its own page with the live per-bot robots.txt verdict plus llms.txt
+          and ai.txt status. Looking for a site that is not here? Use the check tool above to crawl
+          it live.
+        </p>
+        <div className="space-y-8">
+          {sectorGroups.map((group) => (
+            <div key={group.sector}>
+              <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
+                {group.label}
+                <span className="text-text-muted text-xs font-mono font-normal">
+                  {group.domains.length}
+                </span>
+              </h3>
+              <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1.5">
+                {group.domains.map((domain) => (
+                  <li key={domain}>
+                    <Link
+                      href={`/ai-crawler-access/${domain}`}
+                      className="text-text-secondary hover:text-accent-primary text-xs font-mono break-all transition-colors"
+                    >
+                      {domain}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </section>
 
