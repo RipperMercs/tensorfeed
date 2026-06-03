@@ -4673,6 +4673,7 @@ export default {
           agentReadySummary: '/api/agent-ready/summary.json (free; agentic-web readiness across curated domains: per-surface adoption (x402 manifest, agent.json, openapi, llms.txt, AI-bot-crawlable, ai.txt), readiness-tier distribution, and a top-25 leaderboard. Derived from the crawler-access crawl. No parameters.)',
           agentReadySite: '/api/agent-ready/site?domain= (free; per-domain agent-readiness profile: a transparent 0-100 score, tier, and which agent surfaces the site exposes. Required param: domain.)',
           premiumAgentReadyFull: '/api/premium/agent-ready/full (1 credit, AFTA-signed; full per-domain agent-readiness dataset with scores and surface flags. 8-day freshness SLA, no-charge when stale.)',
+          premiumHfLeaderboardMovers: '/api/premium/hf-leaderboard/movers?window= (1 credit, AFTA-signed, strict-premium; period-over-period movers on the Open LLM Leaderboard v2 from TF dated snapshots: rank climbers and fallers, score deltas, models entered and exited, new per-benchmark leaders, license changes. Optional window in days, default 7. 36h SLA, no-charge under two captured days.)',
         },
         admin: {
           usage: '/api/admin/usage?window=today|7d|30d&key=<ADMIN_KEY> (paid summary + AE funnel when provisioned; legacy ?date=YYYY-MM-DD still returns one day raw rollup)',

@@ -16931,6 +16931,38 @@
         "credits": 1,
         "category": "agent-ready"
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/hf-leaderboard/movers",
+        "description": "Period-over-period movers on the Hugging Face Open LLM Leaderboard v2, diffed from TensorFeed dated snapshots: rank climbers and fallers, average and per-benchmark score deltas, models entered and exited, new per-benchmark leaders, and license changes. Optional window in days (default 7). The live board shows only today.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-06-02T00:00:00Z",
+      "metadata": {
+        "name": "HF Leaderboard Movers",
+        "description": "Period-over-period movers on the Open LLM Leaderboard v2: rank climbers and fallers, score deltas, models entered and exited, new per-benchmark leaders, and license changes. Optional window in days (default 7). Free current-state preview at /api/hf-leaderboard/latest.",
+        "tier": 1,
+        "credits": 1,
+        "category": "research"
+      }
     }
   ],
   "freeEndpoints": [

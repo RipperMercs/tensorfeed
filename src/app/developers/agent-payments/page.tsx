@@ -518,6 +518,28 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/hf-leaderboard/movers',
+    description:
+      'Period-over-period movers on the Hugging Face Open LLM Leaderboard v2, diffed from TensorFeed dated snapshots: rank climbers and fallers, average and per-benchmark score deltas, models entered and exited, new per-benchmark leaders, and license changes. Optional window in days (default 7, 1 to 90). The live board shows only today; this is what moved between two captured days.',
+    cost: '1 credit per call',
+    example: `// Query: ?window=7
+{
+  "ok": true,
+  "captured_at": "2026-06-03",
+  "from_date": "2026-05-27",
+  "to_date": "2026-06-03",
+  "window_days": 7,
+  "has_data": true,
+  "rank_climbers": [
+    { "model_id": "org/model-a", "from_rank": 12, "to_rank": 5, "rank_change": 7, "average_change": 2.6 }
+  ],
+  "new_leaders": [
+    { "benchmark": "math_lvl_5", "model_id": "org/model-a", "score": 38.4, "prev_leader": "org/model-b" }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/history/status/uptime',
     description: 'Daily status rollup for one provider over a date range. Returns operational/degraded/down day counts plus uptime % (degraded counts as half-credit). Missing-data days are excluded from the denominator.',
     cost: '1 credit per call',
