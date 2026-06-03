@@ -177,11 +177,11 @@ async function fetchText(domain: string, file: string): Promise<{ status: number
   }
 }
 
-async function crawlDomain(seed: { domain: string; sector: string }, at: string): Promise<DomainRecord> {
+export async function crawlSite(domain: string, sector: string, at: string): Promise<DomainRecord> {
   const [robots, llms, ai] = await Promise.all([
-    fetchText(seed.domain, 'robots.txt'),
-    fetchText(seed.domain, 'llms.txt'),
-    fetchText(seed.domain, 'ai.txt'),
+    fetchText(domain, 'robots.txt'),
+    fetchText(domain, 'llms.txt'),
+    fetchText(domain, 'ai.txt'),
   ]);
   const bots: Record<string, BotVerdict> = {};
   if (robots.body !== null) {
@@ -191,8 +191,8 @@ async function crawlDomain(seed: { domain: string; sector: string }, at: string)
     for (const bot of TRACKED_BOTS) bots[bot] = 'unknown';
   }
   return {
-    domain: seed.domain,
-    sector: seed.sector,
+    domain,
+    sector,
     checkedAt: at,
     robotsStatus: robots.status,
     bots,
@@ -200,6 +200,10 @@ async function crawlDomain(seed: { domain: string; sector: string }, at: string)
     hasAiTxt: ai.body !== null && ai.body.trim().length > 0,
     llmsTxtBytes: llms.body !== null ? llms.body.length : null,
   };
+}
+
+async function crawlDomain(seed: { domain: string; sector: string }, at: string): Promise<DomainRecord> {
+  return crawlSite(seed.domain, seed.sector, at);
 }
 
 export async function captureAiCrawlerAccessMap(
