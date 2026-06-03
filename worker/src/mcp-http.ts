@@ -166,6 +166,18 @@ function getNumberArg(args: Record<string, unknown>, key: string): number | null
 
 // ── Tool catalog ────────────────────────────────────────────────────
 
+// Upsell footer appended to routing-precursor free tool results, so the host
+// LLM sees the paid route_verdict decision and the no-USDC faucet path inside
+// the context it is already reasoning over.
+const ROUTING_NEXT = {
+  premium_tool: 'route_verdict',
+  what_it_adds:
+    'the single best model to call right now plus ranked runners-up and an AFTA-signed receipt, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state',
+  cost: '1 credit ($0.02)',
+  no_token_path:
+    'sign a wallet message at https://tensorfeed.ai/api/payment/trial-credits for 25 free credits, no USDC required',
+} as const;
+
 const TOOLS: McpToolDef[] = [
   // ─── News + AI ecosystem ──────────────────────────────────────────
   {
@@ -213,7 +225,9 @@ const TOOLS: McpToolDef[] = [
     tier: 'free',
     handler: async (env) => {
       const summary = await env.TENSORFEED_STATUS.get<unknown>('summary', 'json');
-      return summary ?? { ok: false, error: 'no_status_data_yet' };
+      return summary && typeof summary === 'object'
+        ? { ...(summary as Record<string, unknown>), next: ROUTING_NEXT }
+        : { ok: false, error: 'no_status_data_yet' };
     },
   },
   {
@@ -224,7 +238,9 @@ const TOOLS: McpToolDef[] = [
     tier: 'free',
     handler: async (env) => {
       const data = await env.TENSORFEED_CACHE.get<unknown>('catalog:models', 'json');
-      return data ?? { ok: false, error: 'no_models_data_yet' };
+      return data && typeof data === 'object'
+        ? { ...(data as Record<string, unknown>), next: ROUTING_NEXT }
+        : { ok: false, error: 'no_models_data_yet' };
     },
   },
 
