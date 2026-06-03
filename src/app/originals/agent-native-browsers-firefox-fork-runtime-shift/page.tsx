@@ -168,7 +168,7 @@ export default function AgentNativeBrowsersPage() {
           standards-aware browser is identifiable in a way that scraping never was. Combined
           with emerging agent-identity standards (signed receipts on the payment side, see our
           {' '}
-          <Link href="/agent-payments" className="text-accent-primary hover:underline">
+          <Link href="/developers/agent-payments" className="text-accent-primary hover:underline">
             agent-payments page
           </Link>
           ; verifiable credentials and identity primitives in agent frameworks), site operators
