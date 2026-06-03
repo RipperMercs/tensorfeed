@@ -107,6 +107,61 @@ export default function PodcastPlayer({ audioUrl, compact = false }: PodcastPlay
     setMuted(false);
   };
 
+  // Keyboard control for the seek slider: arrows step 5s, Home/End jump to ends.
+  const handleSeekKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || !audio.duration) return;
+    const step = 5;
+    let t = audio.currentTime;
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowUp':
+        t = Math.min(audio.duration, t + step);
+        break;
+      case 'ArrowLeft':
+      case 'ArrowDown':
+        t = Math.max(0, t - step);
+        break;
+      case 'Home':
+        t = 0;
+        break;
+      case 'End':
+        t = audio.duration;
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+    audio.currentTime = t;
+  };
+
+  // Keyboard control for the volume slider: arrows step 5 percent.
+  const handleVolumeKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = 0.05;
+    let v = muted ? 0 : volume;
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowUp':
+        v = Math.min(1, v + step);
+        break;
+      case 'ArrowLeft':
+      case 'ArrowDown':
+        v = Math.max(0, v - step);
+        break;
+      case 'Home':
+        v = 0;
+        break;
+      case 'End':
+        v = 1;
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+    setVolume(v);
+    setMuted(false);
+  };
+
   function formatTime(sec: number): string {
     if (!sec || !isFinite(sec)) return '0:00';
     const m = Math.floor(sec / 60);
@@ -138,8 +193,16 @@ export default function PodcastPlayer({ audioUrl, compact = false }: PodcastPlay
           )}
         </button>
         <div
-          className="flex-1 h-1.5 bg-bg-tertiary rounded-full cursor-pointer group"
+          role="slider"
+          tabIndex={0}
+          aria-label="Seek"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress)}
+          aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+          className="flex-1 h-1.5 bg-bg-tertiary rounded-full cursor-pointer group focus:outline-none focus:ring-2 focus:ring-accent-primary"
           onClick={handleSeek}
+          onKeyDown={handleSeekKey}
         >
           <div
             className="h-full bg-accent-primary rounded-full transition-all group-hover:bg-accent-cyan"
@@ -178,8 +241,16 @@ export default function PodcastPlayer({ audioUrl, compact = false }: PodcastPlay
       {/* Time + Progress */}
       <div className="flex-1 min-w-0">
         <div
-          className="h-2 bg-bg-tertiary rounded-full cursor-pointer group"
+          role="slider"
+          tabIndex={0}
+          aria-label="Seek"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress)}
+          aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+          className="h-2 bg-bg-tertiary rounded-full cursor-pointer group focus:outline-none focus:ring-2 focus:ring-accent-primary"
           onClick={handleSeek}
+          onKeyDown={handleSeekKey}
         >
           <div
             className="h-full bg-accent-primary rounded-full transition-all group-hover:bg-accent-cyan"
@@ -202,8 +273,15 @@ export default function PodcastPlayer({ audioUrl, compact = false }: PodcastPlay
           {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
         <div
-          className="w-16 h-1.5 bg-bg-tertiary rounded-full cursor-pointer group"
+          role="slider"
+          tabIndex={0}
+          aria-label="Volume"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round((muted ? 0 : volume) * 100)}
+          className="w-16 h-1.5 bg-bg-tertiary rounded-full cursor-pointer group focus:outline-none focus:ring-2 focus:ring-accent-primary"
           onClick={handleVolume}
+          onKeyDown={handleVolumeKey}
         >
           <div
             className="h-full bg-text-muted rounded-full group-hover:bg-accent-primary transition-colors"
