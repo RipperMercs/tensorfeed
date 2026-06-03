@@ -53,10 +53,10 @@ export interface Env {
   // Workers Paid, 25M datapoints/mo. Read via SQL API (set up later).
   HONEYPOT_AE?: AnalyticsEngineDataset;
   // Workers Analytics Engine: hosted MCP endpoint tool call telemetry.
-  // Replaces the per-call KV counter in mcp-activity.ts. Read via SQL
-  // API; until that's wired the /api/mcp/activity dashboard shows
-  // zeros for hosted_endpoint (npm download counts remain the primary
-  // signal).
+  // Replaces the per-call KV counter in mcp-activity.ts. Read via the SQL
+  // API by buildHostedFromAE (grouping by index1 with SUM(_sample_interval))
+  // to power /api/mcp/activity; npm download counts remain the primary signal
+  // since stdio installs never hit the hosted endpoint.
   MCP_TOOL_CALLS_AE?: AnalyticsEngineDataset;
   // Agent Usage Meter: full-funnel telemetry (free hits, 402 probes, paid
   // calls). One AE datapoint per premium / tracked-free API response via a

@@ -69,9 +69,11 @@ const EMPTY_DAY = (): HostedDayCounts => ({ tools: {}, total: 0 });
  * Workers Paid (25M datapoints/mo) and purpose-built for per-event
  * telemetry; aggregations are computed at read time via the SQL API.
  *
- * Until the SQL reader is wired up, /api/mcp/activity shows zeros for
- * hosted_endpoint counts; npm download stats remain the dominant
- * signal (stdio installs are the majority install path anyway).
+ * Read back by buildHostedFromAE (getActivitySnapshot) via the SQL API,
+ * grouping by index1 (tool) with SUM(_sample_interval) for exact counts.
+ * npm download stats remain the dominant signal anyway, since stdio
+ * (npx-installed) agents are the majority install path and never hit
+ * the hosted endpoint.
  */
 export async function recordHostedToolCall(
   env: Env,
@@ -162,6 +164,162 @@ function dateMinus(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Shared note describing what the hosted-endpoint counts represent.
+const HOSTED_NOTE =
+  'Counts here cover the streamable-http hosted endpoint at https://tensorfeed.ai/api/mcp. The majority of MCP usage is stdio (npx-installed) which runs entirely on the agent operator\'s machine and produces no traffic here; npm download counts above are the better install signal.';
+
+type AeRow = Record<string, unknown>;
+
+// Run one Analytics Engine SQL statement. Returns the data rows, or null when
+// no CF token/account is configured or the request fails. Never throws.
+async function runAeSql(env: Env, sql: string): Promise<AeRow[] | null> {
+  if (!env.CF_ANALYTICS_TOKEN || !env.CF_ACCOUNT_ID) return null;
+  try {
+    const resp = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/analytics_engine/sql`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`, 'Content-Type': 'text/plain' },
+        body: sql,
+      },
+    );
+    if (!resp.ok) return null;
+    const json = (await resp.json()) as { data?: AeRow[] };
+    return json.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Pure: the N most recent UTC date strings (YYYY-MM-DD), today first, derived
+// from a given today string so aggregation is deterministic and testable.
+export function lastNDatesUtc(today: string, n: number): string[] {
+  const base = new Date(`${today}T00:00:00Z`).getTime();
+  return Array.from({ length: n }, (_, i) => new Date(base - i * 86400000).toISOString().slice(0, 10));
+}
+
+// Pure: shape AE rows (per-tool calls grouped by tool+tier over 7d, daily
+// totals over 30d) into the hosted_endpoint block. Counts arrive already
+// sample-interval-weighted from the SQL SUM(_sample_interval).
+export function aggregateHostedFromAeRows(
+  toolRows: AeRow[],
+  dayRows: AeRow[],
+  today: string,
+): MCPActivitySnapshot['hosted_endpoint'] {
+  const toolAcc = new Map<string, { free: number; premium: number }>();
+  for (const r of toolRows) {
+    const tool = String(r.tool ?? '');
+    if (!tool) continue;
+    const calls = Number(r.calls) || 0;
+    const acc = toolAcc.get(tool) ?? { free: 0, premium: 0 };
+    if (String(r.tier ?? '') === 'premium') acc.premium += calls;
+    else acc.free += calls;
+    toolAcc.set(tool, acc);
+  }
+  const top_tools_7d = Array.from(toolAcc.entries())
+    .map(([tool, a]) => ({
+      tool,
+      count: a.free + a.premium,
+      tier: (a.premium > a.free ? 'premium' : a.free > 0 ? 'free' : 'unknown') as 'free' | 'premium' | 'unknown',
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  const dayMap = new Map<string, number>();
+  for (const r of dayRows) {
+    const day = String(r.day ?? '');
+    if (day) dayMap.set(day, Number(r.calls) || 0);
+  }
+  const dates = lastNDatesUtc(today, HOSTED_COUNTER_KEEP_DAYS); // today-first
+  let last30dTotal = 0;
+  let last7dTotal = 0;
+  for (let i = 0; i < dates.length; i++) {
+    const c = dayMap.get(dates[i]) ?? 0;
+    last30dTotal += c;
+    if (i < 7) last7dTotal += c;
+  }
+  const daily_series_30d = dates.map((date) => ({ date, count: dayMap.get(date) ?? 0 })).reverse();
+
+  return {
+    note: HOSTED_NOTE,
+    today_total: dayMap.get(today) ?? 0,
+    last_7d_total: last7dTotal,
+    last_30d_total: last30dTotal,
+    top_tools_7d,
+    daily_series_30d,
+  };
+}
+
+// Read hosted-endpoint counts from Analytics Engine. Returns null (caller
+// falls back to legacy KV) only when AE is unconfigured/unreachable; an empty
+// dataset returns a zeroed-but-valid block (AE is the source of truth).
+async function buildHostedFromAE(env: Env, today: string): Promise<MCPActivitySnapshot['hosted_endpoint'] | null> {
+  // Two reads. The tool breakdown is a rolling 7x24h window on the AE built-in
+  // timestamp; the daily series buckets on blob3 (the writer's UTC date) and
+  // queries 31 days so the oldest of the 30 rendered buckets is fully covered
+  // (rows outside the 30-date set are simply never read from the day map).
+  // The per-tool 7d window and last_7d_total use different time bases, so their
+  // sums are not expected to reconcile exactly; that is fine for a trend view.
+  const [toolRows, dayRows] = await Promise.all([
+    runAeSql(
+      env,
+      "SELECT index1 AS tool, blob1 AS tier, SUM(_sample_interval) AS calls FROM tf_mcp_tool_calls WHERE timestamp > NOW() - INTERVAL '7' DAY GROUP BY tool, tier ORDER BY calls DESC LIMIT 200",
+    ),
+    runAeSql(
+      env,
+      "SELECT blob3 AS day, SUM(_sample_interval) AS calls FROM tf_mcp_tool_calls WHERE timestamp > NOW() - INTERVAL '31' DAY GROUP BY day ORDER BY day",
+    ),
+  ]);
+  // If EITHER leg failed (a single-leg AE 429/500 is the common transient),
+  // treat it as a full AE miss and defer to KV. A half-zeroed AE block would be
+  // self-contradicting: populated top_tools_7d beside all-zero totals, or the
+  // reverse. All-or-nothing keeps the snapshot internally honest.
+  if (toolRows === null || dayRows === null) return null;
+  return aggregateHostedFromAeRows(toolRows, dayRows, today);
+}
+
+// Legacy fallback: read hosted-endpoint counts from the KV daily counters.
+// recordHostedToolCall stopped writing these on 2026-05-12, so in production
+// this returns zeros; it exists only for envs with no CF analytics token.
+async function buildHostedFromKV(env: Env, today: string): Promise<MCPActivitySnapshot['hosted_endpoint']> {
+  const dailySeries: Array<{ date: string; count: number }> = [];
+  const toolTotals = new Map<string, { count: number; premium: number; free: number }>();
+  let last7dTotal = 0;
+  let last30dTotal = 0;
+  let todayTotal = 0;
+  for (let i = 0; i < HOSTED_COUNTER_KEEP_DAYS; i++) {
+    const date = dateMinus(i);
+    const day = await readDayCounts(env, date);
+    dailySeries.push({ date, count: day.total });
+    last30dTotal += day.total;
+    if (i < 7) last7dTotal += day.total;
+    if (date === today) todayTotal = day.total;
+    for (const [tool, t] of Object.entries(day.tools)) {
+      const acc = toolTotals.get(tool) ?? { count: 0, premium: 0, free: 0 };
+      acc.count += t.free + t.premium;
+      acc.premium += t.premium;
+      acc.free += t.free;
+      toolTotals.set(tool, acc);
+    }
+  }
+  const top_tools_7d = Array.from(toolTotals.entries())
+    .map(([tool, acc]) => ({
+      tool,
+      count: acc.count,
+      tier: (acc.premium > acc.free ? 'premium' : acc.free > 0 ? 'free' : 'unknown') as 'free' | 'premium' | 'unknown',
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+  return {
+    note: HOSTED_NOTE,
+    today_total: todayTotal,
+    last_7d_total: last7dTotal,
+    last_30d_total: last30dTotal,
+    top_tools_7d,
+    daily_series_30d: dailySeries.reverse(),
+  };
+}
+
 export async function getActivitySnapshot(env: Env): Promise<MCPActivitySnapshot> {
   const today = new Date().toISOString().slice(0, 10);
 
@@ -189,51 +347,20 @@ export async function getActivitySnapshot(env: Env): Promise<MCPActivitySnapshot
     };
   });
 
-  // Hosted endpoint daily series (last 30 days)
-  const dailySeries: Array<{ date: string; count: number }> = [];
-  const toolTotals = new Map<string, { count: number; premium: number; free: number }>();
-  let last7dTotal = 0;
-  let last30dTotal = 0;
-  let todayTotal = 0;
-
-  for (let i = 0; i < HOSTED_COUNTER_KEEP_DAYS; i++) {
-    const date = dateMinus(i);
-    const day = await readDayCounts(env, date);
-    dailySeries.push({ date, count: day.total });
-    last30dTotal += day.total;
-    if (i < 7) last7dTotal += day.total;
-    if (i === 0) todayTotal = day.total;
-    for (const [tool, t] of Object.entries(day.tools)) {
-      const acc = toolTotals.get(tool) ?? { count: 0, premium: 0, free: 0 };
-      acc.count += t.free + t.premium;
-      acc.premium += t.premium;
-      acc.free += t.free;
-      toolTotals.set(tool, acc);
-    }
-  }
-  // Last-7d top tools
-  const last7Days = new Set(Array.from({ length: 7 }, (_, i) => dateMinus(i)));
-  const topTools7d: Array<{ tool: string; count: number; tier: 'free' | 'premium' | 'unknown' }> = [];
-  for (const [tool, acc] of toolTotals.entries()) {
-    const tier: 'free' | 'premium' | 'unknown' = acc.premium > acc.free ? 'premium' : acc.free > 0 ? 'free' : 'unknown';
-    topTools7d.push({ tool, count: acc.count, tier });
-  }
-  topTools7d.sort((a, b) => b.count - a.count);
+  // Hosted-endpoint counts: read from Analytics Engine (the real source since
+  // 2026-05-12). Fall back to the legacy KV daily counters only when AE is not
+  // configured or unreachable (e.g. a local/test env with no CF token).
+  const aeHosted = await buildHostedFromAE(env, today);
+  const hosted_endpoint = aeHosted ?? (await buildHostedFromKV(env, today));
+  const hostedSource = aeHosted
+    ? 'Workers Analytics Engine (tf_mcp_tool_calls), aggregated at read time via the SQL API with sample-interval weighting'
+    : 'legacy KV daily aggregates (Analytics Engine unavailable)';
 
   return {
     generated_at: new Date().toISOString(),
     packages,
-    hosted_endpoint: {
-      note:
-        'Counts here cover the streamable-http hosted endpoint at https://tensorfeed.ai/api/mcp. The majority of MCP usage is stdio (npx-installed) which runs entirely on the agent operator\'s machine and produces no traffic here; npm download counts above are the better install signal.',
-      today_total: todayTotal,
-      last_7d_total: last7dTotal,
-      last_30d_total: last30dTotal,
-      top_tools_7d: topTools7d.slice(0, 10),
-      daily_series_30d: dailySeries.reverse(),
-    },
-    attribution:
-      'Source: api.npmjs.org for download counts (cached 1h). Hosted-endpoint tool calls migrated to Workers Analytics Engine on 2026-05-12; counts shown here reflect legacy KV-stored daily aggregates and will roll off over 30 days. SQL-backed AE aggregations land in a follow-up.',
+    hosted_endpoint,
+    attribution: `Source: api.npmjs.org for download counts (cached 1h). Hosted-endpoint tool calls from ${hostedSource}.`,
     next_steps: {
       agent_install: 'npx -y @tensorfeed/x402-base-mcp',
       verify_signature: 'npm audit signatures @tensorfeed/x402-base-mcp',
