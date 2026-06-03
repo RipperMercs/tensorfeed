@@ -113,6 +113,7 @@ export async function handleAftaBadge(request: Request, env: Env, url: URL): Pro
     const res = await fetch(certUrl, {
       headers: { Accept: 'application/json' },
       cf: { cacheTtl: BADGE_CACHE_TTL_SECONDS, cacheEverything: true },
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) throw new Error(`cert_endpoint_${res.status}`);
     const result = (await res.json()) as AftaResult;

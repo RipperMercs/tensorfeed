@@ -267,6 +267,7 @@ export async function queryUsageFunnel(
           'Content-Type': 'text/plain',
         },
         body: sql,
+        signal: AbortSignal.timeout(15_000),
       },
     );
     if (!resp.ok) return null;

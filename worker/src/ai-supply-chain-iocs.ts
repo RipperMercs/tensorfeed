@@ -169,7 +169,7 @@ async function fetchGhsaMalwareAdvisories(env: Env): Promise<AiSupplyChainEntry[
   if (env.GITHUB_TOKEN) {
     headers.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
   }
-  const res = await fetch(GITHUB_ADVISORIES_URL, { headers });
+  const res = await fetch(GITHUB_ADVISORIES_URL, { headers, signal: AbortSignal.timeout(30_000) });
   if (!res.ok) {
     throw new Error(`github advisories fetch failed: ${res.status}`);
   }
