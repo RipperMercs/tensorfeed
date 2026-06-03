@@ -792,3 +792,39 @@ describe('pilotCatalogStatus', () => {
     expect(status.every((s) => s.cataloged === false)).toBe(true);
   });
 });
+
+describe('bazaar pilot configs are btoa-safe (Latin1 only)', () => {
+  // payments.ts emits the x402 402 header via btoa(JSON.stringify(headerCanonical))
+  // (payments.ts:2922 and :3097), and the canonical carries the bazaar extension.
+  // btoa throws on any UTF-16 code unit above 0xFF, so a single em dash, smart
+  // quote, or box-drawing char in a pilot description or example output 500s the
+  // live endpoint (this happened once on /api/premium/apis-guru/ai-feed). Latin1
+  // chars (code points up to 0xFF, such as accented letters) are fine; forbid
+  // anything above 0xFF. This codifies the "Latin1-scan before deploy" rule.
+  function firstBadChar(value: unknown, path: string, out: string[]): void {
+    if (typeof value === 'string') {
+      for (let i = 0; i < value.length; i++) {
+        if (value.charCodeAt(i) > 0xff) {
+          const hex = value.charCodeAt(i).toString(16).toUpperCase().padStart(4, '0');
+          out.push(`${path}: U+${hex} near ${JSON.stringify(value.slice(Math.max(0, i - 12), i + 12))}`);
+          return;
+        }
+      }
+    } else if (Array.isArray(value)) {
+      value.forEach((v, i) => firstBadChar(v, `${path}[${i}]`, out));
+    } else if (value && typeof value === 'object') {
+      for (const [k, v] of Object.entries(value)) firstBadChar(v, `${path}.${k}`, out);
+    }
+  }
+
+  it('every pilot config string is Latin1-encodable (no code unit above 0xFF)', () => {
+    const offenders: string[] = [];
+    for (const p of bazaarPilotPaths()) {
+      firstBadChar(getBazaarPilotConfig(p), p, offenders);
+    }
+    expect(
+      offenders,
+      `non-Latin1 chars would crash btoa() at request time: ${offenders.join(' | ')}`,
+    ).toEqual([]);
+  });
+});
