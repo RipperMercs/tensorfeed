@@ -220,6 +220,8 @@ try {
 }
 ```
 
+Requests time out after 15 seconds by default so a stalled connection never hangs your agent. Override it per client with `new TensorFeed({ timeoutMs: 30000 })`. A timeout or network failure surfaces as a `TensorFeedError` with `statusCode: 0` and `payload.error` set to `timeout` or `network_error`, so the `TensorFeedError` branch above already covers it.
+
 ## API Reference
 
 ### Free

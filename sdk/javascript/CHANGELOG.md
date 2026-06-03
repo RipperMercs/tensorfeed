@@ -2,6 +2,14 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 2.3.0 - 2026-06-03
+
+### Added
+- `timeoutMs` client option (`new TensorFeed({ timeoutMs })`). Per-request timeout in milliseconds, default 15000, matching the Python SDK's 15s. Every `request()` now passes an `AbortSignal.timeout`, so a stalled connection can no longer hang the caller indefinitely.
+
+### Changed
+- A request timeout or network failure now throws a `TensorFeedError` with `statusCode: 0` (`payload.error` is `timeout` or `network_error`) instead of leaking a raw `DOMException` / `TypeError`. Callers already catching `TensorFeedError` need no change.
+
 ## 2.2.0 - 2026-05-31
 
 ### Added
