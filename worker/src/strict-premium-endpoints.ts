@@ -252,6 +252,7 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // strict (cve/range, kev/series, epss/series, corroborated,
   // cve/kev-exploitation-timeline, sec/filings/ai-disclosures).
   '/api/premium/security/kev/full',
+  '/api/premium/security/ssvc-verdict',
   '/api/premium/security/epss/top',
   '/api/premium/security/ghsa/ai-feed',
   // Wave 29 (2026-05-30): Wave B tail promoted to strict-premium for cataloging.

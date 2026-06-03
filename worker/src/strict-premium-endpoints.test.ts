@@ -242,8 +242,9 @@ describe('isStrictPremiumPath', () => {
       // were already strict. + 2 (2026-06-01) Model Intelligence Index (TFII)
       // breakdown + history. + 1 (2026-06-02) AI Crawler Access Map changes
       // (param-required ?from=&to=). + 1 (2026-06-02) HF leaderboard movers (?window=).
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(77);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(77); // no duplicates
+      // + 1 (2026-06-03) SSVC verdict (param-required ?cve=).
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(78);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(78); // no duplicates
     });
     it('exposes 7 prefix paths (providers + clean-record pilots + ai-companies + x402-index)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(7);
