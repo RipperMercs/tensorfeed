@@ -15,7 +15,10 @@ const KEY = process.env.INTERNAL_TRAFFIC_KEY || '';
 export function internalHeaders(targetUrl) {
   if (!KEY) return {};
   try {
-    if (new URL(targetUrl).hostname.endsWith('tensorfeed.ai')) {
+    // Anchor to the apex or an explicit subdomain. A bare endsWith() would
+    // also match eviltensorfeed.ai, so normalize case + trailing dot first.
+    const host = new URL(targetUrl).hostname.toLowerCase().replace(/\.$/, '');
+    if (host === 'tensorfeed.ai' || host.endsWith('.tensorfeed.ai')) {
       return { 'X-TF-Internal': KEY };
     }
   } catch {
