@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION, parseSsvcFromVulnrichment } from './ssvc-verdict';
+import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION, parseSsvcFromVulnrichment, buildSsvcVerdict, redactSsvcVerdictForPreview } from './ssvc-verdict';
 
 // The authoritative 36-row CISA SSVC Coordinator v2.0.3 table. Verified three
 // independent ways and adversarially audited (2026-06-03). This fixture pins
@@ -163,5 +163,51 @@ describe('parseSsvcFromVulnrichment', () => {
     expect(parseSsvcFromVulnrichment(null)).toBeNull();
     expect(parseSsvcFromVulnrichment({})).toBeNull();
     expect(parseSsvcFromVulnrichment({ containers: { adp: 'nope' } })).toBeNull();
+  });
+});
+
+const XZ_POINTS = {
+  exploitation: 'none' as const,
+  automatable: 'yes' as const,
+  technical_impact: 'total' as const,
+  role: 'CISA Coordinator',
+  version: '2.0.3',
+  scored_at: '2024-04-02T04:00:23.138684Z',
+};
+
+describe('buildSsvcVerdict', () => {
+  it('builds the envelope and a medium primary for the xz points', () => {
+    const v = buildSsvcVerdict('CVE-2024-3094', XZ_POINTS);
+    expect(v.decision_envelope).toEqual({ low: 'Track', medium: 'Track', high: 'Attend' });
+    expect(v.decision_primary).toBe('Track');
+    expect(v.decision_points).toEqual({ exploitation: 'none', automatable: 'yes', technical_impact: 'total' });
+    expect(v.scored_at).toBe('2024-04-02T04:00:23.138684Z');
+    expect(v.tree.version).toBe('2.0.3');
+    expect(v.reasoning).toHaveLength(3);
+    expect(v.reasoning[2]).toMatchObject({ mission_wellbeing: 'high', decision: 'Attend' });
+    expect(v.source.record).toBe('/api/security/vulnrichment/CVE-2024-3094');
+  });
+
+  it('reaches Act at the worst case', () => {
+    const v = buildSsvcVerdict('CVE-0000-0001', {
+      ...XZ_POINTS,
+      exploitation: 'active',
+      automatable: 'yes',
+      technical_impact: 'total',
+    });
+    expect(v.decision_envelope).toEqual({ low: 'Attend', medium: 'Act', high: 'Act' });
+    expect(v.decision_primary).toBe('Act');
+  });
+});
+
+describe('redactSsvcVerdictForPreview', () => {
+  it('keeps the points but drops the computed decision', () => {
+    const preview = redactSsvcVerdictForPreview(buildSsvcVerdict('CVE-2024-3094', XZ_POINTS)) as unknown as Record<string, unknown>;
+    expect(preview.decision_points).toEqual({ exploitation: 'none', automatable: 'yes', technical_impact: 'total' });
+    expect(preview.scored_at).toBe('2024-04-02T04:00:23.138684Z');
+    expect(preview.preview).toBe(true);
+    expect(preview.decision_primary).toBeUndefined();
+    expect(preview.decision_envelope).toBeUndefined();
+    expect(preview.reasoning).toBeUndefined();
   });
 });

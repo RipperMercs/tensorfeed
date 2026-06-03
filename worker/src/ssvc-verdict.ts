@@ -154,3 +154,89 @@ export function parseSsvcFromVulnrichment(record: unknown): SsvcPoints | null {
     scored_at: typeof content.timestamp === 'string' ? content.timestamp : '',
   };
 }
+
+export interface SsvcReasoningEntry {
+  mission_wellbeing: MissionWellbeing;
+  decision: Decision;
+  path: string;
+}
+
+export interface SsvcVerdict {
+  cve: string;
+  verdict_kind: 'ssvc_decision';
+  decision_points: { exploitation: Exploitation; automatable: Automatable; technical_impact: TechnicalImpact };
+  decision_primary: Decision;
+  decision_envelope: Record<MissionWellbeing, Decision>;
+  mission_wellbeing: { assumed_primary: 'medium'; note: string };
+  reasoning: SsvcReasoningEntry[];
+  tree: { name: string; version: string; source_url: string };
+  scored_at: string;
+  source: { record: string; publisher: string; license: string };
+}
+
+export interface SsvcVerdictPreview {
+  cve: string;
+  verdict_kind: 'ssvc_decision';
+  preview: true;
+  decision_points: { exploitation: Exploitation; automatable: Automatable; technical_impact: TechnicalImpact };
+  tree: { name: string; version: string; source_url: string };
+  scored_at: string;
+  source: { record: string; publisher: string; license: string };
+}
+
+const MW_LEVELS: MissionWellbeing[] = ['low', 'medium', 'high'];
+const MW_NOTE =
+  'CISA omits Mission and Well-being from the vulnrichment record (it is a stakeholder-specific compound of Mission Prevalence and Public Well-being Impact). The verdict is returned across all three levels; the primary assumes medium.';
+
+export const SSVC_ATTRIBUTION = {
+  publisher: 'CISA Vulnrichment',
+  license: 'US Government public domain (17 USC 105)',
+};
+
+export function buildSsvcVerdict(cve: string, points: SsvcPoints): SsvcVerdict {
+  const envelope: Record<MissionWellbeing, Decision> = {
+    low: cisaSsvcDecision(points, 'low'),
+    medium: cisaSsvcDecision(points, 'medium'),
+    high: cisaSsvcDecision(points, 'high'),
+  };
+  const reasoning: SsvcReasoningEntry[] = MW_LEVELS.map((mw) => ({
+    mission_wellbeing: mw,
+    decision: envelope[mw],
+    path: `exploitation=${points.exploitation}, automatable=${points.automatable}, technical_impact=${points.technical_impact}, mission_wellbeing=${mw} -> ${envelope[mw]}`,
+  }));
+  return {
+    cve,
+    verdict_kind: 'ssvc_decision',
+    decision_points: {
+      exploitation: points.exploitation,
+      automatable: points.automatable,
+      technical_impact: points.technical_impact,
+    },
+    decision_primary: envelope.medium,
+    decision_envelope: envelope,
+    mission_wellbeing: { assumed_primary: 'medium', note: MW_NOTE },
+    reasoning,
+    tree: { name: 'CISA SSVC Coordinator', version: CISA_SSVC_TREE_VERSION, source_url: CISA_SSVC_TREE_SOURCE },
+    scored_at: points.scored_at,
+    source: {
+      record: `/api/security/vulnrichment/${cve}`,
+      publisher: SSVC_ATTRIBUTION.publisher,
+      license: SSVC_ATTRIBUTION.license,
+    },
+  };
+}
+
+/** Redact the verdict for the free preview: keep the public decision points and
+ * provenance, drop the computed decision, envelope, and reasoning (the paid
+ * derivation). */
+export function redactSsvcVerdictForPreview(full: SsvcVerdict): SsvcVerdictPreview {
+  return {
+    cve: full.cve,
+    verdict_kind: 'ssvc_decision',
+    preview: true,
+    decision_points: full.decision_points,
+    tree: full.tree,
+    scored_at: full.scored_at,
+    source: full.source,
+  };
+}
