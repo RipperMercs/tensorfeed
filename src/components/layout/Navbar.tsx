@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
-import { Menu, X, Zap, Search, ChevronDown, Sun, Moon, Terminal } from 'lucide-react';
+import { Menu, X, Zap, ChevronDown, Sun, Moon, Terminal } from 'lucide-react';
 import { NAV_LINKS } from '@/lib/constants';
 import { useTheme } from '@/components/ThemeProvider';
 import { useViewMode } from '@/components/ViewModeProvider';
@@ -206,14 +206,6 @@ export default function Navbar() {
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
-            {/* Search icon */}
-            <button
-              className="hidden sm:flex items-center justify-center w-8 h-8 rounded text-text-secondary hover:text-text-primary hover:bg-bg-secondary transition-colors"
-              aria-label="Search"
-            >
-              <Search className="w-4 h-4" />
             </button>
 
             <Link
