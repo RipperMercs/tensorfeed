@@ -85,9 +85,7 @@ import {
 } from './climate-nws-alerts';
 import {
   parseFDAQuery,
-  parseFDAAggregateQuery,
   fetchFDAQuery,
-  fetchFDAAggregate,
   isFDACategory,
   FDA_CATEGORIES,
   FDA_ATTRIBUTION,
@@ -102,13 +100,9 @@ import {
   transformCveRecord,
   transformKevEntry,
   transformEpssScore,
-  transformNasaPowerPoint,
-  transformEiaSeries,
-  transformFdaQueryResults,
   attachCompressionStats,
   measureSourceBytes,
   composeVerifiedCve,
-  transformOpenRouterModel,
   LLM_READY_CLEANING_VERSION,
 } from './llm-ready';
 import {
@@ -206,12 +200,7 @@ import {
   readIndicators as readFREDIndicators,
   isValidCategory as isValidFREDCategory,
 } from './fred-indicators';
-import { computeMacroDigest } from './premium-macro-digest';
 import { computePolicyTimeline, parseTimelineParams } from './premium-policy-timeline';
-import {
-  getEconomySeriesHistory,
-  isValidSource as isValidEconomySource,
-} from './premium-economy-history';
 import { computePackagesMomentum } from './premium-packages-momentum';
 import { computeResearchVelocity } from './premium-research-velocity';
 import { computeCveKevTimeline } from './premium-cve-kev-timeline';
@@ -227,7 +216,6 @@ import {
 } from './premium-research-arxiv';
 import { refreshX402Registry, getLatestX402Registry } from './x402-registry';
 import { getKillSwitchState, setKillSwitch, getKillSwitchAuditLog, safePut } from './kill-switch';
-import { computeRecessionWatch } from './premium-recession-watch';
 import { refreshVrData, readVrFeed, readVrOriginals } from './vr-aggregator';
 import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
