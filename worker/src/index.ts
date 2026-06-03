@@ -4667,6 +4667,7 @@ export default {
           receiptVerify: '/api/receipt/verify',
           aiCrawlerAccessSummary: '/api/ai-crawler-access/summary.json (free; aggregate AI crawler access map across curated domains: per-bot allow/block percentages (GPTBot, ClaudeBot, PerplexityBot, CCBot, and more), plus llms.txt and ai.txt adoption. We report stated robots.txt policy, not enforcement. No parameters.)',
           aiCrawlerAccessSite: '/api/ai-crawler-access/site?domain= (free; per-site robots.txt verdict for each tracked AI bot, plus llms.txt and ai.txt presence, for one domain. Required param: domain.)',
+          aiCrawlerAccessCheck: '/api/ai-crawler-access/check?domain= (free; live on-demand robots.txt verdict for any public domain not in the tracked set: per-bot allowed/blocked/partial/unknown plus llms.txt/ai.txt presence. Rate-limited 120/min/IP, cached 1h.)',
           premiumAiCrawlerAccessFull: '/api/premium/ai-crawler-access/full (1 credit, AFTA-signed; full dataset: every tracked domain with per-bot robots.txt verdicts (allowed/blocked/partial/unknown) and llms.txt/ai.txt flags, plus sector rollups. 8-day freshness SLA, no-charge when stale.)',
           premiumAiCrawlerAccessChanges: '/api/premium/ai-crawler-access/changes?domain=&from=&to= (1 credit, AFTA-signed, strict-premium; historical flip log: when a site changed a bot from allowed to blocked (or back) or published llms.txt, within a date range. Required params: from, to (domain optional).)',
         },
@@ -10787,6 +10788,31 @@ export default {
       const { buildSiteResponse } = await import('./premium-ai-crawler-access');
       const snap = await readSnapshot(env);
       return jsonResponse(buildSiteResponse(snap, domain), 200, 6 * 60 * 60);
+    }
+
+    // === FREE: AI CRAWLER ACCESS MAP, ON-DEMAND CHECK ===
+    // /api/ai-crawler-access/check?domain=
+    // Live on-demand robots.txt verdict for any public domain not in the
+    // tracked seed set. SSRF-guarded validator rejects IPs, localhost,
+    // internal suffixes, and underscores. Per-domain 1h Cache-API
+    // memoization so repeat checks do not re-crawl the upstream site.
+    if (path === '/api/ai-crawler-access/check') {
+      const { validateCheckDomain, checkDomainLive } = await import('./ai-crawler-access-check');
+      const v = validateCheckDomain(url.searchParams.get('domain') || '');
+      if (!v.ok) return jsonResponse({ ok: false, error: v.error, hint: 'Pass ?domain=example.com (public hostname only)' }, 400);
+      // 1h edge memoization per domain so repeat checks do not re-crawl
+      const cache = caches.default;
+      const cacheKey = new Request(`https://tensorfeed.ai/api/ai-crawler-access/check?domain=${v.domain}`, { method: 'GET' });
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+      const record = await checkDomainLive(env, v.domain);
+      const result = {
+        ok: true, domain: v.domain, found: true, tracked: false, record,
+        source_attribution: 'TensorFeed AI Crawler Access Map. Live robots.txt, llms.txt, and ai.txt crawl. We report stated policy, not enforcement.',
+      };
+      const resp = jsonResponse(result, 200, 60 * 60);
+      ctx.waitUntil(cache.put(cacheKey, resp.clone()));
+      return resp;
     }
 
     // === PAID PREMIUM: AI CRAWLER ACCESS MAP, FULL (Tier 1, 1 credit) ===
