@@ -95,6 +95,14 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // with a fresh 30-day fetch cached 24h. SLA matches the longer of
   // the two windows.
   '/api/premium/research/velocity': { maxAgeSeconds: 24 * 60 * 60 },
+  // Top AI authors: daily OpenAlex top-100 snapshot (openalex-authors cron,
+  // 04:00 UTC). 36h SLA = daily cadence + headroom for one missed run, so a
+  // stalled OpenAlex pull (the documented egress-throttle failure mode) yields
+  // a no-charge rather than billing for stale author rankings.
+  '/api/premium/research/authors': { maxAgeSeconds: 36 * 60 * 60 },
+  // Citation velocity: daily OpenAlex snapshot + Semantic Scholar enrichment.
+  // Same daily cadence; 36h SLA with one-run headroom matches authors.
+  '/api/premium/research/citation-velocity': { maxAgeSeconds: 36 * 60 * 60 },
   // arXiv milestones: rebuilt offline from a Qwen extraction round on
   // the last 30 days of preprints. Refresh cadence is weekly. 7-day SLA
   // so a delayed refresh (e.g. server outage on the dev rig) triggers
@@ -324,6 +332,8 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/policy/timeline': 'compute over editorial registry, no staleness signal',
     '/api/premium/packages/pypi/momentum': 'synthesis over the daily PyPI trending snapshot',
     '/api/premium/research/velocity': 'baseline + fresh 30-day OpenAlex fetch with 24h cache',
+    '/api/premium/research/authors': 'daily OpenAlex top-100 AI authors snapshot; charges only when fresh (within 36h of the daily cron)',
+    '/api/premium/research/citation-velocity': 'daily OpenAlex citation-velocity snapshot with Semantic Scholar enrichment; charges only when fresh (within 36h of the daily cron)',
     '/api/premium/research/lab-productivity': 'offline Qwen extraction rolled up into 30/90/365-day lab counts; uploaded weekly',
     '/api/premium/history/pricing/series': 'historical immutable',
     '/api/premium/history/benchmarks/series': 'historical immutable',

@@ -105,3 +105,10 @@ describe('describeSLAs', () => {
     expect(search?.max_age_seconds).toBe(30 * 60);
   });
 });
+
+describe('paid daily-snapshot endpoints have a billing-freshness SLA', () => {
+  it('research/authors and citation-velocity resolve to a finite SLA (no stale-bill gap)', () => {
+    expect(resolveSLA('/api/premium/research/authors')?.maxAgeSeconds).toBe(36 * 60 * 60);
+    expect(resolveSLA('/api/premium/research/citation-velocity')?.maxAgeSeconds).toBe(36 * 60 * 60);
+  });
+});
