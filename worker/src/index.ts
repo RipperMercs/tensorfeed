@@ -6624,7 +6624,7 @@ export default {
     // filter params, and no rate limit.
     if (path === '/api/preview/route-verdict') {
       const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
-      const { computeRouteVerdict, checkRouteVerdictPreviewRateLimit } = await import('./premium-route-verdict');
+      const { computeRouteVerdict, checkRouteVerdictPreviewRateLimit, buildPreviewUpgrade } = await import('./premium-route-verdict');
       const limit = await checkRouteVerdictPreviewRateLimit(env, ip, 10);
       if (!limit.allowed) {
         return jsonResponse(
@@ -6664,10 +6664,7 @@ export default {
           data_freshness: result.data_freshness,
           claim: result.claim,
           rate_limit: { limit: limit.limit, remaining: limit.remaining, scope: 'per IP per UTC day' },
-          upgrade: {
-            premium_endpoint: '/api/premium/route-verdict',
-            adds: ['runners_up', 'AFTA-signed receipt', 'filter params', 'no rate limit'],
-          },
+          upgrade: buildPreviewUpgrade(result),
         },
         200,
         0, // do not Cache-API; rate limiting is per IP

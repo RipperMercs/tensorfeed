@@ -1,14 +1,70 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildRouteVerdict,
+  buildPreviewUpgrade,
   type RouteVerdictInputs,
   type RouteVerdictOptions,
+  type RouteVerdictResult,
 } from './premium-route-verdict';
 import type { LatestSummary, ProviderAggregate } from './probe';
 import type { IncidentTriageSnapshot, IncidentTriageCard } from './incident-triage-generator';
 import type { UsageRanking } from './usage-rankings';
 import type { BenchmarkMeta } from './benchmark-registry';
 import type { ModelDeprecation } from './model-deprecations';
+
+describe('buildPreviewUpgrade', () => {
+  function mkResult(verdictScore: number | null, runnerScores: number[]): RouteVerdictResult {
+    const cand = (composite_score: number) => ({ composite_score, model: { id: 'm', name: 'M' } });
+    return {
+      verdict: verdictScore === null ? null : cand(verdictScore),
+      runners_up: runnerScores.map(cand),
+    } as unknown as RouteVerdictResult;
+  }
+
+  it('flags a contested decision when rank1 beats rank2 by under 5 percent', () => {
+    const u = buildPreviewUpgrade(mkResult(0.9, [0.88]));
+    expect(u.you_are_missing.runners_up).toBe(1);
+    expect(u.you_are_missing.contested).toBe(true);
+    expect(u.you_are_missing.decision_margin).toMatch(/ahead of the hidden runner-up/);
+    expect(u.you_are_missing.next_best).toEqual({
+      rank: 2,
+      model: '<locked>',
+      composite_score: '<locked>',
+      note: expect.any(String),
+    });
+  });
+
+  it('is not contested for a wide margin', () => {
+    const u = buildPreviewUpgrade(mkResult(0.9, [0.5]));
+    expect(u.you_are_missing.contested).toBe(false);
+    expect(u.you_are_missing.decision_margin).toContain('%');
+  });
+
+  it('handles a single candidate with no runner-up', () => {
+    const u = buildPreviewUpgrade(mkResult(0.9, []));
+    expect(u.you_are_missing.runners_up).toBe(0);
+    expect(u.you_are_missing.decision_margin).toBeNull();
+    expect(u.you_are_missing.next_best).toBeNull();
+  });
+
+  it('handles a null verdict', () => {
+    const u = buildPreviewUpgrade(mkResult(null, []));
+    expect(u.you_are_missing.runners_up).toBe(0);
+    expect(u.you_are_missing.decision_margin).toBeNull();
+  });
+
+  it('uses the correct $0.02 price and always offers the signed receipt', () => {
+    const u = buildPreviewUpgrade(mkResult(0.9, [0.88]));
+    expect(u.price).toBe('1 credit ($0.02)');
+    expect(u.you_are_missing.signed_receipt).toBe(true);
+    expect(u.premium_endpoint).toBe('/api/premium/route-verdict');
+  });
+
+  it('emits no em dash anywhere in the upgrade block', () => {
+    const s = JSON.stringify(buildPreviewUpgrade(mkResult(0.9, [0.88])));
+    expect([...s].some((c) => c.codePointAt(0) === 0x2014)).toBe(false);
+  });
+});
 
 const NOW = new Date('2026-05-28T12:00:00Z');
 

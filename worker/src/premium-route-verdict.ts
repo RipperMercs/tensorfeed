@@ -585,6 +585,61 @@ export function buildRouteVerdict(
   };
 }
 
+/**
+ * Build the free-preview "upgrade" block. The preview hands over the top
+ * verdict, so this makes the upgrade earn its credit: it surfaces what is
+ * withheld, including the rank1-vs-rank2 composite margin, so a tight
+ * (contested) decision is visible without revealing the runner-up itself.
+ * Pure over the already-computed result.
+ */
+export function buildPreviewUpgrade(result: RouteVerdictResult): {
+  premium_endpoint: string;
+  price: string;
+  adds: string[];
+  you_are_missing: {
+    runners_up: number;
+    decision_margin: string | null;
+    contested: boolean;
+    next_best: { rank: number; model: string; composite_score: string; note: string } | null;
+    signed_receipt: true;
+  };
+} {
+  const top = result.verdict;
+  const second = result.runners_up.length > 0 ? result.runners_up[0] : null;
+  let decisionMargin: string | null = null;
+  let contested = false;
+  let nextBest: { rank: number; model: string; composite_score: string; note: string } | null = null;
+  if (top && second && top.composite_score > 0) {
+    const marginPct =
+      Math.round(((top.composite_score - second.composite_score) / top.composite_score) * 1000) / 10;
+    decisionMargin = `${marginPct}% ahead of the hidden runner-up`;
+    contested = marginPct < 5;
+    nextBest = {
+      rank: 2,
+      model: '<locked>',
+      composite_score: '<locked>',
+      note: 'one paid call reveals the runner-up and its exact margin vs the winner',
+    };
+  }
+  return {
+    premium_endpoint: '/api/premium/route-verdict',
+    price: '1 credit ($0.02)',
+    adds: [
+      'the full ranked runners-up',
+      'an AFTA-signed receipt over the exact inputs',
+      'constraint filters (budget, min_quality, max_latency, operational-only)',
+      'no rate limit',
+    ],
+    you_are_missing: {
+      runners_up: result.runners_up.length,
+      decision_margin: decisionMargin,
+      contested,
+      next_best: nextBest,
+      signed_receipt: true,
+    },
+  };
+}
+
 // ─── Loader: read live data and compute ────────────────────────────
 
 /** Load the live inputs the route verdict (and the failover verdict) fuse. */
