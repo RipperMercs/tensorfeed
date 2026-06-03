@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Terminal, X, Copy, Check, ExternalLink } from 'lucide-react';
 import { useViewMode } from './ViewModeProvider';
@@ -145,6 +145,8 @@ export default function AgentView() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setSelected(endpoints[0]?.url ?? '/api/meta');
@@ -197,6 +199,43 @@ export default function AgentView() {
     };
   }, [selected, viewMode, mounted]);
 
+  // Modal a11y: move focus into the overlay when it opens (only on open, not on
+  // every re-render, so it does not steal focus while the user interacts).
+  useEffect(() => {
+    if (mounted && viewMode === 'agent') {
+      closeButtonRef.current?.focus();
+    }
+  }, [mounted, viewMode]);
+
+  // Modal a11y: Escape closes the overlay and Tab is trapped within it.
+  useEffect(() => {
+    if (!mounted || viewMode !== 'agent') return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        toggleViewMode();
+        return;
+      }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [mounted, viewMode, toggleViewMode]);
+
   if (!mounted || viewMode !== 'agent') return null;
 
   const handleCopy = async () => {
@@ -211,7 +250,7 @@ export default function AgentView() {
   const curl = `curl ${fullUrl}`;
 
   return (
-    <div className="tf-agent-view fixed inset-0 z-[100] flex flex-col font-mono text-sm">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Agent view" className="tf-agent-view fixed inset-0 z-[100] flex flex-col font-mono text-sm">
       <div className="tf-agent-scanlines absolute inset-0 pointer-events-none" />
 
       <header className="relative z-10 border-b border-accent-cyan/30 bg-bg-primary/95 backdrop-blur-sm px-4 py-3 flex items-center justify-between gap-3">
@@ -222,6 +261,7 @@ export default function AgentView() {
           <span className="text-text-secondary text-xs truncate hidden sm:inline">{pathname}</span>
         </div>
         <button
+          ref={closeButtonRef}
           onClick={toggleViewMode}
           className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border border-accent-cyan/40 text-accent-cyan hover:bg-accent-cyan/10 transition-colors"
           aria-label="Switch to human view"
