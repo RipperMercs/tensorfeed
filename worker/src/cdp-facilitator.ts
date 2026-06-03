@@ -52,6 +52,16 @@ const JWT_EXPIRY_SECONDS = 120;
 // Bound length for clipped response excerpts in error messages.
 const RESPONSE_EXCERPT_LIMIT = 200;
 
+// Per-request upstream timeouts. CDP is the only worker fetch on the PAID hot
+// path; without a bound, a stalled CDP request (TCP open, no response) hangs the
+// agent's paid invocation. verify and the read calls move no funds so they fail
+// fast at 15s. settle broadcasts on-chain, so it gets the same 30s bound as the
+// self-broadcast receipt wait (x402-facilitator.ts:608) to avoid aborting a
+// settle CDP would have completed. An AbortError lands in each function's
+// existing try/catch and surfaces as a clean verify/settle failure, not a hang.
+const CDP_TIMEOUT_MS = 15_000;
+const CDP_SETTLE_TIMEOUT_MS = 30_000;
+
 // ---------- public response types ----------
 
 export interface CdpDiscoveryResource {
@@ -335,6 +345,7 @@ export async function cdpVerify(
     resp = await fetch(url, {
       method: 'POST',
       headers,
+      signal: AbortSignal.timeout(CDP_TIMEOUT_MS),
       body: JSON.stringify({
         x402Version: payload.x402Version,
         paymentPayload: payload,
@@ -467,6 +478,7 @@ export async function cdpSettle(
     resp = await fetch(url, {
       method: 'POST',
       headers,
+      signal: AbortSignal.timeout(CDP_SETTLE_TIMEOUT_MS),
       body: JSON.stringify({
         x402Version: payload.x402Version,
         paymentPayload: enrichedPayload,
@@ -526,7 +538,11 @@ export async function cdpSettle(
 export async function cdpGetSupported(env: Env): Promise<CdpSupportedResponse> {
   const path = `${CDP_BASE_PATH}/supported`;
   const headers = await authHeaders(env, 'GET', path);
-  const resp = await fetch(`${CDP_BASE_URL}/supported`, { method: 'GET', headers });
+  const resp = await fetch(`${CDP_BASE_URL}/supported`, {
+    method: 'GET',
+    headers,
+    signal: AbortSignal.timeout(CDP_TIMEOUT_MS),
+  });
   if (!resp.ok) {
     const text = await resp.text().catch(() => '');
     throw new Error(`cdp getSupported HTTP ${resp.status}: ${clipResponseText(text)}`);
@@ -561,7 +577,11 @@ export async function cdpListDiscoveryResources(
   const url = `${CDP_BASE_URL}/discovery/resources${
     qs.toString() ? '?' + qs.toString() : ''
   }`;
-  const resp = await fetch(url, { method: 'GET', headers });
+  const resp = await fetch(url, {
+    method: 'GET',
+    headers,
+    signal: AbortSignal.timeout(CDP_TIMEOUT_MS),
+  });
   if (!resp.ok) {
     const text = await resp.text().catch(() => '');
     throw new Error(
