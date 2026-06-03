@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'microsoft-mai-models-openai-independence',
+    title:
+      'Microsoft Shipped Seven of Its Own Models. The One That Counts Lives Inside Copilot.',
+    author: 'Ripper',
+    date: 'June 3, 2026',
+    readTime: '6 min read',
+    description:
+      "At Build on June 2, Microsoft launched seven in-house MAI models spanning image, voice, transcription, reasoning, and coding. Two matter: MAI-Thinking-1, the company's first reasoning model (35B active MoE, 256K context, 97% on AIME 2025, human raters preferring it over Claude Sonnet 4.6), and MAI-Code-1-Flash, a roughly 5B coding model already in GitHub Copilot that beats Claude Haiku 4.5 by 16 points on SWE-Bench Pro (51.2% vs 35.2%) while using up to 60% fewer tokens and costing less. The headline was benchmarks. The story underneath is Microsoft building a stack it owns end to end on its own Azure infrastructure, trained without OpenAI data, so it can serve a growing share of Copilot and Azure calls without paying a third party. Why the small coding model is the commercial weapon, what the numbers do and do not prove, and how it fits the week's bigger shift toward the agent runtime as the product.",
+  },
+  {
     slug: 'nvidia-rtx-spark-edge-agents',
     title:
       "NVIDIA's RTX Spark Runs a 120B Model on a Laptop. The Real Move Is Owning Every Layer.",
