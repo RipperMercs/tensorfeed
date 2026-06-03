@@ -9,7 +9,7 @@
  * resolve are rejected at validation, so the agent never sees a
  * hallucinated reference.
  *
- * Pricing: 10 credits ($0.05) vs base whats-new at 1 credit ($0.005).
+ * Pricing: 10 credits ($0.20) vs base whats-new at 1 credit ($0.02).
  * Margin economics:
  *   - Haiku cost per uncached call ~$0.0105 (3K input + 1.5K output)
  *   - Cache hit rate target: 85%+ (cache key includes base-data hash)

@@ -11864,7 +11864,7 @@ export default {
     // validation; agent never sees a hallucinated reference.
     //
     // Pattern: Parallel.ai-style tier ladder. Same product, deeper output,
-    // higher price (10 credits = $0.05 vs base at 1 credit = $0.005).
+    // higher price (10 credits = $0.20 vs base at 1 credit = $0.02).
     //
     // Caching: 6h TTL keyed on window + SHA-256(base data). Expected
     // 85%+ hit rate; uncached calls cost ~$0.01 Haiku, cached calls cost

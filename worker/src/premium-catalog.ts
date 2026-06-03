@@ -37,7 +37,7 @@ import { isStrictPremiumPath } from './strict-premium-endpoints';
 export interface PremiumEndpoint {
   /** The request path. Slug endpoints use a {param} template (e.g. {ticker}). */
   path: string;
-  /** Real credit cost charged on a successful paid call (1 credit = $0.005). */
+  /** Real credit cost charged on a successful paid call (1 credit = $0.02). */
   credits: number;
   /** True if the path bypasses the per-IP free-trial pool (clean 402 to anonymous callers). */
   strict_premium: boolean;
@@ -1200,6 +1200,6 @@ export function buildPremiumCatalog(): {
     categories,
     endpoints,
     note: 'All premium endpoints settle in USDC on Base via x402 and return an Ed25519-signed AFTA receipt; free callers get a 50-credit welcome bonus on first payment.',
-    attribution: 'TensorFeed.ai premium catalog. 1 credit = $0.005. See /developers/agent-payments for the payment flow.',
+    attribution: 'TensorFeed.ai premium catalog. 1 credit = $0.02. See /developers/agent-payments for the payment flow.',
   };
 }
