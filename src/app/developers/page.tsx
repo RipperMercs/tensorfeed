@@ -402,6 +402,195 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/research/authors',
+    description:
+      'Free top-25 preview of AI researchers ranked by publication volume over the trailing 365 days, with h-index, citation count, primary affiliation, ORCID, and AI-publication share. Source: OpenAlex (CC0). The full top-100 is the paid /api/premium/research/authors.',
+    cache: 'Cache for 30 minutes',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-06-03T04:00:00Z",
+  "window_days": 365,
+  "concept": "Artificial intelligence",
+  "authors": [
+    {
+      "rank": 1,
+      "display_name": "Jane Researcher",
+      "orcid": "0000-0002-1825-0097",
+      "primary_affiliation": "Stanford University",
+      "ai_works_last_year": 42,
+      "total_works_count": 310,
+      "cited_by_count": 18000,
+      "h_index": 70,
+      "i10_index": 180,
+      "ai_share_pct": 88.0
+    }
+  ],
+  "source": "OpenAlex (CC0)"
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/research/citation-velocity',
+    description:
+      'Free top-25 preview of AI papers from the last 2 years ranked by the share of their total citations that arrived in the most recent calendar year (what is being cited fastest now, not all-time most cited). OpenAlex (CC0), cross-checked against Semantic Scholar.',
+    cache: 'Cache for 30 minutes',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-06-03T04:00:00Z",
+  "papers": [
+    {
+      "rank": 1,
+      "title": "A Recent Influential Paper",
+      "publication_year": 2024,
+      "cited_by_count": 1200,
+      "citations_latest_year": 900,
+      "citations_latest_year_share": 0.75,
+      "venue": "NeurIPS",
+      "doi": "10.x/y",
+      "first_three_authors": ["Alice", "Bob", "Carol"],
+      "s2": { "tldr": "...", "influential_citation_count": 140 }
+    }
+  ],
+  "source": "OpenAlex (CC0) + Semantic Scholar"
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/research/conference-acceptances',
+    description:
+      'Free. Notable-tier (Oral and Spotlight) accepted papers from current top ML venues (ICLR, NeurIPS, ICML) via OpenReview public metadata. Each paper carries title, authors, decision tier, primary area, keywords, a clipped abstract, and the forum_url. Link and summarize, no full-text republish.',
+    cache: 'Cache for 30 minutes',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-06-03T00:00:00Z",
+  "venues": ["ICLR 2026", "NeurIPS 2025"],
+  "paper_count": 120,
+  "papers": [
+    {
+      "title": "An Accepted Paper",
+      "authors": ["Alice", "Bob"],
+      "venue_group": "ICLR 2026",
+      "tier": "Oral",
+      "primary_area": "representation learning",
+      "keywords": ["llm", "reasoning"],
+      "abstract_snippet": "...",
+      "forum_url": "https://openreview.net/forum?id=...",
+      "pdf_url": "https://openreview.net/pdf?id=..."
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/research/nlp-proceedings',
+    description:
+      'Free. Recent papers from the current ACL, EMNLP, and NAACL proceedings via the ACL Anthology. Each paper carries title, authors, a clipped abstract, and the Anthology url. Abstracts CC-BY, link and summarize, no full-text republish.',
+    cache: 'Cache for 30 minutes',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-06-03T00:00:00Z",
+  "venues": ["ACL 2026", "EMNLP 2025"],
+  "paper_count": 80,
+  "papers": [
+    {
+      "title": "An NLP Paper",
+      "authors": ["Alice", "Bob"],
+      "venue_group": "ACL 2026",
+      "abstract_snippet": "...",
+      "url": "https://aclanthology.org/2026.acl-long.1/",
+      "doi": "10.x/y"
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/research/lab-blogs',
+    description:
+      'Free. Recent posts from major AI lab and academic research blogs (Google DeepMind, Google Research, Berkeley BAIR, MIT News AI, Hugging Face), aggregated newest-first. Each post carries title, source blog, a clipped snippet, published date, and the link. Aggregated public RSS, link and summarize, no full-text republish.',
+    cache: 'Cache for 30 minutes',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-06-03T00:00:00Z",
+  "post_count": 40,
+  "posts": [
+    {
+      "title": "A Research Blog Post",
+      "url": "https://deepmind.google/discover/blog/post",
+      "source": "Google DeepMind",
+      "snippet": "...",
+      "published_at": "2026-06-02T12:00:00Z"
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/research/milestones',
+    description:
+      'Free top-25 preview of arXiv papers from the last 30 days flagged is_milestone_candidate by the TensorFeed offline extraction pipeline. Each paper carries the named benchmark plus quantified delta, model release, or novel architecture behind the flag. The full set is the paid /api/premium/research/milestones.',
+    cache: 'Cache for 30 minutes',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-06-03T00:00:00Z",
+  "window_days": 30,
+  "total": 25,
+  "papers": [
+    {
+      "arxiv_id": "2606.01234",
+      "date": "2026-06-01",
+      "subfield_tag": "reasoning",
+      "methodology_bucket": "benchmark",
+      "title": "A Milestone Paper",
+      "affiliations": ["A Lab"],
+      "milestone_reasoning": "Sets a new SWE-bench Verified high of X percent.",
+      "summary": "..."
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/research/emerging-keywords',
+    description:
+      'Free top-25 preview of multi-word keyphrases across recent arXiv AI abstracts ranked by recent-vs-baseline lift, surfacing emerging research terminology before it shows up in citation counts. The top-50 full set is the paid /api/premium/research/emerging-keywords.',
+    cache: 'Cache for 30 minutes',
+    example: `{
+  "ok": true,
+  "capturedAt": "2026-06-03T00:00:00Z",
+  "recent_window_days": 14,
+  "baseline_window_days": 90,
+  "total": 25,
+  "keywords": [
+    {
+      "keyword": "test time compute",
+      "recent_count": 38,
+      "baseline_count": 6,
+      "lift": 6.3,
+      "example_arxiv_ids": ["2606.01234", "2606.05678"]
+    }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/intelligence',
+    description:
+      'Free headline ranking of the TensorFeed Model Intelligence Index (TFII): a versioned composite score (0 to 100) per AI model derived from public benchmarks (MMLU-Pro, HumanEval, GPQA-Diamond, MATH, SWE-bench) and discounted for contamination and saturation. The signed per-model breakdown is the paid /api/premium/model-intelligence.',
+    cache: 'Cache for 5 minutes',
+    example: `{
+  "ok": true,
+  "as_of": "2026-06-03",
+  "methodology_version": "1.x",
+  "methodology_url": "https://tensorfeed.ai/intelligence",
+  "count": 40,
+  "models": [
+    { "rank": 1, "model_id": "claude-opus-4-8", "name": "Claude Opus 4.8", "provider": "Anthropic", "tfii": 87.4 }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/hf/trending',
     description: 'Top Hugging Face models, datasets, and Spaces (the three asset classes). Models and datasets ranked by downloads (top 30 each); Spaces ranked by likes (top 30, since downloads is meaningless for hosted apps). Captured daily at 12:00 UTC against the public HF API (no auth). Once we have multiple days of snapshots, day-over-day deltas become a real "trending" signal. Pairs with the existing TensorFeed HF dataset (tensorfeed/ai-ecosystem-daily) which we publish back into the HF community.',
     cache: 'Cache for 10 minutes',
