@@ -1062,6 +1062,17 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'misc',
   },
   {
+    path: '/api/premium/hf-leaderboard/movers',
+    credits: 1,
+    strict_premium: true,
+    params: [{ name: 'window', required: false }],
+    returns:
+      'Period-over-period movers on the Open LLM Leaderboard v2: rank climbers and fallers, average and per-benchmark score deltas, models entered and exited, new per-benchmark leaders, and license changes, diffed across TensorFeed dated snapshots.',
+    free_sibling: '/api/hf-leaderboard/latest',
+    signed: true,
+    category: 'research',
+  },
+  {
     path: '/api/premium/coding-harnesses/weekly-deltas',
     credits: 1,
     strict_premium: true,

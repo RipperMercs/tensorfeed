@@ -272,6 +272,10 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // free-trial 400 missing_params, so catalog validators read it as paid. The
   // /full sibling stays premium-with-trial (no required params).
   '/api/premium/ai-crawler-access/changes',
+  // HF leaderboard movers (2026-06-02). Reads the optional ?window= param, so it
+  // is strict-premium per the convention that any param-reading paid route is
+  // strict; anonymous probes see a clean 402, never a free-trial path.
+  '/api/premium/hf-leaderboard/movers',
 ];
 
 /**

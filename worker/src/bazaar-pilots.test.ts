@@ -139,6 +139,8 @@ const PILOT_PATHS = [
   '/api/premium/ai-crawler-access/changes',
   // Wave 31 (2026-06-02): agent-ready
   '/api/premium/agent-ready/full',
+  // Wave 32 (2026-06-02): hf-leaderboard movers
+  '/api/premium/hf-leaderboard/movers',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

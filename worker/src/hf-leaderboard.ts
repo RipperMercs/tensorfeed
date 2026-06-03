@@ -310,6 +310,17 @@ export async function captureLeaderboard(env: Env): Promise<CaptureResult> {
 
 // ── Reader (route handler input) ────────────────────────────────────
 
+// Raw series readers for the premium movers endpoint. readLatest applies the
+// free filter/limit; these return the full dated snapshots so the premium layer
+// can diff complete cohorts period over period.
+export async function readDates(env: Env): Promise<string[]> {
+  return ((await env.TENSORFEED_CACHE.get(KV_DATES, 'json')) as string[] | null) ?? [];
+}
+
+export async function readSnapshotByDate(env: Env, date: string): Promise<LeaderboardSnapshot | null> {
+  return (await env.TENSORFEED_CACHE.get(`${KV_DATE_PREFIX}${date}`, 'json')) as LeaderboardSnapshot | null;
+}
+
 export interface LatestQuery {
   limit?: number;
   min_average?: number;

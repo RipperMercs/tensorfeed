@@ -6241,6 +6241,73 @@ const AGENT_READY_FULL_PILOT: BazaarPilotConfig = {
   },
 };
 
+/*
+ * Wave 32 (2026-06-02): HF Leaderboard Movers. Period-over-period diff of the
+ * Open LLM Leaderboard v2 over TensorFeed's own dated snapshots. Optional
+ * window param (default 7 days). The live board shows only today; this is what
+ * moved between two captured days.
+ */
+const HF_LEADERBOARD_MOVERS_PILOT: BazaarPilotConfig = {
+  description:
+    'Hugging Face Open LLM Leaderboard v2 movers. One paid call diffs the latest captured snapshot against one window days earlier (default 7) and returns what moved: rank climbers and fallers, average and per-benchmark score deltas, models entered and exited, new per-benchmark leaders, and license changes. Derived from TensorFeed dated snapshots; the live board shows only today.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { window: 7 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-03',
+            from_date: '2026-05-27',
+            to_date: '2026-06-03',
+            window_days: 7,
+            has_data: true,
+            rank_climbers: [
+              { model_id: 'org/model-a', from_rank: 12, to_rank: 5, rank_change: 7, from_average: 41.2, to_average: 43.8, average_change: 2.6 },
+            ],
+            new_leaders: [
+              { benchmark: 'math_lvl_5', model_id: 'org/model-a', score: 38.4, prev_leader: 'org/model-b', prev_score: 37.1 },
+            ],
+            source_attribution:
+              'TensorFeed premium derivation over its own dated snapshots of the Hugging Face Open LLM Leaderboard v2 (CC-BY-SA 4.0).',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: { window: { type: 'integer' } },
+                additionalProperties: false,
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -6384,6 +6451,9 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // Wave 31 (2026-06-02): Agent-Ready Web Map. Derived agent-readiness scoring
   // over the crawler-access crawl. Full is the flat per-domain dataset.
   '/api/premium/agent-ready/full': AGENT_READY_FULL_PILOT,
+  // Wave 32 (2026-06-02): HF Leaderboard Movers. Period-over-period diff of the
+  // Open LLM Leaderboard v2 over TF dated snapshots. Optional window param.
+  '/api/premium/hf-leaderboard/movers': HF_LEADERBOARD_MOVERS_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

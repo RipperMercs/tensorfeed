@@ -175,6 +175,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // Agent-Ready Web Map full dataset is derived from the same rolling crawl
   // snapshot, so it inherits the 8-day SLA (7-day window + 1 day headroom).
   '/api/premium/agent-ready/full': { maxAgeSeconds: 8 * 24 * 60 * 60 },
+  // HF leaderboard movers diffs the latest captured snapshot against an earlier
+  // one; captured_at is the latest snapshot date (daily 04:45 UTC cron), so 36h
+  // equals the one-day cadence plus headroom for a single missed run.
+  '/api/premium/hf-leaderboard/movers': { maxAgeSeconds: 36 * 60 * 60 },
   // Historical series queries: immutable.
   '/api/premium/history/pricing/series': NULL_SLA,
   '/api/premium/history/benchmarks/series': NULL_SLA,

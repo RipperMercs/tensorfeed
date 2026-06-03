@@ -5803,6 +5803,27 @@ export default {
       return jsonResponse(result, 200, 1800);
     }
 
+    // === PAID PREMIUM: HF LEADERBOARD MOVERS (Tier 1, 1 credit) ===
+    // /api/premium/hf-leaderboard/movers?window=<days, default 7, 1 to 90>
+    // Period-over-period movers on the Open LLM Leaderboard v2, derived from
+    // TensorFeed's own dated snapshots (the live board shows only today's
+    // state). Rank climbers and fallers, average plus per-benchmark score
+    // deltas, models entered and exited, new per-benchmark leaders, and license
+    // changes. Reads the optional window param (default 7), so it is registered
+    // strict-premium per the convention that any param-reading paid route is
+    // strict. captured_at is the latest snapshot date. Fewer than two captured
+    // days in the window passes empty_result so the call is not billed.
+    if (path === '/api/premium/hf-leaderboard/movers') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      const wRaw = parseInt(url.searchParams.get('window') ?? '', 10);
+      const windowDays = Number.isFinite(wRaw) ? Math.max(1, Math.min(wRaw, 90)) : 7;
+      const { buildMovers } = await import('./premium-hf-leaderboard');
+      const result = await buildMovers(env, windowDays);
+      ctx.waitUntil(logPremiumUsage(env, '/api/premium/hf-leaderboard/movers', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
+      return await premiumResponse(result, payment, 1, request, env, result.has_data ? null : 'empty_result');
+    }
+
     // === GITHUB HOT AI ISSUES (free) ===
     // Daily snapshot of currently-active GitHub issues across AI-relevant
     // topics, ranked by comment count. Captured by the 12:30 UTC cron.
