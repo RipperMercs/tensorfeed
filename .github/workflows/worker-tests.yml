@@ -36,6 +36,13 @@ jobs:
         working-directory: worker
         run: npm install
 
+      # VITEST_SKIP_LIVE=1 skips the handful of live-network smoke tests
+      # (worker/src/x402-index/live.test.ts) that hit Base mainnet RPC and the
+      # live tensorfeed.ai manifest. Those verify external infrastructure, not
+      # Worker code, so a transient RPC hiccup should not paint this signal red.
+      # They still run by default on a developer's local `npm test`.
       - name: Run tests
         working-directory: worker
         run: npm test
+        env:
+          VITEST_SKIP_LIVE: '1'
