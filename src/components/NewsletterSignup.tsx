@@ -46,7 +46,7 @@ export default function NewsletterSignup({ variant = 'sidebar' }: { variant?: 's
         </p>
 
         {status === 'success' ? (
-          <div className="flex items-center gap-2 text-accent-green text-xs">
+          <div role="status" aria-live="polite" className="flex items-center gap-2 text-accent-green text-xs">
             <Check className="w-4 h-4" />
             {message}
           </div>
@@ -54,6 +54,7 @@ export default function NewsletterSignup({ variant = 'sidebar' }: { variant?: 's
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input
               type="email"
+              aria-label="Email address"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="you@email.com"
@@ -70,7 +71,7 @@ export default function NewsletterSignup({ variant = 'sidebar' }: { variant?: 's
           </form>
         )}
         {status === 'error' && (
-          <p className="text-xs text-accent-red mt-2">{message}</p>
+          <p role="status" aria-live="polite" className="text-xs text-accent-red mt-2">{message}</p>
         )}
       </div>
     );
@@ -83,7 +84,7 @@ export default function NewsletterSignup({ variant = 'sidebar' }: { variant?: 's
       <p className="text-xs text-text-muted mb-2">Top AI stories, every Friday.</p>
 
       {status === 'success' ? (
-        <div className="flex items-center gap-2 text-accent-green text-xs">
+        <div role="status" aria-live="polite" className="flex items-center gap-2 text-accent-green text-xs">
           <Check className="w-4 h-4" />
           {message}
         </div>
@@ -91,6 +92,7 @@ export default function NewsletterSignup({ variant = 'sidebar' }: { variant?: 's
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="email"
+            aria-label="Email address"
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="you@email.com"
@@ -107,7 +109,7 @@ export default function NewsletterSignup({ variant = 'sidebar' }: { variant?: 's
         </form>
       )}
       {status === 'error' && (
-        <p className="text-xs text-accent-red mt-2">{message}</p>
+        <p role="status" aria-live="polite" className="text-xs text-accent-red mt-2">{message}</p>
       )}
     </div>
   );
