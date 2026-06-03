@@ -86,3 +86,71 @@ export function cisaSsvcDecision(
   if (!d) throw new Error(`ssvc: no tree entry for ${ssvcTreeKey(points.exploitation, points.automatable, points.technical_impact, mw)}`);
   return d;
 }
+
+export interface SsvcPoints {
+  exploitation: Exploitation;
+  automatable: Automatable;
+  technical_impact: TechnicalImpact;
+  role: string;
+  version: string;
+  scored_at: string;
+}
+
+const EXPLOITATION_VALUES = new Set<string>(['none', 'poc', 'active']);
+const AUTOMATABLE_VALUES = new Set<string>(['no', 'yes']);
+const TECHNICAL_IMPACT_VALUES = new Set<string>(['partial', 'total']);
+
+/**
+ * Extract the SSVC decision points from a CISA Vulnrichment record. The block
+ * lives in containers.adp[] under the metric whose other.type === 'ssvc'. The
+ * adp index varies (seen at adp[0] and adp[1]), so locate by scanning, not by
+ * index. Returns null if the record carries no parseable SSVC block: the caller
+ * treats that as a no-charge no_ssvc_data outcome.
+ */
+export function parseSsvcFromVulnrichment(record: unknown): SsvcPoints | null {
+  const rec = record as { containers?: { adp?: unknown } } | null | undefined;
+  const adp = rec?.containers?.adp;
+  if (!Array.isArray(adp)) return null;
+
+  let content: Record<string, unknown> | null = null;
+  for (const container of adp) {
+    const metrics = (container as { metrics?: unknown })?.metrics;
+    if (!Array.isArray(metrics)) continue;
+    for (const metric of metrics) {
+      const other = (metric as { other?: { type?: unknown; content?: unknown } })?.other;
+      if (other && other.type === 'ssvc' && other.content && typeof other.content === 'object') {
+        content = other.content as Record<string, unknown>;
+        break;
+      }
+    }
+    if (content) break;
+  }
+  if (!content) return null;
+
+  const options = content.options;
+  if (!Array.isArray(options)) return null;
+
+  let exploitation: Exploitation | null = null;
+  let automatable: Automatable | null = null;
+  let technical_impact: TechnicalImpact | null = null;
+  for (const opt of options) {
+    if (!opt || typeof opt !== 'object') continue;
+    for (const [k, v] of Object.entries(opt as Record<string, unknown>)) {
+      const key = k.trim().toLowerCase();
+      const val = typeof v === 'string' ? v.trim().toLowerCase() : '';
+      if (key === 'exploitation' && EXPLOITATION_VALUES.has(val)) exploitation = val as Exploitation;
+      else if (key === 'automatable' && AUTOMATABLE_VALUES.has(val)) automatable = val as Automatable;
+      else if (key === 'technical impact' && TECHNICAL_IMPACT_VALUES.has(val)) technical_impact = val as TechnicalImpact;
+    }
+  }
+  if (!exploitation || !automatable || !technical_impact) return null;
+
+  return {
+    exploitation,
+    automatable,
+    technical_impact,
+    role: typeof content.role === 'string' ? content.role : 'unknown',
+    version: typeof content.version === 'string' ? content.version : 'unknown',
+    scored_at: typeof content.timestamp === 'string' ? content.timestamp : '',
+  };
+}

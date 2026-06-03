@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION } from './ssvc-verdict';
+import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION, parseSsvcFromVulnrichment } from './ssvc-verdict';
 
 // The authoritative 36-row CISA SSVC Coordinator v2.0.3 table. Verified three
 // independent ways and adversarially audited (2026-06-03). This fixture pins
@@ -73,5 +73,95 @@ describe('CISA SSVC tree', () => {
           expect(med).toBeGreaterThanOrEqual(low);
           expect(high).toBeGreaterThanOrEqual(med);
         }
+  });
+});
+
+// Minimal vulnrichment record fixtures (only the fields the parser reads).
+function recordWithSsvc(opts: {
+  adpIndex: 0 | 1;
+  options: Record<string, string>[];
+  timestamp?: string;
+  role?: string;
+  version?: string;
+}) {
+  const ssvcContainer = {
+    title: 'CISA ADP Vulnrichment',
+    metrics: [
+      {
+        other: {
+          type: 'ssvc',
+          content: {
+            id: 'CVE-0000-0000',
+            role: opts.role ?? 'CISA Coordinator',
+            options: opts.options,
+            version: opts.version ?? '2.0.3',
+            timestamp: opts.timestamp ?? '2024-04-02T04:00:23.138684Z',
+          },
+        },
+      },
+    ],
+  };
+  const other = { title: 'CVE Program Container', metrics: [] };
+  const adp = opts.adpIndex === 0 ? [ssvcContainer, other] : [other, ssvcContainer];
+  return { containers: { adp } };
+}
+
+describe('parseSsvcFromVulnrichment', () => {
+  it('parses points from an adp[1] record (xz shape)', () => {
+    const rec = recordWithSsvc({
+      adpIndex: 1,
+      options: [{ Exploitation: 'none' }, { Automatable: 'yes' }, { 'Technical Impact': 'total' }],
+    });
+    expect(parseSsvcFromVulnrichment(rec)).toEqual({
+      exploitation: 'none',
+      automatable: 'yes',
+      technical_impact: 'total',
+      role: 'CISA Coordinator',
+      version: '2.0.3',
+      scored_at: '2024-04-02T04:00:23.138684Z',
+    });
+  });
+
+  it('finds the ssvc block when it is in adp[0] (title-located, not index)', () => {
+    const rec = recordWithSsvc({
+      adpIndex: 0,
+      options: [{ Exploitation: 'none' }, { Automatable: 'no' }, { 'Technical Impact': 'total' }],
+    });
+    expect(parseSsvcFromVulnrichment(rec)?.automatable).toBe('no');
+  });
+
+  it('normalizes value casing', () => {
+    const rec = recordWithSsvc({
+      adpIndex: 1,
+      options: [{ Exploitation: 'Active' }, { Automatable: 'YES' }, { 'Technical Impact': 'Partial' }],
+    });
+    expect(parseSsvcFromVulnrichment(rec)).toMatchObject({
+      exploitation: 'active',
+      automatable: 'yes',
+      technical_impact: 'partial',
+    });
+  });
+
+  it('returns null when there is no ssvc block', () => {
+    expect(parseSsvcFromVulnrichment({ containers: { adp: [{ title: 'CVE Program Container', metrics: [] }] } })).toBeNull();
+  });
+
+  it('returns null when a decision point is missing', () => {
+    const rec = recordWithSsvc({ adpIndex: 1, options: [{ Exploitation: 'none' }, { Automatable: 'yes' }] });
+    expect(parseSsvcFromVulnrichment(rec)).toBeNull();
+  });
+
+  it('returns null when a value is out of enum', () => {
+    const rec = recordWithSsvc({
+      adpIndex: 1,
+      options: [{ Exploitation: 'maybe' }, { Automatable: 'yes' }, { 'Technical Impact': 'total' }],
+    });
+    expect(parseSsvcFromVulnrichment(rec)).toBeNull();
+  });
+
+  it('returns null on a malformed record', () => {
+    expect(parseSsvcFromVulnrichment(null)).toBeNull();
+    expect(parseSsvcFromVulnrichment({})).toBeNull();
+    expect(parseSsvcFromVulnrichment({ containers: { adp: 'nope' } })).toBeNull();
   });
 });
