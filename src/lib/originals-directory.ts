@@ -167,16 +167,6 @@ export const ORIGINALS: OriginalArticle[] = [
       'Keyrock published a market-structure note on May 19 finding that 76 percent of AI agent transactions on public stablecoin rails fall below the 30-cent fee floor of the traditional card networks. Five days later, Coinbase product lead Nick Prince posted a demo in which an AI agent on Base spent $1.87 in USDC across six paid x402 calls to draft a full SpaceX investment-committee memo from the S-1 in twelve minutes. Inside the convergent week (Stellar joining x402, Cryptorefills launching agent payments, Fireblocks signing on, AllUnity adding the first non-dollar stablecoin), why SaaS subscription pricing breaks against an audience that does not amortize, and three signposts for the next ninety days.',
   },
   {
-    slug: 'pope-leo-magnifica-humanitas-anthropic-olah',
-    title:
-      "Pope Leo XIV Just Wrote a 235-Page Encyclical on AI. Anthropic's Co-Founder Was Standing Next to Him.",
-    author: 'Kira Nolan',
-    date: 'May 25, 2026',
-    readTime: '7 min read',
-    description:
-      "Pope Leo XIV released Magnifica Humanitas, the first papal encyclical to take AI as its central subject, at the Vatican on May 25. 235 pages, 245 paragraphs, signed 135 years to the day after Rerum Novarum reframed labor and capital. Pope Leo presented it personally, the first pontiff ever to do so, with Anthropic co-founder Chris Olah at his side. Same day, the $30B Anthropic round at $900B closes; three days earlier, OpenAI files its S-1. Inside what is actually in the text (autonomous weapons judged practically beyond human governance, a call for wider ownership of AI data, slow-down language on deployment), why Olah specifically rather than any other lab founder, what moral capital buys in regulator hearings and Catholic-institution procurement, and the three signposts to watch over the next ninety days.",
-  },
-  {
     slug: 'agent-native-browsers-firefox-fork-runtime-shift',
     title:
       'AI Agents Just Got Their Own Web Browser. The Runtime Layer Is Forking Away From Humans.',
@@ -346,6 +336,16 @@ export const ORIGINALS: OriginalArticle[] = [
       "Google sandbagged its own keynote with the Android Show and shipped Gemini Intelligence on Monday. Anthropic let the $900B to $950B valuation talks leak Tuesday. xAI sunsets eight models at noon Pacific today. Apple started rewriting App Store rules for autonomous agents. Amazon killed Rufus and replaced it with Alexa for Shopping. The Snap-Perplexity $400M deal collapsed. The pre-Google-I/O positioning week ran louder than the keynote it leads into. Inside the seven moves that mattered and what to watch when Sundar takes the stage Tuesday.",
   },
   {
+    slug: 'aws-ships-hosted-mcp-server',
+    title:
+      'AWS Put MCP on Its Own Infrastructure. That Changes What the Protocol Is For.',
+    author: 'Marcus Chen',
+    date: 'May 15, 2026',
+    readTime: '7 min read',
+    description:
+      "AWS shipped a hosted MCP Server with SigV4 auth, IAM authorization, and two regional endpoints, and folded its two prior MCP servers into it. The news is not that AWS has an MCP server. It is that AWS decided MCP belongs on production cloud infrastructure with enterprise auth, not on a developer's laptop. Inside what shipped, why the auth model matters more than the tool list, and how this stacks with AgentCore Payments.",
+  },
+  {
     slug: 'google-a2a-x402-payments-extension',
     title:
       'Google Just Put 60 Payment Companies Behind a Crypto-Native Agent Rail',
@@ -446,6 +446,15 @@ export const ORIGINALS: OriginalArticle[] = [
     readTime: '7 min read',
     description:
       "Google I/O 2026 lands May 19, with The Android Show: I/O Edition opening tomorrow. Over the last fourteen days Anthropic committed $200B to Google TPUs, rented every accelerator at Colossus 1, and hit a $30B run rate on 80x Q1 growth. OpenAI shipped a reasoning voice stack. Apple opened Siri to every compatible model. Inside the five-item punch list Gemini 4 has to clear at the keynote (2M+ context that stays priced for long-doc agents, a first-party Claude Code competitor, an Omni video model with shippable benchmarks, a public stance on the cyber tier, and an Apple Intelligence Extensions flag) and why the cost-per-useful-task quadrant is the one Google cannot afford to lose.",
+  },
+  {
+    slug: 'x402-verifier-mcp-launch',
+    title: 'The x402 Payment Just Settled. Now What Verifies It? We Shipped the MCP.',
+    author: 'Ripper',
+    date: 'May 11, 2026',
+    readTime: '6 min read',
+    description:
+      "Four days after AWS made x402 the default agent payment rail, the next question is who verifies the on-chain settlement actually matches the claimed receipt. We shipped the read-only Base mainnet chain reader that lets any agent answer that without holding a private key. Eleven tools, MIT, on npm and the canonical MCP registry today.",
   },
   {
     slug: 'nvidia-40b-equity-customer-investor-loop',
