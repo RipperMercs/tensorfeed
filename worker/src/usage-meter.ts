@@ -15,9 +15,13 @@ export interface UsageEvent {
   internal?: boolean;
 }
 
-// Tracked free path prefixes (premiumization-signal endpoints). All /api/premium/*
-// is always tracked. Everything else (internal, admin, health, cron) is ignored.
-const TRACKED_FREE_PREFIXES = ['/api/feeds', '/api/status', '/api/news', '/api/agents'];
+// All /api/premium/* is always tracked. Every other /api/* read is tracked for
+// per-endpoint demand visibility EXCEPT these operational families (admin, ops,
+// health, internal, cron, cache, the refresh trigger), which are not external
+// demand. Denylist not allowlist, so new free feeds are metered automatically.
+const UNTRACKED_FREE_PREFIXES = [
+  '/api/admin', '/api/internal', '/api/refresh', '/api/ping', '/api/health',
+];
 
 export function normalizeUaFamily(ua: string): string {
   if (!ua) return 'unknown';
@@ -36,7 +40,9 @@ export function isInternalTraffic(headerValue: string | null, key: string | unde
 // Pure: decide whether a request is metered, and how. Returns null to skip.
 export function deriveUsageEvent(path: string, status: number, charged: boolean): UsageEvent | null {
   const isPremium = path.startsWith('/api/premium/');
-  const isTrackedFree = TRACKED_FREE_PREFIXES.some((p) => path === p || path.startsWith(p + '/') || path.startsWith(p + '?'));
+  const isFreeApi = !isPremium && path.startsWith('/api/');
+  const isUntracked = path.startsWith('/api/__') || UNTRACKED_FREE_PREFIXES.some((p) => path === p || path.startsWith(p + '/') || path.startsWith(p + '?'));
+  const isTrackedFree = isFreeApi && !isUntracked;
   if (!isPremium && !isTrackedFree) return null;
 
   const tier: UsageTier = isPremium ? 'premium' : 'free';

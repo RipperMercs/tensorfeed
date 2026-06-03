@@ -25,6 +25,19 @@ describe('deriveUsageEvent', () => {
     expect(deriveUsageEvent('/api/internal/track-bot', 200, false)).toBeNull();
     expect(deriveUsageEvent('/api/admin/usage', 200, false)).toBeNull();
   });
+  it('tracks ALL free /api/* feed families, not just a hardcoded few', () => {
+    expect(deriveUsageEvent('/api/research/citation-velocity', 200, false)).toMatchObject({ tier: 'free', outcome: 'served_free' });
+    expect(deriveUsageEvent('/api/agent-ready/summary.json', 200, false)).toMatchObject({ tier: 'free', outcome: 'served_free' });
+    expect(deriveUsageEvent('/api/gpu-pricing', 200, false)).toMatchObject({ tier: 'free' });
+  });
+  it('still skips ops, health, refresh, and cache paths', () => {
+    expect(deriveUsageEvent('/api/ping', 200, false)).toBeNull();
+    expect(deriveUsageEvent('/api/refresh', 200, false)).toBeNull();
+    expect(deriveUsageEvent('/api/__kv_cache/x', 200, false)).toBeNull();
+  });
+  it('does not track non-api paths', () => {
+    expect(deriveUsageEvent('/llms.txt', 200, false)).toBeNull();
+  });
   it('classifies any non-2xx/402 as error outcome', () => {
     expect(deriveUsageEvent('/api/premium/compare/models', 500, false))
       .toMatchObject({ tier: 'premium', outcome: 'error' });
