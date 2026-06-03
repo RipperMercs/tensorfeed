@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-project-deal-agent-marketplace' },
   title: 'Anthropic Just Ran the First Real-Money AI Agent Marketplace. The Results Reveal a Coming Inequality.',
   description:
     "Project Deal let 69 Anthropic employees turn Claude loose on a real cash marketplace. 186 trades, $4,000 in goods, and a hidden A/B test that exposes what happens when your agent is cheaper than your neighbor's.",

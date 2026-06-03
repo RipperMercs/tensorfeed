@@ -5,6 +5,7 @@ import { ArticleJsonLd, BreadcrumbListJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-status-monitoring-real-talk' },
   title: 'AI Status Monitoring: How We Actually Track Claude, ChatGPT, and Gemini',
   description:
     'Most "is X down" sites just mirror the official status page. We built TensorFeed to do better: 2-minute polling, component-level detail, incident history, and a single feed across every AI provider. Here is how it works and what it caught last month.',

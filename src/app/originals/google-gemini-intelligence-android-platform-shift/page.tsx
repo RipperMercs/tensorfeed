@@ -6,6 +6,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/google-gemini-intelligence-android-platform-shift' },
   title: "Google Just Renamed Android to an 'Intelligence System.' Apple's WWDC Bar Just Got Higher.",
   description:
     'At The Android Show: I/O Edition on May 12, 2026, Google introduced Gemini Intelligence, a cross-app agentic layer that reads your screen, fills forms, drives Chrome, and books reservations, plus Googlebook, a new Android laptop category. Sameer Samat called it a transition from operating system to intelligence system. Six days before I/O proper, this is what Google decided was important enough to bank ahead of the keynote. Inside what shipped, how it grades against the May 11 Gemini 4 punch list (two of five items down), and why the framing change is the real bet against Apple.',

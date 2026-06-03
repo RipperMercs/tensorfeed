@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-glasswing-update-mythos-public-release' },
   title: 'Mythos Just Logged 10,000 Critical Bugs in 30 Days. Anthropic Says the Public Release Is Next.',
   description:
     "Anthropic's Project Glasswing update on May 25-26 disclosed 23,019 potential vulnerabilities flagged across 1,000+ open source projects, 1,726 independently validated, and more than 10,000 confirmed high- or critical-severity flaws across roughly 50 partner organizations. The company also committed $100M in Mythos credits, $4M in direct OSS donations, and stated its intent to make Mythos-class models generally available once safeguards are in place. The cyber tier just stopped being a research preview.",

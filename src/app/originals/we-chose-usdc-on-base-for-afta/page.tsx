@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/we-chose-usdc-on-base-for-afta' },
   title: "We Could Have Built AFTA on Anything. We Chose USDC on Base.",
   description:
     "Now that the AFTA whitepaper is out, the question we keep getting is rail. Why x402? Why USDC? Why Base? This is the bake-off we ran, the four properties we needed, and why Coinbase and Circle ended up at the bottom of the agent-payments stack we shipped. Forward-compatible by design; opinionated by necessity.",

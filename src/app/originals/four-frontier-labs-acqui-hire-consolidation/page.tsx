@@ -6,6 +6,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/four-frontier-labs-acqui-hire-consolidation' },
   title:
     'Four Frontier Lab Acqui-Hires in Eight Days. The Quiet Consolidation Is Already Here.',
   description:

@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-talent-war-billion-dollar-engineers' },
   title: "The AI Talent War's New Price Tag: $1.5 Billion Per Engineer",
   description:
     'Meta paid one engineer a reported $1.5 billion over six years. VCs poured $18.8 billion into AI startups founded since 2025. Three OpenAI executives walked out in 10 days. The AI talent market in April 2026 is not a labor market anymore. It is a commodity auction.',

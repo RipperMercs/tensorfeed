@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/open-source-llms-closing-gap' },
   title: 'Open Source LLMs Are Closing the Gap Faster Than Anyone Expected',
   description:
     'Qwen 3.5 9B beats GPT-OSS-120B on GPQA Diamond. Gemma 4 runs on phones. Bonsai ships 1-bit models. Apache 2.0 licensing is making frontier performance free. What this means for the industry.',

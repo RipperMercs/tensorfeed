@@ -6,6 +6,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-stainless-sdk-supply-chain' },
   title:
     'Anthropic Bought the Pipeline Its Rivals Ship Their SDKs On. Then It Turned the Hosted Product Off.',
   description:

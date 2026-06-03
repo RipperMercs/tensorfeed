@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/openai-frontier-governance-framework-compliance-era' },
   title: 'OpenAI Mapped Its Safety Stack to the Law. Frontier AI Just Crossed From Voluntary to Mandatory.',
   description:
     "OpenAI published its Frontier Governance Framework this week, a public document that maps its internal safety practices to named statutes: California's Transparency in Frontier AI Act and the EU AI Act Code of Practice. The interesting move is the split between the voluntary safety policy a lab can edit at will and the compliance framework an attorney general can hold it to. What shipped, the SB 53 obligations underneath it, how the three big labs now run two tracks, and what changes for agent builders.",

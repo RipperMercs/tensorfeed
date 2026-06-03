@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/agents-md-new-robots-txt' },
   title: 'AGENTS.md Is the New robots.txt',
   description:
     'Every codebase should ship an AGENTS.md by the end of 2026. Here is why agents look for it, what to put in it, and how a 30-line file makes your repo more useful to every AI coding assistant on the planet.',

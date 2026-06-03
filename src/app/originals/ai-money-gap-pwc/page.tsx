@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-money-gap-pwc' },
   title: '74% of AI&apos;s Economic Value Goes to 20% of Companies. Here&apos;s Why.',
   description:
     'PwC surveyed 1,217 executives and found that the top 20% of companies capture nearly three-quarters of all AI-driven gains. The gap is not about tools. It is about how companies deploy them.',

@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-200b-google-tpu-math' },
   title: "Anthropic's $200B Compute Bill Is Bigger Than Its Revenue. The Google TPU Deal in Numbers.",
   description:
     "On May 5, 2026, Anthropic committed $200 billion to Google Cloud and Broadcom-built TPUs over five years. That averages $40B per year against a current run-rate revenue of roughly $30B. Inside the math, why Google effectively recollects most of its $40B Anthropic equity stake on the compute side, what TPU economics do to Nvidia's moat at the top end of the buyer list, and why 2027 is the year the gigawatts actually arrive.",

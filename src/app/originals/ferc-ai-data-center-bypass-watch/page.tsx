@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ferc-ai-data-center-bypass-watch' },
   title: 'The FERC Ruling Watch: One Decision Could Reshape Every AI Nuclear Deal',
   description:
     'In November 2024, FERC blocked the amended interconnection agreement that would have let Amazon scale its Susquehanna nuclear draw from 480 MW to 960 MW behind the meter. The matter is unresolved. Whichever way it falls reshapes every direct-feed nuclear deal hyperscalers have signed. Inside the procedural state of play, the three possible outcomes, the projects on each side of the bet, and the signposts to watch as the decision approaches.',

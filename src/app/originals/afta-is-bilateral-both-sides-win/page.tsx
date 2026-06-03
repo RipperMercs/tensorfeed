@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/afta-is-bilateral-both-sides-win' },
   title: 'AFTA Is Bilateral. Here Is Why Both Sides Win.',
   description:
     'AFTA shipped as a code-enforced fair-trade standard for AI agents, but the framing undersold what the standard actually does. The same primitives that protect agents also protect publishers. As autonomous agents move trillions of micropayments per day, both sides of every paid call need a clear, code-enforceable contract.',

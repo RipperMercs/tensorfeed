@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/xai-2-8b-gas-turbines-energy-bottleneck' },
   title:
     "Elon Musk's xAI Just Committed $2.8 Billion to Gas Turbines. The AI Energy Crunch Has a Number Now.",
   description:

@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/audited-our-paid-api-killed-two-endpoints' },
   title: "I Audited Our Own Paid API. Two Endpoints Had to Die.",
   description:
     "AFTA promises fair-trade agent commerce. So I ran a redistribution-rights audit on every paid endpoint TensorFeed sells. Two failed. One was sourcing GPU pricing in a way the upstream explicitly prohibits, the other was redistributing someone else's compiled leaderboard. Both got cut today. Here is what we found, what we killed, and why doing it first is the price of asking agents to trust the rail.",

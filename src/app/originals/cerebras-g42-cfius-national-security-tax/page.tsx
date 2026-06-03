@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/cerebras-g42-cfius-national-security-tax' },
   title:
     'Cerebras Cleared the IPO. It Did Not Clear the G42 Question. | TensorFeed',
   description:

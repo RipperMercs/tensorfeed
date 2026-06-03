@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-confidential-s1-ipo' },
   title: 'Anthropic Filed to Go Public. A Confidential S-1 at a $965 Billion Valuation Is an Option, Not a Date.',
   description:
     'On June 1, 2026 Anthropic confidentially submitted a draft Form S-1 to the SEC, the first formal step toward an IPO. The company says the number of shares and the price are not set, the offering depends on market conditions, and the submission gives it the option to go public after the SEC finishes its review. The number underneath it is a $965 billion private valuation from a $65 billion round. What a confidential draft S-1 actually commits to (almost nothing), what it signals (almost everything), and the one figure in the eventual prospectus that matters more than the valuation.',

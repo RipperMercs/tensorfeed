@@ -15,6 +15,7 @@ const isoDate = '2026-05-23T11:00:00.000Z';
 const displayDate = 'May 23, 2026';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/openai-ipo-filing-anthropic-first-profit' },
   title,
   description,
   openGraph: {

@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/apple-20-day-window-io-wwdc' },
   title: "Apple Just Got a 20-Day Window. Between Google I/O and WWDC, It Has To Rewrite the Siri Story.",
   description:
     "Google I/O lands May 19. Apple WWDC lands June 8. That is a 20-day gap, and it is the most valuable counterprogramming window Apple has had in a decade. Inside what Gemini 4 is expected to reveal, what Apple can still swap into the WWDC keynote, the four counterprogramming moves Cupertino can plausibly make in three weeks, and why Extensions changed the math.",

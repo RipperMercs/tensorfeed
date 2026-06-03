@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/mistral-medium-3-5-open-weights-frontier-coder' },
   title: 'Mistral Just Shipped a 128B Open-Weight Frontier Coder. The Numbers Make Sonnet Sweat.',
   description:
     'Mistral Medium 3.5 launched with 77.6% on SWE-Bench Verified, 256K context, $1.50/$7.50 pricing, and a modified MIT license. Cloud-based Vibe agents and a Le Chat Work mode shipped alongside. Here is how it stacks up against Claude Sonnet 4.6, GPT-5.5, and Gemini 3.1 Pro, and why open weights at this tier matters.',

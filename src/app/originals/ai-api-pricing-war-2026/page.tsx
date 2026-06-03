@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-api-pricing-war-2026' },
   title: 'The AI API Pricing War: Who\'s Winning in 2026?',
   description:
     'GPT-5.4, Claude Opus 4.6, and Gemini 3.1 Pro pricing compared. How API costs dropped dramatically in 12 months, and what open source models like Qwen 3.5 9B mean for developers choosing a provider.',

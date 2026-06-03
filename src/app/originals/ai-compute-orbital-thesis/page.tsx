@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-compute-orbital-thesis' },
   title: 'AI Compute in Orbit: The Long-Arc Thesis. Why Solar + Vacuum Beats Texas + Gas (Eventually).',
   description:
     'Terrestrial AI infrastructure runs into four hard constraints: grid bottlenecks, water draws, permits, and NIMBY. Orbital data centers sidestep all four. Continuous solar gives 30% more energy per panel. Vacuum cooling radiates heat to 3 Kelvin background. No grid, no water, no permits. The catch is launch cost, GPU radiation hardening, mass economics, and ground bandwidth. Inside what Starship economics unlock, who is exploring (Anthropic with SpaceX, Google separately, Starcloud), and why this is the 2030+ long-arc thesis, not the 2026 short-cycle play.',

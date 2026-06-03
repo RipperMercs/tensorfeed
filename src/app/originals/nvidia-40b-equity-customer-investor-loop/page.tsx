@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/nvidia-40b-equity-customer-investor-loop' },
   title: 'Nvidia Just Crossed $40 Billion in AI Equity Bets. The Customer-Investor Loop Is the Real Moat.',
   description:
     "Nvidia's 2026 equity commitments to AI companies just topped $40 billion, anchored by a $30B OpenAI stake and capped this week with $3.2B into Corning and $2.1B into IREN. Inside the customer-investor loop, the circular-investment critique, and why this is the most expensive moat any chip vendor has ever tried to build.",

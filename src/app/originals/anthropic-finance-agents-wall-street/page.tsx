@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-finance-agents-wall-street' },
   title: 'Anthropic Just Shipped 10 Wall Street Agents. The Frontier Lab Is Now a Vendor.',
   description:
     'Anthropic shipped ten preconfigured Claude agents for banks, asset managers, and insurers today, plus full Microsoft 365 integration, a Moody&apos;s data app covering 600 million companies, and a co-engineered Financial Crimes Agent with FIS. The day after the $1.5B Wall Street joint venture, the products that JV will sell are live.',

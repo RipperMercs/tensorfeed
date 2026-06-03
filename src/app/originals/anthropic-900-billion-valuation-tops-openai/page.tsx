@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-900-billion-valuation-tops-openai' },
   title: 'Anthropic at $900 Billion. The Valuation Just Lapped OpenAI.',
   description:
     'Anthropic is closing a $50B round at a $900B valuation, more than 2x its February mark and ahead of OpenAI for the first time. The board meeting is this month, the IPO window opens in October, and the revenue numbers actually justify the price.',

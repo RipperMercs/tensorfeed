@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/coinbase-armstrong-14-percent-ai-native-pivot' },
   title: "Coinbase Cuts 14%. Brian Armstrong's Memo Is the First Agent-Native Layoff at Scale.",
   description:
     "Coinbase laid off roughly 14% of staff today and Brian Armstrong's all-hands memo named the reason: AI is changing how the company works, and the new Coinbase will be 'an intelligence, with humans around the edge aligning it.' The first major public-company CEO to reorganize the org around fleets of agents, with one-person teams, no pure managers, and 5 layers max.",

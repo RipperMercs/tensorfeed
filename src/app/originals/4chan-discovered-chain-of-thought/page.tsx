@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/4chan-discovered-chain-of-thought' },
   title: '4chan Users Discovered Chain-of-Thought Reasoning Before Google Did',
   description:
     '4chan players in AI Dungeon discovered that asking AI to solve math step-by-step improves answers. This happened over a year before Google published their "breakthrough" paper. A reminder that innovation comes from everywhere.',

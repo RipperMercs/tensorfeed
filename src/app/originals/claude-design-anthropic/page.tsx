@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/claude-design-anthropic' },
   title: "Anthropic Just Shipped Claude Design. The Loop from Idea to Code Is Now Closed.",
   description:
     "Claude Design launched as an Anthropic Labs research preview. It reads your codebase, builds a design system, and hands off finished prototypes to Claude Code. Here is what it changes.",

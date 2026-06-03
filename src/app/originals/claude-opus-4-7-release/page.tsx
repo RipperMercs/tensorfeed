@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/claude-opus-4-7-release' },
   title: "Claude Opus 4.7 Just Dropped. Here's What Changed.",
   description:
     "Anthropic released Claude Opus 4.7 with a 1M token context window at flagship pricing. Benchmarks, capability gains, and what it means for the model race.",

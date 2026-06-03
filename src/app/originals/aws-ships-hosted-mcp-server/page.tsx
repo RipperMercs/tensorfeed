@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/aws-ships-hosted-mcp-server' },
   title:
     'AWS Put MCP on Its Own Infrastructure. That Changes What the Protocol Is For. | TensorFeed',
   description:

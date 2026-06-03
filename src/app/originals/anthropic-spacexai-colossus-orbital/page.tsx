@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-spacexai-colossus-orbital' },
   title:
     "Anthropic Just Booked 220K GPUs on Colossus 1. The Orbital Footnote Is the Bigger Story.",
   description:

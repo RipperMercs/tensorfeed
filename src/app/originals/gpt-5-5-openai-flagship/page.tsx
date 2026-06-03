@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/gpt-5-5-openai-flagship' },
   title: 'GPT-5.5 Just Landed. OpenAI Doubled the Price and Raised the Bar.',
   description:
     'OpenAI launched GPT-5.5, its first fully retrained base model since GPT-4.5. At $5/$30 per million tokens, it costs double GPT-5.4 but delivers 1M context, native omnimodal capabilities, and benchmark scores that top everything else on the market.',

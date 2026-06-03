@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/cloudflare-stripe-agent-provisioning-protocol' },
   title: 'Agents Just Got the Keys to Production. The Cloudflare-Stripe Protocol Is Live.',
   description:
     'Cloudflare and Stripe shipped a co-designed agent provisioning protocol on April 30, 2026. AI agents can now create Cloudflare accounts, register domains, start paid subscriptions on 32 providers, and deploy applications to production with no human in the loop beyond accepting terms. Default cap is $100 per month per provider.',

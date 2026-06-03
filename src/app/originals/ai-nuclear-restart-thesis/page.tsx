@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-nuclear-restart-thesis' },
   title: 'AI Just Reopened American Nuclear. Inside the Eighteen-Month Shift.',
   description:
     'For thirty years US utility nuclear was in retreat. New plants got cancelled, old plants got retired, and the orthodoxy said we were done building reactors. Then Microsoft signed a 20-year PPA to restart Three Mile Island Unit 1. Amazon bought a direct feed from Talen Susquehanna. Google signed with Kairos Power. Oracle announced three SMRs. AI capital just reopened American nuclear in eighteen months. Inside the deals, why nuclear fits AI workloads so cleanly, the FERC fight that could unravel it all, and the pipeline now in front of the NRC.',

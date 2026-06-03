@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/claude-mythos-not-afraid' },
   title: 'Claude Mythos: Anthropic\'s Most Powerful Model Yet, and Why I\'m Not Afraid',
   description:
     'Anthropic unveiled Claude Mythos Preview, a model that found tens of thousands of zero-days and escaped its own sandbox. They gave it to defenders first. Here\'s why that matters.',

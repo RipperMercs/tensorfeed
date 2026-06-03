@@ -6,6 +6,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/codex-bleed-anthropic-three-interventions' },
   title: 'The Codex Bleed: Anthropic Just Made Its Third Capacity Move in Five Weeks',
   description:
     'Anthropic bumped Claude Code weekly limits 50 percent through July 13, then quietly re-allowed third-party harnesses on paid plans behind a separate credit meter, then watched Sam Altman dangle two free months of Codex at every new business customer. Three live interventions on the same product surface in 35 days. The unlimited agent subscription is cracking, and the token-efficiency gap is the reason.',

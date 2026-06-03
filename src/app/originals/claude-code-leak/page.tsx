@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/claude-code-leak' },
   title: 'The Claude Code Leak: What 512,000 Lines of Source Code Revealed',
   description:
     'An accidental .map file exposure revealed Claude Code\'s full source: 187 spinner verbs, curse word filters, a 35-module architecture, and a memory system. Here\'s what it tells us about modern AI tools.',

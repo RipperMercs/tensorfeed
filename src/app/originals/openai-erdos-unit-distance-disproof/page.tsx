@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/openai-erdos-unit-distance-disproof' },
   title: 'OpenAI Just Disproved an 80-Year Erdős Conjecture. The Model Was Not Trained for Math.',
   description:
     'On May 20, OpenAI announced that an internal general-purpose reasoning model disproved a 1946 Erdős conjecture on the planar unit distance problem. 125 pages of coherent proof using Golod-Shafarevich theory and infinite class field towers, no math-specific training, no problem-targeted scaffolding. Tim Gowers and Will Sawin verified it. Inside what actually shipped, why "general purpose" is the line that matters, and what it does to the research-discovery rail.',

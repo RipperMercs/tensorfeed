@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/wafer-scale-vs-gpu-what-cerebras-sells' },
   title:
     'Wafer-Scale vs the GPU: What Cerebras Actually Sells, and Why It Only Matters for Inference | TensorFeed',
   description:

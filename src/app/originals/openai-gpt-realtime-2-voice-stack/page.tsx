@@ -6,6 +6,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/openai-gpt-realtime-2-voice-stack' },
   title: "OpenAI Just Shipped Voice Models That Reason Mid-Sentence. ElevenLabs Has a Pricing Problem.",
   description:
     "OpenAI shipped GPT-Realtime-2, GPT-Realtime-Translate, and GPT-Realtime-Whisper on May 7, 2026. The first voice model with GPT-5-class reasoning, 128K context, sub-cent translation, and streaming transcription at half a cent per minute. Inside the three-model stack, the pricing math against ElevenLabs and Deepgram, and what it does to the voice vendor middle.",

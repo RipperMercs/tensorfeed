@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/openai-daybreak-cyber-counter-mythos' },
   title: 'OpenAI Just Shipped Daybreak. The Cyber Tier Is Now a Two-Horse Race.',
   description:
     "OpenAI launched Daybreak on May 12, 2026: a three-tier cyber model stack (GPT-5.5, GPT-5.5 Trusted Access for Cyber, GPT-5.5-Cyber) plus Codex Security and 20-plus integration partners. It is OpenAI's direct counter to Anthropic Claude Mythos and Project Glasswing. Inside the launch, the strategic split (Mythos optimized for autonomous discovery, Daybreak optimized for workflow integration), the partner-list math, and what it does to every CISO budget for the second half of 2026.",

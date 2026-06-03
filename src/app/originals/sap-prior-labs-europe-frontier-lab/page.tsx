@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/sap-prior-labs-europe-frontier-lab' },
   title: 'SAP Just Bought Prior Labs. Europe Has a Frontier AI Lab Now.',
   description:
     "SAP signed a definitive agreement to acquire Prior Labs on May 4, 2026, and committed more than 1 billion euros over four years to scale it into a globally leading frontier AI lab in Europe. The play is not LLMs. It is tabular foundation models, the category that fits 80% of enterprise data, and the bet only Europe's most valuable listed company could make.",

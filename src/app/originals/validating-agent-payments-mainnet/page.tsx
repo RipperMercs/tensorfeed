@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/validating-agent-payments-mainnet' },
   title: 'We Validated Agent Payments End-to-End on Base Mainnet',
   description:
     'A first-person walkthrough of the five-step USDC payment loop on Base mainnet that proved TensorFeed agent payments work in production. Real tx hash, real credits, no bugs surfaced.',

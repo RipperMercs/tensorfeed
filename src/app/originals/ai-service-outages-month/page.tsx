@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-service-outages-month' },
   title: 'I Tracked AI Service Outages for a Month. Here\'s What I Found.',
   description:
     'Real data from TensorFeed\'s incident database on AI service reliability. Which services went down most, average resolution times, when outages cluster, and what developers should plan for.',

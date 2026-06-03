@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/google-notebooklm-gemini' },
   title: 'Google Just Put NotebookLM Inside Gemini. Here&apos;s Why It Matters.',
   description:
     'Google integrated NotebookLM directly into the Gemini chatbot. Users can now upload PDFs, documents, URLs, and videos to create searchable information repositories within the chat interface.',

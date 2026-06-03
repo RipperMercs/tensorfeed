@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/x402-batch-settlement-base-mcp-distribution-layer' },
   title: "A Claude Agent Reads the Day's News for 10 Cents Now. x402 Just Had Its Distribution Week.",
   description:
     'An AI agent now pays ten cents to assemble a daily news brief on x402 and Tavily, and it settles itself. That is the demand proof under a busy week: batch settlement went GA on the Coinbase facilitator, Base MCP gave agents a Base wallet, and Visa added x402 to its CLI. The payment rail was always the easy part. This week the settlement and discovery layers underneath it finally got real infrastructure.',

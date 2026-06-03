@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/mcp-97-million-installs' },
   title: 'MCP Just Hit 97 Million Installs. The Agent Era Is Here.',
   description:
     'Anthropic\'s Model Context Protocol went from experimental to foundational infrastructure in under a year. Every major AI provider now ships MCP support. What this means for developers building AI agents.',

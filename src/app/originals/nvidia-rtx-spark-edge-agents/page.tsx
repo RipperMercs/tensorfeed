@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/nvidia-rtx-spark-edge-agents' },
   title: "NVIDIA's RTX Spark Runs a 120B Model on a Laptop. The Real Move Is Owning Every Layer.",
   description:
     'At Computex on June 1, 2026, Jensen Huang unveiled the NVIDIA RTX Spark, an Arm-plus-Blackwell laptop superchip with 128GB of unified memory that NVIDIA says runs a 120-billion-parameter model with a million-token context on a 14mm machine. The real move is not the spec sheet. It is NVIDIA extending its compute monopoly from the datacenter to the edge, with unified memory built to keep frontier-size models resident for local agents. The catch: at $2,899-plus this is a developer beachhead, not a consumer wave, and the question is whether local inference starts pulling agent workloads off the metered cloud APIs.',

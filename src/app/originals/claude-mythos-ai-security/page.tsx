@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/claude-mythos-ai-security' },
   title: 'Claude Mythos Is Rewriting the Rules of AI Security',
   description:
     'The UK AI Security Institute evaluated Claude Mythos Preview in capture-the-flag scenarios and found unprecedented performance in autonomous exploit generation and complex attack simulation.',

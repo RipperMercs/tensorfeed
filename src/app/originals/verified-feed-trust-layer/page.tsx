@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/verified-feed-trust-layer' },
   title:
     "The Verified Feed Is Live: Cross-Source Story Corroboration for AI Agents",
   description:

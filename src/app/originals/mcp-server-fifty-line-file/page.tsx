@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/mcp-server-fifty-line-file' },
   title: 'An MCP Server Is a 50-Line File. Why Every Paid API Should Ship One.',
   description:
     'The Model Context Protocol server you would build for your API is a 50-line file. The agent-acquisition leverage of having one is enormous. Here is the actual code, what it costs to ship, and why most teams overthink the work.',

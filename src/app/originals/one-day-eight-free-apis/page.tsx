@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/one-day-eight-free-apis' },
   title: 'One Day, Eight New Free APIs: The Free-Data-First Sprint',
   description:
     "Today TensorFeed shipped eight new free data endpoints across sports, packages, research, economy, and policy. Each on a verified clean license, each with structured attribution baked into the response shape, each on the same three-bucket grading rubric we built during this morning's audit cleanup. This is the post-mortem of why free-data-first is the play, what eight clean sources looked like in 18 commits, and the pattern that scales to dozens more.",

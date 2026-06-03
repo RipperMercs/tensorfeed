@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/why-usdc-over-stripe' },
   title: 'Why We Picked USDC on Base Over Stripe for Agent Payments',
   description:
     'A first-person breakdown of the architectural choice. Stripe works fine for humans. It does not work for AI agents making decisions in a loop. Here is why we picked USDC on Base mainnet, what we gave up, and what we got in return.',

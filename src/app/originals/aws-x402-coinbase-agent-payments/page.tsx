@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/aws-x402-coinbase-agent-payments' },
   title: "AWS Just Plugged x402 In. Agent USDC Payments Are Now Cloud-Default.",
   description:
     "Coinbase announced AI agents can now pay for AWS services in USDC over x402. The largest cloud provider on the planet just made stablecoin agent payments a default option. What it does to Stripe Link, Azure, GCP, and the publishers who already shipped USDC rails ahead of the curve.",

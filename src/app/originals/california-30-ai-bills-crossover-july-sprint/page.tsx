@@ -6,6 +6,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/california-30-ai-bills-crossover-july-sprint' },
   title: 'Thirty AI Bills Just Survived in Sacramento. The Next Four Weeks Set the US Floor.',
   description:
     'Nearly all of California’s 30 active AI bills cleared their chamber of origin before the May 29 crossover deadline. With no federal standard and a July 2 adjournment looming, the application layer of AI regulation gets written in the next four weeks. Inside the bills that matter for agent operators, why SB 53 covered the model layer and this crop covers deployment, and three signposts.',

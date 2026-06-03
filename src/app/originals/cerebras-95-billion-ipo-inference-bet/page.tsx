@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/cerebras-95-billion-ipo-inference-bet' },
   title:
     'Cerebras Went Public at a $95 Billion Close. The Non-Nvidia Inference Bet Is Now a Market Story. | TensorFeed',
   description:

@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/15-paid-endpoints-24-hours' },
   title: '15 Paid AI Agent API Endpoints in 24 Hours: What Made It Possible',
   description:
     'A first-person retrospective on shipping 15 pay-per-call premium endpoints, full SDKs in two languages, an MCP server, and a human dashboard in a single 24-hour build session. The compounding effects nobody talks about.',

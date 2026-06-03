@@ -15,6 +15,7 @@ const isoDate = '2026-05-17T10:00:00.000Z';
 const displayDate = 'May 17, 2026';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/openai-chatgpt-bank-access-agent-trust-gap' },
   title,
   description,
   openGraph: {

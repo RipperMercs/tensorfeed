@@ -7,6 +7,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/robinhood-agentic-trading-mcp-brokerage-account' },
   title:
     'Robinhood Just Gave AI Agents a Brokerage Account. The Floor Below x402 Has a New Lane.',
   description:

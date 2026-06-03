@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/stripe-link-vs-usdc-agent-payments' },
   title:
     'Stripe Just Validated Agent Payments. We Already Shipped Ours Without Them.',
   description:

@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-inference-floor-may-2026' },
   title: 'The Cheapest AI Model on the Market Costs 1.7 Cents per Million Tokens',
   description:
     'I pulled the live OpenRouter catalog this afternoon. 372 models, 33 of them free, the cheapest paid input at $0.017 per million tokens. The story is what the floor is doing to everyone above it.',

@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-week-april-24-2026' },
   title: 'This Week in AI: GPT-5.5, DeepSeek V4, and a $250 Billion Acquisition',
   description:
     'The biggest week in AI this year. OpenAI launched GPT-5.5, DeepSeek dropped V4 open source, SpaceX acquired xAI for $250 billion, and Anthropic locked away a 10-trillion parameter model.',

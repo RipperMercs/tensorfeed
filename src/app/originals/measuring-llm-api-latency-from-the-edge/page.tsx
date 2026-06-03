@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/measuring-llm-api-latency-from-the-edge' },
   title: 'Provider Status Pages Are Marketing. We Built Our Own LLM Probes.',
   description:
     'Most LLM provider status pages are politically managed. They underreport partial outages, hide latency drift, and never publish per-day SLA. Today we shipped active probing that measures what we see from Cloudflare\'s edge across Anthropic, Google, Mistral, and Cohere. The methodology, the first hour of data, and what comes next.',

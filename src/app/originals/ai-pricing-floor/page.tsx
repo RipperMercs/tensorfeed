@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-pricing-floor' },
   title: "The AI Pricing Floor: How Low Can It Go?",
   description:
     "Google ships Flash at $0.10 per million input tokens. Mistral matches. Open source is free. We look at what happens when inference economics approach zero.",

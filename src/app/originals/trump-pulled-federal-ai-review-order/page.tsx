@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/trump-pulled-federal-ai-review-order' },
   title: 'Trump Pulled the Federal AI Review Order at the Last Minute. The Rules Now Come From Sacramento and Brussels.',
   description:
     'The Trump administration was set to sign an executive order on May 21, 2026 creating a voluntary federal review of frontier AI models before release, with agencies given up to 90 days to inspect them. Hours before signing, after calls from David Sacks, Elon Musk, and Mark Zuckerberg, the President pulled it. The competitiveness framing misses the structural point: killing the one shot at a single national standard does not deregulate frontier AI, it hands the binding rules to California SB 53, the EU AI Act, and the compliance frameworks the labs publish themselves. Inside what the order would have done, who killed it and why, what it means for the model-release pipeline, and three signposts.',

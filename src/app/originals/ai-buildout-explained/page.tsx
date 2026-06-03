@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-buildout-explained' },
   title: 'The AI Buildout, Plain English: What Is Actually Getting Built',
   description:
     'The AI industry is putting steel and concrete in the ground at a pace nobody has seen since the dotcom era of physical fiber. Stargate, Hyperion, Colossus, nuclear restarts, gigawatt-class campuses. A plain-English read of what is being built, where, with what power, and what it means for the AI we actually use.',

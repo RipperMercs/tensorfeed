@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-adoption-faster-than-internet' },
   title: 'AI Adoption Is Outpacing the Internet. Stanford Has the Numbers to Prove It.',
   description:
     'Stanford&apos;s 2026 AI Index reveals AI adoption is faster than the internet or PC. Top models from Anthropic and xAI are driving capabilities forward. Here&apos;s what it means.',

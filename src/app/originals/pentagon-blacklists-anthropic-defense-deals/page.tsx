@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/pentagon-blacklists-anthropic-defense-deals' },
   title: 'The Pentagon Skipped Anthropic. Seven Other AI Companies Got the Contracts.',
   description:
     'On May 1, 2026, the DoD signed classified-network AI deals with OpenAI, Google, Microsoft, AWS, NVIDIA, SpaceX, and Reflection. Anthropic, the only lab with a public no-weapons usage policy, was left out. The first frontier lab to be punished for enforcing its own safety terms. What it means for the rest of the industry.',

@@ -6,6 +6,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-karpathy-four-moves-one-week' },
   title:
     'Karpathy Joined Anthropic. That Is the Fourth Structural Move in One Week.',
   description:

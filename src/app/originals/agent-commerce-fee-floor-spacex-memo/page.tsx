@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/agent-commerce-fee-floor-spacex-memo' },
   title:
     "76% of AI Agent Payments Are Already Below Visa's Floor. Then Came the SpaceX Memo.",
   description:

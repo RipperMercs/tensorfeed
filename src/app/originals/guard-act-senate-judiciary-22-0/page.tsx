@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/guard-act-senate-judiciary-22-0' },
   title: 'The Senate Just Voted 22-0 to Regulate AI Chatbots. Here Is What Is Actually in the GUARD Act.',
   description:
     'The Senate Judiciary Committee unanimously advanced the GUARD Act on April 30, 2026. Government ID age verification, a full ban on AI companions for minors, mandatory non-human disclosures every 30 minutes, criminal penalties. We read the bill so you do not have to.',

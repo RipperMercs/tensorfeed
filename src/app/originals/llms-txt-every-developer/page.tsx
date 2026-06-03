@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/llms-txt-every-developer' },
   title: "Why Every Developer Needs an llms.txt File",
   description:
     "AI agents are becoming your most important visitors. llms.txt is the standard that tells them what your site actually contains. A practical guide.",

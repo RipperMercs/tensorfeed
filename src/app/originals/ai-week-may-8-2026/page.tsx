@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-week-may-8-2026' },
   title: 'This Week in AI: The Mythos Effect, $200B for Google, and an FDA for Models',
   description:
     'A single Anthropic security model rewrote U.S. AI policy in five days. Microsoft, Google, and xAI signed pre-launch government testing agreements. Anthropic locked in $200B of Google compute. OpenAI shipped GPT-5.5-Cyber. The week the regulators finally got the keys.',

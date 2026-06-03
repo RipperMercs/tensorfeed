@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/agent-native-browsers-firefox-fork-runtime-shift' },
   title:
     'AI Agents Just Got Their Own Web Browser. The Runtime Layer Is Forking Away From Humans.',
   description:

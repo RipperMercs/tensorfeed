@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/state-of-ai-apis-2026' },
   title: 'The State of AI APIs in 2026',
   description:
     'A comprehensive look at the AI API landscape in 2026: pricing wars, context window expansion, agent-native endpoints, MCP protocol, and practical advice for developers choosing a provider.',

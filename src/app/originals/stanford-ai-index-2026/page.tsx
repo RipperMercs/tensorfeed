@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/stanford-ai-index-2026' },
   title: 'Stanford&apos;s 2026 AI Index Says We Can&apos;t Keep Up. They&apos;re Right.',
   description:
     'The Stanford AI Index 2026 report finds that as of March 2026, Anthropic leads frontier model development, followed by xAI, Google, and OpenAI. Policy is failing to match capability growth.',

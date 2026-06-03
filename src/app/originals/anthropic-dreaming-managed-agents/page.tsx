@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/anthropic-dreaming-managed-agents' },
   title: "Anthropic Just Taught Claude to Dream Between Tasks. Long-Running Agents Got Their Memory Layer.",
   description:
     "At Code with Claude on May 6, 2026, Anthropic shipped 'dreaming' as a research preview for Managed Agents: offline reflection that reorganizes memories between sessions. Outcomes, multi-agent orchestration, and webhooks went public beta the same day, with rate limits doubled for Pro and Max. Inside what each piece actually does, why offline reflection was the missing layer for long-running agents, and where this puts Anthropic against OpenAI's Operator and Google's Gemini Enterprise stack.",

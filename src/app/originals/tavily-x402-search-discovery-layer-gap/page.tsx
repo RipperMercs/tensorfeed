@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/tavily-x402-search-discovery-layer-gap' },
   title: 'Coinbase Put Tavily Search on x402. The Pay Rail Shipped; the Discovery Rail Did Not.',
   description:
     "Coinbase and Tavily brought agentic web search to x402: an agent pays per request from a Base wallet, no API key. The payment rail works cleanly, $0.01 an advanced search in USDC. But probe the service and the discovery rail is missing: no published manifest, no catalog entry, no agent card. The pay layer of agentic commerce is converging fast; the discover layer is fragmenting, and that gap is the real story under the launch.",

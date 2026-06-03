@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/google-anthropic-40b-compute' },
   title: 'Google Just Committed $40 Billion to Anthropic Compute. The Stakes Just Got Real.',
   description:
     'Google is pouring $40B into Anthropic for compute capacity, one of the largest single infrastructure commitments in AI history. Here is what the deal actually buys, why it is happening now, and what it means for AWS, Nvidia, and the frontier model race.',

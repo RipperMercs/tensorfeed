@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/ai-week-may-15-2026' },
   title: 'This Week in AI: Four Days to I/O, Eight Models Going Dark, and a $950B Number',
   description:
     'Google sandbagged its own keynote with the Android Show. Anthropic priced talks at $900B to $950B. xAI sunsets eight models at noon Pacific today. Apple is rewriting App Store rules for agents. The pre-I/O week was louder than the keynote it leads into.',

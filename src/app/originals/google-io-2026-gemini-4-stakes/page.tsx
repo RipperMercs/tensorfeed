@@ -6,6 +6,7 @@ import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/google-io-2026-gemini-4-stakes' },
   title: 'Google I/O Is in Eight Days. Here Is What Gemini 4 Needs to Do to Matter.',
   description:
     "Google I/O 2026 lands May 19, with The Android Show: I/O Edition opening the cycle tomorrow. Over the two weeks since the last shoe dropped, Anthropic booked $200B of Google TPUs, rented all of Colossus 1, and hit a $30B run rate. OpenAI shipped a reasoning voice stack. Apple opened Siri to every model. Inside what Gemini 4 actually has to ship (context, agentic stack, Omni video, price floor) for Google to hold its current quadrant of the model wars.",

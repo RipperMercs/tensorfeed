@@ -6,6 +6,7 @@ import ShareBar from '@/components/originals/ShareBar';
 import ArticleHero from '@/components/originals/ArticleHero';
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/altman-amodei-walk-back-jobs-apocalypse-ipo-pivot' },
   title: "Altman and Amodei Walked Back the AI Jobs Apocalypse. The Subtext Is the IPO Calendar.",
   description:
     "Fortune reported on May 26 that Sam Altman and Dario Amodei are softening their prior claims that AI would obliterate large swaths of white-collar work. Anthropic just closed its $30B round at a $900B valuation. OpenAI filed its S-1 four days earlier. Read the rhetorical pivot against the fundraise calendar and the labor-replacement story stops being a marketing asset and starts being a liability with regulators, retirement funds, and the IPO roadshow audience.",

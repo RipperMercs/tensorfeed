@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/building-for-ai-agents' },
   title: 'Building for AI Agents: What Developers Need to Know',
   description:
     'A practical guide to building agent-friendly software: structured data, llms.txt, API design patterns, MCP protocol, and lessons learned from building TensorFeed as an agent-first platform.',

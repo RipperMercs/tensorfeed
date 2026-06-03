@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/microsoft-openai-partnership-reset' },
   title: 'The Microsoft and OpenAI Divorce Is Done. Both Sides Got What They Wanted.',
   description:
     'Microsoft and OpenAI announced a sweeping restructure of their partnership today. No more exclusivity, no more AGI clause, capped revenue share through 2030, and OpenAI is now free to ship on any cloud. Here is what actually changed and why it matters.',

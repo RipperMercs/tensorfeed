@@ -5,6 +5,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd';
 
 import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://tensorfeed.ai/originals/frontier-model-forum-vs-china' },
   title: 'OpenAI, Anthropic, and Google Just Teamed Up Against Chinese AI Theft',
   description:
     'Three AI giants announced unprecedented collaboration through the Frontier Model Forum to stop adversarial distillation attacks. Anthropic documented 16 million adversarial exchanges and 24,000 fraudulent accounts.',
