@@ -18,6 +18,7 @@ export interface DomainRecord {
   hasLlmsTxt: boolean;
   hasAiTxt: boolean;
   llmsTxtBytes: number | null;
+  agent?: { hasX402: boolean; hasAgentJson: boolean; hasOpenapi: boolean };
   notes?: string;
 }
 
@@ -196,21 +197,31 @@ export function verdictsFromRobots(status: number | null, body: string | null): 
 }
 
 export async function crawlSite(domain: string, sector: string, at: string): Promise<DomainRecord> {
-  const [robots, llms, ai] = await Promise.all([
+  const [robots, llms, ai, x402, agentJson, openapi1, openapi2] = await Promise.all([
     fetchText(domain, 'robots.txt'),
     fetchText(domain, 'llms.txt'),
     fetchText(domain, 'ai.txt'),
+    fetchText(domain, '.well-known/x402.json'),
+    fetchText(domain, '.well-known/agent.json'),
+    fetchText(domain, 'openapi.json'),
+    fetchText(domain, '.well-known/openapi.json'),
   ]);
   const bots = verdictsFromRobots(robots.status, robots.body);
+  const present = (r: { body: string | null }) => r.body !== null && r.body.trim().length > 0;
   return {
     domain,
     sector,
     checkedAt: at,
     robotsStatus: robots.status,
     bots,
-    hasLlmsTxt: llms.body !== null && llms.body.trim().length > 0,
-    hasAiTxt: ai.body !== null && ai.body.trim().length > 0,
+    hasLlmsTxt: present(llms),
+    hasAiTxt: present(ai),
     llmsTxtBytes: llms.body !== null ? llms.body.length : null,
+    agent: {
+      hasX402: present(x402),
+      hasAgentJson: present(agentJson),
+      hasOpenapi: present(openapi1) || present(openapi2),
+    },
   };
 }
 
