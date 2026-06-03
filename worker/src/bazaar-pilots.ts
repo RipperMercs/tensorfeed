@@ -6175,6 +6175,72 @@ const AI_CRAWLER_ACCESS_CHANGES_PILOT: BazaarPilotConfig = {
   },
 };
 
+/**
+ * Wave 31 (2026-06-02): Agent-Ready Web Map. Derived from the same daily
+ * crawler-access crawl. /api/premium/agent-ready/full returns every profiled
+ * domain with a transparent 0 to 100 agent-readiness score, a tier (closed,
+ * emerging, ready, or advanced), and per-surface flags (x402, agent.json,
+ * openapi, llms.txt, AI-bot-crawlable, ai.txt). No params; flat GET. We
+ * report stated, published surfaces, not enforcement.
+ */
+const AGENT_READY_FULL_PILOT: BazaarPilotConfig = {
+  description:
+    'Agent-Ready Web Map, full dataset. One paid call returns every profiled domain with a transparent 0 to 100 agent-readiness score, a tier (closed, emerging, ready, or advanced), and which agent surfaces the site exposes: x402 manifest, agent.json, openapi, llms.txt, AI-bot-crawlable robots policy, and ai.txt. Score weights are published: x402 +25, agent.json +20, openapi +20, llms.txt +15, crawlable +15, ai.txt +5. Derived from the daily crawler-access crawl. We report stated, published surfaces, not enforcement.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: {},
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-01T09:53:00Z',
+            domains: [
+              {
+                domain: 'stripe.com',
+                sector: 'payments',
+                readiness: {
+                  score: 95,
+                  tier: 'advanced',
+                  surfaces: { x402: true, agentJson: true, openapi: true, llmsTxt: true, crawlable: true, aiTxt: false },
+                },
+              },
+            ],
+            source_attribution:
+              'TensorFeed Agent-Ready Web Map. Derived from the daily crawler-access crawl of curated domains. Scores agent readiness from public surfaces (x402, agent.json, openapi, llms.txt, robots policy, ai.txt). We report stated, published surfaces, not enforcement.',
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: { type: 'object', additionalProperties: false },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -6315,6 +6381,9 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // flat per-domain dataset; changes is the strict-premium flip log.
   '/api/premium/ai-crawler-access/full': AI_CRAWLER_ACCESS_FULL_PILOT,
   '/api/premium/ai-crawler-access/changes': AI_CRAWLER_ACCESS_CHANGES_PILOT,
+  // Wave 31 (2026-06-02): Agent-Ready Web Map. Derived agent-readiness scoring
+  // over the crawler-access crawl. Full is the flat per-domain dataset.
+  '/api/premium/agent-ready/full': AGENT_READY_FULL_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

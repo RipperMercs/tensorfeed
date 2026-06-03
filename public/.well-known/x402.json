@@ -16899,6 +16899,38 @@
         "credits": 1,
         "category": "ai-crawler-access"
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/agent-ready/full",
+        "description": "Agent-Ready Web Map, full dataset. Every profiled domain with a transparent 0 to 100 agent-readiness score, a tier (closed, emerging, ready, or advanced), and which agent surfaces the site exposes: x402 manifest, agent.json, openapi, llms.txt, AI-bot-crawlable, and ai.txt. Derived from the daily crawler-access crawl. We report stated, published surfaces, not enforcement.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "lastUpdated": "2026-06-02T00:00:00Z",
+      "metadata": {
+        "name": "Agent-Ready Web Map, Full Dataset",
+        "description": "Per-domain agent-readiness dataset: a 0 to 100 score, tier, and per-surface flags (x402, agent.json, openapi, llms.txt, AI-bot-crawlable, ai.txt) for every profiled domain in one call. Aggregate view at the free /api/agent-ready/summary.json. We report stated, published surfaces, not enforcement.",
+        "tier": 1,
+        "credits": 1,
+        "category": "agent-ready"
+      }
     }
   ],
   "freeEndpoints": [

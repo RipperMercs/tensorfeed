@@ -1733,6 +1733,30 @@ const ENDPOINTS: PremiumEndpoint[] = [
   "source_attribution": "TensorFeed AI Crawler Access Map. Daily rolling crawl of curated domains, parsing public robots.txt, llms.txt, and ai.txt. We report stated policy, not enforcement."
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/premium/agent-ready/full',
+    description:
+      'The full Agent-Ready Web Map dataset in one call: every profiled domain with a transparent 0 to 100 agent-readiness score, a tier (closed, emerging, ready, or advanced), and per-surface flags covering x402 manifest, agent.json, openapi, llms.txt, AI-bot-crawlable, and ai.txt. The score weights are published: x402 +25, agent.json +20, openapi +20, llms.txt +15, crawlable +15, ai.txt +5. Derived from the crawler-access crawl; the free /api/agent-ready/summary.json gives the aggregate view, this returns the per-domain rows. We report stated, published surfaces, not enforcement. captured_at carries the snapshot data time; 8-day freshness SLA, no-charge when stale.',
+    cost: '1 credit per call',
+    example: `// Header: Authorization: Bearer tf_live_...
+{
+  "ok": true,
+  "captured_at": "2026-06-01T09:53:00Z",
+  "domains": [
+    {
+      "domain": "stripe.com",
+      "sector": "payments",
+      "readiness": {
+        "score": 95,
+        "tier": "advanced",
+        "surfaces": { "x402": true, "agentJson": true, "openapi": true, "llmsTxt": true, "crawlable": true, "aiTxt": false }
+      }
+    }
+  ],
+  "source_attribution": "TensorFeed Agent-Ready Web Map. Derived from the daily crawler-access crawl of curated domains. Scores agent readiness from public surfaces (x402, agent.json, openapi, llms.txt, robots policy, ai.txt). We report stated, published surfaces, not enforcement."
+}`,
+  },
 ];
 
 const PYTHON_QUICKSTART = `from tensorfeed import TensorFeed

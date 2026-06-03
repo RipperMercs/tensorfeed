@@ -1184,6 +1184,58 @@ const ENDPOINTS: Endpoint[] = [
   "source_attribution": "TensorFeed AI Crawler Access Map. Live robots.txt, llms.txt, and ai.txt crawl. We report stated policy, not enforcement."
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/agent-ready/summary.json',
+    description:
+      'Agentic-web readiness across the curated domain set, derived from the crawler-access crawl. Returns per-surface adoption percentages (x402 manifest, agent.json, openapi, llms.txt, AI-bot-crawlable, ai.txt), the readiness-tier distribution (closed, emerging, ready, advanced), per-sector rollups, and a top-25 leaderboard. The readiness score is transparent: x402 +25, agent.json +20, openapi +20, llms.txt +15, crawlable +15, ai.txt +5. profiled climbs toward domains_tracked over the first week as the rolling crawl backfills agent surfaces. We report stated, published surfaces, not enforcement. No parameters.',
+    cache: 'Cache for 6 hours',
+    example: `{
+  "ok": true,
+  "captured_at": "2026-06-01T09:53:00Z",
+  "domains_tracked": 300,
+  "profiled": 142,
+  "adoption_pct": { "x402": 4, "agentJson": 6, "openapi": 12, "llmsTxt": 11, "crawlable": 38, "aiTxt": 3 },
+  "tier_distribution": { "closed": 88, "emerging": 31, "ready": 18, "advanced": 5 },
+  "by_sector": { "ai-native": { "profiled": 40, "ready_or_better": 14 } },
+  "leaderboard": [
+    { "domain": "stripe.com", "sector": "payments", "score": 95, "tier": "advanced" }
+  ],
+  "source_attribution": "TensorFeed Agent-Ready Web Map. Derived from the daily crawler-access crawl of curated domains. Scores agent readiness from public surfaces (x402, agent.json, openapi, llms.txt, robots policy, ai.txt). We report stated, published surfaces, not enforcement."
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/agent-ready/site',
+    description:
+      'Per-domain agent-readiness profile: a transparent 0 to 100 score, a tier (closed, emerging, ready, or advanced), and which agent surfaces the site exposes (x402, agent.json, openapi, llms.txt, AI-bot-crawlable, ai.txt). Pass a bare registrable domain such as example.com. Derived from the crawler-access snapshot. We report stated, published surfaces, not enforcement.',
+    params: '?domain=example.com',
+    cache: 'Cache for 6 hours',
+    example: `// Query: ?domain=stripe.com
+{
+  "ok": true,
+  "domain": "stripe.com",
+  "found": true,
+  "captured_at": "2026-06-01T09:53:00Z",
+  "readiness": {
+    "score": 95,
+    "tier": "advanced",
+    "surfaces": { "x402": true, "agentJson": true, "openapi": true, "llmsTxt": true, "crawlable": true, "aiTxt": false }
+  },
+  "record": {
+    "domain": "stripe.com",
+    "sector": "payments",
+    "checkedAt": "2026-06-01T09:53:00Z",
+    "robotsStatus": 200,
+    "bots": { "GPTBot": "allowed", "ClaudeBot": "allowed" },
+    "hasLlmsTxt": true,
+    "hasAiTxt": false,
+    "llmsTxtBytes": 812,
+    "agent": { "hasX402": true, "hasAgentJson": true, "hasOpenapi": true }
+  },
+  "source_attribution": "TensorFeed Agent-Ready Web Map. Derived from the daily crawler-access crawl of curated domains. Scores agent readiness from public surfaces (x402, agent.json, openapi, llms.txt, robots policy, ai.txt). We report stated, published surfaces, not enforcement."
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news
