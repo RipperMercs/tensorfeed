@@ -195,6 +195,12 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/security/kev/series': NULL_SLA,
   '/api/premium/security/epss/series': { maxAgeSeconds: 36 * 60 * 60 },
   '/api/premium/security/epss/top': { maxAgeSeconds: 36 * 60 * 60 },
+  // SSVC Decision Verdict: derived from the CISA Vulnrichment record, which is
+  // immutable for a given CVE scoring and cached 7 days. Like clean/cve, no
+  // wall-clock staleness applies; dataCapturedAt is CISA's scoring timestamp,
+  // surfaced for the receipt only. The v1.1 KEV/EPSS overlay will flag a stale
+  // Exploitation score separately.
+  '/api/premium/security/ssvc-verdict': NULL_SLA,
   '/api/premium/clean/cve': NULL_SLA,
   '/api/premium/clean/kev': { maxAgeSeconds: 36 * 60 * 60 },
   '/api/premium/clean/epss': { maxAgeSeconds: 36 * 60 * 60 },
@@ -353,6 +359,8 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/security/kev/series': 'historical immutable',
     '/api/premium/security/epss/series': 'EPSS scores update daily at FIRST.org; SLA matches the 36h cache headroom',
     '/api/premium/security/epss/top': 'EPSS scores update daily at FIRST.org; SLA matches the 36h cache headroom',
+    '/api/premium/security/ssvc-verdict':
+      'CISA SSVC Coordinator decision computed from the Vulnrichment record (immutable per scoring, 7-day cache); no wall-clock staleness applies',
     '/api/premium/clean/cve': 'LLM-ready transform of immutable CVE Record',
     '/api/premium/clean/kev': 'LLM-ready transform of CISA KEV catalog entry; SLA tracks the 36h KEV cron headroom',
     '/api/premium/clean/epss': 'LLM-ready transform of EPSS score; SLA tracks the 36h EPSS cache headroom',
