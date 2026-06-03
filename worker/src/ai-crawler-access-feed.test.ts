@@ -1,7 +1,37 @@
 // worker/src/ai-crawler-access-feed.test.ts
 import { describe, it, expect } from 'vitest';
-import { computeStats, detectFlips, oldestCheckedAt, verdictsFromRobots } from './ai-crawler-access-feed';
+import { computeStats, detectFlips, oldestCheckedAt, verdictsFromRobots, looksLikeJson, looksLikeText } from './ai-crawler-access-feed';
 import type { DomainRecord } from './ai-crawler-access-feed';
+
+describe('looksLikeJson', () => {
+  it('accepts JSON objects and arrays', () => {
+    expect(looksLikeJson('{"x402Version":2}')).toBe(true);
+    expect(looksLikeJson('  [1,2,3] ')).toBe(true);
+  });
+  it('rejects HTML soft-404 bodies', () => {
+    expect(looksLikeJson('<!doctype html><html>...')).toBe(false);
+    expect(looksLikeJson('<html><body>Not Found</body></html>')).toBe(false);
+  });
+  it('rejects non-JSON, bare strings, empty, and null', () => {
+    expect(looksLikeJson('hello')).toBe(false);
+    expect(looksLikeJson('"just a string"')).toBe(false);
+    expect(looksLikeJson('')).toBe(false);
+    expect(looksLikeJson(null)).toBe(false);
+  });
+});
+
+describe('looksLikeText', () => {
+  it('accepts plain text and markdown', () => {
+    expect(looksLikeText('# llms.txt\nSome guidance')).toBe(true);
+    expect(looksLikeText('User-agent: *')).toBe(true);
+  });
+  it('rejects HTML and XML soft-404 bodies, empty, and null', () => {
+    expect(looksLikeText('<!DOCTYPE html><html>...')).toBe(false);
+    expect(looksLikeText('<?xml version="1.0"?>')).toBe(false);
+    expect(looksLikeText('   ')).toBe(false);
+    expect(looksLikeText(null)).toBe(false);
+  });
+});
 
 describe('verdictsFromRobots', () => {
   it('parses a 2xx robots.txt body', () => {

@@ -196,6 +196,29 @@ export function verdictsFromRobots(status: number | null, body: string | null): 
   return bots;
 }
 
+// Validate that a fetched surface is really the expected format, not a soft-404.
+// Many sites return 200 with an HTML page for any path, so a bare "2xx with a
+// body" check falsely registers every surface. JSON surfaces must parse to an
+// object or array; text surfaces (llms.txt, ai.txt) must not be HTML or XML.
+export function looksLikeJson(body: string | null): boolean {
+  if (body === null) return false;
+  const t = body.trim();
+  if (!t || (t[0] !== '{' && t[0] !== '[')) return false;
+  try {
+    const v = JSON.parse(t);
+    return typeof v === 'object' && v !== null;
+  } catch {
+    return false;
+  }
+}
+
+export function looksLikeText(body: string | null): boolean {
+  if (body === null) return false;
+  const t = body.trim();
+  if (!t) return false;
+  return !t.startsWith('<');
+}
+
 export async function crawlSite(domain: string, sector: string, at: string): Promise<DomainRecord> {
   const [robots, llms, ai, x402, agentJson, openapi1, openapi2] = await Promise.all([
     fetchText(domain, 'robots.txt'),
@@ -207,20 +230,20 @@ export async function crawlSite(domain: string, sector: string, at: string): Pro
     fetchText(domain, '.well-known/openapi.json'),
   ]);
   const bots = verdictsFromRobots(robots.status, robots.body);
-  const present = (r: { body: string | null }) => r.body !== null && r.body.trim().length > 0;
+  const hasLlmsTxt = looksLikeText(llms.body);
   return {
     domain,
     sector,
     checkedAt: at,
     robotsStatus: robots.status,
     bots,
-    hasLlmsTxt: present(llms),
-    hasAiTxt: present(ai),
-    llmsTxtBytes: llms.body !== null ? llms.body.length : null,
+    hasLlmsTxt,
+    hasAiTxt: looksLikeText(ai.body),
+    llmsTxtBytes: hasLlmsTxt && llms.body !== null ? llms.body.length : null,
     agent: {
-      hasX402: present(x402),
-      hasAgentJson: present(agentJson),
-      hasOpenapi: present(openapi1) || present(openapi2),
+      hasX402: looksLikeJson(x402.body),
+      hasAgentJson: looksLikeJson(agentJson.body),
+      hasOpenapi: looksLikeJson(openapi1.body) || looksLikeJson(openapi2.body),
     },
   };
 }
