@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'nvidia-rtx-spark-edge-agents',
+    title:
+      "NVIDIA's RTX Spark Runs a 120B Model on a Laptop. The Real Move Is Owning Every Layer.",
+    author: 'Marcus Chen',
+    date: 'June 2, 2026',
+    readTime: '6 min read',
+    description:
+      "At Computex on June 1, Jensen Huang unveiled the NVIDIA RTX Spark, an Arm-plus-Blackwell laptop superchip with 128GB of unified memory that NVIDIA says runs a 120B model with a million-token context on a 14mm machine. The real move is not the spec sheet, it is NVIDIA extending its compute monopoly from the datacenter to the edge, with unified memory built to keep frontier-size models resident for local agents. At $2,899-plus it is a developer beachhead, not a consumer wave.",
+  },
+  {
     slug: 'anthropic-confidential-s1-ipo',
     title:
       'Anthropic Filed to Go Public. A Confidential S-1 at a $965 Billion Valuation Is an Option, Not a Date.',
