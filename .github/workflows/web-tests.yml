@@ -15,6 +15,9 @@ on:
     paths:
       - 'src/**'
       - 'public/llms.txt'
+      - 'public/robots.txt'
+      - 'public/ai.txt'
+      - 'public/.well-known/**'
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'
@@ -23,6 +26,9 @@ on:
     paths:
       - 'src/**'
       - 'public/llms.txt'
+      - 'public/robots.txt'
+      - 'public/ai.txt'
+      - 'public/.well-known/**'
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'

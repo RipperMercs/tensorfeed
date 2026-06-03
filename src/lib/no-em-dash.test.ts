@@ -21,7 +21,13 @@ const RE = new RegExp('[' + FORBIDDEN.map(c => '\\u' + c.toString(16).padStart(4
 // generated llms-full.txt is excluded (it is regenerated each build from source
 // that this rule already covers).
 const REPO_ROOT = dirname(SRC); // src to repo root
-const PUBLIC_TEXT_FILES = ['public/llms.txt'];
+const PUBLIC_TEXT_FILES = [
+  'public/llms.txt',
+  'public/robots.txt',
+  'public/ai.txt',
+  'public/.well-known/x402.json',
+  'public/.well-known/agent.json',
+];
 
 function collect(dir: string, out: string[]): void {
   for (const name of readdirSync(dir)) {
@@ -56,7 +62,7 @@ describe('no em dash in source (anti-AI-detection rule)', () => {
     ).toEqual([]);
   });
 
-  it('has zero dash-family chars in the hand-maintained public text (llms.txt)', () => {
+  it('has zero dash-family chars in the hand-maintained public agent-facing text files', () => {
     const offenders: string[] = [];
     for (const rel of PUBLIC_TEXT_FILES) {
       const file = join(REPO_ROOT, rel);
