@@ -387,6 +387,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/datasets`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${baseUrl}/agent-traffic`, lastModified: now, changeFrequency: 'always', priority: 0.85 },
     { url: `${baseUrl}/ai-crawler-access`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
+    { url: `${baseUrl}/agent-ready`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
     ...crawlerDomainPages,
     { url: `${baseUrl}/glossary`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/glossary/x402`, lastModified: now, changeFrequency: 'monthly', priority: 0.75 },
