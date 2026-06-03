@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION, parseSsvcFromVulnrichment, buildSsvcVerdict, redactSsvcVerdictForPreview, checkSsvcVerdictPreviewRateLimit } from './ssvc-verdict';
-import { makeEnv } from './test-harness';
+import { makeEnv, call } from './test-harness';
 
 // The authoritative 36-row CISA SSVC Coordinator v2.0.3 table. Verified three
 // independent ways and adversarially audited (2026-06-03). This fixture pins
@@ -225,5 +225,61 @@ describe('checkSsvcVerdictPreviewRateLimit', () => {
     // A different IP is unaffected.
     const other = await checkSsvcVerdictPreviewRateLimit(env, '198.51.100.43', 3);
     expect(other.allowed).toBe(true);
+  });
+});
+
+// A minimal vulnrichment record the worker cache returns for CVE-2024-3094,
+// so fetchVulnrichment serves it from cache with no network.
+const XZ_RECORD = {
+  containers: {
+    adp: [
+      { title: 'CVE Program Container', metrics: [] },
+      {
+        title: 'CISA ADP Vulnrichment',
+        metrics: [
+          {
+            other: {
+              type: 'ssvc',
+              content: {
+                id: 'CVE-2024-3094',
+                role: 'CISA Coordinator',
+                options: [{ Exploitation: 'none' }, { Automatable: 'yes' }, { 'Technical Impact': 'total' }],
+                version: '2.0.3',
+                timestamp: '2024-04-02T04:00:23.138684Z',
+              },
+            },
+          },
+        ],
+      },
+    ],
+  },
+};
+
+describe('ssvc-verdict preview route', () => {
+  it('returns the redacted preview with upgrade + rate_limit, no computed decision', async () => {
+    const env = await makeEnv({ cache: { 'vulnrichment:CVE-2024-3094': XZ_RECORD } });
+    const res = await call(env, '/api/preview/security/ssvc-verdict?cve=CVE-2024-3094', { ip: '198.51.100.60' });
+    expect(res.status).toBe(200);
+    expect(res.json?.decision_points).toEqual({ exploitation: 'none', automatable: 'yes', technical_impact: 'total' });
+    expect(res.json?.preview).toBe(true);
+    expect(res.json?.decision_primary).toBeUndefined();
+    expect((res.json?.upgrade as Record<string, unknown>)?.premium_endpoint).toBe('/api/premium/security/ssvc-verdict');
+    expect(res.json?.rate_limit).toBeTruthy();
+  });
+
+  it('rejects a bad cve with 400 invalid_cve_id', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/preview/security/ssvc-verdict?cve=notacve', { ip: '198.51.100.61' });
+    expect(res.status).toBe(400);
+    expect(res.json?.error).toBe('invalid_cve_id');
+  });
+
+  it('429s past the daily limit', async () => {
+    const env = await makeEnv({ cache: { 'vulnrichment:CVE-2024-3094': XZ_RECORD } });
+    const ip = '198.51.100.62';
+    let res = await call(env, '/api/preview/security/ssvc-verdict?cve=CVE-2024-3094', { ip });
+    for (let i = 0; i < 10; i++) res = await call(env, '/api/preview/security/ssvc-verdict?cve=CVE-2024-3094', { ip });
+    expect(res.status).toBe(429);
+    expect(res.json?.error).toBe('rate_limit_exceeded');
   });
 });

@@ -10652,6 +10652,76 @@ export default {
       );
     }
 
+    // === SSVC DECISION VERDICT PREVIEW (free, rate-limited) ===
+    // /api/preview/security/ssvc-verdict?cve=CVE-YYYY-NNNNN
+    //
+    // Free taste of the SSVC verdict: the three public CISA decision points and
+    // the tree provenance, WITHOUT the computed decision, the Mission and
+    // Well-being envelope, the reasoning, or the AFTA receipt. 10 calls/day per
+    // IP. The paid endpoint computes and signs the decision.
+    if (path === '/api/preview/security/ssvc-verdict') {
+      const svIp = getClientIP(request);
+      const { parseSsvcFromVulnrichment, buildSsvcVerdict, redactSsvcVerdictForPreview, checkSsvcVerdictPreviewRateLimit } =
+        await import('./ssvc-verdict');
+      const { fetchVulnrichment, normalizeCVEId } = await import('./security-vulnrichment');
+      const svLimit = await checkSsvcVerdictPreviewRateLimit(env, svIp, 10);
+      if (!svLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: svLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/security/ssvc-verdict',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/security/ssvc-verdict adds the computed SSVC decision, the full Mission and Well-being envelope, the per-level reasoning, an AFTA-signed receipt, and no rate limit.',
+          },
+          429,
+        );
+      }
+      const svCveRaw = url.searchParams.get('cve');
+      const svCve = svCveRaw ? normalizeCVEId(svCveRaw) : null;
+      if (!svCve) {
+        return jsonResponse({ ok: false, error: 'invalid_cve_id', hint: 'cve=CVE-YYYY-NNNNN' }, 400, 0);
+      }
+      const svRecord = await fetchVulnrichment(env, svCve);
+      if (!svRecord.ok || !svRecord.record) {
+        return jsonResponse(
+          { ok: false, error: 'cve_not_in_vulnrichment', message: 'No CISA Vulnrichment record for that CVE.', cve: svCve },
+          404,
+          0,
+        );
+      }
+      const svPoints = parseSsvcFromVulnrichment(svRecord.record);
+      if (!svPoints) {
+        return jsonResponse(
+          { ok: false, error: 'no_ssvc_data', message: 'That CVE has a Vulnrichment record but no SSVC decision points.', cve: svCve },
+          404,
+          0,
+        );
+      }
+      const svPreview = redactSsvcVerdictForPreview(buildSsvcVerdict(svCve, svPoints));
+      return jsonResponse(
+        {
+          ...svPreview,
+          rate_limit: { limit: svLimit.limit, remaining: svLimit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/security/ssvc-verdict',
+            adds: [
+              'the computed SSVC decision (Act, Attend, Track, or Track*)',
+              'the full Mission and Well-being envelope (low, medium, high)',
+              'the per-level reasoning trace',
+              'an AFTA-signed receipt',
+              'no rate limit',
+            ],
+          },
+        },
+        200,
+        0,
+      );
+    }
+
     // === PAID PREMIUM: GUIDANCE DELTA (Tier 1, 1 credit, param-required) ===
     // /api/premium/sec/filings/guidance-delta?accession= OR ?ticker=&form=
     //
