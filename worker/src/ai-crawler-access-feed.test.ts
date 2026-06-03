@@ -1,7 +1,30 @@
 // worker/src/ai-crawler-access-feed.test.ts
 import { describe, it, expect } from 'vitest';
-import { computeStats, detectFlips, oldestCheckedAt } from './ai-crawler-access-feed';
+import { computeStats, detectFlips, oldestCheckedAt, verdictsFromRobots } from './ai-crawler-access-feed';
 import type { DomainRecord } from './ai-crawler-access-feed';
+
+describe('verdictsFromRobots', () => {
+  it('parses a 2xx robots.txt body', () => {
+    expect(verdictsFromRobots(200, 'User-agent: GPTBot\nDisallow: /').GPTBot).toBe('blocked');
+  });
+  it('treats a 404 (no robots.txt) as allowed per RFC 9309', () => {
+    const v = verdictsFromRobots(404, null);
+    expect(v.GPTBot).toBe('allowed');
+    expect(v.ClaudeBot).toBe('allowed');
+  });
+  it('treats a 410 as allowed', () => {
+    expect(verdictsFromRobots(410, null).GPTBot).toBe('allowed');
+  });
+  it('treats a 403 as unknown (ambiguous bot-block, not a readable policy)', () => {
+    expect(verdictsFromRobots(403, null).GPTBot).toBe('unknown');
+  });
+  it('treats a 5xx as unknown', () => {
+    expect(verdictsFromRobots(503, null).GPTBot).toBe('unknown');
+  });
+  it('treats a network failure (null status) as unknown', () => {
+    expect(verdictsFromRobots(null, null).GPTBot).toBe('unknown');
+  });
+});
 
 function rec(over: Partial<DomainRecord>): DomainRecord {
   return {

@@ -177,19 +177,31 @@ async function fetchText(domain: string, file: string): Promise<{ status: number
   }
 }
 
+// Map a robots.txt fetch result to per-bot verdicts. A 2xx body is parsed. A
+// 404 or 410 means there is no robots.txt, which per RFC 9309 means crawlers
+// may access anything (allowed). Anything else (5xx, 403, timeout, network
+// error) is unknown: we could not read a stated policy, and a 403 is ambiguous
+// (often edge bot-blocking), so we do not claim allowed.
+export function verdictsFromRobots(status: number | null, body: string | null): Record<string, BotVerdict> {
+  const bots: Record<string, BotVerdict> = {};
+  if (body !== null) {
+    const groups = parseRobotsTxt(body);
+    for (const bot of TRACKED_BOTS) bots[bot] = verdictForBot(groups, bot);
+  } else if (status === 404 || status === 410) {
+    for (const bot of TRACKED_BOTS) bots[bot] = 'allowed';
+  } else {
+    for (const bot of TRACKED_BOTS) bots[bot] = 'unknown';
+  }
+  return bots;
+}
+
 export async function crawlSite(domain: string, sector: string, at: string): Promise<DomainRecord> {
   const [robots, llms, ai] = await Promise.all([
     fetchText(domain, 'robots.txt'),
     fetchText(domain, 'llms.txt'),
     fetchText(domain, 'ai.txt'),
   ]);
-  const bots: Record<string, BotVerdict> = {};
-  if (robots.body !== null) {
-    const groups = parseRobotsTxt(robots.body);
-    for (const bot of TRACKED_BOTS) bots[bot] = verdictForBot(groups, bot);
-  } else {
-    for (const bot of TRACKED_BOTS) bots[bot] = 'unknown';
-  }
+  const bots = verdictsFromRobots(robots.status, robots.body);
   return {
     domain,
     sector,
