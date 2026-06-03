@@ -25,6 +25,73 @@ interface SiteResponse {
   record: SiteRecord | null;
 }
 
+// Mirrors the worker AgentReadySiteResponse from worker/src/agent-ready.ts
+// (buildAgentReadySite). The readiness field is null until the domain has been
+// profiled by the enriched crawl.
+interface Readiness {
+  score: number;
+  tier: 'closed' | 'emerging' | 'ready' | 'advanced';
+  surfaces: {
+    x402: boolean;
+    agentJson: boolean;
+    openapi: boolean;
+    llmsTxt: boolean;
+    crawlable: boolean;
+    aiTxt: boolean;
+  };
+}
+
+interface AgentReadySiteResponse {
+  ok: boolean;
+  domain: string;
+  found: boolean;
+  captured_at: string | null;
+  readiness: Readiness | null;
+}
+
+const TIER_META: Record<
+  Readiness['tier'],
+  { label: string; text: string; ring: string; bg: string }
+> = {
+  advanced: {
+    label: 'Advanced',
+    text: 'text-accent-green',
+    ring: 'border-accent-green/40',
+    bg: 'bg-accent-green/10',
+  },
+  ready: {
+    label: 'Ready',
+    text: 'text-emerald-400',
+    ring: 'border-emerald-400/40',
+    bg: 'bg-emerald-400/10',
+  },
+  emerging: {
+    label: 'Emerging',
+    text: 'text-accent-amber',
+    ring: 'border-accent-amber/40',
+    bg: 'bg-accent-amber/10',
+  },
+  closed: {
+    label: 'Closed',
+    text: 'text-text-muted',
+    ring: 'border-border',
+    bg: 'bg-bg-tertiary',
+  },
+};
+
+// Ordered surface labels for the one-line summary.
+const SURFACE_LABELS: Array<{ key: keyof Readiness['surfaces']; label: string }> = [
+  { key: 'x402', label: 'x402' },
+  { key: 'agentJson', label: 'agent.json' },
+  { key: 'openapi', label: 'openapi' },
+  { key: 'llmsTxt', label: 'llms.txt' },
+  { key: 'aiTxt', label: 'ai.txt' },
+];
+
+function tierMeta(tier: string) {
+  return TIER_META[tier as Readiness['tier']] || TIER_META.closed;
+}
+
 const SECTOR_LABELS: Record<string, string> = {
   'ai-media': 'AI media',
   'dev-docs': 'Developer docs',
@@ -68,6 +135,7 @@ export default function SiteVerdictClient({ domain }: { domain: string }) {
   const [data, setData] = useState<SiteResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [readiness, setReadiness] = useState<AgentReadySiteResponse | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,7 +157,25 @@ export default function SiteVerdictClient({ domain }: { domain: string }) {
         if (!cancelled) setLoading(false);
       }
     }
+    async function loadReadiness() {
+      try {
+        const res = await fetch(
+          `https://tensorfeed.ai/api/agent-ready/site?domain=${encodeURIComponent(domain)}`,
+          { cache: 'no-store' },
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as AgentReadySiteResponse;
+        if (cancelled) return;
+        setReadiness(json);
+      } catch {
+        // Readiness is a non-blocking enhancement. If it fails to load we just
+        // render without the readiness line; the core verdict still shows.
+        if (cancelled) return;
+        setReadiness(null);
+      }
+    }
     load();
+    loadReadiness();
     return () => {
       cancelled = true;
     };
@@ -139,6 +225,9 @@ export default function SiteVerdictClient({ domain }: { domain: string }) {
 
   return (
     <div className="space-y-6">
+      {/* Agent-readiness line (graceful when the domain is not yet profiled) */}
+      <ReadinessLine readiness={readiness?.readiness ?? null} />
+
       {/* Meta strip: sector, robots status, last checked */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-text-muted">
         <span className="px-2 py-0.5 rounded-md bg-bg-tertiary border border-border text-text-secondary">
@@ -197,6 +286,53 @@ export default function SiteVerdictClient({ domain }: { domain: string }) {
           detail={record.hasAiTxt ? 'published' : 'not published'}
         />
       </div>
+    </div>
+  );
+}
+
+function ReadinessLine({ readiness }: { readiness: Readiness | null }) {
+  if (!readiness) {
+    return (
+      <div className="border border-border rounded-xl px-4 py-3 bg-bg-secondary/50 text-xs text-text-muted">
+        Agent-readiness score pending. This domain has not been profiled by the agent-surface crawl
+        yet (it backfills over the next rolling crawl). See the{' '}
+        <a href="/agent-ready" className="text-accent-primary hover:underline">
+          Agent-Ready Web Map
+        </a>{' '}
+        for the methodology.
+      </div>
+    );
+  }
+
+  const meta = tierMeta(readiness.tier);
+  const present = SURFACE_LABELS.filter(({ key }) => readiness.surfaces[key]).map(
+    ({ label }) => label,
+  );
+  const summary =
+    present.length > 0
+      ? `Exposes ${present.join(', ')}`
+      : 'No published agent surfaces yet';
+
+  return (
+    <div
+      className={`rounded-xl border ${meta.ring} ${meta.bg} px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2`}
+    >
+      <div className="flex items-baseline gap-2">
+        <span className={`font-mono text-2xl font-semibold ${meta.text}`}>{readiness.score}</span>
+        <span className="text-xs text-text-muted">/ 100 agent-ready</span>
+      </div>
+      <span
+        className={`px-2 py-0.5 rounded-md border text-xs font-medium ${meta.ring} ${meta.text}`}
+      >
+        {meta.label}
+      </span>
+      <span className="text-xs text-text-secondary">{summary}</span>
+      <a
+        href="/agent-ready"
+        className="text-xs text-accent-primary hover:underline ml-auto whitespace-nowrap"
+      >
+        How this is scored
+      </a>
     </div>
   );
 }
