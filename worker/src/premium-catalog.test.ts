@@ -44,12 +44,9 @@ const REGEX_TO_TEMPLATE: { marker: string; template: string }[] = [
   { marker: 'clean\\/kev', template: '/api/premium/clean/kev/{cve_id}' },
   { marker: 'clean\\/epss', template: '/api/premium/clean/epss/{cve_id}' },
   { marker: 'security\\/verified', template: '/api/premium/security/verified/{cve_id}' },
-  { marker: 'clean\\/openrouter', template: '/api/premium/clean/openrouter/{model_id}' },
-  { marker: 'clean\\/fda', template: '/api/premium/clean/fda/{category}' },
   { marker: 'status\\/([a-z]+)\\/incidents\\/triage', template: '/api/premium/status/{provider}/incidents/triage' },
   { marker: 'ai-companies', template: '/api/premium/ai-companies/{ticker}' },
   { marker: 'x402-index\\/publisher', template: '/api/premium/x402-index/publisher/{domain}' },
-  { marker: 'economy\\/series', template: '/api/premium/economy/series/{source}/{series_id}' },
   { marker: 'providers', template: '/api/premium/providers/{name}' },
   { marker: 'watches', template: '/api/premium/watches/{id}' },
 ];
@@ -63,12 +60,9 @@ const CONCRETE: Record<string, string> = {
   '/api/premium/clean/kev/{cve_id}': '/api/premium/clean/kev/CVE-2024-0001',
   '/api/premium/clean/epss/{cve_id}': '/api/premium/clean/epss/CVE-2024-0001',
   '/api/premium/security/verified/{cve_id}': '/api/premium/security/verified/CVE-2024-0001',
-  '/api/premium/clean/openrouter/{model_id}': '/api/premium/clean/openrouter/anthropic/claude',
-  '/api/premium/clean/fda/{category}': '/api/premium/clean/fda/drug/events',
   '/api/premium/status/{provider}/incidents/triage': '/api/premium/status/openai/incidents/triage',
   '/api/premium/ai-companies/{ticker}': '/api/premium/ai-companies/NVDA',
   '/api/premium/x402-index/publisher/{domain}': '/api/premium/x402-index/publisher/example.com',
-  '/api/premium/economy/series/{source}/{series_id}': '/api/premium/economy/series/fred/DGS10',
   '/api/premium/providers/{name}': '/api/premium/providers/openai',
 };
 
