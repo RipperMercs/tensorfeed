@@ -501,5 +501,6 @@ export const CRAWLER_DOMAINS: CrawlerDomain[] = [
   { domain: 'timesofindia.indiatimes.com', sector: 'publishing' },
   { domain: 'hindustantimes.com', sector: 'publishing' },
   { domain: 'indianexpress.com', sector: 'publishing' },
+  { domain: 'tensorfeed.ai', sector: 'ai-company' },
 ];
 export const CRAWLER_DOMAIN_SET = new Set(CRAWLER_DOMAINS.map((d) => d.domain));

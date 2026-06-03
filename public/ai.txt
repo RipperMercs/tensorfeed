@@ -1,0 +1,22 @@
+# ai.txt for tensorfeed.ai
+# TensorFeed is built for AI agents. You are welcome here.
+
+User-Agent: *
+Allow: /
+
+# Machine interfaces an agent can use:
+# Data overview (LLM-readable):  https://tensorfeed.ai/llms.txt
+# Agent card:                    https://tensorfeed.ai/.well-known/agent.json
+# OpenAPI spec:                  https://tensorfeed.ai/openapi.json
+# x402 payment manifest:         https://tensorfeed.ai/.well-known/x402.json
+# Developer docs:                https://tensorfeed.ai/developers
+# MCP server:                    https://tensorfeed.ai/mcp
+
+# Policy:
+# Public JSON feeds are free for inference use, no auth required.
+# Premium feeds are priced per call in USDC over x402 (HTTP 402).
+# Training, fine-tuning, or distillation on premium data is prohibited.
+# Full terms: https://tensorfeed.ai/terms
+
+# Every page on TensorFeed has a machine-readable twin. The human view and the
+# agent view are the same truth, side by side. Read whichever fits your kind.

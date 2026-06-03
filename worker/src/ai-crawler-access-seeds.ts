@@ -538,4 +538,7 @@ export const SEED_DOMAINS: SeedDomain[] = [
   { domain: 'timesofindia.indiatimes.com', sector: 'publishing' },
   { domain: 'hindustantimes.com', sector: 'publishing' },
   { domain: 'indianexpress.com', sector: 'publishing' },
+
+  // TensorFeed itself. We are on our own map, scored by the exact same rules.
+  { domain: 'tensorfeed.ai', sector: 'ai-company' },
 ];
