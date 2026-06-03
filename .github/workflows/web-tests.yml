@@ -1,0 +1,48 @@
+name: Web tests
+
+# Runs the frontend test suite (src/**/*.test.ts) on every push to main and PR
+# that touches frontend source, the vitest config, or this workflow. The
+# Next.js app otherwise has no CI gate, so this is what catches sitemap drift
+# (sitemap-integrity.test.ts) and other src-level logic regressions before they
+# ship. Vitest runs in a node environment with no build step, so the job is
+# self-contained: install, then test.
+#
+# Locally: npm run test:web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'vitest.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/web-tests.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'vitest.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/web-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'RipperMercs/tensorfeed' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Web test suite
+        run: npm run test:web
