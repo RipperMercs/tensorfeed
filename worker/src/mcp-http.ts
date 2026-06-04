@@ -1254,6 +1254,50 @@ const TOOLS: McpToolDef[] = [
   },
 ];
 
+// ── Memoized handshake payloads ──────────────────────────────────────
+// Built once at module load; reused on every probe. Zero behavior change.
+
+const INITIALIZE_RESULT = {
+  protocolVersion: PROTOCOL_VERSION,
+  capabilities: {
+    tools: {},
+  },
+  serverInfo: {
+    name: SERVER_NAME,
+    version: SERVER_VERSION,
+  },
+  instructions:
+    'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp serves a curated subset of 32 tools; the full 61-tool set ships on the npx stdio server @tensorfeed/mcp-server. ' +
+    'Free tier (31 tools on this hosted endpoint): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
+    'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
+    'EIA Open Data series, USGS recent earthquakes, NWS US weather alerts, AI papers (arXiv recent + AI trending + HF daily), ' +
+    'and the daily agent-ecosystem opportunities scan. ' +
+    'Premium tools (e.g. route_verdict, the signed model-routing decision) require an Authorization: Bearer tf_live_... token. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC), or buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
+    'License posture: most data is US Government public domain; commercial redistribution permitted; attribution preserved on every response.',
+} as const;
+
+const TOOLS_LIST_RESULT = {
+  tools: TOOLS.map((t) => ({
+    name: t.name,
+    description: t.description,
+    inputSchema: t.inputSchema,
+  })),
+};
+
+const GET_DISCOVERY_BODY = JSON.stringify({
+  name: SERVER_NAME,
+  version: SERVER_VERSION,
+  protocolVersion: PROTOCOL_VERSION,
+  endpoint: 'https://tensorfeed.ai/api/mcp',
+  method: 'POST',
+  contentType: 'application/json',
+  body: 'JSON-RPC 2.0 envelope per MCP spec',
+  spec: 'https://modelcontextprotocol.io/specification/2024-11-05/basic/transports',
+  tools_count: TOOLS.length,
+  full_tool_set:
+    'The npx stdio server @tensorfeed/mcp-server exposes the full 61-tool set; this hosted HTTP endpoint serves a curated subset.',
+});
+
 // ── Method handlers ─────────────────────────────────────────────────
 
 interface DispatchContext {
@@ -1266,34 +1310,11 @@ interface DispatchContext {
 }
 
 async function handleInitialize(): Promise<unknown> {
-  return {
-    protocolVersion: PROTOCOL_VERSION,
-    capabilities: {
-      tools: {},
-    },
-    serverInfo: {
-      name: SERVER_NAME,
-      version: SERVER_VERSION,
-    },
-    instructions:
-      'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp serves a curated subset of 32 tools; the full 61-tool set ships on the npx stdio server @tensorfeed/mcp-server. ' +
-      'Free tier (31 tools on this hosted endpoint): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
-      'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
-      'EIA Open Data series, USGS recent earthquakes, NWS US weather alerts, AI papers (arXiv recent + AI trending + HF daily), ' +
-      'and the daily agent-ecosystem opportunities scan. ' +
-      'Premium tools (e.g. route_verdict, the signed model-routing decision) require an Authorization: Bearer tf_live_... token. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC), or buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
-      'License posture: most data is US Government public domain; commercial redistribution permitted; attribution preserved on every response.',
-  };
+  return INITIALIZE_RESULT;
 }
 
 async function handleToolsList(): Promise<unknown> {
-  return {
-    tools: TOOLS.map((t) => ({
-      name: t.name,
-      description: t.description,
-      inputSchema: t.inputSchema,
-    })),
-  };
+  return TOOLS_LIST_RESULT;
 }
 
 async function handleToolCall(
@@ -1418,23 +1439,8 @@ function classifyException(e: unknown): string {
 
 export async function handleMcpHttpRequest(request: Request, env: Env): Promise<Response> {
   if (request.method === 'GET') {
-    // Minimal discovery surface for clients that probe via GET
-    return new Response(
-      JSON.stringify({
-        name: SERVER_NAME,
-        version: SERVER_VERSION,
-        protocolVersion: PROTOCOL_VERSION,
-        endpoint: 'https://tensorfeed.ai/api/mcp',
-        method: 'POST',
-        contentType: 'application/json',
-        body: 'JSON-RPC 2.0 envelope per MCP spec',
-        spec: 'https://modelcontextprotocol.io/specification/2024-11-05/basic/transports',
-        tools_count: TOOLS.length,
-        full_tool_set:
-          'The npx stdio server @tensorfeed/mcp-server exposes the full 61-tool set; this hosted HTTP endpoint serves a curated subset.',
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } },
-    );
+    // Minimal discovery surface for clients that probe via GET. Memoized.
+    return new Response(GET_DISCOVERY_BODY, { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
   if (request.method !== 'POST') {
     return new Response('method_not_allowed', { status: 405 });

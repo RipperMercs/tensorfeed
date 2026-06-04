@@ -315,6 +315,29 @@ describe('HTTP method handling', () => {
   });
 });
 
+describe('MCP handshake payloads (memoized)', () => {
+  it('tools/list returns the full tool set, stable across calls', async () => {
+    const env = {} as never;
+    const r1 = await (await handleMcpHttpRequest(rpcRequest('tools/list'), env)).json() as { result: { tools: unknown[] } };
+    const r2 = await (await handleMcpHttpRequest(rpcRequest('tools/list'), env)).json() as { result: { tools: unknown[] } };
+    expect(r1.result.tools.length).toBe(MCP_TOOLS_COUNT);
+    expect(r2.result.tools).toEqual(r1.result.tools);
+  });
+
+  it('initialize returns the server info', async () => {
+    const env = {} as never;
+    const r = await (await handleMcpHttpRequest(rpcRequest('initialize'), env)).json() as { result: { serverInfo: { name: string }; protocolVersion: string } };
+    expect(r.result.serverInfo.name).toBeTruthy();
+    expect(r.result.protocolVersion).toBeTruthy();
+  });
+
+  it('GET discovery returns the tools_count', async () => {
+    const env = {} as never;
+    const r = await (await handleMcpHttpRequest(new Request('https://tensorfeed.ai/api/mcp', { method: 'GET' }), env)).json() as { tools_count: number };
+    expect(r.tools_count).toBe(MCP_TOOLS_COUNT);
+  });
+});
+
 describe('CORS', () => {
   it('includes CORS headers on POST responses', async () => {
     const env = makeEnv();
