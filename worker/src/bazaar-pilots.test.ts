@@ -18,6 +18,7 @@ import {
   pilotCatalogStatus,
   pilotTemplatePath,
 } from './bazaar-pilots';
+import { isStrictPremiumPath } from './strict-premium-endpoints';
 
 // Pilot paths currently in BAZAAR_PILOTS. Wave 1 (2026-05-14) added
 // /routing, /compare/models, /cost/projection alongside the original
@@ -201,6 +202,62 @@ describe('isBazaarPilotPath', () => {
     expect(isBazaarPilotPath('/api/premium/clean/cve')).toBe(false);
     // Wrong prefix
     expect(isBazaarPilotPath('/api/premium/other/cve/CVE-2024-3094')).toBe(false);
+  });
+});
+
+describe('Bazaar pilot strict-premium invariant', () => {
+  // Structural fix for the audit finding that ai-crawler-access/full and
+  // agent-ready/full were Bazaar pilots but missing from STRICT_PREMIUM_PATHS,
+  // so anonymous CDP / x402scan crawlers got the full premium dataset on the
+  // free-trial 200 path instead of a 402 (leaking the payload and never
+  // settling, so CDP could not catalog them). 2026-06-04.
+  //
+  // Invariant: every key in BAZAAR_PILOTS must be strict-premium. A Bazaar
+  // pilot that is NOT strict-premium falls through to the free-trial pool, so
+  // anonymous discovery crawlers never see the 402 settlement they need to
+  // catalog the endpoint, and the full premium payload leaks for free. Template
+  // keys (Wave 14+, e.g. /api/premium/clean/cve/:id) are covered because
+  // isStrictPremiumPath() prefix-matches them (the ':param' segment follows the
+  // strict prefix slash), so the literal template string passes the check.
+  //
+  // EXEMPTIONS: paths that are deliberately gated some other way and are
+  // intentionally NOT strict-premium. There are currently none: the audit noted
+  // /api/premium/watches is hard-gated on a bearer token inside its handler (it
+  // 401s rather than leaking), but it is NOT a BAZAAR_PILOTS key (it lives in
+  // NON_PILOT_PREMIUM_PATHS), so the invariant never reaches it and no exemption
+  // entry is required. The allowlist exists so that if such a deliberately
+  // bearer-gated write IS ever added as a pilot, it can be exempted here with a
+  // documented reason, while any other non-exempt pilot added without
+  // strict-premium fails this test.
+  const STRICT_PREMIUM_EXEMPT_PILOTS: ReadonlyArray<string> = [];
+
+  it('every BAZAAR_PILOTS key is strict-premium (or an explicit exemption)', () => {
+    const offenders: string[] = [];
+    for (const key of bazaarPilotPaths()) {
+      if (STRICT_PREMIUM_EXEMPT_PILOTS.includes(key)) continue;
+      if (!isStrictPremiumPath(key)) {
+        offenders.push(key);
+      }
+    }
+    expect(
+      offenders,
+      `Bazaar pilots missing from strict-premium (free-trial 200 leaks the full premium payload to anonymous crawlers): ${offenders.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('does not list a stale exemption (every exemption is still a pilot and still non-strict)', () => {
+    // Keeps the allowlist honest: an exemption that no longer applies (the path
+    // was removed, or it became strict-premium) should be deleted, not left to
+    // rot. With an empty allowlist this is vacuously true today, but it guards
+    // future entries.
+    const pilots = new Set(bazaarPilotPaths());
+    for (const exempt of STRICT_PREMIUM_EXEMPT_PILOTS) {
+      expect(pilots.has(exempt), `exemption ${exempt} is no longer a Bazaar pilot`).toBe(true);
+      expect(
+        isStrictPremiumPath(exempt),
+        `exemption ${exempt} is now strict-premium; remove it from the allowlist`,
+      ).toBe(false);
+    }
   });
 });
 

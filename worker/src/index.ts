@@ -7579,6 +7579,12 @@ export default {
       }
 
       const result = await getPricingSeries(env, model, range.from, range.to);
+      // AFTA empty_result no-charge: a valid model with zero captured days in
+      // the window is a billable-free empty (same payload, signed receipt
+      // records the no-charge). Mirrors model-intelligence/history.
+      if (result.points.length === 0) {
+        return await premiumResponse(result, payment, 2, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/history/pricing/series', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet),
       );
@@ -7619,6 +7625,12 @@ export default {
       }
 
       const result = await getBenchmarkSeries(env, model, benchmark, range.from, range.to);
+      // AFTA empty_result no-charge: a valid model+benchmark with zero captured
+      // days in the window is a billable-free empty (same payload, signed
+      // receipt records the no-charge). Mirrors model-intelligence/history.
+      if (result.points.length === 0) {
+        return await premiumResponse(result, payment, 2, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/history/benchmarks/series', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet),
       );
@@ -7654,6 +7666,13 @@ export default {
       }
 
       const result = await getStatusUptime(env, provider, range.from, range.to);
+      // AFTA empty_result no-charge: a valid provider with zero captured days in
+      // the window (no measurable uptime, uptime_pct null) is a billable-free
+      // empty (same payload, signed receipt records the no-charge). This series
+      // has no points array; days_with_data === 0 is the zero-data condition.
+      if (result.days_with_data === 0) {
+        return await premiumResponse(result, payment, 2, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/history/status/uptime', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet),
       );
@@ -10636,6 +10655,15 @@ export default {
       const { getAiStackCves } = await import('./premium-ai-cves');
       const result = await getAiStackCves(env);
 
+      // AFTA empty_result no-charge: cold-start absence (no ai-flagged batch
+      // ingested yet) returns the placeholder {batch_id:null, total:0,
+      // papers:[]}. batch_id === null only occurs on that cold placeholder; a
+      // real batch always carries a batch_id (and this endpoint has no filter,
+      // so an existing batch always yields its rows). Same payload, signed
+      // receipt records the no-charge.
+      if (result.batch_id === null) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-cves/ai-stack-cves', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10654,6 +10682,15 @@ export default {
       const { getExploitedInWildFromKv } = await import('./premium-ai-cves');
       const result = await getExploitedInWildFromKv(env);
 
+      // AFTA empty_result no-charge: cold-start absence (no ai-flagged batch
+      // ingested yet) returns the placeholder with batch_id:null. We key on
+      // batch_id === null, NOT total === 0: when a batch exists the
+      // exploited_in_wild filter legitimately yielding zero rows is a real
+      // billable answer (the agent learns nothing is actively exploited), so
+      // only the cold placeholder is no-charge.
+      if (result.batch_id === null) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-cves/exploited-in-wild', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10690,6 +10727,22 @@ export default {
       const { lookupCve } = await import('./premium-ai-cves');
       const result = await lookupCve(env, id);
 
+      // AFTA empty_result no-charge: the id passed regex validation above, so a
+      // not-found (no entry in TF's cve-index) is a valid query with no data,
+      // not a malformed request. Mirror security/epss/series' cve_not_in_epss
+      // -> empty_result convention (valid id, absent from this dataset) and
+      // route through premiumValidationFailure so the no-charge is ledgered and
+      // the signed receipt records empty_result. Same found:false payload, 404.
+      if (!result.found) {
+        return await premiumValidationFailure(
+          { ok: false, error: 'cve_not_found', ...result },
+          payment,
+          request,
+          env,
+          'empty_result',
+          404,
+        );
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-cves/cve', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10868,6 +10921,13 @@ export default {
         min_score: parseMinScoreFilter(url.searchParams.get('min_score')),
       });
 
+      // AFTA empty_result no-charge: zero filings after filtering (covers both
+      // cold start, where the snapshot is absent and the cohort is all-zero,
+      // and a valid filter that matched nothing). Same payload, signed receipt
+      // records the no-charge.
+      if (result.cohort.total_after_filter === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/sec/filings/ai-flagged', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10941,6 +11001,22 @@ export default {
       const { lookupFiling } = await import('./premium-sec-filings');
       const result = await lookupFiling(env, accession.trim());
 
+      // AFTA empty_result no-charge: the accession passed the format check
+      // above, so a not-found (no extraction for this accession) is a valid
+      // query with no data, not a malformed request. Mirror the single-record
+      // not-found convention (clean/cve, epss/series) and route through
+      // premiumValidationFailure with empty_result so the no-charge is ledgered
+      // and the receipt records it. Same found:false payload, 404.
+      if (!result.found) {
+        return await premiumValidationFailure(
+          { ok: false, error: 'filing_not_found', ...result },
+          payment,
+          request,
+          env,
+          'empty_result',
+          404,
+        );
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/sec/filings/ai-disclosures', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -11684,6 +11760,13 @@ export default {
       const { lookupCvesBatch } = await import('./premium-ai-cves');
       const result = await lookupCvesBatch(env, parsed.ids);
 
+      // AFTA empty_result no-charge: every requested (validated) id resolved to
+      // not-found, so the agent got zero records. Same payload (per-id results
+      // preserved), signed receipt records the no-charge. Mirrors
+      // model-intelligence/history. A partial hit (total_found > 0) charges.
+      if (result.total_found === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-cves/batch', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -12331,6 +12414,16 @@ export default {
           { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
           payment, request, env, 'upstream_failure',
         );
+      }
+
+      // AFTA empty_result no-charge: the query validated and the snapshot
+      // loaded (the !result.ok branch above already handled the cold-start
+      // no_snapshot_yet upstream case), but the filters matched no papers (or
+      // an offset landed past the result set). Zero returned rows is a
+      // billable-free empty. Same payload, signed receipt records the
+      // no-charge. Mirrors model-intelligence/history.
+      if (result.papers.length === 0) {
+        return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env, 'empty_result');
       }
 
       ctx.waitUntil(

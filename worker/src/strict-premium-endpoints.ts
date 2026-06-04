@@ -278,9 +278,19 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   '/api/premium/substrate-changelog/history',
   // AI Crawler Access Map changes (2026-06-02). Param-required (?from=&to=,
   // domain optional): anonymous probes must see a clean 402 challenge, not a
-  // free-trial 400 missing_params, so catalog validators read it as paid. The
-  // /full sibling stays premium-with-trial (no required params).
+  // free-trial 400 missing_params, so catalog validators read it as paid.
   '/api/premium/ai-crawler-access/changes',
+  // AI Crawler Access Map full + Agent-Ready Web Map full (audit fix
+  // 2026-06-04). Both are Bazaar-discoverable full-dataset premium endpoints.
+  // They take no required params, so without strict-premium an anonymous CDP /
+  // x402scan crawler lands in the free-trial pool and gets a 200 with the full
+  // premium payload (up to 100/IP/day) instead of the canonical 402, so CDP
+  // never sees the settlement that catalogs them and the full dataset leaks for
+  // free. Strict-premium gates anonymous crawlers to a clean 402. Their /changes
+  // sibling was already strict, so this makes the family consistent. Free tastes
+  // live at /api/ai-crawler-access/summary.json and /api/agent-ready/summary.json.
+  '/api/premium/ai-crawler-access/full',
+  '/api/premium/agent-ready/full',
   // HF leaderboard movers (2026-06-02). Reads the optional ?window= param, so it
   // is strict-premium per the convention that any param-reading paid route is
   // strict; anonymous probes see a clean 402, never a free-trial path.

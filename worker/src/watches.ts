@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { isSafeCrawlTarget, MAX_REDIRECT_HOPS } from './ai-crawler-access-feed';
 
 /**
  * Premium webhook watches.
@@ -161,17 +162,20 @@ function expiresIso(ttlSeconds: number): string {
 }
 
 // === SSRF guard ===
-
-const PRIVATE_HOST_PATTERNS: RegExp[] = [
-  /^localhost$/i,
-  /\.local$/i,
-  /^127\./, /^10\./, /^192\.168\./,
-  /^172\.(1[6-9]|2\d|3[01])\./,
-  /^169\.254\./,
-  /^0\.0\.0\.0$/,
-  /^::1$/,
-  /^fc00:/i, /^fd[0-9a-f]{2}:/i, /^fe80:/i,
-];
+//
+// Webhook delivery is a server-side fetch to an agent-supplied URL, so the
+// callback target must pass the same allow-by-shape host check the AI-crawler
+// guard uses (isSafeCrawlTarget). That validator is the single source of truth
+// for what counts as a safe egress target: https-only, no loopback / private /
+// link-local / 169.254 metadata / CGNAT / multicast IPv4, no IPv6 loopback /
+// link-local / unique-local / IPv4-mapped, and (because it normalizes through
+// new URL()) it rejects the integer / hex / octal IP-literal obfuscations
+// (e.g. https://2130706433 -> 127.0.0.1) that a hand-written regex misses.
+// We reuse it directly rather than maintaining a second list so the two egress
+// paths can never drift. The two-step structure below preserves the existing
+// error-code contract: https failures keep returning callback_url_must_be_https,
+// everything else (private / encoded-IP / malformed-host) returns
+// callback_url_resolves_to_private_host.
 
 export interface UrlValidation {
   ok: boolean;
@@ -188,11 +192,15 @@ export function validateCallbackUrl(input: string): UrlValidation {
   if (url.protocol !== 'https:') {
     return { ok: false, error: 'callback_url_must_be_https' };
   }
-  const host = url.hostname;
-  for (const pat of PRIVATE_HOST_PATTERNS) {
-    if (pat.test(host)) {
-      return { ok: false, error: 'callback_url_resolves_to_private_host' };
-    }
+  // mDNS / link-local .local names (e.g. printer.local) resolve to LAN hosts.
+  // isSafeCrawlTarget blocks localhost but not the .local suffix, so keep this
+  // explicit guard to preserve the existing callback contract.
+  const hostname = url.hostname.toLowerCase().replace(/\.+$/, '');
+  if (hostname === 'local' || hostname.endsWith('.local')) {
+    return { ok: false, error: 'callback_url_resolves_to_private_host' };
+  }
+  if (!isSafeCrawlTarget(url.toString())) {
+    return { ok: false, error: 'callback_url_resolves_to_private_host' };
   }
   return { ok: true };
 }
@@ -685,14 +693,37 @@ async function deliver(watch: Watch, payload: FirePayload): Promise<number | nul
   if (watch.secret) {
     headers['X-TensorFeed-Signature'] = await signBody(body, watch.secret);
   }
+  // SSRF-hardened delivery. validateCallbackUrl gates the host at registration
+  // time, but a callback host can 30x-redirect a delivery to an internal target
+  // (or DNS-rebind), so we follow redirects MANUALLY and revalidate every hop's
+  // Location with isSafeCrawlTarget before requesting it. A redirect to an
+  // unsafe / private host, an https-to-http downgrade, or a hop overflow is a
+  // delivery failure (returns null), recorded by the caller the same way a
+  // network error is, so the watch is not silently considered delivered.
   try {
-    const res = await fetch(watch.callback_url, {
-      method: 'POST',
-      headers,
-      body,
-      signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS),
-    });
-    return res.status;
+    let target = watch.callback_url;
+    for (let hop = 0; hop <= MAX_REDIRECT_HOPS; hop += 1) {
+      if (!isSafeCrawlTarget(target)) {
+        console.warn(`watch delivery blocked for ${watch.id}: unsafe redirect target`);
+        return null;
+      }
+      const res = await fetch(target, {
+        method: 'POST',
+        headers,
+        body,
+        signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS),
+        redirect: 'manual',
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get('location');
+        if (!loc) return res.status; // 3xx without a Location: nothing to follow
+        target = new URL(loc, target).toString(); // resolve relative redirects
+        continue;
+      }
+      return res.status;
+    }
+    console.warn(`watch delivery blocked for ${watch.id}: exceeded redirect hops`);
+    return null; // exceeded MAX_REDIRECT_HOPS
   } catch (e) {
     console.warn(`watch delivery failed for ${watch.id}:`, e instanceof Error ? e.message : e);
     return null;

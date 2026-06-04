@@ -119,6 +119,37 @@ describe('validateCallbackUrl', () => {
     expect(validateCallbackUrl('https://service.local/x').ok).toBe(false);
     expect(validateCallbackUrl('https://169.254.169.254/x').ok).toBe(false);
   });
+
+  it('blocks encoded / obfuscated IP-literal bypasses', () => {
+    // Decimal integer form of 127.0.0.1; new URL() normalizes it to dotted-quad.
+    const dec = validateCallbackUrl('https://2130706433/x');
+    expect(dec.ok).toBe(false);
+    expect(dec.error).toBe('callback_url_resolves_to_private_host');
+    // Hex integer form of 127.0.0.1.
+    expect(validateCallbackUrl('https://0x7f000001/x').ok).toBe(false);
+  });
+
+  it('blocks CGNAT and 0.0.0.0', () => {
+    expect(validateCallbackUrl('https://100.64.0.1/x').ok).toBe(false);
+    expect(validateCallbackUrl('https://0.0.0.0/x').ok).toBe(false);
+  });
+
+  it('blocks IPv6 loopback, link-local, ULA, and IPv4-mapped literals', () => {
+    expect(validateCallbackUrl('https://[::1]/x').ok).toBe(false);
+    expect(validateCallbackUrl('https://[fe80::1]/x').ok).toBe(false);
+    expect(validateCallbackUrl('https://[fc00::1]/x').ok).toBe(false);
+    expect(validateCallbackUrl('https://[::ffff:127.0.0.1]/x').ok).toBe(false);
+  });
+
+  it('blocks the localhost FQDN-root (trailing dot) form', () => {
+    expect(validateCallbackUrl('https://localhost./x').ok).toBe(false);
+  });
+
+  it('still accepts ordinary public hosts and global IPv6', () => {
+    expect(validateCallbackUrl('https://8.8.8.8/x').ok).toBe(true);
+    expect(validateCallbackUrl('https://[2606:4700::1]/x').ok).toBe(true);
+    expect(validateCallbackUrl('https://fcbarcelona.com/hook').ok).toBe(true);
+  });
 });
 
 // ── validateSpec ─────────────────────────────────────────────────────
@@ -668,6 +699,94 @@ describe('dispatch (network-stubbed)', () => {
     ]);
     expect(summary.watches_fired).toBe(1);
     expect(captured).toHaveLength(1);
+  });
+});
+
+// ── Delivery SSRF hardening (manual-redirect revalidation) ──────────
+
+describe('deliver SSRF redirect guard (network-stubbed)', () => {
+  let originalFetch: typeof globalThis.fetch;
+  let captured: { url: string; init: RequestInit }[];
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+    captured = [];
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('does not follow a 302 redirect to a private host', async () => {
+    // First (and only allowed) request returns a redirect pointing at the
+    // cloud metadata endpoint. A hardened deliver must NOT issue a second
+    // fetch to that host; it must drop the delivery as a failure.
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      captured.push({ url: String(input), init: init ?? {} });
+      return new Response(null, {
+        status: 302,
+        headers: { location: 'https://169.254.169.254/latest/meta-data/' },
+      });
+    }) as typeof globalThis.fetch;
+
+    const env = makeEnv();
+    const created = await createWatch(env, 'tf_live_abc', {
+      spec: { type: 'price', model: 'Opus 4.7', field: 'blended', op: 'lt', threshold: 40 },
+      callback_url: 'https://agent.example.com/hook',
+      secret: 'shh',
+    });
+    if (!created.ok) throw new Error('setup failed');
+
+    const before = {
+      providers: [{ id: 'a', name: 'Anthropic', models: [{ id: 'op', name: 'Opus 4.7', inputPrice: 15, outputPrice: 75 }] }],
+    };
+    const after = {
+      providers: [{ id: 'a', name: 'Anthropic', models: [{ id: 'op', name: 'Opus 4.7', inputPrice: 12, outputPrice: 60 }] }],
+    };
+
+    const summary = await dispatchPriceWatches(env, before, after);
+
+    // Exactly one fetch (the original POST). The redirect was NOT followed.
+    expect(captured).toHaveLength(1);
+    expect(captured[0].url).toBe('https://agent.example.com/hook');
+    // The watch still fired (predicate matched) but delivery is a failure.
+    expect(summary.watches_fired).toBe(1);
+    expect(summary.delivery_failures).toBe(1);
+    const stored = await getWatch(env, created.watch.id);
+    expect(stored?.last_delivery_status).toBeNull();
+  });
+
+  it('follows a 302 redirect to another safe public host', async () => {
+    let call = 0;
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      captured.push({ url: String(input), init: init ?? {} });
+      call += 1;
+      if (call === 1) {
+        return new Response(null, {
+          status: 302,
+          headers: { location: 'https://hooks.agent.dev/relay' },
+        });
+      }
+      return new Response('{"received": true}', { status: 200 });
+    }) as typeof globalThis.fetch;
+
+    const env = makeEnv();
+    const created = await createWatch(env, 'tf_live_abc', {
+      spec: { type: 'status', provider: 'anthropic', op: 'changes' },
+      callback_url: 'https://agent.example.com/hook',
+    });
+    if (!created.ok) throw new Error('setup failed');
+
+    const summary = await dispatchStatusWatches(env, [
+      { provider: 'anthropic', name: 'Anthropic', from: 'operational', to: 'down' },
+    ]);
+
+    // Two fetches: original POST + the revalidated public redirect target.
+    expect(captured).toHaveLength(2);
+    expect(captured[1].url).toBe('https://hooks.agent.dev/relay');
+    expect(summary.delivery_failures).toBe(0);
+    const stored = await getWatch(env, created.watch.id);
+    expect(stored?.last_delivery_status).toBe(200);
   });
 });
 

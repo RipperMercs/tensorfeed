@@ -37,6 +37,8 @@ worker/.env.*
 *.env
 mcp-server/.env
 mcp-server/.env.*
+.dev.vars
+**/.dev.vars
 
 # secrets directories and ad-hoc key files
 secrets/

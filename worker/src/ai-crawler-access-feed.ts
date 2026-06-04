@@ -163,7 +163,7 @@ export async function writeCursor(env: Env, index: number, ts: string): Promise<
 const FETCH_TIMEOUT_MS = 5000;
 const CONCURRENCY = 8;
 const CRAWLER_UA = 'tensorfeed-crawler-access/1.0 (+https://tensorfeed.ai/ai-crawler-access)';
-const MAX_REDIRECT_HOPS = 4;
+export const MAX_REDIRECT_HOPS = 4;
 
 // SSRF guard for the crawler. The seed list is curated and Cloudflare Workers
 // fetch already refuses RFC1918 / link-local egress, but a compromised seed

@@ -981,7 +981,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
   {
     path: '/api/premium/ai-crawler-access/full',
     credits: 1,
-    strict_premium: false,
+    strict_premium: true,
     params: [],
     returns: 'Every tracked domain with per-bot robots.txt verdicts, llms.txt and ai.txt flags, plus sector rollups.',
     free_sibling: '/api/ai-crawler-access/summary.json',
@@ -1005,7 +1005,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
   {
     path: '/api/premium/agent-ready/full',
     credits: 1,
-    strict_premium: false,
+    strict_premium: true,
     params: [],
     returns: 'Full per-domain agent-readiness dataset: a transparent 0-100 score, tier, and which agent surfaces (x402, agent.json, openapi, llms.txt, crawlable, ai.txt) each domain exposes.',
     free_sibling: '/api/agent-ready/summary.json',
