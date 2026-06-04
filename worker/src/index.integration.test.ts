@@ -884,6 +884,167 @@ describe('ai-procurement', () => {
   });
 });
 
+// The ai-opportunities family is the open-solicitation sibling of ai-procurement:
+// a daily title-keyword SAM.gov search for AI terms across every agency, rolled up
+// by agency and set-aside with a closing-soon preview. FREE
+// /api/procurement/ai-opportunities reads the `ai-opportunities:snapshot` KV blob
+// with the full `open` pipeline stripped (cold-start safe: an empty 200 shape with
+// a note pre-first-cron, never a 503). PREMIUM
+// /api/premium/procurement/ai-opportunities/deadlines is strict-premium, no-param,
+// ranks the full open pipeline by response deadline with days_remaining on each,
+// and no-charges (empty_result) when the snapshot is absent. Same harness, same
+// direct-KV seeding via env.TENSORFEED_CACHE.put, same receipt.signature field-path
+// for the AFTA signature, same balance asserts as the ai-procurement block above.
+describe('ai-opportunities', () => {
+  // The KV key the 01:37 UTC cron writes and both routes read. Mirrors
+  // OPP_SNAPSHOT_KEY exported from ai-opportunities.ts.
+  const SNAPSHOT_KEY = 'ai-opportunities:snapshot';
+
+  // A realistic OpportunitySnapshot: one open opportunity with a FUTURE
+  // response_deadline (so it survives isOpen and yields a positive
+  // days_remaining in the premium ranking), plus the rollups and previews the
+  // free view surfaces. ASCII only (no em dashes, no double hyphens).
+  function snapshot(capturedAt: string): Record<string, unknown> {
+    const deadline = new Date(Date.now() + 14 * 86_400_000).toISOString();
+    const opp = {
+      notice_id: 'TEST_NOTICE_0001',
+      title: 'Artificial Intelligence Advisory Services',
+      solicitation_number: 'TEST-SOL-0001',
+      agency: 'Department of Defense',
+      agency_path: 'Department of Defense.Defense Information Systems Agency',
+      notice_type: 'Solicitation',
+      posted_date: '2026-05-30',
+      response_deadline: deadline,
+      naics_code: '541512',
+      set_aside: 'Total Small Business Set-Aside',
+      active: true,
+      ui_link: 'https://sam.gov/opp/TEST_NOTICE_0001/view',
+      matched_keyword: 'artificial intelligence',
+    };
+    return {
+      ok: true,
+      captured_at: capturedAt,
+      source: 'SAM.gov Get Opportunities API (test)',
+      license: 'Public domain (US Government work).',
+      window_days: 90,
+      keywords: ['artificial intelligence', 'machine learning'],
+      total_open: 1,
+      unique_agencies: 1,
+      by_agency: [{ agency: 'Department of Defense', open_count: 1 }],
+      by_set_aside: [{ set_aside: 'Total Small Business Set-Aside', count: 1 }],
+      closing_soon: [opp],
+      recent: [opp],
+      open: [opp],
+    };
+  }
+
+  // FREE with a seeded snapshot: 200, ok, the rollups and closing_soon preview
+  // surface, and the full `open` pipeline is stripped (that ranked list is the
+  // premium read, not the free view).
+  it('serves the free snapshot with totals and closing_soon but strips the open pipeline when seeded', async () => {
+    const env = await makeEnv();
+    const captured = new Date().toISOString();
+    await env.TENSORFEED_CACHE.put(SNAPSHOT_KEY, JSON.stringify(snapshot(captured)));
+
+    const res = await call(env, '/api/procurement/ai-opportunities', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(typeof res.json?.total_open).toBe('number');
+    const closingSoon = res.json?.closing_soon as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(closingSoon)).toBe(true);
+    // The full `open` pipeline is the premium read; the free view must not leak it.
+    expect('open' in (res.json as Record<string, unknown>)).toBe(false);
+  });
+
+  // FREE cold (no seed): 200, ok, total_open 0, with the cold-start note. The
+  // contract is an empty parseable answer, NEVER a 503.
+  it('serves a cold-start empty 200 with total_open 0 when no snapshot is seeded', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/procurement/ai-opportunities', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.total_open).toBe(0);
+    expect(typeof res.json?.note).toBe('string');
+    expect((res.json?.note as string).length).toBeGreaterThan(0);
+  });
+
+  // GATE: strict-premium deadlines, no token. The endpoint is on the strict list,
+  // so a no-token call returns the canonical x402 402 challenge, NOT a free trial.
+  it('returns the canonical 402 challenge on a no-token deadlines call (no free trial)', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/procurement/ai-opportunities/deadlines', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.error).toBe('payment_required');
+    // Strict-premium advertises no free trial.
+    expect(res.json?.free_trial ?? null).toBeNull();
+  });
+
+  // DEBIT happy path: valid token + a seeded fresh snapshot. The deadlines read
+  // ranks the open pipeline, charges exactly 1 credit, and signs an AFTA receipt
+  // at the same receipt.signature field-path.
+  it('charges 1 credit and signs an AFTA receipt for the deadlines read', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+    // Fresh snapshot (captured_at recent) so the 36h freshness SLA does not fire
+    // and the charge actually happens.
+    await env.TENSORFEED_CACHE.put(
+      SNAPSHOT_KEY,
+      JSON.stringify(snapshot(new Date(Date.now() - 60_000).toISOString())),
+    );
+
+    const res = await call(env, '/api/premium/procurement/ai-opportunities/deadlines', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    // The ranked pipeline: deadlines is an array, first item carries a numeric
+    // days_remaining.
+    const deadlines = res.json?.deadlines as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(deadlines)).toBe(true);
+    expect((deadlines as unknown[]).length).toBeGreaterThan(0);
+    expect(typeof (deadlines as Array<Record<string, unknown>>)[0].days_remaining).toBe('number');
+
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(1);
+    expect(billing?.no_charge_reason ?? null).toBeNull();
+
+    // AFTA signature: premiumResponse signs the receipt with the harness Ed25519
+    // key, so the response carries a top-level receipt with a base64url signature.
+    // Same field-path the ai-procurement demand success asserts.
+    const receipt = res.json?.receipt as Record<string, unknown> | undefined;
+    expect(receipt).toBeDefined();
+    expect(typeof receipt?.signature).toBe('string');
+    expect((receipt?.signature as string).length).toBeGreaterThan(0);
+
+    // Balance decremented by exactly the cost.
+    expect(await balanceOf(env, token)).toBe(99);
+  });
+
+  // NO-CHARGE cold: valid token, no snapshot. The handler no-charges
+  // (empty_result), returns the ok empty shape, and the balance is held.
+  it('no-charges a valid-token deadlines call when no snapshot is seeded', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/procurement/ai-opportunities/deadlines', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(0);
+
+    // Balance unchanged: an empty result is free.
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+});
+
 // Canonical accepts[].outputSchema so x402scan and spec-compliant x402
 // indexers find the input schema at the standard location (the coinbase
 // x402 DiscoveryInfo shape: outputSchema = { input, output? }). Long-

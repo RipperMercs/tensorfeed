@@ -297,6 +297,12 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // challenge rather than a free-trial 200 on the premium verdict. Free taste
   // at /api/procurement/ai-contracts.
   '/api/premium/procurement/ai-contracts/demand',
+  // Federal AI opportunities deadlines (2026-06-04). Full open SAM.gov AI
+  // solicitation pipeline ranked by deadline. No required params, but
+  // Bazaar-discoverable, so strict-premium gates anonymous CDP / x402scan
+  // crawlers to a clean 402 challenge rather than a free-trial 200 on the
+  // premium pipeline. Free taste at /api/procurement/ai-opportunities.
+  '/api/premium/procurement/ai-opportunities/deadlines',
 ];
 
 /**

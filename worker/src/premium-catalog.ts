@@ -602,6 +602,16 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'funding',
   },
+  {
+    path: '/api/premium/procurement/ai-opportunities/deadlines',
+    credits: 1,
+    strict_premium: true,
+    params: [],
+    returns: 'Full ranked pipeline of open federal AI contract opportunities (SAM.gov) sorted by response deadline, each with days remaining, set-aside type, buying agency, and the direct solicitation link.',
+    free_sibling: '/api/procurement/ai-opportunities',
+    signed: true,
+    category: 'funding',
+  },
 
   // === COMPUTE ===
   {
