@@ -166,6 +166,9 @@ export interface Env {
   // 503 with a hint and the daily refresh is skipped gracefully. Set
   // with: wrangler secret put FRED_API_KEY
   FRED_API_KEY?: string;
+  // SAM.gov-account Public API Key (NOT api.data.gov) for the federal AI
+  // opportunities feed. Set via: wrangler secret put SAM_GOV_API_KEY
+  SAM_GOV_API_KEY?: string;
   // Agent Fair-Trade Agreement: Ed25519 private key used to sign every
   // premium response receipt. Stored as a JWK string (kty=OKP, crv=Ed25519).
   // Generate with `node worker/scripts/generate-receipt-key.mjs` and set
