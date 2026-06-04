@@ -140,6 +140,8 @@ const PILOT_PATHS = [
   '/api/premium/agent-ready/full',
   // Wave 32 (2026-06-02): hf-leaderboard movers
   '/api/premium/hf-leaderboard/movers',
+  // Wave 33 (2026-06-04): x402-publisher-verdict (signed single-publisher trust verdict)
+  '/api/premium/x402-publisher-verdict',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

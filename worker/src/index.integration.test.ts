@@ -279,6 +279,120 @@ describe('index.ts router money path (integration)', () => {
   });
 });
 
+// The x402 publisher trust-verdict endpoint is strict-premium and param-
+// required (?domain=). These lock its gating + signing wiring at the HTTP
+// boundary: the no-token 402 challenge, the missing-param no-charge, the
+// not-in-registry no-charge (empty_result), the in-registry real charge with
+// an AFTA-signed receipt, and the free redacted preview. They mirror the
+// settlement-verdict integration posture exactly: same harness, same
+// receipt.signature field-path for the AFTA signature, same balance asserts.
+describe('x402 publisher-verdict', () => {
+  // GATE: strict-premium, no token. The endpoint is on the strict list, so a
+  // no-token call returns the canonical x402 402 challenge, NOT a free trial.
+  it('returns the canonical 402 challenge on a no-token call (no free trial)', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/x402-publisher-verdict?domain=x402.tavily.com', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.error).toBe('payment_required');
+    // Strict-premium advertises no free trial.
+    expect(res.json?.free_trial ?? null).toBeNull();
+  });
+
+  // NO-CHARGE on missing param: valid token, no ?domain=. premiumValidationFailure
+  // returns 400 with the schema_validation_failure no-charge receipt; balance held.
+  it('no-charges a valid-token call that is missing the domain param', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/x402-publisher-verdict', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(400);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(0);
+    expect(billing?.no_charge_reason).toBe('schema_validation_failure');
+
+    // Balance unchanged: the deferred debit never committed.
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+
+  // NO-CHARGE on not_indexed: valid token, a domain TF does not index. The agent
+  // still gets the signed not_indexed ruling, billed at zero (empty_result rule).
+  it('no-charges a not_indexed verdict for a domain absent from the registry', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/x402-publisher-verdict?domain=nonexistent-xyz.example', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.verdict).toBe('not_indexed');
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(0);
+
+    // Balance unchanged: an empty result is free.
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+
+  // DEBIT happy path: valid token, a domain that IS in the verified directory.
+  // Seed the directory blob so the domain resolves to a real verdict, then assert
+  // exactly 1 credit is charged and the AFTA receipt is signed.
+  it('charges 1 credit and signs an AFTA receipt for a domain in the verified directory', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    // Seed the precomputed verified-directory blob the verdict reads
+    // (TENSORFEED_CACHE key x402-idx:verified). A verified-settling + active
+    // entry resolves to actively_settling (NOT not_indexed), so the call charges.
+    await env.TENSORFEED_CACHE.put('x402-idx:verified', JSON.stringify({
+      captured_at: '2026-06-04T11:00:00Z',
+      publishers: [{ domain: 'seeded-pub.example', status: 'verified-settling', activity: 'active', settlement_count: 10, volume_usdc: '5.000000', first_settled: '2026-05-30', last_settled: '2026-06-03', pay_to_wallets: ['0xabc'], manifest_url: 'https://seeded-pub.example/.well-known/x402', source: 'manual', note: null, first_seen: '2026-05-30' }],
+    }));
+
+    const res = await call(env, '/api/premium/x402-publisher-verdict?domain=seeded-pub.example', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    // A directory hit yields a real verdict, never the not_indexed no-charge.
+    expect(res.json?.verdict).not.toBe('not_indexed');
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(1);
+    expect(billing?.no_charge_reason ?? null).toBeNull();
+
+    // AFTA signature: premiumResponse signs the receipt with the harness
+    // Ed25519 key, so the response carries a top-level receipt with a base64url
+    // signature. This is the same field-path a settlement-verdict success asserts.
+    const receipt = res.json?.receipt as Record<string, unknown> | undefined;
+    expect(receipt).toBeDefined();
+    expect(typeof receipt?.signature).toBe('string');
+    expect((receipt?.signature as string).length).toBeGreaterThan(0);
+
+    // Balance decremented by exactly the cost.
+    expect(await balanceOf(env, token)).toBe(99);
+  });
+
+  // FREE PREVIEW: no token, with a domain. Returns the redacted taste: ok, the
+  // verdict and claim, but NOT the premium-only evidence or trust blocks.
+  it('serves the free preview with the verdict but redacts evidence and trust', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/preview/x402-publisher-verdict?domain=x402.tavily.com', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.preview).toBe(true);
+    expect(res.json).toHaveProperty('verdict');
+    // The premium-only blocks must not leak into the free preview.
+    expect(res.json).not.toHaveProperty('evidence');
+    expect(res.json).not.toHaveProperty('trust');
+  });
+});
+
 // Canonical accepts[].outputSchema so x402scan and spec-compliant x402
 // indexers find the input schema at the standard location (the coinbase
 // x402 DiscoveryInfo shape: outputSchema = { input, output? }). Long-
