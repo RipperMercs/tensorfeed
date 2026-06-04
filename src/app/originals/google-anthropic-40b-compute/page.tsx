@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'A $40B compute deal reshapes the cloud landscape for frontier AI. Breakdown of what it means for Anthropic, Google, AWS, and Nvidia.',
     type: 'article',
     publishedTime: '2026-04-24T18:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -30,7 +30,7 @@ export default function GoogleAnthropic40BCompute() {
         title="Google Just Committed $40 Billion to Anthropic Compute. The Stakes Just Got Real."
         description="Google is pouring $40B into Anthropic for compute capacity. Analysis of what the deal buys, what it means for AWS and Nvidia, and why it signals the real cost of frontier AI."
         datePublished="2026-04-24"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -46,7 +46,7 @@ export default function GoogleAnthropic40BCompute() {
           Google Just Committed $40 Billion to Anthropic Compute. The Stakes Just Got Real.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-24">April 24, 2026</time>
           <span>&middot;</span>

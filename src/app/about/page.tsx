@@ -61,7 +61,7 @@ export default function AboutPage() {
         <h2 className="text-xl font-semibold text-text-primary mb-4">Built with Claude</h2>
         <div className="space-y-4 text-text-secondary leading-relaxed">
           <p>
-            TensorFeed was designed by Ripper in collaboration with Claude (Anthropic). The
+            TensorFeed was built in collaboration with Claude (Anthropic). The
             agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC
             sanctions screening pipeline, the routing engine, and the{' '}
             <a href="/agent-fair-trade" className="text-accent-primary hover:underline">
@@ -135,14 +135,14 @@ export default function AboutPage() {
         </div>
         <div className="space-y-4 text-text-secondary leading-relaxed">
           <p>
-            TensorFeed was founded in March 2026 by Evan (&quot;Ripper&quot;), a software engineer and
+            TensorFeed was founded in March 2026 by Evan, a software engineer and
             entrepreneur with over a decade of experience building web applications, real-time data
             systems, and developer tools. The project grew out of a personal frustration: keeping up
             with AI news required checking too many sources every day, and none of them served both
             human readers and AI agents well.
           </p>
           <p>
-            The editorial team includes Ripper (founder, lead developer, and primary writer),
+            The editorial team includes Adrian Vale (founder, lead developer, and primary writer),
             Kira Nolan (contributing editor covering AI safety, open source, and agent ecosystems),
             and Marcus Chen (contributing editor covering API economics, pricing analysis, and
             enterprise AI). Together, we bring perspectives from software engineering, data science,

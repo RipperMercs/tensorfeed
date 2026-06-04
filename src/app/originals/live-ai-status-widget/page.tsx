@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     type: 'article',
     url: 'https://tensorfeed.ai/originals/live-ai-status-widget',
     publishedTime: '2026-05-15T22:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
     images: [{ url: '/originals/live-ai-status-widget/hero.jpg', width: 1200, height: 675 }],
   },
   twitter: {
@@ -36,7 +36,7 @@ export default function LiveAiStatusWidgetPage() {
         title="We Made AI Status Embeddable: One Line of HTML, Live on Any Site"
         description="We shipped a free, self-contained widget that puts real-time operational status and latency for every major AI provider into any site with one line of HTML. How it works, why it is honest by construction, and why a trust widget never carries an ad."
         datePublished="2026-05-15"
-        author="Ripper"
+        author="Adrian Vale"
         image="https://tensorfeed.ai/originals/live-ai-status-widget/hero.jpg"
         url="https://tensorfeed.ai/originals/live-ai-status-widget"
       />
@@ -61,7 +61,7 @@ export default function LiveAiStatusWidgetPage() {
           We Made AI Status Embeddable: One Line of HTML, Live on Any Site
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-15">May 15, 2026</time>
           <span>&middot;</span>

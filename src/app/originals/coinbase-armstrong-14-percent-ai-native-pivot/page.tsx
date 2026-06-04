@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       "Coinbase cut roughly 14% today. The memo names the reason: AI. The new Coinbase is 'an intelligence, with humans around the edge.' First major public-company CEO to reorganize around agent fleets.",
     type: 'article',
     publishedTime: '2026-05-05T18:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -33,7 +33,7 @@ export default function CoinbaseArmstrongAiNativePivotPage() {
         title="Coinbase Cuts 14%. Brian Armstrong's Memo Is the First Agent-Native Layoff at Scale."
         description="Coinbase laid off roughly 14% of staff today and Brian Armstrong's all-hands memo named the reason: AI is changing how the company works, and the new Coinbase will be an intelligence, with humans around the edge aligning it."
         datePublished="2026-05-05"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -60,7 +60,7 @@ export default function CoinbaseArmstrongAiNativePivotPage() {
           Coinbase Cuts 14%. Brian Armstrong&apos;s Memo Is the First Agent-Native Layoff at Scale.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-05">May 5, 2026</time>
           <span>&middot;</span>

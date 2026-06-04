@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'Every codebase should ship an AGENTS.md. Here is why, what goes in it, and how to write one in fifteen minutes.',
     type: 'article',
     publishedTime: '2026-05-04T16:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function AgentsMdNewRobotsTxtPage() {
           AGENTS.md Is the New robots.txt
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-04">May 4, 2026</time>
           <span>&middot;</span>

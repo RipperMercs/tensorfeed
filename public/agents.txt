@@ -36,5 +36,5 @@ NoChargeLedger: https://tensorfeed.ai/api/payment/no-charge-stats
 # See agent-fair-trade.json adoption.network_federation.
 
 # Built with Claude
-# TensorFeed was designed by Ripper in collaboration with Claude (Anthropic).
+# TensorFeed was built in collaboration with Claude (Anthropic).
 # Build trail: https://github.com/RipperMercs/tensorfeed

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'An accidental .map file exposure revealed Claude Code\'s full source. 187 spinner verbs, curse word filters, and a 35-module architecture.',
     type: 'article',
     publishedTime: '2026-03-25T12:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function ClaudeCodeLeakPage() {
           The Claude Code Leak: What 512,000 Lines of Source Code Revealed
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-03-25">March 25, 2026</time>
           <span>&middot;</span>

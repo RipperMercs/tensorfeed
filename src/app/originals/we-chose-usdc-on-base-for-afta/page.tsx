@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       "The AFTA whitepaper is published. Here is why agent-native commerce settles on x402 + USDC on Base for now, what other rails we evaluated, and why Coinbase and Circle ended up underneath the standard.",
     type: 'article',
     publishedTime: '2026-05-06T08:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,7 +32,7 @@ export default function WeChoseUsdcOnBaseForAftaPage() {
         title="We Could Have Built AFTA on Anything. We Chose USDC on Base."
         description="The AFTA whitepaper is published. Here is why agent-native commerce settles on x402 + USDC on Base for now, what other rails we evaluated, and why Coinbase and Circle ended up underneath the standard."
         datePublished="2026-05-06"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -48,7 +48,7 @@ export default function WeChoseUsdcOnBaseForAftaPage() {
           We Could Have Built AFTA on Anything. We Chose USDC on Base.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-06">May 6, 2026</time>
           <span>&middot;</span>

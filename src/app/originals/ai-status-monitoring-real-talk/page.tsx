@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'Why "is X down" sites usually lag the actual outage by 5-15 minutes, and how to do AI status monitoring right. Inside the TensorFeed stack.',
     type: 'article',
     publishedTime: '2026-05-04T22:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -57,7 +57,7 @@ export default function AiStatusMonitoringRealTalkPage() {
           AI Status Monitoring: How We Actually Track Claude, ChatGPT, and Gemini
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-04">May 4, 2026</time>
           <span>&middot;</span>

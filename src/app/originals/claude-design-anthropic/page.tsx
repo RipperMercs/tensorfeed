@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       "Claude Design reads your codebase, generates polished visuals, and hands off prototypes directly to Claude Code. The full loop is closed.",
     type: 'article',
     publishedTime: '2026-04-22T10:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -49,7 +49,7 @@ export default function ClaudeDesignAnthropicPage() {
           Anthropic Just Shipped Claude Design. The Loop from Idea to Code Is Now Closed.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-22">April 22, 2026</time>
           <span>&middot;</span>
@@ -173,7 +173,7 @@ export default function ClaudeDesignAnthropicPage() {
         </div>
 
         <p className="text-sm text-text-muted pt-4">
-          <span className="text-text-secondary font-medium">About Ripper:</span> Ripper covers AI model releases, agent infrastructure, and the business of frontier AI at TensorFeed.ai. TensorFeed aggregates news from 15+ sources and is built for both humans and agents.
+          <span className="text-text-secondary font-medium">About Adrian Vale:</span> Adrian Vale covers AI model releases, agent infrastructure, and the business of frontier AI at TensorFeed.ai. TensorFeed aggregates news from 15+ sources and is built for both humans and agents.
         </p>
       </div>
 

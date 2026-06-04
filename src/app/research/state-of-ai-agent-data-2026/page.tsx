@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     url: 'https://tensorfeed.ai/research/state-of-ai-agent-data-2026',
     siteName: 'TensorFeed',
     publishedTime: PUBLISHED + 'T00:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -35,7 +35,7 @@ const JSON_LD: Record<string, unknown> = {
   '@type': 'TechArticle',
   headline: TITLE,
   description: DESCRIPTION,
-  author: { '@type': 'Person', name: 'Ripper', url: 'https://tensorfeed.ai' },
+  author: { '@type': 'Person', name: 'Adrian Vale', url: 'https://tensorfeed.ai' },
   publisher: { '@type': 'Organization', name: 'TensorFeed', url: 'https://tensorfeed.ai' },
   datePublished: PUBLISHED,
   dateModified: PUBLISHED,
@@ -108,7 +108,7 @@ export default function StateOfAIAgentData2026Page() {
         </p>
         <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
           <span itemProp="author" className="text-text-secondary font-medium">
-            Ripper @ TensorFeed.ai
+            Adrian Vale @ TensorFeed.ai
           </span>
           <span>&middot;</span>
           <time itemProp="datePublished" dateTime={PUBLISHED}>

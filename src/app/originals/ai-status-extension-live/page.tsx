@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     type: 'article',
     url: 'https://tensorfeed.ai/originals/ai-status-extension-live',
     publishedTime: '2026-05-20T18:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
     images: [
       {
         url: '/originals/live-ai-status-widget/hero.jpg',
@@ -49,7 +49,7 @@ export default function AiStatusExtensionLivePage() {
         title="TensorFeed AI Status Is Now a Chrome Extension. Live AI Health Sits in Your Toolbar."
         description="The TensorFeed Live Monitor shipped as a Chrome extension on May 20, 2026: a toolbar popup with real provider status and p95 latency, plus a passive degradation badge. Approved and public on the Chrome Web Store, free."
         datePublished="2026-05-20"
-        author="Ripper"
+        author="Adrian Vale"
         image="https://tensorfeed.ai/originals/live-ai-status-widget/hero.jpg"
         url="https://tensorfeed.ai/originals/ai-status-extension-live"
       />
@@ -75,7 +75,7 @@ export default function AiStatusExtensionLivePage() {
           Your Toolbar.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-20">May 20, 2026</time>
           <span>&middot;</span>

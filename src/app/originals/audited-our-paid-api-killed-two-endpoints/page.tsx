@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       "We ran a ToS audit on every premium TensorFeed endpoint. Vast.ai-derived GPU pricing and HuggingFace-compiled benchmarks both failed. Both got cut today.",
     type: 'article',
     publishedTime: '2026-05-06T19:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,7 +32,7 @@ export default function AuditedOurPaidApiPage() {
         title="I Audited Our Own Paid API. Two Endpoints Had to Die."
         description="A redistribution-rights audit of every TensorFeed premium endpoint, the two that failed, and the cleanup that shipped today."
         datePublished="2026-05-06"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -48,7 +48,7 @@ export default function AuditedOurPaidApiPage() {
           I Audited Our Own Paid API. Two Endpoints Had to Die.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-06">May 6, 2026</time>
           <span>&middot;</span>

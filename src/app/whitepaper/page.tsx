@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     url: 'https://tensorfeed.ai/whitepaper',
     siteName: 'TensorFeed',
     publishedTime: PUBLISHED + 'T00:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -39,7 +39,7 @@ const JSON_LD_TECH_ARTICLE = {
   description: DESCRIPTION,
   author: {
     '@type': 'Person',
-    name: 'Ripper',
+    name: 'Adrian Vale',
     url: 'https://tensorfeed.ai',
   },
   publisher: {
@@ -111,7 +111,7 @@ export default function WhitepaperPage() {
         </p>
         <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
           <span itemProp="author" className="text-text-secondary font-medium">
-            Ripper @ TensorFeed.ai
+            Adrian Vale @ TensorFeed.ai
           </span>
           <span>&middot;</span>
           <time itemProp="datePublished" dateTime={PUBLISHED}>

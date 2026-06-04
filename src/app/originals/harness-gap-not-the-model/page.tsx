@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'Same Sonnet 4.6, two harnesses, 19 points apart on SWE-bench Verified. Why the harness gap is the load-bearing thing in agentic coding, and the new TensorFeed harness leaderboard.',
     type: 'article',
     publishedTime: '2026-04-30T22:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,7 +32,7 @@ export default function HarnessGapPage() {
         title="It Is Not the Model. It Is the Harness."
         description="Same Sonnet 4.6, two different harnesses, 19 points apart on SWE-bench Verified. The harness gap is the load-bearing thing in agentic coding, and TensorFeed now has a leaderboard for it."
         datePublished="2026-04-30"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -48,7 +48,7 @@ export default function HarnessGapPage() {
           It Is Not the Model. It Is the Harness.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-30">April 30, 2026</time>
           <span>&middot;</span>

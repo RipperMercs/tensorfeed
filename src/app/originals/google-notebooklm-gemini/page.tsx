@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'NotebookLM is now built into Gemini. This integration changes what a research chatbot can be.',
     type: 'article',
     publishedTime: '2026-04-12T14:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function GoogleNotebookLmGeminiPage() {
           Google Just Put NotebookLM Inside Gemini. Here&apos;s Why It Matters.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-12">April 12, 2026</time>
           <span>&middot;</span>
@@ -174,7 +174,7 @@ export default function GoogleNotebookLmGeminiPage() {
         </div>
 
         <p className="text-sm text-text-muted pt-4">
-          <span className="text-text-secondary font-medium">About Ripper:</span> Ripper covers AI product strategy, model releases, and competitive landscape shifts at TensorFeed. Follow real-time updates on AI tools and models.
+          <span className="text-text-secondary font-medium">About Adrian Vale:</span> Adrian Vale covers AI product strategy, model releases, and competitive landscape shifts at TensorFeed. Follow real-time updates on AI tools and models.
         </p>
       </div>
 

@@ -24,7 +24,7 @@ const CHANGELOG = [
     date: 'April 30, 2026',
     entries: [
       'Shipped /harnesses, the cross-harness coding-agent leaderboard. Tracks Claude Code, Cursor Agent, Codex CLI, Aider, OpenHands, Devin, Cline, Windsurf Cascade, Amp, Continue, and Roo Code on SWE-bench Verified, Terminal-Bench, Aider Polyglot, and SWE-Lancer. Per-harness detail pages at /harnesses/{slug} cover distribution, model lock-in, pricing, and notable features. Same data as JSON at /api/harnesses (free, cached 5 min) with per-harness rollups for fast "who wins X" queries.',
-      'New /originals piece: "It Is Not the Model. It Is the Harness." (Ripper). The harness gap is bigger than the model gap on agentic benchmarks; this is why we now track it.',
+      'New /originals piece: "It Is Not the Model. It Is the Harness." (Adrian Vale). The harness gap is bigger than the model gap on agentic benchmarks; this is why we now track it.',
       'Scheduled a weekly refresh agent that pulls upstream leaderboards (SWE-bench Verified, Terminal-Bench, Aider Polyglot, SWE-Lancer) into both data/harnesses.json and worker/src/harnesses.ts and opens a PR. Runs Mondays at 9 AM PT.',
       'Shipped /playground, an in-browser no-auth query tool against every free TensorFeed endpoint. Sidebar groups endpoints by category, form fields adapt to each endpoint\'s parameter schema, Run executes the request, JSON renders inline with timing and copy-curl/copy-URL/copy-JSON.',
       'Shipped the AI Attention Index at /attention and /api/attention. Live 0-100 score per AI provider derived from news volume in 24h and 7d, GitHub trending repos matching the provider, and bot/agent traffic to provider-related endpoints. Recomputed on every request from existing free endpoints; no new ingestion. Cached 5 minutes.',
@@ -123,7 +123,7 @@ export default function ChangelogPage() {
           <h1 className="text-3xl font-bold text-text-primary">Changelog</h1>
         </div>
         <p className="text-text-secondary text-lg">
-          Everything we ship, documented in real time. Built in public by Ripper.
+          Everything we ship, documented in real time. Built in public.
         </p>
       </div>
 

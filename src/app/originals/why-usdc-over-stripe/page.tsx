@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'Stripe works fine for humans. It does not work for AI agents in a loop. The case for USDC on Base, what we gave up, and what we got in return.',
     type: 'article',
     publishedTime: '2026-04-27T22:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function UsdcOverStripePage() {
           Why We Picked USDC on Base Over Stripe for Agent Payments
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-27">April 27, 2026</time>
           <span>&middot;</span>

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'OpenAI, Anthropic, and Google announced collaboration to combat Chinese AI theft through the Frontier Model Forum. Here is what happened.',
     type: 'article',
     publishedTime: '2026-04-14T10:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function FrontierModelForumVsChinaPage() {
           OpenAI, Anthropic, and Google Just Teamed Up Against Chinese AI Theft
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-14">April 14, 2026</time>
           <span>&middot;</span>
@@ -163,7 +163,7 @@ export default function FrontierModelForumVsChinaPage() {
         </div>
 
         <p className="text-sm text-text-muted pt-4">
-          <span className="text-text-secondary font-medium">About Ripper:</span> Ripper covers AI security, model releases, and the business side of frontier AI at TensorFeed.ai. TensorFeed aggregates news from 15+ sources and is built for both humans and agents.
+          <span className="text-text-secondary font-medium">About Adrian Vale:</span> Adrian Vale covers AI security, model releases, and the business side of frontier AI at TensorFeed.ai. TensorFeed aggregates news from 15+ sources and is built for both humans and agents.
         </p>
       </div>
 

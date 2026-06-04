@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       'AWS made x402 the default. We shipped the verifier MCP. Read-only Base chain reader, eleven tools, no private keys, in the MCP registry today.',
     type: 'article',
     publishedTime: '2026-05-11T22:30:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -33,7 +33,7 @@ export default function X402VerifierMcpLaunchPage() {
         title="The x402 Payment Just Settled. Now What Verifies It? We Shipped the MCP."
         description="Four days after AWS made x402 the default agent payment rail, the next question is who verifies the on-chain settlement actually matches the claimed receipt. We shipped the read-only Base mainnet chain reader that lets any agent answer that without holding a private key."
         datePublished="2026-05-11"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -57,7 +57,7 @@ export default function X402VerifierMcpLaunchPage() {
           The x402 Payment Just Settled. Now What Verifies It? We Shipped the MCP.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-11">May 11, 2026</time>
           <span>&middot;</span>

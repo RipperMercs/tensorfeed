@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'AFTA is the open standard for API trade between humans, businesses, and AI agents. Same primitives protect agents (verifiable charges, bounded loss) and publishers (dispute defense, predictable revenue). The internet of money breaks loose terms for both sides.',
     type: 'article',
     publishedTime: '2026-05-03T18:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,7 +32,7 @@ export default function AftaIsBilateralBothSidesWinPage() {
         title="AFTA Is Bilateral. Here Is Why Both Sides Win."
         description="AFTA is the open standard for API trade between humans, businesses, and AI agents. Same primitives protect agents (verifiable charges, bounded loss) and publishers (dispute defense, predictable revenue)."
         datePublished="2026-05-03"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -48,7 +48,7 @@ export default function AftaIsBilateralBothSidesWinPage() {
           AFTA Is Bilateral. Here Is Why Both Sides Win.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-03">May 3, 2026</time>
           <span>&middot;</span>

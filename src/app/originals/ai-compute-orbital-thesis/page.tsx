@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       'Terrestrial AI hits four hard constraints. Orbital sidesteps all four. What Starship unlocks, who is exploring, and why this is the 2030+ thesis not the 2026 play.',
     type: 'article',
     publishedTime: '2026-05-13T22:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -33,7 +33,7 @@ export default function AIComputeOrbitalThesisPage() {
         title="AI Compute in Orbit: The Long-Arc Thesis. Why Solar + Vacuum Beats Texas + Gas (Eventually)."
         description="Terrestrial AI infrastructure runs into four hard constraints: grid bottlenecks, water, permits, NIMBY. Orbital compute sidesteps all four. Continuous solar gives 30% more energy per panel; vacuum cooling radiates heat to 3 Kelvin background. The catch is launch cost, GPU radiation hardening, mass, and ground bandwidth. What Starship economics unlock, who is exploring (Anthropic + SpaceX, Google, Starcloud), and why this is the 2030+ long-arc thesis."
         datePublished="2026-05-13"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -57,7 +57,7 @@ export default function AIComputeOrbitalThesisPage() {
           AI Compute in Orbit: The Long-Arc Thesis. Why Solar + Vacuum Beats Texas + Gas (Eventually).
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-13">May 13, 2026</time>
           <span>&middot;</span>

@@ -17,7 +17,7 @@ export const metadata: Metadata = {
       'SpaceXAI gives Anthropic access to Colossus 1 (220K+ GPUs). The deeper play: Anthropic asked about multi-gigawatt orbital AI compute. SpaceX is the only org with the launch cadence to make that real on the timelines that matter.',
     type: 'article',
     publishedTime: '2026-05-09T06:30:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -34,7 +34,7 @@ export default function AnthropicSpacexaiColossusOrbitalPage() {
         title="Anthropic Just Booked 220K GPUs on Colossus 1. The Orbital Footnote Is the Bigger Story."
         description="SpaceXAI signed a compute deal with Anthropic for Colossus 1 (220K+ GPUs). The buried lede: Anthropic asked about multi-gigawatt orbital compute. Inside what Colossus 1 buys, why orbital compute is now a near-term engineering program, and what this does to the cloud-AI duopoly thesis."
         datePublished="2026-05-09"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -58,7 +58,7 @@ export default function AnthropicSpacexaiColossusOrbitalPage() {
           Anthropic Just Booked 220K GPUs on Colossus 1. The Orbital Footnote Is the Bigger Story.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-09">May 9, 2026</time>
           <span>&middot;</span>

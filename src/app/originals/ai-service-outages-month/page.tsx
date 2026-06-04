@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'Real data on AI service reliability: which services went down most, average resolution times, and what developers should plan for.',
     type: 'article',
     publishedTime: '2026-03-27T12:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function AIServiceOutagesPage() {
           I Tracked AI Service Outages for a Month. Here&apos;s What I Found.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-03-27">March 27, 2026</time>
           <span>&middot;</span>

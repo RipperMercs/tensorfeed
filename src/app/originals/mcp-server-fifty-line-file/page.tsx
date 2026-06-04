@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'The MCP server for your API is a 50-line file. The agent-acquisition leverage is enormous. Here is the actual code.',
     type: 'article',
     publishedTime: '2026-04-27T23:30:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -45,7 +45,7 @@ export default function MCP50LineFilePage() {
           An MCP Server Is a 50-Line File. Why Every Paid API Should Ship One.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-27">April 27, 2026</time>
           <span>&middot;</span>

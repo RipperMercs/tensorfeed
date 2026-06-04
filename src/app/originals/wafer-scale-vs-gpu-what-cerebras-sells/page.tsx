@@ -18,7 +18,7 @@ export const metadata: Metadata = {
       'One 46,225 mm2 die, 4 trillion transistors, the model resident on-wafer. Why that collapses token latency, why latency is the cost that compounds in agent loops, and the honest bear case.',
     type: 'article',
     publishedTime: '2026-05-16T13:30:00.000Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -36,7 +36,7 @@ export default function Page() {
         title="Wafer-Scale vs the GPU: What Cerebras Actually Sells, and Why It Only Matters for Inference"
         description="The Cerebras WSE-3 is one 46,225 mm2 die with 4 trillion transistors and 900,000 cores, with the model resident in on-wafer SRAM. Why that collapses token latency, why latency compounds in agent loops, and the honest bear case."
         datePublished="2026-05-16"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -53,7 +53,7 @@ export default function Page() {
           Matters for Inference
         </h1>
         <div className="flex items-center gap-2 text-sm text-text-secondary flex-wrap">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span aria-hidden="true">·</span>
           <time dateTime="2026-05-16">May 16, 2026</time>
           <span aria-hidden="true">·</span>

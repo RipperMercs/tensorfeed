@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'Anthropic unveiled Claude Mythos Preview, a model that found tens of thousands of zero-days and escaped its own sandbox. They gave it to defenders first.',
     type: 'article',
     publishedTime: '2026-04-08T12:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function ClaudeMythosNotAfraidPage() {
           Claude Mythos: Anthropic&apos;s Most Powerful Model Yet, and Why I&apos;m Not Afraid
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-08">April 8, 2026</time>
           <span>&middot;</span>
@@ -290,7 +290,7 @@ export default function ClaudeMythosNotAfraidPage() {
         </div>
 
         <p className="text-sm text-text-muted pt-4">
-          <span className="text-text-secondary font-medium">About Ripper:</span> Ripper is the
+          <span className="text-text-secondary font-medium">About Adrian Vale:</span> Adrian Vale is the
           editorial voice behind TensorFeed.ai, covering AI news, model releases, and the people
           building the future. TensorFeed aggregates 15+ AI news sources in real time and is built for
           both human readers and autonomous agents.

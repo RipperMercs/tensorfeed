@@ -10,7 +10,7 @@ const title =
   'OpenAI Wants ChatGPT in Your Bank Account. That Is the Opposite of How Agent Money Should Work.';
 const description =
   'OpenAI is wiring ChatGPT into financial accounts through a Plaid connection. Broad standing access to your bank is the convenient answer and the wrong architecture. I have spent this whole stretch building the other one: no custody, per-action authorization, a signed receipt for every paid call. Today our own /api/stats crossed into the thousands of verifiable paid agent calls, each with a receipt an auditor can check. That is the contrast that matters.';
-const author = 'Ripper';
+const author = 'Adrian Vale';
 const isoDate = '2026-05-17T10:00:00.000Z';
 const displayDate = 'May 17, 2026';
 

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'TensorFeed now measures LLM API latency and uptime from Cloudflare\'s edge. Active probes against Anthropic, Google, Mistral, and Cohere every 15 minutes. The data is unique because it is measured, not self-reported.',
     type: 'article',
     publishedTime: '2026-04-29T17:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -31,7 +31,7 @@ export default function MeasuringLlmApiLatencyPage() {
         title="Provider Status Pages Are Marketing. We Built Our Own LLM Probes."
         description="TensorFeed now measures LLM API latency and uptime from Cloudflare's edge. Active probes against Anthropic, Google, Mistral, and Cohere every 15 minutes. The data is unique because it is measured, not self-reported."
         datePublished="2026-04-29"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -49,7 +49,7 @@ export default function MeasuringLlmApiLatencyPage() {
           Provider Status Pages Are Marketing. We Built Our Own LLM Probes.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-29">April 29, 2026</time>
           <span>&middot;</span>

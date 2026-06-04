@@ -50,7 +50,7 @@ export default function ClaudeVsGptVsGeminiPage() {
           Claude vs GPT vs Gemini: An Honest Comparison
         </h1>
         <div className="flex items-center gap-2 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-02">April 2, 2026</time>
         </div>

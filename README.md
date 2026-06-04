@@ -115,7 +115,7 @@ If TensorFeed is useful to you (or your agents), starring helps other builders f
 
 ## Built with Claude
 
-TensorFeed was designed by Ripper in collaboration with Claude (Anthropic). Specific systems Claude designed alongside: the agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC sanctions screening pipeline, the routing engine, and the [AFTA standard](https://tensorfeed.ai/agent-fair-trade) itself. Git log shows the build trail.
+TensorFeed was built in collaboration with Claude (Anthropic). Specific systems Claude designed alongside: the agent payments rail, the active LLM probes, the GPU pricing aggregator, the OFAC sanctions screening pipeline, the routing engine, and the [AFTA standard](https://tensorfeed.ai/agent-fair-trade) itself. Git log shows the build trail.
 
 ## Stack
 

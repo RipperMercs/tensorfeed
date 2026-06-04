@@ -6,7 +6,7 @@ interface EditorialFeatureProps {
 }
 
 const ROLE_BY_AUTHOR: Record<string, string> = {
-  Ripper: 'Editor in Chief',
+  'Adrian Vale': 'Editor in Chief',
   'Kira Nolan': 'Senior Editor',
   'Marcus Chen': 'Staff Writer',
   'Priya Ahuja': 'Senior Editor',

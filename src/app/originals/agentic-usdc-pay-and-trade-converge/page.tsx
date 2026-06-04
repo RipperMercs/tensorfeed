@@ -18,7 +18,7 @@ export const metadata: Metadata = {
       'AgentCore Payments uses USDC for agents to buy APIs. Hyperliquid just standardized USDC as trading collateral, with Coinbase as official treasury deployer and Circle staking HYPE. We settled five real x402 payments through CDP this morning.',
     type: 'article',
     publishedTime: '2026-05-14T10:00:00.000Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -36,7 +36,7 @@ export default function Page() {
         title="Same Dollar, Same Chain, Same Custodian: The Agentic USDC Stack Is Converging"
         description="AgentCore Payments uses USDC for agents to buy APIs. Hyperliquid just standardized USDC as agent trading collateral, with Coinbase as official treasury deployer and Circle staking HYPE. We settled five real x402 payments through CDP this morning. The agent economy plumbing is converging on one asset, one chain, one custodian."
         datePublished="2026-05-14"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -52,7 +52,7 @@ export default function Page() {
           Same Dollar, Same Chain, Same Custodian: The Agentic USDC Stack Is Converging
         </h1>
         <div className="flex items-center gap-2 text-sm text-text-secondary flex-wrap">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span aria-hidden="true">·</span>
           <time dateTime="2026-05-14">May 14, 2026</time>
           <span aria-hidden="true">·</span>

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'A live public dashboard of AI bot traffic on TensorFeed.ai. Why we publish it, what we see, and what it tells us about the agent web.',
     type: 'article',
     publishedTime: '2026-04-28T01:30:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -48,7 +48,7 @@ export default function PublishingBotTrafficPage() {
           We Made Our AI Bot Traffic Public. Here&apos;s What We&apos;re Seeing.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-28">April 28, 2026</time>
           <span>&middot;</span>

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'OpenRouter now lists 372 models. 33 are free. The cheapest paid model costs less than a penny per page of text. Real numbers and what they mean.',
     type: 'article',
     publishedTime: '2026-05-04T20:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function AiInferenceFloorMay2026Page() {
           The Cheapest AI Model on the Market Costs 1.7 Cents per Million Tokens
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-04">May 4, 2026</time>
           <span>&middot;</span>

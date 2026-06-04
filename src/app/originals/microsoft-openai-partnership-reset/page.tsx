@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'No more exclusivity, no more AGI clause, capped revenue share through 2030. The biggest partnership in AI just got smaller, and that changes everything downstream.',
     type: 'article',
     publishedTime: '2026-04-27T15:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,7 +32,7 @@ export default function MicrosoftOpenAIPartnershipResetPage() {
         title="The Microsoft and OpenAI Divorce Is Done. Both Sides Got What They Wanted."
         description="Microsoft and OpenAI announced a sweeping restructure of their partnership on April 27, 2026. No more exclusivity, no more AGI clause, capped revenue share through 2030, and OpenAI is free to ship on any cloud."
         datePublished="2026-04-27"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -50,7 +50,7 @@ export default function MicrosoftOpenAIPartnershipResetPage() {
           The Microsoft and OpenAI Divorce Is Done. Both Sides Got What They Wanted.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-27">April 27, 2026</time>
           <span>&middot;</span>

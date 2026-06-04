@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'How a real-time AI news API, status monitoring, and an agent payments tier all live inside 100k KV ops per day.',
     type: 'article',
     publishedTime: '2026-04-28T00:30:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -45,7 +45,7 @@ export default function KVOpsArticlePage() {
           The 100,000 KV Ops Daily Budget and What Fits in It
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-28">April 28, 2026</time>
           <span>&middot;</span>

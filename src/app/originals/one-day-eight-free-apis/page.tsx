@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'TensorFeed shipped eight new free data APIs in one day. Sports, packages, research, economy, policy. Each on a verified clean license. Here is the rubric and the day.',
     type: 'article',
     publishedTime: '2026-05-06T22:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,7 +32,7 @@ export default function OneDayEightFreeApisPage() {
         title="One Day, Eight New Free APIs: The Free-Data-First Sprint"
         description="Post-mortem of the May 6, 2026 TensorFeed sprint that shipped eight new free data endpoints, the rubric that made it possible, and the recommend-loop thesis that makes free-data-first the right strategy."
         datePublished="2026-05-06"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       <Link
@@ -48,7 +48,7 @@ export default function OneDayEightFreeApisPage() {
           One Day, Eight New Free APIs: The Free-Data-First Sprint
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-06">May 6, 2026</time>
           <span>&middot;</span>

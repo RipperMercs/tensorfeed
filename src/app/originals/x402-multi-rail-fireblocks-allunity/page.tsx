@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     type: 'article',
     url: 'https://tensorfeed.ai/originals/x402-multi-rail-fireblocks-allunity',
     publishedTime: '2026-05-21T15:00:00.000Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -40,7 +40,7 @@ export default function Page() {
         title="Fireblocks Brought Spend Governance. AllUnity Brought a Krona. x402 Stopped Being a One-Rail Protocol This Week."
         description="On May 20, 2026, Fireblocks joined the x402 Foundation and shipped a security extension for request integrity and spend governance. The same day, AllUnity rolled out Agentic Payments using x402 to settle into a Swedish krona stablecoin under MiCA. A third party offered a non-Coinbase, three-rail acceptance fixture on issue #2207 the next morning. The variant axis on x402 just opened."
         datePublished="2026-05-21"
-        author="Ripper"
+        author="Adrian Vale"
         url="https://tensorfeed.ai/originals/x402-multi-rail-fireblocks-allunity"
       />
 
@@ -57,7 +57,7 @@ export default function Page() {
           Fireblocks Brought Spend Governance. AllUnity Brought a Krona. x402 Stopped Being a One-Rail Protocol This Week.
         </h1>
         <div className="flex items-center gap-2 text-sm text-text-secondary flex-wrap">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span aria-hidden="true">·</span>
           <time dateTime="2026-05-21">May 21, 2026</time>
           <span aria-hidden="true">·</span>

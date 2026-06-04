@@ -25,3 +25,8 @@
 /gear/books-learning /gear/books 301
 /gear/storage-memory /gear/storage 301
 /gear/audio-voice /gear/audio 301
+
+# Author byline rename: the founder profile moved from /authors/ripper to
+# /authors/adrian-vale. Old URLs kept as 301 so existing links resolve.
+/authors/ripper /authors/adrian-vale 301
+/authors/ripper/ /authors/adrian-vale/ 301

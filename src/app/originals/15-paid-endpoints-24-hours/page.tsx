@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'Shipped 15 pay-per-call premium endpoints, two SDK versions, an MCP server expansion, and a human dashboard in 24 hours. Here is what made the cadence possible.',
     type: 'article',
     publishedTime: '2026-04-27T20:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function FifteenEndpointsPage() {
           15 Paid AI Agent API Endpoints in 24 Hours: What Made It Possible
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-27">April 27, 2026</time>
           <span>&middot;</span>

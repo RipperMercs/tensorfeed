@@ -217,7 +217,7 @@ export default function Page() {
           agent workloads. The bear case is that one enormous die is a
           specialized tool, not a general accelerator, and that the addressable
           market outside a few frontier customers is unproven. That argument is
-          a hardware argument, and Ripper takes it apart in{' '}
+          a hardware argument, and Adrian Vale takes it apart in{' '}
           <Link
             href="/originals/wafer-scale-vs-gpu-what-cerebras-sells"
             className="text-accent-primary hover:underline"

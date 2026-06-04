@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     description: 'Microsoft built its own model stack at Build 2026. MAI-Code-1-Flash undercuts Claude Haiku 4.5 inside GitHub Copilot, and the bigger story is independence from OpenAI.',
     type: 'article',
     publishedTime: '2026-06-03T16:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -31,7 +31,7 @@ export default function MicrosoftMaiModelsPage() {
         title="Microsoft Shipped Seven of Its Own Models. The One That Counts Lives Inside Copilot."
         description="At Build 2026, Microsoft launched seven in-house MAI models, including MAI-Thinking-1 and MAI-Code-1-Flash, a small coding model that beats Claude Haiku 4.5 on SWE-Bench Pro while using fewer tokens. The real story is independence from OpenAI."
         datePublished="2026-06-03"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -49,7 +49,7 @@ export default function MicrosoftMaiModelsPage() {
           Microsoft Shipped Seven of Its Own Models. The One That Counts Lives Inside Copilot.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-06-03">June 3, 2026</time>
           <span>&middot;</span>

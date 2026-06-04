@@ -187,7 +187,7 @@ export default function Page() {
 
         <p>
           The hardware itself is not the issue here, and the engineering case
-          stands on its own merits in Ripper&apos;s{' '}
+          stands on its own merits in Adrian Vale&apos;s{' '}
           <Link
             href="/originals/wafer-scale-vs-gpu-what-cerebras-sells"
             className="text-accent-primary hover:underline"

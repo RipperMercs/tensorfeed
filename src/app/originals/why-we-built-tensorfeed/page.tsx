@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'The origin story of TensorFeed.ai. Why existing AI news sources fell short and the decision to build for humans and AI agents.',
     type: 'article',
     publishedTime: '2026-03-18T12:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function WhyWeBuiltTensorFeedPage() {
           Why We Built TensorFeed.ai
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-03-18">March 18, 2026</time>
           <span>&middot;</span>

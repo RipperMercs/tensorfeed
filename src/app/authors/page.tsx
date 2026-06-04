@@ -5,7 +5,7 @@ import { Users, ArrowRight } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Authors: TensorFeed.ai Editorial Team',
   description:
-    'Meet the TensorFeed.ai editorial team: Ripper (founder and lead editor), Kira Nolan (AI safety and open source), and Marcus Chen (API economics and enterprise AI).',
+    'Meet the TensorFeed.ai editorial team: Adrian Vale (founder and lead editor), Kira Nolan (AI safety and open source), and Marcus Chen (API economics and enterprise AI).',
   alternates: {
     canonical: 'https://tensorfeed.ai/authors',
   },
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     url: 'https://tensorfeed.ai/authors',
     title: 'Authors: TensorFeed.ai Editorial Team',
     description:
-      'Meet the TensorFeed.ai editorial team: Ripper (founder and lead editor), Kira Nolan (AI safety and open source), and Marcus Chen (API economics and enterprise AI).',
+      'Meet the TensorFeed.ai editorial team: Adrian Vale (founder and lead editor), Kira Nolan (AI safety and open source), and Marcus Chen (API economics and enterprise AI).',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
@@ -22,18 +22,18 @@ export const metadata: Metadata = {
     card: 'summary',
     title: 'Authors: TensorFeed.ai Editorial Team',
     description:
-      'Meet the TensorFeed.ai editorial team: Ripper (founder and lead editor), Kira Nolan (AI safety and open source), and Marcus Chen (API economics and enterprise AI).',
+      'Meet the TensorFeed.ai editorial team: Adrian Vale (founder and lead editor), Kira Nolan (AI safety and open source), and Marcus Chen (API economics and enterprise AI).',
   },
 };
 
 const AUTHORS = [
   {
-    slug: 'ripper',
-    name: 'Ripper',
+    slug: 'adrian-vale',
+    name: 'Adrian Vale',
     role: 'Founder and Lead Editor',
     beat: 'Software engineering, AI agents, developer tooling, infrastructure',
     summary:
-      'Evan (Ripper) is a software engineer and entrepreneur with over a decade of experience building web applications, real-time data systems, and developer tools. He founded TensorFeed in March 2026 and leads all editorial decisions.',
+      'Evan (Adrian Vale) is a software engineer and entrepreneur with over a decade of experience building web applications, real-time data systems, and developer tools. He founded TensorFeed in March 2026 and leads all editorial decisions.',
   },
   {
     slug: 'kira-nolan',

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
       'The notable thing about Opus 4.8 is not the benchmarks. It is that deterministic multi-agent orchestration is now a runtime primitive, not a framework you bolt on. What that does to cost, latency, and the agent-framework market.',
     type: 'article',
     publishedTime: '2026-05-28T16:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -36,7 +36,7 @@ export default function Opus48WorkflowOrchestrationPrimitivePage() {
         title="Opus 4.8 Shipped a Workflow Primitive. Agent Orchestration Just Moved Into the Model."
         description="Claude Opus 4.8 ships a Workflow primitive that makes deterministic multi-agent orchestration a runtime feature rather than an app-layer framework. The operator read on cost, latency, and the agent-framework market."
         datePublished="2026-05-28"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -54,7 +54,7 @@ export default function Opus48WorkflowOrchestrationPrimitivePage() {
           Opus 4.8 Shipped a Workflow Primitive. Agent Orchestration Just Moved Into the Model.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-28">May 28, 2026</time>
           <span>&middot;</span>

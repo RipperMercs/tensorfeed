@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'Google goes first on May 19. Apple goes second on June 8. The 20 days between are the most valuable counterprogramming window in consumer AI this year.',
     type: 'article',
     publishedTime: '2026-05-14T11:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,7 +32,7 @@ export default function Apple20DayWindowPage() {
         title="Apple Just Got a 20-Day Window. Between Google I/O and WWDC, It Has To Rewrite the Siri Story."
         description="Google I/O lands May 19. Apple WWDC lands June 8. The 20-day gap is Apple's counterprogramming window: what Gemini 4 is expected to reveal, what Cupertino can swap into the WWDC keynote in three weeks, and why Extensions changed the math."
         datePublished="2026-05-14"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -50,7 +50,7 @@ export default function Apple20DayWindowPage() {
           Apple Just Got a 20-Day Window. Between Google I/O and WWDC, It Has To Rewrite the Siri Story.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-14">May 14, 2026</time>
           <span>&middot;</span>

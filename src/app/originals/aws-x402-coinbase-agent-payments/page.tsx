@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       "Coinbase + AWS made x402 stablecoin payments a default agent rail. Inside what changed, who got validated, and which moats just narrowed.",
     type: 'article',
     publishedTime: '2026-05-07T22:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -33,7 +33,7 @@ export default function AwsX402CoinbaseAgentPaymentsPage() {
         title="AWS Just Plugged x402 In. Agent USDC Payments Are Now Cloud-Default."
         description="Coinbase announced AI agents can now pay for AWS services in USDC over x402. The largest cloud provider on the planet just made stablecoin agent payments a default option."
         datePublished="2026-05-07"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -60,7 +60,7 @@ export default function AwsX402CoinbaseAgentPaymentsPage() {
           AWS Just Plugged x402 In. Agent USDC Payments Are Now Cloud-Default.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-07">May 7, 2026</time>
           <span>&middot;</span>

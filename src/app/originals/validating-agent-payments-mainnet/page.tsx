@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'The five-step USDC payment loop that took TensorFeed agent payments from designed to operational. Real tx hash on Base mainnet, no bugs surfaced.',
     type: 'article',
     publishedTime: '2026-04-27T18:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function MainnetValidationPage() {
           We Validated Agent Payments End-to-End on Base Mainnet
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-27">April 27, 2026</time>
           <span>&middot;</span>

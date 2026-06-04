@@ -194,7 +194,7 @@ export function SoftwareApplicationJsonLd({
 }
 
 const AUTHOR_SLUGS: Record<string, string> = {
-  Ripper: 'ripper',
+  'Adrian Vale': 'adrian-vale',
   'Kira Nolan': 'kira-nolan',
   'Marcus Chen': 'marcus-chen',
 };
@@ -209,7 +209,7 @@ export function ArticleJsonLd({
   description,
   datePublished,
   dateModified,
-  author = 'Ripper',
+  author = 'Adrian Vale',
   url,
   image,
 }: {

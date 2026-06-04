@@ -10,7 +10,7 @@ const title =
   'OpenAI Filed for a Trillion-Dollar IPO. The Same Week Anthropic Booked Its First Profit.';
 const description =
   'OpenAI sent its confidential S-1 to the SEC on Friday targeting an $852B to $1T listing, while still losing $1.22 for every dollar of revenue in Q1. Six days earlier, Anthropic told investors it expects a $559M operating profit on $10.9B of Q2 revenue, its first profitable quarter ever. Two trillion-dollar labs, two opposite financial moments, in the same week. The divergence is the story.';
-const author = 'Ripper';
+const author = 'Adrian Vale';
 const isoDate = '2026-05-23T11:00:00.000Z';
 const displayDate = 'May 23, 2026';
 

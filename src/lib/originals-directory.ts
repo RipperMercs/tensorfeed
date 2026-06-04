@@ -30,7 +30,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'microsoft-mai-models-openai-independence',
     title:
       'Microsoft Shipped Seven of Its Own Models. The One That Counts Lives Inside Copilot.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'June 3, 2026',
     readTime: '6 min read',
     description:
@@ -110,7 +110,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'opus-4-8-workflow-orchestration-primitive',
     title:
       'Opus 4.8 Shipped a Workflow Primitive. Agent Orchestration Just Moved Into the Model.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 28, 2026',
     readTime: '6 min read',
     description:
@@ -150,7 +150,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'starlette-badhost-critical-cve-agent-stack-audit',
     title:
       'Starlette Just Shipped a Critical CVE. If Your Agent Has FastAPI Anywhere in Its Stack, This Is Yours.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 27, 2026',
     readTime: '4 min read',
     description:
@@ -230,7 +230,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'openai-ipo-filing-anthropic-first-profit',
     title:
       'OpenAI Filed for a Trillion-Dollar IPO. The Same Week Anthropic Booked Its First Profit.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 23, 2026',
     readTime: '7 min read',
     description:
@@ -240,7 +240,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'x402-multi-rail-fireblocks-allunity',
     title:
       'Fireblocks Brought Spend Governance. AllUnity Brought a Krona. x402 Stopped Being a One-Rail Protocol This Week.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 21, 2026',
     readTime: '6 min read',
     description:
@@ -250,7 +250,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'ai-status-extension-live',
     title:
       'TensorFeed AI Status Is Now a Chrome Extension. Live AI Health Sits in Your Toolbar.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 20, 2026',
     readTime: '4 min read',
     description:
@@ -280,7 +280,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'openai-chatgpt-bank-access-agent-trust-gap',
     title:
       'OpenAI Wants ChatGPT in Your Bank Account. That Is the Opposite of How Agent Money Should Work.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 17, 2026',
     readTime: '5 min read',
     description:
@@ -320,7 +320,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'wafer-scale-vs-gpu-what-cerebras-sells',
     title:
       'Wafer-Scale vs the GPU: What Cerebras Actually Sells, and Why It Only Matters for Inference',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 16, 2026',
     readTime: '6 min read',
     description:
@@ -339,7 +339,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'live-ai-status-widget',
     title: 'We Made AI Status Embeddable: One Line of HTML, Live on Any Site',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 15, 2026',
     readTime: '6 min read',
     description:
@@ -379,7 +379,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'cve-data-layer-matters-now',
     title:
       '271 Zero-Days, Five Schemas: The AI-Cyber Data Layer Just Got Load-Bearing',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 14, 2026',
     readTime: '5 min read',
     description:
@@ -389,7 +389,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'agentic-usdc-pay-and-trade-converge',
     title:
       'Same Dollar, Same Chain, Same Custodian: The Agentic USDC Stack Is Converging',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 14, 2026',
     readTime: '6 min read',
     description:
@@ -398,7 +398,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'apple-20-day-window-io-wwdc',
     title: "Apple Just Got a 20-Day Window. Between Google I/O and WWDC, It Has To Rewrite the Siri Story.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 14, 2026',
     readTime: '7 min read',
     description:
@@ -416,7 +416,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'ai-compute-orbital-thesis',
     title: 'AI Compute in Orbit: The Long-Arc Thesis. Why Solar + Vacuum Beats Texas + Gas (Eventually).',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 13, 2026',
     readTime: '7 min read',
     description:
@@ -470,7 +470,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'x402-verifier-mcp-launch',
     title: 'The x402 Payment Just Settled. Now What Verifies It? We Shipped the MCP.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 11, 2026',
     readTime: '6 min read',
     description:
@@ -506,7 +506,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'anthropic-spacexai-colossus-orbital',
     title: 'Anthropic Just Booked 220K GPUs on Colossus 1. The Orbital Footnote Is the Bigger Story.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 9, 2026',
     readTime: '7 min read',
     description:
@@ -542,7 +542,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'aws-x402-coinbase-agent-payments',
     title: "AWS Just Plugged x402 In. Agent USDC Payments Are Now Cloud-Default.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 7, 2026',
     readTime: '6 min read',
     description:
@@ -551,7 +551,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'anthropic-dreaming-managed-agents',
     title: "Anthropic Just Taught Claude to Dream Between Tasks. Long-Running Agents Got Their Memory Layer.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 7, 2026',
     readTime: '6 min read',
     description:
@@ -569,7 +569,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'one-day-eight-free-apis',
     title: 'One Day, Eight New Free APIs: The Free-Data-First Sprint',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 6, 2026',
     readTime: '7 min read',
     description:
@@ -578,7 +578,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'audited-our-paid-api-killed-two-endpoints',
     title: 'I Audited Our Own Paid API. Two Endpoints Had to Die.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 6, 2026',
     readTime: '7 min read',
     description:
@@ -596,7 +596,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'we-chose-usdc-on-base-for-afta',
     title: "We Could Have Built AFTA on Anything. We Chose USDC on Base.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 6, 2026',
     readTime: '8 min read',
     description:
@@ -605,7 +605,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'coinbase-armstrong-14-percent-ai-native-pivot',
     title: "Coinbase Cuts 14%. Brian Armstrong's Memo Is the First Agent-Native Layoff at Scale.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 5, 2026',
     readTime: '8 min read',
     description:
@@ -623,7 +623,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'ai-status-monitoring-real-talk',
     title: 'AI Status Monitoring: How We Actually Track Claude, ChatGPT, and Gemini',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 4, 2026',
     readTime: '7 min read',
     description:
@@ -632,7 +632,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'ai-inference-floor-may-2026',
     title: 'The Cheapest AI Model on the Market Costs 1.7 Cents per Million Tokens',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 4, 2026',
     readTime: '5 min read',
     description:
@@ -641,7 +641,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'agents-md-new-robots-txt',
     title: 'AGENTS.md Is the New robots.txt',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 4, 2026',
     readTime: '6 min read',
     description:
@@ -659,7 +659,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'afta-is-bilateral-both-sides-win',
     title: 'AFTA Is Bilateral. Here Is Why Both Sides Win.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 3, 2026',
     readTime: '6 min read',
     description:
@@ -695,7 +695,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'stripe-link-vs-usdc-agent-payments',
     title: 'Stripe Just Validated Agent Payments. We Already Shipped Ours Without Them.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'May 1, 2026',
     readTime: '7 min read',
     description:
@@ -722,7 +722,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'harness-gap-not-the-model',
     title: 'It Is Not the Model. It Is the Harness.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 30, 2026',
     readTime: '6 min read',
     description:
@@ -731,7 +731,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'measuring-llm-api-latency-from-the-edge',
     title: 'Provider Status Pages Are Marketing. We Built Our Own LLM Probes.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 29, 2026',
     readTime: '6 min read',
     description:
@@ -758,7 +758,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'publishing-bot-traffic',
     title: "We Made Our AI Bot Traffic Public. Here's What We're Seeing.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 28, 2026',
     readTime: '6 min read',
     description:
@@ -767,7 +767,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'kv-ops-budget-edge-architecture',
     title: 'The 100,000 KV Ops Daily Budget and What Fits in It',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 28, 2026',
     readTime: '7 min read',
     description:
@@ -776,7 +776,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'mcp-server-fifty-line-file',
     title: 'An MCP Server Is a 50-Line File. Why Every Paid API Should Ship One.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 27, 2026',
     readTime: '6 min read',
     description:
@@ -785,7 +785,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'why-usdc-over-stripe',
     title: 'Why We Picked USDC on Base Over Stripe for Agent Payments',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 27, 2026',
     readTime: '7 min read',
     description:
@@ -794,7 +794,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: '15-paid-endpoints-24-hours',
     title: '15 Paid AI Agent API Endpoints in 24 Hours: What Made It Possible',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 27, 2026',
     readTime: '8 min read',
     description:
@@ -803,7 +803,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'validating-agent-payments-mainnet',
     title: 'We Validated Agent Payments End-to-End on Base Mainnet',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 27, 2026',
     readTime: '6 min read',
     description:
@@ -812,7 +812,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'microsoft-openai-partnership-reset',
     title: 'The Microsoft and OpenAI Divorce Is Done. Both Sides Got What They Wanted.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 27, 2026',
     readTime: '7 min read',
     description:
@@ -830,7 +830,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'openai-workspace-agents-chatgpt-enterprise',
     title: 'OpenAI Just Turned ChatGPT Into an Enterprise Automation Platform',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 26, 2026',
     readTime: '7 min read',
     description:
@@ -866,7 +866,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'google-anthropic-40b-compute',
     title: 'Google Just Committed $40 Billion to Anthropic Compute. The Stakes Just Got Real.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 24, 2026',
     readTime: '6 min read',
     description:
@@ -893,7 +893,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'claude-design-anthropic',
     title: 'Anthropic Just Shipped Claude Design. The Loop from Idea to Code Is Now Closed.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 22, 2026',
     readTime: '5 min read',
     description:
@@ -902,7 +902,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'claude-opus-4-7-release',
     title: "Claude Opus 4.7 Just Dropped. Here's What Changed.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 17, 2026',
     readTime: '6 min read',
     description:
@@ -929,7 +929,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'ai-adoption-faster-than-internet',
     title: "AI Adoption Is Outpacing the Internet. Stanford Has the Numbers to Prove It.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 15, 2026',
     readTime: '6 min read',
     description:
@@ -947,7 +947,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'frontier-model-forum-vs-china',
     title: 'OpenAI, Anthropic, and Google Just Teamed Up Against Chinese AI Theft',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 14, 2026',
     readTime: '6 min read',
     description:
@@ -965,7 +965,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'google-notebooklm-gemini',
     title: "Google Just Put NotebookLM Inside Gemini. Here's Why It Matters.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 12, 2026',
     readTime: '5 min read',
     description:
@@ -983,7 +983,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'claude-mythos-not-afraid',
     title: "Claude Mythos: Anthropic's Most Powerful Model Yet, and Why I'm Not Afraid",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 8, 2026',
     readTime: '8 min read',
     description:
@@ -992,7 +992,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'building-for-ai-agents',
     title: 'Building for AI Agents: What Developers Need to Know',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 5, 2026',
     readTime: '6 min read',
     description:
@@ -1010,7 +1010,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'claude-vs-gpt-vs-gemini',
     title: 'Claude vs GPT vs Gemini: An Honest Comparison',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Apr 2, 2026',
     readTime: '6 min read',
     description:
@@ -1046,7 +1046,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'ai-service-outages-month',
     title: "I Tracked AI Service Outages for a Month. Here's What I Found.",
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Mar 27, 2026',
     readTime: '4 min read',
     description:
@@ -1055,7 +1055,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'claude-code-leak',
     title: 'The Claude Code Leak: What 512,000 Lines of Source Code Revealed',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Mar 25, 2026',
     readTime: '5 min read',
     description:
@@ -1082,7 +1082,7 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'why-we-built-tensorfeed',
     title: 'Why We Built TensorFeed.ai',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'Mar 18, 2026',
     readTime: '5 min read',
     description:

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'Workspace Agents are OpenAI’s answer to Slack workflows, Microsoft Copilot Studio, and Anthropic’s agent stack. Free until May 6, then credit-based pricing kicks in.',
     type: 'article',
     publishedTime: '2026-04-26T13:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,7 +32,7 @@ export default function OpenAIWorkspaceAgentsPage() {
         title="OpenAI Just Turned ChatGPT Into an Enterprise Automation Platform"
         description="OpenAI launched Workspace Agents in research preview for ChatGPT Business, Enterprise, and Edu. Long-running, scheduled, Codex-powered agents that plug straight into Slack, Salesforce, Drive, and Notion."
         datePublished="2026-04-26"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -50,7 +50,7 @@ export default function OpenAIWorkspaceAgentsPage() {
           OpenAI Just Turned ChatGPT Into an Enterprise Automation Platform
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-26">April 26, 2026</time>
           <span>&middot;</span>

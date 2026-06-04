@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: 'AI adoption is outpacing the internet. Stanford&apos;s 2026 AI Index has the data on why.',
     type: 'article',
     publishedTime: '2026-04-15T09:30:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -47,7 +47,7 @@ export default function AiAdoptionFasterThanInternetPage() {
           AI Adoption Is Outpacing the Internet. Stanford Has the Numbers to Prove It.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-04-15">April 15, 2026</time>
           <span>&middot;</span>
@@ -175,7 +175,7 @@ export default function AiAdoptionFasterThanInternetPage() {
         </div>
 
         <p className="text-sm text-text-muted pt-4">
-          <span className="text-text-secondary font-medium">About Ripper:</span> Ripper covers AI capability trends, adoption metrics, and the data behind model development at TensorFeed. Focus is on what the benchmarks tell us about what is actually happening in the labs.
+          <span className="text-text-secondary font-medium">About Adrian Vale:</span> Adrian Vale covers AI capability trends, adoption metrics, and the data behind model development at TensorFeed. Focus is on what the benchmarks tell us about what is actually happening in the labs.
         </p>
       </div>
 

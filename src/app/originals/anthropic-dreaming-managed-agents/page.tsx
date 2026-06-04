@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       "Dreaming is in research preview. Outcomes, multiagent orchestration, and webhooks went public beta. Rate limits doubled for Pro and Max. The agent stack just got a memory layer.",
     type: 'article',
     publishedTime: '2026-05-07T18:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -33,7 +33,7 @@ export default function AnthropicDreamingManagedAgentsPage() {
         title="Anthropic Just Taught Claude to Dream Between Tasks. Long-Running Agents Got Their Memory Layer."
         description="At Code with Claude on May 6, 2026, Anthropic shipped 'dreaming' as a research preview for Managed Agents: offline reflection that reorganizes memories between sessions. Outcomes, multi-agent orchestration, and webhooks went public beta the same day, with rate limits doubled for Pro and Max."
         datePublished="2026-05-07"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -60,7 +60,7 @@ export default function AnthropicDreamingManagedAgentsPage() {
           Anthropic Just Taught Claude to Dream Between Tasks. Long-Running Agents Got Their Memory Layer.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-05-07">May 7, 2026</time>
           <span>&middot;</span>
