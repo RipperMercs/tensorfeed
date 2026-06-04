@@ -173,6 +173,7 @@ export interface SsvcVerdict {
   tree: { name: string; version: string; source_url: string };
   scored_at: string;
   source: { record: string; publisher: string; license: string };
+  kev_cross_check?: KevCrossCheck;
 }
 
 export interface SsvcVerdictPreview {
@@ -259,4 +260,71 @@ export async function checkSsvcVerdictPreviewRateLimit(
   if (count >= max) return { allowed: false, remaining: 0, limit: max };
   await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
   return { allowed: true, remaining: max - count - 1, limit: max };
+}
+
+export interface KevLookup {
+  available: boolean;                    // false when the kev:current snapshot is missing
+  entry: { dateAdded: string } | null;   // the matched KEV entry, or null if not on KEV
+  catalog_date: string | null;           // KEVCatalog.dateReleased, for transparency
+}
+
+export interface KevCrossCheck {
+  checked: boolean;
+  reason?: 'kev_snapshot_unavailable';
+  kev_listed?: boolean;
+  flag?: 'none' | 'exploitation_understated';
+  recorded_exploitation?: Exploitation;
+  implied_exploitation?: 'active';
+  kev_date_added?: string;
+  kev_catalog_date?: string | null;
+  adjusted_primary?: Decision;
+  adjusted_envelope?: Record<MissionWellbeing, Decision>;
+  note?: string;
+}
+
+const KEV_UNDERSTATED_NOTE =
+  'This CVE is on the CISA KEV catalog (exploited in the wild), so the recorded Exploitation understates current reality. The adjusted decision applies the CISA SSVC tree with Exploitation set to active. The CISA decision above is unchanged.';
+
+/**
+ * Cross-check the recorded SSVC Exploitation against current CISA KEV
+ * membership. On-KEV means exploited in the wild, which is SSVC
+ * Exploitation=active. When the record understates that, recompute the
+ * decision envelope at active. Always returns a block (transparency); never
+ * throws. The KEV lookup itself is resolved by the caller (one KV read).
+ */
+export function kevCrossCheck(points: SsvcPoints, kev: KevLookup): KevCrossCheck {
+  if (!kev.available) {
+    return { checked: false, reason: 'kev_snapshot_unavailable' };
+  }
+  if (!kev.entry) {
+    return { checked: true, kev_listed: false, flag: 'none', kev_catalog_date: kev.catalog_date };
+  }
+  if (points.exploitation === 'active') {
+    return {
+      checked: true,
+      kev_listed: true,
+      flag: 'none',
+      recorded_exploitation: 'active',
+      kev_date_added: kev.entry.dateAdded,
+      kev_catalog_date: kev.catalog_date,
+    };
+  }
+  const adjustedPoints = { ...points, exploitation: 'active' as const };
+  const adjusted_envelope: Record<MissionWellbeing, Decision> = {
+    low: cisaSsvcDecision(adjustedPoints, 'low'),
+    medium: cisaSsvcDecision(adjustedPoints, 'medium'),
+    high: cisaSsvcDecision(adjustedPoints, 'high'),
+  };
+  return {
+    checked: true,
+    kev_listed: true,
+    flag: 'exploitation_understated',
+    recorded_exploitation: points.exploitation,
+    implied_exploitation: 'active',
+    kev_date_added: kev.entry.dateAdded,
+    kev_catalog_date: kev.catalog_date,
+    adjusted_primary: adjusted_envelope.medium,
+    adjusted_envelope,
+    note: KEV_UNDERSTATED_NOTE,
+  };
 }

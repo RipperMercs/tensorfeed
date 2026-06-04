@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION, parseSsvcFromVulnrichment, buildSsvcVerdict, redactSsvcVerdictForPreview, checkSsvcVerdictPreviewRateLimit } from './ssvc-verdict';
+import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION, parseSsvcFromVulnrichment, buildSsvcVerdict, redactSsvcVerdictForPreview, checkSsvcVerdictPreviewRateLimit, kevCrossCheck } from './ssvc-verdict';
 import { makeEnv, call, seedToken, balanceOf } from './test-harness';
 
 // The authoritative 36-row CISA SSVC Coordinator v2.0.3 table. Verified three
@@ -329,5 +329,63 @@ describe('ssvc-verdict premium route', () => {
     expect(res.status).toBe(404);
     expect(res.json?.error).toBe('no_ssvc_data');
     expect(await balanceOf(env, token)).toBe(5);
+  });
+});
+
+const POINTS_NONE = {
+  exploitation: 'none' as const,
+  automatable: 'yes' as const,
+  technical_impact: 'total' as const,
+  role: 'CISA Coordinator',
+  version: '2.0.3',
+  scored_at: '2024-04-02T04:00:23.138684Z',
+};
+
+describe('kevCrossCheck', () => {
+  it('reports not-checked when the KEV snapshot is unavailable', () => {
+    expect(kevCrossCheck(POINTS_NONE, { available: false, entry: null, catalog_date: null })).toEqual({
+      checked: false,
+      reason: 'kev_snapshot_unavailable',
+    });
+  });
+
+  it('reports clean when the CVE is not on KEV', () => {
+    expect(kevCrossCheck(POINTS_NONE, { available: true, entry: null, catalog_date: '2026-06-03' })).toEqual({
+      checked: true,
+      kev_listed: false,
+      flag: 'none',
+      kev_catalog_date: '2026-06-03',
+    });
+  });
+
+  it('reports no understatement when recorded Exploitation is already active', () => {
+    const r = kevCrossCheck(
+      { ...POINTS_NONE, exploitation: 'active' },
+      { available: true, entry: { dateAdded: '2024-03-29' }, catalog_date: '2026-06-03' },
+    );
+    expect(r).toMatchObject({ checked: true, kev_listed: true, flag: 'none', recorded_exploitation: 'active', kev_date_added: '2024-03-29' });
+    expect(r.adjusted_primary).toBeUndefined();
+  });
+
+  it('flags understatement and recomputes at active for the xz case (none/yes/total)', () => {
+    const r = kevCrossCheck(POINTS_NONE, { available: true, entry: { dateAdded: '2024-03-29' }, catalog_date: '2026-06-03' });
+    expect(r.checked).toBe(true);
+    expect(r.kev_listed).toBe(true);
+    expect(r.flag).toBe('exploitation_understated');
+    expect(r.recorded_exploitation).toBe('none');
+    expect(r.implied_exploitation).toBe('active');
+    expect(r.kev_date_added).toBe('2024-03-29');
+    expect(r.adjusted_envelope).toEqual({ low: 'Attend', medium: 'Act', high: 'Act' });
+    expect(r.adjusted_primary).toBe('Act');
+  });
+
+  it('flags understatement when recorded Exploitation is poc', () => {
+    const r = kevCrossCheck(
+      { ...POINTS_NONE, exploitation: 'poc' },
+      { available: true, entry: { dateAdded: '2025-01-28' }, catalog_date: '2026-06-03' },
+    );
+    expect(r.flag).toBe('exploitation_understated');
+    expect(r.recorded_exploitation).toBe('poc');
+    expect(r.adjusted_primary).toBe('Act');
   });
 });
