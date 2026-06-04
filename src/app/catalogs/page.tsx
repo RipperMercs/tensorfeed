@@ -108,7 +108,7 @@ const GROUPS: CatalogGroup[] = [
     blurb: 'Money flowing in. Rules being written.',
     entries: [
       { href: '/funding', apiHref: '/api/funding', title: 'Funding Rounds', description: 'OpenAI, Anthropic, Cursor, Cognition, Mistral, Sierra, Glean, Perplexity, Cohere, Groq, Together, Crusoe, ElevenLabs, Cartesia.', icon: DollarSign, count: '21 rounds' },
-      { href: '/ai-policy', apiHref: '/api/ai-policy', title: 'AI Policy Tracker', description: 'EU AI Act, US GUARD Act, California AB 2013, China Generative AI Measures, Korea Basic Act, NIST AI RMF, ISO 42001.', icon: Scale, count: '10 items' },
+      { href: '/ai-policy', apiHref: '/api/policy/ai/registry', title: 'AI Policy Tracker', description: 'EU AI Act, Trump EO 14179, California SB 53, NY RAISE Act, Texas TRAIGA, China GenAI Measures, Korea AI Basic Act, NIST AI RMF, and more across jurisdictions.', icon: Scale, count: '28 items' },
     ],
   },
   {

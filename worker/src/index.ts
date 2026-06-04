@@ -2155,7 +2155,7 @@ export default {
       let items = POLICY_ITEMS;
       if (statusFilter) items = items.filter(i => i.status === statusFilter);
       if (jurisdictionFilter) items = items.filter(i => i.jurisdiction.toLowerCase().includes(jurisdictionFilter.toLowerCase()));
-      return jsonResponse({ ok: true, source: 'tensorfeed.ai', lastUpdated: POLICY_LAST_UPDATED, count: items.length, items }, 200, 600);
+      return jsonResponse({ ok: true, source: 'tensorfeed.ai', deprecated: true, deprecation_note: 'Use /api/policy/ai/registry, the richer typed AI policy registry.', lastUpdated: POLICY_LAST_UPDATED, count: items.length, items }, 200, 600);
     }
 
     // === AI CONFERENCES (cached 600s) ===
