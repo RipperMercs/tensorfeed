@@ -6,16 +6,25 @@ import {
   KV_MODELS_SNAP,
   KV_DEPRECATIONS_SNAP,
   KV_SPECS_SNAP,
+  KV_FRAMEWORKS_SNAP,
   kvDay,
   RECENT_CAP,
   SPEC_REPOS,
+  FRAMEWORK_REPOS,
 } from './constants';
 import type {
   ModelSnapshot,
   DeprecationSnapshot,
   SpecSnapshot,
+  FrameworkSnapshot,
   SubstrateEvent,
 } from './types';
+
+// slug -> owner/repo, so the diff can build the canonical releases-page URL for
+// a framework_release without threading per-slug source URLs through the snapshot.
+const FRAMEWORK_REPO_BY_SLUG: Record<string, string> = Object.fromEntries(
+  FRAMEWORK_REPOS.map((f) => [f.slug, f.repo]),
+);
 
 // ===========================================================================
 // Source shape for the KV `models` payload (the same data /api/models serves).
@@ -63,6 +72,8 @@ export function diffSnapshots(
   currDeprecations: DeprecationSnapshot,
   prevSpecs: SpecSnapshot | null,
   currSpecs: SpecSnapshot,
+  prevFrameworks: FrameworkSnapshot | null,
+  currFrameworks: FrameworkSnapshot,
   today: string,
 ): SubstrateEvent[] {
   const events: SubstrateEvent[] = [];
@@ -153,6 +164,25 @@ export function diffSnapshots(
         detail: `${repo} spec version ${cur}`,
         version: cur,
         source_url: currSpecs.sources[repo],
+      });
+    }
+  }
+
+  // === Frameworks: per-repo GitHub release (new slug or changed tag) ===
+  if (prevFrameworks !== null) {
+    for (const [slug, tag] of Object.entries(currFrameworks)) {
+      const prior = prevFrameworks[slug];
+      if (prior === tag) continue;
+      const repo = FRAMEWORK_REPO_BY_SLUG[slug];
+      events.push({
+        id: `framework_release:${slug}:${tag}`,
+        type: 'framework_release',
+        at: today,
+        subject: slug,
+        provider: null,
+        detail: `${slug} released ${tag}`,
+        version: tag,
+        source_url: repo ? `https://github.com/${repo}/releases/tag/${tag}` : null,
       });
     }
   }
@@ -259,10 +289,11 @@ export async function captureSubstrateChangelog(
     }
 
     // === Prior snapshots (null when absent: first run seeds silently) ===
-    const [prevModels, prevDeprecations, prevSpecs] = await Promise.all([
+    const [prevModels, prevDeprecations, prevSpecs, prevFrameworks] = await Promise.all([
       env.TENSORFEED_CACHE.get(KV_MODELS_SNAP, 'json') as Promise<ModelSnapshot | null>,
       env.TENSORFEED_CACHE.get(KV_DEPRECATIONS_SNAP, 'json') as Promise<DeprecationSnapshot | null>,
       env.TENSORFEED_CACHE.get(KV_SPECS_SNAP, 'json') as Promise<SpecSnapshot | null>,
+      env.TENSORFEED_CACHE.get(KV_FRAMEWORKS_SNAP, 'json') as Promise<FrameworkSnapshot | null>,
     ]);
 
     // === Poll the 3 spec repos; each keeps its prior on any failure ===
@@ -278,6 +309,25 @@ export async function captureSubstrateChangelog(
       sources: { mcp: mcp.sourceUrl, x402: x402.sourceUrl, a2a: a2a.sourceUrl },
     };
 
+    // === Poll the framework repos' latest GitHub release; each keeps its prior
+    // tag on any failure (pollSpecRepo never throws). Only slugs that resolve to
+    // a tag are recorded, so a slow repo never erases a known baseline. ===
+    const frameworkPolls = await Promise.all(
+      FRAMEWORK_REPOS.map((f) =>
+        pollSpecRepo(
+          fetchFn,
+          `https://api.github.com/repos/${f.repo}/releases?per_page=1`,
+          'releases',
+          prevFrameworks?.[f.slug] ?? null,
+          null,
+        ).then((r) => ({ slug: f.slug, version: r.version })),
+      ),
+    );
+    const currFrameworks: FrameworkSnapshot = {};
+    for (const p of frameworkPolls) {
+      if (p.version !== null) currFrameworks[p.slug] = p.version;
+    }
+
     // === Diff ===
     const events = diffSnapshots(
       prevModels,
@@ -286,6 +336,8 @@ export async function captureSubstrateChangelog(
       currDeprecations,
       prevSpecs,
       currSpecs,
+      prevFrameworks,
+      currFrameworks,
       today,
     );
 
@@ -305,10 +357,11 @@ export async function captureSubstrateChangelog(
       await env.TENSORFEED_CACHE.put(kvDay(today), JSON.stringify({ date: today, events }));
     }
 
-    // === ALWAYS write the 3 current snapshots + cursor ===
+    // === ALWAYS write the 4 current snapshots + cursor ===
     await env.TENSORFEED_CACHE.put(KV_MODELS_SNAP, JSON.stringify(currModels));
     await env.TENSORFEED_CACHE.put(KV_DEPRECATIONS_SNAP, JSON.stringify(currDeprecations));
     await env.TENSORFEED_CACHE.put(KV_SPECS_SNAP, JSON.stringify(currSpecs));
+    await env.TENSORFEED_CACHE.put(KV_FRAMEWORKS_SNAP, JSON.stringify(currFrameworks));
     await env.TENSORFEED_CACHE.put(KV_CURSOR, JSON.stringify({ last_run_at: nowIso, last_ok_at: nowIso }));
 
     return { events: events.length };

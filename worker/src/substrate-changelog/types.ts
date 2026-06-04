@@ -1,4 +1,4 @@
-export type SubstrateEventType = 'model_added' | 'model_removed' | 'model_repriced' | 'model_deprecated' | 'spec_version';
+export type SubstrateEventType = 'model_added' | 'model_removed' | 'model_repriced' | 'model_deprecated' | 'spec_version' | 'framework_release';
 
 export interface SubstrateEvent {
   id: string;
@@ -15,6 +15,7 @@ export interface ModelSnapshotEntry { provider: string; name: string; input: num
 export type ModelSnapshot = Record<string, ModelSnapshotEntry>;     // key = `${providerId}/${modelId}`
 export type DeprecationSnapshot = Record<string, string>;           // deprecation.id -> status
 export interface SpecSnapshot { mcp: string | null; x402: string | null; a2a: string | null; sources: { mcp: string | null; x402: string | null; a2a: string | null } }
+export type FrameworkSnapshot = Record<string, string>;             // slug -> latest release tag
 
 export interface CapturedState {
   models: ModelSnapshot;
