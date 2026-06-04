@@ -88,15 +88,13 @@ export default function LastUpdatedFooter({ path }: Props) {
             </span>
           </>
         )}
-        {next && next.overdue && (
-          <>
-            <span aria-hidden="true">&middot;</span>
-            <span className="font-mono text-amber-400 font-semibold">
-              OVERDUE (was due{' '}
-              <time dateTime={next.dueISO}>{formatDate(next.dueISO)}</time>)
-            </span>
-          </>
-        )}
+        {/*
+          Overdue is an INTERNAL ops signal, not visitor-facing. A public amber
+          OVERDUE reads as neglect, so we do not render it. The next-review
+          stamp simply drops off once a page passes its due date, and the
+          overdue set is surfaced to the operator by the freshness audit
+          (scripts/freshness-audit.mjs) instead of to readers.
+        */}
       </div>
       {entry.notes && (
         <p className="mt-2 italic text-text-muted/80 max-w-2xl leading-relaxed">{entry.notes}</p>
