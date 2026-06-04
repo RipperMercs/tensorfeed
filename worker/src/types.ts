@@ -225,6 +225,12 @@ export interface ServiceStatus {
   statusPageUrl: string;
   components: { name: string; status: string }[];
   lastChecked: string;
+  early_warning?: {
+    source: string;
+    note: string;
+    detected_at: string | null;
+    probe_signal: string;
+  };
 }
 
 export interface StatusPageResponse {

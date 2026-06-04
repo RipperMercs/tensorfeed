@@ -1,7 +1,7 @@
 import { Env, ServiceStatus, StatusPageResponse } from './types';
 import { STATUS_PAGES, StatusPageConfig } from './sources';
 import { getLatestSummary } from './probe';
-import { computeEarlyWarning, type EarlyWarning } from './probe-early-warning';
+import { computeEarlyWarning } from './probe-early-warning';
 import { dispatchStatusWatches, StatusTransition } from './watches';
 import { recordPollCycle } from './status-counters';
 
@@ -603,23 +603,30 @@ export async function pollStatusPages(env: Env): Promise<void> {
     }
   }
 
+  // Early-warning enrichment: when our probes detect provider-side degradation
+  // while the vendor still says operational, attach an additive early_warning
+  // to the service. The vendor `status` is never changed. Best-effort: a
+  // probe-read failure leaves services unchanged. Done BEFORE the services
+  // write so both /api/status (services) and /api/status/summary carry it.
+  const probeSummary = await getLatestSummary(env).catch(() => null);
+  for (const s of statuses) {
+    const ew = computeEarlyWarning(probeSummary, s.provider, s.status);
+    if (ew) s.early_warning = ew;
+  }
+
   await env.TENSORFEED_STATUS.put('services', JSON.stringify(statuses), {
     metadata: { count: statuses.length, updatedAt: new Date().toISOString() },
   });
 
-  // Store a summary for quick widget reads. Additive early-warning overlay:
-  // when our probes detect provider-side degradation but the vendor still says
-  // operational, attach early_warning. The vendor `status` is never changed.
-  // Best-effort: a probe-read failure leaves the summary as-is.
-  const probeSummary = await getLatestSummary(env).catch(() => null);
+  // Store a summary for quick widget reads. early_warning is already attached
+  // to each enriched service above (Step 2), so carry it forward verbatim.
   const summary = statuses.map((s) => {
-    const entry: { name: string; status: string; provider: string; early_warning?: EarlyWarning } = {
+    const entry: { name: string; status: string; provider: string; early_warning?: { source: string; note: string; detected_at: string | null; probe_signal: string } } = {
       name: s.name,
       status: s.status,
       provider: s.provider,
     };
-    const ew = computeEarlyWarning(probeSummary, s.provider, s.status);
-    if (ew) entry.early_warning = ew;
+    if (s.early_warning) entry.early_warning = s.early_warning;
     return entry;
   });
   await env.TENSORFEED_STATUS.put('summary', JSON.stringify(summary));
