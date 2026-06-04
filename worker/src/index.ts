@@ -4603,6 +4603,8 @@ export default {
           premiumFundingFederalMomentum: '/api/premium/funding/federal/momentum (1 credit, AFTA-signed; one signed leadership and concentration ruling over the federal spending snapshot. Names the cohort leader and its share of total tracked federal AI award dollars, the top-2 spend concentration, the leading awarding agency, and the vendors with a dated award inside the last 120 days, plus echoed cohort totals. 36h freshness SLA, no-charge when stale.)',
           procurementAiContracts: '/api/procurement/ai-contracts (free; the government AI procurement snapshot across the whole federal market, not a curated cohort: a keyword search of USAspending award descriptions for AI terms over the trailing 180 days, rolled up by agency demand, by vendor with an emerging-vendor flag, plus totals, unique counts, and the 25 newest dated awards. Source USAspending.gov, public domain under the DATA Act. Precomputed daily; cold-start returns an empty 200, never 503.)',
           premiumProcurementAiContractsDemand: '/api/premium/procurement/ai-contracts/demand (1 credit, AFTA-signed; one signed demand read over the free /api/procurement/ai-contracts snapshot. Agency concentration (top-agency share of tracked AI award dollars plus the Herfindahl-Hirschman Index over ranked agencies), the emerging contractors winning AI work outside the known vendor cohort, and the top buying agencies, with echoed total dollars. captured_at is the real snapshot data time; no-charge when the snapshot is not yet captured.)',
+          procurementAiOpportunities: '/api/procurement/ai-opportunities (free; open US federal AI contract opportunities from SAM.gov, the open-solicitation sibling of /api/procurement/ai-contracts. A title-keyword search for AI terms across every agency over the trailing 90 days, rolled up by agency and set-aside, with a closing-soon preview and the 25 newest postings. The full ranked open pipeline is the paid sibling. Source SAM.gov, public domain. Precomputed daily; cold-start returns an empty 200, never 503.)',
+          premiumProcurementAiOpportunitiesDeadlines: '/api/premium/procurement/ai-opportunities/deadlines (1 credit, AFTA-signed; the full ranked pipeline of open federal AI solicitations over the free /api/procurement/ai-opportunities snapshot, sorted by response deadline with days_remaining on each, plus the echoed agency and set-aside rollups. captured_at is the real snapshot data time; no-charge when the snapshot is not yet captured.)',
           aiDatacenters: '/api/ai-datacenters?operator=&status=announced|under_construction|operational|expansion|paused&country=&region=&purpose=training|inference|mixed|unknown (free; hand-curated registry of publicly announced AI datacenter projects, the gigawatt-class training and inference campuses from the labs and hyperscalers. Each entry carries disclosed power (MW), capex, status, accelerator, partners, and a source_url; power and capex are disclosed values only, null where not public. Sorted operational-first.)',
           premiumAiDatacentersBuildout: '/api/premium/ai-datacenters/buildout (1 credit, AFTA-signed; aggregate over the free /api/ai-datacenters registry. Disclosed power (MW) and capex totals by operator, region, and status, plus the forward commissioning calendar of sites coming online. Curated registry, no staleness SLA.)',
           routingPreview: '/api/preview/routing',
@@ -5580,6 +5582,49 @@ export default {
         },
         200,
         60,
+      );
+    }
+
+    // === FEDERAL AI OPPORTUNITIES (free) ===
+    // /api/procurement/ai-opportunities: the open-solicitation sibling of the
+    // award-side /api/procurement/ai-contracts. A title-keyword SAM.gov search
+    // for AI terms across every agency over the trailing 90 days, rolled up by
+    // agency and set-aside with a closing-soon preview. The 01:37 UTC cron
+    // writes one precomputed snapshot blob to KV; this route serves it with the
+    // full `open` list stripped (that ranked pipeline is the premium read).
+    // Cold-start safe: pre-first-cron it returns a 200 empty shape, never 503,
+    // so an agent always gets a parseable answer.
+    if (path === '/api/procurement/ai-opportunities') {
+      const { OPP_SNAPSHOT_KEY } = await import('./ai-opportunities');
+      const snapshot = (await env.TENSORFEED_CACHE.get(OPP_SNAPSHOT_KEY, 'json')) as
+        | import('./ai-opportunities').OpportunitySnapshot
+        | null;
+      if (snapshot) {
+        // Strip the full `open` pipeline; the free view keeps the rollups plus
+        // the closing_soon and recent previews.
+        const { open, ...freeView } = snapshot;
+        void open;
+        return jsonResponse(freeView, 200, 300);
+      }
+      const { OPP_SOURCE, OPP_LICENSE, WINDOW_DAYS, AI_TITLE_KEYWORDS } = await import('./ai-opportunities');
+      return jsonResponse(
+        {
+          ok: true,
+          captured_at: null,
+          source: OPP_SOURCE,
+          license: OPP_LICENSE,
+          window_days: WINDOW_DAYS,
+          keywords: AI_TITLE_KEYWORDS,
+          total_open: 0,
+          unique_agencies: 0,
+          by_agency: [],
+          by_set_aside: [],
+          closing_soon: [],
+          recent: [],
+          note: 'snapshot not yet generated',
+        },
+        200,
+        300,
       );
     }
 
@@ -10002,6 +10047,62 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: FEDERAL AI OPPORTUNITIES DEADLINES (Tier 1, 1 credit) ===
+    // /api/premium/procurement/ai-opportunities/deadlines
+    // One signed read over the free /api/procurement/ai-opportunities snapshot:
+    // the full ranked pipeline of open AI solicitations sorted by response
+    // deadline, each with days_remaining, plus the echoed agency and set-aside
+    // rollups. Regular premium (no params), the same premiumResponse signing
+    // path as the procurement demand sibling. captured_at is the REAL snapshot
+    // data time so the freshness no-charge bills against actual data age, never
+    // build time. Cold-start safe: when the snapshot blob is missing it
+    // no-charges (empty_result), so an agent is never billed for a pre-first-
+    // cron empty answer.
+    if (path === '/api/premium/procurement/ai-opportunities/deadlines') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { OPP_SNAPSHOT_KEY } = await import('./ai-opportunities');
+      const snapshot = (await env.TENSORFEED_CACHE.get(OPP_SNAPSHOT_KEY, 'json')) as
+        | import('./ai-opportunities').OpportunitySnapshot
+        | null;
+      if (!snapshot) {
+        return await premiumResponse(
+          { ok: true, captured_at: null, note: 'Snapshot not yet captured.' },
+          payment,
+          1,
+          request,
+          env,
+          'empty_result',
+        );
+      }
+
+      const now = Date.now();
+      const deadlines = snapshot.open
+        .filter((o) => o.response_deadline !== null)
+        .map((o) => ({
+          ...o,
+          days_remaining: Math.ceil((Date.parse(o.response_deadline as string) - now) / 86_400_000),
+        }))
+        .sort((a, b) => Date.parse(a.response_deadline as string) - Date.parse(b.response_deadline as string));
+      const payload = {
+        ok: true as const,
+        window_days: snapshot.window_days,
+        total_open: snapshot.total_open,
+        by_agency: snapshot.by_agency,
+        by_set_aside: snapshot.by_set_aside,
+        deadlines,
+        source: snapshot.source,
+        license: snapshot.license,
+        capturedAt: snapshot.captured_at,
+      };
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/procurement/ai-opportunities/deadlines', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(payload, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: CVE KEV EXPLOITATION TIMELINE (Tier 1, 1 credit) ===
     // /api/premium/cve/kev-exploitation-timeline?vendor=<name>
     // Per-vendor exploited-in-the-wild history from the bundled
@@ -14333,6 +14434,18 @@ export default {
       // collision-free (hour 16 empty, minute 23 odd/not-mult-5/not-27).
       const { captureAiProcurement } = await import('./ai-procurement');
       await run('captureAiProcurement', () => captureAiProcurement(env));
+    } else if (cron === '37 1 * * *') {
+      // Daily 01:37 UTC: federal AI opportunities capture (worker/src/
+      // ai-opportunities.ts). One title-keyword SAM.gov Get Opportunities
+      // search per AI term, unioned by noticeId, over the trailing 90 days,
+      // rolled up by agency and set-aside, written to ai-opportunities:snapshot.
+      // Best-effort by design (never throws; a missing SAM_GOV_API_KEY logs a
+      // warning and writes an empty snapshot). Powers free /api/procurement/
+      // ai-opportunities + premium /api/premium/procurement/ai-opportunities/
+      // deadlines. Slot 01:37 is collision-free (hour 1 empty, minute 37 odd/
+      // not-mult-2/not-mult-5/not-27, and not minute 0 shadowed by 0 * * * *).
+      const { captureAiOpportunities } = await import('./ai-opportunities');
+      await run('captureAiOpportunities', () => captureAiOpportunities(env));
     } else if (cron === '35 6 * * *') {
       // Daily 06:35 UTC: crawl every seed publisher's /.well-known/x402.json,
       // merge first_seen across re-crawls, write the wallet allowlist +
