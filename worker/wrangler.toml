@@ -220,6 +220,19 @@ crons = [
   # 07:30 news-clustering cron completes; well before the 14:30 X cron.
   # Uses PROBE_ANTHROPIC_KEY secret (reused; existing key in probe.ts).
   "0 8 * * *",
+  # Daily 10:17 UTC: substrate changelog capture (worker/src/substrate-
+  # changelog/capture.ts). Diffs TF's model catalog + deprecation registry
+  # day over day and polls the public MCP, x402, and A2A spec repos, writing
+  # model lifecycle + spec-version events to the forward-only log. Powers
+  # free /api/substrate-changelog/recent and premium
+  # /api/premium/substrate-changelog/history. Slot 10:17 is collision-free:
+  # NOT "0 10" (that 10:00 instant is shadowed by the "0 * * * *" hourly under
+  # Cloudflare first-match-wins dispatch, so the branch would never run);
+  # minute 17 is odd (dodges */2), not a multiple of 5 (dodges */5, */10,
+  # */15), not minute 0 (dodges 0 * * * *), not 27, and no */2 round-minute
+  # or other daily cron lands at 10:17, so event.cron there is unambiguously
+  # "17 10 * * *" and the dispatch branch is reachable.
+  "17 10 * * *",
   # Daily 05:25 UTC: snapshot TerminalFeed's coding-harness leaderboard
   # for weekly-delta computation (third AFTA federation cross-call).
   # Stores tf-harnesses:current + tf-harnesses:daily:{date}, bumps

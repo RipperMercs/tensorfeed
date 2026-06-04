@@ -4455,9 +4455,11 @@ export default {
           x402IndexLeaderboard: '/api/x402-index/leaderboard?window=24h|7d|30d&limit= (free, limit clamped 1 to 25; top publishers by x402 USDC settlement volume in the window, with rank, count, volume_usdc, and share_pct of the windowed ecosystem volume (window_volume_usdc carries the denominator). Aggregated from full per-publisher daily rollups, no per-day top-N truncation.)',
           x402IndexRecent: '/api/x402-index/recent?limit= (free, limit clamped 1 to 50; most recent x402 USDC settlement events newest-first, each with tx_hash, block, ts, from_address, to_address, amount_usdc, publisher_domain, base_explorer_url. Powers a live ticker for the /x402 hub.)',
           x402IndexVerified: '/api/x402-index/verified (free; the verified-publisher directory: which curated x402 publishers have observed on-chain USDC settlements on Base, with verified/unverified status and metrics. Precomputed daily after the 06:35 UTC publisher refresh; each entry carries status (verified-settling, unverified, unreachable, no-base-payto), activity tier, settlement_count, volume_usdc, first/last_settled, pay_to_wallets, and source. Verification is a positive on-chain claim; absence of settlements is not a claim a publisher is fake.)',
+          substrateChangelogRecent: '/api/substrate-changelog/recent?limit= (free, limit clamped 1 to 50; most recent substrate events newest-first: model lifecycle changes (added, removed, repriced, deprecated) across TF\'s curated catalog plus version bumps in the public MCP, x402, and A2A spec repos, alongside the current spec versions. Forward-only log fed by a daily 10:17 UTC capture.)',
           premiumAiCompaniesByTicker: '/api/premium/ai-companies/{ticker} (1 credit, AFTA-signed; per-ticker AI intelligence envelope for the 14 AI bellwethers. One paid call returns latest 10 SEC filings, latest 10 news mentions filtered by curated aliases, strategic and equity funding rounds where the company is a lead or notable investor, plus cohort metadata. Single captured-at timestamp, 9h freshness SLA. Composes four free siblings (/api/sec/filings, /api/news, /api/funding, cohort registry) into one round trip.)',
           premiumX402IndexPublisher: '/api/premium/x402-index/publisher/{domain}?from=YYYY-MM-DD&to=YYYY-MM-DD (1 credit, AFTA-signed; per-publisher receipt feed for one x402-compliant domain across the inclusive date range. Returns publisher meta (domain, pay_to_wallets, first_seen), window rollup (volume_usdc, count, avg_amount, daily_series), full attribution + CC BY 4.0 license. Forensic + compliance lane for any caller building dashboards over x402 settlement data. Strict-premium prefix; anonymous Bazaar probes see a clean 402 challenge.)',
           premiumX402IndexSeries: '/api/premium/x402-index/series?metric=volume|count&granularity=day|hour&from=&to=&domain= (1 credit, AFTA-signed; time-series of ecosystem or per-publisher x402 settlement volume / count across a date range. domain param optional (omit for ecosystem). MVP supports granularity=day only; hour returns an empty series with an attribution note. Wave 20 Bazaar pilot.)',
+          premiumSubstrateChangelogHistory: '/api/premium/substrate-changelog/history?from=YYYY-MM-DD&to=YYYY-MM-DD&event_type= (1 credit, AFTA-signed; full forward-only changelog of model lifecycle events (added, removed, repriced, deprecated) and agent-protocol spec versions across an inclusive date range, optionally filtered by event_type. from and to required; an empty window returns free as a no-data result. Strict-premium prefix; anonymous Bazaar probes see a clean 402 challenge.)',
           premiumStatusIncidentsTriage: '/api/premium/status/incidents/triage?provider=&impact=&recommended_action=&capability=&ongoing_only= (1 credit, AFTA-signed; full incident cohort + provider substring + impact/action exact filters + capability membership filter + ongoing_only flag. Sort priority: impact > recommended_action > started_at. Summary rollups by_provider, by_impact, by_recommended_action, by_capability, cards_with_failover_action.)',
           premiumNewsActionCards: '/api/premium/news/action-cards?capability=&urgency=&min_cost_impact=&min_security_impact=&query= (1 credit, AFTA-signed; full cohort + capability/urgency exact filters + impact "at-or-above" threshold filters + title/source substring search. Sort priority: urgency > security_impact > cost_impact > published. Summary rollups by_capability, by_urgency, by_cost_impact, by_security_impact, cards_with_migration_recommendation.)',
           codingHarnessesDates: '/api/coding-harnesses/dates (free; ordered date index of captured TerminalFeed harness snapshots for delta queries.)',
@@ -11151,6 +11153,19 @@ export default {
       return jsonResponse({ ok: true, ...result }, 200, 30);
     }
 
+    // === FREE: SUBSTRATE CHANGELOG (recent) ===
+    // Most recent model lifecycle events (added, removed, repriced,
+    // deprecated) and agent-protocol spec versions, newest first, plus the
+    // current MCP / x402 / A2A spec versions. The || 20 coerces a NaN from a
+    // garbage limit to the default before clamping, since getRecentChangelog
+    // does not default NaN itself.
+    if (path === '/api/substrate-changelog/recent') {
+      const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') ?? '20', 10) || 20, 1), 50);
+      const { getRecentChangelog } = await import('./substrate-changelog/query');
+      const result = await cachedFetch('substrate-changelog:recent:' + limit, 60, () => getRecentChangelog(env, limit));
+      return jsonResponse({ ok: true, ...result }, 200, 60);
+    }
+
     if (path === '/api/x402-index/verified') {
       const { KV_KEY_VERIFIED } = await import('./x402-index/constants');
       const blob = await env.TENSORFEED_CACHE.get(KV_KEY_VERIFIED, 'json');
@@ -11312,6 +11327,63 @@ export default {
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/x402-index/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse({ ok: true, ...result }, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: SUBSTRATE CHANGELOG HISTORY (1 credit, param-required) ===
+    // Full forward-only changelog of model lifecycle events (added, removed,
+    // repriced, deprecated) and agent-protocol spec versions across a date
+    // range, filterable by event_type. Strict-premium prefix, so an anonymous
+    // Bazaar probe sees a clean 402 challenge.
+    if (path === '/api/premium/substrate-changelog/history') {
+      // requirePayment FIRST: strict-premium, so an anonymous probe sees the
+      // 402 challenge, not a 400. Validation (incl. the range cap that bounds
+      // the per-day KV fan-out) runs after as a no-charge premiumValidationFailure.
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const from = url.searchParams.get('from');
+      const to = url.searchParams.get('to');
+      const eventType = url.searchParams.get('event_type');
+      if (!from || !to) {
+        return await premiumValidationFailure(
+          { error: 'missing_params', required: ['from', 'to'], hint: 'Both from and to required, YYYY-MM-DD format.' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const { getChangelogHistory, validateRange } = await import('./substrate-changelog/query');
+      const range = validateRange(from, to);
+      if (!range.ok) {
+        return await premiumValidationFailure({ error: range.error, hint: range.hint }, payment, request, env);
+      }
+
+      // Narrow event_type to the known union; an unrecognized value (or none)
+      // means "no filter" rather than a validation error, so the caller gets the
+      // full window instead of an opaque rejection.
+      const validEventTypes: ReadonlyArray<import('./substrate-changelog/types').SubstrateEventType> = [
+        'model_added',
+        'model_removed',
+        'model_repriced',
+        'model_deprecated',
+        'spec_version',
+      ];
+      const eventTypeArg = validEventTypes.find((t) => t === eventType);
+
+      const result = await getChangelogHistory(env, from, to, eventTypeArg);
+
+      // No day in the window had a stored rollup: return the empty result for
+      // free rather than charging for a no-data answer. has_data is true iff at
+      // least one day in the window had a stored rollup.
+      if (!result.has_data || result.events.length === 0) {
+        return await premiumResponse({ ok: true, ...result }, payment, 1, request, env, 'empty_result');
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/substrate-changelog/history', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
       return await premiumResponse({ ok: true, ...result }, payment, 1, request, env);
     }
@@ -14075,6 +14147,17 @@ export default {
       // and record latency + validity. Rolls up to 24h + 7d uptime
       // stats served on /x402/health.
       await run('runX402StatusCheck', () => runX402StatusCheck(env, env.SITE_URL || 'https://tensorfeed.ai'));
+    } else if (cron === '17 10 * * *') {
+      // Daily 10:17 UTC: substrate changelog capture. Diffs the model catalog
+      // + deprecation registry day over day and polls the MCP / x402 / A2A
+      // spec repos, appending model lifecycle + spec-version events to the
+      // forward-only log. First run seeds the snapshots silently; events begin
+      // the next day. Slot 10:17 is collision-free (NOT 0 10, which the hourly
+      // 0 * * * * shadows under first-match-wins). Powers free
+      // /api/substrate-changelog/recent + premium
+      // /api/premium/substrate-changelog/history.
+      const { captureSubstrateChangelog } = await import('./substrate-changelog/capture');
+      await run('captureSubstrateChangelog', () => captureSubstrateChangelog(env));
     } else if (cron === '35 6 * * *') {
       // Daily 06:35 UTC: crawl every seed publisher's /.well-known/x402.json,
       // merge first_seen across re-crawls, write the wallet allowlist +

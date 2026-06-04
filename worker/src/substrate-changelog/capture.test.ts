@@ -47,6 +47,36 @@ describe('diffSnapshots', () => {
     expect(json).not.toContain('–');
     expect(json.includes('--')).toBe(false);
   });
+  it('float equality is not a reprice (2.5 equals 2.50, 5 equals 5.0)', () => {
+    const ev = diffSnapshots(
+      m({ 'a/x': { provider: 'A', name: 'X', input: 2.5, output: 5 } }),
+      m({ 'a/x': { provider: 'A', name: 'X', input: 2.50, output: 5.0 } }),
+      {}, {}, specs(), specs(), D,
+    );
+    expect(ev).toEqual([]);
+  });
+  it('output-only change fires exactly one model_repriced', () => {
+    const ev = diffSnapshots(
+      m({ 'a/x': { provider: 'A', name: 'X', input: 3, output: 15 } }),
+      m({ 'a/x': { provider: 'A', name: 'X', input: 3, output: 12 } }),
+      {}, {}, specs(), specs(), D,
+    );
+    const repriced = ev.filter((e) => e.type === 'model_repriced');
+    expect(repriced).toHaveLength(1);
+    expect(repriced[0].subject).toBe('a/x');
+  });
+  it('an identical model entry fires no model_repriced', () => {
+    const ev = diffSnapshots(
+      m({ 'a/x': { provider: 'A', name: 'X', input: 3, output: 15 } }),
+      m({ 'a/x': { provider: 'A', name: 'X', input: 3, output: 15 } }),
+      {}, {}, specs(), specs(), D,
+    );
+    expect(ev.filter((e) => e.type === 'model_repriced')).toHaveLength(0);
+  });
+  it('a spec value going to null keeps the prior, fires no spec_version', () => {
+    const ev = diffSnapshots(m({}), m({}), {}, {}, specs({ mcp: 'm1' }), specs({ mcp: null }), D);
+    expect(ev.filter((e) => e.type === 'spec_version')).toHaveLength(0);
+  });
 });
 
 describe('pickX402SpecTag', () => {
