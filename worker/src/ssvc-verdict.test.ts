@@ -389,3 +389,58 @@ describe('kevCrossCheck', () => {
     expect(r.adjusted_primary).toBe('Act');
   });
 });
+
+// Minimal KEV catalog the worker reads from kev:current. Only the fields the
+// handler reads are needed: cveID (match), dateAdded (surfaced), dateReleased.
+const KEV_CATALOG_WITH_XZ = {
+  title: 'CISA Known Exploited Vulnerabilities Catalog',
+  catalogVersion: '2026.06.03',
+  dateReleased: '2026-06-03',
+  count: 1,
+  vulnerabilities: [
+    { cveID: 'CVE-2024-3094', vendorProject: 'test', product: 'test', vulnerabilityName: 'xz', dateAdded: '2024-03-29', shortDescription: '', requiredAction: '', dueDate: '2024-04-19', knownRansomwareCampaignUse: 'Unknown', notes: '' },
+  ],
+};
+const KEV_CATALOG_EMPTY = { title: 'KEV', catalogVersion: '2026.06.03', dateReleased: '2026-06-03', count: 0, vulnerabilities: [] };
+
+describe('ssvc-verdict premium route: KEV overlay', () => {
+  it('flags understatement and recomputes at active when the CVE is on KEV', async () => {
+    const token = 'tf_live_ssvctest_kev';
+    const env = await makeEnv({ cache: { 'vulnrichment:CVE-2024-3094': XZ_RECORD, 'kev:current': KEV_CATALOG_WITH_XZ } });
+    await seedToken(env, token, 5);
+    const res = await call(env, '/api/premium/security/ssvc-verdict?cve=CVE-2024-3094', { token, ip: '198.51.100.80', settle: true });
+    expect(res.status).toBe(200);
+    // CISA decision is UNCHANGED.
+    expect(res.json?.decision_primary).toBe('Track');
+    const x = res.json?.kev_cross_check as Record<string, unknown>;
+    expect(x?.checked).toBe(true);
+    expect(x?.kev_listed).toBe(true);
+    expect(x?.flag).toBe('exploitation_understated');
+    expect(x?.adjusted_primary).toBe('Act');
+    expect(x?.adjusted_envelope).toEqual({ low: 'Attend', medium: 'Act', high: 'Act' });
+    expect(x?.kev_date_added).toBe('2024-03-29');
+    expect((res.json?.billing as Record<string, unknown>)?.credits_charged).toBe(1);
+  });
+
+  it('reports kev_listed false when the snapshot exists but lacks the CVE', async () => {
+    const token = 'tf_live_ssvctest_kevclean';
+    const env = await makeEnv({ cache: { 'vulnrichment:CVE-2024-3094': XZ_RECORD, 'kev:current': KEV_CATALOG_EMPTY } });
+    await seedToken(env, token, 5);
+    const res = await call(env, '/api/premium/security/ssvc-verdict?cve=CVE-2024-3094', { token, ip: '198.51.100.81', settle: true });
+    expect(res.status).toBe(200);
+    const x = res.json?.kev_cross_check as Record<string, unknown>;
+    expect(x?.checked).toBe(true);
+    expect(x?.kev_listed).toBe(false);
+    expect(x?.flag).toBe('none');
+  });
+
+  it('degrades gracefully (still 200, still charges) when no KEV snapshot is seeded', async () => {
+    const token = 'tf_live_ssvctest_kevmissing';
+    const env = await makeEnv({ cache: { 'vulnrichment:CVE-2024-3094': XZ_RECORD } });
+    await seedToken(env, token, 5);
+    const res = await call(env, '/api/premium/security/ssvc-verdict?cve=CVE-2024-3094', { token, ip: '198.51.100.82', settle: true });
+    expect(res.status).toBe(200);
+    expect((res.json?.kev_cross_check as Record<string, unknown>)?.checked).toBe(false);
+    expect((res.json?.billing as Record<string, unknown>)?.credits_charged).toBe(1);
+  });
+});

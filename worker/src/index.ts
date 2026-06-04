@@ -10838,7 +10838,7 @@ export default {
       const payment = await requirePayment(request, env, 1);
       if (!payment.paid) return payment.response!;
 
-      const { parseSsvcFromVulnrichment, buildSsvcVerdict } = await import('./ssvc-verdict');
+      const { parseSsvcFromVulnrichment, buildSsvcVerdict, kevCrossCheck } = await import('./ssvc-verdict');
       const { fetchVulnrichment, normalizeCVEId } = await import('./security-vulnrichment');
 
       const svCveRaw = url.searchParams.get('cve');
@@ -10883,6 +10883,32 @@ export default {
 
       const svVerdict = buildSsvcVerdict(svCve, svPoints);
 
+      // v1.1 KEV staleness overlay: cross-check the recorded Exploitation
+      // against the current CISA KEV snapshot (one KV read). Best-effort: a KEV
+      // read failure never fails or no-charges the call; the CISA decision is
+      // the product, the overlay is a bonus. Uses readKEVCurrent (not
+      // readKEVByCVE) so "not on KEV" is distinguishable from "snapshot missing".
+      let svKevLookup: { available: boolean; entry: { dateAdded: string } | null; catalog_date: string | null } = {
+        available: false,
+        entry: null,
+        catalog_date: null,
+      };
+      try {
+        const { readKEVCurrent } = await import('./security-kev');
+        const svKevCatalog = await readKEVCurrent(env);
+        if (svKevCatalog) {
+          const svKevHit = svKevCatalog.vulnerabilities.find((v) => v.cveID?.toUpperCase() === svCve.toUpperCase()) ?? null;
+          svKevLookup = {
+            available: true,
+            entry: svKevHit ? { dateAdded: svKevHit.dateAdded } : null,
+            catalog_date: svKevCatalog.dateReleased ?? null,
+          };
+        }
+      } catch {
+        // best-effort: leave svKevLookup as unavailable
+      }
+      const svVerdictWithOverlay = { ...svVerdict, kev_cross_check: kevCrossCheck(svPoints, svKevLookup) };
+
       ctx.waitUntil(
         logPremiumUsage(
           env,
@@ -10896,7 +10922,7 @@ export default {
       // dataCapturedAt = CISA's SSVC scoring timestamp (real data time, never
       // build time). NULL_SLA, so this never spuriously no-charges; it gives the
       // receipt an honest captured_at.
-      return await premiumResponse(svVerdict, payment, 1, request, env, null, svVerdict.scored_at || null);
+      return await premiumResponse(svVerdictWithOverlay, payment, 1, request, env, null, svVerdict.scored_at || null);
     }
 
     // === PAID PREMIUM: AI COMPANIES PER-TICKER ENVELOPE (Tier 1, 1 credit) ===
