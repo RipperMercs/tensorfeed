@@ -12779,6 +12779,25 @@ export default {
       return jsonResponse({ ok: true, ...report }, 200, 0);
     }
 
+    if (path === '/api/admin/request-health' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      // Worker-returned 5xx + slow-but-completing requests by path, from the
+      // tf_request_health AE dataset. ?window=today|7d|30d. The standing answer
+      // to "which path is erroring or slow". A true gateway-timeout 504 (worker
+      // hung, never returned) is not recorded; top_slow_by_path is the proxy.
+      const rhWindow = url.searchParams.get('window') || 'today';
+      const rhDays = rhWindow === '30d' ? 30 : rhWindow === '7d' ? 7 : 1;
+      const rhReport = await queryRequestHealth(env, rhDays);
+      return jsonResponse(
+        {
+          ok: true,
+          note: 'Worker-returned 5xx and slow-but-completing requests by path. A true gateway-timeout 504 (worker hung, never returned) is not recorded here; top_slow_by_path is the proxy for which path is approaching the timeout.',
+          ...rhReport,
+        },
+        200,
+        0,
+      );
+    }
+
     if (path === '/api/admin/usage/dates' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const dates = await listRollupDates(env);
       return jsonResponse({ ok: true, count: dates.length, dates }, 200, 0);

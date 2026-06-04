@@ -451,3 +451,20 @@ describe('breaking alert endpoints', () => {
     expect(Array.isArray(admin.json?.audit)).toBe(true);
   });
 });
+
+describe('admin request-health view', () => {
+  it('rejects without the admin key', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/admin/request-health', { ip: uniqueIp() });
+    expect(res.status === 401 || res.status === 404).toBe(true);
+  });
+
+  it('returns the shaped report with the admin key (AE unavailable in tests, degrades gracefully)', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/admin/request-health?key=test-admin-key', { ip: uniqueIp() });
+    expect(res.status).toBe(200);
+    expect(res.json?.slow_ms).toBe(5000);
+    expect(res.json?.status).toBe('unavailable');
+    expect(res.json?.top_5xx_by_path ?? null).toBeNull();
+  });
+});
