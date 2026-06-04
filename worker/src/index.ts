@@ -11534,6 +11534,7 @@ export default {
         'model_repriced',
         'model_deprecated',
         'spec_version',
+        'framework_release',
       ];
       const eventTypeArg = validEventTypes.find((t) => t === eventType);
 

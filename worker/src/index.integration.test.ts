@@ -553,6 +553,37 @@ describe('substrate-changelog', () => {
     expect(await balanceOf(env, token)).toBe(99);
   });
 
+  // FILTER: event_type=framework_release must actually narrow the result to
+  // framework releases (regression guard: the handler whitelist must include
+  // framework_release, or the filter is silently dropped and the full window
+  // is returned).
+  it('filters premium history to framework_release events when event_type is set', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    await env.TENSORFEED_CACHE.put('substrate-changelog:day:2026-06-03', JSON.stringify({
+      date: '2026-06-03',
+      events: [
+        evt(),
+        evt({ id: 'framework_release:langchain:v0.3.99', type: 'framework_release', subject: 'langchain', provider: null, detail: 'langchain released v0.3.99', version: 'v0.3.99', source_url: 'https://github.com/langchain-ai/langchain/releases/tag/v0.3.99' }),
+      ],
+    }));
+    await env.TENSORFEED_CACHE.put('substrate-changelog:cursor', JSON.stringify({
+      last_run_at: new Date(Date.now() - 60_000).toISOString(),
+    }));
+
+    const res = await call(env, '/api/premium/substrate-changelog/history?from=2026-06-01&to=2026-06-04&event_type=framework_release', { token, ip: uniqueIp() });
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const events = res.json?.events as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(events)).toBe(true);
+    // Only the framework_release event survives the filter (NOT the model_added one).
+    expect(events?.length).toBe(1);
+    expect(events?.[0]?.type).toBe('framework_release');
+    expect((res.json?.billing as Record<string, unknown> | undefined)?.credits_charged).toBe(1);
+  });
+
   // NO-CHARGE on empty range: valid token, a range with no day rollups. The agent
   // gets the ok empty result, billed at zero (empty_result rule). Balance held.
   it('no-charges an empty range with no day rollups', async () => {
