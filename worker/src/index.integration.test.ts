@@ -573,6 +573,127 @@ describe('substrate-changelog', () => {
   });
 });
 
+// The ai-datacenters family is a curated, bundled registry (23 verified AI
+// datacenter projects) plus a premium buildout aggregate. There is no KV seeding
+// here: the registry ships in the worker module, so the free endpoint always has
+// data and the premium aggregate is always non-empty (it always charges). The
+// premium path is strict-premium, no-param, NULL_SLA (a curated registry never
+// no-charges on staleness). These mirror the substrate-changelog / publisher-verdict
+// posture: same harness, same receipt.signature field-path for the AFTA signature,
+// same balance asserts. The only difference is the premium call needs no params
+// and no seeding, so the happy-path debit is the simplest of the family.
+describe('ai-datacenters', () => {
+  // FREE: no token. The bundled registry always has data, so the unfiltered feed
+  // returns 200 with all 23 entries and the last-updated date.
+  it('serves the free registry with all entries and a last_updated date', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/ai-datacenters', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(typeof res.json?.count).toBe('number');
+    expect(res.json?.count as number).toBeGreaterThan(0);
+    expect(res.json?.count).toBe(23);
+    const datacenters = res.json?.datacenters as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(datacenters)).toBe(true);
+    expect((datacenters as unknown[]).length).toBeGreaterThan(0);
+    expect((datacenters as unknown[]).length).toBe(res.json?.count);
+    // The registry last-updated date rides the response.
+    expect(typeof res.json?.last_updated).toBe('string');
+    expect((res.json?.last_updated as string).length).toBeGreaterThan(0);
+  });
+
+  // FREE with an operator filter. operator is a case-insensitive SUBSTRING match,
+  // so ?operator=meta narrows the feed and every returned entry's operator
+  // contains 'meta' (case-insensitive). The narrowed count is strictly smaller
+  // than the unfiltered count.
+  it('narrows the free feed by operator and every entry matches the substring', async () => {
+    const env = await makeEnv();
+    const all = await call(env, '/api/ai-datacenters', { ip: uniqueIp() });
+    expect(all.status).toBe(200);
+    const unfilteredCount = all.json?.count as number;
+
+    const res = await call(env, '/api/ai-datacenters?operator=meta', { ip: uniqueIp() });
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const filteredCount = res.json?.count as number;
+    expect(filteredCount).toBeGreaterThan(0);
+    expect(filteredCount).toBeLessThan(unfilteredCount);
+
+    const datacenters = res.json?.datacenters as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(datacenters)).toBe(true);
+    for (const dc of datacenters as Array<Record<string, unknown>>) {
+      expect((dc.operator as string).toLowerCase()).toContain('meta');
+    }
+  });
+
+  // FREE with a status filter. status is a case-insensitive EXACT match, so every
+  // returned entry has status 'operational'.
+  it('filters the free feed by status and every entry has that status', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/ai-datacenters?status=operational', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const datacenters = res.json?.datacenters as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(datacenters)).toBe(true);
+    expect((datacenters as unknown[]).length).toBeGreaterThan(0);
+    for (const dc of datacenters as Array<Record<string, unknown>>) {
+      expect(dc.status).toBe('operational');
+    }
+  });
+
+  // GATE: strict-premium buildout, no token. The endpoint is on the strict list,
+  // so a no-token call returns the canonical x402 402 challenge, NOT a free trial.
+  it('returns the canonical 402 challenge on a no-token buildout call (no free trial)', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/ai-datacenters/buildout', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.error).toBe('payment_required');
+    // Strict-premium advertises no free trial.
+    expect(res.json?.free_trial ?? null).toBeNull();
+  });
+
+  // DEBIT happy path: valid token, no params, no seeding. The bundled registry is
+  // always non-empty, NULL_SLA means staleness never no-charges, so the call
+  // charges exactly 1 credit and returns the buildout aggregate with a signed AFTA
+  // receipt at the same receipt.signature field-path.
+  it('charges 1 credit and signs an AFTA receipt for the buildout aggregate', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/ai-datacenters/buildout', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    // The aggregate totals ride the response with projects and disclosed power.
+    const totals = res.json?.totals as Record<string, unknown> | undefined;
+    expect(totals).toBeDefined();
+    expect(typeof totals?.projects).toBe('number');
+    expect(totals?.projects as number).toBeGreaterThan(0);
+    expect(typeof totals?.disclosed_power_mw).toBe('number');
+
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(1);
+    expect(billing?.no_charge_reason ?? null).toBeNull();
+
+    // AFTA signature: premiumResponse signs the receipt with the harness Ed25519
+    // key, so the response carries a top-level receipt with a base64url signature.
+    // Same field-path the substrate-changelog and publisher-verdict successes assert.
+    const receipt = res.json?.receipt as Record<string, unknown> | undefined;
+    expect(receipt).toBeDefined();
+    expect(typeof receipt?.signature).toBe('string');
+    expect((receipt?.signature as string).length).toBeGreaterThan(0);
+
+    // Balance decremented by exactly the cost.
+    expect(await balanceOf(env, token)).toBe(99);
+  });
+});
+
 // Canonical accepts[].outputSchema so x402scan and spec-compliant x402
 // indexers find the input schema at the standard location (the coinbase
 // x402 DiscoveryInfo shape: outputSchema = { input, output? }). Long-
