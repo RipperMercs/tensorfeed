@@ -59,6 +59,22 @@ route_verdict({ task: "code", max_latency_p95_ms: 1500, budget: 8, min_quality: 
 
 Models, prices, and latency move week to week. `route_verdict` is one signed call an agent can act on now and later prove why it routed the way it did, without rebuilding the comparison from scratch each time.
 
+## Catalog
+
+79 tools (48 free, 31 premium). Free tools need no token; premium tools charge USDC on Base via x402 and return an AFTA-signed receipt. The full tool reference lives in the [standalone repo](https://github.com/RipperMercs/tensorfeed-mcp).
+
+### Verdict family
+
+Seven signed decisions, each with a free preview tool plus a 1-credit ($0.02) AFTA-signed premium version:
+
+- **provider_reliability_verdict**: the safest AI provider to build on, ranked by availability and tail consistency over TensorFeed's own probes.
+- **x402_settlement_verdict**: the x402 settlement momentum, concentration, and leading publisher over a 24h, 7d, or 30d window.
+- **x402_publisher_verdict**: a signed trust verdict on one publisher domain before you pay it.
+- **stack_safety_verdict**: a GO, HOLD, or BLOCK deploy gate over your package@version pins, with the worst CVE or KEV match.
+- **benchmark_trust_verdict**: a trust band and 0 to 100 score for a benchmark, flagging saturation, contamination, and held-out status.
+- **failover_verdict**: when a provider is degraded, the single best operational provider to fail over to, with ranked alternatives.
+- **ssvc_verdict**: the CISA SSVC Act, Attend, Track, or Track* decision for one CVE, with a live KEV cross-check.
+
 ## Publish a new version
 
 From the main tensorfeed repo:

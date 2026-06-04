@@ -321,7 +321,7 @@ registerTool(
     return {
       content: [{
         type: 'text' as const,
-        text: `${statusEmoji} ${match.name} (${match.provider}) is ${match.status}${components}`
+        text: `${statusEmoji} ${match.name} (${match.provider}) is ${match.status}${components}\n\nIf it is degraded, failover_verdict ranks the best operational alternative to fail over to right now.`
       }]
     };
   }
@@ -2062,7 +2062,7 @@ registerTool(
       content: [
         {
           type: 'text' as const,
-          text: `AI provider uptime leaderboard ${data.range?.from} to ${data.range?.to}\n${lines.join('\n')}`,
+          text: `AI provider uptime leaderboard ${data.range?.from} to ${data.range?.to}\n${lines.join('\n')}\n\nprovider_reliability_verdict ranks providers by dependability, not just current state.`,
         },
       ],
     };
@@ -3564,7 +3564,7 @@ registerTool(
       content: [
         {
           type: 'text' as const,
-          text: `${head}\n\nFirst 25 papers:\n${lines}\n\nFor AI-stack-filtered + categorized + sorted papers: /api/premium/ai-cves/ai-stack-cves (1 credit, x402-paid). For only papers actively exploited in the wild: /api/premium/ai-cves/exploited-in-wild (1 credit). For single-CVE lookup: /api/premium/ai-cves/cve?id=CVE-YYYY-NNNNN (1 credit).`,
+          text: `${head}\n\nFirst 25 papers:\n${lines}\n\nFor AI-stack-filtered + categorized + sorted papers: /api/premium/ai-cves/ai-stack-cves (1 credit, x402-paid). For only papers actively exploited in the wild: /api/premium/ai-cves/exploited-in-wild (1 credit). For single-CVE lookup: /api/premium/ai-cves/cve?id=CVE-YYYY-NNNNN (1 credit).\n\nssvc_verdict gives the CISA SSVC act/attend/track decision for a CVE; stack_safety_verdict gates your deploy by package.`,
         },
       ],
     };
@@ -3798,7 +3798,7 @@ registerTool(
       content: [
         {
           type: 'text' as const,
-          text: `x402 publishers (${data.count}, captured ${data.captured_at}):\n\n${lines}${more}`,
+          text: `x402 publishers (${data.count}, captured ${data.captured_at}):\n\n${lines}${more}\n\nx402_publisher_verdict returns a signed trust verdict on one publisher before you pay it.`,
         },
       ],
     };
