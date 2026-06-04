@@ -1,5 +1,7 @@
 import { Env, ServiceStatus, StatusPageResponse } from './types';
 import { STATUS_PAGES, StatusPageConfig } from './sources';
+import { getLatestSummary } from './probe';
+import { computeEarlyWarning, type EarlyWarning } from './probe-early-warning';
 import { dispatchStatusWatches, StatusTransition } from './watches';
 import { recordPollCycle } from './status-counters';
 
@@ -605,12 +607,21 @@ export async function pollStatusPages(env: Env): Promise<void> {
     metadata: { count: statuses.length, updatedAt: new Date().toISOString() },
   });
 
-  // Store a summary for quick widget reads
-  const summary = statuses.map(s => ({
-    name: s.name,
-    status: s.status,
-    provider: s.provider,
-  }));
+  // Store a summary for quick widget reads. Additive early-warning overlay:
+  // when our probes detect provider-side degradation but the vendor still says
+  // operational, attach early_warning. The vendor `status` is never changed.
+  // Best-effort: a probe-read failure leaves the summary as-is.
+  const probeSummary = await getLatestSummary(env).catch(() => null);
+  const summary = statuses.map((s) => {
+    const entry: { name: string; status: string; provider: string; early_warning?: EarlyWarning } = {
+      name: s.name,
+      status: s.status,
+      provider: s.provider,
+    };
+    const ew = computeEarlyWarning(probeSummary, s.provider, s.status);
+    if (ew) entry.early_warning = ew;
+    return entry;
+  });
   await env.TENSORFEED_STATUS.put('summary', JSON.stringify(summary));
 
   // ── Incident detection ──────────────────────────────────────────────
