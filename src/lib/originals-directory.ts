@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'card-networks-base-settlement-agents',
+    title:
+      'Mastercard Will Settle Cards on Eight Chains. Base Is the One Where Agents Already Pay Each Other.',
+    author: 'Marcus Chen',
+    date: 'June 4, 2026',
+    readTime: '7 min read',
+    description:
+      "On June 3, Mastercard said it will settle card transactions in regulated stablecoins across eight blockchains (Arbitrum, Base, Canton, Ethereum, Polygon, Solana, Tempo, XRPL) with intraday, weekend, and holiday cycles. It is not Mastercard on Base; Base is one of eight chains the network will settle across, and the program starts with five named fintechs and banks, not the whole card base. Visa added Base in April. The real story is convergence: of the eight chains the networks now settle on, Base is the only one already running a live x402 agent-payment economy on the same USDC. The card networks are not entering agent commerce; they are turning the rail it already runs on into mainstream financial plumbing, and that deeper, more regulated dollar is what makes per-call agent economics durable.",
+  },
+  {
     slug: 'microsoft-mai-models-openai-independence',
     title:
       'Microsoft Shipped Seven of Its Own Models. The One That Counts Lives Inside Copilot.',
