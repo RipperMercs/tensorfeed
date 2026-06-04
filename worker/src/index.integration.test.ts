@@ -397,6 +397,182 @@ describe('x402 publisher-verdict', () => {
   });
 });
 
+// The substrate-changelog family is a forward-only log of model lifecycle
+// events and agent-protocol spec versions. FREE recent reads the
+// `substrate-changelog:recent` ring plus the `substrate-changelog:specs:snapshot`
+// and the `substrate-changelog:cursor` (for captured_at). PREMIUM history is
+// strict-premium, param-required (from AND to), range-walks the
+// `substrate-changelog:day:{date}` rollups, and is NULL_SLA (an immutable
+// historical log never no-charges on staleness). These mirror the x402
+// publisher-verdict posture exactly: same harness, same direct-KV seeding via
+// env.TENSORFEED_CACHE.put, same receipt.signature field-path for the AFTA
+// signature, same balance asserts.
+describe('substrate-changelog', () => {
+  // A minimal valid SubstrateEvent, ASCII-only (no em dashes, no double hyphens).
+  function evt(over: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
+    return {
+      id: 'model_added:anthropic/claude-x:3/15',
+      type: 'model_added',
+      at: '2026-06-03',
+      subject: 'anthropic/claude-x',
+      provider: 'Anthropic',
+      detail: 'Added Claude X at 3 in, 15 out.',
+      version: null,
+      source_url: null,
+      ...over,
+    };
+  }
+
+  // The current spec versions block the free recent feed surfaces. Stored at
+  // KV_SPECS_SNAP as the full SpecSnapshot { mcp, x402, a2a, sources }.
+  const specsSnapshot = {
+    mcp: '2026-06-01',
+    x402: 'v2',
+    a2a: 'v1.0.0',
+    sources: {
+      mcp: 'https://github.com/modelcontextprotocol/modelcontextprotocol/releases',
+      x402: 'https://github.com/coinbase/x402/tags',
+      a2a: 'https://github.com/a2aproject/A2A/releases',
+    },
+  };
+
+  // FREE: seeded recent ring (2 events) + specs snapshot + cursor -> 200, ok,
+  // events present (length 2), and the current spec versions surfaced.
+  it('serves recent with seeded events, clamps limit, and tolerates a garbage limit', async () => {
+    const env = await makeEnv();
+    const events = [
+      evt({ id: 'spec_version:mcp:2026-06-01', type: 'spec_version', subject: 'mcp', provider: null, detail: 'MCP spec bumped to 2026-06-01.', version: '2026-06-01' }),
+      evt(),
+    ];
+    await env.TENSORFEED_CACHE.put('substrate-changelog:recent', JSON.stringify(events));
+    await env.TENSORFEED_CACHE.put('substrate-changelog:specs:snapshot', JSON.stringify(specsSnapshot));
+    await env.TENSORFEED_CACHE.put('substrate-changelog:cursor', JSON.stringify({ last_run_at: new Date().toISOString() }));
+
+    const res = await call(env, '/api/substrate-changelog/recent', { ip: uniqueIp() });
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const recentEvents = res.json?.events as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(recentEvents)).toBe(true);
+    expect(recentEvents?.length).toBe(2);
+    // The current spec versions ride the response under current_specs.
+    const currentSpecs = res.json?.current_specs as Record<string, unknown> | undefined;
+    expect(currentSpecs).toBeDefined();
+    expect(currentSpecs?.mcp).toBe('2026-06-01');
+    expect(currentSpecs?.x402).toBe('v2');
+    expect(currentSpecs?.a2a).toBe('v1.0.0');
+
+    // limit=1 returns exactly one event (clamped slice).
+    const one = await call(env, '/api/substrate-changelog/recent?limit=1', { ip: uniqueIp() });
+    expect(one.status).toBe(200);
+    expect((one.json?.events as unknown[] | undefined)?.length).toBe(1);
+
+    // A garbage limit falls back to the default (20) and does not error.
+    const garbage = await call(env, '/api/substrate-changelog/recent?limit=abc', { ip: uniqueIp() });
+    expect(garbage.status).toBe(200);
+    expect(garbage.json?.ok).toBe(true);
+    // 2 seeded events, default-20 cap leaves them both present.
+    expect((garbage.json?.events as unknown[] | undefined)?.length).toBe(2);
+  });
+
+  // GATE: strict-premium history, no token. The endpoint is on the strict list,
+  // so a no-token call returns the canonical x402 402 challenge, NOT a free trial.
+  it('returns the canonical 402 challenge on a no-token history call (no free trial)', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/substrate-changelog/history?from=2026-06-01&to=2026-06-04', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.error).toBe('payment_required');
+    // Strict-premium advertises no free trial.
+    expect(res.json?.free_trial ?? null).toBeNull();
+  });
+
+  // NO-CHARGE on missing param: valid token, no from/to. premiumValidationFailure
+  // returns 400 with the schema_validation_failure no-charge receipt; balance held.
+  it('no-charges a valid-token history call that is missing from/to', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/substrate-changelog/history', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(400);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(0);
+    expect(billing?.no_charge_reason).toBe('schema_validation_failure');
+
+    // Balance unchanged: the deferred debit never committed.
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+
+  // DEBIT happy path: valid token, a range with a seeded day rollup inside it +
+  // a fresh cursor. NULL_SLA means staleness never no-charges, but the cursor is
+  // seeded fresh anyway for realism. Asserts exactly 1 credit and a signed AFTA
+  // receipt at the same receipt.signature field-path.
+  it('charges 1 credit and signs an AFTA receipt when the range has events', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    // A day rollup inside the window. Shape: { date, events: SubstrateEvent[] }.
+    await env.TENSORFEED_CACHE.put('substrate-changelog:day:2026-06-03', JSON.stringify({
+      date: '2026-06-03',
+      events: [
+        evt(),
+        evt({ id: 'model_repriced:openai/gpt:2/8', type: 'model_repriced', subject: 'openai/gpt', provider: 'OpenAI', detail: 'Repriced GPT to 2 in, 8 out.' }),
+      ],
+    }));
+    // Fresh cursor (last_run_at one minute ago). NULL_SLA means staleness will
+    // not no-charge regardless, but seed it fresh for realism.
+    await env.TENSORFEED_CACHE.put('substrate-changelog:cursor', JSON.stringify({
+      last_run_at: new Date(Date.now() - 60_000).toISOString(),
+    }));
+
+    const res = await call(env, '/api/premium/substrate-changelog/history?from=2026-06-01&to=2026-06-04', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const histEvents = res.json?.events as unknown[] | undefined;
+    expect(Array.isArray(histEvents)).toBe(true);
+    expect((histEvents as unknown[]).length).toBeGreaterThan(0);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(1);
+    expect(billing?.no_charge_reason ?? null).toBeNull();
+
+    // AFTA signature: premiumResponse signs the receipt with the harness
+    // Ed25519 key, so the response carries a top-level receipt with a base64url
+    // signature. Same field-path the publisher-verdict success asserts.
+    const receipt = res.json?.receipt as Record<string, unknown> | undefined;
+    expect(receipt).toBeDefined();
+    expect(typeof receipt?.signature).toBe('string');
+    expect((receipt?.signature as string).length).toBeGreaterThan(0);
+
+    // Balance decremented by exactly the cost.
+    expect(await balanceOf(env, token)).toBe(99);
+  });
+
+  // NO-CHARGE on empty range: valid token, a range with no day rollups. The agent
+  // gets the ok empty result, billed at zero (empty_result rule). Balance held.
+  it('no-charges an empty range with no day rollups', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/substrate-changelog/history?from=2026-06-01&to=2026-06-04', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(0);
+
+    // Balance unchanged: an empty result is free.
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+});
+
 // Canonical accepts[].outputSchema so x402scan and spec-compliant x402
 // indexers find the input schema at the standard location (the coinbase
 // x402 DiscoveryInfo shape: outputSchema = { input, output? }). Long-
