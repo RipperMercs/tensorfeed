@@ -421,7 +421,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     strict_premium: true,
     params: [{ name: 'cve', required: true }],
     returns:
-      'The CISA SSVC Coordinator decision (Act, Attend, Track, or Track*) for one CVE, computed from the recorded decision points and returned as the full low/medium/high Mission and Well-being envelope with a per-level reasoning trace.',
+      'The CISA SSVC Coordinator decision (Act, Attend, Track, or Track*) for one CVE, computed from the recorded decision points and returned as the full low/medium/high Mission and Well-being envelope with a per-level reasoning trace, plus a KEV cross-check that flags and recomputes the decision when the recorded Exploitation understates a CVE now on the CISA KEV catalog.',
     free_sibling: '/api/preview/security/ssvc-verdict',
     signed: true,
     category: 'security',
