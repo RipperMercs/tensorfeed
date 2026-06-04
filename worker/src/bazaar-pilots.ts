@@ -3476,6 +3476,70 @@ const FAILOVER_PILOT: BazaarPilotConfig = {
   },
 };
 
+// SSVC Decision Verdict. The CISA SSVC Coordinator decision computed from a
+// Vulnrichment record's decision points, returned across the M&W envelope.
+// Free taste at /api/preview/security/ssvc-verdict.
+const SSVC_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'SSVC Decision Verdict. Should an agent patch this CVE now? Pass ?cve=CVE-2024-3094 and get the CISA SSVC Coordinator decision (Act, Attend, Track, or Track*) computed from CISA Vulnrichment, returned as the full low/medium/high Mission and Well-being envelope with a per-level reasoning trace and an AFTA-signed receipt. CISA records the three decision points but never the decision; this computes and signs it. US Government public domain.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: { cve: 'CVE-2024-3094' } },
+        output: {
+          type: 'json',
+          example: {
+            cve: 'CVE-2024-3094',
+            verdict_kind: 'ssvc_decision',
+            decision_points: { exploitation: 'none', automatable: 'yes', technical_impact: 'total' },
+            decision_primary: 'Track',
+            decision_envelope: { low: 'Track', medium: 'Track', high: 'Attend' },
+            tree: {
+              name: 'CISA SSVC Coordinator',
+              version: '2.0.3',
+              source_url: 'https://github.com/CERTCC/SSVC/blob/main/docs/ssvc-calc/CISA-Coordinator.json',
+            },
+            scored_at: '2024-04-02T04:00:23.138684Z',
+            source: {
+              record: '/api/security/vulnrichment/CVE-2024-3094',
+              publisher: 'CISA Vulnrichment',
+              license: 'US Government public domain (17 USC 105)',
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  cve: {
+                    type: 'string',
+                    description:
+                      'A CVE id in CVE-YYYY-NNNNN form (e.g. CVE-2024-3094). One per call. The CVE must have a CISA Vulnrichment SSVC record.',
+                  },
+                },
+                required: ['cve'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+      },
+    },
+  },
+};
+
 // Wave 24 (2026-05-28): guidance-delta. Did this periodic SEC filing
 // materially change guidance, segment outlook, or risk language versus the
 // prior same-form filing, with the exact changed sentences quoted. Reads the
@@ -6210,6 +6274,7 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/failover-verdict': FAILOVER_PILOT,
   // Wave 24 (2026-05-28): guidance-delta. Signed periodic-filing guidance diff.
   '/api/premium/sec/filings/guidance-delta': GUIDANCE_DELTA_PILOT,
+  '/api/premium/security/ssvc-verdict': SSVC_VERDICT_PILOT,
   // Wave 26 (2026-05-30): agent news-search + brief cluster. Rode the x402
   // distribution week. The decision-verified pair was already strict-premium;
   // topic-search and recent were promoted to strict-premium in the same change
