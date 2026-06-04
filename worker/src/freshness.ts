@@ -224,6 +224,11 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/openrouter/series': NULL_SLA,
   '/api/premium/x402-registry/series': NULL_SLA,
   '/api/premium/hf/velocity': NULL_SLA,
+  // Substrate changelog history: a forward-only, append-only log of model
+  // lifecycle and spec-version events. Each dated entry is immutable once
+  // written, so no wall-clock staleness applies; the handler no-charges
+  // empty ranges. The free /recent sibling surfaces captured_at for health.
+  '/api/premium/substrate-changelog/history': NULL_SLA,
   '/api/premium/probe/series': NULL_SLA,
   '/api/gpu/pricing/series': NULL_SLA,
   // Watch registration: pure write, no capture concept.

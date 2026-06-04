@@ -270,6 +270,12 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // 2026-06-01: Model Intelligence Index (TFII) premium depth + history.
   '/api/premium/model-intelligence',
   '/api/premium/model-intelligence/history',
+  // Substrate changelog history (2026-06-04). Param-required (?from=&to=,
+  // event_type optional), so strict-premium gates anonymous crawlers to a
+  // clean 402 challenge instead of a free-trial 400 missing_params. Exact
+  // path (the range and filter are query params). Free taste at
+  // /api/substrate-changelog/recent.
+  '/api/premium/substrate-changelog/history',
   // AI Crawler Access Map changes (2026-06-02). Param-required (?from=&to=,
   // domain optional): anonymous probes must see a clean 402 challenge, not a
   // free-trial 400 missing_params, so catalog validators read it as paid. The
