@@ -52,6 +52,57 @@ export interface ProbeResult {
   error?: string;             // non-empty when ok=false
 }
 
+export type ProbeSignal = 'healthy' | 'our_probe_limited' | 'provider_degraded' | 'no_signal';
+
+export interface ProbeSignalDetail {
+  signal: ProbeSignal;
+  window_minutes: number;
+  window_count: number;
+  provider_fails: number;
+  our_fails: number;
+}
+
+const PROBE_SIGNAL_WINDOW_MIN = 60;
+const PROBE_SIGNAL_FAIL_THRESHOLD = 2;
+
+/**
+ * Classify a provider's recent probe failures as our-side vs provider-side.
+ * Looks only at the last PROBE_SIGNAL_WINDOW_MIN minutes (recency is the point:
+ * a 24h ok_pct buries a fresh outage). A 4xx (or no_api_key) means our key or
+ * request is the problem and the provider is up; a 5xx, a network/timeout
+ * (status 0), or a 200-with-garbage (invalid_response_shape) means the provider
+ * is degraded. Needs PROBE_SIGNAL_FAIL_THRESHOLD failures of one kind so a
+ * single transient blip stays healthy. Pure; never throws.
+ */
+export function classifyProbeSignal(results: ProbeResult[], now: Date = new Date()): ProbeSignalDetail {
+  const cutoff = now.getTime() - PROBE_SIGNAL_WINDOW_MIN * 60_000;
+  const recent = results.filter((r) => {
+    const t = Date.parse(r.timestamp);
+    return Number.isFinite(t) && t >= cutoff;
+  });
+  let providerFails = 0;
+  let ourFails = 0;
+  for (const r of recent) {
+    if (r.ok) continue;
+    const ourSide = r.error === 'no_api_key' || (r.status >= 400 && r.status < 500);
+    const providerSide = !ourSide && (r.status >= 500 || r.status === 0 || r.error === 'invalid_response_shape');
+    if (ourSide) ourFails++;
+    else if (providerSide) providerFails++;
+  }
+  let signal: ProbeSignal;
+  if (recent.length === 0) signal = 'no_signal';
+  else if (providerFails >= PROBE_SIGNAL_FAIL_THRESHOLD) signal = 'provider_degraded';
+  else if (ourFails >= PROBE_SIGNAL_FAIL_THRESHOLD) signal = 'our_probe_limited';
+  else signal = 'healthy';
+  return {
+    signal,
+    window_minutes: PROBE_SIGNAL_WINDOW_MIN,
+    window_count: recent.length,
+    provider_fails: providerFails,
+    our_fails: ourFails,
+  };
+}
+
 export interface ProviderAggregate {
   provider: string;
   count: number;
@@ -62,6 +113,7 @@ export interface ProviderAggregate {
   status_codes: Record<string, number>;
   last_probe_at: string | null;
   last_error: string | null;
+  probe_signal: ProbeSignalDetail;
 }
 
 export interface LatestSummary {
@@ -208,7 +260,7 @@ export function percentile(values: number[], p: number): number | null {
   return sorted[idx];
 }
 
-export function aggregateResults(provider: string, results: ProbeResult[]): ProviderAggregate {
+export function aggregateResults(provider: string, results: ProbeResult[], now: Date = new Date()): ProviderAggregate {
   const successes = results.filter(r => r.ok);
   const ttfbValues = successes.map(r => r.ttfb_ms);
   const totalValues = successes.map(r => r.total_ms);
@@ -229,6 +281,7 @@ export function aggregateResults(provider: string, results: ProbeResult[]): Prov
     status_codes,
     last_probe_at: last?.timestamp || null,
     last_error: lastError,
+    probe_signal: classifyProbeSignal(results, now),
   };
 }
 

@@ -77,6 +77,7 @@ function probeAgg(provider: string, p95: number): ProviderAggregate {
     status_codes: { '200': 96 },
     last_probe_at: '2026-05-28T11:55:00Z',
     last_error: null,
+    probe_signal: { signal: 'healthy', window_minutes: 60, window_count: 4, provider_fails: 0, our_fails: 0 },
   };
 }
 

@@ -7,6 +7,7 @@ import {
   PROBE_MAX_RANGE_DAYS,
   PROBE_DEFAULT_RANGE_DAYS,
   ProbeResult,
+  classifyProbeSignal,
 } from './probe';
 
 const probe = (over: Partial<ProbeResult> = {}): ProbeResult => ({
@@ -170,5 +171,76 @@ describe('listProviders', () => {
     expect(provs).toContain('mistral');
     expect(provs).toContain('cohere');
     expect(provs).toHaveLength(5);
+  });
+});
+
+function mkResult(minutesAgo: number, over: Partial<ProbeResult>): ProbeResult {
+  return {
+    provider: 'openai',
+    timestamp: new Date(Date.now() - minutesAgo * 60_000).toISOString(),
+    ok: false,
+    status: 0,
+    ttfb_ms: 0,
+    total_ms: 0,
+    ...over,
+  };
+}
+const okResult = (minutesAgo: number): ProbeResult => mkResult(minutesAgo, { ok: true, status: 200 });
+
+describe('classifyProbeSignal', () => {
+  it('flags provider_degraded on repeated 5xx', () => {
+    const r = classifyProbeSignal([mkResult(30, { status: 503 }), mkResult(15, { status: 503 })]);
+    expect(r.signal).toBe('provider_degraded');
+    expect(r.provider_fails).toBe(2);
+  });
+
+  it('flags provider_degraded on repeated timeouts (status 0, not no_api_key)', () => {
+    const r = classifyProbeSignal([mkResult(20, { status: 0, error: 'The operation timed out' }), mkResult(5, { status: 0, error: 'fetch_failed' })]);
+    expect(r.signal).toBe('provider_degraded');
+  });
+
+  it('flags provider_degraded on repeated invalid_response_shape (200 but garbage)', () => {
+    const r = classifyProbeSignal([mkResult(20, { status: 200, error: 'invalid_response_shape' }), mkResult(5, { status: 200, error: 'invalid_response_shape' })]);
+    expect(r.signal).toBe('provider_degraded');
+  });
+
+  it('flags our_probe_limited on repeated 429', () => {
+    const r = classifyProbeSignal([mkResult(20, { status: 429 }), mkResult(5, { status: 429 })]);
+    expect(r.signal).toBe('our_probe_limited');
+    expect(r.our_fails).toBe(2);
+  });
+
+  it('flags our_probe_limited on repeated 403', () => {
+    expect(classifyProbeSignal([mkResult(20, { status: 403 }), mkResult(5, { status: 403 })]).signal).toBe('our_probe_limited');
+  });
+
+  it('classifies no_api_key (status 0) as our-side, not provider-side', () => {
+    const r = classifyProbeSignal([mkResult(20, { status: 0, error: 'no_api_key' }), mkResult(5, { status: 0, error: 'no_api_key' })]);
+    expect(r.signal).toBe('our_probe_limited');
+    expect(r.provider_fails).toBe(0);
+  });
+
+  it('stays healthy on a single blip below threshold', () => {
+    expect(classifyProbeSignal([okResult(40), okResult(25), mkResult(5, { status: 503 })]).signal).toBe('healthy');
+  });
+
+  it('stays healthy when one our-side and one provider-side failure are each below threshold', () => {
+    expect(classifyProbeSignal([mkResult(20, { status: 503 }), mkResult(5, { status: 429 })]).signal).toBe('healthy');
+  });
+
+  it('returns no_signal for an empty window', () => {
+    expect(classifyProbeSignal([]).signal).toBe('no_signal');
+  });
+
+  it('returns no_signal when all probes are older than the 60 minute window', () => {
+    expect(classifyProbeSignal([mkResult(120, { status: 503 }), mkResult(90, { status: 503 })]).signal).toBe('no_signal');
+  });
+});
+
+describe('aggregateResults probe_signal', () => {
+  it('includes a probe_signal detail object', () => {
+    const agg = aggregateResults('openai', [okResult(30), okResult(10)]);
+    expect(agg.probe_signal.signal).toBe('healthy');
+    expect(agg.probe_signal.window_minutes).toBe(60);
   });
 });

@@ -13,6 +13,7 @@ function agg(p: Partial<ProviderAggregate> & { provider: string }): ProviderAggr
     status_codes: p.status_codes ?? {},
     last_probe_at: p.last_probe_at ?? '2026-05-29T11:59:00.000Z',
     last_error: p.last_error ?? null,
+    probe_signal: p.probe_signal ?? { signal: 'healthy', window_minutes: 60, window_count: 4, provider_fails: 0, our_fails: 0 },
   };
 }
 
