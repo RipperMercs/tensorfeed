@@ -1,15 +1,15 @@
 /**
- * Government AI procurement ingest, filtered by AI NAICS codes across the
- * whole federal market (NOT a curated vendor cohort).
+ * Government AI procurement ingest, filtered by AI keywords across the whole
+ * federal market (NOT a curated vendor cohort).
  *
  * This is the complement to federal-spending-fetcher.ts. Where that feed
  * tracks USAspending awards to 8 hand-picked AI vendors by recipient-name
  * match (a vendor-side leaderboard), this feed pulls AI procurement across
- * EVERY vendor via NAICS codes (541511 custom programming, 541512 computer
- * systems design, 518210 data processing and hosting) and rolls up by AGENCY
- * demand plus an emerging-vendor flag. It answers the agent-native question
- * "which agencies are buying AI, from whom, and how much," surfacing
- * contractors outside the known cohort.
+ * EVERY vendor via a keyword search of award descriptions (artificial
+ * intelligence, machine learning, large language model, and related terms) and
+ * rolls up by AGENCY demand plus an emerging-vendor flag. It answers the
+ * agent-native question "which agencies are buying AI, from whom, and how
+ * much," surfacing contractors outside the known cohort.
  *
  * Source is USAspending.gov, the official public-domain federal spending data
  * published under the DATA Act (the same source the fed feed relies on).
@@ -18,17 +18,18 @@
  * AbortController timeout, the bounded MAX_PAGES pagination loop, the
  * best-effort try/catch with structured console.warn (this never throws), the
  * obligation-date-first mapRow logic, and the agency rollup. The differences:
- * the filter is naics_codes (one query across all vendors, no per-vendor loop),
+ * the filter is keywords (one query across all vendors, no per-vendor loop),
  * and the rollups are by agency demand and by vendor with an emerging flag.
  */
 
 import type { Env } from './types';
 import { FED_AI_COHORT } from './federal-spending-fetcher';
 
-// AI NAICS codes (grounding-tested): 541511 custom computer programming
-// services, 541512 computer systems design services, 518210 data processing,
-// hosting and related services. Single hyphens in this note are fine.
-export const AI_NAICS_CODES = ['541511', '541512', '518210'];
+// AI keywords (live-verified): USAspending matches these against award
+// descriptions, returning genuine AI awards across every vendor. This is the
+// precise AI signal; broad IT-services NAICS codes were not. Single hyphens in
+// this note are fine.
+export const AI_KEYWORDS = ['artificial intelligence', 'machine learning', 'large language model', 'generative ai', 'deep learning', 'neural network', 'natural language processing', 'computer vision'];
 
 // Look-back window for the snapshot, in days.
 export const WINDOW_DAYS = 180;
@@ -43,7 +44,7 @@ export const AI_PROCUREMENT_SNAPSHOT_KEY = 'ai-procurement:snapshot';
 export const AI_PROCUREMENT_DAY_PREFIX = 'ai-procurement:day:';
 
 export const PROCUREMENT_SOURCE =
-  'USAspending.gov (US federal contract awards, public domain under the DATA Act). Filtered by AI NAICS codes (541511, 541512, 518210) across all vendors, not a curated cohort. Coverage is standard award records; some vehicles such as OTA agreements are reported separately and may not appear, so totals are a verifiable floor.';
+  'USAspending.gov (US federal contract awards, public domain under the DATA Act). Filtered by a keyword search of award descriptions for AI terms (artificial intelligence, machine learning, large language model, and related) across all vendors, not a curated cohort. Coverage is a verifiable floor: a keyword search misses awards whose description does not use these terms.';
 export const PROCUREMENT_LICENSE =
   'Public domain (US Government work). TensorFeed editorial aggregation and derivation.';
 
@@ -56,7 +57,7 @@ export interface AiAward {
   amount: number;
   agency: string;
   agency_slug: string;
-  naics_code: string;
+  description: string;
   award_type: 'contract';
   internal_id: string;
   date: string | null; // YYYY-MM-DD or null
@@ -84,7 +85,7 @@ export interface ProcurementSnapshot {
   source: string;
   license: string;
   window_days: number;
-  naics_codes: string[];
+  keywords: string[];
   total_usd: number;
   total_awards: number;
   unique_recipients: number;
@@ -180,7 +181,7 @@ export function buildProcurementSnapshot(
     source: PROCUREMENT_SOURCE,
     license: PROCUREMENT_LICENSE,
     window_days: windowDays,
-    naics_codes: AI_NAICS_CODES,
+    keywords: AI_KEYWORDS,
     total_usd,
     total_awards,
     unique_recipients,
@@ -200,7 +201,7 @@ const FETCH_TIMEOUT_MS = 15_000;
 const PAGE_LIMIT = 100;
 
 // Contract award type codes (A, B, C, D). No grant codes here: AI procurement
-// in v1 is contract awards under the AI NAICS codes.
+// in v1 is contract awards matching the AI keywords.
 const CONTRACT_AWARD_TYPE_CODES = ['A', 'B', 'C', 'D'];
 
 // Upstream row shape. agency_slug and generated_internal_id ride along
@@ -210,7 +211,7 @@ interface UsaSpendingRow {
   'Recipient Name'?: string | null;
   'Award Amount'?: number | string | null;
   'Awarding Agency'?: string | null;
-  'NAICS Code'?: string | null;
+  'Description'?: string | null;
   agency_slug?: string | null;
   generated_internal_id?: string | null;
   'Start Date'?: string | null;
@@ -236,7 +237,7 @@ function mapRow(row: UsaSpendingRow): AiAward {
     amount: Number(row['Award Amount']) || 0,
     agency: row['Awarding Agency'] ?? '',
     agency_slug: row.agency_slug ?? '',
-    naics_code: row['NAICS Code'] ?? '',
+    description: String(row['Description'] ?? ''),
     award_type: 'contract',
     internal_id: row.generated_internal_id ?? '',
     date,
@@ -245,13 +246,13 @@ function mapRow(row: UsaSpendingRow): AiAward {
 
 /**
  * Fetch all in-window AI procurement contract awards across every vendor,
- * filtered by NAICS code.
+ * filtered by a keyword search of award descriptions.
  *
  * Best effort by design: this never throws. On a non-ok response, an aborted or
  * thrown fetch, or a JSON parse failure, it logs a structured warning and stops
  * paginating, returning whatever it has collected so far. Unlike the fed
  * fetcher there is no per-vendor loop and no recipient match filter, since
- * NAICS is the filter rather than a fuzzy recipient_search_text.
+ * keywords are the filter rather than a fuzzy recipient_search_text.
  */
 export async function fetchAiAwards(
   fromDate: string,
@@ -263,7 +264,7 @@ export async function fetchAiAwards(
   for (let page = 1; page <= MAX_PAGES; page++) {
     const body = {
       filters: {
-        naics_codes: AI_NAICS_CODES,
+        keywords: AI_KEYWORDS,
         award_type_codes: CONTRACT_AWARD_TYPE_CODES,
         time_period: [{ start_date: fromDate, end_date: toDate }],
       },
@@ -272,7 +273,7 @@ export async function fetchAiAwards(
         'Recipient Name',
         'Award Amount',
         'Awarding Agency',
-        'NAICS Code',
+        'Description',
         'Start Date',
         'Base Obligation Date',
       ],
@@ -326,8 +327,8 @@ export async function fetchAiAwards(
 /**
  * Capture a full AI procurement snapshot and write it to KV.
  *
- * Fetches the last WINDOW_DAYS of NAICS-filtered AI contract awards, builds the
- * snapshot, and writes two KV keys: the current snapshot and a forward-only
+ * Fetches the last WINDOW_DAYS of keyword-filtered AI contract awards, builds
+ * the snapshot, and writes two KV keys: the current snapshot and a forward-only
  * daily key for the premium history once it accrues. capturedAt is the live
  * fetch time, the real data capture time for a fresh fetch. KV writes are
  * best-effort and guarded on env.TENSORFEED_CACHE so this never throws.

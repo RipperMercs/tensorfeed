@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-  AI_NAICS_CODES,
+  AI_KEYWORDS,
   WINDOW_DAYS,
   MAX_PAGES,
   AI_PROCUREMENT_SNAPSHOT_KEY,
@@ -33,7 +33,7 @@ type UpstreamRow = {
   'Recipient Name'?: string | null;
   'Award Amount'?: number | string | null;
   'Awarding Agency'?: string | null;
-  'NAICS Code'?: string | null;
+  'Description'?: string | null;
   agency_slug?: string | null;
   generated_internal_id?: string | null;
   'Start Date'?: string | null;
@@ -55,7 +55,7 @@ function award(partial: Partial<AiAward>): AiAward {
     amount: 1000,
     agency: 'Department of Defense',
     agency_slug: 'dod',
-    naics_code: '541511',
+    description: 'AI and machine learning research services',
     award_type: 'contract',
     internal_id: 'CONT_AWD_1',
     date: daysAgo(10),
@@ -64,13 +64,22 @@ function award(partial: Partial<AiAward>): AiAward {
 }
 
 describe('constants', () => {
-  it('exposes the AI NAICS codes, window, page cap, key, source, and license', () => {
-    expect(AI_NAICS_CODES).toEqual(['541511', '541512', '518210']);
+  it('exposes the AI keywords, window, page cap, key, source, and license', () => {
+    expect(AI_KEYWORDS).toEqual([
+      'artificial intelligence',
+      'machine learning',
+      'large language model',
+      'generative ai',
+      'deep learning',
+      'neural network',
+      'natural language processing',
+      'computer vision',
+    ]);
     expect(WINDOW_DAYS).toBe(180);
     expect(MAX_PAGES).toBe(10);
     expect(AI_PROCUREMENT_SNAPSHOT_KEY).toBe('ai-procurement:snapshot');
     expect(PROCUREMENT_SOURCE).toContain('USAspending.gov');
-    expect(PROCUREMENT_SOURCE).toContain('NAICS');
+    expect(PROCUREMENT_SOURCE).toContain('keyword');
     expect(PROCUREMENT_LICENSE).toContain('Public domain');
   });
 });
@@ -88,7 +97,7 @@ describe('fetchAiAwards', () => {
             'Recipient Name': 'Acme Robotics LLC',
             'Award Amount': 100 * body.page,
             'Awarding Agency': 'Department of Defense',
-            'NAICS Code': '541511',
+            'Description': 'Machine learning model development',
             agency_slug: 'dod',
             generated_internal_id: `id-${body.page}`,
             'Start Date': '2026-01-01',
@@ -106,7 +115,7 @@ describe('fetchAiAwards', () => {
     expect(awards.map((a) => a.award_id)).toEqual(['AWD-1', 'AWD-2']);
   });
 
-  it('maps rows to AiAward: contract type, NAICS Code, obligation-date-first', async () => {
+  it('maps rows to AiAward: contract type, Description, obligation-date-first', async () => {
     const fetchFn = vi.fn(async () =>
       jsonResponse({
         results: [
@@ -115,7 +124,7 @@ describe('fetchAiAwards', () => {
             'Recipient Name': 'Palantir Technologies Inc',
             'Award Amount': '4200',
             'Awarding Agency': 'Army',
-            'NAICS Code': '541512',
+            'Description': 'Artificial intelligence platform integration',
             agency_slug: 'army',
             generated_internal_id: 'oblig-1',
             'Start Date': '2026-09-01',
@@ -130,7 +139,7 @@ describe('fetchAiAwards', () => {
     expect(awards).toHaveLength(1);
     const a = awards[0];
     expect(a.award_type).toBe('contract');
-    expect(a.naics_code).toBe('541512');
+    expect(a.description).toBe('Artificial intelligence platform integration');
     expect(a.amount).toBe(4200);
     expect(a.recipient).toBe('Palantir Technologies Inc');
     // Base Obligation Date wins over Start Date, sliced to 10 chars.
@@ -146,7 +155,7 @@ describe('fetchAiAwards', () => {
             'Recipient Name': 'Acme Robotics LLC',
             'Award Amount': null,
             'Awarding Agency': 'DoD',
-            'NAICS Code': null,
+            'Description': null,
             agency_slug: 'dod',
             generated_internal_id: 'na',
             'Start Date': null,
@@ -161,7 +170,7 @@ describe('fetchAiAwards', () => {
     expect(awards).toHaveLength(1);
     expect(awards[0].amount).toBe(0);
     expect(awards[0].date).toBeNull();
-    expect(awards[0].naics_code).toBe('');
+    expect(awards[0].description).toBe('');
   });
 
   it('caps pagination at MAX_PAGES when hasNext never flips', async () => {
@@ -175,7 +184,7 @@ describe('fetchAiAwards', () => {
             'Recipient Name': 'Acme Robotics LLC',
             'Award Amount': 1,
             'Awarding Agency': 'DoD',
-            'NAICS Code': '541511',
+            'Description': 'Neural network training pipeline',
             agency_slug: 'dod',
             generated_internal_id: `loop-${call}`,
             'Start Date': '2026-01-01',
@@ -190,10 +199,10 @@ describe('fetchAiAwards', () => {
     expect(awards).toHaveLength(MAX_PAGES);
   });
 
-  it('sends the NAICS filter and contract award-type codes in the request body', async () => {
+  it('sends the AI keyword filter and contract award-type codes in the request body', async () => {
     let captured: {
       filters?: {
-        naics_codes?: string[];
+        keywords?: string[];
         award_type_codes?: string[];
         time_period?: { start_date?: string; end_date?: string }[];
       };
@@ -207,10 +216,10 @@ describe('fetchAiAwards', () => {
     });
 
     await fetchAiAwards(FROM, TO, fetchFn as unknown as typeof fetch);
-    expect(captured.filters?.naics_codes).toEqual(AI_NAICS_CODES);
+    expect(captured.filters?.keywords).toEqual(AI_KEYWORDS);
     expect(captured.filters?.award_type_codes).toEqual(['A', 'B', 'C', 'D']);
     expect(captured.filters?.time_period?.[0]).toEqual({ start_date: FROM, end_date: TO });
-    expect(captured.fields).toContain('NAICS Code');
+    expect(captured.fields).toContain('Description');
     expect(captured.sort).toBe('Award Amount');
     expect(captured.order).toBe('desc');
   });
@@ -337,7 +346,7 @@ describe('buildProcurementSnapshot', () => {
     expect(snap.source).toBe(PROCUREMENT_SOURCE);
     expect(snap.license).toBe(PROCUREMENT_LICENSE);
     expect(snap.window_days).toBe(WINDOW_DAYS);
-    expect(snap.naics_codes).toEqual(AI_NAICS_CODES);
+    expect(snap.keywords).toEqual(AI_KEYWORDS);
     expect(snap.total_usd).toBe(3500);
     expect(snap.total_awards).toBe(3);
     expect(snap.unique_recipients).toBe(2);
@@ -452,7 +461,7 @@ describe('captureAiProcurement', () => {
             'Recipient Name': 'Acme Robotics LLC',
             'Award Amount': 1234,
             'Awarding Agency': 'DoD',
-            'NAICS Code': '541511',
+            'Description': 'Large language model evaluation contract',
             agency_slug: 'dod',
             generated_internal_id: 'cap-1',
             'Start Date': '2026-03-01',
