@@ -4594,6 +4594,7 @@ export default {
           guidanceDeltaPreview: '/api/preview/sec/filings/guidance-delta?accession= or ?ticker=&form= (free, 10/IP/day; the materiality_summary + per-change category/type/direction/materiality, with the verbatim quotes and values redacted)',
           providerReliabilityPreview: '/api/preview/provider-reliability-verdict (free, 10/IP/day; the most-dependable and riskiest picks only, no full per-provider ranking or signed receipt)',
           x402SettlementPreview: '/api/preview/x402-settlement-verdict (free, 10/IP/day; the momentum, concentration, and leading-publisher verdict only, no full publisher ranking or signed receipt)',
+          x402PublisherPreview: '/api/preview/x402-publisher-verdict?domain= (free, 10/IP/day; the trust verdict and claim for one publisher only, no momentum, shared-wallet flag, or settlement evidence)',
           premiumRouting: '/api/premium/routing?task=code|reasoning|creative|general (1 credit; top-5 ranked models with full score breakdown, pricing, status, and component-level detail. Optional ?budget=, ?min_quality=, ?top_n=1-10, and custom weights ?w_quality=, ?w_availability=, ?w_cost=, ?w_latency=.)',
           premiumRouteVerdict: '/api/premium/route-verdict?task=code|reasoning|creative|general or ?model= (1 credit, AFTA-signed; the single best model to use right now, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state, plus runners-up and a signed receipt. Optional ?max_latency_p95_ms=, ?require_operational=, ?exclude_deprecated=. 30-min freshness SLA, no-charge when stale.)',
           stackSafetyVerdict: '/api/premium/stack-safety-verdict?packages=name@version,... (1 credit, AFTA-signed; GO/HOLD/BLOCK deploy gate per AI-stack package, fusing the ingested AI-CVE batch + CISA KEV. Up to 10 packages. Never-false-confirm: BLOCK only on exploited with no fix, HOLD on version-ambiguous, PASS on no match, UNKNOWN outside the cohort.)',
@@ -4602,6 +4603,7 @@ export default {
           guidanceDeltaVerdict: '/api/premium/sec/filings/guidance-delta?accession= or ?ticker=&form= (1 credit, AFTA-signed; did this periodic 10-K/10-Q materially change guidance, segment outlook, or risk language vs the prior same-form filing, with the exact changed sentences quoted. Deterministic materiality_summary + full verbatim changes. Input-keyed freshness, no-charge when a newer same-form filing supersedes the delta.)',
           providerReliabilityVerdict: '/api/premium/provider-reliability-verdict (1 credit, AFTA-signed; ranks the frontier providers TensorFeed probes by measured operational reliability, fusing availability and tail consistency (p50 over p95) into one dependability ranking. Names the most dependable and the riskiest, ships the full per-provider ranking and a signed receipt. 30-min freshness SLA, no-charge when stale.)',
           x402SettlementVerdict: '/api/premium/x402-settlement-verdict?window=24h|7d|30d (1 credit, AFTA-signed; rules on the Base x402 USDC settlement market over TensorFeed\'s own settlement index: momentum vs the prior window of equal length, concentration by the Herfindahl index, and the leading publisher, plus the full per-publisher ranking. 10-min freshness SLA, no-charge when stale.)',
+          x402PublisherVerdict: '/api/premium/x402-publisher-verdict?domain= (1 credit, AFTA-signed; signed trust verdict on one x402 publisher over TensorFeed\'s own settlement index: whether its Base payTo is actively settling, its 30-day settlement momentum, a shared-wallet risk flag, and the settlement evidence. 10-min freshness SLA, no-charge when stale.)',
           premiumPricingSeries: '/api/premium/history/pricing/series?model=&from=&to=',
           premiumBenchmarkSeries: '/api/premium/history/benchmarks/series?model=&benchmark=&from=&to=',
           premiumStatusUptime: '/api/premium/history/status/uptime?provider=&from=&to=',
@@ -6940,6 +6942,63 @@ export default {
       );
     }
 
+    // Free taste of the single-publisher x402 Trust Verdict: the verdict and
+    // claim for one publisher domain only, no momentum, no shared-wallet flag,
+    // and no settlement evidence. 10 calls/day per IP. The paid
+    // /api/premium/x402-publisher-verdict adds the 30-day settlement momentum,
+    // the shared-wallet risk flag, the settlement evidence, and the AFTA-signed
+    // receipt.
+    if (path === '/api/preview/x402-publisher-verdict') {
+      const domain = url.searchParams.get('domain');
+      if (!domain) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'missing_params',
+            required: ['domain'],
+            hint: 'domain=<publisher domain>, e.g. domain=x402.tavily.com',
+          },
+          400,
+        );
+      }
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const { computeX402PublisherVerdict, redactX402PublisherVerdictForPreview, checkX402PublisherVerdictPreviewRateLimit } = await import('./premium-x402-publisher-verdict');
+      const limit = await checkX402PublisherVerdictPreviewRateLimit(env, ip, 10);
+      if (!limit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: limit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/x402-publisher-verdict',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/x402-publisher-verdict (full verdict with 30-day settlement momentum, shared-wallet risk flag, settlement evidence, AFTA-signed receipt, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const full = await computeX402PublisherVerdict(env, domain);
+      return jsonResponse(
+        {
+          ...redactX402PublisherVerdictForPreview(full),
+          rate_limit: { limit: limit.limit, remaining: limit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/x402-publisher-verdict',
+            adds: [
+              'full verdict with 30-day settlement momentum',
+              'shared-wallet risk flag and the settlement evidence',
+              'AFTA-signed receipt',
+              'no rate limit',
+            ],
+          },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
+    }
+
     // === PAID PREMIUM ENDPOINT: X402 SETTLEMENT VERDICT (Tier 1, 1 credit) ===
     // /api/premium/x402-settlement-verdict?window=24h|7d|30d (default 7d)
     // One signed ruling over TensorFeed's OWN x402 settlement index: classifies
@@ -6962,6 +7021,36 @@ export default {
       const result = await computeX402SettlementVerdict(env, window);
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/x402-settlement-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM ENDPOINT: X402 PUBLISHER TRUST VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/x402-publisher-verdict?domain=<publisher domain>
+    // One signed ruling on a single x402 publisher derived from TensorFeed's OWN
+    // on-chain settlement index: whether its Base payTo is actively settling, its
+    // 30-day settlement momentum, a shared-wallet risk flag, and the settlement
+    // evidence, plus an AFTA-signed receipt. The decision layer above the raw
+    // /api/x402-index/* feeds and the free /api/preview/x402-publisher-verdict
+    // taste. Requires ?domain=, so strict-premium: anonymous Bazaar crawlers see
+    // a clean 402, not a free trial. A missing domain is a no-charge schema
+    // validation failure. 10-minute freshness SLA keyed to the index cursor.
+    if (path === '/api/premium/x402-publisher-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+      const domain = url.searchParams.get('domain');
+      if (!domain) {
+        return await premiumValidationFailure(
+          { error: 'missing_params', required: ['domain'], hint: 'domain=<publisher domain>, e.g. domain=x402.tavily.com' },
+          payment,
+          request,
+          env,
+        );
+      }
+      const { computeX402PublisherVerdict } = await import('./premium-x402-publisher-verdict');
+      const result = await computeX402PublisherVerdict(env, domain);
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/x402-publisher-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
