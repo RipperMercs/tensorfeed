@@ -290,6 +290,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // gates anonymous CDP / x402scan crawlers to a clean 402 challenge rather than
   // a free-trial 200 on the premium aggregate. Free taste at /api/ai-datacenters.
   '/api/premium/ai-datacenters/buildout',
+  // Federal AI procurement demand (2026-06-04). Signed demand read (agency
+  // concentration, emerging contractors, top buying agencies) over the daily
+  // ai-procurement:snapshot. No required params, but Bazaar-discoverable, so
+  // strict-premium gates anonymous CDP / x402scan crawlers to a clean 402
+  // challenge rather than a free-trial 200 on the premium verdict. Free taste
+  // at /api/procurement/ai-contracts.
+  '/api/premium/procurement/ai-contracts/demand',
 ];
 
 /**

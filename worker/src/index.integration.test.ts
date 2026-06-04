@@ -694,6 +694,165 @@ describe('ai-datacenters', () => {
   });
 });
 
+// The ai-procurement family is a daily keyword-filtered AI procurement snapshot
+// over USAspending.gov (every vendor, rolled up by buying-agency demand plus an
+// emerging-vendor flag). FREE /api/procurement/ai-contracts reads the
+// `ai-procurement:snapshot` KV blob (cold-start safe: an empty 200 shape with a
+// note pre-first-cron, never a 503). PREMIUM /api/premium/procurement/ai-contracts/demand
+// is strict-premium, no-param, derives agency concentration + emerging vendors +
+// top buying agencies, and no-charges (empty_result) when the snapshot is absent.
+// These mirror the substrate-changelog / ai-datacenters posture: same harness,
+// same direct-KV seeding via env.TENSORFEED_CACHE.put, same receipt.signature
+// field-path for the AFTA signature, same balance asserts.
+describe('ai-procurement', () => {
+  // The KV key the 16:23 UTC cron writes and both routes read. Mirrors
+  // AI_PROCUREMENT_SNAPSHOT_KEY exported from ai-procurement.ts.
+  const SNAPSHOT_KEY = 'ai-procurement:snapshot';
+
+  // A realistic ProcurementSnapshot: two agencies (so HHI and top-agency share
+  // are meaningful), one cohort vendor (Palantir, emerging false) and one
+  // outside-cohort vendor (emerging true), and one recent dated award. ASCII
+  // only (no em dashes, no double hyphens).
+  function snapshot(capturedAt: string): Record<string, unknown> {
+    return {
+      ok: true,
+      captured_at: capturedAt,
+      source: 'USAspending.gov (test)',
+      license: 'Public domain (US Government work).',
+      window_days: 180,
+      keywords: ['artificial intelligence', 'machine learning'],
+      total_usd: 1_000_000,
+      total_awards: 3,
+      unique_recipients: 2,
+      unique_agencies: 2,
+      by_agency: [
+        { agency: 'Department of Defense', agency_slug: 'dod', usd: 700_000, award_count: 2 },
+        { agency: 'Department of Health and Human Services', agency_slug: 'hhs', usd: 300_000, award_count: 1 },
+      ],
+      by_vendor: [
+        { recipient: 'Palantir Technologies', usd: 700_000, award_count: 2, emerging: false },
+        { recipient: 'Aperture Robotics LLC', usd: 300_000, award_count: 1, emerging: true },
+      ],
+      recent: [
+        {
+          award_id: 'CONT_AWD_TEST_0001',
+          recipient: 'Palantir Technologies',
+          amount: 400_000,
+          agency: 'Department of Defense',
+          agency_slug: 'dod',
+          description: 'Artificial intelligence advisory services.',
+          award_type: 'contract',
+          internal_id: 'TEST_INTERNAL_1',
+          date: '2026-05-30',
+        },
+      ],
+    };
+  }
+
+  // FREE with a seeded snapshot: 200, ok, the spread snapshot surfaces with a
+  // positive total_awards and the by_agency demand rollup, no note (note is the
+  // cold-start marker only).
+  it('serves the free snapshot with totals and the agency rollup when seeded', async () => {
+    const env = await makeEnv();
+    const captured = new Date().toISOString();
+    await env.TENSORFEED_CACHE.put(SNAPSHOT_KEY, JSON.stringify(snapshot(captured)));
+
+    const res = await call(env, '/api/procurement/ai-contracts', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(typeof res.json?.total_awards).toBe('number');
+    expect(res.json?.total_awards as number).toBeGreaterThan(0);
+    const byAgency = res.json?.by_agency as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(byAgency)).toBe(true);
+    expect((byAgency as unknown[]).length).toBeGreaterThan(0);
+    // The seeded snapshot has no note; note only appears on the cold-start shape.
+    expect(res.json?.note ?? null).toBeNull();
+  });
+
+  // FREE cold (no seed): 200, ok, total_awards 0, with the cold-start note. The
+  // contract is an empty parseable answer, NEVER a 503.
+  it('serves a cold-start empty 200 with a note when no snapshot is seeded', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/procurement/ai-contracts', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.total_awards).toBe(0);
+    expect(typeof res.json?.note).toBe('string');
+    expect((res.json?.note as string).length).toBeGreaterThan(0);
+  });
+
+  // GATE: strict-premium demand, no token. The endpoint is on the strict list,
+  // so a no-token call returns the canonical x402 402 challenge, NOT a free trial.
+  it('returns the canonical 402 challenge on a no-token demand call (no free trial)', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/procurement/ai-contracts/demand', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.error).toBe('payment_required');
+    // Strict-premium advertises no free trial.
+    expect(res.json?.free_trial ?? null).toBeNull();
+  });
+
+  // DEBIT happy path: valid token + a seeded fresh snapshot. The demand read
+  // derives agency_concentration, charges exactly 1 credit, and signs an AFTA
+  // receipt at the same receipt.signature field-path.
+  it('charges 1 credit and signs an AFTA receipt for the demand read', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+    // Fresh snapshot so the 36h freshness SLA does not fire.
+    await env.TENSORFEED_CACHE.put(SNAPSHOT_KEY, JSON.stringify(snapshot(new Date().toISOString())));
+
+    const res = await call(env, '/api/premium/procurement/ai-contracts/demand', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    // The demand verdict carries the agency concentration block.
+    const concentration = res.json?.agency_concentration as Record<string, unknown> | undefined;
+    expect(concentration).toBeDefined();
+    expect(typeof concentration?.top_agency_share_pct).toBe('number');
+    expect(typeof concentration?.hhi).toBe('number');
+
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(1);
+    expect(billing?.no_charge_reason ?? null).toBeNull();
+
+    // AFTA signature: premiumResponse signs the receipt with the harness Ed25519
+    // key, so the response carries a top-level receipt with a base64url signature.
+    // Same field-path the substrate-changelog and ai-datacenters successes assert.
+    const receipt = res.json?.receipt as Record<string, unknown> | undefined;
+    expect(receipt).toBeDefined();
+    expect(typeof receipt?.signature).toBe('string');
+    expect((receipt?.signature as string).length).toBeGreaterThan(0);
+
+    // Balance decremented by exactly the cost.
+    expect(await balanceOf(env, token)).toBe(99);
+  });
+
+  // NO-CHARGE cold: valid token, no snapshot. The handler no-charges
+  // (empty_result), returns the ok empty shape, and the balance is held.
+  it('no-charges a valid-token demand call when no snapshot is seeded', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/procurement/ai-contracts/demand', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(0);
+
+    // Balance unchanged: an empty result is free.
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+});
+
 // Canonical accepts[].outputSchema so x402scan and spec-compliant x402
 // indexers find the input schema at the standard location (the coinbase
 // x402 DiscoveryInfo shape: outputSchema = { input, output? }). Long-

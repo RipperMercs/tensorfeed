@@ -592,6 +592,16 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'funding',
   },
+  {
+    path: '/api/premium/procurement/ai-contracts/demand',
+    credits: 1,
+    strict_premium: true,
+    params: [],
+    returns: 'Signed federal AI procurement demand read: agency concentration (top-agency share and HHI), emerging contractors winning AI work beyond the known vendor cohort, and the top buying agencies.',
+    free_sibling: '/api/procurement/ai-contracts',
+    signed: true,
+    category: 'funding',
+  },
 
   // === COMPUTE ===
   {
