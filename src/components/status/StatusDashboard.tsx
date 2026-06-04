@@ -10,6 +10,7 @@ interface StatusService {
   name: string;
   provider: string;
   status: string;
+  early_warning?: { note: string; detected_at: string | null };
   statusPageUrl?: string;
   components: { name: string; status: string }[];
   lastChecked?: string;

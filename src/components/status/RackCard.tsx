@@ -6,6 +6,7 @@ interface StatusService {
   name: string;
   provider: string;
   status: string;
+  early_warning?: { note: string; detected_at: string | null };
   statusPageUrl?: string;
   components: { name: string; status: string }[];
   lastChecked?: string;
@@ -181,6 +182,16 @@ export default function RackCard({ service, probe, rackIndex }: RackCardProps) {
           />
           {pillLabel(norm)}
         </span>
+        {service.early_warning && (
+          <span
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[9.5px] font-mono uppercase tracking-[0.12em] border"
+            style={{ color: '#f59e0b', borderColor: 'rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.10)' }}
+            title={service.early_warning.note}
+          >
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#f59e0b' }} />
+            Early warning
+          </span>
+        )}
       </header>
 
       {/* Metrics grid: latency + uptime */}

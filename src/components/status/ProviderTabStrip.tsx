@@ -7,6 +7,7 @@ interface StatusService {
   name: string;
   provider: string;
   status: string;
+  early_warning?: { note: string; detected_at: string | null };
 }
 
 type Norm = 'ok' | 'warn' | 'down' | 'unknown';
@@ -148,6 +149,14 @@ export default function ProviderTabStrip({ services, selectedName, onSelect }: P
                       boxShadow: c.norm === 'ok' ? `0 0 6px ${color}` : undefined,
                     }}
                   />
+                  {c.service.early_warning && (
+                    <span
+                      className="w-1 h-1 rounded-full"
+                      style={{ background: '#f59e0b', boxShadow: '0 0 4px #f59e0b' }}
+                      title="early warning"
+                      aria-hidden="true"
+                    />
+                  )}
                   <span className="text-[11px] font-semibold text-text-primary truncate">
                     {c.service.name}
                   </span>
