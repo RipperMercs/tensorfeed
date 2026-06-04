@@ -7049,6 +7049,13 @@ export default {
       }
       const { computeX402PublisherVerdict } = await import('./premium-x402-publisher-verdict');
       const result = await computeX402PublisherVerdict(env, domain);
+      if (result.verdict === 'not_indexed') {
+        // No-charge: the domain is not in TF's x402 registry, so there is no
+        // settlement signal to sell. The agent still gets the signed not_indexed
+        // ruling, billed at zero, consistent with the empty-result no-charge rule
+        // used by the sibling publisher-receipts endpoint.
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/x402-publisher-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
