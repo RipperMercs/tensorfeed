@@ -286,7 +286,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     credits: 1,
     strict_premium: true,
     params: [{ name: 'from', required: true }, { name: 'to', required: true }, { name: 'event_type', required: false }],
-    returns: 'Full forward-only changelog of model lifecycle events (added, removed, repriced, deprecated) and agent-protocol spec versions across a date range, filterable by event type.',
+    returns: 'Full forward-only changelog of model lifecycle events (added, removed, repriced, deprecated), agent-protocol spec versions, and agent-framework releases across a date range, filterable by event type.',
     free_sibling: '/api/substrate-changelog/recent',
     signed: true,
     category: 'intelligence',
