@@ -135,6 +135,11 @@ function Row({
         <div className="tf-r-status">
           <span className="tf-r-dot" aria-hidden="true" />
           <span>{STATUS_LABEL[item.state]}</span>
+          {item.earlyWarning && (
+            <span className="tf-r-ew" title={item.earlyWarning.note} aria-label="early warning: probes detect degradation">
+              EW
+            </span>
+          )}
         </div>
         <div className="tf-r-name">
           <span className="tf-r-name-text">{item.name}</span>
@@ -216,6 +221,12 @@ function Row({
               <div className="tf-dr-cell">
                 <span className="tf-dr-k">LAST CHECK</span>
                 <span className="tf-dr-v">{formatAgo(item.lastCheckedAgoS)} ago</span>
+              </div>
+            )}
+            {item.earlyWarning && (
+              <div className="tf-dr-cell tf-dr-cell-ew">
+                <span className="tf-dr-k">EARLY WARNING</span>
+                <span className="tf-dr-v">{item.earlyWarning.note}</span>
               </div>
             )}
           </div>

@@ -1137,3 +1137,19 @@
 @media (prefers-reduced-motion: reduce) {
   .tf-drawer { animation: none; }
 }
+
+/* Additive early-warning chip. Never an escalation: steady, amber, calm. */
+.tf-r-ew {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  padding: 2px 4px;
+  margin-left: 6px;
+  border-radius: 3px;
+  color: var(--tf-degraded);
+  border: 1px solid var(--tf-degraded-dim);
+  background: var(--tf-degraded-dim);
+  white-space: nowrap;
+}
+.tf-dr-cell-ew .tf-dr-v { color: var(--tf-degraded); }

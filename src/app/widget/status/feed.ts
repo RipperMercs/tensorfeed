@@ -355,6 +355,9 @@ export function buildDemoFeed(s: 'nominal' | 'degraded' | 'critical' | 'offline'
       detailHref: 'https://tensorfeed.ai/status?utm_source=widget&utm_medium=demo',
       components,
       sourceUrl: `https://status.${r.id}.com`,
+      ...(r.id === 'openai' ? {
+        earlyWarning: { note: 'TensorFeed probes detect provider-side degradation; vendor not yet confirming.', detectedAt: new Date(Date.now() - 9 * 60_000).toISOString() },
+      } : undefined),
     };
   };
   return {
