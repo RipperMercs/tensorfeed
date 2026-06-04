@@ -285,6 +285,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // is strict-premium per the convention that any param-reading paid route is
   // strict; anonymous probes see a clean 402, never a free-trial path.
   '/api/premium/hf-leaderboard/movers',
+  // AI datacenter buildout (2026-06-04). Aggregate over the curated AI datacenter
+  // registry. No required params, but Bazaar-discoverable, so strict-premium
+  // gates anonymous CDP / x402scan crawlers to a clean 402 challenge rather than
+  // a free-trial 200 on the premium aggregate. Free taste at /api/ai-datacenters.
+  '/api/premium/ai-datacenters/buildout',
 ];
 
 /**

@@ -593,6 +593,18 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'funding',
   },
 
+  // === COMPUTE ===
+  {
+    path: '/api/premium/ai-datacenters/buildout',
+    credits: 1,
+    strict_premium: true,
+    params: [],
+    returns: 'Aggregate of the AI datacenter buildout: disclosed power (MW) and capex totals by operator, region, and status, plus the forward commissioning calendar of sites coming online.',
+    free_sibling: '/api/ai-datacenters',
+    signed: true,
+    category: 'compute',
+  },
+
   // === STATUS ===
   {
     path: '/api/premium/status/leaderboard',

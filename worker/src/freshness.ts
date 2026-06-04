@@ -129,6 +129,11 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // snapshot. 36h SLA = daily cron cadence + headroom for one missed run,
   // so a stale snapshot (a real ingest outage) triggers a no-charge.
   '/api/premium/funding/federal/momentum': { maxAgeSeconds: 36 * 60 * 60 },
+  // AI datacenter buildout: pure aggregate over a hand-curated registry that
+  // updates on redeploy. No staleness signal applies (capturedAt is the
+  // registry last-updated date); same shape as the funding/exposure registry
+  // but with no maxAge SLA because the figures are editorial, not a snapshot.
+  '/api/premium/ai-datacenters/buildout': NULL_SLA,
   // Recession watch: synthesis over BLS + FRED daily snapshots. 24h
   // matches the cron cadence of underlying data.
   // Model-deprecations timeline: pure compute over a hand-curated registry

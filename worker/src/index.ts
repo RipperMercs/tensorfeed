@@ -4601,6 +4601,8 @@ export default {
           fundingFederalSummary: '/api/funding/federal/summary (free; full federal AI spending snapshot for a curated AI-vendor cohort: per-vendor totals, award counts, the most recent award date per vendor, top awarding agencies, plus cohort-wide totals and the top 25 recent awards. Source USAspending.gov, public domain under the DATA Act. Precomputed daily.)',
           fundingFederalRecent: '/api/funding/federal/recent (free; the 25 newest dated federal contract and grant awards across the AI-vendor cohort, each with recipient, amount, awarding agency, award type, and date. Source USAspending.gov, public domain. Precomputed daily.)',
           premiumFundingFederalMomentum: '/api/premium/funding/federal/momentum (1 credit, AFTA-signed; one signed leadership and concentration ruling over the federal spending snapshot. Names the cohort leader and its share of total tracked federal AI award dollars, the top-2 spend concentration, the leading awarding agency, and the vendors with a dated award inside the last 120 days, plus echoed cohort totals. 36h freshness SLA, no-charge when stale.)',
+          aiDatacenters: '/api/ai-datacenters?operator=&status=announced|under_construction|operational|expansion|paused&country=&region=&purpose=training|inference|mixed|unknown (free; hand-curated registry of publicly announced AI datacenter projects, the gigawatt-class training and inference campuses from the labs and hyperscalers. Each entry carries disclosed power (MW), capex, status, accelerator, partners, and a source_url; power and capex are disclosed values only, null where not public. Sorted operational-first.)',
+          premiumAiDatacentersBuildout: '/api/premium/ai-datacenters/buildout (1 credit, AFTA-signed; aggregate over the free /api/ai-datacenters registry. Disclosed power (MW) and capex totals by operator, region, and status, plus the forward commissioning calendar of sites coming online. Curated registry, no staleness SLA.)',
           routingPreview: '/api/preview/routing',
           routeVerdictPreview: '/api/preview/route-verdict?task=code|reasoning|creative|general or ?model= (free, 10/IP/day; the top Route Verdict only, no runners-up or signed receipt, so an agent can evaluate the shape before paying)',
           stackSafetyPreview: '/api/preview/stack-safety-verdict?packages= (free, 10/IP/day; the gate + per-package verdict only, no CVE evidence, capped at 3 packages)',
@@ -5466,6 +5468,36 @@ export default {
         until: url.searchParams.get('until') ?? undefined,
       });
       return jsonResponse(result, 200, 3600);
+    }
+
+    // === FREE: AI DATACENTER BUILDOUT REGISTRY ===
+    // Hand-curated catalog of publicly announced AI datacenter projects: the
+    // gigawatt-class training and inference campuses being built by the labs
+    // and hyperscalers. Filter by operator (case-insensitive substring) and by
+    // status / country / region / purpose (case-insensitive exact). Curated,
+    // editorial cadence on redeploy. Sister to /api/funding/portfolio.
+    if (path === '/api/ai-datacenters') {
+      const { AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED, DATACENTERS_ATTRIBUTION, filterDatacenters } =
+        await import('./ai-datacenters');
+      const operator = url.searchParams.get('operator') ?? undefined;
+      const status = url.searchParams.get('status') ?? undefined;
+      const country = url.searchParams.get('country') ?? undefined;
+      const region = url.searchParams.get('region') ?? undefined;
+      const purpose = url.searchParams.get('purpose') ?? undefined;
+      const datacenters = filterDatacenters(AI_DATACENTERS, { operator, status, country, region, purpose });
+      return jsonResponse(
+        {
+          ok: true,
+          source: 'tensorfeed.ai',
+          count: datacenters.length,
+          last_updated: AI_DATACENTERS_LAST_UPDATED,
+          datacenters,
+          attribution: DATACENTERS_ATTRIBUTION,
+          filters: { operator, status, country, region, purpose },
+        },
+        200,
+        3600,
+      );
     }
 
     // === FREE: FEDERAL AI SPENDING ===
@@ -9739,6 +9771,32 @@ export default {
         logPremiumUsage(env, '/api/premium/funding/exposure', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 3, request, env);
+    }
+
+    // === PAID PREMIUM: AI DATACENTER BUILDOUT (Tier 1, 1 credit) ===
+    // /api/premium/ai-datacenters/buildout
+    // Aggregate over the free /api/ai-datacenters registry: disclosed power
+    // (MW) and capex totals by operator, region, and status, plus the forward
+    // commissioning calendar of sites coming online. No params; the registry is
+    // always non-empty so it always charges. capturedAt is the registry
+    // last-updated date (the real data time), so the freshness no-charge bills
+    // against actual data age, never build time.
+    if (path === '/api/premium/ai-datacenters/buildout') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED, buildBuildoutAggregate } =
+        await import('./ai-datacenters');
+      const result = {
+        ok: true,
+        ...buildBuildoutAggregate(AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED),
+        capturedAt: AI_DATACENTERS_LAST_UPDATED + 'T00:00:00Z',
+      };
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-datacenters/buildout', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === PAID PREMIUM: FEDERAL AI SPENDING LEADERSHIP (Tier 1, 1 credit) ===
