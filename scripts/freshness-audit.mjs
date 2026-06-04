@@ -60,6 +60,12 @@ async function main() {
 
   overdue.sort((a, b) => b.overdueDays - a.overdueDays);
 
+  // Machine-readable mode for the weekly freshness agent (GitHub Action).
+  if (process.argv.includes('--json')) {
+    console.log(JSON.stringify({ today, overdue, dueSoon, editorial }));
+    return;
+  }
+
   const lines = [];
   lines.push(`# Page freshness audit (${today})`);
   lines.push('');
