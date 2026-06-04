@@ -10820,6 +10820,81 @@ export default {
       );
     }
 
+    // === PAID PREMIUM: SSVC DECISION VERDICT (Tier 1, 1 credit, param-required) ===
+    // /api/premium/security/ssvc-verdict?cve=CVE-YYYY-NNNNN
+    //
+    // One signed verified decision for a security agent: should this CVE be
+    // patched now? Reads the three SSVC decision points CISA records in its
+    // Vulnrichment data, applies the CISA SSVC Coordinator decision tree, and
+    // returns the decision across the full Mission and Well-being envelope
+    // (CISA omits M&W from the record, so the envelope is the honest form).
+    // Param-required, so strict-premium. NULL_SLA: a scored record is immutable,
+    // dataCapturedAt is CISA's scoring timestamp for the receipt only.
+    if (path === '/api/premium/security/ssvc-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { parseSsvcFromVulnrichment, buildSsvcVerdict } = await import('./ssvc-verdict');
+      const { fetchVulnrichment, normalizeCVEId } = await import('./security-vulnrichment');
+
+      const svCveRaw = url.searchParams.get('cve');
+      const svCve = svCveRaw ? normalizeCVEId(svCveRaw) : null;
+      if (!svCve) {
+        return await premiumValidationFailure(
+          { error: 'invalid_cve_id', hint: 'cve=CVE-YYYY-NNNNN (e.g. CVE-2024-3094)' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const svRecord = await fetchVulnrichment(env, svCve);
+      if (!svRecord.ok || !svRecord.record) {
+        // A genuine "no record" is not in the dataset (empty_result); a fetch
+        // error from GitHub is upstream_failure. Both no-charge.
+        const isUpstream = typeof svRecord.error === 'string' && svRecord.error.startsWith('vulnrichment_');
+        return await premiumValidationFailure(
+          isUpstream
+            ? { error: 'upstream_failure', message: 'CISA Vulnrichment fetch failed; try again shortly.', cve: svCve }
+            : { error: 'cve_not_in_vulnrichment', message: 'No CISA Vulnrichment record for that CVE.', cve: svCve },
+          payment,
+          request,
+          env,
+          isUpstream ? 'upstream_failure' : 'empty_result',
+          isUpstream ? 502 : 404,
+        );
+      }
+
+      const svPoints = parseSsvcFromVulnrichment(svRecord.record);
+      if (!svPoints) {
+        return await premiumValidationFailure(
+          { error: 'no_ssvc_data', message: 'That CVE has a Vulnrichment record but no SSVC decision points.', cve: svCve },
+          payment,
+          request,
+          env,
+          'empty_result',
+          404,
+        );
+      }
+
+      const svVerdict = buildSsvcVerdict(svCve, svPoints);
+
+      ctx.waitUntil(
+        logPremiumUsage(
+          env,
+          '/api/premium/security/ssvc-verdict',
+          request.headers.get('User-Agent') || 'unknown',
+          1,
+          payment.token,
+          payment.payerWallet,
+        ),
+      );
+      // dataCapturedAt = CISA's SSVC scoring timestamp (real data time, never
+      // build time). NULL_SLA, so this never spuriously no-charges; it gives the
+      // receipt an honest captured_at.
+      return await premiumResponse(svVerdict, payment, 1, request, env, null, svVerdict.scored_at || null);
+    }
+
     // === PAID PREMIUM: AI COMPANIES PER-TICKER ENVELOPE (Tier 1, 1 credit) ===
     // /api/premium/ai-companies/{ticker}
     //

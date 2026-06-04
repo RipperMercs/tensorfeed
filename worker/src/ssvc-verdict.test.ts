@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CISA_SSVC_TREE, cisaSsvcDecision, CISA_SSVC_TREE_VERSION, parseSsvcFromVulnrichment, buildSsvcVerdict, redactSsvcVerdictForPreview, checkSsvcVerdictPreviewRateLimit } from './ssvc-verdict';
-import { makeEnv, call } from './test-harness';
+import { makeEnv, call, seedToken, balanceOf } from './test-harness';
 
 // The authoritative 36-row CISA SSVC Coordinator v2.0.3 table. Verified three
 // independent ways and adversarially audited (2026-06-03). This fixture pins
@@ -281,5 +281,53 @@ describe('ssvc-verdict preview route', () => {
     for (let i = 0; i < 10; i++) res = await call(env, '/api/preview/security/ssvc-verdict?cve=CVE-2024-3094', { ip });
     expect(res.status).toBe(429);
     expect(res.json?.error).toBe('rate_limit_exceeded');
+  });
+});
+
+const RECORD_NO_SSVC = {
+  containers: { adp: [{ title: 'CISA ADP Vulnrichment', metrics: [{ other: { type: 'cvssV3_1', content: {} } }] }] },
+};
+
+describe('ssvc-verdict premium route', () => {
+  it('returns the canonical 402 with no token (strict-premium)', async () => {
+    const env = await makeEnv({ cache: { 'vulnrichment:CVE-2024-3094': XZ_RECORD } });
+    const res = await call(env, '/api/premium/security/ssvc-verdict?cve=CVE-2024-3094', { ip: '198.51.100.70' });
+    expect(res.status).toBe(402);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.free_trial ?? null).toBeNull();
+  });
+
+  it('charges 1 credit and returns the signed verdict on a valid call', async () => {
+    const token = 'tf_live_ssvctest_ok';
+    const env = await makeEnv({ cache: { 'vulnrichment:CVE-2024-3094': XZ_RECORD } });
+    await seedToken(env, token, 5);
+    const res = await call(env, '/api/premium/security/ssvc-verdict?cve=CVE-2024-3094', { token, ip: '198.51.100.71', settle: true });
+    expect(res.status).toBe(200);
+    expect(res.json?.decision_primary).toBe('Track');
+    expect(res.json?.decision_envelope).toEqual({ low: 'Track', medium: 'Track', high: 'Attend' });
+    expect((res.json?.billing as Record<string, unknown>)?.credits_charged).toBe(1);
+    expect(res.json?.receipt).toBeTruthy();
+    expect(await balanceOf(env, token)).toBe(4);
+  });
+
+  it('no-charges invalid_cve_id (400, credit preserved)', async () => {
+    const token = 'tf_live_ssvctest_badid';
+    const env = await makeEnv();
+    await seedToken(env, token, 5);
+    const res = await call(env, '/api/premium/security/ssvc-verdict?cve=notacve', { token, ip: '198.51.100.72', settle: true });
+    expect(res.status).toBe(400);
+    expect(res.json?.error).toBe('invalid_cve_id');
+    expect((res.json?.billing as Record<string, unknown>)?.credits_charged).toBe(0);
+    expect(await balanceOf(env, token)).toBe(5);
+  });
+
+  it('no-charges no_ssvc_data (404, credit preserved)', async () => {
+    const token = 'tf_live_ssvctest_nossvc';
+    const env = await makeEnv({ cache: { 'vulnrichment:CVE-2024-9999': RECORD_NO_SSVC } });
+    await seedToken(env, token, 5);
+    const res = await call(env, '/api/premium/security/ssvc-verdict?cve=CVE-2024-9999', { token, ip: '198.51.100.73', settle: true });
+    expect(res.status).toBe(404);
+    expect(res.json?.error).toBe('no_ssvc_data');
+    expect(await balanceOf(env, token)).toBe(5);
   });
 });
