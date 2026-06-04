@@ -350,8 +350,12 @@ describe('x402 publisher-verdict', () => {
     // Seed the precomputed verified-directory blob the verdict reads
     // (TENSORFEED_CACHE key x402-idx:verified). A verified-settling + active
     // entry resolves to actively_settling (NOT not_indexed), so the call charges.
+    // captured_at MUST be inside the 10-minute freshness SLA, or premiumResponse
+    // correctly no-charges the read as stale. Seed it one minute ago so the test
+    // is deterministic at any wall-clock time (a fixed timestamp goes stale and flakes).
+    const freshCapturedAt = new Date(Date.now() - 60_000).toISOString();
     await env.TENSORFEED_CACHE.put('x402-idx:verified', JSON.stringify({
-      captured_at: '2026-06-04T11:00:00Z',
+      captured_at: freshCapturedAt,
       publishers: [{ domain: 'seeded-pub.example', status: 'verified-settling', activity: 'active', settlement_count: 10, volume_usdc: '5.000000', first_settled: '2026-05-30', last_settled: '2026-06-03', pay_to_wallets: ['0xabc'], manifest_url: 'https://seeded-pub.example/.well-known/x402', source: 'manual', note: null, first_seen: '2026-05-30' }],
     }));
 
