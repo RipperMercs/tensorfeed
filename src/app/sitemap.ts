@@ -205,6 +205,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/funding`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/funding/portfolio`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/funding/federal`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${baseUrl}/procurement`, lastModified: now, changeFrequency: 'daily', priority: 0.75 },
+    { url: `${baseUrl}/substrate`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${baseUrl}/ai-infrastructure`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/ai-stocks`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     ...AI_COMPANIES.map((company) => ({
