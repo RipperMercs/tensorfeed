@@ -50,6 +50,7 @@ interface RawService {
   statusPageUrl?: string;
   components?: Array<{ name?: string; status?: string }>;
   lastChecked?: string;
+  early_warning?: { source?: string; note?: string; detected_at?: string | null; probe_signal?: string };
 }
 interface ProbeAggregate {
   provider: string;
@@ -217,6 +218,10 @@ function toItem(svc: RawService, probes: ProbeAggregate[], lb: LeaderboardEntry[
     detailHref: detailHref(name, provider, id),
     components: cleanComponents(svc.components),
     sourceUrl: cleanSourceUrl(svc.statusPageUrl),
+    earlyWarning:
+      svc.early_warning && typeof svc.early_warning.note === 'string'
+        ? { note: svc.early_warning.note, detectedAt: svc.early_warning.detected_at ?? null }
+        : undefined,
   };
 }
 

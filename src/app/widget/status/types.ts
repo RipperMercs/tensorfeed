@@ -20,6 +20,10 @@ export interface Item {
   // publishes neither. Never fabricated.
   components: { name: string; status: string }[];
   sourceUrl: string | null; // vendor's own status page, opens off-site
+  // Additive heads-up from /api/status: our probes detect provider-side
+  // degradation while the vendor still says operational. Never escalates
+  // state/condition. Absent on non-probed providers and when healthy.
+  earlyWarning?: { note: string; detectedAt: string | null };
 }
 
 export interface Feed {
