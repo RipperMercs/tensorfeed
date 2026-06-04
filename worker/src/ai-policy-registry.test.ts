@@ -12,6 +12,14 @@ import {
 } from './ai-policy-registry';
 
 describe('POLICY_REGISTRY catalog', () => {
+  it('holds the full curated set of 28 entries', () => {
+    expect(POLICY_REGISTRY.length).toBe(28);
+  });
+
+  it('exposes frontier-models as a valid scope', () => {
+    expect(VALID_SCOPES).toContain('frontier-models');
+  });
+
   it('uses unique ids', () => {
     const ids = POLICY_REGISTRY.map(p => p.id);
     expect(new Set(ids).size).toBe(ids.length);

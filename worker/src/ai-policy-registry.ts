@@ -50,7 +50,8 @@ export type PolicyScope =
   | 'export-controls'
   | 'national-security'
   | 'public-sector'
-  | 'workplace';
+  | 'workplace'
+  | 'frontier-models';
 
 export interface PolicyEntry {
   id: string;
@@ -293,9 +294,193 @@ export const POLICY_REGISTRY: PolicyEntry[] = [
     citations: [],
     scope: ['safety'],
   },
+
+  // ── 2026 expansion: frontier-model laws + global frameworks ───
+  {
+    id: 'us-ny-raise-act',
+    title: 'New York RAISE Act (Responsible AI Safety and Education Act, S6953B / A6453B)',
+    jurisdiction: 'US-State',
+    type: 'statute',
+    status: 'pending',
+    enacted_date: '2025-12-19',
+    effective_date: '2027-01-01',
+    summary:
+      'Second US state frontier-model safety law after California. Requires large frontier AI developers to publish safety and security protocols, report critical-harm safety incidents to the state within 72 hours, and creates an oversight office within the Department of Financial Services. Signed by Governor Hochul on 2025-12-19 with agreed chapter amendments; takes effect 2027-01-01.',
+    source_url: 'https://www.nysenate.gov/legislation/bills/2025/S6953',
+    citations: ['https://www.governor.ny.gov/news/governor-hochul-signs-nation-leading-legislation-require-ai-frameworks-ai-frontier-models'],
+    scope: ['frontier-models', 'safety', 'transparency'],
+  },
+  {
+    id: 'us-ca-sb-53',
+    title: 'California SB 53: Transparency in Frontier Artificial Intelligence Act (TFAIA)',
+    jurisdiction: 'US-State',
+    type: 'statute',
+    status: 'pending',
+    enacted_date: '2025-09-29',
+    effective_date: '2026-01-01',
+    summary:
+      "California's frontier-model law, the successor to the vetoed SB 1047. Requires developers of frontier models (trained above 10^26 FLOPs) to publish safety frameworks, report critical safety incidents to the state, and protect whistleblowers; large frontier developers (over 500M dollars revenue) face additional duties. Also creates CalCompute. Signed by Governor Newsom 2025-09-29; most requirements effective 2026-01-01.",
+    source_url: 'https://www.gov.ca.gov/2025/09/29/governor-newsom-signs-sb-53-advancing-californias-world-leading-artificial-intelligence-industry/',
+    citations: ['https://leginfo.legislature.ca.gov/faces/billTextClient.xhtml?bill_id=202520260SB53'],
+    scope: ['frontier-models', 'safety', 'transparency'],
+  },
+  {
+    id: 'us-tx-traiga-hb-149',
+    title: 'Texas Responsible Artificial Intelligence Governance Act (TRAIGA, HB 149)',
+    jurisdiction: 'US-State',
+    type: 'statute',
+    status: 'pending',
+    enacted_date: '2025-06-22',
+    effective_date: '2026-01-01',
+    summary:
+      'Comprehensive Texas AI statute with an intent-based liability framework. Bars AI systems built to unlawfully discriminate, manipulate behavior, or produce certain unlawful content; requires state agencies to disclose when citizens interact with AI; restricts biometric capture. Attorney General has exclusive enforcement with a 60-day cure period, no private right of action. Signed 2025-06-22, effective 2026-01-01.',
+    source_url: 'https://capitol.texas.gov/tlodocs/89R/billtext/pdf/HB00149I.pdf',
+    citations: [],
+    scope: ['general', 'discrimination', 'consumer-protection', 'public-sector'],
+  },
+  {
+    id: 'us-il-hb-3773',
+    title: 'Illinois HB 3773: AI in Employment (Human Rights Act amendment)',
+    jurisdiction: 'US-State',
+    type: 'statute',
+    status: 'pending',
+    enacted_date: '2024-08-09',
+    effective_date: '2026-01-01',
+    summary:
+      'Amends the Illinois Human Rights Act to make it a civil-rights violation for an employer to use AI that discriminates based on protected characteristics in recruitment, hiring, promotion, discipline, or discharge, including via zip-code proxies, and to require employee notice when AI is used in such decisions. Effective 2026-01-01.',
+    source_url: 'https://www.ilga.gov/Legislation/BillStatus?DocNum=3773&GAID=17&DocTypeID=HB&SessionID=112&GA=103',
+    citations: [],
+    scope: ['workplace', 'discrimination', 'transparency'],
+  },
+  {
+    id: 'us-nist-ai-rmf',
+    title: 'NIST AI Risk Management Framework (AI RMF 1.0, NIST AI 100-1)',
+    jurisdiction: 'US-Federal',
+    type: 'guidance',
+    status: 'active',
+    enacted_date: '2023-01-26',
+    effective_date: null,
+    summary:
+      'Voluntary US framework from the National Institute of Standards and Technology for managing risks in the design, development, and use of AI. Organized around four functions (Govern, Map, Measure, Manage). Companion Generative AI Profile (NIST AI 600-1) was released 2024-07-26. Widely referenced as a de facto baseline in US and global AI governance.',
+    source_url: 'https://www.nist.gov/itl/ai-risk-management-framework',
+    citations: ['https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf'],
+    scope: ['general', 'safety', 'transparency'],
+  },
+  {
+    id: 'eu-gpai-code-of-practice',
+    title: 'EU AI Act General-Purpose AI Code of Practice',
+    jurisdiction: 'EU',
+    type: 'guidance',
+    status: 'active',
+    enacted_date: '2025-07-10',
+    effective_date: '2025-08-02',
+    summary:
+      'Voluntary code prepared by independent experts to help providers of general-purpose AI models demonstrate compliance with the EU AI Act. Has three chapters (Transparency, Copyright, Safety and Security); the Safety and Security chapter applies only to GPAI models with systemic risk under Article 55. Published 2025-07-10; GPAI obligations applied from 2025-08-02.',
+    source_url: 'https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai',
+    citations: [],
+    scope: ['transparency', 'safety', 'frontier-models'],
+  },
+  {
+    id: 'eu-ai-act-prohibited-practices',
+    title: 'EU AI Act Prohibited Practices (Article 5)',
+    jurisdiction: 'EU',
+    type: 'regulation',
+    status: 'active',
+    enacted_date: '2024-07-12',
+    effective_date: '2025-02-02',
+    summary:
+      'The first binding phase of the EU AI Act to take effect: from 2025-02-02 the Article 5 bans on unacceptable-risk practices (manipulative AI, exploitation of vulnerabilities, social scoring, certain predictive policing, untargeted facial-image scraping, and emotion recognition in workplaces and schools) apply across the EU. Enforceable by member-state authorities from 2025-08-02.',
+    source_url: 'https://artificialintelligenceact.eu/article/5/',
+    citations: [],
+    scope: ['high-risk', 'discrimination', 'deepfakes', 'general'],
+  },
+  {
+    id: 'cn-ai-content-labeling',
+    title: 'Measures for Labeling AI-Generated Synthetic Content',
+    jurisdiction: 'China',
+    type: 'regulation',
+    status: 'active',
+    enacted_date: '2025-03-14',
+    effective_date: '2025-09-01',
+    summary:
+      'Cyberspace Administration of China rule requiring both explicit (visible) and implicit (metadata) labels on AI-generated text, images, audio, video, and virtual assets distributed on Chinese platforms, paired with the mandatory national standard GB 45438-2025. Issued 2025-03-14, effective 2025-09-01.',
+    source_url: 'https://www.cac.gov.cn/2025-03/14/c_1743654684782215.htm',
+    citations: ['https://www.chinalawtranslate.com/en/ai-labeling/'],
+    scope: ['deepfakes', 'transparency'],
+  },
+  {
+    id: 'kr-ai-basic-act',
+    title: 'South Korea AI Basic Act (Framework Act on the Development of AI and Establishment of Trust)',
+    jurisdiction: 'International',
+    type: 'statute',
+    status: 'active',
+    enacted_date: '2025-01-21',
+    effective_date: '2026-01-22',
+    summary:
+      "South Korea's comprehensive AI framework law, the second national comprehensive AI regime after the EU. Imposes transparency duties on generative and high-impact AI, safety obligations for high-impact systems, and establishes a national AI policy structure and an AI Safety Institute. Promulgated January 2025, effective 2026-01-22, with a roughly one-year enforcement grace period on fines.",
+    source_url: 'https://www.loc.gov/item/global-legal-monitor/2026-02-20/south-korea-comprehensive-ai-legal-framework-takes-effect/',
+    citations: [],
+    scope: ['general', 'high-risk', 'transparency', 'safety'],
+  },
+  {
+    id: 'jp-ai-promotion-act',
+    title: 'Japan AI Promotion Act (Act on Promotion of Research and Development and Utilization of AI-Related Technologies)',
+    jurisdiction: 'International',
+    type: 'statute',
+    status: 'active',
+    enacted_date: '2025-05-28',
+    effective_date: '2025-06-04',
+    summary:
+      "Japan's first AI-specific statute, taking an innovation-first, soft-law approach. Sets national AI policy principles and establishes an AI Strategy Headquarters within the Cabinet, but imposes no direct fines or prohibitions; the government may issue guidance, request information, or publicly name non-compliant actors. Passed 2025-05-28, mostly effective 2025-06-04, in full effect September 2025.",
+    source_url: 'https://www.gov-online.go.jp/hlj/en/november_2025/november_2025-08.html',
+    citations: [],
+    scope: ['general', 'safety'],
+  },
+  {
+    id: 'intl-un-ai-resolution',
+    title: 'UN General Assembly Resolution A/RES/78/265 on Safe, Secure and Trustworthy AI',
+    jurisdiction: 'International',
+    type: 'declaration',
+    status: 'active',
+    enacted_date: '2024-03-21',
+    effective_date: null,
+    summary:
+      'First UN General Assembly resolution on artificial intelligence (draft A/78/L.49), adopted by consensus and co-sponsored by 125 states with the US in the lead. Promotes safe, secure, and trustworthy AI for sustainable development and calls for bridging digital divides. Non-binding.',
+    source_url: 'https://docs.un.org/en/A/RES/78/265',
+    citations: ['https://press.un.org/en/2024/ga12588.doc.htm'],
+    scope: ['general', 'safety'],
+  },
+  {
+    id: 'au-mandatory-guardrails',
+    title: 'Australia: Mandatory Guardrails for AI in High-Risk Settings (Proposals Paper)',
+    jurisdiction: 'International',
+    type: 'guidance',
+    status: 'proposed',
+    enacted_date: '2024-09-05',
+    effective_date: null,
+    summary:
+      'Australian Government proposals paper (Department of Industry, Science and Resources) setting out 10 proposed mandatory guardrails for AI in high-risk settings, alongside a Voluntary AI Safety Standard. Defines high-risk AI and canvasses legislative options. Out for consultation; not yet enacted as binding law.',
+    source_url: 'https://consult.industry.gov.au/ai-mandatory-guardrails',
+    citations: [],
+    scope: ['high-risk', 'safety', 'general'],
+  },
+  {
+    id: 'sg-genai-governance-framework',
+    title: 'Singapore Model AI Governance Framework for Generative AI',
+    jurisdiction: 'International',
+    type: 'guidance',
+    status: 'active',
+    enacted_date: '2024-05-30',
+    effective_date: null,
+    summary:
+      "Voluntary framework from Singapore's Infocomm Media Development Authority and the AI Verify Foundation, extending the earlier Model AI Governance Framework to generative AI. Sets out nine dimensions (including accountability, content provenance, security, and testing) for a trusted GenAI ecosystem. Non-binding guidance.",
+    source_url: 'https://www.imda.gov.sg/resources/press-releases-factsheets-and-speeches/press-releases/2024/public-consult-model-ai-governance-framework-genai',
+    citations: ['https://aiverifyfoundation.sg/wp-content/uploads/2024/06/Model-AI-Governance-Framework-for-Generative-AI-19-June-2024.pdf'],
+    scope: ['general', 'transparency', 'safety'],
+  },
 ];
 
-export const POLICY_REGISTRY_LAST_UPDATED = '2026-05-06';
+export const POLICY_REGISTRY_LAST_UPDATED = '2026-06-04';
 
 // ── Read API ────────────────────────────────────────────────────────
 
@@ -351,6 +536,7 @@ export const VALID_STATUSES: PolicyStatus[] = [
 export const VALID_SCOPES: PolicyScope[] = [
   'general', 'transparency', 'safety', 'high-risk', 'discrimination', 'deepfakes',
   'consumer-protection', 'export-controls', 'national-security', 'public-sector', 'workplace',
+  'frontier-models',
 ];
 
 function isJurisdiction(s: string): s is Jurisdiction {
