@@ -355,6 +355,7 @@ import {
 } from './rate-limit';
 import { isStrictPremiumPath } from './strict-premium-endpoints';
 import { buildPremiumCatalog } from './premium-catalog';
+import { buildOfficialSurfaces } from './official-surfaces';
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, listRecentBackups, readManifest } from './backup';
@@ -4364,6 +4365,16 @@ export default {
       return jsonResponse(buildPremiumCatalog(), 200, 3600);
     }
 
+    // === OFFICIAL SURFACES (free, machine-readable; cached 1h) ===
+    // Canonical anti-impersonation list: the authentic packages, MCP servers,
+    // SDKs, repos, dataset, well-knowns, and the one true payTo address. The
+    // served payTo comes from the live env.PAYMENT_WALLET so it can never drift
+    // from /api/payment/info.
+
+    if (path === '/api/meta/official') {
+      return jsonResponse(buildOfficialSurfaces(env.PAYMENT_WALLET || undefined), 200, 3600);
+    }
+
     // === META ENDPOINT (cached 60s) ===
 
     if (path === '/api/meta') {
@@ -4376,6 +4387,8 @@ export default {
           'TensorFeed.ai is agent fair-trade certified: open pricing, automatic no-charge on 5xx, breaker, schema fail, and stale data, Ed25519-signed receipts on every paid call, inference-only license. Built with Claude (Anthropic). Standard at /.well-known/agent-fair-trade.json.',
         metaPremium:
           '/api/meta/premium (free; machine-readable catalog of every premium endpoint: path, credit cost, params, returns, free sibling, strict-premium flag. The canonical "what can I buy" surface for agents.)',
+        metaOfficial:
+          '/api/meta/official (free; canonical list of TensorFeed official surfaces and the one true payment address, for anti-impersonation. Verify any package, MCP server, repo, or payTo claiming to be TensorFeed here.)',
         feeds: {
           rss: '/api/feed.xml',
           json: '/api/feed.json',

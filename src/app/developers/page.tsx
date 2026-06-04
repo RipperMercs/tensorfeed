@@ -219,6 +219,22 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/meta/official',
+    description:
+      'Anti-impersonation attestation. Canonical, machine-readable list of every authentic TensorFeed surface (packages, SDKs, MCP servers, repos, dataset, well-knowns, API) plus the one true Base payment address. Verify any package or payTo claiming to be TensorFeed against this list before trusting it.',
+    cache: 'Cache for 1 hour',
+    example: `{
+  "ok": true,
+  "site": "tensorfeed.ai",
+  "payment": { "network": "base", "pay_to": "0x549c82e6..." },
+  "count": 27,
+  "surfaces": [
+    { "category": "mcp", "name": "TensorFeed data MCP server", "identifier": "@tensorfeed/mcp-server" }
+  ]
+}`,
+  },
+  {
+    method: 'GET',
     path: '/feed.xml',
     description: 'RSS 2.0 feed of the latest AI news articles. Compatible with all standard feed readers.',
     cache: 'Cache for 5 minutes',

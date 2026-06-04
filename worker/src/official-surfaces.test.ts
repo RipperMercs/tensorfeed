@@ -48,6 +48,12 @@ describe('buildOfficialSurfaces', () => {
     expect(json).not.toContain('rejected');
   });
 
+  it('uses the passed payTo and defaults to the canonical literal', () => {
+    expect(buildOfficialSurfaces('0xtest').payment.pay_to).toBe('0xtest');
+    expect(buildOfficialSurfaces().payment.pay_to).toBe('0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1');
+    expect(buildOfficialSurfaces().payment.pay_to).toBe(CANONICAL_PAY_TO);
+  });
+
   it('emits zero em dashes, en dashes, and double hyphens', () => {
     const json = JSON.stringify(out);
     expect(json).not.toContain('—');

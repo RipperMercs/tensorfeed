@@ -47,7 +47,7 @@ export const OFFICIAL_SURFACES: OfficialSurface[] = [
   { category: 'docs', name: 'AFTA canonical home', identifier: 'afta.dev', url: 'https://afta.dev', verify: 'Redirects to github.com/RipperMercs/afta, the AFTA standard repository.' },
 ];
 
-export function buildOfficialSurfaces(): {
+export function buildOfficialSurfaces(payTo: string = CANONICAL_PAY_TO): {
   ok: true;
   site: 'tensorfeed.ai';
   operator: 'Pizza Robot Studios LLC';
@@ -79,7 +79,7 @@ export function buildOfficialSurfaces(): {
     payment: {
       network: 'base',
       chain_id: 'eip155:8453',
-      pay_to: CANONICAL_PAY_TO,
+      pay_to: payTo,
       usdc_contract: USDC_BASE,
       decimals: 6,
       operator: 'Pizza Robot Studios LLC',
