@@ -5,6 +5,8 @@ import {
   recordUsageEvent,
   buildUsageReport,
   isInternalTraffic,
+  recordRequestHealth,
+  SLOW_MS,
 } from './usage-meter';
 import type { Env } from './types';
 
@@ -208,5 +210,40 @@ describe('/api/admin/usage gating contract', () => {
   });
   it('allows only the exact ADMIN_KEY', () => {
     expect(adminGateAllows('secret', 'secret')).toBe(true);
+  });
+});
+
+function fakeAeEnv() {
+  const calls: Array<{ indexes: unknown[]; blobs: unknown[]; doubles: unknown[] }> = [];
+  const env = { REQUEST_HEALTH_AE: { writeDataPoint: (d: { indexes: unknown[]; blobs: unknown[]; doubles: unknown[] }) => calls.push(d) } } as unknown as import('./types').Env;
+  return { env, calls };
+}
+
+describe('recordRequestHealth', () => {
+  it('writes a datapoint on a 5xx', () => {
+    const { env, calls } = fakeAeEnv();
+    recordRequestHealth(env, '/api/mcp', 503, 'axios/1.7', 12);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].indexes).toEqual(['/api/mcp']);
+    expect(calls[0].blobs[0]).toBe('503');
+    expect(calls[0].blobs[1]).toBe('axios');
+    expect(calls[0].doubles).toEqual([12]);
+  });
+
+  it('writes a datapoint on a slow 200', () => {
+    const { env, calls } = fakeAeEnv();
+    recordRequestHealth(env, '/api/news', 200, 'python-requests', SLOW_MS + 1000);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].doubles).toEqual([SLOW_MS + 1000]);
+  });
+
+  it('does not write on a fast 200', () => {
+    const { env, calls } = fakeAeEnv();
+    recordRequestHealth(env, '/api/status', 200, 'curl', 40);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('never throws when the binding is absent', () => {
+    expect(() => recordRequestHealth({} as import('./types').Env, '/api/x', 500, 'ua', 9999)).not.toThrow();
   });
 });

@@ -67,6 +67,12 @@ export interface Env {
   // test fixtures that build a KV-only Env do not need to stub it. In a
   // production deploy it is always present per wrangler.toml.
   USAGE_AE?: AnalyticsEngineDataset;
+  // Workers Analytics Engine: request-health telemetry. One datapoint per
+  // request that returned a 5xx OR completed slower than SLOW_MS, keyed by
+  // path. Read via the SQL API from the ADMIN_KEY-gated /api/admin/request-health
+  // view. Optional like the sibling AE bindings; recordRequestHealth no-ops when
+  // unbound, so node-env test fixtures need not stub it.
+  REQUEST_HEALTH_AE?: AnalyticsEngineDataset;
   // AE READ credentials for the admin usage view. Optional: the view degrades
   // to the KV paid summary and marks the funnel unavailable when absent (see
   // usage-meter buildUsageReport). CF_ANALYTICS_TOKEN is an Account Analytics

@@ -240,6 +240,75 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
   return { window, top_paid_endpoints, top_payers, funnel_by_endpoint, build_targets, funnel_status };
 }
 
+// Request-health threshold: a request that completes slower than this many ms
+// is recorded as a slow-path signal (the proxy for a path approaching the
+// gateway-timeout 504, which a hung worker can never self-report).
+export const SLOW_MS = 5000;
+
+// Best-effort AE write for request health. Writes ONE datapoint only when the
+// request returned a 5xx OR completed slower than SLOW_MS; otherwise no-op.
+// Never throws, never blocks. path goes in indexes; status, ua-family and the
+// UTC date in blobs; duration in doubles. A true gateway-timeout 504 (worker
+// hung, never returned) cannot be recorded here.
+export function recordRequestHealth(env: Env, path: string, status: number, ua: string, durationMs: number): void {
+  if (status < 500 && durationMs <= SLOW_MS) return;
+  try {
+    if (!env.REQUEST_HEALTH_AE) return;
+    env.REQUEST_HEALTH_AE.writeDataPoint({
+      indexes: [path.slice(0, 96)],
+      blobs: [String(status), normalizeUaFamily(ua), new Date().toISOString().slice(0, 10)],
+      doubles: [durationMs],
+    });
+  } catch {
+    // swallow: telemetry must never affect the response path
+  }
+}
+
+export interface RequestHealthReport {
+  window: string;
+  slow_ms: number;
+  top_5xx_by_path: Array<{ path: string; status: string; hits: number; max_ms: number }> | null;
+  top_slow_by_path: Array<{ path: string; slow_hits: number; avg_ms: number; max_ms: number }> | null;
+  status: 'ok' | 'unavailable';
+}
+
+// AE SQL read for the admin request-health view. Degrades gracefully to
+// "unavailable" (null arrays) when the token/account id are absent or a query
+// fails. Never throws. Mirrors queryUsageFunnel.
+export async function queryRequestHealth(env: Env, days: number): Promise<RequestHealthReport> {
+  const base: RequestHealthReport = { window: `${days}d`, slow_ms: SLOW_MS, top_5xx_by_path: null, top_slow_by_path: null, status: 'unavailable' };
+  if (!env.CF_ANALYTICS_TOKEN || !env.CF_ACCOUNT_ID) return base;
+  const run = async (sql: string): Promise<Array<Record<string, unknown>> | null> => {
+    try {
+      const resp = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/analytics_engine/sql`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`, 'Content-Type': 'text/plain' },
+          body: sql,
+          signal: AbortSignal.timeout(15_000),
+        },
+      );
+      if (!resp.ok) return null;
+      const json = (await resp.json()) as { data?: Array<Record<string, unknown>> };
+      return json.data ?? null;
+    } catch {
+      return null;
+    }
+  };
+  const fivexxSql = `SELECT index1 AS path, blob1 AS status, SUM(_sample_interval) AS hits, MAX(double1) AS max_ms FROM tf_request_health WHERE timestamp > now() - INTERVAL '${days}' DAY AND blob1 >= '500' GROUP BY path, status ORDER BY hits DESC LIMIT 100`;
+  const slowSql = `SELECT index1 AS path, SUM(_sample_interval) AS slow_hits, AVG(double1) AS avg_ms, MAX(double1) AS max_ms FROM tf_request_health WHERE timestamp > now() - INTERVAL '${days}' DAY AND double1 > ${SLOW_MS} GROUP BY path ORDER BY slow_hits DESC LIMIT 50`;
+  const [fivexx, slow] = await Promise.all([run(fivexxSql), run(slowSql)]);
+  if (fivexx === null && slow === null) return base;
+  return {
+    window: `${days}d`,
+    slow_ms: SLOW_MS,
+    top_5xx_by_path: fivexx ? fivexx.map((r) => ({ path: String(r.path), status: String(r.status), hits: Number(r.hits), max_ms: Number(r.max_ms) })) : null,
+    top_slow_by_path: slow ? slow.map((r) => ({ path: String(r.path), slow_hits: Number(r.slow_hits), avg_ms: Number(r.avg_ms), max_ms: Number(r.max_ms) })) : null,
+    status: 'ok',
+  };
+}
+
 // Analytics Engine SQL read. Returns null (graceful degrade) when the token or
 // account id are absent, or when the query fails. Never throws. The funnel is
 // external-only: events tagged internal (blob7 = '1', TF's own automated

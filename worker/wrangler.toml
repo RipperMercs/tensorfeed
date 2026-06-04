@@ -399,6 +399,15 @@ dataset = "tf_mcp_tool_calls"
 binding = "USAGE_AE"
 dataset = "tf_usage"
 
+# tf_request_health: per-request 5xx and slow-request telemetry, keyed by path.
+# One datapoint only when status >= 500 OR duration > 5000ms, so the dataset
+# stays small. AE writes are unmetered against the KV budget. Read via the SQL
+# API from the ADMIN_KEY-gated /api/admin/request-health view. The standing
+# answer to "which path is erroring or slow".
+[[analytics_engine_datasets]]
+binding = "REQUEST_HEALTH_AE"
+dataset = "tf_request_health"
+
 # CreditLedger Durable Object. Per-token DO instance owns the canonical
 # credit balance + daily-spend counter, serializing all read-modify-
 # write operations to close race conditions H-1 and H-2 from the
