@@ -106,7 +106,11 @@ function computeMomentum(series: DailyPoint[], firstSeen: string | null, fromDat
   const totalCount = series.reduce((a, s) => a + s.count, 0);
   if (totalCount === 0) return 'nascent';
   if (firstSeen && firstSeen >= fromDate) return 'nascent';
-  const sumVol = (arr: DailyPoint[]) => arr.reduce((a, s) => a + Number(s.volume_usdc), 0);
+  const sumVol = (arr: DailyPoint[]) =>
+    arr.reduce((a, s) => {
+      const v = Number(s.volume_usdc);
+      return a + (Number.isFinite(v) ? v : 0);
+    }, 0);
   const prior = sumVol(series.filter((s) => s.date < midDate));
   const recent = sumVol(series.filter((s) => s.date >= midDate));
   if (prior === 0) return recent > 0 ? 'expanding' : 'nascent';

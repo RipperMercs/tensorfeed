@@ -1,8 +1,21 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   buildX402PublisherVerdict,
   redactX402PublisherVerdictForPreview,
+  computeX402PublisherVerdict,
 } from './premium-x402-publisher-verdict';
+
+vi.mock('./x402-index/query', () => ({
+  getPublisherReceipts: vi.fn(async () => ({
+    publisher: { domain: 'a.com', pay_to_wallets: [], first_seen: '2026-05-29' },
+    window: { from: '2026-05-06', to: '2026-06-04', days: 30 },
+    rollup: { volume_usdc: '0.000000', count: 0, avg_amount: '0.000000', daily_series: [] },
+    captured_at: null,
+    has_data: false,
+    attribution: 'x',
+    license: 'CC BY 4.0',
+  })),
+}));
 
 const NOW = new Date('2026-06-04T12:00:00Z');
 
@@ -92,6 +105,43 @@ describe('buildX402PublisherVerdict', () => {
     expect(r.momentum).toBe('nascent');
   });
 
+  it('momentum steady when volume is flat across both halves', () => {
+    const r = buildX402PublisherVerdict('x402.tavily.com', entry({ first_seen: '2026-05-01' }), receipts([
+      { date: '2026-05-07', volume_usdc: '5.000000', count: 10 },
+      { date: '2026-06-01', volume_usdc: '5.000000', count: 10 },
+    ]), NOW);
+    expect(r.momentum).toBe('steady');
+  });
+
+  it('momentum expanding from a zero prior half when the recent half has volume', () => {
+    const r = buildX402PublisherVerdict('x402.tavily.com', entry({ first_seen: '2026-05-01' }), receipts([
+      { date: '2026-05-30', volume_usdc: '8.000000', count: 20 },
+    ]), NOW);
+    expect(r.momentum).toBe('expanding');
+  });
+
+  it('momentum treats a malformed volume string as zero, not NaN', () => {
+    const r = buildX402PublisherVerdict('x402.tavily.com', entry({ first_seen: '2026-05-01' }), receipts([
+      { date: '2026-05-07', volume_usdc: '5.000000', count: 10 },
+      { date: '2026-06-01', volume_usdc: 'not-a-number', count: 10 },
+    ]), NOW);
+    // prior=5, recent guarded to 0 -> contracting, never NaN-collapsed to steady
+    expect(r.momentum).toBe('contracting');
+  });
+
+  it('wallet_shared false for a plain provenance note', () => {
+    const r = buildX402PublisherVerdict('a.com', entry({ note: 'Manually seeded from the live 402 challenge.' }), receipts([]), NOW);
+    expect(r.trust.wallet_shared).toBe(false);
+  });
+
+  it('empty receipts yield the zero-evidence fallback', () => {
+    const r = buildX402PublisherVerdict('a.com', entry({ activity: 'quiet' }), receipts([], { captured_at: null }), NOW);
+    expect(r.evidence.window_days).toBe(30);
+    expect(r.evidence.count).toBe(0);
+    expect(r.evidence.daily_series).toEqual([]);
+    expect(r.capturedAt).toBeNull();
+  });
+
   it('wallet_shared true when the directory note discloses sharing', () => {
     const r = buildX402PublisherVerdict('a.com', entry({ note: 'Verified through a Base payTo wallet shared with b.com. Counts shown are the wallet total.' }), receipts([]), NOW);
     expect(r.trust.wallet_shared).toBe(true);
@@ -122,5 +172,38 @@ describe('redactX402PublisherVerdictForPreview', () => {
     expect((p as unknown as Record<string, unknown>).momentum).toBeUndefined();
     expect((p as unknown as Record<string, unknown>).trust).toBeUndefined();
     expect((p as unknown as Record<string, unknown>).evidence).toBeUndefined();
+  });
+});
+
+describe('computeX402PublisherVerdict', () => {
+  it('falls back to the directory blob captured_at when receipts lack one', async () => {
+    const env = {
+      TENSORFEED_CACHE: {
+        get: async (key: string) =>
+          key === 'x402-idx:verified'
+            ? {
+                captured_at: '2026-06-04T09:00:00Z',
+                publishers: [
+                  {
+                    domain: 'a.com',
+                    status: 'verified-settling',
+                    activity: 'quiet',
+                    pay_to_wallets: [],
+                    first_settled: '2026-05-29',
+                    last_settled: '2026-05-30',
+                    note: null,
+                    first_seen: '2026-05-29',
+                  },
+                ],
+              }
+            : null,
+        put: async () => undefined,
+      },
+    } as unknown as Parameters<typeof computeX402PublisherVerdict>[0];
+    // normalizes 'A.com' -> 'a.com', mocked receipts return captured_at:null,
+    // so capturedAt must come from the directory blob.
+    const r = await computeX402PublisherVerdict(env, 'A.com');
+    expect(r.verdict).toBe('recently_quiet');
+    expect(r.capturedAt).toBe('2026-06-04T09:00:00Z');
   });
 });
