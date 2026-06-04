@@ -10,7 +10,7 @@ import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatest
 import { captureHistory, listHistory, readHistory } from './history';
 import { cdpListDiscoveryResources } from './cdp-facilitator';
 import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
-import { deriveUsageEvent, recordUsageEvent, buildUsageReport, isInternalTraffic } from './usage-meter';
+import { deriveUsageEvent, recordUsageEvent, buildUsageReport, isInternalTraffic, recordRequestHealth, queryRequestHealth } from './usage-meter';
 import { cachedFetch } from './edge-cache';
 import aiInfraProjects from '../../data/ai-infrastructure-projects.json';
 import {
@@ -1146,6 +1146,7 @@ function chargedResponseTag(response: Response): ChargedResponseTag | null {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    const t0 = Date.now();
     // Vanity-host normalization. mcp.tensorfeed.ai is bound by wrangler.toml
     // to this worker; treat its root and /mcp paths as /api/mcp so the
     // existing dispatch (line ~1168) handles the request without duplicating
@@ -1228,6 +1229,10 @@ export default {
         if (tag) evt.wallet = tag.wallet;
         recordUsageEvent(env, evt);
       }
+      // Request-health telemetry: fires for ALL paths (not just metered ones)
+      // when the response is a 5xx or the request was slow. Same best-effort
+      // try as the usage meter; never affects the response.
+      recordRequestHealth(env, meterPath, response.status, request.headers.get('User-Agent') || '', Date.now() - t0);
       // Pilots are intentionally NOT logged to the KV rollup here. Every
       // premium endpoint, pilots included, already calls logPremiumUsage
       // exactly once inside its named handler (the per-provider incident
