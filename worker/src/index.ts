@@ -4601,6 +4601,8 @@ export default {
           fundingFederalSummary: '/api/funding/federal/summary (free; full federal AI spending snapshot for a curated AI-vendor cohort: per-vendor totals, award counts, the most recent award date per vendor, top awarding agencies, plus cohort-wide totals and the top 25 recent awards. Source USAspending.gov, public domain under the DATA Act. Precomputed daily.)',
           fundingFederalRecent: '/api/funding/federal/recent (free; the 25 newest dated federal contract and grant awards across the AI-vendor cohort, each with recipient, amount, awarding agency, award type, and date. Source USAspending.gov, public domain. Precomputed daily.)',
           premiumFundingFederalMomentum: '/api/premium/funding/federal/momentum (1 credit, AFTA-signed; one signed leadership and concentration ruling over the federal spending snapshot. Names the cohort leader and its share of total tracked federal AI award dollars, the top-2 spend concentration, the leading awarding agency, and the vendors with a dated award inside the last 120 days, plus echoed cohort totals. 36h freshness SLA, no-charge when stale.)',
+          procurementAiContracts: '/api/procurement/ai-contracts (free; the government AI procurement snapshot across the whole federal market, not a curated cohort: a keyword search of USAspending award descriptions for AI terms over the trailing 180 days, rolled up by agency demand, by vendor with an emerging-vendor flag, plus totals, unique counts, and the 25 newest dated awards. Source USAspending.gov, public domain under the DATA Act. Precomputed daily; cold-start returns an empty 200, never 503.)',
+          premiumProcurementAiContractsDemand: '/api/premium/procurement/ai-contracts/demand (1 credit, AFTA-signed; one signed demand read over the free /api/procurement/ai-contracts snapshot. Agency concentration (top-agency share of tracked AI award dollars plus the Herfindahl-Hirschman Index over ranked agencies), the emerging contractors winning AI work outside the known vendor cohort, and the top buying agencies, with echoed total dollars. captured_at is the real snapshot data time; no-charge when the snapshot is not yet captured.)',
           aiDatacenters: '/api/ai-datacenters?operator=&status=announced|under_construction|operational|expansion|paused&country=&region=&purpose=training|inference|mixed|unknown (free; hand-curated registry of publicly announced AI datacenter projects, the gigawatt-class training and inference campuses from the labs and hyperscalers. Each entry carries disclosed power (MW), capex, status, accelerator, partners, and a source_url; power and capex are disclosed values only, null where not public. Sorted operational-first.)',
           premiumAiDatacentersBuildout: '/api/premium/ai-datacenters/buildout (1 credit, AFTA-signed; aggregate over the free /api/ai-datacenters registry. Disclosed power (MW) and capex totals by operator, region, and status, plus the forward commissioning calendar of sites coming online. Curated registry, no staleness SLA.)',
           routingPreview: '/api/preview/routing',
@@ -5537,6 +5539,47 @@ export default {
         { ok: true, captured_at: snap.captured_at, source: snap.source, license: snap.license, recent: snap.recent },
         200,
         300,
+      );
+    }
+
+    // === GOVERNMENT AI PROCUREMENT (free) ===
+    // /api/procurement/ai-contracts: the full keyword-filtered AI procurement
+    // snapshot across the whole federal market (every vendor), rolled up by
+    // agency demand plus an emerging-vendor flag. The 16:23 UTC cron writes
+    // one precomputed snapshot blob to KV; this route serves it. Distinct from
+    // /api/funding/federal/summary, which name-matches a curated 8-vendor
+    // cohort. Cold-start safe: pre-first-cron it returns a 200 empty shape,
+    // never 503, so an agent always gets a parseable answer.
+    if (path === '/api/procurement/ai-contracts') {
+      const { AI_PROCUREMENT_SNAPSHOT_KEY } = await import('./ai-procurement');
+      const snap = (await env.TENSORFEED_CACHE.get(AI_PROCUREMENT_SNAPSHOT_KEY, 'json')) as
+        | import('./ai-procurement').ProcurementSnapshot
+        | null;
+      if (snap) {
+        // snap already carries ok: true (ProcurementSnapshot), so the spread
+        // alone satisfies the { ok: true, ...snapshot } contract.
+        return jsonResponse({ ...snap }, 200, 300);
+      }
+      const { PROCUREMENT_SOURCE, PROCUREMENT_LICENSE, AI_KEYWORDS } = await import('./ai-procurement');
+      return jsonResponse(
+        {
+          ok: true,
+          captured_at: null,
+          source: PROCUREMENT_SOURCE,
+          license: PROCUREMENT_LICENSE,
+          window_days: 180,
+          keywords: AI_KEYWORDS,
+          total_usd: 0,
+          total_awards: 0,
+          unique_recipients: 0,
+          unique_agencies: 0,
+          by_agency: [],
+          by_vendor: [],
+          recent: [],
+          note: 'Snapshot not yet captured; first cron run pending.',
+        },
+        200,
+        60,
       );
     }
 
@@ -9896,6 +9939,69 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: GOVERNMENT AI PROCUREMENT DEMAND (Tier 1, 1 credit) ===
+    // /api/premium/procurement/ai-contracts/demand
+    // One signed demand read over the free /api/procurement/ai-contracts
+    // snapshot: agency concentration (top-agency share of tracked AI award
+    // dollars plus the Herfindahl-Hirschman Index over all ranked agencies),
+    // the emerging contractors winning AI work outside the known vendor
+    // cohort, and the top buying agencies. Regular premium (no params), the
+    // same premiumResponse signing path as the federal momentum verdict.
+    // captured_at is the REAL snapshot data time so the freshness no-charge
+    // bills against actual data age, never build time. Cold-start safe: when
+    // the snapshot blob is missing it no-charges (empty_result), so an agent
+    // is never billed for a pre-first-cron empty answer.
+    if (path === '/api/premium/procurement/ai-contracts/demand') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { AI_PROCUREMENT_SNAPSHOT_KEY } = await import('./ai-procurement');
+      const snapshot = (await env.TENSORFEED_CACHE.get(AI_PROCUREMENT_SNAPSHOT_KEY, 'json')) as
+        | import('./ai-procurement').ProcurementSnapshot
+        | null;
+      if (!snapshot) {
+        return await premiumResponse(
+          { ok: true, captured_at: null, note: 'Snapshot not yet captured.' },
+          payment,
+          1,
+          request,
+          env,
+          'empty_result',
+        );
+      }
+
+      // Agency concentration. top_agency_share_pct is the leading agency's
+      // share of total tracked AI award dollars. hhi is the Herfindahl-
+      // Hirschman Index: the sum of every ranked agency's percent-share
+      // squared (each share as a 0-100 percent, so a single-agency market is
+      // 100^2 = 10000 and a perfectly fragmented market trends toward 0).
+      const total = snapshot.total_usd;
+      const top_agency_share_pct =
+        total > 0 ? (snapshot.by_agency[0]?.usd ?? 0) / total * 100 : 0;
+      const hhi =
+        total > 0
+          ? snapshot.by_agency.reduce((sum, a) => {
+              const sharePct = (a.usd / total) * 100;
+              return sum + sharePct * sharePct;
+            }, 0)
+          : 0;
+
+      const result = {
+        ok: true as const,
+        captured_at: snapshot.captured_at,
+        total_usd: snapshot.total_usd,
+        agency_concentration: { top_agency_share_pct, hhi },
+        top_agencies: snapshot.by_agency.slice(0, 10),
+        emerging_vendors: snapshot.by_vendor.filter((v) => v.emerging).slice(0, 15),
+        capturedAt: snapshot.captured_at,
+      };
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/procurement/ai-contracts/demand', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: CVE KEV EXPLOITATION TIMELINE (Tier 1, 1 credit) ===
     // /api/premium/cve/kev-exploitation-timeline?vendor=<name>
     // Per-vendor exploited-in-the-wild history from the bundled
@@ -14216,6 +14322,16 @@ export default {
       // /api/premium/substrate-changelog/history.
       const { captureSubstrateChangelog } = await import('./substrate-changelog/capture');
       await run('captureSubstrateChangelog', () => captureSubstrateChangelog(env));
+    } else if (cron === '23 16 * * *') {
+      // Daily 16:23 UTC: government AI procurement capture. One USAspending
+      // keyword search across every vendor for AI contract awards over the
+      // trailing 180 days, rolled up by agency demand plus an emerging-vendor
+      // flag, written to ai-procurement:snapshot. Best-effort by design
+      // (never throws). Powers free /api/procurement/ai-contracts + premium
+      // /api/premium/procurement/ai-contracts/demand. Slot 16:23 is
+      // collision-free (hour 16 empty, minute 23 odd/not-mult-5/not-27).
+      const { captureAiProcurement } = await import('./ai-procurement');
+      await run('captureAiProcurement', () => captureAiProcurement(env));
     } else if (cron === '35 6 * * *') {
       // Daily 06:35 UTC: crawl every seed publisher's /.well-known/x402.json,
       // merge first_seen across re-crawls, write the wallet allowlist +

@@ -333,6 +333,17 @@ crons = [
   # rather than 06:30 because 06:30 is already held by the CISA KEV cron;
   # 06:35 is unused by any other cron in this file.
   "35 6 * * *",
+  # Daily 16:23 UTC: capture the government AI procurement snapshot
+  # (worker/src/ai-procurement.ts). One USAspending keyword search across
+  # every vendor for AI contract awards over the trailing 180 days, rolled
+  # up by agency demand plus an emerging-vendor flag, written to
+  # ai-procurement:snapshot. Powers free /api/procurement/ai-contracts and
+  # premium /api/premium/procurement/ai-contracts/demand (1 credit). Slot
+  # 16:23 is collision-free: hour 16 is unused by any fixed-time cron, minute
+  # 23 is odd (dodges */2), not a multiple of 5 (dodges */5, */10, */15), not
+  # minute 0 (dodges 0 * * * *), and not 27 (dodges the 27 * * * * x402
+  # probe), so event.cron there is unambiguously "23 16 * * *".
+  "23 16 * * *",
   # Every 5 min: a bare trigger whose only job is to make scheduled() fire at
   # :05/:25/:35/:55, the multiples of 5 that no other cron covers. The
   # x402-index settlement indexer (cursor read, Base USDC Transfer logs
