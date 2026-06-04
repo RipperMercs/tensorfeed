@@ -47,6 +47,12 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // every block-processing tick, even in a quiet period), so a stale captured_at
   // means a real indexer outage and triggers a no-charge.
   '/api/premium/x402-settlement-verdict': { maxAgeSeconds: 10 * 60 },
+  // x402 publisher verdict: single-publisher trust ruling over the same x402
+  // settlement index (verified directory blob + the publisher's 30-day receipts).
+  // 10-min SLA matches the settlement verdict and the x402-index family: the
+  // 5-min indexer cron advances captured_at on every tick, so a stale captured_at
+  // means a real indexer outage and triggers a no-charge.
+  '/api/premium/x402-publisher-verdict': { maxAgeSeconds: 10 * 60 },
   // Stack Safety Verdict: derived over the ingested AI-CVE batch (DP CC
   // pipeline cadence) joined to CISA KEV. 10-day SLA matches the ai-cves
   // batch SLA, so a stale CVE batch triggers a no-charge.

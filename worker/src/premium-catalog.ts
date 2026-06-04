@@ -682,6 +682,16 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'x402',
   },
+  {
+    path: '/api/premium/x402-publisher-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [{ name: 'domain', required: true }],
+    returns: 'Signed trust verdict on a single x402 publisher: whether its Base payTo is actively settling, its 30-day settlement momentum, and a shared-wallet risk flag, with the settlement evidence.',
+    free_sibling: '/api/preview/x402-publisher-verdict',
+    signed: true,
+    category: 'x402',
+  },
 
   // === MCP ===
   {

@@ -3264,6 +3264,90 @@ const X402_SETTLEMENT_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 33 (2026-06-04): x402-publisher-verdict. Signed single-publisher trust
+// ruling over the same x402 settlement index as the ecosystem verdict, scoped
+// to one domain: whether its Base payTo is actively settling, its 30-day
+// settlement momentum, a shared-wallet risk flag, and the settlement evidence.
+// Param-required (?domain=). Free taste at /api/preview/x402-publisher-verdict.
+const X402_PUBLISHER_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'x402 Publisher Trust Verdict. Pass one publisher domain and get a signed ruling on whether it is safe to pay: is its Base payTo wallet actively settling USDC (on-chain settlement inside the last 14 days), what is its 30-day settlement momentum (expanding, steady, contracting, or nascent), and is the wallet shared with another publisher so the counts cannot be split. Returns the verdict, the momentum, a trust block with the registered payTo wallets and first/last settled dates, and the settlement evidence (30-day volume, count, and daily series), plus an AFTA-signed receipt. Computed over TensorFeed\'s own index of Base USDC settlements, not a market-wide claim. The "should I trust this x402 publisher" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { domain: 'x402.tavily.com' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-06-04T11:55:00Z',
+            domain: 'x402.tavily.com',
+            verdict: 'actively_settling',
+            momentum: 'expanding',
+            trust: {
+              wallet_shared: false,
+              disclosure: null,
+              pay_to_wallets: ['0xc78f83c13ba79be3781e7c5f658d1341729515b0'],
+              first_seen: '2026-05-29',
+              first_settled: '2026-05-29',
+              last_settled: '2026-06-03',
+            },
+            evidence: {
+              window_days: 30,
+              volume_usdc: '12.500000',
+              count: 40,
+              avg_amount: '0.312500',
+              daily_series: [
+                { date: '2026-05-29', volume_usdc: '5.000000', count: 16 },
+                { date: '2026-06-03', volume_usdc: '7.500000', count: 24 },
+              ],
+            },
+            claim:
+              'x402.tavily.com is actively settling USDC on Base: a verified payTo wallet with on-chain settlement inside the last 14 days.',
+            notes: [
+              'TF indexes x402 settlement on Base forward-only from 2026-05-28; windows that predate that read as empty.',
+            ],
+            attribution: { sources: ['Base mainnet USDC Transfer events (on-chain)'], license: 'CC BY 4.0' },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  domain: {
+                    type: 'string',
+                    description:
+                      'Publisher domain to rule on (e.g. x402.tavily.com). Canonicalized server-side; case-insensitive. Required.',
+                  },
+                },
+                required: ['domain'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 // Wave 21 (2026-05-28): stack-safety-verdict. GO/HOLD/BLOCK deploy gate
 // over a package list, fusing the ingested AI-CVE batch with CISA KEV.
 // Free taste at /api/preview/stack-safety-verdict. Total pilot count: 45 -> 46.
@@ -6333,6 +6417,10 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // Wave 32 (2026-06-02): HF Leaderboard Movers. Period-over-period diff of the
   // Open LLM Leaderboard v2 over TF dated snapshots. Optional window param.
   '/api/premium/hf-leaderboard/movers': HF_LEADERBOARD_MOVERS_PILOT,
+  // Wave 33 (2026-06-04): x402-publisher-verdict. Signed single-publisher trust
+  // ruling over the x402 settlement index, scoped to one domain. Param-required
+  // (?domain=). Free taste at /api/preview/x402-publisher-verdict.
+  '/api/premium/x402-publisher-verdict': X402_PUBLISHER_VERDICT_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

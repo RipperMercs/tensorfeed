@@ -68,6 +68,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // the leading publisher. Reads optional ?window=, so strict-premium gates
   // anonymous crawlers to a clean 402. Free taste at /api/preview/x402-settlement-verdict.
   '/api/premium/x402-settlement-verdict',
+  // x402 publisher verdict (2026-06-04). Signed single-publisher trust ruling
+  // over the same x402 settlement index: whether one domain's Base payTo is
+  // actively settling, its 30-day momentum, and a shared-wallet risk flag.
+  // Param-required (?domain=), so strict-premium gates anonymous crawlers to a
+  // clean 402 instead of a free-trial 400 missing_params. Free taste at
+  // /api/preview/x402-publisher-verdict. Exact path (domain is a query param).
+  '/api/premium/x402-publisher-verdict',
   // Stack Safety Verdict (2026-05-28). GO/HOLD/BLOCK deploy gate over a
   // package list, fusing the ingested AI-CVE batch + CISA KEV. Param-
   // required (?packages=), so strict-premium gates anonymous crawlers to a
