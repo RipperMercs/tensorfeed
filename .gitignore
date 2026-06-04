@@ -74,12 +74,14 @@ mcp-server/registry/
 .playwright-mcp/
 
 # Internal-only docs (Pizza Robot Studios public-repo policy).
-# Public-facing READMEs and CHANGELOGs are still tracked; these three
+# Public-facing READMEs and CHANGELOGs are still tracked; these
 # leak internal strategy / architecture / maintainer-only ops, so they
 # live locally only.
 CLAUDE.md
 docs/ARCHITECTURE.md
 sdk/python/PUBLISHING.md
+docs/WRITING.md
+docs/restore-from-backup.md
 
 # Local-only spec / planning files (public-repo policy)
 specs/
