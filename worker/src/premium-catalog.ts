@@ -415,6 +415,17 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'security',
   },
+  {
+    path: '/api/premium/security/ssvc-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [{ name: 'cve', required: true }],
+    returns:
+      'The CISA SSVC Coordinator decision (Act, Attend, Track, or Track*) for one CVE, computed from the recorded decision points and returned as the full low/medium/high Mission and Well-being envelope with a per-level reasoning trace.',
+    free_sibling: '/api/preview/security/ssvc-verdict',
+    signed: true,
+    category: 'security',
+  },
 
   // === SEC ===
   {
