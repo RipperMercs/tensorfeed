@@ -116,6 +116,9 @@ jobs:
             echo "No freshness changes this week."
             exit 0
           fi
+          # claude-code-action rewrites origin to its own short-lived OIDC app token,
+          # which is revoked by the time we get here. Re-point origin at GITHUB_TOKEN.
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git push -u origin HEAD
           gh pr create --base main --head "$(git branch --show-current)" \
             --title "freshness: weekly curated-page review" \
