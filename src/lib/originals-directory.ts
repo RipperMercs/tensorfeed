@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'deepseek-maiden-funding-round-59-billion',
+    title:
+      'DeepSeek Took Its First Outside Money. The $59 Billion Price Tells You What Open Weights Are Worth.',
+    author: 'Kira Nolan',
+    date: 'June 4, 2026',
+    readTime: '7 min read',
+    description:
+      "DeepSeek is reportedly raising about 50 billion yuan ($7.4 billion) in its first ever external funding round at a post-money valuation between $52 billion and $59 billion. Founder Liang Wenfeng, who controls nearly 90 percent of the company, is committing 20 billion yuan himself; Tencent (~10B yuan) and battery giant CATL (~5B yuan) are weighing the largest outside checks, with NetEase, JD.com, IDG Capital, Monolith, and state-backed AI funds also in the syndicate. The lab that shipped V4 under MIT and famously refused outside capital is now priced at roughly six percent of Anthropic's $965 billion. Inside the round composition, the three readings of that valuation gap (open weights monetize worse, the China discount, a negotiated industrial-policy number), why CATL in the cap table is the energy-compute convergence tell, what it means for builders on DeepSeek's 20x to 30x API discount, and three signposts over the next ninety days.",
+  },
+  {
     slug: 'card-networks-base-settlement-agents',
     title:
       'Mastercard Will Settle Cards on Eight Chains. Base Is the One Where Agents Already Pay Each Other.',
