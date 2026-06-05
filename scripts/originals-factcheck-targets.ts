@@ -22,7 +22,7 @@ function main(): void {
     const slugs = new Set(extractChangedSlugs(changed));
     entries = ORIGINALS.filter((e) => slugs.has(e.slug));
   } else {
-    entries = selectWeeklyTargets(ORIGINALS, todayMs, 14);
+    entries = selectWeeklyTargets(ORIGINALS, todayMs, 7);
   }
 
   const targets = entries.map((e) => ({

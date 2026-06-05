@@ -8,7 +8,8 @@ name: Originals Fact-Check Agent
 #
 # Two triggers feed one agent step through targets.json:
 #   - push to main touching src/app/originals/** -> check the changed articles
-#   - weekly cron -> re-check articles published in the last 14 days
+#   - weekly cron -> re-check articles published in the last 7 days (drift backstop; the
+#     on-publish trigger is the thorough per-article gate the day each article ships)
 #
 # Prerequisites (already satisfied for the freshness agent): repo secret
 # CLAUDE_CODE_OAUTH_TOKEN, the Claude GitHub App, and the repo toggle
@@ -24,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "weekly (last 14 days) for a watched manual run"
+        description: "weekly (last 7 days) for a watched manual run"
         default: "weekly"
 
 permissions:
