@@ -12,6 +12,11 @@
       "cadence": "weekly",
       "notes": "New projects added when announced; updates when status (announced/permitted/construction/operational) changes."
     },
+    "/ai-crawler-access": {
+      "last_reviewed": "2026-06-02",
+      "cadence": "weekly",
+      "notes": "Aggregate numbers refresh from the daily crawl via the live summary endpoint. This stamp tracks editorial review of the methodology and seed universe (worker/src/ai-crawler-access-seeds.ts)."
+    },
     "/timeline": {
       "last_reviewed": "2026-05-13",
       "cadence": "monthly",

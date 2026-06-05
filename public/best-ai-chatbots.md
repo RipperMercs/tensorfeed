@@ -1,12 +1,15 @@
 # Best AI Chatbots Compared (2026)
 
 > Source: https://tensorfeed.ai/best-ai-chatbots
-> Last generated: 2026-04-18
+> Last generated: 2026-06-05
 
-Last Updated: March 2026
+())}
+      />
+
+      Last Updated: May 31, 2026
 
       # 
-        Best AI Chatbots Compared (2026)
+        AI Chatbot Comparison 2026: Claude vs ChatGPT vs Gemini
 
           The best AI chatbots in 2026 are Claude (best for reasoning and coding), ChatGPT (best
           for general use and plugins), and Gemini (best for Google ecosystem integration). Each
@@ -34,13 +37,24 @@ Last Updated: March 2026
                 | Paid Price 
                 | Context 
                 | Free Tier 
+                | Live Status 
               |
 
-                  |  
-                  | Yes 
-                |
+              ;
+                const statusHref = STATUS_LINKS[bot.name];
+                return (
 
-              ))}
+                    |  
+                    |  
+                    |  
+                    |  
+                    | Yes 
+                    | 
+
+                  |
+
+                );
+              })}
 
         ## Detailed Reviews
 
@@ -181,25 +195,72 @@ Last Updated: March 2026
 
             ### Which AI chatbot is the smartest?
 
-              Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude leads on
-              coding tasks and instruction following, while ChatGPT excels at creative tasks and has
-              the broadest plugin ecosystem.
+              Claude and ChatGPT consistently score highest on reasoning benchmarks. Claude Opus 4.7 leads on
+              coding and complex instruction following with a 1M token context window. GPT-5.5 leads on
+              creative tasks, multimodal input, and has the broadest plugin ecosystem.
 
             ### Which AI chatbot is free?
 
-              All major chatbots offer free tiers: ChatGPT Free, Claude Free, Gemini Free, and
-              Perplexity Free. Paid plans ($20/mo range) unlock more capable models and higher usage limits.
+              All major chatbots offer free tiers: ChatGPT Free (GPT-4o-mini and limited GPT-4o), Claude Free
+              (Sonnet, with daily message caps), Gemini Free (Flash with 1M context), and Perplexity Free
+              (mixed underlying models). Paid plans land around $20/month and unlock the flagship models plus
+              higher usage limits.
 
             ### Is ChatGPT better than Claude?
 
-              It depends on the task. ChatGPT has more integrations and plugins. Claude is generally
-              better at coding, reasoning, long documents, and following complex instructions. Both are
-              excellent general-purpose assistants.
+              It depends on the task. ChatGPT has more integrations, plugins, custom GPTs, and a built-in
+              image generator. Claude is generally better at coding, careful reasoning, long documents, and
+              following complex multi-step instructions. Both are excellent general-purpose assistants and
+              most power users keep tabs open for both.
 
             ### What is the best AI chatbot for coding?
 
               Claude is widely considered the best chatbot for coding, especially with Claude Code for
-              terminal-based development. ChatGPT and Gemini are also strong alternatives.
+              terminal-based development. It produces cleaner code, follows project conventions more
+              consistently, and is less likely to invent APIs that do not exist. ChatGPT and Gemini are
+              strong alternatives. For a deep look at coding-specific tools see our 
+
+                best AI coding tools
+
+              guide.
+
+            ### Is Claude down right now?
+
+              You can check live Claude API status on our 
+
+                Claude status page
+
+              which polls Anthropic every two minutes. We track every major chatbot the same way: 
+              ChatGPT, 
+              Gemini, 
+              Perplexity, 
+              Copilot.
+              When one chatbot goes down, you can switch to another from this comparison while the outage clears.
+
+            ### Which AI chatbot has the largest context window?
+
+              As of May 2026, three chatbots support 1 million token context windows: Claude Opus 4.7,
+              GPT-5.5, and Gemini 2.5 Pro. One million tokens is roughly 750,000 words, enough to fit an
+              entire mid-sized codebase or several full books in a single conversation. Gemini was first to
+              ship 1M context; Claude was last to add it (Opus 4.7, April 2026), closing the long-context gap.
+
+            ### What is the cheapest AI chatbot?
+
+              For end users, every major chatbot has a free tier. Gemini's free tier is the most
+              capable. For developers calling APIs directly, the cheapest hosted models cost roughly 
+
+                $0.02 per million input tokens
+
+              today, on the OpenRouter open shelf. Flagship chat models like Claude Opus 4.7 cost $15 per
+              million input tokens, which is roughly 880x the floor.
+
+            ### Should I pay for ChatGPT, Claude, or Gemini?
+
+              If you mostly want long-document analysis and Google Workspace integration, pay for Gemini
+              Advanced. If you mostly want creative work and an ecosystem of custom GPTs and plugins, pay
+              for ChatGPT Plus. If you mostly want careful coding, complex reasoning, and quality writing,
+              pay for Claude Pro. All three are $20 per month. Many serious users pay for two of the three
+              and rotate.
 
         ## Related Guides
 

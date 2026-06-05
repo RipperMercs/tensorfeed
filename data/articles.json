@@ -1,65 +1,9 @@
 {
   "articles": [
     {
-      "id": "urxwlv",
-      "title": "Open-source spectre haunts the AI feast",
-      "url": "https://www.reuters.com/commentary/breakingviews/open-source-spectre-haunts-ai-feast-2026-05-28/",
-      "source": "Hacker News AI",
-      "sourceIcon": "/images/sources/hackernews.png",
-      "sourceDomain": "reuters.com",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-05-31T18:23:25.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
-    },
-    {
-      "id": "a0utfl",
-      "title": "The math world is losing its mind over the new AI solution to an Erdős problem",
-      "url": "https://www.wsj.com/tech/ai/ai-math-solves-erdos-problem-openai-c4029e84",
-      "source": "Hacker News AI",
-      "sourceIcon": "/images/sources/hackernews.png",
-      "sourceDomain": "wsj.com",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-05-31T18:23:21.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
-    },
-    {
-      "id": "bqc85n",
-      "title": "Sandboxes and Worktrees: My Secure Agentic AI Setup",
-      "url": "https://mikemcquaid.com/sandboxed-agent-worktrees-my-coding-and-ai-setup-in-2026/",
-      "source": "Hacker News AI",
-      "sourceIcon": "/images/sources/hackernews.png",
-      "sourceDomain": "mikemcquaid.com",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-05-31T17:39:07.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
-    },
-    {
-      "id": "amxmek",
-      "title": "\"AI is as big a deal as the internet or mobile–and only as big.\" Benedict Evans [video]",
-      "url": "https://www.youtube.com/watch?v=BD3vLtWhT5A",
-      "source": "Hacker News AI",
-      "sourceIcon": "/images/sources/hackernews.png",
-      "sourceDomain": "youtube.com",
-      "snippet": "",
-      "categories": [
-        "Community"
-      ],
-      "publishedAt": "2026-05-31T17:28:06.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
-    },
-    {
-      "id": "x5wzr7",
-      "title": "Git-courer – A complete, JSON-first Git layer for LLM agents",
-      "url": "https://github.com/Alejandro-M-P/git-courer",
+      "id": "e9917q",
+      "title": "Aisop – Define AI agent workflows as Mermaid or JSON flow graphs",
+      "url": "https://github.com/AIXP-Labs/AISOP",
       "source": "Hacker News AI",
       "sourceIcon": "/images/sources/hackernews.png",
       "sourceDomain": "github.com",
@@ -67,340 +11,1169 @@
       "categories": [
         "Community"
       ],
-      "publishedAt": "2026-05-31T17:27:16.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
+      "publishedAt": "2026-06-05T02:28:02.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
     },
     {
-      "id": "he234r",
-      "title": "GrillKit – Self-hosted AI trainer for technical interviews with voice",
-      "url": "https://github.com/GrillKit/grillkit",
+      "id": "d52ter",
+      "title": "A Vector Lakebase is all you need for all AI workloads",
+      "url": "https://zilliz.com/blog/from-vector-database-to-vector-lakebase",
       "source": "Hacker News AI",
       "sourceIcon": "/images/sources/hackernews.png",
-      "sourceDomain": "github.com",
+      "sourceDomain": "zilliz.com",
       "snippet": "",
       "categories": [
         "Community"
       ],
-      "publishedAt": "2026-05-31T17:21:19.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
+      "publishedAt": "2026-06-05T02:20:54.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
     },
     {
-      "id": "kh55n",
-      "title": "DDS Vibe Academy – 49 free AI coding classes (12 new masterclasses this week)",
-      "url": "https://ddsboston.com/pages/dds-vibe-academy",
+      "id": "jtvbj2",
+      "title": "Dirk and Linus discuss AI and kernel development",
+      "url": "https://lwn.net/Articles/1073761/",
       "source": "Hacker News AI",
       "sourceIcon": "/images/sources/hackernews.png",
-      "sourceDomain": "ddsboston.com",
+      "sourceDomain": "lwn.net",
       "snippet": "",
       "categories": [
         "Community"
       ],
-      "publishedAt": "2026-05-31T17:15:07.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
+      "publishedAt": "2026-06-05T01:54:39.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
     },
     {
-      "id": "bwblf8",
-      "title": "AI guardrails stripped from Meta and Google models in minutes",
-      "url": "https://www.ft.com/content/5630ed79-a263-41ed-9a1a-321617ae310e",
+      "id": "hj2r1w",
+      "title": "Mathematicians warn of AI threats to profession as industry encroaches",
+      "url": "https://arstechnica.com/tech-policy/2026/06/mathematicians-warn-of-ai-threats-to-profession-as-industry-encroaches/",
       "source": "Hacker News AI",
       "sourceIcon": "/images/sources/hackernews.png",
-      "sourceDomain": "ft.com",
+      "sourceDomain": "arstechnica.com",
       "snippet": "",
       "categories": [
         "Community"
       ],
-      "publishedAt": "2026-05-31T17:09:17.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
+      "publishedAt": "2026-06-05T01:52:38.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
     },
     {
-      "id": "qrzxc4",
-      "title": "Why AI safety researchers should consider a contract research manager position",
-      "url": "https://www.lesswrong.com/posts/MjFArZa85KydKdivh/why-ai-safety-researchers-should-consider-a-contract",
+      "id": "q2gcas",
+      "title": "AI should earn its keep: Introducing the AI Productivity Guarantee",
+      "url": "https://cognition.ai/blog/ai-guarantee",
       "source": "Hacker News AI",
       "sourceIcon": "/images/sources/hackernews.png",
-      "sourceDomain": "lesswrong.com",
+      "sourceDomain": "cognition.ai",
       "snippet": "",
       "categories": [
         "Community"
       ],
-      "publishedAt": "2026-05-31T17:03:46.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
+      "publishedAt": "2026-06-05T01:51:29.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
     },
     {
-      "id": "o01tcw",
-      "title": "OpenJarvis: Personal AI, on Personal Devices",
-      "url": "https://github.com/open-jarvis/OpenJarvis",
+      "id": "aqqvcs",
+      "title": "AI assistant shouldn't have your passwords",
+      "url": "https://bitwarden.com/blog/how-bitwarden-helps-secure-agentic-ai-access-to-your-credentials/",
       "source": "Hacker News AI",
       "sourceIcon": "/images/sources/hackernews.png",
-      "sourceDomain": "github.com",
+      "sourceDomain": "bitwarden.com",
       "snippet": "",
       "categories": [
         "Community"
       ],
-      "publishedAt": "2026-05-31T17:02:56.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.533Z"
+      "publishedAt": "2026-06-05T01:29:41.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
     },
     {
-      "id": "3q29eh",
-      "title": "Asus vs. Acer: I've reviewed laptops from both brands for years, and here's my pick",
-      "url": "https://www.zdnet.com/article/acer-vs-asus-laptops/",
+      "id": "teaxug",
+      "title": "Anthropic calls for global pause in AI development before humans lose control",
+      "url": "https://siliconangle.com/2026/06/04/anthropic-calls-global-pause-ai-development-humans-lose-control/",
+      "source": "Hacker News AI",
+      "sourceIcon": "/images/sources/hackernews.png",
+      "sourceDomain": "siliconangle.com",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-06-05T01:23:41.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
+    },
+    {
+      "id": "bz29em",
+      "title": "LLM AI Chatbots are letting me down every single day",
+      "url": "https://umrashrf.github.io/llm-ai-chatbots-are-letting-me-down-every-single-day/",
+      "source": "Hacker News AI",
+      "sourceIcon": "/images/sources/hackernews.png",
+      "sourceDomain": "umrashrf.github.io",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-06-05T01:13:11.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
+    },
+    {
+      "id": "vzm5bj",
+      "title": "Jo – Secure Programming for the AI Era",
+      "url": "https://jo-lang.org/blog/2026-06-04-introducing-jo.html",
+      "source": "Hacker News AI",
+      "sourceIcon": "/images/sources/hackernews.png",
+      "sourceDomain": "jo-lang.org",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-06-05T00:56:04.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
+    },
+    {
+      "id": "opbstd",
+      "title": "Show HN: Bonsai –- Using agentic AI / browser / memory to replace ChatGPT",
+      "url": "https://drive.google.com/drive/folders/1YUQ3tmcBSLEyBKLi5JdJgmod9mqXFTgl",
+      "source": "Hacker News AI",
+      "sourceIcon": "/images/sources/hackernews.png",
+      "sourceDomain": "drive.google.com",
+      "snippet": "",
+      "categories": [
+        "Community"
+      ],
+      "publishedAt": "2026-06-05T00:51:07.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.525Z"
+    },
+    {
+      "id": "7af6vd",
+      "title": "A day later with Oura Ring 5, I can't believe how much of an upgrade it's been from Ring 4",
+      "url": "https://www.zdnet.com/article/oura-ring-5-hands-on-review/",
       "source": "ZDNet AI",
       "sourceIcon": "/images/sources/zdnet.png",
       "sourceDomain": "zdnet.com",
-      "snippet": "Acer and Asus both have tried and tested PC options, but they excel in different areas. Let's break down the major differences.",
+      "snippet": "The Oura Ring 5's best upgrade is also the most subtle one.",
       "categories": [
         "Enterprise",
         "General AI"
       ],
-      "publishedAt": "2026-05-31T16:00:42.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
+      "publishedAt": "2026-06-05T00:32:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
     },
     {
-      "id": "ezq3ki",
-      "title": "I've used Android Auto with Gemini for 2 months now - it's transformed my drives in 4 ways",
-      "url": "https://www.zdnet.com/article/how-gemini-in-android-auto-is-changing-my-daily-drive/",
+      "id": "2ong4l",
+      "title": "Dashlane explains how attackers managed to download encrypted password vaults",
+      "url": "https://arstechnica.com/security/2026/06/dashlane-explains-how-attackers-managed-to-download-encrypted-password-vaults/",
+      "source": "Ars Technica",
+      "sourceIcon": "/images/sources/arstechnica.png",
+      "sourceDomain": "arstechnica.com",
+      "snippet": "By targeting large numbers of users, attackers increased their chances of success.",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T20:02:04.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.106Z"
+    },
+    {
+      "id": "gt158j",
+      "title": "This 65-inch Hisense TV is $130 off ahead of Prime Day - and I highly recommend it",
+      "url": "https://www.zdnet.com/article/hisense-u6-mini-led-tv-amazon-prime-day-deal-2026/",
       "source": "ZDNet AI",
       "sourceIcon": "/images/sources/zdnet.png",
       "sourceDomain": "zdnet.com",
-      "snippet": "Gemini has made voice control in my car fun and useful, and I'm still discovering new ways to use it.",
+      "snippet": "Multiple screen sizes of one of Hisense's latest 4K Smart TVs are on sale right now.",
       "categories": [
         "Enterprise",
         "General AI"
       ],
-      "publishedAt": "2026-05-31T14:00:43.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
+      "publishedAt": "2026-06-04T19:54:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
     },
     {
-      "id": "jt5z50",
-      "title": "How I turned my old Android phone into a Wi-Fi extender - and fixed dead spots at home",
-      "url": "https://www.zdnet.com/article/how-to-turn-android-phone-into-wifi-extender-for-free/",
+      "id": "2wg1n1",
+      "title": "Amazon is selling a 2TB Samsung SSD for nearly 40% off right now - and it's plenty fast for PC",
+      "url": "https://www.zdnet.com/article/samsung-990-pro-ssd-deal-2026/",
       "source": "ZDNet AI",
       "sourceIcon": "/images/sources/zdnet.png",
       "sourceDomain": "zdnet.com",
-      "snippet": "The process is free, easy to set up, and doesn't use mobile data while helping you avoid upgrading to a mesh network.",
+      "snippet": "Samsung's flagship 990 Pro SSD just dropped to a near-record low price.",
       "categories": [
         "Enterprise",
         "General AI"
       ],
-      "publishedAt": "2026-05-31T13:00:37.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
+      "publishedAt": "2026-06-04T19:34:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
     },
     {
-      "id": "c3h3ag",
-      "title": "I went looking for the AI weed vape that gives you Bitcoin for smoking",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/933916/ai-powered-crypto-cannabis-vape",
-      "source": "The Verge AI",
-      "sourceIcon": "/images/sources/verge.png",
-      "sourceDomain": "theverge.com",
-      "snippet": "The crypto weed vape found me on 4/20, the high holiday of cannabis enthusiasts everywhere. It arrived over Slack with the thumbnail of a man exhaling a plume of vapor, the words \"every hit delivers Bitcoin\" emblazoned across it. It claimed to be...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-31T13:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
-    },
-    {
-      "id": "c99901",
-      "title": "Your TV's RS-232 port is a versatile automation tool - how to unlock its full potential",
-      "url": "https://www.zdnet.com/article/what-is-the-tvs-rss232-serial-port-and-what-it-can-do/",
+      "id": "3oz9yv",
+      "title": "How to clear your Android phone cache - the 30-second routine every user should be doing",
+      "url": "https://www.zdnet.com/article/how-to-clear-android-phone-cache/",
       "source": "ZDNet AI",
       "sourceIcon": "/images/sources/zdnet.png",
       "sourceDomain": "zdnet.com",
-      "snippet": "The RS-232 serial port on your smart TV isn't just for professional diagnostics. Here's how to use it for more advanced programming.",
+      "snippet": "This simple adjustment can effectively boost speed and responsiveness on almost any device - Google and Samsung included.",
       "categories": [
         "Enterprise",
         "General AI"
       ],
-      "publishedAt": "2026-05-31T11:00:41.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
+      "publishedAt": "2026-06-04T19:04:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
     },
     {
-      "id": "rwol5k",
-      "title": "Quantum computing looms, and your security is nowhere near ready",
-      "url": "https://www.zdnet.com/article/as-quantum-computing-emerges-some-hard-deadlines-loom/",
-      "source": "ZDNet AI",
-      "sourceIcon": "/images/sources/zdnet.png",
-      "sourceDomain": "zdnet.com",
-      "snippet": "Quantum is coming soon to an enterprise near you. But that shift brings significant security concerns.",
+      "id": "3v9ceo",
+      "title": "Nemotron 3.5 Content Safety: Customizable Multimodal Safety for Global Enterprise AI",
+      "url": "https://huggingface.co/blog/nvidia/nemotron-3-5-content-safety",
+      "source": "Hugging Face Blog",
+      "sourceIcon": "/images/sources/huggingface.png",
+      "sourceDomain": "huggingface.co",
+      "snippet": "",
       "categories": [
-        "Enterprise",
-        "General AI"
+        "Open Source",
+        "Models"
       ],
-      "publishedAt": "2026-05-31T10:00:49.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
+      "publishedAt": "2026-06-04T18:57:45.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
     },
     {
-      "id": "z4rx7k",
-      "title": "This hidden FaceTime feature is incredibly useful - and surprised my own family",
-      "url": "https://www.zdnet.com/article/facetime-voicemail-feature-incredibly-useful-surprised-family/",
-      "source": "ZDNet AI",
-      "sourceIcon": "/images/sources/zdnet.png",
-      "sourceDomain": "zdnet.com",
-      "snippet": "If someone missed your FaceTime call, try leaving them a video message. Here's how.",
-      "categories": [
-        "Enterprise",
-        "General AI"
-      ],
-      "publishedAt": "2026-05-31T10:00:36.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
-    },
-    {
-      "id": "ppgsum",
-      "title": "How Turkey Hacked the Hair Transplant Industry",
-      "url": "https://www.wired.com/story/how-turkey-hacked-the-hair-transplant-industry/",
+      "id": "4efk59",
+      "title": "The AI IPO Race Heats Up, DOGE Whistleblower Sues Elon Musk, and Instagram Gets Hacked",
+      "url": "https://www.wired.com/story/uncanny-valley-podcast-ai-ipo-race-elon-musk-doge-whistleblower-instagram-hacking-incident/",
       "source": "WIRED AI",
       "sourceIcon": "/images/sources/wired.png",
       "sourceDomain": "wired.com",
-      "snippet": "From specialized motors to the use of machine learning algorithms, Turkey’s billion-dollar hair-transplant industry is the result of a constant process of innovation.",
+      "snippet": "On Uncanny Valley, we dive into the IPO bonanza that the top AI companies are embarking on to the point where some real estate listings are looking for not just regular old cash, but Anthropic stock.",
       "categories": [
         "General AI"
       ],
-      "publishedAt": "2026-05-31T09:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
+      "publishedAt": "2026-06-04T18:44:49.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
     },
     {
-      "id": "rdr56j",
-      "title": "Why I switched to MyRadar as my main Android Auto weather app for road trip storm tracking",
-      "url": "https://www.zdnet.com/article/best-android-auto-weather-apps/",
-      "source": "ZDNet AI",
-      "sourceIcon": "/images/sources/zdnet.png",
-      "sourceDomain": "zdnet.com",
-      "snippet": "There aren't many weather apps for Android Auto, but there's one that easily rises above the rest.",
-      "categories": [
-        "Enterprise",
-        "General AI"
-      ],
-      "publishedAt": "2026-05-31T09:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
-    },
-    {
-      "id": "o8m385",
-      "title": "I'm an iPhone user who switches to Gemini with Android Auto in the car - why I don't regret it",
-      "url": "https://www.zdnet.com/article/gemini-with-android-auto-beats-siri-in-car-heres-why/",
-      "source": "ZDNet AI",
-      "sourceIcon": "/images/sources/zdnet.png",
-      "sourceDomain": "zdnet.com",
-      "snippet": "Gemini can help with a variety of tasks when behind the wheel. All you need is an Android phone and a car with Android Auto.",
-      "categories": [
-        "Enterprise",
-        "General AI"
-      ],
-      "publishedAt": "2026-05-31T00:00:41.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
-    },
-    {
-      "id": "y6whqo",
-      "title": "This Lenovo Yoga model I tested may be the most overlooked business laptop in 2026",
-      "url": "https://www.zdnet.com/article/lenovo-yoga-slim-7x-review/",
-      "source": "ZDNet AI",
-      "sourceIcon": "/images/sources/zdnet.png",
-      "sourceDomain": "zdnet.com",
-      "snippet": "The Slim 7x (2026) has impressive performance improvements, but its target user - the modern professional - remains the same.",
-      "categories": [
-        "Enterprise",
-        "General AI"
-      ],
-      "publishedAt": "2026-05-30T16:00:42.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
-    },
-    {
-      "id": "wou91p",
-      "title": "How one founder’s bet on ‘the old school web’ is paying off",
-      "url": "https://www.theverge.com/tech/938245/past-maps-website-google-zero-ai",
+      "id": "yl7wdr",
+      "title": "Kevin O’Leary agrees to downsize massive Utah data center",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/943234/kevin-oleary-agrees-to-downsize-massive-utah-data-center",
       "source": "The Verge AI",
       "sourceIcon": "/images/sources/verge.png",
       "sourceDomain": "theverge.com",
-      "snippet": "A good time with old maps. | Image: Past Maps Craig Campbell walked away from the river of investor money flowing into AI to create, of all things, a website. Sure, Campbell probably could have started an AI company. He's a former engineer at Meta...",
+      "snippet": "Kevin O'Leary agreed to halve the size of his planned 40,000-acre data center in Utah amid mounting pressure from residents and activists, as reported earlier by local affiliate ABC4. The Shark Tank star sent a letter to Utah Senate President J....",
       "categories": [
         "General AI"
       ],
-      "publishedAt": "2026-05-30T13:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
+      "publishedAt": "2026-06-04T18:38:04.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.076Z"
     },
     {
-      "id": "75vx9m",
-      "title": "AI grifters are creating fake Black people to sell Shein junk",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/938844/ai-tiktok-shop-blackface-shein-dropshipping",
-      "source": "The Verge AI",
-      "sourceIcon": "/images/sources/verge.png",
-      "sourceDomain": "theverge.com",
-      "snippet": "TikTok sellers that appear to be AI generated, in tears. | The Verge Aliyah, a light-skinned Black woman dressed in country-western gear, is struggling to sell metal buckles she handmade on TikTok. In a video for the social media platform from...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-30T13:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
-    },
-    {
-      "id": "naj6k2",
-      "title": "I tried Microsoft's Windows 365 Cloud PC on MacOS, Android, and iOS - here's what it's like",
-      "url": "https://www.zdnet.com/article/windows-365-cloud-pc-hands-on/",
+      "id": "2xnrtx",
+      "title": "I tried Google Drive's new AI cleanup tool to fix 14 years of storage clutter - here's the result",
+      "url": "https://www.zdnet.com/article/i-tried-google-drives-new-ai-cleanup-tool-storage-clutter/",
       "source": "ZDNet AI",
       "sourceIcon": "/images/sources/zdnet.png",
       "sourceDomain": "zdnet.com",
-      "snippet": "Who needs a Cloud PC, anyway? What's the experience like? How much does it really cost? I've got answers to all those questions.",
+      "snippet": "With Organize My Files, can Gemini clean up my messy Google Drive and save me money on storage? Let's see.",
       "categories": [
         "Enterprise",
         "General AI"
       ],
-      "publishedAt": "2026-05-30T12:00:46.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.576Z"
+      "publishedAt": "2026-06-04T18:04:43.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
     },
     {
-      "id": "i9tonf",
-      "title": "The SpaceX IPO is great for Elon Musk and terrible for you",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/940001/elon-musk-spacex-ipo-ai",
+      "id": "1v6a3q",
+      "title": "Motorola Razr Fold vs. Razr Ultra: I tested both phones for a month - this one's better",
+      "url": "https://www.zdnet.com/article/2026-motorola-razr-fold-vs-razr-ultra/",
+      "source": "ZDNet AI",
+      "sourceIcon": "/images/sources/zdnet.png",
+      "sourceDomain": "zdnet.com",
+      "snippet": "The Razr Fold offers a more premium experience, while the Razr Ultra is more compact and stylish. Here's how to choose between them.",
+      "categories": [
+        "Enterprise",
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T16:50:23.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
+    },
+    {
+      "id": "sytujs",
+      "title": "Hate the right-click menu in Windows? Microsoft just promised to let you tweak it - soon",
+      "url": "https://www.zdnet.com/article/right-click-context-menu-windows-microsoft-tweak-it/",
+      "source": "ZDNet AI",
+      "sourceIcon": "/images/sources/zdnet.png",
+      "sourceDomain": "zdnet.com",
+      "snippet": "A top Microsoft VP is promising a faster, simpler, and more customizable context menu that appears when you right-click an item in File Explorer or on the Desktop.",
+      "categories": [
+        "Enterprise",
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T16:38:02.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
+    },
+    {
+      "id": "flxztk",
+      "title": "I flew 2,700 miles with 4 headphones - this pair was the best travel companion",
+      "url": "https://www.zdnet.com/article/i-flew-2700-miles-with-4-headphones-my-best-travel-companion/",
+      "source": "ZDNet AI",
+      "sourceIcon": "/images/sources/zdnet.png",
+      "sourceDomain": "zdnet.com",
+      "snippet": "Air travel is the true test for headphones and earbuds. My multiple journeys revealed all the strengths and weaknesses of these latest models.",
+      "categories": [
+        "Enterprise",
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T16:24:18.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
+    },
+    {
+      "id": "fslp24",
+      "title": "Samsung's R95H Micro RGB impressed me more than any TV since my first OLED",
+      "url": "https://www.zdnet.com/article/samsung-r95h-data-byte/",
+      "source": "ZDNet AI",
+      "sourceIcon": "/images/sources/zdnet.png",
+      "sourceDomain": "zdnet.com",
+      "snippet": "ZDNET's first Data Byte dives deep into Samsung's latest Micro RGB screen technology in the R95H TV. Here's what the numbers tell us.",
+      "categories": [
+        "Enterprise",
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T16:20:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
+    },
+    {
+      "id": "lx6z0n",
+      "title": "I compared two of the best Android camera phones right now - it came down to the wire",
+      "url": "https://www.zdnet.com/article/samsung-galaxy-s26-ultra-vs-vivo-x300-ultra-camera-comparison/",
+      "source": "ZDNet AI",
+      "sourceIcon": "/images/sources/zdnet.png",
+      "sourceDomain": "zdnet.com",
+      "snippet": "I expected the Vivo X300 Ultra to wipe the floor with Samsung's Galaxy S26 Ultra, but the latter impressed me in ways I didn't expect.",
+      "categories": [
+        "Enterprise",
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T14:55:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.351Z"
+    },
+    {
+      "id": "a6duqj",
+      "title": "TSMC struggles to keep up with AI demand: &#8216;We can only support so much&#8217;",
+      "url": "https://www.theverge.com/tech/943066/tsmc-ai-demand-struggles",
       "source": "The Verge AI",
       "sourceIcon": "/images/sources/verge.png",
       "sourceDomain": "theverge.com",
-      "snippet": "Number go up? | Image: Cath Virginia / The Verge, Getty Images I haven't seen anything as stupid as the WeWork IPO document in a very long time - that is, until Elon Musk filed to take SpaceX public. WeWork was a joke. SpaceX is a threat. And if...",
+      "snippet": "Taiwan Semiconductor Manufacturing Co. - the world's biggest semiconductor-maker - is struggling to meet demands from American customers even with its factory buildout in the US, according to reports from Reuters and Bloomberg. \"Customer demand is...",
       "categories": [
         "General AI"
       ],
-      "publishedAt": "2026-05-30T12:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
+      "publishedAt": "2026-06-04T14:15:44.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.076Z"
     },
     {
-      "id": "3bv27e",
-      "title": "Do You Actually Need to Pay for Transcription Software?",
-      "url": "https://www.wired.com/story/do-you-actually-need-to-pay-for-transcription-software/",
+      "id": "57xw1z",
+      "title": "Elon Musk is steamrolling Wall Street to become a trillionaire",
+      "url": "https://www.theverge.com/podcast/942586/elon-musk-spacex-ipo-x-xai-index-funds",
+      "source": "The Verge AI",
+      "sourceIcon": "/images/sources/verge.png",
+      "sourceDomain": "theverge.com",
+      "snippet": "Today on Decoder, I’m talking to Ryan Mac, a technology reporter at The New York Times and coauthor of the excellent book Character Limit: How Elon Musk Destroyed Twitter, which came out in 2024. I can’t recommend it enough. I wanted to have Ryan on...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T14:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.077Z"
+    },
+    {
+      "id": "9xywo1",
+      "title": "Forecast: Fun Ahead — 18 Games Join in June to Stream on GeForce NOW",
+      "url": "https://blogs.nvidia.com/blog/geforce-now-thursday-june-2026-games-list/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "June’s forecast with GeForce NOW: 100% chance of gaming. GeForce NOW is lining up new adventures for the month, from big-name blockbusters to quirky indies ready for the spotlight. Members can dive into fresh worlds, squad up in new playlists and...",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-04T13:00:27.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.371Z"
+    },
+    {
+      "id": "pvkrtf",
+      "title": "Let us filter AI slop, you cowards",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/942909/let-us-filter-ai-slop-google-youtube-meta-instagram-tiktok",
+      "source": "The Verge AI",
+      "sourceIcon": "/images/sources/verge.png",
+      "sourceDomain": "theverge.com",
+      "snippet": "Nobody should be subjected to seeing shrimp Jesus all over their social feeds. | Image: Cath Virginia / The Verge, Getty Images It's almost impossible to avoid seeing AI-generated content online, but it doesn't have to be this way. YouTube,...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T12:30:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.077Z"
+    },
+    {
+      "id": "jlcw7g",
+      "title": "EVA-Bench Data 2.0: 3 Domains, 121 Tools, 213 Scenarios",
+      "url": "https://huggingface.co/blog/ServiceNow-AI/eva-bench-data",
+      "source": "Hugging Face Blog",
+      "sourceIcon": "/images/sources/huggingface.png",
+      "sourceDomain": "huggingface.co",
+      "snippet": "",
+      "categories": [
+        "Open Source",
+        "Models"
+      ],
+      "publishedAt": "2026-06-04T12:24:58.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
+    },
+    {
+      "id": "9hhb2v",
+      "title": "AI leaders call for tougher protections against AI-aided bioweapons",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/942956/ai-biological-weapons-open-letter-congress",
+      "source": "The Verge AI",
+      "sourceIcon": "/images/sources/verge.png",
+      "sourceDomain": "theverge.com",
+      "snippet": "Some of the AI industry's biggest rivals have put their many, many grievances aside for a common cause: making it harder for people to use their technology to develop biological weapons. In an open letter to US lawmakers, tech leaders are pressing...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T12:12:12.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.077Z"
+    },
+    {
+      "id": "2z5yr5",
+      "title": "The Download: AI-generated lawsuits and virtual power plants for data centers",
+      "url": "https://www.technologyreview.com/2026/06/04/1138408/the-download-ai-lawsuits-virtual-power-plants-data-centers/",
+      "source": "MIT Technology Review",
+      "sourceIcon": "/images/sources/mit.png",
+      "sourceDomain": "technologyreview.com",
+      "snippet": "This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. How courts are coping with a flood of AI-generated lawsuits Most days in her chambers, Judge Maritza Braswell,...",
+      "categories": [
+        "Research",
+        "Policy & Safety"
+      ],
+      "publishedAt": "2026-06-04T12:10:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
+    },
+    {
+      "id": "xngf1y",
+      "title": "How courts are coping with a flood of AI-generated lawsuits",
+      "url": "https://www.technologyreview.com/2026/06/04/1138391/courts-coping-ai-lawsuits/",
+      "source": "MIT Technology Review",
+      "sourceIcon": "/images/sources/mit.png",
+      "sourceDomain": "technologyreview.com",
+      "snippet": "Most days in her chambers, Judge Maritza Braswell, a federal magistrate judge in Colorado, sifts through stacks of documents written by people without a lawyer. Many of them can’t afford to hire a lawyer, and others have cases too weak or too small...",
+      "categories": [
+        "Research",
+        "Policy & Safety"
+      ],
+      "publishedAt": "2026-06-04T10:50:18.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
+    },
+    {
+      "id": "fld4gj",
+      "title": "Jeff Bezos Is Funding a Wild Hunt for the Brain’s ‘Core Algorithm’",
+      "url": "https://www.wired.com/story/jeff-bezos-is-funding-a-wild-hunt-for-the-brains-core-algorithm/",
       "source": "WIRED AI",
       "sourceIcon": "/images/sources/wired.png",
       "sourceDomain": "wired.com",
-      "snippet": "I tested Wispr Flow and various AI-powered transcription software to see whether you should bother subscribing or stick with free services.",
+      "snippet": "With $500 million in funding and a reported $2.5 billion valuation, Flourish wants to reinvent AI by putting real neurons under the microscope.",
       "categories": [
         "General AI"
       ],
-      "publishedAt": "2026-05-30T09:30:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
+      "publishedAt": "2026-06-04T10:30:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
     },
     {
-      "id": "xtfdbc",
-      "title": "Amazon Is Making an AI-Animated ‘Good Advice Cupcake’ TV Show. Its Original Creator Is Furious",
-      "url": "https://www.wired.com/story/story/amazon-is-making-an-ai-animated-good-advice-cupcake-tv-show-its-original-creator-is-furious/",
+      "id": "4ojkll",
+      "title": "Alpha School’s Ritzy New York City Campus Costs $65,000 a Year—but Isn’t Actually a School",
+      "url": "https://www.wired.com/story/alpha-schools-new-york-city-campus-isnt-actually-a-school/",
       "source": "WIRED AI",
       "sourceIcon": "/images/sources/wired.png",
       "sourceDomain": "wired.com",
-      "snippet": "Loryn Brantz created The Good Advice Cupcake for BuzzFeed years ago. The company licensed the character for a new Amazon series—made with AI—without her consent.",
+      "snippet": "A homeschooling center in Manhattan is part of the company’s nationwide expansion. Internal documents reveal its strategy: “Opening date > safety.”",
       "categories": [
         "General AI"
       ],
-      "publishedAt": "2026-05-29T20:56:59.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
+      "publishedAt": "2026-06-04T10:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
     },
     {
-      "id": "kwt9or",
-      "title": "Hands-On With Gemini Spark: I Gave It Access to My Life and It Friend-Zoned My Boyfriend",
-      "url": "https://www.wired.com/story/google-gemini-spark-ai-agent-hands-on/",
+      "id": "ee2lgc",
+      "title": "Quantum Computing Is Having Its Public Market Moment",
+      "url": "https://www.wired.com/story/quantum-computing-is-having-its-public-market-moment-quantinuum/",
       "source": "WIRED AI",
       "sourceIcon": "/images/sources/wired.png",
       "sourceDomain": "wired.com",
-      "snippet": "Google’s new AI agent combed through my emails, documents, and calendar to plan a birthday party and still didn’t clock the person most important to me.",
+      "snippet": "Quantinuum, a quantum computing startup, is losing millions. Investors want in anyway.",
       "categories": [
         "General AI"
       ],
-      "publishedAt": "2026-05-29T19:07:46.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
+      "publishedAt": "2026-06-04T09:34:23.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
+    },
+    {
+      "id": "j8liox",
+      "title": "Amazon develops a warehouse robot that workers can speak to",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/942884/amazon-next-generation-warehouse-robot-proteus",
+      "source": "The Verge AI",
+      "sourceIcon": "/images/sources/verge.png",
+      "sourceDomain": "theverge.com",
+      "snippet": "The design hasn’t changed much from the original Proteus, which was announced in 2022. | Image: Amazon Amazon has announced a new version of its fully autonomous warehouse robot, Proteus, that will interact using language instead of code. The...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T09:31:14.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.077Z"
+    },
+    {
+      "id": "w9eqjh",
+      "title": "Toward Pre-Deployment Assurance for Enterprise AI Agents: Ontology-Grounded Simulation and Trust Certification",
+      "url": "https://arxiv.org/abs/2606.04037",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04037v2 Announce Type: new Abstract: Pre-deployment verification of enterprise artificial intelligence (AI) agents remains a critical gap between large language model (LLM) capability benchmarking and production deployment....",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "w9erbp",
+      "title": "Stumbling Into AI Emotional Dependence: How Routine AI Interactions Reshape Human Connection",
+      "url": "https://arxiv.org/abs/2606.04150",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04150v1 Announce Type: new Abstract: Public discourse and emerging policy typically assume that AI emotional support is a deliberate act: a lonely user consciously seeking comfort from a dedicated companion chatbot. In this paper, we draw...",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "w9erbr",
+      "title": "Thinking Through Signs: PEEL as a Semiotic Scaffolding for Epistemically Accountable AI-Enabled Research",
+      "url": "https://arxiv.org/abs/2606.04152",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04152v1 Announce Type: new Abstract: Large language models are reshaping research practice while quietly eroding researchers epistemic accountability. This commentary introduces PEEL - Protocols for Epistemically Engaged Literacy in AI, a...",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "w9ery5",
+      "title": "SMAC-Talk: A Natural Language Extension of the StarCraft Multi-Agent Challenge for Large Language Models",
+      "url": "https://arxiv.org/abs/2606.04202",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04202v1 Announce Type: new Abstract: As LLMs become more widely deployed, they are increasingly expected to work alongside other AI agents rather than operating in isolation. Effective coordination in these settings requires agents to...",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "w9erzw",
+      "title": "Consensus is Strategically Insufficient: Reasoning-Trace Disagreement as a Knowledge-Representation Signal",
+      "url": "https://arxiv.org/abs/2606.04223",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04223v1 Announce Type: new Abstract: Multi-agent systems are commonly designed to reduce disagreement through voting, consensus protocols, debate, or fault-tolerant aggregation. We argue that this objective is insufficient for value-laden...",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "w9es1n",
+      "title": "VAMPS: Visual-Assisted Mathematical Problem Solving Benchmark",
+      "url": "https://arxiv.org/abs/2606.04244",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04244v1 Announce Type: new Abstract: Multimodal large language models are increasingly capable of complex reasoning, yet their performance often degrades when they must externalize a problem through a tool and then reason over the tool's...",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "w9es1p",
+      "title": "StepPRM-RTL: Stepwise Process-Reward Guided LLM Fine-Tuning for Enhanced RTL Synthesis",
+      "url": "https://arxiv.org/abs/2606.04246",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04246v1 Announce Type: new Abstract: Automatic generation of RTL code for digital hardware designs remains challenging due to long-horizon reasoning, multi-step dependencies, and strict correctness constraints in Verilog and VHDL. We...",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "w9es3a",
+      "title": "Can Generalist Agents Automate Data Curation?",
+      "url": "https://arxiv.org/abs/2606.04261",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04261v1 Announce Type: new Abstract: Curating training data is among the most consequential yet labor-intensive parts of modern AI development: practitioners iteratively propose, implement, evaluate, and revise data policies against noisy...",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "w9es47",
+      "title": "Characterizing initial human-AI proof formalization workflows",
+      "url": "https://arxiv.org/abs/2606.04273",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04273v1 Announce Type: new Abstract: For centuries, human mathematicians have written proofs to substantiate their mathematical arguments; yet, the ability to automatically verify the validity of proofs has long been a challenge. Advances...",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "w9es60",
+      "title": "The Saturation Trap and the Subjectivity of Intervention Timing: Why Affect-Based Triggers and LLM Judges Fail to Time Interventions on Autonomous Agents",
+      "url": "https://arxiv.org/abs/2606.04296",
+      "source": "arXiv cs.AI",
+      "sourceIcon": "/images/sources/arxiv.png",
+      "sourceDomain": "arxiv.org",
+      "snippet": "arXiv:2606.04296v1 Announce Type: new Abstract: As autonomous AI agents move from conversational systems to long-horizon software execution, runtime safety layers that decide when to interrupt an agent have become essential. We study this timing...",
+      "categories": [
+        "Research"
+      ],
+      "publishedAt": "2026-06-04T04:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.262Z"
+    },
+    {
+      "id": "2yrdk7",
+      "title": "OpenAI and Anthropic Sign Letter to Prevent AI-Developed Biological Weapons",
+      "url": "https://www.wired.com/story/openai-anthropic-letter-ai-biological-weapons/",
+      "source": "WIRED AI",
+      "sourceIcon": "/images/sources/wired.png",
+      "sourceDomain": "wired.com",
+      "snippet": "Leading AI labs, executives, and scientists are sending a letter to lawmakers urging them to improve tracking of synthetic DNA sequences that could be used for bioweapons.",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-04T01:01:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
+    },
+    {
+      "id": "hfyruh",
+      "title": "Designing the hf CLI as an agent-optimized way to work with the Hub",
+      "url": "https://huggingface.co/blog/hf-cli-for-agents",
+      "source": "Hugging Face Blog",
+      "sourceIcon": "/images/sources/huggingface.png",
+      "sourceDomain": "huggingface.co",
+      "snippet": "",
+      "categories": [
+        "Open Source",
+        "Models"
+      ],
+      "publishedAt": "2026-06-04T00:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
+    },
+    {
+      "id": "k6ktk2",
+      "title": "Can't make sense of Dashlane's vault theft notification? You're not alone.",
+      "url": "https://arstechnica.com/security/2026/06/dashlane-issues-opaque-advisory-warning-20-encrypted-vaults-were-stolen/",
+      "source": "Ars Technica",
+      "sourceIcon": "/images/sources/arstechnica.png",
+      "sourceDomain": "arstechnica.com",
+      "snippet": "Security advisory leaves out key details. Dashlane maintains complete silence.",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T19:53:14.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.106Z"
+    },
+    {
+      "id": "1h75ei",
+      "title": "xAI Asks Court to Strip Alleged Grok Deepfake Nudes Victims of Anonymity",
+      "url": "https://www.wired.com/story/xai-asks-court-to-strip-alleged-grok-deepfake-nudes-victims-of-anonymity/",
+      "source": "WIRED AI",
+      "sourceIcon": "/images/sources/wired.png",
+      "sourceDomain": "wired.com",
+      "snippet": "Four people suing Elon Musk's AI firm under pseudonyms due to the risks of being identified may face a difficult choice: Reveal your real names, or drop the lawsuit.",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T18:49:32.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
+    },
+    {
+      "id": "7v070x",
+      "title": "The Humanoid Robot of the Future Is a 6-Foot-Tall Beefcake With a Chinese Body and an American Brain",
+      "url": "https://www.wired.com/story/nvidia-unitree-humanoid-robot-h2-plus/",
+      "source": "WIRED AI",
+      "sourceIcon": "/images/sources/wired.png",
+      "sourceDomain": "wired.com",
+      "snippet": "Spencer Huang, Nvidia’s robotics lead, tells WIRED that the new bot combines the best of both worlds.",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T18:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
+    },
+    {
+      "id": "pokxhc",
+      "title": "As AI gets better, it reveals an empty promise",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/942629/as-ai-gets-better-it-reveals-an-empty-promise",
+      "source": "The Verge AI",
+      "sourceIcon": "/images/sources/verge.png",
+      "sourceDomain": "theverge.com",
+      "snippet": "This week we've got tandem hands-ons with Google's new Gemini AI agent - Spark - from my colleagues David Pierce and Jay Peters. Their takeaways are similar: It's so effective that it's scary. Spark knew that David's dog is named Frida and knew the...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T17:45:35.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.077Z"
+    },
+    {
+      "id": "99ukdf",
+      "title": "How virtual power plants could provide energy for data centers",
+      "url": "https://www.technologyreview.com/2026/06/03/1138350/virtual-power-plants-data-centers/",
+      "source": "MIT Technology Review",
+      "sourceIcon": "/images/sources/mit.png",
+      "sourceDomain": "technologyreview.com",
+      "snippet": "Would you take a payment to ramp down your electricity use? Would it change anything if you were doing so to help power a local data center? Google just signed a new deal to help pay for a virtual power plant (VPP) in the largest power grid in the...",
+      "categories": [
+        "Research",
+        "Policy & Safety"
+      ],
+      "publishedAt": "2026-06-03T16:51:38.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
+    },
+    {
+      "id": "wejhlg",
+      "title": "Amazon&#8217;s search bar will invent AI-generated products you can&#8217;t buy",
+      "url": "https://www.theverge.com/tech/942547/amazon-search-bar-ai-images",
+      "source": "The Verge AI",
+      "sourceIcon": "/images/sources/verge.png",
+      "sourceDomain": "theverge.com",
+      "snippet": "Amazon's updated search bar will now show you AI-generated images of products as you describe them. For now, the in-app feature only surfaces AI images of clothing and home goods, allowing you to tap on the image that best matches what you're...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T16:07:31.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.077Z"
+    },
+    {
+      "id": "ndakgn",
+      "title": "This Is How Trump Finally Signed the AI Executive Order",
+      "url": "https://www.wired.com/story/this-is-how-trump-finally-signed-the-ai-executive-order/",
+      "source": "WIRED AI",
+      "sourceIcon": "/images/sources/wired.png",
+      "sourceDomain": "wired.com",
+      "snippet": "After shelving the original executive order last month, Donald Trump finally got on board Monday night.",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T15:46:52.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
+    },
+    {
+      "id": "hkjrk5",
+      "title": "NVIDIA Research Unlocks Advanced Grasping, Smarter Autonomous Driving and Agent Training at Scale",
+      "url": "https://blogs.nvidia.com/blog/cvpr-research-grasping-driving-agent-training/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "What makes a robot gripper useful isn’t that it can pick up one object — it’s that it can pick up the next one, and the one after that, with a tool it’s never held before. What makes an autonomous vehicle system safe isn’t just that it can reason...",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-03T15:00:57.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.371Z"
+    },
+    {
+      "id": "cc6jgi",
+      "title": "NVIDIA Enables the Next Era Of Physical AI Research With Agent Skills For Autonomous Vehicles, Robotics And Vision AI",
+      "url": "https://blogs.nvidia.com/blog/cvpr-physical-ai-research-agent-skills/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "At CVPR, NVIDIA is unveiling new physical AI agent skills that help researchers and developers speed the development of autonomous vehicles, robots and vision AI systems. The core challenge in physical AI research isn’t simply developing stronger...",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-03T15:00:35.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.371Z"
+    },
+    {
+      "id": "mdodxy",
+      "title": "Microsoft and OpenAI broke up — now they’re ready to fight",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/942242/microsoft-build-ai-agents-openai-competition",
+      "source": "The Verge AI",
+      "sourceIcon": "/images/sources/verge.png",
+      "sourceDomain": "theverge.com",
+      "snippet": "At Microsoft's annual Build conference on Tuesday, the company announced a slew of new or expanded AI initiatives, including a super app, in-house reasoning models, a cybersecurity tool, and OpenClaw-esque AI agents. All this news added up to a...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T14:04:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.077Z"
+    },
+    {
+      "id": "lpx9ge",
+      "title": "5 ways Google Search can level up your thrift and vintage shopping",
+      "url": "https://blog.google/products-and-platforms/products/search/thrifting-tips/",
+      "source": "Google AI Blog",
+      "sourceIcon": "/images/sources/google.png",
+      "sourceDomain": "blog.google",
+      "snippet": "Uncover second-hand scores with AI tools in Google Search and Shopping.",
+      "categories": [
+        "Google/Gemini"
+      ],
+      "publishedAt": "2026-06-03T13:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
+    },
+    {
+      "id": "d0nzc8",
+      "title": "Direct Preference Optimization Beyond Chatbots",
+      "url": "https://huggingface.co/blog/Dharma-AI/direct-preference-optimization-beyond-chatbots",
+      "source": "Hugging Face Blog",
+      "sourceIcon": "/images/sources/huggingface.png",
+      "sourceDomain": "huggingface.co",
+      "snippet": "",
+      "categories": [
+        "Open Source",
+        "Models"
+      ],
+      "publishedAt": "2026-06-03T12:55:11.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
+    },
+    {
+      "id": "vcaq7b",
+      "title": "The Download: Trump’s new AI order, and smart glasses for warfare",
+      "url": "https://www.technologyreview.com/2026/06/03/1138322/the-download-trump-ai-order-smart-glasses-warfare/",
+      "source": "MIT Technology Review",
+      "sourceIcon": "/images/sources/mit.png",
+      "sourceDomain": "technologyreview.com",
+      "snippet": "This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. 5 key points in Trump’s new AI order Less than two weeks after scrapping an executive order on AI, President...",
+      "categories": [
+        "Research",
+        "Policy & Safety"
+      ],
+      "publishedAt": "2026-06-03T12:10:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
+    },
+    {
+      "id": "5txbdn",
+      "title": "Nvidia’s RTX Spark Laptops Look Hell-Bent on Disruption",
+      "url": "https://www.wired.com/story/nvidia-rtx-spark-laptop-disruption/",
+      "source": "WIRED AI",
+      "sourceIcon": "/images/sources/wired.png",
+      "sourceDomain": "wired.com",
+      "snippet": "The company’s RTX Spark chips might finally turn the “AI PC” into reality.",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T11:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
+    },
+    {
+      "id": "rd2tv0",
+      "title": "What’s Worth More Than Cash in San Francisco Real Estate? Anthropic Stock",
+      "url": "https://www.wired.com/story/whats-worth-more-than-san-francisco-real-estate-anthropic-stock/",
+      "source": "WIRED AI",
+      "sourceIcon": "/images/sources/wired.png",
+      "sourceDomain": "wired.com",
+      "snippet": "Several real estate listings in the San Francisco Bay Area are offering to exchange a home for a piece of the AI startup.",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T10:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.157Z"
+    },
+    {
+      "id": "n5vy6k",
+      "title": "AI has a water problem — Google thinks it has a fix",
+      "url": "https://www.theverge.com/policy/942296/google-water-commitments-data-centers",
+      "source": "The Verge AI",
+      "sourceIcon": "/images/sources/verge.png",
+      "sourceDomain": "theverge.com",
+      "snippet": "In the face of widespread backlash to the AI data center buildout throughout the US, Google is touting its efforts to minimize the environmental impact by actually increasing water for local communities. The company laid out five commitments around...",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-03T09:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.077Z"
+    },
+    {
+      "id": "6ihnrs",
+      "title": "Adding MCP Tools to Reachy Mini",
+      "url": "https://huggingface.co/blog/adding-mcp-tools-to-reachy-mini",
+      "source": "Hugging Face Blog",
+      "sourceIcon": "/images/sources/huggingface.png",
+      "sourceDomain": "huggingface.co",
+      "snippet": "",
+      "categories": [
+        "Open Source",
+        "Models"
+      ],
+      "publishedAt": "2026-06-03T00:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
+    },
+    {
+      "id": "jbaulf",
+      "title": "Industrial Software Leaders Build Secure, Autonomous AI Engineers With NVIDIA NemoClaw",
+      "url": "https://blogs.nvidia.com/blog/industrial-software-leaders-secure-autonomous-ai-engineers-nemoclaw/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "Accelerated computing has revolutionized industrial engineering, compressing simulation times from weeks to hours. Today’s remaining challenges sit in the end-to-end workflow surrounding the simulations: computer-aided design, meshing, simulation...",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-02T22:00:58.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.371Z"
+    },
+    {
+      "id": "ng2igk",
+      "title": "NVIDIA Partners With Microsoft on Unified Stack for Agentic AI Deployment, From Windows Devices to Cloud to Local",
+      "url": "https://blogs.nvidia.com/blog/microsoft-build-windows-local-cloud-devices/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "The agentic AI moment has arrived, but delivering on its promise requires more than good models. It also takes fast hardware, secure runtimes, a responsive data layer and models tuned for long-running reasoning. NVIDIA and Microsoft are bringing...",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-02T19:00:08.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.371Z"
+    },
+    {
+      "id": "d9ofe5",
+      "title": "Holo3.1: Fast & Local Computer Use Agents",
+      "url": "https://huggingface.co/blog/Hcompany/holo31",
+      "source": "Hugging Face Blog",
+      "sourceIcon": "/images/sources/huggingface.png",
+      "sourceDomain": "huggingface.co",
+      "snippet": "",
+      "categories": [
+        "Open Source",
+        "Models"
+      ],
+      "publishedAt": "2026-06-02T14:13:23.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
+    },
+    {
+      "id": "ca74yp",
+      "title": "The Download: AI can run your admin department now",
+      "url": "https://www.technologyreview.com/2026/06/02/1138277/the-download-ai-tips-small-businesses-admin/",
+      "source": "MIT Technology Review",
+      "sourceIcon": "/images/sources/mit.png",
+      "sourceDomain": "technologyreview.com",
+      "snippet": "This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. How small businesses can leverage AI From accounting to design to market research and product development,...",
+      "categories": [
+        "Research",
+        "Policy & Safety"
+      ],
+      "publishedAt": "2026-06-02T12:10:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
+    },
+    {
+      "id": "nstz2e",
+      "title": "Rehumanizing global health care with agentic AI",
+      "url": "https://www.technologyreview.com/2026/06/02/1137827/rehumanizing-global-health-care-with-agentic-ai/",
+      "source": "MIT Technology Review",
+      "sourceIcon": "/images/sources/mit.png",
+      "sourceDomain": "technologyreview.com",
+      "snippet": "The global health care sector is under increasing strain. Decades of chronic underinvestment and constraints in recruitment have coincided with a surge in demand for services for aging populations. Gaps in provision are already taking a toll, with...",
+      "categories": [
+        "Research",
+        "Policy & Safety"
+      ],
+      "publishedAt": "2026-06-02T11:23:34.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
+    },
+    {
+      "id": "yswmc4",
+      "title": "How small businesses can leverage AI",
+      "url": "https://www.technologyreview.com/2026/06/02/1138227/how-small-businesses-can-leverage-ai/",
+      "source": "MIT Technology Review",
+      "sourceIcon": "/images/sources/mit.png",
+      "sourceDomain": "technologyreview.com",
+      "snippet": "This article is from Making AI Work, MIT Technology Review’s limited-run newsletter examining how to apply LLMs across industries. To receive it in your inbox,sign up here. From accounting to design to market research and product development,...",
+      "categories": [
+        "Research",
+        "Policy & Safety"
+      ],
+      "publishedAt": "2026-06-02T09:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
+    },
+    {
+      "id": "jtt034",
+      "title": "Why Financial Institutions Are Converging on Transaction Foundation Models to Build Their Own Intelligence",
+      "url": "https://blogs.nvidia.com/blog/financial-institutions-transaction-foundation-models/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "Financial institutions have spent years building AI: fraud models, credit models, recommendation engines and risk systems. While this sprawl of task-specific models has been effective, it’s also constrained by siloed systems. Siloed systems prevent...",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-02T06:00:36.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.371Z"
+    },
+    {
+      "id": "j1isc8",
+      "title": "NVIDIA Jetson Brings Agentic AI to the Physical World",
+      "url": "https://blogs.nvidia.com/blog/jetson-agentic-ai-physical-world/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "Agentic AI is getting physical. At COMPUTEX on Tuesday, NVIDIA announced NVIDIA JetPack 7.2 and NVIDIA NemoClaw support on NVIDIA Jetson. JetPack 7.2 brings agentic AI skills, Yocto project support, NVIDIA CUDA 13 on NVIDIA Jetson Orin, a...",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-02T02:00:40.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.372Z"
+    },
+    {
+      "id": "2vtxio",
+      "title": "Dozens of Red Hat packages backdoored through its official NPM channel",
+      "url": "https://arstechnica.com/security/2026/06/dozens-of-red-hat-packages-backdoored-through-its-offical-npm-channel/",
+      "source": "Ars Technica",
+      "sourceIcon": "/images/sources/arstechnica.png",
+      "sourceDomain": "arstechnica.com",
+      "snippet": "Anyone who has downloaded affected Red Hat packages should investigate immediately.",
+      "categories": [
+        "General AI"
+      ],
+      "publishedAt": "2026-06-01T19:49:09.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.107Z"
+    },
+    {
+      "id": "y5dojn",
+      "title": "How we used Gemini to build Google I/O 2026",
+      "url": "https://blog.google/innovation-and-ai/technology/ai/io-2026-google-ai/",
+      "source": "Google AI Blog",
+      "sourceIcon": "/images/sources/google.png",
+      "sourceDomain": "blog.google",
+      "snippet": "Learn how Googlers used AI to produce Google I/O 2026.",
+      "categories": [
+        "Google/Gemini"
+      ],
+      "publishedAt": "2026-06-01T16:00:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
+    },
+    {
+      "id": "fn05zo",
+      "title": "Introducing Mellum2: A 12B Mixture-of-Experts Model by JetBrains",
+      "url": "https://huggingface.co/blog/JetBrains/mellum2-launch",
+      "source": "Hugging Face Blog",
+      "sourceIcon": "/images/sources/huggingface.png",
+      "sourceDomain": "huggingface.co",
+      "snippet": "",
+      "categories": [
+        "Open Source",
+        "Models"
+      ],
+      "publishedAt": "2026-06-01T15:45:17.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
+    },
+    {
+      "id": "c6i66g",
+      "title": "Beyond LLMs: Why Scalable Enterprise AI Adoption Depends on Agent Logic",
+      "url": "https://huggingface.co/blog/ibm-research/agent-logic-and-scalable-ai-adoption",
+      "source": "Hugging Face Blog",
+      "sourceIcon": "/images/sources/huggingface.png",
+      "sourceDomain": "huggingface.co",
+      "snippet": "",
+      "categories": [
+        "Open Source",
+        "Models"
+      ],
+      "publishedAt": "2026-06-01T13:51:18.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
+    },
+    {
+      "id": "vy899n",
+      "title": "The Download: China’s brain implant ambitions",
+      "url": "https://www.technologyreview.com/2026/06/01/1138207/the-download-china-bci-brain-implant-nvidia-ai-chips-laptops/",
+      "source": "MIT Technology Review",
+      "sourceIcon": "/images/sources/mit.png",
+      "sourceDomain": "technologyreview.com",
+      "snippet": "This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. China has approved the world’s first invasive brain-computer chip—here’s what’s next Sitting in the courtyard...",
+      "categories": [
+        "Research",
+        "Policy & Safety"
+      ],
+      "publishedAt": "2026-06-01T12:10:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
+    },
+    {
+      "id": "spzs3f",
+      "title": "China has approved the world’s first invasive brain-computer chip—here’s what’s next",
+      "url": "https://www.technologyreview.com/2026/06/01/1138133/china-world-first-brain-chip/",
+      "source": "MIT Technology Review",
+      "sourceIcon": "/images/sources/mit.png",
+      "sourceDomain": "technologyreview.com",
+      "snippet": "One day last October, sitting in the courtyard of his house in China’s Henan province, Dong Hui decided to see if he could hold a pen to write. Dong, 39, had sustained spinal cord injuries in a car accident six years earlier that left him paralyzed...",
+      "categories": [
+        "Research",
+        "Policy & Safety"
+      ],
+      "publishedAt": "2026-06-01T09:09:00.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
+    },
+    {
+      "id": "uirmj0",
+      "title": "NVIDIA AI Cloud Ecosystem Expands Worldwide to Meet Global AI Compute Demand",
+      "url": "https://blogs.nvidia.com/blog/ai-cloud-ecosystem/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "The NVIDIA AI Cloud ecosystem is accelerating the global buildout of AI factory infrastructure. Partners are expanding capacity to meet growing demand from enterprises, startups, nations, AI labs and developers scaling agentic AI applications....",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-01T05:00:56.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.372Z"
+    },
+    {
+      "id": "95ec4g",
+      "title": "NVIDIA Factory Operations Blueprint Gives Factories a New AI Brain",
+      "url": "https://blogs.nvidia.com/blog/factory-operations-fox-blueprint-ai-brain/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "As factories move from isolated automation to plant-wide intelligence, manufacturers need AI systems that can connect live machine signals, quality systems, work instructions and operational alerts into a unified decision layer. Today at GTC Taipei...",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-01T05:00:47.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.372Z"
+    },
+    {
+      "id": "gfidtt",
+      "title": "Taiwan’s Industry Titans Turbocharge World’s AI Infrastructure Buildout With NVIDIA",
+      "url": "https://blogs.nvidia.com/blog/taiwan-ecosystem-ai-infrastructure/",
+      "source": "NVIDIA AI Blog",
+      "sourceIcon": "/images/sources/nvidia.png",
+      "sourceDomain": "blogs.nvidia.com",
+      "snippet": "Taiwan is home to more than 500 NVIDIA ecosystem partners. More than 1 million NVIDIA MGX rack components for NVIDIA Vera Rubin infrastructure come together in Taiwan, from across 25 factory sites. As Vera Rubin ramps into full production to power...",
+      "categories": [
+        "Hardware/Chips"
+      ],
+      "publishedAt": "2026-06-01T05:00:41.000Z",
+      "fetchedAt": "2026-06-05T02:53:55.372Z"
     },
     {
       "id": "z18hft",
@@ -414,7 +1187,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-05-29T19:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
     },
     {
       "id": "b1xlbb",
@@ -428,21 +1201,7 @@
         "General AI"
       ],
       "publishedAt": "2026-05-29T18:46:33.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
-    },
-    {
-      "id": "chhjb0",
-      "title": "Tech companies desperately want to film you doing chores",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/940007/ai-companies-will-pay-for-robot-training-data",
-      "source": "The Verge AI",
-      "sourceIcon": "/images/sources/verge.png",
-      "sourceDomain": "theverge.com",
-      "snippet": "This week, an AI training startup called Shift said it would clean New Yorkers' homes for free. It has plans to expand into other cities as well, including London, and looking around my flat, I get the appeal. But there's a catch. There's always a...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-29T17:37:43.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
+      "fetchedAt": "2026-06-05T02:53:55.107Z"
     },
     {
       "id": "ww0sov",
@@ -456,49 +1215,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-05-29T17:30:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
-    },
-    {
-      "id": "skxze0",
-      "title": "We Asked the ‘Future of Truth’ Author to Explain How He Used AI. It Didn’t Go Well",
-      "url": "https://www.wired.com/story/future-of-truth-ai-interview/",
-      "source": "WIRED AI",
-      "sourceIcon": "/images/sources/wired.png",
-      "sourceDomain": "wired.com",
-      "snippet": "A book about how AI shapes perceptions of reality came under fire for using AI-generated quotes. Its problems go beyond that.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-29T16:30:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
-    },
-    {
-      "id": "gp6ga8",
-      "title": "The Vatican’s Man Inside Anthropic",
-      "url": "https://www.wired.com/story/the-vaticans-man-inside-anthropic/",
-      "source": "WIRED AI",
-      "sourceIcon": "/images/sources/wired.png",
-      "sourceDomain": "wired.com",
-      "snippet": "Pope Leo XIV may not be able to disarm AI, but he’s got the attention of the industry.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-29T15:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
-    },
-    {
-      "id": "m7c1zf",
-      "title": "Jony Ive’s funky Ferrari",
-      "url": "https://www.theverge.com/podcast/939589/ferrari-luce-jony-ive-vergecast",
-      "source": "The Verge AI",
-      "sourceIcon": "/images/sources/verge.png",
-      "sourceDomain": "theverge.com",
-      "snippet": "Most people will never own, drive, or even sit inside a Ferrari Luce. (If you can, or do… hit us up.) There's still no question that Ferrari's first electric vehicle is one of the most interesting, surprising cars of the year. With a decidedly...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-29T12:25:12.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
     },
     {
       "id": "brbz89",
@@ -513,7 +1230,7 @@
         "Policy & Safety"
       ],
       "publishedAt": "2026-05-29T12:10:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
+      "fetchedAt": "2026-06-05T02:53:55.140Z"
     },
     {
       "id": "tfyv5i",
@@ -527,65 +1244,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-05-29T12:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
-    },
-    {
-      "id": "cxpuii",
-      "title": "This AI startup will clean your home for free to train future robots",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/939765/ai-training-data-startup-shift-free-cleaning",
-      "source": "The Verge AI",
-      "sourceIcon": "/images/sources/verge.png",
-      "sourceDomain": "theverge.com",
-      "snippet": "AI training startup Shift wants to clean your home for free. The catch - because, despite what its website says, there's always a catch - is that it will record cleaners as they scrub, vacuum, dust, tidy, and wash, and use that footage to train...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-29T11:58:40.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
-    },
-    {
-      "id": "f2zk15",
-      "title": "The deadly Ebola outbreak is proving difficult to control",
-      "url": "https://www.technologyreview.com/2026/05/29/1138093/the-deadly-ebola-outbreak-is-proving-difficult-to-control/",
-      "source": "MIT Technology Review",
-      "sourceIcon": "/images/sources/mit.png",
-      "sourceDomain": "technologyreview.com",
-      "snippet": "The alert was raised on May 5. Four health-care workers in the Ituri Province of the Democratic Republic of the Congo had died from an unknown illness within four days. Rapid response teams were sent to investigate, and tests at a research center in...",
-      "categories": [
-        "Research",
-        "Policy & Safety"
-      ],
-      "publishedAt": "2026-05-29T11:19:52.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
-    },
-    {
-      "id": "2gv7iv",
-      "title": "Adobe’s conversational AI agent is a mediocre design intern",
-      "url": "https://www.theverge.com/tech/939686/adobes-conversational-ai-agent-is-a-mediocre-design-intern",
-      "source": "The Verge AI",
-      "sourceIcon": "/images/sources/verge.png",
-      "sourceDomain": "theverge.com",
-      "snippet": "It explained the process of how it made these edits beautifully, I’m just not terribly impressed by the results. | Images by Jess Weatherbed / The Verge AI image tools rarely make me feel like I'm part of the creative process. They are, after all,...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-29T10:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
-    },
-    {
-      "id": "sng45b",
-      "title": "How the Pope’s Magnifica Humanitas offers a template for individuals to meet the AI moment",
-      "url": "https://www.technologyreview.com/2026/05/29/1138107/how-the-popes-magnifica-humanitas-offers-a-template-for-individuals-to-meet-the-ai-moment/",
-      "source": "MIT Technology Review",
-      "sourceIcon": "/images/sources/mit.png",
-      "sourceDomain": "technologyreview.com",
-      "snippet": "Pope Leo XIV’s new encyclical on artificial intelligence includes a statement that warrants serious attention from technologists and policymakers: “Technology is never neutral.” Magnifica Humanitas (“Magnificent Humanity”) is a clarion call to all...",
-      "categories": [
-        "Research",
-        "Policy & Safety"
-      ],
-      "publishedAt": "2026-05-29T10:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
     },
     {
       "id": "bdqxhr",
@@ -600,7 +1259,7 @@
         "Models"
       ],
       "publishedAt": "2026-05-29T00:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
     },
     {
       "id": "5n2n6e",
@@ -614,50 +1273,7 @@
         "General AI"
       ],
       "publishedAt": "2026-05-28T20:29:53.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
-    },
-    {
-      "id": "oq2ont",
-      "title": "Microsoft 365 Copilot gets a speed boost and cleaner design",
-      "url": "https://www.theverge.com/tech/939273/microsoft-365-copilot-redesign",
-      "source": "The Verge AI",
-      "sourceIcon": "/images/sources/verge.png",
-      "sourceDomain": "theverge.com",
-      "snippet": "Microsoft is launching a revamped version of Microsoft 365 Copilot, offering a cleaner design that the company claims loads twice as fast. As part of this update, Copilot will provide more reliable and structured responses that are easier to scan,...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-28T20:14:07.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
-    },
-    {
-      "id": "nxrkg7",
-      "title": "How a new extraction process could unlock the world’s lithium",
-      "url": "https://www.technologyreview.com/2026/05/28/1138096/lithium-extraction-rock-zero/",
-      "source": "MIT Technology Review",
-      "sourceIcon": "/images/sources/mit.png",
-      "sourceDomain": "technologyreview.com",
-      "snippet": "Researchers say they’ve found a new way to extract lithium, a crucial metal used in the lithium-ion batteries that power electric vehicles and energy storage arrays. This new technique could be more environmentally friendly and cheaper than existing...",
-      "categories": [
-        "Research",
-        "Policy & Safety"
-      ],
-      "publishedAt": "2026-05-28T18:01:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
-    },
-    {
-      "id": "v10xiw",
-      "title": "Claude’s new model is more ‘honest’ when it messes up",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/939094/anthropic-claude-4-8-opus-honesty-effort",
-      "source": "The Verge AI",
-      "sourceIcon": "/images/sources/verge.png",
-      "sourceDomain": "theverge.com",
-      "snippet": "Anthropic is releasing Claude Opus 4.8 on Thursday, and the company is touting the model's \"honesty.\" According to Anthropic, it trains \"all [its] models to be honest - for instance, to avoid making claims that they can't support.\" But it notes that...",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-28T17:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.965Z"
+      "fetchedAt": "2026-06-05T02:53:55.107Z"
     },
     {
       "id": "ueyh68",
@@ -671,136 +1287,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-05-28T15:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
-    },
-    {
-      "id": "7qf2n9",
-      "title": "Here Comes Ojai, Waymo’s New Chinese-Made Robotaxi",
-      "url": "https://www.wired.com/story/here-comes-ojai-waymos-new-chinese-made-robotaxi/",
-      "source": "WIRED AI",
-      "sourceIcon": "/images/sources/wired.png",
-      "sourceDomain": "wired.com",
-      "snippet": "The pale-blue Ojai vehicles will start picking up members of the public in California and Arizona in the next few weeks.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-28T15:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
-    },
-    {
-      "id": "6g6f9k",
-      "title": "NVIDIA Research Advances Robotics From Simulation to the Real World",
-      "url": "https://blogs.nvidia.com/blog/icra-research-robotics-simulation-to-real-world/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "Robotics is entering a new phase: moving from controlled demos and scripted automation toward generalizable, reliable embodied autonomy in the real world. At the International Conference on Robotics and Automation (ICRA), eight of NVIDIA Research’s...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-28T13:00:51.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.316Z"
-    },
-    {
-      "id": "idnk7m",
-      "title": "The Name’s Gaming … Cloud Gaming: ‘007 First Light’ Launches on GeForce NOW",
-      "url": "https://blogs.nvidia.com/blog/geforce-now-thursday-007-first-light-launch/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "License to stream, shaken and stirred. GeForce NOW is dialing up the espionage with the launch of 007 First Light, letting members slip into James Bond’s reimagined origin story from almost any device — no tux or preloads required. For a limited...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-28T13:00:37.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.316Z"
-    },
-    {
-      "id": "o56256",
-      "title": "The Download: climate tech goes public and the AI Hype Index returns",
-      "url": "https://www.technologyreview.com/2026/05/28/1138085/the-download-climate-tech-ipos-ai-hype-index/",
-      "source": "MIT Technology Review",
-      "sourceIcon": "/images/sources/mit.png",
-      "sourceDomain": "technologyreview.com",
-      "snippet": "This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. Climate tech companies are going public. What’s next? Solar and battery company Solv Energy went public in...",
-      "categories": [
-        "Research",
-        "Policy & Safety"
-      ],
-      "publishedAt": "2026-05-28T12:10:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
-    },
-    {
-      "id": "4vntht",
-      "title": "New Moms Are Returning to Coding Jobs Radically Reshaped by AI",
-      "url": "https://www.wired.com/story/women-parental-leave-return-office-ai/",
-      "source": "WIRED AI",
-      "sourceIcon": "/images/sources/wired.png",
-      "sourceDomain": "wired.com",
-      "snippet": "New mothers working in software development are staring down an AI-pilled workplace they barely recognize.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-28T11:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
-    },
-    {
-      "id": "srek1p",
-      "title": "Amazon Thinks the Future of Data Centers Depends on a Technical Problem It Just Solved",
-      "url": "https://www.wired.com/story/amazon-thinks-the-future-of-data-centers-depends-on-a-technical-problem-it-just-solved/",
-      "source": "WIRED AI",
-      "sourceIcon": "/images/sources/wired.png",
-      "sourceDomain": "wired.com",
-      "snippet": "The tech giant says a breakthrough in data center networking has dramatically accelerated the flow of information through its massive cloud infrastructure.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-28T10:30:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
-    },
-    {
-      "id": "92ab5a",
-      "title": "Climate tech companies are going public. What’s next?",
-      "url": "https://www.technologyreview.com/2026/05/28/1138067/climate-tech-ipos/",
-      "source": "MIT Technology Review",
-      "sourceIcon": "/images/sources/mit.png",
-      "sourceDomain": "technologyreview.com",
-      "snippet": "This year, there’s been a wave of notable energy companies going public via IPO in the US. The solar and battery company Solv Energy went public in February, to the tune of $6 billion. X-energy, which is building small modular nuclear reactors, did...",
-      "categories": [
-        "Research",
-        "Policy & Safety"
-      ],
-      "publishedAt": "2026-05-28T10:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
-    },
-    {
-      "id": "b95cd7",
-      "title": "The AI Hype Index: AI gets booed in graduation season",
-      "url": "https://www.technologyreview.com/2026/05/28/1138053/the-ai-hype-index-ai-gets-booed-in-graduation-season/",
-      "source": "MIT Technology Review",
-      "sourceIcon": "/images/sources/mit.png",
-      "sourceDomain": "technologyreview.com",
-      "snippet": "It is one thing to say AI will change the world. It is another to expect the class of 2026 to applaud it. In fact, when former Google CEO Eric Schmidt told University of Arizona graduates that their task is to help shape AI, he was met with a...",
-      "categories": [
-        "Research",
-        "Policy & Safety"
-      ],
-      "publishedAt": "2026-05-28T09:51:11.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
-    },
-    {
-      "id": "kefsi0",
-      "title": "Illinois Lawmakers Just Passed America’s Strongest AI Safety Bill",
-      "url": "https://www.wired.com/story/illinois-pass-major-ai-safety-law-pritzker/",
-      "source": "WIRED AI",
-      "sourceIcon": "/images/sources/wired.png",
-      "sourceDomain": "wired.com",
-      "snippet": "The bill requires companies like OpenAI, Anthropic, and Google to have third parties confirm they’re following safety standards. Illinois governor JB Pritzker says he’ll sign it.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-28T00:10:42.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.193Z"
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
     },
     {
       "id": "nrk46c",
@@ -814,51 +1301,7 @@
         "General AI"
       ],
       "publishedAt": "2026-05-27T20:56:03.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
-    },
-    {
-      "id": "sse5ou",
-      "title": "ITBench-AA: Frontier Models Score Below 50% on the First Benchmark for Agentic Enterprise IT Tasks — by Artificial Analysis and IBM",
-      "url": "https://huggingface.co/blog/ibm-research/itbench-aa",
-      "source": "Hugging Face Blog",
-      "sourceIcon": "/images/sources/huggingface.png",
-      "sourceDomain": "huggingface.co",
-      "snippet": "",
-      "categories": [
-        "Open Source",
-        "Models"
-      ],
-      "publishedAt": "2026-05-27T17:20:29.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
-    },
-    {
-      "id": "bnlscp",
-      "title": "AI Factories: The New Infrastructure of Intelligence",
-      "url": "https://blogs.nvidia.com/blog/ai-factories-the-new-infrastructure-of-intelligence/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "AI factories are token factories, converting power into intelligence in real time. And as agentic AI scales and autonomous, always-on special agents are deployed in the enterprise, performance per watt and cost per token become the economics that...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-27T16:00:36.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.316Z"
-    },
-    {
-      "id": "u2dh0c",
-      "title": "The Download: keeping up with AI, and the future of IVF",
-      "url": "https://www.technologyreview.com/2026/05/27/1138048/the-download-ai-future-ivf-technology/",
-      "source": "MIT Technology Review",
-      "sourceIcon": "/images/sources/mit.png",
-      "sourceDomain": "technologyreview.com",
-      "snippet": "This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. Stay on top of what’s going on in AI this summer Here at MIT Technology Review, we understand exactly how...",
-      "categories": [
-        "Research",
-        "Policy & Safety"
-      ],
-      "publishedAt": "2026-05-27T12:10:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
+      "fetchedAt": "2026-06-05T02:53:55.107Z"
     },
     {
       "id": "fk6crt",
@@ -873,36 +1316,7 @@
         "Models"
       ],
       "publishedAt": "2026-05-27T00:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
-    },
-    {
-      "id": "r7afkq",
-      "title": "Shipping a Trillion Parameters With a Hub Bucket: Delta Weight Sync in TRL",
-      "url": "https://huggingface.co/blog/delta-weight-sync",
-      "source": "Hugging Face Blog",
-      "sourceIcon": "/images/sources/huggingface.png",
-      "sourceDomain": "huggingface.co",
-      "snippet": "",
-      "categories": [
-        "Open Source",
-        "Models"
-      ],
-      "publishedAt": "2026-05-27T00:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
-    },
-    {
-      "id": "q2sy6u",
-      "title": "NVIDIA Vera CPU Is ‘Packing a Heavy-Hitting Punch’ Against Competition",
-      "url": "https://blogs.nvidia.com/blog/vera-cpu-phoronix/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "The shift to agentic AI creates a new CPU requirement for the AI factory: fast cores, massive memory bandwidth and the ability to sustain high performance when all cores are active. Initial benchmark results published by Phoronix today show that the...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-26T21:15:15.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.316Z"
+      "fetchedAt": "2026-06-05T02:53:55.218Z"
     },
     {
       "id": "y909o6",
@@ -916,37 +1330,7 @@
         "General AI"
       ],
       "publishedAt": "2026-05-26T19:50:33.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
-    },
-    {
-      "id": "puefs9",
-      "title": "Rethinking organizational design in the age of agentic AI",
-      "url": "https://www.technologyreview.com/2026/05/26/1137584/rethinking-organizational-design-in-the-age-of-agentic-ai/",
-      "source": "MIT Technology Review",
-      "sourceIcon": "/images/sources/mit.png",
-      "sourceDomain": "technologyreview.com",
-      "snippet": "Amid rapidly growing adoption of enterprise-level AI agents, there’s a disconnect emerging between ambition and execution. Although 85% of organizations say they want to be agentic within the next three years, 76% say their current operations and...",
-      "categories": [
-        "Research",
-        "Policy & Safety"
-      ],
-      "publishedAt": "2026-05-26T14:54:10.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
-    },
-    {
-      "id": "pd34bg",
-      "title": "The Download: puncturing the AI jobs panic",
-      "url": "https://www.technologyreview.com/2026/05/26/1138028/the-download-ai-jobs-data/",
-      "source": "MIT Technology Review",
-      "sourceIcon": "/images/sources/mit.png",
-      "sourceDomain": "technologyreview.com",
-      "snippet": "This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. A reality check on the AI jobs hysteria Despite the growing hysteria over AI’s threat to white-collar jobs,...",
-      "categories": [
-        "Research",
-        "Policy & Safety"
-      ],
-      "publishedAt": "2026-05-26T12:10:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.064Z"
+      "fetchedAt": "2026-06-05T02:53:55.107Z"
     },
     {
       "id": "tcnbs",
@@ -960,37 +1344,7 @@
         "General AI"
       ],
       "publishedAt": "2026-05-25T12:00:15.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
-    },
-    {
-      "id": "yn8vqd",
-      "title": "Harness, Scaffold, and the AI Agent Terms Worth Getting Right",
-      "url": "https://huggingface.co/blog/agent-glossary",
-      "source": "Hugging Face Blog",
-      "sourceIcon": "/images/sources/huggingface.png",
-      "sourceDomain": "huggingface.co",
-      "snippet": "",
-      "categories": [
-        "Open Source",
-        "Models"
-      ],
-      "publishedAt": "2026-05-25T00:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
-    },
-    {
-      "id": "iy3jiu",
-      "title": "Towards Speed-of-Light Text Generation with Nemotron-Labs Diffusion Language Models",
-      "url": "https://huggingface.co/blog/nvidia/nemotron-labs-diffusion",
-      "source": "Hugging Face Blog",
-      "sourceIcon": "/images/sources/huggingface.png",
-      "sourceDomain": "huggingface.co",
-      "snippet": "",
-      "categories": [
-        "Open Source",
-        "Models"
-      ],
-      "publishedAt": "2026-05-23T00:02:03.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
+      "fetchedAt": "2026-06-05T02:53:55.107Z"
     },
     {
       "id": "t26ja",
@@ -1004,7 +1358,7 @@
         "General AI"
       ],
       "publishedAt": "2026-05-22T18:13:05.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
+      "fetchedAt": "2026-06-05T02:53:55.107Z"
     },
     {
       "id": "n6hnzo",
@@ -1018,22 +1372,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-05-22T18:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
-    },
-    {
-      "id": "s9kt8w",
-      "title": "Specialization Beats Scale: A Strategic Variable Most AI Procurement Decisions Overlook",
-      "url": "https://huggingface.co/blog/Dharma-AI/specialization-beats-scale",
-      "source": "Hugging Face Blog",
-      "sourceIcon": "/images/sources/huggingface.png",
-      "sourceDomain": "huggingface.co",
-      "snippet": "",
-      "categories": [
-        "Open Source",
-        "Models"
-      ],
-      "publishedAt": "2026-05-22T15:25:59.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
     },
     {
       "id": "6jo4gt",
@@ -1047,49 +1386,7 @@
         "General AI"
       ],
       "publishedAt": "2026-05-22T10:30:14.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
-    },
-    {
-      "id": "oqyfmv",
-      "title": "NVIDIA GTC Taipei at COMPUTEX: Live Updates on What’s Next in AI",
-      "url": "https://blogs.nvidia.com/blog/nvidia-gtc-taipei-computex-2026-news/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "At NVIDIA GTC Taipei at COMPUTEX, the world’s developers, researchers and industry leaders are converging to dive into the latest breakthroughs shaping every industry, covering topics spanning AI factories and scaling infrastructure to agentic and...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-21T16:00:17.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.316Z"
-    },
-    {
-      "id": "842gpt",
-      "title": "US government takes $2 billion equity stake in nine quantum computing firms",
-      "url": "https://arstechnica.com/gadgets/2026/05/us-government-takes-2-billion-equity-stake-in-nine-quantum-computing-firms/",
-      "source": "Ars Technica",
-      "sourceIcon": "/images/sources/arstechnica.png",
-      "sourceDomain": "arstechnica.com",
-      "snippet": "Beneficiaries include startup backed by firm with links to the Trump family.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-21T13:48:38.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
-    },
-    {
-      "id": "jm12zl",
-      "title": "License to Stream: ‘007 First Light’ Coming to GeForce NOW With an Ultimate Bundle",
-      "url": "https://blogs.nvidia.com/blog/geforce-now-thursday-007-first-light-ultimate-bundle/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "The mission begins now. GeForce NOW is dialing up the action with a blockbuster mix of spy thrills, high-speed racing and member rewards — plus eight new games joining the cloud this week, all ready to stream instantly. Leading the drop: the 007...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-21T13:00:22.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.316Z"
+      "fetchedAt": "2026-06-05T02:53:55.107Z"
     },
     {
       "id": "4n62ox",
@@ -1103,7 +1400,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-05-20T20:40:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
     },
     {
       "id": "pih6bm",
@@ -1117,21 +1414,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-05-20T19:30:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
-    },
-    {
-      "id": "klldtg",
-      "title": "Google publishes exploit code threatening millions of Chromium users",
-      "url": "https://arstechnica.com/security/2026/05/google-publishes-exploit-code-threatening-millions-of-chromium-users/",
-      "source": "Ars Technica",
-      "sourceIcon": "/images/sources/arstechnica.png",
-      "sourceDomain": "arstechnica.com",
-      "snippet": "Google publishes exploit code before patch, reported 42 months earlier, is fixed.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-20T19:10:36.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
     },
     {
       "id": "4p93mm",
@@ -1145,78 +1428,7 @@
         "Google/Gemini"
       ],
       "publishedAt": "2026-05-20T16:45:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
-    },
-    {
-      "id": "sjmlcj",
-      "title": "NVIDIA and Google Cloud Empower the Next Wave of AI Builders",
-      "url": "https://blogs.nvidia.com/blog/google-cloud-developer-community-ai-builders/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "At this year’s Google I/O conference, NVIDIA and Google Cloud are accelerating the work of more than 100,000 developers in the companies’ joint developer community, which provides curated learning paths, hands-on labs and events that help them build...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-19T20:30:09.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.316Z"
-    },
-    {
-      "id": "6etnv1",
-      "title": "OlmoEarth v1.1: A more efficient family of Earth observation models",
-      "url": "https://huggingface.co/blog/allenai/olmoearth-v1-1",
-      "source": "Hugging Face Blog",
-      "sourceIcon": "/images/sources/huggingface.png",
-      "sourceDomain": "huggingface.co",
-      "snippet": "",
-      "categories": [
-        "Open Source",
-        "Models"
-      ],
-      "publishedAt": "2026-05-19T18:38:09.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
-    },
-    {
-      "id": "lzuor6",
-      "title": "In stunning display of stupid, secret CISA credentials found in public GitHub repo",
-      "url": "https://arstechnica.com/information-technology/2026/05/in-stunning-display-of-stupid-secret-cisa-credentials-found-in-public-github-repo/",
-      "source": "Ars Technica",
-      "sourceIcon": "/images/sources/arstechnica.png",
-      "sourceDomain": "arstechnica.com",
-      "snippet": "SSH keys, plaintext passwords, other sensitive data had been up since November 2025.",
-      "categories": [
-        "General AI"
-      ],
-      "publishedAt": "2026-05-19T18:27:08.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.017Z"
-    },
-    {
-      "id": "nut24l",
-      "title": "How AI Mode is changing the way people search in the U.S.",
-      "url": "https://blog.google/products-and-platforms/products/search/ai-mode-us-insights/",
-      "source": "Google AI Blog",
-      "sourceIcon": "/images/sources/google.png",
-      "sourceDomain": "blog.google",
-      "snippet": "One year after launch, see how AI Mode’s users are shifting from keywords to natural language queries.",
-      "categories": [
-        "Google/Gemini"
-      ],
-      "publishedAt": "2026-05-19T17:45:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
-    },
-    {
-      "id": "rno3vx",
-      "title": "New ways to create and get things done in Google Workspace",
-      "url": "https://blog.google/products-and-platforms/products/workspace/workspace-updates/",
-      "source": "Google AI Blog",
-      "sourceIcon": "/images/sources/google.png",
-      "sourceDomain": "blog.google",
-      "snippet": "Announcing new voice capabilities in Gmail, Docs and Keep, a new design tool called Google Pics and updates to AI Inbox.",
-      "categories": [
-        "Google/Gemini"
-      ],
-      "publishedAt": "2026-05-19T17:45:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.349Z"
+      "fetchedAt": "2026-06-05T02:53:55.271Z"
     },
     {
       "id": "2xka9u",
@@ -1231,79 +1443,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-05-19T17:45:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.230Z"
-    },
-    {
-      "id": "9qhpg",
-      "title": "Introducing the Ettin Reranker Family",
-      "url": "https://huggingface.co/blog/ettin-reranker",
-      "source": "Hugging Face Blog",
-      "sourceIcon": "/images/sources/huggingface.png",
-      "sourceDomain": "huggingface.co",
-      "snippet": "",
-      "categories": [
-        "Open Source",
-        "Models"
-      ],
-      "publishedAt": "2026-05-19T00:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
-    },
-    {
-      "id": "3i0d72",
-      "title": "NVIDIA CEO Jensen Huang at Dell Technologies World: ‘Demand Is Going Parabolic, Utterly Parabolic’",
-      "url": "https://blogs.nvidia.com/blog/dell-technologies-agent-enterprise-ai/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "Agentic AI inference at one-tenth the cost per token with NVIDIA Vera Rubin NVL72. Agent sandboxes run 50% faster on NVIDIA Vera than traditional CPUs — while enterprise data queries are up to 3x faster with the Vera CPU. And 5,000 enterprises like...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-18T22:28:59.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.316Z"
-    },
-    {
-      "id": "f4kq2p",
-      "title": "Vera Arrives: NVIDIA’s First CPU Built for Agents Lands at Top AI Labs",
-      "url": "https://blogs.nvidia.com/blog/vera-cpu-delivery/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "The first NVIDIA Vera CPUs arrived at three of the world's leading AI labs on Friday — Anthropic in San Francisco, OpenAI in Mission Bay, SpaceXAI in Palo Alto — followed by a delivery to Oracle Cloud Infrastructure in Santa Clara on Monday. NVIDIA...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-18T21:48:17.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.317Z"
-    },
-    {
-      "id": "q9g989",
-      "title": "PaddleOCR 3.5: Running OCR and Document Parsing Tasks with a Transformers Backend",
-      "url": "https://huggingface.co/blog/PaddlePaddle/paddleocr-transformers",
-      "source": "Hugging Face Blog",
-      "sourceIcon": "/images/sources/huggingface.png",
-      "sourceDomain": "huggingface.co",
-      "snippet": "",
-      "categories": [
-        "Open Source",
-        "Models"
-      ],
-      "publishedAt": "2026-05-18T15:12:46.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.153Z"
-    },
-    {
-      "id": "yk4rbl",
-      "title": "Sea You in the Cloud: ‘Subnautica 2’ Early Access Dives Onto GeForce NOW",
-      "url": "https://blogs.nvidia.com/blog/geforce-now-thursday-subnautica-2/",
-      "source": "NVIDIA AI Blog",
-      "sourceIcon": "/images/sources/nvidia.png",
-      "sourceDomain": "blogs.nvidia.com",
-      "snippet": "Editor’s note: The Gaijin single sign-on feature is now up and running. Dive masks on — Subnautica 2 is making a splash on GeForce NOW day-and-date with launch, so members can plunge into the title’s brand-new alien ocean from almost any device. It...",
-      "categories": [
-        "Hardware/Chips"
-      ],
-      "publishedAt": "2026-05-14T13:00:08.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.317Z"
+      "fetchedAt": "2026-06-05T02:53:55.234Z"
     },
     {
       "id": "8j8wf4",
@@ -1317,7 +1457,7 @@
         "General AI"
       ],
       "publishedAt": "2026-04-27T15:27:52.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.960Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     },
     {
       "id": "lt1nhr",
@@ -1332,7 +1472,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-22T14:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.230Z"
+      "fetchedAt": "2026-06-05T02:53:55.234Z"
     },
     {
       "id": "pw82ni",
@@ -1347,7 +1487,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-19T14:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.230Z"
+      "fetchedAt": "2026-06-05T02:53:55.235Z"
     },
     {
       "id": "2stlo5",
@@ -1362,7 +1502,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-16T14:01:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.230Z"
+      "fetchedAt": "2026-06-05T02:53:55.235Z"
     },
     {
       "id": "wkanl4",
@@ -1377,7 +1517,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-13T13:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.231Z"
+      "fetchedAt": "2026-06-05T02:53:55.235Z"
     },
     {
       "id": "3qldyo",
@@ -1391,7 +1531,7 @@
         "General AI"
       ],
       "publishedAt": "2026-01-13T11:30:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.960Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     },
     {
       "id": "69xvr0",
@@ -1406,7 +1546,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-12T11:30:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.231Z"
+      "fetchedAt": "2026-06-05T02:53:55.235Z"
     },
     {
       "id": "o3ucts",
@@ -1421,7 +1561,7 @@
         "Enterprise"
       ],
       "publishedAt": "2026-01-07T20:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:46.231Z"
+      "fetchedAt": "2026-06-05T02:53:55.235Z"
     },
     {
       "id": "e9o9yk",
@@ -1435,7 +1575,7 @@
         "General AI"
       ],
       "publishedAt": "2025-10-31T19:26:30.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.960Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     },
     {
       "id": "1wsfir",
@@ -1449,7 +1589,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-26T15:21:19.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.960Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     },
     {
       "id": "tm47qk",
@@ -1463,7 +1603,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-20T16:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.960Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     },
     {
       "id": "27akb2",
@@ -1477,7 +1617,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-20T15:56:53.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.960Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     },
     {
       "id": "tj3u0t",
@@ -1491,7 +1631,7 @@
         "General AI"
       ],
       "publishedAt": "2025-08-04T15:41:39.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.960Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     },
     {
       "id": "6xwg8b",
@@ -1505,7 +1645,7 @@
         "General AI"
       ],
       "publishedAt": "2025-06-04T14:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.960Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     },
     {
       "id": "yt0ltc",
@@ -1519,7 +1659,7 @@
         "General AI"
       ],
       "publishedAt": "2025-06-02T18:07:05.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.960Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     },
     {
       "id": "jrrt6d",
@@ -1533,8 +1673,8 @@
         "General AI"
       ],
       "publishedAt": "2025-05-27T12:00:00.000Z",
-      "fetchedAt": "2026-05-31T18:38:45.961Z"
+      "fetchedAt": "2026-06-05T02:53:55.030Z"
     }
   ],
-  "fetchedAt": "2026-05-31T18:38:46.577Z"
+  "fetchedAt": "2026-06-05T02:53:55.526Z"
 }

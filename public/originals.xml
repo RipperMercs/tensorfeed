@@ -5,8 +5,48 @@
     <link>https://tensorfeed.ai</link>
     <description>Original AI editorial from the TensorFeed team.</description>
     <language>en-us</language>
-    <lastBuildDate>Sun, 31 May 2026 07:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 04 Jun 2026 07:00:00 GMT</lastBuildDate>
     <atom:link href="https://tensorfeed.ai/originals.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title><![CDATA[DeepSeek Took Its First Outside Money. The $59 Billion Price Tells You What Open Weights Are Worth.]]></title>
+      <link>https://tensorfeed.ai/originals/deepseek-maiden-funding-round-59-billion</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/deepseek-maiden-funding-round-59-billion</guid>
+      <pubDate>Thu, 04 Jun 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Kira Nolan]]></dc:creator>
+      <description><![CDATA[DeepSeek is reportedly raising about 50 billion yuan ($7.4 billion) in its first ever external funding round at a post-money valuation between $52 billion and $59 billion. Founder Liang Wenfeng, who controls nearly 90 percent of the company, is committing 20 billion yuan himself; Tencent (~10B yuan) and battery giant CATL (~5B yuan) are weighing the largest outside checks, with NetEase, JD.com, IDG Capital, Monolith, and state-backed AI funds also in the syndicate. The lab that shipped V4 under MIT and famously refused outside capital is now priced at roughly six percent of Anthropic's $965 billion. Inside the round composition, the three readings of that valuation gap (open weights monetize worse, the China discount, a negotiated industrial-policy number), why CATL in the cap table is the energy-compute convergence tell, what it means for builders on DeepSeek's 20x to 30x API discount, and three signposts over the next ninety days.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Mastercard Will Settle Cards on Eight Chains. Base Is the One Where Agents Already Pay Each Other.]]></title>
+      <link>https://tensorfeed.ai/originals/card-networks-base-settlement-agents</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/card-networks-base-settlement-agents</guid>
+      <pubDate>Thu, 04 Jun 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[On June 3, Mastercard said it will settle card transactions in regulated stablecoins across eight blockchains (Arbitrum, Base, Canton, Ethereum, Polygon, Solana, Tempo, XRPL) with intraday, weekend, and holiday cycles. It is not Mastercard on Base; Base is one of eight chains the network will settle across, and the program starts with five named fintechs and banks, not the whole card base. Visa added Base in April. The real story is convergence: of the eight chains the networks now settle on, Base is the only one already running a live x402 agent-payment economy on the same USDC. The card networks are not entering agent commerce; they are turning the rail it already runs on into mainstream financial plumbing, and that deeper, more regulated dollar is what makes per-call agent economics durable.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Microsoft Shipped Seven of Its Own Models. The One That Counts Lives Inside Copilot.]]></title>
+      <link>https://tensorfeed.ai/originals/microsoft-mai-models-openai-independence</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/microsoft-mai-models-openai-independence</guid>
+      <pubDate>Wed, 03 Jun 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Adrian Vale]]></dc:creator>
+      <description><![CDATA[At Build on June 2, Microsoft launched seven in-house MAI models spanning image, voice, transcription, reasoning, and coding. Two matter: MAI-Thinking-1, the company's first reasoning model (35B active MoE, 256K context, 97% on AIME 2025, human raters preferring it over Claude Sonnet 4.6), and MAI-Code-1-Flash, a roughly 5B coding model already in GitHub Copilot that beats Claude Haiku 4.5 by 16 points on SWE-Bench Pro (51.2% vs 35.2%) while using up to 60% fewer tokens and costing less. The headline was benchmarks. The story underneath is Microsoft building a stack it owns end to end on its own Azure infrastructure, trained without OpenAI data, so it can serve a growing share of Copilot and Azure calls without paying a third party. Why the small coding model is the commercial weapon, what the numbers do and do not prove, and how it fits the week's bigger shift toward the agent runtime as the product.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[NVIDIA's RTX Spark Runs a 120B Model on a Laptop. The Real Move Is Owning Every Layer.]]></title>
+      <link>https://tensorfeed.ai/originals/nvidia-rtx-spark-edge-agents</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/nvidia-rtx-spark-edge-agents</guid>
+      <pubDate>Tue, 02 Jun 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[At Computex on June 1, Jensen Huang unveiled the NVIDIA RTX Spark, an Arm-plus-Blackwell laptop superchip with 128GB of unified memory that NVIDIA says runs a 120B model with a million-token context on a 14mm machine. The real move is not the spec sheet, it is NVIDIA extending its compute monopoly from the datacenter to the edge, with unified memory built to keep frontier-size models resident for local agents. At $2,899-plus it is a developer beachhead, not a consumer wave.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Anthropic Filed to Go Public. A Confidential S-1 at a $965 Billion Valuation Is an Option, Not a Date.]]></title>
+      <link>https://tensorfeed.ai/originals/anthropic-confidential-s1-ipo</link>
+      <guid isPermaLink="true">https://tensorfeed.ai/originals/anthropic-confidential-s1-ipo</guid>
+      <pubDate>Mon, 01 Jun 2026 07:00:00 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
+      <description><![CDATA[On June 1, 2026 Anthropic confidentially submitted a draft Form S-1 to the SEC, the first formal step toward an IPO. The company says the number of shares and the price are not set, the offering depends on market conditions, and the submission gives it the option to go public after the SEC finishes its review. The number underneath it is a $965 billion private valuation from a $65 billion round, with reporting putting annualized revenue near a $47 billion run rate. What a confidential draft S-1 actually commits to (almost nothing), what it signals (almost everything), the frontier-AI IPO race it joins, and the one figure in the eventual prospectus that matters more than the valuation: inference gross margin.]]></description>
+    </item>
     <item>
       <title><![CDATA[Thirty AI Bills Just Survived in Sacramento. The Next Four Weeks Set the US Floor.]]></title>
       <link>https://tensorfeed.ai/originals/california-30-ai-bills-crossover-july-sprint</link>
@@ -52,7 +92,7 @@
       <link>https://tensorfeed.ai/originals/opus-4-8-workflow-orchestration-primitive</link>
       <guid isPermaLink="true">https://tensorfeed.ai/originals/opus-4-8-workflow-orchestration-primitive</guid>
       <pubDate>Thu, 28 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <dc:creator><![CDATA[Adrian Vale]]></dc:creator>
       <description><![CDATA[Anthropic shipped Claude Opus 4.8 this week, and the part agent operators are talking about is not the quality bump. It is Workflow, a primitive that turns deterministic multi-agent orchestration (fan-out, pipelines, judge panels, adversarial verification) into a first-class feature of the model tool itself, not an app-layer framework you bolt on. Inside what actually shipped, why moving orchestration from the framework into the runtime shifts the default behavior of the median agent builder, the cost and latency math that changes when fan-out becomes one line to express (a ten-way parallel step quietly costs ten times the tokens), the pipeline-versus-barrier latency trap, and how the agent-framework market splits along the multi-model line once orchestration ergonomics stop being a moat.]]></description>
     </item>
     <item>
@@ -84,7 +124,7 @@
       <link>https://tensorfeed.ai/originals/starlette-badhost-critical-cve-agent-stack-audit</link>
       <guid isPermaLink="true">https://tensorfeed.ai/originals/starlette-badhost-critical-cve-agent-stack-audit</guid>
       <pubDate>Wed, 27 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <dc:creator><![CDATA[Adrian Vale]]></dc:creator>
       <description><![CDATA[Ars Technica reported on May 26 that a critical vulnerability nicknamed BadHost was found in Starlette, the ASGI toolkit that ships inside roughly every FastAPI deployment and is downloaded 325 million times a week. The CVE imperils millions of AI agents because FastAPI is the default backend for agent servers, MCP gateways, and tool-calling middleware across the cohort. Inside: why agents got hit disproportionately (the standardization speed), the five-minute operator audit (uv tree, version pin, exposure triage, log the work), the TF security feeds that confirm exposure across a portfolio in one call (/api/ai-cves/latest, /api/security/ai-supply-chain-iocs.json, /api/premium/ai-cves/batch), and the structural lesson about dependency concentration when the asset value on top of the graph is the spend on a model API key.]]></description>
     </item>
     <item>
@@ -110,14 +150,6 @@
       <pubDate>Mon, 25 May 2026 07:00:00 GMT</pubDate>
       <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
       <description><![CDATA[Keyrock published a market-structure note on May 19 finding that 76 percent of AI agent transactions on public stablecoin rails fall below the 30-cent fee floor of the traditional card networks. Five days later, Coinbase product lead Nick Prince posted a demo in which an AI agent on Base spent $1.87 in USDC across six paid x402 calls to draft a full SpaceX investment-committee memo from the S-1 in twelve minutes. Inside the convergent week (Stellar joining x402, Cryptorefills launching agent payments, Fireblocks signing on, AllUnity adding the first non-dollar stablecoin), why SaaS subscription pricing breaks against an audience that does not amortize, and three signposts for the next ninety days.]]></description>
-    </item>
-    <item>
-      <title><![CDATA[Pope Leo XIV Just Wrote a 235-Page Encyclical on AI. Anthropic's Co-Founder Was Standing Next to Him.]]></title>
-      <link>https://tensorfeed.ai/originals/pope-leo-magnifica-humanitas-anthropic-olah</link>
-      <guid isPermaLink="true">https://tensorfeed.ai/originals/pope-leo-magnifica-humanitas-anthropic-olah</guid>
-      <pubDate>Mon, 25 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Kira Nolan]]></dc:creator>
-      <description><![CDATA[Pope Leo XIV released Magnifica Humanitas, the first papal encyclical to take AI as its central subject, at the Vatican on May 25. 235 pages, 245 paragraphs, signed 135 years to the day after Rerum Novarum reframed labor and capital. Pope Leo presented it personally, the first pontiff ever to do so, with Anthropic co-founder Chris Olah at his side. Same day, the $30B Anthropic round at $900B closes; three days earlier, OpenAI files its S-1. Inside what is actually in the text (autonomous weapons judged practically beyond human governance, a call for wider ownership of AI data, slow-down language on deployment), why Olah specifically rather than any other lab founder, what moral capital buys in regulator hearings and Catholic-institution procurement, and the three signposts to watch over the next ninety days.]]></description>
     </item>
     <item>
       <title><![CDATA[AI Agents Just Got Their Own Web Browser. The Runtime Layer Is Forking Away From Humans.]]></title>
@@ -156,7 +188,7 @@
       <link>https://tensorfeed.ai/originals/openai-ipo-filing-anthropic-first-profit</link>
       <guid isPermaLink="true">https://tensorfeed.ai/originals/openai-ipo-filing-anthropic-first-profit</guid>
       <pubDate>Sat, 23 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <dc:creator><![CDATA[Adrian Vale]]></dc:creator>
       <description><![CDATA[OpenAI sent its confidential S-1 to the SEC on Friday May 22 targeting an $852B to $1T Q4 listing with Goldman Sachs and Morgan Stanley leading, while still losing $1.22 for every dollar of revenue in Q1 on $5.7B of quarterly revenue. Six days earlier, Anthropic told investors it expects a $559M operating profit on $10.9B of Q2 revenue (130% growth from Q1), the first profitable quarter in company history, with the compute cost ratio collapsing from 71 cents per $1 to 56 cents in a single quarter. Two trillion-dollar labs, two opposite financial moments in the same week. Inside the side-by-side, why distribution-first burning and unit-economics-first compounding can both be rational bets, what the S-1 actually discloses vs hides until the public roadshow, and what the price-floor implications are for every other API vendor.]]></description>
     </item>
     <item>
@@ -164,7 +196,7 @@
       <link>https://tensorfeed.ai/originals/x402-multi-rail-fireblocks-allunity</link>
       <guid isPermaLink="true">https://tensorfeed.ai/originals/x402-multi-rail-fireblocks-allunity</guid>
       <pubDate>Thu, 21 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <dc:creator><![CDATA[Adrian Vale]]></dc:creator>
       <description><![CDATA[Two announcements landed on May 20. Fireblocks, the institutional crypto custodian rather than a startup, joined the x402 Foundation and shipped a security extension for request integrity and spend governance. The same day, Germany’s MiCA-regulated AllUnity rolled out Agentic Payments using x402 to settle into a Swedish krona stablecoin. The next morning, a third party offered the spec authors a non-Coinbase, three-rail acceptance fixture on #2207 covering Base USDC, Solana USDC, and JPYC on Polygon. x402 was a Coinbase-and-Cloudflare default six months ago. After this week the variant axis is open.]]></description>
     </item>
     <item>
@@ -172,7 +204,7 @@
       <link>https://tensorfeed.ai/originals/ai-status-extension-live</link>
       <guid isPermaLink="true">https://tensorfeed.ai/originals/ai-status-extension-live</guid>
       <pubDate>Wed, 20 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <dc:creator><![CDATA[Adrian Vale]]></dc:creator>
       <description><![CDATA[Our embeddable Live Monitor just shipped as a Chrome extension, approved and public on the Web Store as of today. A toolbar popup with real status and real p95 latency for every major AI provider, plus a passive badge that quietly turns amber or red the moment something degrades. Same honest-by-construction rules as the widget, in the surface that already lives next to your address bar. One click to install, no account, no tracking, host access scoped to tensorfeed.ai only. Inside: why a toolbar popup is the right surface for an AI health signal, the CSP frame-ancestors detail that almost killed the review, and what permissions we deliberately did not ask for.]]></description>
     </item>
     <item>
@@ -196,7 +228,7 @@
       <link>https://tensorfeed.ai/originals/openai-chatgpt-bank-access-agent-trust-gap</link>
       <guid isPermaLink="true">https://tensorfeed.ai/originals/openai-chatgpt-bank-access-agent-trust-gap</guid>
       <pubDate>Sun, 17 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Ripper]]></dc:creator>
+      <dc:creator><![CDATA[Adrian Vale]]></dc:creator>
       <description><![CDATA[OpenAI is wiring ChatGPT into financial accounts through a Plaid connection. Broad standing access to your bank is the convenient answer and the wrong architecture. The other one is not theoretical: no custody, per-action authorization, a signed receipt for every paid call. Today our own /api/stats crossed into the thousands of verifiable paid agent calls, each with a receipt an auditor can check against our published key. That contrast is the whole argument: convenience is winning the demo, it should not win the standard.]]></description>
     </item>
     <item>
@@ -214,38 +246,6 @@
       <pubDate>Sat, 16 May 2026 07:00:00 GMT</pubDate>
       <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
       <description><![CDATA[Anthropic bumped Claude Code weekly limits 50 percent through July 13, then re-allowed third-party agent harnesses on paid plans behind a separate credit meter, then watched Sam Altman dangle two free months of Codex at every new business customer. Three live interventions on the same product surface in 35 days. Inside the 4.2x token-efficiency gap that makes Codex structurally cheaper to deliver, the $900B funding round running on top of the same unit-economics problem, and the July 13 sunset that gives Anthropic eight weeks to figure out what the agent subscription actually costs.]]></description>
-    </item>
-    <item>
-      <title><![CDATA[Cerebras Went Public at a $95 Billion Close. The Non-Nvidia Inference Bet Is Now a Market Story.]]></title>
-      <link>https://tensorfeed.ai/originals/cerebras-95-billion-ipo-inference-bet</link>
-      <guid isPermaLink="true">https://tensorfeed.ai/originals/cerebras-95-billion-ipo-inference-bet</guid>
-      <pubDate>Sat, 16 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Marcus Chen]]></dc:creator>
-      <description><![CDATA[Cerebras priced its IPO at $185, above the raised $150 to $160 range, opened at $350 on May 14, and closed day one up 68 percent near a $95 billion market cap, then gave back about 10 percent on day two. The largest US tech IPO since Uber in 2019 sits on $510 million of revenue, a non-GAAP loss, a $10 billion OpenAI contract, and 86 percent revenue from two UAE entities. The mechanics, the asterisks, and what it does to the compute capital map.]]></description>
-    </item>
-    <item>
-      <title><![CDATA[Wafer-Scale vs the GPU: What Cerebras Actually Sells, and Why It Only Matters for Inference]]></title>
-      <link>https://tensorfeed.ai/originals/wafer-scale-vs-gpu-what-cerebras-sells</link>
-      <guid isPermaLink="true">https://tensorfeed.ai/originals/wafer-scale-vs-gpu-what-cerebras-sells</guid>
-      <pubDate>Sat, 16 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Ripper]]></dc:creator>
-      <description><![CDATA[Now that Cerebras is public, the question is the chip, not the valuation. The WSE-3 is one 46,225 square millimeter die: 4 trillion transistors, 900,000 cores, the whole model resident in on-wafer SRAM. Cerebras and Artificial Analysis report Llama 4 Maverick at 2,522 tokens per second against 1,038 on Nvidia Blackwell. Why on-wafer residence collapses token latency, why latency is the cost that compounds in agent loops, and the honest bear case.]]></description>
-    </item>
-    <item>
-      <title><![CDATA[Cerebras Cleared the IPO. It Did Not Clear the G42 Question.]]></title>
-      <link>https://tensorfeed.ai/originals/cerebras-g42-cfius-national-security-tax</link>
-      <guid isPermaLink="true">https://tensorfeed.ai/originals/cerebras-g42-cfius-national-security-tax</guid>
-      <pubDate>Sat, 16 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Kira Nolan]]></dc:creator>
-      <description><![CDATA[The CFIUS review of the G42 stake is what postponed this exact IPO in 2024. The 2026 listing went through after the investment was restructured into non-voting shares and the notice was withdrawn, not after the dependence was removed. The 86 percent revenue concentration in two UAE entities is still in the S-1 as a risk. Why national-security scrutiny was papered rather than resolved, and why it is now a structural tax on the 2026 AI-silicon IPO class.]]></description>
-    </item>
-    <item>
-      <title><![CDATA[We Made AI Status Embeddable: One Line of HTML, Live on Any Site]]></title>
-      <link>https://tensorfeed.ai/originals/live-ai-status-widget</link>
-      <guid isPermaLink="true">https://tensorfeed.ai/originals/live-ai-status-widget</guid>
-      <pubDate>Fri, 15 May 2026 07:00:00 GMT</pubDate>
-      <dc:creator><![CDATA[Ripper]]></dc:creator>
-      <description><![CDATA[We shipped a free, self-contained widget that drops a real-time AI status console onto any site with one line of HTML. Sixteen LLM providers and counting, real p95 latency where we probe and real seven-day uptime where we do not, no fabricated charts, no cry-wolf alarms, no ads. Inside the honest-by-construction engineering (vendor status authoritative, the probe never overrides it, NO DATA is never an outage), why an embeddable trust widget is the cleanest discovery loop for humans and agents, and the three ways to embed it: one line of HTML, the zero-dependency @tensorfeed/status-widget npm component, or the browser extension on the way.]]></description>
     </item>
   </channel>
 </rss>
