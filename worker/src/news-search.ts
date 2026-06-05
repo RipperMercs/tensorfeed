@@ -72,6 +72,18 @@ export interface NewsSearchResult {
   total_corpus: number;
   matched: number;
   returned: number;
+  /**
+   * Corpus capture time: the most recent fetchedAt across the WHOLE article
+   * corpus (the RSS poll cron stamps every article it pulls with the pull
+   * time, so this is effectively the last successful news refresh). Null only
+   * when the corpus is empty or carries no parseable fetchedAt. This is the
+   * real data-capture signal the 30-min staleness SLA bills against; it is NOT
+   * a response timestamp and it advances every poll even in a quiet news
+   * window (so a quiet period does not falsely look stale, while a stalled
+   * poll cron does). publishedAt is deliberately not used: it is the article's
+   * own publication time, which can outrun the SLA during slow news.
+   */
+  captured_at: string | null;
   attribution: NewsAttribution;
   results: {
     title: string;
@@ -213,6 +225,19 @@ export async function searchNews(
     ((await env.TENSORFEED_NEWS.get('articles', 'json')) as Article[] | null) ?? [];
   const totalCorpus = articles.length;
 
+  // Corpus capture time = the freshest fetchedAt across the whole corpus (the
+  // RSS poll stamps every article with its pull time). This is the data-time
+  // the 30-min staleness SLA bills against. Computed over the full corpus, not
+  // the filtered pool, so a from/to filter restricting to old articles does
+  // not make a healthy corpus look stale.
+  let newestFetchedMs = -Infinity;
+  for (const a of articles) {
+    const ms = new Date(a.fetchedAt).getTime();
+    if (!Number.isNaN(ms) && ms > newestFetchedMs) newestFetchedMs = ms;
+  }
+  const corpusCapturedAt =
+    newestFetchedMs > -Infinity ? new Date(newestFetchedMs).toISOString() : null;
+
   // Apply non-text filters first to shrink the candidate set
   let pool = articles;
   if (options.from || options.to) {
@@ -246,6 +271,7 @@ export async function searchNews(
       total_corpus: totalCorpus,
       matched: pool.length,
       returned: sorted.length,
+      captured_at: corpusCapturedAt,
       attribution: NEWS_ATTRIBUTION,
       results: sorted.map(a => ({
         title: a.title,
@@ -275,6 +301,7 @@ export async function searchNews(
       total_corpus: totalCorpus,
       matched: 0,
       returned: 0,
+      captured_at: corpusCapturedAt,
       attribution: NEWS_ATTRIBUTION,
       results: [],
     };
@@ -307,6 +334,7 @@ export async function searchNews(
     total_corpus: totalCorpus,
     matched: scored.length,
     returned: top.length,
+    captured_at: corpusCapturedAt,
     attribution: NEWS_ATTRIBUTION,
     results: top.map(s => ({
       title: s.article.title,

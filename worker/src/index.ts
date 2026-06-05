@@ -8327,6 +8327,17 @@ export default {
         transformKevEntry(entry),
         measureSourceBytes(entry),
       );
+      // Real data-capture time = when our daily 06:30 UTC cron last wrote
+      // kev:current (kev:meta.last_run), the same snapshot readKEVByCVE reads.
+      // NOT entry.dateAdded: that is CISA's per-CVE add date, which for almost
+      // every entry is weeks or months in the past (always beyond the 36h SLA),
+      // so gating on it would no-charge fresh data on nearly every call. Gating
+      // on last_run no-charges only a stalled capture cron.
+      const kevMeta = await readKEVMeta(env);
+      const kevLastRun =
+        kevMeta && typeof kevMeta === 'object' && typeof (kevMeta as Record<string, unknown>).last_run === 'string'
+          ? ((kevMeta as Record<string, unknown>).last_run as string)
+          : null;
       ctx.waitUntil(
         logPremiumUsage(
           env,
@@ -8349,6 +8360,8 @@ export default {
         1,
         request,
         env,
+        null,
+        kevLastRun,
       );
     }
 
@@ -8372,6 +8385,12 @@ export default {
         transformEpssScore(raw.data),
         measureSourceBytes(raw.data),
       );
+      // No capturedAt is plumbed here on purpose: the only data time available
+      // is FIRST.org's date-only EPSS model date, which combined with the 24h
+      // KV cache and FIRST's own publication lag can legitimately reach past the
+      // 36h SLA on FRESH data, so gating on it would false-no-charge healthy
+      // calls. EPSS is live-fetched with a 24h cache and cannot serve deeply
+      // stale data, so leaving the SLA inert here is the revenue-safe choice.
       ctx.waitUntil(
         logPremiumUsage(
           env,
@@ -8549,6 +8568,11 @@ export default {
           payment.payerWallet,
         ),
       );
+      // No capturedAt is plumbed here on purpose (same reasoning as clean/epss):
+      // FIRST.org's date-only EPSS model date plus the 24h cache and publication
+      // lag can legitimately exceed the 36h SLA on FRESH data, which would
+      // false-no-charge healthy calls. EPSS is live-fetched with a 24h cache so
+      // it cannot serve deeply stale data; leaving the SLA inert is revenue-safe.
       return await premiumResponse(
         {
           ok: true,
@@ -8607,6 +8631,10 @@ export default {
           payment.payerWallet,
         ),
       );
+      // No single dataCapturedAt: the top-N is a heterogeneous set whose rows
+      // each carry their own FIRST.org EPSS model date (result.data[i].date),
+      // so there is no one snapshot capture time to gate the 36h SLA against.
+      // Leave the 7th arg unset; the per-row dates travel in the payload.
       return await premiumResponse(
         {
           ok: true,
@@ -8643,6 +8671,16 @@ export default {
           503,
         );
       }
+      // The real data-capture time is when our daily 06:30 UTC cron last
+      // fetched and wrote kev:current (kev:meta.last_run), NOT catalog
+      // dateReleased: CISA can go several days without releasing a new
+      // catalog version, so dateReleased can sit past the 36h SLA while our
+      // cron is healthy. Gating on last_run no-charges only a stalled cron.
+      const kevMeta = await readKEVMeta(env);
+      const kevLastRun =
+        kevMeta && typeof kevMeta === 'object' && typeof (kevMeta as Record<string, unknown>).last_run === 'string'
+          ? ((kevMeta as Record<string, unknown>).last_run as string)
+          : null;
       ctx.waitUntil(
         logPremiumUsage(
           env,
@@ -8666,6 +8704,8 @@ export default {
         1,
         request,
         env,
+        null,
+        kevLastRun,
       );
     }
 
@@ -9907,7 +9947,11 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/research/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Pass the real OpenAlex baseline capture time so the 24h staleness SLA
+      // can no-charge a stalled baseline cron. baseline_captured_at is the
+      // BASELINE_KEY (openalex-ai-institutions:current) snapshot's capturedAt;
+      // computed_at is response time and must never gate billing.
+      return await premiumResponse(result, payment, 1, request, env, null, result.baseline_captured_at);
     }
 
     // === PAID PREMIUM: FUNDING EXPOSURE (Tier 1, 1 credit) ===
@@ -10725,7 +10769,11 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-cves/ai-stack-cves', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Pass the DP CC batch extraction time so the 10-day staleness SLA can
+      // no-charge a stalled extraction pipeline. extracted_at is the batch's
+      // own data-capture time (set at ingest), not a response timestamp. Same
+      // contract the stack-safety-verdict sibling uses (capturedAt = extractedAt).
+      return await premiumResponse(result, payment, 1, request, env, null, result.extracted_at);
     }
 
     // === PAID PREMIUM: EXPLOITED IN WILD (Tier 1, 1 credit) ==========
@@ -10752,7 +10800,11 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-cves/exploited-in-wild', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Pass the DP CC batch extraction time so the 10-day staleness SLA can
+      // no-charge a stalled extraction pipeline. extracted_at is the batch's
+      // own data-capture time, not a response timestamp. Same contract as
+      // the stack-safety-verdict sibling (capturedAt = extractedAt).
+      return await premiumResponse(result, payment, 1, request, env, null, result.extracted_at);
     }
 
     // === PAID PREMIUM: CVE LOOKUP (Tier 1, 1 credit, param-required) =
@@ -10804,7 +10856,10 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-cves/cve', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Pass the resolved batch's extraction time so the 10-day staleness SLA
+      // can no-charge a stalled extraction pipeline. extracted_at is the DP CC
+      // batch data-capture time surfaced by lookupCve, not a response timestamp.
+      return await premiumResponse(result, payment, 1, request, env, null, result.extracted_at);
     }
 
     // === FREE: AI CRAWLER ACCESS MAP, SUMMARY ===
@@ -12997,7 +13052,22 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/providers', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 3, request, env);
+      // Gate the 24h staleness SLA on the LIVE status capture time
+      // (data_freshness.status = the latest probe lastChecked), which advances
+      // on the status cron. We deliberately do NOT gate on data_freshness.pricing:
+      // the pricing snapshot lastUpdated only moves when the LiteLLM catalog
+      // changes (often weeks apart), so it is structurally older than 24h in
+      // normal operation and would no-charge fresh deep-dives. If a provider has
+      // no status (rare), capturedAt is null and the call charges (revenue-safe).
+      return await premiumResponse(
+        result,
+        payment,
+        3,
+        request,
+        env,
+        null,
+        result.data_freshness.status ?? null,
+      );
     }
 
     // === PAID PREMIUM: COST PROJECTION (Tier 1, 1 credit) ===

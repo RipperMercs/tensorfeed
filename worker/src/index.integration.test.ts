@@ -1388,3 +1388,164 @@ describe('admin request-health view', () => {
     expect(res.json?.top_5xx_by_path ?? null).toBeNull();
   });
 });
+
+// === SLA capturedAt no-charge fix (fix-sla-capturedat) ===============
+// These lock in the billing-correctness fix: 7 SLA-bearing premium
+// endpoints surfaced their real data-capture time under a field that
+// premiumResponse's precedence walk did not read, so a stalled cron
+// billed stale data as fresh (the staleness no-charge was silently
+// inert). Each fix plumbs the REAL underlying capture time as the
+// explicit 7th dataCapturedAt arg (or a precedence field). The two
+// representative HIGH endpoints below prove the SLA now fires: a recent
+// capture still charges, a capture past the SLA no-charges.
+describe('SLA capturedAt no-charge (research/velocity, kev/full)', () => {
+  // Seed a minimal but valid velocity baseline + recent window so
+  // computeResearchVelocity runs fully offline (the recent snapshot's
+  // windowDays/realizedWindowDays match the constants, so the OpenAlex
+  // 30-day fetch is short-circuited). capturedAt drives the baseline age.
+  function velocitySeed(baselineCapturedAt: string): Record<string, unknown> {
+    return {
+      'openalex-ai-institutions:current': {
+        capturedAt: baselineCapturedAt,
+        institutions: [
+          {
+            rank: 1,
+            openalex_id: 'I100',
+            display_name: 'Test University',
+            country_code: 'US',
+            type: 'education',
+            ai_works_last_year: 1200,
+            total_works_count: 50000,
+          },
+        ],
+      },
+      // realizedWindowDays must equal REALIZED_WINDOW_DAYS (30 - 14 = 16) and
+      // windowDays must equal RECENT_WINDOW_DAYS (30), or getRecent30dCached
+      // discards this and hits the network. fromDate/toDate are descriptive.
+      'openalex-ai-institutions:recent-30d': {
+        fetchedAt: '2026-06-01T00:00:00Z',
+        windowDays: 30,
+        realizedWindowDays: 16,
+        lagBufferDays: 14,
+        fromDate: '2026-05-05',
+        toDate: '2026-05-19',
+        countsById: { I100: 60 },
+      },
+    };
+  }
+
+  it('research/velocity: a RECENT baseline still charges 1 credit', async () => {
+    // Baseline captured 1h ago: well inside the 24h SLA, so the call is a
+    // normal charge of exactly 1 credit. Proves the fix did not introduce a
+    // no-charge on fresh data.
+    const captured = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const env = await makeEnv({ cache: velocitySeed(captured) });
+    const token = uniqueToken();
+    await seedToken(env, token, 50);
+
+    const res = await call(env, '/api/premium/research/velocity', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.stale ?? false).toBe(false);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing?.credits_charged).toBe(1);
+    expect(billing?.no_charge_reason ?? null).toBeNull();
+    expect(await balanceOf(env, token)).toBe(49);
+  });
+
+  it('research/velocity: a STALE baseline (past the 24h SLA) no-charges', async () => {
+    // Baseline captured 3 days ago: past the 24h SLA. Under the OLD inert
+    // behavior baseline_captured_at was not a precedence field, so the call
+    // wrongly charged. The fix plumbs it as the 7th arg, so the SLA now fires
+    // a stale_data no-charge and the balance is untouched.
+    const captured = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    const env = await makeEnv({ cache: velocitySeed(captured) });
+    const token = uniqueToken();
+    await seedToken(env, token, 50);
+
+    const res = await call(env, '/api/premium/research/velocity', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.stale).toBe(true);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing?.credits_charged).toBe(0);
+    expect(billing?.no_charge_reason).toBe('stale_data');
+    // Balance unchanged: stale data is free.
+    expect(await balanceOf(env, token)).toBe(50);
+  });
+
+  // kev/full reads the catalog from kev:current and the capture time from
+  // kev:meta.last_run (NOT catalog.dateReleased, which can sit past the SLA
+  // while our daily cron is healthy). Seed both.
+  function kevSeed(lastRun: string): Record<string, unknown> {
+    return {
+      'kev:current': {
+        title: 'CISA KEV',
+        catalogVersion: '2026.06.01',
+        dateReleased: '2026-06-01T00:00:00.000Z',
+        count: 1,
+        vulnerabilities: [
+          {
+            cveID: 'CVE-2026-0001',
+            vendorProject: 'TestVendor',
+            product: 'TestProduct',
+            vulnerabilityName: 'Test vuln',
+            dateAdded: '2026-01-15',
+            shortDescription: 'A test vulnerability.',
+            requiredAction: 'Patch it.',
+            dueDate: '2026-02-15',
+            knownRansomwareCampaignUse: 'Unknown',
+            notes: '',
+          },
+        ],
+      },
+      'kev:meta': {
+        last_run: lastRun,
+        catalog_version: '2026.06.01',
+        catalog_date_released: '2026-06-01T00:00:00.000Z',
+        total_entries: 1,
+        newly_added_today: 0,
+      },
+    };
+  }
+
+  it('security/kev/full: a RECENT cron run still charges 1 credit', async () => {
+    // last_run 1h ago: inside the 36h SLA, normal charge.
+    const lastRun = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const env = await makeEnv({ cache: kevSeed(lastRun) });
+    const token = uniqueToken();
+    await seedToken(env, token, 50);
+
+    const res = await call(env, '/api/premium/security/kev/full', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.stale ?? false).toBe(false);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing?.credits_charged).toBe(1);
+    expect(billing?.no_charge_reason ?? null).toBeNull();
+    expect(await balanceOf(env, token)).toBe(49);
+  });
+
+  it('security/kev/full: a STALE cron run (past the 36h SLA) no-charges', async () => {
+    // last_run 4 days ago: past the 36h SLA. The fix plumbs kev:meta.last_run
+    // as the 7th arg, so a stalled capture cron no-charges instead of billing
+    // stale catalog data as fresh.
+    const lastRun = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
+    const env = await makeEnv({ cache: kevSeed(lastRun) });
+    const token = uniqueToken();
+    await seedToken(env, token, 50);
+
+    const res = await call(env, '/api/premium/security/kev/full', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.stale).toBe(true);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing?.credits_charged).toBe(0);
+    expect(billing?.no_charge_reason).toBe('stale_data');
+    expect(await balanceOf(env, token)).toBe(50);
+  });
+});

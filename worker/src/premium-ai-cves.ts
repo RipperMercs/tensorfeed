@@ -186,6 +186,12 @@ export interface CveLookupResponse {
   found: boolean;
   paper: PublicPaper | null;
   batch_id: string | null;
+  /**
+   * The DP CC extraction time of the batch this CVE resolved from (ISO 8601),
+   * or null when not found. This is the real underlying-data capture time the
+   * 10-day staleness SLA bills against, NOT a response timestamp.
+   */
+  extracted_at: string | null;
   source_license: string;
   source_attribution: string;
 }
@@ -202,6 +208,7 @@ export async function lookupCve(env: Env, cveId: string): Promise<CveLookupRespo
     found: false,
     paper: null,
     batch_id: null,
+    extracted_at: null,
     ...publicAttribution(),
   };
 
@@ -217,6 +224,9 @@ export async function lookupCve(env: Env, cveId: string): Promise<CveLookupRespo
     found: true,
     paper: toPublicPaper(batch.papers[entry.paper_index]),
     batch_id: entry.batch_id,
+    // The resolved batch's extraction time = the real data-capture time the
+    // 10-day staleness SLA bills against (surfaced for the receipt + 7th-arg).
+    extracted_at: batch.extracted_at,
     ...publicAttribution(),
   };
 }
@@ -293,6 +303,7 @@ export function buildBatchResponse(
       found: false,
       paper: null,
       batch_id: null,
+      extracted_at: null,
       ...publicAttribution(),
     };
     if (!index || !index[id]) return empty;
@@ -304,6 +315,7 @@ export function buildBatchResponse(
       found: true,
       paper: toPublicPaper(batch.papers[entry.paper_index]),
       batch_id: entry.batch_id,
+      extracted_at: batch.extracted_at,
       ...publicAttribution(),
     };
   });
