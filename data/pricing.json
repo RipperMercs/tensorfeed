@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-01",
+  "lastUpdated": "2026-06-05",
   "providers": [
     {
       "id": "anthropic",
@@ -353,8 +353,8 @@
         {
           "id": "deepseek-v4-pro",
           "name": "DeepSeek V4 Pro",
-          "inputPrice": 1.74,
-          "outputPrice": 3.48,
+          "inputPrice": 0.435,
+          "outputPrice": 0.87,
           "contextWindow": 1000000,
           "released": "2026-04",
           "openSource": true,
@@ -390,6 +390,24 @@
           "contextWindow": 1000000,
           "released": "2026-05",
           "capabilities": ["text", "code", "reasoning", "tool-use"],
+          "tier": "flagship"
+        }
+      ]
+    },
+    {
+      "id": "xai",
+      "name": "xAI",
+      "logo": "/images/providers/xai.png",
+      "url": "https://x.ai",
+      "models": [
+        {
+          "id": "grok-4-3",
+          "name": "Grok 4.3",
+          "inputPrice": 1.25,
+          "outputPrice": 2.5,
+          "contextWindow": 1000000,
+          "released": "2026-04",
+          "capabilities": ["text", "vision", "tool-use", "code"],
           "tier": "flagship"
         }
       ]

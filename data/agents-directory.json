@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-03-28",
+  "lastUpdated": "2026-06-05",
   "categories": [
     {
       "id": "coding",
@@ -60,11 +60,11 @@
     },
     {
       "id": "windsurf",
-      "name": "Windsurf",
-      "provider": "Codeium",
+      "name": "Devin Desktop (formerly Windsurf)",
+      "provider": "Cognition",
       "category": "coding",
-      "description": "An AI-powered IDE that combines copilot and agent capabilities, allowing flows where the AI and developer collaborate on code changes across an entire project.",
-      "url": "https://codeium.com/windsurf",
+      "description": "An AI-native developer environment (rebranded from Windsurf in June 2026) that provides a unified surface for managing local and cloud coding agents, including Devin, Claude Code, Codex, and custom agents through the Agent Client Protocol.",
+      "url": "https://devin.ai",
       "pricing": "Free tier, Pro $15/mo, Teams $30/mo",
       "launched": 2024
     },
@@ -117,6 +117,16 @@
       "url": "https://gemini.google.com",
       "pricing": "Free tier, Advanced $19.99/mo (included with Google One AI Premium)",
       "launched": 2023
+    },
+    {
+      "id": "gemini-spark",
+      "name": "Gemini Spark",
+      "provider": "Google",
+      "category": "general",
+      "description": "A 24/7 personal AI agent announced at Google I/O May 2026 that runs continuously in the background, managing Gmail, Google Calendar, and 30+ third-party tools via MCP connections. Designed to handle tasks proactively with user approval gates.",
+      "url": "https://blog.google/products-and-platforms/products/google-one/google-ai-subscriptions/",
+      "pricing": "Google AI Ultra subscription required (~$100/mo); US beta access for Ultra subscribers",
+      "launched": 2026
     },
     {
       "id": "claude",
