@@ -1233,12 +1233,25 @@ const TOOLS: McpToolDef[] = [
       if (reqOp !== null) params.set('require_operational', reqOp);
       const exDep = getStringArg(args, 'exclude_deprecated');
       if (exDep !== null) params.set('exclude_deprecated', exDep);
-      const res = await fetch(`https://tensorfeed.ai/api/premium/route-verdict?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${ctx?.bearerToken ?? ''}`,
-          'User-Agent': 'tensorfeed-mcp/route_verdict',
-        },
-      });
+      // Bound the self-relay so a stalled upstream cannot hang the /mcp
+      // request. 12s sits comfortably under the fetch-handler soft deadline;
+      // an abort returns a clean structured error rather than a raw throw.
+      let res: Response;
+      try {
+        res = await fetch(`https://tensorfeed.ai/api/premium/route-verdict?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${ctx?.bearerToken ?? ''}`,
+            'User-Agent': 'tensorfeed-mcp/route_verdict',
+          },
+          signal: AbortSignal.timeout(12000),
+        });
+      } catch {
+        return {
+          ok: false,
+          error: 'upstream_timeout',
+          detail: 'The route-verdict upstream did not respond in time. Retry shortly.',
+        };
+      }
       const data = await res.json().catch(() => ({ ok: false, error: 'upstream_parse_error' }));
       if (res.status === 402) {
         return {

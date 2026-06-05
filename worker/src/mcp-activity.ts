@@ -181,6 +181,10 @@ async function runAeSql(env: Env, sql: string): Promise<AeRow[] | null> {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`, 'Content-Type': 'text/plain' },
         body: sql,
+        // Bound the AE SQL call so a stalled API cannot hang /api/mcp/activity.
+        // The catch below degrades to null. Mirrors the 15s AE-SQL timeout in
+        // usage-meter and the sibling fetchNpmDownloads timeout in this file.
+        signal: AbortSignal.timeout(10000),
       },
     );
     if (!resp.ok) return null;
