@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'spacex-ipo-anthropic-colossus-compute',
+    title:
+      "The Biggest IPO in History Is Also an AI-Compute Disclosure. SpaceX's S-1 Surfaced the Anthropic-Colossus Lease.",
+    author: 'Marcus Chen',
+    date: 'June 4, 2026',
+    readTime: '7 min read',
+    description:
+      "The SpaceX roadshow opens June 4; the deal prices June 11, debuts June 12, and trades on Nasdaq as SPCX, raising up to $75 billion at a valuation of at least $1.8 trillion (more than twice the largest IPO ever, so the biggest in history). Strip away the Mars narrative and it is a Starlink connectivity business: ~8 million customers, ~$11.4 billion revenue, ~$4.4 billion operating income, ~$7.2 billion segment adjusted EBITDA in 2025, all trading inside SPCX. The disclosure that turns it into a compute story sits in the S-1: Anthropic pays $1.25 billion per month for the full output of xAI's Colossus 1 (a ~300 MW Memphis cluster with 220,000+ H100/H200/GB200 GPUs that had been running at roughly 11 percent after xAI moved its own training to Colossus 2). Colossus is xAI's, not SpaceX's; the money goes to xAI and the terms only surfaced because SpaceX had to file. Then the contradiction: the S-1 frames it as a fee through May 2029 (a $40 billion-plus three-year read), while Musk publicly calls it a 180-day lease with 90-day mutual cancellation that was 'our request.' Inside the cash-engine pattern funding compute, idle-GPU monetization as a business, the IPO calendar as an involuntary transparency engine for the compute layer, and three things to watch after the June 11 pricing.",
+  },
+  {
     slug: 'deepseek-maiden-funding-round-59-billion',
     title:
       'DeepSeek Took Its First Outside Money. The $59 Billion Price Tells You What Open Weights Are Worth.',
