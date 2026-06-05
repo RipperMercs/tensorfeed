@@ -4605,6 +4605,8 @@ export default {
           premiumProcurementAiContractsDemand: '/api/premium/procurement/ai-contracts/demand (1 credit, AFTA-signed; one signed demand read over the free /api/procurement/ai-contracts snapshot. Agency concentration (top-agency share of tracked AI award dollars plus the Herfindahl-Hirschman Index over ranked agencies), the emerging contractors winning AI work outside the known vendor cohort, and the top buying agencies, with echoed total dollars. captured_at is the real snapshot data time; no-charge when the snapshot is not yet captured.)',
           procurementAiOpportunities: '/api/procurement/ai-opportunities (free; open US federal AI contract opportunities from SAM.gov, the open-solicitation sibling of /api/procurement/ai-contracts. A title-keyword search for AI terms across every agency over the trailing 90 days, rolled up by agency and set-aside, with a closing-soon preview and the 25 newest postings. The full ranked open pipeline is the paid sibling. Source SAM.gov, public domain. Precomputed daily; cold-start returns an empty 200, never 503.)',
           premiumProcurementAiOpportunitiesDeadlines: '/api/premium/procurement/ai-opportunities/deadlines (1 credit, AFTA-signed; the full ranked pipeline of open federal AI solicitations over the free /api/procurement/ai-opportunities snapshot, sorted by response deadline with days_remaining on each, plus the echoed agency and set-aside rollups. captured_at is the real snapshot data time; no-charge when the snapshot is not yet captured.)',
+          exportControlsAi: '/api/export-controls/ai (free; classified US BIS AI and advanced-computing export-control actions (Entity List changes, license and threshold rules) from the Federal Register. Returns by_category counts plus the 30 most recent classified events: Entity List additions, advanced-computing license and threshold rules, due-diligence and model-weights measures. Source federalregister.gov, public domain; TensorFeed editorial classification. Precomputed daily; cold-start returns an empty 200, never 503.)',
+          premiumExportControlsAiHistory: '/api/premium/export-controls/ai/history?from=YYYY-MM-DD&to=YYYY-MM-DD&category= (1 credit, AFTA-signed; full filterable history of AI export-control actions by date range and category. Filters the BIS Federal Register snapshot by inclusive publication-date range and category (entity-list, compute-threshold, license-policy, due-diligence, model-weights, other). captured_at is the real snapshot data time; no-charge when the snapshot is missing or the filtered window is empty. Strict-premium prefix; anonymous Bazaar probes see a clean 402 challenge.)',
           aiDatacenters: '/api/ai-datacenters?operator=&status=announced|under_construction|operational|expansion|paused&country=&region=&purpose=training|inference|mixed|unknown (free; hand-curated registry of publicly announced AI datacenter projects, the gigawatt-class training and inference campuses from the labs and hyperscalers. Each entry carries disclosed power (MW), capex, status, accelerator, partners, and a source_url; power and capex are disclosed values only, null where not public. Sorted operational-first.)',
           premiumAiDatacentersBuildout: '/api/premium/ai-datacenters/buildout (1 credit, AFTA-signed; aggregate over the free /api/ai-datacenters registry. Disclosed power (MW) and capex totals by operator, region, and status, plus the forward commissioning calendar of sites coming online. Curated registry, no staleness SLA.)',
           routingPreview: '/api/preview/routing',
@@ -5582,6 +5584,62 @@ export default {
         },
         200,
         60,
+      );
+    }
+
+    // === AI EXPORT CONTROLS (free) ===
+    // /api/export-controls/ai: classified US BIS AI and advanced-computing
+    // export-control actions (Entity List changes, advanced-computing license
+    // and threshold rules, due-diligence measures) drawn from the Federal
+    // Register and classified by TensorFeed. The 18:43 UTC cron writes one
+    // snapshot blob to KV; this route serves a rollup over it (by_category
+    // counts plus the 30 most recent events). Cold-start safe: pre-first-cron
+    // it returns a 200 empty shape, never 503, so an agent always gets a
+    // parseable answer.
+    if (path === '/api/export-controls/ai') {
+      const { EXPORT_CONTROLS_KEY, EXPORT_CONTROL_SOURCE, EXPORT_CONTROL_LICENSE } = await import('./export-controls');
+      const snapshot = (await env.TENSORFEED_CACHE.get(EXPORT_CONTROLS_KEY, 'json')) as
+        | {
+            ok: true;
+            captured_at: string;
+            source: string;
+            license: string;
+            total: number;
+            events: import('./export-controls').ExportControlEvent[];
+          }
+        | null;
+      if (snapshot) {
+        const byCategory: Record<string, number> = {};
+        for (const e of snapshot.events) {
+          byCategory[e.category] = (byCategory[e.category] ?? 0) + 1;
+        }
+        return jsonResponse(
+          {
+            ok: true,
+            captured_at: snapshot.captured_at,
+            source: snapshot.source,
+            license: snapshot.license,
+            total: snapshot.total,
+            by_category: byCategory,
+            recent: snapshot.events.slice(0, 30),
+          },
+          200,
+          300,
+        );
+      }
+      return jsonResponse(
+        {
+          ok: true,
+          captured_at: null,
+          source: EXPORT_CONTROL_SOURCE,
+          license: EXPORT_CONTROL_LICENSE,
+          total: 0,
+          by_category: {},
+          recent: [],
+          note: 'snapshot not yet generated',
+        },
+        200,
+        300,
       );
     }
 
@@ -11730,6 +11788,87 @@ export default {
       return await premiumResponse({ ok: true, ...result }, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: AI EXPORT-CONTROL HISTORY (1 credit, param-optional) ===
+    // Full filterable history of AI export-control actions over the BIS Federal
+    // Register snapshot, by inclusive date range and category. Strict-premium
+    // prefix, so an anonymous Bazaar probe sees a clean 402 challenge. A missing
+    // snapshot or an empty filtered result returns free as a no-data result.
+    if (path === '/api/premium/export-controls/ai/history') {
+      // requirePayment FIRST: strict-premium, so an anonymous probe sees the
+      // 402 challenge, not a 400.
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const from = url.searchParams.get('from');
+      const to = url.searchParams.get('to');
+      const category = url.searchParams.get('category');
+
+      const { EXPORT_CONTROLS_KEY } = await import('./export-controls');
+      const snapshot = (await env.TENSORFEED_CACHE.get(EXPORT_CONTROLS_KEY, 'json')) as
+        | {
+            ok: true;
+            captured_at: string;
+            source: string;
+            license: string;
+            total: number;
+            events: import('./export-controls').ExportControlEvent[];
+          }
+        | null;
+
+      // Snapshot missing (pre-first-cron): no-charge with empty_result rather
+      // than charging for a no-data answer. Lexical date compare is correct for
+      // YYYY-MM-DD.
+      if (!snapshot) {
+        return await premiumResponse(
+          { ok: true, captured_at: null, total: 0, events: [] },
+          payment,
+          1,
+          request,
+          env,
+          'empty_result',
+        );
+      }
+
+      const filtered = snapshot.events.filter(
+        (e) =>
+          (!from || e.publication_date >= from) &&
+          (!to || e.publication_date <= to) &&
+          (!category || e.category === category),
+      );
+
+      // No event in the window matched the filters: no-charge with empty_result.
+      if (filtered.length === 0) {
+        return await premiumResponse(
+          { ok: true, captured_at: snapshot.captured_at, total: 0, events: [] },
+          payment,
+          1,
+          request,
+          env,
+          'empty_result',
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/export-controls/ai/history', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      // captured_at carries the real snapshot data time; premiumResponse picks
+      // it up for the AFTA staleness no-charge. Never new Date().
+      return await premiumResponse(
+        {
+          ok: true,
+          captured_at: snapshot.captured_at,
+          total: filtered.length,
+          events: filtered,
+          source: snapshot.source,
+          license: snapshot.license,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
     // === PAID PREMIUM: CVE BATCH LOOKUP (Tier 1, 1 credit, param-required) ===
     // /api/premium/ai-cves/batch?ids=CVE-A,CVE-B,...
     // Up to 10 CVE ids per call, 1 credit flat. Reads the persistent
@@ -14527,6 +14666,17 @@ export default {
       // collision-free (hour 16 empty, minute 23 odd/not-mult-5/not-27).
       const { captureAiProcurement } = await import('./ai-procurement');
       await run('captureAiProcurement', () => captureAiProcurement(env));
+    } else if (cron === '43 18 * * *') {
+      // Daily 18:43 UTC: AI export-control capture (worker/src/export-controls.ts).
+      // Unions the BIS Federal Register term queries, keeps AI/advanced-computing
+      // relevant docs, classifies each, merges into the forward-only snapshot at
+      // export-controls:ai:events. Best-effort by design (never throws). Powers
+      // free /api/export-controls/ai + premium /api/premium/export-controls/ai/
+      // history. Slot 18:43 is collision-free (hour 18 has no fixed-time cron,
+      // minute 43 is odd and unmatched by any wildcard incl 0 *, 27 *, */2, */5,
+      // */6-minute, and the */6-hour :15/:35 patterns).
+      const { captureExportControls } = await import('./export-controls');
+      await run('captureExportControls', () => captureExportControls(env));
     } else if (cron === '37 1 * * *') {
       // Daily 01:37 UTC: federal AI opportunities capture (worker/src/
       // ai-opportunities.ts). One title-keyword SAM.gov Get Opportunities

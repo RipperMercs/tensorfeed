@@ -344,6 +344,8 @@ crons = [
   # minute 0 (dodges 0 * * * *), and not 27 (dodges the 27 * * * * x402
   # probe), so event.cron there is unambiguously "23 16 * * *".
   "23 16 * * *",
+  # Daily 18:43 UTC: capture the AI export-controls snapshot (worker/src/export-controls.ts). Collision-free (hour 18 has no fixed-time cron, minute 43 is odd and unmatched by any wildcard incl 0 *, 27 *, */2, */5, */6-minute, and the */6-hour :15/:35 patterns).
+  "43 18 * * *",
   # Daily 01:37 UTC: capture the federal AI opportunities snapshot (worker/src/ai-opportunities.ts). Collision-free (hour 1 is empty, minute 37 is odd and matched by no wildcard incl 0 *, 27 *, */2).
   "37 1 * * *",
   # Every 5 min: a bare trigger whose only job is to make scheduled() fire at
