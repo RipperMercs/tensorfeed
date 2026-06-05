@@ -248,7 +248,7 @@ export default function FourFrontierLabsAcquiHirePage() {
         <p>
           <span className="text-text-primary font-semibold">Meta and Dreamer.</span> Hugo
           Barra, David Singleton, and Nicholas Jitkoff went to Meta Superintelligence Labs
-          under Alexandr Wang. Barra ran Android partnerships at Google and led Oculus at
+          under Alexandr Wang. Barra ran Android product management at Google and led Oculus at
           Facebook. Singleton was Stripe&apos;s CTO. Jitkoff led design at Google for years.
           This was Meta paying a premium to install three operators with platform pedigrees
           into MSL during a phase where Meta&apos;s agent strategy was visibly trailing.
