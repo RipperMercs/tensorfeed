@@ -118,7 +118,7 @@ export default function XaiGasTurbinesPage() {
         <p>
           Microsoft, Google, Amazon, and Meta have spent the last eighteen months signing
           long-term contracts with utilities, restarting nuclear plants (Microsoft and Three Mile
-          Island, March 2024), pulling forward gas peakers, and bidding on offshore wind. They
+          Island, September 2024), pulling forward gas peakers, and bidding on offshore wind. They
           are big enough that the grid moves for them. xAI is not, yet. So xAI builds.
         </p>
 
