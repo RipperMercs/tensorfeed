@@ -368,7 +368,7 @@ export const BASELINE_PRICING: PricingData = {
 };
 
 export const BASELINE_BENCHMARKS: BenchmarksData = {
-  lastUpdated: '2026-05-24',
+  lastUpdated: '2026-06-05',
   benchmarks: [
     { id: 'mmlu_pro', name: 'MMLU-Pro', description: 'General knowledge and reasoning across 57 subjects', maxScore: 100 },
     { id: 'human_eval', name: 'HumanEval', description: 'Python code generation and problem solving', maxScore: 100 },
@@ -399,7 +399,7 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
 };
 
 export const BASELINE_AGENTS: AgentsData = {
-  lastUpdated: '2026-03-28',
+  lastUpdated: '2026-06-05',
   categories: [
     { id: 'coding', name: 'Coding Agents', description: 'AI-powered tools that write, review, and debug code directly in your development workflow.' },
     { id: 'research', name: 'Research Agents', description: 'AI agents specialized in finding, synthesizing, and analyzing information from various sources.' },
@@ -411,12 +411,13 @@ export const BASELINE_AGENTS: AgentsData = {
     { id: 'claude-code', name: 'Claude Code', provider: 'Anthropic', category: 'coding', description: 'An agentic CLI tool that lets Claude operate directly in your terminal, reading files, editing code, running commands, and managing git workflows autonomously.', url: 'https://docs.anthropic.com/en/docs/claude-code', pricing: 'Usage-based via Claude API', launched: 2025 },
     { id: 'cursor', name: 'Cursor', provider: 'Anysphere', category: 'coding', description: 'An AI-native code editor built on VS Code that provides inline code generation, multi-file editing, and codebase-aware chat powered by multiple foundation models.', url: 'https://cursor.sh', pricing: 'Free tier, Pro $20/mo, Business $40/mo', launched: 2023 },
     { id: 'github-copilot', name: 'GitHub Copilot', provider: 'GitHub / Microsoft', category: 'coding', description: 'An AI pair programmer integrated into popular editors that suggests code completions, generates functions from comments, and offers chat-based coding assistance.', url: 'https://github.com/features/copilot', pricing: 'Individual $10/mo, Business $19/mo, Enterprise $39/mo', launched: 2022 },
-    { id: 'windsurf', name: 'Windsurf', provider: 'Codeium', category: 'coding', description: 'An AI-powered IDE that combines copilot and agent capabilities, allowing flows where the AI and developer collaborate on code changes across an entire project.', url: 'https://codeium.com/windsurf', pricing: 'Free tier, Pro $15/mo, Teams $30/mo', launched: 2024 },
+    { id: 'windsurf', name: 'Devin Desktop (formerly Windsurf)', provider: 'Cognition', category: 'coding', description: 'An AI-native developer environment (rebranded from Windsurf in June 2026) that provides a unified surface for managing local and cloud coding agents, including Devin, Claude Code, Codex, and custom agents through the Agent Client Protocol.', url: 'https://devin.ai', pricing: 'Free tier, Pro $15/mo, Teams $30/mo', launched: 2024 },
     { id: 'perplexity', name: 'Perplexity', provider: 'Perplexity AI', category: 'research', description: 'An AI-powered answer engine that searches the web in real time, synthesizes information from multiple sources, and provides cited responses to complex questions.', url: 'https://www.perplexity.ai', pricing: 'Free tier, Pro $20/mo', launched: 2022 },
     { id: 'elicit', name: 'Elicit', provider: 'Elicit Inc.', category: 'research', description: 'A research assistant that helps find and analyze academic papers, extract key claims, and summarize findings across large bodies of scientific literature.', url: 'https://elicit.com', pricing: 'Free tier, Plus $10/mo, Enterprise custom', launched: 2021 },
     { id: 'consensus', name: 'Consensus', provider: 'Consensus NLP', category: 'research', description: 'A search engine that uses AI to find and synthesize results from peer-reviewed scientific research, providing evidence-based answers with citations.', url: 'https://consensus.app', pricing: 'Free tier, Premium $9.99/mo', launched: 2022 },
     { id: 'chatgpt', name: 'ChatGPT', provider: 'OpenAI', category: 'general', description: 'A general-purpose AI assistant that can handle conversation, writing, coding, analysis, and web browsing, with plugin and custom GPT support for specialized tasks.', url: 'https://chat.openai.com', pricing: 'Free tier, Plus $20/mo, Team $25/mo, Enterprise custom', launched: 2022 },
     { id: 'gemini', name: 'Gemini', provider: 'Google', category: 'general', description: "Google's multimodal AI assistant with deep integration into Google Workspace, Search, and Android, capable of handling text, images, code, and long documents.", url: 'https://gemini.google.com', pricing: 'Free tier, Advanced $19.99/mo (included with Google One AI Premium)', launched: 2023 },
+    { id: 'gemini-spark', name: 'Gemini Spark', provider: 'Google', category: 'general', description: 'A 24/7 personal AI agent announced at Google I/O May 2026 that runs continuously in the background, managing Gmail, Google Calendar, and 30+ third-party tools via MCP connections. Designed to handle tasks proactively with user approval gates.', url: 'https://blog.google/products-and-platforms/products/google-one/google-ai-subscriptions/', pricing: 'Google AI Ultra subscription required (~$100/mo); US beta access for Ultra subscribers', launched: 2026 },
     { id: 'claude', name: 'Claude', provider: 'Anthropic', category: 'general', description: 'A helpful AI assistant known for nuanced instruction-following, long-context understanding, and careful reasoning across writing, analysis, coding, and research tasks.', url: 'https://claude.ai', pricing: 'Free tier, Pro $20/mo, Team $25/mo, Enterprise custom', launched: 2023 },
     { id: 'midjourney', name: 'Midjourney', provider: 'Midjourney Inc.', category: 'creative', description: 'A leading AI image generation tool that creates high-quality, artistic images from text prompts, known for its distinctive aesthetic style and photorealistic output.', url: 'https://www.midjourney.com', pricing: 'Basic $10/mo, Standard $30/mo, Pro $60/mo', launched: 2022 },
     { id: 'dall-e-3', name: 'DALL-E 3', provider: 'OpenAI', category: 'creative', description: "OpenAI's image generation model integrated into ChatGPT and available via API, offering precise prompt adherence and the ability to render text within images.", url: 'https://openai.com/dall-e-3', pricing: 'Included with ChatGPT Plus, API usage-based', launched: 2023 },
