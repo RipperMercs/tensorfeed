@@ -12,12 +12,12 @@ export const metadata: Metadata = {
   title:
     "The Biggest IPO in History Is Also an AI-Compute Disclosure. SpaceX's S-1 Surfaced the Anthropic-Colossus Lease.",
   description:
-    "SpaceX prices the largest IPO ever on June 11 (debuts June 12, ticker SPCX, up to $75 billion at a valuation of at least $1.8 trillion). Buried in the S-1: Anthropic pays $1.25 billion a month for the full output of xAI's Colossus 1, the idle 220,000-GPU cluster Musk had running at roughly 11 percent. The filing reads it as a fee through May 2029; Musk calls it a 180-day lease. The two sides do not agree, and the disagreement is the story.",
+    "SpaceX prices the largest IPO ever on June 11 (debuts June 12, ticker SPCX, up to $75 billion at a valuation of at least $1.8 trillion). Buried in the S-1: Anthropic pays $1.25 billion a month for the full output of Colossus 1, the idle 220,000-GPU cluster SpaceX owns through xAI and had been running at roughly 11 percent. The filing reads it as a fee through May 2029; Musk calls it a 180-day lease. The two sides do not agree, and the disagreement is the story.",
   openGraph: {
     title:
       "The Biggest IPO in History Is Also an AI-Compute Disclosure. SpaceX's S-1 Surfaced the Anthropic-Colossus Lease.",
     description:
-      "SpaceX prices the largest IPO ever on June 11 at a valuation of at least $1.8 trillion. The S-1 surfaced Anthropic's $1.25 billion-a-month lease of xAI's idle Colossus 1, and SpaceX and Musk publicly disagree on how long it runs.",
+      "SpaceX prices the largest IPO ever on June 11 at a valuation of at least $1.8 trillion. The S-1 surfaced Anthropic's $1.25 billion-a-month lease of SpaceX's idle Colossus 1 (built by its xAI subsidiary), and SpaceX and Musk publicly disagree on how long it runs.",
     type: 'article',
     publishedTime: '2026-06-04T12:00:00Z',
     authors: ['Marcus Chen'],
@@ -35,7 +35,7 @@ export default function SpacexIpoAnthropicColossusComputePage() {
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <ArticleJsonLd
         title="The Biggest IPO in History Is Also an AI-Compute Disclosure. SpaceX's S-1 Surfaced the Anthropic-Colossus Lease."
-        description="SpaceX prices the largest IPO ever on June 11 at a valuation of at least $1.8 trillion. Buried in the S-1: Anthropic pays $1.25 billion a month for the full output of xAI's idle Colossus 1. The filing frames it as a fee through May 2029; Musk calls it a 180-day lease. The disagreement is the story."
+        description="SpaceX prices the largest IPO ever on June 11 at a valuation of at least $1.8 trillion. Buried in the S-1: Anthropic pays $1.25 billion a month for the full output of Colossus 1, the idle cluster SpaceX owns through xAI. The filing frames it as a fee through May 2029; Musk calls it a 180-day lease. The disagreement is the story."
         datePublished="2026-06-04"
         author="Marcus Chen"
       />
@@ -144,8 +144,8 @@ export default function SpacexIpoAnthropicColossusComputePage() {
 
         <p>
           Here is the move that turned a finance event into a compute story. The terms of
-          Anthropic&apos;s compute lease did not come out in an Anthropic filing or an xAI press
-          release. They came out{' '}
+          Anthropic&apos;s compute lease were not volunteered by anyone. They did not come out in an
+          Anthropic announcement or a SpaceX press release. They surfaced{' '}
           <a
             href="https://www.datacenterdynamics.com/en/news/spacex-ipo-filing-reveals-anthropic-set-to-pay-musks-firm-125bn-a-month-to-rent-xai-data-center-space/"
             target="_blank"
@@ -168,12 +168,16 @@ export default function SpacexIpoAnthropicColossusComputePage() {
         </p>
 
         <p>
-          One clarification, because the corporate structure here is easy to get wrong. Colossus is
-          xAI&apos;s, not SpaceX&apos;s. xAI and SpaceX are separate Musk companies. The money flows to
-          xAI. The reason the deal showed up in a SpaceX document at all is that the disclosure surfaced
-          through SpaceX&apos;s prospectus, not because SpaceX owns the cluster. Do not read this as
-          SpaceX renting out GPUs. Read it as SpaceX&apos;s IPO paperwork accidentally being the venue
-          where a competitor&apos;s nine-figure-a-month AI lease got published.
+          One clarification, because the corporate structure is the whole reason this sits in the
+          filing. Colossus was built by xAI, and xAI is now part of SpaceX. SpaceX bought xAI in an
+          all-stock deal that closed in February 2026, the largest merger ever struck, and folded it
+          into a division it calls SpaceXAI in May 2026. So xAI is a wholly owned SpaceX subsidiary, and
+          Colossus 1 is, by the org chart, a SpaceX asset. That is precisely why the lease is in the
+          prospectus: a company going public has to consolidate and disclose its subsidiaries&apos;
+          material contracts, and a $1.25 billion-a-month revenue line clears that bar without trying.
+          This is not a competitor&apos;s lease that leaked through SpaceX&apos;s paperwork by accident.
+          It is SpaceX disclosing that it rents a block of idle GPUs to Anthropic, an AI rival, for nine
+          figures a month, because the S-1 left it no choice.
         </p>
 
         <p>
@@ -216,8 +220,8 @@ export default function SpacexIpoAnthropicColossusComputePage() {
 
         <p>
           Read SpaceX&apos;s S-1 and you get one picture: a monthly fee running through May 2029. Read
-          that as a three-year arrangement and the contract is worth north of $40 billion to xAI over its
-          life. That is a colossal multi-year commitment, the kind of number that reshapes how you think
+          that as a three-year arrangement and the contract is worth north of $40 billion to SpaceX over
+          its life. That is a colossal multi-year commitment, the kind of number that reshapes how you think
           about a lab&apos;s cost structure and a datacenter operator&apos;s revenue base.
         </p>
 
@@ -245,7 +249,7 @@ export default function SpacexIpoAnthropicColossusComputePage() {
                 <th className="text-left px-4 py-3 text-text-primary font-semibold">Source</th>
                 <th className="text-left px-4 py-3 text-text-primary font-semibold">Duration</th>
                 <th className="text-left px-4 py-3 text-text-primary font-semibold">
-                  Implied value to xAI
+                  Implied value to SpaceX
                 </th>
                 <th className="text-left px-4 py-3 text-text-primary font-semibold">Exit terms</th>
               </tr>
@@ -308,8 +312,9 @@ export default function SpacexIpoAnthropicColossusComputePage() {
 
         <p>
           Third, the disclosure path. The biggest single data point about AI compute economics this quarter
-          did not come from a lab being transparent. It came out because a third company had to file an S-1.
-          That is worth sitting with. As more of this industry approaches the public markets, the disclosure
+          did not come from a lab being transparent. It came out because SpaceX had to file an S-1, and a
+          company going public cannot bury a subsidiary&apos;s billion-dollar-a-month contract. That is
+          worth sitting with. As more of this industry approaches the public markets, the disclosure
           regime is going to keep surfacing terms the labs would never volunteer, $1.25 billion a month being
           the latest. The IPO calendar is becoming an involuntary transparency engine for the compute layer,
           and this is the clearest example yet.
