@@ -113,8 +113,9 @@ export default function SpacexIpoAnthropicColossusComputePage() {
 
         <p>
           Strip away the Mars narrative and SpaceX is, financially, a connectivity company. Starlink
-          now serves roughly 8 million customers, and per the IPO reporting the connectivity segment
-          generated about{' '}
+          now serves more than 10 million customers (the S-1 disclosed 10.3 million paid subscribers in
+          the first quarter, up 105 percent year over year), and per the IPO reporting the connectivity
+          segment generated about{' '}
           <a
             href="https://www.bloomberg.com/news/articles/2026-05-21/spacex-ipo-ai-plans-starlink-growth-and-risks"
             target="_blank"
