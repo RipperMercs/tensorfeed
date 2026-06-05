@@ -5,11 +5,11 @@ import { BASELINE_AGENTS } from './catalog';
 
 /**
  * Third instance of the mirror-drift guard (see catalog-benchmarks-sync and
- * catalog-pricing-sync). BASELINE_AGENTS seeds the agents-directory KV and is
- * meant to mirror data/agents-directory.json. Agents are seed-only (no runtime
- * merge), so the invariant is exact equality: any provider/agent added to the
- * canonical file must be reflected in the worker baseline or /agents serves a
- * narrower directory than the site's own data.
+ * catalog-pricing-sync). BASELINE_AGENTS is adopted wholesale into the
+ * agents-directory KV on every daily run and is meant to mirror
+ * data/agents-directory.json. The invariant is exact equality: any provider or
+ * agent added to the canonical file must be reflected in the worker baseline or
+ * /api/agents serves a narrower directory than the site's own data.
  */
 function loadCanonical(): unknown {
   for (const rel of ['../data/agents-directory.json', 'data/agents-directory.json', '../../data/agents-directory.json']) {

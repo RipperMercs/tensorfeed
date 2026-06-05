@@ -507,16 +507,23 @@ export async function updateDailyData(env: Env): Promise<DailyUpdateResult> {
     console.log('Benchmarks KV updated from baseline');
   }
 
-  // --- 3. Agents directory: seed if needed, set staleness timestamp ---
-  let agents = await env.TENSORFEED_CACHE.get('agents-directory', 'json') as AgentsData | null;
-  if (!agents) {
-    console.log('Seeding agents directory from baseline');
-    agents = BASELINE_AGENTS;
+  // --- 3. Agents directory: baseline is canonical (mirrors
+  // data/agents-directory.json, guarded by catalog-agents-sync.test.ts), so
+  // adopt it wholesale like benchmarks above instead of the old seed-if-empty
+  // logic. Seed-only meant directory edits (a rebrand, a new agent like Gemini
+  // Spark) never reached /api/agents after the first seed; adopting the baseline
+  // lets additions and revisions propagate on redeploy. No other writer touches
+  // this key, so the baseline is the single source of truth. Write only on a
+  // serialized change, to respect the KV write budget.
+  const existingAgents = await env.TENSORFEED_CACHE.get('agents-directory', 'json') as AgentsData | null;
+  const agents = BASELINE_AGENTS;
+  result.agentCount = agents.agents.length;
+  if (!existingAgents || JSON.stringify(existingAgents) !== JSON.stringify(agents)) {
     await env.TENSORFEED_CACHE.put('agents-directory', JSON.stringify(agents), {
       metadata: { updatedAt: new Date().toISOString() },
     });
+    console.log('Agents directory KV updated from baseline');
   }
-  result.agentCount = agents.agents.length;
 
   // Set agents-updated timestamp so /api/health can track staleness
   await env.TENSORFEED_CACHE.put('agents-updated', JSON.stringify({
