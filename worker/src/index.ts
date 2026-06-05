@@ -11,6 +11,7 @@ import { captureHistory, listHistory, readHistory } from './history';
 import { cdpListDiscoveryResources } from './cdp-facilitator';
 import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
 import { deriveUsageEvent, recordUsageEvent, buildUsageReport, isInternalTraffic, recordRequestHealth, queryRequestHealth } from './usage-meter';
+import { resolveDeadlineMs, isDeadlineExempt, raceDeadline, buildDeadlineResponse } from './deadline';
 import { cachedFetch } from './edge-cache';
 import aiInfraProjects from '../../data/ai-infrastructure-projects.json';
 import {
@@ -1199,7 +1200,23 @@ export default {
       }
     }
 
-    const response = await this._handleRoute(request, env, ctx, url, path);
+    // Soft per-request deadline. A hung handler (typically an upstream
+    // subrequest with no timeout) that never returns is otherwise invisible:
+    // the edge serves an opaque 504 and the worker never reaches the telemetry
+    // hook below, so recordRequestHealth cannot see it. Racing the dispatch
+    // against a generous deadline turns that hang into a fast, worker-returned
+    // 504 that DOES flow through the telemetry block (status 504 + elapsed
+    // ~deadline), finally making the hanging path visible in
+    // /api/admin/request-health. _handleRoute never rejects (its outer catch
+    // always returns a Response), so raceDeadline's no-reject contract holds.
+    // Admin/refresh paths are exempt because they may legitimately run long.
+    const routeWork = this._handleRoute(request, env, ctx, url, path);
+    const deadlineMs = resolveDeadlineMs(env.REQUEST_DEADLINE_MS);
+    const response = isDeadlineExempt(path)
+      ? await routeWork
+      : await raceDeadline(routeWork, deadlineMs, () =>
+          buildDeadlineResponse(path, deadlineMs, CORS_HEADERS),
+        );
 
     // Agent Usage Meter: one AE data point per premium / tracked-free API response.
     // `charged` is true only when this request settled a payment this invocation,

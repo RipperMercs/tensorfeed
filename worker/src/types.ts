@@ -83,6 +83,13 @@ export interface Env {
   // TensorFeed's own automated callers and are excluded from external-demand
   // funnel metrics. Optional, so unset = nothing tagged.
   INTERNAL_TRAFFIC_KEY?: string;
+  // Soft per-request deadline in milliseconds for the fetch handler. When a
+  // handler hangs past this, the worker sheds a fast structured 504 instead of
+  // riding to an opaque, unrecorded edge gateway-timeout (see deadline.ts).
+  // Optional; resolveDeadlineMs falls back to DEFAULT_REQUEST_DEADLINE_MS
+  // (20000) when unset or non-positive. A plain var (not a secret) so it can be
+  // retuned in wrangler.toml without a code change.
+  REQUEST_DEADLINE_MS?: string;
   // CreditLedger Durable Object namespace. Per-token DO instance owns
   // the canonical credit balance + daily-spend counter and serializes
   // all read-modify-write operations to close H-1 + H-2 races from the
