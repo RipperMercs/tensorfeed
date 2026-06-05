@@ -43,4 +43,26 @@ describe('BASELINE_PRICING covers every provider and model in data/pricing.json'
     }
     expect(missing).toEqual([]);
   });
+
+  // Order parity: /api/models is now baseline-canonical (membership AND order),
+  // so the worker rebuilds the curated catalog from BASELINE_PRICING every run.
+  // LiteLLM only refreshes prices and can no longer reorder or add models, which
+  // means provider order and per-provider model order must match the canonical
+  // editorial file exactly. This guards the flagship-leads invariant (e.g. the
+  // newest Opus at the head of Anthropic) and the missing-provider drift that
+  // once dropped xAI from the live endpoint.
+  it('matches the canonical provider order exactly', () => {
+    const baseOrder = BASELINE_PRICING.providers.map((p) => p.id);
+    const canonOrder = canonical.providers.map((p) => p.id);
+    expect(baseOrder).toEqual(canonOrder);
+  });
+
+  it('matches the canonical model order within each provider', () => {
+    const baseById = new Map(
+      BASELINE_PRICING.providers.map((p) => [p.id, p.models.map((m) => m.id)]),
+    );
+    for (const p of canonical.providers) {
+      expect(baseById.get(p.id)).toEqual(p.models.map((m) => m.id));
+    }
+  });
 });

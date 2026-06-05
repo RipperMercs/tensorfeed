@@ -1,5 +1,4 @@
 import { Env } from './types';
-import { isCatalogNoise, humanizeModelName } from './catalog-clean';
 
 /**
  * Daily data updater for AI models/pricing, benchmarks, and agents directory.
@@ -142,17 +141,12 @@ export const PRICING_ATTRIBUTION: PricingAttribution = {
 };
 
 // ── LiteLLM pricing source mapping ─────────────────────────────────
-
-const LITELLM_PROVIDER_MAP: Record<string, string> = {
-  'claude-': 'anthropic',
-  'gpt-': 'openai',
-  'o1': 'openai',
-  'o3': 'openai',
-  'o4': 'openai',
-  'gemini/': 'google',
-  'mistral/': 'mistral',
-  'command-': 'cohere',
-};
+//
+// TRACKED_MODELS is the allowlist of LiteLLM keys whose prices and context
+// windows we mirror onto the curated catalog. /api/models is the curated
+// frontier set: we deliberately do NOT auto-add LiteLLM's long tail here (that
+// lives at /api/openrouter/models). LiteLLM is a price-freshness overlay, not a
+// membership source.
 
 const TRACKED_MODELS: Record<string, { providerId: string; ourId: string; name: string }> = {
   'claude-opus-4-8': { providerId: 'anthropic', ourId: 'claude-opus-4-8', name: 'Claude Opus 4.8' },
@@ -247,94 +241,13 @@ function mergePricing(current: PricingData, litellm: Record<string, unknown>): {
     }
   }
 
-  // Check for new models from tracked providers
-  for (const [key, value] of Object.entries(litellm)) {
-    if (typeof value !== 'object' || value === null) continue;
-    const entry = value as Record<string, unknown>;
-
-    if (TRACKED_MODELS[key]) continue;
-
-    let providerId: string | null = null;
-    for (const [prefix, pid] of Object.entries(LITELLM_PROVIDER_MAP)) {
-      if (key.startsWith(prefix)) {
-        providerId = pid;
-        break;
-      }
-    }
-    if (!providerId) continue;
-
-    const provider = current.providers.find(p => p.id === providerId);
-    if (!provider) continue;
-
-    const litellmProvider = entry['litellm_provider'] as string | undefined;
-    if (!litellmProvider) continue;
-
-    const inputPerToken = entry['input_cost_per_token'] as number | undefined;
-    const outputPerToken = entry['output_cost_per_token'] as number | undefined;
-    const maxTokens = (entry['max_input_tokens'] || entry['max_tokens']) as number | undefined;
-
-    if (key.includes(':') || key.includes('/latest')) continue;
-    // Skip catalog noise (dated snapshots, non-chat modalities like
-    // tts/audio/image/embedding). Keeps the auto-add to current chat LLMs.
-    if (isCatalogNoise(key)) continue;
-    if (inputPerToken === undefined || outputPerToken === undefined) continue;
-
-    const cleanKey = key.replace('gemini/', '').replace('mistral/', '');
-    const alreadyHave = provider.models.some(
-      m => m.id === cleanKey || m.name.toLowerCase().includes(cleanKey.toLowerCase())
-    );
-    if (alreadyHave) continue;
-
-    const lowerName = cleanKey.toLowerCase();
-    let inferredTier: ModelEntry['tier'] = 'mid';
-    if (/opus|ultra|max|behemoth|maverick|large|premier|reasoning/.test(lowerName)) {
-      inferredTier = 'flagship';
-    } else if (/mini|nano|flash|tiny|small|haiku|lite|edge/.test(lowerName)) {
-      inferredTier = 'budget';
-    }
-
-    const newModel: ModelEntry = {
-      id: cleanKey,
-      name: humanizeModelName(cleanKey),
-      inputPrice: parseFloat((inputPerToken * 1_000_000).toFixed(2)),
-      outputPrice: parseFloat((outputPerToken * 1_000_000).toFixed(2)),
-      contextWindow: maxTokens || 128000,
-      released: new Date().toISOString().slice(0, 7),
-      capabilities: ['text'],
-      tier: inferredTier,
-    };
-
-    console.log(`New model detected: ${provider.name} / ${newModel.name}`);
-    provider.models.push(newModel);
-    changed = true;
-  }
-
-  // Clean untracked entries: prune noise (dated snapshots, non-chat
-  // modalities) and humanize any slug-form display name. Only touches entries
-  // whose name still equals their id (untracked LiteLLM adds); tracked and
-  // curated baseline models carry hand-written names and are left untouched.
-  for (const provider of current.providers) {
-    const before = provider.models.length;
-    provider.models = provider.models.filter(m => !(m.name === m.id && isCatalogNoise(m.id)));
-    if (provider.models.length !== before) {
-      console.log(`Pruned ${before - provider.models.length} noise entries from ${provider.name}`);
-      changed = true;
-    }
-    for (const m of provider.models) {
-      if (m.name === m.id) {
-        const humanized = humanizeModelName(m.id);
-        if (humanized !== m.name) {
-          m.name = humanized;
-          changed = true;
-        }
-      }
-    }
-  }
-
-  if (changed) {
-    current.lastUpdated = new Date().toISOString().slice(0, 10);
-  }
-
+  // No auto-add. /api/models is the curated frontier catalog; LiteLLM only
+  // refreshes price and context on the TRACKED_MODELS above. The long tail of
+  // cloud-hosted models is served separately at /api/openrouter/models, so we
+  // never widen this set from the LiteLLM dump (that drift is what buried the
+  // flagship and dragged in dated snapshots and non-chat modalities). The
+  // lastUpdated date is owned by the editorial baseline (data/pricing.json),
+  // not bumped here, so a stable LiteLLM delta does not churn the KV value.
   return { data: current, changed };
 }
 
@@ -368,7 +281,7 @@ async function pingIndexNow(env: Env): Promise<void> {
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 export const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-06-01',
+  lastUpdated: '2026-06-05',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
@@ -393,10 +306,10 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'google', name: 'Google', logo: '/images/providers/google.png', url: 'https://ai.google.dev',
       models: [
-        { id: 'gemini-3-5-flash', name: 'Gemini 3.5 Flash', inputPrice: 1.5, outputPrice: 9, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
-        { id: 'gemini-3-1-flash-lite', name: 'Gemini 3.1 Flash-Lite', inputPrice: 0.25, outputPrice: 1.5, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'gemini-2-5-pro', name: 'Gemini 2.5 Pro', inputPrice: 1.25, outputPrice: 10.00, contextWindow: 1000000, released: '2025-03', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'gemini-2-0-flash', name: 'Gemini 2.0 Flash', inputPrice: 0.10, outputPrice: 0.40, contextWindow: 1000000, released: '2025-02', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'budget' },
+        { id: 'gemini-3-1-flash-lite', name: 'Gemini 3.1 Flash-Lite', inputPrice: 0.25, outputPrice: 1.5, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
+        { id: 'gemini-3-5-flash', name: 'Gemini 3.5 Flash', inputPrice: 1.5, outputPrice: 9, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
       ],
     },
     {
@@ -423,7 +336,7 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'deepseek', name: 'DeepSeek', logo: '/images/providers/deepseek.png', url: 'https://www.deepseek.com',
       models: [
-        { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', inputPrice: 1.74, outputPrice: 3.48, contextWindow: 1000000, released: '2026-04', openSource: true, license: 'MIT', capabilities: ['text', 'vision', 'code', 'reasoning'], tier: 'flagship' },
+        { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', inputPrice: 0.435, outputPrice: 0.87, contextWindow: 1000000, released: '2026-04', openSource: true, license: 'MIT', capabilities: ['text', 'vision', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', inputPrice: 0.14, outputPrice: 0.28, contextWindow: 1000000, released: '2026-04', openSource: true, license: 'MIT', capabilities: ['text', 'vision', 'code'], tier: 'budget' },
       ],
     },
@@ -431,6 +344,12 @@ export const BASELINE_PRICING: PricingData = {
       id: 'alibaba', name: 'Alibaba', logo: '/images/providers/alibaba.png', url: 'https://qwenlm.ai',
       models: [
         { id: 'qwen3-7-max', name: 'Qwen3.7-Max', inputPrice: 2.5, outputPrice: 7.5, contextWindow: 1000000, released: '2026-05', capabilities: ['text', 'code', 'reasoning', 'tool-use'], tier: 'flagship' },
+      ],
+    },
+    {
+      id: 'xai', name: 'xAI', logo: '/images/providers/xai.png', url: 'https://x.ai',
+      models: [
+        { id: 'grok-4-3', name: 'Grok 4.3', inputPrice: 1.25, outputPrice: 2.5, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
       ],
     },
     {
@@ -524,62 +443,47 @@ export async function updateDailyData(env: Env): Promise<DailyUpdateResult> {
   };
 
   // --- 1. Models / Pricing ---
-  let pricing = await env.TENSORFEED_CACHE.get('models', 'json') as PricingData | null;
-  // Migration: check old key if new key is empty
-  if (!pricing) {
-    pricing = await env.TENSORFEED_CACHE.get('pricing', 'json') as PricingData | null;
-  }
-  if (!pricing) {
-    console.log('Seeding pricing data from baseline');
-    pricing = BASELINE_PRICING;
-  }
+  // BASELINE_PRICING (the worker mirror of data/pricing.json, guarded by
+  // catalog-pricing-sync.test.ts) is the canonical source of truth for
+  // /api/models membership AND order, exactly like BASELINE_BENCHMARKS below.
+  // We rebuild the curated frontier catalog from the baseline every run, so
+  // additions, reorderings, removals, and the lastUpdated date in
+  // data/pricing.json always propagate, and the flagship always leads. LiteLLM
+  // is layered on top purely to refresh price and context on the tracked
+  // models; it never widens the set (the long tail lives at
+  // /api/openrouter/models). This is what stopped the drift where auto-added
+  // LiteLLM entries polluted the curated set and buried the flagship.
+  const existingPricing =
+    ((await env.TENSORFEED_CACHE.get('models', 'json')) as PricingData | null) ??
+    ((await env.TENSORFEED_CACHE.get('pricing', 'json')) as PricingData | null);
 
-  // Backfill: add any new models present in baseline but missing from KV
-  {
-    let backfilled = false;
-    for (const baseProvider of BASELINE_PRICING.providers) {
-      const liveProvider = pricing.providers.find((p) => p.id === baseProvider.id);
-      if (!liveProvider) {
-        pricing.providers.push(baseProvider);
-        backfilled = true;
-        continue;
-      }
-      for (const baseModel of baseProvider.models) {
-        if (!liveProvider.models.find((m) => m.id === baseModel.id)) {
-          liveProvider.models.unshift(baseModel);
-          backfilled = true;
-        }
-      }
-    }
-    if (backfilled) {
-      pricing.lastUpdated = BASELINE_PRICING.lastUpdated;
-      result.modelsChanged = true;
-      console.log('Pricing baseline backfill added new models');
-    }
-  }
+  let pricing: PricingData = JSON.parse(JSON.stringify(BASELINE_PRICING)) as PricingData;
 
   const litellm = await fetchLiteLLMPricing();
   if (litellm) {
-    const merged = mergePricing(pricing, litellm);
-    pricing = merged.data;
-    result.modelsChanged = merged.changed;
-    console.log(`LiteLLM merge: ${merged.changed ? 'changes detected' : 'no changes'}`);
+    pricing = mergePricing(pricing, litellm).data;
+    console.log('LiteLLM merge: refreshed tracked-model prices');
   } else {
-    console.log('LiteLLM fetch failed, keeping existing pricing');
+    console.log('LiteLLM fetch failed, serving curated baseline prices');
   }
 
   result.modelCount = pricing.providers.reduce((n, p) => n + p.models.length, 0);
 
-  // Write to KV only if data changed or first seed
-  if (result.modelsChanged || !await env.TENSORFEED_CACHE.get('models')) {
+  // Write only when the serialized catalog actually changed, to respect the KV
+  // write budget. The serialized compare (rather than a change flag) is what
+  // lets a redeploy re-seed a previously polluted KV: even with no price move,
+  // the curated membership and order differ from the drifted value and land
+  // exactly once, then stay byte-stable.
+  if (!existingPricing || JSON.stringify(existingPricing) !== JSON.stringify(pricing)) {
+    result.modelsChanged = true;
     await env.TENSORFEED_CACHE.put('models', JSON.stringify(pricing), {
       metadata: { updatedAt: new Date().toISOString() },
     });
-    // Keep old key in sync for backwards compatibility during migration
+    // Keep the legacy key in sync for backwards compatibility during migration.
     await env.TENSORFEED_CACHE.put('pricing', JSON.stringify(pricing), {
       metadata: { updatedAt: new Date().toISOString() },
     });
-    console.log('Models KV updated');
+    console.log('Models KV updated (curated baseline + LiteLLM prices)');
   }
 
   // --- 2. Benchmarks ---
