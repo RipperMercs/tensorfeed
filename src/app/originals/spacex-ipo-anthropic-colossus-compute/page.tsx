@@ -12,12 +12,12 @@ export const metadata: Metadata = {
   title:
     "The Biggest IPO in History Is Also an AI-Compute Disclosure. SpaceX's S-1 Surfaced the Anthropic-Colossus Lease.",
   description:
-    "SpaceX prices the largest IPO ever on June 11 (debuts June 12, ticker SPCX, up to $75 billion at a valuation of at least $1.8 trillion). Buried in the S-1: Anthropic pays $1.25 billion a month for the full output of Colossus 1, the idle 220,000-GPU cluster SpaceX owns through xAI and had been running at roughly 11 percent. The filing reads it as a fee through May 2029; Musk calls it a 180-day lease. The two sides do not agree, and the disagreement is the story.",
+    "SpaceX prices the largest IPO ever on June 11 (debuts June 12, ticker SPCX, $75 billion at a valuation of about $1.77 trillion, a fixed $135 a share). Buried in the S-1: Anthropic pays $1.25 billion a month for the full output of Colossus 1, the idle 220,000-GPU cluster SpaceX owns through xAI and had been running at roughly 11 percent. The filing reads it as a fee through May 2029; Musk calls it a 180-day lease. The two sides do not agree, and the disagreement is the story.",
   openGraph: {
     title:
       "The Biggest IPO in History Is Also an AI-Compute Disclosure. SpaceX's S-1 Surfaced the Anthropic-Colossus Lease.",
     description:
-      "SpaceX prices the largest IPO ever on June 11 at a valuation of at least $1.8 trillion. The S-1 surfaced Anthropic's $1.25 billion-a-month lease of SpaceX's idle Colossus 1 (built by its xAI subsidiary), and SpaceX and Musk publicly disagree on how long it runs.",
+      "SpaceX prices the largest IPO ever on June 11 at a valuation of about $1.77 trillion ($135 a share). The S-1 surfaced Anthropic's $1.25 billion-a-month lease of SpaceX's idle Colossus 1 (built by its xAI subsidiary), and SpaceX and Musk publicly disagree on how long it runs.",
     type: 'article',
     publishedTime: '2026-06-04T12:00:00Z',
     authors: ['Marcus Chen'],
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'The Biggest IPO in History Is an AI-Compute Disclosure',
     description:
-      "SpaceX's $1.8 trillion S-1 surfaced Anthropic's $1.25 billion-a-month lease of idle Colossus 1. SpaceX says through 2029; Musk says 180 days. They disagree.",
+      "SpaceX's $1.77 trillion S-1 surfaced Anthropic's $1.25 billion-a-month lease of idle Colossus 1. SpaceX says through 2029; Musk says 180 days. They disagree.",
   },
 };
 
@@ -35,7 +35,7 @@ export default function SpacexIpoAnthropicColossusComputePage() {
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <ArticleJsonLd
         title="The Biggest IPO in History Is Also an AI-Compute Disclosure. SpaceX's S-1 Surfaced the Anthropic-Colossus Lease."
-        description="SpaceX prices the largest IPO ever on June 11 at a valuation of at least $1.8 trillion. Buried in the S-1: Anthropic pays $1.25 billion a month for the full output of Colossus 1, the idle cluster SpaceX owns through xAI. The filing frames it as a fee through May 2029; Musk calls it a 180-day lease. The disagreement is the story."
+        description="SpaceX prices the largest IPO ever on June 11 at a valuation of about $1.77 trillion. Buried in the S-1: Anthropic pays $1.25 billion a month for the full output of Colossus 1, the idle cluster SpaceX owns through xAI. The filing frames it as a fee through May 2029; Musk calls it a 180-day lease. The disagreement is the story."
         datePublished="2026-06-04"
         author="Marcus Chen"
       />
@@ -83,14 +83,14 @@ export default function SpacexIpoAnthropicColossusComputePage() {
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The SpaceX roadshow opens today. The deal prices June 11, debuts June 12, and trades on
-          Nasdaq under SPCX. It raises up to{' '}
+          Nasdaq under SPCX. At a fixed $135 a share, set before the roadshow even opened, it raises{' '}
           <a
-            href="https://www.techi.com/spacex-ipo/"
+            href="https://fortune.com/2026/06/03/spacex-ipo-share-price-index-funds-valuation-public/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent-primary hover:underline"
           >
-            $75 billion at a valuation of at least $1.8 trillion
+            $75 billion at a valuation of about $1.77 trillion
           </a>
           , more than twice the largest IPO ever recorded. That makes it the biggest public offering
           in history, full stop. And here is the part the space-finance coverage keeps burying: the
@@ -133,7 +133,7 @@ export default function SpacexIpoAnthropicColossusComputePage() {
           That cash engine matters for the rest of this piece. A company throwing off billions in
           segment EBITDA from a subscription product can self-fund things capital-starved AI startups
           cannot, including the kind of multi-gigawatt compute ambitions Musk keeps gesturing at. The
-          $1.8 trillion number is not priced on satellites alone. A meaningful slice of it is the market
+          $1.77 trillion number is not priced on satellites alone. A meaningful slice of it is the market
           paying up for optionality on everything Musk&apos;s constellation of companies might do with
           that cash flow next, and AI is at the top of that list.
         </p>
@@ -278,11 +278,11 @@ export default function SpacexIpoAnthropicColossusComputePage() {
           right that makes the practical commitment six months at a time. But you cannot have it both ways
           when you are pricing a security. A reader of the S-1 sees a $40 billion-plus counterparty
           relationship. A listener to Musk hears a cancelable short-term rental. Those are very different
-          inputs into a $1.8 trillion valuation, and the gap between them is sitting in a live prospectus.
+          inputs into a $1.77 trillion valuation, and the gap between them is sitting in a live prospectus.
         </p>
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">
-          What a $1.8 trillion AI-adjacent infra IPO actually signals
+          What a $1.77 trillion AI-adjacent infra IPO actually signals
         </h2>
 
         <p>

@@ -24,7 +24,7 @@ export const ORIGINALS: OriginalArticle[] = [
     date: 'June 4, 2026',
     readTime: '7 min read',
     description:
-      "SpaceX prices the largest IPO ever on June 11 (it debuts June 12 as SPCX at a valuation of at least $1.8 trillion), and the most consequential line in the S-1 is not about rockets. It discloses that Anthropic pays $1.25 billion a month for the full output of Colossus 1, the idle Memphis cluster SpaceX owns through its xAI subsidiary, with SpaceX and Musk publicly disagreeing on whether the lease runs through May 2029 or just 180 days. How an IPO filing became the venue where an AI-compute lease surfaced.",
+      "SpaceX prices the largest IPO ever on June 11 (it debuts June 12 as SPCX at a fixed $135 a share, a valuation of about $1.77 trillion), and the most consequential line in the S-1 is not about rockets. It discloses that Anthropic pays $1.25 billion a month for the full output of Colossus 1, the idle Memphis cluster SpaceX owns through its xAI subsidiary, with SpaceX and Musk publicly disagreeing on whether the lease runs through May 2029 or just 180 days. How an IPO filing became the venue where an AI-compute lease surfaced.",
   },
   {
     slug: 'deepseek-maiden-funding-round-59-billion',
