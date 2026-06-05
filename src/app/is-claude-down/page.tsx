@@ -146,6 +146,21 @@ export default async function IsClaudeDownPage() {
       answer:
         'No. Claude Code calls the same Anthropic API as the chat app. When the API is down, Claude Code commands will fail with a network or 5xx error. Claude Code agents do automatically retry once the API recovers, so many short outages are invisible to in-progress workflows.',
     },
+    {
+      question: 'Why is Claude down right now?',
+      answer:
+        'Most Claude outages trace to one of a few causes: a spike in API traffic that overwhelms capacity, a bad deploy that Anthropic rolls back within minutes, an upstream cloud or networking issue, or elevated error rates on a single component (the API, Console, or Workbench) rather than the whole service. The status box above reflects the current state. When it shows degraded or down, Anthropic is typically already investigating. When it shows operational but you are still seeing errors, the cause is more likely on your side: an expired API key, a hit rate limit, or a local network issue.',
+    },
+    {
+      question: 'Is it just me, or is Claude down for everyone?',
+      answer:
+        'This page checks Anthropic\'s own status feed, so it reflects the global picture, not your individual connection. If the status above is green but Claude is failing for you, the problem is almost certainly local: a rate limit on your account, an expired or wrong API key, a browser extension or VPN interfering with claude.ai, or your own network. If the status shows degraded or down, it is affecting everyone and waiting it out (or switching to a fallback) is the move.',
+    },
+    {
+      question: 'How long do Claude outages usually last?',
+      answer:
+        'Most Claude incidents resolve within 15 to 60 minutes. Brief degradation (a few minutes of elevated latency or a partial Workbench issue) is the most common kind and usually clears on its own. Full API outages are rarer and tend to be the ones Anthropic posts about on status.anthropic.com with a running incident timeline. If an outage runs past an hour, switching to a fallback like ChatGPT, Gemini, or OpenRouter is usually faster than waiting.',
+    },
   ];
 
   return (

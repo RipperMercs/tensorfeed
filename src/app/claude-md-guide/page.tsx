@@ -36,6 +36,16 @@ const faqs = [
     answer:
       'The fastest way is to run the /init command inside Claude Code, which generates a starter CLAUDE.md based on your project structure. You can also use our interactive generator at tensorfeed.ai/claude-md-generator to build one from a template, or copy one of our examples at tensorfeed.ai/claude-md-examples.',
   },
+  {
+    question: 'Do other AI coding agents read CLAUDE.md? (Codex, Cursor, Gemini CLI, Copilot)',
+    answer:
+      'Not by default. CLAUDE.md is Claude Code\'s own convention. OpenAI Codex reads AGENTS.md, Cursor uses its own rules files plus AGENTS.md, Gemini CLI reads GEMINI.md, and GitHub Copilot uses repository custom instructions. None of them read CLAUDE.md automatically. If your team runs more than one agent, keep a single AGENTS.md as the shared source of truth and point a short CLAUDE.md at it, or maintain both files with the same content so every tool gets the same context.',
+  },
+  {
+    question: 'Does CLAUDE.md update automatically as my project changes?',
+    answer:
+      'No. CLAUDE.md is a static file you maintain by hand. Claude Code reads whatever is in it at the start of each session, so when you adopt a new library, change your deploy pipeline, or introduce a new convention, you update CLAUDE.md yourself. Treat it like any other config file: review it in pull requests and prune it every few weeks so it stays accurate.',
+  },
 ];
 
 export default function ClaudeMdGuidePage() {
@@ -45,6 +55,7 @@ export default function ClaudeMdGuidePage() {
         title="The Complete Guide to CLAUDE.md: Best Practices, Examples & Templates"
         description="Learn how to write the perfect CLAUDE.md file. Complete guide with examples, templates, best practices, and an interactive generator for Claude Code."
         datePublished="2026-03-30"
+        dateModified="2026-06-05"
         author="TensorFeed.ai"
       />
       <FAQPageJsonLd faqs={faqs} />
@@ -56,7 +67,7 @@ export default function ClaudeMdGuidePage() {
         ]}
       />
 
-      <p className="text-text-muted text-sm mb-4">Published: March 30, 2026</p>
+      <p className="text-text-muted text-sm mb-4">Published March 30, 2026. Last updated June 5, 2026.</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         The Complete Guide to CLAUDE.md
