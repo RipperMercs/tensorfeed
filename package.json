@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "check:originals": "node scripts/check-originals-sync.mjs",
     "prepare": "husky",
     "test:web": "vitest run"
   },
