@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-05-13T20:00:00Z",
+  "generated_at": "2026-06-05T00:00:00Z",
   "license": "TF curation CC-BY-4.0. Underlying public-record sources retain their original license.",
   "notice": "Editorial registry of disclosed major AI buildout projects. Each entry preserves canonical source URLs. Capacity, capex, and timeline figures reflect publicly announced or reported numbers at time of curation and may evolve. Status enum: announced (publicly committed, no ground broken), permitted (regulatory greenlights obtained), construction (active build), operational (online and serving traffic). Power source enum is the announced primary source; many projects mix multiple feeds.",
   "schema": {
@@ -41,35 +41,37 @@
       "id": "meta-hyperion-richland-parish",
       "name": "Meta Hyperion",
       "operator": "Meta",
-      "partners": ["Entergy"],
+      "partners": ["Blue Owl Capital", "Entergy"],
       "location": { "city": "Richland Parish", "state": "Louisiana", "country": "USA" },
       "status": "construction",
-      "capacity_mw_announced": 2000,
+      "capacity_mw_announced": 5000,
       "power_source": "natural gas plus grid",
       "announced_date": "2024-12-04",
       "target_operational": "2030",
-      "capex_usd_billion": 10,
-      "context": "Meta's largest single data center campus, roughly 5 million square feet on completion. Entergy Louisiana is the serving utility and has filed multi-gigawatt expansion plans tied to the load. Construction underway across phased buildings.",
+      "capex_usd_billion": 27,
+      "context": "Meta's largest single data center campus. Originally announced December 2024 as a $10 billion independent project; restructured in October 2025 into a $27 billion joint venture with Blue Owl Capital (80% Blue Owl, 20% Meta). Up to 5 GW total capacity; Phase 1 targets 1.5 GW by late 2027, using roughly 1.3 million NVIDIA Blackwell GPUs. Entergy Louisiana is the serving utility and is building 10 gas-fired plants to serve the load.",
       "primary_sources": [
-        "https://about.fb.com/news/2024/12/meta-establishing-louisiana-data-center/"
+        "https://about.fb.com/news/2024/12/meta-establishing-louisiana-data-center/",
+        "https://about.fb.com/news/2025/10/meta-blue-owl-capital-develop-hyperion-data-center/"
       ]
     },
     {
       "id": "xai-colossus-memphis",
-      "name": "xAI Colossus",
-      "operator": "xAI",
-      "partners": ["Supermicro", "Dell"],
+      "name": "SpaceXAI Colossus",
+      "operator": "SpaceXAI",
+      "partners": ["Supermicro", "Dell", "Anthropic (tenant)"],
       "location": { "city": "Memphis", "state": "Tennessee", "country": "USA" },
       "status": "operational",
-      "capacity_mw_announced": 250,
+      "capacity_mw_announced": 300,
       "power_source": "natural gas turbines plus grid",
       "announced_date": "2024-06-05",
       "target_operational": "2024",
       "capex_usd_billion": null,
-      "context": "Operational since late 2024 with an initial 100,000 Nvidia H100 build, expanded to roughly 200,000 GPUs through 2025. Local controversy over the temporary methane gas turbines and downstream air-quality concerns in nearby neighborhoods. Memphis Light, Gas and Water is the serving utility.",
+      "context": "Operational since late 2024, initially with 100,000 NVIDIA H100s, expanding to 555,000+ GPUs across Colossus 1 and 2 by 2026. SpaceX acquired xAI in February 2026 and merged the AI division into SpaceXAI in May 2026. In May 2026, Anthropic leased the entire Colossus 1 cluster (220,000+ GPUs, 300+ MW) to supplement its Google Cloud TPU capacity. Local controversy persists over temporary gas turbines and air quality in nearby neighborhoods.",
       "primary_sources": [
         "https://x.ai/news/colossus",
-        "https://www.supermicro.com/en/pressreleases/supermicro-and-xai-launch-worlds-largest-ai-supercomputer"
+        "https://www.supermicro.com/en/pressreleases/supermicro-and-xai-launch-worlds-largest-ai-supercomputer",
+        "https://www.actuia.com/en/news/anthropic-rents-colossus-1-for-125-billionmonth-on-an-xai-park-capped-at-11-capacity/"
       ]
     },
     {
@@ -166,14 +168,15 @@
       "partners": ["AEP Ohio"],
       "location": { "city": "New Albany", "state": "Ohio", "country": "USA" },
       "status": "construction",
-      "capacity_mw_announced": null,
+      "capacity_mw_announced": 1500,
       "power_source": "grid",
       "announced_date": "2024-08-14",
       "target_operational": "2026",
       "capex_usd_billion": 1,
-      "context": "Meta's New Albany campus expansion, codenamed Prometheus in some internal references. Sits inside the broader AEP Ohio service area which has filed multiple data center load adjustments. Smaller than Hyperion but earlier to operational status.",
+      "context": "Meta's New Albany campus expansion, codenamed Prometheus. Targeting 1.5 GW capacity on completion, with advanced liquid cooling. Sits inside the broader AEP Ohio service area which has filed multiple data center load adjustments. Smaller than Hyperion but on track for earlier operational status.",
       "primary_sources": [
-        "https://about.fb.com/news/2024/08/expanding-our-new-albany-data-center/"
+        "https://about.fb.com/news/2024/08/expanding-our-new-albany-data-center/",
+        "https://www.nbc4i.com/news/local-news/new-albany/meet-prometheus-world-highest-capacity-data-center-slated-to-open-in-ohio-in-2026/"
       ]
     },
     {
@@ -205,7 +208,7 @@
       "announced_date": "2017-01-01",
       "target_operational": "ongoing",
       "capex_usd_billion": 20,
-      "context": "AI-specialized GPU cloud, IPO on Nasdaq in March 2025 (CRWV). Operates 32+ data centers as of 2026 with hundreds of thousands of Nvidia GPUs (H100, H200, GB200) deployed. Microsoft is the anchor customer, accounting for roughly half of revenue. Nvidia holds a meaningful equity stake. Heavy spend on multi-year capacity commitments tied to Microsoft and OpenAI deals.",
+      "context": "AI-specialized GPU cloud, IPO on Nasdaq in March 2025 (CRWV). Operates 49 data centers as of mid-2026 with 1.0 GW operational in Q1 2026, targeting 1.7+ GW by year-end. Planning 5+ GW by 2030. Microsoft is the anchor customer, accounting for roughly half of revenue. NVIDIA holds a meaningful equity stake ($2 billion investment, January 2026). Heavy spend on multi-year capacity commitments tied to Microsoft and OpenAI deals.",
       "primary_sources": [
         "https://www.coreweave.com/",
         "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001769628&type=10-K"
@@ -263,6 +266,41 @@
       "primary_sources": [
         "https://lambda.ai/",
         "https://lambda.ai/news/lambda-and-microsoft-strategic-collaboration"
+      ]
+    },
+    {
+      "id": "stargate-michigan",
+      "name": "Stargate Michigan (The Barn)",
+      "operator": "OpenAI",
+      "partners": ["Oracle", "Walbridge", "Related Digital", "Blackstone", "SoftBank"],
+      "location": { "city": "Saline", "state": "Michigan", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": 1000,
+      "power_source": "grid",
+      "announced_date": "2026-06-04",
+      "target_operational": "2027",
+      "capex_usd_billion": 7,
+      "context": "Second major Stargate campus after Abilene, Texas. Ground broken June 4, 2026 by Walbridge in Saline Township, Washtenaw County. Three 550,000-square-foot buildings planned on 250 acres; the first was nearing completion at groundbreaking. Development alongside Related Digital and Blackstone. Part of the broader $500 billion Stargate program announced from the White House in January 2025.",
+      "primary_sources": [
+        "https://www.constructiondive.com/news/walbridge-breaks-ground-stargate-data-center-openai-oracle/821972/",
+        "https://www.cnbc.com/2026/06/01/stargate-project-michigan-live-updates.html"
+      ]
+    },
+    {
+      "id": "anthropic-fluidstack-us",
+      "name": "Anthropic AI Infrastructure (Fluidstack)",
+      "operator": "Anthropic",
+      "partners": ["Fluidstack"],
+      "location": { "city": "Texas and New York (multi-site)", "state": "TX, NY", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": null,
+      "power_source": "grid",
+      "announced_date": "2025-11-12",
+      "target_operational": "2026",
+      "capex_usd_billion": 50,
+      "context": "Anthropic committed $50 billion to American AI infrastructure, with Fluidstack as the build partner across initial sites in Texas and New York. Announced November 12, 2025 alongside an expected 800 permanent jobs and 2,400 construction jobs. Sites are designed as custom data centers optimized for Anthropic workloads and are coming online in phases through 2026. The gigawatt-scale capacity complements Anthropic's Google Cloud TPU commitments and its lease of SpaceXAI Colossus 1.",
+      "primary_sources": [
+        "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure"
       ]
     },
     {

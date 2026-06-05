@@ -299,6 +299,25 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
     url: 'https://aws.amazon.com/ai/machine-learning/trainium/',
   },
   {
+    id: 'trainium-3',
+    name: 'AWS Trainium3',
+    manufacturer: 'AWS',
+    family: 'Trainium',
+    process: 'TSMC 3nm',
+    released: '2025-12',
+    memoryGB: 144,
+    memoryBandwidthTBs: 4.9,
+    fp16TFLOPS: 1260,
+    fp8TFLOPS: 2520,
+    fp4TFLOPS: null,
+    tdpWatts: null as unknown as number,
+    interconnect: 'NeuronLink-v4 (2 TB/s per chip)',
+    listPriceUSD: null,
+    availability: 'AWS only (Trn3 instances)',
+    notes: 'Third-generation AWS training and inference silicon. 144 GB HBM3e, 4.9 TB/s bandwidth. Roughly 30-50% lower cost per hour than H100/H200 on committed AWS workloads.',
+    url: 'https://aws.amazon.com/ai/machine-learning/trainium/',
+  },
+  {
     id: 'inferentia-2',
     name: 'AWS Inferentia 2',
     manufacturer: 'AWS',
@@ -382,4 +401,4 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
   },
 ];
 
-export const AI_HARDWARE_LAST_UPDATED = '2026-04-30';
+export const AI_HARDWARE_LAST_UPDATED = '2026-06-05';
