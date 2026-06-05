@@ -604,6 +604,160 @@ describe('substrate-changelog', () => {
   });
 });
 
+// The export-controls family is a forward-only log of US BIS AI and advanced-
+// computing export-control actions classified from the Federal Register. FREE
+// /api/export-controls/ai reads the `export-controls:ai:events` snapshot and
+// rolls it up into by_category + recent + total (and returns a 200 total:0
+// shape pre-first-cron, never a 503). PREMIUM /api/premium/export-controls/ai/
+// history is strict-premium, param-reading (from/to/category, all optional),
+// reads the same snapshot, filters it, and is NULL_SLA (an immutable historical
+// log never no-charges on staleness; only the empty_result no-charge applies).
+// These mirror the substrate-changelog / ai-contracts posture: same harness,
+// same direct-KV seeding via env.TENSORFEED_CACHE.put, same receipt.signature
+// field-path for the AFTA signature, same balance asserts.
+describe('export-controls', () => {
+  // A minimal valid ExportControlEvent, ASCII-only (no em dashes, no double
+  // hyphens). `over` lets a case vary the category or date.
+  function evt(over: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
+    return {
+      id: '2026-09999',
+      title: 'Additions to the Entity List',
+      doc_type: 'Rule',
+      category: 'entity-list',
+      abstract: 'BIS adds parties to the Entity List for advanced-computing diversion risk.',
+      publication_date: '2026-06-03',
+      source_url: 'https://www.federalregister.gov/documents/2026/06/03/2026-09999',
+      agency: 'BIS',
+      ...over,
+    };
+  }
+
+  // A seeded snapshot with two events in distinct categories and a recent
+  // captured_at (well within any SLA, though the premium path is NULL_SLA).
+  function snapshot(): Record<string, unknown> {
+    const events = [
+      evt(),
+      evt({
+        id: '2026-09998',
+        title: 'Advanced Computing and Semiconductor Manufacturing Items',
+        doc_type: 'Rule',
+        category: 'compute-threshold',
+        abstract: 'BIS revises the advanced-computing performance thresholds and license requirements.',
+        publication_date: '2026-06-02',
+        source_url: 'https://www.federalregister.gov/documents/2026/06/02/2026-09998',
+      }),
+    ];
+    return {
+      ok: true,
+      captured_at: new Date(Date.now() - 60_000).toISOString(),
+      source: 'US Federal Register (federalregister.gov), Bureau of Industry and Security',
+      license: 'Public domain (US Government work). TensorFeed editorial classification.',
+      total: events.length,
+      events,
+    };
+  }
+
+  // FREE: seeded snapshot -> 200, ok, by_category + recent + total present.
+  it('serves the free feed with by_category, recent, and total from the seeded snapshot', async () => {
+    const env = await makeEnv();
+    await env.TENSORFEED_CACHE.put('export-controls:ai:events', JSON.stringify(snapshot()));
+
+    const res = await call(env, '/api/export-controls/ai', { ip: uniqueIp() });
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.total).toBe(2);
+    const byCategory = res.json?.by_category as Record<string, number> | undefined;
+    expect(byCategory).toBeDefined();
+    expect(byCategory?.['entity-list']).toBe(1);
+    expect(byCategory?.['compute-threshold']).toBe(1);
+    const recent = res.json?.recent as unknown[] | undefined;
+    expect(Array.isArray(recent)).toBe(true);
+    expect(recent?.length).toBe(2);
+  });
+
+  // FREE COLD: no KV snapshot -> 200 with total:0 (the parseable not-ready
+  // shape), NOT a 503. An agent always gets a valid answer pre-first-cron.
+  it('serves a 200 total:0 cold shape when no snapshot exists, not a 503', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/export-controls/ai', { ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.total).toBe(0);
+    expect(res.json?.by_category).toEqual({});
+    expect((res.json?.recent as unknown[] | undefined)?.length).toBe(0);
+  });
+
+  // GATE: strict-premium history, no token. The endpoint is on the strict list,
+  // so a no-token call returns the canonical x402 402 challenge, NOT a free trial.
+  it('returns the canonical 402 challenge on a no-token history call (no free trial)', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/export-controls/ai/history', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+    // Explicitly assert this is NOT a free-trial 200.
+    expect(res.status).not.toBe(200);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.error).toBe('payment_required');
+    expect(res.json?.free_trial ?? null).toBeNull();
+  });
+
+  // DEBIT happy path: valid token, seeded snapshot, no filter (returns all). The
+  // snapshot has events, so it charges exactly 1 credit and signs an AFTA receipt
+  // at the same receipt.signature field-path the substrate/ai-contracts tests use.
+  it('charges 1 credit and signs an AFTA receipt when the snapshot has events', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+    await env.TENSORFEED_CACHE.put('export-controls:ai:events', JSON.stringify(snapshot()));
+
+    const res = await call(env, '/api/premium/export-controls/ai/history', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const events = res.json?.events as unknown[] | undefined;
+    expect(Array.isArray(events)).toBe(true);
+    expect((events as unknown[]).length).toBe(2);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(1);
+    expect(billing?.no_charge_reason ?? null).toBeNull();
+
+    // AFTA signature: premiumResponse signs the receipt with the harness
+    // Ed25519 key. Same field-path the substrate-changelog success asserts.
+    const receipt = res.json?.receipt as Record<string, unknown> | undefined;
+    expect(receipt).toBeDefined();
+    expect(typeof receipt?.signature).toBe('string');
+    expect((receipt?.signature as string).length).toBeGreaterThan(0);
+
+    // Balance decremented by exactly the cost.
+    expect(await balanceOf(env, token)).toBe(99);
+  });
+
+  // NO-CHARGE on empty filter: valid token, seeded snapshot, a category that
+  // matches no event. The agent gets the ok empty result billed at zero
+  // (empty_result rule). Balance held.
+  it('no-charges a valid-token history call whose category filter matches nothing', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+    await env.TENSORFEED_CACHE.put('export-controls:ai:events', JSON.stringify(snapshot()));
+
+    const res = await call(env, '/api/premium/export-controls/ai/history?category=nonexistent-category', { token, ip: uniqueIp() });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    expect(res.json?.total).toBe(0);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(0);
+    expect(billing?.no_charge_reason).toBe('empty_result');
+
+    // Balance unchanged: an empty result is free.
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+});
+
 // The ai-datacenters family is a curated, bundled registry (23 verified AI
 // datacenter projects) plus a premium buildout aggregate. There is no KV seeding
 // here: the registry ships in the worker module, so the free endpoint always has

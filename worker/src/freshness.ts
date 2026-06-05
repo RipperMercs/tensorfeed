@@ -245,6 +245,11 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // written, so no wall-clock staleness applies; the handler no-charges
   // empty ranges. The free /recent sibling surfaces captured_at for health.
   '/api/premium/substrate-changelog/history': NULL_SLA,
+  // Export-controls AI history: an immutable, forward-only log of Federal
+  // Register export-control actions. Each published event never changes once
+  // recorded, so no wall-clock staleness no-charge applies; the handler's
+  // empty_result no-charge covers the cold (pre-first-cron) and empty-filter cases.
+  '/api/premium/export-controls/ai/history': NULL_SLA,
   '/api/premium/probe/series': NULL_SLA,
   '/api/gpu/pricing/series': NULL_SLA,
   // Watch registration: pure write, no capture concept.

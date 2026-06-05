@@ -276,6 +276,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // path (the range and filter are query params). Free taste at
   // /api/substrate-changelog/recent.
   '/api/premium/substrate-changelog/history',
+  // Export-controls AI history (2026-06-04). Param-reading history endpoint
+  // (?from=&to=, category optional), strict so anonymous crawlers get a clean
+  // 402 challenge instead of a free-trial path; audit-fix-era convention for
+  // any param-reading paid route. Free taste at /api/export-controls/ai.
+  '/api/premium/export-controls/ai/history',
   // AI Crawler Access Map changes (2026-06-02). Param-required (?from=&to=,
   // domain optional): anonymous probes must see a clean 402 challenge, not a
   // free-trial 400 missing_params, so catalog validators read it as paid.

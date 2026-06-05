@@ -291,6 +291,23 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'intelligence',
   },
+  {
+    path: '/api/premium/export-controls/ai/history',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'from', required: false },
+      { name: 'to', required: false },
+      { name: 'category', required: false },
+    ],
+    returns:
+      'Full filterable history of US BIS AI and advanced-computing export-control actions (Entity List changes, advanced-computing license and threshold rules, due-diligence measures) by date range and category, classified from the Federal Register.',
+    free_sibling: '/api/export-controls/ai',
+    signed: true,
+    // Matches the AI-policy beat category used by /api/premium/policy/timeline,
+    // which buckets under 'misc' (no dedicated policy category exists).
+    category: 'misc',
+  },
 
   // === SECURITY ===
   {
