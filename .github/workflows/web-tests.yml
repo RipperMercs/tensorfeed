@@ -3,11 +3,12 @@ name: Web tests
 # Runs the frontend test suite (src/**/*.test.ts) on every push to main and PR
 # that touches frontend source, the vitest config, or this workflow. The
 # Next.js app otherwise has no CI gate, so this is what catches sitemap drift
-# (sitemap-integrity.test.ts) and other src-level logic regressions before they
-# ship. Vitest runs in a node environment with no build step, so the job is
-# self-contained: install, then test.
+# (sitemap-integrity.test.ts), originals discoverability drift (the dependency-free
+# check-originals-sync step that runs first), and other src-level regressions before
+# they ship. Vitest runs in a node environment with no build step, so the job is
+# self-contained: the sync-check, then install, then test.
 #
-# Locally: npm run test:web
+# Locally: npm run check:originals && npm run test:web
 
 on:
   push:
@@ -21,6 +22,7 @@ on:
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'
+      - 'scripts/check-originals-sync.mjs'
       - '.github/workflows/web-tests.yml'
   pull_request:
     paths:
@@ -32,6 +34,7 @@ on:
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'
+      - 'scripts/check-originals-sync.mjs'
       - '.github/workflows/web-tests.yml'
   workflow_dispatch:
 
@@ -48,6 +51,9 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+
+      - name: Originals discoverability sync-check
+        run: node scripts/check-originals-sync.mjs
 
       - name: Install dependencies
         run: npm ci
