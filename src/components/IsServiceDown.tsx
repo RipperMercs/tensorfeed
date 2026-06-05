@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Activity, ArrowRight, HelpCircle } from 'lucide-react';
-import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
 import { WebApplicationJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
+import LiveServiceStatus from '@/components/status/LiveServiceStatus';
 import type { IsDownService } from '@/lib/is-down-services';
 
 /**
@@ -36,48 +36,8 @@ async function fetchService(statusServiceName: string): Promise<StatusService | 
   return null;
 }
 
-function statusMessage(name: string, status: string): string {
-  switch (status) {
-    case 'operational':
-      return `${name} is up and running normally. All systems are operational.`;
-    case 'degraded':
-      return `${name} is experiencing degraded performance. Some features may be slower or intermittently unavailable.`;
-    case 'down':
-      return `${name} is currently down. The provider is likely aware and working on a fix.`;
-    default:
-      return `Live status for ${name} is not available here right now. Check the official status page below.`;
-  }
-}
-
-function statusBg(status: string): string {
-  switch (status) {
-    case 'operational':
-      return 'from-accent-green/20 to-accent-green/5 border-accent-green/40';
-    case 'degraded':
-      return 'from-accent-amber/20 to-accent-amber/5 border-accent-amber/40';
-    case 'down':
-      return 'from-accent-red/20 to-accent-red/5 border-accent-red/40';
-    default:
-      return 'from-bg-tertiary to-bg-secondary border-border';
-  }
-}
-
-function statusHeading(name: string, status: string): string {
-  switch (status) {
-    case 'operational':
-      return `${name} is Operational`;
-    case 'degraded':
-      return `${name} is Degraded`;
-    case 'down':
-      return `${name} is Down`;
-    default:
-      return `${name} Status Unknown`;
-  }
-}
-
 export default async function IsServiceDown({ service }: { service: IsDownService }) {
   const live = await fetchService(service.statusServiceName);
-  const status = live?.status || 'unknown';
   const name = service.displayName;
 
   return (
@@ -118,46 +78,13 @@ export default async function IsServiceDown({ service }: { service: IsDownServic
         </p>
       </div>
 
-      {/* Big Status Indicator */}
-      <div className={`bg-gradient-to-br ${statusBg(status)} border rounded-xl p-8 mb-8 text-center`}>
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <span className={`inline-block w-5 h-5 rounded-full ${STATUS_DOTS[status] || STATUS_DOTS.unknown}`} />
-          <h2 className="text-2xl font-bold text-text-primary">{statusHeading(name, status)}</h2>
-        </div>
-        <p className="text-text-secondary text-lg max-w-xl mx-auto">{statusMessage(name, status)}</p>
-        {live?.lastChecked && (
-          <p className="text-text-muted text-xs mt-4">
-            Last checked:{' '}
-            <span className="font-mono">
-              {new Date(live.lastChecked).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          </p>
-        )}
-        <p className="text-text-muted text-xs mt-3">
-          Official status page:{' '}
-          <a href={service.statusPageUrl} target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">
-            {service.statusPageUrl.replace(/^https?:\/\//, '')}
-          </a>
-        </p>
-      </div>
-
-      {/* Component Status */}
-      {live && live.components.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-text-primary mb-4">Component Status</h2>
-          <div className="bg-bg-secondary border border-border rounded-xl divide-y divide-border">
-            {live.components.map((comp) => (
-              <div key={comp.name} className="flex items-center justify-between px-5 py-3.5">
-                <span className="text-sm text-text-secondary">{comp.name}</span>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-block w-2.5 h-2.5 rounded-full ${STATUS_DOTS[comp.status] || STATUS_DOTS.unknown}`} />
-                  <span className={`text-sm capitalize ${STATUS_COLORS[comp.status] || STATUS_COLORS.unknown}`}>{comp.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Live status indicator + component breakdown (polls /api/status every 2 min) */}
+      <LiveServiceStatus
+        serviceName={service.statusServiceName}
+        providerName={name}
+        initial={live}
+        statusPageUrl={service.statusPageUrl}
+      />
 
       {/* What to do when X is down */}
       <section className="mb-10">

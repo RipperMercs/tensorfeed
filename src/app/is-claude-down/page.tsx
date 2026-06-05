@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Activity, ArrowRight, HelpCircle } from 'lucide-react';
-import { STATUS_DOTS, STATUS_COLORS } from '@/lib/constants';
 import { WebApplicationJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
+import LiveServiceStatus from '@/components/status/LiveServiceStatus';
 
 interface StatusService {
   name: string;
@@ -46,53 +46,6 @@ export const metadata: Metadata = {
       'Check if Claude is down right now. Real-time Claude API status monitoring with live updates. See current outages, degraded performance, and component status for Anthropic Claude.',
   },
 };
-
-function StatusDot({ status }: { status: string }) {
-  return (
-    <span
-      className={`inline-block w-2.5 h-2.5 rounded-full ${STATUS_DOTS[status] || STATUS_DOTS.unknown}`}
-    />
-  );
-}
-
-function getStatusMessage(status: string): string {
-  switch (status) {
-    case 'operational':
-      return 'Claude is up and running normally. All systems are operational.';
-    case 'degraded':
-      return 'Claude is experiencing degraded performance. Some features may be slower or intermittently unavailable.';
-    case 'down':
-      return 'Claude is currently down. Anthropic is likely aware and working on a fix.';
-    default:
-      return 'Unable to determine Claude status at this time. Check back shortly.';
-  }
-}
-
-function getStatusBg(status: string): string {
-  switch (status) {
-    case 'operational':
-      return 'from-accent-green/20 to-accent-green/5 border-accent-green/40';
-    case 'degraded':
-      return 'from-accent-amber/20 to-accent-amber/5 border-accent-amber/40';
-    case 'down':
-      return 'from-accent-red/20 to-accent-red/5 border-accent-red/40';
-    default:
-      return 'from-bg-tertiary to-bg-secondary border-border';
-  }
-}
-
-function getStatusHeading(status: string): string {
-  switch (status) {
-    case 'operational':
-      return 'Claude is Operational';
-    case 'degraded':
-      return 'Claude is Degraded';
-    case 'down':
-      return 'Claude is Down';
-    default:
-      return 'Claude Status Unknown';
-  }
-}
 
 function getDynamicFaqAnswer(status: string): string {
   switch (status) {
@@ -201,53 +154,8 @@ export default async function IsClaudeDownPage() {
         </p>
       </div>
 
-      {/* Big Status Indicator */}
-      <div
-        className={`bg-gradient-to-br ${getStatusBg(status)} border rounded-xl p-8 mb-8 text-center`}
-      >
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <span
-            className={`inline-block w-5 h-5 rounded-full ${STATUS_DOTS[status] || STATUS_DOTS.unknown}`}
-          />
-          <h2 className="text-2xl font-bold text-text-primary">{getStatusHeading(status)}</h2>
-        </div>
-        <p className="text-text-secondary text-lg max-w-xl mx-auto">
-          {getStatusMessage(status)}
-        </p>
-        {service?.lastChecked && (
-          <p className="text-text-muted text-xs mt-4">
-            Last checked:{' '}
-            <span className="font-mono">
-              {new Date(service.lastChecked).toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-          </p>
-        )}
-      </div>
-
-      {/* Component Status */}
-      {service && service.components.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-text-primary mb-4">Component Status</h2>
-          <div className="bg-bg-secondary border border-border rounded-xl divide-y divide-border">
-            {service.components.map((comp) => (
-              <div key={comp.name} className="flex items-center justify-between px-5 py-3.5">
-                <span className="text-sm text-text-secondary">{comp.name}</span>
-                <div className="flex items-center gap-2">
-                  <StatusDot status={comp.status} />
-                  <span
-                    className={`text-sm capitalize ${STATUS_COLORS[comp.status] || STATUS_COLORS.unknown}`}
-                  >
-                    {comp.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Live status indicator + component breakdown (polls /api/status every 2 min) */}
+      <LiveServiceStatus serviceName="Claude API" providerName="Claude" initial={service} />
 
       {/* What to do when Claude is down */}
       <section className="mb-10">
