@@ -6,8 +6,9 @@ name: Weekly Freshness Agent
 # NO Bash, it works on a throwaway feature branch (never main), and every change
 # reaches main only through a human-reviewed pull request opened by a deterministic
 # workflow step. The agent cannot run shell commands or push to main.
-# Prerequisites (one time): repo secret ANTHROPIC_API_KEY + the Claude GitHub App
-# (github.com/apps/claude) installed with contents + pull-requests write.
+# Prerequisites (one time): repo secret CLAUDE_CODE_OAUTH_TOKEN (minted locally with
+# `claude setup-token`) + the Claude GitHub App (github.com/apps/claude) installed with
+# contents + pull-requests write.
 
 on:
   schedule:
@@ -22,14 +23,14 @@ jobs:
   freshness:
     runs-on: ubuntu-latest
     steps:
-      # Stay green (skip cleanly) until the ANTHROPIC_API_KEY secret exists.
+      # Stay green (skip cleanly) until the CLAUDE_CODE_OAUTH_TOKEN secret exists.
       - name: Verify setup
         id: pre
         env:
-          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          KEY: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           if [ -z "$KEY" ]; then
-            echo "ANTHROPIC_API_KEY not set. Add the repo secret and install the Claude GitHub App to enable this workflow. Skipping."
+            echo "CLAUDE_CODE_OAUTH_TOKEN not set. Add the repo secret and install the Claude GitHub App to enable this workflow. Skipping."
             echo "ready=false" >> "$GITHUB_OUTPUT"
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"
@@ -62,7 +63,7 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         if: steps.pre.outputs.ready == 'true'
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: |
             --model claude-sonnet-4-6
             --max-turns 40
