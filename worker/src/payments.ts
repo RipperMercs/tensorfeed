@@ -31,6 +31,7 @@ import {
   canonicalDiscoveryInput,
   canonicalDiscoveryOutput,
 } from './bazaar-pilots';
+import type { DebitResult, MintResult } from './credit-ledger';
 
 /**
  * Payment middleware for premium endpoints.
@@ -1800,6 +1801,96 @@ export type ValidateAndChargeResult =
   | { ok: true; credits_remaining: number }
   | { ok: false; reason: ValidateAndChargeReason };
 
+// Route a token's debit through the per-token CreditLedger DO when the
+// Phase-3 flag + binding are present. Returns the DO verdict (ok=charged,
+// !ok=rejected with reason), or null when the DO path is unavailable (flag
+// off, missing binding, non-2xx, or thrown) so the caller falls back to the
+// legacy KV read-modify-write. Mirrors commitPayment's DO routing.
+async function tryLedgerDebit(
+  env: Env,
+  token: string,
+  cost: number,
+): Promise<DebitResult | null> {
+  if (!(cost > 0 && env.CREDIT_LEDGER_ENABLED === 'true' && env.CREDIT_LEDGER !== undefined)) {
+    return null;
+  }
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const stub = env.CREDIT_LEDGER.get(env.CREDIT_LEDGER.idFromName(token));
+    const res = await stub.fetch(
+      new Request('https://credit-ledger.do/debit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token, amount: cost, today }),
+      }),
+    );
+    if (!res.ok) {
+      console.warn('credit-ledger DO debit non-2xx (federation rail), falling back to KV:', res.status);
+      return null;
+    }
+    return (await res.json()) as DebitResult;
+  } catch (err) {
+    console.warn('credit-ledger DO debit failed (federation rail), falling back to KV:', err);
+    return null;
+  }
+}
+
+// Route a refund / credit-add through the DO mint. Returns the MintResult,
+// or null on unavailable so the caller falls back to the legacy KV add.
+async function tryLedgerMint(
+  env: Env,
+  token: string,
+  amount: number,
+): Promise<MintResult | null> {
+  if (!(amount > 0 && env.CREDIT_LEDGER_ENABLED === 'true' && env.CREDIT_LEDGER !== undefined)) {
+    return null;
+  }
+  try {
+    const stub = env.CREDIT_LEDGER.get(env.CREDIT_LEDGER.idFromName(token));
+    const res = await stub.fetch(
+      new Request('https://credit-ledger.do/mint', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token, amount }),
+      }),
+    );
+    if (!res.ok) {
+      console.warn('credit-ledger DO mint non-2xx (federation refund), falling back to KV:', res.status);
+      return null;
+    }
+    return (await res.json()) as MintResult;
+  } catch (err) {
+    console.warn('credit-ledger DO mint failed (federation refund), falling back to KV:', err);
+    return null;
+  }
+}
+
+// Ask the DO to mirror its current balance to KV. The DO `debit` auto-mirrors,
+// but `mint` does not, so after a DO mint refund we must explicitly mirror so
+// the public read source (`pay:credits:{token}` in KV) ends correct (the money
+// invariant). Best effort: a failed mirror leaves a transient DO-vs-KV
+// divergence that Part B reconciles; it never throws into the refund path.
+async function tryLedgerMirrorToKV(env: Env, token: string): Promise<void> {
+  if (!(env.CREDIT_LEDGER_ENABLED === 'true' && env.CREDIT_LEDGER !== undefined)) {
+    return;
+  }
+  try {
+    const stub = env.CREDIT_LEDGER.get(env.CREDIT_LEDGER.idFromName(token));
+    const res = await stub.fetch(
+      new Request('https://credit-ledger.do/mirror-to-kv', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token }),
+      }),
+    );
+    if (!res.ok) {
+      console.warn('credit-ledger DO mirror-to-kv non-2xx (federation refund):', res.status);
+    }
+  } catch (err) {
+    console.warn('credit-ledger DO mirror-to-kv failed (federation refund):', err);
+  }
+}
+
 export async function validateAndCharge(
   env: Env,
   args: { token: string; cost: number; endpoint?: string },
@@ -1822,6 +1913,14 @@ export async function validateAndCharge(
   if (!record) {
     return { ok: false, reason: 'invalid_token' };
   }
+  // Atomic debit via the per-token DO (race-safe). Falls back to the legacy
+  // KV read-modify-write below on flag-off / missing binding / DO error.
+  const doResult = await tryLedgerDebit(env, token, cost);
+  if (doResult !== null) {
+    if (doResult.ok) return { ok: true, credits_remaining: doResult.balance };
+    return { ok: false, reason: 'insufficient_credits' }; // insufficient_credits or cap_exceeded
+  }
+  // Legacy KV path (bounded race; default until the flag/binding).
   if (record.balance < cost) {
     return { ok: false, reason: 'insufficient_credits' };
   }
@@ -1887,24 +1986,43 @@ export async function validateOnly(
   if (!record) {
     return { ok: false, reason: 'invalid_token' };
   }
-  if (record.balance < cost) {
-    return { ok: false, reason: 'insufficient_credits' };
-  }
-  // Atomic-reserve: debit the balance up front, hold the value in a
-  // reservation record. commitInternal will either finalize (charge
-  // path: no-op, debit already happened) or restore (no-charge path:
-  // refund the reserved credits to balance). A 5-minute TTL bounds
-  // the worst-case "soft loss" if a sister-site handler crashes
-  // before commit.
-  const reservedFromBalance = record.balance - cost;
-  record.balance = reservedFromBalance;
-  record.last_used = new Date().toISOString();
   const reservationId = generateNonce();
   const reservation: ReservationRecord = {
     token,
     cost,
     reserved_at: new Date().toISOString(),
   };
+  // Atomic reserve via the DO debit. The reservation record is the refund
+  // bookkeeping commitInternal consumes; the DO owns the actual debit and
+  // auto-mirrors the debited balance to KV. Falls back to the legacy KV
+  // reserve below on flag-off / missing binding / DO error.
+  const doResult = await tryLedgerDebit(env, token, cost);
+  if (doResult !== null) {
+    if (!doResult.ok) return { ok: false, reason: 'insufficient_credits' };
+    await env.TENSORFEED_CACHE.put(
+      `pay:reservation:${reservationId}`,
+      JSON.stringify(reservation),
+      { expirationTtl: RESERVATION_TTL_SECONDS },
+    );
+    return {
+      ok: true,
+      credits_remaining: doResult.balance,
+      sufficient: true,
+      reservation_id: reservationId,
+    };
+  }
+  // Legacy KV reserve (bounded race). Debit the balance up front, hold the
+  // value in a reservation record. commitInternal will either finalize
+  // (charge path: no-op, debit already happened) or restore (no-charge
+  // path: refund the reserved credits to balance). A 5-minute TTL bounds
+  // the worst-case "soft loss" if a sister-site handler crashes before
+  // commit.
+  if (record.balance < cost) {
+    return { ok: false, reason: 'insufficient_credits' };
+  }
+  const reservedFromBalance = record.balance - cost;
+  record.balance = reservedFromBalance;
+  record.last_used = new Date().toISOString();
   await Promise.all([
     env.TENSORFEED_CACHE.put(`pay:credits:${token}`, JSON.stringify(record)),
     env.TENSORFEED_CACHE.put(
@@ -1979,20 +2097,31 @@ export async function commitInternal(
     await env.TENSORFEED_CACHE.delete(`pay:reservation:${reservationId}`);
 
     if (noChargeReason !== null) {
-      // Restore the reserved credits to the balance.
-      const record = (await env.TENSORFEED_CACHE.get(
-        `pay:credits:${reservation.token}`,
-        'json',
-      )) as CreditsRecord | null;
+      // Refund the reserved credits (validateOnly debited them up front).
+      // Route through the DO mint when available so the refund is atomic
+      // and auto-mirrors to KV; fall back to the legacy KV add otherwise.
       let balanceAfter = 0;
-      if (record) {
-        record.balance += reservation.cost;
-        record.last_used = new Date().toISOString();
-        balanceAfter = record.balance;
-        await env.TENSORFEED_CACHE.put(
+      const mintResult = await tryLedgerMint(env, reservation.token, reservation.cost);
+      if (mintResult !== null) {
+        balanceAfter = mintResult.balance;
+        // The DO mint updates DO storage but does NOT auto-mirror (only debit
+        // does), so push the restored balance to the KV read source explicitly
+        // to keep the public balance endpoint correct.
+        await tryLedgerMirrorToKV(env, reservation.token);
+      } else {
+        const record = (await env.TENSORFEED_CACHE.get(
           `pay:credits:${reservation.token}`,
-          JSON.stringify(record),
-        );
+          'json',
+        )) as CreditsRecord | null;
+        if (record) {
+          record.balance += reservation.cost;
+          record.last_used = new Date().toISOString();
+          balanceAfter = record.balance;
+          await env.TENSORFEED_CACHE.put(
+            `pay:credits:${reservation.token}`,
+            JSON.stringify(record),
+          );
+        }
       }
       await logNoChargeEvent(env, noChargeReason, endpoint, reservation.cost, reservation.token);
       return {
@@ -2003,8 +2132,9 @@ export async function commitInternal(
       };
     }
 
-    // Charge path: debit already happened in validateOnly. Just surface
-    // the current balance.
+    // Charge path: the debit already happened in validateOnly (DO debit or
+    // legacy KV reserve). Surface the current (DO-mirrored or KV) balance;
+    // no further debit here, so there is no double-debit.
     const record = (await env.TENSORFEED_CACHE.get(
       `pay:credits:${reservation.token}`,
       'json',
@@ -2017,8 +2147,11 @@ export async function commitInternal(
     };
   }
 
-  // === Legacy path (deprecated; race-y) ===
-  // Retained for callers that haven't migrated to the reservation API.
+  // === Legacy no-reservation path (deprecated; DO-routed for atomicity) ===
+  // Retained for callers that haven't migrated to the reservation API. The
+  // charge debit is now routed through the DO when available (falling back
+  // to the legacy KV read-modify-write), so this path is atomic under the
+  // flag even without a reservation.
   // No-charge path: log the event without touching the credit balance.
   if (noChargeReason !== null) {
     const record = (await env.TENSORFEED_CACHE.get(
@@ -2034,7 +2167,16 @@ export async function commitInternal(
     };
   }
 
-  // Charge path: atomic debit.
+  // Charge path: atomic debit via the DO, fall back to legacy KV.
+  const doResult = await tryLedgerDebit(env, token, cost);
+  if (doResult !== null) {
+    if (doResult.ok) {
+      return { ok: true, credits_charged: cost, balance_after: doResult.balance, no_charge_reason: null };
+    }
+    // DO rejected (insufficient/cap): no-charge, mirroring commitPayment.
+    await logNoChargeEvent(env, 'stale_data', endpoint, cost, token);
+    return { ok: true, credits_charged: 0, balance_after: doResult.balance, no_charge_reason: 'stale_data' };
+  }
   const record = (await env.TENSORFEED_CACHE.get(
     `pay:credits:${token}`,
     'json',
