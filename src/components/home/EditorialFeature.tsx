@@ -88,7 +88,7 @@ export default function EditorialFeature({ articles }: EditorialFeatureProps) {
         </h2>
 
         <p
-          className="relative"
+          className="relative line-clamp-4"
           style={{
             zIndex: 1,
             fontSize: 16,
