@@ -24,7 +24,7 @@ export const POLICY_SNAPSHOT_KEY = 'federal-ai-policy:snapshot';
 export const POLICY_DAY_PREFIX = 'federal-ai-policy:day:';
 
 export const POLICY_SOURCE =
-  'Federal Register API (US executive and agency actions: rules, proposed rules, notices, presidential documents; public domain) plus GovInfo BILLS search (US federal legislation; public domain). Both queried full-text for AI terms (artificial intelligence, machine learning, large language model, and related) then filtered to documents whose title or abstract names an AI term. Coverage is a verifiable precision floor: a document that regulates AI without naming it in the title or abstract is not counted.';
+  'Federal Register API (US executive and agency actions: rules, proposed rules, notices, presidential documents; public domain) plus GovInfo BILLS search (US federal legislation; public domain). Both queried full-text for AI terms (artificial intelligence, machine learning, large language model, and related) then filtered to documents and bills whose title names an AI term. Coverage is a verifiable precision floor: a document that regulates AI without naming it in its title is not counted.';
 export const POLICY_LICENSE =
   'Public domain (US Government works). TensorFeed editorial aggregation and derivation.';
 
@@ -243,10 +243,12 @@ export function rollupTypes(docs: PolicyDocument[]): TypeCount[] {
     .sort((a, b) => b.count - a.count);
 }
 
-// Keep only high-signal documents: an AI term in the title or abstract. Drops
-// full-text noise (e.g. an environmental rule that merely mentions AI once).
+// Keep only high-signal documents: an AI term in the TITLE. Title-only matching
+// (not abstract) so a rule that merely mentions AI once in its abstract is
+// dropped; the title is where a document declares it is actually about AI. This
+// is consistent with the bill filter, which is also title-only.
 export function highSignalDocs(docs: PolicyDocument[]): PolicyDocument[] {
-  return docs.filter((d) => hasAiTerm(d.title) || hasAiTerm(d.abstract));
+  return docs.filter((d) => hasAiTerm(d.title));
 }
 
 // Keep only bills whose title names an AI term, same precision rationale.

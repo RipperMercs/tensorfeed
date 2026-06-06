@@ -274,7 +274,7 @@ TensorFeed accepts USDC on Base as the sole payment method for premium endpoints
 
 **Federal AI Opportunities:** `/api/procurement/ai-opportunities` (open SAM.gov federal AI solicitations by agency and set-aside; premium `/api/premium/procurement/ai-opportunities/deadlines` ranks the full pipeline by response deadline with days remaining).
 
-**Federal AI Policy:** `/api/federal-ai-policy` tracks US federal AI policy actions across two layers. The executive and agency layer pulls Federal Register documents (rules, proposed rules, notices, presidential documents) whose title or abstract names an AI term, rolled up by agency and document type with the 15 newest as a preview. The legislative layer pulls AI-named federal bills from GovInfo. Public domain, refreshed daily, 120-day window, cold-start safe. Premium `/api/premium/federal-ai-policy` (1 credit, AFTA-signed) returns the full ranked document and bill lists with the rollups; 36h freshness SLA, no-charge when stale.
+**Federal AI Policy:** `/api/federal-ai-policy` tracks US federal AI policy actions across two layers. The executive and agency layer pulls Federal Register documents (rules, proposed rules, notices, presidential documents) whose title names an AI term, rolled up by agency and document type with the 15 newest as a preview. The legislative layer pulls AI-named federal bills from GovInfo. Public domain, refreshed daily, 120-day window, cold-start safe. Premium `/api/premium/federal-ai-policy` (1 credit, AFTA-signed) returns the full ranked document and bill lists with the rollups; 36h freshness SLA, no-charge when stale.
 
 Procurement hub (human): https://tensorfeed.ai/procurement (federal AI contract awards plus open solicitations, by agency and set-aside).
 

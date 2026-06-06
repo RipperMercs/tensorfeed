@@ -191,7 +191,7 @@ describe('rollups', () => {
 });
 
 describe('high-signal filtering', () => {
-  it('drops documents that do not name an AI term in title or abstract', () => {
+  it('keeps only documents that name an AI term in the title (title-only, ignores abstract)', () => {
     const docs: PolicyDocument[] = [
       mapFrDocument(
         { document_number: '1', title: 'Promoting Advanced Artificial Intelligence', type: 'Presidential Document' },
@@ -216,8 +216,9 @@ describe('high-signal filtering', () => {
         'a',
       ),
     ];
+    // Doc 3 names ML only in its abstract, not its title, so title-only drops it.
     const kept = highSignalDocs(docs).map((d) => d.document_number);
-    expect(kept).toEqual(['1', '3']);
+    expect(kept).toEqual(['1']);
   });
   it('keeps only bills whose title names an AI term', () => {
     const bills: PolicyBill[] = [

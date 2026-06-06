@@ -173,7 +173,7 @@ export default function AIPolicyPage() {
           <h2 className="text-xl font-bold text-text-primary">Live Federal Activity</h2>
         </div>
         <p className="text-sm text-text-muted mb-4">
-          AI-related US Federal Register actions (rules, proposed rules, notices, presidential documents) and federal bills, refreshed daily. Filtered to documents whose title or abstract names an AI term.
+          AI-related US Federal Register actions (rules, proposed rules, notices, presidential documents) and federal bills, refreshed daily. Filtered to items whose title names an AI term.
           {feed?.captured_at && ` Captured ${feed.captured_at.slice(0, 10)}.`}
         </p>
 
