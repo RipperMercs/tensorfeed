@@ -160,6 +160,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // scores per provider, top arbitrage opportunities. Same anonymous-
   // crawler hygiene rationale as Wave 3.
   '/api/premium/inference-providers/arbitrage',
+  // Inference Cost Verdict (2026-06-06). Cheapest inference host for one model
+  // at a monthly token volume, with savings vs the caller's current host.
+  // Param-required (?model=), so strict-premium gates anonymous crawlers to a
+  // clean 402.
+  '/api/premium/inference/cost-verdict',
   // Wave 5 Bazaar pilot (2026-05-24). AI safety incidents exposure: per-
   // vendor exposure rollups over the daily-refreshed AVID snapshot.
   // Same anonymous-crawler hygiene rationale as previous waves.

@@ -12793,6 +12793,64 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: INFERENCE COST VERDICT (Tier 1, 1 credit, param-required) ===
+    // /api/premium/inference/cost-verdict?model=&monthly_tokens=&current_provider=
+    // Cheapest inference host to serve one open-weight model at a monthly token
+    // volume, projected per-host spend, and savings vs the caller's current host.
+    // Ranks by cost with throughput (outputTPS) as the secondary signal; inference-
+    // host reliability is not yet measured, so it is not factored in (a v2 item).
+    // Optional input_tokens + output_tokens for an exact split (else blended 50/50).
+    // Param-required (?model=), so strict-premium. Free sibling is the raw
+    // /api/inference-providers/cheapest feed.
+    if (path === '/api/premium/inference/cost-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const model = url.searchParams.get('model')?.trim() || null;
+      const monthlyTokens = parseFloat(url.searchParams.get('monthly_tokens') ?? '');
+      const inputTokens = parseFloat(url.searchParams.get('input_tokens') ?? '');
+      const outputTokens = parseFloat(url.searchParams.get('output_tokens') ?? '');
+      const hasSplit = Number.isFinite(inputTokens) && inputTokens >= 0 && Number.isFinite(outputTokens) && outputTokens >= 0;
+      const hasMonthly = Number.isFinite(monthlyTokens) && monthlyTokens > 0;
+      if (!model || (!hasMonthly && !hasSplit)) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'Pass model=<id> (e.g. llama-3.1-70b) and monthly_tokens=<n>, or input_tokens=<n>&output_tokens=<n> for an exact split. Optional current_provider=<name> for a savings comparison.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const { buildInferenceCostVerdict } = await import('./premium-inference-cost-verdict');
+      const { INFERENCE_MATRIX, INFERENCE_LAST_UPDATED } = await import('./inference-providers');
+      const result = buildInferenceCostVerdict(
+        INFERENCE_MATRIX,
+        {
+          model,
+          monthly_tokens: hasMonthly ? monthlyTokens : null,
+          input_tokens: hasSplit ? inputTokens : null,
+          output_tokens: hasSplit ? outputTokens : null,
+          current_provider: url.searchParams.get('current_provider')?.trim() || null,
+        },
+        INFERENCE_LAST_UPDATED,
+      );
+
+      if (!result.ok) {
+        // model_not_in_matrix: a valid query for a model absent from the curated
+        // matrix. AFTA empty_result no-charge, with the available model ids back.
+        return await premiumValidationFailure({ ...result }, payment, request, env, 'empty_result', 404);
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/inference/cost-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: MODEL DEPRECATION TIMELINE (Tier 1, 1 credit) ===
     // /api/premium/model-deprecations/timeline?within_days=&provider=
     // Derived-metrics timeline over the hand-curated model deprecation

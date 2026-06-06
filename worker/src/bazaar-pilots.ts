@@ -3772,6 +3772,80 @@ const CONCENTRATION_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 36 (2026-06-06): inference-cost-verdict. Cheapest inference host for one
+// open-weight model at a monthly token volume, with savings vs the caller's
+// current host. Param-required (?model=). Free sibling is the raw
+// /api/inference-providers/cheapest feed. Total pilot count: 85 -> 86.
+const INFERENCE_COST_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'Inference cost verdict. Where should an agent run this open-weight model the cheapest? Pass ?model=llama-3.1-70b&monthly_tokens=100000000 (optionally current_provider=Together AI) and get the cheapest inference host, per-host projected monthly spend, throughput context, and the savings versus your current host, with an AFTA-signed receipt. Ranked by cost with throughput as the secondary signal. No-charge when the model is not in the matrix.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { model: 'llama-3.1-70b', monthly_tokens: 100000000, current_provider: 'Together AI' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            verdict_kind: 'inference_cost',
+            model: 'Llama 3.1 70B',
+            model_id: 'llama-3.1-70b',
+            family: 'Meta',
+            cheapest: {
+              provider: 'DeepInfra',
+              monthly_cost_usd: 37.5,
+              input_price_per_1m: 0.35,
+              output_price_per_1m: 0.4,
+              blended_price_per_1m: 0.375,
+              output_tps: 95,
+              context_window: 130000,
+              url: 'https://deepinfra.com/pricing',
+            },
+            current: { provider: 'Together AI', monthly_cost_usd: 88 },
+            savings: { vs_current_usd: 50.5, vs_current_pct: 57.4 },
+            fastest: { provider: 'Groq', output_tps: 250 },
+            recommendation: 'For Llama 3.1 70B at the stated volume, DeepInfra is the cheapest host at $37.5 per month. Switching from Together AI saves $50.5 per month (57.4 percent).',
+            matrix_last_updated: '2026-05-24',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  model: { type: 'string', description: 'Open-weight model id, e.g. llama-3.1-70b. Required.' },
+                  monthly_tokens: { type: 'number', description: 'Total monthly tokens (blended 50/50 input and output). Provide this or input_tokens plus output_tokens.' },
+                  input_tokens: { type: 'number', description: 'Monthly input tokens, for an exact split.' },
+                  output_tokens: { type: 'number', description: 'Monthly output tokens, for an exact split.' },
+                  current_provider: { type: 'string', description: 'Optional current host, for a savings comparison (e.g. Together AI).' },
+                },
+                required: ['model'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 // Wave 24 (2026-05-28): guidance-delta. Did this periodic SEC filing
 // materially change guidance, segment outlook, or risk language versus the
 // prior same-form filing, with the exact changed sentences quoted. Reads the
@@ -6513,6 +6587,9 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // Wave 35 (2026-06-06): concentration-verdict. SPOF ruling over a caller's
   // AI-provider dependency set (reliability ranking + live status).
   '/api/premium/resilience/concentration-verdict': CONCENTRATION_VERDICT_PILOT,
+  // Wave 36 (2026-06-06): inference-cost-verdict. Cheapest-host ruling over the
+  // inference-provider price matrix.
+  '/api/premium/inference/cost-verdict': INFERENCE_COST_VERDICT_PILOT,
   // Wave 26 (2026-05-30): agent news-search + brief cluster. Rode the x402
   // distribution week. The decision-verified pair was already strict-premium;
   // topic-search and recent were promoted to strict-premium in the same change

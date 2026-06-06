@@ -163,6 +163,9 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // Inference-provider arbitrage: pure compute over the hand-curated
   // inference-providers matrix. Updates on redeploy; no staleness signal.
   '/api/premium/inference-providers/arbitrage': NULL_SLA,
+  // Inference cost verdict: pure compute over the same hand-curated inference-
+  // providers matrix. Updates on redeploy; no wall-clock staleness signal.
+  '/api/premium/inference/cost-verdict': NULL_SLA,
   // AI safety incidents exposure: derived over the AVID snapshot. 36h SLA
   // matches the daily 03:00 UTC AVID refresh cadence with headroom for
   // a single missed run.

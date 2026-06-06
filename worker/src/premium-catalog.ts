@@ -1162,6 +1162,22 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'misc',
   },
   {
+    path: '/api/premium/inference/cost-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'model', required: true },
+      { name: 'monthly_tokens', required: false },
+      { name: 'input_tokens', required: false },
+      { name: 'output_tokens', required: false },
+      { name: 'current_provider', required: false },
+    ],
+    returns: 'Cheapest inference host to serve one open-weight model at a monthly token volume, per-host projected spend, throughput context, and savings vs the caller current_provider. No-charge when the model is not in the matrix.',
+    free_sibling: '/api/inference-providers/cheapest',
+    signed: true,
+    category: 'verdict',
+  },
+  {
     path: '/api/premium/model-deprecations/timeline',
     credits: 1,
     strict_premium: true,

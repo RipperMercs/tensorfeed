@@ -228,7 +228,7 @@ describe('isStrictPremiumPath', () => {
   });
 
   describe('list integrity', () => {
-    it('exposes all 90 exact paths', () => {
+    it('exposes all 91 exact paths', () => {
       // 24 pre-Wave-2 + 9 Wave 2 + 1 each Waves 3..12 + 3 Wave 13 (ai-cves trio)
       // + 1 Wave 15 (ai-cves batch) + 5 Wave 16 (per-provider triage)
       // + 3 Wave 17 (SEC filings AI-extraction) + 1 Wave 18 (pro-tier
@@ -260,8 +260,10 @@ describe('isStrictPremiumPath', () => {
       // ?package=&ecosystem=, GO/REVIEW/BLOCK AI-package safety verdict).
       // + 1 (2026-06-06) resilience/concentration-verdict (param-required
       // ?providers=, dependency single-point-of-failure ruling).
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(90);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(90); // no duplicates
+      // + 1 (2026-06-06) inference/cost-verdict (param-required ?model=,
+      // cheapest-inference-host ruling with savings vs current).
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(91);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(91); // no duplicates
     });
     it('exposes 7 prefix paths (providers + clean-record pilots + ai-companies + x402-index)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(7);
