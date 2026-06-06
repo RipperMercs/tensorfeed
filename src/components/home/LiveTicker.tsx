@@ -55,7 +55,7 @@ const TICKER_NAME: Record<string, string> = {
 // fetched live. No timestamps, no "X minutes ago" claims; those would be
 // dishonest in a static export.
 const EVERGREEN_ITEMS: TickerItem[] = [
-  { kind: 'price', tag: 'OPUS 4.7', text: '$15 / $75', mono: 'per Mtok' },
+  { kind: 'price', tag: 'OPUS 4.8', text: '$5 / $25', mono: 'per Mtok' },
   { kind: 'price', tag: 'SONNET 4.6', text: '$3 / $15', mono: 'per Mtok' },
   { kind: 'price', tag: 'GPT-5.5', text: '$10 / $30', mono: 'per Mtok' },
   { kind: 'price', tag: 'GEMINI 3.1', text: '$3.50 / $10.50', mono: 'per Mtok' },

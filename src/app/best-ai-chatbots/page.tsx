@@ -558,8 +558,8 @@ export default function BestAIChatbotsPage() {
               <Link href="/originals/ai-inference-floor-may-2026" className="text-accent-primary hover:underline">
                 $0.02 per million input tokens
               </Link>{' '}
-              today, on the OpenRouter open shelf. Flagship chat models like Claude Opus 4.8 cost $15 per
-              million input tokens, which is roughly 880x the floor.
+              today, on the OpenRouter open shelf. Flagship chat models like Claude Opus 4.8 cost $5 per
+              million input tokens, which is roughly 250x the floor.
             </p>
           </div>
           <div className="bg-bg-secondary border border-border rounded-lg p-5">
@@ -583,7 +583,7 @@ export default function BestAIChatbotsPage() {
           { question: 'What is the best AI chatbot for coding?', answer: 'Claude is widely considered the best chatbot for coding, especially with Claude Code for terminal-based development. It produces cleaner code, follows project conventions more consistently, and is less likely to invent APIs that do not exist. ChatGPT and Gemini are strong alternatives.' },
           { question: 'Is Claude down right now?', answer: 'You can check live Claude API status on our Claude status page which polls Anthropic every two minutes. We track every major chatbot the same way. When one chatbot goes down, you can switch to another from this comparison while the outage clears.' },
           { question: 'Which AI chatbot has the largest context window?', answer: 'As of May 2026, three chatbots support 1 million token context windows: Claude Opus 4.8, GPT-5.5, and Gemini 2.5 Pro. One million tokens is roughly 750,000 words, enough to fit an entire mid-sized codebase or several full books in a single conversation. All three reached 1M context with their current flagships, so long-context capacity is now a tie at the top.' },
-          { question: 'What is the cheapest AI chatbot?', answer: 'For end users, every major chatbot has a free tier. Gemini’s free tier is the most capable. For developers calling APIs directly, the cheapest hosted models cost roughly $0.02 per million input tokens today on the OpenRouter open shelf. Flagship chat models like Claude Opus 4.8 cost $15 per million input tokens, roughly 880x the floor.' },
+          { question: 'What is the cheapest AI chatbot?', answer: 'For end users, every major chatbot has a free tier. Gemini’s free tier is the most capable. For developers calling APIs directly, the cheapest hosted models cost roughly $0.02 per million input tokens today on the OpenRouter open shelf. Flagship chat models like Claude Opus 4.8 cost $5 per million input tokens, roughly 250x the floor.' },
           { question: 'Should I pay for ChatGPT, Claude, or Gemini?', answer: 'If you mostly want long-document analysis and Google Workspace integration, pay for Gemini Advanced. If you mostly want creative work and an ecosystem of custom GPTs and plugins, pay for ChatGPT Plus. If you mostly want careful coding, complex reasoning, and quality writing, pay for Claude Pro. All three are $20 per month. Many serious users pay for two of the three and rotate.' },
         ]}
       />
