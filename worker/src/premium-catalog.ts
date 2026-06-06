@@ -1111,6 +1111,20 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'misc',
   },
   {
+    path: '/api/premium/security/package-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'package', required: true },
+      { name: 'ecosystem', required: true },
+      { name: 'version', required: false },
+    ],
+    returns: 'GO/REVIEW/BLOCK pre-install safety verdict for one AI/ML package, fusing the known-malicious IOC list, the OSV advisory snapshot, the GHSA AI firehose, and release cadence. No-charge out_of_coverage when the package is in no TF security feed.',
+    free_sibling: '/api/ai-safety/packages/security',
+    signed: true,
+    category: 'security',
+  },
+  {
     path: '/api/premium/ai-safety/incidents/exposure',
     credits: 1,
     strict_premium: true,

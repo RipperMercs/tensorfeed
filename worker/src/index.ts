@@ -12534,6 +12534,84 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: AI PACKAGE SAFETY VERDICT (Tier 1, 1 credit, param-required) ===
+    // /api/premium/security/package-verdict?package=&ecosystem=&version=
+    // Single GO/REVIEW/BLOCK ruling on whether an agent should install one
+    // AI/ML package, fusing four feeds: the known-malicious IOC list, the
+    // daily OSV advisory snapshot (curated AI/ML packages), the GHSA AI
+    // advisory firehose, and the package-release snapshot (cadence context).
+    // Param-required, so strict-premium (anonymous probes see a clean 402).
+    // Coverage honesty: a package in none of the security feeds is no-charge
+    // out_of_coverage, never a false GO. Free sibling is the raw OSV per-
+    // package feed at /api/ai-safety/packages/security.
+
+    if (path === '/api/premium/security/package-verdict') {
+      // requirePayment FIRST so anonymous strict-premium probes see a clean
+      // 402 challenge before any param validation (the audit CR-1 ordering).
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { parseEcosystem, buildPackageVerdict } = await import('./premium-package-verdict');
+      const pkg = url.searchParams.get('package')?.trim() || null;
+      const ecosystem = parseEcosystem(url.searchParams.get('ecosystem'));
+      if (!pkg || !ecosystem) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'Pass package=<name> and ecosystem=PyPI|npm (pip is accepted as PyPI). version= is optional.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+      const version = url.searchParams.get('version')?.trim() || null;
+
+      const [{ getAiSupplyChainIocs }, { getAiPackageSecuritySnapshot }, { getGhsaAiFeed }, { getPackageReleasesSnapshot }] =
+        await Promise.all([
+          import('./ai-supply-chain-iocs'),
+          import('./ai-package-security-fetcher'),
+          import('./ghsa-ai-feed'),
+          import('./ai-package-releases-fetcher'),
+        ]);
+      const [iocs, security, ghsa, releases] = await Promise.all([
+        getAiSupplyChainIocs(env),
+        getAiPackageSecuritySnapshot(env),
+        getGhsaAiFeed(env),
+        getPackageReleasesSnapshot(env),
+      ]);
+
+      // Every security feed failed to load (cold start before first cron):
+      // no-charge upstream_failure rather than billing for a non-answer.
+      if (!iocs && !security && !ghsa) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'snapshot_not_ready',
+            hint: 'The package-security feeds populate after the first cron ticks (OSV 05:45 UTC, IOC 07:15 UTC, GHSA every 6h). Retry after the next run.',
+          },
+          payment,
+          request,
+          env,
+          'upstream_failure',
+        );
+      }
+
+      const result = buildPackageVerdict({ iocs, security, ghsa, releases }, { package: pkg, ecosystem, version }, new Date());
+
+      if (!result.ok) {
+        // out_of_coverage: a valid query for a package absent from every TF
+        // security feed. AFTA empty_result no-charge, not a billable answer.
+        return await premiumValidationFailure({ ...result }, payment, request, env, 'empty_result', 404);
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/security/package-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env, null, result.captured_at);
+    }
+
     // === AI SAFETY INCIDENTS: AVID (free, cached 600s) ===
     // /api/ai-safety/incidents/avid?limit=&developer=&risk_domain=
     // Raw normalized snapshot of recent AVID (AI Vulnerability Database)

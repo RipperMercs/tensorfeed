@@ -163,6 +163,12 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // package risk scoring over the daily OSV snapshot of the curated AI
   // package lists. Same anonymous-crawler hygiene rationale.
   '/api/premium/ai-safety/packages/security/radar',
+  // Package Safety Verdict (2026-06-06). GO/REVIEW/BLOCK pre-install ruling for
+  // one AI/ML package, fusing the known-malicious IOC list, the OSV advisory
+  // snapshot, the GHSA AI firehose, and release cadence. Param-required
+  // (?package=&ecosystem=), so strict-premium gates anonymous crawlers to a
+  // clean 402 instead of a free-trial 200.
+  '/api/premium/security/package-verdict',
   // Wave 7 Bazaar pilot (2026-05-24). Package release velocity: per-
   // package release counts + bump classification + breaking-change radar
   // over the 6-hourly PyPI/npm snapshot. Same hygiene rationale.

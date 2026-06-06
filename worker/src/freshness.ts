@@ -166,6 +166,12 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // AI-package security radar: derived over the daily 05:45 UTC OSV
   // snapshot. 36h SLA matches the cron cadence with one-run headroom.
   '/api/premium/ai-safety/packages/security/radar': { maxAgeSeconds: 36 * 60 * 60 },
+  // Package safety verdict: fuses the daily OSV snapshot (05:45 UTC) and the
+  // daily IOC feed (07:15 UTC) with the 6-hourly GHSA firehose. captured_at is
+  // the oldest contributing snapshot (the honest staleness floor), so a 36h SLA
+  // (daily cadence + one-run headroom) keys billing to the daily feeds; a
+  // stalled OSV or IOC pipeline triggers a no-charge.
+  '/api/premium/security/package-verdict': { maxAgeSeconds: 36 * 60 * 60 },
   // AI-package release velocity: derived over the 6-hourly registry
   // snapshot. 9h SLA = cron cadence + 50% headroom for a missed run.
   '/api/premium/packages/releases/velocity': { maxAgeSeconds: 9 * 60 * 60 },
@@ -402,6 +408,8 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/clean/kev': 'LLM-ready transform of CISA KEV catalog entry; SLA tracks the 36h KEV cron headroom',
     '/api/premium/clean/epss': 'LLM-ready transform of EPSS score; SLA tracks the 36h EPSS cache headroom',
     '/api/premium/security/ghsa/ai-feed': 'GHSA AI-relevant advisory firehose refreshed every 6h; charges only when fresh (within 9h of the last successful refresh)',
+    '/api/premium/security/package-verdict':
+      'GO/REVIEW/BLOCK pre-install ruling fusing the known-malicious IOC list, the OSV advisory snapshot, the GHSA AI firehose, and release cadence; charges only when the daily feeds are fresh (within 36h) and the package is in coverage',
     '/api/premium/apis-guru/ai-feed': 'APIs.guru AI-API watch refreshed daily; charges only when fresh (within 36h of the last successful refresh)',
     '/api/premium/history/news/clusters/full': 'historical immutable',
     '/api/premium/history/news/verified': 'historical immutable',

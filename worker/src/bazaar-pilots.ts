@@ -3635,6 +3635,78 @@ const SSVC_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 34 (2026-06-06): package-safety-verdict. GO/REVIEW/BLOCK pre-install
+// ruling on one AI/ML package, fusing the known-malicious IOC list, the OSV
+// advisory snapshot, the GHSA AI firehose, and release cadence. Param-required
+// (?package=&ecosystem=). Free sibling is the raw OSV feed at
+// /api/ai-safety/packages/security. Total pilot count: 83 -> 84.
+const PACKAGE_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'AI package safety verdict. Should an agent install this package? Pass ?package=langchain&ecosystem=PyPI (npm also supported) and get a single GO, REVIEW, or BLOCK ruling fusing the known-malicious IOC list, the OSV advisory snapshot of curated AI/ML packages, the GHSA AI-relevant advisory firehose, and release cadence, with an AFTA-signed receipt. BLOCK on known-malicious, REVIEW on open critical or high advisories, GO when covered and clean. A package outside TensorFeed AI/ML coverage is no-charge, never a false GO.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { package: 'langchain', ecosystem: 'PyPI', version: '0.2.0' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            verdict_kind: 'package_safety',
+            package: 'langchain',
+            ecosystem: 'PyPI',
+            version: '0.2.0',
+            verdict: 'REVIEW',
+            risk_score: 39,
+            risk_band: 'hot',
+            reasons: [
+              {
+                signal: 'osv',
+                severity: 'high',
+                detail: 'OSV risk_band is hot (risk_score 39): 1 critical and 2 high advisories in the last 90 days.',
+                source_url: 'https://osv.dev/vulnerability/GHSA-xxxx-xxxx-xxxx',
+              },
+            ],
+            coverage_sources: ['osv', 'release'],
+            recommendation: 'Review before installing langchain. There are open advisories; pin to a patched version where a first_patched_version is listed.',
+            captured_at: '2026-06-06T05:45:00Z',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  package: { type: 'string', description: 'Package name to evaluate (e.g. langchain). Required.' },
+                  ecosystem: { type: 'string', enum: ['PyPI', 'npm', 'pip'], description: 'Package registry. pip is accepted as PyPI. Required.' },
+                  version: { type: 'string', description: 'Optional version under consideration. Echoed; advisory ranges are surfaced for your comparison.' },
+                },
+                required: ['package', 'ecosystem'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 // Wave 24 (2026-05-28): guidance-delta. Did this periodic SEC filing
 // materially change guidance, segment outlook, or risk language versus the
 // prior same-form filing, with the exact changed sentences quoted. Reads the
@@ -6370,6 +6442,9 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // Wave 24 (2026-05-28): guidance-delta. Signed periodic-filing guidance diff.
   '/api/premium/sec/filings/guidance-delta': GUIDANCE_DELTA_PILOT,
   '/api/premium/security/ssvc-verdict': SSVC_VERDICT_PILOT,
+  // Wave 34 (2026-06-06): package-safety-verdict. GO/REVIEW/BLOCK pre-install
+  // ruling on one AI/ML package over the IOC list + OSV + GHSA + release cadence.
+  '/api/premium/security/package-verdict': PACKAGE_VERDICT_PILOT,
   // Wave 26 (2026-05-30): agent news-search + brief cluster. Rode the x402
   // distribution week. The decision-verified pair was already strict-premium;
   // topic-search and recent were promoted to strict-premium in the same change
