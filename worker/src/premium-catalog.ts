@@ -1125,6 +1125,16 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'security',
   },
   {
+    path: '/api/premium/resilience/concentration-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [{ name: 'providers', required: true }],
+    returns: 'RESILIENT/EXPOSED/CRITICAL ruling on a caller-supplied AI-provider dependency set: single-point-of-failure exposure, which providers are impaired right now, the weakest link, and the most dependable provider to add. No-charge when no listed provider is tracked.',
+    free_sibling: '/api/probe/latest',
+    signed: true,
+    category: 'verdict',
+  },
+  {
     path: '/api/premium/ai-safety/incidents/exposure',
     credits: 1,
     strict_premium: true,

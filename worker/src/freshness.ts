@@ -42,6 +42,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // layer (15-min probe cron). 30-min SLA matches that operational layer, so a
   // stale probe summary triggers a no-charge, same posture as route-verdict.
   '/api/premium/provider-reliability-verdict': { maxAgeSeconds: 30 * 60 },
+  // Dependency concentration verdict: fuses the reliability ranking (probe
+  // layer) with live status. captured_at is the probe summary computed_at, so
+  // a 30-min SLA matches the reliability verdict; a stale probe layer no-charges.
+  '/api/premium/resilience/concentration-verdict': { maxAgeSeconds: 30 * 60 },
   // x402 settlement verdict: ruling over the x402 settlement index. 10-min SLA
   // matches the x402-index family (5-min indexer cron advances last_run_at on
   // every block-processing tick, even in a quiet period), so a stale captured_at
@@ -376,6 +380,8 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/routing': 'computed live from current pricing',
     '/api/premium/route-verdict': 'fuses live latency probes + incident triage + status; charges only when the operational layer is fresh (within 30 min)',
     '/api/premium/provider-reliability-verdict': 'ranks providers by measured availability and tail consistency from the TensorFeed probes; charges only when the probe layer is fresh (within 30 min)',
+    '/api/premium/resilience/concentration-verdict':
+      'rules on single-point-of-failure exposure across a caller-supplied AI-provider set, fusing the reliability ranking with live status; charges only when the probe layer is fresh (within 30 min) and at least one listed provider is tracked',
     '/api/premium/x402-settlement-verdict': 'rules on Base x402 USDC settlement momentum, concentration, and the leading publisher over the TensorFeed settlement index; charges only when the index is fresh (within 10 min)',
     '/api/premium/stack-safety-verdict': 'GO/HOLD/BLOCK deploy gate over the ingested AI-CVE batch joined to CISA KEV; charges only when the CVE batch is fresh (within 10 days)',
     '/api/premium/benchmark-trust-verdict': 'pure compute over the editorial benchmark registry plus daily benchmark scores; no staleness signal applies',

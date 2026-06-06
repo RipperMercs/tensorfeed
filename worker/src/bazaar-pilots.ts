@@ -3707,6 +3707,71 @@ const PACKAGE_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 35 (2026-06-06): concentration-verdict. RESILIENT/EXPOSED/CRITICAL
+// ruling on a caller's AI-provider dependency set, fusing the reliability
+// ranking with live status. Param-required (?providers=). Free sibling is the
+// raw probe feed at /api/probe/latest. Total pilot count: 84 -> 85.
+const CONCENTRATION_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'Dependency concentration verdict. How exposed is your AI stack to a single point of failure? Pass ?providers=openai,anthropic,google (comma-separated, aliases like claude, gpt, gemini, bedrock, azure accepted) and get a RESILIENT, EXPOSED, or CRITICAL ruling fusing TensorFeed measured reliability with live provider status: which providers are impaired right now, your weakest link, and the most dependable provider to add for redundancy, with an AFTA-signed receipt. No-charge when none of your providers are tracked.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: { providers: 'openai,anthropic,google' } },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            verdict_kind: 'dependency_concentration',
+            verdict: 'EXPOSED',
+            provider_count: 3,
+            single_point_of_failure: false,
+            providers: [
+              { input: 'openai', provider: 'OpenAI', reliability_score: 0.98, reliability_rank: 1, measured: true, current_status: 'operational' },
+              { input: 'anthropic', provider: 'Anthropic', reliability_score: 0.97, reliability_rank: 2, measured: true, current_status: 'degraded' },
+              { input: 'google', provider: 'Google', reliability_score: 0.95, reliability_rank: 3, measured: true, current_status: 'operational' },
+            ],
+            unrecognized: [],
+            currently_impaired: ['Anthropic'],
+            weakest_link: { input: 'anthropic', provider: 'Anthropic', reliability_score: 0.97, reliability_rank: 2, measured: true, current_status: 'degraded' },
+            diversification: { suggested: [{ provider: 'AWS', reliability_score: 0.96, rank: 4 }], note: 'Highest-reliability tracked providers you are not already using, by measured dependability.' },
+            recommendation: 'Exposed: Anthropic impaired right now. Keep a healthy fallback ready and consider adding AWS.',
+            captured_at: '2026-06-06T12:00:00Z',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  providers: {
+                    type: 'string',
+                    description: 'Comma-separated AI providers you depend on (e.g. openai,anthropic,google). Aliases like claude, gpt, gemini, bedrock, azure accepted. Required.',
+                  },
+                },
+                required: ['providers'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 // Wave 24 (2026-05-28): guidance-delta. Did this periodic SEC filing
 // materially change guidance, segment outlook, or risk language versus the
 // prior same-form filing, with the exact changed sentences quoted. Reads the
@@ -6445,6 +6510,9 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // Wave 34 (2026-06-06): package-safety-verdict. GO/REVIEW/BLOCK pre-install
   // ruling on one AI/ML package over the IOC list + OSV + GHSA + release cadence.
   '/api/premium/security/package-verdict': PACKAGE_VERDICT_PILOT,
+  // Wave 35 (2026-06-06): concentration-verdict. SPOF ruling over a caller's
+  // AI-provider dependency set (reliability ranking + live status).
+  '/api/premium/resilience/concentration-verdict': CONCENTRATION_VERDICT_PILOT,
   // Wave 26 (2026-05-30): agent news-search + brief cluster. Rode the x402
   // distribution week. The decision-verified pair was already strict-premium;
   // topic-search and recent were promoted to strict-premium in the same change

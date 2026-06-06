@@ -7151,6 +7151,70 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: DEPENDENCY CONCENTRATION VERDICT (Tier 1, 1 credit, param-required) ===
+    // /api/premium/resilience/concentration-verdict?providers=openai,anthropic,google
+    // RESILIENT/EXPOSED/CRITICAL ruling on a caller's AI-provider dependency
+    // set: single-point-of-failure exposure, which listed providers are impaired
+    // right now, and the most dependable provider to add for diversification.
+    // Fuses the measured reliability ranking with the live status feed.
+    // Param-required (?providers=), so strict-premium gates anonymous crawlers
+    // to a clean 402. Coverage honesty: if no listed provider is tracked, the
+    // call is no-charge and returns the tracked vocabulary. Free sibling is the
+    // raw probe feed at /api/probe/latest.
+    if (path === '/api/premium/resilience/concentration-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { parseProviders, buildConcentrationVerdict } = await import('./premium-concentration-verdict');
+      const providers = parseProviders(url.searchParams.get('providers'));
+      if (providers.length === 0) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'Pass providers=a,b,c (comma-separated AI providers you depend on, e.g. openai,anthropic,google). Aliases like claude, gpt, gemini, bedrock, azure are accepted.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const { computeReliabilityVerdict } = await import('./premium-provider-reliability-verdict');
+      const reliability = await computeReliabilityVerdict(env);
+      const statusServices =
+        ((await cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120)) as import('./types').ServiceStatus[] | null) || [];
+
+      // No operational signal at all (cold start before first cron): no-charge.
+      if (reliability.ranking.length === 0 && statusServices.length === 0) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'snapshot_not_ready',
+            hint: 'The reliability probe and status feeds populate after the first cron ticks. Retry shortly.',
+          },
+          payment,
+          request,
+          env,
+          'upstream_failure',
+        );
+      }
+
+      const result = buildConcentrationVerdict(reliability, statusServices, providers, new Date());
+
+      if (!result.ok) {
+        // no_recognized_providers: a valid query where none of the listed
+        // providers are tracked. AFTA empty_result no-charge, with the tracked
+        // vocabulary returned so the caller can self-correct.
+        return await premiumValidationFailure({ ...result }, payment, request, env, 'empty_result', 404);
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/resilience/concentration-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env, null, result.captured_at);
+    }
+
     // Free taste of the x402 Settlement Verdict: the three classifications
     // (momentum, concentration, leading publisher) only, no full publisher
     // ranking and no signed receipt. 10 calls/day per IP. The paid

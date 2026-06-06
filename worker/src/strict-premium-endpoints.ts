@@ -63,6 +63,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // No params, but Bazaar-piloted, so strict-premium gates anonymous crawlers
   // to a clean 402. Free taste at /api/preview/provider-reliability-verdict.
   '/api/premium/provider-reliability-verdict',
+  // Dependency Concentration Verdict (2026-06-06). RESILIENT/EXPOSED/CRITICAL
+  // ruling on a caller's AI-provider dependency set, fusing the reliability
+  // ranking with live status. Param-required (?providers=), so strict-premium
+  // gates anonymous crawlers to a clean 402.
+  '/api/premium/resilience/concentration-verdict',
   // x402 settlement verdict (2026-05-29). Signed ruling over TensorFeed's own
   // x402 settlement index: Base USDC market momentum, concentration (HHI), and
   // the leading publisher. Reads optional ?window=, so strict-premium gates
