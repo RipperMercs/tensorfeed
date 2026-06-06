@@ -4621,7 +4621,9 @@ export default {
           procurementAiContracts: '/api/procurement/ai-contracts (free; the government AI procurement snapshot across the whole federal market, not a curated cohort: a keyword search of USAspending award descriptions for AI terms over the trailing 180 days, rolled up by agency demand, by vendor with an emerging-vendor flag, plus totals, unique counts, and the 25 newest dated awards. Source USAspending.gov, public domain under the DATA Act. Precomputed daily; cold-start returns an empty 200, never 503.)',
           premiumProcurementAiContractsDemand: '/api/premium/procurement/ai-contracts/demand (1 credit, AFTA-signed; one signed demand read over the free /api/procurement/ai-contracts snapshot. Agency concentration (top-agency share of tracked AI award dollars plus the Herfindahl-Hirschman Index over ranked agencies), the emerging contractors winning AI work outside the known vendor cohort, and the top buying agencies, with echoed total dollars. captured_at is the real snapshot data time; no-charge when the snapshot is not yet captured.)',
           procurementAiOpportunities: '/api/procurement/ai-opportunities (free; open US federal AI contract opportunities from SAM.gov, the open-solicitation sibling of /api/procurement/ai-contracts. A title-keyword search for AI terms across every agency over the trailing 90 days, rolled up by agency and set-aside, with a closing-soon preview and the 25 newest postings. The full ranked open pipeline is the paid sibling. Source SAM.gov, public domain. Precomputed daily; cold-start returns an empty 200, never 503.)',
+          federalAiPolicy: '/api/federal-ai-policy (free; US federal AI policy tracker across two layers. Executive and agency actions from the Federal Register (rules, proposed rules, notices, presidential documents) whose title or abstract names an AI term, rolled up by agency and document type with the 15 newest as a preview; plus AI-named federal bills from GovInfo. License: US Gov public domain. The full ranked document and bill lists are the premium read /api/premium/federal-ai-policy. Precomputed daily; cold-start returns an empty 200, never 503.)',
           premiumProcurementAiOpportunitiesDeadlines: '/api/premium/procurement/ai-opportunities/deadlines (1 credit, AFTA-signed; the full ranked pipeline of open federal AI solicitations over the free /api/procurement/ai-opportunities snapshot, sorted by response deadline with days_remaining on each, plus the echoed agency and set-aside rollups. captured_at is the real snapshot data time; no-charge when the snapshot is not yet captured.)',
+          premiumFederalAiPolicy: '/api/premium/federal-ai-policy (1 credit, AFTA-signed; the full ranked list of AI-related US Federal Register actions (rules, proposed rules, notices, presidential documents) plus AI-named federal bills (GovInfo), with agency and document-type rollups, over the free /api/federal-ai-policy snapshot. captured_at is the real snapshot data time; 36h freshness SLA, no-charge when stale or not yet captured.)',
           exportControlsAi: '/api/export-controls/ai (free; classified US BIS AI and advanced-computing export-control actions (Entity List changes, license and threshold rules) from the Federal Register. Returns by_category counts plus the 30 most recent classified events: Entity List additions, advanced-computing license and threshold rules, due-diligence and model-weights measures. Source federalregister.gov, public domain; TensorFeed editorial classification. Precomputed daily; cold-start returns an empty 200, never 503.)',
           premiumExportControlsAiHistory: '/api/premium/export-controls/ai/history?from=YYYY-MM-DD&to=YYYY-MM-DD&category= (1 credit, AFTA-signed; full filterable history of AI export-control actions by date range and category. Filters the BIS Federal Register snapshot by inclusive publication-date range and category (entity-list, compute-threshold, license-policy, due-diligence, model-weights, other). captured_at is the real snapshot data time; no-charge when the snapshot is missing or the filtered window is empty. Strict-premium prefix; anonymous Bazaar probes see a clean 402 challenge.)',
           aiDatacenters: '/api/ai-datacenters?operator=&status=announced|under_construction|operational|expansion|paused&country=&region=&purpose=training|inference|mixed|unknown (free; hand-curated registry of publicly announced AI datacenter projects, the gigawatt-class training and inference campuses from the labs and hyperscalers. Each entry carries disclosed power (MW), capex, status, accelerator, partners, and a source_url; power and capex are disclosed values only, null where not public. Sorted operational-first.)',
@@ -5696,6 +5698,53 @@ export default {
           by_set_aside: [],
           closing_soon: [],
           recent: [],
+          note: 'snapshot not yet generated',
+        },
+        200,
+        300,
+      );
+    }
+
+    // === FEDERAL AI POLICY TRACKER (free) ===
+    // /api/federal-ai-policy: US federal AI policy actions across two layers.
+    // Executive/agency layer = Federal Register documents (rules, proposed
+    // rules, notices, presidential documents) whose title or abstract names an
+    // AI term. Legislative layer = GovInfo BILLS matches (key-gated; the
+    // bills_enabled flag reflects whether DATA_GOV_API_KEY is set). The 01:47
+    // UTC cron writes one precomputed snapshot blob; this route serves it with
+    // the full `documents` and `bills` arrays stripped (those ranked lists are
+    // the premium read). Cold-start safe: pre-first-cron it returns a 200 empty
+    // shape, never 503, so an agent always gets a parseable answer.
+    if (path === '/api/federal-ai-policy') {
+      const { POLICY_SNAPSHOT_KEY } = await import('./federal-ai-policy');
+      const snapshot = (await env.TENSORFEED_CACHE.get(POLICY_SNAPSHOT_KEY, 'json')) as
+        | import('./federal-ai-policy').PolicySnapshot
+        | null;
+      if (snapshot) {
+        // Strip the full pipelines; the free view keeps the rollups plus the
+        // recent_documents and recent_bills previews.
+        const { documents, bills, ...freeView } = snapshot;
+        void documents;
+        void bills;
+        return jsonResponse(freeView, 200, 300);
+      }
+      const { POLICY_SOURCE, POLICY_LICENSE, POLICY_WINDOW_DAYS, POLICY_AI_KEYWORDS } = await import('./federal-ai-policy');
+      return jsonResponse(
+        {
+          ok: true,
+          captured_at: null,
+          source: POLICY_SOURCE,
+          license: POLICY_LICENSE,
+          window_days: POLICY_WINDOW_DAYS,
+          keywords: POLICY_AI_KEYWORDS,
+          total_documents: 0,
+          unique_agencies: 0,
+          by_agency: [],
+          by_type: [],
+          recent_documents: [],
+          bills_enabled: false,
+          total_bills: 0,
+          recent_bills: [],
           note: 'snapshot not yet generated',
         },
         200,
@@ -10241,6 +10290,58 @@ export default {
       return await premiumResponse(payload, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: FEDERAL AI POLICY (Tier 1, 1 credit) ===
+    // /api/premium/federal-ai-policy
+    // One signed read over the free /api/federal-ai-policy snapshot: the full
+    // ranked list of AI-related Federal Register documents plus the AI bill
+    // matches, with the agency and document-type rollups. Regular premiumResponse
+    // signing path; strict-premium (see strict-premium-endpoints.ts) so anonymous
+    // crawlers get a clean 402, not a free-trial 200 leaking the full dataset.
+    // captured_at is the REAL snapshot data time so the freshness no-charge bills
+    // against actual data age, never build time. Cold-start safe: a missing
+    // snapshot no-charges (empty_result), so an agent is never billed for a
+    // pre-first-cron empty answer.
+    if (path === '/api/premium/federal-ai-policy') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { POLICY_SNAPSHOT_KEY } = await import('./federal-ai-policy');
+      const snapshot = (await env.TENSORFEED_CACHE.get(POLICY_SNAPSHOT_KEY, 'json')) as
+        | import('./federal-ai-policy').PolicySnapshot
+        | null;
+      if (!snapshot) {
+        return await premiumResponse(
+          { ok: true, captured_at: null, note: 'Snapshot not yet captured.' },
+          payment,
+          1,
+          request,
+          env,
+          'empty_result',
+        );
+      }
+
+      const payload = {
+        ok: true as const,
+        window_days: snapshot.window_days,
+        total_documents: snapshot.total_documents,
+        unique_agencies: snapshot.unique_agencies,
+        by_agency: snapshot.by_agency,
+        by_type: snapshot.by_type,
+        documents: snapshot.documents,
+        bills_enabled: snapshot.bills_enabled,
+        total_bills: snapshot.total_bills,
+        bills: snapshot.bills,
+        source: snapshot.source,
+        license: snapshot.license,
+        capturedAt: snapshot.captured_at,
+      };
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/federal-ai-policy', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(payload, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM: CVE KEV EXPLOITATION TIMELINE (Tier 1, 1 credit) ===
     // /api/premium/cve/kev-exploitation-timeline?vendor=<name>
     // Per-vendor exploited-in-the-wild history from the bundled
@@ -14776,6 +14877,19 @@ export default {
       // not-mult-2/not-mult-5/not-27, and not minute 0 shadowed by 0 * * * *).
       const { captureAiOpportunities } = await import('./ai-opportunities');
       await run('captureAiOpportunities', () => captureAiOpportunities(env));
+    } else if (cron === '47 1 * * *') {
+      // Daily 01:47 UTC: federal AI policy capture (worker/src/
+      // federal-ai-policy.ts). One term query per AI keyword against the
+      // Federal Register (no key) plus GovInfo BILLS search (key-gated on
+      // DATA_GOV_API_KEY), filtered to documents and bills whose title or
+      // abstract names an AI term, written to federal-ai-policy:snapshot.
+      // Best-effort by design (never throws; a missing data.gov key just skips
+      // the bill layer and writes bills_enabled=false). Powers free
+      // /api/federal-ai-policy + premium /api/premium/federal-ai-policy. Slot
+      // 01:47 is collision-free (hour 1 holds only 37 1; minute 47 is odd and
+      // dodges 0 *, 27 *, */2, */5, */10).
+      const { captureFederalAiPolicy } = await import('./federal-ai-policy');
+      await run('captureFederalAiPolicy', () => captureFederalAiPolicy(env));
     } else if (cron === '35 6 * * *') {
       // Daily 06:35 UTC: crawl every seed publisher's /.well-known/x402.json,
       // merge first_seen across re-crawls, write the wallet allowlist +

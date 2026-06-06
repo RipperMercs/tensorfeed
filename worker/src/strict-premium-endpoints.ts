@@ -318,6 +318,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // crawlers to a clean 402 challenge rather than a free-trial 200 on the
   // premium pipeline. Free taste at /api/procurement/ai-opportunities.
   '/api/premium/procurement/ai-opportunities/deadlines',
+  // Federal AI policy (2026-06-05). Full ranked list of AI-related Federal
+  // Register actions plus AI-named federal bills (GovInfo). No required params,
+  // but Bazaar-discoverable and a full-dataset premium read, so strict-premium
+  // gates anonymous CDP / x402scan crawlers to a clean 402 challenge rather than
+  // a free-trial 200 that would leak the full dataset. Free taste at
+  // /api/federal-ai-policy.
+  '/api/premium/federal-ai-policy',
 ];
 
 /**

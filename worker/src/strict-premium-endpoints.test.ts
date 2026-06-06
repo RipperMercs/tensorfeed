@@ -252,8 +252,10 @@ describe('isStrictPremiumPath', () => {
       // + 2 (2026-06-04, audit fix) ai-crawler-access/full + agent-ready/full
       // (no params, Bazaar-discoverable full datasets that previously leaked the
       // full premium payload on the free-trial 200 path).
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(86);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(86); // no duplicates
+      // + 1 (2026-06-05) federal AI policy (no params, Bazaar-discoverable full
+      // dataset: Federal Register AI actions + GovInfo AI bills).
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(87);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(87); // no duplicates
     });
     it('exposes 7 prefix paths (providers + clean-record pilots + ai-companies + x402-index)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(7);

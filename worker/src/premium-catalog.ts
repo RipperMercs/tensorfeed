@@ -629,6 +629,16 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'funding',
   },
+  {
+    path: '/api/premium/federal-ai-policy',
+    credits: 1,
+    strict_premium: true,
+    params: [],
+    returns: 'Full ranked list of AI-related US Federal Register actions (rules, proposed rules, notices, presidential documents) plus AI-named federal bills (GovInfo), with agency and document-type rollups. The executive and legislative policy layers in one signed read.',
+    free_sibling: '/api/federal-ai-policy',
+    signed: true,
+    category: 'policy',
+  },
 
   // === COMPUTE ===
   {

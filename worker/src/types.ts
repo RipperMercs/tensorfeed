@@ -176,6 +176,11 @@ export interface Env {
   // SAM.gov-account Public API Key (NOT api.data.gov) for the federal AI
   // opportunities feed. Set via: wrangler secret put SAM_GOV_API_KEY
   SAM_GOV_API_KEY?: string;
+  // Shared api.data.gov key for the GovInfo BILLS search that powers the
+  // legislative layer of the federal AI policy tracker. The Federal Register
+  // layer needs no key; this only gates the bill matches. Set via:
+  // wrangler secret put DATA_GOV_API_KEY
+  DATA_GOV_API_KEY?: string;
   // Agent Fair-Trade Agreement: Ed25519 private key used to sign every
   // premium response receipt. Stored as a JWK string (kty=OKP, crv=Ed25519).
   // Generate with `node worker/scripts/generate-receipt-key.mjs` and set

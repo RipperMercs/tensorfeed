@@ -348,6 +348,8 @@ crons = [
   "43 18 * * *",
   # Daily 01:37 UTC: capture the federal AI opportunities snapshot (worker/src/ai-opportunities.ts). Collision-free (hour 1 is empty, minute 37 is odd and matched by no wildcard incl 0 *, 27 *, */2).
   "37 1 * * *",
+  # Daily 01:47 UTC: capture the federal AI policy snapshot (worker/src/federal-ai-policy.ts). Federal Register AI documents (no key) plus GovInfo AI bills (key-gated on DATA_GOV_API_KEY). Collision-free (hour 1 holds only 37 1; minute 47 is odd and dodges 0 *, 27 *, */2, */5, */10).
+  "47 1 * * *",
   # Every 5 min: a bare trigger whose only job is to make scheduled() fire at
   # :05/:25/:35/:55, the multiples of 5 that no other cron covers. The
   # x402-index settlement indexer (cursor read, Base USDC Transfer logs
