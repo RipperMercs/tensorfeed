@@ -7172,6 +7172,58 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: MODEL MIGRATION VERDICT (Tier 1, 1 credit, param-required) ===
+    // /api/premium/model-migration-verdict?model=&deadline=
+    // For one depended-on model: MIGRATE_NOW / MIGRATE_SOON / NO_ACTION plus the
+    // recommended successor with cost delta, capability (TFII) delta, days until
+    // sunset, and a drop-in note. Fuses the deprecation registry, pricing, and
+    // the intelligence snapshot. Param-required (?model=), so strict-premium.
+    // Optional ?deadline=YYYY-MM-DD reconciles against the sunset date. Free
+    // sibling is the raw /api/model-deprecations feed.
+    if (path === '/api/premium/model-migration-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const model = url.searchParams.get('model')?.trim() || null;
+      if (!model) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'Pass model=<id> (e.g. claude-3-opus). Optional deadline=YYYY-MM-DD reconciles against the sunset date.',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+      const deadline = url.searchParams.get('deadline')?.trim() || null;
+
+      const [deprModule, { buildMigrationVerdict }] = await Promise.all([
+        import('./premium-model-deprecations'),
+        import('./premium-model-migration-verdict'),
+      ]);
+      const [pricingRaw, intelligenceRaw] = await Promise.all([
+        env.TENSORFEED_CACHE.get('models', 'json'),
+        env.TENSORFEED_CACHE.get('intelligence:snapshot:latest', 'json'),
+      ]);
+      const pricing = (pricingRaw as import('./premium-models-frontier').PricingDataLite | null) ?? { providers: [] };
+      const intelligence = intelligenceRaw as import('./model-intelligence').IntelligenceSnapshot | null;
+      const deprecations = deprModule.buildTimeline({ within_days: null, provider: null }, new Date()).entries;
+
+      const result = buildMigrationVerdict(model, deadline, { deprecations, pricing, intelligence }, new Date());
+
+      if (!result.ok) {
+        // model_not_recognized: the model is in no TF source. AFTA empty_result.
+        return await premiumValidationFailure({ ...result }, payment, request, env, 'empty_result', 404);
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/model-migration-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM ENDPOINT: MODEL INTELLIGENCE HISTORY (Tier 2, 2 credits) ===
     // /api/premium/model-intelligence/history
     // A single model's TFII time-series across the dated snapshots within the

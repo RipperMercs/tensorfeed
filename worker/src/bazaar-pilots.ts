@@ -3991,6 +3991,64 @@ const STACK_DRIFT_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 39 (2026-06-06): model-migration-verdict. For one depended-on model:
+// the recommended successor with cost and capability deltas and days until
+// sunset. Param-required (?model=). Free sibling is /api/model-deprecations.
+// Total pilot count: 88 -> 89.
+const MIGRATION_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'Model migration verdict. Your model is sunsetting, what do you move to? Pass ?model=claude-3-opus (optionally deadline=2026-08-01) and get MIGRATE_NOW, MIGRATE_SOON, or NO_ACTION with the recommended successor, the blended-cost delta, the capability (TFII) delta, days until sunset, and a drop-in note, with an AFTA-signed receipt. No-charge when the model is in no TensorFeed source.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: { model: 'claude-3-opus', deadline: '2026-08-01' } },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            verdict_kind: 'model_migration',
+            verdict: 'MIGRATE_NOW',
+            model: { id: 'claude-3-opus', name: 'Claude 3 Opus', provider: 'Anthropic', cost_blended_per_1m: 30, capability_tfii: 74 },
+            deprecation: { status: 'deprecated', sunset_date: '2026-07-21', days_until_sunset: 45, urgency_band: 'within_60d' },
+            successor: { id: 'claude-opus-4-8', name: 'Claude Opus 4.8', provider: 'Anthropic', cost_blended_per_1m: 30, capability_tfii: 92 },
+            deltas: { cost_blended_per_1m: 0, cost_pct: 0, capability_tfii: 18 },
+            drop_in: { same_provider: true, note: 'Same provider, so the migration is likely an id swap with minor parameter changes.' },
+            migration_chain: ['claude-opus-4-8'],
+            deadline: { date: '2026-08-01', days_from_now: 56, sunset_before_deadline: true },
+            recommendation: 'Claude 3 Opus is deprecated, sunset 2026-07-21 (45 days). Migrate to Claude Opus 4.8. The successor is same blended cost, TFII up 18. Sunset lands before your stated deadline; pull the migration forward.',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  model: { type: 'string', description: 'Model id you depend on, e.g. claude-3-opus. Required.' },
+                  deadline: { type: 'string', description: 'Optional YYYY-MM-DD migration deadline, reconciled against the sunset date.' },
+                },
+                required: ['model'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 // Wave 24 (2026-05-28): guidance-delta. Did this periodic SEC filing
 // materially change guidance, segment outlook, or risk language versus the
 // prior same-form filing, with the exact changed sentences quoted. Reads the
@@ -6739,6 +6797,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/models/frontier': MODELS_FRONTIER_PILOT,
   // Wave 38 (2026-06-06): stack-drift-verdict. What moved under a declared stack.
   '/api/premium/stack-drift-verdict': STACK_DRIFT_VERDICT_PILOT,
+  // Wave 39 (2026-06-06): model-migration-verdict. Per-model migration decision.
+  '/api/premium/model-migration-verdict': MIGRATION_VERDICT_PILOT,
   // Wave 26 (2026-05-30): agent news-search + brief cluster. Rode the x402
   // distribution week. The decision-verified pair was already strict-premium;
   // topic-search and recent were promoted to strict-premium in the same change

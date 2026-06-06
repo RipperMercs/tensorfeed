@@ -168,6 +168,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // registry plus the release snapshot, scoped to the caller's stack. The two
   // headline sources are curated-immutable; no wall-clock staleness applies.
   '/api/premium/stack-drift-verdict': NULL_SLA,
+  // Model migration verdict: compute over the curated deprecation registry plus
+  // pricing and the intelligence snapshot for the deltas. The migration target
+  // is curated-immutable; no wall-clock staleness applies (same as the timeline).
+  '/api/premium/model-migration-verdict': NULL_SLA,
   // Inference-provider arbitrage: pure compute over the hand-curated
   // inference-providers matrix. Updates on redeploy; no staleness signal.
   '/api/premium/inference-providers/arbitrage': NULL_SLA,

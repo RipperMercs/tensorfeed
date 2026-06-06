@@ -1160,6 +1160,19 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'verdict',
   },
   {
+    path: '/api/premium/model-migration-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'model', required: true },
+      { name: 'deadline', required: false },
+    ],
+    returns: 'MIGRATE_NOW/MIGRATE_SOON/NO_ACTION ruling for one depended-on model: the recommended successor with blended-cost delta, capability (TFII) delta, days until sunset, and a drop-in note. Optional deadline=YYYY-MM-DD reconciles against the sunset. No-charge when the model is in no TF source.',
+    free_sibling: '/api/model-deprecations',
+    signed: true,
+    category: 'verdict',
+  },
+  {
     path: '/api/premium/ai-safety/incidents/exposure',
     credits: 1,
     strict_premium: true,
