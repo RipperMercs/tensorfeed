@@ -4728,7 +4728,7 @@ export default {
           anomalies: '/api/admin/anomalies?key=<ADMIN_KEY>&severity=warning|critical',
           killSwitch: '/api/admin/kill-switch?key=<ADMIN_KEY> (GET = status + audit; POST&action=on|off to flip the runtime KV-flag side. Env-secret side via wrangler secret put KILL_SWITCH_KV_WRITES.)',
           breaking: '/api/admin/breaking?key=<ADMIN_KEY> (GET = raw alert + is_live + audit; POST {headline, href, ttl_hours?} sets; POST {clear:true} clears. Public read at /api/breaking.)',
-          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|s2|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch|crawler-access]',
+          refresh: '/api/refresh?key=<ADMIN_KEY>[&task=history|harnesses|models|mcp-registry|papers|arxiv|hf|hf-leaderboard|hot-issues|reddit|openrouter|hf-daily-papers|probe|probe-rollup|fred|bls|npm-ai|pypi-ai|openalex|openalex-authors|openalex-citation-velocity|openreview|acl|lab-blogs|s2|apis-guru-ai|nflverse|sec-tickers|sec-filings|sports-news|opportunities|ai-supply-chain-iocs|ghsa-ai-feed|agent-reputation|epoch|crawler-access|federal-ai-policy]',
         },
         chaos_engineering: {
           description: 'Free, no-auth headers for testing agent fallback logic against simulated failures. No credits charged for simulated errors.',
@@ -14047,6 +14047,11 @@ export default {
       if (task === 'fred') {
         const result = await refreshFREDIndicators(env);
         return jsonResponse({ message: 'FRED indicators refreshed', ...result });
+      }
+      if (task === 'federal-ai-policy') {
+        const { captureFederalAiPolicy } = await import('./federal-ai-policy');
+        const result = await captureFederalAiPolicy(env);
+        return jsonResponse({ message: 'Federal AI policy snapshot captured', ...result });
       }
       if (task === 'bls') {
         const result = await refreshBLSIndicators(env);
