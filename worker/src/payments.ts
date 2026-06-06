@@ -1168,7 +1168,7 @@ export async function getPaymentInfo(env: Env): Promise<unknown> {
     operator: {
       legal_entity: 'Pizza Robot Studios LLC',
       jurisdiction: 'California, USA',
-      contact: 'evan@tensorfeed.ai',
+      contact: 'contact@tensorfeed.ai',
       note: 'The legal entity behind the payment wallet. Premium credits are non-refundable per Section 17.5 of the Terms of Service at https://tensorfeed.ai/terms.',
     },
     wallet: {

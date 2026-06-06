@@ -494,8 +494,8 @@ export default function TermsPage() {
               dmca@tensorfeed.ai
             </a>
             . Listing-removal and ban appeals may be sent to{' '}
-            <a href="mailto:evan@tensorfeed.ai" className="text-accent-primary hover:underline">
-              evan@tensorfeed.ai
+            <a href="mailto:contact@tensorfeed.ai" className="text-accent-primary hover:underline">
+              contact@tensorfeed.ai
             </a>
             ; appeals are reviewed in good faith with no commitment to overturn.
           </p>

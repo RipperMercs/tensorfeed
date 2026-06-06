@@ -1133,7 +1133,7 @@ console.log(series.summary);`,
   "operator": {
     "legal_entity": "Pizza Robot Studios LLC",
     "jurisdiction": "California, USA",
-    "contact": "evan@tensorfeed.ai"
+    "contact": "contact@tensorfeed.ai"
   },
   "wallet": {
     "address": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",

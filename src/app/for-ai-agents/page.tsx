@@ -396,7 +396,7 @@ export default function ForAIAgentsPage() {
       </section>
 
       <div className="border-t border-border pt-6 text-text-muted text-sm">
-        Questions, integration help, or feedback: <a href="mailto:evan@tensorfeed.ai" className="text-accent-primary hover:underline">evan@tensorfeed.ai</a>.
+        Questions, integration help, or feedback: <a href="mailto:contact@tensorfeed.ai" className="text-accent-primary hover:underline">contact@tensorfeed.ai</a>.
         TensorFeed.ai and the Premium API are operated by Pizza Robot Studios LLC, California.
       </div>
     </div>

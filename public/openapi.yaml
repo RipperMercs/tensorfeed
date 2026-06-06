@@ -19,7 +19,7 @@ info:
   termsOfService: https://tensorfeed.ai/terms
   contact:
     name: TensorFeed Support
-    email: evan@tensorfeed.ai
+    email: contact@tensorfeed.ai
     url: https://tensorfeed.ai/developers
   license:
     name: API content licensed for inference-only use

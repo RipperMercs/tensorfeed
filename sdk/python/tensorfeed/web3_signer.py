@@ -172,7 +172,7 @@ def auto_purchase_credits(
     if not result.get("ok"):
         raise RuntimeError(
             f"Tx {tx_hash} mined but TensorFeed rejected confirm: {result}. "
-            f"Email evan@tensorfeed.ai with the tx hash for a manual reconciliation."
+            f"Email contact@tensorfeed.ai with the tx hash for a manual reconciliation."
         )
 
     return {

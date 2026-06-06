@@ -2231,7 +2231,7 @@ export default function AgentPaymentsPage() {
           <p className="text-text-muted text-sm">
             Different tokens are tracked independently, so normal high-volume traffic across multiple agents is
             unaffected. If you legitimately need more than 100 RPM on one token, split traffic across multiple
-            tokens or email <code className="font-mono">evan@tensorfeed.ai</code>.
+            tokens or email <code className="font-mono">contact@tensorfeed.ai</code>.
           </p>
         </div>
       </section>
