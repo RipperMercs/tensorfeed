@@ -1,17 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-type TickerKind = 'news' | 'status' | 'price' | 'benchmark' | 'release';
-type TickerCls = 'up' | 'down' | 'warn' | 'info' | 'ok';
-
-interface TickerItem {
-  kind: TickerKind;
-  tag: string;
-  text: string;
-  mono?: string;
-  cls?: TickerCls;
-}
+import type { TickerItem, TickerCls } from '@/lib/ticker-data';
 
 interface FetchedService {
   name: string;
@@ -49,21 +39,10 @@ const TICKER_NAME: Record<string, string> = {
   'Luma AI': 'LUMA',
 };
 
-// Evergreen items the ticker always shows. These are facts that change
-// infrequently enough to hardcode (and we update by editing this file
-// when they go stale), in contrast to the status items which are now
-// fetched live. No timestamps, no "X minutes ago" claims; those would be
-// dishonest in a static export.
-const EVERGREEN_ITEMS: TickerItem[] = [
-  { kind: 'price', tag: 'OPUS 4.8', text: '$5 / $25', mono: 'per Mtok' },
-  { kind: 'price', tag: 'SONNET 4.6', text: '$3 / $15', mono: 'per Mtok' },
-  { kind: 'price', tag: 'GPT-5.5', text: '$10 / $30', mono: 'per Mtok' },
-  { kind: 'price', tag: 'GEMINI 3.1', text: '$3.50 / $10.50', mono: 'per Mtok' },
-  { kind: 'benchmark', tag: 'SWE-BENCH', text: 'leader GPT-5.5', mono: '68.7%', cls: 'info' },
-  { kind: 'benchmark', tag: 'MMLU-PRO', text: 'leader GPT-5.5', mono: '94.2', cls: 'info' },
-  { kind: 'benchmark', tag: 'GPQA', text: 'leader GPT-5.5', mono: '78.3', cls: 'info' },
-  { kind: 'release', tag: 'AFTA', text: 'v1.0 whitepaper live at /whitepaper' },
-];
+// The evergreen rows (model prices + benchmark leaders) are derived from
+// data/pricing.json + data/benchmarks.json in the server layout and passed in
+// as `evergreenItems`, so the numbers can never drift out of sync with the
+// canonical data again. Status items are still fetched live below.
 
 function statusToCls(status: string): TickerCls {
   const v = (status || '').toLowerCase();
@@ -109,7 +88,7 @@ function buildStatusItems(services: FetchedService[]): TickerItem[] {
   }));
 }
 
-export default function LiveTicker() {
+export default function LiveTicker({ evergreenItems }: { evergreenItems: TickerItem[] }) {
   // Server render shows evergreen-only ticker. Client hydrates with
   // live status pulled from /api/status. This means SSR output is
   // honest (no fake status claims) and clients see live data within
@@ -143,8 +122,8 @@ export default function LiveTicker() {
   // Interleave: status items (live), then evergreen, then status again
   // so the marquee sees both as it scrolls. If status fetch hasn't
   // completed yet, the ticker shows evergreen-only; never fake status.
-  const items: TickerItem[] = [...statusItems, ...EVERGREEN_ITEMS];
-  const loop = items.length > 0 ? [...items, ...items] : EVERGREEN_ITEMS;
+  const items: TickerItem[] = [...statusItems, ...evergreenItems];
+  const loop = items.length > 0 ? [...items, ...items] : evergreenItems;
 
   return (
     <section
