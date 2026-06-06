@@ -602,7 +602,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
   {
     path: '/api/premium/funding/federal/momentum',
     credits: 1,
-    strict_premium: false,
+    strict_premium: true,
     params: [],
     returns: 'Signed leadership and concentration ruling over the federal AI-spending snapshot, with the cohort leader and top-2 share.',
     free_sibling: '/api/funding/federal/summary',

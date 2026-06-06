@@ -325,6 +325,16 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // a free-trial 200 that would leak the full dataset. Free taste at
   // /api/federal-ai-policy.
   '/api/premium/federal-ai-policy',
+  // Federal AI spending momentum (audit fix 2026-06-05). Full-dataset, no-param,
+  // Bazaar-discoverable signed leadership and concentration verdict over the
+  // daily federal-spending snapshot. It was the lone outlier in the funding
+  // family left off the strict list, so anonymous CDP / x402scan crawlers got a
+  // free-trial 200 with the full verdict (up to 100/IP/day) instead of a clean
+  // 402, and the settlement that catalogs the endpoint was never observed. Every
+  // sibling (funding/exposure, procurement/ai-contracts/demand,
+  // procurement/ai-opportunities/deadlines, federal-ai-policy) is already strict.
+  // Free taste at /api/funding/federal/summary.
+  '/api/premium/funding/federal/momentum',
 ];
 
 /**
