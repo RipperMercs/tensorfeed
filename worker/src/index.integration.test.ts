@@ -48,50 +48,14 @@ describe('index.ts router money path (integration)', () => {
 
   // GATE 2: non-strict premium path, no token, expect the free-trial 200.
   it('serves a free-trial 200 on a no-token non-strict premium call', async () => {
-    // /api/premium/funding/federal/momentum is NOT on the strict list, so a
-    // no-token call inside the per-IP trial quota should return 200 (free
-    // trial), proving the strict/free split actually routes. Seed a FRESH
-    // federal snapshot so the handler returns data (not the not-ready 503)
-    // and the 36h freshness SLA does not fire.
-    const captured = new Date().toISOString();
-    const env = await makeEnv({
-      cache: {
-        'fedspend:snapshot': {
-          ok: true,
-          captured_at: captured,
-          source: 'test',
-          license: 'public domain',
-          window_days: 365,
-          cohort_size: 2,
-          total_usd: 1_000_000,
-          total_awards: 2,
-          vendors: [
-            {
-              slug: 'palantir',
-              name: 'Palantir',
-              category: 'ai-native',
-              total_usd: 700_000,
-              award_count: 1,
-              last_award_date: captured.slice(0, 10),
-              top_agencies: [{ agency: 'DoD', agency_slug: 'dod', usd: 700_000 }],
-            },
-            {
-              slug: 'anthropic',
-              name: 'Anthropic',
-              category: 'frontier-lab',
-              total_usd: 300_000,
-              award_count: 1,
-              last_award_date: captured.slice(0, 10),
-              top_agencies: [{ agency: 'DoD', agency_slug: 'dod', usd: 300_000 }],
-            },
-          ],
-          agencies: [{ agency: 'DoD', agency_slug: 'dod', usd: 1_000_000 }],
-          recent: [],
-        },
-      },
-    });
-
-    const res = await call(env, '/api/premium/funding/federal/momentum', { ip: uniqueIp() });
+    // /api/premium/news/search is NOT on the strict list, so a no-token call
+    // inside the per-IP trial quota returns 200 (free trial), proving the
+    // strict/free split actually routes. searchNews returns ok:true with an
+    // empty corpus, so no data seeding is needed for a valid free-trial 200.
+    // (Repointed 2026-06-06: funding/federal/momentum was moved onto the strict
+    // list by the 5aab69d free-trial-leak fix, so it now correctly 402s here.)
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/news/search', { ip: uniqueIp() });
 
     expect(res.status).toBe(200);
     expect(res.json?.ok).toBe(true);
