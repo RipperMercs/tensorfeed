@@ -23,10 +23,10 @@ export default function AIAPIPricingGuidePage() {
         title="AI API Pricing Guide 2026: Every Provider Compared"
         description="Complete AI API pricing comparison for 2026 covering all major providers, cost calculators, free tier details, and optimization tips."
         datePublished="2025-07-01"
-        dateModified="2026-03-28"
+        dateModified="2026-06-05"
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: March 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: June 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         AI API Pricing Guide: Every Provider Compared
@@ -34,9 +34,10 @@ export default function AIAPIPricingGuidePage() {
 
       <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-xl p-4 mb-8">
         <p className="text-text-secondary text-base leading-relaxed">
-          AI API pricing in 2026 ranges from free open-source models to $75 per million tokens for
-          premium models like Claude Opus. Most developers spend between $0.10 and $15 per million
-          input tokens depending on the model tier and use case.
+          AI API pricing in 2026 ranges from free open-source models to around $60 per million
+          output tokens for premium reasoning models. The current flagship Claude Opus 4.8 runs $5
+          input and $25 output per million tokens. Most developers spend between $0.10 and $15 per
+          million input tokens depending on the model tier and use case.
         </p>
       </div>
 
@@ -111,10 +112,10 @@ export default function AIAPIPricingGuidePage() {
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   <tr>
-                    <td className="py-2 text-text-secondary">Claude Opus 4.7</td>
-                    <td className="py-2 text-right text-text-muted">$300.00</td>
-                    <td className="py-2 text-right text-text-muted">$750.00</td>
-                    <td className="py-2 text-right text-text-primary font-semibold">$1,050.00</td>
+                    <td className="py-2 text-text-secondary">Claude Opus 4.8</td>
+                    <td className="py-2 text-right text-text-muted">$100.00</td>
+                    <td className="py-2 text-right text-text-muted">$250.00</td>
+                    <td className="py-2 text-right text-text-primary font-semibold">$350.00</td>
                   </tr>
                   <tr>
                     <td className="py-2 text-text-secondary">Claude Sonnet 4.6</td>
@@ -150,7 +151,7 @@ export default function AIAPIPricingGuidePage() {
               </table>
             </div>
             <p className="text-text-muted text-sm mt-3">
-              The takeaway: there is a 175x cost difference between the most expensive and cheapest
+              The takeaway: there is a 58x cost difference between the most expensive and cheapest
               options for the same workload. Choosing the right model matters enormously.
             </p>
           </div>
@@ -172,8 +173,8 @@ export default function AIAPIPricingGuidePage() {
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   <tr>
-                    <td className="py-2 text-text-secondary">Claude Opus 4.7</td>
-                    <td className="py-2 text-right text-text-primary font-semibold">$187.50</td>
+                    <td className="py-2 text-text-secondary">Claude Opus 4.8</td>
+                    <td className="py-2 text-right text-text-primary font-semibold">$62.50</td>
                   </tr>
                   <tr>
                     <td className="py-2 text-text-secondary">Gemini 2.5 Pro</td>
@@ -365,7 +366,7 @@ export default function AIAPIPricingGuidePage() {
         </div>
 
         <p className="text-text-muted text-sm mt-3">
-          Frontier model = Claude Opus 4.7 / o1. Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
+          Frontier tier = premium reasoning models (o1-class). Mid-tier = Claude Sonnet 4.6 / GPT-4o. Budget = GPT-4o-mini / Gemini Flash.
         </p>
       </section>
 
