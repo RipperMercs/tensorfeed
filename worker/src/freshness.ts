@@ -164,6 +164,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // that updates on redeploy. No staleness signal applies; the relative-to-
   // now math runs at request time. Same shape as policy/timeline.
   '/api/premium/model-deprecations/timeline': NULL_SLA,
+  // Stack drift verdict: compute over the curated changelog and deprecation
+  // registry plus the release snapshot, scoped to the caller's stack. The two
+  // headline sources are curated-immutable; no wall-clock staleness applies.
+  '/api/premium/stack-drift-verdict': NULL_SLA,
   // Inference-provider arbitrage: pure compute over the hand-curated
   // inference-providers matrix. Updates on redeploy; no staleness signal.
   '/api/premium/inference-providers/arbitrage': NULL_SLA,

@@ -1145,6 +1145,21 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'verdict',
   },
   {
+    path: '/api/premium/stack-drift-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'models', required: false },
+      { name: 'packages', required: false },
+      { name: 'protocols', required: false },
+      { name: 'since_days', required: false },
+    ],
+    returns: 'STABLE/WATCH/ACTION_NEEDED ruling on what moved under a declared stack in the last N days (deprecated/sunsetting model, breaking package major bump, agent-protocol spec bump), classified by break-risk. At least one of models, packages, or protocols is required. No-charge when nothing in the stack is tracked.',
+    free_sibling: '/api/substrate-changelog',
+    signed: true,
+    category: 'verdict',
+  },
+  {
     path: '/api/premium/ai-safety/incidents/exposure',
     credits: 1,
     strict_premium: true,

@@ -3919,6 +3919,78 @@ const MODELS_FRONTIER_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 38 (2026-06-06): stack-drift-verdict. What moved under a caller's
+// declared stack (models, packages, protocols) in the last N days that could
+// break them, graded into STABLE/WATCH/ACTION_NEEDED. Free sibling is the raw
+// /api/substrate-changelog feed. Total pilot count: 87 -> 88.
+const STACK_DRIFT_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'Stack drift verdict. What moved under your AI stack that could break you? Pass ?models=gpt-4o,claude-3-opus&packages=langchain,fastapi&protocols=mcp&since_days=14 and get a STABLE, WATCH, or ACTION_NEEDED ruling on deprecated or sunsetting models, breaking package major bumps, and agent-protocol spec bumps in the window, each classified by break-risk with a recommended action and an AFTA-signed receipt. At least one of models, packages, or protocols is required. No-charge when nothing in your stack is tracked.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { models: 'gpt-4o,claude-3-opus', packages: 'langchain', protocols: 'mcp', since_days: 14 },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            verdict_kind: 'stack_drift',
+            verdict: 'ACTION_NEEDED',
+            window: { since_days: 14, from: '2026-05-23', to: '2026-06-06' },
+            findings: [
+              {
+                kind: 'model',
+                subject: 'claude-3-opus',
+                resolved: 'Claude 3 Opus',
+                signal: 'deprecated',
+                break_risk: 'high',
+                detail: 'Claude 3 Opus is deprecated, sunset 2026-07-21 (45 days).',
+                recommended_action: 'Migrate to claude-opus-4-8.',
+                source_url: 'https://www.anthropic.com',
+                at: '2026-07-21',
+              },
+            ],
+            counts: { high: 1, medium: 0, low: 0, info: 0, total: 1, assessed: 3 },
+            unmatched: { models: [], packages: [], protocols: [] },
+            recommendation: '1 high-risk change(s) under your stack in the last 14 days. Act now: Claude 3 Opus is deprecated, sunset 2026-07-21 (45 days).',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  models: { type: 'string', description: 'Comma-separated model ids you depend on.' },
+                  packages: { type: 'string', description: 'Comma-separated PyPI or npm package names you depend on.' },
+                  protocols: { type: 'string', description: 'Comma-separated agent protocols you use (mcp, x402, a2a).' },
+                  since_days: { type: 'number', description: 'Lookback window in days. Default 14, max 365.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 // Wave 24 (2026-05-28): guidance-delta. Did this periodic SEC filing
 // materially change guidance, segment outlook, or risk language versus the
 // prior same-form filing, with the exact changed sentences quoted. Reads the
@@ -6665,6 +6737,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/inference/cost-verdict': INFERENCE_COST_VERDICT_PILOT,
   // Wave 37 (2026-06-06): models-frontier. Pareto price-performance set.
   '/api/premium/models/frontier': MODELS_FRONTIER_PILOT,
+  // Wave 38 (2026-06-06): stack-drift-verdict. What moved under a declared stack.
+  '/api/premium/stack-drift-verdict': STACK_DRIFT_VERDICT_PILOT,
   // Wave 26 (2026-05-30): agent news-search + brief cluster. Rode the x402
   // distribution week. The decision-verified pair was already strict-premium;
   // topic-search and recent were promoted to strict-premium in the same change

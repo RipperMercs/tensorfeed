@@ -63,6 +63,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // (no required param), but Bazaar-piloted, so strict-premium gates anonymous
   // crawlers to a clean 402.
   '/api/premium/models/frontier',
+  // Stack Drift Verdict (2026-06-06). What moved under a caller's declared
+  // stack (models, packages, protocols) in the last N days that could break
+  // them. Param-required (?models=/&packages=/&protocols=), so strict-premium
+  // gates anonymous crawlers to a clean 402.
+  '/api/premium/stack-drift-verdict',
   // Provider reliability verdict (2026-05-29). Signed dependability ranking
   // over TensorFeed's own measured probes (availability + tail consistency).
   // No params, but Bazaar-piloted, so strict-premium gates anonymous crawlers

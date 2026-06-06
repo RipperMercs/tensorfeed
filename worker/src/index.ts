@@ -7098,6 +7098,80 @@ export default {
       return await premiumResponse(result, payment, 1, request, env, null, result.as_of);
     }
 
+    // === PAID PREMIUM: STACK DRIFT VERDICT (Tier 1, 1 credit, param-required) ===
+    // /api/premium/stack-drift-verdict?models=a,b&packages=x,y&protocols=mcp&since_days=14
+    // What moved under a caller's declared stack in the last N days that could
+    // break them: a deprecated or sunsetting model, a breaking package major
+    // bump, an agent-protocol spec-version bump, classified by break-risk into a
+    // STABLE / WATCH / ACTION_NEEDED verdict. Fuses the substrate changelog, the
+    // deprecation registry, and the release snapshot. Param-required, so strict-
+    // premium. Coverage honesty: unrecognized items are reported under unmatched,
+    // and an all-unrecognized stack is no-charge. Free sibling is the raw
+    // /api/substrate-changelog feed.
+    if (path === '/api/premium/stack-drift-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { parseList, parseSinceDays, buildStackDriftVerdict, normalizeKey } = await import('./premium-stack-drift-verdict');
+      const models = parseList(url.searchParams.get('models'));
+      const packages = parseList(url.searchParams.get('packages'));
+      const protocols = parseList(url.searchParams.get('protocols'));
+      if (models.length === 0 && packages.length === 0 && protocols.length === 0) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'missing_params',
+            hint: 'Declare your stack: at least one of models=a,b, packages=x,y, or protocols=mcp,a2a. Optional since_days=N (default 14, max 365).',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+      const since_days = parseSinceDays(url.searchParams.get('since_days'));
+      const now = new Date();
+      const to = now.toISOString().slice(0, 10);
+      const from = new Date(now.getTime() - since_days * 86400000).toISOString().slice(0, 10);
+
+      const [{ getChangelogHistory }, deprModule, { getPackageReleasesSnapshot }] = await Promise.all([
+        import('./substrate-changelog/query'),
+        import('./premium-model-deprecations'),
+        import('./ai-package-releases-fetcher'),
+      ]);
+      const [changelogResult, releases, pricingRaw] = await Promise.all([
+        getChangelogHistory(env, from, to),
+        getPackageReleasesSnapshot(env),
+        env.TENSORFEED_CACHE.get('models', 'json'),
+      ]);
+      const pricing = pricingRaw as { providers?: Array<{ models?: Array<{ id: string; name: string }> }> } | null;
+      const deprecations = deprModule.buildTimeline({ within_days: null, provider: null }, now).entries;
+
+      const knownModelKeys = new Set<string>();
+      for (const provider of pricing?.providers ?? []) {
+        for (const m of provider.models ?? []) {
+          knownModelKeys.add(normalizeKey(m.id));
+          knownModelKeys.add(normalizeKey(m.name));
+        }
+      }
+
+      const result = buildStackDriftVerdict(
+        { models, packages, protocols, since_days, from, to },
+        { changelog: changelogResult.events, deprecations, releases, knownModelKeys },
+        now,
+      );
+
+      if (!result.ok) {
+        // no_recognized_stack: nothing the caller listed is tracked by TF.
+        // AFTA empty_result no-charge, with the unmatched items returned.
+        return await premiumValidationFailure({ ...result }, payment, request, env, 'empty_result', 404);
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/stack-drift-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
     // === PAID PREMIUM ENDPOINT: MODEL INTELLIGENCE HISTORY (Tier 2, 2 credits) ===
     // /api/premium/model-intelligence/history
     // A single model's TFII time-series across the dated snapshots within the
