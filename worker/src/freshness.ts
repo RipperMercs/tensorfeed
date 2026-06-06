@@ -36,6 +36,10 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   '/api/premium/route-verdict': { maxAgeSeconds: 30 * 60 },
   // TFII breakdown reflects the daily snapshot; stale beyond 48h yields no-charge.
   '/api/premium/model-intelligence': { maxAgeSeconds: 48 * 60 * 60 },
+  // Model price-performance frontier: Pareto set over the same daily TFII
+  // snapshot joined to pricing. captured_at is the snapshot as_of, so the 48h
+  // SLA mirrors model-intelligence; a stale snapshot triggers a no-charge.
+  '/api/premium/models/frontier': { maxAgeSeconds: 48 * 60 * 60 },
   // History is immutable past data; no freshness SLA (handler no-charges empty ranges).
   '/api/premium/model-intelligence/history': NULL_SLA,
   // Provider reliability verdict: ranks providers over the measured probe

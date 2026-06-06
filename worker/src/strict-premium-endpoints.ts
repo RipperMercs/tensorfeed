@@ -58,6 +58,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // anonymous crawlers to a clean 402 rather than a free-trial 200 on the
   // premium verdict. Free taste lives at /api/preview/route-verdict.
   '/api/premium/route-verdict',
+  // Model price-performance frontier (2026-06-06). Pareto set of models on a
+  // capability-vs-price plane with dominated models flagged. Optional ?task=
+  // (no required param), but Bazaar-piloted, so strict-premium gates anonymous
+  // crawlers to a clean 402.
+  '/api/premium/models/frontier',
   // Provider reliability verdict (2026-05-29). Signed dependability ranking
   // over TensorFeed's own measured probes (availability + tail consistency).
   // No params, but Bazaar-piloted, so strict-premium gates anonymous crawlers

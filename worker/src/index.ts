@@ -7053,6 +7053,51 @@ export default {
       return await premiumResponse(result, payment, 1, request, env);
     }
 
+    // === PAID PREMIUM: MODEL PRICE-PERFORMANCE FRONTIER (Tier 1, 1 credit) ===
+    // /api/premium/models/frontier?task=code|reasoning|creative|general
+    // The Pareto-optimal set of models on a capability (TFII subscore) versus
+    // blended-price plane, with every dominated model flagged plus the model
+    // that dominates it. A dominated model is never the rational pick. Optional
+    // ?task= (default general). Strict-premium (Bazaar-piloted, so anonymous
+    // crawlers see a clean 402). Free siblings: /api/models and /api/intelligence.
+    if (path === '/api/premium/models/frontier') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const snap = (await env.TENSORFEED_CACHE.get('intelligence:snapshot:latest', 'json')) as
+        | import('./model-intelligence').IntelligenceSnapshot
+        | null;
+      const pricing = (await env.TENSORFEED_CACHE.get('models', 'json')) as
+        | import('./premium-models-frontier').PricingDataLite
+        | null;
+      if (!snap || !pricing) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'snapshot_not_ready',
+            hint: 'The intelligence snapshot or pricing catalog has not populated yet. Retry after the next daily refresh.',
+          },
+          payment,
+          request,
+          env,
+          'upstream_failure',
+        );
+      }
+
+      const { buildModelFrontier, parseTask } = await import('./premium-models-frontier');
+      const result = buildModelFrontier(snap, pricing, parseTask(url.searchParams.get('task')));
+
+      if (!result.ok) {
+        // insufficient_data: fewer than two overlapping priced and scored models.
+        return await premiumValidationFailure({ ...result }, payment, request, env, 'empty_result', 404);
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/models/frontier', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env, null, result.as_of);
+    }
+
     // === PAID PREMIUM ENDPOINT: MODEL INTELLIGENCE HISTORY (Tier 2, 2 credits) ===
     // /api/premium/model-intelligence/history
     // A single model's TFII time-series across the dated snapshots within the

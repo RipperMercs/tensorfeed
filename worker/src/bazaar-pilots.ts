@@ -3846,6 +3846,79 @@ const INFERENCE_COST_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 37 (2026-06-06): models-frontier. Pareto-optimal set of models on a
+// capability (TFII subscore) versus blended-price plane, dominated models
+// flagged with their dominator. Optional ?task=. Free siblings /api/models and
+// /api/intelligence. Total pilot count: 86 -> 87.
+const MODELS_FRONTIER_PILOT: BazaarPilotConfig = {
+  description:
+    'Model price-performance frontier. Which models can an agent rule out entirely? Pass ?task=code (or reasoning, creative, general) and get the Pareto-optimal set of models on a capability (contamination-discounted TFII subscore) versus blended-price plane, plus every dominated model flagged with the cheaper, at-least-as-capable model that dominates it, with an AFTA-signed receipt. A dominated model is never the rational pick.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: { task: 'code' } },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            verdict_kind: 'price_performance_frontier',
+            task: 'code',
+            capability_metric: 'TFII code subscore (0-100)',
+            price_metric: 'blended USD per 1M tokens',
+            frontier: [
+              { model_id: 'claude-opus-4-8', name: 'Claude Opus 4.8', provider: 'Anthropic', capability: 92, blended_price: 30, input_price: 15, output_price: 45, low_coverage: false },
+              { model_id: 'gpt-5-mini', name: 'GPT-5 mini', provider: 'OpenAI', capability: 78, blended_price: 1.2, input_price: 0.4, output_price: 2, low_coverage: false },
+            ],
+            dominated: [
+              {
+                model_id: 'legacy-model',
+                name: 'Legacy Model',
+                provider: 'Example',
+                capability: 70,
+                blended_price: 5,
+                input_price: 4,
+                output_price: 6,
+                low_coverage: false,
+                dominated_by: { model_id: 'gpt-5-mini', name: 'GPT-5 mini', capability: 78, blended_price: 1.2 },
+              },
+            ],
+            counts: { intelligence_models: 40, priced: 36, frontier: 6, dominated: 30, unpriced_skipped: 4 },
+            as_of: '2026-06-06',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  task: {
+                    type: 'string',
+                    enum: ['code', 'reasoning', 'creative', 'general'],
+                    description: 'Capability axis: the TFII subscore for this task. Default general (the headline).',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 // Wave 24 (2026-05-28): guidance-delta. Did this periodic SEC filing
 // materially change guidance, segment outlook, or risk language versus the
 // prior same-form filing, with the exact changed sentences quoted. Reads the
@@ -6590,6 +6663,8 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // Wave 36 (2026-06-06): inference-cost-verdict. Cheapest-host ruling over the
   // inference-provider price matrix.
   '/api/premium/inference/cost-verdict': INFERENCE_COST_VERDICT_PILOT,
+  // Wave 37 (2026-06-06): models-frontier. Pareto price-performance set.
+  '/api/premium/models/frontier': MODELS_FRONTIER_PILOT,
   // Wave 26 (2026-05-30): agent news-search + brief cluster. Rode the x402
   // distribution week. The decision-verified pair was already strict-premium;
   // topic-search and recent were promoted to strict-premium in the same change

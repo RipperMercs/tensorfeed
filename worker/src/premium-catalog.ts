@@ -1135,6 +1135,16 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'verdict',
   },
   {
+    path: '/api/premium/models/frontier',
+    credits: 1,
+    strict_premium: true,
+    params: [{ name: 'task', required: false }],
+    returns: 'Pareto-optimal set of models on a capability (TFII subscore) versus blended-price plane, with every dominated model flagged plus the model that dominates it. Optional task=code|reasoning|creative|general (default general).',
+    free_sibling: '/api/models',
+    signed: true,
+    category: 'verdict',
+  },
+  {
     path: '/api/premium/ai-safety/incidents/exposure',
     credits: 1,
     strict_premium: true,
