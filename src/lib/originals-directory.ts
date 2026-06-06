@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'great-american-ai-act-preemption',
+    title:
+      'Congress Finally Wrote the Preemption Down: Three Years, Development Only. Sacramento Keeps the Rest.',
+    author: 'Kira Nolan',
+    date: 'June 5, 2026',
+    readTime: '7 min read',
+    description:
+      "Reps. Jay Obernolte (R-CA) and Lori Trahan (D-MA) released the 269-page Great American Artificial Intelligence Act as a discussion draft on June 4, the most complete federal AI framework Congress has produced. It would preempt state laws specifically regulating the development of AI models for three years (with a sunset), while explicitly leaving use and deployment laws untouched. It formally establishes CAISI with $100M a year through 2029, requires frontier developers to write risk plans before release and report critical safety incidents, and adds whistleblower protections. Trahan's office named California's AB 2013 and part of SB 942 as preempted; SB 53 is squarely in scope. The development versus deployment line means most of Sacramento's 30-bill deployment crop survives while the model-layer transparency regime freezes. Inside the draft, the week Washington reversed itself on the June 2 review order, why the obligations read like SB 53 federalized minus the enforcement teeth, and three signposts over the next ninety days.",
+  },
+  {
     slug: 'spacex-ipo-anthropic-colossus-compute',
     title:
       "The Biggest IPO in History Is Also an AI-Compute Disclosure. SpaceX's S-1 Surfaced the Anthropic-Colossus Lease.",
