@@ -59,9 +59,9 @@ const EVERGREEN_ITEMS: TickerItem[] = [
   { kind: 'price', tag: 'SONNET 4.6', text: '$3 / $15', mono: 'per Mtok' },
   { kind: 'price', tag: 'GPT-5.5', text: '$10 / $30', mono: 'per Mtok' },
   { kind: 'price', tag: 'GEMINI 3.1', text: '$3.50 / $10.50', mono: 'per Mtok' },
-  { kind: 'benchmark', tag: 'SWE-BENCH', text: 'leader Claude Opus 4.7', mono: '72.1%', cls: 'info' },
-  { kind: 'benchmark', tag: 'MMLU-PRO', text: 'leader Opus 4.7', mono: '88.4', cls: 'info' },
-  { kind: 'benchmark', tag: 'VALS FINANCE', text: 'leader Opus 4.7', mono: '64.4%', cls: 'info' },
+  { kind: 'benchmark', tag: 'SWE-BENCH', text: 'leader GPT-5.5', mono: '68.7%', cls: 'info' },
+  { kind: 'benchmark', tag: 'MMLU-PRO', text: 'leader GPT-5.5', mono: '94.2', cls: 'info' },
+  { kind: 'benchmark', tag: 'GPQA', text: 'leader GPT-5.5', mono: '78.3', cls: 'info' },
   { kind: 'release', tag: 'AFTA', text: 'v1.0 whitepaper live at /whitepaper' },
 ];
 
