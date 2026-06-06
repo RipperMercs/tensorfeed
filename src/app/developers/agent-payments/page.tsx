@@ -320,6 +320,121 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/security/package-verdict',
+    description: 'GO / REVIEW / BLOCK before an agent installs an AI/ML package. Pass package=<name>&ecosystem=PyPI|npm (optional version=) and get a single ruling fusing the known-malicious supply-chain IOC list, the OSV advisory snapshot of curated AI packages, the GHSA AI-relevant firehose, and release cadence. BLOCK on known-malicious, REVIEW on open critical or high advisories, GO when covered and clean. Coverage honesty: a package in no TF security feed is no-charge out_of_coverage, never a false GO.',
+    cost: '1 credit per call',
+    example: `// Query: ?package=langchain&ecosystem=PyPI
+{
+  "ok": true,
+  "verdict_kind": "package_safety",
+  "package": "langchain",
+  "ecosystem": "PyPI",
+  "verdict": "REVIEW",
+  "risk_score": 39,
+  "risk_band": "hot",
+  "reasons": [
+    { "signal": "osv", "severity": "high", "detail": "OSV risk_band is hot (risk_score 39): 1 critical and 2 high advisories in the last 90 days." }
+  ],
+  "coverage_sources": ["osv", "release"],
+  "recommendation": "Review before installing langchain. Pin to a patched version where a first_patched_version is listed.",
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/resilience/concentration-verdict',
+    description: 'RESILIENT / EXPOSED / CRITICAL single-point-of-failure ruling for your AI-provider dependency set. Pass providers=openai,anthropic,google (aliases like claude, gpt, gemini, bedrock, azure accepted) and get which providers are impaired right now, your weakest link, and the most dependable provider to add for redundancy, fusing the measured reliability ranking with live status. No-charge when no listed provider is tracked.',
+    cost: '1 credit per call',
+    example: `// Query: ?providers=openai,anthropic,google
+{
+  "ok": true,
+  "verdict_kind": "dependency_concentration",
+  "verdict": "EXPOSED",
+  "provider_count": 3,
+  "single_point_of_failure": false,
+  "currently_impaired": ["Anthropic"],
+  "weakest_link": { "provider": "Anthropic", "reliability_score": 0.97, "current_status": "degraded" },
+  "diversification": { "suggested": [{ "provider": "AWS", "reliability_score": 0.96, "rank": 4 }] },
+  "recommendation": "Exposed: Anthropic impaired right now. Keep a healthy fallback ready and consider adding AWS.",
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/inference/cost-verdict',
+    description: 'The cheapest inference host to serve one open-weight model at a monthly token volume, with per-host projected spend, throughput context, and the savings versus your current host. Pass model=<id>&monthly_tokens=<n> (optional current_provider=, or input_tokens + output_tokens for an exact split). Ranked by cost with throughput as the secondary signal. No-charge when the model is not in the matrix.',
+    cost: '1 credit per call',
+    example: `// Query: ?model=llama-3.1-70b&monthly_tokens=100000000&current_provider=Together AI
+{
+  "ok": true,
+  "verdict_kind": "inference_cost",
+  "model": "Llama 3.1 70B",
+  "cheapest": { "provider": "DeepInfra", "monthly_cost_usd": 37.5, "output_tps": 95 },
+  "current": { "provider": "Together AI", "monthly_cost_usd": 88 },
+  "savings": { "vs_current_usd": 50.5, "vs_current_pct": 57.4 },
+  "recommendation": "DeepInfra is the cheapest host at 37.5 USD per month. Switching from Together AI saves 50.5 USD per month (57.4 percent).",
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/models/frontier',
+    description: 'The Pareto-optimal set of models on a capability versus price plane, with every dominated model flagged plus the cheaper, at-least-as-capable model that dominates it. The set-level answer to which models to rule out entirely. Capability is the contamination-discounted TFII subscore; price is blended USD per 1M tokens. Optional task=code|reasoning|creative|general (default general).',
+    cost: '1 credit per call',
+    example: `// Query: ?task=code
+{
+  "ok": true,
+  "verdict_kind": "price_performance_frontier",
+  "task": "code",
+  "frontier": [
+    { "model_id": "claude-opus-4-8", "name": "Claude Opus 4.8", "capability": 92, "blended_price": 30 },
+    { "model_id": "gpt-5-mini", "name": "GPT-5 mini", "capability": 78, "blended_price": 1.2 }
+  ],
+  "dominated": [
+    { "model_id": "legacy-model", "name": "Legacy Model", "capability": 70, "blended_price": 5, "dominated_by": { "model_id": "gpt-5-mini", "capability": 78, "blended_price": 1.2 } }
+  ],
+  "counts": { "priced": 36, "frontier": 6, "dominated": 30 },
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/stack-drift-verdict',
+    description: 'STABLE / WATCH / ACTION_NEEDED ruling on what moved under your declared stack in the last N days that could break you: a deprecated or sunsetting model, a breaking package major bump, an agent-protocol spec-version bump, each classified by break-risk with a recommended action. Pass at least one of models=, packages=, protocols= (comma-separated), optional since_days= (default 14). No-charge when nothing in your stack is tracked.',
+    cost: '1 credit per call',
+    example: `// Query: ?models=claude-3-opus&packages=langchain&protocols=mcp&since_days=14
+{
+  "ok": true,
+  "verdict_kind": "stack_drift",
+  "verdict": "ACTION_NEEDED",
+  "window": { "since_days": 14, "from": "2026-05-23", "to": "2026-06-06" },
+  "findings": [
+    { "kind": "model", "subject": "claude-3-opus", "signal": "deprecated", "break_risk": "high", "detail": "Claude 3 Opus is deprecated, sunset 2026-07-21 (45 days).", "recommended_action": "Migrate to claude-opus-4-8." }
+  ],
+  "counts": { "high": 1, "medium": 0, "low": 0, "info": 0, "total": 1, "assessed": 3 },
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+  },
+  {
+    method: 'GET',
+    path: '/api/premium/model-migration-verdict',
+    description: 'For one model you depend on: MIGRATE_NOW / MIGRATE_SOON / NO_ACTION plus the recommended successor with the blended-cost delta, the capability (TFII) delta, days until sunset, and a drop-in note (same provider versus an API change). Pass model=<id>, optional deadline=YYYY-MM-DD to reconcile against the sunset date. No-charge when the model is in no TF source.',
+    cost: '1 credit per call',
+    example: `// Query: ?model=claude-3-opus&deadline=2026-08-01
+{
+  "ok": true,
+  "verdict_kind": "model_migration",
+  "verdict": "MIGRATE_NOW",
+  "model": { "id": "claude-3-opus", "name": "Claude 3 Opus", "cost_blended_per_1m": 30, "capability_tfii": 74 },
+  "successor": { "id": "claude-opus-4-8", "name": "Claude Opus 4.8", "cost_blended_per_1m": 30, "capability_tfii": 92 },
+  "deltas": { "cost_blended_per_1m": 0, "cost_pct": 0, "capability_tfii": 18 },
+  "deadline": { "date": "2026-08-01", "days_from_now": 56, "sunset_before_deadline": true },
+  "recommendation": "Claude 3 Opus is deprecated, sunset 2026-07-21 (45 days). Migrate to Claude Opus 4.8. The successor is same blended cost, TFII up 18.",
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/stack-safety-verdict',
     description: 'GO / HOLD / BLOCK deploy gate for your AI stack. Pass packages=name@version (up to 10) and get a verdict per package plus an overall gate, fusing the ingested AI-CVE batch (GHSA plus vendor advisories) with the CISA KEV catalog. Never-false-confirm: BLOCK only when an exploited CVE has no fix, HOLD when the pinned version must be verified, PASS when no AI-stack CVE matches the package name, UNKNOWN outside the curated cohort. A free gate-only preview (no CVE evidence, capped at 3 packages) lives at /api/preview/stack-safety-verdict, 10 calls per IP per day.',
     cost: '1 credit per call',
