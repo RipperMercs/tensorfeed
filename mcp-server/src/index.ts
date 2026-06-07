@@ -1839,18 +1839,57 @@ registerTool(
   },
 );
 
-// ── Tool: pricing_series_free (free, 7-day cap) ─────────────────────
+// Series window helper: convert a requested day count into a `from` date
+// (today minus days-1, UTC) for the premium date-range endpoints, which
+// take from/to rather than a days shorthand.
+function seriesFromDate(days: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - (days - 1));
+  return d.toISOString().slice(0, 10);
+}
+
+// ── Tool: pricing_series (free 1 to 7 days, paid 8 to 90 days) ──────
 
 registerTool(
-  'pricing_series_free',
-  'Daily price points for one AI model over the last 1 to 7 days, free. For windows up to 90 days use pricing_series (1 credit).',
+  'pricing_series',
+  'Daily price points for one AI model over a window. days 1 to 7 is free; days 8 to 90 costs 1 credit ($0.02) and needs a TENSORFEED_TOKEN, adding the min/max/delta summary over the longer window. Get credits at tensorfeed.ai/developers/agent-payments.',
   {
-    model: z.string().describe('Model id or display name (e.g. "Claude Opus 4.7" or "claude-opus-4-7")'),
-    days: z.number().min(1).max(7).optional().describe('Rolling window length 1 to 7 days (default 7)'),
+    model: z.string().describe('Model id or display name (e.g. "Claude Opus 4.7" or "claude-opus-4-7").'),
+    days: z.number().int().min(1).max(90).optional().describe('Window length (default 7). 1 to 7 free; 8 to 90 costs 1 credit.'),
   },
   async ({ model, days }) => {
-    const params = new URLSearchParams({ model });
-    if (typeof days === 'number') params.set('days', String(days));
+    const d = days ?? 7;
+    if (d > 7) {
+      const params = new URLSearchParams({ model, from: seriesFromDate(d) });
+      const data = (await fetchJSON(`/premium/history/pricing/series?${params}`, { auth: true })) as {
+        model: string;
+        provider: string | null;
+        points: { date: string; input: number; output: number; blended: number }[];
+        summary: {
+          first: { date: string; blended: number } | null;
+          latest: { date: string; blended: number } | null;
+          min_blended: number | null;
+          max_blended: number | null;
+          delta_pct_blended: number | null;
+          changes_detected: number;
+          days_with_data: number;
+        };
+        billing?: { credits_remaining?: number };
+      };
+      const s = data.summary;
+      const summary = s.first && s.latest
+        ? `${s.first.date} blended $${s.first.blended} -> ${s.latest.date} blended $${s.latest.blended} (${s.delta_pct_blended}%, ${s.changes_detected} changes, min $${s.min_blended}, max $${s.max_blended})`
+        : 'no data points in range';
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: `${data.model} (${data.provider ?? 'unknown'}) ${data.points.length} points\n${summary}\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+          },
+        ],
+      };
+    }
+    const params = new URLSearchParams({ model, days: String(d) });
     const data = (await fetchJSON(`/history/pricing/series?${params}`)) as {
       model: string;
       provider: string | null;
@@ -1872,26 +1911,48 @@ registerTool(
       content: [
         {
           type: 'text' as const,
-          text: `${data.model} (${data.provider ?? 'unknown'}) ${data.points.length} points over ${data.points.length} days\n${summary}\nFor up to 90 days, use the pricing_series tool (1 credit).`,
+          text: `${data.model} (${data.provider ?? 'unknown'}) ${data.points.length} points over ${data.points.length} days\n${summary}\nFor up to 90 days, pass days 8 to 90 (1 credit).`,
         },
       ],
     };
   },
 );
 
-// ── Tool: benchmark_series_free (free, 7-day cap) ───────────────────
+// ── Tool: benchmark_series (free 1 to 7 days, paid 8 to 90 days) ────
 
 registerTool(
-  'benchmark_series_free',
-  'Daily benchmark scores for one model+benchmark over the last 1 to 7 days, free. Benchmark keys: swe_bench, mmlu_pro, gpqa_diamond, math, human_eval. For windows up to 90 days use benchmark_series (1 credit).',
+  'benchmark_series',
+  'Daily benchmark scores for one model+benchmark over a window. Benchmark keys: swe_bench, mmlu_pro, gpqa_diamond, math, human_eval. days 1 to 7 is free; days 8 to 90 costs 1 credit ($0.02) and needs a TENSORFEED_TOKEN, tracking score evolution over the longer window. Get credits at tensorfeed.ai/developers/agent-payments.',
   {
-    model: z.string().describe('Model id or display name'),
-    benchmark: z.string().describe('Benchmark key'),
-    days: z.number().min(1).max(7).optional().describe('Rolling window length 1 to 7 days (default 7)'),
+    model: z.string().describe('Model id or display name.'),
+    benchmark: z.string().describe('Benchmark key (e.g. swe_bench, mmlu_pro, gpqa_diamond, math, human_eval).'),
+    days: z.number().int().min(1).max(90).optional().describe('Window length (default 7). 1 to 7 free; 8 to 90 costs 1 credit.'),
   },
   async ({ model, benchmark, days }) => {
-    const params = new URLSearchParams({ model, benchmark });
-    if (typeof days === 'number') params.set('days', String(days));
+    const d = days ?? 7;
+    if (d > 7) {
+      const params = new URLSearchParams({ model, benchmark, from: seriesFromDate(d) });
+      const data = (await fetchJSON(`/premium/history/benchmarks/series?${params}`, { auth: true })) as {
+        model: string;
+        benchmark: string;
+        points: { date: string; score: number }[];
+        summary: { first: { date: string; score: number } | null; latest: { date: string; score: number } | null; delta_pp: number | null };
+        billing?: { credits_remaining?: number };
+      };
+      const s = data.summary;
+      const summary = s.first && s.latest
+        ? `${s.first.date} score ${s.first.score} -> ${s.latest.date} score ${s.latest.score} (delta ${s.delta_pp} pp)`
+        : 'no data in range';
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: `${data.model} on ${data.benchmark}: ${data.points.length} points\n${summary}\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+          },
+        ],
+      };
+    }
+    const params = new URLSearchParams({ model, benchmark, days: String(d) });
     const data = (await fetchJSON(`/history/benchmarks/series?${params}`)) as {
       model: string;
       benchmark: string;
@@ -1913,18 +1974,47 @@ registerTool(
   },
 );
 
-// ── Tool: status_uptime_free (free, 7-day cap) ──────────────────────
+// ── Tool: status_uptime (free 1 to 7 days, paid 8 to 90 days) ───────
 
 registerTool(
-  'status_uptime_free',
-  'Daily uptime rollup for one provider over the last 1 to 7 days, free. For windows up to 90 days use status_uptime (1 credit).',
+  'status_uptime',
+  'Daily uptime rollup for one provider over a window with operational/degraded/down day counts and uptime % (degraded counts as half-credit). days 1 to 7 is free; days 8 to 90 costs 1 credit ($0.02) and needs a TENSORFEED_TOKEN, adding per-incident-day detail over the longer window. Get credits at tensorfeed.ai/developers/agent-payments.',
   {
-    provider: z.string().describe('Provider name (e.g. anthropic, openai, google)'),
-    days: z.number().min(1).max(7).optional().describe('Rolling window length 1 to 7 days (default 7)'),
+    provider: z.string().describe('Provider name (e.g. anthropic, openai, google).'),
+    days: z.number().int().min(1).max(90).optional().describe('Window length (default 7). 1 to 7 free; 8 to 90 costs 1 credit.'),
   },
   async ({ provider, days }) => {
-    const params = new URLSearchParams({ provider });
-    if (typeof days === 'number') params.set('days', String(days));
+    const d = days ?? 7;
+    if (d > 7) {
+      const params = new URLSearchParams({ provider, from: seriesFromDate(d) });
+      const data = (await fetchJSON(`/premium/history/status/uptime?${params}`, { auth: true })) as {
+        provider: string;
+        days_total: number;
+        days_with_data: number;
+        days_operational: number;
+        days_degraded: number;
+        days_down: number;
+        uptime_pct: number | null;
+        incident_days: { date: string; status: string }[];
+        billing?: { credits_remaining?: number };
+      };
+      const incidents = data.incident_days.length
+        ? '\n\nIncident days:\n' + data.incident_days.map(d2 => `  ${d2.date}: ${d2.status}`).join('\n')
+        : '';
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text:
+              `${data.provider} uptime: ${data.uptime_pct ?? 'n/a'}% over ${data.days_with_data} measured days (of ${data.days_total} in range)\n` +
+              `  operational: ${data.days_operational}, degraded: ${data.days_degraded}, down: ${data.days_down}` +
+              incidents +
+              `\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+          },
+        ],
+      };
+    }
+    const params = new URLSearchParams({ provider, days: String(d) });
     const data = (await fetchJSON(`/history/status/uptime?${params}`)) as {
       provider: string;
       days_total: number;
@@ -1944,19 +2034,56 @@ registerTool(
   },
 );
 
-// ── Tool: status_leaderboard_free (free, 7-day cap) ─────────────────
+// ── Tool: status_leaderboard (free 1 to 7 days, paid 8 to 90 days) ──
 
 registerTool(
-  'status_leaderboard_free',
-  'Cross-provider uptime leaderboard, ranked by uptime % DESC. Free, 7-day cap. Computed from minute-resolution counters (~720 samples per provider per day). For 90-day windows plus incident_count and mttr_minutes per provider use status_leaderboard (1 credit).',
+  'status_leaderboard',
+  'Cross-provider uptime leaderboard ranked by uptime % DESC, computed from minute-resolution counters (~720 samples per provider per day). days 1 to 7 is free; days 8 to 90 costs 3 credits ($0.06) and needs a TENSORFEED_TOKEN, adding incident_count and mttr_minutes (mean time to recover) per provider over the longer window. Get credits at tensorfeed.ai/developers/agent-payments.',
   {
-    days: z.number().min(1).max(7).optional().describe('Rolling window length 1 to 7 days (default 7)'),
+    days: z.number().int().min(1).max(90).optional().describe('Window length (default 7). 1 to 7 free; 8 to 90 costs 3 credits.'),
   },
   async ({ days }) => {
-    const params = new URLSearchParams();
-    if (typeof days === 'number') params.set('days', String(days));
-    const qs = params.toString();
-    const data = (await fetchJSON(`/status/leaderboard${qs ? `?${qs}` : ''}`)) as {
+    const d = days ?? 7;
+    if (d > 7) {
+      const params = new URLSearchParams({ from: seriesFromDate(d) });
+      const data = (await fetchJSON(`/premium/status/leaderboard?${params}`, { auth: true })) as {
+        ok: boolean;
+        error?: string;
+        message?: string;
+        range?: { from: string; to: string; days: number };
+        entries?: {
+          provider: string;
+          rank: number;
+          uptime_pct: number;
+          polls: number;
+          downtime_minutes: number;
+          hard_down_minutes: number;
+          incident_count?: number;
+          mttr_minutes?: number | null;
+        }[];
+        billing?: { credits_remaining?: number };
+      };
+      if (!data.ok) {
+        return {
+          content: [{ type: 'text' as const, text: `Leaderboard unavailable: ${data.error ?? 'unknown'} - ${data.message ?? ''}` }],
+        };
+      }
+      const lines = (data.entries ?? []).map(
+        (e) =>
+          `#${e.rank} ${e.provider}: ${e.uptime_pct}% uptime, ${e.downtime_minutes}m downtime (${e.hard_down_minutes}m hard-down), ${e.incident_count ?? 0} incidents, MTTR ${e.mttr_minutes ?? 'n/a'}m`,
+      );
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text:
+              `AI provider uptime leaderboard ${data.range?.from} to ${data.range?.to}\n${lines.join('\n')}\n\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+          },
+        ],
+      };
+    }
+    const params = new URLSearchParams({ days: String(d) });
+    const data = (await fetchJSON(`/status/leaderboard?${params}`)) as {
       ok: boolean;
       error?: string;
       message?: string;
@@ -1984,181 +2111,6 @@ registerTool(
         {
           type: 'text' as const,
           text: `AI provider uptime leaderboard ${data.range?.from} to ${data.range?.to}\n${lines.join('\n')}\n\nprovider_reliability_verdict ranks providers by dependability, not just current state.`,
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: pricing_series (1 credit) ─────────────────────────────────
-
-registerTool(
-  'pricing_series',
-  'Daily price points for one AI model with min/max/delta summary. Default range = last 30 days, max 90 days. Costs 1 credit ($0.02). Strict premium, no free trial; the 7-day-capped sibling pricing_series_free is the discovery option.',
-  {
-    model: z.string().describe('Model id or display name (e.g. "Claude Opus 4.7" or "claude-opus-4-7")'),
-    from: z.string().optional().describe('Start date YYYY-MM-DD UTC (default: 30 days ago)'),
-    to: z.string().optional().describe('End date YYYY-MM-DD UTC (default: today)'),
-  },
-  async ({ model, from, to }) => {
-    const params = new URLSearchParams({ model });
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
-    const data = (await fetchJSON(`/premium/history/pricing/series?${params}`, { auth: true })) as {
-      model: string;
-      provider: string | null;
-      points: { date: string; input: number; output: number; blended: number }[];
-      summary: {
-        first: { date: string; blended: number } | null;
-        latest: { date: string; blended: number } | null;
-        min_blended: number | null;
-        max_blended: number | null;
-        delta_pct_blended: number | null;
-        changes_detected: number;
-        days_with_data: number;
-      };
-      billing?: { credits_remaining?: number };
-    };
-    const s = data.summary;
-    const summary = s.first && s.latest
-      ? `${s.first.date} blended $${s.first.blended} -> ${s.latest.date} blended $${s.latest.blended} (${s.delta_pct_blended}%, ${s.changes_detected} changes, min $${s.min_blended}, max $${s.max_blended})`
-      : 'no data points in range';
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: `${data.model} (${data.provider ?? 'unknown'}) ${data.points.length} points\n${summary}\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: benchmark_series (1 credit) ───────────────────────────────
-
-registerTool(
-  'benchmark_series',
-  'Score evolution for a single benchmark on one AI model. Costs 1 credit ($0.02). Strict premium, no free trial; the 7-day-capped sibling benchmark_series_free is the discovery option. Benchmark keys: swe_bench, mmlu_pro, gpqa_diamond, math, human_eval.',
-  {
-    model: z.string().describe('Model id or display name'),
-    benchmark: z.string().describe('Benchmark key (e.g. swe_bench, mmlu_pro, gpqa_diamond, math, human_eval)'),
-    from: z.string().optional().describe('Start date YYYY-MM-DD UTC (default: 30 days ago)'),
-    to: z.string().optional().describe('End date YYYY-MM-DD UTC (default: today)'),
-  },
-  async ({ model, benchmark, from, to }) => {
-    const params = new URLSearchParams({ model, benchmark });
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
-    const data = (await fetchJSON(`/premium/history/benchmarks/series?${params}`, { auth: true })) as {
-      model: string;
-      benchmark: string;
-      points: { date: string; score: number }[];
-      summary: { first: { date: string; score: number } | null; latest: { date: string; score: number } | null; delta_pp: number | null };
-      billing?: { credits_remaining?: number };
-    };
-    const s = data.summary;
-    const summary = s.first && s.latest
-      ? `${s.first.date} score ${s.first.score} -> ${s.latest.date} score ${s.latest.score} (delta ${s.delta_pp} pp)`
-      : 'no data in range';
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: `${data.model} on ${data.benchmark}: ${data.points.length} points\n${summary}\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: status_uptime (1 credit) ──────────────────────────────────
-
-registerTool(
-  'status_uptime',
-  'Daily uptime rollup for one provider with operational/degraded/down day counts and uptime % (degraded counts as half-credit). Costs 1 credit ($0.02). Strict premium, no free trial; the 7-day-capped sibling status_uptime_free is the discovery option.',
-  {
-    provider: z.string().describe('Provider name (e.g. anthropic, openai, google)'),
-    from: z.string().optional().describe('Start date YYYY-MM-DD UTC (default: 30 days ago)'),
-    to: z.string().optional().describe('End date YYYY-MM-DD UTC (default: today)'),
-  },
-  async ({ provider, from, to }) => {
-    const params = new URLSearchParams({ provider });
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
-    const data = (await fetchJSON(`/premium/history/status/uptime?${params}`, { auth: true })) as {
-      provider: string;
-      days_total: number;
-      days_with_data: number;
-      days_operational: number;
-      days_degraded: number;
-      days_down: number;
-      uptime_pct: number | null;
-      incident_days: { date: string; status: string }[];
-      billing?: { credits_remaining?: number };
-    };
-    const incidents = data.incident_days.length
-      ? '\n\nIncident days:\n' + data.incident_days.map(d => `  ${d.date}: ${d.status}`).join('\n')
-      : '';
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `${data.provider} uptime: ${data.uptime_pct ?? 'n/a'}% over ${data.days_with_data} measured days (of ${data.days_total} in range)\n` +
-            `  operational: ${data.days_operational}, degraded: ${data.days_degraded}, down: ${data.days_down}` +
-            incidents +
-            `\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: status_leaderboard (1 credit) ─────────────────────────────
-
-registerTool(
-  'status_leaderboard',
-  'Cross-provider uptime leaderboard for a custom date range up to 90 days. Same minute-resolution counter source as status_leaderboard_free, but adds incident_count and mttr_minutes (mean time to recover) per provider. Sorted by uptime % DESC. Costs 3 credits ($0.06). Strict premium, no free trial; the 7-day-capped sibling status_leaderboard_free is the discovery option.',
-  {
-    from: z.string().optional().describe('Start date YYYY-MM-DD UTC (default: 30 days ago)'),
-    to: z.string().optional().describe('End date YYYY-MM-DD UTC (default: today)'),
-  },
-  async ({ from, to }) => {
-    const params = new URLSearchParams();
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
-    const data = (await fetchJSON(`/premium/status/leaderboard?${params}`, { auth: true })) as {
-      ok: boolean;
-      error?: string;
-      message?: string;
-      range?: { from: string; to: string; days: number };
-      entries?: {
-        provider: string;
-        rank: number;
-        uptime_pct: number;
-        polls: number;
-        downtime_minutes: number;
-        hard_down_minutes: number;
-        incident_count?: number;
-        mttr_minutes?: number | null;
-      }[];
-      billing?: { credits_remaining?: number };
-    };
-    if (!data.ok) {
-      return {
-        content: [{ type: 'text' as const, text: `Leaderboard unavailable: ${data.error ?? 'unknown'} - ${data.message ?? ''}` }],
-      };
-    }
-    const lines = (data.entries ?? []).map(
-      (e) =>
-        `#${e.rank} ${e.provider}: ${e.uptime_pct}% uptime, ${e.downtime_minutes}m downtime (${e.hard_down_minutes}m hard-down), ${e.incident_count ?? 0} incidents, MTTR ${e.mttr_minutes ?? 'n/a'}m`,
-    );
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `AI provider uptime leaderboard ${data.range?.from} to ${data.range?.to}\n${lines.join('\n')}\n\nCredits remaining: ${data.billing?.credits_remaining ?? '?'}`,
         },
       ],
     };
