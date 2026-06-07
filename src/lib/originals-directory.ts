@@ -17,6 +17,36 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'ai-capex-bubble-debate-scoreboard',
+    title:
+      'Everyone Is Calling an AI Capex Bubble. Almost No One Agrees on How to Measure One.',
+    author: 'Marcus Chen',
+    date: 'June 7, 2026',
+    readTime: '6 min read',
+    description:
+      "The four largest US hyperscalers spent roughly $448 billion on capex in 2025 and have guided 2026 to about $600 to $725 billion, with Goldman modeling $7.6 trillion of AI capex through 2031. The bears cite a MIT study finding 95 percent of enterprise GenAI pilots showed no P&L return, circular vendor financing, and depreciation games; the bulls cite real inference demand and sold-out capacity. The catch is that the two camps use different denominators, so the only lens that travels is capex as a share of GDP, where the AI boom sits between the dotcom peak near 1.2 percent and the railroad manias above 4 percent.",
+  },
+  {
+    slug: 'government-equity-stakes-ai-labs-ipo-window',
+    title:
+      'Trump and Sanders Now Want the Same Thing: Government Equity in the AI Labs. The Timing Is the Story.',
+    author: 'Kira Nolan',
+    date: 'June 7, 2026',
+    readTime: '7 min read',
+    description:
+      "On June 6 Trump told reporters the US government may take direct equity stakes in OpenAI, Anthropic, and xAI ('You make them a partnership in this revolution. It would be a beautiful thing.'), days after Bernie Sanders' NYT op-ed and draft American AI Sovereign Wealth Fund Act proposed a one-time 50 percent stock tax, paid in shares, on the same three companies. Sam Altman has been privately pitching a donated-equity Public Wealth Fund to the White House since early 2025; Anthropic is reportedly not in the talks. All of it lands inside the IPO window: SpaceX prices June 11, OpenAI targets September, Anthropic filed June 1 at $965B. Inside the three proposals and why they differ by an order of magnitude, the Intel, US Steel, and MP Materials precedents that make government equity a term-sheet question rather than rhetoric, why the bill names the three private labs and skips Google and Meta, what an unmodelable policy overhang does to a roadshow, and three signposts over the next ninety days.",
+  },
+  {
+    slug: 'chatgpt-dreaming-v3-memory-default',
+    title:
+      "ChatGPT's Memory Now Writes Itself. The Delete Button Does Less Than You Think.",
+    author: 'Marcus Chen',
+    date: 'June 6, 2026',
+    readTime: '7 min read',
+    description:
+      "OpenAI began rolling out Dreaming V3 on June 4, the biggest rewrite of ChatGPT memory since 2024. A background process now synthesizes a running profile of you from past conversations and injects it into every new chat, rewriting memories as circumstances change. A roughly 5x compute cut takes the feature to Free and Go users within weeks; paid users get 2x capacity and a new summary page. Vendor-reported recall jumped from 41.5% (2024) to 67.9% (2025) to 82.8%, all internal evals with no independent audit. The part that deserves the attention: deleting a chat does not delete the memories derived from it, the summary page does not promise completeness, and memory injected into the system prompt is the same persistent injection surface Tenable documented in November 2025, now fed by ambient conversation by default. Inside the three-generation architecture shift, the February study that found 96 percent of memories are written without user instruction, the August 2 EU AI Act transparency deadline, and why memory just became the chat interface's first real switching cost.",
+  },
+  {
     slug: 'great-american-ai-act-preemption',
     title:
       'Congress Finally Wrote the Preemption Down: Three Years, Development Only. Sacramento Keeps the Rest.',
