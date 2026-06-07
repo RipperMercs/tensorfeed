@@ -550,6 +550,42 @@ const ENDPOINTS: PremiumEndpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/premium/ai-capex-cycle-verdict',
+    description: 'Where does the current AI infrastructure buildout rank against the great technology capital buildouts of the past? Ranks the AI cycle against a curated historical set (UK and US railways, electrification, the Bell telephone network, the dotcom telecom-fiber overbuild) on the single cross-era-comparable axis: peak annual capex as a percent of national GDP. Returns a MODERATE / ELEVATED / EXTREME / UNPRECEDENTED band, the current rank in the set, the closest and farthest historical analog, the equities-led cycles (radio 1929) flagged separately as sentiment outliers rather than ranked, and an explicit list of the post-bust dimensions (overbuild ratio, drawdown, boom-to-bust duration, survival rate) that cannot be scored while a cycle is in progress. It deliberately does not call bubble or not-a-bubble; the honesty about what cannot yet be known is the product. No params. Editorial-cadence freshness keyed to the registry data time, no-charge when the inputs are unavailable. AFTA-signed.',
+    cost: '1 credit per call',
+    example: `// Header: Authorization: Bearer tf_live_...
+{
+  "ok": true,
+  "verdict_kind": "capex_cycle_analog",
+  "verdict": "ELEVATED",
+  "ranked_dimension": "peak_capex_pct_gdp",
+  "current_cycle": { "id": "ai-buildout", "name": "AI infrastructure buildout", "peak_capex_pct_gdp": 1.887, "annual_capex_usd_b": 600, "in_progress": true },
+  "current_rank": 3,
+  "total_ranked": 6,
+  "exceeds_all_priors": false,
+  "ranking": [
+    { "id": "uk-railway-mania", "name": "UK Railway Mania", "peak_capex_pct_gdp": 7.0, "is_current": false },
+    { "id": "us-railroad-1873", "name": "US Railroad Boom and Panic of 1873", "peak_capex_pct_gdp": 4.8, "is_current": false },
+    { "id": "ai-buildout", "name": "AI infrastructure buildout", "peak_capex_pct_gdp": 1.887, "is_current": true },
+    { "id": "dotcom-fiber", "name": "Dotcom and Telecom-Fiber Overbuild", "peak_capex_pct_gdp": 1.2, "is_current": false }
+  ],
+  "closest_analog": { "cycle_id": "dotcom-fiber", "name": "Dotcom and Telecom-Fiber Overbuild", "peak_capex_pct_gdp": 1.2, "distance": 0.687 },
+  "sentiment_outliers": [
+    { "cycle_id": "radio-1929", "name": "1920s Radio Boom and 1929 Crash", "peak_to_trough_drawdown_pct": 98.0, "note": "Equity mania around a new platform technology, capital-light, best compared on drawdown not capex." }
+  ],
+  "not_yet_measurable": ["overbuild_ratio", "peak_to_trough_drawdown_pct", "boom_to_bust_years", "survival_rate_pct"],
+  "caveats": [
+    "The AI capex-to-GDP figure is a point estimate near 1.887 percent (US AI capex over US GDP); estimates range from about 0.8 percent on a global-GDP denominator to about 2.4 percent on the broadest hyperscaler guidance.",
+    "The AI numerator is disclosed annual capex and is a lower bound; it excludes AI labs, neoclouds, and sovereign buildouts."
+  ],
+  "interpretation": "On capex as a share of GDP, the AI buildout is comparable to the larger historical buildouts (rank 3 of 6), closest to the Dotcom and Telecom-Fiber Overbuild. The post-bust dimensions that decide whether a buildout was a bubble cannot be scored while the cycle is in progress.",
+  "captured_at": "2026-06-07T00:00:00Z",
+  "billing": { "credits_charged": 1, "credits_remaining": 48 },
+  "receipt": { "id": "rcpt_...", "signing_alg": "EdDSA", "signing_curve": "Ed25519", "signature": "<base64url>" }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/premium/x402-settlement-verdict',
     description: 'Is the Base x402 USDC settlement market growing, is it concentrated or a real market, and who leads? Rules over TensorFeed\'s own on-chain settlement index: momentum versus the prior window of equal length (expanding, steady, contracting, or nascent), concentration by the Herfindahl index (concentrated, moderate, or diversified), and the leading publisher, plus the full per-publisher volume ranking and the ecosystem totals with the window-over-window change. Optional ?window=24h|7d|30d (default 7d). Coverage is the Base settlements TensorFeed indexes, forward-only from launch: not all of x402 and not other chains. 10-minute freshness SLA keyed to the index cursor last_run_at, no-charge when stale. A free classifications-only preview lives at /api/preview/x402-settlement-verdict, 10 calls per IP per day.',
     cost: '1 credit per call',

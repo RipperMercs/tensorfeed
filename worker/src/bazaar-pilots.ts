@@ -3264,6 +3264,53 @@ const X402_SETTLEMENT_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 40 (2026-06-07): ai-capex-cycle-verdict. Signed ruling that ranks the
+// current AI infrastructure buildout against a curated set of historical
+// technology capital buildouts on capex as a share of GDP, naming the closest
+// historical analog. No params; the AI numerator is the curated annual-capex
+// constant. Free sibling registry at /api/capital-cycles.
+const AI_CAPEX_CYCLE_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'AI Capex Cycle Verdict. One paid call ranks the current AI infrastructure buildout against six historical technology capital buildouts (UK and US railways, electrification, the Bell telephone network, the dotcom telecom-fiber overbuild) on the single cross-era-comparable axis: peak annual capex as a share of GDP. Returns a MODERATE / ELEVATED / EXTREME / UNPRECEDENTED band, the current rank, the closest and farthest historical analog, the equities-led cycles flagged separately as sentiment outliers, the post-bust dimensions that cannot be scored while a cycle is in progress, and an AFTA-signed receipt. It deliberately does not call bubble or not-a-bubble. No params. The "how does the AI buildout compare to past capital manias" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            verdict_kind: 'capex_cycle_analog',
+            verdict: 'ELEVATED',
+            ranked_dimension: 'peak_capex_pct_gdp',
+            current_cycle: { id: 'ai-buildout', name: 'AI infrastructure buildout', peak_capex_pct_gdp: 1.887, annual_capex_usd_b: 600, in_progress: true },
+            current_rank: 3,
+            total_ranked: 6,
+            exceeds_all_priors: false,
+            ranking: [
+              { id: 'uk-railway-mania', name: 'UK Railway Mania', peak_capex_pct_gdp: 7.0, is_current: false },
+              { id: 'us-railroad-1873', name: 'US Railroad Boom and Panic of 1873', peak_capex_pct_gdp: 4.8, is_current: false },
+              { id: 'ai-buildout', name: 'AI infrastructure buildout', peak_capex_pct_gdp: 1.887, is_current: true },
+              { id: 'dotcom-fiber', name: 'Dotcom and Telecom-Fiber Overbuild', peak_capex_pct_gdp: 1.2, is_current: false },
+            ],
+            closest_analog: { cycle_id: 'dotcom-fiber', name: 'Dotcom and Telecom-Fiber Overbuild', peak_capex_pct_gdp: 1.2, distance: 0.687 },
+            sentiment_outliers: [
+              { cycle_id: 'radio-1929', name: '1920s Radio Boom and 1929 Crash', peak_to_trough_drawdown_pct: 98.0 },
+            ],
+            not_yet_measurable: ['overbuild_ratio', 'peak_to_trough_drawdown_pct', 'boom_to_bust_years', 'survival_rate_pct'],
+            captured_at: '2026-06-07T00:00:00Z',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
 // Wave 33 (2026-06-04): x402-publisher-verdict. Signed single-publisher trust
 // ruling over the same x402 settlement index as the ecosystem verdict, scoped
 // to one domain: whether its Base payTo is actively settling, its 30-day
@@ -6850,6 +6897,10 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // ruling over the x402 settlement index, scoped to one domain. Param-required
   // (?domain=). Free taste at /api/preview/x402-publisher-verdict.
   '/api/premium/x402-publisher-verdict': X402_PUBLISHER_VERDICT_PILOT,
+  // Wave 40 (2026-06-07): ai-capex-cycle-verdict. Ranks the AI buildout against
+  // historical capital buildouts on capex as a share of GDP. Free sibling
+  // registry at /api/capital-cycles.
+  '/api/premium/ai-capex-cycle-verdict': AI_CAPEX_CYCLE_VERDICT_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

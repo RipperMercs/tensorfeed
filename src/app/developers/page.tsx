@@ -145,6 +145,55 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/capital-cycles',
+    description:
+      'Curated registry of historical technology capital buildouts (UK and US railways, electrification, the Bell telephone network, the dotcom telecom-fiber overbuild, the 1920s radio mania), each summarized on a fixed metric skeleton. The current AI infrastructure buildout is mapped into the same shape (current_cycle) so it can be ranked against the historical set on the one cross-era-comparable axis, peak annual capex as a percent of national GDP. Filter by era (pre_1931 or modern).',
+    params: '?era=modern',
+    cache: 'Cache for 1 hour',
+    example: `// Query: ?era=modern
+{
+  "ok": true,
+  "source": "tensorfeed.ai",
+  "count": 2,
+  "last_updated": "2026-06-07",
+  "gdp_denominator": {
+    "value_usd_t": 31.8,
+    "source_url": "https://fred.stlouisfed.org/series/GDP",
+    "as_of": "Q1 2026 nominal GDP, seasonally adjusted annual rate, BEA via FRED"
+  },
+  "cycles": [
+    {
+      "id": "dotcom-fiber",
+      "name": "Dotcom and Telecom-Fiber Overbuild",
+      "era": "modern",
+      "period": "1995-2002",
+      "lead_sector": "telecom and internet infrastructure",
+      "peak_capex_pct_gdp": 1.2,
+      "physical_unit": "miles of fiber laid in North America and Europe",
+      "physical_value": 80000000,
+      "peak_to_trough_drawdown_pct": 78.0,
+      "boom_to_bust_years": 7,
+      "confidence": "high"
+    }
+  ],
+  "current_cycle": {
+    "id": "ai-buildout",
+    "name": "AI infrastructure buildout",
+    "era": "modern",
+    "peak_capex_pct_gdp": 1.887,
+    "annual_capex_usd_b": 600,
+    "capex_range_low_pct": 0.8,
+    "capex_range_high_pct": 2.4,
+    "physical_unit": "datacenter MW (disclosed)",
+    "physical_value": 24500,
+    "in_progress": true,
+    "captured_at": "2026-06-07T00:00:00Z"
+  },
+  "filters": { "era": "modern" }
+}`,
+  },
+  {
+    method: 'GET',
     path: '/api/agents/directory',
     description: 'Directory of AI agents and autonomous systems with descriptions, categories, and links.',
     cache: 'Cache for 15 minutes',

@@ -155,6 +155,8 @@ const PILOT_PATHS = [
   '/api/premium/hf-leaderboard/movers',
   // Wave 33 (2026-06-04): x402-publisher-verdict (signed single-publisher trust verdict)
   '/api/premium/x402-publisher-verdict',
+  // Wave 40 (2026-06-07): ai-capex-cycle-verdict (AI buildout ranked vs historical capital cycles)
+  '/api/premium/ai-capex-cycle-verdict',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.
