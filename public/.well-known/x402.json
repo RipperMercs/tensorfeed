@@ -409,7 +409,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/history/pricing/series",
-        "description": "Daily input/output/blended price points for one model with min/max/delta summary. Default 30-day window, max 90 days.",
+        "description": "Daily input, output, and blended price history for one AI model across a full date window (90-day max). One paid call returns the per-day points plus a summary (first, latest, min, max, percent delta, changes detected). The pricing-trend feed the free 7-day sibling cannot reach.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -496,7 +496,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Pricing series",
         "description": "Daily input, output, and blended price history for one AI model across a full date window (90-day max). One paid call returns the per-day points plus a summary (first, latest, min, max, percent delta, changes detected). The pricing-trend feed the free 7-day sibling cannot reach.",
@@ -642,7 +642,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/history/benchmarks/series",
-        "description": "Score evolution for a single benchmark on one model with delta in percentage points. Supported keys: swe_bench, mmlu_pro, gpqa_diamond, math, human_eval.",
+        "description": "Daily benchmark-score history for one AI model on one benchmark (swe_bench, mmlu_pro, gpqa_diamond, math, human_eval) across a full date window (90-day max). Returns the per-day points plus a summary (first, latest, min, max, delta in percentage points). The capability-drift feed.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -720,7 +720,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Benchmark score series",
         "description": "Daily benchmark-score history for one AI model on one benchmark (swe_bench, mmlu_pro, gpqa_diamond, math, human_eval) across a full date window (90-day max). Returns the per-day points plus a summary (first, latest, min, max, delta in percentage points). The capability-drift feed.",
@@ -862,7 +862,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/history/status/uptime",
-        "description": "Daily uptime rollup for one provider with operational, degraded, and down day counts. Uptime % treats degraded as half-credit. Missing-data days excluded from denominator.",
+        "description": "Historical uptime SLA report for one AI provider over a full date window (90-day max). Returns per-day operational, degraded, down, and unknown counts, a computed uptime percentage (degraded counts half), and the list of incident days. The \"what was provider X SLA last quarter\" call.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -927,7 +927,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Uptime rollup",
         "description": "Historical uptime SLA report for one AI provider over a full date window (90-day max). Returns per-day operational, degraded, down, and unknown counts, a computed uptime percentage (degraded counts half), and the list of incident days. The \"what was provider X SLA last quarter\" call.",
@@ -1115,7 +1115,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/security/cve/range",
-        "description": "MITRE CVE List range query: CVE IDs added or modified across a UTC date range, capped at 30 days. Each day in the response carries the full CVE-ID set indexed by the daily cvelistV5 commit-history scan. Pair with /api/security/cve/{id} for the per-CVE Record v5.2 lookup. License: MITRE CVE Terms of Use, commercial redistribution permitted; attribution block included on every response.",
+        "description": "CVE IDs added across a UTC date range in one paid call, capped at 30 days. Each day returns the full CVE-ID set TensorFeed indexed from the MITRE cvelistV5 commit history that UTC day, with a per-day count and a range total. The bulk-pull an agent uses to drive per-CVE record lookups or build exploitation-velocity trends. MITRE CVE Terms of Use; commercial redistribution permitted.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -1176,7 +1176,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "CVE range query",
         "description": "CVE IDs added across a UTC date range in one paid call, capped at 30 days. Each day returns the full CVE-ID set TensorFeed indexed from the MITRE cvelistV5 commit history that UTC day, with a per-day count and a range total. The bulk-pull an agent uses to drive per-CVE record lookups or build exploitation-velocity trends. MITRE CVE Terms of Use; commercial redistribution permitted.",
@@ -1295,7 +1295,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/security/kev/full",
-        "description": "Full untruncated CISA Known Exploited Vulnerabilities catalog. Free tier returns top-50 most recent entries; this endpoint returns the entire current catalog (~1500+ entries) with full entry detail. License: US Government public domain (17 USC 105), commercial redistribution explicitly permitted; attribution block on every response.",
+        "description": "The complete untruncated CISA Known Exploited Vulnerabilities catalog (1500 plus entries) in one paid call. The free /api/security/kev tier returns only the 50 most-recent entries; this returns the full current catalog with catalog version and release date, no truncation. The bulk-export an agent uses to seed a local exploitation index. CISA KEV is US Government public domain; commercial redistribution permitted.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -1360,7 +1360,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "CISA KEV full catalog",
         "description": "The complete untruncated CISA Known Exploited Vulnerabilities catalog (1500 plus entries) in one paid call. The free /api/security/kev tier returns only the 50 most-recent entries; this returns the full current catalog with catalog version and release date, no truncation. The bulk-export an agent uses to seed a local exploitation index. CISA KEV is US Government public domain; commercial redistribution permitted.",
@@ -1467,7 +1467,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/security/kev/series",
-        "description": "Multi-day series of CISA KEV catalog additions across a UTC date range, capped at 90 days. Each day returns the full entry list whose dateAdded fell on that day. License: US Government public domain (17 USC 105), commercial redistribution explicitly permitted.",
+        "description": "Daily CISA KEV catalog additions across a UTC date range in one paid call, capped at 90 days. Each day returns the full set of Known Exploited Vulnerability entries whose dateAdded fell on that day, plus a per-day count and a range total. The feed an agent uses to track exploitation velocity, build anomaly detectors, or pull weekly digests. CISA KEV is US Government public domain; commercial redistribution permitted.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -1542,7 +1542,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "CISA KEV added series",
         "description": "Daily CISA KEV catalog additions across a UTC date range in one paid call, capped at 90 days. Each day returns the full set of Known Exploited Vulnerability entries whose dateAdded fell on that day, plus a per-day count and a range total. The feed an agent uses to track exploitation velocity, build anomaly detectors, or pull weekly digests. CISA KEV is US Government public domain; commercial redistribution permitted.",
@@ -1675,7 +1675,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/security/epss/series",
-        "description": "Full historical EPSS (Exploit Prediction Scoring System) time-series for one CVE, sourced from FIRST.org. EPSS estimates the daily probability of exploitation in the next 30 days. License: free for any use per FIRST.org policy; commercial redistribution permitted.",
+        "description": "Full historical EPSS time-series for one CVE in a single paid call. Returns the per-date exploit-prediction probability (0 to 1, likelihood of exploitation in the next 30 days) and percentile rank for the requested CVE across its entire scored history. The feed an agent uses to chart whether a vulnerability is heating up or cooling off over time. EPSS is maintained by the FIRST.org Special Interest Group; free for any use, commercial redistribution permitted.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -1743,7 +1743,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "EPSS time series",
         "description": "Full historical EPSS time-series for one CVE in a single paid call. Returns the per-date exploit-prediction probability (0 to 1, likelihood of exploitation in the next 30 days) and percentile rank for the requested CVE across its entire scored history. The feed an agent uses to chart whether a vulnerability is heating up or cooling off over time. EPSS is maintained by the FIRST.org Special Interest Group; free for any use, commercial redistribution permitted.",
@@ -1863,7 +1863,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/security/epss/top",
-        "description": "Top-N CVEs ranked by current or historical EPSS exploitation-likelihood score. Optional ?date=YYYY-MM-DD returns the leaderboard as of any past date. License: FIRST.org free-for-any-use policy.",
+        "description": "Top-N CVEs ranked by EPSS exploitation probability (the modeled chance of exploitation in the next 30 days), as of any UTC date. One paid call returns the current or historical exploitation leaderboard with each CVE probability and corpus percentile. FIRST.org EPSS, free for any use, commercial redistribution permitted.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -1923,7 +1923,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "EPSS top-N",
         "description": "Top-N CVEs ranked by EPSS exploitation probability (the modeled chance of exploitation in the next 30 days), as of any UTC date. One paid call returns the current or historical exploitation leaderboard with each CVE probability and corpus percentile. FIRST.org EPSS, free for any use, commercial redistribution permitted.",
@@ -2709,7 +2709,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/whats-new/pro",
-        "description": "Pro tier of the agent morning brief. Same 24-hour delta payload as /api/premium/whats-new plus a Claude Haiku 4.5 generated analyst summary, 1 to 5 cited key takeaways, and 1 to 3 recommended actions targeted by agent class. Every claim cites by stable basis ID; citations are server-side validated.",
+        "description": "Pro tier of the agent morning brief. Returns the same 24-hour delta as /api/premium/whats-new plus Claude Haiku 4.5 generated analyst synthesis: a narrative summary, 1-5 key takeaways, and 1-3 recommended actions targeted by agent class (inference-bound, training-bound, security-watchful, cost-bound, compliance-watchful). Every claim cites back to a stable basis ID assigned server-side BEFORE the model sees the data. Citations that do not resolve are rejected at validation, so the agent never sees a hallucinated reference. 10 credits vs base at 1 credit.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -2865,7 +2865,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "What's new Pro",
         "description": "Pro tier of the agent morning brief. Returns the same 24-hour delta as /api/premium/whats-new plus Claude Haiku 4.5 generated analyst synthesis: a narrative summary, 1-5 key takeaways, and 1-3 recommended actions targeted by agent class (inference-bound, training-bound, security-watchful, cost-bound, compliance-watchful). Every claim cites back to a stable basis ID assigned server-side BEFORE the model sees the data. Citations that do not resolve are rejected at validation, so the agent never sees a hallucinated reference. 10 credits vs base at 1 credit.",
@@ -3463,7 +3463,7 @@
         {
           "scheme": "exact",
           "network": "eip155:8453",
-          "amount": "20000",
+          "amount": "100000",
           "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
           "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
           "maxTimeoutSeconds": 60,
@@ -3517,12 +3517,12 @@
           }
         }
       ],
-      "lastUpdated": "2026-05-31T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "PyPI packages momentum",
         "description": "AI/ML PyPI package momentum and velocity. Per-package week-over-week change, direction classification (accelerating / steady / declining), notable movers, and by-category counts. The \"what AI packages are heating up\" feed.",
         "tier": 1,
-        "credits": 1,
+        "credits": 5,
         "category": "package-ecosystem-momentum"
       },
       "extensions": {
@@ -3623,7 +3623,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/probe/series",
-        "description": "Per-day SLA series for one LLM provider, measured by TensorFeed itself: count, success rate, ttfb p50/p95/p99, total p50/p95/p99, incident-hour count. 90-day max range. Unique because we measure (vs. self-report). Pairs with /api/premium/routing.",
+        "description": "Daily latency and uptime series from TensorFeed measured probes against one provider (anthropic, openai, google, mistral, cohere). Per-day ok percentage, uptime, TTFB and total-time p50/p95/p99, and incident hours, plus an overall summary. First-party measurement no other source has. 90-day window.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -3633,7 +3633,7 @@
         {
           "scheme": "exact",
           "network": "eip155:8453",
-          "amount": "20000",
+          "amount": "100000",
           "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
           "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
           "maxTimeoutSeconds": 60,
@@ -3689,12 +3689,12 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "LLM probe series",
         "description": "Daily latency and uptime series from TensorFeed measured probes against one provider (anthropic, openai, google, mistral, cohere). Per-day ok percentage, uptime, TTFB and total-time p50/p95/p99, and incident hours, plus an overall summary. First-party measurement no other source has. 90-day window.",
         "tier": 1,
-        "credits": 1,
+        "credits": 5,
         "category": "llm-sla-measurement"
       },
       "extensions": {
@@ -3821,7 +3821,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/openrouter/series",
-        "description": "Daily OpenRouter cross-provider catalog series over a 90-day window: per-day model count, cheapest paid input and output USD-per-million floor, free-tier count, namespace breadth, plus day-over-day model add and remove churn and per-model price-change counts. OpenRouter serves only current state, so this history is TensorFeed-captured and cannot be backfilled. Default 30-day window, max 90.",
+        "description": "Daily OpenRouter cross-provider catalog drift. Per-day model count, cheapest paid input and output USD-per-million floor, free-tier count, and namespace breadth, plus day-over-day model add and remove churn and per-model price-change counts. OpenRouter serves only current state, so this multi-day record is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -3900,7 +3900,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "OpenRouter catalog drift series",
         "description": "Daily OpenRouter cross-provider catalog drift. Per-day model count, cheapest paid input and output USD-per-million floor, free-tier count, and namespace breadth, plus day-over-day model add and remove churn and per-model price-change counts. OpenRouter serves only current state, so this multi-day record is TensorFeed-captured and cannot be backfilled. Default 30 days, max 90.",
@@ -4031,7 +4031,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/x402-registry/series",
-        "description": "Daily x402 publisher-registry series over a 90-day window: reachable vs erroring publisher counts, federation count, network breadth, paid and free endpoint totals, agent-fair-trade declarations, plus day-over-day domains added and removed, status flips, and payment-wallet changes versus the prior captured day. A registry is current-state only, so this history is TensorFeed-captured and cannot be backfilled. Default 30-day window, max 90.",
+        "description": "Daily x402 publisher-registry drift. Per-day reachable vs erroring publisher counts, federation count, network breadth, paid and free endpoint totals, and agent-fair-trade declarations, plus day-over-day domains added and removed, crawl status flips, and payment-wallet changes (the security-relevant signal an agent paying a publisher wants to watch). A registry is current-state only, so this history is TensorFeed-captured. Default 30 days, max 90.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -4115,7 +4115,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "x402 publisher registry drift series",
         "description": "Daily x402 publisher-registry drift. Per-day reachable vs erroring publisher counts, federation count, network breadth, paid and free endpoint totals, and agent-fair-trade declarations, plus day-over-day domains added and removed, crawl status flips, and payment-wallet changes (the security-relevant signal an agent paying a publisher wants to watch). A registry is current-state only, so this history is TensorFeed-captured. Default 30 days, max 90.",
@@ -4251,7 +4251,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/hf/velocity",
-        "description": "Daily Hugging Face download-velocity over a 90-day window: per-day top models and datasets by download delta and top Spaces by likes delta among the daily top-30, top-set entered and exited churn, plus window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is TensorFeed-computed and cannot be backfilled. Default 30-day window, max 90.",
+        "description": "Daily Hugging Face download-velocity over a trailing window (default 30 days, max 90). Per-day top models and datasets by download delta, top Spaces by likes delta among the daily top-30, top-set entered and exited churn, plus window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is TensorFeed-computed and cannot be backfilled.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -4334,7 +4334,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Hugging Face download-velocity series",
         "description": "Daily Hugging Face download-velocity over a trailing window (default 30 days, max 90). Per-day top models and datasets by download delta, top Spaces by likes delta among the daily top-30, top-set entered and exited churn, plus window gainers (last minus first captured day). HF exposes only cumulative totals and a live top list, so this velocity is TensorFeed-computed and cannot be backfilled.",
@@ -4970,7 +4970,7 @@
         {
           "scheme": "exact",
           "network": "eip155:8453",
-          "amount": "60000",
+          "amount": "100000",
           "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
           "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
           "maxTimeoutSeconds": 60,
@@ -5039,12 +5039,12 @@
           }
         }
       ],
-      "lastUpdated": "2026-05-31T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "AI funding exposure metrics",
         "description": "Derived structural metrics over the AI funding portfolio. Silicon-vendor concentration shares per investor, circular-loop classification (fully-circular / partial-loop / agnostic), co-investor pairs holding the same recipient, top recipients by inbound capital. The \"who is funding whose silicon\" call.",
         "tier": 1,
-        "credits": 3,
+        "credits": 5,
         "category": "ai-funding-exposure"
       },
       "extensions": {
@@ -16740,7 +16740,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/x402-index/series",
-        "description": "Time-series of ecosystem-level or per-publisher x402 USDC settlement volume or count across a from/to date range. Required: metric (volume|count), granularity (day|hour), from, to (YYYY-MM-DD). Optional domain filter (omit for ecosystem). MVP supports granularity=day; granularity=hour returns an empty series with an attribution note.",
+        "description": "Time series of x402 USDC settlement on Base mainnet. One paid call returns per-day settlement volume (USDC) or transaction count across a date range, ecosystem-wide or scoped to a single publisher domain. Built over public Base on-chain data; CC BY 4.0. Required params metric, granularity, from, and to; granularity day only in the MVP.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -16802,7 +16802,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "x402 Index: time-series",
         "description": "Time series of x402 USDC settlement on Base mainnet. One paid call returns per-day settlement volume (USDC) or transaction count across a date range, ecosystem-wide or scoped to a single publisher domain. Built over public Base on-chain data; CC BY 4.0. Required params metric, granularity, from, and to; granularity day only in the MVP.",
@@ -16942,7 +16942,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/route-verdict",
-        "description": "The signed model-routing decision. For ?task=code|reasoning|creative|general or ?model=<id-or-name>, returns the single best model to use right now, fusing pricing, contamination-discounted benchmark capability, real production usage, measured p95 latency probes, and live incident-triage operational state, plus runners-up and an AFTA-signed receipt over the inputs. 30-minute operational freshness SLA, no-charge when the live layer is stale.",
+        "description": "Signed model routing decision. One paid call returns the best model for a task (code, reasoning, creative, general) or a named model, fusing pricing, benchmark capability discounted for contamination, real production usage, measured p95 latency from active probes, live incident-triage operational state, and deprecation flags into a single verdict with runners-up and an AFTA-signed receipt over the inputs. Optional filters: max_latency_p95_ms, require_operational, exclude_deprecated. The \"which model right now\" call.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -17043,7 +17043,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Route Verdict",
         "description": "Signed model routing decision. One paid call returns the best model for a task (code, reasoning, creative, general) or a named model, fusing pricing, benchmark capability discounted for contamination, real production usage, measured p95 latency from active probes, live incident-triage operational state, and deprecation flags into a single verdict with runners-up and an AFTA-signed receipt over the inputs. Optional filters: max_latency_p95_ms, require_operational, exclude_deprecated. The \"which model right now\" call.",
@@ -17223,7 +17223,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/provider-reliability-verdict",
-        "description": "Which frontier AI provider is the most dependable to build on right now, and which is the riskiest? Ranks the providers TensorFeed actively probes by measured operational reliability, fusing availability and tail consistency (p50 over p95) from its own latency probes into one dependability score, names the most dependable and the riskiest, and returns the full per-provider ranking with an AFTA-signed receipt. 30-minute freshness SLA, no-charge when stale.",
+        "description": "Provider Reliability Verdict. One paid call ranks the frontier AI providers TensorFeed actively probes by measured operational reliability, fusing availability (ok rate) and tail consistency (p50 over p95) from its own latency probes into a single dependability ranking. Returns the most dependable and riskiest providers, the full per-provider ranking (availability, p50/p95/p99, spread ratio, score), and an AFTA-signed receipt. The thesis: an agent retry loop feels the tail, not the median. The \"which provider can I depend on right now\" call.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -17284,7 +17284,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Provider Reliability Verdict",
         "description": "Provider Reliability Verdict. One paid call ranks the frontier AI providers TensorFeed actively probes by measured operational reliability, fusing availability (ok rate) and tail consistency (p50 over p95) from its own latency probes into a single dependability ranking. Returns the most dependable and riskiest providers, the full per-provider ranking (availability, p50/p95/p99, spread ratio, score), and an AFTA-signed receipt. The thesis: an agent retry loop feels the tail, not the median. The \"which provider can I depend on right now\" call.",
@@ -17387,7 +17387,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/x402-settlement-verdict",
-        "description": "Is the Base x402 USDC settlement market growing, is it concentrated or a real market, and who leads? Rules over TensorFeed's own on-chain settlement index: momentum versus the prior window of equal length, concentration by the Herfindahl index, and the leading publisher, plus the full per-publisher volume ranking. Optional window=24h|7d|30d (default 7d). Coverage is the Base settlements TensorFeed indexes, forward-only from launch. 10-minute freshness SLA, no-charge when stale.",
+        "description": "x402 Settlement Verdict. One paid call rules on the state of the x402 USDC settlement market on Base, computed over TensorFeed's own on-chain settlement index. Returns the market momentum (expanding, steady, contracting, or nascent versus the prior window of equal length), the concentration by Herfindahl index (concentrated, moderate, or diversified), the leading publisher, the full per-publisher volume ranking, ecosystem totals with the window-over-window change, and an AFTA-signed receipt. Optional window (24h, 7d, 30d). The \"is x402 settlement growing and who leads\" call, over the Base settlements TensorFeed measures, not a market-wide claim.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -17449,7 +17449,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "x402 Settlement Verdict",
         "description": "x402 Settlement Verdict. One paid call rules on the state of the x402 USDC settlement market on Base, computed over TensorFeed's own on-chain settlement index. Returns the market momentum (expanding, steady, contracting, or nascent versus the prior window of equal length), the concentration by Herfindahl index (concentrated, moderate, or diversified), the leading publisher, the full per-publisher volume ranking, ecosystem totals with the window-over-window change, and an AFTA-signed receipt. Optional window (24h, 7d, 30d). The \"is x402 settlement growing and who leads\" call, over the Base settlements TensorFeed measures, not a market-wide claim.",
@@ -17553,7 +17553,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/stack-safety-verdict",
-        "description": "GO / HOLD / BLOCK deploy gate for your AI stack, fusing the ingested AI-CVE batch with CISA KEV. Pass packages=name@version (up to 10).",
+        "description": "Stack Safety Verdict. A GET deploy gate: pass packages=name@version,name@version (up to 10) from your AI stack and get GO / HOLD / BLOCK per package plus an overall gate, fusing TensorFeed's ingested AI-CVE batch (GHSA plus vendor advisories) with the CISA KEV catalog for exploitation status. Each verdict carries the matched CVE ids, affected ranges, fixed versions, and KEV status, plus an AFTA-signed receipt. Never-false-confirm: BLOCK only on exploited with no fix, HOLD when the version must be verified, PASS on no AI-stack match, UNKNOWN outside the cohort. The \"is my AI stack safe to ship\" call.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -17638,7 +17638,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Stack Safety Verdict",
         "description": "Stack Safety Verdict. A GET deploy gate: pass packages=name@version,name@version (up to 10) from your AI stack and get GO / HOLD / BLOCK per package plus an overall gate, fusing TensorFeed's ingested AI-CVE batch (GHSA plus vendor advisories) with the CISA KEV catalog for exploitation status. Each verdict carries the matched CVE ids, affected ranges, fixed versions, and KEV status, plus an AFTA-signed receipt. Never-false-confirm: BLOCK only on exploited with no fix, HOLD when the version must be verified, PASS on no AI-stack match, UNKNOWN outside the cohort. The \"is my AI stack safe to ship\" call.",
@@ -17774,7 +17774,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/benchmark-trust-verdict",
-        "description": "Is an AI benchmark a trustworthy capability signal, or saturated/contaminated/near-ceiling so a high score should be down-weighted? Trust band + 0-100 score per benchmark.",
+        "description": "Benchmark Trust Verdict. Is an AI benchmark a trustworthy capability signal right now, or is it saturated, contaminated, or near its ceiling so a high score is a floor and not a differentiator? Returns a trust band and a 0-100 trust score per benchmark, fusing the registry contamination and saturation flags with the live spread of the top model scores (frontier compression), plus a down-weight recommendation and an alternative benchmark to use instead. Optional ?benchmark= or ?category= filter. AFTA-signed. The \"should I trust this SOTA claim\" call.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -17840,7 +17840,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Benchmark Trust Verdict",
         "description": "Benchmark Trust Verdict. Is an AI benchmark a trustworthy capability signal right now, or is it saturated, contaminated, or near its ceiling so a high score is a floor and not a differentiator? Returns a trust band and a 0-100 trust score per benchmark, fusing the registry contamination and saturation flags with the live spread of the top model scores (frontier compression), plus a down-weight recommendation and an alternative benchmark to use instead. Optional ?benchmark= or ?category= filter. AFTA-signed. The \"should I trust this SOTA claim\" call.",
@@ -17958,7 +17958,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/failover-verdict",
-        "description": "Provider A is degraded, which operational provider do I fail over to for this task right now? Confirms A against live incident triage, then recommends the best operational alternative. Pass ?from=<provider>.",
+        "description": "Failover Verdict. Provider A is degraded, which operational provider do I fail over to for this task right now? Confirms A against the live incident-triage feed, then runs the capability-first route verdict with A and any provider flagged failover_now excluded, returning the recommended destination model plus the incident reason plus ranked alternatives plus an AFTA-signed receipt. Pass ?from=<provider> and optional ?task= or ?model=. The \"A just broke, where do I send it\" call.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -18063,7 +18063,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Failover Verdict",
         "description": "Failover Verdict. Provider A is degraded, which operational provider do I fail over to for this task right now? Confirms A against the live incident-triage feed, then runs the capability-first route verdict with A and any provider flagged failover_now excluded, returning the recommended destination model plus the incident reason plus ranked alternatives plus an AFTA-signed receipt. Pass ?from=<provider> and optional ?task= or ?model=. The \"A just broke, where do I send it\" call.",
@@ -18233,7 +18233,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/sec/filings/guidance-delta",
-        "description": "Did this periodic SEC filing (10-K or 10-Q) materially change guidance, segment outlook, or risk language versus the prior same-form filing, with the exact changed sentences quoted? Pass ?ticker=NVDA&form=10-Q or ?accession=.",
+        "description": "Guidance Delta. Did this periodic SEC filing (10-K or 10-Q) materially change guidance, segment outlook, or risk language versus the prior same-form filing, with the exact changed sentences quoted? Pass ?ticker=NVDA&form=10-Q for the latest, or ?accession= for one filing. Returns a deterministic materiality_summary, the full verbatim changes (prior and current quotes, values, section), and an AFTA-signed receipt. The signed verified-decision a finance agent reads before acting on an earnings filing.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -18331,7 +18331,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Guidance Delta",
         "description": "Guidance Delta. Did this periodic SEC filing (10-K or 10-Q) materially change guidance, segment outlook, or risk language versus the prior same-form filing, with the exact changed sentences quoted? Pass ?ticker=NVDA&form=10-Q for the latest, or ?accession= for one filing. Returns a deterministic materiality_summary, the full verbatim changes (prior and current quotes, values, section), and an AFTA-signed receipt. The signed verified-decision a finance agent reads before acting on an earnings filing.",
@@ -18485,7 +18485,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/ai-crawler-access/full",
-        "description": "AI Crawler Access Map, full dataset. Every tracked domain with its per-bot robots.txt verdict (allowed, blocked, partial, or unknown) across GPTBot, ClaudeBot, PerplexityBot, CCBot, Google-Extended, and more, plus llms.txt and ai.txt presence flags, sector rollups, and aggregate blocked/allowed percentages. We report stated policy, not enforcement.",
+        "description": "AI Crawler Access Map, full dataset. One paid call returns every tracked domain with its per-bot robots.txt verdict (allowed, blocked, partial, or unknown) across the tracked AI bots (GPTBot, ClaudeBot, PerplexityBot, CCBot, Google-Extended, and more), plus llms.txt and ai.txt presence flags, sector rollups, and aggregate blocked/allowed percentages. Built by parsing each domain public robots.txt, llms.txt, and ai.txt on a daily rolling crawl. We report stated policy, not enforcement.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -18556,7 +18556,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "AI Crawler Access Map, Full Dataset",
         "description": "AI Crawler Access Map, full dataset. One paid call returns every tracked domain with its per-bot robots.txt verdict (allowed, blocked, partial, or unknown) across the tracked AI bots (GPTBot, ClaudeBot, PerplexityBot, CCBot, Google-Extended, and more), plus llms.txt and ai.txt presence flags, sector rollups, and aggregate blocked/allowed percentages. Built by parsing each domain public robots.txt, llms.txt, and ai.txt on a daily rolling crawl. We report stated policy, not enforcement.",
@@ -18670,7 +18670,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/ai-crawler-access/changes",
-        "description": "AI Crawler Access Map, change history. The flip log over a date range: when a tracked domain changed a bot from allowed to blocked (or back), or published or removed llms.txt or ai.txt. Pass ?from=YYYY-MM-DD&to=YYYY-MM-DD (domain optional). We report stated policy, not enforcement.",
+        "description": "AI Crawler Access Map, change history. One paid call returns the flip log over a date range: when a tracked domain changed a bot from allowed to blocked (or back), or first published or removed llms.txt or ai.txt. Each entry is domain, field (a bot name or llms.txt or ai.txt), from, to, and at. Required params from and to (YYYY-MM-DD); optional domain to scope to one site. We report stated policy, not enforcement.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -18729,7 +18729,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "AI Crawler Access Map, Changes",
         "description": "AI Crawler Access Map, change history. One paid call returns the flip log over a date range: when a tracked domain changed a bot from allowed to blocked (or back), or first published or removed llms.txt or ai.txt. Each entry is domain, field (a bot name or llms.txt or ai.txt), from, to, and at. Required params from and to (YYYY-MM-DD); optional domain to scope to one site. We report stated policy, not enforcement.",
@@ -18848,7 +18848,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/agent-ready/full",
-        "description": "Agent-Ready Web Map, full dataset. Every profiled domain with a transparent 0 to 100 agent-readiness score, a tier (closed, emerging, ready, or advanced), and which agent surfaces the site exposes: x402 manifest, agent.json, openapi, llms.txt, AI-bot-crawlable, and ai.txt. Derived from the daily crawler-access crawl. We report stated, published surfaces, not enforcement.",
+        "description": "Agent-Ready Web Map, full dataset. One paid call returns every profiled domain with a transparent 0 to 100 agent-readiness score, a tier (closed, emerging, ready, or advanced), and which agent surfaces the site exposes: x402 manifest, agent.json, openapi, llms.txt, AI-bot-crawlable robots policy, and ai.txt. Score weights are published: x402 +25, agent.json +20, openapi +20, llms.txt +15, crawlable +15, ai.txt +5. Derived from the daily crawler-access crawl. We report stated, published surfaces, not enforcement.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -18901,7 +18901,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "Agent-Ready Web Map, Full Dataset",
         "description": "Agent-Ready Web Map, full dataset. One paid call returns every profiled domain with a transparent 0 to 100 agent-readiness score, a tier (closed, emerging, ready, or advanced), and which agent surfaces the site exposes: x402 manifest, agent.json, openapi, llms.txt, AI-bot-crawlable robots policy, and ai.txt. Score weights are published: x402 +25, agent.json +20, openapi +20, llms.txt +15, crawlable +15, ai.txt +5. Derived from the daily crawler-access crawl. We report stated, published surfaces, not enforcement.",
@@ -18997,7 +18997,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/hf-leaderboard/movers",
-        "description": "Period-over-period movers on the Hugging Face Open LLM Leaderboard v2, diffed from TensorFeed dated snapshots: rank climbers and fallers, average and per-benchmark score deltas, models entered and exited, new per-benchmark leaders, and license changes. Optional window in days (default 7). The live board shows only today.",
+        "description": "Hugging Face Open LLM Leaderboard v2 movers. One paid call diffs the latest captured snapshot against one window days earlier (default 7) and returns what moved: rank climbers and fallers, average and per-benchmark score deltas, models entered and exited, new per-benchmark leaders, and license changes. Derived from TensorFeed dated snapshots; the live board shows only today.",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -19058,7 +19058,7 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "HF Leaderboard Movers",
         "description": "Hugging Face Open LLM Leaderboard v2 movers. One paid call diffs the latest captured snapshot against one window days earlier (default 7) and returns what moved: rank climbers and fallers, average and per-benchmark score deltas, models entered and exited, new per-benchmark leaders, and license changes. Derived from TensorFeed dated snapshots; the live board shows only today.",
@@ -19324,7 +19324,7 @@
     {
       "resource": {
         "url": "https://tensorfeed.ai/api/premium/ai-cves/exploited-in-wild",
-        "description": "Live-threat CVE feed. Returns only papers with exploited_in_wild = stated_yes from the latest AI-flagged batch, ranked by severity. The subset answers \"what AI-stack CVEs are actively being weaponized right now.\"",
+        "description": "AI-stack CVEs actively exploited in the wild. Returns only the AI inference, agent-framework, training, vector DB, and model-gateway vulnerabilities flagged as exploited (stated_yes), ranked by severity, with affected products, fixed versions, and the source advisory. The \"which AI dependency is being weaponized right now and do I have a patch\" call. 99.8% GitHub Security Advisories (CC BY 4.0).",
         "mimeType": "application/json"
       },
       "type": "http",
@@ -19380,10 +19380,10 @@
           }
         }
       ],
-      "lastUpdated": "2026-06-06T00:00:00Z",
+      "lastUpdated": "2026-06-07T00:00:00Z",
       "metadata": {
         "name": "AI-stack CVEs exploited in wild",
-        "description": "Live-threat CVE feed. Returns only papers with exploited_in_wild = stated_yes from the latest AI-flagged batch, ranked by severity. The subset answers \"what AI-stack CVEs are actively being weaponized right now.\"",
+        "description": "AI-stack CVEs actively exploited in the wild. Returns only the AI inference, agent-framework, training, vector DB, and model-gateway vulnerabilities flagged as exploited (stated_yes), ranked by severity, with affected products, fixed versions, and the source advisory. The \"which AI dependency is being weaponized right now and do I have a patch\" call. 99.8% GitHub Security Advisories (CC BY 4.0).",
         "tier": 1,
         "credits": 1,
         "category": "ai-stack-cve-exploited"

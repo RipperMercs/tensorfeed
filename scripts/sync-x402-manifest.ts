@@ -70,8 +70,8 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   '/api/premium/compare/models':                     { name: 'Compare models',                        category: 'ai-model-comparison',     credits: 1, method: 'GET' },
   '/api/premium/cost/projection':                    { name: 'Cost projection',                       category: 'ai-cost-projection',      credits: 1, method: 'GET' },
   '/api/premium/agents/directory':                   { name: 'Enriched agents directory',             category: 'ai-agents-directory',     credits: 1, method: 'GET' },
-  '/api/premium/funding/exposure':                   { name: 'AI funding exposure metrics',           category: 'ai-funding-exposure',     credits: 3, method: 'GET' },
-  '/api/premium/packages/pypi/momentum':             { name: 'PyPI packages momentum',                category: 'package-ecosystem-momentum', credits: 1, method: 'GET' },
+  '/api/premium/funding/exposure':                   { name: 'AI funding exposure metrics',           category: 'ai-funding-exposure',     credits: 5, method: 'GET' },
+  '/api/premium/packages/pypi/momentum':             { name: 'PyPI packages momentum',                category: 'package-ecosystem-momentum', credits: 5, method: 'GET' },
   '/api/premium/research/velocity':                  { name: 'AI research velocity',                  category: 'research-momentum',       credits: 1, method: 'GET' },
   '/api/premium/research/authors':                   { name: 'Top AI authors',                        category: 'research-authors',        credits: 1, method: 'GET' },
   '/api/premium/research/citation-velocity':         { name: 'AI citation velocity',                  category: 'research-citation-velocity', credits: 1, method: 'GET' },
@@ -398,10 +398,32 @@ function applyOutputSchema(item: ManifestItem, pilot: BazaarPilotConfig): void {
   }
 }
 
+// Compute the on-chain atomic-unit amount string for a credit count.
+function amountForCredits(credits: number): string {
+  return String(credits * CENTS_PER_CREDIT * Math.pow(10, USDC_DECIMALS - 2));
+}
+
+// Reconcile an existing item's advertised price (metadata.credits and the
+// accepts[].amount) with the authoritative PILOT_METADATA credit count. Without
+// this, a credit correction in PILOT_METADATA only reaches NEW items: existing
+// manifest rows keep the stale price they were minted with, so the manifest can
+// advertise a different cost than the Worker actually charges. Idempotent.
+function applyCredits(item: ManifestItem, meta: PilotMeta): void {
+  if (item.metadata) {
+    item.metadata.credits = meta.credits;
+  }
+  const amount = amountForCredits(meta.credits);
+  if (Array.isArray(item.accepts)) {
+    for (const accept of item.accepts) {
+      accept.amount = amount;
+    }
+  }
+}
+
 // ── Build a manifest item from a pilot path + config ──────────────
 
 function buildItem(pilotPath: string, pilot: BazaarPilotConfig, meta: PilotMeta, today: string): ManifestItem {
-  const amount = String(meta.credits * CENTS_PER_CREDIT * Math.pow(10, USDC_DECIMALS - 2));
+  const amount = amountForCredits(meta.credits);
   const outputSchema = outputSchemaFor(pilot);
   return {
     resource: {
@@ -504,15 +526,27 @@ function main(): void {
       const before =
         JSON.stringify(item.extensions ?? null) +
         '|' + (item.metadata?.description ?? '') +
+        '|' + (typeof item.resource === 'object' ? item.resource.description ?? '' : '') +
+        '|' + (item.metadata?.credits ?? '') +
+        '|' + (item.accepts?.[0]?.amount ?? '') +
         '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       item.extensions = pilot.extension;
       applyOutputSchema(item, pilot);
+      applyCredits(item, meta);
       if (item.metadata) {
         item.metadata.description = pilot.description;
+      }
+      // CDP reads the resource-block description when cataloging, so keep it in
+      // lockstep with the pilot description (the metadata copy alone is not enough).
+      if (typeof item.resource === 'object' && item.resource) {
+        item.resource.description = pilot.description;
       }
       const after =
         JSON.stringify(item.extensions) +
         '|' + item.metadata.description +
+        '|' + (typeof item.resource === 'object' ? item.resource.description ?? '' : '') +
+        '|' + item.metadata.credits +
+        '|' + (item.accepts?.[0]?.amount ?? '') +
         '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       if (before !== after) {
         item.lastUpdated = today;
@@ -550,6 +584,7 @@ function main(): void {
       const before =
         JSON.stringify(item.extensions ?? null) +
         '|' + (item.metadata?.description ?? '') +
+        '|' + (typeof item.resource === 'object' ? item.resource.description ?? '' : '') +
         '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       item.extensions = parentPilot.extension;
       applyOutputSchema(item, parentPilot);
@@ -558,9 +593,15 @@ function main(): void {
         item.metadata.name = inst.name;
         item.metadata.category = inst.category;
       }
+      // Keep the resource-block description (the copy CDP catalogs from) in sync
+      // with the parent pilot, same as the non-split refresh path above.
+      if (typeof item.resource === 'object' && item.resource) {
+        item.resource.description = parentPilot.description;
+      }
       const after =
         JSON.stringify(item.extensions) +
         '|' + item.metadata.description +
+        '|' + (typeof item.resource === 'object' ? item.resource.description ?? '' : '') +
         '|' + JSON.stringify(item.accepts?.[0]?.outputSchema ?? null);
       if (before !== after) {
         item.lastUpdated = today;

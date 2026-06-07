@@ -2426,7 +2426,7 @@ const AI_CVES_AI_STACK_PILOT: BazaarPilotConfig = {
  */
 const AI_CVES_EXPLOITED_PILOT: BazaarPilotConfig = {
   description:
-    'Live-threat CVE feed. Returns only papers with exploited_in_wild = stated_yes from the latest AI-flagged batch, ranked by severity. The subset answers "what AI-stack CVEs are actively being weaponized right now."',
+    'AI-stack CVEs actively exploited in the wild. Returns only the AI inference, agent-framework, training, vector DB, and model-gateway vulnerabilities flagged as exploited (stated_yes), ranked by severity, with affected products, fixed versions, and the source advisory. The "which AI dependency is being weaponized right now and do I have a patch" call. 99.8% GitHub Security Advisories (CC BY 4.0).',
   extension: {
     bazaar: {
       info: {
