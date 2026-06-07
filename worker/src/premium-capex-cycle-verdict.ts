@@ -156,10 +156,10 @@ export function buildCapexCycleVerdict(
   ].filter((s) => s.length > 0);
 
   const bandPhrase: Record<CapexCycleVerdictKind, string> = {
-    UNPRECEDENTED: 'exceeds every prior buildout we track on capex as a share of GDP',
-    EXTREME: 'ranks near the top of the historical set on capex as a share of GDP',
-    ELEVATED: 'is comparable to the larger historical buildouts on capex as a share of GDP',
-    MODERATE: 'sits within the lower range of the historical set on capex as a share of GDP',
+    UNPRECEDENTED: 'exceeds every prior buildout we track',
+    EXTREME: 'ranks near the top of the historical set',
+    ELEVATED: 'is comparable to the larger historical buildouts',
+    MODERATE: 'sits within the lower range of the historical set',
   };
   const interpretation = `On capex as a share of GDP, the AI buildout ${bandPhrase[verdict]} (rank ${current_rank} of ${total_ranked})${
     closest_analog ? `, closest to the ${closest_analog.name}` : ''
