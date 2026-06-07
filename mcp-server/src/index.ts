@@ -267,6 +267,35 @@ registerTool(
   }
 );
 
+// ── Tool: find_tensorfeed_data (discovery, long-tail surface) ───────
+
+registerTool(
+  'find_tensorfeed_data',
+  'Discover which TensorFeed endpoint answers a data need. Describe what you want in plain language (e.g. "trending AI papers", "is OpenAI down", "model price history") and this returns the 2 to 3 best-matching TensorFeed endpoints, each with its HTTP path, what it returns, and whether it is free or paid. TensorFeed exposes 100+ AI-ecosystem data and signed-verdict endpoints; the core ones are also dedicated tools, but the full catalog is reachable here and callable over HTTP (paid ones via x402 or a credits token). Free, no auth. Use this first when no dedicated tool obviously fits.',
+  {
+    query: z.string().describe('Plain-language description of the data or decision you need.'),
+    limit: z.number().int().min(1).max(5).optional().describe('Max endpoints to return (default 3).'),
+  },
+  async ({ query, limit }) => {
+    const { flattenCatalog, scoreEndpoints } = await import('./discovery.js');
+    let meta: unknown;
+    try {
+      meta = await fetchJSON('/meta');
+    } catch {
+      const { readFileSync } = await import('node:fs');
+      const p = join(dirname(fileURLToPath(import.meta.url)), 'meta-snapshot.json');
+      meta = JSON.parse(readFileSync(p, 'utf-8'));
+    }
+    const rows = flattenCatalog(meta);
+    const top = scoreEndpoints(rows, query, limit ?? 3);
+    if (top.length === 0) {
+      return { content: [{ type: 'text' as const, text: `No TensorFeed endpoint matched "${query}". Browse the full catalog at https://tensorfeed.ai/api/meta or https://tensorfeed.ai/developers.` }] };
+    }
+    const lines = top.map((r) => `- ${r.path}\n  ${r.description}`).join('\n');
+    return { content: [{ type: 'text' as const, text: `Top TensorFeed endpoints for "${query}":\n${lines}\n\nCall free endpoints directly over HTTP. Paid endpoints (marked with a credit cost) accept x402 payment or a TENSORFEED_TOKEN bearer; see https://tensorfeed.ai/developers/agent-payments.` }] };
+  },
+);
+
 // ── Tool: get_ai_status ─────────────────────────────────────────────
 
 registerTool(
