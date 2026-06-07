@@ -4634,6 +4634,8 @@ export default {
           premiumExportControlsAiHistory: '/api/premium/export-controls/ai/history?from=YYYY-MM-DD&to=YYYY-MM-DD&category= (1 credit, AFTA-signed; full filterable history of AI export-control actions by date range and category. Filters the BIS Federal Register snapshot by inclusive publication-date range and category (entity-list, compute-threshold, license-policy, due-diligence, model-weights, other). captured_at is the real snapshot data time; no-charge when the snapshot is missing or the filtered window is empty. Strict-premium prefix; anonymous Bazaar probes see a clean 402 challenge.)',
           aiDatacenters: '/api/ai-datacenters?operator=&status=announced|under_construction|operational|expansion|paused&country=&region=&purpose=training|inference|mixed|unknown (free; hand-curated registry of publicly announced AI datacenter projects, the gigawatt-class training and inference campuses from the labs and hyperscalers. Each entry carries disclosed power (MW), capex, status, accelerator, partners, and a source_url; power and capex are disclosed values only, null where not public. Sorted operational-first.)',
           premiumAiDatacentersBuildout: '/api/premium/ai-datacenters/buildout (1 credit, AFTA-signed; aggregate over the free /api/ai-datacenters registry. Disclosed power (MW) and capex totals by operator, region, and status, plus the forward commissioning calendar of sites coming online. Curated registry, no staleness SLA.)',
+          capitalCycles: '/api/capital-cycles?era=pre_1931|modern (free; hand-curated registry of six historical technology capital buildouts (UK Railway Mania through the dotcom fiber overbuild) on a fixed metric skeleton, plus the current AI buildout mapped into the same skeleton. The only cross-era-comparable metric is peak capex as a percent of national GDP; absolute dollars and physical units are descriptive. The signed ranking and analogy verdict is premium at /api/premium/ai-capex-cycle-verdict.)',
+          premiumAiCapexCycleVerdict: '/api/premium/ai-capex-cycle-verdict (1 credit, AFTA-signed; one signed ruling on where the current AI infrastructure capex cycle ranks against six historical technology capital buildouts measured as capex over GDP: MODERATE, ELEVATED, EXTREME, or UNPRECEDENTED, with the closest and farthest historical analog, equities-led cycles surfaced as sentiment outliers, and the post-bust dimensions that cannot be scored while the cycle is in progress. No params. Free registry at /api/capital-cycles.)',
           routingPreview: '/api/preview/routing',
           routeVerdictPreview: '/api/preview/route-verdict?task=code|reasoning|creative|general or ?model= (free, 10/IP/day; the top Route Verdict only, no runners-up or signed receipt, so an agent can evaluate the shape before paying)',
           stackSafetyPreview: '/api/preview/stack-safety-verdict?packages= (free, 10/IP/day; the gate + per-package verdict only, no CVE evidence, capped at 3 packages)',
@@ -10412,7 +10414,7 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-capex-cycle-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      return await premiumResponse(result, payment, 1, request, env, null, result.captured_at);
     }
 
     // === PAID PREMIUM: FEDERAL AI SPENDING LEADERSHIP (Tier 1, 1 credit) ===
