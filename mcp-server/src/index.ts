@@ -994,12 +994,12 @@ registerTool(
   },
 );
 
-// ── Tool: route_verdict_preview (free, 10/IP/day) ───────────────────
-// Free taste of the signed routing decision. Returns the single best
-// model for a task or named model, with the reasoning, but no ranked
-// runners-up, no constraint filters, and no AFTA-signed receipt. The
-// upgrade is route_verdict (1 credit). No auth, rate-limited 10/IP/day
-// by the worker.
+// ── Tool: route_verdict (tier: preview free / full 1 credit) ────────
+// One tool, two tiers. tier='preview' (default) is the free taste of
+// the signed routing decision: the single best model for a task or
+// named model with the reasoning, no auth, rate-limited 10/IP/day by
+// the worker. tier='full' burns 1 credit, adds ranked runners-up,
+// constraint filters, and an AFTA-signed receipt over the exact inputs.
 
 interface VerdictCandidatePayload {
   rank: number;
@@ -1022,13 +1022,19 @@ interface VerdictTrust {
 }
 
 registerTool(
-  'route_verdict_preview',
-  "Free. TensorFeed's signed routing decision that fuses live pricing, contamination-discounted benchmarks, real production usage, MEASURED p95 latency, incident state, and deprecation flags into the single best model for a task or a named model, with the reasoning. For ranked runners-up, constraint filters, and an AFTA-signed receipt you can audit, use route_verdict. 10 calls per day per IP.",
+  'route_verdict',
+  "TensorFeed's signed model-routing decision: the single best model for a task or named model, fused from live pricing, contamination-discounted benchmarks, real production usage, measured p95 latency, incident state, and deprecation flags, with the reasoning. tier='preview' (default) is free (10 calls per day per IP), top verdict only. tier='full' costs 1 credit ($0.02), adds ranked runners-up, constraint filters, and an AFTA-signed receipt you can audit, and needs a TENSORFEED_TOKEN. Get credits at tensorfeed.ai/developers/agent-payments.",
   {
+    tier: z.enum(['preview', 'full']).optional().describe("'preview' (default, free) or 'full' (1 credit; adds runners-up, filters, signed receipt)."),
     task: z.enum(['code', 'reasoning', 'creative', 'general']).optional().describe('Task type to route for (code, reasoning, creative, general). Provide task or model.'),
     model: z.string().optional().describe('Model id or display name to narrow the verdict to one model (e.g. "Claude Opus 4.7" or "claude-opus-4-7"). Provide task or model.'),
+    max_latency_p95_ms: z.number().optional().describe('Full tier only. Drop candidates whose measured p95 latency exceeds this value (ms).'),
+    budget: z.number().optional().describe('Full tier only. Max blended USD per 1M tokens.'),
+    min_quality: z.number().min(0).max(1).optional().describe('Full tier only. Minimum trust-discounted quality score in [0, 1].'),
+    require_operational: z.boolean().optional().describe('Full tier only. Default true. Set false to keep candidates known down or in failover.'),
+    exclude_deprecated: z.boolean().optional().describe('Full tier only. Default true. Set false to keep deprecated or sunsetted models.'),
   },
-  async ({ task, model }) => {
+  async ({ tier, task, model, max_latency_p95_ms, budget, min_quality, require_operational, exclude_deprecated }) => {
     if (!task && !model) {
       return {
         content: [
@@ -1042,6 +1048,52 @@ registerTool(
     const params = new URLSearchParams();
     if (task) params.set('task', task);
     if (model) params.set('model', model);
+    if ((tier ?? 'preview') === 'full') {
+      if (typeof max_latency_p95_ms === 'number') params.set('max_latency_p95_ms', String(max_latency_p95_ms));
+      if (typeof budget === 'number') params.set('budget', String(budget));
+      if (typeof min_quality === 'number') params.set('min_quality', String(min_quality));
+      if (typeof require_operational === 'boolean') params.set('require_operational', String(require_operational));
+      if (typeof exclude_deprecated === 'boolean') params.set('exclude_deprecated', String(exclude_deprecated));
+      const data = (await fetchJSON(`/premium/route-verdict?${params}`, { auth: true })) as {
+        ok: boolean;
+        query: { task: string | null; model: string | null };
+        verdict: VerdictCandidatePayload | null;
+        runners_up: VerdictCandidatePayload[];
+        trust: VerdictTrust;
+        filters_applied: { max_latency_p95_ms: number | null; require_operational: boolean; exclude_deprecated: boolean };
+        claim: string;
+        billing?: { credits_charged: number; credits_remaining?: number };
+      };
+      if (!data.verdict) {
+        return {
+          content: [{ type: 'text' as const, text: `No routing verdict matched your filters.\n${data.claim ?? ''}` }],
+        };
+      }
+      const v = data.verdict;
+      const t = data.trust;
+      const f = data.filters_applied;
+      const runners = (data.runners_up ?? [])
+        .map((r) => `  #${r.rank} ${r.model.name} (${r.model.provider}) blended $${r.pricing.blended}/1M\n     ${r.why}`)
+        .join('\n');
+      const trustLine = `Trust: usage ${t.usage_corroborated ? 'corroborated' : 'uncorroborated'}, benchmark contamination ${t.benchmark_contamination}, operational ${t.operational_layer}, latency ${t.latency_layer}`;
+      const filterLine = `Filters: max p95 ${f.max_latency_p95_ms ?? 'none'}ms, require_operational ${f.require_operational}, exclude_deprecated ${f.exclude_deprecated}`;
+      const billing = data.billing
+        ? `\n\nCharged ${data.billing.credits_charged} credit. Remaining: ${data.billing.credits_remaining}.`
+        : '';
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text:
+              `Route Verdict: ${v.model.name} (${v.model.provider}) score ${v.composite_score}\n` +
+              `Why: ${v.why}\n` +
+              `Blended price: $${v.pricing.blended}/1M tokens (in $${v.pricing.input}, out $${v.pricing.output})\n\n` +
+              `Runners-up:\n${runners || '  (none)'}\n\n` +
+              `${trustLine}\n${filterLine}\n\nClaim: ${data.claim}${billing}`,
+          },
+        ],
+      };
+    }
     const data = (await fetchJSON(`/preview/route-verdict?${params}`)) as {
       ok: boolean;
       query: { task: string | null; model: string | null };
@@ -1076,86 +1128,7 @@ registerTool(
             `Why: ${v.why}\n` +
             `Blended price: $${v.pricing.blended}/1M tokens (in $${v.pricing.input}, out $${v.pricing.output})\n` +
             `${trustLine}${fresh ? `\nData freshness: ${fresh}` : ''}\n` +
-            `Upgrade: route_verdict (1 credit, $0.02) adds ranked runners-up, constraint filters, and an AFTA-signed receipt you can audit. No USDC yet? Sign a wallet message at tensorfeed.ai/api/payment/trial-credits for 25 free credits.${rl}`,
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: route_verdict (1 credit) ──────────────────────────────────
-// The signed routing decision. Single best model plus ranked runners-up
-// for a task or named model, with constraint filters and an AFTA-signed
-// receipt over the exact inputs. Strict premium, no free trial. The free
-// route_verdict_preview is the no-auth taste of the same engine.
-
-registerTool(
-  'route_verdict',
-  "Costs 1 credit ($0.02). The signed routing decision: TensorFeed's single best model plus ranked runners-up for your task or a named model, fused from live pricing, contamination-discounted benchmarks, real production usage, MEASURED p95 latency, incident state, and deprecation flags, with an AFTA-signed receipt over the exact inputs so you can prove why you routed. Versus the free route_verdict_preview it adds ranked runners-up, constraint filters (max p95 latency, budget, min quality, operational-only, exclude-deprecated), the signed receipt, and no rate limit. Get credits at tensorfeed.ai/developers/agent-payments. Strict premium, no free trial.",
-  {
-    task: z.enum(['code', 'reasoning', 'creative', 'general']).optional().describe('Task type to route for (code, reasoning, creative, general). Provide task or model.'),
-    model: z.string().optional().describe('Model id or display name to narrow the verdict to one model. Provide task or model.'),
-    max_latency_p95_ms: z.number().optional().describe('Drop candidates whose measured p95 latency exceeds this value (ms).'),
-    budget: z.number().optional().describe('Max blended USD per 1M tokens'),
-    min_quality: z.number().min(0).max(1).optional().describe('Minimum trust-discounted quality score in [0, 1]'),
-    require_operational: z.boolean().optional().describe('Default true. Set false to keep candidates known down or in failover.'),
-    exclude_deprecated: z.boolean().optional().describe('Default true. Set false to keep deprecated or sunsetted models.'),
-  },
-  async ({ task, model, max_latency_p95_ms, budget, min_quality, require_operational, exclude_deprecated }) => {
-    if (!task && !model) {
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: 'Provide a task (code, reasoning, creative, general) or a model id/name to get a signed routing verdict.',
-          },
-        ],
-      };
-    }
-    const params = new URLSearchParams();
-    if (task) params.set('task', task);
-    if (model) params.set('model', model);
-    if (typeof max_latency_p95_ms === 'number') params.set('max_latency_p95_ms', String(max_latency_p95_ms));
-    if (typeof budget === 'number') params.set('budget', String(budget));
-    if (typeof min_quality === 'number') params.set('min_quality', String(min_quality));
-    if (typeof require_operational === 'boolean') params.set('require_operational', String(require_operational));
-    if (typeof exclude_deprecated === 'boolean') params.set('exclude_deprecated', String(exclude_deprecated));
-    const data = (await fetchJSON(`/premium/route-verdict?${params}`, { auth: true })) as {
-      ok: boolean;
-      query: { task: string | null; model: string | null };
-      verdict: VerdictCandidatePayload | null;
-      runners_up: VerdictCandidatePayload[];
-      trust: VerdictTrust;
-      filters_applied: { max_latency_p95_ms: number | null; require_operational: boolean; exclude_deprecated: boolean };
-      claim: string;
-      billing?: { credits_charged: number; credits_remaining?: number };
-    };
-    if (!data.verdict) {
-      return {
-        content: [{ type: 'text' as const, text: `No routing verdict matched your filters.\n${data.claim ?? ''}` }],
-      };
-    }
-    const v = data.verdict;
-    const t = data.trust;
-    const f = data.filters_applied;
-    const runners = (data.runners_up ?? [])
-      .map((r) => `  #${r.rank} ${r.model.name} (${r.model.provider}) blended $${r.pricing.blended}/1M\n     ${r.why}`)
-      .join('\n');
-    const trustLine = `Trust: usage ${t.usage_corroborated ? 'corroborated' : 'uncorroborated'}, benchmark contamination ${t.benchmark_contamination}, operational ${t.operational_layer}, latency ${t.latency_layer}`;
-    const filterLine = `Filters: max p95 ${f.max_latency_p95_ms ?? 'none'}ms, require_operational ${f.require_operational}, exclude_deprecated ${f.exclude_deprecated}`;
-    const billing = data.billing
-      ? `\n\nCharged ${data.billing.credits_charged} credit. Remaining: ${data.billing.credits_remaining}.`
-      : '';
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `Route Verdict: ${v.model.name} (${v.model.provider}) score ${v.composite_score}\n` +
-            `Why: ${v.why}\n` +
-            `Blended price: $${v.pricing.blended}/1M tokens (in $${v.pricing.input}, out $${v.pricing.output})\n\n` +
-            `Runners-up:\n${runners || '  (none)'}\n\n` +
-            `${trustLine}\n${filterLine}\n\nClaim: ${data.claim}${billing}`,
+            `Upgrade: route_verdict tier='full' (1 credit, $0.02) adds ranked runners-up, constraint filters, and an AFTA-signed receipt you can audit. No USDC yet? Sign a wallet message at tensorfeed.ai/api/payment/trial-credits for 25 free credits.${rl}`,
         },
       ],
     };
@@ -1163,9 +1136,9 @@ registerTool(
 );
 
 // ════════════════════════════════════════════════════════════════════
-// Verdict family: 7 signed decisions, each a free preview tool plus a
-// 1-credit premium tool. Each preview calls fetchJSON('/preview/<x>')
-// (no auth, 10 calls per IP per day); each premium calls
+// Verdict family: 7 signed decisions, each a single tier-parameterized
+// tool. tier='preview' (default) calls fetchJSON('/preview/<x>') (no
+// auth, 10 calls per IP per day); tier='full' calls
 // fetchJSON('/premium/<x>', { auth: true }) and burns 1 credit. The
 // shapes below mirror the worker builder result interfaces exactly.
 // ════════════════════════════════════════════════════════════════════
@@ -1200,7 +1173,7 @@ function previewRateLine(rate?: VerdictRateLimit): string {
   return rate ? ` Preview: ${rate.remaining} of ${rate.limit} calls left today.` : '';
 }
 
-// ── Tool: provider_reliability_verdict_preview (free, 10/IP/day) ─────
+// ── Tool: provider_reliability_verdict (preview free / full 1 credit) ─
 
 interface ReliabilityRankEntryPayload {
   rank: number;
@@ -1216,10 +1189,45 @@ interface ReliabilityRankEntryPayload {
 }
 
 registerTool(
-  'provider_reliability_verdict_preview',
-  "Free. TensorFeed's signed dependability ruling over its OWN measured latency and availability probes of the frontier AI providers. Names the single most-dependable provider to build on and the riskiest, scoring availability and tail consistency (p50 over p95) equally because an agent retry loop feels the tail, not the median. For the full per-provider ranking and an AFTA-signed receipt, use provider_reliability_verdict. 10 calls per day per IP.",
-  {},
-  async () => {
+  'provider_reliability_verdict',
+  "TensorFeed's signed dependability ruling over its OWN measured latency and availability probes of the frontier AI providers: the single most-dependable provider to build on and the riskiest, scoring availability and tail consistency (p50 over p95) equally because an agent retry loop feels the tail, not the median. tier='preview' (default) is free (10 calls per day per IP), top verdict only. tier='full' costs 1 credit ($0.02), adds the full per-provider ranking with measured availability and p50/p95/p99 and tail spread plus an AFTA-signed receipt, and needs a TENSORFEED_TOKEN. Get credits at tensorfeed.ai/developers/agent-payments.",
+  {
+    tier: z.enum(['preview', 'full']).optional().describe("'preview' (default, free) or 'full' (1 credit; adds the full per-provider ranking and signed receipt)."),
+  },
+  async ({ tier }) => {
+    if ((tier ?? 'preview') === 'full') {
+      const data = (await fetchJSON('/premium/provider-reliability-verdict', { auth: true })) as {
+        ok: boolean;
+        verdict: { most_dependable: string | null; riskiest: string | null };
+        ranking: ReliabilityRankEntryPayload[];
+        coverage: { providers_ranked: number; fully_measured: number; availability_only: number };
+        captured_at?: string | null;
+        capturedAt?: string | null;
+        claim: string;
+        billing?: VerdictBilling;
+      };
+      const v = data.verdict;
+      if (!v || !v.most_dependable) {
+        return { content: [{ type: 'text' as const, text: `No reliability verdict available right now.\n${data.claim ?? ''}` }] };
+      }
+      const ranking = (data.ranking ?? [])
+        .map((r) => `  #${r.rank} ${r.provider}: ${r.note}`)
+        .join('\n');
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text:
+              `Provider Reliability Verdict: most dependable ${v.most_dependable}` +
+              (v.riskiest ? `, riskiest ${v.riskiest}` : '') +
+              '\n\n' +
+              `Ranking:\n${ranking || '  (none)'}\n\n` +
+              `Claim: ${data.claim}` +
+              verdictBilling(data.billing),
+          },
+        ],
+      };
+    }
     const data = (await fetchJSON('/preview/provider-reliability-verdict')) as {
       ok: boolean;
       verdict: { most_dependable: string | null; riskiest: string | null };
@@ -1253,48 +1261,7 @@ registerTool(
   },
 );
 
-// ── Tool: provider_reliability_verdict (1 credit) ───────────────────
-
-registerTool(
-  'provider_reliability_verdict',
-  "Costs 1 credit ($0.02). The signed provider dependability ruling over TensorFeed's OWN measured probes: ranks every probed frontier provider by availability and tail consistency (p50 over p95), names the most dependable and the riskiest, and ships the full per-provider ranking with an AFTA-signed receipt over the measurements. Versus the free provider_reliability_verdict_preview it adds the complete ranking with each provider's measured availability, p50/p95/p99, and tail spread, plus the receipt and no rate limit. 30-minute freshness SLA, no-charge when stale. Get credits at tensorfeed.ai/developers/agent-payments. Strict premium, no free trial.",
-  {},
-  async () => {
-    const data = (await fetchJSON('/premium/provider-reliability-verdict', { auth: true })) as {
-      ok: boolean;
-      verdict: { most_dependable: string | null; riskiest: string | null };
-      ranking: ReliabilityRankEntryPayload[];
-      coverage: { providers_ranked: number; fully_measured: number; availability_only: number };
-      captured_at?: string | null;
-      capturedAt?: string | null;
-      claim: string;
-      billing?: VerdictBilling;
-    };
-    const v = data.verdict;
-    if (!v || !v.most_dependable) {
-      return { content: [{ type: 'text' as const, text: `No reliability verdict available right now.\n${data.claim ?? ''}` }] };
-    }
-    const ranking = (data.ranking ?? [])
-      .map((r) => `  #${r.rank} ${r.provider}: ${r.note}`)
-      .join('\n');
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `Provider Reliability Verdict: most dependable ${v.most_dependable}` +
-            (v.riskiest ? `, riskiest ${v.riskiest}` : '') +
-            '\n\n' +
-            `Ranking:\n${ranking || '  (none)'}\n\n` +
-            `Claim: ${data.claim}` +
-            verdictBilling(data.billing),
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: x402_settlement_verdict_preview (free, 10/IP/day) ──────────
+// ── Tool: x402_settlement_verdict (preview free / full 1 credit) ─────
 
 interface X402PublisherRankEntryPayload {
   rank: number;
@@ -1305,10 +1272,56 @@ interface X402PublisherRankEntryPayload {
 }
 
 registerTool(
-  'x402_settlement_verdict_preview',
-  "Free. TensorFeed's signed ruling on the state of the x402 USDC settlement market on Base, computed over its OWN on-chain settlement index: market momentum versus the prior window, concentration, and the leading publisher. For the full per-publisher ranking, ecosystem totals, the Herfindahl concentration index, an optional window, and an AFTA-signed receipt, use x402_settlement_verdict. Covers the publishers TensorFeed indexes on Base, forward-only from launch. 10 calls per day per IP.",
-  {},
-  async () => {
+  'x402_settlement_verdict',
+  "TensorFeed's signed ruling on the state of the x402 USDC settlement market on Base, computed over its OWN on-chain settlement index: market momentum versus the prior window of equal length, concentration, and the leading publisher. Covers the publishers TensorFeed indexes on Base, forward-only from launch. tier='preview' (default) is free (10 calls per day per IP), headline verdict only. tier='full' costs 1 credit ($0.02), adds the full per-publisher ranking with volume share, ecosystem totals, the Herfindahl concentration index, an optional window, and an AFTA-signed receipt, and needs a TENSORFEED_TOKEN. Get credits at tensorfeed.ai/developers/agent-payments.",
+  {
+    tier: z.enum(['preview', 'full']).optional().describe("'preview' (default, free) or 'full' (1 credit; adds per-publisher ranking, totals, window, signed receipt)."),
+    window: z.enum(['24h', '7d', '30d']).optional().describe('Full tier only. Settlement window to rule over (24h, 7d, 30d). Default 7d.'),
+  },
+  async ({ tier, window }) => {
+    if ((tier ?? 'preview') === 'full') {
+      const params = new URLSearchParams();
+      if (window) params.set('window', window);
+      const qs = params.toString();
+      const data = (await fetchJSON(`/premium/x402-settlement-verdict${qs ? `?${qs}` : ''}`, { auth: true })) as {
+        ok: boolean;
+        verdict: { momentum: string; concentration: string; leading_publisher: string | null };
+        window_label: string | null;
+        ecosystem: {
+          volume_usdc: string;
+          count: number;
+          unique_publishers: number;
+          top_publisher_share_pct: number | null;
+          hhi: number | null;
+        };
+        ranking: X402PublisherRankEntryPayload[];
+        claim: string;
+        billing?: VerdictBilling;
+      };
+      const v = data.verdict;
+      const e = data.ecosystem;
+      const ranking = (data.ranking ?? [])
+        .map((r) => `  #${r.rank} ${r.domain}: ${r.volume_usdc} USDC over ${r.count} settlements (${r.share_pct}% share)`)
+        .join('\n');
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text:
+              `x402 Settlement Verdict (${data.window_label ?? '7d'}): momentum ${v.momentum}, concentration ${v.concentration}` +
+              (v.leading_publisher ? `, leading publisher ${v.leading_publisher}` : ', no leading publisher this window') +
+              '\n' +
+              `Ecosystem: ${e.volume_usdc} USDC over ${e.count} settlements across ${e.unique_publishers} publishers` +
+              (e.top_publisher_share_pct !== null ? `, top share ${e.top_publisher_share_pct}%` : '') +
+              (e.hhi !== null ? `, HHI ${e.hhi}` : '') +
+              '\n\n' +
+              `Ranking:\n${ranking || '  (none)'}\n\n` +
+              `Claim: ${data.claim}` +
+              verdictBilling(data.billing),
+          },
+        ],
+      };
+    }
     const data = (await fetchJSON('/preview/x402-settlement-verdict')) as {
       ok: boolean;
       verdict: { momentum: string; concentration: string; leading_publisher: string | null };
@@ -1341,72 +1354,49 @@ registerTool(
   },
 );
 
-// ── Tool: x402_settlement_verdict (1 credit) ────────────────────────
+// ── Tool: x402_publisher_verdict (preview free / full 1 credit) ──────
 
 registerTool(
-  'x402_settlement_verdict',
-  "Costs 1 credit ($0.02). The signed ruling on the Base x402 USDC settlement market over TensorFeed's OWN settlement index: momentum versus the prior window of equal length, concentration by the Herfindahl index over publisher volume share, and the leading publisher, plus the full per-publisher ranking and an AFTA-signed receipt. Versus the free x402_settlement_verdict_preview it adds the per-publisher ranking with volume share, the ecosystem totals and concentration index, an optional window, and the receipt, with no rate limit. 10-minute freshness SLA, no-charge when stale. Get credits at tensorfeed.ai/developers/agent-payments. Strict premium, no free trial.",
+  'x402_publisher_verdict',
+  "TensorFeed's signed trust verdict on one x402 publisher, over its OWN on-chain settlement index: whether a named publisher domain is actively settling, recently quiet, registered with no settlement, unreachable, missing a Base payTo, or not indexed. Requires a domain. tier='preview' (default) is free (10 calls per day per IP), the trust verdict only. tier='full' costs 1 credit ($0.02), adds the 30-day settlement momentum, the shared-wallet risk flag, the settlement evidence (volume, count, last settled), and an AFTA-signed receipt, and needs a TENSORFEED_TOKEN. Get credits at tensorfeed.ai/developers/agent-payments.",
   {
-    window: z.enum(['24h', '7d', '30d']).optional().describe('Settlement window to rule over (24h, 7d, 30d). Default 7d.'),
-  },
-  async ({ window }) => {
-    const params = new URLSearchParams();
-    if (window) params.set('window', window);
-    const qs = params.toString();
-    const data = (await fetchJSON(`/premium/x402-settlement-verdict${qs ? `?${qs}` : ''}`, { auth: true })) as {
-      ok: boolean;
-      verdict: { momentum: string; concentration: string; leading_publisher: string | null };
-      window_label: string | null;
-      ecosystem: {
-        volume_usdc: string;
-        count: number;
-        unique_publishers: number;
-        top_publisher_share_pct: number | null;
-        hhi: number | null;
-      };
-      ranking: X402PublisherRankEntryPayload[];
-      claim: string;
-      billing?: VerdictBilling;
-    };
-    const v = data.verdict;
-    const e = data.ecosystem;
-    const ranking = (data.ranking ?? [])
-      .map((r) => `  #${r.rank} ${r.domain}: ${r.volume_usdc} USDC over ${r.count} settlements (${r.share_pct}% share)`)
-      .join('\n');
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `x402 Settlement Verdict (${data.window_label ?? '7d'}): momentum ${v.momentum}, concentration ${v.concentration}` +
-            (v.leading_publisher ? `, leading publisher ${v.leading_publisher}` : ', no leading publisher this window') +
-            '\n' +
-            `Ecosystem: ${e.volume_usdc} USDC over ${e.count} settlements across ${e.unique_publishers} publishers` +
-            (e.top_publisher_share_pct !== null ? `, top share ${e.top_publisher_share_pct}%` : '') +
-            (e.hhi !== null ? `, HHI ${e.hhi}` : '') +
-            '\n\n' +
-            `Ranking:\n${ranking || '  (none)'}\n\n` +
-            `Claim: ${data.claim}` +
-            verdictBilling(data.billing),
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: x402_publisher_verdict_preview (free, 10/IP/day) ───────────
-
-registerTool(
-  'x402_publisher_verdict_preview',
-  "Free. TensorFeed's signed trust verdict on one x402 publisher, over its OWN on-chain settlement index: whether a named publisher domain is actively settling, recently quiet, registered with no settlement, unreachable, missing a Base payTo, or not indexed. For the 30-day settlement momentum, the shared-wallet risk flag, the settlement evidence, and an AFTA-signed receipt, use x402_publisher_verdict. Requires a domain. 10 calls per day per IP.",
-  {
+    tier: z.enum(['preview', 'full']).optional().describe("'preview' (default, free) or 'full' (1 credit; adds momentum, shared-wallet flag, evidence, signed receipt)."),
     domain: z.string().describe('Publisher domain to rule on, e.g. "x402.tavily.com". Required.'),
   },
-  async ({ domain }) => {
+  async ({ tier, domain }) => {
     if (!domain || !domain.trim()) {
       return { content: [{ type: 'text' as const, text: 'Provide a publisher domain (e.g. domain "x402.tavily.com") to get a trust verdict.' }] };
     }
     const params = new URLSearchParams({ domain: domain.trim() });
+    if ((tier ?? 'preview') === 'full') {
+      const data = (await fetchJSON(`/premium/x402-publisher-verdict?${params}`, { auth: true })) as {
+        ok: boolean;
+        domain: string;
+        verdict: string;
+        momentum: string;
+        trust: { wallet_shared: boolean; last_settled: string | null; pay_to_wallets: string[] };
+        evidence: { window_days: number; volume_usdc: string; count: number };
+        claim: string;
+        billing?: VerdictBilling;
+      };
+      const t = data.trust;
+      const ev = data.evidence;
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text:
+              `x402 Publisher Verdict for ${data.domain}: ${data.verdict}\n` +
+              `Momentum: ${data.momentum}. Shared wallet: ${t.wallet_shared ? 'yes (risk flag)' : 'no'}` +
+              (t.last_settled ? `. Last settled ${t.last_settled}` : '') +
+              '\n' +
+              `Evidence (${ev.window_days}d): ${ev.volume_usdc} USDC over ${ev.count} settlements\n` +
+              `Claim: ${data.claim}` +
+              verdictBilling(data.billing),
+          },
+        ],
+      };
+    }
     const data = (await fetchJSON(`/preview/x402-publisher-verdict?${params}`)) as {
       ok: boolean;
       domain: string;
@@ -1436,50 +1426,7 @@ registerTool(
   },
 );
 
-// ── Tool: x402_publisher_verdict (1 credit) ─────────────────────────
-
-registerTool(
-  'x402_publisher_verdict',
-  "Costs 1 credit ($0.02). The signed trust verdict on a single x402 publisher over TensorFeed's OWN on-chain settlement index: whether its Base payTo is actively settling, its 30-day settlement momentum, a shared-wallet risk flag, and the settlement evidence, with an AFTA-signed receipt. Versus the free x402_publisher_verdict_preview it adds the momentum band, the shared-wallet flag, and the settlement evidence (volume, count, last settled, daily series), with no rate limit. A not-indexed domain is no-charge. 10-minute freshness SLA. Get credits at tensorfeed.ai/developers/agent-payments. Strict premium, no free trial.",
-  {
-    domain: z.string().describe('Publisher domain to rule on, e.g. "x402.tavily.com". Required.'),
-  },
-  async ({ domain }) => {
-    if (!domain || !domain.trim()) {
-      return { content: [{ type: 'text' as const, text: 'Provide a publisher domain (e.g. domain "x402.tavily.com") to get a signed trust verdict.' }] };
-    }
-    const params = new URLSearchParams({ domain: domain.trim() });
-    const data = (await fetchJSON(`/premium/x402-publisher-verdict?${params}`, { auth: true })) as {
-      ok: boolean;
-      domain: string;
-      verdict: string;
-      momentum: string;
-      trust: { wallet_shared: boolean; last_settled: string | null; pay_to_wallets: string[] };
-      evidence: { window_days: number; volume_usdc: string; count: number };
-      claim: string;
-      billing?: VerdictBilling;
-    };
-    const t = data.trust;
-    const ev = data.evidence;
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `x402 Publisher Verdict for ${data.domain}: ${data.verdict}\n` +
-            `Momentum: ${data.momentum}. Shared wallet: ${t.wallet_shared ? 'yes (risk flag)' : 'no'}` +
-            (t.last_settled ? `. Last settled ${t.last_settled}` : '') +
-            '\n' +
-            `Evidence (${ev.window_days}d): ${ev.volume_usdc} USDC over ${ev.count} settlements\n` +
-            `Claim: ${data.claim}` +
-            verdictBilling(data.billing),
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: stack_safety_verdict_preview (free, 10/IP/day) ────────────
+// ── Tool: stack_safety_verdict (preview free / full 1 credit) ────────
 
 interface StackPackageSlim {
   package: string;
@@ -1491,17 +1438,67 @@ interface StackPackageSlim {
   matched_cve_count: number;
 }
 
+interface MatchedCvePayload {
+  cve_id: string;
+  on_kev: boolean;
+  severity_label: string;
+  affected_version_ranges: string[];
+  fixed_versions: string[];
+}
+interface StackPackageFull {
+  package: string;
+  version: string | null;
+  verdict: string;
+  exploited: boolean;
+  fix_available: boolean;
+  matched_cves: MatchedCvePayload[];
+  reason: string;
+}
+
 registerTool(
-  'stack_safety_verdict_preview',
-  "Free. TensorFeed's deploy gate for an AI software stack: pass each package name (comma-separated name@version) and get the overall BLOCK / HOLD / PASS / UNKNOWN gate plus a per-package verdict, fusing the ingested AI-stack CVE batch with the CISA KEV catalog. Conservative by design: BLOCK only on an exploited CVE with no fix, HOLD when a known CVE applies and you must verify your version, PASS on no match, UNKNOWN outside the curated AI-stack cohort. For the matched-CVE evidence (ids, ranges, fixes, KEV status), up to 10 packages, and an AFTA-signed receipt, use stack_safety_verdict. Capped at 3 packages, 10 calls per day per IP.",
+  'stack_safety_verdict',
+  "TensorFeed's deploy gate for an AI software stack: pass each package as comma-separated name@version and get the overall BLOCK / HOLD / PASS / UNKNOWN gate plus a per-package verdict, fusing the ingested AI-stack CVE batch with the CISA KEV catalog. Conservative by design: BLOCK only on an exploited CVE with no fix, HOLD when a known CVE applies and you must verify your version, PASS on no match, UNKNOWN outside the curated AI-stack cohort. tier='preview' (default) is free (10 calls per day per IP), caps at 3 packages, gate plus worst offender. tier='full' costs 1 credit ($0.02), raises the cap to 10 packages, adds the matched-CVE evidence (ids, affected ranges, fixed versions, KEV status) and an AFTA-signed receipt, and needs a TENSORFEED_TOKEN. Get credits at tensorfeed.ai/developers/agent-payments.",
   {
-    packages: z.string().describe('Comma-separated AI-stack packages as name@version (e.g. "vllm@0.5.0,transformers@4.40.0"). Required. Preview caps at 3.'),
+    tier: z.enum(['preview', 'full']).optional().describe("'preview' (default, free, caps at 3 packages) or 'full' (1 credit; up to 10 packages, matched-CVE evidence, signed receipt)."),
+    packages: z.string().describe('Comma-separated AI-stack packages as name@version (e.g. "vllm@0.5.0,transformers@4.40.0"). Required. Preview caps at 3, full up to 10.'),
   },
-  async ({ packages }) => {
+  async ({ tier, packages }) => {
     if (!packages || !packages.trim()) {
       return { content: [{ type: 'text' as const, text: 'Provide packages as a comma-separated name@version list (e.g. "vllm@0.5.0,transformers@4.40.0") to get a deploy gate.' }] };
     }
     const params = new URLSearchParams({ packages: packages.trim() });
+    if ((tier ?? 'preview') === 'full') {
+      const data = (await fetchJSON(`/premium/stack-safety-verdict?${params}`, { auth: true })) as {
+        ok: boolean;
+        gate: string;
+        counts: { block: number; hold: number; pass: number; unknown: number };
+        packages: StackPackageFull[];
+        claim: string;
+        billing?: VerdictBilling;
+      };
+      const c = data.counts;
+      const lines = (data.packages ?? [])
+        .map((p) => {
+          const cves = p.matched_cves
+            .map((m) => `${m.cve_id}${m.on_kev ? ' (KEV)' : ''} ${m.severity_label}`)
+            .join('; ');
+          return `  ${p.package}${p.version ? `@${p.version}` : ''}: ${p.verdict}. ${p.reason}` + (cves ? `\n     CVEs: ${cves}` : '');
+        })
+        .join('\n');
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text:
+              `Stack Safety Verdict: gate ${data.gate}\n` +
+              `Counts: ${c.block} block, ${c.hold} hold, ${c.pass} pass, ${c.unknown} unknown\n\n` +
+              `${lines || '  (no packages)'}\n\n` +
+              `Claim: ${data.claim}` +
+              verdictBilling(data.billing),
+          },
+        ],
+      };
+    }
     const data = (await fetchJSON(`/preview/stack-safety-verdict?${params}`)) as {
       ok: boolean;
       gate: string;
@@ -1532,70 +1529,7 @@ registerTool(
   },
 );
 
-// ── Tool: stack_safety_verdict (1 credit) ───────────────────────────
-
-interface MatchedCvePayload {
-  cve_id: string;
-  on_kev: boolean;
-  severity_label: string;
-  affected_version_ranges: string[];
-  fixed_versions: string[];
-}
-interface StackPackageFull {
-  package: string;
-  version: string | null;
-  verdict: string;
-  exploited: boolean;
-  fix_available: boolean;
-  matched_cves: MatchedCvePayload[];
-  reason: string;
-}
-
-registerTool(
-  'stack_safety_verdict',
-  "Costs 1 credit ($0.02). The signed deploy gate for an AI software stack (up to 10 packages): the overall BLOCK / HOLD / PASS / UNKNOWN gate and a per-package verdict, fusing the ingested AI-stack CVE batch with the CISA KEV catalog, plus the matched-CVE evidence and an AFTA-signed receipt. Versus the free stack_safety_verdict_preview it adds the matched-CVE ids, affected ranges, fixed versions, and KEV status per package, raises the cap to 10 packages, and ships the receipt, with no rate limit. Never-false-confirm: BLOCK only on exploited with no fix. Get credits at tensorfeed.ai/developers/agent-payments. Strict premium, no free trial.",
-  {
-    packages: z.string().describe('Comma-separated AI-stack packages as name@version (e.g. "vllm@0.5.0,transformers@4.40.0"). Required. Up to 10.'),
-  },
-  async ({ packages }) => {
-    if (!packages || !packages.trim()) {
-      return { content: [{ type: 'text' as const, text: 'Provide packages as a comma-separated name@version list (e.g. "vllm@0.5.0,transformers@4.40.0") to get a signed deploy gate.' }] };
-    }
-    const params = new URLSearchParams({ packages: packages.trim() });
-    const data = (await fetchJSON(`/premium/stack-safety-verdict?${params}`, { auth: true })) as {
-      ok: boolean;
-      gate: string;
-      counts: { block: number; hold: number; pass: number; unknown: number };
-      packages: StackPackageFull[];
-      claim: string;
-      billing?: VerdictBilling;
-    };
-    const c = data.counts;
-    const lines = (data.packages ?? [])
-      .map((p) => {
-        const cves = p.matched_cves
-          .map((m) => `${m.cve_id}${m.on_kev ? ' (KEV)' : ''} ${m.severity_label}`)
-          .join('; ');
-        return `  ${p.package}${p.version ? `@${p.version}` : ''}: ${p.verdict}. ${p.reason}` + (cves ? `\n     CVEs: ${cves}` : '');
-      })
-      .join('\n');
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `Stack Safety Verdict: gate ${data.gate}\n` +
-            `Counts: ${c.block} block, ${c.hold} hold, ${c.pass} pass, ${c.unknown} unknown\n\n` +
-            `${lines || '  (no packages)'}\n\n` +
-            `Claim: ${data.claim}` +
-            verdictBilling(data.billing),
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: benchmark_trust_verdict_preview (free, 10/IP/day) ──────────
+// ── Tool: benchmark_trust_verdict (preview free / full 1 credit) ─────
 
 interface BenchmarkVerdictSlim {
   id: string;
@@ -1605,18 +1539,62 @@ interface BenchmarkVerdictSlim {
   trust_score: number;
 }
 
+interface BenchmarkVerdictFull {
+  id: string;
+  name: string;
+  category: string;
+  trust_band: string;
+  trust_score: number;
+  signals: { ceiling_proximity: string; frontier_compression: string };
+  recommendation: string;
+}
+
 registerTool(
-  'benchmark_trust_verdict_preview',
-  "Free. TensorFeed's signed ruling on whether an AI benchmark is still a trustworthy capability signal or saturated, contaminated, or near ceiling so a high score should be down-weighted. Returns a trust band (reliable, use_with_caution, saturated, contaminated, deprecated) and a 0-100 trust score per benchmark. Pass benchmark to narrow to one, or category to filter, or neither for the registry. For the per-signal detail (ceiling proximity, frontier compression, contamination) and the down-weight recommendation with an alternative, use benchmark_trust_verdict. 10 calls per day per IP.",
+  'benchmark_trust_verdict',
+  "TensorFeed's signed ruling on whether an AI benchmark is still a trustworthy capability signal or saturated, contaminated, or near ceiling so a high score should be down-weighted: a trust band (reliable, use_with_caution, saturated, contaminated, deprecated) and a 0-100 trust score per benchmark. Pass benchmark to narrow to one, or category to filter, or neither for the registry. tier='preview' (default) is free (10 calls per day per IP), top verdict and bands only. tier='full' costs 1 credit ($0.02), adds the per-signal detail (ceiling proximity, frontier compression, contamination), a down-weight recommendation with an alternative benchmark, and an AFTA-signed receipt, and needs a TENSORFEED_TOKEN. Get credits at tensorfeed.ai/developers/agent-payments.",
   {
+    tier: z.enum(['preview', 'full']).optional().describe("'preview' (default, free) or 'full' (1 credit; adds per-signal detail, recommendation, signed receipt)."),
     benchmark: z.string().optional().describe('Benchmark registry id or name to narrow to one (e.g. "mmlu", "swe-bench"). Optional.'),
     category: z.string().optional().describe('Category to filter the benchmarks (e.g. "coding", "reasoning"). Optional.'),
   },
-  async ({ benchmark, category }) => {
+  async ({ tier, benchmark, category }) => {
     const params = new URLSearchParams();
     if (benchmark) params.set('benchmark', benchmark);
     if (category) params.set('category', category);
     const qs = params.toString();
+    if ((tier ?? 'preview') === 'full') {
+      const data = (await fetchJSON(`/premium/benchmark-trust-verdict${qs ? `?${qs}` : ''}`, { auth: true })) as {
+        ok: boolean;
+        filter: { benchmark: string | null; category: string | null };
+        count: number;
+        verdicts: BenchmarkVerdictFull[];
+        claim: string;
+        billing?: VerdictBilling;
+      };
+      const verdicts = data.verdicts ?? [];
+      if (verdicts.length === 0) {
+        return { content: [{ type: 'text' as const, text: `No benchmark matched that filter.\n${data.claim ?? ''}` }] };
+      }
+      const lines = verdicts
+        .slice(0, 8)
+        .map(
+          (v) =>
+            `  ${v.name} (${v.category}): ${v.trust_band}, score ${v.trust_score}/100. Ceiling ${v.signals.ceiling_proximity}, frontier ${v.signals.frontier_compression}.\n     ${v.recommendation}`,
+        )
+        .join('\n');
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text:
+              `Benchmark Trust Verdict: ${data.count} benchmark${data.count === 1 ? '' : 's'} ruled on\n\n` +
+              `${lines}\n\n` +
+              `Claim: ${data.claim}` +
+              verdictBilling(data.billing),
+          },
+        ],
+      };
+    }
     const data = (await fetchJSON(`/preview/benchmark-trust-verdict${qs ? `?${qs}` : ''}`)) as {
       ok: boolean;
       filter: { benchmark: string | null; category: string | null };
@@ -1654,65 +1632,7 @@ registerTool(
   },
 );
 
-// ── Tool: benchmark_trust_verdict (1 credit) ────────────────────────
-
-interface BenchmarkVerdictFull {
-  id: string;
-  name: string;
-  category: string;
-  trust_band: string;
-  trust_score: number;
-  signals: { ceiling_proximity: string; frontier_compression: string };
-  recommendation: string;
-}
-
-registerTool(
-  'benchmark_trust_verdict',
-  "Costs 1 credit ($0.02). The signed ruling on whether an AI benchmark is a trustworthy capability signal or saturated, contaminated, or near ceiling: a trust band and 0-100 score per benchmark, the per-signal detail, a down-weight recommendation with an alternative benchmark, and an AFTA-signed receipt. Versus the free benchmark_trust_verdict_preview it adds the ceiling proximity, frontier compression, and contamination signals, the recommendation, and the receipt, with no rate limit. Pass benchmark to narrow to one, or category to filter, or neither for the registry. Get credits at tensorfeed.ai/developers/agent-payments. Strict premium, no free trial.",
-  {
-    benchmark: z.string().optional().describe('Benchmark registry id or name to narrow to one (e.g. "mmlu", "swe-bench"). Optional.'),
-    category: z.string().optional().describe('Category to filter the benchmarks (e.g. "coding", "reasoning"). Optional.'),
-  },
-  async ({ benchmark, category }) => {
-    const params = new URLSearchParams();
-    if (benchmark) params.set('benchmark', benchmark);
-    if (category) params.set('category', category);
-    const qs = params.toString();
-    const data = (await fetchJSON(`/premium/benchmark-trust-verdict${qs ? `?${qs}` : ''}`, { auth: true })) as {
-      ok: boolean;
-      filter: { benchmark: string | null; category: string | null };
-      count: number;
-      verdicts: BenchmarkVerdictFull[];
-      claim: string;
-      billing?: VerdictBilling;
-    };
-    const verdicts = data.verdicts ?? [];
-    if (verdicts.length === 0) {
-      return { content: [{ type: 'text' as const, text: `No benchmark matched that filter.\n${data.claim ?? ''}` }] };
-    }
-    const lines = verdicts
-      .slice(0, 8)
-      .map(
-        (v) =>
-          `  ${v.name} (${v.category}): ${v.trust_band}, score ${v.trust_score}/100. Ceiling ${v.signals.ceiling_proximity}, frontier ${v.signals.frontier_compression}.\n     ${v.recommendation}`,
-      )
-      .join('\n');
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `Benchmark Trust Verdict: ${data.count} benchmark${data.count === 1 ? '' : 's'} ruled on\n\n` +
-            `${lines}\n\n` +
-            `Claim: ${data.claim}` +
-            verdictBilling(data.billing),
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: failover_verdict_preview (free, 10/IP/day) ────────────────
+// ── Tool: failover_verdict (preview free / full 1 credit) ────────────
 
 interface FailoverCandidateSlim {
   model: { id: string; name: string; provider: string };
@@ -1720,19 +1640,83 @@ interface FailoverCandidateSlim {
   composite_score: number;
 }
 
+interface FailoverCandidateFull {
+  rank: number;
+  model: { id: string; name: string; provider: string };
+  pricing: { blended: number };
+  latency: { measured_p95_ms: number | null };
+  operational: { ok: boolean | null; status: string };
+  composite_score: number;
+  why: string;
+}
+
 registerTool(
-  'failover_verdict_preview',
-  "Free. Provider A is degraded; TensorFeed's signed ruling on the single best operational provider to fail over to for a task right now. Confirms A against the live incident-triage feed, then runs the route-verdict fusion with A (and any provider already in failover) excluded. For the full failover candidate (pricing, measured latency, quality), the ranked alternatives, and an AFTA-signed receipt, use failover_verdict. Requires from. 10 calls per day per IP.",
+  'failover_verdict',
+  "Provider A is degraded; TensorFeed's signed ruling on the single best operational provider to fail over to for a task right now. Confirms A against the live incident-triage feed, then runs the route-verdict fusion with A (and any provider already in failover) excluded. Requires from. tier='preview' (default) is free (10 calls per day per IP), the failover target only. tier='full' costs 1 credit ($0.02), adds the full candidate (pricing, measured p95 latency, quality), the ranked alternatives, the confirmed incident on A, and an AFTA-signed receipt, and needs a TENSORFEED_TOKEN. Get credits at tensorfeed.ai/developers/agent-payments.",
   {
+    tier: z.enum(['preview', 'full']).optional().describe("'preview' (default, free) or 'full' (1 credit; adds candidate detail, ranked alternatives, incident, signed receipt)."),
     from: z.string().describe('The degraded provider to fail over FROM (e.g. "anthropic", "openai"). Required.'),
     task: z.enum(['code', 'reasoning', 'creative', 'general']).optional().describe('Task type to optimize the failover target for. Optional.'),
   },
-  async ({ from, task }) => {
+  async ({ tier, from, task }) => {
     if (!from || !from.trim()) {
       return { content: [{ type: 'text' as const, text: 'Provide a from provider (the degraded provider to fail over from, e.g. from "anthropic") to get a failover verdict.' }] };
     }
     const params = new URLSearchParams({ from: from.trim() });
     if (task) params.set('task', task);
+    if ((tier ?? 'preview') === 'full') {
+      const data = (await fetchJSON(`/premium/failover-verdict?${params}`, { auth: true })) as {
+        ok: boolean;
+        from: { provider: string; in_incident: boolean; incident: { title: string; recommended_action: string } | null };
+        query: { task: string | null; model: string | null };
+        excluded_providers: string[];
+        failover_to: FailoverCandidateFull | null;
+        alternatives: FailoverCandidateFull[];
+        why: string;
+        claim: string;
+        billing?: VerdictBilling;
+      };
+      const dest = data.failover_to;
+      const incidentLine = data.from.incident
+        ? `Incident on ${data.from.provider}: ${data.from.incident.title} (action ${data.from.incident.recommended_action})\n`
+        : '';
+      if (!dest) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text:
+                `Failover Verdict from ${data.from.provider}: no operational failover target found.\n` +
+                incidentLine +
+                `Why: ${data.why}\nClaim: ${data.claim}` +
+                verdictBilling(data.billing),
+            },
+          ],
+        };
+      }
+      const alts = (data.alternatives ?? [])
+        .map(
+          (a) =>
+            `  #${a.rank} ${a.model.name} (${a.model.provider}) blended $${a.pricing.blended}/1M, p95 ${a.latency.measured_p95_ms ?? 'n/a'}ms, status ${a.operational.status}`,
+        )
+        .join('\n');
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text:
+              `Failover Verdict from ${data.from.provider}: fail over to ${dest.model.name} (${dest.model.provider})\n` +
+              `Why: ${dest.why}\n` +
+              `Blended $${dest.pricing.blended}/1M, p95 ${dest.latency.measured_p95_ms ?? 'n/a'}ms, status ${dest.operational.status}\n` +
+              incidentLine +
+              `Excluded: ${data.excluded_providers.length ? data.excluded_providers.join(', ') : 'none'}\n\n` +
+              `Alternatives:\n${alts || '  (none)'}\n\n` +
+              `Claim: ${data.claim}` +
+              verdictBilling(data.billing),
+          },
+        ],
+      };
+    }
     const data = (await fetchJSON(`/preview/failover-verdict?${params}`)) as {
       ok: boolean;
       from: { provider: string; in_incident: boolean };
@@ -1776,98 +1760,53 @@ registerTool(
   },
 );
 
-// ── Tool: failover_verdict (1 credit) ───────────────────────────────
-
-interface FailoverCandidateFull {
-  rank: number;
-  model: { id: string; name: string; provider: string };
-  pricing: { blended: number };
-  latency: { measured_p95_ms: number | null };
-  operational: { ok: boolean | null; status: string };
-  composite_score: number;
-  why: string;
-}
+// ── Tool: ssvc_verdict (preview free / full 1 credit) ────────────────
 
 registerTool(
-  'failover_verdict',
-  "Costs 1 credit ($0.02). The signed failover ruling: provider A is degraded, this is the best operational provider to fail over to for a task right now, with the full candidate (pricing, measured p95 latency, quality), the ranked alternatives, the confirmed incident on A, and an AFTA-signed receipt. Versus the free failover_verdict_preview it adds the candidate's pricing, measured latency, and quality, the ranked alternatives, and the receipt, with no rate limit. Confirms A against live incident triage and excludes any provider already in failover. 30-minute operational freshness SLA. Get credits at tensorfeed.ai/developers/agent-payments. Strict premium, no free trial.",
+  'ssvc_verdict',
+  "TensorFeed's signed SSVC patch-urgency decision for one CVE, applying the CISA SSVC Coordinator decision tree to the recorded Vulnrichment decision points (exploitation, automatable, technical impact). Requires a CVE id. tier='preview' (default) is free (10 calls per day per IP): the three decision points and the decision-tree provenance, WITHOUT the computed Act / Attend / Track / Track* decision. tier='full' costs 1 credit ($0.02), adds the computed decision across the full low/medium/high Mission and Well-being envelope, the per-level reasoning, a live CISA KEV cross-check, and an AFTA-signed receipt, and needs a TENSORFEED_TOKEN. Get credits at tensorfeed.ai/developers/agent-payments.",
   {
-    from: z.string().describe('The degraded provider to fail over FROM (e.g. "anthropic", "openai"). Required.'),
-    task: z.enum(['code', 'reasoning', 'creative', 'general']).optional().describe('Task type to optimize the failover target for. Optional.'),
+    tier: z.enum(['preview', 'full']).optional().describe("'preview' (default, free) or 'full' (1 credit; adds the computed decision, envelope, reasoning, KEV cross-check, signed receipt)."),
+    cve: z.string().describe('CVE id to rule on, e.g. "CVE-2024-3094". Required.'),
   },
-  async ({ from, task }) => {
-    if (!from || !from.trim()) {
-      return { content: [{ type: 'text' as const, text: 'Provide a from provider (the degraded provider to fail over from, e.g. from "anthropic") to get a signed failover verdict.' }] };
+  async ({ tier, cve }) => {
+    if (!cve || !cve.trim()) {
+      return { content: [{ type: 'text' as const, text: 'Provide a CVE id (e.g. cve "CVE-2024-3094") to get the SSVC decision points.' }] };
     }
-    const params = new URLSearchParams({ from: from.trim() });
-    if (task) params.set('task', task);
-    const data = (await fetchJSON(`/premium/failover-verdict?${params}`, { auth: true })) as {
-      ok: boolean;
-      from: { provider: string; in_incident: boolean; incident: { title: string; recommended_action: string } | null };
-      query: { task: string | null; model: string | null };
-      excluded_providers: string[];
-      failover_to: FailoverCandidateFull | null;
-      alternatives: FailoverCandidateFull[];
-      why: string;
-      claim: string;
-      billing?: VerdictBilling;
-    };
-    const dest = data.failover_to;
-    const incidentLine = data.from.incident
-      ? `Incident on ${data.from.provider}: ${data.from.incident.title} (action ${data.from.incident.recommended_action})\n`
-      : '';
-    if (!dest) {
+    const params = new URLSearchParams({ cve: cve.trim() });
+    if ((tier ?? 'preview') === 'full') {
+      const data = (await fetchJSON(`/premium/security/ssvc-verdict?${params}`, { auth: true })) as {
+        cve: string;
+        decision_points: { exploitation: string; automatable: string; technical_impact: string };
+        decision_primary: string;
+        decision_envelope: { low: string; medium: string; high: string };
+        tree: { name: string; version: string };
+        kev_cross_check?: { checked: boolean; kev_listed?: boolean; flag?: string };
+        scored_at: string;
+        billing?: VerdictBilling;
+      };
+      const dp = data.decision_points;
+      const env = data.decision_envelope;
+      const kev = data.kev_cross_check;
+      const kevLine = kev && kev.checked
+        ? `KEV cross-check: ${kev.kev_listed ? 'listed on CISA KEV' : 'not on KEV'}${kev.flag && kev.flag !== 'none' ? ` (${kev.flag})` : ''}`
+        : 'KEV cross-check: unavailable';
       return {
         content: [
           {
             type: 'text' as const,
             text:
-              `Failover Verdict from ${data.from.provider}: no operational failover target found.\n` +
-              incidentLine +
-              `Why: ${data.why}\nClaim: ${data.claim}` +
+              `SSVC Verdict for ${data.cve}: ${data.decision_primary} (Mission and Well-being assumed medium)\n` +
+              `Envelope: low ${env.low}, medium ${env.medium}, high ${env.high}\n` +
+              `Decision points: exploitation ${dp.exploitation}, automatable ${dp.automatable}, technical impact ${dp.technical_impact}\n` +
+              `${kevLine}\n` +
+              `Tree: ${data.tree.name} ${data.tree.version}` +
+              (data.scored_at ? `, scored ${data.scored_at}` : '') +
               verdictBilling(data.billing),
           },
         ],
       };
     }
-    const alts = (data.alternatives ?? [])
-      .map(
-        (a) =>
-          `  #${a.rank} ${a.model.name} (${a.model.provider}) blended $${a.pricing.blended}/1M, p95 ${a.latency.measured_p95_ms ?? 'n/a'}ms, status ${a.operational.status}`,
-      )
-      .join('\n');
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `Failover Verdict from ${data.from.provider}: fail over to ${dest.model.name} (${dest.model.provider})\n` +
-            `Why: ${dest.why}\n` +
-            `Blended $${dest.pricing.blended}/1M, p95 ${dest.latency.measured_p95_ms ?? 'n/a'}ms, status ${dest.operational.status}\n` +
-            incidentLine +
-            `Excluded: ${data.excluded_providers.length ? data.excluded_providers.join(', ') : 'none'}\n\n` +
-            `Alternatives:\n${alts || '  (none)'}\n\n` +
-            `Claim: ${data.claim}` +
-            verdictBilling(data.billing),
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: ssvc_verdict_preview (free, 10/IP/day) ────────────────────
-
-registerTool(
-  'ssvc_verdict_preview',
-  "Free. The CISA SSVC decision points for one CVE, read from CISA's Vulnrichment record: exploitation, automatable, and technical impact, plus the decision-tree provenance, WITHOUT the computed Act / Attend / Track / Track* decision (that is the premium ruling). For the computed SSVC decision across the full Mission and Well-being envelope, the per-level reasoning, the live KEV cross-check, and an AFTA-signed receipt, use ssvc_verdict. Requires a CVE id. 10 calls per day per IP.",
-  {
-    cve: z.string().describe('CVE id to rule on, e.g. "CVE-2024-3094". Required.'),
-  },
-  async ({ cve }) => {
-    if (!cve || !cve.trim()) {
-      return { content: [{ type: 'text' as const, text: 'Provide a CVE id (e.g. cve "CVE-2024-3094") to get the SSVC decision points.' }] };
-    }
-    const params = new URLSearchParams({ cve: cve.trim() });
     const data = (await fetchJSON(`/preview/security/ssvc-verdict?${params}`)) as {
       cve: string;
       decision_points: { exploitation: string; automatable: string; technical_impact: string };
@@ -1894,53 +1833,6 @@ registerTool(
               'the computed SSVC decision (Act, Attend, Track, or Track*) across the low/medium/high Mission and Well-being envelope, the per-level reasoning, and the live KEV cross-check',
               rl,
             ),
-        },
-      ],
-    };
-  },
-);
-
-// ── Tool: ssvc_verdict (1 credit) ───────────────────────────────────
-
-registerTool(
-  'ssvc_verdict',
-  "Costs 1 credit ($0.02). The signed SSVC patch-urgency decision for one CVE: applies the CISA SSVC Coordinator decision tree to the three recorded decision points and returns the decision (Act, Attend, Track, or Track*) across the full low/medium/high Mission and Well-being envelope, the per-level reasoning, a live CISA KEV cross-check, and an AFTA-signed receipt. Versus the free ssvc_verdict_preview it adds the computed decision, the envelope, the reasoning trace, the KEV staleness overlay, and the receipt, with no rate limit. A CVE not in Vulnrichment is no-charge. Get credits at tensorfeed.ai/developers/agent-payments. Strict premium, no free trial.",
-  {
-    cve: z.string().describe('CVE id to rule on, e.g. "CVE-2024-3094". Required.'),
-  },
-  async ({ cve }) => {
-    if (!cve || !cve.trim()) {
-      return { content: [{ type: 'text' as const, text: 'Provide a CVE id (e.g. cve "CVE-2024-3094") to get a signed SSVC decision.' }] };
-    }
-    const params = new URLSearchParams({ cve: cve.trim() });
-    const data = (await fetchJSON(`/premium/security/ssvc-verdict?${params}`, { auth: true })) as {
-      cve: string;
-      decision_points: { exploitation: string; automatable: string; technical_impact: string };
-      decision_primary: string;
-      decision_envelope: { low: string; medium: string; high: string };
-      tree: { name: string; version: string };
-      kev_cross_check?: { checked: boolean; kev_listed?: boolean; flag?: string };
-      scored_at: string;
-      billing?: VerdictBilling;
-    };
-    const dp = data.decision_points;
-    const env = data.decision_envelope;
-    const kev = data.kev_cross_check;
-    const kevLine = kev && kev.checked
-      ? `KEV cross-check: ${kev.kev_listed ? 'listed on CISA KEV' : 'not on KEV'}${kev.flag && kev.flag !== 'none' ? ` (${kev.flag})` : ''}`
-      : 'KEV cross-check: unavailable';
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text:
-            `SSVC Verdict for ${data.cve}: ${data.decision_primary} (Mission and Well-being assumed medium)\n` +
-            `Envelope: low ${env.low}, medium ${env.medium}, high ${env.high}\n` +
-            `Decision points: exploitation ${dp.exploitation}, automatable ${dp.automatable}, technical impact ${dp.technical_impact}\n` +
-            `${kevLine}\n` +
-            `Tree: ${data.tree.name} ${data.tree.version}` +
-            (data.scored_at ? `, scored ${data.scored_at}` : '') +
-            verdictBilling(data.billing),
         },
       ],
     };
