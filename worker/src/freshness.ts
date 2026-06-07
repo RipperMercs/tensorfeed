@@ -158,6 +158,12 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // registry last-updated date); same shape as the funding/exposure registry
   // but with no maxAge SLA because the figures are editorial, not a snapshot.
   '/api/premium/ai-datacenters/buildout': NULL_SLA,
+  // AI capex cycle verdict: signed ranking over the hand-curated capital-cycles
+  // registry plus the curated AI_CURRENT annual-capex constant, both editorial
+  // and updated on redeploy. captured_at is the registry last-updated date, but
+  // no wall-clock staleness signal applies (the figures are editorial, not a
+  // cron snapshot); same shape as the ai-datacenters buildout aggregate.
+  '/api/premium/ai-capex-cycle-verdict': NULL_SLA,
   // Recession watch: synthesis over BLS + FRED daily snapshots. 24h
   // matches the cron cadence of underlying data.
   // Model-deprecations timeline: pure compute over a hand-curated registry

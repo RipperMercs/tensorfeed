@@ -255,6 +255,16 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'verdict',
   },
+  {
+    path: '/api/premium/ai-capex-cycle-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [],
+    returns: 'Signed ranking of the current AI buildout against curated historical capital cycles on peak capex as a percent of GDP, naming the closest and farthest analog and the dimensions that cannot yet be scored.',
+    free_sibling: '/api/capital-cycles',
+    signed: true,
+    category: 'verdict',
+  },
 
   // === INTELLIGENCE ===
   {

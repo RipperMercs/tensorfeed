@@ -336,6 +336,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // gates anonymous CDP / x402scan crawlers to a clean 402 challenge rather than
   // a free-trial 200 on the premium aggregate. Free taste at /api/ai-datacenters.
   '/api/premium/ai-datacenters/buildout',
+  // AI capex cycle verdict (2026-06-07). Signed ranking of the current AI
+  // buildout against curated historical capital cycles on peak capex as a percent
+  // of GDP. No required params, but Bazaar-discoverable and a full signed verdict,
+  // so strict-premium gates anonymous CDP / x402scan crawlers to a clean 402
+  // challenge rather than a free-trial 200 that would leak the full verdict. Free
+  // registry taste at /api/capital-cycles.
+  '/api/premium/ai-capex-cycle-verdict',
   // Federal AI procurement demand (2026-06-04). Signed demand read (agency
   // concentration, emerging contractors, top buying agencies) over the daily
   // ai-procurement:snapshot. No required params, but Bazaar-discoverable, so

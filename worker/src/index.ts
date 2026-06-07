@@ -5531,6 +5531,58 @@ export default {
       );
     }
 
+    // === FREE: CAPITAL CYCLES ===
+    // Hand-curated registry of historical technology capital buildouts on a
+    // fixed metric skeleton, plus the current AI buildout mapped into the same
+    // skeleton. The only cross-era-comparable metric is peak capex as a percent
+    // of national GDP; absolute dollars and physical units are descriptive. The
+    // current AI numerator is the curated AI_CURRENT annual-capex constant (an
+    // annual flow, matching the historical annual-flow basis), not the
+    // ai-datacenters cumulative announced capex. The signed ranking and analogy
+    // verdict is premium at /api/premium/ai-capex-cycle-verdict. Filter by era
+    // (pre_1931 | modern). Curated, editorial cadence on redeploy.
+    if (path === '/api/capital-cycles') {
+      const {
+        CAPITAL_CYCLES,
+        CAPITAL_CYCLES_LAST_UPDATED,
+        CAPITAL_CYCLES_ATTRIBUTION,
+        CONSIDERED_EXCLUDED,
+        GDP_DENOMINATOR,
+        AI_CURRENT,
+        REAL_CAPITAL_NOTE,
+        deriveCurrentAiCycle,
+        filterCapitalCycles,
+      } = await import('./capital-cycles');
+      const { AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED, buildBuildoutAggregate } = await import('./ai-datacenters');
+      const era = url.searchParams.get('era') ?? undefined;
+      const cycles = filterCapitalCycles(CAPITAL_CYCLES, { era });
+      const agg = buildBuildoutAggregate(AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED);
+      const current_cycle = deriveCurrentAiCycle(
+        AI_CURRENT,
+        agg.totals.disclosed_power_mw,
+        GDP_DENOMINATOR.value_usd_t,
+        AI_DATACENTERS_LAST_UPDATED + 'T00:00:00Z',
+      );
+      return jsonResponse(
+        {
+          ok: true,
+          source: 'tensorfeed.ai',
+          count: cycles.length,
+          last_updated: CAPITAL_CYCLES_LAST_UPDATED,
+          gdp_denominator: GDP_DENOMINATOR,
+          ai_current_capex: AI_CURRENT,
+          real_capital_note: REAL_CAPITAL_NOTE,
+          cycles,
+          current_cycle,
+          considered_excluded: CONSIDERED_EXCLUDED,
+          attribution: CAPITAL_CYCLES_ATTRIBUTION,
+          filters: { era },
+        },
+        200,
+        3600,
+      );
+    }
+
     // === FREE: FEDERAL AI SPENDING ===
     // Surfaces US federal contract and grant awards flowing to a curated
     // AI-vendor cohort. The daily cron writes one precomputed snapshot blob
@@ -10311,6 +10363,54 @@ export default {
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-datacenters/buildout', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: AI CAPEX CYCLE VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/ai-capex-cycle-verdict
+    // One signed ruling over the free /api/capital-cycles registry: where the
+    // current AI buildout ranks against the curated set of historical technology
+    // capital buildouts on the single cross-era-comparable axis, peak annual
+    // capex as a percent of national GDP. Names the closest and farthest
+    // historical analog, lists equities-led cycles as sentiment outliers rather
+    // than ranking them, and explicitly enumerates the post-bust dimensions that
+    // cannot be scored while a cycle is still in progress. It deliberately does
+    // NOT call "bubble" or "not a bubble"; the honesty about what cannot yet be
+    // known is the product. Regular premium (no params); the AI numerator is the
+    // curated AI_CURRENT annual-capex constant, not the ai-datacenters cumulative
+    // announced capex. captured_at is the REAL registry data time so the
+    // freshness no-charge bills against actual data age, never build time. When
+    // the registry yields no rankable AI signal it no-charges (inputs_unavailable),
+    // an unexpected cold state since the inputs are bundled and static.
+    if (path === '/api/premium/ai-capex-cycle-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const { CAPITAL_CYCLES, CAPITAL_CYCLES_LAST_UPDATED, GDP_DENOMINATOR, AI_CURRENT, deriveCurrentAiCycle } =
+        await import('./capital-cycles');
+      const { AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED, buildBuildoutAggregate } =
+        await import('./ai-datacenters');
+      const { buildCapexCycleVerdict } = await import('./premium-capex-cycle-verdict');
+
+      const agg = buildBuildoutAggregate(AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED);
+      const current = deriveCurrentAiCycle(
+        AI_CURRENT,
+        agg.totals.disclosed_power_mw,
+        GDP_DENOMINATOR.value_usd_t,
+        AI_DATACENTERS_LAST_UPDATED + 'T00:00:00Z',
+      );
+      const result = buildCapexCycleVerdict(CAPITAL_CYCLES, current, CAPITAL_CYCLES_LAST_UPDATED, new Date());
+
+      if (!result.ok) {
+        return await premiumValidationFailure(
+          { error: result.error, hint: result.hint },
+          payment, request, env, 'upstream_failure', 503,
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/ai-capex-cycle-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
