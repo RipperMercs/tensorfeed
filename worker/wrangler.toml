@@ -350,6 +350,16 @@ crons = [
   "37 1 * * *",
   # Daily 01:47 UTC: capture the federal AI policy snapshot (worker/src/federal-ai-policy.ts). Federal Register AI documents (no key) plus GovInfo AI bills (key-gated on DATA_GOV_API_KEY). Collision-free (hour 1 holds only 37 1; minute 47 is odd and dodges 0 *, 27 *, */2, */5, */10).
   "47 1 * * *",
+  # Daily 06:41 UTC: anti-drift health audit (worker/src/drift-audit.ts).
+  # HEAD-checks the live deployed site (sitemap pages, newest originals, and
+  # llms.txt model/compare/provider links) for broken URLs, folds in the
+  # catalog data-freshness check, and emails an alert only when health flips
+  # to red or a new failure appears. Powers the redacted /api/health/drift.
+  # Slot 06:41 is collision-free: hour 6 holds only fixed crons at :00, :15,
+  # :30, :35; minute 41 is odd (dodges */2), not a multiple of 5 (dodges
+  # */5, */10, */15), not minute 0 (dodges 0 * * * *), not 27 (dodges the
+  # 27 * * * * x402 probe), and no */6-hour :15/:35 pattern lands at :41.
+  "41 6 * * *",
   # Every 5 min: a bare trigger whose only job is to make scheduled() fire at
   # :05/:25/:35/:55, the multiples of 5 that no other cron covers. The
   # x402-index settlement indexer (cursor read, Base USDC Transfer logs

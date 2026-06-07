@@ -1692,6 +1692,18 @@ export default {
       });
     }
 
+    // Consolidated live-surface drift health. Public redacted view (status +
+    // counts only, no failing-URL detail). Full detail goes to the alert email.
+    // Computed by the daily 41 6 UTC drift-audit cron, served from KV.
+    if (path === '/api/health/drift') {
+      const { publicView } = await import('./drift-audit');
+      const last = (await env.TENSORFEED_CACHE.get('drift:last', 'json')) as import('./drift-audit').DriftReport | null;
+      if (!last) {
+        return jsonResponse({ ok: false, error: 'not_ready', hint: 'The drift audit precomputes daily; retry after the next run.' }, 503, 0);
+      }
+      return jsonResponse({ ok: true, ...publicView(last) }, 200, 300);
+    }
+
     // === NEWS ENDPOINTS (cached 60s via Cache API) ===
 
     if (path === '/api/news' || path === '/api/agents/news' || path === '/api/agents/news.json') {
@@ -15406,6 +15418,18 @@ export default {
     if (cron === '53 9 * * *') {
       const { captureAiCrawlerAccessMap } = await import('./ai-crawler-access-feed');
       await run('captureAiCrawlerAccessMap', () => captureAiCrawlerAccessMap(env));
+    }
+
+    // Daily 06:41 UTC: anti-drift health audit. Independent top-level if (not
+    // chained into the else-if above) so it dispatches on its own dedicated
+    // slot. HEAD-checks the live deployed site for broken URLs, folds in the
+    // catalog data-freshness check, persists drift:last, and emails an alert
+    // only when health flips to red or a new failure appears. The scheduled()
+    // signature is (event, env) with no ctx, so the orchestrator awaits its
+    // own work here. Powers the redacted /api/health/drift.
+    if (cron === '41 6 * * *') {
+      const { runDriftAudit } = await import('./drift-audit');
+      await run('runDriftAudit', () => runDriftAudit(env));
     }
 
     // Record RSS poll history for the daily summary digest
