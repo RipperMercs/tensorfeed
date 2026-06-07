@@ -249,8 +249,24 @@ registerTool(
   {
     category: z.string().optional().describe('Filter by category (e.g. "anthropic", "openai", "research", "tools")'),
     limit: z.number().min(1).max(50).optional().describe('Number of articles to return (default 10, max 50)'),
+    digest: z.boolean().optional().describe('When true, return a headline-only digest (title, source, URL per story) instead of the full article set.'),
   },
-  async ({ category, limit }) => {
+  async ({ category, limit, digest }) => {
+    // digest mode reproduces the former get_ai_today tool: a headline-only
+    // companion view of the same feed. Default 5 stories, max 20, no category
+    // filter (matching the old tool's behavior).
+    if (digest) {
+      const data = await fetchJSON(`/news?limit=${Math.min(limit || 5, 20)}`) as {
+        articles: { title: string; url: string; source: string; publishedAt: string }[];
+      };
+
+      const text = data.articles
+        .map((a, i) => `${i + 1}. ${a.title} (${a.source})\n   ${a.url}`)
+        .join('\n\n');
+
+      return { content: [{ type: 'text' as const, text: `Today in AI:\n\n${text}` }] };
+    }
+
     const params = new URLSearchParams();
     if (category) params.set('category', category);
     params.set('limit', String(limit || 10));
@@ -575,27 +591,6 @@ registerTool(
   }
 );
 
-// ── Tool: get_ai_today ──────────────────────────────────────────────
-
-registerTool(
-  'get_ai_today',
-  'Get a quick digest of the top AI stories from the latest TensorFeed news feed, each with title, source, and URL. A shorter, headline-only companion to get_ai_news for when an agent just needs a fast read on what is happening in AI right now rather than the full article set. Free, no auth.',
-  {
-    limit: z.number().min(1).max(20).optional().describe('Number of stories (default 5)'),
-  },
-  async ({ limit }) => {
-    const data = await fetchJSON(`/news?limit=${limit || 5}`) as {
-      articles: { title: string; url: string; source: string; publishedAt: string }[];
-    };
-
-    const text = data.articles
-      .map((a, i) => `${i + 1}. ${a.title} (${a.source})\n   ${a.url}`)
-      .join('\n\n');
-
-    return { content: [{ type: 'text' as const, text: `Today in AI:\n\n${text}` }] };
-  }
-);
-
 // ── Tool: get_agent_activity ────────────────────────────────────────
 
 registerTool(
@@ -899,54 +894,45 @@ registerTool(
 // PREMIUM TOOLS (require TENSORFEED_TOKEN env var, paid in USDC on Base)
 // ════════════════════════════════════════════════════════════════════
 
-// ── Tool: get_account_balance ───────────────────────────────────────
+// ── Tool: account_status ────────────────────────────────────────────
+// Merges the former get_account_balance and get_account_usage tools into
+// one read. Both fetch calls and both output bodies are reused verbatim
+// and concatenated into a single text response.
 
 registerTool(
-  'get_account_balance',
-  'Check the credit balance for the configured TensorFeed bearer token. Free, but requires TENSORFEED_TOKEN to be set.',
+  'account_status',
+  'Check the configured TensorFeed token: current credit balance plus recent per-endpoint usage (last 100 calls aggregated). Free, but requires TENSORFEED_TOKEN.',
   {},
   async () => {
-    const data = (await fetchJSON('/payment/balance', { auth: true })) as {
+    const balance = (await fetchJSON('/payment/balance', { auth: true })) as {
       balance: number;
       created: string;
       last_used: string;
       total_purchased: number;
     };
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: `Balance: ${data.balance} credits\nTotal purchased: ${data.total_purchased}\nCreated: ${data.created}\nLast used: ${data.last_used}`,
-        },
-      ],
-    };
-  },
-);
+    const balanceText = `Balance: ${balance.balance} credits\nTotal purchased: ${balance.total_purchased}\nCreated: ${balance.created}\nLast used: ${balance.last_used}`;
 
-// ── Tool: get_account_usage ─────────────────────────────────────────
-
-registerTool(
-  'get_account_usage',
-  'Show per-endpoint usage for the configured TensorFeed token (last 100 calls aggregated). Free, but requires TENSORFEED_TOKEN.',
-  {},
-  async () => {
-    const data = (await fetchJSON('/payment/usage', { auth: true })) as {
+    const usage = (await fetchJSON('/payment/usage', { auth: true })) as {
       total_calls: number;
       total_credits_spent: number;
       by_endpoint: Record<string, { calls: number; credits: number; last_seen: string }>;
     };
-    if (data.total_calls === 0) {
-      return { content: [{ type: 'text' as const, text: 'No premium API calls on this token yet.' }] };
+    let usageText: string;
+    if (usage.total_calls === 0) {
+      usageText = 'No premium API calls on this token yet.';
+    } else {
+      const rows = Object.entries(usage.by_endpoint)
+        .sort(([, a], [, b]) => b.calls - a.calls)
+        .map(([ep, info]) => `  ${ep}: ${info.calls} calls, ${info.credits} credits, last ${info.last_seen}`)
+        .join('\n');
+      usageText = `Total: ${usage.total_calls} calls, ${usage.total_credits_spent} credits\n\n${rows}`;
     }
-    const rows = Object.entries(data.by_endpoint)
-      .sort(([, a], [, b]) => b.calls - a.calls)
-      .map(([ep, info]) => `  ${ep}: ${info.calls} calls, ${info.credits} credits, last ${info.last_seen}`)
-      .join('\n');
+
     return {
       content: [
         {
           type: 'text' as const,
-          text: `Total: ${data.total_calls} calls, ${data.total_credits_spent} credits\n\n${rows}`,
+          text: `${balanceText}\n\nUsage:\n${usageText}`,
         },
       ],
     };
@@ -2449,140 +2435,113 @@ registerTool(
   },
 );
 
-// ── Tool: create_price_watch (1 credit) ─────────────────────────────
+// ── Tool: create_watch (1 credit) ───────────────────────────────────
+// Merges the four former create_*_watch tools (price, status, digest,
+// leaderboard_rank) into one type-selected tool. Each case below builds
+// the EXACT body and uses the EXACT output formatting the matching old
+// create_*_watch tool used, against the same /premium/watches endpoint.
 
 registerTool(
-  'create_price_watch',
-  'Register a webhook watch on a model price change. Costs 1 credit ($0.02). Watch lives 90 days. Each fire is an HMAC-signed POST to callback_url.',
+  'create_watch',
+  'Register a webhook watch. type selects what to watch: "price" (a model price change), "status" (a service status transition), "digest" (a scheduled daily or weekly pricing summary), or "leaderboard_rank" (a provider crossing an uptime-rank threshold). Costs 1 credit ($0.02) at registration; the watch lives 90 days and each fire is an HMAC-signed POST to callback_url. Needs a TENSORFEED_TOKEN.',
   {
-    model: z.string().describe('Model name (e.g. "Claude Opus 4.7")'),
-    field: z.enum(['inputPrice', 'outputPrice', 'blended']).describe('Which price field to watch'),
-    op: z.enum(['lt', 'gt', 'changes']).describe('Trigger: lt = below threshold, gt = above, changes = any change'),
-    threshold: z.number().optional().describe('Required when op is lt or gt; ignored for changes'),
-    callback_url: z.string().describe('HTTPS URL to POST to when the watch fires'),
-    secret: z.string().optional().describe('Optional shared secret used to HMAC-sign delivery bodies'),
+    type: z.enum(['price', 'status', 'digest', 'leaderboard_rank']).describe('What to watch.'),
+    callback_url: z.string().describe('HTTPS URL that receives the HMAC-signed POST when the watch fires.'),
+    secret: z.string().optional().describe('Optional shared secret used to HMAC-sign delivery bodies.'),
+    model: z.string().optional().describe('type=price only. Model name (e.g. "Claude Opus 4.7").'),
+    field: z.enum(['inputPrice', 'outputPrice', 'blended']).optional().describe('type=price only. Which price field to watch.'),
+    cadence: z.enum(['daily', 'weekly']).optional().describe('type=digest only. How often the digest fires.'),
+    provider: z.string().optional().describe('type=status or type=leaderboard_rank only. Provider name or slug (case-insensitive). e.g. anthropic, openai, gemini, bedrock, azure.'),
+    op: z
+      .enum(['lt', 'gt', 'changes', 'becomes', 'drops_below', 'rises_above'])
+      .optional()
+      .describe('type=price uses lt/gt/changes (lt = below threshold, gt = above, changes = any change). type=status uses becomes/changes (becomes = transitions to a specific value; changes = any transition). type=leaderboard_rank uses drops_below/rises_above/changes (rank 1 = best; drops_below: was rank<=N now rank>N; rises_above: was rank>=N now rank<N; changes: any rank movement).'),
+    threshold: z.number().optional().describe('type=price (when op is lt or gt) or type=leaderboard_rank (when op is drops_below or rises_above). Integer rank position for leaderboard_rank.'),
+    value: z.enum(['operational', 'degraded', 'down']).optional().describe('type=status only. Required when op is becomes.'),
   },
-  async ({ model, field, op, threshold, callback_url, secret }) => {
-    const body: Record<string, unknown> = {
-      spec: { type: 'price', model, field, op, ...(typeof threshold === 'number' ? { threshold } : {}) },
-      callback_url,
-    };
-    if (secret !== undefined) body.secret = secret;
-    const data = (await fetchJSON('/premium/watches', { method: 'POST', body, auth: true })) as {
-      watch: { id: string; expires_at: string };
-      billing?: { credits_remaining?: number };
-    };
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: `Created watch ${data.watch.id} (expires ${data.watch.expires_at}). Credits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-        },
-      ],
-    };
-  },
-  CREATE_TOOL,
-);
-
-// ── Tool: create_status_watch (1 credit) ────────────────────────────
-
-registerTool(
-  'create_status_watch',
-  'Register a webhook watch on a service status transition (e.g. anthropic becomes down). Costs 1 credit ($0.02). Watch lives 90 days.',
-  {
-    provider: z.string().describe('Provider name (e.g. anthropic, openai)'),
-    op: z.enum(['becomes', 'changes']).describe('becomes = transitions to a specific value; changes = any transition'),
-    value: z.enum(['operational', 'degraded', 'down']).optional().describe('Required when op is becomes'),
-    callback_url: z.string().describe('HTTPS URL to POST to when the watch fires'),
-    secret: z.string().optional().describe('Optional HMAC shared secret'),
-  },
-  async ({ provider, op, value, callback_url, secret }) => {
-    const body: Record<string, unknown> = {
-      spec: { type: 'status', provider, op, ...(value ? { value } : {}) },
-      callback_url,
-    };
-    if (secret !== undefined) body.secret = secret;
-    const data = (await fetchJSON('/premium/watches', { method: 'POST', body, auth: true })) as {
-      watch: { id: string; expires_at: string };
-      billing?: { credits_remaining?: number };
-    };
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: `Created watch ${data.watch.id} (expires ${data.watch.expires_at}). Credits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-        },
-      ],
-    };
-  },
-  CREATE_TOOL,
-);
-
-// ── Tool: create_digest_watch (1 credit) ────────────────────────────
-
-registerTool(
-  'create_digest_watch',
-  'Register a scheduled digest webhook that fires daily or weekly with a curated summary of pricing changes (regardless of whether anything dramatic happened). Costs 1 credit ($0.02). Watch lives 90 days. Set-and-forget for agents that want a periodic snapshot without subscribing to realtime transitions.',
-  {
-    cadence: z.enum(['daily', 'weekly']).describe('How often the digest fires'),
-    callback_url: z.string().describe('HTTPS URL to POST to when the digest fires'),
-    secret: z.string().optional().describe('Optional HMAC shared secret'),
-  },
-  async ({ cadence, callback_url, secret }) => {
-    const body: Record<string, unknown> = {
-      spec: { type: 'digest', cadence },
-      callback_url,
-    };
-    if (secret !== undefined) body.secret = secret;
-    const data = (await fetchJSON('/premium/watches', { method: 'POST', body, auth: true })) as {
-      watch: { id: string; expires_at: string };
-      billing?: { credits_remaining?: number };
-    };
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: `Created ${cadence} digest watch ${data.watch.id} (expires ${data.watch.expires_at}). First fire at the next 7am UTC daily cron. Credits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-        },
-      ],
-    };
-  },
-  CREATE_TOOL,
-);
-
-// ── Tool: create_leaderboard_rank_watch (1 credit) ──────────────────
-
-registerTool(
-  'create_leaderboard_rank_watch',
-  'Register a webhook that fires when a provider crosses a rank threshold on the cross-provider 7-day uptime leaderboard. Rank 1 = best (highest uptime). drops_below: was rank<=N, now rank>N (got worse). rises_above: was rank>=N, now rank<N (got better). changes: any rank movement. Costs 1 credit ($0.02) at registration. Watch lives 90 days.',
-  {
-    provider: z.string().describe('Provider name or slug (case-insensitive). e.g. claude, openai, gemini, bedrock, azure'),
-    op: z.enum(['drops_below', 'rises_above', 'changes']).describe('Trigger condition'),
-    threshold: z.number().int().min(1).optional().describe('Required for drops_below / rises_above. Integer rank position.'),
-    callback_url: z.string().describe('HTTPS URL to POST to when the watch fires'),
-    secret: z.string().optional().describe('Optional HMAC shared secret'),
-  },
-  async ({ provider, op, threshold, callback_url, secret }) => {
-    const spec: Record<string, unknown> = { type: 'leaderboard_rank', provider, op };
-    if (threshold !== undefined) spec.threshold = threshold;
-    const body: Record<string, unknown> = { spec, callback_url };
-    if (secret !== undefined) body.secret = secret;
-    const data = (await fetchJSON('/premium/watches', { method: 'POST', body, auth: true })) as {
-      watch: { id: string; expires_at: string };
-      billing?: { credits_remaining?: number };
-    };
-    const desc =
-      op === 'changes'
-        ? `${provider} rank changes`
-        : `${provider} ${op.replace('_', ' ')} #${threshold}`;
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: `Created leaderboard rank watch ${data.watch.id} (${desc}). Expires ${data.watch.expires_at}. Credits remaining: ${data.billing?.credits_remaining ?? '?'}`,
-        },
-      ],
-    };
+  async (args) => {
+    const { type, callback_url, secret, model, field, op, threshold, cadence, provider, value } = args;
+    switch (type) {
+      case 'price': {
+        const body: Record<string, unknown> = {
+          spec: { type: 'price', model, field, op, ...(typeof threshold === 'number' ? { threshold } : {}) },
+          callback_url,
+        };
+        if (secret !== undefined) body.secret = secret;
+        const data = (await fetchJSON('/premium/watches', { method: 'POST', body, auth: true })) as {
+          watch: { id: string; expires_at: string };
+          billing?: { credits_remaining?: number };
+        };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Created watch ${data.watch.id} (expires ${data.watch.expires_at}). Credits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+            },
+          ],
+        };
+      }
+      case 'status': {
+        const body: Record<string, unknown> = {
+          spec: { type: 'status', provider, op, ...(value ? { value } : {}) },
+          callback_url,
+        };
+        if (secret !== undefined) body.secret = secret;
+        const data = (await fetchJSON('/premium/watches', { method: 'POST', body, auth: true })) as {
+          watch: { id: string; expires_at: string };
+          billing?: { credits_remaining?: number };
+        };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Created watch ${data.watch.id} (expires ${data.watch.expires_at}). Credits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+            },
+          ],
+        };
+      }
+      case 'digest': {
+        const body: Record<string, unknown> = {
+          spec: { type: 'digest', cadence },
+          callback_url,
+        };
+        if (secret !== undefined) body.secret = secret;
+        const data = (await fetchJSON('/premium/watches', { method: 'POST', body, auth: true })) as {
+          watch: { id: string; expires_at: string };
+          billing?: { credits_remaining?: number };
+        };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Created ${cadence} digest watch ${data.watch.id} (expires ${data.watch.expires_at}). First fire at the next 7am UTC daily cron. Credits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+            },
+          ],
+        };
+      }
+      case 'leaderboard_rank': {
+        const spec: Record<string, unknown> = { type: 'leaderboard_rank', provider, op };
+        if (threshold !== undefined) spec.threshold = threshold;
+        const body: Record<string, unknown> = { spec, callback_url };
+        if (secret !== undefined) body.secret = secret;
+        const data = (await fetchJSON('/premium/watches', { method: 'POST', body, auth: true })) as {
+          watch: { id: string; expires_at: string };
+          billing?: { credits_remaining?: number };
+        };
+        const desc =
+          op === 'changes'
+            ? `${provider} rank changes`
+            : `${provider} ${(op ?? '').replace('_', ' ')} #${threshold}`;
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Created leaderboard rank watch ${data.watch.id} (${desc}). Expires ${data.watch.expires_at}. Credits remaining: ${data.billing?.credits_remaining ?? '?'}`,
+            },
+          ],
+        };
+      }
+    }
   },
   CREATE_TOOL,
 );
@@ -2597,7 +2556,7 @@ registerTool(
       .string()
       .regex(/^[A-Za-z0-9_-]+$/, 'watch_id may only contain letters, digits, underscores, and hyphens')
       .max(128)
-      .describe('The wat_... id from create_price_watch / create_status_watch / list_watches'),
+      .describe('The wat_... id from create_watch / list_watches'),
   },
   async ({ watch_id }) => {
     await fetchJSON(`/premium/watches/${encodeURIComponent(watch_id)}`, { method: 'DELETE', auth: true });
