@@ -139,13 +139,25 @@ describe('refreshOpenAlexAICitationVelocity', () => {
   });
 
   it('returns ok:false on HTTP failure', async () => {
-    // mockResolvedValue (not Once): fetchOpenAlexWithRetry calls fetch up to 3 times.
-    (fetch as any).mockResolvedValue(new Response('rate limit', { status: 429 }));
-    const { kv } = makeKv();
-    const env = { TENSORFEED_CACHE: kv } as any;
-    const r = await refreshOpenAlexAICitationVelocity(env);
-    expect(r.ok).toBe(false);
-    expect(r.error).toContain('429');
+    // mockResolvedValue (not Once): fetchOpenAlexWithRetry calls fetch up to 3 times,
+    // sleeping with exponential backoff plus jitter (up to about 6s total) between
+    // attempts. Faking setTimeout makes those backoff sleeps instant so this test is
+    // fast and deterministic instead of racing the default 5s test timeout (the prior
+    // source of intermittent CI failures). AbortSignal.timeout is left on real timers
+    // (it never fires here because fetch is mocked).
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      (fetch as any).mockResolvedValue(new Response('rate limit', { status: 429 }));
+      const { kv } = makeKv();
+      const env = { TENSORFEED_CACHE: kv } as any;
+      const promise = refreshOpenAlexAICitationVelocity(env);
+      await vi.runAllTimersAsync();
+      const r = await promise;
+      expect(r.ok).toBe(false);
+      expect(r.error).toContain('429');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
