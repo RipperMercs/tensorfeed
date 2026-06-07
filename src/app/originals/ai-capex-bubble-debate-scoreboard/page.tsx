@@ -4,7 +4,6 @@ import { ArrowLeft, Clock, Coins } from 'lucide-react';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import ArticleHero from '@/components/originals/ArticleHero';
 import ShareBar from '@/components/originals/ShareBar';
-import { AdPlaceholder } from '@/components/AdPlaceholder';
 
 export const metadata: Metadata = {
   alternates: {
@@ -154,8 +153,6 @@ export default function AiCapexBubbleDebateScoreboardPage() {
           this hardware ages is an assumption, not a measurement.
         </p>
 
-        <AdPlaceholder format="in-article" className="my-8" />
-
         <h2 className="text-2xl font-semibold text-text-primary pt-4">
           The bull case: the demand is real and the capacity is short
         </h2>
@@ -275,8 +272,6 @@ export default function AiCapexBubbleDebateScoreboardPage() {
           </Link>{' '}
           are where I check whether the trend is bending.
         </p>
-
-        <AdPlaceholder format="horizontal" className="mt-10" />
 
         <h2 className="text-2xl font-semibold text-text-primary pt-4">Our Take</h2>
 
