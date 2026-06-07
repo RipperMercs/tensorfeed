@@ -25,7 +25,7 @@ const SDK_VERSION = (JSON.parse(readFileSync(pkgPath, 'utf-8')) as { version: st
 // model, so each points at the one premium tool that fuses them into a signed
 // decision. Mirrors the hosted /api/mcp `next` field. Honest, zero em dashes.
 const ROUTE_VERDICT_FOOTER =
-  '\n\nNext: route_verdict (1 credit, $0.02) fuses live pricing, contamination-discounted ' +
+  '\n\nNext: route_verdict with tier="full" (1 credit, $0.02) fuses live pricing, contamination-discounted ' +
   'benchmarks, real production usage, measured p95 latency, incident state, and deprecation ' +
   'flags into a signed best-fit model decision with ranked runners-up and an AFTA-signed ' +
   'receipt. No USDC yet? Sign a wallet message at tensorfeed.ai/api/payment/trial-credits ' +
@@ -252,11 +252,15 @@ registerTool(
     digest: z.boolean().optional().describe('When true, return a headline-only digest (title, source, URL per story) instead of the full article set.'),
   },
   async ({ category, limit, digest }) => {
-    // digest mode reproduces the former get_ai_today tool: a headline-only
-    // companion view of the same feed. Default 5 stories, max 20, no category
-    // filter (matching the old tool's behavior).
+    // digest mode is a headline-only companion view of the same feed. It honors
+    // the same inputs as the full view: the category filter and the schema limit
+    // (default 5, max 50). Earlier this branch dropped category and capped at 20,
+    // silently ignoring declared params.
     if (digest) {
-      const data = await fetchJSON(`/news?limit=${Math.min(limit || 5, 20)}`) as {
+      const dParams = new URLSearchParams();
+      if (category) dParams.set('category', category);
+      dParams.set('limit', String(limit || 5));
+      const data = await fetchJSON(`/news?${dParams}`) as {
         articles: { title: string; url: string; source: string; publishedAt: string }[];
       };
 
@@ -420,19 +424,16 @@ registerTool(
   'Check the configured TensorFeed token: current credit balance plus recent per-endpoint usage (last 100 calls aggregated). Free, but requires TENSORFEED_TOKEN.',
   {},
   async () => {
-    const balance = (await fetchJSON('/payment/balance', { auth: true })) as {
-      balance: number;
-      created: string;
-      last_used: string;
-      total_purchased: number;
-    };
+    // Balance and usage are independent reads; fetch them in parallel so the
+    // merged tool costs one round-trip of wall-clock time, not two.
+    const [balance, usage] = (await Promise.all([
+      fetchJSON('/payment/balance', { auth: true }),
+      fetchJSON('/payment/usage', { auth: true }),
+    ])) as [
+      { balance: number; created: string; last_used: string; total_purchased: number },
+      { total_calls: number; total_credits_spent: number; by_endpoint: Record<string, { calls: number; credits: number; last_seen: string }> },
+    ];
     const balanceText = `Balance: ${balance.balance} credits\nTotal purchased: ${balance.total_purchased}\nCreated: ${balance.created}\nLast used: ${balance.last_used}`;
-
-    const usage = (await fetchJSON('/payment/usage', { auth: true })) as {
-      total_calls: number;
-      total_credits_spent: number;
-      by_endpoint: Record<string, { calls: number; credits: number; last_seen: string }>;
-    };
     let usageText: string;
     if (usage.total_calls === 0) {
       usageText = 'No premium API calls on this token yet.';
@@ -610,7 +611,7 @@ registerTool(
 // calls suffix.
 function verdictUpsell(tool: string, adds: string, rl: string): string {
   return (
-    `Upgrade: ${tool} (1 credit, $0.02) adds ${adds} and an AFTA-signed receipt. ` +
+    `Upgrade: call ${tool} again with tier="full" (1 credit, $0.02) for ${adds} and an AFTA-signed receipt. ` +
     `No USDC yet? Sign a wallet message at tensorfeed.ai/api/payment/trial-credits for 25 free credits.${rl}`
   );
 }
@@ -1786,6 +1787,27 @@ registerTool(
   },
   async (args) => {
     const { type, callback_url, secret, model, field, op, threshold, cadence, provider, value } = args;
+    // The merged schema makes every type-specific field optional (each is
+    // required for only one type). Guard the required fields per type here so a
+    // missing one fails with a clear message instead of an opaque 4xx from the
+    // paid /premium/watches endpoint (which would otherwise burn a request).
+    const missingFields: string[] = [];
+    if (type === 'price') {
+      if (!model) missingFields.push('model');
+      if (!field) missingFields.push('field');
+      if (!op) missingFields.push('op');
+    } else if (type === 'status') {
+      if (!provider) missingFields.push('provider');
+      if (!op) missingFields.push('op');
+    } else if (type === 'digest') {
+      if (!cadence) missingFields.push('cadence');
+    } else if (type === 'leaderboard_rank') {
+      if (!provider) missingFields.push('provider');
+      if (!op) missingFields.push('op');
+    }
+    if (missingFields.length > 0) {
+      return { content: [{ type: 'text' as const, text: `type=${type} requires: ${missingFields.join(', ')}.` }] };
+    }
     switch (type) {
       case 'price': {
         const body: Record<string, unknown> = {

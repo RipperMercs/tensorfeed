@@ -43,17 +43,17 @@ Swap `task` for `reasoning`, `creative`, or `general`, or pass `?model=<id-or-na
 
 ### The agent path (MCP)
 
-With `@tensorfeed/mcp-server` installed, an agent gets two tools. Call the free one for the pick, then the paid one when it needs to defend the choice:
+With `@tensorfeed/mcp-server` installed, an agent gets one `route_verdict` tool with a `tier` parameter. Call it with the default free tier for the pick, then `tier="full"` when it needs to defend the choice:
 
 ```text
-# Free taste: the top pick + reasoning, no token (10/IP/day)
-route_verdict_preview({ task: "code" })
+# Free taste: the top pick + reasoning, no token (10/IP/day). tier defaults to "preview".
+route_verdict({ task: "code" })
 
 # 1 credit: ranked runners-up, constraint filters, AFTA-signed receipt
-route_verdict({ task: "code", max_latency_p95_ms: 1500, budget: 8, min_quality: 0.6 })
+route_verdict({ task: "code", tier: "full", max_latency_p95_ms: 1500, budget: 8, min_quality: 0.6 })
 ```
 
-`route_verdict` adds the ranked runners-up, the constraint filters (`max_latency_p95_ms`, `budget`, `min_quality`, `require_operational`, `exclude_deprecated`), and the AFTA-signed receipt the agent can audit later. Credits come from [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
+`tier="full"` adds the ranked runners-up, the constraint filters (`max_latency_p95_ms`, `budget`, `min_quality`, `require_operational`, `exclude_deprecated`), and the AFTA-signed receipt the agent can audit later. Credits come from [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
 ### Why it matters
 
@@ -61,11 +61,11 @@ Models, prices, and latency move week to week. `route_verdict` is one signed cal
 
 ## Catalog
 
-79 tools (48 free, 31 premium). Free tools need no token; premium tools charge USDC on Base via x402 and return an AFTA-signed receipt. The full tool reference lives in the [standalone repo](https://github.com/RipperMercs/tensorfeed-mcp).
+24 tools. The core flagships, the eight signed verdicts, the time-series tools, and the webhook watches are dedicated tools; the rest of the 100+ TensorFeed endpoints are reachable through the `find_tensorfeed_data` discovery tool and callable over HTTP. Free tiers need no token; paid tiers charge USDC on Base via x402 and return an AFTA-signed receipt. The full tool reference lives in the [standalone repo](https://github.com/RipperMercs/tensorfeed-mcp).
 
 ### Verdict family
 
-Seven signed decisions, each with a free preview tool plus a 1-credit ($0.02) AFTA-signed premium version:
+Eight signed decisions (route_verdict is featured above). Each is a single tool with a `tier` parameter: `tier="preview"` (default) is free, `tier="full"` costs 1 credit ($0.02) and adds the full ranking and an AFTA-signed receipt:
 
 - **provider_reliability_verdict**: the safest AI provider to build on, ranked by availability and tail consistency over TensorFeed's own probes.
 - **x402_settlement_verdict**: the x402 settlement momentum, concentration, and leading publisher over a 24h, 7d, or 30d window.
