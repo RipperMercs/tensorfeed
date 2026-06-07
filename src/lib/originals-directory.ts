@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'nvidia-nemotron-3-ultra-open-agents-blackwell',
+    title:
+      'NVIDIA Just Open-Sourced a 550B Agent Model. The Architecture Is the Blackwell Sale.',
+    author: 'Kira Nolan',
+    date: 'June 7, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 4, 2026, NVIDIA released Nemotron 3 Ultra: a 550B mixture-of-experts model with 55B active parameters, a hybrid Mamba-Transformer design, a 1M token context, 300+ tokens/sec, and open weights under the NVIDIA Open Model License. It is the highest scoring US open weight model on the Artificial Analysis Intelligence Index (48), still six points behind China's Kimi K2.6 (54). OpenRouter lists it at $0.50 input / $2.50 output per million tokens, with a free tier. NVIDIA built it for long-running agents and trained it natively in NVFP4 on Blackwell. The three architecture choices (NVFP4 routed experts, Mamba long-context, agent-trajectory shaping) are silicon decisions disguised as research decisions: each one ties best-case inference economics to Blackwell. The US versus China open weight gap did not close (six points to Kimi). What the model does to the inference floor, why it pulls the agent workload back onto NVIDIA silicon, and the open frontier becoming a NVIDIA-and-China conversation by default.",
+  },
+  {
     slug: 'great-american-ai-act-preemption',
     title:
       'Congress Finally Wrote the Preemption Down: Three Years, Development Only. Sacramento Keeps the Rest.',
