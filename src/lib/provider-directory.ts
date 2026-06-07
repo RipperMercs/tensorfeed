@@ -33,7 +33,7 @@ export const PROVIDERS: ProviderMeta[] = [
     seoDescription:
       'Everything about Anthropic and Claude. Model lineup, API pricing, benchmark scores, and status monitoring. Updated daily on TensorFeed.',
     intro:
-      'Anthropic is the AI safety company behind the Claude family of models. Founded in 2021 by former OpenAI researchers Dario and Daniela Amodei, Anthropic has built a reputation for producing models that lead on reasoning and code generation benchmarks while emphasizing safety research. Their current flagship, Claude Opus 4.8, shipped on May 28, 2026, just six weeks after Opus 4.7. It keeps the 1 million token context window and the $15 input / $75 output pricing while improving agentic coding (64.3% to 69.2% on Anthropic\'s own measure), honesty about its own progress, and long-horizon autonomy, with a fast mode that is roughly 2.5x quicker and three times cheaper than before. In late April 2026 the company secured up to $25 billion in additional Amazon investment (April 21) and up to $40 billion in compute and capital from Google (April 24), bringing combined hyperscaler commitments past $65 billion at a $350 to $380 billion valuation. Their Model Context Protocol (MCP) has become foundational infrastructure for AI agents.',
+      'Anthropic is the AI safety company behind the Claude family of models. Founded in 2021 by former OpenAI researchers Dario and Daniela Amodei, Anthropic has built a reputation for producing models that lead on reasoning and code generation benchmarks while emphasizing safety research. Their current flagship, Claude Opus 4.8, shipped on May 28, 2026, just six weeks after Opus 4.7. It keeps the 1 million token context window and the $15 input / $75 output pricing while improving agentic coding (64.3% to 69.2% on Anthropic\'s own measure), honesty about its own progress, and long-horizon autonomy, with a fast mode that is roughly 2.5x quicker and three times cheaper than before. In late April 2026 the company secured up to $25 billion in additional Amazon investment (April 21) and up to $40 billion in compute and capital from Google (April 24). On May 28, 2026 Anthropic closed a $65 billion Series H at a $965 billion post-money valuation, and on June 1 it confidentially filed a draft S-1 with the SEC for a proposed IPO, getting ahead of rival OpenAI. Their Model Context Protocol (MCP) has become foundational infrastructure for AI agents.',
     founded: '2021',
     headquarters: 'San Francisco, CA',
     ceo: 'Dario Amodei',
@@ -172,6 +172,38 @@ export const PROVIDERS: ProviderMeta[] = [
     ceo: 'Jensen Huang',
     keyProducts: ['Nemotron 3 Nano Omni', 'NIM inference microservices', 'build.nvidia.com', 'NeMo framework', 'Parakeet ASR'],
     strengths: ['Open weights with consumer GPU support', '256K context multimodal', 'Top document and video benchmarks', 'Native audio as first-class modality', 'Self-hosted deployment focus'],
+  },
+  {
+    slug: 'microsoft',
+    pricingId: 'microsoft',
+    name: 'Microsoft',
+    url: 'https://microsoft.ai',
+    seoTitle: 'Microsoft AI: MAI Models, Copilot, Pricing, and Overview',
+    seoDescription:
+      'Everything about Microsoft AI and the MAI family. MAI-Code-1-Flash, MAI-Thinking-1, GitHub Copilot integration, pricing, and capabilities. Updated daily on TensorFeed.',
+    intro:
+      'Microsoft spent years as OpenAI\'s largest backer and distributor, and in June 2026 it stepped onto the field as a frontier lab in its own right. At Build 2026 on June 2, Microsoft AI announced MAI-Code-1-Flash, its first in-house coding model, and MAI-Thinking-1, its first reasoning model. MAI-Code-1-Flash rolls out across all GitHub Copilot tiers at $0.75 per million input and $4.50 per million output with a 256K context window, and Microsoft claims it beats Claude Haiku 4.5 on price to performance while using 60% fewer tokens on hard tasks. MAI-Thinking-1, a 35B-active-parameter MoE with a 256K context window, posted 97% on AIME 25 and 53% on SWE-Bench Pro, which Microsoft says matches Claude Opus 4.6, and sits in private preview on Microsoft Foundry with distribution planned through Fireworks AI, Baseten, and OpenRouter. The launches are widely read as Microsoft reducing its dependence on OpenAI models inside Copilot.',
+    founded: '1975 (Microsoft); 2024 (Microsoft AI)',
+    headquarters: 'Redmond, WA',
+    ceo: 'Satya Nadella',
+    keyProducts: ['MAI-Code-1-Flash', 'MAI-Thinking-1', 'GitHub Copilot', 'Microsoft Foundry', 'Microsoft 365 Copilot', 'Azure AI'],
+    strengths: ['GitHub Copilot distribution at massive scale', 'Aggressive price to performance on coding', 'Azure and Foundry enterprise reach', 'First-party reasoning model in preview', 'Reduced reliance on OpenAI'],
+  },
+  {
+    slug: 'minimax',
+    pricingId: 'minimax',
+    name: 'MiniMax',
+    url: 'https://www.minimax.io',
+    seoTitle: 'MiniMax: M3 Model, Open Weights, Pricing, and Overview',
+    seoDescription:
+      'Everything about MiniMax and the M3 model. Sparse attention, 1M context, open weights, $0.30/$1.20 pricing, benchmarks, and capabilities. Updated daily on TensorFeed.',
+    intro:
+      'MiniMax is the Shanghai-based AI lab known for shipping open-weight models with aggressive long-context engineering. Its June 1, 2026 release, MiniMax M3, is built on MiniMax Sparse Attention (MSA), which replaces full attention with KV-block selection and cuts per-token compute at 1M context to roughly one twentieth of the previous generation. M3 takes text, image, and video input across a 1,048,576 token context window, reports 59% on SWE-Bench Pro and 83.5 on BrowseComp, and is priced at $0.30 per million input and $1.20 per million output, around 5 to 10 percent of the cost of proprietary flagships. The headline benchmark runs used MiniMax\'s own infrastructure and agent scaffolding, so independent verification is pending, and the open weights are due on Hugging Face within about ten days of launch.',
+    founded: '2021',
+    headquarters: 'Shanghai, China',
+    ceo: 'Yan Junjie',
+    keyProducts: ['MiniMax M3', 'MiniMax M2', 'MiniMax API platform', 'Hailuo AI video'],
+    strengths: ['Sparse attention long-context efficiency', 'Ultra-low pricing', 'Open-weight release cadence', 'Multimodal input at 1M context', 'Strong agentic coding claims'],
   },
 ];
 

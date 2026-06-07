@@ -1,6 +1,41 @@
 {
   "events": [
     {
+      "date": "2026-06-02",
+      "title": "Microsoft Launches MAI-Code-1-Flash and MAI-Thinking-1 at Build 2026",
+      "provider": "Microsoft",
+      "category": "model-release",
+      "description": "Microsoft announced its first in-house coding and reasoning models at Build 2026 in San Francisco. MAI-Code-1-Flash rolls out across all GitHub Copilot tiers with a 256K context window, priced at $0.75 per million input tokens ($0.075 cached) and $4.50 per million output, with Microsoft claiming better price to performance than Claude Haiku 4.5 and 60% fewer tokens used on hard tasks. MAI-Thinking-1, a 35B active parameter MoE reasoning model with a 256K context window, posted 97% on AIME 25 and 53% on SWE-Bench Pro, which Microsoft says matches Claude Opus 4.6. It enters private preview on Microsoft Foundry with distribution planned through Fireworks AI, Baseten, and OpenRouter. The launches mark a deliberate step away from Microsoft's dependence on OpenAI models inside Copilot."
+    },
+    {
+      "date": "2026-06-01",
+      "title": "Anthropic Confidentially Files S-1 for IPO",
+      "provider": "Anthropic",
+      "category": "funding",
+      "description": "Anthropic confidentially submitted a draft S-1 registration statement to the SEC for a proposed initial public offering, less than a week after closing a $65 billion Series H at a $965 billion post-money valuation. Annualized revenue run-rate recently crossed $47 billion on enterprise adoption of Claude for coding and agentic workflows. Share count and pricing are not yet determined. The move puts Anthropic ahead of OpenAI, which is reportedly preparing its own confidential filing, in the race to a landmark AI listing."
+    },
+    {
+      "date": "2026-06-01",
+      "title": "MiniMax Releases M3 Open-Weight Coding Model",
+      "provider": "MiniMax",
+      "category": "open-source",
+      "description": "MiniMax launched M3, an open-weight coding and agentic model built on MiniMax Sparse Attention, which replaces full attention with KV-block selection and cuts per-token compute at 1M context to roughly one twentieth of the previous generation. M3 accepts text, image, and video input across a 1,048,576 token context window with up to 512K output tokens, priced at $0.30 per million input and $1.20 per million output. MiniMax reports 59% on SWE-Bench Pro and 83.5 on BrowseComp, though headline runs used its own infrastructure with agent scaffolding, so independent verification is pending. Weights and a technical report are due on Hugging Face within about ten days."
+    },
+    {
+      "date": "2026-05-28",
+      "title": "Anthropic Raises $65B Series H at $965B Valuation",
+      "provider": "Anthropic",
+      "category": "funding",
+      "description": "Anthropic closed a $65 billion Series H funding round at a $965 billion post-money valuation, surpassing OpenAI's reported $852 billion to become the most valuable private AI company. The round landed the same day as the Claude Opus 4.8 release and set the stage for the confidential IPO filing that followed on June 1."
+    },
+    {
+      "date": "2026-05-28",
+      "title": "Anthropic Releases Claude Opus 4.8",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic shipped Claude Opus 4.8 just six weeks after Opus 4.7, keeping the 1 million token context window. Anthropic's own measures put agentic coding at 69.2% (up from 64.3%) and knowledge work at 1890 (up from 1753), with the model roughly 4x less likely than 4.7 to let flaws in its own code slip through while using about 35% fewer tokens per task. A new fast mode runs roughly 2.5x quicker and about three times cheaper than before, and Dynamic Workflows adds large-scale parallel subagent support."
+    },
+    {
       "date": "2026-05-21",
       "title": "Trump Postpones AI Executive Order Hours Before Signing",
       "provider": "US Government",

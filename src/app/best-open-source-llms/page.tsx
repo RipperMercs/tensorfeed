@@ -4,11 +4,11 @@ import { ArticleJsonLd, FAQPageJsonLd, ItemListJsonLd } from '@/components/seo/J
 export const metadata: Metadata = {
   title: 'Best Open Source LLMs in 2026: Llama, DeepSeek V4, Mistral, Qwen, Cohere Command A+ & More | TensorFeed',
   description:
-    'Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, Mistral, Qwen 2.5, Phi-4, Gemma 2, Cohere Command A+, and Command R. Parameters, benchmarks, licensing, and how to run them locally.',
+    'Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, MiniMax M3, Mistral, Qwen 2.5, Phi-4, Gemma 2, Cohere Command A+, and Command R. Parameters, benchmarks, licensing, and how to run them locally.',
   openGraph: {
     title: 'Best Open Source LLMs in 2026',
     description:
-      'Compare the best open source LLMs: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R.',
+      'Compare the best open source LLMs: Llama 4, DeepSeek V4, MiniMax M3, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R.',
     url: 'https://tensorfeed.ai/best-open-source-llms',
   },
   alternates: { canonical: 'https://tensorfeed.ai/best-open-source-llms' },
@@ -86,6 +86,24 @@ const models = [
     ],
     bestFor: 'High-volume, cost-sensitive workloads where you need 1M context on a budget. Classification, summarization, and batch processing tasks where V4 Pro is overkill.',
     considerations: 'Noticeably weaker than V4 Pro on complex reasoning and coding benchmarks. Best paired with V4 Pro in a routing setup where simpler tasks go to Flash and harder ones go to Pro.',
+  },
+  {
+    name: 'MiniMax M3',
+    company: 'MiniMax',
+    parameters: 'Undisclosed MoE (sparse attention)',
+    architecture: 'Mixture of Experts (MoE) with MiniMax Sparse Attention',
+    contextWindow: '1M tokens (512K minimum guaranteed)',
+    license: 'Open weights announced, license TBD (weights due on Hugging Face mid-June 2026)',
+    released: 'June 2026',
+    highlights: [
+      'MiniMax Sparse Attention cuts 1M-context compute to roughly 1/20th of the prior generation',
+      'Claimed 59% on SWE-Bench Pro and 83.5 on BrowseComp',
+      'Multimodal input: text, image, and video',
+      'API pricing at $0.30/$1.20 per 1M tokens, among the cheapest at this tier',
+      'Up to 512K output tokens',
+    ],
+    bestFor: 'Cost-sensitive agentic coding and browser-agent workloads that need very long context. One to watch once the weights and technical report land on Hugging Face.',
+    considerations: 'Launch benchmarks were run on MiniMax infrastructure with agent scaffolding (Claude Code, Mini-SWE-Agent, Terminus), so treat them as unverified until independent results appear. Weights were not yet downloadable at launch; the API went live first.',
   },
   {
     name: 'Mistral Large',
@@ -223,7 +241,7 @@ export default function BestOpenSourceLLMsPage() {
         title="Best Open Source LLMs in 2026"
         description="Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R. Includes benchmarks, licensing, and how to run locally."
         datePublished="2025-05-01"
-        dateModified="2026-05-24"
+        dateModified="2026-06-07"
       />
 
       <ItemListJsonLd
@@ -233,7 +251,7 @@ export default function BestOpenSourceLLMsPage() {
         items={models.map((model) => ({ name: model.name }))}
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: May 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: June 7, 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         Best Open Source LLMs in 2026

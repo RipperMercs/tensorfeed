@@ -820,6 +820,81 @@ export const COMPARISONS: ComparisonMeta[] = [
       'Workloads where 4.7 already meets quality and latency targets',
     ],
   },
+  // ── Added June 7, 2026 ──────────────────────────────────────────────
+  {
+    slug: 'mai-code-1-flash-vs-claude-haiku-4-5',
+    modelA: 'mai-code-1-flash',
+    modelB: 'claude-haiku-4-5',
+    nameA: 'MAI-Code-1-Flash',
+    nameB: 'Claude Haiku 4.5',
+    providerA: 'Microsoft',
+    providerB: 'Anthropic',
+    benchmarkNameA: 'MAI-Code-1-Flash',
+    benchmarkNameB: 'Claude Haiku 4.5',
+    seoTitle: 'MAI-Code-1-Flash vs Claude Haiku 4.5: Budget Coding Showdown',
+    seoDescription:
+      'Microsoft MAI-Code-1-Flash vs Claude Haiku 4.5 compared. Pricing, context windows, Copilot integration, and which budget coding model to pick on TensorFeed.',
+    intro:
+      'Microsoft picked this fight on purpose. When MAI-Code-1-Flash launched at Build 2026 on June 2, Microsoft framed it directly against Claude Haiku 4.5, claiming better price to performance across coding benchmarks in GitHub Copilot token-based billing. The numbers back the pricing half of that claim: $0.75 input and $4.50 output per million tokens versus Haiku at $0.80 and $4.00, with a $0.075 cached input rate and a claimed 60% reduction in tokens used on hard tasks, which matters more than the sticker price. Haiku counters with vision support, a mature track record in production, and Anthropic\'s tooling ecosystem. MAI-Code-1-Flash benchmarks are mostly Microsoft\'s own at launch, so treat the performance claims as provisional until independent results land.',
+    verdicts: [
+      { category: 'Output pricing', winner: 'B', reason: 'Haiku 4.5 charges $4.00 per million output tokens vs MAI-Code-1-Flash at $4.50' },
+      { category: 'Input pricing', winner: 'A', reason: 'MAI-Code-1-Flash charges $0.75 per million input tokens vs Haiku at $0.80, and cached input drops to $0.075' },
+      { category: 'Effective cost per task', winner: 'A', reason: 'Microsoft claims 60% fewer tokens consumed on hard coding tasks, which would dominate raw per-token pricing if it holds up independently' },
+      { category: 'Context window', winner: 'A', reason: '256K tokens vs Haiku at 200K' },
+      { category: 'Multimodal', winner: 'B', reason: 'Haiku 4.5 supports vision input; MAI-Code-1-Flash is text and code only' },
+      { category: 'IDE integration', winner: 'A', reason: 'Native model picker option across every GitHub Copilot tier including Free' },
+      { category: 'Benchmark transparency', winner: 'B', reason: 'Haiku 4.5 has a year of independent benchmark coverage; MAI-Code-1-Flash launch numbers are Microsoft-reported and pricing is still being finalized' },
+    ],
+    chooseA: [
+      'GitHub Copilot workflows on any tier, including Free',
+      'High-volume code completion where cached input pricing compounds',
+      'Refactoring sessions that benefit from the 256K context window',
+      'Teams already standardized on Microsoft Foundry or Azure',
+    ],
+    chooseB: [
+      'Workloads that need vision input alongside code',
+      'Production systems that want a year of proven reliability',
+      'Teams built on Claude Code, MCP, and the Anthropic ecosystem',
+      'Output-heavy generation where the $4.00 rate edges ahead',
+    ],
+  },
+  {
+    slug: 'minimax-m3-vs-deepseek-v4-pro',
+    modelA: 'minimax-m3',
+    modelB: 'deepseek-v4-pro',
+    nameA: 'MiniMax M3',
+    nameB: 'DeepSeek V4 Pro',
+    providerA: 'MiniMax',
+    providerB: 'DeepSeek',
+    benchmarkNameA: 'MiniMax M3',
+    benchmarkNameB: 'DeepSeek V4 Pro',
+    seoTitle: 'MiniMax M3 vs DeepSeek V4 Pro: Open-Weight Coding Compared',
+    seoDescription:
+      'MiniMax M3 vs DeepSeek V4 Pro compared. Two Chinese open-weight coding flagships, pricing, 1M context on both, benchmarks, and verdicts on TensorFeed.',
+    intro:
+      'China\'s two loudest open-weight labs now have flagships aimed at the same workload: cheap, long-context agentic coding. MiniMax M3 landed June 1, 2026 with sparse attention that cuts 1M-context compute to roughly one twentieth of its previous generation, $0.30/$1.20 pricing, and a claimed 59% on SWE-Bench Pro. DeepSeek V4 Pro, the April 2026 incumbent, counters with a verified 80.6% on SWE-bench Verified, MIT-licensed weights you can download today, and a longer record of independent benchmarking. The big caveat: M3\'s headline numbers were run on MiniMax\'s own infrastructure with agent scaffolding, and its weights are still about ten days out at launch. V4 Pro is the safer pick today; M3 is the one to watch.',
+    verdicts: [
+      { category: 'Pricing', winner: 'A', reason: 'M3 costs $0.30/$1.20 per million tokens vs V4 Pro at $0.435/$0.87; M3 is cheaper on input, V4 Pro on output' },
+      { category: 'Verified benchmarks', winner: 'B', reason: 'V4 Pro has independently reproduced scores including 80.6% SWE-bench Verified; M3 launch numbers are self-reported with agent scaffolding' },
+      { category: 'Long-context efficiency', winner: 'A', reason: 'MiniMax Sparse Attention cuts per-token compute at 1M context to roughly 1/20th of the prior generation' },
+      { category: 'Context window', winner: 'tie', reason: 'Both ship roughly 1M token context windows' },
+      { category: 'Multimodal input', winner: 'A', reason: 'M3 accepts text, image, and video input; V4 Pro covers text and vision' },
+      { category: 'Weights availability', winner: 'B', reason: 'V4 Pro weights are on Hugging Face under MIT today; M3 weights were still pending about ten days after launch' },
+      { category: 'License clarity', winner: 'B', reason: 'V4 Pro is MIT licensed; M3\'s license is unconfirmed until the weights drop' },
+    ],
+    chooseA: [
+      'Cost-sensitive agentic pipelines with massive input context',
+      'Browser and tool-use agents (83.5 BrowseComp claimed)',
+      'Video and image input alongside code',
+      'Workloads that can tolerate launch-window uncertainty',
+    ],
+    chooseB: [
+      'Self-hosting today under a clear MIT license',
+      'Workloads that need independently verified coding performance',
+      'Output-heavy generation where $0.87 beats $1.20',
+      'Production systems that cannot wait for M3 verification',
+    ],
+  },
 ];
 
 export function getComparisonBySlug(slug: string): ComparisonMeta | undefined {

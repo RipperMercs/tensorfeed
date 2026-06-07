@@ -60,7 +60,7 @@ const categories: { title: string; id: string; tools: Tool[] }[] = [
       {
         name: 'GitHub Copilot',
         description:
-          'The most widely adopted AI coding assistant, embedded directly in VS Code and other editors. It provides inline code suggestions, chat-based help, and can generate entire functions from comments. Powered by OpenAI models.',
+          'The most widely adopted AI coding assistant, embedded directly in VS Code and other editors. It provides inline code suggestions, chat-based help, and can generate entire functions from comments. The model picker spans OpenAI, Anthropic, and as of June 2026, Microsoft\'s own MAI-Code-1-Flash on every tier including Free.',
         pricing: 'Individual: $10/mo. Business: $19/user/mo.',
         bestFor: 'Inline code completion in your existing editor',
         url: 'https://github.com/features/copilot',
@@ -250,7 +250,7 @@ export default function BestAIToolsPage() {
         title="Best AI Tools in 2026: The Definitive Guide"
         description="A curated guide to the best AI tools in 2026 across chatbots, coding, image generation, video, writing, research, and productivity."
         datePublished="2025-09-01"
-        dateModified="2026-03-28"
+        dateModified="2026-06-07"
       />
 
       <ItemListJsonLd
@@ -262,7 +262,7 @@ export default function BestAIToolsPage() {
         )}
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: March 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: June 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         Best AI Tools in 2026: The Definitive Guide

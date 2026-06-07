@@ -281,7 +281,7 @@ async function pingIndexNow(env: Env): Promise<void> {
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 export const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-06-05',
+  lastUpdated: '2026-06-07',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
@@ -356,6 +356,18 @@ export const BASELINE_PRICING: PricingData = {
       id: 'nvidia', name: 'NVIDIA', logo: '/images/providers/nvidia.png', url: 'https://www.nvidia.com/en-us/ai/',
       models: [
         { id: 'nemotron-3-nano-omni', name: 'Nemotron 3 Nano Omni', inputPrice: 0, outputPrice: 0, contextWindow: 256000, released: '2026-04', openSource: true, license: 'NVIDIA Open Model License', capabilities: ['text', 'vision', 'audio', 'video', 'code', 'reasoning', 'tool-use'], tier: 'mid' },
+      ],
+    },
+    {
+      id: 'microsoft', name: 'Microsoft', logo: '/images/providers/microsoft.png', url: 'https://microsoft.ai',
+      models: [
+        { id: 'mai-code-1-flash', name: 'MAI-Code-1-Flash', inputPrice: 0.75, outputPrice: 4.5, contextWindow: 256000, released: '2026-06', capabilities: ['text', 'code', 'tool-use'], tier: 'budget' },
+      ],
+    },
+    {
+      id: 'minimax', name: 'MiniMax', logo: '/images/providers/minimax.png', url: 'https://www.minimax.io',
+      models: [
+        { id: 'minimax-m3', name: 'MiniMax M3', inputPrice: 0.3, outputPrice: 1.2, contextWindow: 1048576, released: '2026-06', openSource: true, license: 'Open weights, license TBD', capabilities: ['text', 'vision', 'video', 'code', 'tool-use'], tier: 'budget' },
       ],
     },
   ],

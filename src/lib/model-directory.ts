@@ -461,6 +461,44 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     docsUrl: 'https://huggingface.co/nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16',
     tier: 'mid',
   },
+
+  // ── Microsoft ──────────────────────────────────────────────────────
+  {
+    slug: 'mai-code-1-flash',
+    pricingId: 'mai-code-1-flash',
+    benchmarkName: 'MAI-Code-1-Flash',
+    providerId: 'microsoft',
+    providerName: 'Microsoft',
+    providerUrl: 'https://microsoft.ai',
+    seoTitle: 'MAI-Code-1-Flash: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Microsoft MAI-Code-1-Flash, the first in-house Copilot coding model from Build 2026. $0.75/$4.50 pricing, 256K context, availability, and specs on TensorFeed.',
+    intro:
+      'MAI-Code-1-Flash is Microsoft\'s first in-house coding model, announced at Build 2026 on June 2. It targets fast, cheap code generation inside GitHub Copilot, where it is rolling out across Free, Pro, Pro+, and Max tiers as a model picker option. Microsoft says it uses roughly 60% fewer tokens than comparable models on hard tasks, and GitHub lists it at $0.75 per million input tokens ($0.075 cached) and $4.50 per million output, undercutting Claude Haiku 4.5 on price to performance. It ships with a 256K context window and reaches third-party providers including Fireworks AI, Baseten, and OpenRouter via Microsoft Foundry. Pricing is listed as still being finalized, so treat the numbers as launch-window figures.',
+    strengths: ['256K context window', 'Cheap token-based billing ($0.75/$4.50)', '60% fewer tokens on hard coding tasks', 'Native GitHub Copilot integration', 'Available via Fireworks, Baseten, OpenRouter'],
+    useCases: ['High-volume code completion', 'Copilot-style IDE assistance', 'Refactoring sessions with long file context', 'Budget agentic coding pipelines'],
+    docsUrl: 'https://microsoft.ai/models/mai-code-1-flash/',
+    tier: 'budget',
+  },
+
+  // ── MiniMax ────────────────────────────────────────────────────────
+  {
+    slug: 'minimax-m3',
+    pricingId: 'minimax-m3',
+    benchmarkName: 'MiniMax M3',
+    providerId: 'minimax',
+    providerName: 'MiniMax',
+    providerUrl: 'https://www.minimax.io',
+    seoTitle: 'MiniMax M3: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'MiniMax M3, the June 2026 open-weight coding model with sparse attention. $0.30/$1.20 pricing, 1M context window, SWE-Bench Pro claims, and specs on TensorFeed.',
+    intro:
+      'MiniMax M3 launched June 1, 2026 as an open-weight coding and agentic model built on MiniMax Sparse Attention, which swaps full attention for KV-block selection to cut long-context compute to roughly one twentieth of the previous generation at 1M tokens. It accepts text, image, and video input with a 1,048,576 token context window and up to 512K output tokens. MiniMax reports 59% on SWE-Bench Pro and 83.5 on BrowseComp, though several results were run on MiniMax infrastructure with agent scaffolding, so independent verification is still pending. API pricing is $0.30 per million input and $1.20 per million output. Weights and a technical report are due on Hugging Face within about ten days of launch.',
+    strengths: ['1M token context window', 'Very low pricing ($0.30/$1.20)', 'Sparse attention cuts long-context cost roughly 20x', 'Multimodal input (text, image, video)', 'Open weights promised within days of launch'],
+    useCases: ['Budget agentic coding', 'Long-context repository analysis', 'Browser and tool-use agents', 'Self-hosted inference once weights land'],
+    docsUrl: 'https://www.minimax.io/platform',
+    tier: 'budget',
+  },
 ];
 
 /** Look up a model by its URL slug */
