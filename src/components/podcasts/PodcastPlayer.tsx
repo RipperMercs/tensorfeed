@@ -45,7 +45,18 @@ export default function PodcastPlayer({ audioUrl, compact = false }: PodcastPlay
 
     // Track playing state from the audio element's own events so the UI
     // stays in sync even if play() rejects (autoplay policy, CORS, 404).
-    const onPlay = () => { setPlaying(true); setErrored(false); };
+    // When this player starts, pause every other audio element on the page so
+    // only one podcast ever plays at a time. Each other player listens to its
+    // own pause event and flips its own UI back to the Play button.
+    const onPlay = () => {
+      setPlaying(true);
+      setErrored(false);
+      document.querySelectorAll('audio').forEach((el) => {
+        if (el !== audio && !el.paused) {
+          el.pause();
+        }
+      });
+    };
     const onPause = () => setPlaying(false);
     const onError = () => { setPlaying(false); setErrored(true); };
 
