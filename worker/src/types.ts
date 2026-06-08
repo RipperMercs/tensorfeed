@@ -278,6 +278,10 @@ export interface PodcastSource {
   name: string;
   feedUrl: string;
   active: boolean;
+  // Optional per-source override for the fetch User-Agent. Defaults to the
+  // descriptive TensorFeed bot UA. Some hosts (transistor.fm) reject that UA
+  // from Cloudflare egress, so those sources opt into a browser UA instead.
+  userAgent?: string;
 }
 
 export interface TrendingRepo {

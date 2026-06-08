@@ -1,5 +1,10 @@
 import { Env, PodcastEpisode, PodcastSource } from './types';
 
+// A current desktop-Chrome User-Agent, used only for hosts that reject the
+// descriptive TensorFeed bot UA from Cloudflare egress (transistor.fm).
+const TRANSISTOR_BROWSER_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+
 const PODCAST_SOURCES: PodcastSource[] = [
   // Original sources
   { id: 'ai-daily-brief', name: 'AI Daily Brief', feedUrl: 'https://anchor.fm/s/f7cac464/podcast/rss', active: true },
@@ -31,14 +36,13 @@ const PODCAST_SOURCES: PodcastSource[] = [
   { id: 'a16z', name: 'a16z Podcast', feedUrl: 'https://feeds.simplecast.com/JGE3yC0V', active: true },
   { id: 'decoder', name: 'Decoder with Nilay Patel', feedUrl: 'https://feeds.megaphone.fm/recodedecode', active: true },
   { id: 'vergecast', name: 'The Vergecast', feedUrl: 'https://feeds.megaphone.fm/vergecast', active: true },
-  // Inactive 2026-06-07: feeds.transistor.fm returns non-success from the
-  // Cloudflare Worker egress (both fetch fine from a local machine), so the
-  // poll never gets episodes for them. Acquired's newest episode was newer
-  // than the live cutoff yet never appeared, confirming the fetch failure.
-  // Revisit with a browser User-Agent if we want these back; there is no
+  // feeds.transistor.fm returns non-success to the descriptive bot UA from
+  // Cloudflare egress (both fetch fine from a local machine), so 2026-06-07
+  // these were briefly inactive. Re-enabled with a browser User-Agent to
+  // test whether the block is UA-based rather than IP-based. There is no
   // alternative non-transistor RSS source for either show.
-  { id: 'this-day-in-ai', name: 'This Day in AI', feedUrl: 'https://feeds.transistor.fm/this-day-in-ai', active: false },
-  { id: 'acquired', name: 'Acquired', feedUrl: 'https://feeds.transistor.fm/acquired', active: false },
+  { id: 'this-day-in-ai', name: 'This Day in AI', feedUrl: 'https://feeds.transistor.fm/this-day-in-ai', active: true, userAgent: TRANSISTOR_BROWSER_UA },
+  { id: 'acquired', name: 'Acquired', feedUrl: 'https://feeds.transistor.fm/acquired', active: true, userAgent: TRANSISTOR_BROWSER_UA },
 ];
 
 function hashString(str: string): string {
@@ -142,7 +146,7 @@ function extractItunesImage(itemXml: string, channelXml: string): string {
 async function fetchPodcastFeed(source: PodcastSource, channelXmlCache: Map<string, string>): Promise<PodcastEpisode[]> {
   try {
     const response = await fetch(source.feedUrl, {
-      headers: { 'User-Agent': 'TensorFeed/1.0 (https://tensorfeed.ai)' },
+      headers: { 'User-Agent': source.userAgent || 'TensorFeed/1.0 (https://tensorfeed.ai)' },
       signal: AbortSignal.timeout(30000),
     });
 
