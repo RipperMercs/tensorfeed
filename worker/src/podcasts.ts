@@ -36,13 +36,16 @@ const PODCAST_SOURCES: PodcastSource[] = [
   { id: 'a16z', name: 'a16z Podcast', feedUrl: 'https://feeds.simplecast.com/JGE3yC0V', active: true },
   { id: 'decoder', name: 'Decoder with Nilay Patel', feedUrl: 'https://feeds.megaphone.fm/recodedecode', active: true },
   { id: 'vergecast', name: 'The Vergecast', feedUrl: 'https://feeds.megaphone.fm/vergecast', active: true },
-  // feeds.transistor.fm returns non-success to the descriptive bot UA from
-  // Cloudflare egress (both fetch fine from a local machine), so 2026-06-07
-  // these were briefly inactive. Re-enabled with a browser User-Agent to
-  // test whether the block is UA-based rather than IP-based. There is no
-  // alternative non-transistor RSS source for either show.
-  { id: 'this-day-in-ai', name: 'This Day in AI', feedUrl: 'https://feeds.transistor.fm/this-day-in-ai', active: true, userAgent: TRANSISTOR_BROWSER_UA },
-  { id: 'acquired', name: 'Acquired', feedUrl: 'https://feeds.transistor.fm/acquired', active: true, userAgent: TRANSISTOR_BROWSER_UA },
+  // Inactive: feeds.transistor.fm is unreachable from the Cloudflare Worker
+  // egress (both fetch fine from a local machine). The poll never gets
+  // episodes; Acquired's newest episode was newer than the live cutoff yet
+  // never surfaced. 2026-06-07 we tested a desktop-Chrome User-Agent against
+  // the live poll and it made no difference, so the block is by IP (CF egress
+  // range), not User-Agent. The userAgent override is left documented but
+  // inert here. There is no alternative non-transistor RSS source for either
+  // show. Reaching these would require an off-Cloudflare fetch path (proxy).
+  { id: 'this-day-in-ai', name: 'This Day in AI', feedUrl: 'https://feeds.transistor.fm/this-day-in-ai', active: false, userAgent: TRANSISTOR_BROWSER_UA },
+  { id: 'acquired', name: 'Acquired', feedUrl: 'https://feeds.transistor.fm/acquired', active: false, userAgent: TRANSISTOR_BROWSER_UA },
 ];
 
 function hashString(str: string): string {
