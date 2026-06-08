@@ -18,6 +18,16 @@ const PODCAST_COLORS: Record<string, { bg: string; border: string }> = {
   'Dwarkesh Podcast': { bg: 'bg-pink-500/20', border: '#ec4899' },
   'All-In Podcast': { bg: 'bg-teal-500/20', border: '#14b8a6' },
   'Machine Learning Street Talk': { bg: 'bg-indigo-500/20', border: '#6366f1' },
+  'Eye on AI': { bg: 'bg-cyan-500/20', border: '#06b6d4' },
+  'Training Data': { bg: 'bg-lime-500/20', border: '#84cc16' },
+  'The MAD Podcast': { bg: 'bg-orange-500/20', border: '#f97316' },
+  'Super Data Science': { bg: 'bg-sky-500/20', border: '#0ea5e9' },
+  'Data Skeptic': { bg: 'bg-rose-500/20', border: '#f43f5e' },
+  'This Day in AI': { bg: 'bg-fuchsia-500/20', border: '#d946ef' },
+  'a16z Podcast': { bg: 'bg-green-500/20', border: '#22c55e' },
+  'Decoder with Nilay Patel': { bg: 'bg-purple-500/20', border: '#a855f7' },
+  'The Vergecast': { bg: 'bg-yellow-500/20', border: '#eab308' },
+  'Acquired': { bg: 'bg-zinc-500/20', border: '#71717a' },
 };
 
 function timeAgo(dateStr: string): string {
@@ -108,6 +118,10 @@ export default function PodcastsPage() {
           'practical ai',
           'latent space',
           'last week in ai',
+          'eye on ai',
+          'training data podcast',
+          'a16z podcast',
+          'super data science',
           'podcast episodes',
           'ai news audio',
         ]}
