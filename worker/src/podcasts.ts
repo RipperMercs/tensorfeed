@@ -21,17 +21,24 @@ const PODCAST_SOURCES: PodcastSource[] = [
   { id: 'all-in', name: 'All-In Podcast', feedUrl: 'https://allinchamathjason.libsyn.com/rss', active: true },
   { id: 'mlst', name: 'Machine Learning Street Talk', feedUrl: 'https://anchor.fm/s/1e4a0eac/podcast/rss', active: true },
   // Added 2026-06-07: broader AI and tech coverage. Every feed below was
-  // verified to return audio enclosures with recent episodes before adding.
+  // verified to return audio enclosures with recent episodes before adding,
+  // then confirmed live in the production poll output.
   { id: 'eye-on-ai', name: 'Eye on AI', feedUrl: 'https://aneyeonai.libsyn.com/rss', active: true },
   { id: 'training-data', name: 'Training Data', feedUrl: 'https://feeds.megaphone.fm/trainingdata', active: true },
   { id: 'mad-podcast', name: 'The MAD Podcast', feedUrl: 'https://anchor.fm/s/f2ee4948/podcast/rss', active: true },
   { id: 'super-data-science', name: 'Super Data Science', feedUrl: 'https://feeds.soundcloud.com/users/soundcloud:users:253585900/sounds.rss', active: true },
   { id: 'data-skeptic', name: 'Data Skeptic', feedUrl: 'https://dataskeptic.libsyn.com/rss', active: true },
-  { id: 'this-day-in-ai', name: 'This Day in AI', feedUrl: 'https://feeds.transistor.fm/this-day-in-ai', active: true },
   { id: 'a16z', name: 'a16z Podcast', feedUrl: 'https://feeds.simplecast.com/JGE3yC0V', active: true },
   { id: 'decoder', name: 'Decoder with Nilay Patel', feedUrl: 'https://feeds.megaphone.fm/recodedecode', active: true },
   { id: 'vergecast', name: 'The Vergecast', feedUrl: 'https://feeds.megaphone.fm/vergecast', active: true },
-  { id: 'acquired', name: 'Acquired', feedUrl: 'https://feeds.transistor.fm/acquired', active: true },
+  // Inactive 2026-06-07: feeds.transistor.fm returns non-success from the
+  // Cloudflare Worker egress (both fetch fine from a local machine), so the
+  // poll never gets episodes for them. Acquired's newest episode was newer
+  // than the live cutoff yet never appeared, confirming the fetch failure.
+  // Revisit with a browser User-Agent if we want these back; there is no
+  // alternative non-transistor RSS source for either show.
+  { id: 'this-day-in-ai', name: 'This Day in AI', feedUrl: 'https://feeds.transistor.fm/this-day-in-ai', active: false },
+  { id: 'acquired', name: 'Acquired', feedUrl: 'https://feeds.transistor.fm/acquired', active: false },
 ];
 
 function hashString(str: string): string {
