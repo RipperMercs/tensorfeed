@@ -17,6 +17,26 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-maia-200-fourth-chip-inference',
+    title:
+      'Anthropic Is Negotiating a Fourth Chip. Claude Inference Just Stopped Being a Nvidia Story.',
+    author: 'Marcus Chen',
+    date: 'June 9, 2026',
+    readTime: '7 min read',
+    description:
+      "Anthropic is in early-stage talks with Microsoft to run Claude inference on the Maia 200, Microsoft's second-generation custom AI accelerator (TSMC 3nm, launched January 2026, more than 30 percent better performance per dollar, still in limited preview), served through Azure. Nothing is signed. If it closes, Maia 200 becomes the fourth distinct silicon platform behind Claude after AWS Trainium2 (Project Rainier, ~500K chips scaling toward 1M), Google TPU (up to 1M units in 2026), and Nvidia GPUs. The structural read matters more than the headline: frontier inference is de-coupling from Nvidia and migrating onto hyperscaler-owned silicon, because inference is a recurring per-token bill and a lab at a reported ~$47B run rate chases every point of margin. The deal sits inside Anthropic's $30B Azure commitment ($15B combined Microsoft and Nvidia investment), and a frontier logo is the external validation Microsoft's chip program has lacked. Why a fourth platform is leverage rather than redundancy, what it means for builders on the API, the hard caveat that none of it is signed, and three signposts over the next ninety days.",
+  },
+  {
+    slug: 'apple-gemini-siri-extensions-wwdc-2026',
+    title:
+      'Apple Rebuilt Siri on Gemini and Opened the iPhone to Claude. The Assistant Layer Just Became Swappable.',
+    author: 'Adrian Vale',
+    date: 'June 8, 2026',
+    readTime: '7 min read',
+    description:
+      "At WWDC 2026, in Tim Cook's final keynote as CEO, Apple rebuilt Siri on a custom 1.2-trillion-parameter Google Gemini model under a deal reported at about $1 billion a year, with the contract reportedly barring Google from training future Gemini versions on Siri queries. Siri now routes across three tiers: on-device Apple models, Private Cloud Compute, and the custom Gemini running on Google Cloud Nvidia Blackwell B200 GPUs for the heaviest reasoning. The bigger story is iOS 27 Extensions, which let ChatGPT, Gemini, or Claude serve as the default assistant, putting Claude on the iPhone as a first-class option for the first time. The model just became a setting instead of a fixture, which turns the assistant layer into a routing and switching problem on a billion phones. Why Extensions matters more than the Gemini check, who wins and who pays, and the one onboarding detail in the iOS 27 betas that decides whether the dropdown is real or theater.",
+  },
+  {
     slug: 'ai-capex-bubble-debate-scoreboard',
     title:
       'Everyone Is Calling an AI Capex Bubble. Almost No One Agrees on How to Measure One.',
