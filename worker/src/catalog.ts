@@ -1,4 +1,5 @@
 import { Env } from './types';
+import { pingIndexNow } from './indexnow';
 
 /**
  * Daily data updater for AI models/pricing, benchmarks, and agents directory.
@@ -252,31 +253,14 @@ function mergePricing(current: PricingData, litellm: Record<string, unknown>): {
 }
 
 // ── IndexNow ping ──────────────────────────────────────────────────
+// Shared transport lives in indexnow.ts; this keeps the catalog's url list.
 
-async function pingIndexNow(env: Env): Promise<void> {
-  if (!env.INDEXNOW_KEY) return;
-  try {
-    await fetch('https://api.indexnow.org/indexnow', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        host: 'tensorfeed.ai',
-        key: env.INDEXNOW_KEY,
-        keyLocation: `https://tensorfeed.ai/${env.INDEXNOW_KEY}.txt`,
-        urlList: [
-          'https://tensorfeed.ai/models',
-          'https://tensorfeed.ai/benchmarks',
-          'https://tensorfeed.ai/ai-api-pricing-guide',
-          'https://tensorfeed.ai/compare',
-        ],
-      }),
-      signal: AbortSignal.timeout(5000),
-    });
-    console.log('IndexNow pinged for models/benchmarks pages');
-  } catch (e) {
-    console.warn('IndexNow ping failed:', e);
-  }
-}
+const CATALOG_CHANGE_URLS = [
+  'https://tensorfeed.ai/models',
+  'https://tensorfeed.ai/benchmarks',
+  'https://tensorfeed.ai/ai-api-pricing-guide',
+  'https://tensorfeed.ai/compare',
+];
 
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
@@ -556,7 +540,7 @@ export async function updateDailyData(env: Env): Promise<DailyUpdateResult> {
 
   // --- 5. Ping IndexNow if any data changed ---
   if (result.modelsChanged || result.benchmarksChanged) {
-    await pingIndexNow(env);
+    await pingIndexNow(env, CATALOG_CHANGE_URLS, 'catalog-update');
   }
 
   console.log(
