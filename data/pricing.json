@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-07",
+  "lastUpdated": "2026-06-09",
   "providers": [
     {
       "id": "anthropic",
@@ -7,6 +7,21 @@
       "logo": "/images/providers/anthropic.png",
       "url": "https://www.anthropic.com",
       "models": [
+        {
+          "id": "claude-fable-5",
+          "name": "Claude Fable 5",
+          "inputPrice": 10,
+          "outputPrice": 50,
+          "contextWindow": 1000000,
+          "released": "2026-06",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code"
+          ],
+          "tier": "flagship"
+        },
         {
           "id": "claude-opus-4-8",
           "name": "Claude Opus 4.8",

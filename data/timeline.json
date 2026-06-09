@@ -1,6 +1,13 @@
 {
   "events": [
     {
+      "date": "2026-06-09",
+      "title": "Anthropic Releases Claude Fable 5, a New Frontier Tier Above Opus",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic launched Claude Fable 5 (API id claude-fable-5), a new frontier tier positioned above Claude Opus 4.8, which remains the default model. Pricing is $10 per million input tokens and $50 per million output with no long-context surcharge, on a 1 million token default context window with up to 128K output tokens and text plus vision input. Adaptive thinking is always on and cannot be disabled, with effort levels spanning low, medium, high, xhigh, and max. Anthropic's launch table reports 80.3 on SWE-bench Pro, 29.3 on FrontierCode Diamond, 85.0 on OSWorld-Verified, and a GDPval-AA ELO of 1932, all vendor-reported. Always-on safety classifiers can reroute flagged requests to Opus 4.8, billed at Opus rates for the rerouted portion. The model is available on the Claude API, Amazon Bedrock, Google Vertex, and Microsoft Foundry at launch."
+    },
+    {
       "date": "2026-06-02",
       "title": "Microsoft Launches MAI-Code-1-Flash and MAI-Thinking-1 at Build 2026",
       "provider": "Microsoft",

@@ -458,7 +458,8 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [CLAUDE.md Generator](https://tensorfeed.ai/claude-md-generator): Interactive tool to generate a custom CLAUDE.md for your project
 
 ## Individual Model Pages
-- [Claude Opus 4.8](https://tensorfeed.ai/models/claude-opus-4-8): Pricing, benchmarks, specs for Anthropic's current flagship (released May 28, 2026; 1M context)
+- [Claude Fable 5](https://tensorfeed.ai/models/claude-fable-5): Pricing, benchmarks, specs for Anthropic's frontier tier above Opus 4.8 (released June 9, 2026; $10/$50 per 1M tokens; 1M context, 128K output)
+- [Claude Opus 4.8](https://tensorfeed.ai/models/claude-opus-4-8): Pricing, benchmarks, specs for Anthropic's default model (released May 28, 2026; 1M context)
 - [Claude Opus 4.7](https://tensorfeed.ai/models/claude-opus-4-7): Pricing, benchmarks, specs for Anthropic's previous-generation flagship (1M context)
 - [Claude Opus 4.6](https://tensorfeed.ai/models/claude-opus-4-6): Pricing, benchmarks, specs for Anthropic's previous-generation flagship
 - [Claude Sonnet 4.6](https://tensorfeed.ai/models/claude-sonnet-4-6): Pricing, benchmarks, specs for Anthropic's mid-tier

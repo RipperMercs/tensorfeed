@@ -45,8 +45,10 @@ export interface BenchmarkDataLite {
 
 // Which providers' current flagship to show, and any extra models to feature
 // by id. Editorial selection only; every displayed price comes from the data.
+// Anthropic's newest flagship is Claude Fable 5 (2026-06), so it is the derived
+// pick; Opus 4.8 stays featured explicitly because it remains the default model.
 const FLAGSHIP_PROVIDERS = ['anthropic', 'openai', 'google'];
-const ALSO_FEATURE_IDS = ['claude-sonnet-4-6'];
+const ALSO_FEATURE_IDS = ['claude-opus-4-8', 'claude-sonnet-4-6'];
 
 // Benchmarks to surface a live leader for. Score and leading model are computed
 // from data/benchmarks.json. suffix keeps the existing "%" vs bare-number look.

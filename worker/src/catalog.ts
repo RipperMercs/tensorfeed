@@ -150,6 +150,7 @@ export const PRICING_ATTRIBUTION: PricingAttribution = {
 // membership source.
 
 const TRACKED_MODELS: Record<string, { providerId: string; ourId: string; name: string }> = {
+  'claude-fable-5': { providerId: 'anthropic', ourId: 'claude-fable-5', name: 'Claude Fable 5' },
   'claude-opus-4-8': { providerId: 'anthropic', ourId: 'claude-opus-4-8', name: 'Claude Opus 4.8' },
   'claude-sonnet-4-5': { providerId: 'anthropic', ourId: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5' },
   'claude-opus-4-1': { providerId: 'anthropic', ourId: 'claude-opus-4-1', name: 'Claude Opus 4.1' },
@@ -265,11 +266,12 @@ const CATALOG_CHANGE_URLS = [
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 export const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-06-07',
+  lastUpdated: '2026-06-09',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
       models: [
+        { id: 'claude-fable-5', name: 'Claude Fable 5', inputPrice: 10.00, outputPrice: 50.00, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'claude-opus-4-8', name: 'Claude Opus 4.8', inputPrice: 5.00, outputPrice: 25.00, contextWindow: 1000000, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'claude-opus-4-7', name: 'Claude Opus 4.7', inputPrice: 15.00, outputPrice: 75.00, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', inputPrice: 15.00, outputPrice: 75.00, contextWindow: 200000, released: '2026-03', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'mid' },
@@ -364,7 +366,7 @@ export const BASELINE_PRICING: PricingData = {
 };
 
 export const BASELINE_BENCHMARKS: BenchmarksData = {
-  lastUpdated: '2026-06-05',
+  lastUpdated: '2026-06-09',
   benchmarks: [
     { id: 'mmlu_pro', name: 'MMLU-Pro', description: 'General knowledge and reasoning across 57 subjects', maxScore: 100 },
     { id: 'human_eval', name: 'HumanEval', description: 'Python code generation and problem solving', maxScore: 100 },
@@ -376,6 +378,7 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
     { model: 'GPT-5.5', provider: 'OpenAI', released: '2026-04', scores: { mmlu_pro: 94.2, human_eval: 97.1, gpqa_diamond: 78.3, math: 95.8, swe_bench: 68.7 } },
     { model: 'DeepSeek V4 Pro', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 91.5, human_eval: 94.8, gpqa_diamond: 73.1, math: 92.4, swe_bench: 63.8 } },
     { model: 'DeepSeek V4 Flash', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 85.2, human_eval: 89.4, gpqa_diamond: 58.7, math: 82.1, swe_bench: 48.9 } },
+    { model: 'Claude Fable 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 80.3 } },
     { model: 'Claude Opus 4.7', provider: 'Anthropic', released: '2026-04', scores: { mmlu_pro: 93.8, human_eval: 96.2, gpqa_diamond: 76.5, math: 93.1, swe_bench: 65.4 } },
     { model: 'Claude Opus 4.6', provider: 'Anthropic', released: '2026-03', scores: { mmlu_pro: 92.4, human_eval: 95.1, gpqa_diamond: 74.2, math: 91.8, swe_bench: 62.3 } },
     { model: 'Claude Sonnet 4.6', provider: 'Anthropic', released: '2026-02', scores: { mmlu_pro: 88.7, human_eval: 92.0, gpqa_diamond: 65.8, math: 85.4, swe_bench: 55.7 } },

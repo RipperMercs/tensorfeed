@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-05",
+  "lastUpdated": "2026-06-09",
   "benchmarks": [
     { "id": "mmlu_pro", "name": "MMLU-Pro", "description": "General knowledge and reasoning across 57 subjects", "maxScore": 100 },
     { "id": "human_eval", "name": "HumanEval", "description": "Python code generation and problem solving", "maxScore": 100 },
@@ -25,6 +25,12 @@
       "provider": "DeepSeek",
       "released": "2026-04",
       "scores": { "mmlu_pro": 85.2, "human_eval": 89.4, "gpqa_diamond": 58.7, "math": 82.1, "swe_bench": 48.9 }
+    },
+    {
+      "model": "Claude Fable 5",
+      "provider": "Anthropic",
+      "released": "2026-06",
+      "scores": { "swe_bench": 80.3 }
     },
     {
       "model": "Claude Opus 4.7",

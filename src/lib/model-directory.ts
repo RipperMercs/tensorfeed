@@ -38,6 +38,23 @@ export interface ModelPageMeta {
 export const MODEL_DIRECTORY: ModelPageMeta[] = [
   // ── Anthropic ──────────────────────────────────────────────────────
   {
+    slug: 'claude-fable-5',
+    pricingId: 'claude-fable-5',
+    benchmarkName: 'Claude Fable 5',
+    providerId: 'anthropic',
+    providerName: 'Anthropic',
+    providerUrl: 'https://www.anthropic.com',
+    seoTitle: 'Claude Fable 5: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Claude Fable 5 by Anthropic, the frontier tier above Opus 4.8 released June 9, 2026. $10/$50 pricing, 1M context window, 128K output, and specs on TensorFeed.',
+    intro:
+      'Claude Fable 5 is Anthropic\'s new frontier tier, announced June 9, 2026 and positioned above Claude Opus 4.8, which stays on as the default model. The API id is claude-fable-5, priced at $10 per million input tokens and $50 per million output with no long-context surcharge. It ships a 1 million token context window by default with up to 128K output tokens, takes text and vision input, and runs adaptive thinking always on (it cannot be disabled) with effort levels spanning low, medium, high, xhigh, and max. Anthropic\'s launch table reports 80.3 on SWE-bench Pro, 85.0 on OSWorld-Verified, 29.3 on FrontierCode Diamond, and a GDPval-AA ELO of 1932; treat all of these as vendor-reported until independent runs land. One operational note: always-on safety classifiers can reroute flagged requests to Opus 4.8, billed at Opus rates for the rerouted portion. Available on the Claude API, Amazon Bedrock, Google Vertex, and Microsoft Foundry.',
+    strengths: ['1M token context window with 128K max output', 'Frontier tier above Opus 4.8', 'Adaptive thinking always on with five effort levels (low to max)', 'Vendor-reported 80.3 SWE-bench Pro and 85.0 OSWorld-Verified', 'Day-one availability on Claude API, Bedrock, Vertex, and Foundry'],
+    useCases: ['Hardest long-horizon agentic work', 'Whole-repository refactors', 'Multi-document research synthesis', 'Computer-use automation'],
+    docsUrl: 'https://docs.anthropic.com/en/docs/about-claude/models',
+    tier: 'flagship',
+  },
+  {
     slug: 'claude-opus-4-8',
     pricingId: 'claude-opus-4-8',
     benchmarkName: 'Claude Opus 4.8',
@@ -46,10 +63,10 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     providerUrl: 'https://www.anthropic.com',
     seoTitle: 'Claude Opus 4.8: Pricing, Benchmarks, Specs',
     seoDescription:
-      'Claude Opus 4.8 by Anthropic, the new flagship released May 28, 2026. Pricing unchanged at $15/$75, sharper agentic coding, cheaper fast mode, and a 1M context window on TensorFeed.',
+      'Claude Opus 4.8 by Anthropic, released May 28, 2026 and still the default model. Priced at $5/$25 per 1M tokens, sharper agentic coding, cheaper fast mode, and a 1M context window on TensorFeed.',
     intro:
       'Claude Opus 4.8 is Anthropic\'s flagship as of May 28, 2026, arriving just six weeks after Opus 4.7. Anthropic describes it as a more effective collaborator with sharper judgement, more honesty about its own progress, and the ability to work independently for longer. Agentic coding climbs from 64.3% to 69.2% and knowledge work from 1753 to 1890 on Anthropic\'s own measures, while API pricing holds at $15 input and $75 output per million tokens. The new fast mode is roughly 2.5x quicker and about three times cheaper than before. It keeps the 1 million token context window and adds Dynamic Workflows for large-scale parallel subagent tasks.',
-    strengths: ['1M token context window', 'Pricing unchanged from Opus 4.7 ($15/$75)', 'Agentic coding up to 69.2%', 'Fast mode 2.5x faster and 3x cheaper', 'Dynamic Workflows for parallel subagents'],
+    strengths: ['1M token context window', 'Priced at $5/$25 per 1M tokens, down from the $15/$75 Opus 4.7 era', 'Agentic coding up to 69.2%', 'Fast mode 2.5x faster and 3x cheaper', 'Dynamic Workflows for parallel subagents'],
     useCases: ['Whole-repository refactors', 'Long-running asynchronous agent workflows', 'Multi-document research synthesis', 'Extended codebase debugging'],
     docsUrl: 'https://docs.anthropic.com/en/docs/about-claude/models',
     tier: 'flagship',

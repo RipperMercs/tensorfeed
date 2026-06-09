@@ -232,14 +232,14 @@ export default function ProviderPage({ params }: { params: { slug: string } }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {providerBenchmarks.map((b: { model: string; scores: Record<string, number> }) => (
+                {providerBenchmarks.map((b: { model: string; scores: Record<string, number | undefined> }) => (
                   <tr key={b.model} className="bg-bg-secondary">
                     <td className="px-4 py-3 text-sm text-text-primary font-medium">{b.model}</td>
                     {benchmarkData.benchmarks.map((bm: { id: string }) => {
                       const score = b.scores[bm.id as keyof typeof b.scores];
                       return (
                         <td key={bm.id} className={`px-4 py-3 text-sm text-right font-mono font-semibold ${
-                          score >= 90 ? 'text-accent-green' : score >= 80 ? 'text-accent-amber' : 'text-text-secondary'
+                          (score ?? 0) >= 90 ? 'text-accent-green' : (score ?? 0) >= 80 ? 'text-accent-amber' : 'text-text-secondary'
                         }`}>
                           {score?.toFixed(1) ?? 'N/A'}
                         </td>
