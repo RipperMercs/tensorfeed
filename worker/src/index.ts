@@ -4718,6 +4718,8 @@ export default {
           premiumFederalAiPolicy: '/api/premium/federal-ai-policy (1 credit, AFTA-signed; the full ranked list of AI-related US Federal Register actions (rules, proposed rules, notices, presidential documents) plus AI-named federal bills (GovInfo), with agency and document-type rollups, over the free /api/federal-ai-policy snapshot. captured_at is the real snapshot data time; 36h freshness SLA, no-charge when stale or not yet captured.)',
           exportControlsAi: '/api/export-controls/ai (free; classified US BIS AI and advanced-computing export-control actions (Entity List changes, license and threshold rules) from the Federal Register. Returns by_category counts plus the 30 most recent classified events: Entity List additions, advanced-computing license and threshold rules, due-diligence and model-weights measures. Source federalregister.gov, public domain; TensorFeed editorial classification. Precomputed daily; cold-start returns an empty 200, never 503.)',
           premiumExportControlsAiHistory: '/api/premium/export-controls/ai/history?from=YYYY-MM-DD&to=YYYY-MM-DD&category= (1 credit, AFTA-signed; full filterable history of AI export-control actions by date range and category. Filters the BIS Federal Register snapshot by inclusive publication-date range and category (entity-list, compute-threshold, license-policy, due-diligence, model-weights, other). captured_at is the real snapshot data time; no-charge when the snapshot is missing or the filtered window is empty. Strict-premium prefix; anonymous Bazaar probes see a clean 402 challenge.)',
+          euAiActNotifiedBodies: '/api/eu-ai-act/notified-bodies (free; current EU notified-body designations under the AI Act (Regulation (EU) 2024/1689), the Cyber Resilience Act (2024/2847), and EUCC (2024/482), from the European Commission NANDO / Single Market Compliance Space database, CC BY 4.0 with attribution. Per-legislation totals plus every latest-version notification with body number, country, scope (products, procedures, annexes), and status, plus a recent designation-change preview. The AI Act count is genuinely zero today (the Digital Omnibus deferred the high-risk regime to Dec 2027 / Aug 2028); the feed exists to catch the first designation the day it lands. Precomputed daily; cold-start returns an empty 200, never 503.)',
+          premiumEuAiActNotifiedBodiesHistory: '/api/premium/eu-ai-act/notified-bodies/history?from=YYYY-MM-DD&to=YYYY-MM-DD&legislation_id=&type= (1 credit, AFTA-signed; full designation-change history over the EU NANDO / SMCS register for the AI Act, CRA, and EUCC: every designation_first_seen, status_change, scope_change, and delisted event, timestamped on the observation day. All filters optional. captured_at is the events-log update time; 36h freshness SLA, no-charge when stale, when the log is empty (the AI Act is pre-first-designation), or when the filtered window has no events. Strict-premium prefix.)',
           aiDatacenters: '/api/ai-datacenters?operator=&status=announced|under_construction|operational|expansion|paused&country=&region=&purpose=training|inference|mixed|unknown (free; hand-curated registry of publicly announced AI datacenter projects, the gigawatt-class training and inference campuses from the labs and hyperscalers. Each entry carries disclosed power (MW), capex, status, accelerator, partners, and a source_url; power and capex are disclosed values only, null where not public. Sorted operational-first.)',
           premiumAiDatacentersBuildout: '/api/premium/ai-datacenters/buildout (1 credit, AFTA-signed; aggregate over the free /api/ai-datacenters registry. Disclosed power (MW) and capex totals by operator, region, and status, plus the forward commissioning calendar of sites coming online. Curated registry, no staleness SLA.)',
           capitalCycles: '/api/capital-cycles?era=pre_1931|modern (free; hand-curated registry of six historical technology capital buildouts (UK Railway Mania through the dotcom fiber overbuild) on a fixed metric skeleton, plus the current AI buildout mapped into the same skeleton. The only cross-era-comparable metric is peak capex as a percent of national GDP; absolute dollars and physical units are descriptive. The signed ranking and analogy verdict is premium at /api/premium/ai-capex-cycle-verdict.)',
@@ -5801,6 +5803,76 @@ export default {
           total: 0,
           by_category: {},
           recent: [],
+          note: 'snapshot not yet generated',
+        },
+        200,
+        300,
+      );
+    }
+
+    // === EU AI ACT NOTIFIED BODIES (free) ===
+    // /api/eu-ai-act/notified-bodies: current EU conformity-assessment
+    // designations under the AI Act (Regulation (EU) 2024/1689), the Cyber
+    // Resilience Act (2024/2847), and EUCC (2024/482) from the Commission's
+    // NANDO / Single Market Compliance Space database (CC BY 4.0). The 19:33
+    // UTC cron writes one snapshot blob plus a forward-only change log to KV;
+    // this route serves the snapshot with a short recent-changes preview (the
+    // full designation-change history is the premium read). The AI Act count
+    // being zero is real data, not a bug: the Digital Omnibus deferred the
+    // high-risk regime, so the feed's job today is to catch the first
+    // designation the day it lands. Cold-start safe: pre-first-cron it
+    // returns a 200 empty shape, never 503.
+    if (path === '/api/eu-ai-act/notified-bodies') {
+      const {
+        EU_AI_ACT_CURRENT_KEY,
+        EU_AI_ACT_EVENTS_KEY,
+        EU_AI_ACT_SOURCE,
+        EU_AI_ACT_LICENSE,
+        EU_AI_ACT_TIMELINE_NOTE,
+        TRACKED_LEGISLATIONS,
+      } = await import('./eu-ai-act');
+      const snapshot = (await env.TENSORFEED_CACHE.get(EU_AI_ACT_CURRENT_KEY, 'json')) as
+        | {
+            ok: true;
+            captured_at: string;
+            source: string;
+            license: string;
+            timeline_note: string;
+            legislations: Array<{
+              legislation_id: number;
+              code: string;
+              name: string;
+              total: number;
+              active: number;
+            }>;
+            total: number;
+            bodies: import('./eu-ai-act').NotifiedBodyRecord[];
+          }
+        | null;
+      if (snapshot) {
+        const log = (await env.TENSORFEED_CACHE.get(EU_AI_ACT_EVENTS_KEY, 'json')) as
+          | { events: import('./eu-ai-act').DesignationEvent[] }
+          | null;
+        return jsonResponse(
+          {
+            ...snapshot,
+            recent_changes: (log?.events ?? []).slice(0, 5),
+          },
+          200,
+          300,
+        );
+      }
+      return jsonResponse(
+        {
+          ok: true,
+          captured_at: null,
+          source: EU_AI_ACT_SOURCE,
+          license: EU_AI_ACT_LICENSE,
+          timeline_note: EU_AI_ACT_TIMELINE_NOTE,
+          legislations: TRACKED_LEGISLATIONS.map((l) => ({ ...l, total: 0, active: 0 })),
+          total: 0,
+          bodies: [],
+          recent_changes: [],
           note: 'snapshot not yet generated',
         },
         200,
@@ -12471,6 +12543,116 @@ export default {
       );
     }
 
+    // === PAID PREMIUM: EU AI ACT DESIGNATION HISTORY (1 credit, param-optional) ===
+    // Full designation-change event history over the free
+    // /api/eu-ai-act/notified-bodies snapshot: every first_seen, status_change,
+    // scope_change, and delisted event the daily NANDO / SMCS diff has observed,
+    // filterable by inclusive observed-at date range (from/to), legislation_id
+    // (168380 AI Act, 167953 CRA, 164702 EUCC), and event type. The free route
+    // serves only a 5-event preview; the history is the moat (the Commission
+    // publishes no designation time series). Strict-premium prefix, so an
+    // anonymous Bazaar probe sees a clean 402 challenge. An empty log (the
+    // expected state until the EU's first AI Act notified body lands) or an
+    // empty filtered window returns free as a no-data result.
+    if (path === '/api/premium/eu-ai-act/notified-bodies/history') {
+      // requirePayment FIRST: strict-premium, so an anonymous probe sees the
+      // 402 challenge, not a 400.
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const from = url.searchParams.get('from');
+      const to = url.searchParams.get('to');
+      const legParam = url.searchParams.get('legislation_id');
+      const typeParam = url.searchParams.get('type');
+
+      // A malformed legislation_id must not silently widen the filter to the
+      // full log on a billed call; reject it free instead.
+      const legislationId = legParam === null ? null : Number(legParam);
+      if (legislationId !== null && !Number.isInteger(legislationId)) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'invalid legislation_id',
+            hint: 'legislation_id must be a NANDO numeric id: 168380 (AI Act), 167953 (Cyber Resilience Act), 164702 (EUCC)',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const { EU_AI_ACT_EVENTS_KEY, EU_AI_ACT_SOURCE, EU_AI_ACT_LICENSE, filterEvents } = await import('./eu-ai-act');
+      const log = (await env.TENSORFEED_CACHE.get(EU_AI_ACT_EVENTS_KEY, 'json')) as
+        | {
+            ok: true;
+            updated_at: string;
+            baseline_established_at: string;
+            total: number;
+            events: import('./eu-ai-act').DesignationEvent[];
+          }
+        | null;
+
+      // Log missing (pre-first-cron): no-charge with empty_result rather than
+      // charging for a no-data answer.
+      if (!log) {
+        return await premiumResponse(
+          { ok: true, captured_at: null, baseline_established_at: null, total: 0, events: [] },
+          payment,
+          1,
+          request,
+          env,
+          'empty_result',
+        );
+      }
+
+      const filtered = filterEvents(log.events, {
+        from,
+        to,
+        legislation_id: legislationId,
+        type: typeParam,
+      });
+
+      // Empty log or empty filtered window: no-charge. With the AI Act at zero
+      // designations this is the expected day-one state; never bill for it.
+      if (filtered.length === 0) {
+        return await premiumResponse(
+          {
+            ok: true,
+            captured_at: log.updated_at,
+            baseline_established_at: log.baseline_established_at,
+            total: 0,
+            events: [],
+          },
+          payment,
+          1,
+          request,
+          env,
+          'empty_result',
+        );
+      }
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/eu-ai-act/notified-bodies/history', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      // captured_at carries the events-log update time; premiumResponse picks
+      // it up for the AFTA staleness no-charge. Never new Date().
+      return await premiumResponse(
+        {
+          ok: true,
+          captured_at: log.updated_at,
+          baseline_established_at: log.baseline_established_at,
+          total: filtered.length,
+          events: filtered,
+          source: EU_AI_ACT_SOURCE,
+          license: EU_AI_ACT_LICENSE,
+        },
+        payment,
+        1,
+        request,
+        env,
+      );
+    }
+
     // === PAID PREMIUM: CVE BATCH LOOKUP (Tier 1, 1 credit, param-required) ===
     // /api/premium/ai-cves/batch?ids=CVE-A,CVE-B,...
     // Up to 10 CVE ids per call, 1 credit flat. Reads the persistent
@@ -14230,6 +14412,16 @@ export default {
       );
     }
 
+    // Admin: manually run the EU AI Act notified-body capture, the same code
+    // path as the 19:33 UTC cron. Used to seed the baseline right after a
+    // deploy and to verify the EC search API accepts Cloudflare egress (some
+    // upstreams 403 shared CF IPs; never trust a local curl alone).
+    if (path === '/api/admin/eu-ai-act/capture' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      const { captureEuAiAct } = await import('./eu-ai-act');
+      const result = await captureEuAiAct(env);
+      return jsonResponse({ ok: true, ...result }, 200, 0);
+    }
+
     if (path === '/api/admin/usage/dates' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const dates = await listRollupDates(env);
       return jsonResponse({ ok: true, count: dates.length, dates }, 200, 0);
@@ -15435,6 +15627,19 @@ export default {
       // */6-minute, and the */6-hour :15/:35 patterns).
       const { captureExportControls } = await import('./export-controls');
       await run('captureExportControls', () => captureExportControls(env));
+    } else if (cron === '33 19 * * *') {
+      // Daily 19:33 UTC: EU AI Act notified-body capture (worker/src/eu-ai-act.ts).
+      // Queries the EC search API behind the NANDO / SMCS Angular SPA for every
+      // latest-version notification under the AI Act (168380), Cyber Resilience
+      // Act (167953), and EUCC (164702), diffs against the previous snapshot,
+      // and appends designation-change events (first_seen / status_change /
+      // scope_change / delisted) to the forward-only log. Best-effort by design
+      // (never throws). Powers free /api/eu-ai-act/notified-bodies + the
+      // premium change-history read. Slot 19:33 is collision-free (hour 19 has
+      // no fixed-time cron; minute 33 is odd, dodges 0 *, 27 *, */2, */5,
+      // */10, */15, and the multi-hour :15/:25/:35 patterns).
+      const { captureEuAiAct } = await import('./eu-ai-act');
+      await run('captureEuAiAct', () => captureEuAiAct(env));
     } else if (cron === '37 1 * * *') {
       // Daily 01:37 UTC: federal AI opportunities capture (worker/src/
       // ai-opportunities.ts). One title-keyword SAM.gov Get Opportunities

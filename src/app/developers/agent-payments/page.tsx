@@ -1892,6 +1892,36 @@ const ENDPOINTS: PremiumEndpoint[] = [
   "source_attribution": "TensorFeed Agent-Ready Web Map. Derived from the daily crawler-access crawl of curated domains. Scores agent readiness from public surfaces (x402, agent.json, openapi, llms.txt, robots policy, ai.txt). We report stated, published surfaces, not enforcement."
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/premium/eu-ai-act/notified-bodies/history',
+    description:
+      'Full designation-change history over the EU NANDO / SMCS notified-body register for the AI Act (Regulation (EU) 2024/1689), the Cyber Resilience Act (2024/2847), and EUCC (2024/482): every designation_first_seen, status_change, scope_change, and delisted event, timestamped on the day TensorFeed observed it. The Commission publishes the register but no change history; the daily diff is the product. Optional params: from and to (YYYY-MM-DD, inclusive, on the observation day), legislation_id (168380 AI Act, 167953 CRA, 164702 EUCC), type. The free /api/eu-ai-act/notified-bodies gives the current list and a 5-event preview. No-charge when the log is empty (the AI Act is pre-first-designation today), when the filtered window has no events, or when the watch is stale past the 36h SLA. AFTA-signed.',
+    cost: '1 credit per call',
+    example: `// Header: Authorization: Bearer tf_live_...
+// Query: ?legislation_id=168380&type=designation_first_seen
+{
+  "ok": true,
+  "captured_at": "2026-06-10T19:33:09.000Z",
+  "baseline_established_at": "2026-06-09T19:33:09.000Z",
+  "total": 1,
+  "events": [
+    {
+      "type": "designation_first_seen",
+      "observed_at": "2026-06-10T19:33:09.000Z",
+      "legislation_id": 168380,
+      "legislation": "Regulation (EU) 2024/1689 on artificial intelligence (Artificial Intelligence Act)",
+      "notification_id": 1031234,
+      "body": "Example Conformity Assessment GmbH",
+      "body_display": "NB 1234",
+      "country": "Germany",
+      "detail": "first designation observed: NB 1234 under Regulation (EU) 2024/1689"
+    }
+  ],
+  "license": "CC BY 4.0 (European Commission reuse policy, Decision 2011/833/EU). TensorFeed aggregation and change-history derivation.",
+  "billing": { "credits_charged": 1, "credits_remaining": 49 }
+}`,
+  },
 ];
 
 const PYTHON_QUICKSTART = `from tensorfeed import TensorFeed

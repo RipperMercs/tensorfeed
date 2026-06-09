@@ -1490,6 +1490,39 @@ const ENDPOINTS: Endpoint[] = [
   "source_attribution": "TensorFeed Agent-Ready Web Map. Derived from the daily crawler-access crawl of curated domains. Scores agent readiness from public surfaces (x402, agent.json, openapi, llms.txt, robots policy, ai.txt). We report stated, published surfaces, not enforcement."
 }`,
   },
+  {
+    method: 'GET',
+    path: '/api/eu-ai-act/notified-bodies',
+    description:
+      'Current EU notified-body designations under the AI Act (Regulation (EU) 2024/1689), the Cyber Resilience Act (2024/2847), and EUCC (2024/482), from the European Commission NANDO / Single Market Compliance Space register (CC BY 4.0). Per-legislation totals plus every latest-version notification with body number, country, scope (products, procedures, annexes), and status, plus a 5-event designation-change preview. The AI Act count being zero is real data: the Digital Omnibus deferred the high-risk regime to Dec 2027 / Aug 2028, and this feed exists to catch the first designation the day it lands. Refreshed daily at 19:33 UTC. No parameters.',
+    cache: 'Cache for 5 minutes',
+    example: `{
+  "ok": true,
+  "captured_at": "2026-06-09T19:33:09.000Z",
+  "license": "CC BY 4.0 (European Commission reuse policy, Decision 2011/833/EU). TensorFeed aggregation and change-history derivation.",
+  "legislations": [
+    { "legislation_id": 168380, "code": "Regulation (EU) 2024/1689", "name": "EU AI Act", "total": 0, "active": 0 },
+    { "legislation_id": 167953, "code": "Regulation (EU) 2024/2847", "name": "Cyber Resilience Act", "total": 0, "active": 0 },
+    { "legislation_id": 164702, "code": "Regulation (EU) 2024/482", "name": "EUCC cybersecurity certification scheme", "total": 38, "active": 35 }
+  ],
+  "total": 38,
+  "bodies": [
+    {
+      "notification_id": 1019234,
+      "body_name": "Example Evaluation Facility GmbH",
+      "body_display": "NB 9999",
+      "body_type": "NB",
+      "country": "Germany",
+      "legislation_id": 164702,
+      "status": "Active",
+      "products": ["..."],
+      "procedures": ["..."],
+      "last_approval_date": "2026-03-23"
+    }
+  ],
+  "recent_changes": []
+}`,
+  },
 ];
 
 const JS_EXAMPLE = `// Fetch latest AI news

@@ -27596,6 +27596,186 @@
           }
         }
       }
+    },
+    {
+      "resource": {
+        "url": "https://tensorfeed.ai/api/premium/eu-ai-act/notified-bodies/history",
+        "description": "EU AI Act notified-body designation history. The European Commission lists which bodies may certify high-risk AI (NANDO / SMCS) but publishes no change history; TensorFeed diffs the register daily and keeps the designation time series: every first designation, status change (Active, Suspended, Withdrawn), scope change, and delisting under the AI Act, the Cyber Resilience Act, and EUCC, timestamped on the day observed. Optional ?from=&to=&legislation_id=&type= filters. Free taste at /api/eu-ai-act/notified-bodies. No-charge while the log is empty (the AI Act is pre-first-designation today) or when the filtered window has no events. AFTA-signed receipt.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          },
+          "outputSchema": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "from": "2026-06-01",
+                "to": "2026-12-31",
+                "legislation_id": 168380,
+                "type": "designation_first_seen"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "captured_at": "2026-06-10T19:33:09.000Z",
+                "baseline_established_at": "2026-06-09T19:33:09.000Z",
+                "total": 1,
+                "events": [
+                  {
+                    "type": "designation_first_seen",
+                    "observed_at": "2026-06-10T19:33:09.000Z",
+                    "legislation_id": 168380,
+                    "legislation": "Regulation (EU) 2024/1689 on artificial intelligence (Artificial Intelligence Act)",
+                    "notification_id": 1031234,
+                    "body": "Example Conformity Assessment GmbH",
+                    "body_display": "NB 1234",
+                    "country": "Germany",
+                    "detail": "first designation observed: NB 1234 under Regulation (EU) 2024/1689"
+                  }
+                ],
+                "source": "European Commission, NANDO / Single Market Compliance Space, CC BY 4.0",
+                "license": "CC BY 4.0 (European Commission reuse policy, Decision 2011/833/EU)",
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          }
+        }
+      ],
+      "lastUpdated": "2026-06-09T00:00:00Z",
+      "metadata": {
+        "name": "EU AI Act designation history",
+        "description": "EU AI Act notified-body designation history. The European Commission lists which bodies may certify high-risk AI (NANDO / SMCS) but publishes no change history; TensorFeed diffs the register daily and keeps the designation time series: every first designation, status change (Active, Suspended, Withdrawn), scope change, and delisting under the AI Act, the Cyber Resilience Act, and EUCC, timestamped on the day observed. Optional ?from=&to=&legislation_id=&type= filters. Free taste at /api/eu-ai-act/notified-bodies. No-charge while the log is empty (the AI Act is pre-first-designation today) or when the filtered window has no events. AFTA-signed receipt.",
+        "tier": 1,
+        "credits": 1,
+        "category": "eu-ai-act-notified-bodies"
+      },
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "from": "2026-06-01",
+                "to": "2026-12-31",
+                "legislation_id": 168380,
+                "type": "designation_first_seen"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "captured_at": "2026-06-10T19:33:09.000Z",
+                "baseline_established_at": "2026-06-09T19:33:09.000Z",
+                "total": 1,
+                "events": [
+                  {
+                    "type": "designation_first_seen",
+                    "observed_at": "2026-06-10T19:33:09.000Z",
+                    "legislation_id": 168380,
+                    "legislation": "Regulation (EU) 2024/1689 on artificial intelligence (Artificial Intelligence Act)",
+                    "notification_id": 1031234,
+                    "body": "Example Conformity Assessment GmbH",
+                    "body_display": "NB 1234",
+                    "country": "Germany",
+                    "detail": "first designation observed: NB 1234 under Regulation (EU) 2024/1689"
+                  }
+                ],
+                "source": "European Commission, NANDO / Single Market Compliance Space, CC BY 4.0",
+                "license": "CC BY 4.0 (European Commission reuse policy, Decision 2011/833/EU)",
+                "billing": {
+                  "credits_charged": 1,
+                  "credits_remaining": 49
+                }
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET"
+                    ]
+                  },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "description": "Inclusive start day, YYYY-MM-DD, on the observed_at date."
+                      },
+                      "to": {
+                        "type": "string",
+                        "description": "Inclusive end day, YYYY-MM-DD."
+                      },
+                      "legislation_id": {
+                        "type": "number",
+                        "description": "NANDO legislation id: 168380 AI Act, 167953 Cyber Resilience Act, 164702 EUCC."
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Event type: designation_first_seen, status_change, scope_change, or delisted."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              "output": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
     }
   ],
   "freeEndpoints": [
@@ -27667,5 +27847,5 @@
       "manifest": "https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
     }
   ],
-  "lastUpdated": "2026-06-07T00:00:00Z"
+  "lastUpdated": "2026-06-09T00:00:00Z"
 }

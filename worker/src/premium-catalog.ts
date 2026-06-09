@@ -318,6 +318,24 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     // which buckets under 'misc' (no dedicated policy category exists).
     category: 'misc',
   },
+  {
+    path: '/api/premium/eu-ai-act/notified-bodies/history',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'from', required: false },
+      { name: 'to', required: false },
+      { name: 'legislation_id', required: false },
+      { name: 'type', required: false },
+    ],
+    returns:
+      'Full designation-change history over the EU NANDO / SMCS register for the AI Act, Cyber Resilience Act, and EUCC: every first designation, status change, scope change, and delisting, timestamped on the day TensorFeed observed it. The Commission publishes no time series.',
+    free_sibling: '/api/eu-ai-act/notified-bodies',
+    signed: true,
+    // Same AI-policy beat as export-controls history above; buckets under
+    // 'misc' (no dedicated policy category exists).
+    category: 'misc',
+  },
 
   // === SECURITY ===
   {

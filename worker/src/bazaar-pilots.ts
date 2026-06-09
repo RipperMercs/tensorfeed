@@ -4096,6 +4096,78 @@ const MIGRATION_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 41 (2026-06-09): eu-ai-act notified-body designation history. The
+// Commission's NANDO / SMCS register lists who may certify high-risk AI but
+// publishes no change feed; the daily TensorFeed diff is the moat. Param-
+// optional (?from=&to=&legislation_id=&type=). Free sibling at
+// /api/eu-ai-act/notified-bodies. Total pilot count: 90 -> 91.
+const EU_AI_ACT_NB_HISTORY_PILOT: BazaarPilotConfig = {
+  description:
+    'EU AI Act notified-body designation history. The European Commission lists which bodies may certify high-risk AI (NANDO / SMCS) but publishes no change history; TensorFeed diffs the register daily and keeps the designation time series: every first designation, status change (Active, Suspended, Withdrawn), scope change, and delisting under the AI Act, the Cyber Resilience Act, and EUCC, timestamped on the day observed. Optional ?from=&to=&legislation_id=&type= filters. Free taste at /api/eu-ai-act/notified-bodies. No-charge while the log is empty (the AI Act is pre-first-designation today) or when the filtered window has no events. AFTA-signed receipt.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-06-01', to: '2026-12-31', legislation_id: 168380, type: 'designation_first_seen' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-10T19:33:09.000Z',
+            baseline_established_at: '2026-06-09T19:33:09.000Z',
+            total: 1,
+            events: [
+              {
+                type: 'designation_first_seen',
+                observed_at: '2026-06-10T19:33:09.000Z',
+                legislation_id: 168380,
+                legislation: 'Regulation (EU) 2024/1689 on artificial intelligence (Artificial Intelligence Act)',
+                notification_id: 1031234,
+                body: 'Example Conformity Assessment GmbH',
+                body_display: 'NB 1234',
+                country: 'Germany',
+                detail: 'first designation observed: NB 1234 under Regulation (EU) 2024/1689',
+              },
+            ],
+            source: 'European Commission, NANDO / Single Market Compliance Space, CC BY 4.0',
+            license: 'CC BY 4.0 (European Commission reuse policy, Decision 2011/833/EU)',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: { type: 'string', description: 'Inclusive start day, YYYY-MM-DD, on the observed_at date.' },
+                  to: { type: 'string', description: 'Inclusive end day, YYYY-MM-DD.' },
+                  legislation_id: { type: 'number', description: 'NANDO legislation id: 168380 AI Act, 167953 Cyber Resilience Act, 164702 EUCC.' },
+                  type: { type: 'string', description: 'Event type: designation_first_seen, status_change, scope_change, or delisted.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 // Wave 24 (2026-05-28): guidance-delta. Did this periodic SEC filing
 // materially change guidance, segment outlook, or risk language versus the
 // prior same-form filing, with the exact changed sentences quoted. Reads the
@@ -6901,6 +6973,10 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // historical capital buildouts on capex as a share of GDP. Free sibling
   // registry at /api/capital-cycles.
   '/api/premium/ai-capex-cycle-verdict': AI_CAPEX_CYCLE_VERDICT_PILOT,
+  // Wave 41 (2026-06-09): eu-ai-act designation history. Daily NANDO / SMCS
+  // register diff; the Commission publishes no designation time series. Free
+  // sibling at /api/eu-ai-act/notified-bodies.
+  '/api/premium/eu-ai-act/notified-bodies/history': EU_AI_ACT_NB_HISTORY_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

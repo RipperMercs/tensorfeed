@@ -157,6 +157,8 @@ const PILOT_PATHS = [
   '/api/premium/x402-publisher-verdict',
   // Wave 40 (2026-06-07): ai-capex-cycle-verdict (AI buildout ranked vs historical capital cycles)
   '/api/premium/ai-capex-cycle-verdict',
+  // Wave 41 (2026-06-09): eu-ai-act designation history (daily NANDO / SMCS register diff)
+  '/api/premium/eu-ai-act/notified-bodies/history',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

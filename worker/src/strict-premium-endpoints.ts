@@ -312,6 +312,11 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // 402 challenge instead of a free-trial path; audit-fix-era convention for
   // any param-reading paid route. Free taste at /api/export-controls/ai.
   '/api/premium/export-controls/ai/history',
+  // EU AI Act designation history (2026-06-09). Param-reading history endpoint
+  // (?from=&to=&legislation_id=&type=, all optional), strict so anonymous
+  // crawlers get a clean 402 challenge. Free taste at
+  // /api/eu-ai-act/notified-bodies (current list + 5-event preview).
+  '/api/premium/eu-ai-act/notified-bodies/history',
   // AI Crawler Access Map changes (2026-06-02). Param-required (?from=&to=,
   // domain optional): anonymous probes must see a clean 402 challenge, not a
   // free-trial 400 missing_params, so catalog validators read it as paid.

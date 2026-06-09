@@ -156,6 +156,7 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   '/api/premium/hf-leaderboard/movers':              { name: 'Open LLM leaderboard movers',           category: 'hf-leaderboard-movers',   credits: 1, method: 'GET' },
   '/api/premium/x402-publisher-verdict':             { name: 'x402 publisher verdict',                category: 'x402-publisher-verdict',  credits: 1, method: 'GET' },
   '/api/premium/ai-capex-cycle-verdict':             { name: 'AI Capex Cycle Verdict',                category: 'ai-capex-cycle-verdict',  credits: 1, method: 'GET' },
+  '/api/premium/eu-ai-act/notified-bodies/history':  { name: 'EU AI Act designation history',         category: 'eu-ai-act-notified-bodies', credits: 1, method: 'GET' },
 };
 
 // ── Latin1 hygiene ─────────────────────────────────────────────────

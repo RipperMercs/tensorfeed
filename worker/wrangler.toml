@@ -348,6 +348,12 @@ crons = [
   "43 18 * * *",
   # Daily 01:37 UTC: capture the federal AI opportunities snapshot (worker/src/ai-opportunities.ts). Collision-free (hour 1 is empty, minute 37 is odd and matched by no wildcard incl 0 *, 27 *, */2).
   "37 1 * * *",
+  # Daily 19:33 UTC: capture the EU AI Act notified-body snapshot + designation
+  # delta events (worker/src/eu-ai-act.ts). EC search API behind the NANDO /
+  # SMCS SPA; AI Act + CRA + EUCC cohort; CC BY 4.0. Collision-free (hour 19
+  # has no fixed-time cron; minute 33 is odd and dodges 0 *, 27 *, */2, */5,
+  # */10, */15, and the multi-hour :15/:25/:35 patterns).
+  "33 19 * * *",
   # Daily 01:47 UTC: capture the federal AI policy snapshot (worker/src/federal-ai-policy.ts). Federal Register AI documents (no key) plus GovInfo AI bills (key-gated on DATA_GOV_API_KEY). Collision-free (hour 1 holds only 37 1; minute 47 is odd and dodges 0 *, 27 *, */2, */5, */10).
   "47 1 * * *",
   # Daily 06:41 UTC: anti-drift health audit (worker/src/drift-audit.ts).

@@ -286,6 +286,13 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // recorded, so no wall-clock staleness no-charge applies; the handler's
   // empty_result no-charge covers the cold (pre-first-cron) and empty-filter cases.
   '/api/premium/export-controls/ai/history': NULL_SLA,
+  // EU AI Act designation history: unlike the export-controls log above, this
+  // is a recency-watch product (did NANDO change?). Its captured_at is the
+  // events-log updated_at, which the 19:33 UTC cron advances on every
+  // successful capture even when zero events landed, so a captured_at older
+  // than daily cadence plus one-run headroom means the watch itself is broken
+  // and the answer must not bill.
+  '/api/premium/eu-ai-act/notified-bodies/history': { maxAgeSeconds: 36 * 60 * 60 },
   '/api/premium/probe/series': NULL_SLA,
   '/api/gpu/pricing/series': NULL_SLA,
   // Watch registration: pure write, no capture concept.
