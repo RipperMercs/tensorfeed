@@ -134,9 +134,11 @@ export default function RootLayout({
           <ViewModeProvider>
             <ChromeGate>
               <LiveTicker evergreenItems={TICKER_ITEMS} />
-              <TopAlertBar />
             </ChromeGate>
             <Navbar />
+            <ChromeGate>
+              <TopAlertBar />
+            </ChromeGate>
             <main id="main-content" className="flex-1">{children}</main>
             <ConditionalFooter />
             <ChromeGate>
