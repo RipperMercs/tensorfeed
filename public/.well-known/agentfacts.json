@@ -1,0 +1,88 @@
+{
+  "id": "tensorfeed.ai:data-hub-v1",
+  "agent_name": "urn:agent:tensorfeed:DataHub",
+  "label": "TensorFeed AI Data Hub",
+  "description": "AI-ecosystem data hub built for AI agents. Serves 100+ machine-readable data feeds covering AI industry news, model and GPU pricing, live AI service status and uptime, AI-stack CVE intelligence, and dated leaderboard history. Free REST API with no auth, plus x402/USDC premium endpoints settled on Base. This is a read-only data API, not a task-executing agent.",
+  "version": "1.0.0",
+  "documentationUrl": "https://tensorfeed.ai/developers",
+  "jurisdiction": "US",
+  "provider": {
+    "name": "Pizza Robot Studios",
+    "url": "https://tensorfeed.ai"
+  },
+  "endpoints": {
+    "static": [
+      "https://tensorfeed.ai/api/meta",
+      "https://tensorfeed.ai/api/news",
+      "https://tensorfeed.ai/api/pricing",
+      "https://tensorfeed.ai/api/status",
+      "https://tensorfeed.ai/api/ai-cves/latest",
+      "https://tensorfeed.ai/api/hf-leaderboard/latest"
+    ]
+  },
+  "capabilities": {
+    "modalities": ["text"],
+    "streaming": false,
+    "batch": true,
+    "authentication": {
+      "methods": ["none", "x402"]
+    }
+  },
+  "skills": [
+    {
+      "id": "ai-news",
+      "description": "Aggregated AI industry news plus a cross-source corroborated verified feed. GET https://tensorfeed.ai/api/news and https://tensorfeed.ai/api/verified-feed",
+      "inputModes": ["text"],
+      "outputModes": ["text"],
+      "supportedLanguages": ["en"]
+    },
+    {
+      "id": "model-pricing",
+      "description": "Current model API pricing and GPU rental pricing across providers. GET https://tensorfeed.ai/api/pricing and https://tensorfeed.ai/api/gpu-pricing",
+      "inputModes": ["text"],
+      "outputModes": ["text"],
+      "supportedLanguages": ["en"]
+    },
+    {
+      "id": "service-status",
+      "description": "Live status, incident history, and uptime for AI providers including OpenAI, Anthropic, and Google, with an early-warning outage signal. GET https://tensorfeed.ai/api/status",
+      "inputModes": ["text"],
+      "outputModes": ["text"],
+      "supportedLanguages": ["en"]
+    },
+    {
+      "id": "ai-cve-intelligence",
+      "description": "AI-stack CVE feed with affected products, version ranges, severity, and exploited-in-wild signals, plus an AI supply-chain IOC feed. GET https://tensorfeed.ai/api/ai-cves/latest",
+      "inputModes": ["text"],
+      "outputModes": ["text"],
+      "supportedLanguages": ["en"]
+    },
+    {
+      "id": "leaderboard-history",
+      "description": "Dated daily snapshots of the Hugging Face Open LLM Leaderboard v2 and pointers to every live public AI leaderboard. GET https://tensorfeed.ai/api/hf-leaderboard/latest and https://tensorfeed.ai/api/public-leaderboards",
+      "inputModes": ["text"],
+      "outputModes": ["text"],
+      "supportedLanguages": ["en"]
+    }
+  ],
+  "telemetry": {
+    "enabled": false
+  },
+  "contact": "contact@tensorfeed.ai",
+  "related": {
+    "endpoint_catalog": "https://tensorfeed.ai/api/meta",
+    "x402_manifest": "https://tensorfeed.ai/.well-known/x402.json",
+    "agent_fair_trade_manifest": "https://tensorfeed.ai/.well-known/agent-fair-trade.json",
+    "a2a_agent_card": "https://tensorfeed.ai/.well-known/agent-card.json",
+    "llms_txt": "https://tensorfeed.ai/llms.txt",
+    "mcp_servers": [
+      {
+        "registry_name": "ai.tensorfeed/mcp-server",
+        "npm": "@tensorfeed/mcp-server"
+      },
+      {
+        "npm": "@tensorfeed/x402-base-mcp"
+      }
+    ]
+  }
+}

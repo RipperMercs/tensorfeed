@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "domain": "tensorfeed.ai",
+  "updated": "2026-06-09T00:00:00Z",
+  "provider": {
+    "name": "Pizza Robot Studios",
+    "url": "https://tensorfeed.ai",
+    "contact": "contact@tensorfeed.ai"
+  },
+  "agents": [
+    {
+      "handle": "@tensorfeed/data-hub",
+      "label": "TensorFeed AI Data Hub",
+      "facts_url": "https://tensorfeed.ai/.well-known/agentfacts.json"
+    }
+  ]
+}
