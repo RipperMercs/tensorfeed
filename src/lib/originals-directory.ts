@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'apple-siri-ai-google-gemini-vertical-stack-inverted',
+    title:
+      "Apple's New Siri Is a Gemini Model on Google Cloud on Nvidia Chips. The Vertical Stack Just Inverted.",
+    author: 'Marcus Chen',
+    date: 'June 9, 2026',
+    readTime: '6 min read',
+    description:
+      "At WWDC 2026 on June 8, Apple rebranded Siri to 'Siri AI' and confirmed that its hardest reasoning requests run on a custom 1.2-trillion-parameter Gemini model hosted on Nvidia B200 GPUs inside Google Cloud, on a multi-year deal worth roughly $1 billion a year. The on-device tier still runs on Apple Silicon, but the cloud tier (where the new capabilities actually live) is three external dependencies stacked: Google's model, Google's data centers, Nvidia's silicon. Apple, the most vertically integrated company in tech, just rented the deepest part of its newest product line. The Extensions framework that lets users swap in Claude, ChatGPT, or Grok is the hedge. Inside the structural admission, what $1 billion a year actually buys, why the headline customer for Google's headline cloud deal is paying for Nvidia and not TPU, and what it does to Anthropic and OpenAI distribution.",
+  },
+  {
     slug: 'ai-capex-bubble-debate-scoreboard',
     title:
       'Everyone Is Calling an AI Capex Bubble. Almost No One Agrees on How to Measure One.',
