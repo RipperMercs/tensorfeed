@@ -90,6 +90,12 @@ export interface Env {
   // (20000) when unset or non-positive. A plain var (not a secret) so it can be
   // retuned in wrangler.toml without a code change.
   REQUEST_DEADLINE_MS?: string;
+  // Bound (ms) on the inline KV read cachedKVGet performs on a cold cache
+  // miss when running in stale-while-revalidate mode. A hung KV operation
+  // past this serves an empty payload fast (the late result still warms the
+  // cache in the background) instead of riding to the request deadline 504.
+  // Optional; falls back to DEFAULT_KV_READ_TIMEOUT_MS (10000). Plain var.
+  KV_READ_TIMEOUT_MS?: string;
   // CreditLedger Durable Object namespace. Per-token DO instance owns
   // the canonical credit balance + daily-spend counter and serializes
   // all read-modify-write operations to close H-1 + H-2 races from the

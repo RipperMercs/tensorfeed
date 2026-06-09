@@ -269,6 +269,14 @@ export interface RequestHealthReport {
   slow_ms: number;
   top_5xx_by_path: Array<{ path: string; status: string; hits: number; max_ms: number }> | null;
   top_slow_by_path: Array<{ path: string; slow_hits: number; avg_ms: number; max_ms: number }> | null;
+  // Slow rows broken out by (path, ua family, status). Separates real agent
+  // slowness from synthetic latency (chaos-header tests) and shows whether a
+  // hang clusters on one caller family or spans all of them.
+  slow_by_ua: Array<{ path: string; ua: string; status: string; hits: number; avg_ms: number; max_ms: number }> | null;
+  // Most recent individual slow/5xx rows with timestamps. Lets the reader
+  // correlate stalls against the cron schedule (isolate CPU contention shows
+  // up as multi-path stalls at cron minutes; KV tail latency is scattered).
+  slow_recent: Array<{ at: string; path: string; ua: string; status: string; ms: number }> | null;
   status: 'ok' | 'unavailable';
 }
 
@@ -276,7 +284,7 @@ export interface RequestHealthReport {
 // "unavailable" (null arrays) when the token/account id are absent or a query
 // fails. Never throws. Mirrors queryUsageFunnel.
 export async function queryRequestHealth(env: Env, days: number): Promise<RequestHealthReport> {
-  const base: RequestHealthReport = { window: `${days}d`, slow_ms: SLOW_MS, top_5xx_by_path: null, top_slow_by_path: null, status: 'unavailable' };
+  const base: RequestHealthReport = { window: `${days}d`, slow_ms: SLOW_MS, top_5xx_by_path: null, top_slow_by_path: null, slow_by_ua: null, slow_recent: null, status: 'unavailable' };
   if (!env.CF_ANALYTICS_TOKEN || !env.CF_ACCOUNT_ID) return base;
   const run = async (sql: string): Promise<Array<Record<string, unknown>> | null> => {
     try {
@@ -298,13 +306,17 @@ export async function queryRequestHealth(env: Env, days: number): Promise<Reques
   };
   const fivexxSql = `SELECT index1 AS path, blob1 AS status, SUM(_sample_interval) AS hits, MAX(double1) AS max_ms FROM tf_request_health WHERE timestamp > now() - INTERVAL '${days}' DAY AND blob1 >= '500' GROUP BY path, status ORDER BY hits DESC LIMIT 100`;
   const slowSql = `SELECT index1 AS path, SUM(_sample_interval) AS slow_hits, AVG(double1) AS avg_ms, MAX(double1) AS max_ms FROM tf_request_health WHERE timestamp > now() - INTERVAL '${days}' DAY AND double1 > ${SLOW_MS} GROUP BY path ORDER BY slow_hits DESC LIMIT 50`;
-  const [fivexx, slow] = await Promise.all([run(fivexxSql), run(slowSql)]);
-  if (fivexx === null && slow === null) return base;
+  const slowByUaSql = `SELECT index1 AS path, blob2 AS ua, blob1 AS status, SUM(_sample_interval) AS hits, AVG(double1) AS avg_ms, MAX(double1) AS max_ms FROM tf_request_health WHERE timestamp > now() - INTERVAL '${days}' DAY AND double1 > ${SLOW_MS} GROUP BY path, ua, status ORDER BY hits DESC LIMIT 100`;
+  const slowRecentSql = `SELECT timestamp AS ts, index1 AS path, blob2 AS ua, blob1 AS status, double1 AS ms FROM tf_request_health WHERE timestamp > now() - INTERVAL '${days}' DAY AND double1 > ${SLOW_MS} ORDER BY ts DESC LIMIT 50`;
+  const [fivexx, slow, slowByUa, slowRecent] = await Promise.all([run(fivexxSql), run(slowSql), run(slowByUaSql), run(slowRecentSql)]);
+  if (fivexx === null && slow === null && slowByUa === null && slowRecent === null) return base;
   return {
     window: `${days}d`,
     slow_ms: SLOW_MS,
     top_5xx_by_path: fivexx ? fivexx.map((r) => ({ path: String(r.path), status: String(r.status), hits: Number(r.hits), max_ms: Number(r.max_ms) })) : null,
     top_slow_by_path: slow ? slow.map((r) => ({ path: String(r.path), slow_hits: Number(r.slow_hits), avg_ms: Number(r.avg_ms), max_ms: Number(r.max_ms) })) : null,
+    slow_by_ua: slowByUa ? slowByUa.map((r) => ({ path: String(r.path), ua: String(r.ua), status: String(r.status), hits: Number(r.hits), avg_ms: Number(r.avg_ms), max_ms: Number(r.max_ms) })) : null,
+    slow_recent: slowRecent ? slowRecent.map((r) => ({ at: String(r.ts), path: String(r.path), ua: String(r.ua), status: String(r.status), ms: Number(r.ms) })) : null,
     status: 'ok',
   };
 }

@@ -1350,6 +1350,10 @@ describe('admin request-health view', () => {
     expect(res.json?.slow_ms).toBe(5000);
     expect(res.json?.status).toBe('unavailable');
     expect(res.json?.top_5xx_by_path ?? null).toBeNull();
+    // Diagnostic UA breakdown ships in the report shape even when AE is
+    // unavailable, so consumers can rely on the key existing.
+    expect('slow_by_ua' in (res.json ?? {})).toBe(true);
+    expect(res.json?.slow_by_ua ?? null).toBeNull();
   });
 });
 

@@ -681,15 +681,42 @@ async function cachePut(request: Request, response: Response, ttlSeconds: number
   await cache.put(request, cloned);
 }
 
+// Epoch-ms write time of a cachedKVGet entry. The entry's logical freshness
+// is judged against this header (per-caller cacheTTL), NOT against the
+// Cache API max-age, which is set to the hard ceiling below so a stale entry
+// stays retrievable for stale-while-revalidate serving.
+const KV_CACHE_AT_HEADER = 'X-TF-Cached-At';
+// Hard ceiling on how long a stale entry stays servable while background
+// refreshes keep failing. Steady-state staleness is bounded by one request
+// interval past the logical TTL, not by this.
+const KV_CACHE_HARD_TTL_SECONDS = 21_600;
+const DEFAULT_KV_READ_TIMEOUT_MS = 10_000;
+
+function resolveKvReadTimeoutMs(raw: string | undefined): number {
+  const n = raw === undefined ? NaN : parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_KV_READ_TIMEOUT_MS;
+}
+
 /**
  * Try Cache API first, then KV, then cache the KV result.
  * Dramatically reduces KV read operations.
+ *
+ * When `swrCtx` is passed, the read runs in stale-while-revalidate mode:
+ * an entry past its logical TTL is served immediately while a background
+ * KV refresh (ctx.waitUntil) rewrites it, and the cold-miss inline KV read
+ * is bounded by KV_READ_TIMEOUT_MS. Request-health showed the synchronous
+ * KV read on the hot paths (/api/status, /api/breaking, /api/news, feeds)
+ * carrying a heavy latency tail (6-20s, occasionally hanging into the 20s
+ * deadline 504); SWR takes KV off those request paths entirely except on a
+ * true cold miss. Without `swrCtx` the behavior is the pre-SWR inline read.
  */
 async function cachedKVGet(
   request: Request,
   kvNamespace: KVNamespace,
   key: string,
-  cacheTTL: number
+  cacheTTL: number,
+  swrCtx?: ExecutionContext,
+  env?: { KV_READ_TIMEOUT_MS?: string }
 ): Promise<unknown> {
   // Synthetic cache key URL. Pinned to a constant origin + no search
   // params so every caller of cachedKVGet(..., key, ...) hits the same
@@ -700,38 +727,82 @@ async function cachedKVGet(
   const cacheUrl = new URL(`https://tensorfeed-kv-cache.internal/__kv_cache/${encodeURIComponent(key)}`);
   const cacheRequest = new Request(cacheUrl.toString());
 
+  // KV read + cache rewrite, shared by the inline and background paths.
+  // Entries are written with the hard max-age plus the cached-at header;
+  // every reader judges freshness against the header, so the longer
+  // retention never extends what callers observe as fresh. A KV value that
+  // is affirmatively gone deletes the entry so removals (e.g. a cleared
+  // breaking alert) converge instead of being stale-served for hours.
+  const readKvAndRecache = async (): Promise<unknown> => {
+    const data = await kvNamespace.get(key, 'json');
+    try {
+      if (data) {
+        const resp = new Response(JSON.stringify(data), {
+          headers: { 'Content-Type': 'application/json', [KV_CACHE_AT_HEADER]: String(Date.now()) },
+        });
+        await cachePut(cacheRequest, resp, KV_CACHE_HARD_TTL_SECONDS);
+      } else {
+        await caches.default.delete(cacheRequest);
+      }
+    } catch (putErr) {
+      console.warn(`Cache API write failed for key "${key}":`, putErr);
+    }
+    return data;
+  };
+
   // Try Cache API first (free, unlimited)
   try {
     const cached = await cacheGet(cacheRequest);
     if (cached) {
-      return cached.json();
+      const atRaw = cached.headers.get(KV_CACHE_AT_HEADER);
+      const cachedAt = atRaw === null ? NaN : parseInt(atRaw, 10);
+      // Entries without the header predate it and are bounded by their own
+      // short max-age, so they count as fresh.
+      const ageMs = Number.isFinite(cachedAt) ? Date.now() - cachedAt : 0;
+      if (ageMs <= cacheTTL * 1000) {
+        return cached.json();
+      }
+      if (swrCtx) {
+        // Stale-while-revalidate: serve the stale copy now, refresh KV off
+        // the request path.
+        swrCtx.waitUntil(readKvAndRecache().catch(() => undefined));
+        return cached.json();
+      }
+      // Stale without a ctx: fall through to the inline KV read below.
     }
   } catch (cacheErr) {
     console.warn(`Cache API read failed for key "${key}":`, cacheErr);
   }
 
-  // Cache miss: read from KV
-  let data: unknown;
+  // Cache miss (or stale entry without SWR): read from KV inline.
+  if (swrCtx) {
+    // Bound the inline read so a hung KV operation cannot ride the request
+    // into the deadline 504. The read itself continues via waitUntil, so a
+    // late result still warms the cache for the next request.
+    const timeoutMs = resolveKvReadTimeoutMs(env?.KV_READ_TIMEOUT_MS);
+    const read = readKvAndRecache();
+    swrCtx.waitUntil(read.catch(() => undefined));
+    const TIMED_OUT = Symbol('kv-read-timeout');
+    const winner = await Promise.race([
+      read.catch((kvErr) => {
+        console.error(`KV read failed for key "${key}":`, kvErr);
+        return undefined;
+      }),
+      new Promise<typeof TIMED_OUT>((resolve) => setTimeout(() => resolve(TIMED_OUT), timeoutMs)),
+    ]);
+    if (winner === TIMED_OUT) {
+      console.warn(`KV read for key "${key}" exceeded ${timeoutMs}ms; serving empty (cache warms when the read lands)`);
+      return undefined;
+    }
+    return winner;
+  }
+
   try {
-    data = await kvNamespace.get(key, 'json');
+    return await readKvAndRecache();
   } catch (kvErr) {
     console.error(`KV read failed for key "${key}":`, kvErr);
     return undefined;
   }
-
-  // Store in Cache API for next time
-  if (data) {
-    try {
-      const resp = new Response(JSON.stringify(data), {
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${cacheTTL}` },
-      });
-      await cachePut(cacheRequest, resp, cacheTTL);
-    } catch (putErr) {
-      console.warn(`Cache API write failed for key "${key}":`, putErr);
-    }
-  }
-
-  return data;
 }
 
 /**
@@ -1185,7 +1256,10 @@ export default {
       ctx.waitUntil(maybeFlushChaos(env));
       return simulatedError;
     }
-    await applySimulatedLatency(request);
+    // Capture the injected delay so the request-health telemetry below can
+    // subtract it: a caller-requested simulated latency must not be recorded
+    // as server slowness.
+    const chaosLatencyMs = await applySimulatedLatency(request);
 
     // App-level IP rate limit (free public API only). Premium endpoints
     // are gated by per-token credits + circuit breaker; admin/internal
@@ -1250,7 +1324,7 @@ export default {
       // Request-health telemetry: fires for ALL paths (not just metered ones)
       // when the response is a 5xx or the request was slow. Same best-effort
       // try as the usage meter; never affects the response.
-      recordRequestHealth(env, meterPath, response.status, request.headers.get('User-Agent') || '', Date.now() - t0);
+      recordRequestHealth(env, meterPath, response.status, request.headers.get('User-Agent') || '', Date.now() - t0 - chaosLatencyMs);
       // Pilots are intentionally NOT logged to the KV rollup here. Every
       // premium endpoint, pilots included, already calls logPremiumUsage
       // exactly once inside its named handler (the per-provider incident
@@ -1711,7 +1785,7 @@ export default {
       const parsedLimit = parseInt(url.searchParams.get('limit') || '50', 10);
       const limit = Math.min(Number.isNaN(parsedLimit) ? 50 : parsedLimit, 200);
 
-      let articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60) as Article[] | null;
+      let articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60, ctx, env) as Article[] | null;
       if (!articles) articles = [];
 
       if (category && category !== 'All') {
@@ -1905,7 +1979,7 @@ export default {
 
     // RSS feed (cached 300s). Served at both /feed.xml and /api/feed.xml.
     if (path === '/feed.xml' || path === '/api/feed.xml' || path === '/api/feed/all.xml' || path === '/feed/all.xml') {
-      const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 300) as Article[] | null;
+      const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 300, ctx, env) as Article[] | null;
       const safe = (articles || []).map(sanitizeArticleForAgents);
       return xmlResponse(articlesToRSS(safe, 'TensorFeed.ai', 'https://tensorfeed.ai/feed.xml'));
     }
@@ -1913,7 +1987,7 @@ export default {
     // Category RSS feeds. Served at both /feed/<cat>.xml and /api/feed/<cat>.xml.
     if ((path.startsWith('/feed/') || path.startsWith('/api/feed/')) && path.endsWith('.xml')) {
       const category = path.replace(/^\/(api\/)?feed\//, '').replace('.xml', '');
-      const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 300) as Article[] | null;
+      const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 300, ctx, env) as Article[] | null;
       if (!articles) return xmlResponse(articlesToRSS([], `TensorFeed.ai - ${category}`, `https://tensorfeed.ai${path}`));
 
       const categoryMap: Record<string, string[]> = {
@@ -1935,7 +2009,7 @@ export default {
 
     // JSON Feed (cached 60s). Served at both /feed.json and /api/feed.json.
     if (path === '/feed.json' || path === '/api/feed.json') {
-      const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60) as Article[] | null;
+      const articles = await cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60, ctx, env) as Article[] | null;
       const safe = (articles || []).map(sanitizeArticleForAgents);
       return jsonResponse(articlesToJsonFeed(safe), 200, 60);
     }
@@ -1943,7 +2017,7 @@ export default {
     // === STATUS ENDPOINTS (cached 120s) ===
 
     if (path === '/api/status' || path === '/api/agents/status' || path === '/api/agents/status.json') {
-      const services = await cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120);
+      const services = await cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120, ctx, env);
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
@@ -1955,7 +2029,7 @@ export default {
     // === INCIDENTS ENDPOINT (cached 120s) ===
 
     if (path === '/api/incidents') {
-      const incidents = await cachedKVGet(request, env.TENSORFEED_STATUS, 'incidents', 120);
+      const incidents = await cachedKVGet(request, env.TENSORFEED_STATUS, 'incidents', 120, ctx, env);
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
@@ -1964,7 +2038,7 @@ export default {
     }
 
     if (path === '/api/status/summary') {
-      const summary = await cachedKVGet(request, env.TENSORFEED_STATUS, 'summary', 120);
+      const summary = await cachedKVGet(request, env.TENSORFEED_STATUS, 'summary', 120, ctx, env);
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
@@ -1977,7 +2051,7 @@ export default {
     // Written only by the ADMIN_KEY-gated POST /api/admin/breaking below.
     if (path === '/api/breaking') {
       const { filterActiveAlert, CACHE_TTL_SECONDS } = await import('./breaking');
-      const raw = await cachedKVGet(request, env.TENSORFEED_CACHE, 'breaking:current', CACHE_TTL_SECONDS);
+      const raw = await cachedKVGet(request, env.TENSORFEED_CACHE, 'breaking:current', CACHE_TTL_SECONDS, ctx, env);
       const alert = filterActiveAlert(raw, new Date());
       return jsonResponse({ ok: true, source: 'tensorfeed.ai', alert }, 200, CACHE_TTL_SECONDS);
     }
@@ -1985,7 +2059,7 @@ export default {
     // === PRICING ENDPOINT (cached 300s) ===
 
     if (path === '/api/agents/pricing' || path === '/api/pricing' || path === '/api/agents/pricing.json') {
-      const cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'pricing', 300);
+      const cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'pricing', 300, ctx, env);
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
@@ -1998,8 +2072,8 @@ export default {
 
     if (path === '/api/models') {
       // Try new 'models' key first, fall back to legacy 'pricing' key
-      let cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'models', 300);
-      if (!cached) cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'pricing', 300);
+      let cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'models', 300, ctx, env);
+      if (!cached) cached = await cachedKVGet(request, env.TENSORFEED_CACHE, 'pricing', 300, ctx, env);
       // Merge the free TFII headline per model from the latest index snapshot.
       // Direct KV read (not cachedKVGet) to avoid sharing a request-scoped cache
       // key with the 'models' read above. The snapshot is small and the whole
@@ -6262,7 +6336,7 @@ export default {
         news, papersAITrending, papersArxivRecent, papersHFDaily,
         hfTrending, hotIssues, redditTrending, openrouter, status,
       ] = await Promise.all([
-        wantNews ? safe(cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60) as Promise<Article[] | null>) : Promise.resolve(null),
+        wantNews ? safe(cachedKVGet(request, env.TENSORFEED_NEWS, 'articles', 60, ctx, env) as Promise<Article[] | null>) : Promise.resolve(null),
         wantPapers ? safe(getPapersLatest(env)) : Promise.resolve(null),
         wantPapers ? safe(getArxivLatest(env)) : Promise.resolve(null),
         wantPapers ? safe(getHFDailyPapersLatest(env)) : Promise.resolve(null),
@@ -6270,7 +6344,7 @@ export default {
         wantCommunity ? safe(getHotIssuesLatest(env)) : Promise.resolve(null),
         wantCommunity ? safe(getRedditLatest(env)) : Promise.resolve(null),
         wantInference ? safe(getORLatest(env)) : Promise.resolve(null),
-        wantStatus ? safe(cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120) as Promise<ServiceStatus[] | null>) : Promise.resolve(null),
+        wantStatus ? safe(cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120, ctx, env) as Promise<ServiceStatus[] | null>) : Promise.resolve(null),
       ]);
 
       const brief = buildTodayBrief(
@@ -7426,7 +7500,7 @@ export default {
       const { computeReliabilityVerdict } = await import('./premium-provider-reliability-verdict');
       const reliability = await computeReliabilityVerdict(env);
       const statusServices =
-        ((await cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120)) as import('./types').ServiceStatus[] | null) || [];
+        ((await cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120, ctx, env)) as import('./types').ServiceStatus[] | null) || [];
 
       // No operational signal at all (cold start before first cron): no-charge.
       if (reliability.ranking.length === 0 && statusServices.length === 0) {
