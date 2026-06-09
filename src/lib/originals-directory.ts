@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'claude-fable-5-mythos-5-split-frontier',
+    title: 'Anthropic Split the Frontier in Two. Fable 5 Is the Half You Can Buy.',
+    author: 'Kira Nolan',
+    date: 'June 9, 2026',
+    readTime: '8 min read',
+    description:
+      'Anthropic shipped its newest frontier model as two products on June 9: Claude Fable 5, generally available behind always-on safety classifiers at $10 per 1M input and $50 per 1M output with a default 1M context window, and Claude Mythos 5, the same model with safeguards lifted for vetted cyberdefense and government partners. The vendor table leads the field (SWE-bench Pro 80.3 percent vs GPT-5.5 at 58.6), but several headline rows are Mythos-only ceilings, flagged requests silently reroute to Opus 4.8 at Opus pricing, and for the first time no ASL tier was named.',
+  },
+  {
     slug: 'anthropic-maia-200-fourth-chip-inference',
     title:
       'Anthropic Is Negotiating a Fourth Chip. Claude Inference Just Stopped Being a Nvidia Story.',
