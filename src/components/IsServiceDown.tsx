@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Activity, ArrowRight, HelpCircle } from 'lucide-react';
 import { WebApplicationJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
 import LiveServiceStatus from '@/components/status/LiveServiceStatus';
+import EarlyWarningIncidents from '@/components/status/EarlyWarningIncidents';
 import type { IsDownService } from '@/lib/is-down-services';
 
 /**
@@ -84,6 +85,12 @@ export default async function IsServiceDown({ service }: { service: IsDownServic
         providerName={name}
         initial={live}
         statusPageUrl={service.statusPageUrl}
+      />
+
+      {/* Early-warning probe callout + last-10 incident history (polls every 2 min) */}
+      <EarlyWarningIncidents
+        serviceName={service.statusServiceName}
+        provider={service.providerName}
       />
 
       {/* What to do when X is down */}

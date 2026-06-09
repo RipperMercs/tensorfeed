@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Activity, ArrowRight, HelpCircle } from 'lucide-react';
 import { WebApplicationJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
 import LiveServiceStatus from '@/components/status/LiveServiceStatus';
+import EarlyWarningIncidents from '@/components/status/EarlyWarningIncidents';
 
 interface StatusService {
   name: string;
@@ -148,6 +149,9 @@ export default async function IsGeminiDownPage() {
 
       {/* Live status indicator + component breakdown (polls /api/status every 2 min) */}
       <LiveServiceStatus serviceName="Google Gemini" providerName="Gemini" initial={service} />
+
+      {/* Early-warning probe callout + last-10 incident history (polls every 2 min) */}
+      <EarlyWarningIncidents serviceName="Google Gemini" provider="Google" />
 
       {/* What to do when Gemini is down */}
       <section className="mb-10">

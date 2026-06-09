@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { buildIndexNowPayload, pingIndexNow, STATUS_CHANGE_URLS } from './indexnow';
+import { buildIndexNowPayload, pingIndexNow, STATUS_CHANGE_URLS, statusFlipUrlList, PROVIDER_QUESTION_URLS } from './indexnow';
 
 describe('buildIndexNowPayload', () => {
   it('builds the spec payload with host, key, keyLocation, urlList', () => {
@@ -16,6 +16,28 @@ describe('buildIndexNowPayload', () => {
 describe('STATUS_CHANGE_URLS', () => {
   it('includes the status hub', () => {
     expect(STATUS_CHANGE_URLS).toContain('https://tensorfeed.ai/status');
+  });
+});
+
+describe('statusFlipUrlList', () => {
+  it('returns just the base surfaces when no provider has a question page', () => {
+    expect(statusFlipUrlList(['Hyperliquid'])).toEqual(STATUS_CHANGE_URLS);
+  });
+
+  it('appends the flipped provider question page, deduped', () => {
+    const urls = statusFlipUrlList(['Anthropic', 'Anthropic', 'OpenAI']);
+    expect(urls).toEqual([
+      ...STATUS_CHANGE_URLS,
+      'https://tensorfeed.ai/is-claude-down',
+      'https://tensorfeed.ai/is-chatgpt-down',
+    ]);
+  });
+
+  it('question urls all use the established top-level is-X-down pattern', () => {
+    for (const url of Object.values(PROVIDER_QUESTION_URLS)) {
+      expect(url.startsWith('https://tensorfeed.ai/is-')).toBe(true);
+      expect(url.endsWith('-down')).toBe(true);
+    }
   });
 });
 

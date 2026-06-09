@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Activity, ArrowRight, HelpCircle } from 'lucide-react';
 import { WebApplicationJsonLd, FAQPageJsonLd, BreadcrumbListJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
 import LiveServiceStatus from '@/components/status/LiveServiceStatus';
+import EarlyWarningIncidents from '@/components/status/EarlyWarningIncidents';
 
 interface StatusService {
   name: string;
@@ -156,6 +157,9 @@ export default async function IsClaudeDownPage() {
 
       {/* Live status indicator + component breakdown (polls /api/status every 2 min) */}
       <LiveServiceStatus serviceName="Claude API" providerName="Claude" initial={service} />
+
+      {/* Early-warning probe callout + last-10 incident history (polls every 2 min) */}
+      <EarlyWarningIncidents serviceName="Claude API" provider="Anthropic" />
 
       {/* What to do when Claude is down */}
       <section className="mb-10">

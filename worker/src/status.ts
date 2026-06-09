@@ -4,7 +4,7 @@ import { getLatestSummary } from './probe';
 import { computeEarlyWarning } from './probe-early-warning';
 import { dispatchStatusWatches, StatusTransition } from './watches';
 import { recordPollCycle } from './status-counters';
-import { pingIndexNow, STATUS_CHANGE_URLS } from './indexnow';
+import { pingIndexNow, statusFlipUrlList } from './indexnow';
 
 function normalizeStatus(indicator: string): 'operational' | 'degraded' | 'down' | 'unknown' {
   switch (indicator?.toLowerCase()) {
@@ -730,10 +730,15 @@ export async function pollStatusPages(env: Env): Promise<void> {
       console.error('dispatchStatusWatches failed:', e instanceof Error ? e.message : e);
     }
 
-    // A real status transition just happened: push the status pages into
+    // A real status transition just happened: push the status pages (hub,
+    // homepage, and each flipped provider's is-X-down question page) into
     // Bing's live index so answer engines see TF's incident answer minutes
     // into an outage, not after the next organic crawl. Best-effort.
-    await pingIndexNow(env, STATUS_CHANGE_URLS, `status-flip:${watchTransitions.map((t) => `${t.provider}:${t.from}>${t.to}`).join(',')}`);
+    await pingIndexNow(
+      env,
+      statusFlipUrlList(watchTransitions.map((t) => t.provider)),
+      `status-flip:${watchTransitions.map((t) => `${t.provider}:${t.from}>${t.to}`).join(',')}`,
+    );
   }
 }
 
