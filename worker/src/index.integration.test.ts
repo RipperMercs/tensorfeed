@@ -1584,3 +1584,55 @@ describe('security/epss/series (migrated)', () => {
     expect(await balanceOf(env, token)).toBe(100);
   });
 });
+
+// Empty-result no-charge guards on the four federal/procurement endpoints
+// (2026-06-10 security audit, bill-on-empty class). Each previously no-charged
+// only the cold (snapshot-absent) case; a present-but-empty snapshot (left by a
+// multi-day upstream-source outage, which the best-effort fetchers turn into an
+// empty array rather than a throw) was billed in full for an all-zeros answer.
+// Each now no-charges a captured-but-empty snapshot with empty_result, balance
+// held. captured_at is seeded fresh so the assertion isolates empty_result from
+// the 36h staleness no-charge.
+describe('federal/procurement empty-result no-charge', () => {
+  const fresh = () => new Date(Date.now() - 60_000).toISOString();
+  const cases: { path: string; key: string; emptySnapshot: () => Record<string, unknown> }[] = [
+    {
+      path: '/api/premium/funding/federal/momentum',
+      key: 'fedspend:snapshot',
+      emptySnapshot: () => ({ captured_at: fresh(), source: 't', license: 't', window_days: 120, total_usd: 0, cohort_size: 0, vendors: [], agencies: [] }),
+    },
+    {
+      path: '/api/premium/procurement/ai-contracts/demand',
+      key: 'ai-procurement:snapshot',
+      emptySnapshot: () => ({ captured_at: fresh(), source: 't', license: 't', window_days: 180, total_usd: 0, total_awards: 0, by_agency: [], by_vendor: [], recent: [] }),
+    },
+    {
+      path: '/api/premium/procurement/ai-opportunities/deadlines',
+      key: 'ai-opportunities:snapshot',
+      emptySnapshot: () => ({ captured_at: fresh(), source: 't', license: 't', window_days: 90, total_open: 0, by_agency: [], by_set_aside: [], closing_soon: [], recent: [], open: [] }),
+    },
+    {
+      path: '/api/premium/federal-ai-policy',
+      key: 'federal-ai-policy:snapshot',
+      emptySnapshot: () => ({ captured_at: fresh(), source: 't', license: 't', window_days: 30, total_documents: 0, unique_agencies: 0, by_agency: [], by_type: [], documents: [], bills_enabled: true, total_bills: 0, bills: [] }),
+    },
+  ];
+  for (const c of cases) {
+    it(`no-charges ${c.path} for a captured-but-empty snapshot, balance held`, async () => {
+      const env = await makeEnv();
+      const token = uniqueToken();
+      await seedToken(env, token, 100);
+      await env.TENSORFEED_CACHE.put(c.key, JSON.stringify(c.emptySnapshot()));
+
+      const res = await call(env, c.path, { token, ip: uniqueIp() });
+
+      expect(res.status).toBe(200);
+      expect(res.json?.ok).toBe(true);
+      const billing = res.json?.billing as Record<string, unknown> | undefined;
+      expect(billing).toBeDefined();
+      expect(billing?.credits_charged).toBe(0);
+      expect(billing?.no_charge_reason).toBe('empty_result');
+      expect(await balanceOf(env, token)).toBe(100);
+    });
+  }
+});

@@ -226,6 +226,10 @@ async function pollSpecRepo(
         'User-Agent': 'tensorfeed-substrate-changelog',
         Accept: 'application/vnd.github+json',
       },
+      // Bound every GitHub poll so one stalled socket cannot ride the
+      // Promise.all fan-out to the cron's invocation deadline. An AbortError is
+      // caught below and falls back to the prior value (keep-prior-on-failure).
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) return { version: prior, sourceUrl: priorSource };
 

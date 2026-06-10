@@ -10586,6 +10586,14 @@ export default {
         window_days: snap.window_days,
       };
 
+      // A captured-but-empty snapshot (no vendors) is a no-data answer, not a
+      // ruling; no-charge it rather than billing for an all-zeros verdict. The
+      // cold (!snap) case no-charges above; this covers a present-but-empty
+      // snapshot left by an upstream-source outage.
+      if (vendors.length === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
+
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/funding/federal/momentum', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10649,6 +10657,13 @@ export default {
         capturedAt: snapshot.captured_at,
       };
 
+      // A captured-but-empty snapshot (no awards, no ranked agencies/vendors)
+      // is a no-data answer; no-charge it instead of billing for an all-zeros
+      // concentration/HHI ruling. The cold (!snapshot) case no-charges above.
+      if (snapshot.total_usd === 0 && snapshot.by_agency.length === 0 && snapshot.by_vendor.length === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
+
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/procurement/ai-contracts/demand', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10705,6 +10720,14 @@ export default {
         capturedAt: snapshot.captured_at,
       };
 
+      // A captured-but-empty pipeline (no open solicitations) is a no-data
+      // answer; no-charge it instead of billing for an empty deadlines list.
+      // The cold (!snapshot) case no-charges above; this covers a present
+      // snapshot whose open pipeline is empty.
+      if (deadlines.length === 0) {
+        return await premiumResponse(payload, payment, 1, request, env, 'empty_result');
+      }
+
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/procurement/ai-opportunities/deadlines', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10756,6 +10779,13 @@ export default {
         license: snapshot.license,
         capturedAt: snapshot.captured_at,
       };
+
+      // A captured-but-empty snapshot (no documents and no bills) is a no-data
+      // answer; no-charge it instead of billing for an empty policy feed. The
+      // cold (!snapshot) case no-charges above.
+      if (snapshot.total_documents === 0 && snapshot.total_bills === 0) {
+        return await premiumResponse(payload, payment, 1, request, env, 'empty_result');
+      }
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/federal-ai-policy', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
