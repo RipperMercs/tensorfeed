@@ -12,8 +12,8 @@ import { requirePayment, TIER_COSTS } from './payments';
 import type { NoChargeReason } from './receipts';
 
 export type ComputeResult =
-  | { kind: 'ok'; body: Record<string, unknown>; dataCapturedAt: string | null }
-  | { kind: 'no_charge'; body: Record<string, unknown>; reason: NoChargeReason; dataCapturedAt?: string | null }
+  | { kind: 'ok'; body: object; dataCapturedAt: string | null }
+  | { kind: 'no_charge'; body: object; reason: NoChargeReason; dataCapturedAt?: string | null }
   | { kind: 'validation_failure'; error: Record<string, unknown>; status?: number; reason?: NoChargeReason }
   | { kind: 'upstream_failure'; error: Record<string, unknown>; status: number; reason?: NoChargeReason };
 

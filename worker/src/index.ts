@@ -7186,41 +7186,31 @@ export default {
     // ?model=), so strict-premium. 30-minute freshness SLA keyed to the
     // operational signal: a stale live layer triggers a no-charge.
     if (path === '/api/premium/route-verdict') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const taskParam = url.searchParams.get('task');
-      const modelParam = url.searchParams.get('model');
-      const task: RoutingTask | undefined =
-        taskParam === 'code' || taskParam === 'reasoning' || taskParam === 'creative' || taskParam === 'general'
-          ? taskParam
-          : undefined;
-      if (!task && !modelParam) {
-        return premiumValidationFailure(
-          { error: 'missing_params', hint: 'provide ?task=code|reasoning|creative|general or ?model=<id-or-name>' },
-          payment,
-          request,
-          env,
-        );
-      }
-      const maxLatRaw = parseInt(url.searchParams.get('max_latency_p95_ms') ?? '', 10);
-      const budgetRaw = parseFloat(url.searchParams.get('budget') ?? '');
-      const minQualityRaw = parseFloat(url.searchParams.get('min_quality') ?? '');
-      const { computeRouteVerdict } = await import('./premium-route-verdict');
-      const result = await computeRouteVerdict(env, {
-        task,
-        model: modelParam ?? undefined,
-        maxLatencyP95Ms: Number.isFinite(maxLatRaw) ? maxLatRaw : undefined,
-        requireOperational: url.searchParams.get('require_operational') !== 'false',
-        excludeDeprecated: url.searchParams.get('exclude_deprecated') !== 'false',
-        budget: Number.isFinite(budgetRaw) && budgetRaw > 0 ? budgetRaw : undefined,
-        minQuality: Number.isFinite(minQualityRaw) && minQualityRaw > 0 ? minQualityRaw : undefined,
-      });
-
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/route-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
-      );
-      return await premiumResponse(result, payment, 1, request, env);
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/route-verdict' }, async () => {
+        const taskParam = url.searchParams.get('task');
+        const modelParam = url.searchParams.get('model');
+        const task: RoutingTask | undefined =
+          taskParam === 'code' || taskParam === 'reasoning' || taskParam === 'creative' || taskParam === 'general'
+            ? taskParam
+            : undefined;
+        if (!task && !modelParam) {
+          return { kind: 'validation_failure', error: { error: 'missing_params', hint: 'provide ?task=code|reasoning|creative|general or ?model=<id-or-name>' } };
+        }
+        const maxLatRaw = parseInt(url.searchParams.get('max_latency_p95_ms') ?? '', 10);
+        const budgetRaw = parseFloat(url.searchParams.get('budget') ?? '');
+        const minQualityRaw = parseFloat(url.searchParams.get('min_quality') ?? '');
+        const { computeRouteVerdict } = await import('./premium-route-verdict');
+        const result = await computeRouteVerdict(env, {
+          task,
+          model: modelParam ?? undefined,
+          maxLatencyP95Ms: Number.isFinite(maxLatRaw) ? maxLatRaw : undefined,
+          requireOperational: url.searchParams.get('require_operational') !== 'false',
+          excludeDeprecated: url.searchParams.get('exclude_deprecated') !== 'false',
+          budget: Number.isFinite(budgetRaw) && budgetRaw > 0 ? budgetRaw : undefined,
+          minQuality: Number.isFinite(minQualityRaw) && minQualityRaw > 0 ? minQualityRaw : undefined,
+        });
+        return { kind: 'ok', body: result, dataCapturedAt: null };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM ENDPOINT: MODEL INTELLIGENCE BREAKDOWN (Tier 1, 1 credit) ===
