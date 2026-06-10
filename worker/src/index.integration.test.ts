@@ -1517,3 +1517,42 @@ describe('SLA capturedAt no-charge (research/velocity, kev/full)', () => {
     expect(await balanceOf(env, token)).toBe(50);
   });
 });
+
+// clean/cve migrated onto handlePremium. Two network-free assertions: the
+// no-token gate, and the intentional behavior change, an upstream MITRE 5xx is
+// now a SIGNED no-charge receipt (was a raw jsonResponse 502 with no receipt).
+// The MITRE upstream is forced to 5xx by stubbing global fetch on a cache miss;
+// nothing else on the request path uses global fetch.
+describe('clean/cve (migrated)', () => {
+  it('no-token strict call returns the canonical 402', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/clean/cve/CVE-2026-0001', { ip: uniqueIp() });
+    expect(res.status).toBe(402);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.free_trial ?? null).toBeNull();
+  });
+
+  it('signs the upstream-5xx no-charge instead of a raw 502, balance held', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async () => new Response('', { status: 503 })) as typeof fetch;
+    try {
+      const res = await call(env, '/api/premium/clean/cve/CVE-2030-0001', { token, ip: uniqueIp() });
+      expect(res.status).toBe(502);
+      const billing = res.json?.billing as Record<string, unknown> | undefined;
+      expect(billing).toBeDefined();
+      expect(billing?.credits_charged).toBe(0);
+      // The point of this migration: a signed receipt now rides the 5xx no-charge.
+      const receipt = res.json?.receipt as Record<string, unknown> | undefined;
+      expect(receipt).toBeDefined();
+      expect(typeof receipt?.signature).toBe('string');
+      expect((receipt?.signature as string).length).toBeGreaterThan(0);
+      // Balance untouched: an upstream failure never charges.
+      expect(await balanceOf(env, token)).toBe(100);
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+});

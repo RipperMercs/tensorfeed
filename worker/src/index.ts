@@ -356,6 +356,7 @@ import {
 } from './rate-limit';
 import { isStrictPremiumPath } from './strict-premium-endpoints';
 import { buildPremiumCatalog } from './premium-catalog';
+import { handlePremium } from './premium-handler';
 import { buildOfficialSurfaces } from './official-surfaces';
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
@@ -1164,6 +1165,12 @@ async function premiumValidationFailure(
 
   return new Response(JSON.stringify(responseBody), { status, headers });
 }
+
+// Injected into handlePremium (premium-handler.ts) so the wrapper module need
+// not import these module-private settle helpers, which would be circular with
+// index.ts. logPremiumUsage is imported above; the two settle functions are
+// hoisted declarations.
+const PREMIUM_DEPS = { premiumResponse, premiumValidationFailure, logPremiumUsage };
 
 // ─────────────────────────────────────────────────────────────────────
 
@@ -8767,59 +8774,34 @@ export default {
 
     const cleanCveMatch = path.match(/^\/api\/premium\/clean\/cve\/(CVE-\d{4}-\d{4,7})$/i);
     if (cleanCveMatch) {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const raw = await fetchCVE(env, cleanCveMatch[1]);
-      if (!raw.ok) {
-        if (raw.error === 'cve_not_found' || raw.error === 'invalid_cve_id') {
-          // Client/validation no-charge: route through the AFTA ledger +
-          // signed receipt + no-charge abuse cap (B-F4).
-          return await premiumValidationFailure(
-            { ok: false, error: raw.error, cve_id: raw.cveId, attribution: raw.attribution },
-            payment,
-            request,
-            env,
-          );
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/clean/cve' }, async () => {
+        const raw = await fetchCVE(env, cleanCveMatch[1]);
+        if (!raw.ok) {
+          if (raw.error === 'cve_not_found' || raw.error === 'invalid_cve_id') {
+            // Client/validation no-charge: signed AFTA receipt + no-charge abuse cap.
+            return { kind: 'validation_failure', error: { ok: false, error: raw.error, cve_id: raw.cveId, attribution: raw.attribution } };
+          }
+          // Upstream MITRE 5xx: now a SIGNED no-charge receipt (was a raw 502
+          // with no receipt). The deferred debit still never commits.
+          return { kind: 'upstream_failure', error: { ok: false, error: raw.error, cve_id: raw.cveId, attribution: raw.attribution }, status: 502, reason: '5xx' };
         }
-        // Upstream MITRE failure: a 5xx-class no-charge, NOT a client
-        // validation failure. Keep the 502 + raw shape (deferred-debit
-        // already means no charge). The uniform signed 5xx no-charge
-        // receipt for this class is B-F3, not B-F4; do not mislabel it
-        // as schema_validation_failure or downgrade it to 400.
-        return jsonResponse(
-          { ok: false, error: raw.error, cve_id: raw.cveId, attribution: raw.attribution },
-          502,
+        const clean = attachCompressionStats(
+          transformCveRecord(raw.record),
+          measureSourceBytes(raw.record),
         );
-      }
-      const clean = attachCompressionStats(
-        transformCveRecord(raw.record),
-        measureSourceBytes(raw.record),
-      );
-      ctx.waitUntil(
-        logPremiumUsage(
-          env,
-          '/api/premium/clean/cve',
-          request.headers.get('User-Agent') || 'unknown',
-          1,
-          payment.token,
-          payment.payerWallet,
-        ),
-      );
-      return await premiumResponse(
-        {
-          ok: true,
-          source_format: 'mitre_cve_v5_2',
-          target_format: 'tensorfeed_llm_ready_v1',
-          source_payload: raw.source,
-          ...clean,
-          attribution: raw.attribution,
-        },
-        payment,
-        1,
-        request,
-        env,
-      );
+        return {
+          kind: 'ok',
+          body: {
+            ok: true,
+            source_format: 'mitre_cve_v5_2',
+            target_format: 'tensorfeed_llm_ready_v1',
+            source_payload: raw.source,
+            ...clean,
+            attribution: raw.attribution,
+          },
+          dataCapturedAt: null,
+        };
+      }, PREMIUM_DEPS);
     }
 
     const cleanKevMatch = path.match(/^\/api\/premium\/clean\/kev\/(CVE-\d{4}-\d{4,7})$/i);
