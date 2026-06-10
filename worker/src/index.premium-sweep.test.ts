@@ -106,3 +106,24 @@ describe('strict endpoints: no-token 402 gate + header health', () => {
     });
   }
 });
+
+// A no-token call to a NON-strict premium endpoint must NOT 402: it rides the
+// per-IP free-trial pool and returns the endpoint's normal answer (usually a
+// free-trial 200). A 402 here means the endpoint is mis-listed or the trial
+// layer broke.
+describe('non-strict premium endpoints: no-token is not a 402', () => {
+  const nonStrict = PREMIUM_CATALOG.filter((e) => !e.strict_premium);
+  if (nonStrict.length === 0) {
+    it('no non-strict premium endpoints in the catalog (vacuously satisfied)', () => {
+      expect(nonStrict.length).toBe(0);
+    });
+  }
+  for (const ep of nonStrict) {
+    it(`free-trials ${ep.path} on a no-token call`, async () => {
+      if (isException(ep.path, 'free_trial')) return;
+      const env = await makeEnv();
+      const res = await call(env, concretePath(ep.path), { ip: uniqueIp() });
+      expect(res.status).not.toBe(402);
+    });
+  }
+});
