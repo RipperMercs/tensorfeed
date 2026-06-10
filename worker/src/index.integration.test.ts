@@ -1556,3 +1556,31 @@ describe('clean/cve (migrated)', () => {
     }
   });
 });
+
+// security/epss/series migrated onto handlePremium. Network-free assertions:
+// the no-token gate, and the missing-cve_id no-charge (the handler bails before
+// the FIRST.org fetch). The three-way data no-charge map (404 not-in-epss / 400
+// invalid / 502 upstream) is a faithful transcription guarded by the wrapper
+// unit test and the breadth sweep.
+describe('security/epss/series (migrated)', () => {
+  it('no-token strict call returns the canonical 402', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/security/epss/series?cve_id=CVE-2026-0001', { ip: uniqueIp() });
+    expect(res.status).toBe(402);
+    expect(res.json?.x402Version).toBe(2);
+    expect(res.json?.free_trial ?? null).toBeNull();
+  });
+
+  it('no-charges a valid-token call missing cve_id, balance held', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+    const res = await call(env, '/api/premium/security/epss/series', { token, ip: uniqueIp() });
+    expect(res.status).toBe(400);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(0);
+    expect(billing?.no_charge_reason).toBe('schema_validation_failure');
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+});

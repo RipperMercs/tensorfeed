@@ -9011,65 +9011,40 @@ export default {
     // FIRST.org free-for-any-use policy.
 
     if (path === '/api/premium/security/epss/series') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const cveIdParam = url.searchParams.get('cve_id') ?? url.searchParams.get('cve');
-      if (!cveIdParam) {
-        return await premiumValidationFailure(
-          { ok: false, error: 'cve_id_required', hint: 'pass ?cve_id=CVE-YYYY-NNNNN' },
-          payment,
-          request,
-          env,
-        );
-      }
-      const result = await fetchEPSSSeries(env, cveIdParam);
-      if (!result.ok) {
-        const status = result.error === 'cve_not_in_epss' ? 404 : result.error === 'invalid_cve_id' ? 400 : 502;
-        const reason: NoChargeReason =
-          result.error === 'cve_not_in_epss'
-            ? 'empty_result'
-            : result.error === 'invalid_cve_id'
-              ? 'schema_validation_failure'
-              : 'upstream_failure';
-        return await premiumValidationFailure(
-          { ok: false, error: result.error, cve_id: result.cve_id, attribution: result.attribution },
-          payment,
-          request,
-          env,
-          reason,
-          status,
-        );
-      }
-      ctx.waitUntil(
-        logPremiumUsage(
-          env,
-          '/api/premium/security/epss/series',
-          request.headers.get('User-Agent') || 'unknown',
-          1,
-          payment.token,
-          payment.payerWallet,
-        ),
-      );
-      // No capturedAt is plumbed here on purpose (same reasoning as clean/epss):
-      // FIRST.org's date-only EPSS model date plus the 24h cache and publication
-      // lag can legitimately exceed the 36h SLA on FRESH data, which would
-      // false-no-charge healthy calls. EPSS is live-fetched with a 24h cache so
-      // it cannot serve deeply stale data; leaving the SLA inert is revenue-safe.
-      return await premiumResponse(
-        {
-          ok: true,
-          cve_id: result.cve_id,
-          fetched_at: result.fetched_at,
-          source: result.source,
-          score: result.data,
-          attribution: result.attribution,
-        },
-        payment,
-        1,
-        request,
-        env,
-      );
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/security/epss/series' }, async () => {
+        const cveIdParam = url.searchParams.get('cve_id') ?? url.searchParams.get('cve');
+        if (!cveIdParam) {
+          return { kind: 'validation_failure', error: { ok: false, error: 'cve_id_required', hint: 'pass ?cve_id=CVE-YYYY-NNNNN' } };
+        }
+        const result = await fetchEPSSSeries(env, cveIdParam);
+        if (!result.ok) {
+          const status = result.error === 'cve_not_in_epss' ? 404 : result.error === 'invalid_cve_id' ? 400 : 502;
+          const reason: NoChargeReason =
+            result.error === 'cve_not_in_epss'
+              ? 'empty_result'
+              : result.error === 'invalid_cve_id'
+                ? 'schema_validation_failure'
+                : 'upstream_failure';
+          return { kind: 'validation_failure', error: { ok: false, error: result.error, cve_id: result.cve_id, attribution: result.attribution }, status, reason };
+        }
+        // No capturedAt on purpose (same reasoning as clean/epss): FIRST.org's
+        // date-only EPSS model date plus the 24h cache and publication lag can
+        // legitimately exceed the 36h SLA on FRESH data, which would
+        // false-no-charge healthy calls. EPSS is live-fetched with a 24h cache so
+        // it cannot serve deeply stale data; leaving the SLA inert is revenue-safe.
+        return {
+          kind: 'ok',
+          body: {
+            ok: true,
+            cve_id: result.cve_id,
+            fetched_at: result.fetched_at,
+            source: result.source,
+            score: result.data,
+            attribution: result.attribution,
+          },
+          dataCapturedAt: null,
+        };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM: EPSS TOP (Tier 1, 1 credit) ===
