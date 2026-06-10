@@ -133,6 +133,13 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // Funding exposure: hand-curated registry, refreshed on redeploy when new
   // entries land. 7-day SLA so a stale snapshot triggers no-charge.
   '/api/premium/funding/exposure': { maxAgeSeconds: 7 * 24 * 60 * 60 },
+  // NOTE (2026-06-10 audit): the four federal/procurement SLAs below are
+  // PIPELINE-REFRESH health checks, not data-age guarantees. captured_at is the
+  // cron-write time, so the no-charge fires when the cron itself stalls past 36h.
+  // An upstream-source outage that still lets the cron write an empty snapshot is
+  // caught by the per-handler empty_result no-charge, NOT this SLA. A data-age SLA
+  // would be wrong here: federal award/solicitation data is inherently lagged, so
+  // gating on record age would constantly no-charge real-but-old refreshes.
   // Federal AI spending momentum: derived over the daily USAspending.gov
   // snapshot. 36h SLA = daily cron cadence + headroom for one missed run,
   // so a stale snapshot (a real ingest outage) triggers a no-charge.
