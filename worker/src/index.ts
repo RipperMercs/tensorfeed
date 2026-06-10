@@ -9093,55 +9093,34 @@ export default {
     // Same data, no truncation. Pure public-domain redistribution.
 
     if (path === '/api/premium/security/kev/full') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-      const catalog = await readKEVCurrent(env);
-      if (!catalog) {
-        return await premiumValidationFailure(
-          { ok: false, error: 'not_yet_captured' },
-          payment,
-          request,
-          env,
-          'upstream_failure',
-          503,
-        );
-      }
-      // The real data-capture time is when our daily 06:30 UTC cron last
-      // fetched and wrote kev:current (kev:meta.last_run), NOT catalog
-      // dateReleased: CISA can go several days without releasing a new
-      // catalog version, so dateReleased can sit past the 36h SLA while our
-      // cron is healthy. Gating on last_run no-charges only a stalled cron.
-      const kevMeta = await readKEVMeta(env);
-      const kevLastRun =
-        kevMeta && typeof kevMeta === 'object' && typeof (kevMeta as Record<string, unknown>).last_run === 'string'
-          ? ((kevMeta as Record<string, unknown>).last_run as string)
-          : null;
-      ctx.waitUntil(
-        logPremiumUsage(
-          env,
-          '/api/premium/security/kev/full',
-          request.headers.get('User-Agent') || 'unknown',
-          1,
-          payment.token,
-          payment.payerWallet,
-        ),
-      );
-      return await premiumResponse(
-        {
-          ok: true,
-          catalog_version: catalog.catalogVersion,
-          date_released: catalog.dateReleased,
-          total_entries: catalog.count ?? catalog.vulnerabilities.length,
-          vulnerabilities: catalog.vulnerabilities,
-          attribution: KEV_ATTRIBUTION,
-        },
-        payment,
-        1,
-        request,
-        env,
-        null,
-        kevLastRun,
-      );
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/security/kev/full' }, async () => {
+        const catalog = await readKEVCurrent(env);
+        if (!catalog) {
+          // Original: premiumValidationFailure(..., 'upstream_failure', 503). Preserve both.
+          return { kind: 'validation_failure', error: { ok: false, error: 'not_yet_captured' }, reason: 'upstream_failure', status: 503 };
+        }
+        // The real data-capture time is kev:meta.last_run (the daily cron write),
+        // NOT catalog dateReleased: CISA can go several days without a new version,
+        // so dateReleased can sit past the 36h SLA while our cron is healthy.
+        // last_run no-charges only a stalled cron.
+        const kevMeta = await readKEVMeta(env);
+        const kevLastRun =
+          kevMeta && typeof kevMeta === 'object' && typeof (kevMeta as Record<string, unknown>).last_run === 'string'
+            ? ((kevMeta as Record<string, unknown>).last_run as string)
+            : null;
+        return {
+          kind: 'ok',
+          body: {
+            ok: true,
+            catalog_version: catalog.catalogVersion,
+            date_released: catalog.dateReleased,
+            total_entries: catalog.count ?? catalog.vulnerabilities.length,
+            vulnerabilities: catalog.vulnerabilities,
+            attribution: KEV_ATTRIBUTION,
+          },
+          dataCapturedAt: kevLastRun,
+        };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM: KEV ADDED SERIES (Tier 1, 1 credit) ===
@@ -9151,86 +9130,51 @@ export default {
     // velocity, building anomaly detectors, or pulling weekly digests.
 
     if (path === '/api/premium/security/kev/series') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/security/kev/series' }, async () => {
+        const fromParam = url.searchParams.get('from');
+        const toParam = url.searchParams.get('to');
+        if (!fromParam || !toParam) {
+          return { kind: 'validation_failure', error: { ok: false, error: 'missing_params', hint: 'pass ?from=YYYY-MM-DD&to=YYYY-MM-DD' } };
+        }
+        if (!isISODate(fromParam) || !isISODate(toParam)) {
+          return { kind: 'validation_failure', error: { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' } };
+        }
+        const fromMs = Date.parse(fromParam + 'T00:00:00Z');
+        const toMs = Date.parse(toParam + 'T00:00:00Z');
+        if (!(toMs >= fromMs)) {
+          return { kind: 'validation_failure', error: { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' } };
+        }
+        const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
+        const KEV_SERIES_MAX_DAYS = 90;
+        if (dayCount > KEV_SERIES_MAX_DAYS) {
+          return {
+            kind: 'validation_failure',
+            error: { ok: false, error: 'range_too_large', hint: `range must be at most ${KEV_SERIES_MAX_DAYS} days`, limits: { max_range_days: KEV_SERIES_MAX_DAYS } },
+          };
+        }
 
-      const fromParam = url.searchParams.get('from');
-      const toParam = url.searchParams.get('to');
-      if (!fromParam || !toParam) {
-        return await premiumValidationFailure(
-          { ok: false, error: 'missing_params', hint: 'pass ?from=YYYY-MM-DD&to=YYYY-MM-DD' },
-          payment,
-          request,
-          env,
+        const dates = enumerateDates(fromParam, toParam);
+        const days = await Promise.all(
+          dates.map(async (d) => {
+            const entries = await readKEVAddedOnDate(env, d);
+            return { date: d, count: entries.length, entries };
+          }),
         );
-      }
-      if (!isISODate(fromParam) || !isISODate(toParam)) {
-        return await premiumValidationFailure(
-          { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' },
-          payment,
-          request,
-          env,
-        );
-      }
-      const fromMs = Date.parse(fromParam + 'T00:00:00Z');
-      const toMs = Date.parse(toParam + 'T00:00:00Z');
-      if (!(toMs >= fromMs)) {
-        return await premiumValidationFailure(
-          { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' },
-          payment,
-          request,
-          env,
-        );
-      }
-      const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
-      const KEV_SERIES_MAX_DAYS = 90;
-      if (dayCount > KEV_SERIES_MAX_DAYS) {
-        return await premiumValidationFailure(
-          {
-            ok: false,
-            error: 'range_too_large',
-            hint: `range must be at most ${KEV_SERIES_MAX_DAYS} days`,
-            limits: { max_range_days: KEV_SERIES_MAX_DAYS },
+        const totalAdded = days.reduce((sum, day) => sum + day.count, 0);
+        return {
+          kind: 'ok',
+          body: {
+            ok: true,
+            from: fromParam,
+            to: toParam,
+            days_returned: days.length,
+            total_added_in_range: totalAdded,
+            days,
+            attribution: KEV_ATTRIBUTION,
           },
-          payment,
-          request,
-          env,
-        );
-      }
-
-      const dates = enumerateDates(fromParam, toParam);
-      const days = await Promise.all(
-        dates.map(async (d) => {
-          const entries = await readKEVAddedOnDate(env, d);
-          return { date: d, count: entries.length, entries };
-        }),
-      );
-      const totalAdded = days.reduce((sum, day) => sum + day.count, 0);
-      ctx.waitUntil(
-        logPremiumUsage(
-          env,
-          '/api/premium/security/kev/series',
-          request.headers.get('User-Agent') || 'unknown',
-          1,
-          payment.token,
-          payment.payerWallet,
-        ),
-      );
-      return await premiumResponse(
-        {
-          ok: true,
-          from: fromParam,
-          to: toParam,
-          days_returned: days.length,
-          total_added_in_range: totalAdded,
-          days,
-          attribution: KEV_ATTRIBUTION,
-        },
-        payment,
-        1,
-        request,
-        env,
-      );
+          dataCapturedAt: null,
+        };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM: CVE RANGE (Tier 1, 1 credit) ===
@@ -9239,86 +9183,51 @@ export default {
     // hit /api/security/cve/{id} for the per-CVE record after.
 
     if (path === '/api/premium/security/cve/range') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/security/cve/range' }, async () => {
+        const fromParam = url.searchParams.get('from');
+        const toParam = url.searchParams.get('to');
+        if (!fromParam || !toParam) {
+          return { kind: 'validation_failure', error: { ok: false, error: 'missing_params', hint: 'pass ?from=YYYY-MM-DD&to=YYYY-MM-DD' } };
+        }
+        if (!isISODate(fromParam) || !isISODate(toParam)) {
+          return { kind: 'validation_failure', error: { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' } };
+        }
+        const fromMs = Date.parse(fromParam + 'T00:00:00Z');
+        const toMs = Date.parse(toParam + 'T00:00:00Z');
+        if (!(toMs >= fromMs)) {
+          return { kind: 'validation_failure', error: { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' } };
+        }
+        const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
+        const CVE_RANGE_MAX_DAYS = 30;
+        if (dayCount > CVE_RANGE_MAX_DAYS) {
+          return {
+            kind: 'validation_failure',
+            error: { ok: false, error: 'range_too_large', hint: `range must be at most ${CVE_RANGE_MAX_DAYS} days`, limits: { max_range_days: CVE_RANGE_MAX_DAYS } },
+          };
+        }
 
-      const fromParam = url.searchParams.get('from');
-      const toParam = url.searchParams.get('to');
-      if (!fromParam || !toParam) {
-        return await premiumValidationFailure(
-          { ok: false, error: 'missing_params', hint: 'pass ?from=YYYY-MM-DD&to=YYYY-MM-DD' },
-          payment,
-          request,
-          env,
+        const dates = enumerateDates(fromParam, toParam);
+        const days = await Promise.all(
+          dates.map(async (d) => {
+            const ids = await readCVEsByDate(env, d);
+            return { date: d, count: ids.length, cve_ids: ids };
+          }),
         );
-      }
-      if (!isISODate(fromParam) || !isISODate(toParam)) {
-        return await premiumValidationFailure(
-          { ok: false, error: 'invalid_date_range', hint: 'from and to must both be YYYY-MM-DD' },
-          payment,
-          request,
-          env,
-        );
-      }
-      const fromMs = Date.parse(fromParam + 'T00:00:00Z');
-      const toMs = Date.parse(toParam + 'T00:00:00Z');
-      if (!(toMs >= fromMs)) {
-        return await premiumValidationFailure(
-          { ok: false, error: 'invalid_date_range', hint: 'to must be on or after from' },
-          payment,
-          request,
-          env,
-        );
-      }
-      const dayCount = Math.floor((toMs - fromMs) / 86400_000) + 1;
-      const CVE_RANGE_MAX_DAYS = 30;
-      if (dayCount > CVE_RANGE_MAX_DAYS) {
-        return await premiumValidationFailure(
-          {
-            ok: false,
-            error: 'range_too_large',
-            hint: `range must be at most ${CVE_RANGE_MAX_DAYS} days`,
-            limits: { max_range_days: CVE_RANGE_MAX_DAYS },
+        const totalCves = days.reduce((sum, day) => sum + day.count, 0);
+        return {
+          kind: 'ok',
+          body: {
+            ok: true,
+            from: fromParam,
+            to: toParam,
+            days_returned: days.length,
+            cves_total: totalCves,
+            days,
+            attribution: CVE_ATTRIBUTION,
           },
-          payment,
-          request,
-          env,
-        );
-      }
-
-      const dates = enumerateDates(fromParam, toParam);
-      const days = await Promise.all(
-        dates.map(async (d) => {
-          const ids = await readCVEsByDate(env, d);
-          return { date: d, count: ids.length, cve_ids: ids };
-        }),
-      );
-      const totalCves = days.reduce((sum, day) => sum + day.count, 0);
-      ctx.waitUntil(
-        logPremiumUsage(
-          env,
-          '/api/premium/security/cve/range',
-          request.headers.get('User-Agent') || 'unknown',
-          1,
-          payment.token,
-          payment.payerWallet,
-        ),
-      );
-      return await premiumResponse(
-        {
-          ok: true,
-          from: fromParam,
-          to: toParam,
-          days_returned: days.length,
-          cves_total: totalCves,
-          days,
-          attribution: CVE_ATTRIBUTION,
-        },
-        payment,
-        1,
-        request,
-        env,
-      );
+          dataCapturedAt: null,
+        };
+      }, PREMIUM_DEPS);
     }
 
     // === FREE: NEWS HISTORY INDEX (list of available dates) ===
