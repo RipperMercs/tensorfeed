@@ -12364,56 +12364,46 @@ export default {
     // range, filterable by event_type. Strict-premium prefix, so an anonymous
     // Bazaar probe sees a clean 402 challenge.
     if (path === '/api/premium/substrate-changelog/history') {
-      // requirePayment FIRST: strict-premium, so an anonymous probe sees the
-      // 402 challenge, not a 400. Validation (incl. the range cap that bounds
-      // the per-day KV fan-out) runs after as a no-charge premiumValidationFailure.
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
+      // requirePayment FIRST (the wrapper gates): strict-premium, so an anonymous
+      // probe sees the 402 challenge, not a 400. Validation (incl. the range cap
+      // that bounds the per-day KV fan-out) runs after as a no-charge failure.
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/substrate-changelog/history' }, async () => {
+        const from = url.searchParams.get('from');
+        const to = url.searchParams.get('to');
+        const eventType = url.searchParams.get('event_type');
+        if (!from || !to) {
+          return { kind: 'validation_failure', error: { error: 'missing_params', required: ['from', 'to'], hint: 'Both from and to required, YYYY-MM-DD format.' } };
+        }
 
-      const from = url.searchParams.get('from');
-      const to = url.searchParams.get('to');
-      const eventType = url.searchParams.get('event_type');
-      if (!from || !to) {
-        return await premiumValidationFailure(
-          { error: 'missing_params', required: ['from', 'to'], hint: 'Both from and to required, YYYY-MM-DD format.' },
-          payment,
-          request,
-          env,
-        );
-      }
+        const { getChangelogHistory, validateRange } = await import('./substrate-changelog/query');
+        const range = validateRange(from, to);
+        if (!range.ok) {
+          return { kind: 'validation_failure', error: { error: range.error, hint: range.hint } };
+        }
 
-      const { getChangelogHistory, validateRange } = await import('./substrate-changelog/query');
-      const range = validateRange(from, to);
-      if (!range.ok) {
-        return await premiumValidationFailure({ error: range.error, hint: range.hint }, payment, request, env);
-      }
+        // Narrow event_type to the known union; an unrecognized value (or none)
+        // means "no filter" rather than a validation error, so the caller gets the
+        // full window instead of an opaque rejection.
+        const validEventTypes: ReadonlyArray<import('./substrate-changelog/types').SubstrateEventType> = [
+          'model_added',
+          'model_removed',
+          'model_repriced',
+          'model_deprecated',
+          'spec_version',
+          'framework_release',
+        ];
+        const eventTypeArg = validEventTypes.find((t) => t === eventType);
 
-      // Narrow event_type to the known union; an unrecognized value (or none)
-      // means "no filter" rather than a validation error, so the caller gets the
-      // full window instead of an opaque rejection.
-      const validEventTypes: ReadonlyArray<import('./substrate-changelog/types').SubstrateEventType> = [
-        'model_added',
-        'model_removed',
-        'model_repriced',
-        'model_deprecated',
-        'spec_version',
-        'framework_release',
-      ];
-      const eventTypeArg = validEventTypes.find((t) => t === eventType);
+        const result = await getChangelogHistory(env, from, to, eventTypeArg);
 
-      const result = await getChangelogHistory(env, from, to, eventTypeArg);
+        // No day in the window had a stored rollup: return the empty result for
+        // free rather than charging for a no-data answer.
+        if (!result.has_data || result.events.length === 0) {
+          return { kind: 'no_charge', body: { ok: true, ...result }, reason: 'empty_result', dataCapturedAt: null };
+        }
 
-      // No day in the window had a stored rollup: return the empty result for
-      // free rather than charging for a no-data answer. has_data is true iff at
-      // least one day in the window had a stored rollup.
-      if (!result.has_data || result.events.length === 0) {
-        return await premiumResponse({ ok: true, ...result }, payment, 1, request, env, 'empty_result');
-      }
-
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/substrate-changelog/history', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
-      );
-      return await premiumResponse({ ok: true, ...result }, payment, 1, request, env);
+        return { kind: 'ok', body: { ok: true, ...result }, dataCapturedAt: null };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM: AI EXPORT-CONTROL HISTORY (1 credit, param-optional) ===
