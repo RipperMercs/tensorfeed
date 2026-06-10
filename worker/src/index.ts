@@ -8806,117 +8806,87 @@ export default {
 
     const cleanKevMatch = path.match(/^\/api\/premium\/clean\/kev\/(CVE-\d{4}-\d{4,7})$/i);
     if (cleanKevMatch) {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const entry = await readKEVByCVE(env, cleanKevMatch[1]);
-      if (!entry) {
-        return await premiumValidationFailure(
-          {
-            ok: false,
-            error: 'not_in_kev',
-            cve_id: cleanKevMatch[1].toUpperCase(),
-            hint: 'CVE may exist in MITRE CVE List but not be on the CISA KEV catalog.',
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/clean/kev' }, async () => {
+        const entry = await readKEVByCVE(env, cleanKevMatch[1]);
+        if (!entry) {
+          return {
+            kind: 'validation_failure',
+            error: {
+              ok: false,
+              error: 'not_in_kev',
+              cve_id: cleanKevMatch[1].toUpperCase(),
+              hint: 'CVE may exist in MITRE CVE List but not be on the CISA KEV catalog.',
+              attribution: KEV_ATTRIBUTION,
+            },
+          };
+        }
+        const clean = attachCompressionStats(
+          transformKevEntry(entry),
+          measureSourceBytes(entry),
+        );
+        // Real data-capture time = kev:meta.last_run (the daily cron write), NOT
+        // entry.dateAdded (CISA's per-CVE add date, weeks old, would false-no-charge
+        // fresh data on nearly every call). last_run no-charges only a stalled cron.
+        const kevMeta = await readKEVMeta(env);
+        const kevLastRun =
+          kevMeta && typeof kevMeta === 'object' && typeof (kevMeta as Record<string, unknown>).last_run === 'string'
+            ? ((kevMeta as Record<string, unknown>).last_run as string)
+            : null;
+        return {
+          kind: 'ok',
+          body: {
+            ok: true,
+            source_format: 'cisa_kev_v1',
+            target_format: 'tensorfeed_llm_ready_v1',
+            ...clean,
             attribution: KEV_ATTRIBUTION,
           },
-          payment,
-          request,
-          env,
-        );
-      }
-      const clean = attachCompressionStats(
-        transformKevEntry(entry),
-        measureSourceBytes(entry),
-      );
-      // Real data-capture time = when our daily 06:30 UTC cron last wrote
-      // kev:current (kev:meta.last_run), the same snapshot readKEVByCVE reads.
-      // NOT entry.dateAdded: that is CISA's per-CVE add date, which for almost
-      // every entry is weeks or months in the past (always beyond the 36h SLA),
-      // so gating on it would no-charge fresh data on nearly every call. Gating
-      // on last_run no-charges only a stalled capture cron.
-      const kevMeta = await readKEVMeta(env);
-      const kevLastRun =
-        kevMeta && typeof kevMeta === 'object' && typeof (kevMeta as Record<string, unknown>).last_run === 'string'
-          ? ((kevMeta as Record<string, unknown>).last_run as string)
-          : null;
-      ctx.waitUntil(
-        logPremiumUsage(
-          env,
-          '/api/premium/clean/kev',
-          request.headers.get('User-Agent') || 'unknown',
-          1,
-          payment.token,
-          payment.payerWallet,
-        ),
-      );
-      return await premiumResponse(
-        {
-          ok: true,
-          source_format: 'cisa_kev_v1',
-          target_format: 'tensorfeed_llm_ready_v1',
-          ...clean,
-          attribution: KEV_ATTRIBUTION,
-        },
-        payment,
-        1,
-        request,
-        env,
-        null,
-        kevLastRun,
-      );
+          dataCapturedAt: kevLastRun,
+        };
+      }, PREMIUM_DEPS);
     }
 
     const cleanEpssMatch = path.match(/^\/api\/premium\/clean\/epss\/(CVE-\d{4}-\d{4,7})$/i);
     if (cleanEpssMatch) {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const wantSeries = url.searchParams.get('series') === 'true';
-      const raw = wantSeries
-        ? await fetchEPSSSeries(env, cleanEpssMatch[1])
-        : await fetchEPSSCurrent(env, cleanEpssMatch[1]);
-      if (!raw.ok) {
-        const status = raw.error === 'cve_not_in_epss' ? 404 : raw.error === 'invalid_cve_id' ? 400 : 502;
-        return jsonResponse(
-          { ok: false, error: raw.error, cve_id: raw.cve_id, attribution: raw.attribution },
-          status,
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/clean/epss' }, async () => {
+        const wantSeries = url.searchParams.get('series') === 'true';
+        const raw = wantSeries
+          ? await fetchEPSSSeries(env, cleanEpssMatch[1])
+          : await fetchEPSSCurrent(env, cleanEpssMatch[1]);
+        if (!raw.ok) {
+          // Was a raw jsonResponse (no signed receipt). Now a signed no-charge:
+          // not-in-EPSS -> empty_result 404, invalid -> schema 400, else upstream 502.
+          const status = raw.error === 'cve_not_in_epss' ? 404 : raw.error === 'invalid_cve_id' ? 400 : 502;
+          const reason: NoChargeReason =
+            raw.error === 'cve_not_in_epss'
+              ? 'empty_result'
+              : raw.error === 'invalid_cve_id'
+                ? 'schema_validation_failure'
+                : 'upstream_failure';
+          return { kind: 'validation_failure', error: { ok: false, error: raw.error, cve_id: raw.cve_id, attribution: raw.attribution }, status, reason };
+        }
+        const clean = attachCompressionStats(
+          transformEpssScore(raw.data),
+          measureSourceBytes(raw.data),
         );
-      }
-      const clean = attachCompressionStats(
-        transformEpssScore(raw.data),
-        measureSourceBytes(raw.data),
-      );
-      // No capturedAt is plumbed here on purpose: the only data time available
-      // is FIRST.org's date-only EPSS model date, which combined with the 24h
-      // KV cache and FIRST's own publication lag can legitimately reach past the
-      // 36h SLA on FRESH data, so gating on it would false-no-charge healthy
-      // calls. EPSS is live-fetched with a 24h cache and cannot serve deeply
-      // stale data, so leaving the SLA inert here is the revenue-safe choice.
-      ctx.waitUntil(
-        logPremiumUsage(
-          env,
-          '/api/premium/clean/epss',
-          request.headers.get('User-Agent') || 'unknown',
-          1,
-          payment.token,
-          payment.payerWallet,
-        ),
-      );
-      return await premiumResponse(
-        {
-          ok: true,
-          source_format: 'first_org_epss_v1',
-          target_format: 'tensorfeed_llm_ready_v1',
-          source_payload: raw.source,
-          included_series: wantSeries,
-          ...clean,
-          attribution: raw.attribution,
-        },
-        payment,
-        1,
-        request,
-        env,
-      );
+        // No capturedAt on purpose: FIRST.org's date-only EPSS model date plus the
+        // 24h cache and publication lag can exceed the 36h SLA on FRESH data, which
+        // would false-no-charge healthy calls. EPSS is live-fetched (24h cache) so
+        // it cannot serve deeply stale data; leaving the SLA inert is revenue-safe.
+        return {
+          kind: 'ok',
+          body: {
+            ok: true,
+            source_format: 'first_org_epss_v1',
+            target_format: 'tensorfeed_llm_ready_v1',
+            source_payload: raw.source,
+            included_series: wantSeries,
+            ...clean,
+            attribution: raw.attribution,
+          },
+          dataCapturedAt: null,
+        };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM: VERIFIED CVE (Tier 1, 1 credit) ===
@@ -8935,91 +8905,80 @@ export default {
 
     const verifiedCveMatch = path.match(/^\/api\/premium\/security\/verified\/(CVE-\d{4}-\d{4,7})$/i);
     if (verifiedCveMatch) {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/security/verified' }, async () => {
+        const cveId = verifiedCveMatch[1].toUpperCase();
+        const [mitre, kev, epss, osv, vuln] = await Promise.all([
+          fetchCVE(env, cveId).catch(() => null),
+          readKEVByCVE(env, cveId).catch(() => null),
+          fetchEPSSCurrent(env, cveId).catch(() => null),
+          fetchOSVById(env, cveId).catch(() => null),
+          fetchVulnrichment(env, cveId).catch(() => null),
+        ]);
 
-      const cveId = verifiedCveMatch[1].toUpperCase();
-      const [mitre, kev, epss, osv, vuln] = await Promise.all([
-        fetchCVE(env, cveId).catch(() => null),
-        readKEVByCVE(env, cveId).catch(() => null),
-        fetchEPSSCurrent(env, cveId).catch(() => null),
-        fetchOSVById(env, cveId).catch(() => null),
-        fetchVulnrichment(env, cveId).catch(() => null),
-      ]);
+        const mitreRecord = mitre && mitre.ok ? mitre.record : null;
+        const kevEntry = kev ?? null;
+        const epssCurrent = epss && epss.ok ? epss.data : null;
+        const osvRecord = osv && osv.ok ? osv.data : null;
+        const vulnRecord = vuln && vuln.ok ? vuln.record : null;
 
-      const mitreRecord = mitre && mitre.ok ? mitre.record : null;
-      const kevEntry = kev ?? null;
-      const epssCurrent = epss && epss.ok ? epss.data : null;
-      const osvRecord = osv && osv.ok ? osv.data : null;
-      const vulnRecord = vuln && vuln.ok ? vuln.record : null;
+        const confirmedCount =
+          Number(Boolean(mitreRecord)) +
+          Number(Boolean(kevEntry)) +
+          Number(Boolean(epssCurrent)) +
+          Number(Boolean(osvRecord)) +
+          Number(Boolean(vulnRecord));
 
-      const confirmedCount =
-        Number(Boolean(mitreRecord)) +
-        Number(Boolean(kevEntry)) +
-        Number(Boolean(epssCurrent)) +
-        Number(Boolean(osvRecord)) +
-        Number(Boolean(vulnRecord));
+        if (confirmedCount === 0) {
+          // Was a raw jsonResponse(404). Now a signed empty_result no-charge.
+          return {
+            kind: 'validation_failure',
+            error: {
+              ok: false,
+              error: 'cve_not_found_in_any_source',
+              cve_id: cveId,
+              checked: ['MITRE', 'KEV', 'EPSS', 'OSV', 'Vulnrichment'],
+              hint: 'No corroboration found across the 5 security databases. CVE id may be invalid, very recent (not yet propagated), or reserved/disputed.',
+            },
+            status: 404,
+            reason: 'empty_result',
+          };
+        }
 
-      if (confirmedCount === 0) {
-        return jsonResponse(
-          {
-            ok: false,
-            error: 'cve_not_found_in_any_source',
-            cve_id: cveId,
-            checked: ['MITRE', 'KEV', 'EPSS', 'OSV', 'Vulnrichment'],
-            hint: 'No corroboration found across the 5 security databases. CVE id may be invalid, very recent (not yet propagated), or reserved/disputed.',
+        const sourcePayloadBytes =
+          (mitreRecord ? measureSourceBytes(mitreRecord) : 0) +
+          (kevEntry ? measureSourceBytes(kevEntry) : 0) +
+          (epssCurrent ? measureSourceBytes(epssCurrent) : 0) +
+          (osvRecord ? measureSourceBytes(osvRecord) : 0) +
+          (vulnRecord ? measureSourceBytes(vulnRecord) : 0);
+
+        const composed = composeVerifiedCve({
+          cveId,
+          mitreRecord,
+          kevEntry,
+          epssCurrent,
+          osvRecord,
+          vulnrichmentRecord: vulnRecord,
+        });
+        const cleaned = attachCompressionStats(composed, sourcePayloadBytes);
+
+        return {
+          kind: 'ok',
+          body: {
+            ok: true,
+            source_format: 'mitre_cve_v5_2 + cisa_kev_v1 + first_epss_v3 + osv_v1 + cisa_vulnrichment_v1',
+            target_format: 'tensorfeed_llm_ready_v1',
+            ...cleaned,
+            attributions: [
+              mitre?.attribution,
+              { source: 'CISA Known Exploited Vulnerabilities', source_url: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog', license: 'US Government Public Domain (17 USC 105)', redistribution: 'commercial-permitted' },
+              epss?.attribution,
+              osv?.attribution,
+              vuln?.attribution,
+            ].filter(Boolean),
           },
-          404,
-        );
-      }
-
-      const sourcePayloadBytes =
-        (mitreRecord ? measureSourceBytes(mitreRecord) : 0) +
-        (kevEntry ? measureSourceBytes(kevEntry) : 0) +
-        (epssCurrent ? measureSourceBytes(epssCurrent) : 0) +
-        (osvRecord ? measureSourceBytes(osvRecord) : 0) +
-        (vulnRecord ? measureSourceBytes(vulnRecord) : 0);
-
-      const composed = composeVerifiedCve({
-        cveId,
-        mitreRecord,
-        kevEntry,
-        epssCurrent,
-        osvRecord,
-        vulnrichmentRecord: vulnRecord,
-      });
-      const cleaned = attachCompressionStats(composed, sourcePayloadBytes);
-
-      ctx.waitUntil(
-        logPremiumUsage(
-          env,
-          '/api/premium/security/verified',
-          request.headers.get('User-Agent') || 'unknown',
-          1,
-          payment.token,
-          payment.payerWallet,
-        ),
-      );
-
-      return await premiumResponse(
-        {
-          ok: true,
-          source_format: 'mitre_cve_v5_2 + cisa_kev_v1 + first_epss_v3 + osv_v1 + cisa_vulnrichment_v1',
-          target_format: 'tensorfeed_llm_ready_v1',
-          ...cleaned,
-          attributions: [
-            mitre?.attribution,
-            { source: 'CISA Known Exploited Vulnerabilities', source_url: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog', license: 'US Government Public Domain (17 USC 105)', redistribution: 'commercial-permitted' },
-            epss?.attribution,
-            osv?.attribution,
-            vuln?.attribution,
-          ].filter(Boolean),
-        },
-        payment,
-        1,
-        request,
-        env,
-      );
+          dataCapturedAt: null,
+        };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM: EPSS SERIES (Tier 1, 1 credit) ===
