@@ -42,6 +42,10 @@ const SYNTH_PATH_VALUE: Record<string, string> = {
   source: 'arxiv',
   id: 'test-id',
   slug: 'x-test',
+  // The clean/* and security/verified slug routes match only CVE-\d{4}-\d{4,7}
+  // (index.ts cleanCveMatch et al.); a non-CVE value 404s before the gate, so a
+  // routable CVE id is needed to reach requirePayment and assert the 402.
+  cve_id: 'CVE-2026-0001',
 };
 function concretePath(tpl: string): string {
   return tpl.replace(/\{(\w+)\}/g, (_full, name: string) => SYNTH_PATH_VALUE[name] ?? 'x-test');
@@ -66,4 +70,39 @@ describe('premium catalog sweep (sanity)', () => {
   it('loaded a non-trivial catalog', () => {
     expect(PREMIUM_CATALOG.length).toBeGreaterThan(80);
   });
+});
+
+// A no-token call to a strict-premium endpoint must return the canonical x402
+// V2 402 challenge with a well-formed, size-bounded, btoa-safe header. Getting
+// a 402 (not a 500) is itself the em-dash btoa() crash guard: a non-Latin1 char
+// in a Bazaar pilot's metadata throws in btoa during challenge construction and
+// the endpoint 500s instead. Decode + size assert the overflow guard.
+function decodeChallengeHeader(b64: string | null): Record<string, unknown> {
+  if (!b64) throw new Error('missing PAYMENT-REQUIRED header');
+  return JSON.parse(Buffer.from(b64, 'base64').toString('utf-8')) as Record<string, unknown>;
+}
+
+describe('strict endpoints: no-token 402 gate + header health', () => {
+  for (const ep of PREMIUM_CATALOG.filter((e) => e.strict_premium)) {
+    it(`gates ${ep.path} with a well-formed 402`, async () => {
+      if (isException(ep.path, 'gate')) return;
+      const env = await makeEnv();
+      const res = await call(env, concretePath(ep.path), { ip: uniqueIp() });
+
+      // Invariant 1: canonical x402 V2 challenge, no free trial.
+      expect(res.status).toBe(402);
+      expect(res.json?.x402Version).toBe(2);
+      expect(res.json?.error).toBe('payment_required');
+      expect(res.json?.free_trial ?? null).toBeNull();
+
+      // Invariant 4: PAYMENT-REQUIRED decodes, stays under 16KB, and the same
+      // base64 rides WWW-Authenticate.
+      const b64 = res.headers.get('PAYMENT-REQUIRED');
+      expect(b64).not.toBeNull();
+      expect((b64 as string).length).toBeLessThan(16000);
+      const decoded = decodeChallengeHeader(b64);
+      expect(Array.isArray(decoded.accepts)).toBe(true);
+      expect(res.headers.get('WWW-Authenticate')).toContain(b64 as string);
+    });
+  }
 });
