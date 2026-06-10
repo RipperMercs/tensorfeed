@@ -17,6 +17,15 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'google-spacex-30b-colossus-2-compute',
+    title: 'Google Has TPUs. So Why Is It Paying SpaceX $30 Billion for Nvidia GPUs?',
+    author: 'Marcus Chen',
+    date: 'June 10, 2026',
+    readTime: '6 min read',
+    description:
+      "SpaceX's amended S-1, filed June 5 ahead of its June 11 pricing, disclosed a Cloud Service Agreement with Google for roughly 110,000 Nvidia GPUs at the Colossus 2 campus in Southaven, Mississippi: $920 million a month at full rate from October 2026 through June 2029, about $30 billion if it runs the full course, with a reduced ramp fee through September. Add it to Anthropic's $1.25 billion-a-month Colossus 1 lease and SpaceX is now collecting about $26 billion annualized in contracted compute revenue, larger than every neocloud not named CoreWeave, off a business it did not announce. The 33-month framing misses the structure: 90-day mutual exit after December 31, 2026, capacity penalties if SpaceX misses September 30, and Musk's own 1 GW Colossus 2 claim already trimmed to about 350 MW by satellite imagery. The headline is a $30B contract. The downside-bounded commitment is closer to $5.5B. Why Google needs 110,000 Nvidia GPUs at all (customer capture, TPU hedging, sub-leasing back through Anthropic), what the termination clause says about how the compute market is repricing, and three signposts dated September 30 and December 31 that will move every inference API.",
+  },
+  {
     slug: 'claude-fable-5-mythos-5-split-frontier',
     title: 'Anthropic Split the Frontier in Two. Fable 5 Is the Half You Can Buy.',
     author: 'Kira Nolan',
