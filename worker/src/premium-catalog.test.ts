@@ -123,9 +123,17 @@ function extractHandlers(): ExtractedHandler[] {
   return handlers.map((h) => {
     let tier: number | null = null;
     for (let j = h.line - 1; j < Math.min(h.line - 1 + 70, lines.length); j++) {
+      // Legacy inline pattern: requirePayment(request, env, TIER).
       const pay = lines[j].match(/requirePayment\(request, env, (\d+)\)/);
       if (pay) {
         tier = parseInt(pay[1], 10);
+        break;
+      }
+      // Wrapper pattern (premium-handler.ts): the tier lives in the
+      // handlePremium descriptor, e.g. handlePremium(request, env, ctx, { tier: 1, ... }).
+      const wrapped = lines[j].match(/handlePremium\(.*\{\s*tier:\s*(\d+)/);
+      if (wrapped) {
+        tier = parseInt(wrapped[1], 10);
         break;
       }
     }
