@@ -7745,30 +7745,22 @@ export default {
     // a clean 402, not a free trial. A missing domain is a no-charge schema
     // validation failure. 10-minute freshness SLA keyed to the index cursor.
     if (path === '/api/premium/x402-publisher-verdict') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-      const domain = url.searchParams.get('domain');
-      if (!domain) {
-        return await premiumValidationFailure(
-          { error: 'missing_params', required: ['domain'], hint: 'domain=<publisher domain>, e.g. domain=x402.tavily.com' },
-          payment,
-          request,
-          env,
-        );
-      }
-      const { computeX402PublisherVerdict } = await import('./premium-x402-publisher-verdict');
-      const result = await computeX402PublisherVerdict(env, domain);
-      if (result.verdict === 'not_indexed') {
-        // No-charge: the domain is not in TF's x402 registry, so there is no
-        // settlement signal to sell. The agent still gets the signed not_indexed
-        // ruling, billed at zero, consistent with the empty-result no-charge rule
-        // used by the sibling publisher-receipts endpoint.
-        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
-      }
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/x402-publisher-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
-      );
-      return await premiumResponse(result, payment, 1, request, env);
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/x402-publisher-verdict' }, async () => {
+        const domain = url.searchParams.get('domain');
+        if (!domain) {
+          return { kind: 'validation_failure', error: { error: 'missing_params', required: ['domain'], hint: 'domain=<publisher domain>, e.g. domain=x402.tavily.com' } };
+        }
+        const { computeX402PublisherVerdict } = await import('./premium-x402-publisher-verdict');
+        const result = await computeX402PublisherVerdict(env, domain);
+        if (result.verdict === 'not_indexed') {
+          // No-charge: the domain is not in TF's x402 registry, so there is no
+          // settlement signal to sell. The agent still gets the signed not_indexed
+          // ruling, billed at zero (empty-result rule).
+          return { kind: 'no_charge', body: result, reason: 'empty_result', dataCapturedAt: null };
+        }
+        // captured_at rides the body; premiumResponse reads it for the 10-min SLA.
+        return { kind: 'ok', body: result, dataCapturedAt: null };
+      }, PREMIUM_DEPS);
     }
 
     // === STACK SAFETY VERDICT PREVIEW (free, rate-limited) ===
