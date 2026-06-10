@@ -10386,30 +10386,21 @@ export default {
     // breakdowns. One upstream API call per cache miss.
 
     if (path === '/api/premium/research/velocity') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const result = await computeResearchVelocity(env);
-      if (!result.ok) {
-        // research/velocity has no input schema; all non-ok cases are
-        // upstream failures (OpenAlex 429, network timeout, etc).
-        // Categorize accordingly so the AFTA receipt's no_charge_reason
-        // is accurate; agents can distinguish "I sent bad input" from
-        // "their upstream is down" from one signed receipt field.
-        return await premiumValidationFailure(
-          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
-          payment, request, env, 'upstream_failure',
-        );
-      }
-
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/research/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
-      );
-      // Pass the real OpenAlex baseline capture time so the 24h staleness SLA
-      // can no-charge a stalled baseline cron. baseline_captured_at is the
-      // BASELINE_KEY (openalex-ai-institutions:current) snapshot's capturedAt;
-      // computed_at is response time and must never gate billing.
-      return await premiumResponse(result, payment, 1, request, env, null, result.baseline_captured_at);
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/research/velocity' }, async () => {
+        const result = await computeResearchVelocity(env);
+        if (!result.ok) {
+          // research/velocity has no input schema; all non-ok cases are upstream
+          // failures (OpenAlex 429, network timeout, etc). Preserves the original
+          // 400 + 'upstream_failure' no-charge (status default) so the AFTA
+          // receipt's no_charge_reason distinguishes "their upstream is down".
+          return { kind: 'validation_failure', error: { error: result.error, ...(result.hint ? { hint: result.hint } : {}) }, reason: 'upstream_failure' };
+        }
+        // Pass the real OpenAlex baseline capture time so the 24h staleness SLA
+        // can no-charge a stalled baseline cron. baseline_captured_at is the
+        // BASELINE_KEY (openalex-ai-institutions:current) snapshot's capturedAt;
+        // computed_at is response time and must never gate billing.
+        return { kind: 'ok', body: result, dataCapturedAt: result.baseline_captured_at };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM: FUNDING EXPOSURE (Tier 1, 1 credit) ===
