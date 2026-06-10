@@ -93,9 +93,10 @@ export default function MicrosoftMaiModelsPage() {
 
         <p>
           The release came from Microsoft AI&apos;s Superintelligence team, and it is a family, not a
-          single flagship. The named models include MAI-Thinking-1 (reasoning), MAI-Code-1 and
-          MAI-Code-1-Flash (coding), MAI-Image-2.5 (image generation and editing), MAI-Transcribe-1.5
-          (speech to text), and MAI-Voice-2 (text to speech). Microsoft says all of it was trained
+          single flagship. The named models include MAI-Thinking-1 (reasoning), MAI-Code-1-Flash
+          (coding), MAI-Image-2.5 and MAI-Image-2.5-Flash (image generation and editing), MAI-Voice-2
+          and MAI-Voice-2-Flash (text to speech), and MAI-Transcribe-1.5 (speech to text). Microsoft
+          says all of it was trained
           end to end on clean, appropriately licensed data, and reporting on MAI-Thinking-1 says it
           was built without OpenAI data. That detail is the whole point.
         </p>

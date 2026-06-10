@@ -240,7 +240,7 @@ export default function Opus48WorkflowOrchestrationPrimitivePage() {
             href="/originals/four-frontier-labs-acqui-hire-consolidation"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
-            <span className="text-text-primary text-sm">Four Frontier Lab Acqui-Hires in Eight Days. The Quiet Consolidation Is Already Here.</span>
+            <span className="text-text-primary text-sm">Three Frontier Lab Acqui-Hires in 48 Hours. The Quiet Consolidation Is Already Here.</span>
           </Link>
           <Link
             href="/originals/robinhood-agentic-trading-mcp-brokerage-account"

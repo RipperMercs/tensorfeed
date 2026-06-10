@@ -106,7 +106,7 @@ export default function DeepSeekMaidenFundingRoundPage() {
         <p>
           The sourcing here is The Information, Bloomberg, Reuters, and the South China Morning
           Post, all landing within about 24 hours. The composite picture: DeepSeek wants about 50
-          billion yuan. Founder Liang Wenfeng, who controls nearly 90 percent of the company, is
+          billion yuan. Founder Liang Wenfeng, who controls about 84 percent of the company, is
           reportedly committing 20 billion yuan of his own capital, about $2.8 billion. That single
           fact reframes the whole round. This is not a founder getting diluted by hungry outside
           money. It is a founder buying alongside it to keep control while the company takes on

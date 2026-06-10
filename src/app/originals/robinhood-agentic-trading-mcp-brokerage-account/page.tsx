@@ -318,7 +318,7 @@ export default function RobinhoodAgenticTradingPage() {
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
             <span className="text-text-primary text-sm">
-              Four Frontier Lab Acqui-Hires in Eight Days. The Quiet Consolidation Is Already Here.
+              Three Frontier Lab Acqui-Hires in 48 Hours. The Quiet Consolidation Is Already Here.
             </span>
           </Link>
         </div>

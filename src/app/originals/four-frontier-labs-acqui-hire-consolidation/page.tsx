@@ -8,14 +8,14 @@ import ShareBar from '@/components/originals/ShareBar';
 export const metadata: Metadata = {
   alternates: { canonical: 'https://tensorfeed.ai/originals/four-frontier-labs-acqui-hire-consolidation' },
   title:
-    'Four Frontier Lab Acqui-Hires in Eight Days. The Quiet Consolidation Is Already Here.',
+    'Three Frontier Lab Acqui-Hires in 48 Hours. The Quiet Consolidation Is Already Here.',
   description:
-    "Mistral bought Vienna's Emmi AI on May 26. Anthropic bought Stainless for $300M+ on May 18. DeepMind paid $80M to $90M to license Contextual AI and lift its team on May 19. Meta absorbed Dreamer in March. Same eight-day window, four frontier labs, four acqui-hires structured to slip past antitrust review. Inside the pattern.",
+    "Anthropic bought Stainless for $300M+ on May 18. The next day, May 19, both Google DeepMind (Contextual AI) and Mistral (Vienna's Emmi AI) did the same. Three frontier-lab acqui-hires in 48 hours, with Meta's Dreamer deal in March the quarter's precedent, all structured to slip past antitrust review. Inside the pattern.",
   openGraph: {
     title:
-      'Four Frontier Lab Acqui-Hires in Eight Days. The Quiet Consolidation Is Already Here.',
+      'Three Frontier Lab Acqui-Hires in 48 Hours. The Quiet Consolidation Is Already Here.',
     description:
-      "Anthropic, Mistral, DeepMind, and Meta each absorbed a small specialist team inside an eight-day window. Same deal shape, same antitrust dodge, four different capability gaps being filled. Here is what they bought and what it signals.",
+      "Anthropic, Google DeepMind, and Mistral each absorbed a small specialist team inside a single 48-hour window in mid-May, with Meta running the same play in March. Same deal shape, same antitrust dodge, four different capability gaps being filled. Here is what they bought and what it signals.",
     type: 'article',
     publishedTime: '2026-05-27T15:00:00Z',
     authors: ['Marcus Chen'],
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title:
-      'Four Frontier Lab Acqui-Hires in Eight Days. The Consolidation Is Already Here.',
+      'Three Frontier Lab Acqui-Hires in 48 Hours. The Consolidation Is Already Here.',
     description:
-      'Anthropic, Mistral, DeepMind, and Meta each absorbed a small specialist team in eight days. Same deal shape, same antitrust dodge. Inside the pattern.',
+      'Anthropic, Google DeepMind, and Mistral each absorbed a small specialist team in a 48-hour window, with Meta the March precedent. Same deal shape, same antitrust dodge. Inside the pattern.',
   },
 };
 
@@ -33,8 +33,8 @@ export default function FourFrontierLabsAcquiHirePage() {
   return (
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <ArticleJsonLd
-        title="Four Frontier Lab Acqui-Hires in Eight Days. The Quiet Consolidation Is Already Here."
-        description="Mistral bought Vienna's Emmi AI on May 26. Anthropic bought Stainless for $300M+ on May 18. DeepMind paid $80M to $90M to license Contextual AI and lift its team on May 19. Meta absorbed Dreamer in March. Same eight-day window for three of them, four frontier labs, four acqui-hires structured to slip past antitrust review."
+        title="Three Frontier Lab Acqui-Hires in 48 Hours. The Quiet Consolidation Is Already Here."
+        description="Anthropic bought Stainless for $300M+ on May 18. The next day, May 19, both Google DeepMind (Contextual AI) and Mistral (Vienna's Emmi AI) did the same. Three frontier-lab acqui-hires in 48 hours, with Meta's Dreamer deal in March the quarter's precedent, all structured to slip past antitrust review."
         datePublished="2026-05-27"
         author="Marcus Chen"
       />
@@ -51,7 +51,7 @@ export default function FourFrontierLabsAcquiHirePage() {
       {/* Header */}
       <header className="mb-10">
         <h1 className="text-3xl sm:text-4xl font-bold text-text-primary mb-4 leading-tight">
-          Four Frontier Lab Acqui-Hires in Eight Days. The Quiet Consolidation Is Already Here.
+          Three Frontier Lab Acqui-Hires in 48 Hours. The Quiet Consolidation Is Already Here.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
           <span className="text-text-secondary font-medium">Marcus Chen</span>
@@ -67,27 +67,27 @@ export default function FourFrontierLabsAcquiHirePage() {
 
       <ShareBar
         path="/originals/four-frontier-labs-acqui-hire-consolidation"
-        title="Four Frontier Lab Acqui-Hires in Eight Days. The Quiet Consolidation Is Already Here."
+        title="Three Frontier Lab Acqui-Hires in 48 Hours. The Quiet Consolidation Is Already Here."
       />
 
       {/* Article body */}
       <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
-          Mistral announced yesterday that it is acquiring Emmi AI, a Vienna-based physics
+          On May 19, Mistral said it was acquiring Emmi AI, a Vienna-based physics
           simulation lab spun out of NXAI in 2024. Roughly 30 researchers, all going to
           Mistral&apos;s Science and Applied AI teams, focused on computational fluid dynamics,
-          heat transfer, and material stress models. That is the fourth time in eight business
-          days a frontier lab has bought a small specialist team. Nobody called it a wave. It
+          heat transfer, and material stress models. It was the third frontier-lab acqui-hire
+          in a 48-hour window, and the fourth in the same quarter. Nobody called it a wave. It
           is a wave.
         </p>
 
         <p>
           Anthropic took Stainless on May 18 for a reported $300 million plus, the dev-tools
           shop that generated SDKs for OpenAI, Google, and Cloudflare. The next day,
-          May 19, Bloomberg reported that Google DeepMind paid between $80 million and
-          $90 million to license Contextual AI&apos;s tech and bring more than 20 of its
-          researchers, including co-founder Douwe Kiela, into Alphabet. Eight days later
-          Mistral closed Emmi. Meta&apos;s Dreamer acqui-hire from March 23 lands a little
+          May 19, two more landed. Bloomberg reported that Google DeepMind paid between
+          $80 million and $90 million to license Contextual AI&apos;s tech and bring more than
+          20 of its researchers, including co-founder Douwe Kiela, into Alphabet, and Mistral
+          closed Emmi the same day. Meta&apos;s Dreamer acqui-hire from March 23 lands well
           outside that window but inside the same quarter and the same deal shape.
         </p>
 
@@ -131,7 +131,7 @@ export default function FourFrontierLabsAcquiHirePage() {
                 <td className="px-4 py-3">Emmi AI</td>
                 <td className="px-4 py-3">Physics-aware industrial simulation</td>
                 <td className="px-4 py-3 font-mono">Undisclosed</td>
-                <td className="px-4 py-3 font-mono">May 26</td>
+                <td className="px-4 py-3 font-mono">May 19</td>
               </tr>
               <tr>
                 <td className="px-4 py-3 text-accent-primary font-medium">Meta</td>
@@ -258,7 +258,7 @@ export default function FourFrontierLabsAcquiHirePage() {
         <h2 className="text-2xl font-semibold text-text-primary pt-4">Where This Leaves the Mid-Tier</h2>
 
         <p>
-          The companies that should be the most nervous after this eight-day window are not
+          The companies that should be the most nervous after this 48-hour window are not
           the frontier labs. They are the seed and Series A specialty AI startups whose pitch
           is a specific capability gap inside the bigger labs. The Emmi-shaped story (small
           team, deep technical expertise, narrow vertical, $50 million ballpark valuation) is
@@ -314,7 +314,7 @@ export default function FourFrontierLabsAcquiHirePage() {
 
         <p>
           <span className="text-text-primary font-semibold">Three.</span> Whether xAI runs
-          this play. SpaceXAI now owns Grok, X, and a 200,000-GPU Memphis supercluster. The
+          this play. SpaceXAI now owns Grok, X, and a 555,000-GPU Memphis supercluster. The
           one thing it does not have is depth in specific verticals. Watch for an acqui-hire
           in physics simulation, biology, or finance that signals where Musk wants the
           superintelligence project to land its first commercial wedge.
@@ -340,7 +340,7 @@ export default function FourFrontierLabsAcquiHirePage() {
         </p>
 
         <p>
-          The quiet phase of AI industry consolidation lasted exactly eight business days
+          The quiet phase of AI industry consolidation lasted exactly 48 hours
           before it stopped being quiet. The loud phase starts when the first regulator
           actually says no to one of these structures, and the labs have to decide whether
           to keep doing the deals anyway.
