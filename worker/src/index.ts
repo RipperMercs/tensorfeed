@@ -10468,21 +10468,17 @@ export default {
     // last-updated date (the real data time), so the freshness no-charge bills
     // against actual data age, never build time.
     if (path === '/api/premium/ai-datacenters/buildout') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const { AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED, buildBuildoutAggregate } =
-        await import('./ai-datacenters');
-      const result = {
-        ok: true,
-        ...buildBuildoutAggregate(AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED),
-        capturedAt: AI_DATACENTERS_LAST_UPDATED + 'T00:00:00Z',
-      };
-
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-datacenters/buildout', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
-      );
-      return await premiumResponse(result, payment, 1, request, env);
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/ai-datacenters/buildout' }, async () => {
+        const { AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED, buildBuildoutAggregate } =
+          await import('./ai-datacenters');
+        const result = {
+          ok: true,
+          ...buildBuildoutAggregate(AI_DATACENTERS, AI_DATACENTERS_LAST_UPDATED),
+          capturedAt: AI_DATACENTERS_LAST_UPDATED + 'T00:00:00Z',
+        };
+        // capturedAt rides the body; premiumResponse reads it for the SLA.
+        return { kind: 'ok', body: result, dataCapturedAt: null };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM: AI CAPEX CYCLE VERDICT (Tier 1, 1 credit) ===
