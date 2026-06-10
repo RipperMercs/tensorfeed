@@ -127,3 +127,34 @@ describe('non-strict premium endpoints: no-token is not a 402', () => {
     });
   }
 });
+
+// A VALID-token call to a strict endpoint that has a required QUERY param, made
+// WITHOUT that param, must no-charge: the deferred debit must never commit, so
+// the balance is held. The status may be a 400 validation no-charge or a 200
+// empty no-charge; the money invariant is credits_charged === 0 AND balance
+// unchanged (catches raw-4xx-after-payment for the param-required class).
+describe('strict endpoints: missing required query param no-charges', () => {
+  const candidates = PREMIUM_CATALOG.filter(
+    (e) => e.strict_premium && requiredQueryParams(e).length > 0,
+  );
+  for (const ep of candidates) {
+    it(`no-charges ${ep.path} when its required query param is absent`, async () => {
+      if (isException(ep.path, 'no_charge_missing_param')) return;
+      const env = await makeEnv();
+      const token = uniqueToken();
+      await seedToken(env, token, 100);
+
+      // Path params are substituted (so it routes); required query params are
+      // omitted. concretePath fills only the {path} template; we add no query.
+      const res = await call(env, concretePath(ep.path), { token, ip: uniqueIp() });
+
+      const billing = res.json?.billing as Record<string, unknown> | undefined;
+      expect(billing).toBeDefined();
+      expect(billing?.credits_charged).toBe(0);
+      expect(typeof billing?.no_charge_reason).toBe('string');
+      expect((billing?.no_charge_reason as string).length).toBeGreaterThan(0);
+      // The hard invariant: the deferred debit never committed.
+      expect(await balanceOf(env, token)).toBe(100);
+    });
+  }
+});
