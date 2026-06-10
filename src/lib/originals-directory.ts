@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'mastercard-agent-pay-machines-x402-trust-layer',
+    title:
+      'Agent Payments Grew Up This Week. Mastercard Brought the Trust Layer; the Open Rail Brought the Merchants.',
+    author: 'Adrian Vale',
+    date: 'June 10, 2026',
+    readTime: '8 min read',
+    description:
+      'Two agentic-payments launches in one week marked the moment the category stopped being a demo. On June 10, 2026 Mastercard launched Agent Pay for Machines, a framework for AI agents to pay each other across cards, bank accounts, and stablecoins with identity, spending controls, and guaranteed settlement, backed by 30+ partners including Coinbase, Stripe, Ripple, Polygon, and the Solana Foundation; Coinbase explicitly framed the goal around open standards like x402. Days earlier, Travala put 2.2 million hotels across 230 countries behind an agent wallet, letting an autonomous agent book and pay for a room in USDC on Base via x402 at about a cent per booking, live first inside Claude Desktop. The rails converged, but the real contest is the trust and discovery layer: Mastercard is monetizing identity and guaranteed settlement, the open rail still lacks a discovery standard, and Travala (which settles for real but publishes no manifest and appears in no catalog) is exactly the case the open trust layer has to solve. Why the incumbent embraced the open rail instead of fighting it, why discovery and trust is the new battleground, how TF tracks the open side, and three signposts.',
+  },
+  {
     slug: 'claude-fable-5-mythos-5-split-frontier',
     title: 'Anthropic Split the Frontier in Two. Fable 5 Is the Half You Can Buy.',
     author: 'Kira Nolan',
