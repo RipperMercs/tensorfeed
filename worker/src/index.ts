@@ -10456,21 +10456,15 @@ export default {
       // Strict-premium tier 3 ($0.06): derived metrics over the free
       // funding/portfolio registry. Silicon-concentration + circular-
       // exposure + co-investor pairs computed server-side.
-      const payment = await requirePayment(request, env, 3);
-      if (!payment.paid) return payment.response!;
-
-      const result = computeFundingExposure();
-      if (!result.ok) {
-        return await premiumValidationFailure(
-          { error: result.error, ...(result.hint ? { hint: result.hint } : {}) },
-          payment, request, env, 'upstream_failure',
-        );
-      }
-
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/funding/exposure', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet),
-      );
-      return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 3, request, env);
+      return handlePremium(request, env, ctx, { tier: 3, endpoint: '/api/premium/funding/exposure' }, async () => {
+        const result = computeFundingExposure();
+        if (!result.ok) {
+          // Preserves the original 400 + 'upstream_failure' no-charge (status default).
+          return { kind: 'validation_failure', error: { error: result.error, ...(result.hint ? { hint: result.hint } : {}) }, reason: 'upstream_failure' };
+        }
+        // capturedAt rides the body; premiumResponse reads it for the 7-day SLA.
+        return { kind: 'ok', body: { ...result, capturedAt: result.capturedAt }, dataCapturedAt: null };
+      }, PREMIUM_DEPS);
     }
 
     // === PAID PREMIUM: AI DATACENTER BUILDOUT (Tier 1, 1 credit) ===
