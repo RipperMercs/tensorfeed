@@ -2045,11 +2045,29 @@ export default {
     }
 
     if (path === '/api/status/summary') {
-      const summary = await cachedKVGet(request, env.TENSORFEED_STATUS, 'summary', 120, ctx, env);
+      // Project the summary shape from the SAME cached 'services' entry that
+      // /api/status serves, so the two endpoints can never disagree during a
+      // status flip. They previously read two independent KV keys through two
+      // separate 120s cache entries, so one could be fresh while the other was
+      // stale for up to a cache TTL. Sharing the 'services' read removes the
+      // desync and drops a per-cron KV write.
+      type EarlyWarning = { source: string; note: string; detected_at: string | null; probe_signal: string };
+      const services = (await cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120, ctx, env)) as
+        | Array<{ name: string; status: string; provider: string; early_warning?: EarlyWarning }>
+        | null;
+      const summary = (services || []).map((s) => {
+        const entry: { name: string; status: string; provider: string; early_warning?: EarlyWarning } = {
+          name: s.name,
+          status: s.status,
+          provider: s.provider,
+        };
+        if (s.early_warning) entry.early_warning = s.early_warning;
+        return entry;
+      });
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
-        services: summary || [],
+        services: summary,
       }, 200, 120);
     }
 

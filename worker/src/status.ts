@@ -618,19 +618,9 @@ export async function pollStatusPages(env: Env): Promise<void> {
   await env.TENSORFEED_STATUS.put('services', JSON.stringify(statuses), {
     metadata: { count: statuses.length, updatedAt: new Date().toISOString() },
   });
-
-  // Store a summary for quick widget reads. early_warning is already attached
-  // to each enriched service above (Step 2), so carry it forward verbatim.
-  const summary = statuses.map((s) => {
-    const entry: { name: string; status: string; provider: string; early_warning?: { source: string; note: string; detected_at: string | null; probe_signal: string } } = {
-      name: s.name,
-      status: s.status,
-      provider: s.provider,
-    };
-    if (s.early_warning) entry.early_warning = s.early_warning;
-    return entry;
-  });
-  await env.TENSORFEED_STATUS.put('summary', JSON.stringify(summary));
+  // The 'summary' KV key is no longer written: /api/status/summary now projects
+  // its shape from this same 'services' entry, so the two endpoints share one
+  // cache and can never desync (and we save a KV write per cron run).
 
   // ── Incident detection ──────────────────────────────────────────────
   const previousRaw = await env.TENSORFEED_STATUS.get('previous-status', 'json') as

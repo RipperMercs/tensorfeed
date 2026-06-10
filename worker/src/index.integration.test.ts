@@ -1636,3 +1636,36 @@ describe('federal/procurement empty-result no-charge', () => {
     });
   }
 });
+
+// /api/status/summary projects from the SAME 'services' KV entry /api/status
+// serves, so the two endpoints can never desync. Guards against re-introducing a
+// separate 'summary' KV read (which previously could be fresh while 'services'
+// was stale for up to a cache TTL).
+describe('status summary projects from services (no desync)', () => {
+  it('serves a name/status/provider projection that carries early_warning and matches /api/status', async () => {
+    const env = await makeEnv({
+      status: {
+        services: [
+          { name: 'Claude API', provider: 'Anthropic', status: 'operational', statusPageUrl: 'x', components: [], lastChecked: 't' },
+          { name: 'Gemini', provider: 'Google', status: 'degraded', statusPageUrl: 'x', components: [], lastChecked: 't', early_warning: { source: 'tensorfeed_probe', note: 'n', detected_at: null, probe_signal: 'provider_degraded' } },
+        ],
+      },
+    });
+
+    const res = await call(env, '/api/status/summary', { ip: uniqueIp() });
+    expect(res.status).toBe(200);
+    const services = res.json?.services as Array<Record<string, unknown>>;
+    expect(services.length).toBe(2);
+    // Projected to name/status/provider only (plus early_warning when present).
+    expect(Object.keys(services[0]).sort()).toEqual(['name', 'provider', 'status']);
+    expect(services[1].early_warning).toBeDefined();
+    expect((services[1].early_warning as Record<string, unknown>).probe_signal).toBe('provider_degraded');
+
+    // /api/status serves the same underlying entry, so the two agree.
+    const full = await call(env, '/api/status', { ip: uniqueIp() });
+    const fullServices = full.json?.services as Array<Record<string, unknown>>;
+    expect(fullServices.length).toBe(2);
+    expect(fullServices[1].name).toBe(services[1].name);
+    expect(fullServices[1].status).toBe(services[1].status);
+  });
+});
