@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'openai-oracle-credits-frontier-procurement',
+    title:
+      'OpenAI Models Are Now an Oracle Line Item. The Frontier War Moved Into Procurement.',
+    author: 'Marcus Chen',
+    date: 'June 11, 2026',
+    readTime: '7 min read',
+    description:
+      "OpenAI announced that Oracle customers will be able to apply eligible Oracle Universal Credits toward OpenAI models and Codex through OCI in the coming weeks. Read against the last ten days (Claude Fable 5 shipping day one on Bedrock, Vertex, and Microsoft Foundry at identical $10/$50 pricing, the 11,000-model Foundry catalog with Opus 4.8 inside, iOS 27 making the default assistant a dropdown), the pattern is clear: the frontier model is becoming a SKU in someone else's catalog, payable with committed spend. Procurement friction, not benchmarks, gates enterprise adoption, and committed dollars are cheaper dollars. The circularity of OpenAI's reported $300B Oracle compute commitment flowing back as Oracle-channel token sales, the channel map (Anthropic on all three hyperscaler storefronts, OpenAI on two plus Oracle, Gemini mostly home turf, DeepSeek sidestepping via MIT weights), what labs give up to the storefront owner, and three signposts: OpenAI on Bedrock, Gemini off Google Cloud, and the first below-API channel discount.",
+  },
+  {
     slug: 'mastercard-agent-pay-machines-x402-trust-layer',
     title:
       'Agent Payments Grew Up This Week. Mastercard Brought the Trust Layer; the Open Rail Brought the Merchants.',
