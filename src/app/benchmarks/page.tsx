@@ -81,12 +81,18 @@ export default function BenchmarksPage() {
 
   const activeDef = benchmarks.find((b) => b.id === activeBenchmark)!;
 
-  const ranked = useMemo(() => {
+  // A model is "reported" on the active benchmark only if it carries a real
+  // numeric score. A vendor that has not published a score for this benchmark
+  // (e.g. a brand-new flagship that only reported SWE-bench) is split into
+  // `unreported` and shown as "not reported" rather than coerced to 0, which
+  // would otherwise rank it dead last behind models it actually beats.
+  const { ranked, unreported } = useMemo(() => {
+    const hasScore = (m: ModelEntry) =>
+      typeof m.scores[activeBenchmark] === 'number' && Number.isFinite(m.scores[activeBenchmark]);
+
     const withScore = models
-      .map((m) => ({
-        ...m,
-        score: m.scores[activeBenchmark] ?? 0,
-      }))
+      .filter(hasScore)
+      .map((m) => ({ ...m, score: m.scores[activeBenchmark] }))
       .sort((a, b) => b.score - a.score)
       .map((m, i) => ({ ...m, rank: i + 1 }));
 
@@ -110,7 +116,11 @@ export default function BenchmarksPage() {
       return sortDir === 'asc' ? cmp : -cmp;
     });
 
-    return sorted;
+    const missing = models
+      .filter((m) => !hasScore(m))
+      .sort((a, b) => a.model.localeCompare(b.model));
+
+    return { ranked: sorted, unreported: missing };
   }, [models, activeBenchmark, sortKey, sortDir]);
 
   function handleSort(key: SortKey) {
@@ -311,6 +321,40 @@ export default function BenchmarksPage() {
                 <td className="py-3 px-3">
                   <span className="font-mono text-text-primary font-semibold">{m.score.toFixed(1)}</span>
                   <span className="text-text-muted text-xs ml-1">/ {activeDef.maxScore}</span>
+                </td>
+                <td className="py-3 px-3 text-sm text-text-muted">{m.released}</td>
+              </tr>
+            ))}
+
+            {unreported.length > 0 && (
+              <tr className="border-b border-border">
+                <td colSpan={5} className="py-2 px-3 text-xs uppercase tracking-wide text-text-muted">
+                  Not reported on {activeDef.name}
+                </td>
+              </tr>
+            )}
+            {unreported.map((m) => (
+              <tr
+                key={m.model}
+                className="border-b border-border/50 hover:bg-bg-tertiary/50 transition-colors"
+              >
+                <td className="py-3 px-3">
+                  <span className="font-bold text-text-muted">-</span>
+                </td>
+                <td className="py-3 px-3">
+                  <span className="font-semibold text-text-secondary">{m.model}</span>
+                </td>
+                <td className="py-3 px-3">
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                      PROVIDER_COLORS[m.provider] || 'bg-bg-tertiary text-text-secondary border-border'
+                    }`}
+                  >
+                    {m.provider}
+                  </span>
+                </td>
+                <td className="py-3 px-3">
+                  <span className="text-text-muted text-xs italic">not reported</span>
                 </td>
                 <td className="py-3 px-3 text-sm text-text-muted">{m.released}</td>
               </tr>
