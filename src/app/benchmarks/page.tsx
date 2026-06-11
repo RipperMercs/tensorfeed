@@ -75,7 +75,13 @@ export default function BenchmarksPage() {
   const benchmarks = data.benchmarks as BenchmarkDef[];
   const models = data.models as ModelEntry[];
 
-  const [activeBenchmark, setActiveBenchmark] = useState(benchmarks[0].id);
+  // Default to the SWE-bench tab: it is the live, current benchmark the 2026
+  // frontier models actually report, so the board opens on a populated,
+  // up-to-date leaderboard rather than the saturated MMLU-Pro column. Picked
+  // by id so it holds regardless of array order (and KV order lag).
+  const [activeBenchmark, setActiveBenchmark] = useState(
+    () => benchmarks.find((b) => b.id === 'swe_bench')?.id ?? benchmarks[0].id,
+  );
   const [sortKey, setSortKey] = useState<SortKey>('score');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 

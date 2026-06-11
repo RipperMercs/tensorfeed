@@ -1,30 +1,30 @@
 {
   "lastUpdated": "2026-06-11",
   "benchmarks": [
+    { "id": "swe_bench", "name": "SWE-bench", "description": "Real-world software engineering tasks from GitHub issues (SWE-bench Verified)", "maxScore": 100 },
     { "id": "mmlu_pro", "name": "MMLU-Pro", "description": "General knowledge and reasoning across 57 subjects", "maxScore": 100 },
     { "id": "human_eval", "name": "HumanEval", "description": "Python code generation and problem solving", "maxScore": 100 },
     { "id": "gpqa_diamond", "name": "GPQA Diamond", "description": "Graduate-level science questions verified by domain experts", "maxScore": 100 },
-    { "id": "math", "name": "MATH", "description": "Competition-level mathematics problems", "maxScore": 100 },
-    { "id": "swe_bench", "name": "SWE-bench", "description": "Real-world software engineering tasks from GitHub issues", "maxScore": 100 }
+    { "id": "math", "name": "MATH", "description": "Competition-level mathematics problems", "maxScore": 100 }
   ],
   "models": [
     {
       "model": "GPT-5.5",
       "provider": "OpenAI",
       "released": "2026-04",
-      "scores": { "mmlu_pro": 94.2, "human_eval": 97.1, "gpqa_diamond": 78.3, "math": 95.8, "swe_bench": 68.7 }
+      "scores": { "mmlu_pro": 94.2, "human_eval": 97.1, "gpqa_diamond": 78.3, "math": 95.8, "swe_bench": 82.6 }
     },
     {
       "model": "DeepSeek V4 Pro",
       "provider": "DeepSeek",
       "released": "2026-04",
-      "scores": { "mmlu_pro": 91.5, "human_eval": 94.8, "gpqa_diamond": 73.1, "math": 92.4, "swe_bench": 63.8 }
+      "scores": { "mmlu_pro": 91.5, "human_eval": 94.8, "gpqa_diamond": 73.1, "math": 92.4, "swe_bench": 80.6 }
     },
     {
       "model": "DeepSeek V4 Flash",
       "provider": "DeepSeek",
       "released": "2026-04",
-      "scores": { "mmlu_pro": 85.2, "human_eval": 89.4, "gpqa_diamond": 58.7, "math": 82.1, "swe_bench": 48.9 }
+      "scores": { "mmlu_pro": 85.2, "human_eval": 89.4, "gpqa_diamond": 58.7, "math": 82.1, "swe_bench": 79.0 }
     },
     {
       "model": "Claude Fable 5",
@@ -42,43 +42,43 @@
       "model": "Claude Opus 4.7",
       "provider": "Anthropic",
       "released": "2026-04",
-      "scores": { "mmlu_pro": 93.8, "human_eval": 96.2, "gpqa_diamond": 76.5, "math": 93.1, "swe_bench": 65.4 }
+      "scores": { "mmlu_pro": 93.8, "human_eval": 96.2, "gpqa_diamond": 76.5, "math": 93.1, "swe_bench": 87.6 }
     },
     {
       "model": "Claude Opus 4.6",
       "provider": "Anthropic",
       "released": "2026-03",
-      "scores": { "mmlu_pro": 92.4, "human_eval": 95.1, "gpqa_diamond": 74.2, "math": 91.8, "swe_bench": 62.3 }
+      "scores": { "mmlu_pro": 92.4, "human_eval": 95.1, "gpqa_diamond": 74.2, "math": 91.8, "swe_bench": 80.8 }
     },
     {
       "model": "Claude Sonnet 4.6",
       "provider": "Anthropic",
       "released": "2026-02",
-      "scores": { "mmlu_pro": 88.7, "human_eval": 92.0, "gpqa_diamond": 65.8, "math": 85.4, "swe_bench": 55.7 }
+      "scores": { "mmlu_pro": 88.7, "human_eval": 92.0, "gpqa_diamond": 65.8, "math": 85.4, "swe_bench": 79.6 }
     },
     {
       "model": "Claude Haiku 4.5",
       "provider": "Anthropic",
       "released": "2026-01",
-      "scores": { "mmlu_pro": 82.1, "human_eval": 86.3, "gpqa_diamond": 52.4, "math": 74.6, "swe_bench": 41.2 }
+      "scores": { "mmlu_pro": 82.1, "human_eval": 86.3, "gpqa_diamond": 52.4, "math": 74.6, "swe_bench": 73.3 }
     },
     {
       "model": "GPT-4o",
       "provider": "OpenAI",
       "released": "2025-05",
-      "scores": { "mmlu_pro": 87.2, "human_eval": 90.2, "gpqa_diamond": 59.1, "math": 81.3, "swe_bench": 48.5 }
+      "scores": { "mmlu_pro": 87.2, "human_eval": 90.2, "gpqa_diamond": 59.1, "math": 81.3, "swe_bench": 33.2 }
     },
     {
       "model": "GPT-4.5",
       "provider": "OpenAI",
       "released": "2025-12",
-      "scores": { "mmlu_pro": 90.1, "human_eval": 93.4, "gpqa_diamond": 68.7, "math": 88.2, "swe_bench": 56.1 }
+      "scores": { "mmlu_pro": 90.1, "human_eval": 93.4, "gpqa_diamond": 68.7, "math": 88.2, "swe_bench": 38.0 }
     },
     {
       "model": "o1",
       "provider": "OpenAI",
       "released": "2025-09",
-      "scores": { "mmlu_pro": 91.8, "human_eval": 94.2, "gpqa_diamond": 72.5, "math": 94.6, "swe_bench": 58.9 }
+      "scores": { "mmlu_pro": 91.8, "human_eval": 94.2, "gpqa_diamond": 72.5, "math": 94.6, "swe_bench": 48.9 }
     },
     {
       "model": "o3-mini",
@@ -90,43 +90,43 @@
       "model": "Gemini 2.5 Pro",
       "provider": "Google",
       "released": "2026-01",
-      "scores": { "mmlu_pro": 91.2, "human_eval": 93.8, "gpqa_diamond": 71.9, "math": 90.5, "swe_bench": 59.4 }
+      "scores": { "mmlu_pro": 91.2, "human_eval": 93.8, "gpqa_diamond": 71.9, "math": 90.5, "swe_bench": 63.8 }
     },
     {
       "model": "Gemini 2.0 Flash",
       "provider": "Google",
       "released": "2025-10",
-      "scores": { "mmlu_pro": 84.5, "human_eval": 87.6, "gpqa_diamond": 54.8, "math": 77.2, "swe_bench": 43.1 }
+      "scores": { "mmlu_pro": 84.5, "human_eval": 87.6, "gpqa_diamond": 54.8, "math": 77.2 }
     },
     {
       "model": "Llama 4 Scout",
       "provider": "Meta",
       "released": "2026-02",
-      "scores": { "mmlu_pro": 85.9, "human_eval": 88.4, "gpqa_diamond": 56.2, "math": 79.8, "swe_bench": 44.6 }
+      "scores": { "mmlu_pro": 85.9, "human_eval": 88.4, "gpqa_diamond": 56.2, "math": 79.8 }
     },
     {
       "model": "Llama 4 Maverick",
       "provider": "Meta",
       "released": "2026-03",
-      "scores": { "mmlu_pro": 89.3, "human_eval": 91.7, "gpqa_diamond": 64.1, "math": 86.7, "swe_bench": 52.8 }
+      "scores": { "mmlu_pro": 89.3, "human_eval": 91.7, "gpqa_diamond": 64.1, "math": 86.7, "swe_bench": 24.0 }
     },
     {
       "model": "Mistral Large",
       "provider": "Mistral",
       "released": "2025-11",
-      "scores": { "mmlu_pro": 86.8, "human_eval": 89.1, "gpqa_diamond": 57.3, "math": 80.4, "swe_bench": 46.2 }
+      "scores": { "mmlu_pro": 86.8, "human_eval": 89.1, "gpqa_diamond": 57.3, "math": 80.4, "swe_bench": 47.2 }
     },
     {
       "model": "Mistral Small",
       "provider": "Mistral",
       "released": "2025-09",
-      "scores": { "mmlu_pro": 78.4, "human_eval": 82.5, "gpqa_diamond": 44.6, "math": 68.9, "swe_bench": 34.7 }
+      "scores": { "mmlu_pro": 78.4, "human_eval": 82.5, "gpqa_diamond": 44.6, "math": 68.9 }
     },
     {
       "model": "DeepSeek V3",
       "provider": "DeepSeek",
       "released": "2025-12",
-      "scores": { "mmlu_pro": 88.1, "human_eval": 91.2, "gpqa_diamond": 63.5, "math": 85.9, "swe_bench": 51.4 }
+      "scores": { "mmlu_pro": 88.1, "human_eval": 91.2, "gpqa_diamond": 63.5, "math": 85.9, "swe_bench": 42.0 }
     }
   ]
 }
