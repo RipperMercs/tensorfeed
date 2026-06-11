@@ -223,10 +223,6 @@ a, button, input, select, textarea,
 
 /* ===== Phase 1 facelift: shared keyframes + utilities ===== */
 
-@keyframes tf-ticker-scroll {
-  0% { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-50%, 0, 0); }
-}
 @keyframes tf-pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.55; transform: scale(0.85); }
@@ -242,12 +238,6 @@ a, button, input, select, textarea,
   0% { box-shadow: inset 0 0 0 2px var(--accent-cyan); }
   100% { box-shadow: inset 0 0 0 0 transparent; }
 }
-
-.tf-ticker-track {
-  animation: tf-ticker-scroll calc(55s / var(--motion, 1)) linear infinite;
-  will-change: transform;
-}
-.tf-ticker:hover .tf-ticker-track { animation-play-state: paused; }
 
 .tf-live-dot {
   animation: tf-pulse-dot calc(2s / var(--motion, 1)) ease-in-out infinite;
@@ -362,7 +352,6 @@ a.tf-activity-row:hover {
 .tf-explore-card .tf-explore-vis { z-index: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tf-ticker-track,
   .tf-live-dot,
   .tf-live-pulse::after,
   .tf-hero-title-reveal,

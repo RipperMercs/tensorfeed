@@ -7,22 +7,9 @@ import ThemeProvider from '@/components/ThemeProvider';
 import ViewModeProvider from '@/components/ViewModeProvider';
 import AgentView from '@/components/AgentView';
 import CookieConsent from '@/components/CookieConsent';
-import LiveTicker from '@/components/home/LiveTicker';
 import TopAlertBar from '@/components/home/TopAlertBar';
 import JsonLd from '@/components/seo/JsonLd';
 import Script from 'next/script';
-import pricingData from '@/../data/pricing.json';
-import benchmarkData from '@/../data/benchmarks.json';
-import { buildEvergreenTickerItems, type PricingDataLite, type BenchmarkDataLite } from '@/lib/ticker-data';
-
-// Ticker price + benchmark rows derived once at build from the canonical data
-// files (data/pricing.json + data/benchmarks.json), so the homepage ticker can
-// never drift out of sync with them again. Passed to the client LiveTicker as a
-// prop, which keeps the JSON out of the client bundle.
-const TICKER_ITEMS = buildEvergreenTickerItems(
-  pricingData as unknown as PricingDataLite,
-  benchmarkData as unknown as BenchmarkDataLite,
-);
 
 export const metadata: Metadata = {
   title: {
@@ -132,9 +119,6 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <ViewModeProvider>
-            <ChromeGate>
-              <LiveTicker evergreenItems={TICKER_ITEMS} />
-            </ChromeGate>
             <Navbar />
             <ChromeGate>
               <TopAlertBar />
