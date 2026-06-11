@@ -33,6 +33,12 @@
       "scores": { "swe_bench": 95.0 }
     },
     {
+      "model": "Claude Opus 4.8",
+      "provider": "Anthropic",
+      "released": "2026-05",
+      "scores": { "gpqa_diamond": 93.6, "swe_bench": 88.6 }
+    },
+    {
       "model": "Claude Opus 4.7",
       "provider": "Anthropic",
       "released": "2026-04",

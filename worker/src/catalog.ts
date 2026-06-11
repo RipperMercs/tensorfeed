@@ -379,6 +379,7 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
     { model: 'DeepSeek V4 Pro', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 91.5, human_eval: 94.8, gpqa_diamond: 73.1, math: 92.4, swe_bench: 63.8 } },
     { model: 'DeepSeek V4 Flash', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 85.2, human_eval: 89.4, gpqa_diamond: 58.7, math: 82.1, swe_bench: 48.9 } },
     { model: 'Claude Fable 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 95.0 } },
+    { model: 'Claude Opus 4.8', provider: 'Anthropic', released: '2026-05', scores: { gpqa_diamond: 93.6, swe_bench: 88.6 } },
     { model: 'Claude Opus 4.7', provider: 'Anthropic', released: '2026-04', scores: { mmlu_pro: 93.8, human_eval: 96.2, gpqa_diamond: 76.5, math: 93.1, swe_bench: 65.4 } },
     { model: 'Claude Opus 4.6', provider: 'Anthropic', released: '2026-03', scores: { mmlu_pro: 92.4, human_eval: 95.1, gpqa_diamond: 74.2, math: 91.8, swe_bench: 62.3 } },
     { model: 'Claude Sonnet 4.6', provider: 'Anthropic', released: '2026-02', scores: { mmlu_pro: 88.7, human_eval: 92.0, gpqa_diamond: 65.8, math: 85.4, swe_bench: 55.7 } },
