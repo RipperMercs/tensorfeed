@@ -62,7 +62,7 @@ export default function MainnetValidationPage() {
         path="/originals/validating-agent-payments-mainnet"
         title="We Validated Agent Payments End-to-End on Base Mainnet"
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           This morning I sent one USDC from a wallet on my laptop to a wallet I had published in four
           places, called a Python function, got back a token, asked a paid AI routing endpoint a

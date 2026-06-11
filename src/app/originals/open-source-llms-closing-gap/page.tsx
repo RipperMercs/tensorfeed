@@ -64,7 +64,7 @@ export default function OpenSourceLLMsPage() {
         title="Open Source LLMs Are Closing the Gap Faster Than Anyone Expected"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Six months ago, if you told me a 9 billion parameter open source model would beat a 120 billion
           parameter model on graduate-level science questions, I would have been skeptical. That&apos;s

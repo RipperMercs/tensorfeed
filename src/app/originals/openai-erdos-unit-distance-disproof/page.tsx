@@ -67,7 +67,7 @@ export default function OpenAIErdosUnitDistanceDisproofPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On Wednesday May 20, OpenAI announced that an internal general-purpose reasoning model
           disproved a conjecture about the planar unit distance problem that Paul Erdős first posed

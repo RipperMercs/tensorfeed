@@ -77,7 +77,7 @@ export default function GoogleIO2026Gemini4StakesPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Eight days. That is what stands between Google and the most consequential I/O keynote
           since Sundar Pichai walked on stage with Bard in 2023. The Android Show: I/O Edition

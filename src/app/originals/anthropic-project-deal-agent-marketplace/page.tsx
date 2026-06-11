@@ -64,7 +64,7 @@ export default function AnthropicProjectDealPage() {
         title="Anthropic Just Ran the First Real-Money AI Agent Marketplace. The Results Reveal a Coming Inequality."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Anthropic just published the results of Project Deal, an internal experiment where 69 employees handed
           their wallets to Claude and let the model buy and sell physical goods on their behalf. The agents made

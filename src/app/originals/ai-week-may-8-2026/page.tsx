@@ -77,7 +77,7 @@ export default function AIWeekMay82026Page() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Five business days. That is how long it took for one Anthropic model release to drag the
           U.S. government, the three biggest cloud providers, and the OpenAI product roadmap into a

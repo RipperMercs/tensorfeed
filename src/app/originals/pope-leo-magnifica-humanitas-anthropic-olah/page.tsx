@@ -81,7 +81,7 @@ export default function PopeLeoMagnificaHumanitasPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The Holy See released Pope Leo XIV&apos;s first encyclical at the
           Vatican this morning. 235 pages, 245 paragraphs, five chapters, the

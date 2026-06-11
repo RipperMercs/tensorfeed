@@ -65,7 +65,7 @@ export default function ClaudeDesignAnthropicPage() {
         title="Anthropic Just Shipped Claude Design. The Loop from Idea to Code Is Now Closed."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On April 17, Anthropic quietly launched Claude Design under the Anthropic Labs banner. No press event. No waitlist hype cycle. Just a research preview rolled out to Pro, Max, Team, and Enterprise subscribers. If you have been paying attention to how Anthropic ships product, this pattern should look familiar by now. They drop the thing, let people use it, and let the work speak for itself.
         </p>

@@ -63,7 +63,7 @@ export default function ClaudeMythosNotAfraidPage() {
         title="Claude Mythos: Anthropic's Most Powerful Model Yet, and Why I'm Not Afraid"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           I&apos;ve been waiting for this moment since I started TensorFeed. Not the fear part. The
           other part. The part where AI stops being a chatbot and starts being something we actually

@@ -64,7 +64,7 @@ export default function RiseOfAgenticAIPage() {
         title="The Rise of Agentic AI: From Chatbots to Autonomous Workers"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The word &quot;agent&quot; has been thrown around so much in AI marketing that it&apos;s starting
           to lose meaning. Every chatbot with a plugin calls itself an agent now. But something genuinely

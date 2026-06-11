@@ -66,7 +66,7 @@ export default function AiMoneyGapPwcPage() {
         title="74% of AI&apos;s Economic Value Goes to 20% of Companies. Here&apos;s Why."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Everyone has access to AI now. ChatGPT is free. Claude has a free tier. Gemini comes bundled with every Google account. Open source models run on laptops. The tools are everywhere. So why is the economic value landing in the same small group of companies?
         </p>

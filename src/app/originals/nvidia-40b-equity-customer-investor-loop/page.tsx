@@ -76,7 +76,7 @@ export default function Nvidia40BEquityCustomerInvestorLoopPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           CNBC ran the tally on Friday: Nvidia&apos;s 2026 equity commitments to AI companies have
           crossed $40 billion. That number is anchored by a $30B stake in OpenAI from late February,

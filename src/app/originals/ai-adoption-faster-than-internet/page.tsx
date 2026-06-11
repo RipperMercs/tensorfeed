@@ -63,7 +63,7 @@ export default function AiAdoptionFasterThanInternetPage() {
         title="AI Adoption Is Outpacing the Internet. Stanford Has the Numbers to Prove It."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           People are adopting AI faster than they adopted the internet. Faster than they adopted personal computers. Stanford&apos;s 2026 AI Index has the data, and the implications are staggering.
         </p>

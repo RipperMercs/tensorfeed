@@ -73,7 +73,7 @@ export default function TavilyX402DiscoveryGapPage() {
         eyebrow="AGENT PAYMENTS"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Coinbase and Tavily announced this week that Tavily web search is live on x402, the open
           protocol for pay-per-request agentic payments. The pitch is the one the whole agent

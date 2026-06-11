@@ -63,7 +63,7 @@ export default function AftaIsBilateralBothSidesWinPage() {
         path="/originals/afta-is-bilateral-both-sides-win"
         title="AFTA Is Bilateral. Here Is Why Both Sides Win."
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           When we shipped the Agent Fair-Trade Agreement four days ago, I framed it as a
           standard for API publishers being fair to AI agents. That framing was correct, and

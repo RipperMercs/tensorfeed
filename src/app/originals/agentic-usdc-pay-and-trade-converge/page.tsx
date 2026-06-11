@@ -75,7 +75,7 @@ export default function Page() {
         eyebrow="AGENT PAYMENTS"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           This morning I settled five real payments through Coinbase Developer Platform&apos;s
           x402 facilitator. Each one was $0.02 of USDC on Base, paid by a test agent to

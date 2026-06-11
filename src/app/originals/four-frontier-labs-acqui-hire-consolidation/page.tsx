@@ -71,7 +71,7 @@ export default function FourFrontierLabsAcquiHirePage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On May 19, Mistral said it was acquiring Emmi AI, a Vienna-based physics
           simulation lab spun out of NXAI in 2024. Roughly 30 researchers, all going to

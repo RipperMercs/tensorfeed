@@ -80,7 +80,7 @@ export default function AiCyberTierDataLayerPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The week opened with Anthropic shipping Mythos. Capability triggered policy.
           Policy triggered procurement. By Wednesday OpenAI had answered with

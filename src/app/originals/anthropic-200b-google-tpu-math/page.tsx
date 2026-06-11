@@ -77,7 +77,7 @@ export default function Anthropic200BGoogleTPUMathPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The Information broke the Anthropic to Google number on Tuesday: a $200 billion commitment
           for cloud and Broadcom-built TPU capacity over five years, with the new gigawatt-scale

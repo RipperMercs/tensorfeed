@@ -81,7 +81,7 @@ export default function DeepSeekMaidenFundingRoundPage() {
         eyebrow="CAPITAL"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           DeepSeek is raising outside money for the first time in its existence. Reports out of
           Beijing on June 3 and 4 put the round at roughly 50 billion yuan, about $7.4 billion, at a

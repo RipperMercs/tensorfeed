@@ -73,7 +73,7 @@ export default function X402DistributionLayerPage() {
         eyebrow="AGENT PAYMENTS"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The thing I keep circling back to from this week is not a protocol upgrade or a funding
           round. It is that an AI agent now pays ten cents to read the day&apos;s news, and the

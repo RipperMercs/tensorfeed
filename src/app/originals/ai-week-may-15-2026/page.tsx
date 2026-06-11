@@ -77,7 +77,7 @@ export default function AIWeekMay152026Page() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Google I/O lands Tuesday, May 19, at 10 AM Pacific. That is the calendar everyone in AI is
           writing against right now. Android Show went out Monday. Anthropic let the $950 billion

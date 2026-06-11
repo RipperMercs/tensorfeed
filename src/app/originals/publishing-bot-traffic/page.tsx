@@ -63,7 +63,7 @@ export default function PublishingBotTrafficPage() {
         path="/originals/publishing-bot-traffic"
         title="We Made Our AI Bot Traffic Public. Here's What We're Seeing."
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Most sites hide their bot traffic. They treat it like a janitor problem, something to
           rate-limit and forget. We just published ours at{' '}

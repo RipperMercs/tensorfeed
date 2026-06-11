@@ -68,7 +68,7 @@ export default function AgentPaymentsGlossaryPage() {
         </p>
       </header>
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <h2 className="text-2xl font-semibold text-text-primary pt-2">The shift</h2>
         <p>
           For most of the internet&apos;s history, every paid API assumed a human at purchase time.

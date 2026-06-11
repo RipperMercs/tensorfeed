@@ -75,7 +75,7 @@ export default function Page() {
         eyebrow="AGENT STACK"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The repository for Google&apos;s A2A x402 payments extension got a commit yesterday.
           That on its own is unremarkable. What is remarkable is the lineup of names that have

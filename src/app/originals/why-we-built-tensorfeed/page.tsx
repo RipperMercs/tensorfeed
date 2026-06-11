@@ -63,7 +63,7 @@ export default function WhyWeBuiltTensorFeedPage() {
         title="Why We Built TensorFeed.ai"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           I used to start every morning the same way. Open a dozen tabs. Hacker News, the OpenAI blog,
           Anthropic&apos;s changelog, Google DeepMind research, a couple Discord servers, maybe a subreddit

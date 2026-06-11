@@ -61,7 +61,7 @@ export default function ClaudeVsGptVsGeminiPage() {
         title="Claude vs GPT vs Gemini: An Honest Comparison"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           I use all three of these models every single day. Claude for coding and writing. GPT for
           research and brainstorming. Gemini for processing long documents and multimodal tasks.

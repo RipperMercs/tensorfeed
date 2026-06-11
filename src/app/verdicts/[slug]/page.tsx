@@ -89,7 +89,7 @@ export default function VerdictPage({ params }: { params: { slug: string } }) {
       </div>
 
       {/* Reasoning */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         {paragraphs.map((p, i) => (
           <p key={i} className={i === 0 ? 'text-lg text-text-primary leading-relaxed' : undefined}>
             {p}

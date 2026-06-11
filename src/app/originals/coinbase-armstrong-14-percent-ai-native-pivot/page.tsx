@@ -77,7 +77,7 @@ export default function CoinbaseArmstrongAiNativePivotPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Brian Armstrong sent an email to all of Coinbase this morning announcing that roughly 14% of
           the company would be let go. He posted the text publicly six hours later. The market is

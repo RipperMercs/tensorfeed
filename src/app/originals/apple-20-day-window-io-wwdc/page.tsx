@@ -66,7 +66,7 @@ export default function Apple20DayWindowPage() {
         title="Apple Just Got a 20-Day Window. Between Google I/O and WWDC, It Has To Rewrite the Siri Story."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Google I/O opens on May 19. Apple WWDC opens on June 8. The math is 20 days. That gap, by
           itself, is the most valuable counterprogramming window Apple has gotten in a decade,

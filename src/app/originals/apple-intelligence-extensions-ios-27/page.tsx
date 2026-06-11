@@ -66,7 +66,7 @@ export default function AppleIntelligenceExtensionsPage() {
         title="Apple Just Opened Siri to Claude and Gemini. ChatGPT's Exclusivity Is Dead."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Bloomberg reported Tuesday that Apple is finalizing a feature for iOS 27, iPadOS 27, and
           macOS 27 that will let users pick from a range of third-party AI providers to power Apple

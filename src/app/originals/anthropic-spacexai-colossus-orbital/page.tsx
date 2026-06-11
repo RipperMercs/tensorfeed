@@ -74,7 +74,7 @@ export default function AnthropicSpacexaiColossusOrbitalPage() {
         title="Anthropic + SpaceXAI: Colossus 1 Now, Orbital Compute Next"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           SpaceXAI announced today that it signed a compute partnership with
           Anthropic providing access to Colossus 1, a supercomputer cluster

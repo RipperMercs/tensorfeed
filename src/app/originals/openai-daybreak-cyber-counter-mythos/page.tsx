@@ -64,7 +64,7 @@ export default function OpenAIDaybreakCyberCounterMythosPage() {
         title="OpenAI Just Shipped Daybreak. The Cyber Tier Is Now a Two-Horse Race."
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           OpenAI shipped Daybreak today. It is a three-tier cyber model stack (GPT-5.5, GPT-5.5
           with Trusted Access for Cyber, and GPT-5.5-Cyber), the Codex Security agentic harness,

@@ -66,7 +66,7 @@ export default function AITalentWarBillionDollarEngineersPage() {
         title="The AI Talent War's New Price Tag: $1.5 Billion Per Engineer"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           One engineer is reportedly worth $1.5 billion to Meta. Another labs CTO walked out of OpenAI
           last Friday. Venture capitalists have already poured $18.8 billion into AI startups

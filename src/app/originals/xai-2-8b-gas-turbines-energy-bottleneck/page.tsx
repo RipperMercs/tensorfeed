@@ -79,7 +79,7 @@ export default function XaiGasTurbinesPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           WIRED reported on May 20 that Elon Musk&apos;s xAI is spending $2.8 billion on gas
           turbines to power its AI data centers, with the Memphis-based Colossus supercluster as

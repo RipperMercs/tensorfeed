@@ -63,7 +63,7 @@ export default function GoogleNotebookLmGeminiPage() {
         title="Google Just Put NotebookLM Inside Gemini. Here&apos;s Why It Matters."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Google just folded NotebookLM into Gemini. That sounds like a quiet product integration. It is not. This is Google shipping what looks like the future of research assistants.
         </p>

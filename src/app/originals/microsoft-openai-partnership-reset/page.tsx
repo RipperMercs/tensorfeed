@@ -66,7 +66,7 @@ export default function MicrosoftOpenAIPartnershipResetPage() {
         title="The Microsoft and OpenAI Divorce Is Done. Both Sides Got What They Wanted."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Microsoft and OpenAI dropped a joint statement this morning announcing the most significant
           restructure of their partnership since the deal began in 2019. Exclusivity is gone. The AGI

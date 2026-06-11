@@ -64,7 +64,7 @@ export default function MCPInstallsPage() {
         title="MCP Just Hit 97 Million Installs. The Agent Era Is Here."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           When Anthropic first released the Model Context Protocol in late 2024, I thought it was
           interesting but niche. A tool-calling standard for Claude. Useful for power users, maybe.

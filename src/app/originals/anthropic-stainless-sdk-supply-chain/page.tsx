@@ -72,7 +72,7 @@ export default function AnthropicStainlessSdkSupplyChainPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On May 18, Anthropic acquired Stainless, the company whose software
           generates the official SDKs for OpenAI, Google, Cloudflare, Runway,

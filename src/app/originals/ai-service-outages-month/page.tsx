@@ -63,7 +63,7 @@ export default function AIServiceOutagesPage() {
         title="I Tracked AI Service Outages for a Month. Here's What I Found."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           TensorFeed polls the status of every major AI service every two minutes. We&apos;ve been doing
           this since launch, and the data is starting to tell a clear story. I pulled the numbers from

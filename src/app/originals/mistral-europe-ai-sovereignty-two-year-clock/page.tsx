@@ -77,7 +77,7 @@ export default function Page() {
         eyebrow="REGULATION"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed mt-8">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed mt-8">
         <p className="text-lg text-text-primary leading-relaxed">
           The Mistral CEO told Europe it has about two years to avoid
           becoming an American AI vassal state. He is right about the

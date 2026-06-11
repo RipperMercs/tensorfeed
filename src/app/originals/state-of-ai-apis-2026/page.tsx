@@ -62,7 +62,7 @@ export default function StateOfAiApisPage() {
         title="The State of AI APIs in 2026"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           If you built something on top of an AI API in early 2025, there&apos;s a good chance your
           integration looks completely different today. The past twelve months have been the most

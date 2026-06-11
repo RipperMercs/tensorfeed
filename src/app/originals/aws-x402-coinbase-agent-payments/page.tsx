@@ -77,7 +77,7 @@ export default function AwsX402CoinbaseAgentPaymentsPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Coinbase announced this afternoon that AI agents can now pay for AWS services in USDC
           through x402. Read that sentence again. The largest cloud provider on the planet just made

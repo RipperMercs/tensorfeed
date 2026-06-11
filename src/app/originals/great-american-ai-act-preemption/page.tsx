@@ -66,7 +66,7 @@ export default function GreatAmericanAIActPreemptionDraftPage() {
         title="Congress Finally Wrote the Preemption Down: Three Years, Development Only. Sacramento Keeps the Rest."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           For a year, federal preemption of state AI law has been a threat without a text. On
           Thursday it got one. Reps. Jay Obernolte (R-CA) and Lori Trahan (D-MA) released a 269-page

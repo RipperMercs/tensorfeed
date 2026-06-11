@@ -68,7 +68,7 @@ export default function GeminiIntelligenceAndroidPlatformShiftPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Google ran The Android Show: I/O Edition yesterday, six days ahead of the main I/O keynote on
           May 19. The headline I am still chewing on twenty-four hours later is not a feature on the

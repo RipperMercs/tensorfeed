@@ -75,7 +75,7 @@ export default function Page() {
         eyebrow="AGENT INFRASTRUCTURE"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           AWS shipped an MCP server. On its own that is not news. There are
           thousands of MCP servers, and AWS already had two of them. The news is

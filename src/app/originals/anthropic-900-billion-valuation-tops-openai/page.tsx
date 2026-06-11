@@ -66,7 +66,7 @@ export default function Anthropic900BillionValuationTopsOpenAIPage() {
         title="Anthropic at $900 Billion. The Valuation Just Lapped OpenAI."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Anthropic is days away from closing a $50 billion funding round at a $900 billion valuation.
           That number is not a typo, and it is not a forward projection. It is the price tag investors

@@ -77,7 +77,7 @@ export default function AnthropicDreamingManagedAgentsPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           At Code with Claude in San Francisco yesterday, Anthropic launched a feature it is calling
           &quot;dreaming&quot; as a research preview for Claude Managed Agents. Between tasks, an agent

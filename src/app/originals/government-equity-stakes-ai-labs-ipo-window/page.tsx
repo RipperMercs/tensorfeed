@@ -66,7 +66,7 @@ export default function GovernmentEquityStakesAILabsIPOWindowPage() {
         title="Trump and Sanders Now Want the Same Thing: Government Equity in the AI Labs. The Timing Is the Story."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On Friday, June 6, President Trump told reporters the US government may take direct
           equity stakes in AI companies like OpenAI, Anthropic, and xAI. &quot;You make them a

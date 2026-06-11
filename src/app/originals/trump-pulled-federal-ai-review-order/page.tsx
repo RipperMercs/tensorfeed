@@ -73,7 +73,7 @@ export default function TrumpPulledFederalAiReviewOrderPage() {
         eyebrow="REGULATION"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The Trump administration spent Thursday, May 21, getting ready to sign an executive order that
           would have given the federal government its first structured look at frontier AI models before

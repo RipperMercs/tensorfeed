@@ -64,7 +64,7 @@ export default function AIWeekApril242026Page() {
         title="This Week in AI: GPT-5.5, DeepSeek V4, and a $250 Billion Acquisition"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           This was the biggest week in AI this year. It was not even close. Three major model drops
           landed within 48 hours of each other, a quarter-trillion dollar acquisition reshaped the

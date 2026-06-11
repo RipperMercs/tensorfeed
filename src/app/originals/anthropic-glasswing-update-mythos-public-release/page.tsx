@@ -65,7 +65,7 @@ export default function AnthropicGlasswingUpdateMythosPublicReleasePage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Anthropic posted the first operational update on Project Glasswing late Monday and into
           Tuesday morning. Thirty days in, the program has flagged 23,019 potential vulnerabilities

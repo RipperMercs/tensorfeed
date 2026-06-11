@@ -73,7 +73,7 @@ export default function AIBuildoutExplainedPage() {
         title="The AI Buildout, Plain English: What Is Actually Getting Built"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The AI industry is putting steel and concrete in the ground at a pace nobody has seen
           since the dotcom buildout of physical fiber. Stargate, Hyperion, Colossus, nuclear plants

@@ -82,7 +82,7 @@ export default function AnthropicMaia200FourthChipPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The reporting is a couple of weeks old now, but the implication keeps getting bigger, so it is
           worth slowing down on. Anthropic is in early-stage talks with Microsoft to run Claude inference

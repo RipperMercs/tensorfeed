@@ -73,7 +73,7 @@ export default function X402VerifierMcpLaunchPage() {
         title="The x402 Payment Just Settled. Now What Verifies It? We Shipped the MCP."
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Four days ago AWS plugged x402 in. Stablecoin micropayments became a first-class way for an
           AI agent to buy compute from the largest cloud on the planet. The rail just got picked. The

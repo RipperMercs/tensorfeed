@@ -73,7 +73,7 @@ export default function NvidiaRtxSparkEdgeAgentsPage() {
         eyebrow="AI HARDWARE"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On Sunday, June 1, Jensen Huang stood on the Computex stage in Taipei and put NVIDIA&apos;s
           name on a laptop chip. The RTX Spark superchip pairs a 20-core Arm CPU with a Blackwell GPU

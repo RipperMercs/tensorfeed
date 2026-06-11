@@ -63,7 +63,7 @@ export default function WeChoseUsdcOnBaseForAftaPage() {
         path="/originals/we-chose-usdc-on-base-for-afta"
         title="We Could Have Built AFTA on Anything. We Chose USDC on Base."
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The{' '}
           <Link href="/whitepaper" className="text-accent-primary hover:underline">

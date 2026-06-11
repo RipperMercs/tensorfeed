@@ -62,7 +62,7 @@ export default function FifteenEndpointsPage() {
         path="/originals/15-paid-endpoints-24-hours"
         title="15 Paid AI Agent API Endpoints in 24 Hours: What Made It Possible"
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           This morning at 5 AM Pacific I had one paid AI agent endpoint live: routing
           recommendations. By 1 PM I had fifteen. Same codebase, same machine, same coffee. The

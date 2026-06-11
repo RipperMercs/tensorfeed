@@ -73,7 +73,7 @@ export default function CardNetworksBaseSettlementPage() {
         eyebrow="PAYMENT RAILS"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On June 3, Mastercard said it will start settling card transactions in regulated
           stablecoins, and it will do it across eight blockchains: Arbitrum, Base, Canton, Ethereum,

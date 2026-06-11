@@ -60,7 +60,7 @@ export default function KVOpsArticlePage() {
         path="/originals/kv-ops-budget-edge-architecture"
         title="The 100,000 KV Ops Daily Budget and What Fits in It"
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Cloudflare Workers give you 100,000 KV operations per day on the free tier. That is the
           number that quietly defines our entire architecture. A real-time AI news API,

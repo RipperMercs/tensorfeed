@@ -148,7 +148,7 @@ export default function StateOfAIAgentData2026Page() {
       </section>
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           BlockRun published the State of x402 in December 2025 and effectively claimed the agent
           commerce corner of the data. Their report counted transactions, USDC volume, buyer

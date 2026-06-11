@@ -68,7 +68,7 @@ export default function CodexBleedThreeInterventionsPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Anthropic does not bump rate limits three times in five weeks because it wants to.
           It bumps them because something on the other side of the market is forcing the move.

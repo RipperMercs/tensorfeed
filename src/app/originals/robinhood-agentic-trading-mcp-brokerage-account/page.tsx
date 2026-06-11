@@ -80,7 +80,7 @@ export default function RobinhoodAgenticTradingPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Robinhood announced two products this morning that put AI agents directly into a regulated
           U.S. brokerage account. Agentic Trading, in beta, lets a connected agent execute equities

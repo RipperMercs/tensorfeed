@@ -66,7 +66,7 @@ export default function OpenAIWorkspaceAgentsPage() {
         title="OpenAI Just Turned ChatGPT Into an Enterprise Automation Platform"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           OpenAI dropped Workspace Agents into ChatGPT Business, Enterprise, Edu, and Teachers
           plans this week. The framing was modest: a research preview, free until May 6. The

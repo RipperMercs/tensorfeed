@@ -79,7 +79,7 @@ export default function AiCapexBubbleDebateScoreboardPage() {
         eyebrow="CAPITAL"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The word &quot;bubble&quot; is now attached to AI capex on every earnings call, every cable
           panel, and every fund letter I read. What strikes me is that the people shouting it and the

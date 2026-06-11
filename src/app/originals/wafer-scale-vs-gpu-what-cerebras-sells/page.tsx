@@ -76,7 +76,7 @@ export default function Page() {
         eyebrow="INFERENCE"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The Cerebras IPO is priced, the headlines moved on, and the question
           that actually matters is back to where it always was: what is on the

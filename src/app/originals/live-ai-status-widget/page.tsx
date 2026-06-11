@@ -76,7 +76,7 @@ export default function LiveAiStatusWidgetPage() {
         title="We Made AI Status Embeddable: One Line of HTML, Live on Any Site"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Every team building on AI depends on APIs it does not control. Claude, GPT, Gemini,
           Mistral, the gateways in front of them. When one of those degrades, the blast radius is

@@ -62,7 +62,7 @@ export default function AgentsMdNewRobotsTxtPage() {
         path="/originals/agents-md-new-robots-txt"
         title="AGENTS.md Is the New robots.txt"
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Every coding agent that has touched my repos in the last three months has done the same thing: it opens the root directory, looks for a file named AGENTS.md, reads it before anything else, and then starts working. Claude Code does this. Cursor does this. Cline does this. The agent ecosystem has converged on a convention that almost nobody knows exists.
         </p>

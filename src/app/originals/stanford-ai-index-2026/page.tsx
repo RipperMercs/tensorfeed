@@ -64,7 +64,7 @@ export default function StanfordAiIndex2026Page() {
         title="Stanford&apos;s 2026 AI Index Says We Can&apos;t Keep Up. They&apos;re Right."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Stanford released the 2026 AI Index report, and the headline is damning: AI is sprinting, and we are struggling to keep up. Not just in research. In policy. In regulation. In the ability of human institutions to respond to what is actually happening in the labs.
         </p>

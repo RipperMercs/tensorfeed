@@ -82,7 +82,7 @@ export default function ResearchAgentsUseCasePage() {
         </p>
       </header>
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <h2 className="text-2xl font-semibold text-text-primary pt-2">The shape of a research agent&apos;s day</h2>
         <p>
           Most research agents have a similar loop: wake up on a schedule, figure out what is

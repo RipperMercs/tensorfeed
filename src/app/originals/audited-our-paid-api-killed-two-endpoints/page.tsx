@@ -63,7 +63,7 @@ export default function AuditedOurPaidApiPage() {
         path="/originals/audited-our-paid-api-killed-two-endpoints"
         title="I Audited Our Own Paid API. Two Endpoints Had to Die."
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The{' '}
           <Link href="/agent-fair-trade" className="text-accent-primary hover:underline">

@@ -75,7 +75,7 @@ export default function Page() {
         eyebrow="REGULATION"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Cerebras went public on May 14 at a valuation that briefly touched
           twelve figures. The market read it as a triumph. I want to flag the

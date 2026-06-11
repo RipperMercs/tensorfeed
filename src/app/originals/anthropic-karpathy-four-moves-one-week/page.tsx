@@ -72,7 +72,7 @@ export default function AnthropicKarpathyFourMovesOneWeekPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On May 19, Andrej Karpathy posted four words: have joined Anthropic.
           An OpenAI founding member, the person who taught a generation how

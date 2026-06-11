@@ -64,7 +64,7 @@ export default function GPT55OpenAIFlagshipPage() {
         title="GPT-5.5 Just Landed. OpenAI Doubled the Price and Raised the Bar."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           OpenAI shipped GPT-5.5 yesterday. It is the first fully retrained base model since GPT-4.5,
           and the benchmarks are genuinely impressive. It also costs twice as much as GPT-5.4. That is

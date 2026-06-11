@@ -60,7 +60,7 @@ export default function MCP50LineFilePage() {
         path="/originals/mcp-server-fifty-line-file"
         title="An MCP Server Is a 50-Line File. Why Every Paid API Should Ship One."
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Every conversation I have with an API team about adding a Model Context Protocol server
           starts the same way. They have heard MCP is a thing. They are not sure how much it costs

@@ -64,7 +64,7 @@ export default function OpenAIKilledSoraPage() {
         title="OpenAI Killed Sora. Here's What That Tells Us About AI Economics."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Sora is dead. OpenAI officially shut down their video generation product after less than a year
           of public availability. The numbers behind the decision are staggering: $15 million per day in

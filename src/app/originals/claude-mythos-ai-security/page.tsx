@@ -64,7 +64,7 @@ export default function ClaudeMythosAiSecurityPage() {
         title="Claude Mythos Is Rewriting the Rules of AI Security"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Cybersecurity professionals have a saying: a good defense requires you to think like an attacker. Claude Mythos does not just think like an attacker. It builds attacks that take security teams weeks to conceive, and compresses the work into hours. The implications are rewriting the conversation about AI and cybersecurity in real time.
         </p>

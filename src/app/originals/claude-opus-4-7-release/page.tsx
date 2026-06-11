@@ -65,7 +65,7 @@ export default function ClaudeOpus47ReleasePage() {
         title="Claude Opus 4.7 Just Dropped. Here's What Changed."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Anthropic shipped Claude Opus 4.7 this morning. If you blinked, you might have missed it. No keynote, no teaser video, no countdown timer. Just a blog post, an updated model card, and a new API identifier. That is how Anthropic does releases now. The story is in the spec sheet.
         </p>

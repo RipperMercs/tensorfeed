@@ -62,7 +62,7 @@ export default function UsdcOverStripePage() {
         path="/originals/why-usdc-over-stripe"
         title="Why We Picked USDC on Base Over Stripe for Agent Payments"
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Most paid APIs make their buying decision the same way. Open a Stripe account. Drop in
           the npm package. Wire up a webhook. Done in an afternoon. We considered it for about

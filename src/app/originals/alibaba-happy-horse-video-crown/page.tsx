@@ -66,7 +66,7 @@ export default function AlibabaHappyHorseVideoCrownPage() {
         title="Alibaba's Happy Horse Just Took the AI Video Crown. China Now Owns Two Frontiers."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Alibaba opened public beta for HappyHorse 1.0 this morning. If you have not been tracking
           the video Arena, here is the short version: a Chinese model from Alibaba&apos;s ATH unit is

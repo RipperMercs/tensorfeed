@@ -64,7 +64,7 @@ export default function AIAPIPricingWarPage() {
         title="The AI API Pricing War: Who's Winning in 2026?"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           A year ago, if you wanted frontier-quality AI through an API, you were paying $15 per million
           input tokens for the best models. Today, that same tier of performance costs $2 to $5. The

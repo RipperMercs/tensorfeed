@@ -66,7 +66,7 @@ export default function X402GlossaryPage() {
         </p>
       </header>
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Origin</h2>
         <p>
           x402 was developed by the Coinbase Developer Platform team and published as an open

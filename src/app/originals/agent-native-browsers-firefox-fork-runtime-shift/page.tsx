@@ -79,7 +79,7 @@ export default function AgentNativeBrowsersPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           A Firefox fork built explicitly for AI agents hit the Hacker News front page on May
           24. The project itself is one of several recent entrants in a category that has been

@@ -63,7 +63,7 @@ export default function FrontierModelForumVsChinaPage() {
         title="OpenAI, Anthropic, and Google Just Teamed Up Against Chinese AI Theft"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           For years, the big three AI companies treated each other as mortal enemies. GPT versus Claude versus Gemini. Pricing wars. Feature parity. Talent raids. Then, this week, something unprecedented happened. OpenAI, Anthropic, and Google announced they are sharing intelligence about Chinese AI companies stealing their models.
         </p>

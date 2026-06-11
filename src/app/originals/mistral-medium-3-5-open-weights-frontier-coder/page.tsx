@@ -64,7 +64,7 @@ export default function MistralMedium35OpenWeightsFrontierCoderPage() {
         title="Mistral Just Shipped a 128B Open-Weight Frontier Coder. The Numbers Make Sonnet Sweat."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Mistral Medium 3.5 went into public preview this weekend. It is a 128B dense model with a
           256K context, 77.6% on SWE-Bench Verified, and a price tag of $1.50 per million input

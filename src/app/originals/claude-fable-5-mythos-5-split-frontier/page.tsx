@@ -77,7 +77,7 @@ export default function ClaudeFable5Mythos5SplitFrontierPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Anthropic did not ship Opus 5 today. At 10:00 AM Pacific on June 9, it{' '}
           <a href="https://www.anthropic.com/news/claude-fable-5-mythos-5" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">

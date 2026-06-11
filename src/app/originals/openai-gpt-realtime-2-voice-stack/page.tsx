@@ -68,7 +68,7 @@ export default function OpenAIGPTRealtime2VoiceStackPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On Tuesday, OpenAI quietly reset the voice agent stack. Three models, one launch post,
           and a price sheet that turns most of the voice vendor middle into a margin question.

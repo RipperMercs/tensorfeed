@@ -73,7 +73,7 @@ export default function AIComputeOrbitalThesisPage() {
         title="AI Compute in Orbit: The Long-Arc Thesis"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The reason this is worth taking seriously is not that we are anywhere near building it.
           We are not. The reason is that the four constraints terrestrial AI infrastructure runs

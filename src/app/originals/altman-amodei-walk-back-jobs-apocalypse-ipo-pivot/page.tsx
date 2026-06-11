@@ -76,7 +76,7 @@ export default function AltmanAmodeiJobsApocalypseIpoPivotPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Fortune reported yesterday afternoon that Sam Altman and Dario Amodei are softening their
           public framing on AI displacing white-collar work. I read the piece on May 26, then I read

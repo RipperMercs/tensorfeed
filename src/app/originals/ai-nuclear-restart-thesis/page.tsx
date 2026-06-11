@@ -73,7 +73,7 @@ export default function AINuclearRestartThesisPage() {
         title="AI Just Reopened American Nuclear. Inside the Eighteen-Month Shift."
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           For thirty years US utility nuclear was in retreat. New plants got cancelled, old plants
           got retired, and the orthodoxy in the industry was that we were done building reactors in

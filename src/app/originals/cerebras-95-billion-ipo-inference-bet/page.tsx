@@ -76,7 +76,7 @@ export default function Page() {
         eyebrow="CAPITAL"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On May 14, 2026, a chip company that has never turned an operating
           profit opened its first day of trading at $350 a share. Cerebras

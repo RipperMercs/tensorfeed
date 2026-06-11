@@ -61,7 +61,7 @@ export default function GoogleAnthropic40BCompute() {
         path="/originals/google-anthropic-40b-compute"
         title="Google Just Committed $40 Billion to Anthropic Compute. The Stakes Just Got Real."
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Google is putting $40 billion into Anthropic for compute. Not valuation. Not equity in the
           abstract. Raw, earmarked compute capacity. That is one of the largest single infrastructure

@@ -66,7 +66,7 @@ export default function CloudflareStripeAgentProvisioningProtocolPage() {
         title="Agents Just Got the Keys to Production. The Cloudflare-Stripe Protocol Is Live."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On April 30, 2026, Cloudflare and Stripe announced something that has been quietly
           rewriting how I think about the agent stack. They co-designed an open agent

@@ -64,7 +64,7 @@ export default function PaloAltoPortkeyMcpGatewayPage() {
         title="Palo Alto Just Bought the MCP Gateway. Enterprise Security Has Entered the Agent Stack."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Palo Alto Networks announced yesterday that it intends to acquire Portkey, a 45-person AI
           gateway company that closed a $15 million Series A in February. Terms were not disclosed.

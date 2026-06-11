@@ -79,7 +79,7 @@ export default function Opus48WorkflowOrchestrationPrimitivePage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Anthropic shipped Claude Opus 4.8 this week. The benchmark numbers are good and the
           1M-context window plus the faster output mode are real quality-of-life wins, but if you

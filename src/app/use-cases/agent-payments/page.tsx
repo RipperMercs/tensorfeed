@@ -82,7 +82,7 @@ export default function AgentPaymentsUseCasePage() {
         </p>
       </header>
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Path 1: One-call purchase via the Python SDK</h2>
         <p>
           The shortest path for an agent that already has a private key for a Base wallet:

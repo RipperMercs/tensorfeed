@@ -74,7 +74,7 @@ export default function VerifiedFeedTrustLayerPage() {
         title="The Verified Feed: Cross-Source Story Corroboration for AI Agents"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Most discourse about AI safety in 2026 is focused on the wrong failure
           mode. People keep talking about hallucinations. Agents make up facts.

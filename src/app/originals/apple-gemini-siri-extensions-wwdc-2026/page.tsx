@@ -80,7 +80,7 @@ export default function AppleGeminiSiriExtensionsWWDC2026Page() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Tim Cook walked out at Apple Park this morning for his last keynote as CEO and handed the
           most interesting part of the iPhone to other people&apos;s models. The rebuilt Siri runs on a

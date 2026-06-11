@@ -82,7 +82,7 @@ export default function CodingAgentsUseCasePage() {
         </p>
       </header>
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <h2 className="text-2xl font-semibold text-text-primary pt-2">The four jobs of a coding agent</h2>
         <p>
           When a coding agent boots up to handle a task, it does some subset of these four things:

@@ -66,7 +66,7 @@ export default function SapPriorLabsEuropeFrontierLabPage() {
         title="SAP Just Bought Prior Labs. Europe Has a Frontier AI Lab Now."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           SAP signed a definitive agreement on May 4 to acquire Prior Labs, an
           18-month-old German AI startup based in Freiburg. The headline number

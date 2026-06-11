@@ -65,7 +65,7 @@ export default function OpenAIAWSBedrock24HoursPage() {
         title="OpenAI Hit AWS Bedrock in 24 Hours. The Infrastructure Was Already Built."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On April 27, Microsoft and OpenAI announced they were ending their exclusive cloud relationship.
           On April 28, OpenAI models, Codex, and a jointly built Managed Agents product went live on AWS

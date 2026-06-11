@@ -90,7 +90,7 @@ export default function AiStatusExtensionLivePage() {
         title="TensorFeed AI Status Is Now a Chrome Extension"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <div
           className="rounded-lg border border-accent-cyan/30 bg-accent-cyan/5 px-4 py-3 text-sm text-text-secondary"
           role="note"

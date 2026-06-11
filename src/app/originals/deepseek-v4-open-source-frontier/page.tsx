@@ -66,7 +66,7 @@ export default function DeepSeekV4OpenSourceFrontierPage() {
         title="DeepSeek V4 Is The First Open Source Frontier Model. Closed Labs Should Be Worried."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Yesterday afternoon, while the Western AI press was still digesting GPT-5.5, a Chinese
           quant fund&apos;s research lab quietly uploaded 1.6 trillion parameters to Hugging Face

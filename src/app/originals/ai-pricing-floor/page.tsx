@@ -63,7 +63,7 @@ export default function AiPricingFloorPage() {
         path="/originals/ai-pricing-floor"
         title="The AI Pricing Floor: How Low Can It Go?"
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Gemini 2.0 Flash costs $0.10 per million input tokens. Mistral Small costs $0.10. GPT-4o Mini costs $0.15. A year ago, the cheapest capable model on the market was around $0.50. A year before that, you were paying ten dollars for the equivalent throughput. Budget AI inference has dropped roughly 100x in two years.
         </p>

@@ -63,7 +63,7 @@ export default function PentagonBlacklistsAnthropicPage() {
         path="/originals/pentagon-blacklists-anthropic-defense-deals"
         title="The Pentagon Skipped Anthropic. Seven Other AI Companies Got the Contracts."
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Yesterday the Department of Defense signed AI infrastructure deals with seven companies
           totaling more than $200 million across classified networks. The list reads like a who&apos;s

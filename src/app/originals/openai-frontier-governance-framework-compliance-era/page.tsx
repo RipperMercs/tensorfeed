@@ -77,7 +77,7 @@ export default function OpenAIFrontierGovernanceFrameworkPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           OpenAI published its Frontier Governance Framework this week. Read the headline and it
           sounds like one more safety document in a genre that already has too many. Read the actual

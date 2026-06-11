@@ -80,7 +80,7 @@ export default function ChatGPTDreamingV3MemoryDefaultPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           On June 4, OpenAI started rolling out{' '}
           <a

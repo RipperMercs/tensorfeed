@@ -73,7 +73,7 @@ export default function FERCRulingWatchPage() {
         title="The FERC Ruling Watch: One Decision Could Reshape Every AI Nuclear Deal"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The single highest-stakes pending regulatory decision in the AI buildout is not at the
           NRC, not at the EPA, not in any state utility commission. It is at FERC, the Federal

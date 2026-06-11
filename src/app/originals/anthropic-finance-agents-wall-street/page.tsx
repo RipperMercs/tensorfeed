@@ -66,7 +66,7 @@ export default function AnthropicFinanceAgentsWallStreetPage() {
         title="Anthropic Just Shipped 10 Wall Street Agents. The Frontier Lab Is Now a Vendor."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Anthropic held an invite-only event in New York this morning and used it to do something
           frontier labs almost never do: sell finished products instead of capability promises. Ten

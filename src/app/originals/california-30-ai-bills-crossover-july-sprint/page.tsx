@@ -68,7 +68,7 @@ export default function CaliforniaAIBillsCrossoverPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Friday was the crossover deadline in the California Legislature, the procedural gate where a
           bill has to pass its first chamber or sit out the rest of the year. Nearly all of the state&apos;s

@@ -77,7 +77,7 @@ export default function Page() {
         eyebrow="CAPITAL"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed mt-8">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed mt-8">
         <p className="text-lg text-text-primary leading-relaxed">
           The two biggest AI labs in the world spent this week telling
           investors completely opposite stories. OpenAI confidentially

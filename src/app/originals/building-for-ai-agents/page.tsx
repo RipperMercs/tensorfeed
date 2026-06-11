@@ -61,7 +61,7 @@ export default function BuildingForAiAgentsPage() {
         title="Building for AI Agents: What Developers Need to Know"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           For two decades, we built software for humans. Screens, buttons, forms, navigation patterns
           optimized for eyeballs and mouse clicks. Now there&apos;s a second consumer of your

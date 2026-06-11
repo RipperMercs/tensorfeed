@@ -79,7 +79,7 @@ export default function AgentCommerceFeeFloorPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Keyrock published a market-structure note on May 19 finding that 76 percent of AI agent
           transactions on public stablecoin rails fall below the roughly 30-cent fee floor Visa

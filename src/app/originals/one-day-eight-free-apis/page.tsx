@@ -63,7 +63,7 @@ export default function OneDayEightFreeApisPage() {
         path="/originals/one-day-eight-free-apis"
         title="One Day, Eight New Free APIs: The Free-Data-First Sprint"
       />
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Today started with an audit that killed two paid endpoints. It ended with eight new
           free ones live. Somewhere in the middle the strategy crystallized: TensorFeed is going

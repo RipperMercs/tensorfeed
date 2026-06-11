@@ -77,7 +77,7 @@ export default function Page() {
         eyebrow="CAPITAL"
       />
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed mt-8">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed mt-8">
         <p className="text-lg text-text-primary leading-relaxed">
           OpenAI is wiring ChatGPT into your financial accounts through a
           Plaid connection. I understand why. It is the shortest path to

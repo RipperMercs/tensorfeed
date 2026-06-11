@@ -74,7 +74,7 @@ export default function ApiCostMonitoringUseCasePage() {
         </p>
       </header>
 
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Three jobs of cost monitoring</h2>
         <p>
           Most cost-monitoring work falls into three buckets: project future cost, react to

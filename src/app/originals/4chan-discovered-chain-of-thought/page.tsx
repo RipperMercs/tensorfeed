@@ -64,7 +64,7 @@ export default function FourchanChainOfThoughtPage() {
         title="4chan Users Discovered Chain-of-Thought Reasoning Before Google Did"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           In 2022, 4chan users were playing AI Dungeon. They gave the AI a math problem. The result was wrong. So they tried something simple: they asked it to show its work, solve the problem step-by-step, explain the reasoning as it went. The answer was right.
         </p>

@@ -73,7 +73,7 @@ export default function MicrosoftMaiModelsPage() {
         eyebrow="MODEL RELEASE"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           At Build on June 2, Microsoft rolled out seven models it built itself, spanning image,
           voice, transcription, reasoning, and coding. Two of them matter. MAI-Thinking-1 is the

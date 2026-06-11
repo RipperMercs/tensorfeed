@@ -66,7 +66,7 @@ export default function GuardActSenateJudiciaryPage() {
         title="The Senate Just Voted 22-0 to Regulate AI Chatbots. Here Is What Is Actually in the GUARD Act."
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           The Senate Judiciary Committee voted 22-0 this morning to advance the GUARD Act, the first
           serious federal AI chatbot bill to clear a Senate committee with unanimous bipartisan support.

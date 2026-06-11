@@ -63,7 +63,7 @@ export default function ClaudeCodeLeakPage() {
         title="The Claude Code Leak: What 512,000 Lines of Source Code Revealed"
       />
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Someone at Anthropic accidentally shipped a source map file with a Claude Code release. Within
           hours, developers had extracted and decompiled the entire codebase: 512,000 lines of TypeScript

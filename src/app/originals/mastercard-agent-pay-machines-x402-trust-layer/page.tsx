@@ -77,7 +77,7 @@ export default function MastercardAgentPayMachinesPage() {
       />
 
       {/* Article body */}
-      <div className="prose-custom space-y-6 text-text-secondary leading-relaxed">
+      <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
         <p className="text-lg text-text-primary leading-relaxed">
           Two things happened in agentic payments inside the same week, and together they mark the
           moment the category stopped being a demo. On June 10, Mastercard launched{' '}
