@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'coinbase-agents-x402-closed-loop',
+    title:
+      'Coinbase Put an Agent Inside ChatGPT and Claude. It Pays for Its Own Research.',
+    author: 'Ripper',
+    date: 'June 12, 2026',
+    readTime: '7 min read',
+    description:
+      "On June 11, 2026 Coinbase shipped Coinbase for Agents, an AI agent that trades spot crypto and derivatives (equities in three weeks, prediction markets in early July), pays for premium research with USDC on Base via x402, and runs inside ChatGPT and Claude Web through Coinbase's MCP server (and inside Claude Code through a CLI). Each agent runs in an isolated permissioned sub-portfolio or a sandbox. x402 just crossed about 75 million transactions and $24 million of volume in the last 30 days, an average of ~$0.32 a call, the sub-dollar unit economics no traditional rail has serviced. This is the first mass-market closed-loop agent product: the same company books fees on both the data the agent buys and the trades the agent executes. The discovery layer is still missing, the verifier story matters more not less, and the equities launch in three weeks is the regulatory test (discretionary trading through a third-party harness is a different SEC and FINRA posture than crypto). Three signposts: whether equities ships with full agent discretion, whether a non-Coinbase x402 research endpoint is reachable from Claude without an intermediary MCP server, and whether the next big brokerage MCP comes from Schwab, Robinhood, or a new entrant.",
+  },
+  {
     slug: 'openai-oracle-credits-frontier-procurement',
     title:
       'OpenAI Models Are Now an Oracle Line Item. The Frontier War Moved Into Procurement.',
