@@ -634,10 +634,25 @@ function main(): void {
   // Defensive Latin1 sweep over every item we might emit (catches em-dash regression).
   walkAndAssertLatin1(manifest.items, 'manifest.items');
 
-  const out = JSON.stringify(manifest, null, 2) + '\n';
+  // Serialize with 1-space indent, not 2. The x402-index publisher crawler (and,
+  // by reasonable assumption, external crawlers like x402scan and CDP Bazaar) cap
+  // an ingestible manifest at MAX_MANIFEST_BYTES = 1,000,000 (worker/src/x402-index/
+  // publisher-registry.ts). The content is only ~560KB minified, but 2-space
+  // pretty-printing inflated the served file past 1MB once the catalog crossed
+  // ~150 items, so our own crawler began rejecting it as manifest_too_large.
+  // 1-space indent keeps the file line-oriented (readable git diffs) while cutting
+  // it to ~830KB, comfortably under the cap. premium-x402-manifest-size.test.ts
+  // guards the byte budget so this cannot silently regress again.
+  const out = JSON.stringify(manifest, null, 1) + '\n';
   fs.writeFileSync(MANIFEST_PATH, out, 'utf-8');
+  if (out.length > 1_000_000) {
+    throw new Error(
+      `[sync-x402-manifest] Manifest is ${out.length} bytes, over the 1,000,000 crawler cap. ` +
+        `Trim per-item verbosity (output examples) or reduce split instances.`,
+    );
+  }
 
-  console.log(`[sync-x402-manifest] items: ${manifest.items.length} total, +${added} new pilots, ${refreshed} refreshed pilots, +${splitAdded} new splits, ${splitRefreshed} refreshed splits`);
+  console.log(`[sync-x402-manifest] items: ${manifest.items.length} total (${out.length} bytes), +${added} new pilots, ${refreshed} refreshed pilots, +${splitAdded} new splits, ${splitRefreshed} refreshed splits`);
 }
 
 main();

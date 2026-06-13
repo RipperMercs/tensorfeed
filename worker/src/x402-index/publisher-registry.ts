@@ -14,7 +14,11 @@ interface X402Manifest {
 }
 
 const BASE_NETWORK_TAGS = new Set(['base', 'base-mainnet', 'eip155:8453']);
-const MAX_MANIFEST_BYTES = 1_000_000;
+// The largest manifest the publisher crawler will ingest. Exported so the
+// build-time size guard (premium-x402-manifest-size.test.ts) asserts our own
+// served manifest stays under the same ceiling external crawlers are assumed to
+// share. A manifest over this is rejected as 'manifest_too_large'.
+export const MAX_MANIFEST_BYTES = 1_000_000;
 const MAX_WALLETS = 100;
 
 export function isValidPublisherDomain(domain: string): boolean {
