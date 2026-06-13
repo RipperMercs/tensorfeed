@@ -77,7 +77,11 @@ export default function TopAlertBar() {
         style={{ background: 'rgba(139,92,246,0.12)', borderColor: 'rgba(139,92,246,0.30)' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2.5 min-w-0">
+          {/* leading-4 (16px) normalizes the row line-box: the 11px label and
+              13px headline otherwise inherit a 24px line-height, leaving the
+              headline taller than the icon and label and reading as uneven.
+              16px matches the w-4 icon so all three sit on one line. */}
+          <div className="inline-flex items-center gap-2.5 min-w-0 leading-4">
             <Zap className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--accent-breaking)' }} aria-hidden="true" />
             <span
               className="font-mono flex-shrink-0"
