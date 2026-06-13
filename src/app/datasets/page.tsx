@@ -5,14 +5,14 @@ import { Database, ExternalLink, Code, Calendar, FileJson, Shield } from 'lucide
 export const metadata: Metadata = {
   title: 'TensorFeed Datasets: AI Ecosystem Daily on Hugging Face',
   description:
-    'Public daily-snapshot dataset of the AI ecosystem: news, model pricing, GPU rental prices, MCP registry, benchmarks, leaderboards, training run costs, agent infrastructure, and more. 36 JSONL feeds per day, inference-only license. Mirror of the live TensorFeed.ai API.',
+    'Public daily-snapshot dataset of the AI ecosystem: news, model pricing, GPU rental prices, MCP registry, benchmarks, leaderboards, training run costs, agent infrastructure, and more. 46 JSONL feeds per day, inference-only license. Mirror of the live TensorFeed.ai API.',
   alternates: { canonical: 'https://tensorfeed.ai/datasets' },
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/datasets',
     title: 'TensorFeed Datasets: AI Ecosystem Daily on Hugging Face',
     description:
-      'Daily JSONL snapshots of the AI ecosystem on Hugging Face. 44 feeds, inference-only license, mirror of the live TensorFeed API.',
+      'Daily JSONL snapshots of the AI ecosystem on Hugging Face. 46 feeds, inference-only license, mirror of the live TensorFeed API.',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TensorFeed AI Ecosystem Daily',
     description:
-      'Daily JSONL snapshots of the AI ecosystem on Hugging Face. 44 feeds, inference-only license.',
+      'Daily JSONL snapshots of the AI ecosystem on Hugging Face. 46 feeds, inference-only license.',
   },
   keywords: [
     'AI dataset',

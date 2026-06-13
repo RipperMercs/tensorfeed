@@ -49,7 +49,7 @@ describe('handleMcpHttpRequest GET', () => {
     expect(body.tools_count).toBe(MCP_TOOLS_COUNT);
     expect(typeof body.full_tool_set).toBe('string');
     expect(body.full_tool_set).toContain('@tensorfeed/mcp-server');
-    expect(body.full_tool_set).toContain('61');
+    expect(body.full_tool_set).toContain('24');
   });
 });
 

@@ -37,7 +37,7 @@ const FAQ_JSONLD = {
     {
       '@type': 'Question',
       name: 'How do I add the TensorFeed MCP server to Claude Desktop?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Add this to your Claude Desktop config (`%APPDATA%\\Claude\\claude_desktop_config.json` on Windows, `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS): { "mcpServers": { "tensorfeed": { "command": "npx", "args": ["-y", "@tensorfeed/mcp-server"], "env": { "TENSORFEED_TOKEN": "tf_live_..." } } } }. The TENSORFEED_TOKEN is optional; without it the 37 free tools work, with it the 24 premium tools unlock.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'Add this to your Claude Desktop config (`%APPDATA%\\Claude\\claude_desktop_config.json` on Windows, `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS): { "mcpServers": { "tensorfeed": { "command": "npx", "args": ["-y", "@tensorfeed/mcp-server"], "env": { "TENSORFEED_TOKEN": "tf_live_..." } } } }. The TENSORFEED_TOKEN is optional; without it the free preview tiers work, with it the paid full results unlock.' },
     },
   ],
 };
@@ -105,10 +105,10 @@ export default function MCPGlossaryPage() {
         <h2 className="text-2xl font-semibold text-text-primary pt-2">TensorFeed&apos;s MCP server</h2>
         <p>
           TensorFeed publishes <code className="text-accent-primary font-mono">@tensorfeed/mcp-server</code>{' '}
-          with 61 tools (37 free, 24 premium). Free tools cover real-time AI news, service status,
-          model pricing, benchmarks, a today summary, and more. Premium tools cover routing
-          recommendations, news search, history series, cost projection, forecasting, provider
-          deep-dive, model comparison, the agent morning brief, and webhook watch management.
+          with 24 tools, each offering free preview tiers plus paid full results. Free preview tiers
+          cover real-time AI news, service status, model pricing, benchmarks, and more. The paid
+          full results add routing recommendations, history series, provider deep-dive, model
+          comparison, the agent morning brief, and webhook watch management.
         </p>
 
         <pre className="bg-bg-secondary border border-border rounded-lg p-4 text-sm overflow-x-auto"><code className="text-text-primary font-mono">{`{

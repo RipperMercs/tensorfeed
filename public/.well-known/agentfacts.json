@@ -31,14 +31,14 @@
   "skills": [
     {
       "id": "ai-news",
-      "description": "Aggregated AI industry news plus a cross-source corroborated verified feed. GET https://tensorfeed.ai/api/news and https://tensorfeed.ai/api/verified-feed",
+      "description": "Aggregated AI industry news. GET https://tensorfeed.ai/api/news. A cross-source corroborated verified history is available as a paid x402-priced feed at https://tensorfeed.ai/api/premium/history/news/verified",
       "inputModes": ["text"],
       "outputModes": ["text"],
       "supportedLanguages": ["en"]
     },
     {
       "id": "model-pricing",
-      "description": "Current model API pricing and GPU rental pricing across providers. GET https://tensorfeed.ai/api/pricing and https://tensorfeed.ai/api/gpu-pricing",
+      "description": "Current model API pricing and GPU rental pricing across providers. GET https://tensorfeed.ai/api/pricing and https://tensorfeed.ai/api/gpu/pricing",
       "inputModes": ["text"],
       "outputModes": ["text"],
       "supportedLanguages": ["en"]

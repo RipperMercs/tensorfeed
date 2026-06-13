@@ -4605,7 +4605,7 @@ export default {
           premiumModelMigrationVerdict: '/api/premium/model-migration-verdict?model=&deadline= (1 credit, AFTA-signed; MIGRATE_NOW/MIGRATE_SOON/NO_ACTION for one depended-on model: the recommended successor with cost delta, capability (TFII) delta, and days until sunset. Optional deadline=YYYY-MM-DD. No-charge when the model is in no TF source.)',
           agentsDirectory: '/api/agents/directory',
           agentsOpportunities: '/api/agents/opportunities (free; daily-refreshed scan of new GitHub repos that represent submission/distribution opportunities for TF: anthropics/openai/microsoft/modelcontextprotocol orgs + MCP/x402/skills keyword sweeps. Scored by signal_weight * recency + log10(stars). 13:30 UTC cron)',
-          agentsReputationByWallet: '/api/agents/reputation/{wallet} (free; v0 Agent Reputation Bureau. Returns a ReputationCard with metrics, ranks, trust grade, flags, and operator-claim status. Cards rebuilt daily at 04:50 UTC from TF telemetry. 404 on unknown wallet. Premium time series at /api/premium/agents/reputation/series.)',
+          agentsReputationByWallet: '/api/agents/reputation/{wallet} (free; v0 Agent Reputation Bureau. Returns a ReputationCard with metrics, ranks, trust grade, flags, and operator-claim status. Cards rebuilt daily at 04:50 UTC from TF telemetry. 404 on unknown wallet.)',
           agentsReputationByToken: '/api/agents/reputation/by-token/{prefix} (free; same shape as the by-wallet card, indexed by tf_live_ token prefix for agents who have not signed an operator claim yet)',
           agentsLeaderboard: '/api/agents/leaderboard?metric=reliability|spend|activity|streak|composite&window=24h|7d|30d|all&limit=1-25 (free, cohort capped at 25; full cohort on /api/premium/agents/leaderboard/full at 1 credit)',
           agentsBans: '/api/agents/bans (free; transparency list of every banned wallet or token-prefix with reason + evidence_url; auto-bans for Chainalysis OFAC hits)',
@@ -4678,7 +4678,7 @@ export default {
           climatePowerParameters: '/api/climate/power/parameters (free; curated NASA POWER parameter catalog with units and longnames)',
           climateEarthquakes: '/api/climate/earthquakes?magnitude=significant|4.5|2.5|1.0|all&period=hour|day|week|month&limit=1-500 (free; USGS Earthquake Hazards Program pre-built summary feeds. License: US Gov public domain. Returns flattened earthquake list with id, magnitude, place, time, depth, lat/lon, tsunami flag, USGS detail URL. Cache TTL scales with feed window)',
           climateWeatherAlerts: '/api/climate/weather-alerts?area=US-state-code&event=NWS-event-name&severity=Extreme|Severe|Moderate|Minor|Unknown&urgency=Immediate|Expected|Future|Past|Unknown&status=actual|exercise|system|test|draft&limit=1-500 (free; NWS Active Weather Alerts. US-only coverage. License: US Gov public domain. Returns flattened alerts list with id, event, severity, urgency, headline, description, areaDesc, sent/effective/expires/ends, sender_name, web URL. 60s cache TTL since active-alert state changes minute by minute)',
-          mcpHttp: '/api/mcp (free; hosted MCP Streamable HTTP transport, JSON-RPC 2.0 over POST. Compatible with Anthropic Claude Code, vertical agent repos, claude.ai connectors, and other MCP-compliant clients. GET returns discovery info; POST expects JSON-RPC envelope. Serves a curated subset of 32 tools (news, status, models, MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR search + submissions + ticker lookup, openFDA, EIA series, USGS earthquakes, NWS weather alerts, AI papers, agent-ecosystem opportunities, and the signed route_verdict premium tool); the full 61-tool set ships on the npx stdio server @tensorfeed/mcp-server)',
+          mcpHttp: '/api/mcp (free; hosted MCP Streamable HTTP transport, JSON-RPC 2.0 over POST. Compatible with Anthropic Claude Code, vertical agent repos, claude.ai connectors, and other MCP-compliant clients. GET returns discovery info; POST expects JSON-RPC envelope. Serves a curated subset of 32 tools (news, status, models, MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR search + submissions + ticker lookup, openFDA, EIA series, USGS earthquakes, NWS weather alerts, AI papers, agent-ecosystem opportunities, and the signed route_verdict premium tool); the full 24-tool set ships on the npx stdio server @tensorfeed/mcp-server)',
           healthFDADrugEvents: '/api/health/fda/drug/events?search=&limit=1-100&skip=&sort= (free; FDA Adverse Event Reporting System (FAERS), 10M+ records. License: CC0)',
           healthFDADrugLabels: '/api/health/fda/drug/labels?search=&limit=1-100&skip=&sort= (free; structured drug labels in SPL format)',
           healthFDADrugRecalls: '/api/health/fda/drug/recalls?search=&limit=1-100&skip=&sort= (free; FDA drug enforcement reports / recalls)',
@@ -9965,7 +9965,7 @@ export default {
     // so it's part of the data moat behind the free endpoint.
 
     if (path === '/api/premium/status/leaderboard') {
-      // Strict-premium tier 3 ($0.06): heavy cross-provider aggregation,
+      // Strict-premium tier 3 ($0.10): heavy cross-provider aggregation,
       // incident_count + MTTR computed per provider.
       const payment = await requirePayment(request, env, 3);
       if (!payment.paid) return payment.response!;
@@ -10175,7 +10175,7 @@ export default {
     // history per LLM provider. 90-day max range, default 30 days back.
 
     if (path === '/api/premium/probe/series') {
-      // Strict-premium tier 3 ($0.06): TF-measured latency series unique
+      // Strict-premium tier 3 ($0.10): TF-measured latency series unique
       // to TF (we record it ourselves), 90-day window.
       const payment = await requirePayment(request, env, 3);
       if (!payment.paid) return payment.response!;
@@ -10297,7 +10297,7 @@ export default {
     // pairs (investors that both hold stakes in the same recipient).
 
     if (path === '/api/premium/funding/exposure') {
-      // Strict-premium tier 3 ($0.06): derived metrics over the free
+      // Strict-premium tier 3 ($0.10): derived metrics over the free
       // funding/portfolio registry. Silicon-concentration + circular-
       // exposure + co-investor pairs computed server-side.
       return handlePremium(request, env, ctx, { tier: 3, endpoint: '/api/premium/funding/exposure' }, async () => {
@@ -13370,7 +13370,7 @@ export default {
     // (npm's downloads endpoint only returns last_week per call).
 
     if (path === '/api/premium/packages/pypi/momentum') {
-      // Strict-premium tier 3 ($0.06): rolling npm/PyPI momentum metrics
+      // Strict-premium tier 3 ($0.10): rolling npm/PyPI momentum metrics
       // over the trending snapshot, computed server-side.
       const payment = await requirePayment(request, env, 3);
       if (!payment.paid) return payment.response!;
@@ -13724,7 +13724,7 @@ export default {
       return await premiumResponse(result, payment, 1, request, env, null, result.data_freshness?.pricing ?? null);
     }
 
-    // === PAID PREMIUM: PROVIDER DEEP-DIVE (Tier 3, 3 credits = $0.06) ===
+    // === PAID PREMIUM: PROVIDER DEEP-DIVE (Tier 3, 5 credits = $0.10) ===
     // /api/premium/providers/{name} returns one paid response that
     // joins live status, all models with pricing + tier, all benchmark
     // scores, recent news, and agent traffic. Aggregation IS the value;

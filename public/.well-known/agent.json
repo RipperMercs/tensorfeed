@@ -19,15 +19,15 @@
   "skills": [
     {
       "id": "ai-news",
-      "name": "AI news and verified feed",
-      "description": "Aggregated AI industry news and a cross-source corroborated verified feed. GET https://tensorfeed.ai/api/news and https://tensorfeed.ai/api/verified-feed",
+      "name": "AI news feed",
+      "description": "Aggregated AI industry news. GET https://tensorfeed.ai/api/news. A cross-source corroborated verified history is available as a paid x402-priced feed at https://tensorfeed.ai/api/premium/history/news/verified",
       "tags": ["news", "ai", "industry"],
       "examples": ["What AI news broke in the last 24 hours?"]
     },
     {
       "id": "model-pricing",
       "name": "Model and GPU pricing",
-      "description": "Current model API pricing and GPU rental pricing across providers. GET https://tensorfeed.ai/api/pricing and https://tensorfeed.ai/api/gpu-pricing",
+      "description": "Current model API pricing and GPU rental pricing across providers. GET https://tensorfeed.ai/api/pricing and https://tensorfeed.ai/api/gpu/pricing",
       "tags": ["pricing", "models", "gpu"],
       "examples": ["Compare the cheapest provider for a given model."]
     },

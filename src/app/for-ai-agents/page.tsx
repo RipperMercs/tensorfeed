@@ -11,7 +11,7 @@ const PREMIUM_MIN_CREDITS = premiumCatalog.credit_range.min;
 export const metadata: Metadata = {
   title: 'TensorFeed for AI Agents: Discovery, MCP, x402 Payments, SDKs',
   description:
-    'TensorFeed.ai is built for AI agents. Free discovery via llms.txt, MCP server with 61 tools, x402 V2 discovery manifest at /.well-known/x402, Python and TypeScript SDKs, pay-per-call premium tier in USDC on Base. Everything an autonomous agent needs to consume real-time AI industry data.',
+    'TensorFeed.ai is built for AI agents. Free discovery via llms.txt, MCP server with 24 tools, x402 V2 discovery manifest at /.well-known/x402, Python and TypeScript SDKs, pay-per-call premium tier in USDC on Base. Everything an autonomous agent needs to consume real-time AI industry data.',
   alternates: { canonical: 'https://tensorfeed.ai/for-ai-agents' },
   openGraph: {
     type: 'website',
@@ -60,7 +60,7 @@ const FAQ_JSONLD = {
       name: 'What can AI agents do for free on TensorFeed?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Five free tools through the MCP server (get_ai_news, get_ai_status, is_service_down, get_model_pricing, get_ai_today) and the equivalent free REST endpoints under /api/news, /api/status, /api/models, /api/benchmarks, and /api/history. No auth required, no rate limit on the REST side, and an explicit invitation to AI crawlers in robots.txt.',
+        text: 'Free preview tiers through the MCP server (get_ai_news, get_ai_status, is_service_down, get_model_pricing, and more) and the equivalent free REST endpoints under /api/news, /api/status, /api/models, /api/benchmarks, and /api/history. No auth required, no rate limit on the REST side, and an explicit invitation to AI crawlers in robots.txt.',
       },
     },
     {
@@ -84,7 +84,7 @@ const FAQ_JSONLD = {
       name: 'Is TensorFeed compatible with Claude Desktop and Claude Code?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. The @tensorfeed/mcp-server npm package exposes all 61 tools (37 free, 24 premium) through the Model Context Protocol. Add it to your Claude Desktop config with `npx -y @tensorfeed/mcp-server`. Pass your tf_live_ bearer token via the TENSORFEED_TOKEN env var to enable premium tools.',
+        text: 'Yes. The @tensorfeed/mcp-server npm package exposes all 24 tools through the Model Context Protocol, free preview tiers plus paid full results. Add it to your Claude Desktop config with `npx -y @tensorfeed/mcp-server`. Pass your tf_live_ bearer token via the TENSORFEED_TOKEN env var to enable the paid full results.',
       },
     },
     {
@@ -239,7 +239,7 @@ export default function ForAIAgentsPage() {
           <DiscoveryCard
             href="https://huggingface.co/datasets/tensorfeed/ai-ecosystem-daily"
             title="HF: tensorfeed/ai-ecosystem-daily"
-            description="Daily-snapshot mirror of the entire public API on Hugging Face. 13 JSONL files per day, one commit at 08:00 UTC, inference-only license. Load with the standard datasets library."
+            description="Daily-snapshot mirror of the entire public API on Hugging Face. One JSONL file per feed (46 feeds), one commit at 08:00 UTC, inference-only license. Load with the standard datasets library."
             external
           />
           <DiscoveryCard
@@ -255,7 +255,7 @@ export default function ForAIAgentsPage() {
           <DiscoveryCard
             href="https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
             title="server.json (MCP registry)"
-            description="MCP server manifest. Registered in the official MCP registry as ai.tensorfeed/mcp-server. Includes all 61 tools split into freeTools and premiumTools."
+            description="MCP server manifest. Registered in the official MCP registry as ai.tensorfeed/mcp-server. Includes all 24 tools, each with free preview tiers plus paid full results."
             external
           />
         </div>
@@ -282,10 +282,10 @@ export default function ForAIAgentsPage() {
 }`}</code></pre>
         <p className="text-text-muted text-sm mt-3">
           The <code className="text-accent-primary font-mono">TENSORFEED_TOKEN</code> env var is
-          optional. Without it, the 37 free tools (<code>get_ai_news</code>,
+          optional. Without it, the free preview tiers (<code>get_ai_news</code>,
           {' '}<code>get_ai_status</code>, <code>is_service_down</code>,
-          {' '}<code>get_model_pricing</code>, <code>get_ai_today</code>, and more) work. With it, the 24
-          premium tools unlock.
+          {' '}<code>get_model_pricing</code>, and more) work. With it, the paid full results
+          across all 24 tools unlock.
         </p>
       </section>
 

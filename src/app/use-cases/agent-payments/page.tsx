@@ -160,10 +160,10 @@ curl https://tensorfeed.ai/api/premium/routing?task=code \\
   }
 }`}</code></pre>
         <p>
-          61 tools become available to the model: 37 free (news, status, pricing, etc.) and 24
-          premium (routing, news search, history series, cost projection, forecasting,
-          provider deep-dive, model comparison, webhook watches, etc.). The model decides which
-          tools to call; you pay 1 credit per premium tool invocation.
+          24 tools become available to the model, each with free preview tiers plus paid full
+          results: news, status, pricing on the free side, then routing, history series,
+          provider deep-dive, model comparison, and webhook watches once a token is set. The
+          model decides which tools to call; you pay 1 credit per paid full-result invocation.
         </p>
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Cross-site bundle</h2>
