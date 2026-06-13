@@ -159,6 +159,17 @@ const PILOT_PATHS = [
   '/api/premium/ai-capex-cycle-verdict',
   // Wave 41 (2026-06-09): eu-ai-act designation history (daily NANDO / SMCS register diff)
   '/api/premium/eu-ai-act/notified-bodies/history',
+  // Wave 42 (2026-06-12): storefront-coverage backfill (nine payable endpoints
+  // that were absent from the static x402.json storefront)
+  '/api/premium/model-intelligence',
+  '/api/premium/model-intelligence/history',
+  '/api/premium/substrate-changelog/history',
+  '/api/premium/export-controls/ai/history',
+  '/api/premium/federal-ai-policy',
+  '/api/premium/funding/federal/momentum',
+  '/api/premium/procurement/ai-contracts/demand',
+  '/api/premium/procurement/ai-opportunities/deadlines',
+  '/api/premium/ai-datacenters/buildout',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

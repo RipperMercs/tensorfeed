@@ -6806,6 +6806,467 @@ const HF_LEADERBOARD_MOVERS_PILOT: BazaarPilotConfig = {
   },
 };
 
+// ── Wave 42 (2026-06-12): storefront-coverage backfill ─────────────
+//
+// Nine payable strict-premium endpoints shipped without their Bazaar
+// pilot registration, so they served valid 402s but never appeared on
+// the static x402.json storefront that agentic.market / CDP / x402scan
+// crawl. A readiness check ahead of Coinbase-for-Agents retail-wallet
+// spend surfaced the gap. These configs close it; the new
+// premium-catalog-bazaar-coverage.test.ts keeps catalog and manifest in
+// lockstep so it cannot drift silently again.
+
+const MODEL_INTELLIGENCE_PILOT: BazaarPilotConfig = {
+  description:
+    'Full per-model TensorFeed Intelligence Index (TFII) breakdown over the latest daily snapshot: the headline composite score, per-task subscores (code, reasoning, knowledge, instruction following), and the trust block that flags benchmark saturation and contamination. One paid call scores every tracked model; pass model to narrow to one. The free sibling returns the ranked list without the subscore and trust detail.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { model: 'claude-opus-4-7' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            as_of: '2026-06-12T07:00:00Z',
+            methodology_version: '1.0',
+            methodology_url: 'https://tensorfeed.ai/intelligence',
+            count: 18,
+            models: [
+              {
+                model_id: 'claude-opus-4-7',
+                name: 'Claude Opus 4.7',
+                provider: 'anthropic',
+                tfii: 87.4,
+                rank: 1,
+                subscores: { code: 91.2, reasoning: 88.0, knowledge: 84.6, instruction_following: 89.1 },
+                trust: { saturation_flag: false, contamination_flag: false, sample_size: 14 },
+              },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  model: {
+                    type: 'string',
+                    description: 'Optional model id to narrow the breakdown to one model. Omit for every tracked model.',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const MODEL_INTELLIGENCE_HISTORY_PILOT: BazaarPilotConfig = {
+  description:
+    'A single model TFII time series across the dated daily snapshots in a requested window. One paid call returns the headline score and rank for each captured date so an agent can chart how a model standing moved over time. Requires model; from and to bound the window.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { model: 'claude-opus-4-7', from: '2026-05-01', to: '2026-06-01' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            model_id: 'claude-opus-4-7',
+            from: '2026-05-01',
+            to: '2026-06-01',
+            points: 2,
+            series: [
+              { date: '2026-05-01', tfii: 86.1, rank: 1 },
+              { date: '2026-06-01', tfii: 87.4, rank: 1 },
+            ],
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  model: { type: 'string', description: 'Required model id to chart.' },
+                  from: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Window start, inclusive UTC date (YYYY-MM-DD).' },
+                  to: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Window end, inclusive UTC date (YYYY-MM-DD).' },
+                },
+                required: ['model'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const SUBSTRATE_CHANGELOG_HISTORY_PILOT: BazaarPilotConfig = {
+  description:
+    'The full forward-only changelog of the AI substrate across a date range: model lifecycle events (added, removed, repriced, deprecated), agent-protocol spec version bumps (MCP, x402, A2A), and agent-framework releases, each timestamped on the day TensorFeed observed it. Filterable by event_type. The audit trail behind the recent-changes feed. Requires from and to.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-05-01', to: '2026-06-01', event_type: 'model_added' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            from: '2026-05-01',
+            to: '2026-06-01',
+            count: 1,
+            events: [
+              {
+                id: 'evt-2026-05-14-model-added-sonnet-4-7',
+                type: 'model_added',
+                at: '2026-05-14T08:00:00Z',
+                subject: 'Sonnet 4.7',
+                provider: 'anthropic',
+                detail: 'New model added to the catalog at 3 USD / 15 USD per 1M tokens.',
+                version: null,
+                source_url: 'https://tensorfeed.ai/models',
+              },
+            ],
+            attribution:
+              'TensorFeed substrate changelog derived from its model catalog, deprecation registry, and the public MCP, x402, and A2A spec repositories',
+            license: 'CC BY 4.0',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Range start, inclusive UTC date (YYYY-MM-DD).' },
+                  to: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Range end, inclusive UTC date (YYYY-MM-DD).' },
+                  event_type: {
+                    type: 'string',
+                    description: 'Optional filter to one event type (for example model_added, model_removed, model_repriced, model_deprecated, spec_version, framework_release).',
+                  },
+                },
+                required: ['from', 'to'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const EXPORT_CONTROLS_AI_HISTORY_PILOT: BazaarPilotConfig = {
+  description:
+    'The filterable history of US BIS AI and advanced-computing export-control actions: Entity List changes, advanced-computing license and threshold rules, and due-diligence measures, classified from the Federal Register and bucketed by category. One paid call returns the full action set across a date range. This is a restatement of public rule notices, not a restricted-party screen.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { from: '2026-01-01', to: '2026-06-01', category: 'entity-list' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-12T18:00:00Z',
+            from: '2026-01-01',
+            to: '2026-06-01',
+            total: 67,
+            by_category: { 'entity-list': 21, 'license-policy': 14, 'due-diligence': 9, 'model-weights': 4, other: 19 },
+            recent: [
+              {
+                id: 'fr-2026-09876',
+                title: 'Additions to the Entity List',
+                doc_type: 'rule',
+                category: 'entity-list',
+                abstract: 'BIS adds named entities determined to be acting contrary to US national security interests.',
+                publication_date: '2026-05-22',
+                source_url: 'https://www.federalregister.gov/documents/2026/05/22/2026-09876',
+                agency: 'Bureau of Industry and Security',
+              },
+            ],
+            source: 'US Federal Register (federalregister.gov), public domain. TensorFeed editorial classification.',
+            license: 'Public domain (US Government work). TensorFeed editorial classification and aggregation.',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  from: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Optional range start, inclusive UTC date (YYYY-MM-DD).' },
+                  to: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Optional range end, inclusive UTC date (YYYY-MM-DD).' },
+                  category: {
+                    type: 'string',
+                    description: 'Optional category filter (entity-list, license-policy, due-diligence, model-weights, other).',
+                  },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const FEDERAL_AI_POLICY_PILOT: BazaarPilotConfig = {
+  description:
+    'Every AI-related US Federal Register action (rules, proposed rules, notices, presidential documents) joined with AI-named federal bills from GovInfo, with agency and document-type rollups. The executive and legislative AI-policy layers in one signed read. Coverage is a verifiable precision floor: a document that regulates AI without naming it in its title is not counted.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-12T01:00:00Z',
+            window_days: 120,
+            total_documents: 3,
+            unique_agencies: 3,
+            by_agency: { 'Office of Science and Technology Policy': 1, 'Department of Commerce': 1, 'Federal Trade Commission': 1 },
+            by_type: { 'presidential-document': 1, rule: 1, notice: 1 },
+            recent_documents: [
+              {
+                id: 'fr-2026-10123',
+                title: 'Executive Order on Trustworthy Artificial Intelligence',
+                doc_type: 'presidential-document',
+                agency: 'Executive Office of the President',
+                publication_date: '2026-05-30',
+                source_url: 'https://www.federalregister.gov/documents/2026/05/30/2026-10123',
+              },
+            ],
+            bills_enabled: true,
+            total_bills: 4,
+            recent_bills: [
+              { bill_id: 'hr-5544-119', title: 'Artificial Intelligence Accountability Act', introduced_date: '2026-05-12', source_url: 'https://www.govinfo.gov/app/details/BILLS-119hr5544ih' },
+            ],
+            source: 'Federal Register API plus GovInfo BILLS search (US Government works, public domain).',
+            license: 'Public domain (US Government works). TensorFeed editorial aggregation and derivation.',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const FUNDING_FEDERAL_MOMENTUM_PILOT: BazaarPilotConfig = {
+  description:
+    'A signed leadership and concentration ruling over the federal AI-spending snapshot: which vendor in the bellwether cohort leads on award value, the top-two combined share, and the concentration read, with the underlying per-vendor totals. The verdict an agent reads instead of recomputing shares from raw USAspending award records.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-12T14:00:00Z',
+            window_days: 365,
+            cohort_size: 8,
+            leader: { vendor: 'Example AI Corp', total_usd: 412000000, awards: 37, share_pct: 0.34 },
+            top2_share_pct: 0.58,
+            hhi: 0.21,
+            concentration: 'moderately concentrated',
+            vendors: [
+              { vendor: 'Example AI Corp', total_usd: 412000000, awards: 37, share_pct: 0.34 },
+            ],
+            source: 'USAspending.gov (US federal contract and grant awards, public domain under the DATA Act).',
+            license: 'Public domain (US Government work). TensorFeed editorial aggregation and derivation.',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const PROCUREMENT_AI_CONTRACTS_DEMAND_PILOT: BazaarPilotConfig = {
+  description:
+    'A signed read on federal AI procurement demand: agency concentration (top-agency share and HHI), emerging contractors winning AI work beyond the known vendor cohort, and the top buying agencies, derived from a keyword search of USAspending award descriptions. Coverage is a verifiable floor: it misses awards whose description does not name AI.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-12T16:00:00Z',
+            window_days: 180,
+            agency_concentration: { top_agency: 'Department of Defense', top_agency_share_pct: 0.41, hhi: 0.27 },
+            emerging_contractors: [
+              { recipient: 'New Entrant Labs LLC', total_usd: 9400000, awards: 3, first_seen: '2026-04-02' },
+            ],
+            top_agencies: [
+              { agency: 'Department of Defense', total_usd: 188000000, awards: 52 },
+            ],
+            source: 'USAspending.gov (US federal contract awards, public domain under the DATA Act).',
+            license: 'Public domain (US Government work). TensorFeed editorial aggregation and derivation.',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const PROCUREMENT_AI_OPPORTUNITIES_DEADLINES_PILOT: BazaarPilotConfig = {
+  description:
+    'The full ranked pipeline of open federal AI contract opportunities from SAM.gov, sorted by response deadline. Each carries days remaining, set-aside type, the buying agency, and the direct solicitation link, so an agent watching for bid windows gets the actionable list in one call rather than paging the raw API.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-12T01:00:00Z',
+            total_open: 10,
+            opportunities: [
+              {
+                notice_id: 'abc123def456',
+                title: 'Machine Learning Model Evaluation Services',
+                agency: 'General Services Administration',
+                set_aside: 'Total Small Business Set-Aside',
+                response_deadline: '2026-06-20',
+                days_remaining: 8,
+                solicitation_url: 'https://sam.gov/opp/abc123def456/view',
+              },
+            ],
+            source: 'SAM.gov Get Opportunities API (US federal contract opportunities, public domain).',
+            license: 'Public domain (US Government work). TensorFeed editorial aggregation and derivation.',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
+const AI_DATACENTERS_BUILDOUT_PILOT: BazaarPilotConfig = {
+  description:
+    'The aggregate of the AI datacenter buildout: disclosed power (MW) and capex totals rolled up by operator, region, and status, plus the forward commissioning calendar of sites coming online. One paid call turns the per-site dataset into the supply-side picture an agent needs for capacity and concentration analysis.',
+  extension: {
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: {} },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            captured_at: '2026-06-04T00:00:00Z',
+            totals: { power_mw: 18400, capex_usd_b: 214.6, site_count: 23 },
+            by_operator: [
+              { operator: 'Example Hyperscaler', power_mw: 5200, capex_usd_b: 61.0, site_count: 6 },
+            ],
+            by_region: [
+              { region: 'US Midwest', power_mw: 4100, site_count: 5 },
+            ],
+            by_status: { operational: 9, construction: 8, announced: 6 },
+            commissioning_calendar: [
+              { project_name: 'Example Campus Phase 2', operator: 'Example Hyperscaler', first_power: '2026-09', power_mw: 900 },
+            ],
+            source: 'tensorfeed.ai',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: flatGetSchema(),
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -6977,6 +7438,19 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // register diff; the Commission publishes no designation time series. Free
   // sibling at /api/eu-ai-act/notified-bodies.
   '/api/premium/eu-ai-act/notified-bodies/history': EU_AI_ACT_NB_HISTORY_PILOT,
+  // Wave 42 (2026-06-12): storefront-coverage backfill. Nine payable endpoints
+  // that served valid 402s but were never registered as pilots, so they were
+  // absent from the static x402.json storefront. See the Wave 42 block above
+  // and premium-catalog-bazaar-coverage.test.ts.
+  '/api/premium/model-intelligence': MODEL_INTELLIGENCE_PILOT,
+  '/api/premium/model-intelligence/history': MODEL_INTELLIGENCE_HISTORY_PILOT,
+  '/api/premium/substrate-changelog/history': SUBSTRATE_CHANGELOG_HISTORY_PILOT,
+  '/api/premium/export-controls/ai/history': EXPORT_CONTROLS_AI_HISTORY_PILOT,
+  '/api/premium/federal-ai-policy': FEDERAL_AI_POLICY_PILOT,
+  '/api/premium/funding/federal/momentum': FUNDING_FEDERAL_MOMENTUM_PILOT,
+  '/api/premium/procurement/ai-contracts/demand': PROCUREMENT_AI_CONTRACTS_DEMAND_PILOT,
+  '/api/premium/procurement/ai-opportunities/deadlines': PROCUREMENT_AI_OPPORTUNITIES_DEADLINES_PILOT,
+  '/api/premium/ai-datacenters/buildout': AI_DATACENTERS_BUILDOUT_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

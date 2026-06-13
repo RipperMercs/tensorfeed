@@ -157,6 +157,16 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   '/api/premium/x402-publisher-verdict':             { name: 'x402 publisher verdict',                category: 'x402-publisher-verdict',  credits: 1, method: 'GET' },
   '/api/premium/ai-capex-cycle-verdict':             { name: 'AI Capex Cycle Verdict',                category: 'ai-capex-cycle-verdict',  credits: 1, method: 'GET' },
   '/api/premium/eu-ai-act/notified-bodies/history':  { name: 'EU AI Act designation history',         category: 'eu-ai-act-notified-bodies', credits: 1, method: 'GET' },
+  // Wave 42 (2026-06-12): storefront-coverage backfill.
+  '/api/premium/model-intelligence':                 { name: 'Model intelligence index (TFII)',       category: 'ai-model-intelligence',   credits: 1, method: 'GET' },
+  '/api/premium/model-intelligence/history':         { name: 'Model intelligence history',            category: 'ai-model-intelligence-history', credits: 1, method: 'GET' },
+  '/api/premium/substrate-changelog/history':        { name: 'Substrate changelog history',           category: 'ai-substrate-changelog',  credits: 1, method: 'GET' },
+  '/api/premium/export-controls/ai/history':         { name: 'AI export-control action history',      category: 'ai-export-controls',      credits: 1, method: 'GET' },
+  '/api/premium/federal-ai-policy':                  { name: 'Federal AI policy actions',             category: 'ai-federal-policy',       credits: 1, method: 'GET' },
+  '/api/premium/funding/federal/momentum':           { name: 'Federal AI spending momentum',          category: 'ai-federal-funding-momentum', credits: 1, method: 'GET' },
+  '/api/premium/procurement/ai-contracts/demand':    { name: 'Federal AI procurement demand',         category: 'ai-procurement-demand',   credits: 1, method: 'GET' },
+  '/api/premium/procurement/ai-opportunities/deadlines': { name: 'Federal AI opportunity deadlines',  category: 'ai-procurement-deadlines', credits: 1, method: 'GET' },
+  '/api/premium/ai-datacenters/buildout':            { name: 'AI datacenter buildout aggregate',      category: 'ai-datacenter-buildout',  credits: 1, method: 'GET' },
 };
 
 // ── Latin1 hygiene ─────────────────────────────────────────────────
