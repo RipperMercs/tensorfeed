@@ -264,9 +264,8 @@ interface Manifest {
 // CDP that all concrete instances consolidate into one catalog row).
 //
 // Picked instances reflect what an agent is actually likely to query:
-// canonical famous CVEs for the security cleaners, top-tracked model
-// vendors for the OpenRouter cleaner, top frontier-lab providers for
-// the provider digest.
+// canonical famous CVEs for the security cleaners and top frontier-lab
+// providers for the provider digest.
 
 interface SplitInstance {
   /** The fully-qualified concrete path (no `:id` template). */
@@ -306,19 +305,6 @@ const TOP_PROVIDERS: ReadonlyArray<{ slug: string; label: string }> = [
   { slug: 'amazon', label: 'Amazon Bedrock' },
 ];
 
-const TOP_OPENROUTER_MODELS: ReadonlyArray<{ id: string; label: string }> = [
-  { id: 'anthropic/claude-opus-4-7', label: 'Claude Opus 4.7' },
-  { id: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5' },
-  { id: 'openai/gpt-5-5', label: 'GPT-5.5' },
-  { id: 'openai/gpt-5-5-mini', label: 'GPT-5.5 Mini' },
-  { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-  { id: 'deepseek/deepseek-chat-v3.1', label: 'DeepSeek V3.1' },
-  { id: 'meta-llama/llama-3.3-70b', label: 'Llama 3.3 70B' },
-  { id: 'mistralai/mistral-large', label: 'Mistral Large' },
-  { id: 'x-ai/grok-3', label: 'Grok 3' },
-];
-
 function buildSplitInstances(): SplitInstance[] {
   const out: SplitInstance[] = [];
   // 4 single-CVE cleaners x 10 CVEs = 40 entries
@@ -345,14 +331,6 @@ function buildSplitInstances(): SplitInstance[] {
       category: 'ai-provider-digest',
     });
   }
-  // 10 OpenRouter models. Path needs URL-encoded slash.
-  for (const m of TOP_OPENROUTER_MODELS) {
-    out.push({
-      concretePath: `/api/premium/clean/openrouter/${encodeURIComponent(m.id)}`,
-      name: `OpenRouter model card: ${m.label}`,
-      category: 'ai-openrouter-model-card',
-    });
-  }
   return out;
 }
 
@@ -365,7 +343,6 @@ function resolveSplitParent(concretePath: string): string | null {
   if (concretePath.startsWith('/api/premium/clean/kev/'))         return '/api/premium/clean/kev/:id';
   if (concretePath.startsWith('/api/premium/clean/epss/'))        return '/api/premium/clean/epss/:id';
   if (concretePath.startsWith('/api/premium/security/verified/')) return '/api/premium/security/verified/:id';
-  if (concretePath.startsWith('/api/premium/clean/openrouter/'))  return '/api/premium/clean/openrouter/:model_id';
   if (concretePath.startsWith('/api/premium/providers/'))         return '/api/premium/providers/:name';
   return null;
 }

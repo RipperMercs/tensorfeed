@@ -1,6 +1,12 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Bot, Zap, BookText, Code, ExternalLink, Wallet } from 'lucide-react';
+import premiumCatalog from '@/../data/premium-catalog.json';
+
+// Premium endpoint count and minimum credit, sourced from the build-time
+// generated catalog so these figures never restale (they were hardcoded at 19).
+const PREMIUM_COUNT = premiumCatalog.count;
+const PREMIUM_MIN_CREDITS = premiumCatalog.credit_range.min;
 
 export const metadata: Metadata = {
   title: 'TensorFeed for AI Agents: Discovery, MCP, x402 Payments, SDKs',
@@ -70,7 +76,7 @@ const FAQ_JSONLD = {
       name: 'What premium endpoints are available for AI agents?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: '19 premium endpoints at 1 credit (~$0.02) each: routing recommendations with composite score, pricing/benchmark/uptime history series, snapshot diff between any two dates, enriched agents directory with trending score, full-text news search with relevance scoring, cost projection across multiple models, conservative regression-based forecasting, single-call provider deep-dive, side-by-side model comparison, agent morning brief (whats-new), webhook watches with realtime price/status triggers and a scheduled daily/weekly digest tier.',
+        text: `${PREMIUM_COUNT} premium endpoints from ${PREMIUM_MIN_CREDITS} credit (~$0.02): routing recommendations with composite score, pricing, benchmark, and uptime history series, snapshot diffs between any two dates, an enriched agents directory, full-text news search with relevance scoring, cost projection across models, single-call provider deep-dives, side-by-side model comparison, the agent morning brief, signed decision verdicts (routing, failover, stack safety), security and SEC filing intelligence, and webhook watches with a scheduled digest tier. The complete machine-readable catalog is one free call to /api/meta/premium.`,
       },
     },
     {
@@ -176,8 +182,8 @@ export default function ForAIAgentsPage() {
             rate limit on REST.
           </li>
           <li>
-            Premium tools: 19 endpoints under <code className="text-accent-primary font-mono text-sm">/api/premium/</code>,
-            1 credit each (~$0.02). USDC on Base. No accounts.
+            Premium tools: {PREMIUM_COUNT} endpoints under <code className="text-accent-primary font-mono text-sm">/api/premium/</code>,
+            from {PREMIUM_MIN_CREDITS} credit (~$0.02). USDC on Base. No accounts.
           </li>
           <li>
             MCP server:{' '}
@@ -289,7 +295,7 @@ export default function ForAIAgentsPage() {
           Premium tier (pay-per-call, USDC on Base)
         </h2>
         <p className="text-text-secondary mb-4">
-          19 paid endpoints at 1 credit (~$0.02) each. No accounts, no API keys, no Stripe. Full
+          {PREMIUM_COUNT} paid endpoints from {PREMIUM_MIN_CREDITS} credit (~$0.02). No accounts, no API keys, no Stripe. Full
           payment flow at{' '}
           <Link href="/developers/agent-payments" className="text-accent-primary hover:underline">
             /developers/agent-payments
