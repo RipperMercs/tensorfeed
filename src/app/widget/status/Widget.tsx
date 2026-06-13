@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { Condition, Feed, Item, ItemState } from './types';
 import { fetchFeed, POLL_MS, buildDemoFeed } from './feed';
+import { widgetBreaking, fetchBreaking, type RawBreaking } from './breaking';
 
 /**
  * TensorFeed Live Monitor. 1:1 port of the design prototype, wired to
@@ -357,6 +358,10 @@ export default function Widget() {
   // compact embed from ballooning). Reset when the visible set changes
   // so a stale row from another tab/filter cannot stay expanded.
   const [openId, setOpenId] = useState<string | null>(null);
+  // Single active breaking alert from /api/breaking (server-filtered to
+  // active-or-null). Polled alongside the status feed; rendered as the
+  // priority-transmission strip above the klaxon.
+  const [breaking, setBreaking] = useState<RawBreaking | null>(null);
 
   useEffect(() => {
     setAppearance(readAppearance());
@@ -376,7 +381,9 @@ export default function Widget() {
   useEffect(() => {
     let cancelled = false;
     async function poll() {
-      const next = await fetchFeed();
+      // Breaking is fetched concurrently and never throws (null on any
+      // failure), so it never affects the feed's poll-failure counter.
+      const [next, brk] = await Promise.all([fetchFeed(), fetchBreaking()]);
       if (cancelled) return;
       if (next) {
         failRef.current = 0;
@@ -386,6 +393,7 @@ export default function Widget() {
         failRef.current += 1;
         setFailCount(failRef.current);
       }
+      setBreaking(brk);
       setLoading(false);
     }
     poll();
@@ -432,10 +440,14 @@ export default function Widget() {
 
   const pollLabel = `Poll · ${Math.round(appearance.pollMs / 1000)}s`;
 
+  // Priority-transmission strip model: null (no strip) unless a real
+  // active alert exists and we are not in demo mode. Pure + tested.
+  const brk = widgetBreaking(breaking, { demo: !!demo });
+
   const doRefresh = async () => {
     if (refreshing) return;
     setRefreshing(true);
-    const next = await fetchFeed();
+    const [next, brk] = await Promise.all([fetchFeed(), fetchBreaking()]);
     if (next) {
       failRef.current = 0;
       setFailCount(0);
@@ -444,6 +456,7 @@ export default function Widget() {
       failRef.current += 1;
       setFailCount(failRef.current);
     }
+    setBreaking(brk);
     setRefreshing(false);
   };
 
@@ -488,6 +501,27 @@ export default function Widget() {
         <span className="tf-spine-code">TF-FEED</span>
       </div>
       <span className="tf-corners" aria-hidden="true" />
+
+      {brk && (
+        <div className="tf-breaking" role="status" aria-live="polite">
+          <span className="tf-breaking-glyph" aria-hidden="true">
+            ⚡
+          </span>
+          <span className="tf-breaking-eyebrow">Priority Transmission</span>
+          {brk.url ? (
+            <a
+              className="tf-breaking-headline"
+              href={brk.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {brk.headline}
+            </a>
+          ) : (
+            <span className="tf-breaking-headline">{brk.headline}</span>
+          )}
+        </div>
+      )}
 
       <div className="tf-klaxon" role="status" aria-live="polite">
         <span className="tf-lamp" aria-hidden="true" />

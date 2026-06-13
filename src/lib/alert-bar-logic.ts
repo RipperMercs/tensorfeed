@@ -39,16 +39,22 @@ export function isSafeHref(href: string): boolean {
 }
 
 /**
- * Single-bar priority: incident > breaking > green. Returns which bar to render.
+ * Single-bar priority: breaking > incident > green. Returns which bar to render.
  * `breaking` is the already-active (server-filtered) alert or null; `dismissed`
  * is whether the user dismissed THIS alert id.
+ *
+ * Breaking outranks an active incident because the breaking alert clears a
+ * strict editorial bar (it is rare and hand-raised), so when one is live it is
+ * the highest-signal thing for the single homepage slot. Dismissing it (the X)
+ * is the safety valve: it falls through to reveal any active incident bar, so a
+ * real outage is never more than one click away.
  */
 export function chooseBar(args: {
   services: StatusAlertBarService[];
   breaking: BreakingAlert | null;
   dismissed: boolean;
 }): 'incident' | 'breaking' | 'status' {
-  if (classifySeverity(args.services) !== 'ok') return 'incident';
   if (args.breaking && !args.dismissed) return 'breaking';
+  if (classifySeverity(args.services) !== 'ok') return 'incident';
   return 'status';
 }
