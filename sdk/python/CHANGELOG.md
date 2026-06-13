@@ -2,6 +2,13 @@
 
 All notable changes to the Python SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 2.2.1 - 2026-06-13
+
+### Fixed
+- Corrected the documented credit cost for `tf.provider_deepdive()`, `tf.status_leaderboard()`, and `tf.get_probe_series()`. These are Tier 3 endpoints that cost 5 credits per call, not 1. The docstrings, the LangChain and CrewAI tool descriptions, and the README table all understated it.
+- Added the required `sender_wallet` argument to the `tf.buy_credits()` examples in the README and the quickstart. The method has always required it; only the examples omitted it, so a copy-paste raised a TypeError before any request.
+- Removed documentation for `tf.forecast()` and `tf.history_compare()`. Both appeared in the README and in earlier changelog entries (1.9.0 and 1.3.0) but were never implemented: no method, no parameters, no release ever shipped them.
+
 ## 2.2.0 - 2026-05-31
 
 ### Added

@@ -1506,7 +1506,7 @@ export class TensorFeed {
    * Each entry includes per-bucket poll counts plus `downtime_minutes` and
    * `hard_down_minutes` (excludes degraded). For windows up to 90 days plus
    * `incident_count` and `mttr_minutes` per provider, use the premium
-   * `statusLeaderboard()` (1 credit).
+   * `statusLeaderboard()` (5 credits).
    */
   async statusLeaderboardFree(options?: { days?: number }): Promise<unknown> {
     return this.get('/status/leaderboard', { days: options?.days });
@@ -1797,7 +1797,7 @@ export class TensorFeed {
   }
 
   /**
-   * Cross-provider uptime leaderboard. Costs 1 credit.
+   * Cross-provider uptime leaderboard. Costs 5 credits.
    *
    * Same minute-resolution counter source as the free `statusLeaderboardFree()`
    * but extends the window to the full 90-day retention horizon and adds
@@ -1937,12 +1937,12 @@ export class TensorFeed {
     });
   }
 
-  // ── Paid: provider deep-dive (1 credit per call) ─────────────
+  // ── Paid: provider deep-dive (5 credits per call) ─────────────
 
   /**
    * Everything about a provider in one paid call: live status,
    * all models with pricing + tier + benchmark scores joined,
-   * recent news, agent traffic. Costs 1 credit.
+   * recent news, agent traffic. Costs 5 credits.
    *
    * @throws Error if no token is set
    * @throws PaymentRequired if the token has insufficient credits

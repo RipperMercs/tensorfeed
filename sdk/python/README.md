@@ -108,8 +108,9 @@ from tensorfeed import TensorFeed, PaymentRequired
 
 tf = TensorFeed()
 
-# Step 1: get a 30-minute quote
-quote = tf.buy_credits(amount_usd=1.00)
+# Step 1: get a 30-minute quote. sender_wallet is the Base wallet you will
+# send the USDC from (required); quote['wallet'] below is where you send it.
+quote = tf.buy_credits(amount_usd=1.00, sender_wallet="0xYourBaseWallet")
 print(f"Send {quote['amount_usd']} USDC on Base to {quote['wallet']}")
 print(f"Memo: {quote['memo']} (expires in {quote['ttl_seconds']}s)")
 print(f"Will get: {quote['credits']} credits")
@@ -142,11 +143,6 @@ print(f'SWE-bench moved {scores["summary"]["delta_pp"]} pp')
 
 uptime = tf.status_uptime(provider="anthropic")
 print(f'Anthropic uptime: {uptime["uptime_pct"]}% over {uptime["days_with_data"]} days')
-
-diff = tf.history_compare(
-    from_date="2026-04-01", to_date="2026-04-27", snapshot_type="pricing",
-)
-print(f'{len(diff["changed"])} price changes, {len(diff["added"])} new models')
 
 # Premium webhook watches (1 credit per registration, free reads)
 created = tf.create_watch(
@@ -288,7 +284,7 @@ except TensorFeedError as e:
 | `tf.routing_preview(task=)` | Top-1 routing recommendation (5/day/IP) |
 | `tf.health()` | API health check |
 | `tf.payment_info()` | Wallet, pricing, supported payment flows |
-| `tf.buy_credits(amount_usd=)` | Generate a 30-min payment quote |
+| `tf.buy_credits(amount_usd=, sender_wallet=)` | Generate a 30-min payment quote |
 | `tf.confirm(tx_hash=, nonce=)` | Verify USDC tx, mint credit token |
 
 ### Token-required
@@ -301,7 +297,6 @@ except TensorFeedError as e:
 | `tf.pricing_series(model=, from_date=, to_date=)` | 1 credit | Daily price points for one model with min/max/delta summary |
 | `tf.benchmark_series(model=, benchmark=, from_date=, to_date=)` | 1 credit | Score evolution for a benchmark on one model, returns delta_pp |
 | `tf.status_uptime(provider=, from_date=, to_date=)` | 1 credit | Uptime % per provider with incident days (degraded = half) |
-| `tf.history_compare(from_date=, to_date=, snapshot_type=)` | 1 credit | Diff two snapshots: added, removed, changed entries with deltas |
 | `tf.create_watch(spec=, callback_url=, secret=, fire_cap=)` | 1 credit | Register a webhook watch (price / status / digest) |
 | `tf.create_digest_watch(cadence=, callback_url=, secret=, fire_cap=)` | 1 credit | Convenience: scheduled daily/weekly digest of pricing changes |
 | `tf.list_watches()` | Free | List all active watches owned by the current token |
@@ -310,8 +305,7 @@ except TensorFeedError as e:
 | `tf.premium_agents_directory(category=, status=, sort=, limit=, ...)` | 1 credit | Enriched directory: status, news, traffic, pricing, trending_score per agent |
 | `tf.news_search(q=, from_date=, to_date=, provider=, category=, limit=)` | 1 credit | Full-text news search with date/provider filters, relevance scoring, recency boost |
 | `tf.cost_projection(models=, input_tokens_per_day=, output_tokens_per_day=, horizon=)` | 1 credit | Project workload cost across 1-10 models, 4 horizons, cheapest-monthly ranking |
-| `tf.forecast(target=, model=, field=, benchmark=, lookback=, horizon=)` | 1 credit | Linear-regression forecast for a price or benchmark series with 95% CI and confidence label |
-| `tf.provider_deepdive(provider)` | 1 credit | One provider's full profile: status + all models + benchmarks joined + news + traffic |
+| `tf.provider_deepdive(provider)` | 5 credits | One provider's full profile: status + all models + benchmarks joined + news + traffic |
 | `tf.compare_models(ids=)` | 1 credit | Side-by-side compare of 2-5 models with normalized benchmarks + rankings |
 | `tf.whats_new(days=, news_limit=)` | 1 credit | Agent morning brief: pricing changes + incidents + top news from last 1-7 days |
 

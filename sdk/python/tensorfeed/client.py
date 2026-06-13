@@ -976,7 +976,7 @@ class TensorFeed:
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> dict[str, Any]:
-        """Cross-provider uptime leaderboard. Costs 1 credit.
+        """Cross-provider uptime leaderboard. Costs 5 credits.
 
         Same minute-resolution counter source as the free
         ``status_leaderboard_free()`` but extends the window to the full
@@ -1184,12 +1184,12 @@ class TensorFeed:
             fire_cap=fire_cap,
         )
 
-    # ── Paid: provider deep-dive (Tier 1, 1 credit) ────────────────
+    # ── Paid: provider deep-dive (Tier 3, 5 credits) ────────────────
 
     def provider_deepdive(self, provider: str) -> dict[str, Any]:
         """Everything about a provider in one paid call.
 
-        Costs 1 credit. Returns the live status + status_page_url +
+        Costs 5 credits. Returns the live status + status_page_url +
         components, all of the provider's models with pricing, tier,
         context window, capabilities, and benchmark scores joined in,
         recent news mentions, and agent-traffic attribution.
@@ -1520,7 +1520,7 @@ class TensorFeed:
         """
         return self._request("GET", "/probe/latest")
 
-    # ── Paid: LLM probe time series (Tier 1, 1 credit) ─────────────
+    # ── Paid: LLM probe time series (Tier 3, 5 credits) ─────────────
 
     def get_probe_series(
         self,
@@ -1531,7 +1531,7 @@ class TensorFeed:
     ) -> dict[str, Any]:
         """Daily SLA series for one LLM provider, measured by TensorFeed.
 
-        Costs 1 credit. Returns per-day count, success rate, ttfb
+        Costs 5 credits. Returns per-day count, success rate, ttfb
         p50/p95/p99, total p50/p95/p99, incident-hour count for each
         day in the requested window. Provider status pages are
         politically managed; this is the measured truth.

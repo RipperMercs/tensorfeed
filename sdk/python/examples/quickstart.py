@@ -39,7 +39,8 @@ def main() -> None:
         print("\nFree preview is rate-limited for today (5/day per IP).")
 
     print("\n=== Buy credits ===")
-    quote = tf.buy_credits(amount_usd=1.00)
+    # sender_wallet is the Base wallet you will send the USDC from (required).
+    quote = tf.buy_credits(amount_usd=1.00, sender_wallet="0xYourBaseWallet")
     print(f"Send {quote['amount_usd']} USDC on Base to:")
     print(f"  Wallet: {quote['wallet']}")
     print(f"  Memo:   {quote['memo']}")

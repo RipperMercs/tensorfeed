@@ -158,14 +158,14 @@ DESCRIPTIONS: dict[str, str] = {
         "limit (1-100, default 25)."
     ),
     "tensorfeed_provider_deepdive": (
-        "PAID, 1 credit. One AI provider's full profile in a single "
+        "PAID, 5 credits. One AI provider's full profile in a single "
         "call: live status, every model with pricing and benchmarks "
         "joined in, recent news, and agent-traffic attribution. Doing "
         "this from free endpoints takes several round-trips and a "
         "non-trivial join. Input: provider (id or display name)."
     ),
     "tensorfeed_status_leaderboard": (
-        "PAID, 1 credit. Cross-provider AI uptime leaderboard over the "
+        "PAID, 5 credits. Cross-provider AI uptime leaderboard over the "
         "full 90-day retention window, with incident_count and "
         "mttr_minutes per provider. Built for vendor selection and "
         "post-incident review. Inputs: from_date, to_date (optional, "

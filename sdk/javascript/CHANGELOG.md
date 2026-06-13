@@ -2,6 +2,13 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 2.3.1 - 2026-06-13
+
+### Fixed
+- Added the required `senderWallet` argument to the `tf.buyCredits()` examples in the README. The method has always required it; only the examples omitted it, so a copy-paste failed the type check and the request before any payment.
+- Corrected the documented credit cost for `tf.providerDeepDive()` and `tf.statusLeaderboard()`. Both are Tier 3 endpoints that cost 5 credits per call, not 1; the README table and the method docstrings understated it.
+- Removed documentation for `tf.forecast()` and `tf.historyCompare()`. Both appeared in the README and in earlier changelog entries (1.8.0 and 1.2.0) but were never implemented: no method, no types, no release ever shipped them.
+
 ## 2.3.0 - 2026-06-03
 
 ### Added

@@ -122,7 +122,9 @@ test('names, descriptions, formatters, invokers align', () => {
   assert.deepEqual(Object.keys(FORMATTERS).sort(), names);
   assert.deepEqual(Object.keys(INVOKERS).sort(), names);
   for (const [name, desc] of Object.entries(DESCRIPTIONS)) {
-    assert.match(desc, /1 credit/, name);
+    // Each description must state its real cost: most tools are 1 credit, the
+    // Tier 3 endpoints (provider deep-dive, status leaderboard) are 5 credits.
+    assert.match(desc, /1 credit|5 credits/, name);
   }
 });
 

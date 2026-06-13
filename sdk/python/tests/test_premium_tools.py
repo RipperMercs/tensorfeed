@@ -182,7 +182,13 @@ class Formatters(unittest.TestCase):
         self.assertEqual(set(pt.DESCRIPTIONS), set(pt.FORMATTERS))
         self.assertEqual(set(pt.PREMIUM_TOOL_NAMES), set(pt.DESCRIPTIONS))
         for name, desc in pt.DESCRIPTIONS.items():
-            self.assertIn("1 credit", desc, msg=name)
+            # Every tool description must state its real credit cost. Most are
+            # 1 credit; the Tier 3 endpoints (provider deep-dive, status
+            # leaderboard) are 5 credits.
+            self.assertTrue(
+                "1 credit" in desc or "5 credits" in desc,
+                msg=f"{name} description must state its credit cost (1 or 5)",
+            )
 
 
 class ClientIntegrationOffline(unittest.TestCase):

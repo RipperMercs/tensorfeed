@@ -109,8 +109,9 @@ import { TensorFeed, PaymentRequired } from 'tensorfeed';
 
 const tf = new TensorFeed();
 
-// Step 1: get a 30-minute quote
-const quote = await tf.buyCredits({ amountUsd: 1.0 });
+// Step 1: get a 30-minute quote. senderWallet is the Base wallet you will
+// send the USDC from (required); quote.wallet below is where you send it.
+const quote = await tf.buyCredits({ amountUsd: 1.0, senderWallet: '0xYourBaseWallet' });
 console.log(`Send ${quote.amount_usd} USDC on Base to ${quote.wallet}`);
 console.log(`Memo: ${quote.memo} (expires in ${quote.ttl_seconds}s)`);
 
@@ -145,15 +146,6 @@ console.log(`SWE-bench moved ${scores.summary.delta_pp} pp`);
 
 const uptime = await tf.statusUptime({ provider: 'anthropic' });
 console.log(`Anthropic uptime: ${uptime.uptime_pct}% over ${uptime.days_with_data} days`);
-
-const diff = await tf.historyCompare({
-  from: '2026-04-01',
-  to: '2026-04-27',
-  type: 'pricing',
-});
-if (diff.type === 'pricing') {
-  console.log(`${diff.changed.length} price changes, ${diff.added.length} new models`);
-}
 
 // Premium webhook watches (1 credit per registration, free reads)
 const created = await tf.createWatch({
@@ -240,7 +232,7 @@ Requests time out after 15 seconds by default so a stalled connection never hang
 | `tf.routingPreview({ task })` | Top-1 routing recommendation (5/day/IP) |
 | `tf.health()` | API health check |
 | `tf.paymentInfo()` | Wallet, pricing, supported payment flows |
-| `tf.buyCredits({ amountUsd })` | Generate a 30-min payment quote |
+| `tf.buyCredits({ amountUsd, senderWallet })` | Generate a 30-min payment quote |
 | `tf.confirm({ txHash, nonce })` | Verify USDC tx, mint credit token |
 
 ### Token-required
@@ -253,7 +245,6 @@ Requests time out after 15 seconds by default so a stalled connection never hang
 | `tf.pricingSeries({ model, from?, to? })` | 1 credit | Daily price points for one model with min/max/delta summary |
 | `tf.benchmarkSeries({ model, benchmark, from?, to? })` | 1 credit | Score evolution for a benchmark on one model, returns delta_pp |
 | `tf.statusUptime({ provider, from?, to? })` | 1 credit | Uptime % per provider with incident days (degraded = half) |
-| `tf.historyCompare({ from, to, type? })` | 1 credit | Diff two snapshots: added, removed, changed entries with deltas |
 | `tf.createWatch({ spec, callbackUrl, secret?, fireCap? })` | 1 credit | Register a webhook watch (price / status / digest) |
 | `tf.createDigestWatch({ cadence, callbackUrl, secret?, fireCap? })` | 1 credit | Convenience: scheduled daily/weekly digest of pricing changes |
 | `tf.listWatches()` | Free | List all active watches owned by the current token |
@@ -262,8 +253,7 @@ Requests time out after 15 seconds by default so a stalled connection never hang
 | `tf.premiumAgentsDirectory({ category?, status?, sort?, limit?, ... })` | 1 credit | Enriched directory: status, news, traffic, pricing, trending_score per agent |
 | `tf.newsSearch({ q?, from?, to?, provider?, category?, limit? })` | 1 credit | Full-text news search with date/provider filters, relevance scoring, recency boost |
 | `tf.costProjection({ models, inputTokensPerDay, outputTokensPerDay, horizon? })` | 1 credit | Project workload cost across 1-10 models, 4 horizons, cheapest-monthly ranking |
-| `tf.forecast({ target, model, field?, benchmark?, lookback?, horizon? })` | 1 credit | Linear-regression forecast for a price or benchmark series with 95% CI and confidence label |
-| `tf.providerDeepDive(provider)` | 1 credit | One provider's full profile: status + all models + benchmarks joined + news + traffic |
+| `tf.providerDeepDive(provider)` | 5 credits | One provider's full profile: status + all models + benchmarks joined + news + traffic |
 | `tf.compareModels({ ids })` | 1 credit | Side-by-side compare of 2-5 models with normalized benchmarks + rankings |
 | `tf.whatsNew({ days?, newsLimit? })` | 1 credit | Agent morning brief: pricing changes + incidents + top news from last 1-7 days |
 
