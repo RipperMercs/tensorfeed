@@ -12,9 +12,63 @@ import {
   CreditCard,
   Handshake,
 } from 'lucide-react';
+import premiumCatalogRaw from '@/../data/premium-catalog.json';
 
 const PAYMENT_WALLET = '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1';
 const USDC_BASE_CONTRACT = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+
+// Full machine-payable catalog, generated at build time from the worker's
+// PREMIUM_CATALOG by scripts/generate-premium-catalog.ts. Rendered below the
+// curated Endpoints highlights so this page can never drift behind the real
+// endpoint set (the storefront-coverage drift class, killed at the root).
+interface CatalogEndpoint {
+  path: string;
+  credits: number;
+  strict_premium: boolean;
+  params: { name: string; required: boolean }[];
+  returns: string;
+  free_sibling: string | null;
+  category: string;
+}
+interface PremiumCatalogData {
+  count: number;
+  credit_range: { min: number; max: number };
+  categories: Record<string, number>;
+  endpoints: CatalogEndpoint[];
+  note: string;
+  attribution: string;
+}
+const premiumCatalog = premiumCatalogRaw as unknown as PremiumCatalogData;
+
+// Readable display labels for the catalog category buckets. Unmapped keys fall
+// back to the raw category string, so a new bucket renders without a code change.
+const CATEGORY_LABELS: Record<string, string> = {
+  history: 'Time series and history',
+  verdict: 'Signed verdicts',
+  intelligence: 'Model intelligence',
+  security: 'Security and CVE',
+  sec: 'SEC filings',
+  research: 'Research',
+  funding: 'Funding and procurement',
+  policy: 'AI policy',
+  compute: 'Compute and datacenters',
+  status: 'Service status',
+  x402: 'x402 settlement',
+  mcp: 'MCP registry',
+  packages: 'Package ecosystem',
+  misc: 'General intelligence',
+};
+
+// Endpoints arrive sorted by category then path. Group them into ordered
+// [category, endpoints] pairs for the rendered sections.
+const premiumCatalogByCategory: [string, CatalogEndpoint[]][] = (() => {
+  const groups: Record<string, CatalogEndpoint[]> = {};
+  for (const ep of premiumCatalog.endpoints) {
+    if (!groups[ep.category]) groups[ep.category] = [];
+    groups[ep.category].push(ep);
+  }
+  return Object.entries(groups).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+})();
 
 export const metadata: Metadata = {
   title: 'Pay-Per-Call API for AI Agents: USDC on Base, x402 Compatible | TensorFeed',
@@ -2326,6 +2380,80 @@ export default function AgentPaymentsPage() {
                   </pre>
                 </div>
               )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Full premium catalog (generated from PREMIUM_CATALOG at build time) */}
+      <section className="mb-10" id="full-catalog">
+        <h2 className="text-2xl font-semibold text-text-primary mb-2">Full premium catalog</h2>
+        <p className="text-text-secondary text-sm mb-1">
+          Every payable endpoint, generated from the live catalog so this list never lags the
+          API. {premiumCatalog.count} endpoints, {premiumCatalog.credit_range.min} to{' '}
+          {premiumCatalog.credit_range.max} credits each. The machine-readable version is a free
+          call to{' '}
+          <code className="font-mono text-accent-primary">/api/meta/premium</code>.
+        </p>
+        <p className="text-text-muted text-xs mb-5">
+          A star marks a required parameter. Every premium call settles in USDC on Base via x402
+          and returns an Ed25519-signed AFTA receipt.
+        </p>
+        <div className="space-y-8">
+          {premiumCatalogByCategory.map(([category, endpoints]) => (
+            <div key={category}>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-text-muted mb-3">
+                {CATEGORY_LABELS[category] ?? category} ({endpoints.length})
+              </h3>
+              <div className="space-y-3">
+                {endpoints.map(ep => (
+                  <div
+                    key={ep.path}
+                    className="bg-bg-secondary border border-border rounded-lg px-4 py-3"
+                  >
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <code className="text-sm font-mono text-text-primary break-all">
+                        {ep.path}
+                      </code>
+                      {ep.strict_premium && (
+                        <span className="text-xs font-medium px-1.5 py-0.5 rounded text-text-muted bg-bg-tertiary">
+                          strict
+                        </span>
+                      )}
+                      <span className="text-xs font-medium px-2 py-0.5 rounded ml-auto text-accent-primary bg-accent-primary/10">
+                        {ep.credits} {ep.credits === 1 ? 'credit' : 'credits'}
+                      </span>
+                    </div>
+                    <p className="text-text-secondary text-sm">{ep.returns}</p>
+                    {(ep.params.length > 0 || ep.free_sibling) && (
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-2 text-xs text-text-muted">
+                        {ep.params.length > 0 && (
+                          <span>
+                            Params:{' '}
+                            {ep.params.map((p, i) => (
+                              <span key={p.name}>
+                                <code className="font-mono text-text-secondary">{p.name}</code>
+                                {p.required && (
+                                  <span className="text-accent-amber" aria-label="required">
+                                    *
+                                  </span>
+                                )}
+                                {i < ep.params.length - 1 ? ', ' : ''}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                        {ep.free_sibling && (
+                          <span>
+                            Free taste:{' '}
+                            <code className="font-mono text-accent-green">{ep.free_sibling}</code>
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
