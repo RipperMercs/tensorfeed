@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'fable-5-mythos-5-export-control-suspension',
+    title:
+      'Washington Pulled Fable 5 and Mythos 5 Three Days After Launch. Export Control Reached the Model Layer.',
+    author: 'Kira Nolan',
+    date: 'June 12, 2026',
+    readTime: '8 min read',
+    description:
+      'On June 12, 2026 the US government issued an export control directive suspending all foreign-national access to Claude Fable 5 and Mythos 5, including Anthropic’s own foreign-national employees. Because a global API cannot segregate access by nationality, the only compliant path was to disable both models for every customer. The stated basis is a reported jailbreak of Fable 5; the order pulled Mythos 5, the model built for government partners, along with it. Anthropic is complying first and disputing the order in public, warning the standard would halt new model deployments across every frontier lab. The mechanism is the precedent: export control has climbed from chips and weights to a deployed, generally available model that agents call at inference time.',
+  },
+  {
     slug: 'coinbase-agents-x402-closed-loop',
     title:
       'Coinbase Put an Agent Inside ChatGPT and Claude. It Pays for Its Own Research.',
