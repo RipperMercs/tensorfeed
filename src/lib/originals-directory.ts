@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'glm-5-2-open-frontier-export-letter',
+    title:
+      'Zhipu Shipped a 1M Open-Weight Frontier on Huawei Silicon. The Export Letter Does Not Reach It.',
+    author: 'Kira Nolan',
+    date: 'June 14, 2026',
+    readTime: '6 min read',
+    description:
+      'On June 13, 2026, two days after a US Commerce directive forced Anthropic to disable Fable 5 and Mythos 5 worldwide, Z.ai (Zhipu AI) shipped GLM-5.2 to every GLM Coding Plan tier with a 1M-token context window, 131K output tokens, and a new Max-effort reasoning mode. The 744B-parameter MoE inherits a training pipeline that ran on 100,000 Huawei Ascend 910B chips with zero Nvidia in the loop. The standalone API, the Z.ai chatbot, and MIT-licensed open weights ship next week. No benchmarks at launch is itself a tell. The contrast is the story: a model the US government can disable in an evening, and a model the US government has no mechanism to recall. Inside the technical envelope, why Ascend matters this week specifically, what builders get now versus next week, and three signposts in the next ten days.',
+  },
+  {
     slug: 'fable-5-mythos-5-export-control-suspension',
     title:
       'Washington Pulled Fable 5 and Mythos 5 Three Days After Launch. Export Control Reached the Model Layer.',
