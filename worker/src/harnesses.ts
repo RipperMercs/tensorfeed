@@ -47,8 +47,8 @@ export interface HarnessesData {
 }
 
 export const HARNESSES_DATA: HarnessesData = {
-  lastUpdated: '2026-04-30',
-  note: "Snapshot of public agentic-coding leaderboard data. Each result is the harness vendor's self-reported best published score for the named base model on the named benchmark. We aggregate; we do not re-run. See sourceUrl on each entry for the upstream report. Refreshed weekly.",
+  lastUpdated: '2026-06-15',
+  note: "Snapshot of public agentic-coding leaderboard data. Each result is the harness vendor's self-reported best published score for the named base model on the named benchmark. We aggregate; we do not re-run. See sourceUrl on each entry for the upstream report. Refreshed weekly. TODO: roo-code shut down 2026-05-15; Kilo Code (kilocode.ai) is the official successor and should be evaluated for addition to harness-directory.ts after editorial review.",
   benchmarks: [
     {
       id: 'swe_bench_verified',
