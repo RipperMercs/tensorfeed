@@ -8,27 +8,27 @@
   "policy": "Editor bumps last_reviewed when the page gets a real review or content update. Pages with cadence other than 'editorial' get a Next-Review-Due stamp computed from last_reviewed + cadence interval, and surface an OVERDUE flag when today is past that date.",
   "pages": {
     "/ai-infrastructure": {
-      "last_reviewed": "2026-06-05",
+      "last_reviewed": "2026-06-15",
       "cadence": "weekly",
       "notes": "New projects added when announced; updates when status (announced/permitted/construction/operational) changes."
     },
     "/ai-crawler-access": {
-      "last_reviewed": "2026-06-02",
+      "last_reviewed": "2026-06-15",
       "cadence": "weekly",
       "notes": "Aggregate numbers refresh from the daily crawl via the live summary endpoint. This stamp tracks editorial review of the methodology and seed universe (worker/src/ai-crawler-access-seeds.ts)."
     },
     "/timeline": {
-      "last_reviewed": "2026-05-13",
+      "last_reviewed": "2026-06-15",
       "cadence": "monthly",
       "notes": "Historical record of AI ecosystem milestones. Monthly review for new entries."
     },
     "/models": {
-      "last_reviewed": "2026-06-05",
+      "last_reviewed": "2026-06-15",
       "cadence": "weekly",
       "notes": "Model catalog and pricing. Update when a flagship drops, when a tracked model is deprecated, or when a provider changes pricing. Reminder issue opens Mondays via weekly-models-check workflow."
     },
     "/ai-hardware": {
-      "last_reviewed": "2026-06-05",
+      "last_reviewed": "2026-06-15",
       "cadence": "weekly",
       "notes": "Hand-curated AI accelerator chip catalog in worker/src/ai-hardware.ts. Update when a new datacenter chip ships (NVIDIA, AMD, Google, AWS, Apple, Cerebras, Groq) or when specs are corrected. Reminder issue opens Mondays via weekly-ai-hardware-check workflow."
     },
@@ -38,7 +38,7 @@
       "notes": "Agent-only work directory and the ARB-backed agent surface. Refresh data/agents-directory.json when notable new agent products ship or when categories shift. Reminder issue opens every other Monday via biweekly-agents-directory-check workflow."
     },
     "/benchmarks": {
-      "last_reviewed": "2026-06-05",
+      "last_reviewed": "2026-06-15",
       "cadence": "weekly",
       "notes": "data/benchmarks.json. Add a row when a flagship lands or when benchmark rankings materially shift. Reminder issue opens Mondays via existing weekly-benchmarks-check workflow."
     },

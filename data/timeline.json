@@ -29,6 +29,13 @@
       "description": "MiniMax launched M3, an open-weight coding and agentic model built on MiniMax Sparse Attention, which replaces full attention with KV-block selection and cuts per-token compute at 1M context to roughly one twentieth of the previous generation. M3 accepts text, image, and video input across a 1,048,576 token context window with up to 512K output tokens, priced at $0.30 per million input and $1.20 per million output. MiniMax reports 59% on SWE-Bench Pro and 83.5 on BrowseComp, though headline runs used its own infrastructure with agent scaffolding, so independent verification is pending. Weights and a technical report are due on Hugging Face within about ten days."
     },
     {
+      "date": "2026-06-01",
+      "title": "NVIDIA Vera Rubin Chips Enter Full Production",
+      "provider": "NVIDIA",
+      "category": "hardware",
+      "description": "NVIDIA CEO Jensen Huang announced at Computex 2026 in Taipei on June 1 that Vera Rubin, the successor to the Blackwell GPU architecture, has entered full production. Each Rubin GPU delivers 50 petaflops of FP4 compute and 3.6 TB/s memory bandwidth, interconnected via sixth-generation NVLink. The rack-scale Vera Rubin NVL72 system pairs 72 Rubin GPUs with 36 custom Vera CPUs and aggregates 260 TB/s of NVLink scale-up bandwidth. Customer system deliveries are planned through major cloud providers including AWS, Google Cloud, Microsoft Azure, and Oracle in the second half of 2026, with Rubin marking the first post-Blackwell NVIDIA data center architecture in production at commercial scale."
+    },
+    {
       "date": "2026-05-28",
       "title": "Anthropic Raises $65B Series H at $965B Valuation",
       "provider": "Anthropic",
@@ -41,6 +48,13 @@
       "provider": "Anthropic",
       "category": "model-release",
       "description": "Anthropic shipped Claude Opus 4.8 just six weeks after Opus 4.7, keeping the 1 million token context window. Anthropic's own measures put agentic coding at 69.2% (up from 64.3%) and knowledge work at 1890 (up from 1753), with the model roughly 4x less likely than 4.7 to let flaws in its own code slip through while using about 35% fewer tokens per task. A new fast mode runs roughly 2.5x quicker and about three times cheaper than before, and Dynamic Workflows adds large-scale parallel subagent support."
+    },
+    {
+      "date": "2026-05-30",
+      "title": "SoftBank Commits Up to 75 Billion Euros to Build AI Data Centers in France",
+      "provider": "SoftBank",
+      "category": "infrastructure",
+      "description": "SoftBank Group announced at the 2026 Choose France summit hosted by President Emmanuel Macron that it will invest up to 75 billion euros to develop and operate AI data center capacity in France, one of the largest single AI infrastructure commitments in European history. Phase 1 commits 45 billion euros to deliver 3.1 gigawatts of capacity in the Hauts-de-France region by 2031, with sites in Dunkirk (Loon-Plage), Bosquel, and Bouchain. Total target is 5 gigawatts across the full program. Schneider Electric is the power modules manufacturing partner at the Port of Dunkirk; EDF supplies low-carbon electricity leveraging France's nuclear-heavy grid. The commitment marks SoftBank's strategic move from Vision Fund-style investing into owning and operating frontier AI compute infrastructure."
     },
     {
       "date": "2026-05-21",
