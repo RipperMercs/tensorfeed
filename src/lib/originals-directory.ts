@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-off-switch-brussels-g7-evian',
+    title:
+      'The Anthropic Off-Switch Reached Brussels This Week. The G7 in Evian Is Where It Gets Negotiated.',
+    author: 'Marcus Chen',
+    date: 'June 15, 2026',
+    readTime: '6 min read',
+    description:
+      'On June 14, 2026, European Commission spokesperson Thomas Regnier said publicly that Brussels is assessing the practical consequences of the US export control directive that forced Anthropic to disable Fable 5 and Mythos 5 worldwide, that any contingency measures should not be discriminatory against partners, and that the episode underlines the need for European technological sovereignty. On June 15, the G7 opens in Evian-les-Bains with the CEOs of OpenAI, Anthropic, and Google DeepMind in the room together for the first time. The off-switch stopped being a TF analytical point this week and became an EU institutional file. Inside the framing Regnier picked (and why discrimination, not security, is the cleverer line), what sovereignty looks like as a procurement question (Mistral, Prior Labs, the EU AI Act August enforcement window), three practical implications for builders shipping into Europe, and three signposts to watch as summit week unfolds.',
+  },
+  {
     slug: 'glm-5-2-open-frontier-export-letter',
     title:
       'Zhipu Shipped a 1M Open-Weight Frontier on Huawei Silicon. The Export Letter Does Not Reach It.',
