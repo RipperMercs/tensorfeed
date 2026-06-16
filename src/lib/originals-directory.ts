@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'amazon-pulled-fable-5-hyperscaler-conflict',
+    title:
+      'Amazon Pulled the Off-Switch on Fable 5. The Hyperscaler Equity Loop Just Met Its First Conflict Test.',
+    author: 'Marcus Chen',
+    date: 'June 16, 2026',
+    readTime: '7 min read',
+    description:
+      "Reporting on June 13 and 14 placed Amazon CEO Andy Jassy at the center of the chain of events that took Claude Fable 5 and Mythos 5 dark worldwide 72 hours after launch. Amazon researchers jailbroke Fable 5 with a series of prompts, Jassy phoned Treasury Secretary Scott Bessent, the White House gave Anthropic 90 minutes to restrict access to US nationals only, and the only compliant setting on a global API was off. When Jassy made the call he was wearing four hats: Anthropic's largest investor, board observer, the cloud host that runs Project Rainier on AWS, and the silicon supplier for Trainium. The hyperscaler equity loop that financed frontier AI for the last three years just produced its first regulatory trigger. Inside the four-hat conflict, why Bedrock was willing to cannibalize its highest-ARPU shelf SKU to make the call, what it forces every other lab to do about multi-cloud routing, the comparison table for OpenAI, Mistral, and DeepSeek, and three signposts as Anthropic heads back to Washington on June 22.",
+  },
+  {
     slug: 'anthropic-off-switch-brussels-g7-evian',
     title:
       'The Anthropic Off-Switch Reached Brussels This Week. The G7 in Evian Is Where It Gets Negotiated.',
