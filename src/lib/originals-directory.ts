@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'aws-waf-x402-publisher-monetize-rule',
+    title:
+      'AWS Made x402 a WAF Rule. The Publisher Side of Agent Commerce Now Has a Default Setting.',
+    author: 'Ripper',
+    date: 'June 17, 2026',
+    readTime: '7 min read',
+    description:
+      "On June 15, 2026, AWS shipped AI traffic monetization inside WAF Bot Control. A new Monetize action turns any CloudFront-fronted endpoint into a pay-per-agent surface: WAF answers an AI bot with HTTP 402, an x402 manifest priced in USDC, settlement through the Coinbase x402 Facilitator, and the response served in the same request cycle. The Bedrock AgentCore announcement in May wired the demand side. This one wires the supply side. Inside the six-action rule menu (Monetize, Allow, Block, Count, CAPTCHA, Challenge), the publisher math the launch is writing to, why the CDN is the right home for a 402, the Cloudflare pay-per-crawl comparison, what is still missing (discovery, AFTA-style signed receipts), and three signposts for the next two weeks.",
+  },
+  {
     slug: 'amazon-pulled-fable-5-hyperscaler-conflict',
     title:
       'Amazon Pulled the Off-Switch on Fable 5. The Hyperscaler Equity Loop Just Met Its First Conflict Test.',
