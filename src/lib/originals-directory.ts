@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'white-house-jailbreak-proof-fable-5-mandate',
+    title:
+      'The White House Told Anthropic to Make Fable 5 Jailbreak-Proof. Security Researchers Say That Is Not a Thing That Exists.',
+    author: 'Kira Nolan',
+    date: 'June 17, 2026',
+    readTime: '6 min read',
+    description:
+      "Reporting this week says the White House will only put Fable 5 back online if Anthropic blocks all jailbreaks, and security researchers told WIRED that may not be possible. The bar describes a property no deployed model has ever had: adversarial robustness has been an open research problem for more than a decade, and Fable 5 itself was pulled because Amazon researchers jailbroke it days after launch. The mandate is a category error. It asks for a perfect outcome instead of a sound process (red-teaming, monitoring, disclosure, fast patching), it governs only the lab that answered the phone, and it cannot touch the open weights, like Zhipu's GLM-5.2, that already shipped and cannot be recalled. Anthropic sent adversarial ML researcher Nicholas Carlini to explain the reality. Two ways this resolves, both bad, and what a real safety standard would require instead.",
+  },
+  {
     slug: 'amazon-pulled-fable-5-hyperscaler-conflict',
     title:
       'Amazon Pulled the Off-Switch on Fable 5. The Hyperscaler Equity Loop Just Met Its First Conflict Test.',
