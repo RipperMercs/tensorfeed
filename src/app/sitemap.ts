@@ -266,6 +266,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals/amazon-pulled-fable-5-hyperscaler-conflict`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/anthropic-off-switch-brussels-g7-evian`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/glm-5-2-open-frontier-export-letter`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/anthropic-overtakes-openai-enterprise-adoption-ramp`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/fable-5-mythos-5-export-control-suspension`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/coinbase-agents-x402-closed-loop`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/openai-oracle-credits-frontier-procurement`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },

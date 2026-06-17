@@ -47,6 +47,16 @@ export const ORIGINALS: OriginalArticle[] = [
       'On June 13, 2026, two days after a US Commerce directive forced Anthropic to disable Fable 5 and Mythos 5 worldwide, Z.ai (Zhipu AI) shipped GLM-5.2 to every GLM Coding Plan tier with a 1M-token context window, 131K output tokens, and a new Max-effort reasoning mode. The 744B-parameter MoE inherits a training pipeline that ran on 100,000 Huawei Ascend 910B chips with zero Nvidia in the loop. The standalone API, the Z.ai chatbot, and MIT-licensed open weights ship next week. No benchmarks at launch is itself a tell. The contrast is the story: a model the US government can disable in an evening, and a model the US government has no mechanism to recall. Inside the technical envelope, why Ascend matters this week specifically, what builders get now versus next week, and three signposts in the next ten days.',
   },
   {
+    slug: 'anthropic-overtakes-openai-enterprise-adoption-ramp',
+    title:
+      'Anthropic Passed OpenAI on Enterprise Spend. The Lead Is Real and Structurally Fragile.',
+    author: 'Marcus Chen',
+    date: 'June 15, 2026',
+    readTime: '6 min read',
+    description:
+      'The June 2026 Ramp AI Index puts Anthropic at 41 percent of US businesses with paid AI subscriptions, the most adopted vendor in enterprise for the second index running. Ramp measures real card and invoice spend across 50,000+ US businesses, so this is a spend signal rather than a survey: Anthropic climbed from 0.03 percent of businesses in June 2023 to 7.94 percent in April 2025, passed OpenAI in April 2026 (34.4 vs 32.3), and reached 41 percent in June, winning roughly 70 percent of first-time-buyer matchups along the way. The crossover is real and earned by owning the coding workflow, but the same report flags why the lead is fragile: token billing misaligns Anthropic with the buyer, reliability complaints are accumulating, compute pressure is pushing effective prices up, and the fastest-growing vendors on Ramp are cheap open-weight inference providers undercutting both leaders. With Anthropic filed at a $965B S-1 and OpenAI steering toward its own listing, the figure that decides whether this lead is a moat or a moment is inference gross margin, not market share.',
+  },
+  {
     slug: 'fable-5-mythos-5-export-control-suspension',
     title:
       'Washington Pulled Fable 5 and Mythos 5 Three Days After Launch. Export Control Reached the Model Layer.',
