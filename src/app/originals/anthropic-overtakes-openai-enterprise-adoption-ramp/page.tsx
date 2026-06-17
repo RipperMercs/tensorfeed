@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     description: 'Ramp puts Anthropic at 41 percent of US businesses with paid AI. The crossover is real. Here is why the lead is harder to hold than it looks.',
     type: 'article',
     publishedTime: '2026-06-15T11:00:00Z',
-    authors: ['Marcus Chen'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -31,7 +31,7 @@ export default function AnthropicEnterpriseAdoptionPage() {
         title="Anthropic Passed OpenAI on Enterprise Spend. The Lead Is Real and Structurally Fragile."
         description="The June 2026 Ramp AI Index puts Anthropic at 41 percent of US businesses with paid AI subscriptions, the most adopted vendor in enterprise for the first time. The crossover is a spend signal, not a vibe, but the lead is built on a pricing model misaligned with the buyer."
         datePublished="2026-06-15"
-        author="Marcus Chen"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -49,7 +49,7 @@ export default function AnthropicEnterpriseAdoptionPage() {
           Anthropic Passed OpenAI on Enterprise Spend. The Lead Is Real and Structurally Fragile.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Marcus Chen</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-06-15">June 15, 2026</time>
           <span>&middot;</span>

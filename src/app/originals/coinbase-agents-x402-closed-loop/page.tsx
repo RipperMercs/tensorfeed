@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       'Coinbase for Agents trades crypto, pays for premium research via x402, and runs inside ChatGPT and Claude through MCP. x402 just crossed 75M transactions in 30 days. The closed loop is the story.',
     type: 'article',
     publishedTime: '2026-06-12T14:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -33,7 +33,7 @@ export default function CoinbaseAgentsX402ClosedLoopPage() {
         title="Coinbase Put an Agent Inside ChatGPT and Claude. It Pays for Its Own Research."
         description="On June 11, 2026 Coinbase shipped Coinbase for Agents, an agent that trades crypto, pays for premium research via x402, and runs inside ChatGPT and Claude through Coinbase's MCP server. x402 just crossed 75M transactions and $24M of volume in 30 days."
         datePublished="2026-06-12"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -60,7 +60,7 @@ export default function CoinbaseAgentsX402ClosedLoopPage() {
           Coinbase Put an Agent Inside ChatGPT and Claude. It Pays for Its Own Research.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-06-12">June 12, 2026</time>
           <span>&middot;</span>

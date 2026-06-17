@@ -50,7 +50,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'anthropic-overtakes-openai-enterprise-adoption-ramp',
     title:
       'Anthropic Passed OpenAI on Enterprise Spend. The Lead Is Real and Structurally Fragile.',
-    author: 'Marcus Chen',
+    author: 'Adrian Vale',
     date: 'June 15, 2026',
     readTime: '6 min read',
     description:
@@ -70,7 +70,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'coinbase-agents-x402-closed-loop',
     title:
       'Coinbase Put an Agent Inside ChatGPT and Claude. It Pays for Its Own Research.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'June 12, 2026',
     readTime: '7 min read',
     description:
