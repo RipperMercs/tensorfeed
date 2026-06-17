@@ -12273,6 +12273,7 @@ export default {
           'model_deprecated',
           'spec_version',
           'framework_release',
+          'protocol_milestone',
         ];
         const eventTypeArg = validEventTypes.find((t) => t === eventType);
 

@@ -4,6 +4,7 @@ export const KV_MODELS_SNAP = 'substrate-changelog:models:snapshot';
 export const KV_DEPRECATIONS_SNAP = 'substrate-changelog:deprecations:snapshot';
 export const KV_SPECS_SNAP = 'substrate-changelog:specs:snapshot';
 export const KV_FRAMEWORKS_SNAP = 'substrate-changelog:frameworks:snapshot';
+export const KV_MILESTONES_SNAP = 'substrate-changelog:milestones:snapshot';
 export const kvDay = (date: string) => `substrate-changelog:day:${date}`;
 export const RECENT_CAP = 200;
 export const MAX_HISTORY_DAYS = 366;

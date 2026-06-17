@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { diffSnapshots, pickX402SpecTag } from './capture';
-import type { ModelSnapshot, DeprecationSnapshot, SpecSnapshot, FrameworkSnapshot } from './types';
+import { diffSnapshots, diffMilestones, pickX402SpecTag } from './capture';
+import { PROTOCOL_MILESTONES, type ProtocolMilestone } from './milestones';
+import type { ModelSnapshot, DeprecationSnapshot, SpecSnapshot, FrameworkSnapshot, MilestoneSnapshot } from './types';
 
 const D = '2026-06-04';
 const specs = (over: Partial<SpecSnapshot> = {}): SpecSnapshot => ({ mcp: 'm1', x402: 'v1', a2a: 'v1.0.0', sources: { mcp: null, x402: null, a2a: null }, ...over });
@@ -115,6 +116,69 @@ describe('diffSnapshots', () => {
     const json = JSON.stringify(ev.filter((e) => e.type === 'framework_release'));
     expect(json).not.toContain('—');
     expect(json).not.toContain('–');
+    expect(json.includes('--')).toBe(false);
+  });
+});
+
+const MS: ProtocolMilestone[] = [
+  { id: 'alpha', subject: 'x402', date: '2026-06-15', detail: 'alpha milestone landed on Base', sourceUrl: 'https://example.com/alpha' },
+  { id: 'beta', subject: 'AWS', date: '2026-06-15', detail: 'beta milestone landed for publishers', sourceUrl: 'https://example.com/beta' },
+];
+const msSnap = (ids: string[]): MilestoneSnapshot => Object.fromEntries(ids.map((id) => [id, '2026-06-15']));
+
+describe('diffMilestones', () => {
+  it('null prior emits the whole curated registry once (seeding IS the feature)', () => {
+    const ev = diffMilestones(null, msSnap(['alpha', 'beta']), MS, D);
+    expect(ev).toHaveLength(2);
+    expect(ev.map((e) => e.id).sort()).toEqual(['protocol_milestone:alpha', 'protocol_milestone:beta']);
+    expect(ev.every((e) => e.type === 'protocol_milestone')).toBe(true);
+    expect(ev.every((e) => e.at === D)).toBe(true);
+  });
+  it('forward-only: an id already in the prior is skipped, a brand new id emits', () => {
+    const ev = diffMilestones(msSnap(['alpha']), msSnap(['alpha', 'beta']), MS, D);
+    expect(ev).toHaveLength(1);
+    expect(ev[0].id).toBe('protocol_milestone:beta');
+    expect(ev[0].subject).toBe('AWS');
+    expect(ev[0].source_url).toBe('https://example.com/beta');
+  });
+  it('nothing new emits nothing', () => {
+    const ev = diffMilestones(msSnap(['alpha', 'beta']), msSnap(['alpha', 'beta']), MS, D);
+    expect(ev).toEqual([]);
+  });
+  it('a curr id absent from the registry is skipped (no orphan event)', () => {
+    const ev = diffMilestones(null, msSnap(['alpha', 'ghost']), MS, D);
+    expect(ev).toHaveLength(1);
+    expect(ev[0].id).toBe('protocol_milestone:alpha');
+  });
+  it('id is timestamp-free: the same milestone yields the same id across days', () => {
+    const a = diffMilestones(msSnap(['alpha']), msSnap(['alpha', 'beta']), MS, D);
+    const b = diffMilestones(msSnap(['alpha']), msSnap(['alpha', 'beta']), MS, '2026-06-05');
+    expect(a[0].id).toBe('protocol_milestone:beta');
+    expect(a[0].id).toBe(b[0].id);
+  });
+  it('at is the detection day, not the real-world milestone date', () => {
+    const ev = diffMilestones(null, msSnap(['alpha']), MS, D);
+    expect(ev[0].at).toBe(D);
+    expect(ev[0].at).not.toBe('2026-06-15');
+  });
+});
+
+describe('PROTOCOL_MILESTONES registry (shipped copy)', () => {
+  it('ids are unique and non-empty', () => {
+    const ids = PROTOCOL_MILESTONES.map((m) => m.id);
+    expect(ids.every((id) => id.length > 0)).toBe(true);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+  it('every entry carries an https source url and a YYYY-MM-DD date', () => {
+    for (const m of PROTOCOL_MILESTONES) {
+      expect(m.sourceUrl.startsWith('https://')).toBe(true);
+      expect(/^\d{4}-\d{2}-\d{2}$/.test(m.date)).toBe(true);
+    }
+  });
+  it('no em dashes, en dashes, or double hyphens in the shipped milestone copy', () => {
+    const json = JSON.stringify(PROTOCOL_MILESTONES);
+    expect(json).not.toContain('—'); // em dash
+    expect(json).not.toContain('–'); // en dash
     expect(json.includes('--')).toBe(false);
   });
 });

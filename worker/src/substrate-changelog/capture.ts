@@ -1,5 +1,6 @@
 import type { Env } from '../types';
 import { MODEL_DEPRECATIONS } from '../model-deprecations';
+import { PROTOCOL_MILESTONES, type ProtocolMilestone } from './milestones';
 import {
   KV_CURSOR,
   KV_RECENT,
@@ -7,6 +8,7 @@ import {
   KV_DEPRECATIONS_SNAP,
   KV_SPECS_SNAP,
   KV_FRAMEWORKS_SNAP,
+  KV_MILESTONES_SNAP,
   kvDay,
   RECENT_CAP,
   SPEC_REPOS,
@@ -17,6 +19,7 @@ import type {
   DeprecationSnapshot,
   SpecSnapshot,
   FrameworkSnapshot,
+  MilestoneSnapshot,
   SubstrateEvent,
 } from './types';
 
@@ -191,6 +194,49 @@ export function diffSnapshots(
 }
 
 // ===========================================================================
+// Curated milestone diff, kept OUT of diffSnapshots so the auto-detected
+// dimensions and their tests stay untouched. The milestone registry is small
+// and intentional, so the seeding rule is deliberately the OPPOSITE of the
+// model/framework dimensions: a null prior (first run with this dimension live)
+// emits the WHOLE registry once, because surfacing these is the point, not a
+// flood to suppress. After that it is forward-only: an id already present in the
+// prior snapshot is skipped, so only a brand new milestone emits. The id is
+// `protocol_milestone:${id}` with no timestamp, so the recent ring dedups it and
+// a re-run (or a lost snapshot) cannot double a milestone within the ring. `at`
+// is the detection day to match the feed's uniform clock; the real event date is
+// carried in the registry's detail string. Every detail is plain ASCII (no em
+// dashes, no double hyphens), enforced by the registry's own discipline.
+// ===========================================================================
+export function diffMilestones(
+  prev: MilestoneSnapshot | null,
+  curr: MilestoneSnapshot,
+  registry: ProtocolMilestone[],
+  today: string,
+): SubstrateEvent[] {
+  const events: SubstrateEvent[] = [];
+  const meta = new Map(registry.map((m) => [m.id, m]));
+  for (const id of Object.keys(curr)) {
+    // null prior => emit all (curated set, seeding IS the feature). Non-null
+    // prior that already holds the id => skip (forward-only). Non-null prior
+    // missing the id => a newly added milestone => emit.
+    if (prev && prev[id]) continue;
+    const m = meta.get(id);
+    if (!m) continue;
+    events.push({
+      id: `protocol_milestone:${id}`,
+      type: 'protocol_milestone',
+      at: today,
+      subject: m.subject,
+      provider: m.provider ?? null,
+      detail: m.detail,
+      version: m.version ?? null,
+      source_url: m.sourceUrl,
+    });
+  }
+  return events;
+}
+
+// ===========================================================================
 // x402 tag filter. The coinbase/x402 tags list mixes the bare spec tags (v1,
 // v2) with language-SDK release tags (npm-x402@v1.1.0, pypi-x402@v2.7.0). Only
 // the bare `vN` form is a protocol-spec version; everything else is an SDK
@@ -292,12 +338,18 @@ export async function captureSubstrateChangelog(
       currDeprecations[d.id] = d.status;
     }
 
-    // === Prior snapshots (null when absent: first run seeds silently) ===
-    const [prevModels, prevDeprecations, prevSpecs, prevFrameworks] = await Promise.all([
+    // === Current curated milestones from the registry ===
+    const currMilestones: MilestoneSnapshot = {};
+    for (const ms of PROTOCOL_MILESTONES) currMilestones[ms.id] = ms.date;
+
+    // === Prior snapshots (null when absent: first run seeds silently for the
+    // auto-detected dimensions; milestones intentionally emit on a null prior) ===
+    const [prevModels, prevDeprecations, prevSpecs, prevFrameworks, prevMilestones] = await Promise.all([
       env.TENSORFEED_CACHE.get(KV_MODELS_SNAP, 'json') as Promise<ModelSnapshot | null>,
       env.TENSORFEED_CACHE.get(KV_DEPRECATIONS_SNAP, 'json') as Promise<DeprecationSnapshot | null>,
       env.TENSORFEED_CACHE.get(KV_SPECS_SNAP, 'json') as Promise<SpecSnapshot | null>,
       env.TENSORFEED_CACHE.get(KV_FRAMEWORKS_SNAP, 'json') as Promise<FrameworkSnapshot | null>,
+      env.TENSORFEED_CACHE.get(KV_MILESTONES_SNAP, 'json') as Promise<MilestoneSnapshot | null>,
     ]);
 
     // === Poll the 3 spec repos; each keeps its prior on any failure ===
@@ -345,6 +397,11 @@ export async function captureSubstrateChangelog(
       today,
     );
 
+    // Curated agent-commerce / protocol-governance milestones, merged forward-only.
+    for (const e of diffMilestones(prevMilestones, currMilestones, PROTOCOL_MILESTONES, today)) {
+      events.push(e);
+    }
+
     // === On events: prepend to the recent ring (cap) + write the day rollup ===
     if (events.length > 0) {
       const recentRaw = (await env.TENSORFEED_CACHE.get(KV_RECENT, 'json')) as SubstrateEvent[] | null;
@@ -366,6 +423,7 @@ export async function captureSubstrateChangelog(
     await env.TENSORFEED_CACHE.put(KV_DEPRECATIONS_SNAP, JSON.stringify(currDeprecations));
     await env.TENSORFEED_CACHE.put(KV_SPECS_SNAP, JSON.stringify(currSpecs));
     await env.TENSORFEED_CACHE.put(KV_FRAMEWORKS_SNAP, JSON.stringify(currFrameworks));
+    await env.TENSORFEED_CACHE.put(KV_MILESTONES_SNAP, JSON.stringify(currMilestones));
     await env.TENSORFEED_CACHE.put(KV_CURSOR, JSON.stringify({ last_run_at: nowIso, last_ok_at: nowIso }));
 
     return { events: events.length };

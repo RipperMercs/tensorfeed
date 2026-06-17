@@ -10,7 +10,8 @@ type SubstrateEventType =
   | 'model_repriced'
   | 'model_deprecated'
   | 'spec_version'
-  | 'framework_release';
+  | 'framework_release'
+  | 'protocol_milestone';
 
 interface SubstrateEvent {
   id: string;
@@ -47,6 +48,7 @@ const TYPE_LABELS: Record<SubstrateEventType, string> = {
   model_deprecated: 'Model deprecated',
   spec_version: 'Spec version',
   framework_release: 'Framework release',
+  protocol_milestone: 'Protocol milestone',
 };
 
 const TYPE_COLORS: Record<SubstrateEventType, string> = {
@@ -56,6 +58,7 @@ const TYPE_COLORS: Record<SubstrateEventType, string> = {
   model_deprecated: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
   spec_version: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   framework_release: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  protocol_milestone: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
 };
 
 function typeLabel(t: SubstrateEventType): string {
@@ -113,7 +116,7 @@ export default function SubstrateView() {
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">AI Substrate Changelog</h1>
         </div>
         <p className="text-text-secondary text-lg max-w-3xl">
-          A forward-only timeline of changes to the substrate AI agents build on: model lifecycle (added, removed, repriced, deprecated), agent-protocol spec versions (MCP, x402, A2A), and agent-framework releases. The moving floor under every agent, in one feed. {data?.captured_at && `Updated ${formatDate(data.captured_at.slice(0, 10))}.`}
+          A forward-only timeline of changes to the substrate AI agents build on: model lifecycle (added, removed, repriced, deprecated), agent-protocol spec versions (MCP, x402, A2A), agent-framework releases, and agent-commerce milestones (payment-protocol governance and the rails that turn publishers into agent-paying merchants). The moving floor under every agent, in one feed. {data?.captured_at && `Updated ${formatDate(data.captured_at.slice(0, 10))}.`}
         </p>
       </div>
 

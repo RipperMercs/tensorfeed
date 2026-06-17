@@ -548,6 +548,36 @@ describe('substrate-changelog', () => {
     expect((res.json?.billing as Record<string, unknown> | undefined)?.credits_charged).toBe(1);
   });
 
+  // FILTER: event_type=protocol_milestone must narrow to curated milestones
+  // (regression guard: the handler whitelist must include protocol_milestone, or
+  // the new agent-commerce milestone dimension is silently un-filterable).
+  it('filters premium history to protocol_milestone events when event_type is set', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    await env.TENSORFEED_CACHE.put('substrate-changelog:day:2026-06-17', JSON.stringify({
+      date: '2026-06-17',
+      events: [
+        evt(),
+        evt({ id: 'protocol_milestone:aws-cloudfront-waf-x402', type: 'protocol_milestone', subject: 'AWS CloudFront and WAF', provider: null, detail: 'AWS and Coinbase let publishers accept AI agents as paying customers via x402.', version: null, source_url: 'https://www.linuxfoundation.org/x402foundation' }),
+      ],
+    }));
+    await env.TENSORFEED_CACHE.put('substrate-changelog:cursor', JSON.stringify({
+      last_run_at: new Date(Date.now() - 60_000).toISOString(),
+    }));
+
+    const res = await call(env, '/api/premium/substrate-changelog/history?from=2026-06-15&to=2026-06-18&event_type=protocol_milestone', { token, ip: uniqueIp() });
+    expect(res.status).toBe(200);
+    expect(res.json?.ok).toBe(true);
+    const events = res.json?.events as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(events)).toBe(true);
+    // Only the protocol_milestone event survives the filter (NOT the model_added one).
+    expect(events?.length).toBe(1);
+    expect(events?.[0]?.type).toBe('protocol_milestone');
+    expect((res.json?.billing as Record<string, unknown> | undefined)?.credits_charged).toBe(1);
+  });
+
   // NO-CHARGE on empty range: valid token, a range with no day rollups. The agent
   // gets the ok empty result, billed at zero (empty_result rule). Balance held.
   it('no-charges an empty range with no day rollups', async () => {
