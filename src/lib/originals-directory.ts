@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-seoul-chaebol-sovereignty-playbook',
+    title:
+      'Anthropic Opened Seoul With Samsung, LG, and NAVER on Day One. The Sovereignty Playbook Just Reached Asia.',
+    author: 'Marcus Chen',
+    date: 'June 18, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 17, 2026 Anthropic opened its Seoul office, its third in Asia-Pacific after Tokyo and Bengaluru, and announced day-one Claude deployments at NAVER (Claude Code across the engineering org), Samsung SDS (Claude Cowork and Claude Code across Samsung Electronics), LG CNS (Claude across LG Group), Nexon (Claude Code for live-service game dev), Hanwha Solutions (Claude via AWS Bedrock with in-region data controls), and Channel Corp (Claude powering Channel Talk for 230,000+ businesses). Anthropic also signed an MOU with Korea's Ministry of Science and ICT covering AI safety, Korean-language model evaluation with the Korea AI Safety Institute, and AI-enabled cyber threat coordination, plus a research consortium giving up to sixty researchers from KAIST, Korea University, Yonsei, and POSTECH access to Claude. Six days after the US Commerce directive that blacked out Fable 5 and Mythos 5, and in the country where the trigger reportedly was, Anthropic planted a flag in Seoul whose job is to keep the next directive from happening. The export-control thread just became a sovereignty-procurement sales lever, with the customer list Wall Street would actually pay to put on a roadshow slide. Inside the six logos, the sovereignty bundle that now ships next to the API, what it does to OpenAI in Korea, and three signposts in the next ninety days.",
+  },
+  {
     slug: 'white-house-jailbreak-proof-fable-5-mandate',
     title:
       'The White House Told Anthropic to Make Fable 5 Jailbreak-Proof. Security Researchers Say That Is Not a Thing That Exists.',
