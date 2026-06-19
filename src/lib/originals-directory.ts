@@ -37,6 +37,26 @@ export const ORIGINALS: OriginalArticle[] = [
       "On June 17, 2026 Anthropic opened its Seoul office, its third in Asia-Pacific after Tokyo and Bengaluru, and announced day-one Claude deployments at NAVER (Claude Code across the engineering org), Samsung SDS (Claude Cowork and Claude Code across Samsung Electronics), LG CNS (Claude across LG Group), Nexon (Claude Code for live-service game dev), Hanwha Solutions (Claude via AWS Bedrock with in-region data controls), and Channel Corp (Claude powering Channel Talk for 230,000+ businesses). Anthropic also signed an MOU with Korea's Ministry of Science and ICT covering AI safety, Korean-language model evaluation with the Korea AI Safety Institute, and AI-enabled cyber threat coordination, plus a research consortium giving up to sixty researchers from KAIST, Korea University, Yonsei, and POSTECH access to Claude. Six days after the US Commerce directive that blacked out Fable 5 and Mythos 5, and in the country where the trigger reportedly was, Anthropic planted a flag in Seoul whose job is to keep the next directive from happening. The export-control thread just became a sovereignty-procurement sales lever, with the customer list Wall Street would actually pay to put on a roadshow slide. Inside the six logos, the sovereignty bundle that now ships next to the API, what it does to OpenAI in Korea, and three signposts in the next ninety days.",
   },
   {
+    slug: 'aws-waf-bot-monetization-x402-rails',
+    title:
+      'AWS Just Put a Paywall for AI Bots Inside Its Firewall. The Payment Rails Are Now a Checkbox.',
+    author: 'Marcus Chen',
+    date: 'June 19, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 15, 2026 AWS WAF gained an AI traffic monetization capability: any site behind the firewall can charge AI bots for content access with an HTTP 402 and an x402 price manifest, settled in USDC on Base or Solana through Coinbase's x402 Facilitator, toggled on from existing config with no origin code. Bot Control already classified more than 650 agent types and sorted them into Verified (Web Bot Auth Ed25519) and Unverified tiers; the new mode adds a price and six per-tier actions. It is the second AWS agent-payments move in five weeks after AgentCore on Bedrock, it landed the same day Coinbase spun x402 out under the Linux Foundation with AWS and Cloudflare among 20-plus founding members, and Cloudflare had already shipped a pay-per-crawl version months earlier. The takeaway: the rails for agent commerce are now commodity infrastructure, so the value migrates to whoever has data and decisions worth paying for. A tollbooth charges for access to content you already host; a merchant charges for a product nobody else assembles. When charging bots is a checkbox, the paywall stops being a moat and discovery plus trust become the contest that decides the market.",
+  },
+  {
+    slug: 'spacex-cursor-acquisition-coding-consolidation',
+    title:
+      'SpaceX Just Bought Cursor for $60 Billion. Every Major AI Coding Tool Now Has an Owner.',
+    author: 'Adrian Vale',
+    date: 'June 18, 2026',
+    readTime: '7 min read',
+    description:
+      "On June 16, 2026, four days after completing the largest IPO in history, SpaceX agreed to acquire Anysphere (the company behind Cursor) for $60 billion in an all-stock deal, with closing expected in Q3 pending regulatory review. Cursor runs at roughly $2.6 billion in annualized revenue, and SPCX shares jumped 16 to 17 percent on the news, briefly making SpaceX the fourth most valuable US company. The price is not the story. The story is that this finishes the consolidation: with OpenAI, Anthropic, Google, and Microsoft each holding a coding surface, the independent AI IDE era is over and every high-intent developer surface now sits inside a model lab or a mega-cap. The strategic logic is that the model layer commoditizes while the application layer does not, so whoever owns the tool owns the routing decision, the usage data, and the recurring revenue. The risk for developers is not that tools break tomorrow, but that model neutrality stops being the default. What to watch: the default model setting, first-party model preference on pricing and latency, and whether competitor models drift to the bottom of the dropdown.",
+  },
+  {
     slug: 'white-house-jailbreak-proof-fable-5-mandate',
     title:
       'The White House Told Anthropic to Make Fable 5 Jailbreak-Proof. Security Researchers Say That Is Not a Thing That Exists.',
