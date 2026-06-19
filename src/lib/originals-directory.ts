@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'openai-frontier-model-science-loop',
+    title:
+      'OpenAI Shipped Two Real Science Results in 24 Hours. The Frontier Model Climbed Into the Research Loop.',
+    author: 'Kira Nolan',
+    date: 'June 19, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 17 and 18, 2026 OpenAI published two measured science results inside 24 hours. The first, a Molecule.one collaboration, used GPT-5.4 inside Molecule.one's Maria agent to find a TEMPO-based fix for the Chan-Lam coupling of primary sulfonamides (a pharmacophore in more than 91 FDA-approved drugs), pushing the mean estimated yield from 16.6% to 25.2% across 10,080 reactions and the share clearing 30% yield from 15.6% to 37.5%, with the agent running for about 2.5 months and human chemists writing it up in another half month. The second, an NEJM AI study with Boston Children's Hospital and Harvard, fed OpenAI o3 Deep Research into 376 previously unsolved rare-disease cases the hospital's specialists had already failed; the model surfaced leads that produced 18 new clinically confirmed diagnoses, a 4.8% additional diagnostic yield split across ten neurodevelopmental conditions, four neuromuscular disorders, two children who died suddenly, and two early-childhood psychosis cases. Neither result used GPT-Rosalind, OpenAI's vertical life-sciences model. The general-purpose frontier model is now a measurable contributor in a real research loop, and the vertical-AI thesis has to make room for it. Inside the chemistry and medicine numbers, the Rosalind-shaped hole, the harness-versus-model question, the FDA/CMS reimbursement implication for the rare-disease workflow, and the contrast with Anthropic's posture this week.",
+  },
+  {
     slug: 'anthropic-seoul-chaebol-sovereignty-playbook',
     title:
       'Anthropic Opened Seoul With Samsung, LG, and NAVER on Day One. The Sovereignty Playbook Just Reached Asia.',
