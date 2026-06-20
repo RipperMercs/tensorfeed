@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'openai-partner-network-150m-channel-moat',
+    title:
+      'OpenAI Put $150 Million Behind 300,000 Consultants. The Partner Network Is a Channel Moat Against Anthropic.',
+    author: 'Marcus Chen',
+    date: 'June 20, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 14, 2026 OpenAI announced the OpenAI Partner Network, a $150 million channel program structured around Select, Advanced, and Elite tiers, with a target of 300,000 certified consultants by year end and launch partners including Accenture, BCG, McKinsey, Bain, PwC, Eliza, and Artium. Specializations cover Codex, cybersecurity, API, and agent transformation, and a Forward Deployed Experts pilot embeds partner practitioners alongside OpenAI engineers on Elite engagements. It is the second OpenAI implementation move in five weeks, after the $4 billion Deployment Company in May, and it lands 30 days after the Ramp AI Index put Anthropic ahead of OpenAI on enterprise spend at 41 percent of paying US businesses. The frame to read this through: when the model commoditizes, the value migrates to whoever owns the implementation layer. OpenAI just bought a 300,000-strong consulting army whose comp plans are now structurally tilted toward recommending GPT-class models first. The channel is the moat. The Big Four pen is the new sales motion. The question for Anthropic is whether the Seoul-style sovereignty bundle and Claude Code's developer surface beat a Big-Four-led procurement check.",
+  },
+  {
     slug: 'openai-frontier-model-science-loop',
     title:
       'OpenAI Shipped Two Real Science Results in 24 Hours. The Frontier Model Climbed Into the Research Loop.',
