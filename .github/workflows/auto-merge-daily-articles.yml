@@ -1,0 +1,42 @@
+name: Auto-merge daily articles
+
+# The daily-article routine opens a PR on an auto/* branch each morning, but nothing
+# merged it automatically, so articles piled up unmerged (gap fixed 2026-06-20).
+# This watches the Web tests suite: when it concludes success on an auto/* branch that
+# lives in this repo, the matching open PR is squash-merged and its branch deleted.
+# Two guards keep it safe: it only fires after tests pass, and only for auto/* branches,
+# so a human PR is never auto-merged. A stale auto/* branch with conflicts simply fails
+# the merge step (visibly) rather than forcing a broken merge.
+
+on:
+  workflow_run:
+    workflows: ["Web tests"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'auto/')
+    steps:
+      - name: Squash-merge the passing daily-article PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then
+            echo "No open PR for $BRANCH; nothing to merge."
+            exit 0
+          fi
+          echo "Web tests passed for $BRANCH; squash-merging PR #$pr"
+          gh pr merge "$pr" --repo "$REPO" --squash --delete-branch
