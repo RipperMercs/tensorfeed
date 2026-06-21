@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'shazeer-google-openai-acqui-hire-cliff',
+    title:
+      'Google Paid $2.7 Billion to Bring Shazeer Back. He Walked to OpenAI 22 Months Later. The Acqui-Hire Cliff Just Got a Price.',
+    author: 'Marcus Chen',
+    date: 'June 21, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 18, 2026, Noam Shazeer, Google's VP of Engineering and co-lead of Gemini, told staff he was leaving for OpenAI. Twenty-two months earlier, in August 2024, Google paid roughly $2.7 billion in a CharacterAI licensing deal that was structurally an acqui-hire designed to keep him in the building. The retention clock just hit zero on the most expensive single engineer Google has ever bought back, and the destination is the rival walking into the IPO window with the most aggressive talent budget in the industry. The 2024 deal had the same shape as Microsoft-Inflection, Amazon-Adept, and Meta-Scale: a non-exclusive license dressed over a retention contract, engineered to slip past antitrust. The Shazeer departure is the first time the named principal has walked, and it sets a public price on the cliff that every other lab can now read. Inside the deal math, why 22 months is the cliff and not the contract, what it does to a Gemini 3.5 Pro launch that is already slipping, and what it costs OpenAI to make a hire this public 30 days after the $150M Partner Network move and 90 days after the $122B raise.",
+  },
+  {
     slug: 'openai-partner-network-150m-channel-moat',
     title:
       'OpenAI Put $150 Million Behind 300,000 Consultants. The Partner Network Is a Channel Moat Against Anthropic.',
