@@ -6326,8 +6326,14 @@ export default {
       const windowDays = Number.isFinite(wRaw) ? Math.max(1, Math.min(wRaw, 90)) : 7;
       const { buildMovers } = await import('./premium-hf-leaderboard');
       const result = await buildMovers(env, windowDays);
+      // Fewer than two captured days is an empty movers result: no-charge AND
+      // skip usage logging. logPremiumUsage previously fired before the
+      // no-charge, over-counting the revenue rollup against a 0-credit debit.
+      if (!result.has_data) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(logPremiumUsage(env, '/api/premium/hf-leaderboard/movers', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
-      return await premiumResponse(result, payment, 1, request, env, result.has_data ? null : 'empty_result');
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === GITHUB HOT AI ISSUES (free) ===
@@ -7549,6 +7555,13 @@ export default {
       if (!payment.paid) return payment.response!;
       const { computeReliabilityVerdict } = await import('./premium-provider-reliability-verdict');
       const result = await computeReliabilityVerdict(env);
+      // AFTA empty_result no-charge: a cold or empty probe layer yields a null
+      // verdict over zero ranked providers (most_dependable/riskiest null). Same
+      // payload, signed receipt records the no-charge. Mirrors the
+      // concentration-verdict sibling, which already guards this cold state.
+      if (result.ranking.length === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/provider-reliability-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10035,6 +10048,13 @@ export default {
       }
 
       const result = await getAttentionSeries(env, provider, range.from, range.to);
+      // AFTA empty_result no-charge: a valid provider with zero captured days in
+      // the window is an all-null series with nothing to sell. The series always
+      // spans the range (one point per day), so key on captured_days, not
+      // points.length. Mirrors the history/*/series guards.
+      if (result.summary.captured_days === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/attention/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10067,6 +10087,12 @@ export default {
       }
 
       const result = await getMcpRegistrySeries(env, range.from!, range.to!);
+      // AFTA empty_result no-charge: a window with zero captured snapshots is an
+      // all-null series (every point has_data:false). points always spans the
+      // range, so key on whether any point carries data, not points.length.
+      if (!result.points.some((p) => p.has_data)) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/mcp/registry/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10098,6 +10124,12 @@ export default {
       }
 
       const result = await getORSeries(env, range.from!, range.to!);
+      // AFTA empty_result no-charge: a window with zero captured snapshots is an
+      // all-null series (every point has_data:false). points always spans the
+      // range, so key on whether any point carries data, not points.length.
+      if (!result.points.some((p) => p.has_data)) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/openrouter/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10129,6 +10161,12 @@ export default {
       }
 
       const result = await getX402RegSeries(env, range.from!, range.to!);
+      // AFTA empty_result no-charge: a window with zero captured snapshots is an
+      // all-null series (every point has_data:false). points always spans the
+      // range, so key on whether any point carries data, not points.length.
+      if (!result.points.some((p) => p.has_data)) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/x402-registry/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -10162,6 +10200,12 @@ export default {
       }
 
       const result = await getHFVelocitySeries(env, range.from!, range.to!);
+      // AFTA empty_result no-charge: a window with zero captured snapshots is an
+      // all-null velocity series (every point has_data:false). points always
+      // spans the range, so key on whether any point carries data.
+      if (!result.points.some((p) => p.has_data)) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/hf/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -11833,20 +11877,17 @@ export default {
         : { superseded: false, checked: false, latest_same_form_accession: null, latest_same_form_filing_date: null };
       const gdResult = buildGuidanceDeltaResponse(gdDelta, gdSupersession);
 
+      // Input-keyed no-charge: if a newer same-form filing supersedes this
+      // delta, the agent's "latest" request cannot be honestly fulfilled, so do
+      // not charge AND do not log usage. logPremiumUsage previously fired before
+      // the no-charge, over-counting the revenue rollup against a 0-credit debit.
+      if (gdSupersession.superseded) {
+        return await premiumResponse(gdResult, payment, 1, request, env, 'stale_data');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/sec/filings/guidance-delta', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      // Input-keyed no-charge: if a newer same-form filing supersedes this
-      // delta, the agent's "latest" request cannot be honestly fulfilled, so
-      // do not charge. Otherwise charge the credit normally.
-      return await premiumResponse(
-        gdResult,
-        payment,
-        1,
-        request,
-        env,
-        gdSupersession.superseded ? 'stale_data' : null,
-      );
+      return await premiumResponse(gdResult, payment, 1, request, env);
     }
 
     // === PAID PREMIUM: SSVC DECISION VERDICT (Tier 1, 1 credit, param-required) ===
@@ -12883,6 +12924,12 @@ export default {
         min_releases_7d: parseMinReleases7d(url.searchParams.get('min_releases_7d')),
       }, new Date());
 
+      // AFTA empty_result no-charge: ecosystem/category/package filters that
+      // match nothing yield an empty velocity result (packages_in_snapshot 0,
+      // empty rows, zero summary totals). Nothing to sell, so do not bill.
+      if (result.packages_in_snapshot === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/packages/releases/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -13129,6 +13176,12 @@ export default {
         within_days: parseWithinDays(url.searchParams.get('within_days')),
       }, new Date());
 
+      // AFTA empty_result no-charge: vendor/risk_domain/within_days filters that
+      // match nothing yield an all-empty rollup (entries_count 0, empty
+      // developers/deployers/risk_domains/top_artifacts). Nothing to sell.
+      if (result.entries_count === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/ai-safety/incidents/exposure', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
@@ -13161,6 +13214,12 @@ export default {
         INFERENCE_LAST_UPDATED,
       );
 
+      // AFTA empty_result no-charge: a family filter that matches no row in the
+      // inference matrix yields an empty arbitrage view (models_in_matrix 0,
+      // empty models/top_arbitrage). Nothing to sell, so do not bill.
+      if (result.models_in_matrix === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'empty_result');
+      }
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/inference-providers/arbitrage', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );

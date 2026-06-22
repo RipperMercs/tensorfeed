@@ -151,6 +151,37 @@ describe('/api/premium/resilience/concentration-verdict', () => {
     expect(r.tracked_providers.length).toBeGreaterThan(0);
   });
 
+  it('threads a null captured_at when the probe layer is cold (never request time)', () => {
+    // Dead-SLA regression (2026-06-22 audit): a cold or empty probe layer yields
+    // capturedAt null and an empty ranking, but a listed provider still resolves
+    // from the live status feed so the verdict bills. captured_at must be null,
+    // NEVER now.toISOString(); a request-time stamp reads as fresh and defeats
+    // the 30-minute stale-probe no-charge keyed to this field.
+    const coldRel: ReliabilityVerdictResult = {
+      ok: true,
+      capturedAt: null,
+      window_label: null,
+      verdict: { most_dependable: null, riskiest: null },
+      ranking: [],
+      coverage: { providers_ranked: 0, fully_measured: 0, availability_only: 0 },
+      claim: 'claim',
+      notes: [],
+      attribution: { sources: [], license: 'measured' },
+    };
+    const r = buildConcentrationVerdict(coldRel, ALL_OK, ['openai', 'anthropic'], NOW);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.captured_at).toBeNull();
+    expect(r.captured_at).not.toBe(NOW.toISOString());
+  });
+
+  it('threads the real probe computed_at when the probe layer is present', () => {
+    const r = buildConcentrationVerdict(RANKING, ALL_OK, ['openai', 'anthropic'], NOW);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.captured_at).toBe('2026-06-06T11:50:00Z');
+  });
+
   it('emits no em dashes or double hyphens in any output string', () => {
     const emDash = String.fromCharCode(0x2014);
     const doubleHyphen = '-' + '-';

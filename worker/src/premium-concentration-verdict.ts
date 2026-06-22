@@ -111,7 +111,10 @@ export interface ConcentrationVerdictResult {
     note: string;
   };
   recommendation: string;
-  captured_at: string;
+  // The probe summary computed_at, or null when the probe layer is empty/cold.
+  // NEVER request time: a now() fallback would stamp every degraded-probe call
+  // as fresh and defeat the 30-minute stale-probe no-charge keyed to this field.
+  captured_at: string | null;
   sources: Array<{ name: string; url: string; license: string }>;
 }
 
@@ -151,7 +154,9 @@ export function buildConcentrationVerdict(
   reliability: ReliabilityVerdictResult,
   statusServices: ServiceStatus[],
   inputProviders: string[],
-  now: Date,
+  // Retained for signature stability; the verdict no longer stamps request time
+  // as the capture time (see captured_at on ConcentrationVerdictResult).
+  _now: Date,
 ): ConcentrationVerdictResult | ConcentrationVerdictEmpty {
   // Reliability map keyed by normalized provider.
   const relMap = new Map<string, { score: number; rank: number; measured: boolean; display: string }>();
@@ -277,7 +282,7 @@ export function buildConcentrationVerdict(
     weakest_link,
     diversification,
     recommendation,
-    captured_at: reliability.capturedAt ?? now.toISOString(),
+    captured_at: reliability.capturedAt,
     sources: SOURCES,
   };
 }
