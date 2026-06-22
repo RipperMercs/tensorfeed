@@ -74,3 +74,41 @@ describe('bill-on-empty: an empty result no-charges and holds the balance', () =
     });
   }
 });
+
+// Concentration verdict sells the FUSION of measured reliability with live
+// status. With the probe layer cold (no reliability backbone, ranking empty)
+// but the status feed up, the verdict degrades to a status-only restatement,
+// so it must serve the usable answer (200) yet no-charge it.
+describe('concentration-verdict no-charges a status-only verdict (no reliability backbone)', () => {
+  it('serves the verdict but holds the balance when the probe layer is cold', async () => {
+    const env = await makeEnv({
+      status: {
+        services: [
+          {
+            name: 'OpenAI',
+            provider: 'openai',
+            status: 'operational',
+            statusPageUrl: 'https://status.openai.com',
+            components: [],
+            lastChecked: '2026-06-22T00:00:00Z',
+          },
+        ],
+      },
+    });
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/resilience/concentration-verdict?providers=openai', {
+      token,
+      ip: uniqueIp(),
+    });
+
+    // A real 200 verdict (not an error path), but billed as no-charge.
+    expect(res.status).toBe(200);
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing).toBeDefined();
+    expect(billing?.credits_charged).toBe(0);
+    expect(billing?.no_charge_reason).toBe('stale_data');
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+});

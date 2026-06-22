@@ -7626,6 +7626,15 @@ export default {
         return await premiumValidationFailure({ ...result }, payment, request, env, 'empty_result', 404);
       }
 
+      // The premium value here is the FUSION of measured reliability with live
+      // status. With no reliability backbone (cold or empty probe layer, ranking
+      // empty), the verdict degrades to a status-only restatement, so serve the
+      // usable answer but do not charge for the missing measured half, and skip
+      // usage logging. Same no-charge family as the 30-minute stale-probe SLA.
+      if (reliability.ranking.length === 0) {
+        return await premiumResponse(result, payment, 1, request, env, 'stale_data', result.captured_at);
+      }
+
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/resilience/concentration-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
