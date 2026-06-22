@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'china-295b-state-ai-grid-sovereign-rail',
+    title:
+      'China Drafted a $295 Billion State AI Grid. The Compute Race Now Runs on Two Different Rails.',
+    author: 'Marcus Chen',
+    date: 'June 22, 2026',
+    readTime: '6 min read',
+    description:
+      "Bloomberg surfaced China's National Development and Reform Commission blueprint for a 2 trillion yuan ($295B) five-year national AI compute network, financed by sovereign debt and ultra-long special government bonds, operated by China Mobile and China Telecom, and supplied 80 percent by domestic chipmakers led by Huawei. The grid is targeted to connect by 2028, and the procurement mandate excludes Nvidia and AMD by design. Read against Anthropic's $200B private commitment to Google TPU and the hyperscaler equity loop financing US frontier compute, the structural picture is two parallel rails financing the same scarcity with very different failure modes. The American rail is private, equity-backed, and demand-pull; the Chinese rail is sovereign, fiscal, and supply-push, with the operator layer rolled up inside the state telco duopoly. Inside the financing math, the Huawei HBM ceiling that decides whether 2028 is real or a slide, why state-directed buildout can internalize externalities the hyperscaler loop cannot, what multi-rail routing means for builders shipping into both markets, and three signposts in the next ninety days that convert the $295B planning number into a budget or back into a draft.",
+  },
+  {
     slug: 'shazeer-google-openai-acqui-hire-cliff',
     title:
       'Google Paid $2.7 Billion to Bring Shazeer Back. He Walked to OpenAI 22 Months Later. The Acqui-Hire Cliff Just Got a Price.',
