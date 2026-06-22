@@ -8,6 +8,20 @@
       "description": "Anthropic launched Claude Fable 5 (API id claude-fable-5), a new frontier tier positioned above Claude Opus 4.8, which remains the default model. Pricing is $10 per million input tokens and $50 per million output with no long-context surcharge, on a 1 million token default context window with up to 128K output tokens and text plus vision input. Adaptive thinking is always on and cannot be disabled, with effort levels spanning low, medium, high, xhigh, and max. Anthropic's launch table reports 80.3 on SWE-bench Pro, 29.3 on FrontierCode Diamond, 85.0 on OSWorld-Verified, and a GDPval-AA ELO of 1932, all vendor-reported. Always-on safety classifiers can reroute flagged requests to Opus 4.8, billed at Opus rates for the rerouted portion. The model is available on the Claude API, Amazon Bedrock, Google Vertex, and Microsoft Foundry at launch."
     },
     {
+      "date": "2026-06-04",
+      "title": "NVIDIA Releases Nemotron 3 Ultra Open-Weight Model",
+      "provider": "NVIDIA",
+      "category": "open-source",
+      "description": "NVIDIA releases Nemotron 3 Ultra, a 550B total / 55B active parameter Mixture-of-Experts model with a Hybrid Mamba-Transformer-MoE architecture and a 1 million token context window. The model scores 47.7 on the Artificial Analysis Intelligence Index and delivers over 400 output tokens per second. It uses NVFP4 quantization for cross-architecture deployment and is available on Hugging Face. The release follows Nemotron 3 Nano Omni (April 28) and extends the Nemotron 3 family to a larger, more capable variant aimed at frontier reasoning and throughput workloads."
+    },
+    {
+      "date": "2026-06-02",
+      "title": "White House Signs AI Innovation and Security Executive Order",
+      "provider": "US Government",
+      "category": "policy",
+      "description": "President Trump signed the executive order Promoting Advanced Artificial Intelligence Innovation and Security on June 2, 2026, roughly two weeks after a prior draft was pulled from the schedule on May 21. The signed order creates a voluntary framework for AI developers to share frontier models with the government for up to 30 days before public release, establishes an AI Cybersecurity Clearinghouse to coordinate vulnerability remediation across government and industry, and sets a 30-day timeline for agencies to upgrade National Security Systems. The order explicitly excludes mandatory licensing, preclearance, or permitting for AI development, a key concession to industry."
+    },
+    {
       "date": "2026-06-02",
       "title": "Microsoft Launches MAI-Code-1-Flash and MAI-Thinking-1 at Build 2026",
       "provider": "Microsoft",
@@ -153,6 +167,13 @@
       "provider": "Anthropic",
       "category": "model-release",
       "description": "Anthropic releases Claude Opus 4.7 with a 1 million token context window at flagship pricing and incremental gains across reasoning, code, and SWE-bench."
+    },
+    {
+      "date": "2026-03-31",
+      "title": "OpenAI Raises $122B at $852B Valuation",
+      "provider": "OpenAI",
+      "category": "funding",
+      "description": "OpenAI closed a $122 billion funding round at an $852 billion post-money valuation, the largest private fundraising round in history at the time. Major investors included Amazon ($50 billion), NVIDIA ($30 billion), and SoftBank ($30 billion), alongside Microsoft, ARK Invest, BlackRock, Blackstone, and Sequoia Capital. Over $3 billion was additionally raised from retail investors through bank channels."
     },
     {
       "date": "2026-03-25",
