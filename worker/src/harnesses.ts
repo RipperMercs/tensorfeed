@@ -47,8 +47,8 @@ export interface HarnessesData {
 }
 
 export const HARNESSES_DATA: HarnessesData = {
-  lastUpdated: '2026-04-30',
-  note: "Snapshot of public agentic-coding leaderboard data. Each result is the harness vendor's self-reported best published score for the named base model on the named benchmark. We aggregate; we do not re-run. See sourceUrl on each entry for the upstream report. Refreshed weekly.",
+  lastUpdated: '2026-06-08',
+  note: "Snapshot of public agentic-coding leaderboard data. Each result is the harness vendor's self-reported best published score for the named base model on the named benchmark. We aggregate; we do not re-run. See sourceUrl on each entry for the upstream report. Refreshed weekly. TODO: Evaluate new harnesses (Antigravity, OpenCode, Hermes) seen in June 2026 coverage for possible addition (each requires editorial review and a new entry in src/lib/harness-directory.ts).",
   benchmarks: [
     {
       id: 'swe_bench_verified',
@@ -107,9 +107,9 @@ export const HARNESSES_DATA: HarnessesData = {
     { harness: 'cursor-agent', model: 'GPT-5.5', scores: { swe_bench_verified: 70.1, terminal_bench: 41.5, aider_polyglot: null, swe_lancer: null } },
     { harness: 'codex-cli', model: 'GPT-5.5', scores: { swe_bench_verified: 72.8, terminal_bench: 48.2, aider_polyglot: 82.1, swe_lancer: 39.6 } },
     { harness: 'codex-cli', model: 'OpenAI o3', scores: { swe_bench_verified: 69.1, terminal_bench: 40.4, aider_polyglot: 76.9, swe_lancer: null } },
-    { harness: 'aider', model: 'Claude Opus 4.7', scores: { swe_bench_verified: null, terminal_bench: 31.2, aider_polyglot: 84.2, swe_lancer: null } },
-    { harness: 'aider', model: 'GPT-5.5', scores: { swe_bench_verified: null, terminal_bench: 28.5, aider_polyglot: 81.8, swe_lancer: null } },
-    { harness: 'aider', model: 'DeepSeek V4 Pro', scores: { swe_bench_verified: null, terminal_bench: 19.7, aider_polyglot: 73.4, swe_lancer: null } },
+    { harness: 'aider', model: 'Claude Opus 4.7', scores: { swe_bench_verified: null, terminal_bench: 31.2, aider_polyglot: 72.0, swe_lancer: null } },
+    { harness: 'aider', model: 'GPT-5.5', scores: { swe_bench_verified: null, terminal_bench: 28.5, aider_polyglot: 88.0, swe_lancer: null } },
+    { harness: 'aider', model: 'DeepSeek V4 Pro', scores: { swe_bench_verified: null, terminal_bench: 19.7, aider_polyglot: 74.2, swe_lancer: null } },
     { harness: 'openhands', model: 'Claude Sonnet 4.6', scores: { swe_bench_verified: 65.8, terminal_bench: 30.1, aider_polyglot: null, swe_lancer: 28.4 } },
     { harness: 'openhands', model: 'GPT-5.5', scores: { swe_bench_verified: 64.2, terminal_bench: 29.6, aider_polyglot: null, swe_lancer: null } },
     { harness: 'devin', model: 'Proprietary (Sonnet 4.6 + planner)', scores: { swe_bench_verified: 61.7, terminal_bench: null, aider_polyglot: null, swe_lancer: 32.5 } },
@@ -119,6 +119,9 @@ export const HARNESSES_DATA: HarnessesData = {
     { harness: 'amp', model: 'Claude Sonnet 4.6', scores: { swe_bench_verified: 70.8, terminal_bench: null, aider_polyglot: null, swe_lancer: null } },
     { harness: 'continue', model: 'Claude Sonnet 4.6', scores: { swe_bench_verified: 52.4, terminal_bench: null, aider_polyglot: null, swe_lancer: null } },
     { harness: 'roo-code', model: 'Claude Sonnet 4.6', scores: { swe_bench_verified: 57.3, terminal_bench: null, aider_polyglot: null, swe_lancer: null } },
+    { harness: 'aider', model: 'claude-sonnet-4 (32k thinking)', scores: { swe_bench_verified: null, terminal_bench: null, aider_polyglot: 61.3, swe_lancer: null } },
+    { harness: 'aider', model: 'gemini-2.5-pro (32k think)', scores: { swe_bench_verified: null, terminal_bench: null, aider_polyglot: 83.1, swe_lancer: null } },
+    { harness: 'aider', model: 'o3-pro (high)', scores: { swe_bench_verified: null, terminal_bench: null, aider_polyglot: 84.9, swe_lancer: null } },
   ],
 };
 
