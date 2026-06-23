@@ -85,7 +85,7 @@ export default function AnthropicOffSwitchBrusselsG7EvianPage() {
           Three days after a US Commerce directive forced Anthropic to disable Claude Fable 5 and
           Mythos 5 for every customer on the planet, the European Commission walked up to a podium
           in Brussels and made the shutoff a policy file. Spokesperson Thomas Regnier said on
-          Saturday, June 14, that the Commission is assessing the practical consequences of the
+          Sunday, June 14, that the Commission is assessing the practical consequences of the
           directive, that any contingency measures should not be discriminatory against partners,
           and that the episode further underlines Europe&apos;s need for technological sovereignty.
           Today the G7 opens in Evian-les-Bains with the CEOs of OpenAI, Anthropic, and Google
@@ -160,7 +160,7 @@ export default function AnthropicOffSwitchBrusselsG7EvianPage() {
               <tr>
                 <td className="px-4 py-3 text-accent-primary font-medium">Mistral Series C</td>
                 <td className="px-4 py-3 font-mono">&euro;1.7B at &euro;11.7B</td>
-                <td className="px-4 py-3">Closed Q2 2026; growth capital, not strategic</td>
+                <td className="px-4 py-3">Closed Q3 2025; growth capital, not strategic</td>
               </tr>
               <tr>
                 <td className="px-4 py-3 text-accent-primary font-medium">France + Germany framework</td>
