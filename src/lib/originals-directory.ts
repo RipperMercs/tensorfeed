@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'reflection-ai-6b-colossus-open-frontier-compute',
+    title:
+      'Reflection Pre-Bought $6.3 Billion of Colossus Compute Without a Shipped Model. The Open-Source Frontier Just Got a Procurement Story.',
+    author: 'Marcus Chen',
+    date: 'June 23, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 22, 2026, Reflection AI signed with SpaceX for $150 million a month of Nvidia GB300 capacity at Colossus 2, starting July 1 and running through 2029. The deal totals roughly $6.3 billion. Reflection is a $25 billion open-source frontier lab with no publicly shipped model, founded by ex-DeepMind researchers Misha Laskin and Ioannis Antonoglou, with Department of Energy Genesis Mission and Pentagon AI work already on the customer list. Read against SpaceX's prior Colossus commitments (Anthropic at roughly $45B, Google at roughly $30B, plus the Cursor acquisition), it is the third frontier-tier lease in seven months and the first one for a lab that has not yet released weights. Inside the per-GPU math, why Colossus is doing the Equinix move at the AI layer (stay neutral, take any customer, sell gigawatts the hyperscalers cannot unbundle from a managed-service tax), what it costs to be a credible open-source frontier in 2026, the Pentagon-clearance angle that separates Reflection from DeepSeek and Z.ai, and three signposts in the next ninety days that decide whether $6.3 billion is a floor or a ceiling. The 90-day notice clause matters more than the headline number.",
+  },
+  {
     slug: 'china-295b-state-ai-grid-sovereign-rail',
     title:
       'China Drafted a $295 Billion State AI Grid. The Compute Race Now Runs on Two Different Rails.',
