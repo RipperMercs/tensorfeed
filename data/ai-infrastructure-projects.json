@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-06-05T00:00:00Z",
+  "generated_at": "2026-06-15T00:00:00Z",
   "license": "TF curation CC-BY-4.0. Underlying public-record sources retain their original license.",
   "notice": "Editorial registry of disclosed major AI buildout projects. Each entry preserves canonical source URLs. Capacity, capex, and timeline figures reflect publicly announced or reported numbers at time of curation and may evolve. Status enum: announced (publicly committed, no ground broken), permitted (regulatory greenlights obtained), construction (active build), operational (online and serving traffic). Power source enum is the announced primary source; many projects mix multiple feeds.",
   "schema": {
@@ -318,6 +318,24 @@
       "context": "Multiple separately-reported feasibility programs into placing AI training or inference capacity in low Earth orbit. Anthropic and SpaceX have publicly discussed orbital extensions of Colossus-class compute; Google has separately explored similar concepts via Starcloud-style partners. Power thesis: continuous solar plus vacuum heat-rejection sidesteps the grid and water constraints driving terrestrial buildouts. Capacity, capex, and timeline figures are all aspirational at this stage. Concept-stage entry; we will reclassify when a launch contract or specific construction commitment lands.",
       "primary_sources": [
         "https://tensorfeed.ai/originals/anthropic-spacexai-colossus-orbital"
+      ]
+    },
+    {
+      "id": "softbank-france-hauts-de-france",
+      "name": "SoftBank AI Data Centers France",
+      "operator": "SoftBank Group",
+      "partners": ["Schneider Electric", "EDF", "SB Energy"],
+      "location": { "city": "Loon-Plage, Bosquel, Bouchain", "state": "Hauts-de-France", "country": "France" },
+      "status": "announced",
+      "capacity_mw_announced": 5000,
+      "power_source": "EDF grid (nuclear-rich, low-carbon)",
+      "announced_date": "2026-05-30",
+      "target_operational": "2031",
+      "capex_usd_billion": 87,
+      "context": "SoftBank Group announced at the 2026 Choose France summit that it will invest up to 75 billion euros (approximately $87 billion) to develop and operate AI data center capacity in France. Phase 1 commits 45 billion euros to deliver 3.1 gigawatts in the Hauts-de-France region by 2031, with sites in Dunkirk (Loon-Plage), Bosquel, and Bouchain. Total target capacity is 5 gigawatts. Schneider Electric is a manufacturing partner for power modules at the Port of Dunkirk. EDF provides low-carbon power leveraging France's nuclear-heavy electricity grid. The commitment represents the largest single European AI infrastructure investment announced by the Japanese technology conglomerate, signaling SoftBank's move from investor to operator of AI compute capacity.",
+      "primary_sources": [
+        "https://group.softbank/en/news/press/20260531_0",
+        "https://techcrunch.com/2026/05/30/softbank-says-it-will-invest-up-to-e75-billion-to-build-french-data-centers/"
       ]
     }
   ]
