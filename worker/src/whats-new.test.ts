@@ -3,7 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { computeWhatsNew } from './whats-new';
+import { computeWhatsNew, previewWhatsNew, type WhatsNewResult } from './whats-new';
+import { NEWS_ATTRIBUTION } from './news-search';
 import type { Env } from './types';
 
 interface MockKV {
@@ -368,5 +369,107 @@ describe('computeWhatsNew: capturedAt (staleness no-charge basis)', () => {
     const r = await computeWhatsNew(env);
     if (!r.ok) return;
     expect(r.capturedAt).toBeNull();
+  });
+});
+
+// === FREE PREVIEW SHAPE (the /api/preview/whats-new taste) ===
+// The preview is the free discovery sibling of the paid morning brief. It
+// must show enough to be compelling (live counts + the top 3 headline
+// TITLES) while withholding the product (every pricing delta, incident
+// detail, and headline link/snippet). Leaking those would give the paid
+// brief away for free, so the leak guards below are load-bearing.
+
+function fixtureResult(newsTitles: string[]): WhatsNewResult {
+  return {
+    ok: true,
+    window: { from: '2026-06-23T00:00:00.000Z', to: '2026-06-24T00:00:00.000Z', days: 1 },
+    computed_at: '2026-06-24T08:00:00.000Z',
+    capturedAt: '2026-06-24T07:55:00.000Z',
+    summary: {
+      total_pricing_changes: 2,
+      new_models: 1,
+      removed_models: 0,
+      incidents: 1,
+      news_articles: newsTitles.length,
+    },
+    pricing: {
+      changes: [
+        { model: 'Claude Opus 4.7', provider: 'anthropic', field: 'inputPrice', from: 15, to: 14, delta_pct: -6.6667 },
+      ],
+      new_models: [
+        { model: 'Sonnet 4.7', provider: 'anthropic', input_per_1m: 3, output_per_1m: 15, tier: 'mid' },
+      ],
+      removed_models: [],
+    },
+    status: {
+      incidents: [
+        {
+          service: 'API',
+          provider: 'openai',
+          severity: 'minor',
+          title: 'SECRET incident title',
+          started_at: '2026-06-23T18:00:00.000Z',
+          resolved_at: '2026-06-23T19:30:00.000Z',
+          duration_minutes: 90,
+        },
+      ],
+      currently_operational: 12,
+      currently_degraded: 1,
+      currently_down: 0,
+      currently_unknown: 0,
+    },
+    news: newsTitles.map((title, i) => ({
+      title,
+      url: `https://secret.example/article/${i}`,
+      source: 'Example',
+      source_domain: 'secret.example',
+      published_at: '2026-06-23T20:00:00.000Z',
+      snippet: `SECRET snippet ${i}`,
+      categories: ['ai'],
+    })),
+    news_attribution: NEWS_ATTRIBUTION,
+    data_freshness: { pricing: null, status: null, incidents_count: 1, news_total_corpus: 100 },
+    notes: [],
+  };
+}
+
+describe('previewWhatsNew (free taste)', () => {
+  it('passes through live counts and the window, flagged as a preview', () => {
+    const full = fixtureResult(['H1', 'H2', 'H3', 'H4', 'H5']);
+    const p = previewWhatsNew(full);
+    expect(p.ok).toBe(true);
+    expect(p.preview).toBe(true);
+    expect(p.summary).toEqual(full.summary);
+    expect(p.window).toEqual(full.window);
+    expect(p.computed_at).toBe(full.computed_at);
+    expect(p.unlock.full_brief).toBe('/api/premium/whats-new');
+    expect(p.unlock.pro_brief).toBe('/api/premium/whats-new/pro');
+  });
+
+  it('exposes at most the top 3 headline TITLES, in order, as plain strings', () => {
+    const p = previewWhatsNew(fixtureResult(['H1', 'H2', 'H3', 'H4', 'H5']));
+    expect(p.top_headlines).toEqual(['H1', 'H2', 'H3']);
+    for (const h of p.top_headlines) expect(typeof h).toBe('string');
+  });
+
+  it('returns fewer titles when fewer headlines exist (no padding)', () => {
+    expect(previewWhatsNew(fixtureResult(['only one'])).top_headlines).toEqual(['only one']);
+    expect(previewWhatsNew(fixtureResult([])).top_headlines).toEqual([]);
+  });
+
+  it('LEAK GUARD: withholds pricing deltas, incident detail, and headline links/snippets', () => {
+    const p = previewWhatsNew(fixtureResult(['H1', 'H2', 'H3', 'H4']));
+    const bag = p as unknown as Record<string, unknown>;
+    // The full payload blocks must be absent entirely.
+    expect(bag.pricing).toBeUndefined();
+    expect(bag.status).toBeUndefined();
+    expect(bag.news).toBeUndefined();
+    // Nothing sensitive may survive serialization: no incident titles, no
+    // headline URLs, no snippets, no pricing numbers beyond the public counts.
+    const serialized = JSON.stringify(p);
+    expect(serialized).not.toContain('SECRET incident title');
+    expect(serialized).not.toContain('SECRET snippet');
+    expect(serialized).not.toContain('secret.example');
+    expect(serialized).not.toContain('H4'); // the 4th headline is past the top-3 cap
   });
 });

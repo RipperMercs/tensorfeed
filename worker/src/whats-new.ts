@@ -1,5 +1,6 @@
 import { Env } from './types';
 import { NEWS_ATTRIBUTION, NewsAttribution } from './news-search';
+import { safePut } from './kill-switch';
 
 /**
  * Premium "what's new" digest summary.
@@ -170,6 +171,79 @@ export interface WhatsNewResult {
 export interface WhatsNewError {
   ok: false;
   error: string;
+}
+
+// === Free preview (the /api/preview/whats-new taste) ===
+
+/** How many headline TITLES the free preview reveals. Titles only, never links or snippets. */
+export const PREVIEW_HEADLINE_LIMIT = 3;
+
+export interface WhatsNewPreview {
+  ok: true;
+  preview: true;
+  window: WhatsNewResult['window'];
+  computed_at: string;
+  summary: WhatsNewResult['summary'];
+  top_headlines: string[];
+  news_attribution: NewsAttribution;
+  unlock: {
+    full_brief: string;
+    pro_brief: string;
+    note: string;
+    withheld: string[];
+  };
+}
+
+/**
+ * Shape a full whats-new result down to the free discovery taste.
+ *
+ * Reveals the live summary counts and the top few headline TITLES so a
+ * booting agent can see TensorFeed actually has today's data, then points at
+ * the paid brief for the rest. Everything that makes the paid brief worth a
+ * credit (pricing deltas, incident detail, headline links and snippets, the
+ * full headline list) is withheld. Pure function: no I/O, trivially testable.
+ */
+export function previewWhatsNew(result: WhatsNewResult): WhatsNewPreview {
+  return {
+    ok: true,
+    preview: true,
+    window: result.window,
+    computed_at: result.computed_at,
+    summary: result.summary,
+    top_headlines: result.news.slice(0, PREVIEW_HEADLINE_LIMIT).map((h) => h.title),
+    news_attribution: result.news_attribution,
+    unlock: {
+      full_brief: '/api/premium/whats-new',
+      pro_brief: '/api/premium/whats-new/pro',
+      note: 'Free preview: live counts and the top 3 headline titles. The full brief (every pricing delta, incident detail, and all headlines with links) is 1 credit ($0.02). The pro brief adds a cited analyst summary and recommended actions for 10 credits ($0.20).',
+      withheld: [
+        'pricing change deltas (model, from, to, percent)',
+        'new and removed model details',
+        'incident titles, severity, and durations',
+        'headline links, sources, snippets, and any headline past the top 3 titles',
+      ],
+    },
+  };
+}
+
+/**
+ * IP-based daily rate limit for the free /api/preview/whats-new taste.
+ * Mirrors checkRouteVerdictPreviewRateLimit (premium-route-verdict.ts) with a
+ * distinct KV key so previews do not share a budget. 1 read plus (0 or 1)
+ * writes per call; the write is skipped under the kill switch via safePut.
+ */
+export async function checkWhatsNewPreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:whats-new-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }
 
 // === Helpers ===

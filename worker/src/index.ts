@@ -222,7 +222,7 @@ import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
 import { computeProviderDeepDive } from './provider-deepdive';
 import { compareModels } from './compare-models';
-import { computeWhatsNew } from './whats-new';
+import { computeWhatsNew, previewWhatsNew, checkWhatsNewPreviewRateLimit } from './whats-new';
 import { computeRouting, checkRoutingPreviewRateLimit, hoursUntilUTCRollover, RoutingTask } from './routing';
 import {
   captureRegistrySnapshot,
@@ -4758,6 +4758,7 @@ export default {
           providerReliabilityPreview: '/api/preview/provider-reliability-verdict (free, 10/IP/day; the most-dependable and riskiest picks only, no full per-provider ranking or signed receipt)',
           x402SettlementPreview: '/api/preview/x402-settlement-verdict (free, 10/IP/day; the momentum, concentration, and leading-publisher verdict only, no full publisher ranking or signed receipt)',
           x402PublisherPreview: '/api/preview/x402-publisher-verdict?domain= (free, 10/IP/day; the trust verdict and claim for one publisher only, no momentum, shared-wallet flag, or settlement evidence)',
+          whatsNewPreview: '/api/preview/whats-new (free, 10/IP/day; live summary counts plus the top 3 headline titles. The full morning brief with pricing deltas, incident detail, and all headlines is the paid upgrade at /api/premium/whats-new.)',
           premiumRouting: '/api/premium/routing?task=code|reasoning|creative|general (1 credit; top-5 ranked models with full score breakdown, pricing, status, and component-level detail. Optional ?budget=, ?min_quality=, ?top_n=1-10, and custom weights ?w_quality=, ?w_availability=, ?w_cost=, ?w_latency=.)',
           premiumRouteVerdict: '/api/premium/route-verdict?task=code|reasoning|creative|general or ?model= (1 credit, AFTA-signed; the single best model to use right now, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state, plus runners-up and a signed receipt. Optional ?max_latency_p95_ms=, ?require_operational=, ?exclude_deprecated=. 30-min freshness SLA, no-charge when stale.)',
           stackSafetyVerdict: '/api/premium/stack-safety-verdict?packages=name@version,... (1 credit, AFTA-signed; GO/HOLD/BLOCK deploy gate per AI-stack package, fusing the ingested AI-CVE batch + CISA KEV. Up to 10 packages. Never-false-confirm: BLOCK only on exploited with no fix, HOLD on version-ambiguous, PASS on no match, UNKNOWN outside the cohort.)',
@@ -13496,6 +13497,48 @@ export default {
         logPremiumUsage(env, '/api/premium/policy/timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
       return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === FREE PREVIEW: WHATS-NEW TASTE (10/IP/day) ===
+    // The free discovery sibling of /api/premium/whats-new. Live summary
+    // counts + the top 3 headline TITLES, so a booting agent can verify
+    // TensorFeed has today's data before paying. The full brief (pricing
+    // deltas, incident detail, all headlines with links) stays paid. Rate
+    // limited per IP per UTC day, which also bounds the KV reads the same
+    // bot volume that hammers the paid 402 would otherwise drive.
+    if (path === '/api/preview/whats-new') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const wnLimit = await checkWhatsNewPreviewRateLimit(env, ip, 10);
+      if (!wnLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: wnLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/whats-new',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/whats-new (full pricing deltas, incident detail, all headlines, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const daysParam = parseInt(url.searchParams.get('days') ?? '', 10);
+      const result = await computeWhatsNew(env, {
+        ...(Number.isFinite(daysParam) ? { days: daysParam } : {}),
+      });
+      if (!result.ok) {
+        return jsonResponse({ ok: false, error: 'whats_new_unavailable' }, 503, 0);
+      }
+      return jsonResponse(
+        {
+          ...previewWhatsNew(result),
+          rate_limit: { limit: wnLimit.limit, remaining: wnLimit.remaining, scope: 'per IP per UTC day' },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
     }
 
     // === PAID PREMIUM: WHATS-NEW SUMMARY (Tier 1, 1 credit) ===

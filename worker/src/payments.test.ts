@@ -25,6 +25,7 @@ import {
   createQuote,
   getBalance,
   buildHeaderExtensions,
+  previewSiblingFor,
 } from './payments';
 import type { Env } from './types';
 
@@ -961,6 +962,18 @@ describe('buildHeaderExtensions (402 header schema, audit + x402scan)', () => {
   });
   it('the input-only block stays well under the cap', () => {
     expect(btoa(JSON.stringify(buildHeaderExtensions(fullExt))).length).toBeLessThan(5000);
+  });
+});
+
+// The 402 challenge advertises a free preview sibling when one exists, so an
+// agent that just bounced off the paywall is told where the free taste lives.
+describe('previewSiblingFor', () => {
+  it('maps whats-new to its free preview', () => {
+    expect(previewSiblingFor('/api/premium/whats-new')).toBe('/api/preview/whats-new');
+  });
+  it('returns undefined for endpoints with no preview sibling', () => {
+    expect(previewSiblingFor('/api/premium/security/kev/full')).toBeUndefined();
+    expect(previewSiblingFor('/api/premium/whats-new/pro')).toBeUndefined();
   });
 });
 

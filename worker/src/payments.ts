@@ -3065,6 +3065,20 @@ export function buildHeaderExtensions(
   return compact;
 }
 
+// Free preview siblings, keyed by the paid endpoint's pathname. When a paid
+// endpoint has a free discovery taste under /api/preview/*, its 402 challenge
+// advertises it so an agent that just bounced off the paywall is pointed
+// straight at the free sample instead of leaving empty-handed. Add an entry
+// here when you ship a new /api/preview/* sibling.
+const PREVIEW_SIBLINGS: Record<string, string> = {
+  '/api/premium/whats-new': '/api/preview/whats-new',
+};
+
+/** The free /api/preview/* sibling for a paid pathname, or undefined if none. */
+export function previewSiblingFor(pathname: string): string | undefined {
+  return PREVIEW_SIBLINGS[pathname];
+}
+
 function paymentRequiredResponse(
   env: Env,
   creditsRequired: number,
@@ -3249,6 +3263,8 @@ function paymentRequiredResponse(
       ok: false,
       message: trialMessage,
       free_trial: freeTrialAdvert,
+      // Point bounced agents at the free preview taste when this endpoint has one.
+      ...(previewSiblingFor(url.pathname) ? { free_preview: previewSiblingFor(url.pathname) } : {}),
       payment: {
         wallet: env.PAYMENT_WALLET,
         currency: 'USDC',
