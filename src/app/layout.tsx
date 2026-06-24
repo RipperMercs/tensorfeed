@@ -63,6 +63,8 @@ export const metadata: Metadata = {
     'ai-data-freshness': '10-minutes',
     'ai-structured-data': 'true',
     'ai-api-endpoint': 'https://tensorfeed.ai/api/agents/news',
+    // Base builder-code domain verification (dashboard.base.org). Public app id, not a secret.
+    'base:app_id': '6a3c3aed1425448483d5c442',
   },
 };
 
