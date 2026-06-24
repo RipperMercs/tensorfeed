@@ -257,6 +257,7 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'mlc llm', category: 'inference-stack' },
   { needle: 'tensorrt', category: 'inference-stack' },
   { needle: 'triton inference', category: 'inference-stack' },
+  { needle: 'sglang', category: 'inference-stack' },
 
   // agent-framework
   { needle: 'langchain', category: 'agent-framework' },
@@ -269,6 +270,9 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'semantic kernel', category: 'agent-framework' },
   { needle: 'model context protocol', category: 'agent-framework' },
   { needle: 'mcp server', category: 'agent-framework' },
+  { needle: 'flowise', category: 'agent-framework' },
+  { needle: 'langflow', category: 'agent-framework' },
+  { needle: 'langsmith', category: 'agent-framework' },
 
   // training-stack
   { needle: 'pytorch', category: 'training-stack' },
@@ -306,6 +310,7 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'openrouter', category: 'model-gateway' },
   { needle: 'fireworks', category: 'model-gateway' },
   { needle: 'replicate', category: 'model-gateway' },
+  { needle: 'litellm', category: 'model-gateway' },
 
   // mcp-tool
   { needle: 'claude desktop', category: 'mcp-tool' },
@@ -314,6 +319,11 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'cursor', category: 'mcp-tool' },
   { needle: 'windsurf', category: 'mcp-tool' },
   { needle: 'zed ai', category: 'mcp-tool' },
+
+  // other-ai (ML app UIs and LLM front-ends; added 2026-06-24 from the job #95 corpus)
+  { needle: 'gradio', category: 'other-ai' },
+  { needle: 'open webui', category: 'other-ai' },
+  { needle: 'open-webui', category: 'other-ai' },
 ];
 
 /**

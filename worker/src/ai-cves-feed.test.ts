@@ -150,6 +150,18 @@ describe('classifyProduct', () => {
     expect(classifyProduct('Anthropic SDK')).toBe('model-gateway');
   });
 
+  it('matches the AI-native tooling wave (job #95 corpus: agent builders, UIs, gateways)', () => {
+    expect(classifyProduct('Flowise')).toBe('agent-framework');
+    expect(classifyProduct('FlowiseAI/Flosise')).toBe('agent-framework'); // source-verbatim typo, still flags on 'flowise'
+    expect(classifyProduct('Langflow')).toBe('agent-framework');
+    expect(classifyProduct('LangSmith SDK')).toBe('agent-framework');
+    expect(classifyProduct('LiteLLM')).toBe('model-gateway');
+    expect(classifyProduct('SGLang')).toBe('inference-stack');
+    expect(classifyProduct('Gradio')).toBe('other-ai');
+    expect(classifyProduct('Open WebUI')).toBe('other-ai');
+    expect(classifyProduct('open-webui')).toBe('other-ai');
+  });
+
   it('returns null for unrelated products', () => {
     expect(classifyProduct('Eclipse BaSyx Java Server SDK')).toBeNull();
     expect(classifyProduct('Next.js')).toBeNull();
