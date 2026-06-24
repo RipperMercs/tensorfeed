@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-06-05T00:00:00Z",
+  "generated_at": "2026-06-22T00:00:00Z",
   "license": "TF curation CC-BY-4.0. Underlying public-record sources retain their original license.",
   "notice": "Editorial registry of disclosed major AI buildout projects. Each entry preserves canonical source URLs. Capacity, capex, and timeline figures reflect publicly announced or reported numbers at time of curation and may evolve. Status enum: announced (publicly committed, no ground broken), permitted (regulatory greenlights obtained), construction (active build), operational (online and serving traffic). Power source enum is the announced primary source; many projects mix multiple feeds.",
   "schema": {
@@ -67,11 +67,12 @@
       "announced_date": "2024-06-05",
       "target_operational": "2024",
       "capex_usd_billion": null,
-      "context": "Operational since late 2024, initially with 100,000 NVIDIA H100s, expanding to 555,000+ GPUs across Colossus 1 and 2 by 2026. SpaceX acquired xAI in February 2026 and merged the AI division into SpaceXAI in May 2026. In May 2026, Anthropic leased the entire Colossus 1 cluster (220,000+ GPUs, 300+ MW) to supplement its Google Cloud TPU capacity. Local controversy persists over temporary gas turbines and air quality in nearby neighborhoods.",
+      "context": "Operational since late 2024, initially with 100,000 NVIDIA H100s, expanding to 555,000+ GPUs across Colossus 1 and 2 by 2026. SpaceX acquired xAI in February 2026 and merged the AI division into SpaceXAI in May 2026. In May 2026, Anthropic leased the entire Colossus 1 cluster (220,000+ GPUs, 300+ MW) to supplement its Google Cloud TPU capacity. A June 2026 Bloomberg report indicated that SpaceX's own engineering teams encountered difficulty using the Colossus 1 compute internally, which accelerated the decision to rent the cluster to Anthropic. Local controversy persists over temporary gas turbines and air quality in nearby neighborhoods.",
       "primary_sources": [
         "https://x.ai/news/colossus",
         "https://www.supermicro.com/en/pressreleases/supermicro-and-xai-launch-worlds-largest-ai-supercomputer",
-        "https://www.actuia.com/en/news/anthropic-rents-colossus-1-for-125-billionmonth-on-an-xai-park-capped-at-11-capacity/"
+        "https://www.actuia.com/en/news/anthropic-rents-colossus-1-for-125-billionmonth-on-an-xai-park-capped-at-11-capacity/",
+        "https://www.bloomberg.com/news/articles/2026-06-12/spacex-rented-out-computing-after-own-teams-had-trouble-using-it"
       ]
     },
     {
