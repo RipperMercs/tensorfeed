@@ -162,6 +162,25 @@ describe('classifyProduct', () => {
     expect(classifyProduct('open-webui')).toBe('other-ai');
   });
 
+  it('matches the full-corpus additions (run 20260624-133422: MLflow, Ray, Claude SDK, MCP SDKs)', () => {
+    expect(classifyProduct('MLflow')).toBe('training-stack');
+    expect(classifyProduct('mlflow/mlflow')).toBe('training-stack');
+    expect(classifyProduct('MLflow Tracking Server')).toBe('training-stack');
+    expect(classifyProduct('Ray')).toBe('training-stack');
+    expect(classifyProduct('Ray Dashboard')).toBe('training-stack');
+    expect(classifyProduct('Claude SDK for Python')).toBe('model-gateway');
+    expect(classifyProduct('MCP Python SDK')).toBe('mcp-tool');
+    expect(classifyProduct('MCP Ruby SDK')).toBe('mcp-tool');
+  });
+
+  it('leaves general (non-AI-stack) dependency libs unflagged', () => {
+    // These appeared in AI-stack advisories as dependencies but are not AI-stack core.
+    expect(classifyProduct('FFmpeg')).toBeNull();
+    expect(classifyProduct('Socket.IO')).toBeNull();
+    expect(classifyProduct('Pandas')).toBeNull();
+    expect(classifyProduct('libopenjp2')).toBeNull();
+  });
+
   it('returns null for unrelated products', () => {
     expect(classifyProduct('Eclipse BaSyx Java Server SDK')).toBeNull();
     expect(classifyProduct('Next.js')).toBeNull();

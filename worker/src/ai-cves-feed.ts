@@ -284,6 +284,8 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'flashattention', category: 'training-stack' },
   { needle: 'lightning', category: 'training-stack' },
   { needle: 'axolotl', category: 'training-stack' },
+  { needle: 'mlflow', category: 'training-stack' },
+  { needle: 'ray', category: 'training-stack' },
 
   // vector-db
   { needle: 'pinecone', category: 'vector-db' },
@@ -311,6 +313,7 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'fireworks', category: 'model-gateway' },
   { needle: 'replicate', category: 'model-gateway' },
   { needle: 'litellm', category: 'model-gateway' },
+  { needle: 'claude sdk', category: 'model-gateway' },
 
   // mcp-tool
   { needle: 'claude desktop', category: 'mcp-tool' },
@@ -319,6 +322,9 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'cursor', category: 'mcp-tool' },
   { needle: 'windsurf', category: 'mcp-tool' },
   { needle: 'zed ai', category: 'mcp-tool' },
+  { needle: 'mcp python sdk', category: 'mcp-tool' },
+  { needle: 'mcp ruby sdk', category: 'mcp-tool' },
+  { needle: 'mcp typescript sdk', category: 'mcp-tool' },
 
   // other-ai (ML app UIs and LLM front-ends; added 2026-06-24 from the job #95 corpus)
   { needle: 'gradio', category: 'other-ai' },
