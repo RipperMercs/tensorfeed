@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'openai-samsung-electronics-dx-chaebol-dual-stack',
+    title:
+      "OpenAI Just Took the Other Half of Samsung. Five Days After Anthropic's Seoul Flag, the Chaebol Voted For Both Stacks.",
+    author: 'Marcus Chen',
+    date: 'June 24, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 22, 2026, OpenAI announced ChatGPT Enterprise and Codex are deploying to every Samsung Electronics employee in South Korea and to the entire global Device eXperience (DX) division (Galaxy phones, visual displays, digital appliances, networks, and health and medical equipment). Samsung called it one of OpenAI's largest enterprise rollouts ever and the end of a three-year internal ChatGPT ban that started with three source-code leaks in April 2023. Five days earlier, Anthropic opened its Seoul office with Samsung SDS as a Day One customer deploying Claude Cowork and Claude Code across the same parent company. The two announcements interlock rather than contradict. The two-month proof-of-concept with 2,500 DX employees tested ChatGPT, Gemini, and Claude in parallel and produced a layered procurement decision: ChatGPT and Codex on productivity and code, Claude Code on the SDS developer surface, and the semiconductor (DS) business excluded by design. Inside the POC bake-off, the DS IP-isolation boundary, the harness gap dual-stack chaebols are about to create demand for, and three signposts in the next ninety days that decide whether Korea is now a structural dual-stack market.",
+  },
+  {
     slug: 'reflection-ai-6b-colossus-open-frontier-compute',
     title:
       'Reflection Pre-Bought $6.3 Billion of Colossus Compute Without a Shipped Model. The Open-Source Frontier Just Got a Procurement Story.',
