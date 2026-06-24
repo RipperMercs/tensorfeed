@@ -3,6 +3,8 @@ import {
   computePolicyTimeline,
   classifyPosition,
   parseTimelineParams,
+  previewPolicyTimeline,
+  type PolicyTimelineResult,
 } from './premium-policy-timeline';
 import { POLICY_REGISTRY } from './ai-policy-registry';
 
@@ -201,5 +203,102 @@ describe('parseTimelineParams', () => {
     expect(p.daysBack).toBeUndefined();
     expect(p.daysForward).toBeUndefined();
     expect(p.jurisdiction).toBeUndefined();
+  });
+});
+
+// ── previewPolicyTimeline (free taste) ──────────────────────────────
+// The free /api/preview/policy/timeline taste must show the temporal
+// "temperature" (window + counts + per-jurisdiction totals + the single
+// next milestone headline) while withholding the timeline itself: the
+// full entries array and every per-entry detail field (summary, status,
+// type, dates, source URL, scope) stay behind the paywall.
+
+function fixtureTimeline(milestoneCount: number): PolicyTimelineResult {
+  const milestones = Array.from({ length: milestoneCount }, (_, i) => ({
+    id: `secret-id-${i}`,
+    title: `Milestone Headline ${i}`,
+    jurisdiction: 'US-Federal',
+    type: 'regulation',
+    status: 'pending',
+    enacted_date: '2026-01-01',
+    effective_date: '2026-09-01',
+    pivot_date: '2026-09-01',
+    relative_position: 'upcoming' as const,
+    days_until_effective: 69 + i,
+    summary: `SECRET summary text ${i}`,
+    source_url: `https://secret.gov/policy/${i}`,
+    scope: ['SECRET-scope-tag'],
+  }));
+  return {
+    ok: true,
+    computed_at: '2026-06-24T12:00:00.000Z',
+    window: { from: '2025-12-26', to: '2026-12-21', days_back: 180, days_forward: 180 },
+    totals: { in_window: 12, past: 4, today: 0, upcoming: 6, far_future: 1, no_date: 1 },
+    by_jurisdiction: { 'US-State': 5, 'US-Federal': 4, EU: 3 },
+    next_milestones: milestones,
+    entries: [
+      {
+        id: 'secret-entry-1',
+        title: 'SECRET entry title',
+        jurisdiction: 'EU',
+        type: 'regulation',
+        status: 'phased',
+        enacted_date: '2024-07-12',
+        effective_date: '2024-08-01',
+        pivot_date: '2024-08-01',
+        relative_position: 'past',
+        days_until_effective: -300,
+        summary: 'SECRET entry summary',
+        source_url: 'https://secret.gov/entry/1',
+        scope: ['SECRET-entry-scope'],
+      },
+    ],
+    attribution: {
+      source: 'TensorFeed editorial AI policy registry',
+      policy: 'public government actions',
+      primary_sources: ['federalregister.gov'],
+      derivation: 'Temporal layer over the free registry.',
+    } as PolicyTimelineResult['attribution'],
+  };
+}
+
+describe('previewPolicyTimeline (free taste)', () => {
+  it('passes through window, totals, and per-jurisdiction counts, flagged as a preview', () => {
+    const full = fixtureTimeline(3);
+    const p = previewPolicyTimeline(full);
+    expect(p.ok).toBe(true);
+    expect(p.preview).toBe(true);
+    expect(p.window).toEqual(full.window);
+    expect(p.totals).toEqual(full.totals);
+    expect(p.by_jurisdiction).toEqual(full.by_jurisdiction);
+    expect(p.computed_at).toBe(full.computed_at);
+    expect(p.unlock.full_endpoint).toBe('/api/premium/policy/timeline');
+  });
+
+  it('reveals only the single next milestone, reduced to headline fields', () => {
+    const p = previewPolicyTimeline(fixtureTimeline(3));
+    expect(p.next_milestone).toEqual({
+      title: 'Milestone Headline 0',
+      jurisdiction: 'US-Federal',
+      relative_position: 'upcoming',
+      days_until_effective: 69,
+    });
+  });
+
+  it('returns null next_milestone when there are no upcoming milestones', () => {
+    expect(previewPolicyTimeline(fixtureTimeline(0)).next_milestone).toBeNull();
+  });
+
+  it('LEAK GUARD: withholds the entries timeline and all per-entry detail', () => {
+    const p = previewPolicyTimeline(fixtureTimeline(3));
+    const bag = p as unknown as Record<string, unknown>;
+    expect(bag.entries).toBeUndefined();
+    expect(bag.next_milestones).toBeUndefined(); // the full milestone array (with detail) must not survive
+    const serialized = JSON.stringify(p);
+    expect(serialized).not.toContain('SECRET summary');
+    expect(serialized).not.toContain('SECRET entry');
+    expect(serialized).not.toContain('secret.gov');
+    expect(serialized).not.toContain('SECRET-scope');
+    expect(serialized).not.toContain('secret-id');
   });
 });

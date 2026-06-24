@@ -3072,6 +3072,8 @@ export function buildHeaderExtensions(
 // here when you ship a new /api/preview/* sibling.
 const PREVIEW_SIBLINGS: Record<string, string> = {
   '/api/premium/whats-new': '/api/preview/whats-new',
+  '/api/premium/policy/timeline': '/api/preview/policy/timeline',
+  '/api/premium/ai-cves/ai-stack-cves': '/api/preview/ai-cves/ai-stack-cves',
 };
 
 /** The free /api/preview/* sibling for a paid pathname, or undefined if none. */

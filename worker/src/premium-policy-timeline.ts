@@ -1,4 +1,6 @@
 import { POLICY_REGISTRY, PolicyEntry, PolicyAttribution, POLICY_ATTRIBUTION } from './ai-policy-registry';
+import { Env } from './types';
+import { safePut } from './kill-switch';
 
 /**
  * Premium AI policy timeline.
@@ -291,4 +293,85 @@ export function parseTimelineParams(searchParams: URLSearchParams): ParsedParams
   void ISO_DATE;
 
   return out;
+}
+
+// ── Free preview (the /api/preview/policy/timeline taste) ───────────
+
+export interface PolicyTimelinePreview {
+  ok: true;
+  preview: true;
+  computed_at: string;
+  window: PolicyTimelineResult['window'];
+  totals: PolicyTimelineResult['totals'];
+  by_jurisdiction: Record<string, number>;
+  next_milestone: {
+    title: string;
+    jurisdiction: string;
+    relative_position: RelativePosition;
+    days_until_effective: number | null;
+  } | null;
+  attribution: PolicyTimelineResult['attribution'];
+  unlock: {
+    full_endpoint: string;
+    note: string;
+    withheld: string[];
+  };
+}
+
+/**
+ * Shape a full policy-timeline result down to the free discovery taste.
+ *
+ * Reveals the temporal temperature (window, the relative-position counts,
+ * per-jurisdiction totals) plus the single next milestone's headline, so a
+ * booting agent can see TensorFeed tracks live, dated AI policy. The
+ * timeline itself (the full entries array and every per-entry detail field:
+ * summary, status, type, dates, source URL, scope) stays paid. Pure
+ * function, no I/O.
+ */
+export function previewPolicyTimeline(result: PolicyTimelineResult): PolicyTimelinePreview {
+  const m = result.next_milestones[0];
+  return {
+    ok: true,
+    preview: true,
+    computed_at: result.computed_at,
+    window: result.window,
+    totals: result.totals,
+    by_jurisdiction: result.by_jurisdiction,
+    next_milestone: m
+      ? {
+          title: m.title,
+          jurisdiction: m.jurisdiction,
+          relative_position: m.relative_position,
+          days_until_effective: m.days_until_effective,
+        }
+      : null,
+    attribution: result.attribution,
+    unlock: {
+      full_endpoint: '/api/premium/policy/timeline',
+      note: 'Free preview: window counts, per-jurisdiction totals, and the single next milestone headline. The full timeline (every entry with its summary, status, type, effective dates, source links, and scope tags, plus all upcoming milestones) is 1 credit ($0.02) at /api/premium/policy/timeline. Optional ?days_back=, ?days_forward=, ?jurisdiction=.',
+      withheld: [
+        'the full entries timeline (every policy with summary, status, type, dates, source URL, scope)',
+        'all milestones beyond the single next one, and their detail fields',
+      ],
+    },
+  };
+}
+
+/**
+ * IP-based daily rate limit for the free /api/preview/policy/timeline taste.
+ * Mirrors checkWhatsNewPreviewRateLimit with a distinct KV key. 1 read plus
+ * (0 or 1) writes per call; the write is skipped under the kill switch.
+ */
+export async function checkPolicyTimelinePreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:policy-timeline-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }

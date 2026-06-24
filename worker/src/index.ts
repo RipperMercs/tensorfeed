@@ -201,7 +201,7 @@ import {
   readIndicators as readFREDIndicators,
   isValidCategory as isValidFREDCategory,
 } from './fred-indicators';
-import { computePolicyTimeline, parseTimelineParams } from './premium-policy-timeline';
+import { computePolicyTimeline, parseTimelineParams, previewPolicyTimeline, checkPolicyTimelinePreviewRateLimit } from './premium-policy-timeline';
 import { computePackagesMomentum } from './premium-packages-momentum';
 import { computeResearchVelocity } from './premium-research-velocity';
 import { computeCveKevTimeline } from './premium-cve-kev-timeline';
@@ -4759,6 +4759,8 @@ export default {
           x402SettlementPreview: '/api/preview/x402-settlement-verdict (free, 10/IP/day; the momentum, concentration, and leading-publisher verdict only, no full publisher ranking or signed receipt)',
           x402PublisherPreview: '/api/preview/x402-publisher-verdict?domain= (free, 10/IP/day; the trust verdict and claim for one publisher only, no momentum, shared-wallet flag, or settlement evidence)',
           whatsNewPreview: '/api/preview/whats-new (free, 10/IP/day; live summary counts plus the top 3 headline titles. The full morning brief with pricing deltas, incident detail, and all headlines is the paid upgrade at /api/premium/whats-new.)',
+          policyTimelinePreview: '/api/preview/policy/timeline (free, 10/IP/day; window counts, per-jurisdiction totals, and the single next milestone headline. The full timeline with every entry, detail, and source links is the paid upgrade at /api/premium/policy/timeline. Optional ?days_back=, ?days_forward=, ?jurisdiction=.)',
+          aiStackCvesPreview: '/api/preview/ai-cves/ai-stack-cves (free, 10/IP/day; counts only (total, exploited-in-wild, by severity, by AI-stack category) plus the single top CVE headline. The full AI-stack-filtered list with version ranges, fixes, and advisory links is the paid upgrade at /api/premium/ai-cves/ai-stack-cves. Raw unfiltered batches are free at /api/ai-cves/latest.)',
           premiumRouting: '/api/premium/routing?task=code|reasoning|creative|general (1 credit; top-5 ranked models with full score breakdown, pricing, status, and component-level detail. Optional ?budget=, ?min_quality=, ?top_n=1-10, and custom weights ?w_quality=, ?w_availability=, ?w_cost=, ?w_latency=.)',
           premiumRouteVerdict: '/api/premium/route-verdict?task=code|reasoning|creative|general or ?model= (1 credit, AFTA-signed; the single best model to use right now, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state, plus runners-up and a signed receipt. Optional ?max_latency_p95_ms=, ?require_operational=, ?exclude_deprecated=. 30-min freshness SLA, no-charge when stale.)',
           stackSafetyVerdict: '/api/premium/stack-safety-verdict?packages=name@version,... (1 credit, AFTA-signed; GO/HOLD/BLOCK deploy gate per AI-stack package, fusing the ingested AI-CVE batch + CISA KEV. Up to 10 packages. Never-false-confirm: BLOCK only on exploited with no fix, HOLD on version-ambiguous, PASS on no match, UNKNOWN outside the cohort.)',
@@ -11259,6 +11261,43 @@ export default {
     // then severity desc, then source_url asc. No params; bulk derived
     // view that "answers is my AI stack vulnerable" in one call.
 
+    // === FREE PREVIEW: AI-STACK CVES TASTE (10/IP/day) ===
+    // Free discovery sibling of /api/premium/ai-cves/ai-stack-cves. Counts
+    // (total, exploited-in-wild, by severity, by AI-stack category) plus the
+    // single top CVE headline, so an agent can see the filtered feed's shape
+    // before paying. The full filtered list and per-CVE remediation detail
+    // (version ranges, fixes, advisory links) stay paid. Raw unfiltered
+    // batches are already free at /api/ai-cves/latest. Per-IP daily cap.
+    if (path === '/api/preview/ai-cves/ai-stack-cves') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const { getAiStackCves, previewAiStackCves, checkAiStackCvesPreviewRateLimit } = await import('./premium-ai-cves');
+      const acLimit = await checkAiStackCvesPreviewRateLimit(env, ip, 10);
+      if (!acLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: acLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/ai-cves/ai-stack-cves',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/ai-cves/ai-stack-cves (the full AI-stack-filtered CVE list with version ranges, fixes, and advisory links, no rate limit) is the upgrade. Raw unfiltered batches are free at /api/ai-cves/latest.',
+          },
+          429,
+        );
+      }
+      const acResult = await getAiStackCves(env);
+      return jsonResponse(
+        {
+          ...previewAiStackCves(acResult),
+          rate_limit: { limit: acLimit.limit, remaining: acLimit.remaining, scope: 'per IP per UTC day' },
+        },
+        200,
+        0,
+      );
+    }
+
     if (path === '/api/premium/ai-cves/ai-stack-cves') {
       const payment = await requirePayment(request, env, 1);
       if (!payment.paid) return payment.response!;
@@ -13463,6 +13502,59 @@ export default {
       // age only as source_captured_at, which premiumResponse does not read
       // on its own (audit 2026-05-31 #7).
       return await premiumResponse(result, payment, 3, request, env, null, result.source_captured_at);
+    }
+
+    // === FREE PREVIEW: POLICY TIMELINE TASTE (10/IP/day) ===
+    // Free discovery sibling of /api/premium/policy/timeline. Window counts,
+    // per-jurisdiction totals, and the single next milestone headline, so an
+    // agent can see TF tracks live dated AI policy before paying. The full
+    // timeline (every entry + per-entry detail) stays paid.
+    // computePolicyTimeline reads no KV (bundled registry); the per-IP daily
+    // cap bounds the only KV op.
+    if (path === '/api/preview/policy/timeline') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const ptLimit = await checkPolicyTimelinePreviewRateLimit(env, ip, 10);
+      if (!ptLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: ptLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/policy/timeline',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/policy/timeline (full timeline with every entry, detail, and source links, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const ptParsed = parseTimelineParams(url.searchParams);
+      if (ptParsed.error) {
+        return jsonResponse(
+          { ok: false, error: ptParsed.error, limits: { max_days_back: 365 * 5, max_days_forward: 365 * 5 } },
+          400,
+        );
+      }
+      const ptResult = computePolicyTimeline({
+        daysBack: ptParsed.daysBack,
+        daysForward: ptParsed.daysForward,
+        jurisdiction: ptParsed.jurisdiction,
+      });
+      if (!ptResult.ok) {
+        return jsonResponse(
+          { ok: false, error: ptResult.error, ...(ptResult.hint ? { hint: ptResult.hint } : {}) },
+          400,
+        );
+      }
+      return jsonResponse(
+        {
+          ...previewPolicyTimeline(ptResult),
+          rate_limit: { limit: ptLimit.limit, remaining: ptLimit.remaining, scope: 'per IP per UTC day' },
+        },
+        200,
+        0,
+      );
     }
 
     if (path === '/api/premium/policy/timeline') {

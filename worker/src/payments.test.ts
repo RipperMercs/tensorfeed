@@ -968,8 +968,10 @@ describe('buildHeaderExtensions (402 header schema, audit + x402scan)', () => {
 // The 402 challenge advertises a free preview sibling when one exists, so an
 // agent that just bounced off the paywall is told where the free taste lives.
 describe('previewSiblingFor', () => {
-  it('maps whats-new to its free preview', () => {
+  it('maps paid endpoints to their free preview', () => {
     expect(previewSiblingFor('/api/premium/whats-new')).toBe('/api/preview/whats-new');
+    expect(previewSiblingFor('/api/premium/policy/timeline')).toBe('/api/preview/policy/timeline');
+    expect(previewSiblingFor('/api/premium/ai-cves/ai-stack-cves')).toBe('/api/preview/ai-cves/ai-stack-cves');
   });
   it('returns undefined for endpoints with no preview sibling', () => {
     expect(previewSiblingFor('/api/premium/security/kev/full')).toBeUndefined();

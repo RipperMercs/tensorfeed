@@ -11,6 +11,7 @@
  */
 
 import type { Env } from './types';
+import { safePut } from './kill-switch';
 import {
   type AiCvesPaper,
   type AiCvesBatch,
@@ -95,6 +96,107 @@ export async function getAiStackCves(env: Env): Promise<AiStackCvesResponse> {
     papers,
     ...publicAttribution(),
   };
+}
+
+// ─── ai-stack-cves free preview (the /api/preview/ai-cves/ai-stack-cves taste) ───
+
+export interface AiStackCvesPreview {
+  ok: true;
+  preview: true;
+  batch_id: string | null;
+  extracted_at: string | null;
+  total: number;
+  exploited_in_wild_count: number;
+  by_severity: Record<string, number>;
+  by_category: Record<string, number>;
+  top_cve: {
+    cve_ids: string[];
+    affected_products: string[];
+    tf_ai_category: AiCategory;
+    severity_label: string;
+    exploited_in_wild: PublicPaper['exploited_in_wild'];
+  } | null;
+  source_license: string;
+  source_attribution: string;
+  unlock: {
+    full_endpoint: string;
+    free_alternatives: string[];
+    note: string;
+    withheld: string[];
+  };
+}
+
+const SEVERITY_BUCKETS = ['unstated', 'low', 'medium', 'high', 'critical'];
+
+/**
+ * Shape the AI-stack CVE feed down to the free discovery taste.
+ *
+ * Reveals the scale and shape (total, exploited-in-wild count, severity and
+ * AI-stack-category breakdowns) plus the single top CVE's headline, so an
+ * agent can see whether the filtered feed is worth unlocking. The full
+ * filtered papers list and the per-CVE remediation detail (affected version
+ * ranges, fixed versions, advisory source URLs) stay paid. Pure function.
+ */
+export function previewAiStackCves(result: AiStackCvesResponse): AiStackCvesPreview {
+  const by_severity: Record<string, number> = { critical: 0, high: 0, medium: 0, low: 0, unstated: 0 };
+  const by_category: Record<string, number> = {};
+  let exploited = 0;
+  for (const p of result.papers) {
+    const bucket = SEVERITY_BUCKETS[p.severity_rank] ?? 'unstated';
+    by_severity[bucket] += 1;
+    by_category[p.tf_ai_category] = (by_category[p.tf_ai_category] ?? 0) + 1;
+    if (p.exploited_in_wild === 'stated_yes') exploited += 1;
+  }
+  const top = result.papers[0];
+  return {
+    ok: true,
+    preview: true,
+    batch_id: result.batch_id,
+    extracted_at: result.extracted_at,
+    total: result.total,
+    exploited_in_wild_count: exploited,
+    by_severity,
+    by_category,
+    top_cve: top
+      ? {
+          cve_ids: top.cve_ids,
+          affected_products: top.affected_products,
+          tf_ai_category: top.tf_ai_category,
+          severity_label: top.severity_label,
+          exploited_in_wild: top.exploited_in_wild,
+        }
+      : null,
+    source_license: result.source_license,
+    source_attribution: result.source_attribution,
+    unlock: {
+      full_endpoint: '/api/premium/ai-cves/ai-stack-cves',
+      free_alternatives: ['/api/ai-cves/latest', '/api/ai-cves/feed', '/api/ai-cves/stats'],
+      note: 'Free preview: counts only (total, exploited-in-wild, by severity, by AI-stack category) plus the single top CVE headline. The full AI-stack-filtered list (every CVE with affected version ranges, fixed versions, and advisory source links) is 1 credit ($0.02) at /api/premium/ai-cves/ai-stack-cves. Raw unfiltered batches are free at /api/ai-cves/latest and /api/ai-cves/feed.',
+      withheld: [
+        'the full AI-stack-filtered papers list',
+        'per-CVE affected version ranges, fixed versions, and advisory source URLs',
+      ],
+    },
+  };
+}
+
+/**
+ * IP-based daily rate limit for the free /api/preview/ai-cves/ai-stack-cves
+ * taste. Mirrors checkWhatsNewPreviewRateLimit with a distinct KV key. 1 read
+ * plus (0 or 1) writes per call; the write is skipped under the kill switch.
+ */
+export async function checkAiStackCvesPreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:ai-stack-cves-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }
 
 // ─── exploited-in-wild ──────────────────────────────────────────────
