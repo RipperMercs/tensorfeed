@@ -7,7 +7,10 @@ import {
   parseWithinDays,
   parseProvider,
   buildTimeline,
+  previewModelDeprecationsTimeline,
   type UrgencyBand,
+  type TimelineResponse,
+  type TimelineEntry,
 } from './premium-model-deprecations';
 import { MODEL_DEPRECATIONS, type ModelDeprecation } from './model-deprecations';
 
@@ -504,5 +507,98 @@ describe('buildTimeline', () => {
       expect(e.migration_chain.length).toBeGreaterThanOrEqual(1);
       expect(e.migration_chain[0]).toBe(e.model);
     }
+  });
+});
+
+// ── previewModelDeprecationsTimeline (free taste) ───────────────────
+// The free /api/preview/model-deprecations/timeline taste shows the shape
+// (registry/window counts, per-provider and per-urgency summaries) plus the
+// single most-imminent sunset headline, while withholding the timeline
+// itself: the full entries array and the agent-actionable per-entry fields
+// (days_*, migration_chain, notes, source URLs) stay paid.
+
+function tlEntry(over: Partial<TimelineEntry>): TimelineEntry {
+  return {
+    id: 'openai-gpt-x',
+    provider: 'OpenAI',
+    model: 'gpt-x-2024',
+    modelDisplay: 'GPT-X (2024)',
+    status: 'announced',
+    announcedDate: '2025-11-01',
+    deprecationDate: '2026-07-15',
+    sunsetDate: '2026-12-31',
+    replacement: 'gpt-y',
+    notes: 'SECRET migration note',
+    sourceUrl: 'https://secret.example/deprecations',
+    days_until_deprecation: 21,
+    days_until_sunset: 190,
+    days_since_sunset: null,
+    urgency_band: 'within_60d',
+    migration_chain: ['gpt-x-2024', 'SECRET-chain-hop'],
+    ...over,
+  } as TimelineEntry;
+}
+
+function tlFixture(entries: TimelineEntry[]): TimelineResponse {
+  return {
+    ok: true,
+    capturedAt: '2026-06-24T12:00:00.000Z',
+    filter: { within_days: 60, provider: null },
+    total_in_registry: 18,
+    returned_count: entries.length,
+    entries,
+    summary: {
+      by_provider: { OpenAI: entries.length },
+      by_urgency_band: {
+        past: 0, within_7d: 0, within_30d: 1, within_60d: 0, within_90d: 0,
+        within_180d: 0, within_365d: 0, future: 0, no_date: 0,
+      },
+    },
+    attribution: { sources: ['https://platform.openai.com/docs/deprecations'], license: 'TF editorial', notes: 'registry' },
+  };
+}
+
+describe('previewModelDeprecationsTimeline (free taste)', () => {
+  const upcoming = tlEntry({ model: 'gpt-soon', modelDisplay: 'GPT Soon', sunsetDate: '2026-07-15', days_until_sunset: 21, urgency_band: 'within_30d', replacement: 'gpt-next' });
+  const past = tlEntry({ model: 'gpt-old', modelDisplay: 'GPT Old', sunsetDate: '2024-01-04', days_until_sunset: -537, days_since_sunset: 537, urgency_band: 'past' });
+  const full = tlFixture([past, upcoming]);
+
+  it('passes through registry/window counts and summaries, flagged as a preview', () => {
+    const p = previewModelDeprecationsTimeline(full);
+    expect(p.ok).toBe(true);
+    expect(p.preview).toBe(true);
+    expect(p.total_in_registry).toBe(18);
+    expect(p.returned_count).toBe(2);
+    expect(p.filter).toEqual(full.filter);
+    expect(p.summary).toEqual(full.summary);
+    expect(p.unlock.full_endpoint).toBe('/api/premium/model-deprecations/timeline');
+  });
+
+  it('reveals only the single most-imminent upcoming sunset, reduced to headline fields', () => {
+    const p = previewModelDeprecationsTimeline(full);
+    expect(p.next_deprecation).toEqual({
+      provider: 'OpenAI',
+      model: 'GPT Soon',
+      sunset_date: '2026-07-15',
+      urgency_band: 'within_30d',
+      replacement: 'gpt-next',
+    });
+  });
+
+  it('returns null next_deprecation when nothing has an upcoming sunset', () => {
+    expect(previewModelDeprecationsTimeline(tlFixture([past])).next_deprecation).toBeNull();
+    expect(previewModelDeprecationsTimeline(tlFixture([])).next_deprecation).toBeNull();
+  });
+
+  it('LEAK GUARD: withholds the entries timeline and per-entry detail', () => {
+    const p = previewModelDeprecationsTimeline(full);
+    const bag = p as unknown as Record<string, unknown>;
+    expect(bag.entries).toBeUndefined();
+    const serialized = JSON.stringify(p);
+    expect(serialized).not.toContain('SECRET migration note');
+    expect(serialized).not.toContain('secret.example');
+    expect(serialized).not.toContain('SECRET-chain-hop');
+    expect(serialized).not.toContain('days_until_sunset');
+    expect(serialized).not.toContain('migration_chain');
   });
 });

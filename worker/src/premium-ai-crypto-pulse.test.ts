@@ -6,6 +6,9 @@ import {
   classifySetup,
   buildPulseRow,
   buildPulse,
+  previewAiCryptoPulse,
+  type PulseResponse,
+  type PulseRow,
 } from './premium-ai-crypto-pulse';
 import type {
   AiCryptoSnapshot,
@@ -570,5 +573,87 @@ describe('buildPulse: degraded snapshot', () => {
     const r = buildPulse(snapshot, DEFAULT_FILTER);
     expect(r.degraded).toBe(true);
     expect(r.partial_sources).toEqual(['funding']);
+  });
+});
+
+// ── previewAiCryptoPulse (free taste) ───────────────────────────────
+// The raw movers + funding arrays are ALREADY free at /api/ai-crypto-pulse;
+// the paid endpoint's value is the derived layer (per-token setup
+// classification + venue-weighted funding analytics). So the taste reveals
+// the derived SHAPE (cohort, by-setup/breadth/median summary, and a small
+// sample of classified standouts) while withholding the full classified
+// rows and the per-venue funding detail an agent pays for.
+
+function pulseRow(over: Partial<PulseRow>): PulseRow {
+  return {
+    symbol: 'DOGE',
+    display_name: 'Dogecoin',
+    thesis: 'meme',
+    price_usd: 0.1,
+    change_24h_percent: 5,
+    market_cap: 1e9,
+    funding_venue_count: 2,
+    funding_median_annualized_pct: 12.5,
+    funding_venue_spread_pct: 3.2,
+    funding_by_venue: [{ venue: 'SECRET-venue', annualized_pct: 12, period_rate: 0.001, mark_price: 0.1 }],
+    setup: 'squeeze_up',
+    ...over,
+  };
+}
+
+function pulseFixture(): PulseResponse {
+  const up = pulseRow({ symbol: 'AAA', display_name: 'Alpha', setup: 'squeeze_up', change_24h_percent: 8 });
+  const down = pulseRow({ symbol: 'BBB', display_name: 'Beta', setup: 'squeeze_down', change_24h_percent: -7 });
+  const coiled = pulseRow({ symbol: 'CCC', display_name: 'Gamma', setup: 'coiled', change_24h_percent: 0.5 });
+  return {
+    ok: true,
+    capturedAt: '2026-06-24T12:00:00.000Z',
+    snapshot_captured_at: '2026-06-24T11:55:00.000Z',
+    source: 'terminalfeed.io federation cross-call',
+    filter: { token: null, setup: null, min_abs_change_pct: 0 },
+    cohort: { cohort_size: 14, movers_seen: 14, funding_seen: 10, failed_venues: [] },
+    rows: [up, down, coiled],
+    notable_movers: { squeezes_up: [up], squeezes_down: [down], coiled: [coiled], top_gainers: [up], top_losers: [down] },
+    summary: {
+      by_setup: { squeeze_up: 1, chase_up: 0, squeeze_down: 1, chase_down: 0, coiled: 1, neutral: 0 },
+      breadth_pct_positive: 60,
+      median_change_24h_pct: 1.2,
+    },
+    attribution: { source: 'TerminalFeed.io', license: 'federation cross-call', notes: 'AI-thesis cohort' },
+  };
+}
+
+describe('previewAiCryptoPulse (free taste)', () => {
+  it('passes through cohort and the derived summary, flagged as a preview', () => {
+    const p = previewAiCryptoPulse(pulseFixture());
+    expect(p.ok).toBe(true);
+    expect(p.preview).toBe(true);
+    expect(p.cohort).toEqual({ cohort_size: 14, movers_seen: 14, funding_seen: 10, failed_venues: [] });
+    expect(p.summary).toEqual({
+      by_setup: { squeeze_up: 1, chase_up: 0, squeeze_down: 1, chase_down: 0, coiled: 1, neutral: 0 },
+      breadth_pct_positive: 60,
+      median_change_24h_pct: 1.2,
+    });
+    expect(p.unlock.full_endpoint).toBe('/api/premium/ai-crypto-pulse');
+  });
+
+  it('samples a few classified standouts, reduced to headline fields only', () => {
+    const p = previewAiCryptoPulse(pulseFixture());
+    expect(p.top_setups).toEqual([
+      { symbol: 'AAA', display_name: 'Alpha', setup: 'squeeze_up', change_24h_percent: 8 },
+      { symbol: 'BBB', display_name: 'Beta', setup: 'squeeze_down', change_24h_percent: -7 },
+      { symbol: 'CCC', display_name: 'Gamma', setup: 'coiled', change_24h_percent: 0.5 },
+    ]);
+  });
+
+  it('LEAK GUARD: withholds the full classified rows and per-venue funding detail', () => {
+    const p = previewAiCryptoPulse(pulseFixture());
+    const bag = p as unknown as Record<string, unknown>;
+    expect(bag.rows).toBeUndefined();
+    expect(bag.notable_movers).toBeUndefined();
+    const serialized = JSON.stringify(p);
+    expect(serialized).not.toContain('SECRET-venue');
+    expect(serialized).not.toContain('funding_by_venue');
+    expect(serialized).not.toContain('funding_median_annualized_pct');
   });
 });

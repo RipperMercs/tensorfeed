@@ -3074,6 +3074,12 @@ const PREVIEW_SIBLINGS: Record<string, string> = {
   '/api/premium/whats-new': '/api/preview/whats-new',
   '/api/premium/policy/timeline': '/api/preview/policy/timeline',
   '/api/premium/ai-cves/ai-stack-cves': '/api/preview/ai-cves/ai-stack-cves',
+  '/api/premium/model-deprecations/timeline': '/api/preview/model-deprecations/timeline',
+  '/api/premium/ai-crypto-pulse': '/api/preview/ai-crypto-pulse',
+  // research/authors already ships a genuine top-25 free taste at the path
+  // below (the paid endpoint returns the full top-100), so the 402 points at
+  // the existing free sibling rather than a new /api/preview/* route.
+  '/api/premium/research/authors': '/api/research/authors',
 };
 
 /** The free /api/preview/* sibling for a paid pathname, or undefined if none. */

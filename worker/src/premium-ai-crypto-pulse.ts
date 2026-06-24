@@ -30,6 +30,8 @@ import type {
   CryptoMoverEntry,
   FundingEntry,
 } from './terminalfeed-crypto-fetcher';
+import type { Env } from './types';
+import { safePut } from './kill-switch';
 
 // ─── Filter ────────────────────────────────────────────────────────
 
@@ -306,4 +308,91 @@ export function buildPulse(
       notes: 'Setup classification: squeeze = price move OPPOSITE the leveraged side (shorts/longs trapped); chase = price move WITH the leveraged side (mean-reversion risk); coiled = flat price + extreme funding. Thresholds: 1% 24h move + 5% annualized funding for elevated, 20% for extreme.',
     },
   };
+}
+
+// ─── Free preview (the /api/preview/ai-crypto-pulse taste) ──────────
+
+export interface AiCryptoPulsePreview {
+  ok: true;
+  preview: true;
+  capturedAt: string;
+  snapshot_captured_at: string;
+  source: PulseResponse['source'];
+  cohort: PulseResponse['cohort'];
+  summary: PulseResponse['summary'];
+  top_setups: Array<{ symbol: string; display_name: string; setup: SetupKind; change_24h_percent: number }>;
+  degraded?: boolean;
+  attribution: PulseResponse['attribution'];
+  unlock: {
+    full_endpoint: string;
+    free_raw: string;
+    note: string;
+    withheld: string[];
+  };
+}
+
+/**
+ * Shape the AI-crypto pulse down to the free discovery taste.
+ *
+ * The raw movers and funding arrays are ALREADY free at /api/ai-crypto-pulse;
+ * the paid endpoint's value is the derived layer (per-token setup
+ * classification + venue-weighted funding analytics). So the taste reveals
+ * the derived shape (cohort, the setup distribution + breadth + median move,
+ * and a few classified standouts reduced to a headline) while withholding the
+ * full classified rows and the per-venue funding detail. Pure function.
+ */
+export function previewAiCryptoPulse(result: PulseResponse): AiCryptoPulsePreview {
+  const candidates = [
+    result.notable_movers.squeezes_up[0],
+    result.notable_movers.squeezes_down[0],
+    result.notable_movers.coiled[0],
+  ];
+  const top_setups = candidates
+    .filter((r): r is PulseRow => Boolean(r))
+    .map((r) => ({
+      symbol: r.symbol,
+      display_name: r.display_name,
+      setup: r.setup,
+      change_24h_percent: r.change_24h_percent,
+    }));
+  return {
+    ok: true,
+    preview: true,
+    capturedAt: result.capturedAt,
+    snapshot_captured_at: result.snapshot_captured_at,
+    source: result.source,
+    cohort: result.cohort,
+    summary: result.summary,
+    top_setups,
+    ...(result.degraded ? { degraded: true } : {}),
+    attribution: result.attribution,
+    unlock: {
+      full_endpoint: '/api/premium/ai-crypto-pulse',
+      free_raw: '/api/ai-crypto-pulse',
+      note: 'Free preview: the cohort size, the derived setup distribution (squeeze/chase/coiled counts plus breadth and median move), and a few classified standouts. The full per-token classified rows (each with venue-weighted funding analytics) and the complete notable-movers slices are 1 credit ($0.02) at /api/premium/ai-crypto-pulse. The raw movers and funding arrays are already free at /api/ai-crypto-pulse.',
+      withheld: [
+        'the full per-token classified rows',
+        'per-token venue-weighted funding analytics and the complete notable-movers slices',
+      ],
+    },
+  };
+}
+
+/**
+ * IP-based daily rate limit for the free /api/preview/ai-crypto-pulse taste.
+ * Mirrors checkWhatsNewPreviewRateLimit with a distinct KV key. 1 read plus
+ * (0 or 1) writes per call; the write is skipped under the kill switch.
+ */
+export async function checkAiCryptoPulsePreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:ai-crypto-pulse-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }

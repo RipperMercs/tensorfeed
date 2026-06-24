@@ -4761,6 +4761,9 @@ export default {
           whatsNewPreview: '/api/preview/whats-new (free, 10/IP/day; live summary counts plus the top 3 headline titles. The full morning brief with pricing deltas, incident detail, and all headlines is the paid upgrade at /api/premium/whats-new.)',
           policyTimelinePreview: '/api/preview/policy/timeline (free, 10/IP/day; window counts, per-jurisdiction totals, and the single next milestone headline. The full timeline with every entry, detail, and source links is the paid upgrade at /api/premium/policy/timeline. Optional ?days_back=, ?days_forward=, ?jurisdiction=.)',
           aiStackCvesPreview: '/api/preview/ai-cves/ai-stack-cves (free, 10/IP/day; counts only (total, exploited-in-wild, by severity, by AI-stack category) plus the single top CVE headline. The full AI-stack-filtered list with version ranges, fixes, and advisory links is the paid upgrade at /api/premium/ai-cves/ai-stack-cves. Raw unfiltered batches are free at /api/ai-cves/latest.)',
+          modelDeprecationsTimelinePreview: '/api/preview/model-deprecations/timeline (free, 10/IP/day; registry and window counts, per-provider and per-urgency-band summaries, and the single most-imminent sunset headline. The full timeline with every model, urgency math, and migration chains is the paid upgrade at /api/premium/model-deprecations/timeline. Optional ?within_days=, ?provider=.)',
+          aiCryptoPulsePreview: '/api/preview/ai-crypto-pulse (free, 10/IP/day; cohort size, the derived setup distribution (squeeze/chase/coiled, breadth, median move), and a few classified standouts. Full per-token setup classification and venue-weighted funding is the paid upgrade at /api/premium/ai-crypto-pulse. Raw movers and funding are free at /api/ai-crypto-pulse.)',
+          researchAuthorsFreeTaste: '/api/research/authors (free; the top 25 AI researchers by trailing-365-day publication volume, same fields as the paid endpoint. The full top 100 is the paid /api/premium/research/authors.)',
           premiumRouting: '/api/premium/routing?task=code|reasoning|creative|general (1 credit; top-5 ranked models with full score breakdown, pricing, status, and component-level detail. Optional ?budget=, ?min_quality=, ?top_n=1-10, and custom weights ?w_quality=, ?w_availability=, ?w_cost=, ?w_latency=.)',
           premiumRouteVerdict: '/api/premium/route-verdict?task=code|reasoning|creative|general or ?model= (1 credit, AFTA-signed; the single best model to use right now, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state, plus runners-up and a signed receipt. Optional ?max_latency_p95_ms=, ?require_operational=, ?exclude_deprecated=. 30-min freshness SLA, no-charge when stale.)',
           stackSafetyVerdict: '/api/premium/stack-safety-verdict?packages=name@version,... (1 credit, AFTA-signed; GO/HOLD/BLOCK deploy gate per AI-stack package, fusing the ingested AI-CVE batch + CISA KEV. Up to 10 packages. Never-false-confirm: BLOCK only on exploited with no fix, HOLD on version-ambiguous, PASS on no match, UNKNOWN outside the cohort.)',
@@ -12772,6 +12775,63 @@ export default {
     // squeeze_down, chase_down, coiled, neutral. The squeeze
     // classifications are the contrarian alpha agents pay for.
 
+    // === FREE PREVIEW: AI-CRYPTO PULSE TASTE (10/IP/day) ===
+    // Free discovery sibling of /api/premium/ai-crypto-pulse. The raw movers
+    // and funding arrays are ALREADY free at /api/ai-crypto-pulse; this taste
+    // reveals the DERIVED layer's shape (cohort, setup distribution, breadth,
+    // and a few classified standouts) so an agent sees the squeeze/chase value
+    // before paying. Full per-token classified rows + venue funding stay paid.
+    // Rate-limit BEFORE the federation fetch so capped bots cannot trigger it.
+    if (path === '/api/preview/ai-crypto-pulse') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const {
+        buildPulse,
+        parseToken,
+        parseSetup,
+        parseMinAbsChangePct,
+        previewAiCryptoPulse,
+        checkAiCryptoPulsePreviewRateLimit,
+      } = await import('./premium-ai-crypto-pulse');
+      const acpLimit = await checkAiCryptoPulsePreviewRateLimit(env, ip, 10);
+      if (!acpLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: acpLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/ai-crypto-pulse',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/ai-crypto-pulse (full per-token setup classification and venue-weighted funding, no rate limit) is the upgrade. Raw movers and funding are free at /api/ai-crypto-pulse.',
+          },
+          429,
+        );
+      }
+      const { getOrRefreshCryptoSnapshot } = await import('./terminalfeed-crypto-fetcher');
+      const acpSnap = await getOrRefreshCryptoSnapshot(env);
+      if (!acpSnap) {
+        return jsonResponse(
+          { ok: false, error: 'upstream_unreachable', hint: 'TerminalFeed.io did not respond and no cached snapshot is available. Retry in a few minutes.' },
+          503,
+          0,
+        );
+      }
+      const acpResult = buildPulse(acpSnap, {
+        token: parseToken(url.searchParams.get('token')),
+        setup: parseSetup(url.searchParams.get('setup')),
+        min_abs_change_pct: parseMinAbsChangePct(url.searchParams.get('min_abs_change_pct')),
+      });
+      return jsonResponse(
+        {
+          ...previewAiCryptoPulse(acpResult),
+          rate_limit: { limit: acpLimit.limit, remaining: acpLimit.remaining, scope: 'per IP per UTC day' },
+        },
+        200,
+        0,
+      );
+    }
+
     if (path === '/api/premium/ai-crypto-pulse') {
       const payment = await requirePayment(request, env, 1);
       if (!payment.paid) return payment.response!;
@@ -13343,6 +13403,55 @@ export default {
     // to a still-active model. Summary breakdowns by_provider and
     // by_urgency_band. Free /api/model-deprecations returns the raw
     // registry; this endpoint is the agent-decision-ready derivative.
+
+    // === FREE PREVIEW: MODEL-DEPRECATIONS TIMELINE TASTE (10/IP/day) ===
+    // Free discovery sibling of /api/premium/model-deprecations/timeline.
+    // Registry/window counts, per-provider and per-urgency-band summaries, and
+    // the single most-imminent sunset headline, so an agent can see if a model
+    // it depends on is affected before paying. The full timeline + per-entry
+    // detail (days-until, migration chain, source links) stays paid.
+    // buildTimeline reads no KV (bundled registry); per-IP cap bounds the op.
+    if (path === '/api/preview/model-deprecations/timeline') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const {
+        buildTimeline,
+        parseWithinDays,
+        parseProvider,
+        previewModelDeprecationsTimeline,
+        checkModelDeprecationsTimelinePreviewRateLimit,
+      } = await import('./premium-model-deprecations');
+      const mdLimit = await checkModelDeprecationsTimelinePreviewRateLimit(env, ip, 10);
+      if (!mdLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: mdLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/model-deprecations/timeline',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/model-deprecations/timeline (full timeline with every model, urgency math, and migration chains, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const mdResult = buildTimeline(
+        {
+          within_days: parseWithinDays(url.searchParams.get('within_days')),
+          provider: parseProvider(url.searchParams.get('provider')),
+        },
+        new Date(),
+      );
+      return jsonResponse(
+        {
+          ...previewModelDeprecationsTimeline(mdResult),
+          rate_limit: { limit: mdLimit.limit, remaining: mdLimit.remaining, scope: 'per IP per UTC day' },
+        },
+        200,
+        0,
+      );
+    }
 
     if (path === '/api/premium/model-deprecations/timeline') {
       const payment = await requirePayment(request, env, 1);

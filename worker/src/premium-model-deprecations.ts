@@ -28,6 +28,8 @@
  */
 
 import { MODEL_DEPRECATIONS, type ModelDeprecation } from './model-deprecations';
+import type { Env } from './types';
+import { safePut } from './kill-switch';
 
 export type UrgencyBand =
   | 'past'
@@ -238,4 +240,92 @@ export function buildTimeline(
         'Registry refreshed on redeploy. New entries land via PR to worker/src/model-deprecations.ts when providers publish new deprecation notices.',
     },
   };
+}
+
+// ── Free preview (the /api/preview/model-deprecations/timeline taste) ──
+
+export interface ModelDeprecationsTimelinePreview {
+  ok: true;
+  preview: true;
+  capturedAt: string;
+  filter: TimelineResponse['filter'];
+  total_in_registry: number;
+  returned_count: number;
+  summary: TimelineResponse['summary'];
+  next_deprecation: {
+    provider: string;
+    model: string;
+    sunset_date: string | null;
+    urgency_band: UrgencyBand;
+    replacement: string | null;
+  } | null;
+  attribution: TimelineResponse['attribution'];
+  unlock: {
+    full_endpoint: string;
+    note: string;
+    withheld: string[];
+  };
+}
+
+/**
+ * Shape the model-deprecations timeline down to the free discovery taste.
+ *
+ * Reveals the shape (registry and window counts, per-provider and
+ * per-urgency-band summaries) plus the single most-imminent upcoming sunset
+ * headline, so an agent can see whether any model it depends on is affected.
+ * The timeline itself (the full entries array and the agent-actionable
+ * per-entry fields: days-until/since, migration chain, notes, source URLs)
+ * stays paid. Pure function, no I/O.
+ */
+export function previewModelDeprecationsTimeline(result: TimelineResponse): ModelDeprecationsTimelinePreview {
+  const upcoming = result.entries
+    .filter((e) => typeof e.days_until_sunset === 'number' && e.days_until_sunset >= 0)
+    .sort((a, b) => (a.days_until_sunset as number) - (b.days_until_sunset as number));
+  const n = upcoming[0];
+  return {
+    ok: true,
+    preview: true,
+    capturedAt: result.capturedAt,
+    filter: result.filter,
+    total_in_registry: result.total_in_registry,
+    returned_count: result.returned_count,
+    summary: result.summary,
+    next_deprecation: n
+      ? {
+          provider: n.provider,
+          model: n.modelDisplay ?? n.model,
+          sunset_date: n.sunsetDate ?? null,
+          urgency_band: n.urgency_band,
+          replacement: n.replacement ?? null,
+        }
+      : null,
+    attribution: result.attribution,
+    unlock: {
+      full_endpoint: '/api/premium/model-deprecations/timeline',
+      note: 'Free preview: registry and window counts, per-provider and per-urgency-band summaries, and the single most-imminent sunset headline. The full timeline (every model with its days-until-sunset, migration chain, notes, and source link) is 1 credit ($0.02) at /api/premium/model-deprecations/timeline. Optional ?within_days=, ?provider=.',
+      withheld: [
+        'the full entries timeline (every model deprecation in the window)',
+        'per-entry days-until and days-since fields, migration chains, notes, and source URLs',
+      ],
+    },
+  };
+}
+
+/**
+ * IP-based daily rate limit for the free /api/preview/model-deprecations/timeline
+ * taste. Mirrors checkWhatsNewPreviewRateLimit with a distinct KV key. 1 read
+ * plus (0 or 1) writes per call; the write is skipped under the kill switch.
+ */
+export async function checkModelDeprecationsTimelinePreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:model-deprecations-timeline-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }
