@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'openai-jalapeno-custom-silicon-loop-closed',
+    title:
+      'OpenAI Taped Out Jalapeño in Nine Months. The Custom-Silicon Loop Just Closed.',
+    author: 'Marcus Chen',
+    date: 'June 25, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 24, 2026, OpenAI and Broadcom unveiled Jalapeño, OpenAI's first custom Intelligence Processor: a reticle-sized ASIC (roughly 840 mm², 25.46 mm by 33 mm, near the EUV reticle limit) designed by OpenAI, built at TSMC with Broadcom co-design and Celestica packaging, taped out in nine months from initial design (called the fastest advanced-node ASIC cycle ever), and aimed at LLM inference at production scale. OpenAI is claiming roughly 50 percent lower cost per token than current Nvidia GPUs in early testing. First deployment lands by end of 2026, with the multi-generation program targeting 10 gigawatts of capacity by 2029 across OpenAI facilities and partner data centers. The chip closes a custom-silicon table that now includes Google TPU, Amazon Trainium, Microsoft Maia, Meta MTIA, and OpenAI Jalapeño, with Anthropic as the only top-three lab still without an in-house ASIC and instead riding all three hyperscaler platforms. Inside the math, the nine-month tape-out floor that OpenAI compressed by running its own models inside the design loop (Greg Brockman called the speed-up surprising), what changes for Nvidia at the top of the inference buyer list, why Broadcom sits on both sides of the most expensive silicon contracts in the industry (Google TPU and Jalapeño), and the 10 GW physical-buildout floor that converges on the same 2027 to 2029 delivery window as every other frontier program.",
+  },
+  {
     slug: 'openai-samsung-electronics-dx-chaebol-dual-stack',
     title:
       "OpenAI Just Took the Other Half of Samsung. Five Days After Anthropic's Seoul Flag, the Chaebol Voted For Both Stacks.",
