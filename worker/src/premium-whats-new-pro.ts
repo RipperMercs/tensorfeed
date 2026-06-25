@@ -526,3 +526,74 @@ function mergeProResponse(base: WhatsNewResult, dataIds: DataIds, block: ProBloc
     pro: block,
   };
 }
+
+// ─── Free pro taste (leak-guarded preview) ──────────────────────────
+//
+// The discovery sibling of /api/premium/whats-new/pro. Shows ONE sample
+// takeaway (the highest-confidence one), the agent classes the paid brief
+// tailors actions for, and the analyst-summary length as a depth signal, while
+// withholding the full summary text, every other takeaway, and every
+// recommended action. The single sample is enough for an agent to judge the
+// synthesis quality and see that claims are cited; the rest stays paid. Pure:
+// no I/O.
+
+export interface WhatsNewProPreview {
+  ok: true;
+  preview: true;
+  tier: 'pro';
+  window: WhatsNewResult['window'];
+  computed_at: string;
+  capturedAt: WhatsNewResult['capturedAt'];
+  summary: WhatsNewResult['summary'];
+  sample_takeaway: { claim: string; confidence: number; basis_count: number } | null;
+  takeaways_total: number;
+  takeaways_withheld: number;
+  action_classes: AgentClass[];
+  recommended_actions_total: number;
+  analyst_summary_chars: number;
+  unlock: {
+    pro_brief: string;
+    full_brief: string;
+    note: string;
+    withheld: string[];
+  };
+}
+
+export function previewWhatsNewPro(result: WhatsNewProResult): WhatsNewProPreview {
+  const takeaways = result.pro.key_takeaways;
+  let sample: WhatsNewProPreview['sample_takeaway'] = null;
+  if (takeaways.length > 0) {
+    const top = takeaways.reduce((best, t) => (t.confidence > best.confidence ? t : best), takeaways[0]);
+    sample = { claim: top.claim, confidence: top.confidence, basis_count: top.basis.length };
+  }
+  const action_classes: AgentClass[] = [];
+  for (const a of result.pro.recommended_actions) {
+    if (!action_classes.includes(a.for)) action_classes.push(a.for);
+  }
+  return {
+    ok: true,
+    preview: true,
+    tier: 'pro',
+    window: result.window,
+    computed_at: result.computed_at,
+    capturedAt: result.capturedAt,
+    summary: result.summary,
+    sample_takeaway: sample,
+    takeaways_total: takeaways.length,
+    takeaways_withheld: Math.max(0, takeaways.length - (sample ? 1 : 0)),
+    action_classes,
+    recommended_actions_total: result.pro.recommended_actions.length,
+    analyst_summary_chars: result.pro.analyst_summary.length,
+    unlock: {
+      pro_brief: '/api/premium/whats-new/pro',
+      full_brief: '/api/premium/whats-new',
+      note: 'Free preview: one sample takeaway and the agent classes the brief tailors actions for. The paid pro brief (10 credits, $0.20) returns the full cited analyst summary, all key takeaways with confidence scores and source citations, and recommended actions per agent class. The 1-credit base brief at full_brief carries the raw pricing, incident, and headline data without the analyst layer.',
+      withheld: [
+        'the full analyst summary text',
+        'every key takeaway beyond the single sample, with its citations and confidence',
+        'every recommended action, its priority, and its citations',
+        'the data_ids citation map',
+      ],
+    },
+  };
+}

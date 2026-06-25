@@ -222,7 +222,7 @@ import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
 import { computeProviderDeepDive } from './provider-deepdive';
 import { compareModels } from './compare-models';
-import { computeWhatsNew, previewWhatsNew, checkWhatsNewPreviewRateLimit } from './whats-new';
+import { computeWhatsNew, previewWhatsNew, checkWhatsNewPreviewRateLimit, checkWhatsNewProPreviewRateLimit } from './whats-new';
 import { computeRouting, checkRoutingPreviewRateLimit, hoursUntilUTCRollover, RoutingTask } from './routing';
 import {
   captureRegistrySnapshot,
@@ -4759,6 +4759,7 @@ export default {
           x402SettlementPreview: '/api/preview/x402-settlement-verdict (free, 10/IP/day; the momentum, concentration, and leading-publisher verdict only, no full publisher ranking or signed receipt)',
           x402PublisherPreview: '/api/preview/x402-publisher-verdict?domain= (free, 10/IP/day; the trust verdict and claim for one publisher only, no momentum, shared-wallet flag, or settlement evidence)',
           whatsNewPreview: '/api/preview/whats-new (free, 10/IP/day; live summary counts plus the top 3 headline titles. The full morning brief with pricing deltas, incident detail, and all headlines is the paid upgrade at /api/premium/whats-new.)',
+          whatsNewProPreview: '/api/preview/whats-new/pro (free, 10/IP/day; one sample cited takeaway plus the agent classes the brief tailors actions for and the analyst-summary length. The full cited analyst summary, every key takeaway, and recommended actions per agent class are the paid upgrade at /api/premium/whats-new/pro.)',
           policyTimelinePreview: '/api/preview/policy/timeline (free, 10/IP/day; window counts, per-jurisdiction totals, and the single next milestone headline. The full timeline with every entry, detail, and source links is the paid upgrade at /api/premium/policy/timeline. Optional ?days_back=, ?days_forward=, ?jurisdiction=.)',
           aiStackCvesPreview: '/api/preview/ai-cves/ai-stack-cves (free, 10/IP/day; counts only (total, exploited-in-wild, by severity, by AI-stack category) plus the single top CVE headline. The full AI-stack-filtered list with version ranges, fixes, and advisory links is the paid upgrade at /api/premium/ai-cves/ai-stack-cves. Raw unfiltered batches are free at /api/ai-cves/latest.)',
           modelDeprecationsTimelinePreview: '/api/preview/model-deprecations/timeline (free, 10/IP/day; registry and window counts, per-provider and per-urgency-band summaries, and the single most-imminent sunset headline. The full timeline with every model, urgency math, and migration chains is the paid upgrade at /api/premium/model-deprecations/timeline. Optional ?within_days=, ?provider=.)',
@@ -13736,6 +13737,49 @@ export default {
         {
           ...previewWhatsNew(result),
           rate_limit: { limit: wnLimit.limit, remaining: wnLimit.remaining, scope: 'per IP per UTC day' },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
+    }
+
+    // === FREE PREVIEW: WHATS-NEW PRO TASTE (10/IP/day) ===
+    // Discovery sibling of /api/premium/whats-new/pro. One sample takeaway plus
+    // the agent classes the paid brief tailors actions for, so an agent can see
+    // the analyst-layer value before paying 10 credits. The full synthesis
+    // (summary, all takeaways, every action) stays paid. The pro synthesis is
+    // cached by base-data hash, so a cache hit is the common path and bot volume
+    // cannot multiply the Haiku cost.
+    if (path === '/api/preview/whats-new/pro') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const wnpLimit = await checkWhatsNewProPreviewRateLimit(env, ip, 10);
+      if (!wnpLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: wnpLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/whats-new/pro',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/whats-new/pro (full cited analyst summary, all takeaways, recommended actions per agent class, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const daysParam = parseInt(url.searchParams.get('days') ?? '', 10);
+      const { computeWhatsNewPro, previewWhatsNewPro } = await import('./premium-whats-new-pro');
+      const result = await computeWhatsNewPro(env, {
+        ...(Number.isFinite(daysParam) ? { days: daysParam } : {}),
+      });
+      if (!result.ok) {
+        return jsonResponse({ ok: false, error: 'whats_new_pro_unavailable', hint: result.hint }, 503, 0);
+      }
+      return jsonResponse(
+        {
+          ...previewWhatsNewPro(result),
+          rate_limit: { limit: wnpLimit.limit, remaining: wnpLimit.remaining, scope: 'per IP per UTC day' },
         },
         200,
         0, // do not Cache-API; rate limiting is per IP

@@ -246,6 +246,25 @@ export async function checkWhatsNewPreviewRateLimit(
   return { allowed: true, remaining: max - count - 1, limit: max };
 }
 
+/**
+ * IP-based daily rate limit for the free /api/preview/whats-new/pro taste.
+ * Distinct KV key from the base preview so the two tastes do not share a
+ * budget; otherwise identical to checkWhatsNewPreviewRateLimit.
+ */
+export async function checkWhatsNewProPreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:whats-new-pro-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
+}
+
 // === Helpers ===
 
 function round4(n: number): number {

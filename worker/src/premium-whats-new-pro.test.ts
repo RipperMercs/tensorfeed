@@ -4,7 +4,9 @@ import {
   validateProBlock,
   buildUserPrompt,
   deriveCacheKey,
+  previewWhatsNewPro,
   type DataIds,
+  type WhatsNewProResult,
 } from './premium-whats-new-pro';
 import type { WhatsNewResult } from './whats-new';
 
@@ -84,6 +86,72 @@ function baseFixture(over: Partial<WhatsNewResult> = {}): WhatsNewResult {
 function dataIdsFromFixture(base: WhatsNewResult): DataIds {
   return assignDataIds(base);
 }
+
+// Full pro result fixture: base payload + a Haiku-style pro block. The claims
+// and actions carry distinctive sentinels so the leak-guard test can assert
+// the free preview never echoes the withheld synthesis.
+function proFixture(): WhatsNewProResult {
+  const base = baseFixture();
+  return {
+    ...base,
+    tier: 'pro',
+    data_ids: assignDataIds(base),
+    pro: {
+      generated_by: 'claude-haiku-4-5-20251001',
+      generated_at: '2026-05-26T08:01:00Z',
+      analyst_summary: 'SECRET_SUMMARY_TEXT covering the pricing cut and the incident in detail across two paragraphs.',
+      key_takeaways: [
+        { claim: 'WITHHELD_CLAIM_B about a removed model', basis: ['n1'], confidence: 0.8 },
+        { claim: 'SAMPLE_CLAIM_A the most confident insight in the set', basis: ['c1', 'n1'], confidence: 0.95 },
+        { claim: 'WITHHELD_CLAIM_C an extrapolated trend', basis: ['m1'], confidence: 0.7 },
+      ],
+      recommended_actions: [
+        { for: 'inference-bound', action: 'WITHHELD_ACTION_ONE reroute inference now', priority: 'act_now', basis: ['c1'] },
+        { for: 'cost-bound', action: 'WITHHELD_ACTION_TWO watch the blended price', priority: 'monitor', basis: [] },
+      ],
+    },
+  };
+}
+
+// ── previewWhatsNewPro (free pro taste, leak-guarded) ───────────────
+
+describe('previewWhatsNewPro', () => {
+  it('surfaces one sample takeaway plus the action classes, withholding the rest', () => {
+    const preview = previewWhatsNewPro(proFixture());
+    // The single highest-confidence takeaway is the taste.
+    expect(preview.sample_takeaway?.claim).toBe('SAMPLE_CLAIM_A the most confident insight in the set');
+    expect(preview.sample_takeaway?.confidence).toBe(0.95);
+    expect(preview.sample_takeaway?.basis_count).toBe(2);
+    expect(preview.takeaways_total).toBe(3);
+    expect(preview.takeaways_withheld).toBe(2);
+    expect(preview.action_classes).toEqual(['inference-bound', 'cost-bound']);
+    expect(preview.recommended_actions_total).toBe(2);
+    expect(preview.analyst_summary_chars).toBeGreaterThan(0);
+    expect(preview.unlock.pro_brief).toBe('/api/premium/whats-new/pro');
+  });
+
+  it('never leaks the withheld synthesis into the preview body', () => {
+    const body = JSON.stringify(previewWhatsNewPro(proFixture()));
+    expect(body).not.toContain('SECRET_SUMMARY_TEXT');
+    expect(body).not.toContain('WITHHELD_CLAIM_B');
+    expect(body).not.toContain('WITHHELD_CLAIM_C');
+    expect(body).not.toContain('WITHHELD_ACTION_ONE');
+    expect(body).not.toContain('WITHHELD_ACTION_TWO');
+    // analyst summary length is exposed as a depth signal, the text is not.
+    expect(body).toContain('analyst_summary_chars');
+  });
+
+  it('dedupes repeated action classes', () => {
+    const pro = proFixture();
+    pro.pro.recommended_actions = [
+      { for: 'inference-bound', action: 'first action long enough to pass', priority: 'monitor', basis: [] },
+      { for: 'inference-bound', action: 'second action long enough to pass', priority: 'monitor', basis: [] },
+    ];
+    const preview = previewWhatsNewPro(pro);
+    expect(preview.action_classes).toEqual(['inference-bound']);
+    expect(preview.recommended_actions_total).toBe(2);
+  });
+});
 
 // ── assignDataIds ───────────────────────────────────────────────────
 
