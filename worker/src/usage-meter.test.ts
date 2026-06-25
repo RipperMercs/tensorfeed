@@ -8,6 +8,7 @@ import {
   recordRequestHealth,
   classifyUaFamily,
   deriveRealAgentFunnel,
+  reconcileTopPaidEndpoints,
   SLOW_MS,
 } from './usage-meter';
 import type { Env } from './types';
@@ -154,16 +155,18 @@ describe('buildUsageReport', () => {
       call_count: 5,
       total_credits_charged: 5,
     });
-    // no CF_ANALYTICS_TOKEN on env
+    // no CF_ANALYTICS_TOKEN on env: the funnel degrades, so paid_calls is
+    // unknown (null) rather than the inflated rollup count, which becomes
+    // logged_calls. distinct_payers stays accurate.
     const report = await buildUsageReport(env, 'today');
-    expect(report.top_paid_endpoints[0]).toMatchObject({ endpoint: '/api/premium/x', paid_calls: 5 });
+    expect(report.top_paid_endpoints[0]).toMatchObject({ endpoint: '/api/premium/x', paid_calls: null, logged_calls: 5, distinct_payers: 2 });
     expect(report.top_payers[0]).toMatchObject({ wallet: '0xa', credits_charged: 3 });
     expect(report.funnel_by_endpoint).toBeNull();
     expect(report.funnel_status).toBe('unavailable');
     expect(report.build_targets).toEqual([]);
   });
 
-  it('ranks paid endpoints by credits charged and bounds payers to the window', async () => {
+  it('ranks paid endpoints by the accurate signal (logged_calls tiebreak when the AE funnel is absent) and bounds payers to the window', async () => {
     const env = makeEnvWithRollup({
       by_endpoint: {
         '/api/premium/low': { calls: 1, credits_charged: 1, first_seen: 't', last_seen: 't', distinct_payers: 1 },
@@ -200,6 +203,55 @@ describe('buildUsageReport', () => {
     expect(report.crawler_summary).toBeNull();
     // build targets degrade to empty without a funnel to derive from.
     expect(report.build_targets).toEqual([]);
+  });
+});
+
+describe('reconcileTopPaidEndpoints', () => {
+  it('sources paid_calls from the accurate AE funnel and relabels the inflated rollup count as logged_calls', () => {
+    // The KV rollup banks the nominal tier cost at log time, before commitPayment
+    // decides charge-vs-no-charge, so a free-trial burst inflates the per-endpoint
+    // call counter. The AE funnel's `paid` reflects an ACTUAL charge; distinct_payers
+    // (settling wallets only) is already accurate. This is the real 2026-05-31 case.
+    const byEndpoint = {
+      '/api/premium/security/kev/full': {
+        calls: 1143, credits_charged: 1143, first_seen: 't', last_seen: 't', distinct_payers: 1,
+      },
+    };
+    const funnel = [
+      { endpoint: '/api/premium/security/kev/full', free_hits: 53, unpaid_402: 4873, paid: 1, conversion: 0.0002 },
+    ];
+    const out = reconcileTopPaidEndpoints(byEndpoint, funnel);
+    expect(out[0]).toEqual({
+      endpoint: '/api/premium/security/kev/full',
+      paid_calls: 1,
+      distinct_payers: 1,
+      logged_calls: 1143,
+      last_seen: 't',
+    });
+  });
+
+  it('sets paid_calls to null (unknown) when the AE funnel is unavailable, never the inflated rollup count', () => {
+    const byEndpoint = {
+      '/api/premium/x': { calls: 1143, credits_charged: 1143, first_seen: 't', last_seen: 't', distinct_payers: 1 },
+    };
+    const out = reconcileTopPaidEndpoints(byEndpoint, null);
+    expect(out[0].paid_calls).toBeNull();
+    expect(out[0].logged_calls).toBe(1143);
+    expect(out[0].distinct_payers).toBe(1);
+  });
+
+  it('ranks by accurate paid_calls, not the inflated logged count', () => {
+    const byEndpoint = {
+      '/api/premium/noise': { calls: 5000, credits_charged: 5000, first_seen: 't', last_seen: 't', distinct_payers: 0 },
+      '/api/premium/real': { calls: 8, credits_charged: 8, first_seen: 't', last_seen: 't', distinct_payers: 3 },
+    };
+    const funnel = [
+      { endpoint: '/api/premium/noise', free_hits: 0, unpaid_402: 4999, paid: 0, conversion: 0 },
+      { endpoint: '/api/premium/real', free_hits: 0, unpaid_402: 5, paid: 4, conversion: 0.44 },
+    ];
+    const out = reconcileTopPaidEndpoints(byEndpoint, funnel);
+    expect(out[0].endpoint).toBe('/api/premium/real');
+    expect(out[1].endpoint).toBe('/api/premium/noise');
   });
 });
 

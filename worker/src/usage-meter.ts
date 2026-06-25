@@ -141,9 +141,17 @@ export interface UsageReport {
   window: string;
   top_paid_endpoints: Array<{
     endpoint: string;
-    paid_calls: number;
-    credits_charged: number;
+    // ACTUAL charged calls, from the AE funnel (outcome='paid' is set only on a
+    // real charge). null when the AE funnel is unavailable (no CF API token).
+    // Never the KV rollup's nominal counter, which over-counts no-charge calls.
+    paid_calls: number | null;
+    // Wallets that actually settled against this endpoint (accurate).
     distinct_payers: number;
+    // Served premium calls incl. no-charge (KV rollup nominal count). Volume
+    // only, NOT revenue: a free-trial or stale-data no-charge call still counts
+    // here. A single 2026-05-31 free-trial burst pushed two security endpoints
+    // to 1143 logged calls while only one ever settled.
+    logged_calls: number;
     last_seen: string;
   }>;
   top_payers: Array<{ wallet: string; calls: number; credits_charged: number }>;
@@ -198,6 +206,42 @@ function mergeByEndpoint(rollups: ReadRollup[]): Record<string, RollupEndpointSl
     }
   }
   return merged;
+}
+
+// Reconcile the per-endpoint paid summary against the accurate AE funnel.
+//
+// The KV daily rollup banks the NOMINAL tier cost (1 or 2) into a per-endpoint
+// call counter inside logPremiumUsage, which runs BEFORE commitPayment decides
+// charge-vs-no-charge. Free-trial and stale-data no-charge calls therefore
+// inflate that counter: a single 2026-05-31 free-trial burst pushed
+// security/kev/full and security/epss/top to 1143 "paid" each while exactly one
+// call ever settled. The AE usage event records outcome='paid' only on a real
+// charge (it reads the charge tag off the response), so the funnel's `paid` is
+// the accurate per-endpoint paid count. distinct_payers (settling wallets only)
+// is already accurate. This surfaces paid_calls from AE, relabels the rollup
+// count as logged_calls (volume, includes no-charge), and sorts by the accurate
+// signal so a crawler/free-trial flood can never top the table again.
+export function reconcileTopPaidEndpoints(
+  byEndpoint: Record<string, RollupEndpointSlot>,
+  funnel: UsageReport['funnel_by_endpoint'],
+): UsageReport['top_paid_endpoints'] {
+  const aePaid = new Map<string, number>();
+  if (funnel) for (const f of funnel) aePaid.set(f.endpoint, f.paid);
+  return Object.entries(byEndpoint)
+    .map(([endpoint, v]) => ({
+      endpoint,
+      paid_calls: aePaid.has(endpoint) ? (aePaid.get(endpoint) as number) : null,
+      distinct_payers: v.distinct_payers || 0,
+      logged_calls: v.calls,
+      last_seen: v.last_seen,
+    }))
+    .sort(
+      (a, b) =>
+        (b.paid_calls ?? 0) - (a.paid_calls ?? 0) ||
+        b.distinct_payers - a.distinct_payers ||
+        b.logged_calls - a.logged_calls,
+    )
+    .slice(0, 25);
 }
 
 // Sum per-wallet paid totals across the window, sorted by credits desc.
@@ -332,19 +376,9 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
   const rollups = await readRollupsForWindow(env, days);
   const byEndpoint = mergeByEndpoint(rollups);
 
-  const top_paid_endpoints = Object.entries(byEndpoint)
-    .map(([endpoint, v]) => ({
-      endpoint,
-      paid_calls: v.calls,
-      credits_charged: v.credits_charged,
-      distinct_payers: v.distinct_payers || 0,
-      last_seen: v.last_seen,
-    }))
-    .sort((a, b) => b.credits_charged - a.credits_charged)
-    .slice(0, 25);
-
-  const top_payers = mergePayers(rollups).slice(0, 25);
-
+  // Funnel first: its accurate per-endpoint paid count (AE outcome='paid' is a
+  // real charge) is what top_paid_endpoints reconciles against. Degrades to null
+  // when no CF API token is provisioned.
   let funnel_by_endpoint: UsageReport['funnel_by_endpoint'] = null;
   let funnel_status: UsageReport['funnel_status'] = 'unavailable';
   const funnel = await queryUsageFunnel(env, days);
@@ -352,6 +386,12 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
     funnel_by_endpoint = funnel;
     funnel_status = 'ok';
   }
+
+  // paid_calls comes from the funnel (accurate); the KV rollup count, which
+  // over-counts no-charge calls, is surfaced as logged_calls only.
+  const top_paid_endpoints = reconcileTopPaidEndpoints(byEndpoint, funnel_by_endpoint);
+
+  const top_payers = mergePayers(rollups).slice(0, 25);
 
   // Crawler-filtered real-agent view, derived from the per-(endpoint, ua) funnel.
   let real_agent_funnel: UsageReport['real_agent_funnel'] = null;
