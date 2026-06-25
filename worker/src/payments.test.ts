@@ -26,6 +26,7 @@ import {
   getBalance,
   buildHeaderExtensions,
   previewSiblingFor,
+  builderCodeExtension,
 } from './payments';
 import type { Env } from './types';
 
@@ -980,6 +981,39 @@ describe('previewSiblingFor', () => {
   it('returns undefined for endpoints with no preview sibling', () => {
     expect(previewSiblingFor('/api/premium/security/kev/full')).toBeUndefined();
     expect(previewSiblingFor('/api/premium/whats-new/pro')).toBeUndefined();
+  });
+});
+
+// Base builder-code (ERC-8021) attribution. Gated behind env.BUILDER_CODE_APP:
+// when unset, the 402 declares NO builder-code extension (today's behavior
+// byte-for-byte). When set to a valid code, the seller app code `a` rides in
+// the 402 extensions so the CDP facilitator can stamp the settlement suffix.
+describe('builderCodeExtension', () => {
+  it('declares nothing when the app code is unset', () => {
+    expect(builderCodeExtension(undefined)).toEqual({});
+    expect(builderCodeExtension('')).toEqual({});
+  });
+
+  it('declares nothing for a code that violates the ^[a-z0-9_]{1,32}$ pattern', () => {
+    expect(builderCodeExtension('Bad Code!')).toEqual({});
+    expect(builderCodeExtension('UPPER')).toEqual({});
+    expect(builderCodeExtension('a'.repeat(33))).toEqual({});
+  });
+
+  it('emits the builder-code block with app code a and the schema for a valid code', () => {
+    const ext = builderCodeExtension('bc_oeob8et3') as Record<string, { info: { a: string }; schema: { properties: { a: { pattern: string } } } }>;
+    expect(Object.keys(ext)).toEqual(['builder-code']);
+    expect(ext['builder-code'].info).toEqual({ a: 'bc_oeob8et3' });
+    expect(ext['builder-code'].schema.properties.a.pattern).toBe('^[a-z0-9_]{1,32}$');
+  });
+
+  it('the builder-code block survives header compaction, with and without bazaar', () => {
+    const withBazaar = { ...builderCodeExtension('bc_oeob8et3'), bazaar: { info: { input: { type: 'http' } } } };
+    const h1 = buildHeaderExtensions(withBazaar) as Record<string, unknown>;
+    expect(h1['builder-code']).toBeDefined();
+    expect(h1.bazaar).toBeDefined();
+    const h2 = buildHeaderExtensions(builderCodeExtension('bc_oeob8et3')) as Record<string, unknown>;
+    expect(h2['builder-code']).toBeDefined();
   });
 });
 

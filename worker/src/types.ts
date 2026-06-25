@@ -129,6 +129,13 @@ export interface Env {
   // secret was confirmed provisioned. INGEST_KEY is now mandatory for
   // ingest; default-deny if unset.
   INGEST_KEY?: string;
+  // Base builder-code (ERC-8021) seller app code, e.g. bc_oeob8et3. When set,
+  // the 402 declares this as the builder-code `a` so the CDP facilitator stamps
+  // the ERC-8021 attribution suffix at settlement. UNSET = no declaration (the
+  // 402 is byte-identical to today). Set via `wrangler secret put BUILDER_CODE_APP`
+  // only after a Sepolia settle confirms non-attributing clients still settle;
+  // revert instantly with `wrangler secret delete BUILDER_CODE_APP`.
+  BUILDER_CODE_APP?: string;
   // Least-privilege key for POST /api/admin/recon-email. Authorizes ONLY
   // that endpoint (sending plain-text email via Resend to a configured
   // recipient). Falls back to ADMIN_KEY if unset, so the rollout doesn't

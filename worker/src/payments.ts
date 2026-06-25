@@ -3055,13 +3055,25 @@ export function buildHeaderExtensions(
   extensions: Record<string, unknown>,
   maxB64Len = 5000,
 ): Record<string, unknown> {
-  const fullExt = extensions as { bazaar?: { info?: { input?: unknown }; routeTemplate?: unknown } };
+  const fullExt = extensions as {
+    bazaar?: { info?: { input?: unknown }; routeTemplate?: unknown };
+    'builder-code'?: unknown;
+  };
+  const compact: Record<string, unknown> = {};
+  // builder-code (ERC-8021 attribution) is tiny and is the value the client
+  // echoes back, so it must survive header compaction; preserve it as-is.
+  if (fullExt['builder-code']) compact['builder-code'] = fullExt['builder-code'];
   const bzInput = fullExt?.bazaar?.info?.input;
-  if (!bzInput || typeof bzInput !== 'object') return {};
-  const compactBazaar: Record<string, unknown> = { info: { input: bzInput } };
-  if (fullExt.bazaar?.routeTemplate) compactBazaar.routeTemplate = fullExt.bazaar.routeTemplate;
-  const compact = { bazaar: compactBazaar };
-  if (btoa(JSON.stringify(compact)).length > maxB64Len) return {};
+  if (bzInput && typeof bzInput === 'object') {
+    const compactBazaar: Record<string, unknown> = { info: { input: bzInput } };
+    if (fullExt.bazaar?.routeTemplate) compactBazaar.routeTemplate = fullExt.bazaar.routeTemplate;
+    compact.bazaar = compactBazaar;
+  }
+  if (btoa(JSON.stringify(compact)).length > maxB64Len) {
+    // Oversized: drop the heavier bazaar block but keep builder-code if it fits alone.
+    const bcOnly = compact['builder-code'] ? { 'builder-code': compact['builder-code'] } : {};
+    return btoa(JSON.stringify(bcOnly)).length > maxB64Len ? {} : bcOnly;
+  }
   return compact;
 }
 
@@ -3085,6 +3097,32 @@ const PREVIEW_SIBLINGS: Record<string, string> = {
 /** The free /api/preview/* sibling for a paid pathname, or undefined if none. */
 export function previewSiblingFor(pathname: string): string | undefined {
   return PREVIEW_SIBLINGS[pathname];
+}
+
+// Base builder-code (ERC-8021) attribution. The seller app code `a` is declared
+// in the 402 extensions under the canonical "builder-code" key (the exact shape
+// @x402/extensions declareBuilderCodeExtension emits, pinned by payments.test).
+// The CDP facilitator reads `a`, adds its own `w`, CBOR-encodes them, and appends
+// the ERC-8021 Schema 2 suffix to the settlement calldata. GATED: returns {}
+// unless env.BUILDER_CODE_APP holds a valid code, so the 402 stays byte-identical
+// to today until the secret is set. Enable on mainnet ONLY after a Sepolia settle
+// confirms non-attributing clients still settle; revert = wrangler secret delete.
+const BUILDER_CODE_PATTERN = /^[a-z0-9_]{1,32}$/;
+const BUILDER_CODE_SCHEMA = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  type: 'object',
+  properties: {
+    a: { type: 'string', pattern: '^[a-z0-9_]{1,32}$', description: 'App builder code' },
+    w: { type: 'string', pattern: '^[a-z0-9_]{1,32}$', description: 'Wallet builder code' },
+    s: { type: 'array', items: { type: 'string', pattern: '^[a-z0-9_]{1,32}$' }, description: 'Service builder codes' },
+  },
+  additionalProperties: false,
+} as const;
+
+/** The builder-code 402 extension block for a valid app code, or {} when unset/invalid. */
+export function builderCodeExtension(appCode: string | undefined): Record<string, unknown> {
+  if (!appCode || !BUILDER_CODE_PATTERN.test(appCode)) return {};
+  return { 'builder-code': { info: { a: appCode }, schema: BUILDER_CODE_SCHEMA } };
 }
 
 function paymentRequiredResponse(
@@ -3160,10 +3198,11 @@ function paymentRequiredResponse(
   // omitted entirely. The CDP-only typing additions (queryFields, schema, ...)
   // ride along harmlessly; the canonical readers key off input.type/method/
   // queryParams which are always present on a piloted DiscoveryInfo.
-  const canonicalExtensions = normalizeBazaarExtensionsForCDP(
-    bazaarExtensionsFor(url.pathname),
-    resourceUrl,
-  );
+  const canonicalExtensions = {
+    ...normalizeBazaarExtensionsForCDP(bazaarExtensionsFor(url.pathname), resourceUrl),
+    // Inert unless env.BUILDER_CODE_APP is set; then declares the seller app code.
+    ...builderCodeExtension(env.BUILDER_CODE_APP),
+  };
   const bazaarInfo = (
     (canonicalExtensions as { bazaar?: { info?: unknown } })?.bazaar?.info
   ) as { input?: unknown; output?: unknown } | undefined;
