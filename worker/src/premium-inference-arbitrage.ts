@@ -29,6 +29,8 @@ import {
   type ModelMatrix,
   type ProviderOffer,
 } from './inference-providers';
+import type { Env } from './types';
+import { safePut } from './kill-switch';
 
 // ─── Filter shape ──────────────────────────────────────────────────
 
@@ -301,4 +303,91 @@ export function buildArbitrage(
         'Matrix curated by hand; updates land via PR to worker/src/inference-providers.ts. Free-tier offers (rate-limited prototyping access on providers like GitHub Models) are excluded from cheapest/spread math and surfaced under each model\'s free_tier_offers array.',
     },
   };
+}
+
+// ─── Free taste (leak-guarded preview) ──────────────────────────────
+//
+// Discovery sibling of /api/premium/inference-providers/arbitrage. Reveals the
+// single largest cross-provider price spread by MAGNITUDE (model, savings_pct,
+// spread) and how many models clear the threshold, so an agent can see there is
+// money on the table. The actionable answer (which provider is cheapest /
+// fastest per model, the full table, the provider value-score rollup) stays
+// paid. Pure: no I/O.
+
+export interface ArbitragePreview {
+  ok: true;
+  preview: true;
+  capturedAt: string;
+  matrix_last_updated: string;
+  models_in_matrix: number;
+  providers_tracked: number;
+  top_opportunity: {
+    modelName: string;
+    family: string;
+    savings_pct: number;
+    spread_usd: number;
+    offer_count_paid: number;
+  } | null;
+  opportunities_above_threshold: number;
+  min_savings_pct: number;
+  attribution: ArbitrageResponse['attribution'];
+  unlock: {
+    full: string;
+    note: string;
+    withheld: string[];
+  };
+}
+
+export function previewArbitrage(result: ArbitrageResponse): ArbitragePreview {
+  const top = result.top_arbitrage[0] ?? null;
+  const top_opportunity =
+    top && top.savings_pct !== null && top.spread_usd !== null
+      ? {
+          modelName: top.modelName,
+          family: top.family,
+          savings_pct: top.savings_pct,
+          spread_usd: top.spread_usd,
+          offer_count_paid: top.offer_count_paid,
+        }
+      : null;
+  return {
+    ok: true,
+    preview: true,
+    capturedAt: result.capturedAt,
+    matrix_last_updated: result.matrix_last_updated,
+    models_in_matrix: result.models_in_matrix,
+    providers_tracked: result.tracked_providers.length,
+    top_opportunity,
+    opportunities_above_threshold: result.top_arbitrage.length,
+    min_savings_pct: result.filter.min_savings_pct,
+    attribution: result.attribution,
+    unlock: {
+      full: '/api/premium/inference-providers/arbitrage',
+      note: 'Free preview: the single largest price spread by magnitude and how many models clear the savings threshold. The paid call (1 credit, $0.02) returns the full per-model arbitrage table (which provider is cheapest, most expensive, and fastest, plus the cheapest-with-TPS pick for every model), the per-provider value-score rollup, and the migration picks. Optional ?family= and ?min_savings_pct=.',
+      withheld: [
+        'which provider is cheapest, most expensive, and fastest for each model',
+        'the full per-model arbitrage table with spreads and median prices',
+        'the per-provider value-score rollup and rankings',
+        'every arbitrage opportunity beyond the single headline magnitude',
+      ],
+    },
+  };
+}
+
+/**
+ * IP-based daily rate limit for the free /api/preview/inference-providers/arbitrage
+ * taste. Distinct KV key; mirrors the other preview limiters.
+ */
+export async function checkArbitragePreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:arbitrage-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }

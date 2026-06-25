@@ -4758,6 +4758,7 @@ export default {
           providerReliabilityPreview: '/api/preview/provider-reliability-verdict (free, 10/IP/day; the most-dependable and riskiest picks only, no full per-provider ranking or signed receipt)',
           x402SettlementPreview: '/api/preview/x402-settlement-verdict (free, 10/IP/day; the momentum, concentration, and leading-publisher verdict only, no full publisher ranking or signed receipt)',
           x402PublisherPreview: '/api/preview/x402-publisher-verdict?domain= (free, 10/IP/day; the trust verdict and claim for one publisher only, no momentum, shared-wallet flag, or settlement evidence)',
+          inferenceArbitragePreview: '/api/preview/inference-providers/arbitrage (free, 10/IP/day; the single largest cross-provider price spread by magnitude and how many models clear the savings threshold. The full per-model cheapest, most-expensive, and fastest provider picks plus the provider value-score rollup are the paid upgrade at /api/premium/inference-providers/arbitrage. Optional ?family=, ?min_savings_pct=.)',
           whatsNewPreview: '/api/preview/whats-new (free, 10/IP/day; live summary counts plus the top 3 headline titles. The full morning brief with pricing deltas, incident detail, and all headlines is the paid upgrade at /api/premium/whats-new.)',
           whatsNewProPreview: '/api/preview/whats-new/pro (free, 10/IP/day; one sample cited takeaway plus the agent classes the brief tailors actions for and the analyst-summary length. The full cited analyst summary, every key takeaway, and recommended actions per agent class are the paid upgrade at /api/premium/whats-new/pro.)',
           policyTimelinePreview: '/api/preview/policy/timeline (free, 10/IP/day; window counts, per-jurisdiction totals, and the single next milestone headline. The full timeline with every entry, detail, and source links is the paid upgrade at /api/premium/policy/timeline. Optional ?days_back=, ?days_forward=, ?jurisdiction=.)',
@@ -13334,6 +13335,51 @@ export default {
         logPremiumUsage(env, '/api/premium/inference-providers/arbitrage', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
       return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === FREE PREVIEW: INFERENCE ARBITRAGE TASTE (10/IP/day) ===
+    // Discovery sibling of /api/premium/inference-providers/arbitrage. The
+    // single largest price spread by magnitude plus the opportunity count, so an
+    // agent sees there is savings on the table. Which provider is cheapest (the
+    // actionable answer), the full table, and the provider rollup stay paid.
+    // Pure compute over the registry, so the free taste has no synthesis cost.
+    if (path === '/api/preview/inference-providers/arbitrage') {
+      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
+      const { previewArbitrage, buildArbitrage, parseFamily, parseMinSavingsPct, checkArbitragePreviewRateLimit } = await import('./premium-inference-arbitrage');
+      const arbLimit = await checkArbitragePreviewRateLimit(env, ip, 10);
+      if (!arbLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: arbLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/inference-providers/arbitrage',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/inference-providers/arbitrage (full per-model cheapest, most-expensive, and fastest provider picks, the provider value-score rollup, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const { INFERENCE_LAST_UPDATED } = await import('./inference-providers');
+      const result = buildArbitrage(
+        {
+          family: parseFamily(url.searchParams.get('family')),
+          min_savings_pct: parseMinSavingsPct(url.searchParams.get('min_savings_pct')),
+        },
+        new Date(),
+        undefined,
+        INFERENCE_LAST_UPDATED,
+      );
+      return jsonResponse(
+        {
+          ...previewArbitrage(result),
+          rate_limit: { limit: arbLimit.limit, remaining: arbLimit.remaining, scope: 'per IP per UTC day' },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
     }
 
     // === PAID PREMIUM: INFERENCE COST VERDICT (Tier 1, 1 credit, param-required) ===

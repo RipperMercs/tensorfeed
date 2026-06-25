@@ -979,6 +979,8 @@ describe('previewSiblingFor', () => {
     expect(previewSiblingFor('/api/premium/research/authors')).toBe('/api/research/authors');
     // the 10-credit pro tier points at its own dedicated free taste.
     expect(previewSiblingFor('/api/premium/whats-new/pro')).toBe('/api/preview/whats-new/pro');
+    // inference arbitrage taste shows the spread magnitude, not which provider wins.
+    expect(previewSiblingFor('/api/premium/inference-providers/arbitrage')).toBe('/api/preview/inference-providers/arbitrage');
   });
   it('returns undefined for endpoints with no preview sibling', () => {
     expect(previewSiblingFor('/api/premium/security/kev/full')).toBeUndefined();

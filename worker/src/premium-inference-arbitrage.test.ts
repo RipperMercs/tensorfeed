@@ -5,8 +5,10 @@ import {
   buildModelArbitrageRow,
   buildProviderRollups,
   buildArbitrage,
+  previewArbitrage,
   DEFAULT_MIN_SAVINGS_PCT,
   type ModelArbitrageRow,
+  type ArbitrageResponse,
 } from './premium-inference-arbitrage';
 import {
   INFERENCE_MATRIX,
@@ -17,6 +19,79 @@ import {
 
 // Shared reference clock.
 const REFERENCE_NOW = new Date('2026-05-24T00:00:00Z');
+
+// ── previewArbitrage (free taste, leak-guarded) ─────────────────────
+
+// Two arbitrage rows with distinctive sentinels in the withheld fields
+// (provider picks, the second model) so the leak-guard can prove the preview
+// strips them.
+const FIXTURE_TOP = [
+  {
+    modelId: 'm-top', modelName: 'SAMPLE_MODEL_TOP', family: 'Meta', offer_count_paid: 4,
+    cheapest_paid: { provider: 'CHEAPPROV_SECRET', blendedPrice: 0.5 },
+    most_expensive_paid: { provider: 'EXPENSIVEPROV_SECRET', blendedPrice: 1.73 },
+    median_paid_blended: 1.0, spread_usd: 1.23, savings_pct: 62.5,
+    fastest_tps: { provider: 'CHEAPPROV_SECRET', outputTPS: 120 },
+    cheapest_with_tps: { provider: 'CHEAPPROV_SECRET', blendedPrice: 0.5, outputTPS: 120 },
+    free_tier_offers: [], paramsB: 70,
+  },
+  {
+    modelId: 'm-two', modelName: 'WITHHELD_MODEL_TWO', family: 'DeepSeek', offer_count_paid: 3,
+    cheapest_paid: { provider: 'EXPENSIVEPROV_SECRET', blendedPrice: 0.8 },
+    most_expensive_paid: { provider: 'ROLLUP_PROV_SECRET', blendedPrice: 1.4 },
+    median_paid_blended: 1.0, spread_usd: 0.6, savings_pct: 42.0,
+    fastest_tps: null, cheapest_with_tps: null, free_tier_offers: [], paramsB: 30,
+  },
+];
+
+// Cast because previewArbitrage only reads a subset of ArbitrageResponse.
+function arbFixture(topArb: unknown[] = FIXTURE_TOP): ArbitrageResponse {
+  return {
+    ok: true,
+    capturedAt: '2026-05-24T00:00:00Z',
+    filter: { family: null, min_savings_pct: 20 },
+    matrix_last_updated: '2026-05-20',
+    models_in_matrix: 7,
+    tracked_providers: ['CHEAPPROV_SECRET', 'EXPENSIVEPROV_SECRET', 'ROLLUP_PROV_SECRET', 'p4'],
+    models: [
+      { modelName: 'SAMPLE_MODEL_TOP', cheapest_paid: { provider: 'CHEAPPROV_SECRET' } },
+      { modelName: 'WITHHELD_MODEL_TWO', cheapest_paid: { provider: 'EXPENSIVEPROV_SECRET' } },
+    ],
+    top_arbitrage: topArb,
+    provider_rollup: [{ provider: 'ROLLUP_PROV_SECRET', value_score: 100 }],
+    attribution: { source: 'TensorFeed.ai inference-providers matrix', license: 'x', notes: 'y' },
+  } as unknown as ArbitrageResponse;
+}
+
+describe('previewArbitrage', () => {
+  it('reveals the single largest spread by magnitude and the opportunity count', () => {
+    const preview = previewArbitrage(arbFixture());
+    expect(preview.top_opportunity?.modelName).toBe('SAMPLE_MODEL_TOP');
+    expect(preview.top_opportunity?.savings_pct).toBe(62.5);
+    expect(preview.top_opportunity?.spread_usd).toBe(1.23);
+    expect(preview.top_opportunity?.offer_count_paid).toBe(4);
+    expect(preview.opportunities_above_threshold).toBe(2);
+    expect(preview.providers_tracked).toBe(4);
+    expect(preview.models_in_matrix).toBe(7);
+    expect(preview.min_savings_pct).toBe(20);
+    expect(preview.unlock.full).toBe('/api/premium/inference-providers/arbitrage');
+  });
+
+  it('never leaks which provider is cheapest, the full table, or the rollup', () => {
+    const body = JSON.stringify(previewArbitrage(arbFixture()));
+    expect(body).not.toContain('CHEAPPROV_SECRET');
+    expect(body).not.toContain('EXPENSIVEPROV_SECRET');
+    expect(body).not.toContain('ROLLUP_PROV_SECRET');
+    expect(body).not.toContain('WITHHELD_MODEL_TWO');
+    expect(body).toContain('SAMPLE_MODEL_TOP');
+  });
+
+  it('returns a null top_opportunity when nothing clears the threshold', () => {
+    const preview = previewArbitrage(arbFixture([]));
+    expect(preview.top_opportunity).toBeNull();
+    expect(preview.opportunities_above_threshold).toBe(0);
+  });
+});
 
 /**
  * Build a synthetic ProviderOffer. Defaults keep tests focused on the fields
