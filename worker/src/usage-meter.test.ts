@@ -6,6 +6,8 @@ import {
   buildUsageReport,
   isInternalTraffic,
   recordRequestHealth,
+  classifyUaFamily,
+  deriveRealAgentFunnel,
   SLOW_MS,
 } from './usage-meter';
 import type { Env } from './types';
@@ -187,6 +189,18 @@ describe('buildUsageReport', () => {
     expect(report.top_payers).toEqual([]);
     expect(report.funnel_status).toBe('unavailable');
   });
+
+  it('exposes real_agent_funnel and crawler_summary as null when no AE token', async () => {
+    const env = makeEnvWithRollup({
+      by_endpoint: { '/api/premium/x': { calls: 1, credits_charged: 1, first_seen: 't', last_seen: 't', distinct_payers: 1 } },
+      top_payers: {},
+    });
+    const report = await buildUsageReport(env, 'today');
+    expect(report.real_agent_funnel).toBeNull();
+    expect(report.crawler_summary).toBeNull();
+    // build targets degrade to empty without a funnel to derive from.
+    expect(report.build_targets).toEqual([]);
+  });
 });
 
 // The /api/admin/usage route in index.ts gates on the same default-deny
@@ -245,5 +259,67 @@ describe('recordRequestHealth', () => {
 
   it('never throws when the binding is absent', () => {
     expect(() => recordRequestHealth({} as import('./types').Env, '/api/x', 500, 'ua', 9999)).not.toThrow();
+  });
+});
+
+describe('classifyUaFamily', () => {
+  it('flags known x402 discovery crawlers and uptime monitors as crawler', () => {
+    for (const fam of [
+      'carbonmonitor', 'x402station', 'x402-observer', 'mako-pulse-prober',
+      'lion-probe', 'dexter-verifier', 'ari-indexer', 'ioi-indexer',
+      'mpp32-health', 'nitrograph-healthcheck', 'coinbasebazaardiscovery', 'weftsearchbot',
+    ]) {
+      expect(classifyUaFamily(fam)).toBe('crawler');
+    }
+  });
+  it('flags self-identifying probe/monitor/indexer families by substring', () => {
+    for (const fam of ['acme-probe', 'foo-indexer', 'bar-monitor', 'baz-uptime', 'qux-healthcheck', 'zed-verifier', 'site-discovery', 'net-observer']) {
+      expect(classifyUaFamily(fam)).toBe('crawler');
+    }
+  });
+  it('counts generic HTTP libraries and unknown UAs as agent (never hide real demand)', () => {
+    // Real paying agents commonly call from these; misclassifying them as
+    // crawlers would erase actual buyers from the real-agent funnel.
+    for (const fam of ['axios', 'undici', 'python-httpx', 'node', 'go-http-client', 'okhttp', 'curl', 'unknown', 'mozilla', '']) {
+      expect(classifyUaFamily(fam)).toBe('agent');
+    }
+  });
+});
+
+describe('deriveRealAgentFunnel', () => {
+  const rows = [
+    { endpoint: '/api/premium/agents/directory', ua: 'mako-pulse-prober', free_hits: 0, unpaid_402: 1510, paid: 0 },
+    { endpoint: '/api/premium/agents/directory', ua: 'carbonmonitor', free_hits: 0, unpaid_402: 1030, paid: 0 },
+    { endpoint: '/api/premium/agents/directory', ua: 'axios', free_hits: 0, unpaid_402: 730, paid: 0 },
+    { endpoint: '/api/premium/whats-new', ua: 'python-httpx', free_hits: 0, unpaid_402: 50, paid: 10 },
+    { endpoint: '/api/premium/whats-new', ua: 'carbonmonitor', free_hits: 0, unpaid_402: 600, paid: 0 },
+    { endpoint: '/api/premium/series/x', ua: 'carbonmonitor', free_hits: 0, unpaid_402: 767, paid: 0 },
+  ];
+
+  it('builds a per-endpoint funnel counting only non-crawler traffic', () => {
+    const { real_agent_funnel } = deriveRealAgentFunnel(rows);
+    const dir = real_agent_funnel.find((e) => e.endpoint === '/api/premium/agents/directory');
+    const wn = real_agent_funnel.find((e) => e.endpoint === '/api/premium/whats-new');
+    expect(dir).toMatchObject({ unpaid_402: 730, paid: 0 });
+    expect(dir!.conversion).toBe(0);
+    expect(wn).toMatchObject({ unpaid_402: 50, paid: 10 });
+    expect(wn!.conversion).toBeCloseTo(10 / 60, 5);
+  });
+
+  it('omits endpoints that only ever saw crawler traffic', () => {
+    const { real_agent_funnel } = deriveRealAgentFunnel(rows);
+    // /api/premium/series/x had only a carbonmonitor row: no real demand at all.
+    expect(real_agent_funnel.find((e) => e.endpoint === '/api/premium/series/x')).toBeUndefined();
+  });
+
+  it('summarizes crawler share of the 402 funnel and the top crawler families', () => {
+    const { crawler_summary } = deriveRealAgentFunnel(rows);
+    // total 402 = 1510+1030+730+50+600+767 = 4687; crawler 402 = 1510+1030+600+767 = 3907
+    expect(crawler_summary.total_402).toBe(4687);
+    expect(crawler_summary.crawler_402).toBe(3907);
+    expect(crawler_summary.crawler_share).toBeCloseTo(3907 / 4687, 5);
+    // carbonmonitor aggregates across endpoints (1030+600+767=2397) and leads mako (1510).
+    expect(crawler_summary.top_crawler_families[0]).toMatchObject({ ua: 'carbonmonitor', unpaid_402: 2397 });
+    expect(crawler_summary.top_crawler_families[1]).toMatchObject({ ua: 'mako-pulse-prober', unpaid_402: 1510 });
   });
 });

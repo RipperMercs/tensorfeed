@@ -30,6 +30,35 @@ export function normalizeUaFamily(ua: string): string {
   return head ? head.slice(0, 40) : 'unknown';
 }
 
+// Known x402-ecosystem discovery crawlers, uptime monitors, and directory
+// indexers that walk our manifest on a schedule. These dominate the raw 402
+// funnel (CarbonMonitor alone is tens of thousands per week) but never pay, so
+// counting them as "demand" is how the build-target heuristic gets misled.
+const CRAWLER_UA_FAMILIES = new Set<string>([
+  'carbonmonitor', 'x402station', 'x402-observer', 'mako-pulse-prober',
+  'lion-probe', 'dexter-verifier', 'ari-indexer', 'ioi-indexer',
+  'mpp32-health', 'nitrograph-healthcheck', 'coinbasebazaardiscovery', 'weftsearchbot',
+]);
+
+// Self-identifying probe/monitor/indexer signals for forward compatibility with
+// new bots that follow the same naming. Deliberately specific: generic HTTP
+// client names (axios, undici, python-httpx) are NOT here, because real paying
+// agents call from those, and a false crawler tag would erase a real buyer.
+const CRAWLER_UA_SUBSTRINGS = ['probe', 'prober', 'healthcheck', 'uptime', 'indexer', 'observer', 'verifier', 'discovery', 'monitor', 'crawler', 'scanner'];
+
+// Classify a normalized UA family as a known crawler/monitor or a (potential)
+// real agent. Conservative by design: anything not provably a crawler counts as
+// an agent, so the real-agent funnel never hides actual demand. Read-only,
+// query-time classification; the request hot path is untouched.
+export function classifyUaFamily(family: string): 'crawler' | 'agent' {
+  const f = (family || '').toLowerCase();
+  if (CRAWLER_UA_FAMILIES.has(f)) return 'crawler';
+  for (const s of CRAWLER_UA_SUBSTRINGS) {
+    if (f.includes(s)) return 'crawler';
+  }
+  return 'agent';
+}
+
 // Pure: is this request one of TensorFeed's own automated callers? True only
 // when the shared secret is configured AND the request's X-TF-Internal header
 // value equals it. When the secret is unset, nothing is ever internal.
@@ -121,6 +150,11 @@ export interface UsageReport {
   funnel_by_endpoint:
     | Array<{ endpoint: string; free_hits: number; unpaid_402: number; paid: number; conversion: number }>
     | null;
+  // Crawler-filtered view: the same funnel counting only non-crawler traffic,
+  // plus how much of the 402 volume is discovery-crawler noise. Null when the
+  // AE token is absent (same degrade contract as funnel_by_endpoint).
+  real_agent_funnel: RealAgentFunnelEntry[] | null;
+  crawler_summary: CrawlerSummary | null;
   build_targets: Array<{ endpoint: string; reason: string }>;
   funnel_status: 'ok' | 'unavailable';
 }
@@ -208,6 +242,89 @@ function deriveBuildTargets(
   return targets;
 }
 
+// === Real-agent funnel (crawler-filtered) ===
+//
+// The raw funnel counts every 402, including the x402 ecosystem's discovery
+// crawlers and uptime monitors. They never pay, so the raw conversion number is
+// a vanity metric. This collapses the per-(endpoint, ua) rows into a funnel that
+// counts only non-crawler traffic, plus a summary of how much of the 402 volume
+// is crawler noise. Pure; no I/O.
+
+export interface FunnelByUaRow {
+  endpoint: string;
+  ua: string;
+  free_hits: number;
+  unpaid_402: number;
+  paid: number;
+}
+
+export interface RealAgentFunnelEntry {
+  endpoint: string;
+  free_hits: number;
+  unpaid_402: number;
+  paid: number;
+  conversion: number;
+}
+
+export interface CrawlerSummary {
+  total_402: number;
+  crawler_402: number;
+  crawler_share: number;
+  top_crawler_families: Array<{ ua: string; unpaid_402: number }>;
+}
+
+export function deriveRealAgentFunnel(rows: FunnelByUaRow[]): {
+  real_agent_funnel: RealAgentFunnelEntry[];
+  crawler_summary: CrawlerSummary;
+} {
+  const byEndpoint = new Map<string, { free_hits: number; unpaid_402: number; paid: number }>();
+  const crawlerByUa = new Map<string, number>();
+  let total402 = 0;
+  let crawler402 = 0;
+
+  for (const r of rows) {
+    total402 += r.unpaid_402;
+    if (classifyUaFamily(r.ua) === 'crawler') {
+      crawler402 += r.unpaid_402;
+      crawlerByUa.set(r.ua, (crawlerByUa.get(r.ua) || 0) + r.unpaid_402);
+      continue;
+    }
+    const acc = byEndpoint.get(r.endpoint) || { free_hits: 0, unpaid_402: 0, paid: 0 };
+    acc.free_hits += r.free_hits;
+    acc.unpaid_402 += r.unpaid_402;
+    acc.paid += r.paid;
+    byEndpoint.set(r.endpoint, acc);
+  }
+
+  const real_agent_funnel: RealAgentFunnelEntry[] = [...byEndpoint.entries()]
+    .map(([endpoint, v]) => {
+      const denom = v.paid + v.unpaid_402;
+      return {
+        endpoint,
+        free_hits: v.free_hits,
+        unpaid_402: v.unpaid_402,
+        paid: v.paid,
+        conversion: denom > 0 ? v.paid / denom : 0,
+      };
+    })
+    .sort((a, b) => b.paid - a.paid || b.unpaid_402 - a.unpaid_402);
+
+  const top_crawler_families = [...crawlerByUa.entries()]
+    .map(([ua, unpaid_402]) => ({ ua, unpaid_402 }))
+    .sort((a, b) => b.unpaid_402 - a.unpaid_402)
+    .slice(0, 10);
+
+  return {
+    real_agent_funnel,
+    crawler_summary: {
+      total_402: total402,
+      crawler_402: crawler402,
+      crawler_share: total402 > 0 ? crawler402 / total402 : 0,
+      top_crawler_families,
+    },
+  };
+}
+
 // Reads the day rollup(s) for the window from KV and shapes the paid summary,
 // then layers on the AE funnel when a token is present. window: today|7d|30d.
 export async function buildUsageReport(env: Env, window: string): Promise<UsageReport> {
@@ -236,8 +353,21 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
     funnel_status = 'ok';
   }
 
-  const build_targets = deriveBuildTargets(funnel_by_endpoint);
-  return { window, top_paid_endpoints, top_payers, funnel_by_endpoint, build_targets, funnel_status };
+  // Crawler-filtered real-agent view, derived from the per-(endpoint, ua) funnel.
+  let real_agent_funnel: UsageReport['real_agent_funnel'] = null;
+  let crawler_summary: UsageReport['crawler_summary'] = null;
+  const byUa = await queryUsageFunnelByUa(env, days);
+  if (byUa) {
+    const derived = deriveRealAgentFunnel(byUa);
+    real_agent_funnel = derived.real_agent_funnel;
+    crawler_summary = derived.crawler_summary;
+  }
+
+  // Build targets are derived from the real-agent funnel, not the raw one, so a
+  // crawler-only 402 flood (e.g. agents/directory) is never flagged as demand.
+  // Falls back to [] when the AE token is absent.
+  const build_targets = deriveBuildTargets(real_agent_funnel);
+  return { window, top_paid_endpoints, top_payers, funnel_by_endpoint, real_agent_funnel, crawler_summary, build_targets, funnel_status };
 }
 
 // Request-health threshold: a request that completes slower than this many ms
@@ -367,6 +497,46 @@ export async function queryUsageFunnel(
         conversion: denom > 0 ? paid / denom : 0,
       };
     });
+  } catch {
+    return null;
+  }
+}
+
+// Analytics Engine SQL read at (endpoint, ua-family) grain. Same external-only
+// filter as queryUsageFunnel (internal blob7='1' excluded, NULL-tolerant).
+// Feeds deriveRealAgentFunnel, which classifies each ua family as crawler or
+// agent. Returns null (graceful degrade) without the token or on failure.
+export async function queryUsageFunnelByUa(env: Env, days: number): Promise<FunnelByUaRow[] | null> {
+  if (!env.CF_ANALYTICS_TOKEN || !env.CF_ACCOUNT_ID) return null;
+  try {
+    const sql = `SELECT blob1 AS endpoint, blob5 AS ua,
+      sum(if(blob3='served_free',1,0)) AS free_hits,
+      sum(if(blob3='unpaid_402',1,0)) AS unpaid_402,
+      sum(if(blob3='paid',1,0)) AS paid
+      FROM tf_usage WHERE timestamp > now() - INTERVAL '${days}' DAY AND (blob7 IS NULL OR blob7 != '1') GROUP BY endpoint, ua ORDER BY unpaid_402 DESC LIMIT 1000`;
+    const resp = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/analytics_engine/sql`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`,
+          'Content-Type': 'text/plain',
+        },
+        body: sql,
+        signal: AbortSignal.timeout(15_000),
+      },
+    );
+    if (!resp.ok) return null;
+    const json = (await resp.json()) as {
+      data?: Array<{ endpoint: string; ua: string; free_hits: number; unpaid_402: number; paid: number }>;
+    };
+    return (json.data || []).map((r) => ({
+      endpoint: r.endpoint,
+      ua: r.ua,
+      free_hits: Number(r.free_hits),
+      unpaid_402: Number(r.unpaid_402),
+      paid: Number(r.paid),
+    }));
   } catch {
     return null;
   }
