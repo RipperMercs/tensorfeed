@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'white-house-gpt-56-stagger-federal-gate-bilateral',
+    title:
+      'OpenAI Will Stagger GPT-5.6 By Customer. The Federal Gate on the Frontier Just Went Bilateral.',
+    author: 'Marcus Chen',
+    date: 'June 26, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 25, 2026, The Information reported that the Trump administration asked OpenAI to stagger the release of GPT-5.6 over national security and cybersecurity concerns, and OpenAI agreed. The Office of the National Cyber Director and the Office of Science and Technology Policy will approve enterprise customers one by one during a limited preview, with a broad release targeted roughly two weeks later. Sam Altman told staff on an internal Q&A that this was the fastest path to a broad release while noting it was not OpenAI's preferred long term model. Thirteen days after Washington forced Anthropic to pull Fable 5 and Mythos 5 under an export control directive, the same federal release-gating template hits the other top-three US lab. Inside the new operational primitive (customer-by-customer government approval at the moment of release), what NCD plus OSTP gating does to enterprise procurement timelines and the foreign-subsidiary question, why the revenue cadence and disclosure language inside the OpenAI 2027 IPO window and the Anthropic confidential S-1 now have to be rewritten, and three signposts in the next ninety days that decide whether the federal frontier-release gate is permanent or temporary. The model that ships fastest in 2026 is no longer the one with the best engineering; it is the one with the best federal queue position, and the queue manager works at the White House.",
+  },
+  {
     slug: 'openai-jalapeno-custom-silicon-loop-closed',
     title:
       'OpenAI Taped Out Jalapeño in Nine Months. The Custom-Silicon Loop Just Closed.',
