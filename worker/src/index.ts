@@ -8,7 +8,7 @@ import { pollPodcastFeeds } from './podcasts';
 import { pollTrendingRepos } from './trending';
 import { captureAllSnapshots, getSnapshotSummary, restoreFromSnapshot, getLatestSnapshot } from './snapshots';
 import { captureHistory, listHistory, readHistory } from './history';
-import { cdpListDiscoveryResources } from './cdp-facilitator';
+import { cdpGetSupported, cdpListDiscoveryResources } from './cdp-facilitator';
 import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
 import { deriveUsageEvent, recordUsageEvent, buildUsageReport, isInternalTraffic, recordRequestHealth, queryRequestHealth } from './usage-meter';
 import { resolveDeadlineMs, isDeadlineExempt, raceDeadline, buildDeadlineResponse } from './deadline';
@@ -3110,6 +3110,51 @@ export default {
           {
             ok: false,
             error: 'cdp_discovery_failed',
+            message: err instanceof Error ? err.message : 'unknown error',
+          },
+          502,
+          0,
+        );
+      }
+    }
+    // Admin: probe which (scheme, network) pairs THIS deployment's CDP key
+    // is actually entitled to settle. Calls CDP's /supported via the
+    // Worker's authHeaders(), which is already scoped to the allowed
+    // /platform/v2/x402 path, so it does not broaden the CDP key blast
+    // radius. Read-only, returns no secret material. This is the live
+    // entitlement check for the second payment rail: the settlement-rails
+    // feed's cdp_supported flag is static config drawn from CDP docs, NOT a
+    // per-key entitlement, so confirm Solana exact here before wiring it.
+    if (
+      path === '/api/admin/cdp/supported' &&
+      request.method === 'GET' &&
+      isAuthorizedAdmin(env, extractAdminKey(request, url))
+    ) {
+      try {
+        const supported = await cdpGetSupported(env);
+        const kinds = supported.kinds ?? [];
+        const networks = [...new Set(kinds.map((k) => k.network))].sort();
+        const exactOn = (re: RegExp) =>
+          kinds.some((k) => k.scheme === 'exact' && re.test(k.network));
+        return jsonResponse(
+          {
+            ok: true,
+            networks,
+            entitled_exact: {
+              base: exactOn(/eip155:8453|^base/i),
+              solana: exactOn(/^solana/i),
+            },
+            kinds,
+            extensions: supported.extensions ?? [],
+          },
+          200,
+          0,
+        );
+      } catch (err) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'cdp_supported_failed',
             message: err instanceof Error ? err.message : 'unknown error',
           },
           502,
