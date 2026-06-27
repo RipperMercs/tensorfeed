@@ -274,8 +274,11 @@ describe('isStrictPremiumPath', () => {
       // + 1 (2026-06-09) eu-ai-act notified-bodies history (param-reading
       // ?from=&to=&legislation_id=&type=, all optional; NANDO designation
       // change log).
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(96);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(96); // no duplicates
+      // + 1 (2026-06-27) settlement/rail-verdict (param-reading ?payment_usd=
+      // and ?prefer=, both optional; recommended x402 settlement rail across
+      // Base, Solana, Polygon, Arbitrum, Avalanche).
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(97);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(97); // no duplicates
     });
     it('exposes 7 prefix paths (providers + clean-record pilots + ai-companies + x402-index)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(7);

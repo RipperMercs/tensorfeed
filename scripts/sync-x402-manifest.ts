@@ -82,6 +82,7 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   '/api/premium/apis-guru/ai-feed':                  { name: 'APIs.guru AI feed',                     category: 'ai-api-directory',        credits: 1, method: 'GET' },
   '/api/premium/model-deprecations/timeline':        { name: 'Model deprecations timeline',           category: 'ai-model-lifecycle',      credits: 1, method: 'GET' },
   '/api/premium/inference-providers/arbitrage':      { name: 'Inference-provider arbitrage',          category: 'ai-inference-arbitrage',  credits: 1, method: 'GET' },
+  '/api/premium/settlement/rail-verdict':            { name: 'Settlement rail verdict',               category: 'x402-settlement-rails',   credits: 1, method: 'GET' },
   '/api/premium/ai-safety/incidents/exposure':       { name: 'AI safety incidents exposure',          category: 'ai-safety-exposure',      credits: 1, method: 'GET' },
   '/api/premium/ai-safety/packages/security/radar':  { name: 'AI-package security radar',             category: 'ai-package-security',     credits: 1, method: 'GET' },
   '/api/premium/packages/releases/velocity':         { name: 'AI-package release velocity',           category: 'package-release-velocity', credits: 1, method: 'GET' },

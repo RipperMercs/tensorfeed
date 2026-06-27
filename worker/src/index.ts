@@ -6510,6 +6510,20 @@ export default {
       return jsonResponse({ ok: true, snapshot }, 200, 600);
     }
 
+    // === SETTLEMENT RAILS: cross-chain x402 cost + finality (free) ===
+    // /api/settlement-rails
+    // Current settlement cost and finality per x402-supported rail (Base,
+    // Solana, Polygon, Arbitrum, Avalanche). Raw on-chain self-settle cost plus
+    // the CDP facilitator reality (gas sponsored, flat $0.001 after 1000/mo
+    // free), plus published finality. Lazily refreshed (~20 min) from live RPC
+    // and Coinbase spot prices, 60s in-memory cache, last-known-good fallback so
+    // it never returns blank. Free sibling of the premium settlement rail verdict.
+    if (path === '/api/settlement-rails') {
+      const { getSnapshot } = await import('./settlement-rails');
+      const snapshot = await getSnapshot(env);
+      return jsonResponse({ ok: true, snapshot }, 200, 300);
+    }
+
     // === GPU PRICING: CHEAPEST RIGHT NOW (free) ===
     // /api/gpu/pricing/cheapest?gpu=H100&type=on_demand|spot
     // Returns the top 3 cheapest current offers for one canonical GPU.
@@ -13438,6 +13452,50 @@ export default {
         logPremiumUsage(env, '/api/premium/inference/cost-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
       return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM: SETTLEMENT RAIL VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/settlement/rail-verdict?payment_usd=&prefer=balanced|cost|finality
+    // The recommended x402 settlement rail for a given payment size, with a full
+    // ranking across Base, Solana, Polygon, Arbitrum, Avalanche. Fuses live raw
+    // on-chain cost with the CDP facilitator reality (gas sponsored, flat $0.001
+    // marginal after 1000 free settlements per month) and published finality.
+    // Optional ?payment_usd= (default 0.01) and ?prefer=. Strict-premium (reads
+    // params) so anonymous Bazaar crawlers see a clean 402. Free sibling is the
+    // /api/settlement-rails snapshot. captured_at threads the freshness SLA.
+    if (path === '/api/premium/settlement/rail-verdict') {
+      const payment = await requirePayment(request, env, 1);
+      if (!payment.paid) return payment.response!;
+
+      const rawPayment = url.searchParams.get('payment_usd');
+      let paymentUsd = 0.01;
+      if (rawPayment != null) {
+        const p = parseFloat(rawPayment);
+        if (!Number.isFinite(p) || p <= 0 || p > 1_000_000) {
+          return await premiumValidationFailure(
+            {
+              ok: false,
+              error: 'invalid_payment_usd',
+              hint: 'payment_usd must be a positive number of US dollars (e.g. 0.01). Omit it to use the $0.01 default.',
+            },
+            payment,
+            request,
+            env,
+          );
+        }
+        paymentUsd = p;
+      }
+
+      const preferRaw = url.searchParams.get('prefer')?.trim().toLowerCase() || 'balanced';
+      const { getSnapshot, buildRailVerdict, isRailPreference } = await import('./settlement-rails');
+      const prefer = isRailPreference(preferRaw) ? preferRaw : 'balanced';
+      const snapshot = await getSnapshot(env);
+      const result = buildRailVerdict(snapshot, paymentUsd, prefer);
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/settlement/rail-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 1, request, env, null, snapshot.capturedAt);
     }
 
     // === PAID PREMIUM: MODEL DEPRECATION TIMELINE (Tier 1, 1 credit) ===

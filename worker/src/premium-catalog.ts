@@ -1244,6 +1244,19 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'verdict',
   },
   {
+    path: '/api/premium/settlement/rail-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'payment_usd', required: false },
+      { name: 'prefer', required: false },
+    ],
+    returns: 'The recommended x402 settlement rail for a given payment size across Base, Solana, Polygon, Arbitrum, Avalanche, fusing live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with a full ranking.',
+    free_sibling: '/api/settlement-rails',
+    signed: true,
+    category: 'verdict',
+  },
+  {
     path: '/api/premium/model-deprecations/timeline',
     credits: 1,
     strict_premium: true,

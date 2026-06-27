@@ -321,6 +321,11 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // Total time from settlement to indexed = ~6 min. SLA = 10 min headroom.
   '/api/premium/x402-index': { maxAgeSeconds: 10 * 60 },
   '/api/x402-index': { maxAgeSeconds: 10 * 60 },
+  // Settlement rail verdict: lazily refreshed (~20 min) from live RPC plus
+  // Coinbase spot prices, 60s in-memory cache, last-known-good fallback. 2h SLA
+  // covers the refresh TTL with headroom, so a sustained upstream outage (a stale
+  // captured_at) triggers a no-charge while normal operation never false-positives.
+  '/api/premium/settlement/rail-verdict': { maxAgeSeconds: 2 * 60 * 60 },
 };
 
 /**

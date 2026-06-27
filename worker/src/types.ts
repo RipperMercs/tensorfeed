@@ -32,6 +32,11 @@ export interface Env {
   // small-limit indexer RPC; the indexer windows each tick into chunks this size.
   // Defaults to DEFAULT_GETLOGS_BLOCK_SPAN (2000).
   BASE_RPC_GETLOGS_SPAN?: string;
+  // Solana RPC for the settlement-rails cost feed (getRecentPrioritizationFees).
+  // SOLANA_RPC_URL takes precedence; else HELIUS_API_KEY builds the Helius URL;
+  // else the public mainnet-beta node. Read-only, low volume, optional.
+  SOLANA_RPC_URL?: string;
+  HELIUS_API_KEY?: string;
   // Cross-Worker validate-and-charge (sister-site integration)
   SHARED_INTERNAL_SECRET?: string;
   // Pages Functions middleware -> Worker bot-hit ingest auth

@@ -170,6 +170,9 @@ const PILOT_PATHS = [
   '/api/premium/procurement/ai-contracts/demand',
   '/api/premium/procurement/ai-opportunities/deadlines',
   '/api/premium/ai-datacenters/buildout',
+  // Wave 43 (2026-06-27): settlement-rail-verdict (recommended x402 settlement
+  // rail for a payment size across Base, Solana, Polygon, Arbitrum, Avalanche)
+  '/api/premium/settlement/rail-verdict',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

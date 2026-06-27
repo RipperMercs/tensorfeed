@@ -7267,6 +7267,72 @@ const AI_DATACENTERS_BUILDOUT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 43 (2026-06-27): settlement-rail-verdict. The recommended x402 settlement
+// rail for a given payment size across Base, Solana, Polygon, Arbitrum, Avalanche,
+// fusing live on-chain cost, the CDP facilitator reality (gas sponsored, flat
+// $0.001 after 1000 free settlements per month), and published finality. Free
+// sibling at /api/settlement-rails. Total pilot count: 91 -> 92.
+const SETTLEMENT_RAIL_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'Settlement rail verdict. Which chain should an agent settle a USDC micro-payment on? Pass payment_usd=0.01 (optional prefer=balanced, cost, or finality) and get the recommended x402 rail across Base, Solana, Polygon, Arbitrum, and Avalanche, with a full ranking. Fuses live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with an AFTA-signed receipt. Among CDP-supported rails the differentiator is finality.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { payment_usd: 0.01, prefer: 'balanced' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            verdict_kind: 'settlement_rail',
+            payment_usd: 0.01,
+            prefer: 'balanced',
+            recommended_rail: {
+              id: 'solana',
+              label: 'Solana',
+              caip2: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+              reason: 'Solana is the recommended rail for a $0.01 settlement. It is CDP-supported (gas sponsored, flat $0.001 marginal cost) and reaches hard finality in about 13s, the fastest among CDP rails.',
+            },
+            ranking: [
+              { id: 'solana', label: 'Solana', cdp_supported: true, settle_path: 'cdp_facilitator', effective_cost_usd: 0.001, effective_cost_pct: 10, finality_hard_seconds: 13 },
+              { id: 'base', label: 'Base', cdp_supported: true, settle_path: 'cdp_facilitator', effective_cost_usd: 0.001, effective_cost_pct: 10, finality_hard_seconds: 1200 },
+            ],
+            cdp_facilitator: { provider: 'cdp', fee_usd_after_free_tier: 0.001, free_settlements_per_month: 1000, gas_sponsored: true },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  payment_usd: { type: 'number', description: 'Payment size in US dollars (default 0.01). Cost is expressed as a percent of this.' },
+                  prefer: { type: 'string', enum: ['balanced', 'cost', 'finality'], description: 'Ranking preference. Defaults to balanced.' },
+                },
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -7451,6 +7517,10 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/procurement/ai-contracts/demand': PROCUREMENT_AI_CONTRACTS_DEMAND_PILOT,
   '/api/premium/procurement/ai-opportunities/deadlines': PROCUREMENT_AI_OPPORTUNITIES_DEADLINES_PILOT,
   '/api/premium/ai-datacenters/buildout': AI_DATACENTERS_BUILDOUT_PILOT,
+  // Wave 43 (2026-06-27): settlement-rail-verdict. Recommended x402 settlement
+  // rail for a payment size across Base, Solana, Polygon, Arbitrum, Avalanche.
+  // Free sibling at /api/settlement-rails.
+  '/api/premium/settlement/rail-verdict': SETTLEMENT_RAIL_VERDICT_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-
