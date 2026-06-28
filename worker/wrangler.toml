@@ -523,7 +523,7 @@ SOLANA_PAYMENT_ENABLED = "true"
 # Ships dark; flip to "true" only after the binding has deployed and a live
 # settle has validated the claim/commit round-trip. Falls back to the legacy
 # KV mint-dedup when off, so activation is reversible by editing back to "false".
-PAYMENT_CLAIM_ENABLED = "false"
+PAYMENT_CLAIM_ENABLED = "true"
 # BASE_RPC_URL: the payments/facilitator RPC (eth_call, receipts, balances).
 # Defaults to https://mainnet.base.org if unset. Keyed Alchemy/QuickNode endpoint
 # recommended (secret): wrangler secret put BASE_RPC_URL
