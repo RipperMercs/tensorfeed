@@ -500,7 +500,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers':
-    'Content-Type, Authorization, X-PAYMENT, X-Payment-Tx, X-Payment-Quote, X-TensorFeed-Simulate-Error, X-TensorFeed-Simulate-Latency, X-Internal-Auth',
+    'Content-Type, Authorization, X-PAYMENT, PAYMENT-SIGNATURE, X-Payment-Tx, X-Payment-Quote, X-TensorFeed-Simulate-Error, X-TensorFeed-Simulate-Latency, X-Internal-Auth',
   'Access-Control-Expose-Headers':
     'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Payment-Token, X-Payment-Token-Balance, X-Payment-Token-Note, PAYMENT-RESPONSE, X-TensorFeed-Simulated, X-TensorFeed-Simulated-Latency-Ms, X-TF-Free-Trial, X-TF-Free-Trial-Used, X-TF-Free-Trial-Remaining, X-TF-Free-Trial-Limit, X-TF-Free-Trial-Resets-At',
   'Access-Control-Max-Age': '86400',
@@ -888,7 +888,7 @@ async function premiumResponse(
     // response bodies are token-scoped (X-Payment-Token-Balance, AFTA
     // receipt-bound to the bearer, optional new-token mint), so the cache
     // key MUST partition on Authorization and X-Payment-Token at minimum.
-    Vary: 'Authorization, X-Payment-Token, X-Payment',
+    Vary: 'Authorization, X-Payment-Token, X-Payment, PAYMENT-SIGNATURE',
   };
   if (payment.token) headers['X-Payment-Token-Balance'] = String(commit.balanceAfter);
   if (payment.newToken && payment.token) {
@@ -1105,7 +1105,7 @@ async function premiumValidationFailure(
     // response bodies are token-scoped (X-Payment-Token-Balance, AFTA
     // receipt-bound to the bearer, optional new-token mint), so the cache
     // key MUST partition on Authorization and X-Payment-Token at minimum.
-    Vary: 'Authorization, X-Payment-Token, X-Payment',
+    Vary: 'Authorization, X-Payment-Token, X-Payment, PAYMENT-SIGNATURE',
   };
   if (payment.token) headers['X-Payment-Token-Balance'] = String(commit.balanceAfter);
   if (payment.newToken && payment.token) {

@@ -2699,7 +2699,16 @@ export async function requirePayment(
   // Coexists additively with Paths 1 and 2; only triggers when X-PAYMENT
   // is present and follows the spec's "exact" scheme: auth.value must
   // equal requirements.amount.
-  const xPaymentHeader = request.headers.get('X-PAYMENT');
+  // Accept the signed payload on EITHER the legacy X-PAYMENT header OR the
+  // x402 v2 transport header PAYMENT-SIGNATURE. TF advertises x402Version 2 and
+  // already emits the v2 response headers (PAYMENT-REQUIRED, PAYMENT-RESPONSE);
+  // the current @x402/fetch + @x402/svm v2 buyer sends the request payload on
+  // PAYMENT-SIGNATURE, so reading only X-PAYMENT made TF unpayable by a
+  // spec-current v2 agent. The header VALUE (base64 payload) is identical on
+  // both, so downstream parsing, OFAC keying, mint-dedup, and the PaymentClaim
+  // idemKey are unchanged regardless of which header carried it.
+  const xPaymentHeader =
+    request.headers.get('X-PAYMENT') || request.headers.get('PAYMENT-SIGNATURE');
   if (xPaymentHeader) {
     const url = new URL(request.url);
     const resourceUrl = `${url.origin}${url.pathname}`;

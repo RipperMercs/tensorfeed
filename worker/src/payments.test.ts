@@ -207,6 +207,22 @@ describe('requirePayment Solana x402 rail (CDP)', () => {
     expect(rec!.balance).toBeGreaterThanOrEqual(1);
   });
 
+  it('accepts the payment on the x402 v2 PAYMENT-SIGNATURE header (not just X-PAYMENT)', async () => {
+    // The current @x402/fetch v2 buyer sends the signed payload on the v2
+    // transport header PAYMENT-SIGNATURE, not the legacy X-PAYMENT. The server
+    // must read either or it cannot be paid by a spec-current v2 agent.
+    installRoutedFetch();
+    const env = solEnv();
+    const req = new Request('https://tensorfeed.ai/api/premium/test-endpoint', {
+      headers: { 'PAYMENT-SIGNATURE': solHeader() },
+    });
+    const result = await requirePayment(req, env, 1);
+    expect(result.paid).toBe(true);
+    if (!result.paid) return;
+    expect(result.token).toMatch(/^tf_live_/);
+    expect(result.payerWallet).toBe(BUYER);
+  });
+
   it('replaying the same Solana payment returns the original token and does not mint twice', async () => {
     installRoutedFetch();
     const env = solEnv();
