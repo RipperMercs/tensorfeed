@@ -191,9 +191,17 @@ async function settleOne(endpoint, account, dryRun) {
     },
   });
 
-  // Mirror the proven smoke-test PaymentPayload shape, but source
-  // resource + accepted + extensions from the live 402 so the cataloged
-  // metadata always matches what the endpoint actually serves.
+  // Mirror the proven smoke-test PaymentPayload shape. We deliberately do NOT
+  // echo the live 402's `extensions` (the full bazaar discovery blob) back into
+  // the X-PAYMENT: the worker catalogs from its OWN bazaarExtensionsFor() config
+  // on settle (payments.ts), never from the client echo, and parseXPaymentHeader
+  // only needs x402Version + payload{signature, authorization}. Echoing the
+  // extensions pushed the largest pilots past ~8KB, where the CDP facilitator
+  // verify rejects the paymentPayload (counterparty/trust-verdict measured 8832
+  // bytes and fast-failed CDP verify in 184ms while every sub-8KB pilot settled).
+  // Dropping it keeps the header near 2KB for every pilot with no loss of
+  // cataloging fidelity. `resource` + `accepted` stay (small, and they mirror the
+  // smoke-test shape).
   const payload = {
     x402Version: pr.x402Version || 2,
     resource: pr.resource,
@@ -207,9 +215,11 @@ async function settleOne(endpoint, account, dryRun) {
       extra: a.extra,
     },
     payload: { signature, authorization: auth },
-    extensions: pr.extensions,
   };
   const xPayment = Buffer.from(JSON.stringify(payload)).toString('base64');
+  if (xPayment.length > 8000) {
+    console.log(`  WARNING: X-PAYMENT is ${xPayment.length} bytes, near the ~8KB facilitator limit; settle may be rejected.`);
+  }
 
   const t0 = Date.now();
   const res = await fetch(endpoint, {
