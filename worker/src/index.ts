@@ -13586,14 +13586,17 @@ export default {
     }
 
     // === PAID PREMIUM: SETTLEMENT RAIL VERDICT (Tier 1, 1 credit) ===
-    // /api/premium/settlement/rail-verdict?payment_usd=&prefer=balanced|cost|finality
+    // /api/premium/settlement/rail-verdict?payment_usd=&prefer=balanced|cost|finality&accepted_rails=
     // The recommended x402 settlement rail for a given payment size, with a full
     // ranking across Base, Solana, Polygon, Arbitrum, Avalanche. Fuses live raw
     // on-chain cost with the CDP facilitator reality (gas sponsored, flat $0.001
     // marginal after 1000 free settlements per month) and published finality.
-    // Optional ?payment_usd= (default 0.01) and ?prefer=. Strict-premium (reads
-    // params) so anonymous Bazaar crawlers see a clean 402. Free sibling is the
-    // /api/settlement-rails snapshot. captured_at threads the freshness SLA.
+    // Optional ?payment_usd= (default 0.01), ?prefer=, and ?accepted_rails= (a
+    // comma-separated id list to rank only the rails the recipient accepts). The
+    // result also carries a cross_protocol block comparing the chosen x402 path
+    // against a card baseline. Strict-premium (reads params) so anonymous Bazaar
+    // crawlers see a clean 402. Free sibling is the /api/settlement-rails
+    // snapshot. captured_at threads the freshness SLA.
     if (path === '/api/premium/settlement/rail-verdict') {
       const payment = await requirePayment(request, env, 1);
       if (!payment.paid) return payment.response!;
@@ -13618,10 +13621,17 @@ export default {
       }
 
       const preferRaw = url.searchParams.get('prefer')?.trim().toLowerCase() || 'balanced';
+      // Optional ?accepted_rails=base,solana restricts the ranking to the rails
+      // the recipient accepts. Unknown ids are ignored and an all-miss set falls
+      // back to every rail, both handled inside buildRailVerdict.
+      const acceptedRailsRaw = url.searchParams.get('accepted_rails');
+      const acceptedRails = acceptedRailsRaw
+        ? acceptedRailsRaw.split(',').map((s) => s.trim().toLowerCase()).filter((s) => s.length > 0)
+        : null;
       const { getSnapshot, buildRailVerdict, isRailPreference } = await import('./settlement-rails');
       const prefer = isRailPreference(preferRaw) ? preferRaw : 'balanced';
       const snapshot = await getSnapshot(env);
-      const result = buildRailVerdict(snapshot, paymentUsd, prefer);
+      const result = buildRailVerdict(snapshot, paymentUsd, prefer, acceptedRails);
 
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/settlement/rail-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),

@@ -147,6 +147,65 @@ describe('buildRailVerdict', () => {
   });
 });
 
+describe('buildRailVerdict accepted_rails filter', () => {
+  it('ranks and recommends only among the accepted rails', () => {
+    const snap = buildSnapshot(FULL_INPUTS);
+    // Recipient takes only Base and Avalanche; Solana (normally the pick) is excluded.
+    const v = buildRailVerdict(snap, 0.01, 'balanced', ['base', 'avalanche']);
+    const ids = v.ranking.map((r) => r.id);
+    expect(ids).toEqual(expect.arrayContaining(['base', 'avalanche']));
+    expect(ids).not.toContain('solana');
+    expect(ids).not.toContain('polygon');
+    // Base is CDP-supported, Avalanche is self-settle, so Base wins among the two.
+    expect(v.recommended_rail.id).toBe('base');
+    expect(v.accepted_rails_filter).toEqual(['base', 'avalanche']);
+  });
+
+  it('echoes a null filter and ranks every rail when no accepted_rails are given', () => {
+    const snap = buildSnapshot(FULL_INPUTS);
+    const v = buildRailVerdict(snap, 0.01, 'balanced');
+    expect(v.accepted_rails_filter).toBeNull();
+    expect(v.ranking).toHaveLength(RAILS.length);
+  });
+
+  it('ignores unknown ids in a partially matching accepted_rails set', () => {
+    const snap = buildSnapshot(FULL_INPUTS);
+    const v = buildRailVerdict(snap, 0.01, 'balanced', ['solana', 'dogecoin']);
+    const ids = v.ranking.map((r) => r.id);
+    expect(ids).toEqual(['solana']);
+    expect(v.recommended_rail.id).toBe('solana');
+  });
+
+  it('falls back to all rails and notes it when accepted_rails matches nothing tracked', () => {
+    const snap = buildSnapshot(FULL_INPUTS);
+    const v = buildRailVerdict(snap, 0.01, 'balanced', ['dogecoin', 'litecoin']);
+    expect(v.ranking).toHaveLength(RAILS.length);
+    expect(v.notes.some((n) => /accepted_rails/i.test(n) && /no tracked rail/i.test(n))).toBe(true);
+  });
+});
+
+describe('buildRailVerdict cross_protocol block', () => {
+  it('compares the recommended x402 rail against a card baseline', () => {
+    const snap = buildSnapshot(FULL_INPUTS);
+    const v = buildRailVerdict(snap, 0.02, 'balanced');
+    const cp = v.cross_protocol;
+    expect(cp.payment_usd).toBe(0.02);
+    // Card = 2.9% of 0.02 plus a fixed $0.30 = 0.30058.
+    expect(cp.card.cost_usd).toBeCloseTo(0.30058, 6);
+    // The recommended rail is CDP-supported, so the x402 path is the flat $0.001.
+    expect(cp.x402.cost_usd).toBe(CDP_FACILITATOR.fee_usd_after_free_tier);
+    expect(cp.x402_saves_usd).toBeGreaterThan(0.29);
+    expect(cp.card_cost_multiple_vs_x402).toBeGreaterThan(100);
+  });
+
+  it('shows the fixed card fee dwarfing the payment at micro sizes', () => {
+    const snap = buildSnapshot(FULL_INPUTS);
+    const v = buildRailVerdict(snap, 0.02, 'balanced');
+    expect(v.cross_protocol.card.pct_of_payment).toBeGreaterThan(1000);
+    expect(v.cross_protocol.x402.pct_of_payment).toBeCloseTo(5, 2);
+  });
+});
+
 describe('isRailPreference', () => {
   it('accepts the valid preferences and rejects others', () => {
     expect(isRailPreference('balanced')).toBe(true);

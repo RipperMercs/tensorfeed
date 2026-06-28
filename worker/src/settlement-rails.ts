@@ -75,6 +75,17 @@ export const CDP_FACILITATOR = {
   scheme: 'exact',
 };
 
+// Traditional card-processing baseline for the cross-protocol comparison. A
+// representative online card rate (Stripe-style standard pricing) is 2.9% of the
+// charge plus a fixed $0.30. The fixed component is what makes card uneconomical
+// for the sub-dollar payments agents settle, which is exactly why it is worth
+// surfacing next to the x402 path.
+export const CARD_FEE = {
+  pct: 0.029,
+  fixed_usd: 0.30,
+  label: 'Card (2.9% + $0.30)',
+};
+
 export const RAILS: RailDef[] = [
   {
     id: 'base',
@@ -326,6 +337,15 @@ export interface RailRankRow {
   finality_hard_seconds: number;
 }
 
+export interface CrossProtocolComparison {
+  payment_usd: number;
+  x402: { method: string; cost_usd: number | null; pct_of_payment: number | null };
+  card: { method: string; cost_usd: number; pct_of_payment: number | null };
+  x402_saves_usd: number | null;
+  card_cost_multiple_vs_x402: number | null;
+  note: string;
+}
+
 export interface RailVerdictResult {
   ok: true;
   verdict_kind: 'settlement_rail';
@@ -333,6 +353,8 @@ export interface RailVerdictResult {
   prefer: RailPreference;
   recommended_rail: { id: string; label: string; caip2: string; reason: string };
   ranking: RailRankRow[];
+  accepted_rails_filter: string[] | null;
+  cross_protocol: CrossProtocolComparison;
   cdp_facilitator: typeof CDP_FACILITATOR & { supported_rails: string[] };
   via_cdp_note: string;
   capturedAt: string;
@@ -355,8 +377,9 @@ export function buildRailVerdict(
   snapshot: RailsSnapshot,
   paymentUsd: number,
   prefer: RailPreference,
+  acceptedRails: string[] | null = null,
 ): RailVerdictResult {
-  const rows: RailRankRow[] = snapshot.rails.map((r) => {
+  const allRows: RailRankRow[] = snapshot.rails.map((r) => {
     const eff = effectiveCostUsd(r);
     const effPct = eff != null && paymentUsd > 0 ? round2((eff / paymentUsd) * 100) : null;
     return {
@@ -373,6 +396,24 @@ export function buildRailVerdict(
       finality_hard_seconds: r.finality_hard_seconds,
     };
   });
+
+  const notes = [...snapshot.notes];
+
+  // Optional accepted_rails filter: rank only the rails the recipient accepts.
+  // Unknown ids are ignored. If the set matches no tracked rail we fall back to
+  // every rail and say so rather than returning an empty ranking.
+  let rows = allRows;
+  let acceptedFilter: string[] | null = null;
+  if (acceptedRails && acceptedRails.length > 0) {
+    acceptedFilter = acceptedRails;
+    const wanted = new Set(acceptedRails.map((s) => s.toLowerCase().trim()));
+    const filtered = allRows.filter((r) => wanted.has(r.id));
+    if (filtered.length > 0) {
+      rows = filtered;
+    } else {
+      notes.push(`The accepted_rails set [${acceptedRails.join(', ')}] matched no tracked rail, so the ranking falls back to all supported rails.`);
+    }
+  }
 
   // CDP-supported rails always rank ahead of self-settle-only rails, because
   // x402 settles through the facilitator on the dominant path. Within that,
@@ -393,18 +434,40 @@ export function buildRailVerdict(
   });
 
   const top = ranking[0];
-  const fastestHard = Math.min(...snapshot.rails.map((r) => r.finality_hard_seconds));
+  const fastestHard = Math.min(...rows.map((r) => r.finality_hard_seconds));
   let reason = `${top.label} is the recommended rail`;
   if (top.cdp_supported) {
     reason += ` for a $${paymentUsd} settlement. It is CDP-supported (gas sponsored, flat $0.001 marginal cost)`;
     if (top.finality_hard_seconds <= fastestHard * 1.5) {
-      reason += ` and reaches hard finality in about ${top.finality_hard_seconds}s, the fastest among CDP rails.`;
+      reason += ` and reaches hard finality in about ${top.finality_hard_seconds}s, the fastest among the considered CDP rails.`;
     } else {
       reason += '.';
     }
   } else {
-    reason += `. No CDP-supported rail was available, so this is the best self-settle option.`;
+    reason += `. No CDP-supported rail was available among the considered rails, so this is the best self-settle option.`;
   }
+
+  // Cross-protocol: the recommended x402 path versus a traditional card rail.
+  // Static arithmetic, but it is the comparison an agent actually faces when it
+  // decides how to pay, and the fixed card fee makes the gap stark at micro sizes.
+  const x402Cost = top.effective_cost_usd;
+  const cardCost = round6(CARD_FEE.pct * paymentUsd + CARD_FEE.fixed_usd);
+  const cardPct = paymentUsd > 0 ? round2((cardCost / paymentUsd) * 100) : null;
+  const x402Pct = x402Cost != null && paymentUsd > 0 ? round2((x402Cost / paymentUsd) * 100) : null;
+  const x402Saves = x402Cost != null ? round6(cardCost - x402Cost) : null;
+  const cardMultiple = x402Cost != null && x402Cost > 0 ? round2(cardCost / x402Cost) : null;
+  const cross_protocol: CrossProtocolComparison = {
+    payment_usd: paymentUsd,
+    x402: { method: `${top.label} via x402 (CDP facilitator)`, cost_usd: x402Cost, pct_of_payment: x402Pct },
+    card: { method: CARD_FEE.label, cost_usd: cardCost, pct_of_payment: cardPct },
+    x402_saves_usd: x402Saves,
+    card_cost_multiple_vs_x402: cardMultiple,
+    note:
+      `A card payment of $${paymentUsd} carries roughly $${cardCost} in processing fees ` +
+      `(about ${cardPct}% of the payment) versus the ${top.label} x402 path` +
+      (x402Cost != null ? ` at $${x402Cost}` : '') +
+      `. The fixed card fee alone exceeds the entire x402 facilitator fee, so card does not undercut an x402 micropayment at agent-commerce sizes.`,
+  };
 
   return {
     ok: true,
@@ -413,11 +476,13 @@ export function buildRailVerdict(
     prefer,
     recommended_rail: { id: top.id, label: top.label, caip2: top.caip2, reason },
     ranking,
+    accepted_rails_filter: acceptedFilter,
+    cross_protocol,
     cdp_facilitator: snapshot.cdp_facilitator,
     via_cdp_note: VIA_CDP_NOTE,
     capturedAt: snapshot.capturedAt,
     sources: snapshot.sources,
-    notes: snapshot.notes,
+    notes,
     license: LICENSE,
   };
 }

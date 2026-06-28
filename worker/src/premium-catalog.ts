@@ -1263,8 +1263,9 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     params: [
       { name: 'payment_usd', required: false },
       { name: 'prefer', required: false },
+      { name: 'accepted_rails', required: false },
     ],
-    returns: 'The recommended x402 settlement rail for a given payment size across Base, Solana, Polygon, Arbitrum, Avalanche, fusing live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with a full ranking.',
+    returns: 'The recommended x402 settlement rail for a given payment size across Base, Solana, Polygon, Arbitrum, Avalanche, fusing live on-chain cost, the CDP facilitator reality (gas sponsored, flat $0.001 after 1000 free settlements per month), and published finality, with a full ranking. Optional accepted_rails ranks only the rails the recipient accepts, and a cross_protocol block compares the chosen x402 path against a card baseline.',
     free_sibling: '/api/settlement-rails',
     signed: true,
     category: 'verdict',
