@@ -601,6 +601,73 @@ describe('cdpGetSupported', () => {
   });
 });
 
+// Characterization tests: cdp-facilitator is rail-agnostic. It forwards the
+// whole payload envelope to CDP and never reads payload.authorization, so the
+// Solana shape ({ transaction } only, no EVM EIP-3009 object) passes straight
+// through. These lock that contract so a future EVM-specific change to this
+// module surfaces as a failure here instead of silently breaking Solana.
+describe('CDP facilitator Solana rail (rail-agnostic envelope forwarding)', () => {
+  const SOL_BUYER = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+  const SOL_SIG =
+    '5VERv8NMvzbJMEkV8xnrLkEaWRtSz9CosKDYjCJjBRnbJLgp8uirBgmQpjKhoR4tjF3ZpRzrFmBV6UjKdiSZkQUW';
+
+  // Solana payload: { transaction } only. No signature/authorization object.
+  const SOLANA_PAYLOAD = {
+    x402Version: 2,
+    payload: { transaction: btoa('serialized-solana-tx-bytes') },
+  } as unknown as PaymentPayload;
+  const SOLANA_TX = (SOLANA_PAYLOAD as unknown as { payload: { transaction: string } })
+    .payload.transaction;
+
+  const SOLANA_REQUIREMENTS = {
+    scheme: 'exact',
+    network: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+    amount: '20000',
+    asset: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    payTo: 'B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ',
+    maxTimeoutSeconds: 60,
+    resource: 'https://tensorfeed.ai/api/premium/test-endpoint',
+    extra: {
+      feePayer: 'GVJJ7rdGiXr5xaYbRwRbjfaJL7fmwRygFi1H6aGqDveb',
+      resource: 'https://tensorfeed.ai/api/premium/test-endpoint',
+    },
+  } as unknown as PaymentRequirements;
+
+  it('verify forwards the Solana envelope (inner transaction, no authorization) to CDP', async () => {
+    const { captures } = installFetchMock({ isValid: true, payer: SOL_BUYER });
+    const result = await cdpVerify(mockEnv(), SOLANA_PAYLOAD, SOLANA_REQUIREMENTS);
+    expect(result.isValid).toBe(true);
+    expect(result.payer).toBe(SOL_BUYER);
+
+    const body = JSON.parse(captures[0].init?.body as string);
+    expect(body.paymentPayload.payload.transaction).toBe(SOLANA_TX);
+    expect(body.paymentPayload.payload.authorization).toBeUndefined();
+    expect(body.paymentRequirements.network).toBe('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp');
+    expect(body.paymentRequirements.asset).toBe('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+  });
+
+  it('settle forwards the Solana envelope (transaction preserved through enrichment) and returns the signature', async () => {
+    const { captures } = installFetchMock({
+      success: true,
+      transaction: SOL_SIG,
+      payer: SOL_BUYER,
+      network: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+    });
+    const result = await cdpSettle(mockEnv(), SOLANA_PAYLOAD, SOLANA_REQUIREMENTS, 'a description');
+    expect(result.success).toBe(true);
+    expect(result.transaction).toBe(SOL_SIG);
+
+    const body = JSON.parse(captures[0].init?.body as string);
+    // The catalog-enrichment spread must NOT drop the inner SVM transaction.
+    expect(body.paymentPayload.payload.transaction).toBe(SOLANA_TX);
+    expect(body.paymentPayload.payload.authorization).toBeUndefined();
+    // Resource enrichment still applies (rail-agnostic).
+    expect(body.paymentPayload.resource.url).toBe(
+      'https://tensorfeed.ai/api/premium/test-endpoint',
+    );
+  });
+});
+
 describe('cdpListDiscoveryResources', () => {
   it('returns the parsed body on 200', async () => {
     installFetchMock({

@@ -468,6 +468,20 @@ class_name = "CreditLedger"
 tag = "v1"
 new_classes = ["CreditLedger"]
 
+# PaymentClaim Durable Object. One instance per payment-idempotency key
+# (sha256 of the X-PAYMENT payload), serializing the claim/settle/mint
+# sequence so exactly one concurrent request can mint a payment. Closes the
+# CDP-path double-mint TOCTOU on the Solana rail and the EVM-via-CDP Bazaar
+# pilot paths. Binding ships present; the gate stays dark until
+# PAYMENT_CLAIM_ENABLED is flipped to "true". See worker/src/payment-claim.ts.
+[[durable_objects.bindings]]
+name = "PAYMENT_CLAIM"
+class_name = "PaymentClaim"
+
+[[migrations]]
+tag = "v2"
+new_classes = ["PaymentClaim"]
+
 # Workers AI binding for news-history Phase B clustering. Free tier
 # allots 10K neurons/day which comfortably covers our daily 200-
 # article embedding pass via @cf/baai/bge-base-en-v1.5. Used by
@@ -500,6 +514,16 @@ CREDIT_LEDGER_ENABLED = "true"
 # Agent payments (Phase 1). USDC on Base, credits-first with x402 fallback.
 PAYMENT_WALLET = "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1"
 PAYMENT_ENABLED = "true"
+# Second payment rail: Solana mainnet USDC via CDP. Receive-only public key
+# (not a secret). Rail stays dark until SOLANA_PAYMENT_ENABLED is flipped to "true".
+SOLANA_PAYMENT_WALLET = "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ"
+SOLANA_PAYMENT_ENABLED = "false"
+# PaymentClaim DO gate. When "true" and the PAYMENT_CLAIM binding is present,
+# the CDP-routed mint path claims atomically before settling (exactly-once).
+# Ships dark; flip to "true" only after the binding has deployed and a live
+# settle has validated the claim/commit round-trip. Falls back to the legacy
+# KV mint-dedup when off, so activation is reversible by editing back to "false".
+PAYMENT_CLAIM_ENABLED = "false"
 # BASE_RPC_URL: the payments/facilitator RPC (eth_call, receipts, balances).
 # Defaults to https://mainnet.base.org if unset. Keyed Alchemy/QuickNode endpoint
 # recommended (secret): wrangler secret put BASE_RPC_URL

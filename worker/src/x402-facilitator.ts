@@ -187,7 +187,9 @@ export interface PaymentRequirements {
   // USDC token (mainnet: "USD Coin"/"2"; sepolia: "USDC"/"2") for the
   // TransferWithAuthorization signing domain. `resource` is the same URL
   // duplicated for the validators that look here instead of top-level.
-  extra?: { name?: string; version?: string; resource?: string };
+  // `feePayer` is the Solana-only fee sponsor (CDP's fee payer address),
+  // advertised under extra so SVM buyers build the tx against it. Unused on EVM.
+  extra?: { name?: string; version?: string; resource?: string; feePayer?: string };
   // Settle-time extensions. CDP's Bazaar indexer reads
   // extensions.bazaar.{info, schema} from the paymentRequirements in the
   // /settle POST body (NOT the 402 response we send to the buyer).
@@ -293,6 +295,76 @@ export function parseXPaymentHeader(headerValue: string): PaymentPayload | null 
   const nonceHex = auth.nonce as string;
   if (nonceHex.length !== 66) return null;
   return parsed as PaymentPayload;
+}
+
+/**
+ * The Solana "exact" x402 payload. Unlike the EVM EIP-3009 shape it carries a
+ * base64-encoded, partially-signed Solana transaction and NO signature /
+ * authorization pair. CDP co-signs the feePayer slot at settle time, so the
+ * final on-chain signature does not exist until after settle.
+ */
+export interface SolanaPaymentPayload {
+  x402Version: number;
+  resource?: { url?: string; description?: string; mimeType?: string };
+  accepted?: PaymentRequirements;
+  payload: { transaction: string };
+  extensions?: Record<string, unknown>;
+}
+
+/**
+ * Decodes the X-PAYMENT header for a Solana exact payment. Mirrors
+ * parseXPaymentHeader's size bound and decode guards, accepts x402Version 1 or
+ * 2 (CDP lists Solana under both), requires a base64 `transaction` string, and
+ * rejects any EVM-shaped payload (signature/authorization present) so the
+ * dispatcher routes those to the EVM parser. Does NOT validate the inner tx;
+ * the facilitator does that at verify time.
+ */
+export function parseSolanaXPaymentHeader(
+  headerValue: string,
+): SolanaPaymentPayload | null {
+  if (!headerValue || typeof headerValue !== 'string') return null;
+  if (headerValue.length > 16384) return null;
+  let json: string;
+  try {
+    json = atob(headerValue.trim());
+  } catch {
+    return null;
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== 'object') return null;
+  const p = parsed as Record<string, unknown>;
+  if (p.x402Version !== 1 && p.x402Version !== 2) return null;
+  const inner = p.payload as Record<string, unknown> | undefined;
+  if (!inner || typeof inner !== 'object') return null;
+  // EVM-shaped payloads belong to parseXPaymentHeader, not here.
+  if ('signature' in inner || 'authorization' in inner) return null;
+  const tx = inner.transaction;
+  if (typeof tx !== 'string' || tx.length === 0) return null;
+  // base64 charset only (the serialized Solana transaction).
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(tx)) return null;
+  return parsed as SolanaPaymentPayload;
+}
+
+/**
+ * Rail discriminator used by the payments path. Tries the EVM parser first,
+ * then the Solana parser, classifying by which one structurally validates. The
+ * caller branches on `rail` for routing, requirements, dedup key, and amount.
+ */
+export type RailPayment =
+  | { rail: 'evm'; payload: PaymentPayload }
+  | { rail: 'solana'; payload: SolanaPaymentPayload };
+
+export function parseAnyXPaymentHeader(headerValue: string): RailPayment | null {
+  const evm = parseXPaymentHeader(headerValue);
+  if (evm) return { rail: 'evm', payload: evm };
+  const sol = parseSolanaXPaymentHeader(headerValue);
+  if (sol) return { rail: 'solana', payload: sol };
+  return null;
 }
 
 // ---------- verification ----------

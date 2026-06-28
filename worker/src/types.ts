@@ -22,6 +22,12 @@ export interface Env {
   // Agent payments (Phase 1)
   PAYMENT_WALLET: string;
   PAYMENT_ENABLED: string;
+  // Second payment rail: Solana mainnet USDC via the CDP facilitator.
+  // SOLANA_PAYMENT_WALLET is a base58 receive-only cold pubkey (public, not a
+  // secret). SOLANA_PAYMENT_ENABLED gates the rail: "true" advertises Solana in
+  // the 402; anything else (or unset) keeps the rail dark.
+  SOLANA_PAYMENT_WALLET?: string;
+  SOLANA_PAYMENT_ENABLED?: string;
   BASE_RPC_URL?: string;
   // Dedicated RPC for the x402 settlement indexer's wide eth_getLogs scans, kept
   // separate from BASE_RPC_URL (the payments/facilitator RPC) because a keyed
@@ -119,6 +125,19 @@ export interface Env {
   // is validated. Phase 4 (planned) removes the legacy path once the
   // flag has been on in production for the grace window.
   CREDIT_LEDGER_ENABLED?: string;
+  // PaymentClaim Durable Object. One instance per payment-idempotency key,
+  // serializing the claim/settle/mint sequence so exactly one concurrent
+  // request can mint a given payment (closes the CDP-path double-mint TOCTOU
+  // on both the Solana rail and the EVM-via-CDP Bazaar pilot paths). Optional
+  // so node-env test fixtures don't need to stub a DurableObjectNamespace; in
+  // production it is always present per wrangler.toml. See worker/src/payment-claim.ts.
+  PAYMENT_CLAIM?: DurableObjectNamespace;
+  // Feature flag for the PaymentClaim DO gate. When 'true' AND PAYMENT_CLAIM
+  // is bound, the CDP-routed mint path claims atomically before settling.
+  // Otherwise falls back to the legacy KV mint-dedup (with its known bounded
+  // concurrent window). Default-off in wrangler.toml [vars] so the binding can
+  // ship present-but-dark and be validated live before activation.
+  PAYMENT_CLAIM_ENABLED?: string;
   // Admin-only routes auth. REQUIRED in production. Set via:
   //   wrangler secret put ADMIN_KEY
   // Used by /api/admin/* and /api/refresh. Replaces the previous

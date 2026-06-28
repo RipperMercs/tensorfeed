@@ -1183,6 +1183,12 @@ const PREMIUM_DEPS = { premiumResponse, premiumValidationFailure, logPremiumUsag
 // worker/src/credit-ledger.ts + tensorfeed-work/tier2-races/DESIGN.md.
 export { CreditLedger } from './credit-ledger';
 
+// PaymentClaim Durable Object class. Same export-on-entrypoint contract as
+// CreditLedger: Cloudflare instantiates it from this named export matching the
+// wrangler.toml binding's class_name. Serializes the settle+mint claim per
+// payment-idempotency key. See worker/src/payment-claim.ts.
+export { PaymentClaim } from './payment-claim';
+
 // Agent Usage Meter charge signal. The central AE hook in fetch needs to
 // know whether a premium 200 actually settled a payment this invocation so
 // it can classify the data point as outcome 'paid' rather than 'served_free'

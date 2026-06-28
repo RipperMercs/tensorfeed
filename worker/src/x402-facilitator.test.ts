@@ -8,6 +8,8 @@ import { privateKeyToAccount } from 'viem/accounts';
 import type { Hex, Address } from 'viem';
 import {
   parseXPaymentHeader,
+  parseSolanaXPaymentHeader,
+  parseAnyXPaymentHeader,
   verifyPayment,
   paymentRequiredV2,
   encodeSettlementHeader,
@@ -112,6 +114,65 @@ async function buildValidPayload(
 function encode(payload: PaymentPayload): string {
   return btoa(JSON.stringify(payload));
 }
+
+describe('parseSolanaXPaymentHeader + parseAnyXPaymentHeader', () => {
+  const SOL_TX = btoa('serialized-solana-versioned-tx-bytes');
+  function solHeader(over: { x402Version?: number; payload?: unknown } = {}): string {
+    return btoa(
+      JSON.stringify({
+        x402Version: over.x402Version ?? 2,
+        payload: over.payload ?? { transaction: SOL_TX },
+      }),
+    );
+  }
+
+  it('parses a valid Solana exact payload (v2) and exposes the base64 transaction', () => {
+    const out = parseSolanaXPaymentHeader(solHeader());
+    expect(out).not.toBeNull();
+    expect(out!.payload.transaction).toBe(SOL_TX);
+    expect(out!.x402Version).toBe(2);
+  });
+
+  it('accepts a v1 Solana payload (CDP lists Solana under both v1 and v2)', () => {
+    const out = parseSolanaXPaymentHeader(solHeader({ x402Version: 1 }));
+    expect(out).not.toBeNull();
+    expect(out!.x402Version).toBe(1);
+  });
+
+  it('rejects an EVM payload (has signature + authorization, no transaction)', async () => {
+    const evm = await buildValidPayload();
+    expect(parseSolanaXPaymentHeader(encode(evm))).toBeNull();
+  });
+
+  it('rejects a Solana-shaped payload missing the transaction field', () => {
+    expect(parseSolanaXPaymentHeader(solHeader({ payload: {} }))).toBeNull();
+  });
+
+  it('rejects an oversized header without parsing', () => {
+    const huge = btoa(
+      JSON.stringify({ x402Version: 2, payload: { transaction: 'A'.repeat(20000) } }),
+    );
+    expect(parseSolanaXPaymentHeader(huge)).toBeNull();
+  });
+
+  it('parseAnyXPaymentHeader classifies a Solana payload as rail solana', () => {
+    const out = parseAnyXPaymentHeader(solHeader());
+    expect(out).not.toBeNull();
+    expect(out!.rail).toBe('solana');
+    if (out!.rail === 'solana') expect(out!.payload.payload.transaction).toBe(SOL_TX);
+  });
+
+  it('parseAnyXPaymentHeader classifies a valid EVM payload as rail evm (regression)', async () => {
+    const evm = await buildValidPayload();
+    const out = parseAnyXPaymentHeader(encode(evm));
+    expect(out).not.toBeNull();
+    expect(out!.rail).toBe('evm');
+  });
+
+  it('parseAnyXPaymentHeader returns null for garbage', () => {
+    expect(parseAnyXPaymentHeader('not-base64-$$$%%%')).toBeNull();
+  });
+});
 
 describe('parseXPaymentHeader', () => {
   it('parses a valid base64-encoded PaymentPayload', async () => {

@@ -10,12 +10,13 @@ import {
 } from './rate-limit';
 import { isStrictPremiumPath } from './strict-premium-endpoints';
 import {
-  parseXPaymentHeader,
+  parseAnyXPaymentHeader,
   verifyPayment as verifyX402Payment,
   settlePayment as settleX402Payment,
   encodeSettlementHeader,
   getX402Config,
   type PaymentRequirements as X402PaymentRequirements,
+  type PaymentPayload as X402PaymentPayload,
 } from './x402-facilitator';
 // Bazaar pilot routing (worker/src/cdp-facilitator.ts + bazaar-pilots.ts).
 // X-PAYMENT settlements for paths in the bazaar pilot set route through
@@ -23,6 +24,8 @@ import {
 // triggering automatic Bazaar catalog indexing on first successful settle.
 // All other endpoints continue to use the self-broadcast path unchanged.
 import { cdpVerify, cdpSettle } from './cdp-facilitator';
+import { SOLANA_USDC_MINT, SOLANA_NETWORK_V2, SOLANA_FEEPAYER_V2 } from './solana-rail';
+import { getPaymentClaim } from './payment-claim';
 import {
   isBazaarPilotPath,
   bazaarExtensionsFor,
@@ -585,6 +588,17 @@ function ofacTransientDecision(
     }),
   );
   return decision;
+}
+
+// SHA-256 hex of a string. Used to derive a stable, bounded discriminator for
+// Solana payments (which carry no EIP-3009 nonce) for the OFAC block record
+// and the payment-claim idempotency key.
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 export async function screenWalletOFAC(
@@ -2711,7 +2725,7 @@ export async function requirePayment(
       bazaarExtensionsFor(url.pathname),
       resourceUrl,
     );
-    const requirements: X402PaymentRequirements = {
+    const evmRequirements: X402PaymentRequirements = {
       scheme: 'exact',
       network: x402Config.network,
       amount: String(cost * 20000),
@@ -2725,9 +2739,29 @@ export async function requirePayment(
       extra: { name: x402Config.domain.name, version: x402Config.domain.version, resource: resourceUrl },
       ...(Object.keys(pilotExtensions).length > 0 ? { extensions: pilotExtensions } : {}),
     };
+    // Second rail: Solana mainnet USDC via CDP. Built only when the rail is
+    // advertised (flag on + receive wallet set); undefined keeps it dark. payTo
+    // is a base58 pubkey forwarded verbatim to CDP (the `0x${string}` cast is a
+    // type accommodation, not an EVM address).
+    const solanaRequirements: X402PaymentRequirements | undefined =
+      env.SOLANA_PAYMENT_ENABLED === 'true' && env.SOLANA_PAYMENT_WALLET
+        ? {
+            scheme: 'exact',
+            network: SOLANA_NETWORK_V2,
+            amount: String(cost * 20000),
+            asset: SOLANA_USDC_MINT,
+            payTo: env.SOLANA_PAYMENT_WALLET as `0x${string}`,
+            maxTimeoutSeconds: 60,
+            resource: resourceUrl,
+            extra: { feePayer: SOLANA_FEEPAYER_V2, resource: resourceUrl },
+          }
+        : undefined;
+    const liveAccepts = solanaRequirements
+      ? [evmRequirements, solanaRequirements]
+      : [evmRequirements];
 
-    const payload = parseXPaymentHeader(xPaymentHeader);
-    if (!payload) {
+    const parsed = parseAnyXPaymentHeader(xPaymentHeader);
+    if (!parsed) {
       return {
         paid: false,
         response: jsonResponse(
@@ -2736,21 +2770,42 @@ export async function requirePayment(
             success: false,
             errorReason: 'invalid_payload',
             message: 'X-PAYMENT header is not valid base64 JSON or is missing required fields.',
-            accepts: [requirements],
+            accepts: liveAccepts,
             resource: { url: resourceUrl, mimeType: 'application/json' },
           },
           400,
         ),
       };
     }
+    // Dark-rail guard: a Solana payload arriving while Solana is not advertised.
+    // No compliant agent sees Solana in `accepts` while dark, so this only
+    // catches probes. Reject as invalid_payload (the rail is not offered).
+    if (parsed.rail === 'solana' && !solanaRequirements) {
+      return {
+        paid: false,
+        response: jsonResponse(
+          {
+            x402Version: 2,
+            success: false,
+            errorReason: 'invalid_payload',
+            message: 'Solana payments are not enabled for this resource.',
+            accepts: liveAccepts,
+            resource: { url: resourceUrl, mimeType: 'application/json' },
+          },
+          400,
+        ),
+      };
+    }
+    const requirements: X402PaymentRequirements =
+      parsed.rail === 'solana' ? solanaRequirements! : evmRequirements;
 
-    // Pilot endpoints route verify+settle through CDP's hosted facilitator
-    // so Bazaar can auto-catalog them on first successful settle.
-    // Non-pilot endpoints stay on the self-broadcast path (unchanged).
-    const viaCDP = isBazaarPilotPath(url.pathname);
+    // Solana always settles through CDP (the self-broadcast facilitator is
+    // viem/EIP-712-bound and cannot touch SVM). EVM pilots route via CDP too;
+    // other EVM endpoints stay on the self-broadcast path unchanged.
+    const viaCDP = parsed.rail === 'solana' || isBazaarPilotPath(url.pathname);
     const verify = viaCDP
-      ? await cdpVerify(env, payload, requirements)
-      : await verifyX402Payment(payload, requirements, undefined, x402Config);
+      ? await cdpVerify(env, parsed.payload as X402PaymentPayload, requirements)
+      : await verifyX402Payment(parsed.payload as X402PaymentPayload, requirements, undefined, x402Config);
     if (!verify.isValid) {
       // Surface verify.message + log it. Without this the buyer side only
       // sees the generic errorReason code (e.g. unexpected_verify_error)
@@ -2793,10 +2848,17 @@ export async function requirePayment(
       };
     }
     if (screen.sanctioned) {
+      // Solana carries no EIP-3009 nonce; derive a stable bounded discriminator
+      // from a hash of the inbound transaction (pre-settle, so settle.transaction
+      // is not yet available here).
+      const ofacReason =
+        parsed.rail === 'solana'
+          ? `x402-sol:${(await sha256Hex(parsed.payload.payload.transaction)).slice(0, 32)}`
+          : `x402-auth:${parsed.payload.payload.authorization.nonce}`;
       await persistOFACBlock(
         env,
         payerAddress,
-        `x402-auth:${payload.payload.authorization.nonce}`,
+        ofacReason,
         screen.identifications,
       );
       return {
@@ -2843,6 +2905,95 @@ export async function requirePayment(
       // cache_pass: a clean screen within the TTL, allow through (logged).
     }
 
+    // PaymentClaim DO gate (flag + binding + CDP path). Serializes the
+    // settle+mint sequence per payment-idempotency key so exactly one
+    // concurrent request mints; closes the CDP-path double-mint TOCTOU on both
+    // the Solana rail and the EVM-via-CDP pilot paths. claimIdemKey = a hash of
+    // the inbound X-PAYMENT payload (identical on a retry, distinct per
+    // payment). A null binding/flag falls back to the legacy KV mint-dedup below.
+    const claimIdemKey =
+      viaCDP && env.PAYMENT_CLAIM_ENABLED === 'true' ? await sha256Hex(xPaymentHeader) : null;
+    const claimStub = claimIdemKey ? getPaymentClaim(env, claimIdemKey) : null;
+    let claimWon = false;
+    if (claimStub && claimIdemKey) {
+      const claimResp = await claimStub.fetch(
+        new Request('https://payment-claim/claim', {
+          method: 'POST',
+          body: JSON.stringify({ idemKey: claimIdemKey, nowMs: Date.now() }),
+        }),
+      );
+      const claim = (await claimResp.json()) as { status?: string; token?: string };
+      if (claim.status === 'done' && typeof claim.token === 'string') {
+        const rec = (await env.TENSORFEED_CACHE.get(
+          `pay:credits:${claim.token}`,
+          'json',
+        )) as CreditsRecord | null;
+        if (rec) {
+          // Another request already settled + minted this exact payment. Return
+          // the original token without settling again (pre-settle exactly-once).
+          return {
+            paid: true,
+            token: claim.token,
+            cost,
+            currentBalance: rec.balance,
+            tokenRemaining: rec.balance - cost,
+            newToken: true,
+            payerWallet: payerAddress,
+          };
+        }
+        // Committed token record purged: fall through and re-mint. Settle is
+        // idempotent on broadcast, so this re-broadcasts to the same tx.
+      } else if (claim.status === 'in_flight') {
+        return {
+          paid: false,
+          response: jsonResponse(
+            {
+              x402Version: 2,
+              success: false,
+              errorReason: 'payment_in_flight',
+              message:
+                'A settlement for this exact payment is already in progress. Retry shortly with the same X-PAYMENT to receive your token.',
+            },
+            409,
+          ),
+        };
+      } else {
+        claimWon = true;
+      }
+    }
+    // Finalize a won claim after a successful mint (records the token + settled
+    // signature so a later/concurrent caller gets 'done'), or release it on
+    // settle failure so a genuine retry can re-win without the TTL wait.
+    const commitClaim = async (
+      mintedToken: string,
+      signature: string | undefined,
+    ): Promise<void> => {
+      if (claimStub && claimWon && claimIdemKey) {
+        await claimStub.fetch(
+          new Request('https://payment-claim/commit', {
+            method: 'POST',
+            body: JSON.stringify({
+              idemKey: claimIdemKey,
+              token: mintedToken,
+              nowMs: Date.now(),
+              signature,
+              payer: payerAddress,
+            }),
+          }),
+        );
+      }
+    };
+    const releaseClaim = async (): Promise<void> => {
+      if (claimStub && claimWon && claimIdemKey) {
+        await claimStub.fetch(
+          new Request('https://payment-claim/release', {
+            method: 'POST',
+            body: JSON.stringify({ idemKey: claimIdemKey }),
+          }),
+        );
+      }
+    };
+
     // Settle on-chain via USDC.transferWithAuthorization. For pilot
     // endpoints routed through CDP, Coinbase's hosted facilitator
     // performs the broadcast (paying gas); for everything else our
@@ -2858,11 +3009,11 @@ export async function requirePayment(
     const settle = viaCDP
       ? await cdpSettle(
           env,
-          payload,
+          parsed.payload as X402PaymentPayload,
           requirements,
           getBazaarPilotConfig(url.pathname)?.description,
         )
-      : await settleX402Payment(payload, env);
+      : await settleX402Payment(parsed.payload as X402PaymentPayload, env);
     // Bazaar pilot observability. CDP's EXTENSION-RESPONSES header indicates
     // whether our bazaar metadata was accepted ("processing"/"indexed") or
     // rejected ("rejected"). The header wire format is not stable (bare
@@ -2880,6 +3031,9 @@ export async function requirePayment(
       );
     }
     if (!settle.success) {
+      // Settle failed: free the claim so a genuine retry can re-win immediately
+      // instead of getting 'in_flight' until the TTL lapses.
+      await releaseClaim();
       return {
         paid: false,
         response: jsonResponse(
@@ -2904,7 +3058,10 @@ export async function requirePayment(
     // return that original token (a lost-response retry gets its token back; a
     // deliberate replay gets no free credits). Covers both the self-broadcast
     // and CDP-routed paths, since settle is unified above.
-    const mintDedupKey = `pay:x402mint:${payerAddress}:${payload.payload.authorization.nonce}`;
+    const mintDedupKey =
+      parsed.rail === 'solana'
+        ? `pay:x402mint:sol:${settle.transaction}`
+        : `pay:x402mint:${payerAddress}:${parsed.payload.payload.authorization.nonce}`;
     const MINT_DEDUP_TTL_SECONDS = 7 * 24 * 60 * 60; // matches X402_AUTH_TTL_SECONDS, the auth-claim replay window
     const priorMint = (await env.TENSORFEED_CACHE.get(mintDedupKey, 'json')) as { token: string } | null;
     if (priorMint && typeof priorMint.token === 'string') {
@@ -2926,6 +3083,7 @@ export async function requirePayment(
         }
         // Already minted for this authorization: return the original token,
         // do NOT mint again and do NOT re-charge.
+        await commitClaim(priorMint.token, settle.transaction);
         return {
           paid: true,
           token: priorMint.token,
@@ -2945,7 +3103,10 @@ export async function requirePayment(
     // means auth.value === requirements.amount, so this token starts with
     // exactly enough credits for THIS call (plus any first-payment
     // welcome bonus). Repeat use should switch to the credits flow.
-    const amountUsd = Number(payload.payload.authorization.value) / 1e6;
+    const amountUsd =
+      parsed.rail === 'solana'
+        ? Number(requirements.amount) / 1e6
+        : Number(parsed.payload.payload.authorization.value) / 1e6;
     const baseCredits = calculateCredits(amountUsd);
     const welcome = await checkAndMarkFirstPayment(env, payerAddress);
     const credits = baseCredits + welcome.bonusCredits;
@@ -2987,6 +3148,10 @@ export async function requirePayment(
       }),
       welcome.isFirstPayment ? markWalletSeen(env, payerAddress) : Promise.resolve(),
     ]);
+
+    // Finalize the claim so any later/concurrent request for this exact payment
+    // gets 'done' + this token instead of settling and minting a second one.
+    await commitClaim(token, settle.transaction);
 
     return {
       paid: true,
@@ -3127,7 +3292,7 @@ export function builderCodeExtension(appCode: string | undefined): Record<string
   return { 'builder-code': { info: { a: appCode }, schema: BUILDER_CODE_SCHEMA } };
 }
 
-function paymentRequiredResponse(
+export function paymentRequiredResponse(
   env: Env,
   creditsRequired: number,
   tier: number,
@@ -3258,6 +3423,23 @@ function paymentRequiredResponse(
         // Canonical x402 DiscoveryInfo. Present only on piloted paths.
         ...(bodyOutputSchema ? { outputSchema: bodyOutputSchema } : {}),
       },
+      // Second rail: Solana mainnet USDC via CDP, advertised only when the
+      // rail is enabled. All values are ASCII (base58 + CAIP-2 with a colon),
+      // so the btoa header encoding below stays safe.
+      ...(env.SOLANA_PAYMENT_ENABLED === 'true' && env.SOLANA_PAYMENT_WALLET
+        ? [
+            {
+              scheme: 'exact',
+              network: SOLANA_NETWORK_V2,
+              amount,
+              asset: SOLANA_USDC_MINT,
+              payTo: env.SOLANA_PAYMENT_WALLET,
+              maxTimeoutSeconds: 60,
+              resource: resourceUrl,
+              extra: { feePayer: SOLANA_FEEPAYER_V2, resource: resourceUrl },
+            },
+          ]
+        : []),
     ],
     extensions: canonicalExtensions,
   };

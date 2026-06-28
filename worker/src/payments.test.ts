@@ -27,8 +27,11 @@ import {
   buildHeaderExtensions,
   previewSiblingFor,
   builderCodeExtension,
+  requirePayment,
+  paymentRequiredResponse,
 } from './payments';
 import type { Env } from './types';
+import { PaymentClaim } from './payment-claim';
 
 interface MockKV {
   get: (key: string, type?: string) => Promise<unknown>;
@@ -94,6 +97,278 @@ function seedCredits(env: Env, balance: number): void {
     }),
   );
 }
+
+describe('requirePayment Solana x402 rail (CDP)', () => {
+  // Reuse the RFC 8032 Ed25519 test vector so authHeaders() signs cleanly.
+  const SOL_SECRET_B64 = Buffer.from(
+    '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60' +
+      'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a',
+    'hex',
+  ).toString('base64');
+  const SOL_API_KEY_ID =
+    'organizations/00000000-0000-0000-0000-000000000000/apiKeys/11111111-1111-1111-1111-111111111111';
+  const BUYER = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU'; // base58 buyer pubkey
+  const SOL_SIG =
+    '5VERv8NMvzbJMEkV8xnrLkEaWRtSz9CosKDYjCJjBRnbJLgp8uirBgmQpjKhoR4tjF3ZpRzrFmBV6UjKdiSZkQUW';
+  const RECEIVE_WALLET = 'B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ';
+
+  function solHeader(): string {
+    return btoa(
+      JSON.stringify({
+        x402Version: 2,
+        payload: { transaction: btoa('serialized-solana-tx-bytes') },
+      }),
+    );
+  }
+
+  function solEnv(over: Partial<Record<string, unknown>> = {}): Env {
+    return {
+      ...makeEnv(),
+      SOLANA_PAYMENT_WALLET: RECEIVE_WALLET,
+      SOLANA_PAYMENT_ENABLED: 'true',
+      CHAINALYSIS_API_KEY: 'test-chainalysis',
+      CDP_API_KEY_ID: SOL_API_KEY_ID,
+      CDP_API_KEY_SECRET: SOL_SECRET_B64,
+      ...over,
+    } as Env;
+  }
+
+  function solRequest(): Request {
+    return new Request('https://tensorfeed.ai/api/premium/test-endpoint', {
+      headers: { 'X-PAYMENT': solHeader() },
+    });
+  }
+
+  // Route CDP verify/settle and Chainalysis by URL.
+  function installRoutedFetch(
+    opts: { verify?: unknown; settle?: unknown; chainalysis?: unknown; chainalysisStatus?: number } = {},
+  ): void {
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : (input as Request).url;
+      if (url.includes('/x402/verify')) {
+        return new Response(JSON.stringify(opts.verify ?? { isValid: true, payer: BUYER }), {
+          status: 200,
+        });
+      }
+      if (url.includes('/x402/settle')) {
+        return new Response(
+          JSON.stringify(
+            opts.settle ?? {
+              success: true,
+              transaction: SOL_SIG,
+              payer: BUYER,
+              network: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+            },
+          ),
+          { status: 200 },
+        );
+      }
+      if (url.includes('chainalysis.com')) {
+        return new Response(JSON.stringify(opts.chainalysis ?? { identifications: [] }), {
+          status: opts.chainalysisStatus ?? 200,
+        });
+      }
+      return new Response('{}', { status: 200 });
+    }) as unknown as typeof fetch;
+  }
+
+  const realFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = realFetch;
+    vi.restoreAllMocks();
+  });
+
+  it('mints a credits token for a valid Solana payment, keyed on the settle signature', async () => {
+    installRoutedFetch();
+    const env = solEnv();
+    const result = await requirePayment(solRequest(), env, 1);
+
+    expect(result.paid).toBe(true);
+    if (!result.paid) return;
+    expect(result.token).toMatch(/^tf_live_/);
+    expect(result.payerWallet).toBe(BUYER);
+
+    // dedup keyed on the Solana settle signature, NOT an EVM nonce
+    const dedup = (await (env.TENSORFEED_CACHE as unknown as MockKV).get(
+      `pay:x402mint:sol:${SOL_SIG}`,
+    )) as { token: string } | null;
+    expect(dedup?.token).toBe(result.token);
+
+    // credits sourced from requirements.amount (Solana has no authorization.value)
+    const rec = (await (env.TENSORFEED_CACHE as unknown as MockKV).get(
+      `pay:credits:${result.token}`,
+    )) as { balance: number } | null;
+    expect(rec).not.toBeNull();
+    expect(rec!.balance).toBeGreaterThanOrEqual(1);
+  });
+
+  it('replaying the same Solana payment returns the original token and does not mint twice', async () => {
+    installRoutedFetch();
+    const env = solEnv();
+    const first = await requirePayment(solRequest(), env, 1);
+    expect(first.paid).toBe(true);
+    if (!first.paid) return;
+
+    const second = await requirePayment(solRequest(), env, 1);
+    expect(second.paid).toBe(true);
+    if (!second.paid) return;
+
+    // same settle signature -> same dedup key -> original token, no re-mint
+    expect(second.token).toBe(first.token);
+    const dedup = (await (env.TENSORFEED_CACHE as unknown as MockKV).get(
+      `pay:x402mint:sol:${SOL_SIG}`,
+    )) as { token: string } | null;
+    expect(dedup?.token).toBe(first.token);
+  });
+
+  it('refuses a sanctioned Solana payer with 403 and does not crash on the missing authorization', async () => {
+    installRoutedFetch({
+      chainalysis: { identifications: [{ category: 'sanctions', name: 'OFAC SDN' }] },
+    });
+    const env = solEnv();
+    const result = await requirePayment(solRequest(), env, 1);
+
+    expect(result.paid).toBe(false);
+    if (result.paid) return;
+    expect(result.response?.status).toBe(403);
+  });
+
+  it('rejects a Solana payment as invalid_payload when the rail is dark (flag off)', async () => {
+    installRoutedFetch();
+    const env = solEnv({ SOLANA_PAYMENT_ENABLED: 'false' });
+    const result = await requirePayment(solRequest(), env, 1);
+
+    expect(result.paid).toBe(false);
+    if (result.paid) return;
+    expect(result.response?.status).toBe(400);
+  });
+
+  // ── PaymentClaim DO wiring (exactly-once gate over the CDP path) ──
+
+  // A mock DurableObjectNamespace backed by the REAL PaymentClaim class, so the
+  // claim/commit/release state machine under test is production code, not a stub.
+  function makeClaimNamespace(): DurableObjectNamespace {
+    const instances = new Map<string, PaymentClaim>();
+    return {
+      idFromName: (name: string) => ({ toString: () => name, name }) as unknown as DurableObjectId,
+      get: (id: { name: string }) => {
+        let inst = instances.get(id.name);
+        if (!inst) {
+          const data = new Map<string, unknown>();
+          const state = {
+            storage: {
+              get: async (k: string) => data.get(k),
+              put: async (k: string | Record<string, unknown>, v?: unknown) => {
+                if (typeof k === 'string') data.set(k, v);
+                else for (const [kk, vv] of Object.entries(k)) data.set(kk, vv);
+              },
+              delete: async (k: string) => data.delete(k),
+            },
+          } as unknown as DurableObjectState;
+          inst = new PaymentClaim(state, {} as Env);
+          instances.set(id.name, inst);
+        }
+        return { fetch: (req: Request) => inst!.fetch(req) } as unknown as DurableObjectStub;
+      },
+    } as unknown as DurableObjectNamespace;
+  }
+
+  async function sha256HexTest(s: string): Promise<string> {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  function settleCallCount(): number {
+    const f = global.fetch as unknown as { mock?: { calls: Array<[RequestInfo | URL]> } };
+    if (!f.mock) return 0;
+    return f.mock.calls.filter(([input]) => {
+      const u =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : (input as Request).url;
+      return u.includes('/x402/settle');
+    }).length;
+  }
+
+  it('claims atomically: the DO commits on mint and a replay short-circuits before settle', async () => {
+    installRoutedFetch();
+    const env = solEnv({ PAYMENT_CLAIM: makeClaimNamespace(), PAYMENT_CLAIM_ENABLED: 'true' });
+
+    const first = await requirePayment(solRequest(), env, 1);
+    expect(first.paid).toBe(true);
+    if (!first.paid) return;
+    expect(settleCallCount()).toBe(1);
+
+    const second = await requirePayment(solRequest(), env, 1);
+    expect(second.paid).toBe(true);
+    if (!second.paid) return;
+    // Same token, and settle was NOT called again: the DO 'done' gate fired
+    // before settle, proving the claim wraps the mint exactly-once.
+    expect(second.token).toBe(first.token);
+    expect(settleCallCount()).toBe(1);
+  });
+
+  it('returns 409 when the DO reports the payment is already in flight', async () => {
+    installRoutedFetch();
+    const ns = makeClaimNamespace();
+    const env = solEnv({ PAYMENT_CLAIM: ns, PAYMENT_CLAIM_ENABLED: 'true' });
+
+    // Pre-seed a fresh pending claim at the idemKey requirePayment will derive.
+    const idemKey = await sha256HexTest(solHeader());
+    const stub = ns.get(ns.idFromName(idemKey));
+    await stub.fetch(
+      new Request('https://payment-claim/claim', {
+        method: 'POST',
+        body: JSON.stringify({ idemKey, nowMs: Date.now() }),
+      }),
+    );
+
+    const result = await requirePayment(solRequest(), env, 1);
+    expect(result.paid).toBe(false);
+    if (result.paid) return;
+    expect(result.response?.status).toBe(409);
+    expect(settleCallCount()).toBe(0);
+  });
+});
+
+describe('paymentRequiredResponse Solana advertisement', () => {
+  const RECEIVE_WALLET = 'B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ';
+  function req(): Request {
+    return new Request('https://tensorfeed.ai/api/premium/x');
+  }
+
+  it('advertises a Solana accepts entry when the rail is enabled', async () => {
+    const env = {
+      ...makeEnv(),
+      SOLANA_PAYMENT_ENABLED: 'true',
+      SOLANA_PAYMENT_WALLET: RECEIVE_WALLET,
+    } as Env;
+    const resp = paymentRequiredResponse(env, 1, 1, req());
+    const body = (await resp.json()) as {
+      accepts: Array<{ network: string; payTo: string; asset: string; extra?: { feePayer?: string } }>;
+    };
+    expect(body.accepts.length).toBe(2);
+    const sol = body.accepts.find((a) => a.network.startsWith('solana'));
+    expect(sol).toBeTruthy();
+    expect(sol!.payTo).toBe(RECEIVE_WALLET);
+    expect(sol!.extra?.feePayer).toBe('GVJJ7rdGiXr5xaYbRwRbjfaJL7fmwRygFi1H6aGqDveb');
+  });
+
+  it('omits Solana from the 402 when the rail is dark', async () => {
+    const resp = paymentRequiredResponse(makeEnv(), 1, 1, req());
+    const body = (await resp.json()) as { accepts: unknown[] };
+    expect(body.accepts.length).toBe(1);
+  });
+});
 
 describe('logPremiumUsage (per-token path)', () => {
   it('aggregates calls per endpoint when a token is provided', async () => {
