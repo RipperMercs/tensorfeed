@@ -103,6 +103,14 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // clean 402 instead of a free-trial 400 missing_params. Free taste at
   // /api/preview/counterparty/trust-verdict.
   '/api/premium/counterparty/trust-verdict',
+  // Restricted-Party Compliance Screen (2026-06-27). Signed screen of a
+  // counterparty NAME against the US Consolidated Screening List (trade.gov:
+  // OFAC SDN/SSI/CAPTA, BIS Entity/Denied/Unverified/MEU, State ISN/AECA),
+  // returning matched entries with source lists, programs, and official
+  // citations. Param-required (?name=), so strict-premium gates anonymous
+  // crawlers to a clean 402 instead of a free-trial 400 missing_params. Free
+  // taste at /api/preview/compliance/restricted-party.
+  '/api/premium/compliance/restricted-party',
   // Stack Safety Verdict (2026-05-28). GO/HOLD/BLOCK deploy gate over a
   // package list, fusing the ingested AI-CVE batch + CISA KEV. Param-
   // required (?packages=), so strict-premium gates anonymous crawlers to a

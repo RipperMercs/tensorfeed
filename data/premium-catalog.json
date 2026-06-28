@@ -1,10 +1,11 @@
 {
-  "count": 104,
+  "count": 105,
   "credit_range": {
     "min": 1,
     "max": 10
   },
   "categories": {
+    "compliance": 1,
     "compute": 1,
     "counterparty": 1,
     "funding": 4,
@@ -22,6 +23,29 @@
     "x402": 4
   },
   "endpoints": [
+    {
+      "path": "/api/premium/compliance/restricted-party",
+      "credits": 1,
+      "strict_premium": true,
+      "params": [
+        {
+          "name": "name",
+          "required": true
+        },
+        {
+          "name": "sources",
+          "required": false
+        },
+        {
+          "name": "country",
+          "required": false
+        }
+      ],
+      "returns": "A signed restricted-party compliance screen of a counterparty name against the US Consolidated Screening List (trade.gov: OFAC SDN/SSI/CAPTA, BIS Entity/Denied/Unverified/MEU, State ISN/AECA), returning the matched entries with source lists, programs, and official citations. A match is a screening signal requiring human verification, not a legal determination or legal advice. No-charge when screening is unavailable.",
+      "free_sibling": "/api/preview/compliance/restricted-party",
+      "signed": true,
+      "category": "compliance"
+    },
     {
       "path": "/api/premium/ai-datacenters/buildout",
       "credits": 1,

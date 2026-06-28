@@ -7956,6 +7956,94 @@ export default {
       }, PREMIUM_DEPS);
     }
 
+    // Free taste of the Restricted-Party Compliance Screen: the overall verdict,
+    // the natural-language claim, and the match count for one counterparty name,
+    // with the matched-list detail and citations stripped. 10 calls/day per IP.
+    // The paid /api/premium/compliance/restricted-party adds the full match rows
+    // (lists, programs, citations) plus a signed receipt.
+    if (path === '/api/preview/compliance/restricted-party') {
+      const { computeRestrictedPartyVerdict, redactRestrictedPartyVerdictForPreview, checkRestrictedPartyVerdictPreviewRateLimit, normalizePartyName } = await import('./premium-restricted-party-verdict');
+      const rawName = url.searchParams.get('name');
+      const rpName = rawName ? normalizePartyName(rawName) : null;
+      if (!rpName) {
+        return jsonResponse(
+          { ok: false, error: 'missing_params', required: ['name'], hint: 'name=<counterparty legal name or alias, 2 to 200 chars>, optional sources=<CSL codes e.g. SDN,EL> and country=<ISO-2>' },
+          400,
+        );
+      }
+      const rpIp = getClientIP(request);
+      const rpLimit = await checkRestrictedPartyVerdictPreviewRateLimit(env, rpIp, 10);
+      if (!rpLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: rpLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/compliance/restricted-party',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/compliance/restricted-party (full match rows with source lists, programs, and citations, plus a signed receipt and no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const rpFull = await computeRestrictedPartyVerdict(env, rpName, {
+        sources: url.searchParams.get('sources') ?? undefined,
+        country: url.searchParams.get('country') ?? undefined,
+      });
+      return jsonResponse(
+        {
+          ...redactRestrictedPartyVerdictForPreview(rpFull),
+          rate_limit: { limit: rpLimit.limit, remaining: rpLimit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/compliance/restricted-party',
+            adds: [
+              'the full matched entries (name, aliases, type, source list, programs)',
+              'official source citations (source_list_url, source_information_url)',
+              'a signed receipt and no rate limit',
+            ],
+          },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
+    }
+
+    // === PAID PREMIUM ENDPOINT: RESTRICTED-PARTY COMPLIANCE SCREEN (Tier 1, 1 credit) ===
+    // /api/premium/compliance/restricted-party?name=<counterparty name>[&sources=&country=]
+    // One signed restricted-party screen for agent-to-agent commerce: the supplied
+    // counterparty name is screened against the US Consolidated Screening List
+    // (trade.gov: OFAC SDN/SSI/CAPTA, BIS Entity/Denied/Unverified/MEU, State
+    // ISN/AECA) and the matched entries are returned with citations and a signed
+    // receipt. Requires ?name=, so strict-premium: anonymous Bazaar crawlers see a
+    // clean 402, not a free trial. A missing or invalid name is a no-charge schema
+    // validation failure; a screening outage (no key or upstream error) is a
+    // no-charge upstream failure (TF will not bill for a screen it could not run).
+    // A match is a screening signal requiring human verification, NOT a legal
+    // determination and NOT legal advice.
+    if (path === '/api/premium/compliance/restricted-party') {
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/compliance/restricted-party' }, async () => {
+        const { computeRestrictedPartyVerdict, normalizePartyName } = await import('./premium-restricted-party-verdict');
+        const rawName = url.searchParams.get('name');
+        const rpName = rawName ? normalizePartyName(rawName) : null;
+        if (!rpName) {
+          return { kind: 'validation_failure', error: { error: 'missing_params', required: ['name'], hint: 'name=<counterparty legal name or alias, 2 to 200 chars>, optional sources=<CSL codes> and country=<ISO-2>' } };
+        }
+        const result = await computeRestrictedPartyVerdict(env, rpName, {
+          sources: url.searchParams.get('sources') ?? undefined,
+          country: url.searchParams.get('country') ?? undefined,
+        });
+        if (result.verdict === 'screening_unavailable') {
+          // No-charge: the CSL screen could not run (key missing or upstream
+          // error), so TF cannot stand behind a screening result. The agent
+          // still gets the signed result, billed at zero.
+          return { kind: 'no_charge', body: result, reason: 'upstream_failure', dataCapturedAt: result.capturedAt };
+        }
+        return { kind: 'ok', body: result, dataCapturedAt: result.capturedAt };
+      }, PREMIUM_DEPS);
+    }
+
     // === STACK SAFETY VERDICT PREVIEW (free, rate-limited) ===
     // Free taste of the deploy gate: the per-package verdict and overall
     // gate, capped at 3 packages, with the matched-CVE evidence stripped

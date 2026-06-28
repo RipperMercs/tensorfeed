@@ -29761,6 +29761,207 @@
      }
     }
    }
+  },
+  {
+   "resource": {
+    "url": "https://tensorfeed.ai/api/premium/compliance/restricted-party",
+    "description": "Signed restricted-party compliance screen. Screen a counterparty name against the US Consolidated Screening List (trade.gov OFAC, BIS, State lists) and get the matched entries with official citations. A match is a screening signal requiring human verification, not legal advice.",
+    "mimeType": "application/json"
+   },
+   "type": "http",
+   "method": "GET",
+   "x402Version": 2,
+   "accepts": [
+    {
+     "scheme": "exact",
+     "network": "eip155:8453",
+     "amount": "20000",
+     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+     "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "name": "USD Coin",
+      "version": "2"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "name": "Huawei Technologies",
+        "sources": "EL,ISN",
+        "country": "CN"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "capturedAt": "2026-06-27T12:00:00Z",
+        "query": {
+         "name": "Huawei Technologies",
+         "sources": [
+          "EL",
+          "ISN"
+         ],
+         "country": "CN"
+        },
+        "screened": true,
+        "match_count": 1,
+        "matches": [
+         {
+          "name": "Huawei Technologies Co., Ltd.",
+          "source": "Entity List (EL) - Bureau of Industry and Security",
+          "source_code": "EL",
+          "programs": [
+           "EAR"
+          ],
+          "citation": "84 FR 22961",
+          "country": "CN"
+         }
+        ],
+        "disclaimer": "A match is a screening signal requiring human verification, not a legal determination or legal advice.",
+        "attribution": {
+         "sources": [
+          "US Consolidated Screening List (trade.gov): OFAC, BIS, State Department lists"
+         ],
+         "license": "Public domain (US Government)"
+        },
+        "billing": {
+         "credits_charged": 1,
+         "credits_remaining": 49
+        }
+       }
+      }
+     }
+    }
+   ],
+   "lastUpdated": "2026-06-28T00:00:00Z",
+   "metadata": {
+    "name": "Restricted-party compliance screen",
+    "description": "Signed restricted-party compliance screen. Screen a counterparty name against the US Consolidated Screening List (trade.gov OFAC, BIS, State lists) and get the matched entries with official citations. A match is a screening signal requiring human verification, not legal advice.",
+    "tier": 1,
+    "credits": 1,
+    "category": "compliance-restricted-party"
+   },
+   "extensions": {
+    "bazaar": {
+     "info": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "name": "Huawei Technologies",
+        "sources": "EL,ISN",
+        "country": "CN"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "capturedAt": "2026-06-27T12:00:00Z",
+        "query": {
+         "name": "Huawei Technologies",
+         "sources": [
+          "EL",
+          "ISN"
+         ],
+         "country": "CN"
+        },
+        "screened": true,
+        "match_count": 1,
+        "matches": [
+         {
+          "name": "Huawei Technologies Co., Ltd.",
+          "source": "Entity List (EL) - Bureau of Industry and Security",
+          "source_code": "EL",
+          "programs": [
+           "EAR"
+          ],
+          "citation": "84 FR 22961",
+          "country": "CN"
+         }
+        ],
+        "disclaimer": "A match is a screening signal requiring human verification, not a legal determination or legal advice.",
+        "attribution": {
+         "sources": [
+          "US Consolidated Screening List (trade.gov): OFAC, BIS, State Department lists"
+         ],
+         "license": "Public domain (US Government)"
+        },
+        "billing": {
+         "credits_charged": 1,
+         "credits_remaining": 49
+        }
+       }
+      }
+     },
+     "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+       "input": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string",
+          "const": "http"
+         },
+         "method": {
+          "type": "string",
+          "enum": [
+           "GET"
+          ]
+         },
+         "queryParams": {
+          "type": "object",
+          "properties": {
+           "name": {
+            "type": "string",
+            "description": "Counterparty name to screen against the US Consolidated Screening List. Required."
+           },
+           "sources": {
+            "type": "string",
+            "description": "Optional comma-separated CSL source codes to restrict the screen (for example SDN, EL, ISN). Defaults to all lists."
+           },
+           "country": {
+            "type": "string",
+            "description": "Optional ISO-2 country code to narrow matches by address country."
+           }
+          },
+          "required": [
+           "name"
+          ]
+         }
+        },
+        "required": [
+         "type",
+         "method"
+        ],
+        "additionalProperties": false
+       },
+       "output": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string"
+         },
+         "example": {
+          "type": "object"
+         }
+        },
+        "required": [
+         "type"
+        ]
+       }
+      },
+      "required": [
+       "input"
+      ]
+     }
+    }
+   }
   }
  ],
  "freeEndpoints": [

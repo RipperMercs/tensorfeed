@@ -7431,6 +7431,94 @@ const COUNTERPARTY_TRUST_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 45 (2026-06-27): restricted-party-compliance-screen. A signed screen of a
+// counterparty name against the US Consolidated Screening List (trade.gov: OFAC
+// SDN/SSI/CAPTA, BIS Entity/Denied/Unverified/MEU, State ISN/AECA), returning the
+// matched entries with source lists, programs, and official citations. A match is
+// a screening signal requiring human verification, not a legal determination.
+// Param-required (?name=, optional ?sources= and ?country=). Free taste at
+// /api/preview/compliance/restricted-party. Total pilot count: 93 -> 94.
+const RESTRICTED_PARTY_SCREEN_PILOT: BazaarPilotConfig = {
+  description:
+    'Signed restricted-party compliance screen. Screen a counterparty name against the US Consolidated Screening List (trade.gov OFAC, BIS, State lists) and get the matched entries with official citations. A match is a screening signal requiring human verification, not legal advice.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { name: 'Huawei Technologies', sources: 'EL,ISN', country: 'CN' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-06-27T12:00:00Z',
+            query: { name: 'Huawei Technologies', sources: ['EL', 'ISN'], country: 'CN' },
+            screened: true,
+            match_count: 1,
+            matches: [
+              {
+                name: 'Huawei Technologies Co., Ltd.',
+                source: 'Entity List (EL) - Bureau of Industry and Security',
+                source_code: 'EL',
+                programs: ['EAR'],
+                citation: '84 FR 22961',
+                country: 'CN',
+              },
+            ],
+            disclaimer:
+              'A match is a screening signal requiring human verification, not a legal determination or legal advice.',
+            attribution: {
+              sources: ['US Consolidated Screening List (trade.gov): OFAC, BIS, State Department lists'],
+              license: 'Public domain (US Government)',
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  name: {
+                    type: 'string',
+                    description:
+                      'Counterparty name to screen against the US Consolidated Screening List. Required.',
+                  },
+                  sources: {
+                    type: 'string',
+                    description:
+                      'Optional comma-separated CSL source codes to restrict the screen (for example SDN, EL, ISN). Defaults to all lists.',
+                  },
+                  country: {
+                    type: 'string',
+                    description:
+                      'Optional ISO-2 country code to narrow matches by address country.',
+                  },
+                },
+                required: ['name'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -7623,6 +7711,11 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // ruling on one settlement address for agent commerce. Param-required
   // (?address=, optional ?agent_id=). Free taste at /api/preview/counterparty/trust-verdict.
   '/api/premium/counterparty/trust-verdict': COUNTERPARTY_TRUST_VERDICT_PILOT,
+  // Wave 45 (2026-06-27): restricted-party compliance screen. Signed screen of a
+  // counterparty name against the US Consolidated Screening List (trade.gov OFAC,
+  // BIS, State lists). Param-required (?name=, optional ?sources= and ?country=).
+  // Free taste at /api/preview/compliance/restricted-party.
+  '/api/premium/compliance/restricted-party': RESTRICTED_PARTY_SCREEN_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

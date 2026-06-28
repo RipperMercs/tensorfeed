@@ -49,6 +49,10 @@ export interface Env {
   PAGES_TRACK_SECRET?: string;
   // OFAC sanctions screening (Chainalysis public sanctions API)
   CHAINALYSIS_API_KEY?: string;
+  // Restricted-party screening (trade.gov Consolidated Screening List search API,
+  // free ITA Developer Portal subscription-key header). When unset, the
+  // compliance screen returns a no-charge screening_unavailable verdict.
+  TRADE_GOV_CSL_KEY?: string;
   // Persistent OFAC block audit log (optional, 7-year retention per privacy policy)
   OFAC_AUDIT_LOG?: KVNamespace;
   // R2 bucket for weekly KV backups (Layer 1 of the disaster recovery

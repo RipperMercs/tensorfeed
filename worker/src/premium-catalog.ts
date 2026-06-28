@@ -802,6 +802,20 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'counterparty',
   },
+  {
+    path: '/api/premium/compliance/restricted-party',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'name', required: true },
+      { name: 'sources', required: false },
+      { name: 'country', required: false },
+    ],
+    returns: 'A signed restricted-party compliance screen of a counterparty name against the US Consolidated Screening List (trade.gov: OFAC SDN/SSI/CAPTA, BIS Entity/Denied/Unverified/MEU, State ISN/AECA), returning the matched entries with source lists, programs, and official citations. A match is a screening signal requiring human verification, not a legal determination or legal advice. No-charge when screening is unavailable.',
+    free_sibling: '/api/preview/compliance/restricted-party',
+    signed: true,
+    category: 'compliance',
+  },
 
   // === MCP ===
   {

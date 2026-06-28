@@ -177,6 +177,10 @@ const PILOT_PATHS = [
   // counterparty settlement address: sanctions + on-chain presence + TF
   // footprint/reputation + a Sybil-safe ERC-8004 leg)
   '/api/premium/counterparty/trust-verdict',
+  // Wave 45 (2026-06-27): compliance/restricted-party (signed screen of a
+  // counterparty name against the US Consolidated Screening List: trade.gov
+  // OFAC, BIS, State lists, with matched entries and official citations)
+  '/api/premium/compliance/restricted-party',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

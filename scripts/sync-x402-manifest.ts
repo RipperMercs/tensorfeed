@@ -172,6 +172,10 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   // ruling on one settlement address for agent commerce (param-required
   // ?address=, optional ?agent_id=).
   '/api/premium/counterparty/trust-verdict':         { name: 'Counterparty trust verdict',            category: 'counterparty-trust-verdict', credits: 1, method: 'GET' },
+  // Wave 45 (2026-06-27): restricted-party compliance screen. Signed screen of a
+  // counterparty name against the US Consolidated Screening List (param-required
+  // ?name=, optional ?sources= and ?country=).
+  '/api/premium/compliance/restricted-party':        { name: 'Restricted-party compliance screen',    category: 'compliance-restricted-party', credits: 1, method: 'GET' },
 };
 
 // ── Latin1 hygiene ─────────────────────────────────────────────────
