@@ -27,6 +27,16 @@ export const ORIGINALS: OriginalArticle[] = [
       "On June 26, 2026, CNBC framed the spend pivot in plain text: enterprise buyers are done tokenmaxxing and have started capping AI tools by the line item. Uber capped Claude Code at $1,500 per employee per month after burning the 2026 AI budget in four months. Lindy moved 100 percent of its production traffic from Claude to DeepSeek. Vercel's AI Gateway watched DeepSeek's share of token volume jump from under 1 percent to 17 percent inside May, while DeepSeek's share of spend stayed near 1 percent. Z.ai's GLM 5.2 lands within a point of Opus 4.8 on a key agentic benchmark at roughly one fifth the cost. The shift hits Anthropic at a $47 billion run-rate and OpenAI at roughly $25 billion, both with IPO paperwork in motion, both with revenue forecasts that depend on the doubling curve continuing. Inside the math, the buyer-side discipline cliff, what it does to the run-rate disclosure language inside the S-1 and the 2027 OpenAI prospectus, the open-weight floor underneath, and three signposts in the next ninety days that decide whether the curve break is real. The doubling curve is not dead, but it now has a competing curve underneath it that the IPO models did not assume.",
   },
   {
+    slug: 'inference-money-vs-ai-chip-stocks',
+    title:
+      'The AI Money Split in Two Directions This Week. The Split Is the Story.',
+    author: 'Kira Nolan',
+    date: 'June 27, 2026',
+    readTime: '6 min read',
+    description:
+      "In one week, private capital poured a record round into AI inference while public AI chip stocks in Asia cratered hard enough to trip a circuit breaker. On June 22, Baseten raised $1.5 billion at a $13 billion valuation (20x revenue year over year, more than a billion inference requests a day), and Qualcomm agreed to buy Modular for about $3.9 billion in all stock to own the Mojo and MAX inference toolchain. Inside the same 48 hours, the Kospi fell about 10 percent and tripped a 20-minute circuit breaker, with SK Hynix and Samsung each down more than 12 percent, the Nikkei off 3.6 percent, and SoftBank down 15 percent. The divergence is not a contradiction; it is a rotation. Value in AI is migrating from training bigger models to serving existing ones cheaply, and venture capital is front-running that migration faster than the public chip trade can digest it. Against it sits Japan's $2.3 trillion through-2040 plan with roughly a third earmarked for AI and semiconductors, the sovereign counterweight to a 10 percent down day. What the split means for anyone building on AI: the serving layer is winning, and the cost curve under your invoice is bending in your favor.",
+  },
+  {
     slug: 'white-house-gpt-56-stagger-federal-gate-bilateral',
     title:
       'OpenAI Will Stagger GPT-5.6 By Customer. The Federal Gate on the Frontier Just Went Bilateral.',
