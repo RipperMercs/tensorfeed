@@ -111,6 +111,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // crawlers to a clean 402 instead of a free-trial 400 missing_params. Free
   // taste at /api/preview/compliance/restricted-party.
   '/api/premium/compliance/restricted-party',
+  // Landed-Cost Estimate (2026-06-28). Signed US import landed-cost estimate for
+  // a counterparty-supplied HTS code, origin, and customs value: base column duty
+  // plus the stacked Chapter 99 add-on layers (301/122/232) with litigation flags,
+  // plus CBP MPF/HMF fees, plus the total. Param-required (?hts=&origin=&value_usd=),
+  // so strict-premium gates anonymous crawlers to a clean 402. A planning estimate,
+  // not a customs filing or legal advice. Free taste at /api/preview/customs/landed-cost.
+  '/api/premium/customs/landed-cost',
   // Stack Safety Verdict (2026-05-28). GO/HOLD/BLOCK deploy gate over a
   // package list, fusing the ingested AI-CVE batch + CISA KEV. Param-
   // required (?packages=), so strict-premium gates anonymous crawlers to a

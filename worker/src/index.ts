@@ -8044,6 +8044,105 @@ export default {
       }, PREMIUM_DEPS);
     }
 
+    // Free taste of the Landed-Cost Estimate: the overall status, the
+    // natural-language claim, the column used, the total duty and total landed
+    // cost, and the count of stacked add-on layers for one HTS/origin/value, with
+    // the per-layer breakdown, base-rate detail, and citations stripped. 10
+    // calls/day per IP. The paid /api/premium/customs/landed-cost adds the full
+    // duty breakdown (base rate, each Chapter 99 layer with rate, litigation
+    // status, and citation, plus the CBP fee lines) and a signed receipt.
+    if (path === '/api/preview/customs/landed-cost') {
+      const { normalizeLandedCostInputs, computeLandedCostVerdict, redactLandedCostVerdictForPreview, checkLandedCostPreviewRateLimit } = await import('./premium-landed-cost-verdict');
+      const lcInputs = normalizeLandedCostInputs({
+        hts: url.searchParams.get('hts'),
+        origin: url.searchParams.get('origin'),
+        value_usd: url.searchParams.get('value_usd'),
+        mode: url.searchParams.get('mode'),
+        fta: url.searchParams.get('fta'),
+        quantity: url.searchParams.get('quantity'),
+        unit: url.searchParams.get('unit'),
+      });
+      if (!lcInputs) {
+        return jsonResponse(
+          { ok: false, error: 'missing_params', required: ['hts', 'origin', 'value_usd'], hint: 'hts=<8 to 10 digit HTS code>, origin=<ISO-2 country>, value_usd=<customs value, positive>, optional mode=ocean|air, fta=<SPI code>, quantity=, unit=' },
+          400,
+        );
+      }
+      const lcIp = getClientIP(request);
+      const lcLimit = await checkLandedCostPreviewRateLimit(env, lcIp, 10);
+      if (!lcLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: lcLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/customs/landed-cost',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/customs/landed-cost (full duty breakdown: base column rate plus each Chapter 99 add-on layer with its rate, litigation-status flag, and citation, the CBP fee lines, plus a signed receipt and no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const lcFull = await computeLandedCostVerdict(env, lcInputs);
+      return jsonResponse(
+        {
+          ...redactLandedCostVerdictForPreview(lcFull),
+          rate_limit: { limit: lcLimit.limit, remaining: lcLimit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/customs/landed-cost',
+            adds: [
+              'the full duty breakdown (base column rate plus each Chapter 99 add-on layer with its rate, litigation-status flag, and citation)',
+              'the CBP fee lines (MPF, HMF)',
+              'a signed receipt and no rate limit',
+            ],
+          },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
+    }
+
+    // === PAID PREMIUM ENDPOINT: LANDED-COST ESTIMATE (Tier 1, 1 credit) ===
+    // /api/premium/customs/landed-cost?hts=&origin=&value_usd=[&mode=&fta=&quantity=&unit=]
+    // One signed US landed-cost estimate for agent-to-agent commerce: the supplied
+    // HTS code, country of origin, and customs value are turned into an estimated
+    // import duty (base column rate plus the Chapter 99 add-on layers TF links from
+    // the HTS footnotes) plus CBP fees (MPF, HMF) and the total landed cost.
+    // Requires ?hts=&origin=&value_usd=, so strict-premium: anonymous Bazaar
+    // crawlers see a clean 402, not a free trial. Missing or invalid params are a
+    // no-charge schema validation failure; an HTS-source outage or unknown code is
+    // a no-charge upstream failure (TF will not bill for an estimate it could not
+    // compute). This is a PLANNING ESTIMATE, not a customs filing and NOT legal or
+    // customs advice; HTS classification is the importer's responsibility and TF
+    // does not auto-classify.
+    if (path === '/api/premium/customs/landed-cost') {
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/customs/landed-cost' }, async () => {
+        const { normalizeLandedCostInputs, computeLandedCostVerdict } = await import('./premium-landed-cost-verdict');
+        const lcInputs = normalizeLandedCostInputs({
+          hts: url.searchParams.get('hts'),
+          origin: url.searchParams.get('origin'),
+          value_usd: url.searchParams.get('value_usd'),
+          mode: url.searchParams.get('mode'),
+          fta: url.searchParams.get('fta'),
+          quantity: url.searchParams.get('quantity'),
+          unit: url.searchParams.get('unit'),
+        });
+        if (!lcInputs) {
+          return { kind: 'validation_failure', error: { error: 'missing_params', required: ['hts', 'origin', 'value_usd'], hint: 'hts=<8 to 10 digit HTS code>, origin=<ISO-2 country>, value_usd=<customs value, positive>, optional mode=ocean|air, fta=<SPI code>, quantity=, unit=' } };
+        }
+        const result = await computeLandedCostVerdict(env, lcInputs);
+        if (result.status === 'unavailable') {
+          // No-charge: the USITC HTS source could not be reached or the code was
+          // not found, so TF cannot stand behind an estimate. The agent still
+          // gets the signed result, billed at zero.
+          return { kind: 'no_charge', body: result, reason: 'upstream_failure', dataCapturedAt: result.capturedAt };
+        }
+        return { kind: 'ok', body: result, dataCapturedAt: result.capturedAt };
+      }, PREMIUM_DEPS);
+    }
+
     // === STACK SAFETY VERDICT PREVIEW (free, rate-limited) ===
     // Free taste of the deploy gate: the per-package verdict and overall
     // gate, capped at 3 packages, with the matched-CVE evidence stripped

@@ -29962,6 +29962,245 @@
      }
     }
    }
+  },
+  {
+   "resource": {
+    "url": "https://tensorfeed.ai/api/premium/customs/landed-cost",
+    "description": "Signed US import landed-cost estimate. Give an HTS code, country of origin, and customs value and get the estimated import duty (base rate plus the stacked Chapter 99 add-on layers, each with a litigation-status flag) plus CBP MPF and HMF fees and the total landed cost. A planning estimate from USITC HTS and CBP public data, not a customs filing or legal advice.",
+    "mimeType": "application/json"
+   },
+   "type": "http",
+   "method": "GET",
+   "x402Version": 2,
+   "accepts": [
+    {
+     "scheme": "exact",
+     "network": "eip155:8453",
+     "amount": "20000",
+     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+     "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "name": "USD Coin",
+      "version": "2"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "hts": "0101.30.00.00",
+        "origin": "CN",
+        "value_usd": "10000",
+        "mode": "ocean"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "status": "estimated",
+        "data_as_of": "2026-06-28",
+        "hts": "0101.30.00.00",
+        "origin": "CN",
+        "customs_value_usd": 10000,
+        "column_used": "general",
+        "base_rate": {
+         "column": "general",
+         "rate_text": "6.8%",
+         "parsed_kind": "advalorem",
+         "duty_usd": 680
+        },
+        "additional_duties": [
+         {
+          "section": "301",
+          "name": "Section 301 (China)",
+          "chapter99_code": "9903.88.15",
+          "rate_pct": 7.5,
+          "duty_usd": 750,
+          "status": "active"
+         },
+         {
+          "section": "122",
+          "name": "Section 122 (global surcharge)",
+          "chapter99_code": null,
+          "rate_pct": 10,
+          "duty_usd": 1000,
+          "status": "under_appeal"
+         }
+        ],
+        "fees": {
+         "mpf_usd": 34.64,
+         "hmf_usd": 12.5,
+         "hmf_applies": true,
+         "basis": "customs value"
+        },
+        "total_duty_usd": 2430,
+        "total_landed_cost_usd": 12477.14,
+        "disclaimer": "This is a planning estimate, not a customs filing or binding ruling, and not legal or customs advice.",
+        "billing": {
+         "credits_charged": 1,
+         "credits_remaining": 49
+        }
+       }
+      }
+     }
+    }
+   ],
+   "lastUpdated": "2026-06-28T00:00:00Z",
+   "metadata": {
+    "name": "Landed-cost estimate",
+    "description": "Signed US import landed-cost estimate. Give an HTS code, country of origin, and customs value and get the estimated import duty (base rate plus the stacked Chapter 99 add-on layers, each with a litigation-status flag) plus CBP MPF and HMF fees and the total landed cost. A planning estimate from USITC HTS and CBP public data, not a customs filing or legal advice.",
+    "tier": 1,
+    "credits": 1,
+    "category": "customs-landed-cost"
+   },
+   "extensions": {
+    "bazaar": {
+     "info": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "hts": "0101.30.00.00",
+        "origin": "CN",
+        "value_usd": "10000",
+        "mode": "ocean"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "status": "estimated",
+        "data_as_of": "2026-06-28",
+        "hts": "0101.30.00.00",
+        "origin": "CN",
+        "customs_value_usd": 10000,
+        "column_used": "general",
+        "base_rate": {
+         "column": "general",
+         "rate_text": "6.8%",
+         "parsed_kind": "advalorem",
+         "duty_usd": 680
+        },
+        "additional_duties": [
+         {
+          "section": "301",
+          "name": "Section 301 (China)",
+          "chapter99_code": "9903.88.15",
+          "rate_pct": 7.5,
+          "duty_usd": 750,
+          "status": "active"
+         },
+         {
+          "section": "122",
+          "name": "Section 122 (global surcharge)",
+          "chapter99_code": null,
+          "rate_pct": 10,
+          "duty_usd": 1000,
+          "status": "under_appeal"
+         }
+        ],
+        "fees": {
+         "mpf_usd": 34.64,
+         "hmf_usd": 12.5,
+         "hmf_applies": true,
+         "basis": "customs value"
+        },
+        "total_duty_usd": 2430,
+        "total_landed_cost_usd": 12477.14,
+        "disclaimer": "This is a planning estimate, not a customs filing or binding ruling, and not legal or customs advice.",
+        "billing": {
+         "credits_charged": 1,
+         "credits_remaining": 49
+        }
+       }
+      }
+     },
+     "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+       "input": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string",
+          "const": "http"
+         },
+         "method": {
+          "type": "string",
+          "enum": [
+           "GET"
+          ]
+         },
+         "queryParams": {
+          "type": "object",
+          "properties": {
+           "hts": {
+            "type": "string",
+            "description": "The 8 to 10 digit HTS code of the goods. Required. TF takes the code as input and does not classify."
+           },
+           "origin": {
+            "type": "string",
+            "description": "ISO-2 country of origin. Required. Selects the duty column (Column 2 for non-NTR origins)."
+           },
+           "value_usd": {
+            "type": "string",
+            "description": "Customs value in USD (the duty basis). Required, positive."
+           },
+           "mode": {
+            "type": "string",
+            "description": "Optional transport mode; ocean (or sea) adds the Harbor Maintenance Fee."
+           },
+           "fta": {
+            "type": "string",
+            "description": "Optional claimed free-trade-agreement SPI code; the Special rate is applied if listed, flagged on unverified rules of origin."
+           },
+           "quantity": {
+            "type": "string",
+            "description": "Optional quantity, required only for specific or compound duty rates."
+           },
+           "unit": {
+            "type": "string",
+            "description": "Optional unit matching the rate (for example kg, liter)."
+           }
+          },
+          "required": [
+           "hts",
+           "origin",
+           "value_usd"
+          ]
+         }
+        },
+        "required": [
+         "type",
+         "method"
+        ],
+        "additionalProperties": false
+       },
+       "output": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string"
+         },
+         "example": {
+          "type": "object"
+         }
+        },
+        "required": [
+         "type"
+        ]
+       }
+      },
+      "required": [
+       "input"
+      ]
+     }
+    }
+   }
   }
  ],
  "freeEndpoints": [

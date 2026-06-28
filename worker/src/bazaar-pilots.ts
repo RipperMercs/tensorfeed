@@ -7519,6 +7519,106 @@ const RESTRICTED_PARTY_SCREEN_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 46 (2026-06-28): landed-cost-estimate. A signed US import landed-cost
+// estimate for a counterparty-supplied HTS code, origin, and customs value: base
+// column duty plus the stacked Chapter 99 add-on layers (301/122/232) with
+// litigation-status flags, plus CBP MPF/HMF fees, plus the total. A planning
+// estimate, not a customs filing or legal advice. Param-required
+// (?hts=&origin=&value_usd=, optional ?mode=&fta=&quantity=&unit=). Free taste at
+// /api/preview/customs/landed-cost. Total pilot count: 94 -> 95.
+const LANDED_COST_PILOT: BazaarPilotConfig = {
+  description:
+    'Signed US import landed-cost estimate. Give an HTS code, country of origin, and customs value and get the estimated import duty (base rate plus the stacked Chapter 99 add-on layers, each with a litigation-status flag) plus CBP MPF and HMF fees and the total landed cost. A planning estimate from USITC HTS and CBP public data, not a customs filing or legal advice.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { hts: '0101.30.00.00', origin: 'CN', value_usd: '10000', mode: 'ocean' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            status: 'estimated',
+            data_as_of: '2026-06-28',
+            hts: '0101.30.00.00',
+            origin: 'CN',
+            customs_value_usd: 10000,
+            column_used: 'general',
+            base_rate: { column: 'general', rate_text: '6.8%', parsed_kind: 'advalorem', duty_usd: 680 },
+            additional_duties: [
+              { section: '301', name: 'Section 301 (China)', chapter99_code: '9903.88.15', rate_pct: 7.5, duty_usd: 750, status: 'active' },
+              { section: '122', name: 'Section 122 (global surcharge)', chapter99_code: null, rate_pct: 10, duty_usd: 1000, status: 'under_appeal' },
+            ],
+            fees: { mpf_usd: 34.64, hmf_usd: 12.5, hmf_applies: true, basis: 'customs value' },
+            total_duty_usd: 2430,
+            total_landed_cost_usd: 12477.14,
+            disclaimer:
+              'This is a planning estimate, not a customs filing or binding ruling, and not legal or customs advice.',
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  hts: {
+                    type: 'string',
+                    description:
+                      'The 8 to 10 digit HTS code of the goods. Required. TF takes the code as input and does not classify.',
+                  },
+                  origin: {
+                    type: 'string',
+                    description:
+                      'ISO-2 country of origin. Required. Selects the duty column (Column 2 for non-NTR origins).',
+                  },
+                  value_usd: {
+                    type: 'string',
+                    description: 'Customs value in USD (the duty basis). Required, positive.',
+                  },
+                  mode: {
+                    type: 'string',
+                    description: 'Optional transport mode; ocean (or sea) adds the Harbor Maintenance Fee.',
+                  },
+                  fta: {
+                    type: 'string',
+                    description:
+                      'Optional claimed free-trade-agreement SPI code; the Special rate is applied if listed, flagged on unverified rules of origin.',
+                  },
+                  quantity: {
+                    type: 'string',
+                    description: 'Optional quantity, required only for specific or compound duty rates.',
+                  },
+                  unit: {
+                    type: 'string',
+                    description: 'Optional unit matching the rate (for example kg, liter).',
+                  },
+                },
+                required: ['hts', 'origin', 'value_usd'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -7716,6 +7816,11 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // BIS, State lists). Param-required (?name=, optional ?sources= and ?country=).
   // Free taste at /api/preview/compliance/restricted-party.
   '/api/premium/compliance/restricted-party': RESTRICTED_PARTY_SCREEN_PILOT,
+  // Wave 46 (2026-06-28): landed-cost estimate. Signed US import landed-cost
+  // estimate for an HTS code, origin, and customs value (base duty + stacked
+  // Chapter 99 add-ons with litigation flags + CBP fees). Param-required
+  // (?hts=&origin=&value_usd=). Free taste at /api/preview/customs/landed-cost.
+  '/api/premium/customs/landed-cost': LANDED_COST_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

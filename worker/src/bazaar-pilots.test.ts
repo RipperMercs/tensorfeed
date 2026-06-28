@@ -181,6 +181,10 @@ const PILOT_PATHS = [
   // counterparty name against the US Consolidated Screening List: trade.gov
   // OFAC, BIS, State lists, with matched entries and official citations)
   '/api/premium/compliance/restricted-party',
+  // Wave 46 (2026-06-28): customs/landed-cost (signed US import landed-cost
+  // estimate: base HTS duty + stacked Chapter 99 add-ons with litigation flags
+  // + CBP MPF/HMF fees + the total)
+  '/api/premium/customs/landed-cost',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

@@ -283,8 +283,11 @@ describe('isStrictPremiumPath', () => {
       // + 1 (2026-06-27) compliance/restricted-party (param-required ?name=,
       // optional ?sources= and ?country=; signed restricted-party screen of a
       // counterparty name against the US Consolidated Screening List).
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(99);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(99); // no duplicates
+      // + 1 (2026-06-28) customs/landed-cost (param-required ?hts=&origin=&value_usd=,
+      // optional ?mode=&fta=&quantity=&unit=; signed US landed-cost estimate fusing
+      // base HTS duty + stacked Chapter 99 add-ons with litigation flags + CBP fees).
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(100);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(100); // no duplicates
     });
     it('exposes 7 prefix paths (providers + clean-record pilots + ai-companies + x402-index)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(7);

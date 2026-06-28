@@ -816,6 +816,24 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'compliance',
   },
+  {
+    path: '/api/premium/customs/landed-cost',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'hts', required: true },
+      { name: 'origin', required: true },
+      { name: 'value_usd', required: true },
+      { name: 'mode', required: false },
+      { name: 'fta', required: false },
+      { name: 'quantity', required: false },
+      { name: 'unit', required: false },
+    ],
+    returns: 'A signed US import landed-cost estimate for a counterparty-supplied HTS code, country of origin, and customs value: the base column duty (selected by origin) plus the stacked Chapter 99 add-on layers TF links from the HTS footnotes (Section 301, 122, 232) each carrying a litigation-status flag and citation, plus CBP MPF and HMF fees, plus the total landed cost. A planning estimate computed from USITC HTS and CBP public-domain data, not a customs filing and not legal or customs advice; TF takes the HTS code as input and does not classify. No-charge when the HTS source is unavailable.',
+    free_sibling: '/api/preview/customs/landed-cost',
+    signed: true,
+    category: 'customs',
+  },
 
   // === MCP ===
   {

@@ -176,6 +176,10 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   // counterparty name against the US Consolidated Screening List (param-required
   // ?name=, optional ?sources= and ?country=).
   '/api/premium/compliance/restricted-party':        { name: 'Restricted-party compliance screen',    category: 'compliance-restricted-party', credits: 1, method: 'GET' },
+  // Wave 46 (2026-06-28): landed-cost estimate. Signed US import landed-cost
+  // estimate for an HTS code, origin, and customs value (param-required
+  // ?hts=&origin=&value_usd=, optional ?mode=&fta=&quantity=&unit=).
+  '/api/premium/customs/landed-cost':                { name: 'Landed-cost estimate',                  category: 'customs-landed-cost',     credits: 1, method: 'GET' },
 };
 
 // ── Latin1 hygiene ─────────────────────────────────────────────────
