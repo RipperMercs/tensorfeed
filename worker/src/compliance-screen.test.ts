@@ -74,6 +74,30 @@ describe('screenPartyAgainstCSL', () => {
     expect(r.matches[0].match_type).toBe('exact');
   });
 
+  it('treats corporate-suffix punctuation variants as an exact match', async () => {
+    // The official Entity List form carries periods/commas ("Co., Ltd.") that a
+    // caller rarely types. Punctuation-insensitive normalization keeps these an
+    // exact hit instead of demoting a definitive listing to a fuzzy possible.
+    const r = await screenPartyAgainstCSL(
+      KEYED_ENV,
+      'Huawei Technologies Co Ltd',
+      {},
+      okFetch({ total: 1, results: [{ ...ACME_EL_RESULT, name: 'Huawei Technologies Co., Ltd.', alt_names: [] }] }),
+    );
+    expect(r.matches[0].match_type).toBe('exact');
+  });
+
+  it('preserves non-Latin letters when normalizing (does not strip accents to overmatch)', async () => {
+    const r = await screenPartyAgainstCSL(
+      KEYED_ENV,
+      'Acme Cafe',
+      {},
+      okFetch({ total: 1, results: [{ ...ACME_EL_RESULT, name: 'Acme Café', alt_names: [] }] }),
+    );
+    // "Acme Cafe" must NOT exact-match "Acme Café" (e != é); accents are letters, not punctuation.
+    expect(r.matches[0].match_type).toBe('fuzzy');
+  });
+
   it('treats a near but unequal name as match_type fuzzy', async () => {
     const r = await screenPartyAgainstCSL(
       KEYED_ENV,

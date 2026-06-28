@@ -77,7 +77,17 @@ interface RawCslResponse {
 }
 
 export function normalizeForCompare(s: string): string {
-  return s.trim().toLowerCase().replace(/\s+/g, ' ');
+  // Strip punctuation (periods, commas, ampersands, the "Co., Ltd." corporate
+  // suffix noise) so a caller-typed name still exact-matches the official listed
+  // form, but keep all Unicode LETTERS and digits so accented and non-Latin
+  // names are not flattened into a false exact match (cafe must not equal cafe
+  // with an accent). \p{L} keeps any-script letters; only punctuation becomes a
+  // space.
+  return s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function mapMatch(raw: RawCslResult, queryNorm: string): CslMatch {
