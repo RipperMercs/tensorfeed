@@ -3,6 +3,7 @@ import {
   buildCounterpartyTrustVerdict,
   redactCounterpartyTrustVerdictForPreview,
   computeCounterpartyTrustVerdict,
+  checkCounterpartyTrustVerdictPreviewRateLimit,
   normalizeEvmAddress,
   type CounterpartyLegs,
 } from './premium-counterparty-trust-verdict';
@@ -10,10 +11,12 @@ import {
 vi.mock('./payments', () => ({ screenWalletOFAC: vi.fn() }));
 vi.mock('./agent-reputation-store', () => ({ getReputationCardByWallet: vi.fn() }));
 vi.mock('./onchain-presence', () => ({ readOnchainPresence: vi.fn(), readErc8004Registry: vi.fn() }));
+vi.mock('./kill-switch', () => ({ safePut: vi.fn() }));
 
 import { screenWalletOFAC } from './payments';
 import { getReputationCardByWallet } from './agent-reputation-store';
 import { readOnchainPresence, readErc8004Registry } from './onchain-presence';
+import { safePut } from './kill-switch';
 
 const CAP = '2026-06-27T12:00:00Z';
 const ADDR = '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1';
@@ -292,5 +295,26 @@ describe('normalizeEvmAddress', () => {
     expect(normalizeEvmAddress('not-an-address')).toBeNull();
     expect(normalizeEvmAddress('0x123')).toBeNull();
     expect(normalizeEvmAddress('')).toBeNull();
+  });
+});
+
+describe('checkCounterpartyTrustVerdictPreviewRateLimit', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('allows a request under the cap and records the increment', async () => {
+    const env = { TENSORFEED_CACHE: { get: async () => null } } as unknown as Parameters<typeof checkCounterpartyTrustVerdictPreviewRateLimit>[0];
+    const r = await checkCounterpartyTrustVerdictPreviewRateLimit(env, '1.2.3.4', 10);
+    expect(r.allowed).toBe(true);
+    expect(r.remaining).toBe(9);
+    expect(r.limit).toBe(10);
+    expect(safePut).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks once the cap is reached and does not record another increment', async () => {
+    const env = { TENSORFEED_CACHE: { get: async () => ({ count: 10 }) } } as unknown as Parameters<typeof checkCounterpartyTrustVerdictPreviewRateLimit>[0];
+    const r = await checkCounterpartyTrustVerdictPreviewRateLimit(env, '1.2.3.4', 10);
+    expect(r.allowed).toBe(false);
+    expect(r.remaining).toBe(0);
+    expect(safePut).not.toHaveBeenCalled();
   });
 });

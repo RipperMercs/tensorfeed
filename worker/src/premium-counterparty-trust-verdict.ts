@@ -8,6 +8,7 @@
 // reputation is permissionless and Sybil-exposed, so it is surfaced as labeled
 // context and NEVER feeds the score. Sanctions are a hard gate.
 import type { Env } from './types';
+import { safePut } from './kill-switch';
 import { screenWalletOFAC } from './payments';
 import { getReputationCardByWallet } from './agent-reputation-store';
 import { readOnchainPresence, readErc8004Registry } from './onchain-presence';
@@ -331,4 +332,21 @@ export async function computeCounterpartyTrustVerdict(
   // leg (sanctions, on-chain presence) is fetched fresh per call, not cached.
   const capturedAt = new Date().toISOString();
   return buildCounterpartyTrustVerdict(address, legs, capturedAt);
+}
+
+// Free-preview rate limit. Mirrors checkX402PublisherVerdictPreviewRateLimit:
+// TENSORFEED_CACHE, a JSON { count } value, safePut with a 48h TTL, and the
+// { allowed, remaining, limit } shape so the route code stays uniform.
+export async function checkCounterpartyTrustVerdictPreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:counterparty-trust-verdict-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }
