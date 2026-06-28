@@ -7,6 +7,11 @@
 // rollup is the only thing that drives the signed verdict; ERC-8004 raw
 // reputation is permissionless and Sybil-exposed, so it is surfaced as labeled
 // context and NEVER feeds the score. Sanctions are a hard gate.
+import type { Env } from './types';
+import { screenWalletOFAC } from './payments';
+import { getReputationCardByWallet } from './agent-reputation-store';
+import { readOnchainPresence, readErc8004Registry } from './onchain-presence';
+import { KV_KEY_VERIFIED } from './x402-index/constants';
 
 export type SanctionsStatus = 'clear' | 'sanctioned' | 'unavailable';
 
@@ -236,4 +241,94 @@ export function redactCounterpartyTrustVerdictForPreview(full: CounterpartyTrust
     claim: full.claim,
     captured_at: full.capturedAt,
   };
+}
+
+// === Compute layer (live I/O) ===
+
+interface DirEntryLite {
+  domain: string;
+  activity: 'active' | 'quiet' | null;
+  pay_to_wallets?: string[];
+  first_settled?: string | null;
+  last_settled?: string | null;
+  note?: string | null;
+}
+interface DirectoryBlobLite {
+  captured_at: string | null;
+  publishers?: DirEntryLite[];
+}
+
+export function normalizeEvmAddress(raw: string): string | null {
+  if (typeof raw !== 'string') return null;
+  const a = raw.trim().toLowerCase();
+  return /^0x[0-9a-f]{40}$/.test(a) ? a : null;
+}
+
+// The OFAC screen fails CLOSED for the payment gate (sanctioned:true when the
+// key is missing). For a VERDICT that is wrong, so map any error string to
+// 'unavailable' and only treat a clean (error:null) sanctioned:true as a real hit.
+function mapSanctions(ofac: { sanctioned: boolean; identifications: unknown[] | null; error: string | null }): SanctionsLeg {
+  const status: SanctionsStatus = ofac.error === null ? (ofac.sanctioned ? 'sanctioned' : 'clear') : 'unavailable';
+  return { status, identifications_count: Array.isArray(ofac.identifications) ? ofac.identifications.length : null };
+}
+
+// The x402 directory is keyed by publisher domain with a pay_to_wallets[] list,
+// so a wallet's TF settlement footprint is the first entry that pays to it.
+function mapFootprint(dir: DirectoryBlobLite | null, address: string): TfFootprintLeg | null {
+  const lower = address.toLowerCase();
+  const entry = dir?.publishers?.find((p) => (p.pay_to_wallets ?? []).some((w) => w.toLowerCase() === lower)) ?? null;
+  if (!entry) return null;
+  const note = entry.note ?? null;
+  return {
+    indexed: true,
+    active: entry.activity === 'active',
+    first_settled: entry.first_settled ?? null,
+    last_settled: entry.last_settled ?? null,
+    wallet_shared: !!note && /shared with/i.test(note),
+    disclosure: note,
+  };
+}
+
+function mapReputation(card: { trust_grade: string; banned?: boolean; metrics?: { paid_calls?: number } } | null): TfReputationLeg | null {
+  if (!card) return null;
+  const grade = card.trust_grade;
+  // Only A/B grant the 'reputable' fast path to established; a TF ban revokes it.
+  const reputable = !card.banned && (grade === 'A' || grade === 'B');
+  return { known: true, reputable, trust_grade: grade, paid_calls: card.metrics?.paid_calls ?? null };
+}
+
+async function readDirectory(env: Env): Promise<DirectoryBlobLite | null> {
+  try {
+    return (await env.TENSORFEED_CACHE.get(KV_KEY_VERIFIED, 'json')) as DirectoryBlobLite | null;
+  } catch {
+    return null;
+  }
+}
+
+export async function computeCounterpartyTrustVerdict(
+  env: Env,
+  address: string,
+  opts?: { agentId?: string | null },
+): Promise<CounterpartyTrustVerdictResult> {
+  const agentId = opts?.agentId ?? null;
+  const [ofac, onchain, dir, card, erc8004] = await Promise.all([
+    screenWalletOFAC(address, env),
+    readOnchainPresence(env, address),
+    readDirectory(env),
+    getReputationCardByWallet(env, address),
+    readErc8004Registry(env, address, agentId),
+  ]);
+
+  const legs: CounterpartyLegs = {
+    sanctions: mapSanctions(ofac),
+    onchain,
+    tfFootprint: mapFootprint(dir, address),
+    tfReputation: mapReputation(card),
+    erc8004,
+  };
+
+  // Live reads: the data time is the read moment. Honest because every primary
+  // leg (sanctions, on-chain presence) is fetched fresh per call, not cached.
+  const capturedAt = new Date().toISOString();
+  return buildCounterpartyTrustVerdict(address, legs, capturedAt);
 }

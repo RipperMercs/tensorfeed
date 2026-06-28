@@ -1,9 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   buildCounterpartyTrustVerdict,
   redactCounterpartyTrustVerdictForPreview,
+  computeCounterpartyTrustVerdict,
+  normalizeEvmAddress,
   type CounterpartyLegs,
 } from './premium-counterparty-trust-verdict';
+
+vi.mock('./payments', () => ({ screenWalletOFAC: vi.fn() }));
+vi.mock('./agent-reputation-store', () => ({ getReputationCardByWallet: vi.fn() }));
+vi.mock('./onchain-presence', () => ({ readOnchainPresence: vi.fn(), readErc8004Registry: vi.fn() }));
+
+import { screenWalletOFAC } from './payments';
+import { getReputationCardByWallet } from './agent-reputation-store';
+import { readOnchainPresence, readErc8004Registry } from './onchain-presence';
 
 const CAP = '2026-06-27T12:00:00Z';
 const ADDR = '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1';
@@ -196,5 +206,91 @@ describe('redactCounterpartyTrustVerdictForPreview', () => {
     expect(rec.onchain).toBeUndefined();
     expect(rec.tf).toBeUndefined();
     expect(rec.erc8004).toBeUndefined();
+  });
+});
+
+const ERC_NOT_RESOLVED = { coverage: 'not_resolved' as const, agent_id: null, agent_uri: null, raw_feedback_count: null };
+function envWith(dir: unknown) {
+  return {
+    CHAINALYSIS_API_KEY: 'k',
+    TENSORFEED_CACHE: { get: async (key: string) => (key === 'x402-idx:verified' ? dir : null), put: async () => undefined },
+  } as unknown as Parameters<typeof computeCounterpartyTrustVerdict>[0];
+}
+
+describe('computeCounterpartyTrustVerdict orchestration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(readOnchainPresence).mockResolvedValue(null);
+    vi.mocked(getReputationCardByWallet).mockResolvedValue(null);
+    vi.mocked(readErc8004Registry).mockResolvedValue(ERC_NOT_RESOLVED);
+    vi.mocked(screenWalletOFAC).mockResolvedValue({ sanctioned: false, identifications: [], error: null });
+  });
+
+  it('maps a real sanctions hit (error null, sanctioned true) to avoid', async () => {
+    vi.mocked(screenWalletOFAC).mockResolvedValue({ sanctioned: true, identifications: [{ category: 'sanctions' }], error: null });
+    const r = await computeCounterpartyTrustVerdict(envWith(null), ADDR);
+    expect(r.verdict).toBe('avoid');
+    expect(r.sanctions.status).toBe('sanctioned');
+  });
+
+  it('maps a fail-closed screening error to screening_unavailable, never a false avoid', async () => {
+    // screenWalletOFAC fails CLOSED (sanctioned:true) when unconfigured, but with error set.
+    // For a verdict that must NOT read as a real sanctions hit.
+    vi.mocked(screenWalletOFAC).mockResolvedValue({ sanctioned: true, identifications: null, error: 'screening_not_configured' });
+    const r = await computeCounterpartyTrustVerdict(envWith(null), ADDR);
+    expect(r.verdict).toBe('screening_unavailable');
+    expect(r.sanctions.status).toBe('unavailable');
+  });
+
+  it('clear screen + the wallet in an active publisher entry is established and settling (case-insensitive match)', async () => {
+    const dir = {
+      captured_at: '2026-06-27T09:00:00Z',
+      publishers: [
+        { domain: 'pub.example', status: 'verified-settling', activity: 'active', pay_to_wallets: [ADDR.toUpperCase()], first_settled: '2026-06-01', last_settled: '2026-06-26', note: null, first_seen: '2026-06-01' },
+      ],
+    };
+    const r = await computeCounterpartyTrustVerdict(envWith(dir), ADDR);
+    expect(r.verdict).toBe('established');
+    expect(r.tf.settling).toBe(true);
+    expect(r.tf.first_settled).toBe('2026-06-01');
+  });
+
+  it('a grade-A TF reputation card establishes the counterparty', async () => {
+    vi.mocked(getReputationCardByWallet).mockResolvedValue({ trust_grade: 'A', banned: false, metrics: { paid_calls: 80 } } as never);
+    const r = await computeCounterpartyTrustVerdict(envWith(null), ADDR);
+    expect(r.verdict).toBe('established');
+    expect(r.tf.reputation_known).toBe(true);
+    expect(r.tf.trust_grade).toBe('A');
+  });
+
+  it('a banned grade-A card is not treated as reputable', async () => {
+    vi.mocked(getReputationCardByWallet).mockResolvedValue({ trust_grade: 'A', banned: true, metrics: { paid_calls: 80 } } as never);
+    vi.mocked(readOnchainPresence).mockResolvedValue({ tx_count: 2, native_balance_wei: '0', usdc_balance_6: '0' });
+    const r = await computeCounterpartyTrustVerdict(envWith(null), ADDR);
+    expect(r.verdict).toBe('limited_history');
+  });
+
+  it('passes the ERC-8004 leg through from the registry reader and forwards the agentId', async () => {
+    vi.mocked(readErc8004Registry).mockResolvedValue({ coverage: 'registered', agent_id: '8004:42', agent_uri: 'ipfs://c', raw_feedback_count: 9 });
+    const r = await computeCounterpartyTrustVerdict(envWith(null), ADDR, { agentId: '8004:42' });
+    expect(r.erc8004.coverage).toBe('registered');
+    expect(r.erc8004.agent_id).toBe('8004:42');
+    expect(readErc8004Registry).toHaveBeenCalledWith(expect.anything(), ADDR, '8004:42');
+  });
+
+  it('no signals at all yields unknown', async () => {
+    const r = await computeCounterpartyTrustVerdict(envWith(null), ADDR);
+    expect(r.verdict).toBe('unknown');
+  });
+});
+
+describe('normalizeEvmAddress', () => {
+  it('accepts a 0x + 40-hex address and lowercases it', () => {
+    expect(normalizeEvmAddress('0x549C82E6bfc54bDAe9A2073744cbC2af5d1FC6D1')).toBe('0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1');
+  });
+  it('rejects junk, short, and empty input', () => {
+    expect(normalizeEvmAddress('not-an-address')).toBeNull();
+    expect(normalizeEvmAddress('0x123')).toBeNull();
+    expect(normalizeEvmAddress('')).toBeNull();
   });
 });
