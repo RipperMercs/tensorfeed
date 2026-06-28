@@ -299,7 +299,9 @@ describe('normalizeEvmAddress', () => {
 });
 
 describe('checkCounterpartyTrustVerdictPreviewRateLimit', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('allows a request under the cap and records the increment', async () => {
     const env = { TENSORFEED_CACHE: { get: async () => null } } as unknown as Parameters<typeof checkCounterpartyTrustVerdictPreviewRateLimit>[0];
