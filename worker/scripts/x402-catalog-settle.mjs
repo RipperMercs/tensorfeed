@@ -191,22 +191,31 @@ async function settleOne(endpoint, account, dryRun) {
     },
   });
 
-  // Send the CANONICAL x402 v2 PaymentPayload and nothing else:
-  //   { x402Version, payload: { signature, authorization } }
-  // This matches the typed PaymentPayload the worker's CDP path expects (see the
-  // DUMMY_PAYLOAD fixture in src/cdp-facilitator.test.ts) and what any standard
-  // x402 client sends. scheme + network + resource live only in
-  // paymentRequirements, which the WORKER builds itself; the worker also catalogs
-  // from its own bazaarExtensionsFor() config on settle. Earlier this tool also
-  // stuffed the 402's `resource` + `accepted` + `extensions` into the payload.
-  // The CDP facilitator tolerated that for most pilots but reproducibly rejected
-  // the counterparty trust-verdict ("paymentPayload is invalid: must match one of
-  // [x402V2Pay...]"), the one whose resource.description carries embedded quotes,
-  // because the extra fields make CDP's union validator fail to discriminate the
-  // exact-EVM schema. Sending the canonical shape removes the ambiguity for every
-  // pilot and keeps the header near 600 bytes.
+  // Canonical x402 v2 PaymentPayload per the coinbase/x402 spec
+  // (specs/schemes/exact/scheme_exact_evm): { x402Version, resource, accepted:
+  // { scheme, network, amount, asset, payTo, maxTimeoutSeconds, extra },
+  // payload: { signature, authorization } }. scheme + network are nested inside
+  // `accepted` (the worker builds its own paymentRequirements from this).
+  //
+  // We OMIT the optional `resource.description`. It is metadata the worker never
+  // needs (it catalogs from its own bazaarExtensionsFor() config), and the
+  // counterparty trust-verdict's long, embedded-quote description is the ONLY
+  // field that differs for the one pilot CDP verify reproducibly rejects
+  // ("paymentPayload is invalid: must match one of [x402V2Pay...]") while every
+  // shorter-description pilot settles. `extensions` also stays out: it is not part
+  // of the PaymentPayload schema (it belongs in the 402 challenge only).
   const payload = {
     x402Version: pr.x402Version || 2,
+    resource: { url: pr.resource && pr.resource.url, mimeType: 'application/json' },
+    accepted: {
+      scheme: a.scheme,
+      network: a.network,
+      amount: String(a.amount),
+      asset: a.asset,
+      payTo: a.payTo,
+      maxTimeoutSeconds: Number(a.maxTimeoutSeconds) || 60,
+      extra: a.extra,
+    },
     payload: { signature, authorization: auth },
   };
   const xPayment = Buffer.from(JSON.stringify(payload)).toString('base64');
