@@ -517,7 +517,7 @@ PAYMENT_ENABLED = "true"
 # Second payment rail: Solana mainnet USDC via CDP. Receive-only public key
 # (not a secret). Rail stays dark until SOLANA_PAYMENT_ENABLED is flipped to "true".
 SOLANA_PAYMENT_WALLET = "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ"
-SOLANA_PAYMENT_ENABLED = "false"
+SOLANA_PAYMENT_ENABLED = "true"
 # PaymentClaim DO gate. When "true" and the PAYMENT_CLAIM binding is present,
 # the CDP-routed mint path claims atomically before settling (exactly-once).
 # Ships dark; flip to "true" only after the binding has deployed and a live
