@@ -7876,6 +7876,86 @@ export default {
       }, PREMIUM_DEPS);
     }
 
+    // Free taste of the Counterparty Trust Verdict: the overall verdict and the
+    // natural-language claim for one settlement address only, with every
+    // evidence leg (sanctions detail, on-chain presence, TF footprint, TF
+    // reputation, the ERC-8004 leg) stripped. 10 calls/day per IP. The paid
+    // /api/premium/counterparty/trust-verdict adds all of it plus a signed receipt.
+    if (path === '/api/preview/counterparty/trust-verdict') {
+      const { computeCounterpartyTrustVerdict, redactCounterpartyTrustVerdictForPreview, checkCounterpartyTrustVerdictPreviewRateLimit, normalizeEvmAddress } = await import('./premium-counterparty-trust-verdict');
+      const rawAddr = url.searchParams.get('address');
+      const ctvAddress = rawAddr ? normalizeEvmAddress(rawAddr) : null;
+      if (!ctvAddress) {
+        return jsonResponse(
+          { ok: false, error: 'missing_params', required: ['address'], hint: 'address=<0x EVM settlement address>, optional agent_id=<ERC-8004 agentId>' },
+          400,
+        );
+      }
+      const ctvIp = getClientIP(request);
+      const ctvLimit = await checkCounterpartyTrustVerdictPreviewRateLimit(env, ctvIp, 10);
+      if (!ctvLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: ctvLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/counterparty/trust-verdict',
+            message:
+              'Free preview limited to 10 calls/day per IP. The paid /api/premium/counterparty/trust-verdict (full verdict with sanctions screening, on-chain presence, TF settlement footprint, TF reputation, the ERC-8004 registry leg, and a signed receipt, no rate limit) is the upgrade.',
+          },
+          429,
+        );
+      }
+      const ctvFull = await computeCounterpartyTrustVerdict(env, ctvAddress, { agentId: url.searchParams.get('agent_id') });
+      return jsonResponse(
+        {
+          ...redactCounterpartyTrustVerdictForPreview(ctvFull),
+          rate_limit: { limit: ctvLimit.limit, remaining: ctvLimit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/counterparty/trust-verdict',
+            adds: [
+              'sanctions screening status and on-chain presence evidence',
+              'TF settlement footprint and agent reputation',
+              'the ERC-8004 registry leg (registration, agentId, raw feedback count)',
+              'a signed receipt and no rate limit',
+            ],
+          },
+        },
+        200,
+        0, // do not Cache-API; rate limiting is per IP
+      );
+    }
+
+    // === PAID PREMIUM ENDPOINT: COUNTERPARTY TRUST VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/counterparty/trust-verdict?address=<0x address>[&agent_id=<ERC-8004 id>]
+    // One signed ruling on a counterparty settlement address for agent-to-agent
+    // commerce: a 3-state sanctions screen, live Base on-chain presence, TF's
+    // x402 settlement footprint, TF agent reputation, and a Sybil-safe ERC-8004
+    // registry leg, fused into a deterministic verdict with a signed receipt.
+    // Requires ?address=, so strict-premium: anonymous Bazaar crawlers see a
+    // clean 402, not a free trial. A missing or invalid address is a no-charge
+    // schema validation failure; a sanctions-screen outage is a no-charge
+    // upstream failure (TF will not bill for a verdict it could not screen).
+    if (path === '/api/premium/counterparty/trust-verdict') {
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/counterparty/trust-verdict' }, async () => {
+        const { computeCounterpartyTrustVerdict, normalizeEvmAddress } = await import('./premium-counterparty-trust-verdict');
+        const rawAddr = url.searchParams.get('address');
+        const ctvAddress = rawAddr ? normalizeEvmAddress(rawAddr) : null;
+        if (!ctvAddress) {
+          return { kind: 'validation_failure', error: { error: 'missing_params', required: ['address'], hint: 'address=<0x EVM settlement address>, optional agent_id=<ERC-8004 agentId>' } };
+        }
+        const result = await computeCounterpartyTrustVerdict(env, ctvAddress, { agentId: url.searchParams.get('agent_id') });
+        if (result.verdict === 'screening_unavailable') {
+          // No-charge: sanctions screening was unavailable, so TF cannot stand
+          // behind a trust verdict. The agent still gets the signed result, billed at zero.
+          return { kind: 'no_charge', body: result, reason: 'upstream_failure', dataCapturedAt: result.capturedAt };
+        }
+        return { kind: 'ok', body: result, dataCapturedAt: result.capturedAt };
+      }, PREMIUM_DEPS);
+    }
+
     // === STACK SAFETY VERDICT PREVIEW (free, rate-limited) ===
     // Free taste of the deploy gate: the per-package verdict and overall
     // gate, capped at 3 packages, with the matched-CVE evidence stripped

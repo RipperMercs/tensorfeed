@@ -1,11 +1,12 @@
 {
-  "count": 103,
+  "count": 104,
   "credit_range": {
     "min": 1,
     "max": 10
   },
   "categories": {
     "compute": 1,
+    "counterparty": 1,
     "funding": 4,
     "history": 7,
     "intelligence": 3,
@@ -30,6 +31,25 @@
       "free_sibling": "/api/ai-datacenters",
       "signed": true,
       "category": "compute"
+    },
+    {
+      "path": "/api/premium/counterparty/trust-verdict",
+      "credits": 1,
+      "strict_premium": true,
+      "params": [
+        {
+          "name": "address",
+          "required": true
+        },
+        {
+          "name": "agent_id",
+          "required": false
+        }
+      ],
+      "returns": "Signed counterparty trust verdict on a settlement address for agent commerce: a 3-state sanctions screen, live Base on-chain presence, TF x402 settlement footprint, TF agent reputation, and a Sybil-safe ERC-8004 registry leg, fused into one deterministic verdict.",
+      "free_sibling": "/api/preview/counterparty/trust-verdict",
+      "signed": true,
+      "category": "counterparty"
     },
     {
       "path": "/api/premium/funding/exposure",

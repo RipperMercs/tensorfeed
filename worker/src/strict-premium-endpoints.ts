@@ -95,6 +95,14 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // clean 402 instead of a free-trial 400 missing_params. Free taste at
   // /api/preview/x402-publisher-verdict. Exact path (domain is a query param).
   '/api/premium/x402-publisher-verdict',
+  // Counterparty Trust Verdict (2026-06-27). Signed trust ruling on a
+  // counterparty settlement ADDRESS for agent-to-agent commerce: a 3-state
+  // sanctions screen, live Base on-chain presence, TF's x402 settlement
+  // footprint, TF agent reputation, and a Sybil-safe ERC-8004 registry leg.
+  // Param-required (?address=), so strict-premium gates anonymous crawlers to a
+  // clean 402 instead of a free-trial 400 missing_params. Free taste at
+  // /api/preview/counterparty/trust-verdict.
+  '/api/premium/counterparty/trust-verdict',
   // Stack Safety Verdict (2026-05-28). GO/HOLD/BLOCK deploy gate over a
   // package list, fusing the ingested AI-CVE batch + CISA KEV. Param-
   // required (?packages=), so strict-premium gates anonymous crawlers to a

@@ -29544,6 +29544,223 @@
      }
     }
    }
+  },
+  {
+   "resource": {
+    "url": "https://tensorfeed.ai/api/premium/counterparty/trust-verdict",
+    "description": "Counterparty Trust Verdict. Pass one settlement address (and optionally its ERC-8004 agentId) and get a single signed ruling on whether it is safe to transact with for agent-to-agent commerce. It fuses a 3-state sanctions screen (clear, sanctioned, or unavailable), live Base on-chain presence (transaction count, native and USDC balances, and a funded flag), the address's TF x402 settlement footprint, TF agent reputation, and a Sybil-safe ERC-8004 registry leg whose raw on-chain feedback count is surfaced but never feeds the score. Returns one verdict (avoid, established, active, limited_history, unknown, or screening_unavailable), the per-leg evidence, and an AFTA-signed receipt. Sanctions are a hard gate. The \"can I trust this wallet to pay or be paid\" call.",
+    "mimeType": "application/json"
+   },
+   "type": "http",
+   "method": "GET",
+   "x402Version": 2,
+   "accepts": [
+    {
+     "scheme": "exact",
+     "network": "eip155:8453",
+     "amount": "20000",
+     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+     "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "name": "USD Coin",
+      "version": "2"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "address": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+        "agent_id": "1024"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "capturedAt": "2026-06-27T12:00:00Z",
+        "address": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+        "verdict": "established",
+        "sanctions": {
+         "status": "clear"
+        },
+        "onchain": {
+         "tx_count": 184,
+         "native_balance_wei": "21500000000000000",
+         "usdc_balance_6": "4120000",
+         "funded": true
+        },
+        "tf": {
+         "settling": true,
+         "first_settled": "2026-05-29",
+         "last_settled": "2026-06-26",
+         "reputation_known": true,
+         "trust_grade": "A",
+         "wallet_shared": false,
+         "disclosure": null
+        },
+        "erc8004": {
+         "coverage": "registered",
+         "agent_id": "1024",
+         "agent_uri": "https://agent.example.eth/.well-known/agent.json",
+         "raw_feedback_count": 7
+        },
+        "claim": "This counterparty (0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1) shows an established, non-sanctioned track record across the signals TF can verify.",
+        "notes": [
+         "On-chain balances and transaction counts are read live from Base mainnet at the captured time and move continuously.",
+         "ERC-8004 reputation shown is the raw, unfiltered on-chain feedback count. It is permissionless and Sybil-exposed, with no trusted-client filter applied, so treat it as a discovery signal, not a trust score."
+        ],
+        "attribution": {
+         "sources": [
+          "Base mainnet on-chain reads (transaction count, balances, ERC-8004 registries)",
+          "OFAC sanctions screening (derived status only)",
+          "TF x402 settlement index",
+          "TF agent reputation"
+         ],
+         "license": "CC BY 4.0"
+        },
+        "billing": {
+         "credits_charged": 1,
+         "credits_remaining": 49
+        }
+       }
+      }
+     }
+    }
+   ],
+   "lastUpdated": "2026-06-28T00:00:00Z",
+   "metadata": {
+    "name": "Counterparty trust verdict",
+    "description": "Counterparty Trust Verdict. Pass one settlement address (and optionally its ERC-8004 agentId) and get a single signed ruling on whether it is safe to transact with for agent-to-agent commerce. It fuses a 3-state sanctions screen (clear, sanctioned, or unavailable), live Base on-chain presence (transaction count, native and USDC balances, and a funded flag), the address's TF x402 settlement footprint, TF agent reputation, and a Sybil-safe ERC-8004 registry leg whose raw on-chain feedback count is surfaced but never feeds the score. Returns one verdict (avoid, established, active, limited_history, unknown, or screening_unavailable), the per-leg evidence, and an AFTA-signed receipt. Sanctions are a hard gate. The \"can I trust this wallet to pay or be paid\" call.",
+    "tier": 1,
+    "credits": 1,
+    "category": "counterparty-trust-verdict"
+   },
+   "extensions": {
+    "bazaar": {
+     "info": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "address": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+        "agent_id": "1024"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "capturedAt": "2026-06-27T12:00:00Z",
+        "address": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+        "verdict": "established",
+        "sanctions": {
+         "status": "clear"
+        },
+        "onchain": {
+         "tx_count": 184,
+         "native_balance_wei": "21500000000000000",
+         "usdc_balance_6": "4120000",
+         "funded": true
+        },
+        "tf": {
+         "settling": true,
+         "first_settled": "2026-05-29",
+         "last_settled": "2026-06-26",
+         "reputation_known": true,
+         "trust_grade": "A",
+         "wallet_shared": false,
+         "disclosure": null
+        },
+        "erc8004": {
+         "coverage": "registered",
+         "agent_id": "1024",
+         "agent_uri": "https://agent.example.eth/.well-known/agent.json",
+         "raw_feedback_count": 7
+        },
+        "claim": "This counterparty (0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1) shows an established, non-sanctioned track record across the signals TF can verify.",
+        "notes": [
+         "On-chain balances and transaction counts are read live from Base mainnet at the captured time and move continuously.",
+         "ERC-8004 reputation shown is the raw, unfiltered on-chain feedback count. It is permissionless and Sybil-exposed, with no trusted-client filter applied, so treat it as a discovery signal, not a trust score."
+        ],
+        "attribution": {
+         "sources": [
+          "Base mainnet on-chain reads (transaction count, balances, ERC-8004 registries)",
+          "OFAC sanctions screening (derived status only)",
+          "TF x402 settlement index",
+          "TF agent reputation"
+         ],
+         "license": "CC BY 4.0"
+        },
+        "billing": {
+         "credits_charged": 1,
+         "credits_remaining": 49
+        }
+       }
+      }
+     },
+     "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+       "input": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string",
+          "const": "http"
+         },
+         "method": {
+          "type": "string",
+          "enum": [
+           "GET"
+          ]
+         },
+         "queryParams": {
+          "type": "object",
+          "properties": {
+           "address": {
+            "type": "string",
+            "description": "Counterparty settlement address to rule on: a 0x-prefixed 40-hex EVM address (for example 0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1). Lowercased server-side. Required."
+           },
+           "agent_id": {
+            "type": "string",
+            "description": "Optional ERC-8004 agentId. When supplied, the registry leg resolves the agent record and surfaces its raw on-chain feedback count (a labeled discovery signal that never feeds the score)."
+           }
+          },
+          "required": [
+           "address"
+          ]
+         }
+        },
+        "required": [
+         "type",
+         "method"
+        ],
+        "additionalProperties": false
+       },
+       "output": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string"
+         },
+         "example": {
+          "type": "object"
+         }
+        },
+        "required": [
+         "type"
+        ]
+       }
+      },
+      "required": [
+       "input"
+      ]
+     }
+    }
+   }
   }
  ],
  "freeEndpoints": [
@@ -29615,5 +29832,5 @@
    "manifest": "https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
   }
  ],
- "lastUpdated": "2026-06-27T00:00:00Z"
+ "lastUpdated": "2026-06-28T00:00:00Z"
 }

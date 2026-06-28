@@ -168,6 +168,10 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   '/api/premium/procurement/ai-contracts/demand':    { name: 'Federal AI procurement demand',         category: 'ai-procurement-demand',   credits: 1, method: 'GET' },
   '/api/premium/procurement/ai-opportunities/deadlines': { name: 'Federal AI opportunity deadlines',  category: 'ai-procurement-deadlines', credits: 1, method: 'GET' },
   '/api/premium/ai-datacenters/buildout':            { name: 'AI datacenter buildout aggregate',      category: 'ai-datacenter-buildout',  credits: 1, method: 'GET' },
+  // Wave 44 (2026-06-27): counterparty-trust-verdict. Signed safe-to-transact
+  // ruling on one settlement address for agent commerce (param-required
+  // ?address=, optional ?agent_id=).
+  '/api/premium/counterparty/trust-verdict':         { name: 'Counterparty trust verdict',            category: 'counterparty-trust-verdict', credits: 1, method: 'GET' },
 };
 
 // ── Latin1 hygiene ─────────────────────────────────────────────────

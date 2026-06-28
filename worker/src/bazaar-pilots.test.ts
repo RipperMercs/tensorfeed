@@ -173,6 +173,10 @@ const PILOT_PATHS = [
   // Wave 43 (2026-06-27): settlement-rail-verdict (recommended x402 settlement
   // rail for a payment size across Base, Solana, Polygon, Arbitrum, Avalanche)
   '/api/premium/settlement/rail-verdict',
+  // Wave 44 (2026-06-27): counterparty/trust-verdict (signed trust ruling on a
+  // counterparty settlement address: sanctions + on-chain presence + TF
+  // footprint/reputation + a Sybil-safe ERC-8004 leg)
+  '/api/premium/counterparty/trust-verdict',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

@@ -7333,6 +7333,104 @@ const SETTLEMENT_RAIL_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 44 (2026-06-27): counterparty-trust-verdict. One signed ruling on whether
+// a settlement address is safe to transact with for agent-to-agent commerce,
+// fusing a 3-state sanctions screen, live Base on-chain presence, the address's
+// TF x402 settlement footprint, TF agent reputation, and a Sybil-safe ERC-8004
+// registry leg (raw on-chain feedback count surfaced, never scored). Param-required
+// (?address=, optional ?agent_id=). Free taste at /api/preview/counterparty/trust-verdict.
+// Total pilot count: 92 -> 93.
+const COUNTERPARTY_TRUST_VERDICT_PILOT: BazaarPilotConfig = {
+  description:
+    'Counterparty Trust Verdict. Pass one settlement address (and optionally its ERC-8004 agentId) and get a single signed ruling on whether it is safe to transact with for agent-to-agent commerce. It fuses a 3-state sanctions screen (clear, sanctioned, or unavailable), live Base on-chain presence (transaction count, native and USDC balances, and a funded flag), the address\'s TF x402 settlement footprint, TF agent reputation, and a Sybil-safe ERC-8004 registry leg whose raw on-chain feedback count is surfaced but never feeds the score. Returns one verdict (avoid, established, active, limited_history, unknown, or screening_unavailable), the per-leg evidence, and an AFTA-signed receipt. Sanctions are a hard gate. The "can I trust this wallet to pay or be paid" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { address: '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1', agent_id: '1024' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-06-27T12:00:00Z',
+            address: '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1',
+            verdict: 'established',
+            sanctions: { status: 'clear' },
+            onchain: { tx_count: 184, native_balance_wei: '21500000000000000', usdc_balance_6: '4120000', funded: true },
+            tf: {
+              settling: true,
+              first_settled: '2026-05-29',
+              last_settled: '2026-06-26',
+              reputation_known: true,
+              trust_grade: 'A',
+              wallet_shared: false,
+              disclosure: null,
+            },
+            erc8004: {
+              coverage: 'registered',
+              agent_id: '1024',
+              agent_uri: 'https://agent.example.eth/.well-known/agent.json',
+              raw_feedback_count: 7,
+            },
+            claim:
+              'This counterparty (0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1) shows an established, non-sanctioned track record across the signals TF can verify.',
+            notes: [
+              'On-chain balances and transaction counts are read live from Base mainnet at the captured time and move continuously.',
+              'ERC-8004 reputation shown is the raw, unfiltered on-chain feedback count. It is permissionless and Sybil-exposed, with no trusted-client filter applied, so treat it as a discovery signal, not a trust score.',
+            ],
+            attribution: {
+              sources: [
+                'Base mainnet on-chain reads (transaction count, balances, ERC-8004 registries)',
+                'OFAC sanctions screening (derived status only)',
+                'TF x402 settlement index',
+                'TF agent reputation',
+              ],
+              license: 'CC BY 4.0',
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  address: {
+                    type: 'string',
+                    description:
+                      'Counterparty settlement address to rule on: a 0x-prefixed 40-hex EVM address (for example 0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1). Lowercased server-side. Required.',
+                  },
+                  agent_id: {
+                    type: 'string',
+                    description:
+                      'Optional ERC-8004 agentId. When supplied, the registry leg resolves the agent record and surfaces its raw on-chain feedback count (a labeled discovery signal that never feeds the score).',
+                  },
+                },
+                required: ['address'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -7521,6 +7619,10 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // rail for a payment size across Base, Solana, Polygon, Arbitrum, Avalanche.
   // Free sibling at /api/settlement-rails.
   '/api/premium/settlement/rail-verdict': SETTLEMENT_RAIL_VERDICT_PILOT,
+  // Wave 44 (2026-06-27): counterparty-trust-verdict. Signed safe-to-transact
+  // ruling on one settlement address for agent commerce. Param-required
+  // (?address=, optional ?agent_id=). Free taste at /api/preview/counterparty/trust-verdict.
+  '/api/premium/counterparty/trust-verdict': COUNTERPARTY_TRUST_VERDICT_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

@@ -789,6 +789,19 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'x402',
   },
+  {
+    path: '/api/premium/counterparty/trust-verdict',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'address', required: true },
+      { name: 'agent_id', required: false },
+    ],
+    returns: 'Signed counterparty trust verdict on a settlement address for agent commerce: a 3-state sanctions screen, live Base on-chain presence, TF x402 settlement footprint, TF agent reputation, and a Sybil-safe ERC-8004 registry leg, fused into one deterministic verdict.',
+    free_sibling: '/api/preview/counterparty/trust-verdict',
+    signed: true,
+    category: 'counterparty',
+  },
 
   // === MCP ===
   {
