@@ -191,35 +191,25 @@ async function settleOne(endpoint, account, dryRun) {
     },
   });
 
-  // Mirror the proven smoke-test PaymentPayload shape. We deliberately do NOT
-  // echo the live 402's `extensions` (the full bazaar discovery blob) back into
-  // the X-PAYMENT: the worker catalogs from its OWN bazaarExtensionsFor() config
-  // on settle (payments.ts), never from the client echo, and parseXPaymentHeader
-  // only needs x402Version + payload{signature, authorization}. Echoing the
-  // extensions pushed the largest pilots past ~8KB, where the CDP facilitator
-  // verify rejects the paymentPayload (counterparty/trust-verdict measured 8832
-  // bytes and fast-failed CDP verify in 184ms while every sub-8KB pilot settled).
-  // Dropping it keeps the header near 2KB for every pilot with no loss of
-  // cataloging fidelity. `resource` + `accepted` stay (small, and they mirror the
-  // smoke-test shape).
+  // Send the CANONICAL x402 v2 PaymentPayload and nothing else:
+  //   { x402Version, payload: { signature, authorization } }
+  // This matches the typed PaymentPayload the worker's CDP path expects (see the
+  // DUMMY_PAYLOAD fixture in src/cdp-facilitator.test.ts) and what any standard
+  // x402 client sends. scheme + network + resource live only in
+  // paymentRequirements, which the WORKER builds itself; the worker also catalogs
+  // from its own bazaarExtensionsFor() config on settle. Earlier this tool also
+  // stuffed the 402's `resource` + `accepted` + `extensions` into the payload.
+  // The CDP facilitator tolerated that for most pilots but reproducibly rejected
+  // the counterparty trust-verdict ("paymentPayload is invalid: must match one of
+  // [x402V2Pay...]"), the one whose resource.description carries embedded quotes,
+  // because the extra fields make CDP's union validator fail to discriminate the
+  // exact-EVM schema. Sending the canonical shape removes the ambiguity for every
+  // pilot and keeps the header near 600 bytes.
   const payload = {
     x402Version: pr.x402Version || 2,
-    resource: pr.resource,
-    accepted: {
-      scheme: a.scheme,
-      network: a.network,
-      amount: String(a.amount),
-      asset: a.asset,
-      payTo: a.payTo,
-      maxTimeoutSeconds: Number(a.maxTimeoutSeconds) || 60,
-      extra: a.extra,
-    },
     payload: { signature, authorization: auth },
   };
   const xPayment = Buffer.from(JSON.stringify(payload)).toString('base64');
-  if (xPayment.length > 8000) {
-    console.log(`  WARNING: X-PAYMENT is ${xPayment.length} bytes, near the ~8KB facilitator limit; settle may be rejected.`);
-  }
 
   const t0 = Date.now();
   const res = await fetch(endpoint, {
