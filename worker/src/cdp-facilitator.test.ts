@@ -19,6 +19,7 @@ import {
   cdpGetSupported,
   cdpListDiscoveryResources,
   decodeBazaarStatus,
+  sanitizeCdpDescription,
   CDP_FACILITATOR_CONSTANTS,
 } from './cdp-facilitator';
 import type { Env } from './types';
@@ -693,5 +694,81 @@ describe('cdpListDiscoveryResources', () => {
     const mock = installFetchMock();
     mock.setResponse({}, { status: 500 });
     await expect(cdpListDiscoveryResources(mockEnv())).rejects.toThrow(/HTTP 500/);
+  });
+});
+
+describe('CDP resource.description sanitization (PaymentPayloadV2Schema safety)', () => {
+  // CDP's verify and settle reject some resource.description values: the
+  // counterparty trust-verdict (long, with embedded double quotes) reproducibly
+  // 402'd "'paymentPayload' is invalid: must match one of [x402V2Pay...]" while
+  // every short, plain description settled. The worker must not forward a
+  // client-supplied or pilot description that trips this, on either CDP call.
+  const REQ_WITH_RESOURCE: PaymentRequirements & {
+    resource: string;
+    extensions: Record<string, unknown>;
+  } = {
+    ...DUMMY_REQUIREMENTS,
+    resource: 'https://tensorfeed.ai/api/premium/counterparty/trust-verdict',
+    extensions: { bazaar: { info: { input: { type: 'http', method: 'GET' } } } },
+  };
+  const QUOTED = 'The "can I trust this wallet to pay or be paid" call.';
+  const payloadWithResource = (description: unknown, url = 'https://tensorfeed.ai/x') =>
+    ({ ...DUMMY_PAYLOAD, resource: { url, description, mimeType: 'application/json' } } as unknown as PaymentPayload);
+  const bodyOf = (init: RequestInit | undefined) =>
+    JSON.parse((init?.body as string) ?? '{}') as {
+      paymentPayload: { resource?: { url?: string; description?: string; mimeType?: string } | string };
+    };
+
+  it('sanitizeCdpDescription replaces double quotes, caps length, and passes through benign text', () => {
+    expect(sanitizeCdpDescription('a "quoted" b')).toBe("a 'quoted' b");
+    expect(sanitizeCdpDescription('x'.repeat(400))).toHaveLength(256);
+    expect(sanitizeCdpDescription('Agent morning brief.')).toBe('Agent morning brief.');
+    expect(sanitizeCdpDescription(undefined)).toBeUndefined();
+    expect(sanitizeCdpDescription('')).toBeUndefined();
+  });
+
+  it('cdpVerify strips double quotes from a client resource.description before forwarding', async () => {
+    const { captures } = installFetchMock({ isValid: true });
+    await cdpVerify(mockEnv(), payloadWithResource(QUOTED), DUMMY_REQUIREMENTS);
+    const r = bodyOf(captures[0].init).paymentPayload.resource as { url: string; description: string };
+    expect(r.description).not.toContain('"');
+    expect(r.url).toBe('https://tensorfeed.ai/x');
+  });
+
+  it('cdpVerify caps a long client resource.description', async () => {
+    const { captures } = installFetchMock({ isValid: true });
+    await cdpVerify(mockEnv(), payloadWithResource('y'.repeat(500)), DUMMY_REQUIREMENTS);
+    const r = bodyOf(captures[0].init).paymentPayload.resource as { description: string };
+    expect(r.description.length).toBeLessThanOrEqual(256);
+  });
+
+  it('cdpVerify leaves a payload that has no resource untouched', async () => {
+    const { captures } = installFetchMock({ isValid: true });
+    await cdpVerify(mockEnv(), DUMMY_PAYLOAD, DUMMY_REQUIREMENTS);
+    expect(bodyOf(captures[0].init).paymentPayload.resource).toBeUndefined();
+  });
+
+  it('cdpVerify converts a bare string resource into an object (CDP rejects string resource)', async () => {
+    const { captures } = installFetchMock({ isValid: true });
+    const strPayload = { ...DUMMY_PAYLOAD, resource: 'https://tensorfeed.ai/x' } as unknown as PaymentPayload;
+    await cdpVerify(mockEnv(), strPayload, DUMMY_REQUIREMENTS);
+    const r = bodyOf(captures[0].init).paymentPayload.resource as { url: string };
+    expect(typeof r).toBe('object');
+    expect(r.url).toBe('https://tensorfeed.ai/x');
+  });
+
+  it('cdpSettle sanitizes a buyer-supplied resource.description', async () => {
+    const { captures } = installFetchMock({ success: true, transaction: '0xdef' });
+    await cdpSettle(mockEnv(), payloadWithResource(QUOTED), REQ_WITH_RESOURCE, 'worker desc');
+    const r = bodyOf(captures[0].init).paymentPayload.resource as { description: string };
+    expect(r.description).not.toContain('"');
+  });
+
+  it('cdpSettle sanitizes the worker resourceDescription param when it carries quotes', async () => {
+    const { captures } = installFetchMock({ success: true, transaction: '0xdef' });
+    await cdpSettle(mockEnv(), DUMMY_PAYLOAD, REQ_WITH_RESOURCE, 'has "quotes" here');
+    const r = bodyOf(captures[0].init).paymentPayload.resource as { description: string };
+    expect(r.description).not.toContain('"');
+    expect(r.description).toContain("'quotes'");
   });
 });

@@ -326,6 +326,52 @@ async function readBody(resp: Response): Promise<{ text: string; json: unknown }
 
 // ---------- verify ----------
 
+// CDP's PaymentPayloadV2Schema validates resource.description; some values trip
+// "'paymentPayload' is invalid: must match one of [x402V2Pay...]" and the call is
+// rejected. The counterparty trust-verdict (a long description with embedded
+// double quotes) was rejected on verify while every short plain description
+// settled. The CDP wire never needs the client's or pilot's description verbatim,
+// so normalize it: replace double quotes and cap to the proven-safe length band.
+const CDP_DESCRIPTION_MAX = 256;
+
+export function sanitizeCdpDescription(desc: unknown): string | undefined {
+  if (typeof desc !== 'string' || desc.length === 0) return undefined;
+  const dequoted = desc.replace(/"/g, "'");
+  return dequoted.length > CDP_DESCRIPTION_MAX ? dequoted.slice(0, CDP_DESCRIPTION_MAX) : dequoted;
+}
+
+// Normalize a payload's `resource` into a CDP-safe object. CDP requires resource
+// to be { url, description?, mimeType } (a bare string is rejected per the
+// PaymentPayloadV2Schema). Sanitizes the description; drops a resource that has
+// no usable url.
+function cdpSafeResource(
+  resource: unknown,
+): { url: string; description?: string; mimeType: string } | undefined {
+  if (!resource) return undefined;
+  if (typeof resource === 'string') {
+    return { url: resource, mimeType: 'application/json' };
+  }
+  if (typeof resource === 'object') {
+    const r = resource as { url?: unknown; description?: unknown; mimeType?: unknown };
+    if (typeof r.url !== 'string' || r.url.length === 0) return undefined;
+    const description = sanitizeCdpDescription(r.description);
+    return {
+      url: r.url,
+      ...(description ? { description } : {}),
+      mimeType: typeof r.mimeType === 'string' ? r.mimeType : 'application/json',
+    };
+  }
+  return undefined;
+}
+
+// Copy of the payload with a CDP-safe `resource`. A payload carrying no resource
+// is returned untouched (resource is optional in the schema).
+function cdpSafePayload(payload: PaymentPayload): PaymentPayload {
+  const p = payload as PaymentPayload & { resource?: unknown };
+  if (p.resource === undefined) return payload;
+  return { ...p, resource: cdpSafeResource(p.resource) } as PaymentPayload;
+}
+
 /**
  * Calls CDP /verify. Validates the signed authorization without broadcast.
  * Returns a TF-shaped VerifyResult for compatibility with the existing
@@ -348,7 +394,7 @@ export async function cdpVerify(
       signal: AbortSignal.timeout(CDP_TIMEOUT_MS),
       body: JSON.stringify({
         x402Version: payload.x402Version,
-        paymentPayload: payload,
+        paymentPayload: cdpSafePayload(payload),
         paymentRequirements: requirements,
       }),
     });
@@ -455,17 +501,21 @@ export async function cdpSettle(
   // runtime contract some catalog validators check. In practice every TF
   // call path builds requirements with a defined resource URL, so the
   // undefined branch is defensive.
+  // Sanitize both description sources before they reach the CDP wire (see
+  // sanitizeCdpDescription): the pilot-supplied resourceDescription used to enrich
+  // the resource, and any description on a buyer-supplied resource.
+  const safeWorkerDescription = sanitizeCdpDescription(resourceDescription);
   const enrichedResource: { url: string; description?: string; mimeType?: string } | undefined =
     requirements.resource
       ? {
           url: requirements.resource,
-          ...(resourceDescription ? { description: resourceDescription } : {}),
+          ...(safeWorkerDescription ? { description: safeWorkerDescription } : {}),
           mimeType: 'application/json',
         }
       : undefined;
   const enrichedPayload: EnrichablePayload = {
     ...buyerPayload,
-    resource: buyerPayload.resource ?? enrichedResource,
+    resource: cdpSafeResource(buyerPayload.resource) ?? enrichedResource,
     ...(buyerPayload.extensions
       ? {}
       : reqExtensions && Object.keys(reqExtensions).length > 0
