@@ -65,11 +65,12 @@ const TYPES = {
 };
 
 function parseArgs(argv) {
-  const args = { endpoints: [], dryRun: false };
+  const args = { endpoints: [], dryRun: false, echoFullResource: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--endpoint') args.endpoints.push(argv[++i]);
     else if (a === '--dry-run') args.dryRun = true;
+    else if (a === '--echo-full-resource') args.echoFullResource = true;
     else if (a === '--help' || a === '-h') args.help = true;
   }
   return args;
@@ -79,7 +80,11 @@ function usage() {
   console.log(
     'Usage:\n' +
       '  $env:AGENT_KEY = "0x..."   (omit for --dry-run)\n' +
-      '  node scripts/x402-catalog-settle.mjs --endpoint <url> [--endpoint <url> ...] [--dry-run]',
+      '  node scripts/x402-catalog-settle.mjs --endpoint <url> [--endpoint <url> ...] [--dry-run] [--echo-full-resource]\n' +
+      '\n' +
+      '  --echo-full-resource  Echo the 402 resource.description verbatim (default omits it).\n' +
+      '                        Simulates a spec-compliant client that round-trips the server\n' +
+      '                        resource, exercising the worker-side CDP description sanitizer.',
   );
 }
 
@@ -146,12 +151,19 @@ function describe(endpoint, pr) {
   return { a, hasBazaar: !!bazaar };
 }
 
-async function settleOne(endpoint, account, dryRun) {
+async function settleOne(endpoint, account, dryRun, echoFullResource) {
   const pr = await read402(endpoint);
   const { a, hasBazaar } = describe(endpoint, pr);
   if (!hasBazaar) {
     console.log('  SKIP: no bazaar extension in the 402, settling would not catalog.');
     return { endpoint, skipped: true };
+  }
+  if (echoFullResource) {
+    const len = (pr.resource && pr.resource.description ? pr.resource.description.length : 0);
+    console.log(
+      `  ECHO-FULL-RESOURCE: sending resource.description verbatim (${len} chars). ` +
+        'A safe worker sanitizes it before CDP; an unpatched worker would 402.',
+    );
   }
   if (dryRun) {
     console.log('  DRY RUN: not signing, not sending. The block above is what would be echoed.');
@@ -197,16 +209,29 @@ async function settleOne(endpoint, account, dryRun) {
   // payload: { signature, authorization } }. scheme + network are nested inside
   // `accepted` (the worker builds its own paymentRequirements from this).
   //
-  // We OMIT the optional `resource.description`. It is metadata the worker never
-  // needs (it catalogs from its own bazaarExtensionsFor() config), and the
-  // counterparty trust-verdict's long, embedded-quote description is the ONLY
-  // field that differs for the one pilot CDP verify reproducibly rejects
+  // We OMIT the optional `resource.description` by default. It is metadata the
+  // worker never needs (it catalogs from its own bazaarExtensionsFor() config),
+  // and the counterparty trust-verdict's long, embedded-quote description is the
+  // ONLY field that differs for the one pilot CDP verify reproducibly rejects
   // ("paymentPayload is invalid: must match one of [x402V2Pay...]") while every
   // shorter-description pilot settles. `extensions` also stays out: it is not part
   // of the PaymentPayload schema (it belongs in the 402 challenge only).
+  //
+  // --echo-full-resource flips this to echo the description verbatim, the way a
+  // spec-compliant agent that round-trips the server resource would. That is the
+  // payload that used to 402 on #1; with the worker-side sanitizer (cdpVerify /
+  // cdpSettle in cdp-facilitator.ts) it should now settle, which is the whole
+  // point of running it.
+  const resource = echoFullResource
+    ? {
+        url: pr.resource && pr.resource.url,
+        ...(pr.resource && pr.resource.description ? { description: pr.resource.description } : {}),
+        mimeType: 'application/json',
+      }
+    : { url: pr.resource && pr.resource.url, mimeType: 'application/json' };
   const payload = {
     x402Version: pr.x402Version || 2,
-    resource: { url: pr.resource && pr.resource.url, mimeType: 'application/json' },
+    resource,
     accepted: {
       scheme: a.scheme,
       network: a.network,
@@ -287,7 +312,7 @@ async function main() {
   const results = [];
   for (const ep of args.endpoints) {
     try {
-      results.push(await settleOne(ep, account, args.dryRun));
+      results.push(await settleOne(ep, account, args.dryRun, args.echoFullResource));
     } catch (err) {
       console.log(`\n=== ${ep} ===`);
       console.log('  ERROR:', err instanceof Error ? err.message : String(err));
