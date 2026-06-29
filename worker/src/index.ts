@@ -8143,6 +8143,41 @@ export default {
       }, PREMIUM_DEPS);
     }
 
+    // Free taste of the Merchant Legitimacy Verdict: the overall verdict and
+    // score band for one domain only, with the per-signal breakdown, reasons,
+    // and recommendation stripped. 10 calls/day per IP. The paid
+    // /api/premium/merchant/legitimacy adds the full signal detail plus a signed receipt.
+    if (path === '/api/preview/merchant/legitimacy') {
+      const { computeMerchantLegitimacyVerdict, normalizeDomain, redactMerchantLegitimacyForPreview, checkMerchantLegitimacyPreviewRateLimit } = await import('./premium-merchant-legitimacy');
+      const domain = normalizeDomain(url.searchParams.get('domain') || '');
+      if (!domain) return jsonResponse({ error: 'missing_params', required: ['domain'] }, 400, 0);
+      const ip = getClientIP(request);
+      const lim = await checkMerchantLegitimacyPreviewRateLimit(env, ip, 10);
+      if (!lim.allowed) return jsonResponse({ error: 'rate_limited', reset_in_hours: hoursUntilUTCRollover(), message: 'Free preview is 10/day. The premium endpoint /api/premium/merchant/legitimacy has no limit and returns full signals plus a signed receipt.' }, 429, 0);
+      const full = await computeMerchantLegitimacyVerdict(env, domain);
+      const redacted = redactMerchantLegitimacyForPreview(full);
+      return jsonResponse({ ...redacted, rate_limit: { remaining: lim.remaining, limit: lim.limit }, upgrade: { premium_endpoint: '/api/premium/merchant/legitimacy', adds: ['per-signal breakdown', 'reasons', 'signed receipt'] } }, 200, 0);
+    }
+
+    // === PAID PREMIUM ENDPOINT: MERCHANT LEGITIMACY VERDICT (Tier 1, 1 credit) ===
+    // /api/premium/merchant/legitimacy?domain=<domain>
+    // One signed merchant-domain legitimacy verdict for AI commerce agents:
+    // a deterministic 0-100 score and proceed/step_up/block/insufficient_data
+    // ruling, fused from RDAP domain age, DoH DNS hygiene, crt.sh cert history,
+    // Majestic top-100k membership, and Phishing.Database active-domain list.
+    // Requires ?domain=, so strict-premium: anonymous Bazaar crawlers see a
+    // clean 402, not a free trial. A missing or invalid domain is a no-charge
+    // schema validation failure.
+    if (path === '/api/premium/merchant/legitimacy') {
+      return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/merchant/legitimacy' }, async () => {
+        const { computeMerchantLegitimacyVerdict, normalizeDomain } = await import('./premium-merchant-legitimacy');
+        const domain = normalizeDomain(url.searchParams.get('domain') || '');
+        if (!domain) return { kind: 'validation_failure', error: { error: 'missing_params', required: ['domain'], hint: 'pass ?domain=example.com' } };
+        const result = await computeMerchantLegitimacyVerdict(env, domain);
+        return { kind: 'ok', body: result, dataCapturedAt: result.capturedAt };
+      }, PREMIUM_DEPS);
+    }
+
     // === STACK SAFETY VERDICT PREVIEW (free, rate-limited) ===
     // Free taste of the deploy gate: the per-package verdict and overall
     // gate, capped at 3 packages, with the matched-CVE evidence stripped
