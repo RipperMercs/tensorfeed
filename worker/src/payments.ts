@@ -280,92 +280,25 @@ export async function mintTrialCredits(
  * Returns a fresh object on every call (deep clone), so the shared
  * module-level config in bazaar-pilots.ts is never mutated.
  */
-// Infer a JSON-Schema-2020-12 fragment from a sample value. Used to
-// auto-derive typed queryFields + output schemas at settle-time from the
-// pilot configs' sample-value queryParams + output.example. Keeps the
-// pilot configs compact (one source of truth: the sample) while still
-// emitting CDP-friendly typed schemas. Integer detection prefers the
-// narrower type so catalog UIs render number inputs correctly.
-function inferJsonSchema(value: unknown): Record<string, unknown> {
-  if (value === null) return { type: 'null' };
-  if (typeof value === 'boolean') return { type: 'boolean' };
-  if (typeof value === 'number') {
-    return Number.isInteger(value)
-      ? { type: 'integer', example: value }
-      : { type: 'number', example: value };
-  }
-  if (typeof value === 'string') return { type: 'string', example: value };
-  if (Array.isArray(value)) {
-    return value.length > 0
-      ? { type: 'array', items: inferJsonSchema(value[0]) }
-      : { type: 'array' };
-  }
-  if (typeof value === 'object') {
-    const properties: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      properties[k] = inferJsonSchema(v);
-    }
-    return { type: 'object', properties };
-  }
-  return {};
-}
-
-function normalizeBazaarExtensionsForCDP(
+export function normalizeBazaarExtensionsForCDP(
   ext: Record<string, unknown>,
-  resourceUrl: string,
+  _resourceUrl: string,
 ): Record<string, unknown> {
   // Pass-through empty (non-pilot endpoints).
   if (!ext || Object.keys(ext).length === 0) return ext;
-  // Deep clone via JSON round-trip. Bazaar extensions are JSON-safe
-  // (only strings, numbers, booleans, arrays, plain objects); no Dates,
-  // BigInts, or Symbols sneak in.
-  const cloned: Record<string, unknown> = JSON.parse(JSON.stringify(ext));
-  const bazaar = (cloned.bazaar ?? {}) as Record<string, unknown>;
-  const info = (bazaar.info ?? {}) as Record<string, unknown>;
-  const input = (info.input ?? {}) as Record<string, unknown>;
-  // NOTE 2026-05-25 evening: do NOT set input.discoverable. Per Ethan
-  // Oroshiba (CDP) on x402-foundation/x402#2207, the `discoverable`
-  // field is not part of the Bazaar spec and CDP's validator treats
-  // its presence as a failed-discovery signal. We added this earlier
-  // today on a (wrong) hypothesis from the BlockRun pattern; removing.
-  // The keep-resource-url-in-input field is also unspec, drop it too
-  // so we send a minimal-and-correct extensions block.
-  // V2 catalog-friendly typing: derive typed queryFields/pathFields from
-  // the existing sample-value queryParams/pathParams. Keeps the legacy
-  // keys in place for crawlers that still read them; adds the typed
-  // variant for crawlers that prefer JSON-Schema fields. Required is
-  // left unset (CDP defaults to optional, which is true for every TF
-  // pilot today: all query params have sensible defaults in the worker).
-  if (input.queryParams && typeof input.queryParams === 'object' && !input.queryFields) {
-    const fields: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(input.queryParams as Record<string, unknown>)) {
-      fields[k] = inferJsonSchema(v);
-    }
-    input.queryFields = fields;
-  }
-  if (input.pathParams && typeof input.pathParams === 'object' && !input.pathFields) {
-    const fields: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(input.pathParams as Record<string, unknown>)) {
-      fields[k] = { ...inferJsonSchema(v), required: true };
-    }
-    input.pathFields = fields;
-  }
-  info.input = input;
-  // V2 catalog-friendly typing for outputs: when info.output has an
-  // example but no schema, derive a JSON Schema from the example shape.
-  const output = (info.output ?? {}) as Record<string, unknown>;
-  if (output.example !== undefined && !output.schema) {
-    output.schema = inferJsonSchema(output.example);
-    info.output = output;
-  }
-  bazaar.info = info;
-  const schema = (bazaar.schema ?? {}) as Record<string, unknown>;
-  if ('$schema' in schema) {
-    delete schema.$schema;
-    bazaar.schema = schema;
-  }
-  cloned.bazaar = bazaar;
-  return cloned;
+  // Emit the static pilot bazaar config VERBATIM (deep clone only). It is
+  // already in the exact shape CDP's Bazaar discovery validator catalogs,
+  // verified against 120 live cataloged records (2026-06-29): a simple
+  // info.input / info.output and a top-level bazaar.schema that KEEPS
+  // $schema, with NO derived info.input.queryFields and NO info.output.schema.
+  // The earlier "v2 catalog-friendly typing" (inject queryFields/pathFields/
+  // output.schema, strip $schema; added 2026-05-25 from a misread of
+  // x402-foundation/x402#2207) made the extension malformed, so CDP rejected
+  // it (EXTENSION-RESPONSES e30=, "no valid extension") and stopped cataloging
+  // every TF endpoint. Keep this a verbatim clone: do NOT re-derive, add, or
+  // strip fields. The JSON round-trip is safe (bazaar configs are plain JSON:
+  // strings, numbers, booleans, arrays, objects only).
+  return JSON.parse(JSON.stringify(ext));
 }
 
 function checkRequestCircuit(request: Request, token: string) {

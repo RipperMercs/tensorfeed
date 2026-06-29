@@ -29,6 +29,7 @@ import {
   builderCodeExtension,
   requirePayment,
   paymentRequiredResponse,
+  normalizeBazaarExtensionsForCDP,
 } from './payments';
 import type { Env } from './types';
 import { PaymentClaim } from './payment-claim';
@@ -1308,6 +1309,67 @@ describe('builderCodeExtension', () => {
     expect(h1.bazaar).toBeDefined();
     const h2 = buildHeaderExtensions(builderCodeExtension('bc_oeob8et3')) as Record<string, unknown>;
     expect(h2['builder-code']).toBeDefined();
+  });
+});
+
+describe('normalizeBazaarExtensionsForCDP: emits the CDP-cataloged canonical bazaar shape', () => {
+  // Ground truth from 120 live CDP-cataloged records (2026-06-29): the bazaar
+  // extension CDP indexes carries a simple info.input / info.output plus a
+  // top-level bazaar.schema that KEEPS $schema (104 of 120). ZERO cataloged
+  // records carry a derived info.input.queryFields or info.output.schema. A
+  // malformed extension is rejected by CDP (EXTENSION-RESPONSES e30=) and the
+  // resource is never cataloged, which is why every TF settle since the
+  // 2026-05-25 normalize shim stopped cataloging. The static pilot config is
+  // already canonical, so normalize must pass it through verbatim.
+  const RESOURCE = 'https://tensorfeed.ai/api/premium/whats-new';
+  const canonical = () => ({
+    bazaar: {
+      info: {
+        input: { type: 'http', method: 'GET', queryParams: { days: 1, news_limit: 10 } },
+        output: { type: 'json', example: { ok: true, summary: { incidents: 2 } } },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: { input: { type: 'object' }, output: { type: 'object' } },
+        required: ['input'],
+      },
+    },
+  });
+
+  it('keeps bazaar.schema.$schema (104 of 120 cataloged peers retain it)', () => {
+    const out = normalizeBazaarExtensionsForCDP(canonical(), RESOURCE) as Record<string, any>;
+    expect(out.bazaar.schema).toHaveProperty('$schema');
+  });
+
+  it('does not inject info.input.queryFields (0 of 120 cataloged peers carry it)', () => {
+    const out = normalizeBazaarExtensionsForCDP(canonical(), RESOURCE) as Record<string, any>;
+    expect(out.bazaar.info.input).not.toHaveProperty('queryFields');
+  });
+
+  it('does not inject info.output.schema (0 of 120 cataloged peers carry it)', () => {
+    const out = normalizeBazaarExtensionsForCDP(canonical(), RESOURCE) as Record<string, any>;
+    expect(out.bazaar.info.output).not.toHaveProperty('schema');
+  });
+
+  it('does not add a discoverable field (CDP treats it as a failed-discovery signal)', () => {
+    const out = normalizeBazaarExtensionsForCDP(canonical(), RESOURCE) as Record<string, any>;
+    expect(out.bazaar.info.input).not.toHaveProperty('discoverable');
+  });
+
+  it('emits the canonical static config verbatim (no mutation)', () => {
+    const out = normalizeBazaarExtensionsForCDP(canonical(), RESOURCE);
+    expect(out).toEqual(canonical());
+  });
+
+  it('returns a clone, not the same reference (no shared static-config mutation)', () => {
+    const input = canonical();
+    const out = normalizeBazaarExtensionsForCDP(input, RESOURCE);
+    expect(out).not.toBe(input);
+  });
+
+  it('passes empty extensions through unchanged for non-pilot paths', () => {
+    expect(normalizeBazaarExtensionsForCDP({}, RESOURCE)).toEqual({});
   });
 });
 
