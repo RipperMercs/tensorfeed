@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchRdapAgeDays, fetchDnsHygiene, fetchCertFirstSeenDays, lookupMajestic, lookupPhishing } from './merchant-signals';
+import { fetchRdapAgeDays, fetchDnsHygiene, fetchCertFirstSeenDays, lookupMajestic, lookupPhishing, fetchMerchantSignals } from './merchant-signals';
 
 const NOW = Date.parse('2026-06-29T00:00:00Z');
 beforeEach(() => { vi.restoreAllMocks(); });
@@ -79,5 +79,67 @@ describe('KV list lookups', () => {
     const env = envWith({});
     expect(await lookupMajestic(env, 'example.com')).toEqual({ inIndex: false, rank: null, snapshot: null });
     expect(await lookupPhishing(env, 'bad.com')).toEqual({ listed: false, snapshot: null });
+  });
+});
+
+describe('fetchMerchantSignals', () => {
+  it('fans out all five signals and counts the resolved live ones', async () => {
+    // Intercept at the real fetch and KV boundary so the orchestrator exercises
+    // the actual sibling functions, not stand-in mocks. RDAP, DoH, and crt.sh
+    // each return a resolvable answer, so all three live signals resolve.
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.includes('rdap.org')) {
+        return new Response(JSON.stringify({
+          events: [{ eventAction: 'registration', eventDate: '2024-04-20T00:00:00Z' }],
+        }), { status: 200 });
+      }
+      if (url.includes('cloudflare-dns.com')) {
+        const u = new URL(url);
+        const name = u.searchParams.get('name');
+        const type = u.searchParams.get('type');
+        if (type === 'MX') return new Response(JSON.stringify({ Status: 0, Answer: [{ type: 15, data: '5 mx.example.com.' }] }));
+        if (name === 'example.com') return new Response(JSON.stringify({ Status: 0, Answer: [{ type: 16, data: '"v=spf1 ~all"' }] }));
+        if (name === '_dmarc.example.com') return new Response(JSON.stringify({ Status: 0, Answer: [{ type: 16, data: '"v=DMARC1; p=reject"' }] }));
+        return new Response(JSON.stringify({ Status: 0 }));
+      }
+      if (url.includes('crt.sh')) {
+        return new Response(JSON.stringify([{ not_before: '2024-04-20T00:00:00' }]), { status: 200 });
+      }
+      return new Response('not found', { status: 404 });
+    });
+    const env = envWith({
+      'merchant:majestic-topn': { captured_at: 'M', ranks: { 'example.com': 5000 } },
+      'merchant:phishing-active': { captured_at: 'P', domains: [] },
+    });
+    const r = await fetchMerchantSignals(env, 'example.com', Date.parse('2026-06-29T00:00:00Z'));
+    expect(r.domainAgeDays).toBe(800);
+    expect(r.dns).toEqual({ mx: true, spf: true, dmarc: 'reject' });
+    expect(r.certFirstSeenDays).toBe(800);
+    expect(r.majestic).toEqual({ inIndex: true, rank: 5000 });
+    expect(r.phishingListed).toBe(false);
+    expect(r.listSnapshots).toEqual({ majestic: 'M', phishing: 'P' });
+    expect(r.liveSignalsResolved).toBe(3);
+  });
+
+  it('counts only the live signals that resolved when fetches fail', async () => {
+    // DoH resolves; RDAP and crt.sh both fail, so liveSignalsResolved is 1.
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.includes('cloudflare-dns.com')) {
+        const u = new URL(url);
+        if (u.searchParams.get('type') === 'MX') return new Response(JSON.stringify({ Status: 0, Answer: [{ type: 15, data: '5 mx.example.com.' }] }));
+        return new Response(JSON.stringify({ Status: 0 }));
+      }
+      throw new Error('boom');
+    });
+    const env = envWith({});
+    const r = await fetchMerchantSignals(env, 'example.com', Date.parse('2026-06-29T00:00:00Z'));
+    expect(r.domainAgeDays).toBeNull();
+    expect(r.certFirstSeenDays).toBeNull();
+    expect(r.dns).toEqual({ mx: true, spf: false, dmarc: null });
+    expect(r.majestic).toEqual({ inIndex: false, rank: null });
+    expect(r.listSnapshots).toEqual({ majestic: null, phishing: null });
+    expect(r.liveSignalsResolved).toBe(1);
   });
 });
