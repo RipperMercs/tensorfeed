@@ -1,5 +1,5 @@
 {
-  "count": 106,
+  "count": 107,
   "credit_range": {
     "min": 1,
     "max": 10
@@ -13,6 +13,7 @@
     "history": 7,
     "intelligence": 3,
     "mcp": 1,
+    "merchant": 1,
     "misc": 36,
     "packages": 2,
     "policy": 1,
@@ -399,6 +400,21 @@
       "free_sibling": "/api/mcp/registry/snapshot",
       "signed": true,
       "category": "mcp"
+    },
+    {
+      "path": "/api/premium/merchant/legitimacy",
+      "credits": 1,
+      "strict_premium": true,
+      "params": [
+        {
+          "name": "domain",
+          "required": true
+        }
+      ],
+      "returns": "Signed merchant-domain legitimacy verdict (proceed/step_up/block) with per-signal reasons.",
+      "free_sibling": "/api/preview/merchant/legitimacy",
+      "signed": true,
+      "category": "merchant"
     },
     {
       "path": "/api/premium/agent-ready/full",
