@@ -60,4 +60,38 @@ export async function fetchDnsHygiene(domain: string): Promise<MerchantSignals['
   }
 }
 
+function toUtcMs(ts: string): number {
+  const norm = /[zZ]|[+-]\d{2}:?\d{2}$/.test(ts) ? ts : `${ts}Z`;
+  return Date.parse(norm);
+}
+
+function earliestNotBefore(rows: { not_before?: string }[], nowMs: number): number | null {
+  const times = rows.map((r) => (r.not_before ? toUtcMs(r.not_before) : NaN)).filter((n) => !Number.isNaN(n));
+  if (!times.length) return null;
+  return Math.max(0, Math.floor((nowMs - Math.min(...times)) / DAY_MS));
+}
+
+export async function fetchCertFirstSeenDays(domain: string, nowMs: number): Promise<number | null> {
+  try {
+    const res = await fetch(`https://crt.sh/?q=${encodeURIComponent(domain)}&output=json`, {
+      headers: { 'user-agent': 'tensorfeed-merchant-verdict/1.0' }, signal: AbortSignal.timeout(8000),
+    });
+    if (res.ok) {
+      const rows = (await res.json()) as { not_before?: string }[];
+      const v = earliestNotBefore(rows, nowMs);
+      if (v !== null) return v;
+    }
+  } catch { /* fall through to CertSpotter */ }
+  try {
+    const res = await fetch(`https://api.certspotter.com/v1/issuances?domain=${encodeURIComponent(domain)}&include_subdomains=true&expand=dns_names`, {
+      headers: { 'user-agent': 'tensorfeed-merchant-verdict/1.0' }, signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as { not_before?: string }[];
+    return earliestNotBefore(rows, nowMs);
+  } catch {
+    return null;
+  }
+}
+
 void (0 as unknown as Env);

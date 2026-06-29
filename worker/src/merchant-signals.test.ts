@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchRdapAgeDays, fetchDnsHygiene } from './merchant-signals';
+import { fetchRdapAgeDays, fetchDnsHygiene, fetchCertFirstSeenDays } from './merchant-signals';
 
 const NOW = Date.parse('2026-06-29T00:00:00Z');
 beforeEach(() => vi.restoreAllMocks());
@@ -39,5 +39,23 @@ describe('fetchDnsHygiene', () => {
   it('returns all-absent on fetch failure', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('boom'));
     expect(await fetchDnsHygiene('example.com')).toEqual({ mx: false, spf: false, dmarc: null });
+  });
+});
+
+describe('fetchCertFirstSeenDays', () => {
+  it('parses crt.sh, coercing the Z-less timestamp to UTC', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify([
+      { not_before: '2026-03-28T00:00:00' }, { not_before: '2026-06-16T05:06:10' },
+    ]), { status: 200 }));
+    expect(await fetchCertFirstSeenDays('example.com', Date.parse('2026-06-29T00:00:00Z'))).toBe(93);
+  });
+  it('falls back to CertSpotter on a crt.sh 502', async () => {
+    let call = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+      call += 1;
+      if (call === 1) return new Response('bad gateway', { status: 502 });
+      return new Response(JSON.stringify([{ not_before: '2025-06-29T00:00:00Z' }]), { status: 200 });
+    });
+    expect(await fetchCertFirstSeenDays('example.com', Date.parse('2026-06-29T00:00:00Z'))).toBe(365);
   });
 });
