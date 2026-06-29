@@ -32,6 +32,7 @@ export interface MerchantLegitimacyResult {
   reasons: { signal: string; pull: 'positive' | 'negative' | 'neutral'; detail: string }[];
   recommendation: string;
   sources: { name: string; license: string }[];
+  screens: { phishing: 'unavailable' | 'active' };
 }
 
 export interface MerchantLegitimacyPreview {
@@ -54,8 +55,27 @@ const SOURCES = [
 export function buildMerchantLegitimacyVerdict(
   domain: string,
   s: MerchantSignals,
-  capturedAt: string,
+  nowMs: number,
+  nowISO: string,
 ): MerchantLegitimacyResult {
+  // Compute capturedAt as the oldest binding-signal timestamp. Never newer than
+  // the oldest data that contributed to the verdict.
+  const candidateISOs: string[] = [];
+  if (s.liveSignalsResolved > 0) {
+    candidateISOs.push(nowISO);
+  }
+  if (s.phishingListed && s.listSnapshots.phishing) {
+    const t = Date.parse(s.listSnapshots.phishing);
+    if (Number.isFinite(t)) candidateISOs.push(s.listSnapshots.phishing);
+  }
+  if (s.majestic.inIndex && s.listSnapshots.majestic) {
+    const t = Date.parse(s.listSnapshots.majestic);
+    if (Number.isFinite(t)) candidateISOs.push(s.listSnapshots.majestic);
+  }
+  const capturedAt = candidateISOs.length > 0
+    ? candidateISOs.reduce((a, b) => (Date.parse(a) <= Date.parse(b) ? a : b))
+    : nowISO;
+
   const reasons: MerchantLegitimacyResult['reasons'] = [];
   let score = 50;
 
@@ -133,12 +153,20 @@ export function buildMerchantLegitimacyVerdict(
           ? 'Could not verify; treat as unverified and add escrow or identity checks.'
           : 'Mixed signals; verify before high-value transactions (escrow, identity, or an alternative).';
 
-  return { ok: true, capturedAt, domain, verdict, score, signals: s, reasons, recommendation, sources: SOURCES };
+  const screens: MerchantLegitimacyResult['screens'] = {
+    phishing: s.listSnapshots.phishing === null ? 'unavailable' : 'active',
+  };
+
+  return { ok: true, capturedAt, domain, verdict, score, signals: s, reasons, recommendation, sources: SOURCES, screens };
 }
 
 export function redactMerchantLegitimacyForPreview(full: MerchantLegitimacyResult): MerchantLegitimacyPreview {
   const score_band: 'high' | 'medium' | 'low' = full.score >= 70 ? 'high' : full.score >= 40 ? 'medium' : 'low';
   return { ok: true, preview: true, domain: full.domain, verdict: full.verdict, score_band, capturedAt: full.capturedAt };
+}
+
+export function billingKindFor(result: MerchantLegitimacyResult): 'ok' | 'no_charge' {
+  return result.verdict === 'insufficient_data' ? 'no_charge' : 'ok';
 }
 
 export async function checkMerchantLegitimacyPreviewRateLimit(
@@ -158,5 +186,5 @@ export async function checkMerchantLegitimacyPreviewRateLimit(
 export async function computeMerchantLegitimacyVerdict(env: Env, domain: string): Promise<MerchantLegitimacyResult> {
   const nowMs = Date.now();
   const signals = await fetchMerchantSignals(env, domain, nowMs);
-  return buildMerchantLegitimacyVerdict(domain, signals, new Date(nowMs).toISOString());
+  return buildMerchantLegitimacyVerdict(domain, signals, nowMs, new Date(nowMs).toISOString());
 }
