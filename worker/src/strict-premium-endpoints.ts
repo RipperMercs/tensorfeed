@@ -118,6 +118,14 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // so strict-premium gates anonymous crawlers to a clean 402. A planning estimate,
   // not a customs filing or legal advice. Free taste at /api/preview/customs/landed-cost.
   '/api/premium/customs/landed-cost',
+  // Merchant Legitimacy Verdict (2026-06-28). Signed domain legitimacy ruling
+  // for AI commerce agents: RDAP domain age, DoH DNS hygiene, crt.sh cert
+  // history, Majestic top-100k membership, and Phishing.Database active-domain
+  // list fused into a proceed/step_up/block/insufficient_data verdict with a
+  // 0-100 score. Param-required (?domain=), so strict-premium gates anonymous
+  // crawlers to a clean 402 instead of a free-trial 400 missing_params. Free
+  // taste at /api/preview/merchant/legitimacy.
+  '/api/premium/merchant/legitimacy',
   // Stack Safety Verdict (2026-05-28). GO/HOLD/BLOCK deploy gate over a
   // package list, fusing the ingested AI-CVE batch + CISA KEV. Param-
   // required (?packages=), so strict-premium gates anonymous crawlers to a
