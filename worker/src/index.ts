@@ -8151,12 +8151,29 @@ export default {
       const { computeMerchantLegitimacyVerdict, normalizeDomain, redactMerchantLegitimacyForPreview, checkMerchantLegitimacyPreviewRateLimit } = await import('./premium-merchant-legitimacy');
       const domain = normalizeDomain(url.searchParams.get('domain') || '');
       if (!domain) return jsonResponse({ error: 'missing_params', required: ['domain'] }, 400, 0);
+      // Cache-API front: preview is billing-free; a domain's verdict is stable for hours.
+      // Cache hits skip rate-limit accounting and external fetches. Guard for test env
+      // where caches is not defined.
+      const mlPreviewCacheKey = typeof caches !== 'undefined'
+        ? new Request(`https://tensorfeed.ai/__cache/merchant-legitimacy-preview/v1?domain=${domain}`)
+        : null;
+      if (mlPreviewCacheKey) {
+        const hit = await caches.default.match(mlPreviewCacheKey);
+        if (hit) return hit;
+      }
       const ip = getClientIP(request);
       const lim = await checkMerchantLegitimacyPreviewRateLimit(env, ip, 10);
       if (!lim.allowed) return jsonResponse({ error: 'rate_limited', reset_in_hours: hoursUntilUTCRollover(), message: 'Free preview is 10/day. The premium endpoint /api/premium/merchant/legitimacy has no limit and returns full signals plus a signed receipt.' }, 429, 0);
       const full = await computeMerchantLegitimacyVerdict(env, domain);
       const redacted = redactMerchantLegitimacyForPreview(full);
-      return jsonResponse({ ...redacted, rate_limit: { remaining: lim.remaining, limit: lim.limit }, upgrade: { premium_endpoint: '/api/premium/merchant/legitimacy', adds: ['per-signal breakdown', 'reasons', 'signed receipt'] } }, 200, 0);
+      const mlPreviewBody = { ...redacted, rate_limit: { remaining: lim.remaining, limit: lim.limit }, upgrade: { premium_endpoint: '/api/premium/merchant/legitimacy', adds: ['per-signal breakdown', 'reasons', 'signed receipt'] } };
+      if (mlPreviewCacheKey) {
+        const cacheResp = new Response(JSON.stringify(mlPreviewBody), {
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=10800' },
+        });
+        ctx.waitUntil(caches.default.put(mlPreviewCacheKey, cacheResp));
+      }
+      return jsonResponse(mlPreviewBody, 200, 0);
     }
 
     // === PAID PREMIUM ENDPOINT: MERCHANT LEGITIMACY VERDICT (Tier 1, 1 credit) ===
@@ -8171,9 +8188,33 @@ export default {
     if (path === '/api/premium/merchant/legitimacy') {
       return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/merchant/legitimacy' }, async () => {
         const { computeMerchantLegitimacyVerdict, normalizeDomain, billingKindFor } = await import('./premium-merchant-legitimacy');
+        type MlResult = Awaited<ReturnType<typeof computeMerchantLegitimacyVerdict>>;
         const domain = normalizeDomain(url.searchParams.get('domain') || '');
         if (!domain) return { kind: 'validation_failure', error: { error: 'missing_params', required: ['domain'], hint: 'pass ?domain=example.com' } };
+        // Cache-API front for verdict DATA only. Billing is always charged by
+        // handlePremium BEFORE this callback runs, so serving cached data here
+        // never bypasses payment. The signed response wrapper is produced fresh
+        // by handlePremium after this callback returns. Guard for test env.
+        const mlVerdictCacheKey = typeof caches !== 'undefined'
+          ? new Request(`https://tensorfeed.ai/__cache/merchant-verdict/v1?domain=${domain}`)
+          : null;
+        if (mlVerdictCacheKey) {
+          const hit = await caches.default.match(mlVerdictCacheKey);
+          if (hit) {
+            const cached = (await hit.json()) as MlResult;
+            if (billingKindFor(cached) === 'no_charge') {
+              return { kind: 'no_charge', body: cached, reason: 'upstream_failure', dataCapturedAt: cached.capturedAt };
+            }
+            return { kind: 'ok', body: cached, dataCapturedAt: cached.capturedAt };
+          }
+        }
         const result = await computeMerchantLegitimacyVerdict(env, domain);
+        if (mlVerdictCacheKey) {
+          const cacheResp = new Response(JSON.stringify(result), {
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=10800' },
+          });
+          ctx.waitUntil(caches.default.put(mlVerdictCacheKey, cacheResp));
+        }
         if (billingKindFor(result) === 'no_charge') {
           // No-charge: all live signals failed; TF cannot stand behind a verdict.
           // The agent still gets the signed result, billed at zero.

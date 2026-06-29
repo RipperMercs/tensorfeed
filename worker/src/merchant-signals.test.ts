@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchRdapAgeDays, fetchDnsHygiene, fetchCertFirstSeenDays, lookupMajestic, lookupPhishing, fetchMerchantSignals } from './merchant-signals';
+import { fetchRdapAgeDays, fetchDnsHygiene, fetchCertFirstSeenDays, lookupMajestic, lookupPhishing, fetchMerchantSignals, _resetMerchantMemosForTest } from './merchant-signals';
 
 const NOW = Date.parse('2026-06-29T00:00:00Z');
-beforeEach(() => { vi.restoreAllMocks(); });
+beforeEach(() => { vi.restoreAllMocks(); _resetMerchantMemosForTest(); });
 
 describe('fetchRdapAgeDays', () => {
   it('parses the registration event into an age in days', async () => {
@@ -141,5 +141,102 @@ describe('fetchMerchantSignals', () => {
     expect(r.majestic).toEqual({ inIndex: false, rank: null });
     expect(r.listSnapshots).toEqual({ majestic: null, phishing: null });
     expect(r.liveSignalsResolved).toBe(1);
+  });
+});
+
+describe('lookupMajestic memoization', () => {
+  it('skips the KV subrequest on second call when memo is warm', async () => {
+    let kvCalls = 0;
+    const env = {
+      TENSORFEED_CACHE: {
+        get: async () => {
+          kvCalls++;
+          return { captured_at: 'memo-snap-A', ranks: { 'example.com': 77 } };
+        },
+      },
+    } as unknown as Parameters<typeof lookupMajestic>[0];
+    const r1 = await lookupMajestic(env, 'example.com');
+    const r2 = await lookupMajestic(env, 'example.com');
+    expect(kvCalls).toBe(1);
+    expect(r1.rank).toBe(77);
+    expect(r2.rank).toBe(77);
+    expect(r1.snapshot).toBe('memo-snap-A');
+    expect(r2.snapshot).toBe('memo-snap-A');
+  });
+
+  it('re-fetches from KV after the memo is reset (simulating TTL expiry)', async () => {
+    let kvCalls = 0;
+    const env = {
+      TENSORFEED_CACHE: {
+        get: async () => {
+          kvCalls++;
+          return { captured_at: 'snap-exp', ranks: { 'x.com': 1 } };
+        },
+      },
+    } as unknown as Parameters<typeof lookupMajestic>[0];
+    await lookupMajestic(env, 'x.com');
+    expect(kvCalls).toBe(1);
+    _resetMerchantMemosForTest();
+    await lookupMajestic(env, 'x.com');
+    expect(kvCalls).toBe(2);
+  });
+
+  it('returns null snapshot when KV is empty and does not populate memo', async () => {
+    const env = {
+      TENSORFEED_CACHE: { get: async () => null },
+    } as unknown as Parameters<typeof lookupMajestic>[0];
+    const r = await lookupMajestic(env, 'any.com');
+    expect(r).toEqual({ inIndex: false, rank: null, snapshot: null });
+  });
+});
+
+describe('fetchMerchantSignals signal memo', () => {
+  it('reuses fan-out result on second call for same domain within TTL', async () => {
+    let fetchCalls = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      fetchCalls++;
+      const url = String(input);
+      if (url.includes('rdap.org')) {
+        return new Response(JSON.stringify({ events: [{ eventAction: 'registration', eventDate: '2024-01-01T00:00:00Z' }] }), { status: 200 });
+      }
+      if (url.includes('cloudflare-dns.com')) return new Response(JSON.stringify({ Status: 0 }));
+      if (url.includes('crt.sh')) return new Response(JSON.stringify([]), { status: 200 });
+      return new Response('{}', { status: 200 });
+    });
+    const env = envWith({
+      'merchant:majestic-topn': { captured_at: 'memo-maj-1', ranks: {} },
+      'merchant:phishing-active': { captured_at: 'memo-phish-1', domains: [] },
+    });
+    const nowMs = Date.parse('2026-06-29T00:00:00Z');
+
+    await fetchMerchantSignals(env, 'signal-memo-unique.test', nowMs);
+    const afterFirst = fetchCalls;
+    expect(afterFirst).toBeGreaterThan(0);
+
+    await fetchMerchantSignals(env, 'signal-memo-unique.test', nowMs);
+    expect(fetchCalls).toBe(afterFirst);
+  });
+
+  it('does not share memo across different domains', async () => {
+    let fetchCalls = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      fetchCalls++;
+      const url = String(input);
+      if (url.includes('rdap.org')) return new Response(JSON.stringify({ events: [] }), { status: 200 });
+      if (url.includes('cloudflare-dns.com')) return new Response(JSON.stringify({ Status: 0 }));
+      if (url.includes('crt.sh')) return new Response(JSON.stringify([]), { status: 200 });
+      return new Response('{}', { status: 200 });
+    });
+    const env = envWith({
+      'merchant:majestic-topn': { captured_at: 'memo-maj-2', ranks: {} },
+      'merchant:phishing-active': { captured_at: 'memo-phish-2', domains: [] },
+    });
+    const nowMs = Date.parse('2026-06-29T00:00:00Z');
+
+    await fetchMerchantSignals(env, 'domain-alpha-unique.test', nowMs);
+    const afterAlpha = fetchCalls;
+
+    await fetchMerchantSignals(env, 'domain-beta-unique.test', nowMs);
+    expect(fetchCalls).toBeGreaterThan(afterAlpha);
   });
 });

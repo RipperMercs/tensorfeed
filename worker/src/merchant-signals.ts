@@ -12,6 +12,38 @@ export interface MerchantSignals {
 
 const DAY_MS = 86_400_000;
 
+// Module-level Majestic memo. Skips the KV subrequest (and its 100k-key JSON
+// parse) when the memo is warm. Refreshed when the memo is cold or the TTL
+// expires. TTL is 55s, within the 30-60s spec window.
+const MAJESTIC_MEMO_TTL_MS = 55_000;
+
+interface MajesticMemo {
+  snapshot: string;
+  ranks: Record<string, number>;
+  loadedAt: number;
+}
+
+let majesticCache: MajesticMemo | null = null;
+
+// Per-domain signal fan-out memo (30-60s). A burst of calls for the same
+// domain within the TTL reuses one external fan-out result (RDAP/DoH/crt.sh)
+// without re-fetching. Billing-neutral: billing still runs per call; only the
+// data fetch is cached.
+const SIGNAL_MEMO_TTL_MS = 45_000;
+
+interface SignalMemoEntry {
+  signals: MerchantSignals;
+  expiresAt: number;
+}
+
+const signalMemoCache = new Map<string, SignalMemoEntry>();
+
+/** Reset module-level memos. Call only in test code. */
+export function _resetMerchantMemosForTest(): void {
+  majesticCache = null;
+  signalMemoCache.clear();
+}
+
 export async function fetchRdapAgeDays(domain: string, nowMs: number): Promise<number | null> {
   try {
     const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
@@ -99,13 +131,17 @@ export async function lookupMajestic(
   domain: string,
 ): Promise<{ inIndex: boolean; rank: number | null; snapshot: string | null }> {
   try {
-    const blob = (await env.TENSORFEED_CACHE.get('merchant:majestic-topn', 'json')) as {
-      captured_at: string;
-      ranks: Record<string, number>;
-    } | null;
-    if (!blob) return { inIndex: false, rank: null, snapshot: null };
-    const rank = blob.ranks[domain];
-    return { inIndex: rank !== undefined, rank: rank ?? null, snapshot: blob.captured_at };
+    const now = Date.now();
+    if (!majesticCache || (now - majesticCache.loadedAt) > MAJESTIC_MEMO_TTL_MS) {
+      const blob = (await env.TENSORFEED_CACHE.get('merchant:majestic-topn', 'json')) as {
+        captured_at: string;
+        ranks: Record<string, number>;
+      } | null;
+      if (!blob) return { inIndex: false, rank: null, snapshot: null };
+      majesticCache = { snapshot: blob.captured_at, ranks: blob.ranks, loadedAt: now };
+    }
+    const rank = majesticCache.ranks[domain];
+    return { inIndex: rank !== undefined, rank: rank ?? null, snapshot: majesticCache.snapshot };
   } catch {
     return { inIndex: false, rank: null, snapshot: null };
   }
@@ -133,6 +169,12 @@ export async function lookupPhishing(
 }
 
 export async function fetchMerchantSignals(env: Env, domain: string, nowMs: number): Promise<MerchantSignals> {
+  const now = Date.now();
+  const memo = signalMemoCache.get(domain);
+  if (memo && now < memo.expiresAt) {
+    return memo.signals;
+  }
+
   const [age, dns, cert, maj, phish] = await Promise.all([
     fetchRdapAgeDays(domain, nowMs),
     fetchDnsHygiene(domain),
@@ -141,7 +183,7 @@ export async function fetchMerchantSignals(env: Env, domain: string, nowMs: numb
     lookupPhishing(env, domain),
   ]);
   const dnsResolved = dns.mx || dns.spf || dns.dmarc !== null;
-  return {
+  const signals: MerchantSignals = {
     domainAgeDays: age,
     dns,
     certFirstSeenDays: cert,
@@ -150,4 +192,6 @@ export async function fetchMerchantSignals(env: Env, domain: string, nowMs: numb
     listSnapshots: { majestic: maj.snapshot, phishing: phish.snapshot },
     liveSignalsResolved: (age !== null ? 1 : 0) + (cert !== null ? 1 : 0) + (dnsResolved ? 1 : 0),
   };
+  signalMemoCache.set(domain, { signals, expiresAt: now + SIGNAL_MEMO_TTL_MS });
+  return signals;
 }
