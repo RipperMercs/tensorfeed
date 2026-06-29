@@ -63,11 +63,13 @@ describe('buildMerchantLegitimacyVerdict', () => {
   it('phishing hit overrides to block regardless of score', () => {
     const r = buildMerchantLegitimacyVerdict('p.com', sig({ domainAgeDays: 2000, majestic: { inIndex: true, rank: 100 }, phishingListed: true }), CAP);
     expect(r.verdict).toBe('block');
-    expect(r.score).toBeLessThanOrEqual(15);
+    expect(r.score).toBeLessThanOrEqual(10);
   });
   it('all live signals failed -> insufficient_data, never proceed', () => {
     const r = buildMerchantLegitimacyVerdict('x.io', sig({ domainAgeDays: null, dns: { mx: false, spf: false, dmarc: null }, certFirstSeenDays: null, liveSignalsResolved: 0 }), CAP);
     expect(r.verdict).toBe('insufficient_data');
+    expect(r.score).toBeGreaterThanOrEqual(40);
+    expect(r.score).toBeLessThan(70);
   });
   it('carries capturedAt and emits no em dashes or double hyphens', () => {
     const r = buildMerchantLegitimacyVerdict('shop.com', sig(), CAP);
