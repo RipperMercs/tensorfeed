@@ -839,7 +839,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     credits: 1,
     strict_premium: true,
     params: [{ name: 'domain', required: true }],
-    returns: 'Signed merchant-domain legitimacy verdict (proceed/step_up/block) with per-signal reasons.',
+    returns: 'Signed merchant-domain legitimacy verdict (proceed/step_up/block/insufficient_data) with per-signal reasons.',
     free_sibling: '/api/preview/merchant/legitimacy',
     signed: true,
     category: 'merchant',
