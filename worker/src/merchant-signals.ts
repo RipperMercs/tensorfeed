@@ -1,4 +1,5 @@
 import type { Env } from './types';
+import * as _m from './merchant-signals';
 
 export interface MerchantSignals {
   domainAgeDays: number | null;
@@ -130,4 +131,24 @@ export async function lookupPhishing(
   } catch {
     return { listed: false, snapshot: null };
   }
+}
+
+export async function fetchMerchantSignals(env: Env, domain: string, nowMs: number): Promise<MerchantSignals> {
+  const [age, dns, cert, maj, phish] = await Promise.all([
+    _m.fetchRdapAgeDays(domain, nowMs),
+    _m.fetchDnsHygiene(domain),
+    _m.fetchCertFirstSeenDays(domain, nowMs),
+    _m.lookupMajestic(env, domain),
+    _m.lookupPhishing(env, domain),
+  ]);
+  const dnsResolved = dns.mx || dns.spf || dns.dmarc !== null;
+  return {
+    domainAgeDays: age,
+    dns,
+    certFirstSeenDays: cert,
+    majestic: { inIndex: maj.inIndex, rank: maj.rank },
+    phishingListed: phish.listed,
+    listSnapshots: { majestic: maj.snapshot, phishing: phish.snapshot },
+    liveSignalsResolved: (age !== null ? 1 : 0) + (cert !== null ? 1 : 0) + (dnsResolved ? 1 : 0),
+  };
 }

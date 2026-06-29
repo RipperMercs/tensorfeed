@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchRdapAgeDays, fetchDnsHygiene, fetchCertFirstSeenDays, lookupMajestic, lookupPhishing } from './merchant-signals';
 
 const NOW = Date.parse('2026-06-29T00:00:00Z');
-beforeEach(() => vi.restoreAllMocks());
+beforeEach(() => { vi.restoreAllMocks(); });
 
 describe('fetchRdapAgeDays', () => {
   it('parses the registration event into an age in days', async () => {
