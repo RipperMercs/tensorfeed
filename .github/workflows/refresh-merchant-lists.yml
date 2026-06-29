@@ -1,0 +1,44 @@
+name: Refresh merchant lists
+
+# Rebuilds two KV sets that the Worker reads for the merchant-legitimacy
+# endpoint: the Majestic top-100k popularity map and the
+# Phishing.Database active-domains list. The Worker fetches RDAP/DNS/
+# crt.sh live per request; these bulk sets are too large to fetch per
+# request, so this job preprocesses them into compact KV blobs.
+#
+# Cron: 06:17 UTC daily. Chosen to be clearly distinct from the
+# drift-audit Worker cron at 06:41 UTC, the KV backup at 06:15 UTC
+# (GitHub Actions cron, not Worker), and the only other GitHub Actions
+# daily cron (huggingface-push at 08:00 UTC). No collisions.
+#
+# Required secrets (both already used by deploy-worker.yml):
+#   CLOUDFLARE_API_TOKEN
+#   CLOUDFLARE_ACCOUNT_ID
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install worker dependencies (provides wrangler)
+        working-directory: worker
+        run: npm ci
+
+      - name: Fetch and upload merchant lists
+        run: node scripts/refresh-merchant-lists.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
