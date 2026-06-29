@@ -118,4 +118,8 @@ describe('paid daily-snapshot endpoints have a billing-freshness SLA', () => {
     expect(resolveSLA('/api/premium/security/ghsa/ai-feed')?.maxAgeSeconds).toBe(9 * 60 * 60);
     expect(resolveSLA('/api/premium/apis-guru/ai-feed')?.maxAgeSeconds).toBe(36 * 60 * 60);
   });
+
+  it('merchant legitimacy resolves to a 36h SLA (no stale-bill gap on list snapshots)', () => {
+    expect(resolveSLA('/api/premium/merchant/legitimacy')?.maxAgeSeconds).toBe(36 * 60 * 60);
+  });
 });
