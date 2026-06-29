@@ -2696,6 +2696,13 @@ export async function requirePayment(
             maxTimeoutSeconds: 60,
             resource: resourceUrl,
             extra: { feePayer: SOLANA_FEEPAYER_V2, resource: resourceUrl },
+            // Carry the pilot bazaar extension on the Solana rail too, mirroring
+            // evmRequirements above. cdpSettle echoes requirements.extensions
+            // into paymentPayload.extensions, which is the discovery payload CDP
+            // reads to catalog. Without this the SOL rail settled but never
+            // appeared in Bazaar (only the resource key was present, not the
+            // extension). pilotExtensions is the canonical verbatim config.
+            ...(Object.keys(pilotExtensions).length > 0 ? { extensions: pilotExtensions } : {}),
           }
         : undefined;
     const liveAccepts = solanaRequirements

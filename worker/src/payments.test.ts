@@ -208,6 +208,41 @@ describe('requirePayment Solana x402 rail (CDP)', () => {
     expect(rec!.balance).toBeGreaterThanOrEqual(1);
   });
 
+  it('sends resource + canonical bazaar extension to CDP on a Solana pilot settle (so the SOL rail catalogs)', async () => {
+    // CDP v2 cataloging needs BOTH paymentPayload.resource AND a well-formed
+    // paymentPayload.extensions.bazaar. The EVM requirements carry the pilot
+    // extension; the Solana requirements did NOT, so the SOL rail could never
+    // be discovered in Bazaar. This drives that fix. Uses a real pilot path
+    // (whats-new) so pilotExtensions is non-empty.
+    installRoutedFetch();
+    const env = solEnv();
+    const req = new Request('https://tensorfeed.ai/api/premium/whats-new', {
+      headers: { 'X-PAYMENT': solHeader() },
+    });
+    const result = await requirePayment(req, env, 1);
+    expect(result.paid).toBe(true);
+
+    const calls = (global.fetch as unknown as { mock: { calls: unknown[][] } }).mock.calls;
+    const settleCall = calls.find(([input]) => {
+      const u = typeof input === 'string' ? input : (input as Request).url;
+      return u.includes('/x402/settle');
+    });
+    expect(settleCall).toBeTruthy();
+    const body = JSON.parse((settleCall![1] as { body: string }).body);
+
+    // Catalog key: the resource object must reach CDP.
+    expect(body.paymentPayload?.resource?.url).toBeTruthy();
+    // Discovery payload: the echoed bazaar extension CDP reads at settle time.
+    const payExt = body.paymentPayload?.extensions?.bazaar as
+      | { info: { input: Record<string, unknown> }; schema: Record<string, unknown> }
+      | undefined;
+    expect(payExt).toBeDefined();
+    // And it must be the canonical (well-formed) shape, not the malformed one
+    // that CDP rejects: no derived queryFields, $schema retained.
+    expect(payExt!.info.input).not.toHaveProperty('queryFields');
+    expect(payExt!.schema).toHaveProperty('$schema');
+  });
+
   it('accepts the payment on the x402 v2 PAYMENT-SIGNATURE header (not just X-PAYMENT)', async () => {
     // The current @x402/fetch v2 buyer sends the signed payload on the v2
     // transport header PAYMENT-SIGNATURE, not the legacy X-PAYMENT. The server
