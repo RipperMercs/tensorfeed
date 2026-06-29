@@ -94,4 +94,40 @@ export async function fetchCertFirstSeenDays(domain: string, nowMs: number): Pro
   }
 }
 
-void (0 as unknown as Env);
+export async function lookupMajestic(
+  env: Env,
+  domain: string,
+): Promise<{ inIndex: boolean; rank: number | null; snapshot: string | null }> {
+  try {
+    const blob = (await env.TENSORFEED_CACHE.get('merchant:majestic-topn', 'json')) as {
+      captured_at: string;
+      ranks: Record<string, number>;
+    } | null;
+    if (!blob) return { inIndex: false, rank: null, snapshot: null };
+    const rank = blob.ranks[domain];
+    return { inIndex: rank !== undefined, rank: rank ?? null, snapshot: blob.captured_at };
+  } catch {
+    return { inIndex: false, rank: null, snapshot: null };
+  }
+}
+
+let phishCache: { snapshot: string; set: Set<string> } | null = null;
+
+export async function lookupPhishing(
+  env: Env,
+  domain: string,
+): Promise<{ listed: boolean; snapshot: string | null }> {
+  try {
+    const blob = (await env.TENSORFEED_CACHE.get('merchant:phishing-active', 'json')) as {
+      captured_at: string;
+      domains: string[];
+    } | null;
+    if (!blob) return { listed: false, snapshot: null };
+    if (!phishCache || phishCache.snapshot !== blob.captured_at) {
+      phishCache = { snapshot: blob.captured_at, set: new Set(blob.domains) };
+    }
+    return { listed: phishCache.set.has(domain), snapshot: blob.captured_at };
+  } catch {
+    return { listed: false, snapshot: null };
+  }
+}

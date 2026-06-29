@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchRdapAgeDays, fetchDnsHygiene, fetchCertFirstSeenDays } from './merchant-signals';
+import { fetchRdapAgeDays, fetchDnsHygiene, fetchCertFirstSeenDays, lookupMajestic, lookupPhishing } from './merchant-signals';
 
 const NOW = Date.parse('2026-06-29T00:00:00Z');
 beforeEach(() => vi.restoreAllMocks());
@@ -57,5 +57,27 @@ describe('fetchCertFirstSeenDays', () => {
       return new Response(JSON.stringify([{ not_before: '2025-06-29T00:00:00Z' }]), { status: 200 });
     });
     expect(await fetchCertFirstSeenDays('example.com', Date.parse('2026-06-29T00:00:00Z'))).toBe(365);
+  });
+});
+
+function envWith(map: Record<string, unknown>) {
+  return { TENSORFEED_CACHE: { get: async (k: string) => map[k] ?? null } } as unknown as Parameters<typeof lookupMajestic>[0];
+}
+
+describe('KV list lookups', () => {
+  it('returns rank when present and null when absent', async () => {
+    const env = envWith({ 'merchant:majestic-topn': { captured_at: 'S', ranks: { 'example.com': 42 } } });
+    expect(await lookupMajestic(env, 'example.com')).toEqual({ inIndex: true, rank: 42, snapshot: 'S' });
+    expect(await lookupMajestic(env, 'nope.com')).toEqual({ inIndex: false, rank: null, snapshot: 'S' });
+  });
+  it('flags a phishing domain', async () => {
+    const env = envWith({ 'merchant:phishing-active': { captured_at: 'S', domains: ['bad.com'] } });
+    expect((await lookupPhishing(env, 'bad.com')).listed).toBe(true);
+    expect((await lookupPhishing(env, 'ok.com')).listed).toBe(false);
+  });
+  it('degrades gracefully when KV is empty', async () => {
+    const env = envWith({});
+    expect(await lookupMajestic(env, 'example.com')).toEqual({ inIndex: false, rank: null, snapshot: null });
+    expect(await lookupPhishing(env, 'bad.com')).toEqual({ listed: false, snapshot: null });
   });
 });
