@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeDomain } from './premium-merchant-legitimacy';
+import { normalizeDomain, buildMerchantLegitimacyVerdict } from './premium-merchant-legitimacy';
+import type { MerchantSignals } from './merchant-signals';
 
 describe('normalizeDomain', () => {
   it('lowercases and strips scheme, path, port, and www', () => {
@@ -11,5 +12,54 @@ describe('normalizeDomain', () => {
   it('rejects junk and empty', () => {
     expect(normalizeDomain('not a domain')).toBeNull();
     expect(normalizeDomain('')).toBeNull();
+  });
+});
+
+const CAP = '2026-06-29T00:00:00Z';
+
+function sig(o: Partial<MerchantSignals> = {}): MerchantSignals {
+  return {
+    domainAgeDays: 400,
+    dns: { mx: true, spf: true, dmarc: 'reject' },
+    certFirstSeenDays: 390,
+    majestic: { inIndex: false, rank: null },
+    phishingListed: false,
+    listSnapshots: { majestic: 'M', phishing: 'P' },
+    liveSignalsResolved: 3,
+    ...o,
+  };
+}
+
+describe('buildMerchantLegitimacyVerdict', () => {
+  it('established clean merchant -> proceed', () => {
+    const r = buildMerchantLegitimacyVerdict('shop.com', sig({ domainAgeDays: 1200, majestic: { inIndex: true, rank: 5000 } }), CAP);
+    expect(r.verdict).toBe('proceed');
+    expect(r.score).toBeGreaterThanOrEqual(70);
+  });
+  it('newly-registered, no hygiene, unknown, fresh cert -> block cluster', () => {
+    const r = buildMerchantLegitimacyVerdict('scam.com', sig({ domainAgeDays: 9, dns: { mx: false, spf: false, dmarc: null }, certFirstSeenDays: 5 }), CAP);
+    expect(r.verdict).toBe('block');
+    expect(r.score).toBeLessThan(40);
+  });
+  it('young but clean small merchant -> step_up', () => {
+    const r = buildMerchantLegitimacyVerdict('new.com', sig({ domainAgeDays: 90 }), CAP);
+    expect(r.verdict).toBe('step_up');
+  });
+  it('phishing hit overrides to block regardless of score', () => {
+    const r = buildMerchantLegitimacyVerdict('p.com', sig({ domainAgeDays: 2000, majestic: { inIndex: true, rank: 100 }, phishingListed: true }), CAP);
+    expect(r.verdict).toBe('block');
+    expect(r.score).toBeLessThanOrEqual(15);
+  });
+  it('all live signals failed -> insufficient_data, never proceed', () => {
+    const r = buildMerchantLegitimacyVerdict('x.io', sig({ domainAgeDays: null, dns: { mx: false, spf: false, dmarc: null }, certFirstSeenDays: null, liveSignalsResolved: 0 }), CAP);
+    expect(r.verdict).toBe('insufficient_data');
+  });
+  it('carries capturedAt and emits no em dashes or double hyphens', () => {
+    const r = buildMerchantLegitimacyVerdict('shop.com', sig(), CAP);
+    expect(r.capturedAt).toBe(CAP);
+    const j = JSON.stringify(r);
+    expect(j).not.toContain('—');
+    expect(j).not.toContain('–');
+    expect(j.includes('--')).toBe(false);
   });
 });
