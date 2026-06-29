@@ -834,6 +834,16 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     signed: true,
     category: 'customs',
   },
+  {
+    path: '/api/premium/merchant/legitimacy',
+    credits: 1,
+    strict_premium: true,
+    params: [{ name: 'domain', required: true }],
+    returns: 'Signed merchant-domain legitimacy verdict (proceed/step_up/block) with per-signal reasons.',
+    free_sibling: '/api/preview/merchant/legitimacy',
+    signed: true,
+    category: 'merchant',
+  },
 
   // === MCP ===
   {
