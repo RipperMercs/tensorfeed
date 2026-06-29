@@ -8148,7 +8148,7 @@ export default {
     // and recommendation stripped. 10 calls/day per IP. The paid
     // /api/premium/merchant/legitimacy adds the full signal detail plus a signed receipt.
     if (path === '/api/preview/merchant/legitimacy') {
-      const { computeMerchantLegitimacyVerdict, normalizeDomain, redactMerchantLegitimacyForPreview, checkMerchantLegitimacyPreviewRateLimit } = await import('./premium-merchant-legitimacy');
+      const { computeMerchantLegitimacyVerdict, normalizeDomain, redactMerchantLegitimacyForPreview, checkMerchantLegitimacyPreviewRateLimit, billingKindFor } = await import('./premium-merchant-legitimacy');
       const domain = normalizeDomain(url.searchParams.get('domain') || '');
       if (!domain) return jsonResponse({ error: 'missing_params', required: ['domain'] }, 400, 0);
       // Cache-API front: preview is billing-free; a domain's verdict is stable for hours.
@@ -8166,10 +8166,16 @@ export default {
       if (!lim.allowed) return jsonResponse({ error: 'rate_limited', reset_in_hours: hoursUntilUTCRollover(), message: 'Free preview is 10/day. The premium endpoint /api/premium/merchant/legitimacy has no limit and returns full signals plus a signed receipt.' }, 429, 0);
       const full = await computeMerchantLegitimacyVerdict(env, domain);
       const redacted = redactMerchantLegitimacyForPreview(full);
-      const mlPreviewBody = { ...redacted, rate_limit: { remaining: lim.remaining, limit: lim.limit }, upgrade: { premium_endpoint: '/api/premium/merchant/legitimacy', adds: ['per-signal breakdown', 'reasons', 'signed receipt'] } };
-      if (mlPreviewCacheKey) {
-        const cacheResp = new Response(JSON.stringify(mlPreviewBody), {
-          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=10800' },
+      // mlPreviewCacheBody omits rate_limit so cached responses do not echo a stale count.
+      const mlPreviewCacheBody = { ...redacted, upgrade: { premium_endpoint: '/api/premium/merchant/legitimacy', adds: ['per-signal breakdown', 'reasons', 'signed receipt'] } };
+      // Live response includes rate_limit; cache hits do not.
+      const mlPreviewBody = { ...mlPreviewCacheBody, rate_limit: { remaining: lim.remaining, limit: lim.limit } };
+      // Only cache real verdicts (proceed/step_up/block). insufficient_data means all
+      // live upstreams failed; caching that zero-evidence result would poison later
+      // paid calls for 60 minutes after upstreams recover.
+      if (mlPreviewCacheKey && billingKindFor(full) !== 'no_charge') {
+        const cacheResp = new Response(JSON.stringify(mlPreviewCacheBody), {
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' },
         });
         ctx.waitUntil(caches.default.put(mlPreviewCacheKey, cacheResp));
       }
@@ -8209,9 +8215,12 @@ export default {
           }
         }
         const result = await computeMerchantLegitimacyVerdict(env, domain);
-        if (mlVerdictCacheKey) {
+        // Only cache real verdicts. A no_charge/insufficient_data result means all
+        // live upstreams failed; caching it for 60 minutes would serve stale
+        // non-answers to paid callers even after upstreams recover.
+        if (mlVerdictCacheKey && billingKindFor(result) !== 'no_charge') {
           const cacheResp = new Response(JSON.stringify(result), {
-            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=10800' },
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' },
           });
           ctx.waitUntil(caches.default.put(mlVerdictCacheKey, cacheResp));
         }
