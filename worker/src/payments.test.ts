@@ -237,10 +237,11 @@ describe('requirePayment Solana x402 rail (CDP)', () => {
       | { info: { input: Record<string, unknown> }; schema: Record<string, unknown> }
       | undefined;
     expect(payExt).toBeDefined();
-    // And it must be the canonical (well-formed) shape, not the malformed one
-    // that CDP rejects: no derived queryFields, $schema retained.
+    // And it must be the shape CDP's draft-07 Ajv accepts: no derived
+    // queryFields, and no $schema pin (a 2020-12 $schema makes CDP's compile
+    // throw -> rejected / "invalid discovery configuration").
     expect(payExt!.info.input).not.toHaveProperty('queryFields');
-    expect(payExt!.schema).toHaveProperty('$schema');
+    expect(payExt!.schema).not.toHaveProperty('$schema');
   });
 
   it('accepts the payment on the x402 v2 PAYMENT-SIGNATURE header (not just X-PAYMENT)', async () => {
@@ -1372,9 +1373,15 @@ describe('normalizeBazaarExtensionsForCDP: emits the CDP-cataloged canonical baz
     },
   });
 
-  it('keeps bazaar.schema.$schema (104 of 120 cataloged peers retain it)', () => {
+  it('strips bazaar.schema.$schema (CDP draft-07 Ajv cannot resolve the 2020-12 meta-schema ref)', () => {
+    // Reproduced offline 2026-06-29 against CDP's exact validator
+    // (new Ajv({strict:false}).compile(schema)(info), draft-07): with a pinned
+    // $schema=".../draft/2020-12/schema" the compile THROWS and CDP returns
+    // rejected / "invalid discovery configuration"; with $schema stripped the
+    // schema compiles and info validates. Cataloged peers (deepnets) only show
+    // $schema because CDP re-injects it into the stored record.
     const out = normalizeBazaarExtensionsForCDP(canonical(), RESOURCE) as Record<string, any>;
-    expect(out.bazaar.schema).toHaveProperty('$schema');
+    expect(out.bazaar.schema).not.toHaveProperty('$schema');
   });
 
   it('does not inject info.input.queryFields (0 of 120 cataloged peers carry it)', () => {
@@ -1392,9 +1399,11 @@ describe('normalizeBazaarExtensionsForCDP: emits the CDP-cataloged canonical baz
     expect(out.bazaar.info.input).not.toHaveProperty('discoverable');
   });
 
-  it('emits the canonical static config verbatim (no mutation)', () => {
-    const out = normalizeBazaarExtensionsForCDP(canonical(), RESOURCE);
-    expect(out).toEqual(canonical());
+  it('strips only $schema, leaving info and the rest of schema verbatim', () => {
+    const out = normalizeBazaarExtensionsForCDP(canonical(), RESOURCE) as Record<string, any>;
+    expect(out.bazaar.info).toEqual(canonical().bazaar.info);
+    const { $schema, ...schemaRest } = canonical().bazaar.schema as Record<string, unknown>;
+    expect(out.bazaar.schema).toEqual(schemaRest);
   });
 
   it('returns a clone, not the same reference (no shared static-config mutation)', () => {

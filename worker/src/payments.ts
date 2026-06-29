@@ -286,19 +286,26 @@ export function normalizeBazaarExtensionsForCDP(
 ): Record<string, unknown> {
   // Pass-through empty (non-pilot endpoints).
   if (!ext || Object.keys(ext).length === 0) return ext;
-  // Emit the static pilot bazaar config VERBATIM (deep clone only). It is
-  // already in the exact shape CDP's Bazaar discovery validator catalogs,
-  // verified against 120 live cataloged records (2026-06-29): a simple
-  // info.input / info.output and a top-level bazaar.schema that KEEPS
-  // $schema, with NO derived info.input.queryFields and NO info.output.schema.
-  // The earlier "v2 catalog-friendly typing" (inject queryFields/pathFields/
-  // output.schema, strip $schema; added 2026-05-25 from a misread of
-  // x402-foundation/x402#2207) made the extension malformed, so CDP rejected
-  // it (EXTENSION-RESPONSES e30=, "no valid extension") and stopped cataloging
-  // every TF endpoint. Keep this a verbatim clone: do NOT re-derive, add, or
-  // strip fields. The JSON round-trip is safe (bazaar configs are plain JSON:
-  // strings, numbers, booleans, arrays, objects only).
-  return JSON.parse(JSON.stringify(ext));
+  // Emit the static pilot bazaar config verbatim EXCEPT strip
+  // bazaar.schema.$schema. CDP's Bazaar discovery validator compiles the
+  // seller's own bazaar.schema with a draft-07 Ajv and validates info against
+  // it (validateDiscoveryExtension in x402-foundation/x402,
+  // bazaar/facilitator.ts: new Ajv({strict:false}).compile(schema)(info)). A
+  // pinned `$schema: ".../draft/2020-12/schema"` makes that compile THROW ("no
+  // schema with key or ref ...2020-12..."), which CDP surfaces as rejected /
+  // "invalid discovery configuration", so the resource never catalogs.
+  // Reproduced offline 2026-06-29: WITH $schema the schema throws under
+  // draft-07; WITHOUT it the schema compiles AND info validates (identical to
+  // cataloged peers like deepnets). CDP re-injects a normalized $schema into
+  // the STORED record, which is why cataloged peers appear to keep it. Do NOT
+  // add queryFields/pathFields/output.schema: the seller schema's input
+  // additionalProperties:false rejects those as illegal extra props.
+  const cloned: Record<string, unknown> = JSON.parse(JSON.stringify(ext));
+  const bazaar = cloned.bazaar as Record<string, unknown> | undefined;
+  if (bazaar && bazaar.schema && typeof bazaar.schema === 'object') {
+    delete (bazaar.schema as Record<string, unknown>).$schema;
+  }
+  return cloned;
 }
 
 function checkRequestCircuit(request: Request, token: string) {
