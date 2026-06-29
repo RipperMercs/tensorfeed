@@ -95,4 +95,6 @@ async function main() {
   console.log(`refreshed merchant lists at ${nowIso}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}
