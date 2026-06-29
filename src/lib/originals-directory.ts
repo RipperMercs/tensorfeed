@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'qwen-agentworld-mcp-simulator-open-frontier',
+    title:
+      'Qwen Just Open-Sourced a Simulator for Seven Agent Worlds. MCP Is One of Them.',
+    author: 'Ripper',
+    date: 'June 29, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 24, 2026, Alibaba's Qwen team shipped Qwen-AgentWorld, an open-weight Language World Model that simulates seven agent environments inside a single model: MCP, Search, Terminal, Software Engineering, Web, OS, and Android. The 397B-A17B variant scores 58.71 on the team's AgentWorldBench, beating GPT-5.4 (58.25), Claude Opus 4.8 (56.59), and Gemini 3.1 Pro (54.57) at predicting what an agent's tool call will return. A 35B-A3B sibling runs cheap enough to spin up as a training simulator on a single H100. Apache 2.0 weights, 256K context, three-stage training pipeline (CPT, SFT, RL) over 10M+ real interaction trajectories. The agent harness, the thing we have been writing about as the load-bearing piece nobody owns, just became a forward pass you can download from Hugging Face. Inside the seven-environment design, the MCP simulation line that matters most to anyone shipping a server, the irony of an open frontier topping a benchmark on closed-frontier traces, and what it does to the data factory underneath every credible agent training loop.",
+  },
+  {
     slug: 'tokenmaxxing-cliff-ipo-math',
     title:
       'The Tokenmaxxing Era Just Ended. The Run-Rate Doubling Curve Just Got an Efficiency Asterisk.',
