@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-05",
+  "lastUpdated": "2026-06-29",
   "categories": [
     {
       "id": "coding",
@@ -28,6 +28,16 @@
     }
   ],
   "agents": [
+    {
+      "id": "microsoft-scout",
+      "name": "Microsoft Scout",
+      "provider": "Microsoft",
+      "category": "general",
+      "description": "Microsoft's always-on autonomous enterprise agent with its own governed Microsoft Entra identity. Scout operates continuously across Microsoft 365 services including Teams, Outlook, calendars, contacts, OneDrive, and SharePoint, taking actions proactively within user-configured approval gates. Announced at Microsoft Build 2026 as the flagship of Microsoft's new Autopilots category for enterprise AI agents.",
+      "url": "https://microsoft.com/en-us/microsoft-365/copilot/microsoft-365-copilot-for-work",
+      "pricing": "Included with Microsoft 365 Copilot (enterprise subscription)",
+      "launched": 2026
+    },
     {
       "id": "claude-code",
       "name": "Claude Code",
