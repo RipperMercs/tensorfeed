@@ -23,9 +23,59 @@ const REPO_ROOT = path.join(__dirname, '..');
 const WORKER_DIR = path.join(REPO_ROOT, 'worker');
 
 /**
+ * Minimum number of entries the Majestic map must have before we allow a KV write.
+ * The top-100k source should always yield close to 100k entries; fewer than this
+ * means the fetch was truncated or returned an error page, and writing it would
+ * overwrite good production data with a near-empty blob.
+ */
+const MAJESTIC_MIN_ENTRIES = 50000;
+
+/**
+ * Minimum number of entries the phishing list must have before we allow a KV write.
+ * The active list is hundreds of thousands of entries; fewer than this means the
+ * fetch returned a 404, a rate-limit page, or a truncated body, and writing it
+ * would silently disable the phishing hard-block.
+ */
+const PHISHING_MIN_ENTRIES = 1000;
+
+/**
+ * Guard that prevents overwriting production KV with a truncated or errored
+ * Majestic response. Returns the map unchanged when it is large enough.
+ *
+ * @param {Record<string, number>} ranksObj
+ * @returns {Record<string, number>}
+ */
+export function assertMajesticSane(ranksObj) {
+  const count = Object.keys(ranksObj).length;
+  if (count < MAJESTIC_MIN_ENTRIES) {
+    throw new Error(
+      `Majestic map has only ${count} entries (minimum ${MAJESTIC_MIN_ENTRIES}). Refusing KV write to avoid overwriting good data.`,
+    );
+  }
+  return ranksObj;
+}
+
+/**
+ * Guard that prevents overwriting production KV with a truncated or errored
+ * phishing-list response. Returns the array unchanged when it is large enough.
+ *
+ * @param {string[]} domainsArr
+ * @returns {string[]}
+ */
+export function assertPhishingSane(domainsArr) {
+  if (domainsArr.length < PHISHING_MIN_ENTRIES) {
+    throw new Error(
+      `Phishing list has only ${domainsArr.length} entries (minimum ${PHISHING_MIN_ENTRIES}). Refusing KV write to avoid overwriting good data.`,
+    );
+  }
+  return domainsArr;
+}
+
+/**
  * Parse a Majestic Million CSV and return the top N domains keyed to their GlobalRank.
  * Column order: GlobalRank, TldRank, Domain, TLD (header row always present).
- * Domains are lowercased. Stops at exactly N entries.
+ * Domains are lowercased and stripped of a leading "www." to match the Worker's
+ * normalizeDomain lookup. Stops at exactly N entries.
  *
  * @param {string} csvText - raw CSV text including header
  * @param {number} n - how many top-ranked domains to include
@@ -38,7 +88,8 @@ export function buildMajesticTopN(csvText, n) {
     const cols = lines[i].split(',');
     if (cols.length < 3) continue;
     const rank = Number(cols[0]);
-    const domain = cols[2].trim().toLowerCase();
+    let domain = cols[2].trim().toLowerCase();
+    if (domain.startsWith('www.')) domain = domain.slice(4);
     if (domain && Number.isFinite(rank)) out[domain] = rank;
   }
   return out;
@@ -46,27 +97,47 @@ export function buildMajesticTopN(csvText, n) {
 
 /**
  * Parse the Phishing.Database active-domains list.
- * Each line is one domain. Trims whitespace, lowercases, drops blank lines.
+ * Each line is one domain. Trims whitespace, lowercases, strips a leading "www."
+ * to match the Worker's normalizeDomain lookup, and drops blank lines.
  *
  * @param {string} text - raw file text
  * @returns {string[]} array of lowercase domain strings
  */
 export function parsePhishingActive(text) {
-  return text.split('\n').map((l) => l.trim().toLowerCase()).filter(Boolean);
+  return text
+    .split('\n')
+    .map((l) => {
+      let d = l.trim().toLowerCase();
+      if (d.startsWith('www.')) d = d.slice(4);
+      return d;
+    })
+    .filter(Boolean);
 }
 
 async function main() {
   const nowIso = new Date().toISOString();
 
-  const [majCsv, phishTxt] = await Promise.all([
-    fetch('https://downloads.majestic.com/majestic_million.csv').then((r) => r.text()),
+  const [majRes, phishRes] = await Promise.all([
+    fetch('https://downloads.majestic.com/majestic_million.csv'),
     fetch(
       'https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/phishing-domains-ACTIVE.txt',
-    ).then((r) => r.text()),
+    ),
   ]);
 
-  const majesticBlob = JSON.stringify({ captured_at: nowIso, ranks: buildMajesticTopN(majCsv, 100000) });
-  const phishingBlob = JSON.stringify({ captured_at: nowIso, domains: parsePhishingActive(phishTxt) });
+  if (!majRes.ok) {
+    throw new Error(`Majestic fetch failed: HTTP ${majRes.status} ${majRes.statusText}`);
+  }
+  if (!phishRes.ok) {
+    throw new Error(`Phishing.Database fetch failed: HTTP ${phishRes.status} ${phishRes.statusText}`);
+  }
+
+  const [majCsv, phishTxt] = await Promise.all([majRes.text(), phishRes.text()]);
+
+  const majesticRanks = assertMajesticSane(buildMajesticTopN(majCsv, 100000));
+  const phishingDomains = assertPhishingSane(parsePhishingActive(phishTxt));
+
+  const majesticBlob = JSON.stringify({ captured_at: nowIso, ranks: majesticRanks });
+  const phishingBlob = JSON.stringify({ captured_at: nowIso, domains: phishingDomains });
 
   const { writeFileSync } = await import('node:fs');
   const { spawnSync } = await import('node:child_process');
