@@ -7619,6 +7619,67 @@ const LANDED_COST_PILOT: BazaarPilotConfig = {
   },
 };
 
+// Wave 47 (2026-06-28): merchant-legitimacy. Signed domain-legitimacy verdict
+// for AI commerce agents: RDAP domain age, DoH DNS hygiene, crt.sh cert
+// history, Majestic top-100k membership, and Phishing.Database active-domain
+// list fused into a proceed/step_up/block/insufficient_data verdict with a
+// 0-100 score. Param-required (?domain=). Free taste at
+// /api/preview/merchant/legitimacy. Total pilot count: 95 -> 96.
+const MERCHANT_LEGITIMACY_PILOT: BazaarPilotConfig = {
+  description:
+    'Signed merchant-domain legitimacy verdict for AI commerce agents. Pass a domain and get a proceed/step_up/block/insufficient_data ruling with a 0-100 score, fused from RDAP domain age, DoH DNS hygiene, crt.sh cert history, Majestic top-100k rank, and Phishing.Database active-domain membership. Per-signal reasons and recommendation included. The "can I trust this merchant domain before paying" call.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { domain: 'example.com' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            capturedAt: '2026-06-28T12:00:00Z',
+            domain: 'example.com',
+            verdict: 'proceed',
+            score: 82,
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  domain: {
+                    type: 'string',
+                    description:
+                      'Merchant domain to assess (for example example.com). Schemes, paths, and www. prefix are stripped server-side. Required.',
+                  },
+                },
+                required: ['domain'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -7821,6 +7882,10 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // Chapter 99 add-ons with litigation flags + CBP fees). Param-required
   // (?hts=&origin=&value_usd=). Free taste at /api/preview/customs/landed-cost.
   '/api/premium/customs/landed-cost': LANDED_COST_PILOT,
+  // Wave 47 (2026-06-28): merchant/legitimacy. Signed merchant-domain legitimacy
+  // verdict for AI commerce agents (param-required ?domain=). Free taste at
+  // /api/preview/merchant/legitimacy.
+  '/api/premium/merchant/legitimacy': MERCHANT_LEGITIMACY_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

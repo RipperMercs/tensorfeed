@@ -185,6 +185,10 @@ const PILOT_PATHS = [
   // estimate: base HTS duty + stacked Chapter 99 add-ons with litigation flags
   // + CBP MPF/HMF fees + the total)
   '/api/premium/customs/landed-cost',
+  // Wave 47 (2026-06-28): merchant/legitimacy (signed merchant-domain legitimacy
+  // verdict: RDAP age, DoH DNS hygiene, crt.sh cert history, Majestic top-100k,
+  // Phishing.Database; proceed/step_up/block/insufficient_data)
+  '/api/premium/merchant/legitimacy',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

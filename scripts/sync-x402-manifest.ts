@@ -180,6 +180,9 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   // estimate for an HTS code, origin, and customs value (param-required
   // ?hts=&origin=&value_usd=, optional ?mode=&fta=&quantity=&unit=).
   '/api/premium/customs/landed-cost':                { name: 'Landed-cost estimate',                  category: 'customs-landed-cost',     credits: 1, method: 'GET' },
+  // Wave 47 (2026-06-28): merchant/legitimacy. Signed merchant-domain legitimacy
+  // verdict for AI commerce agents (param-required ?domain=).
+  '/api/premium/merchant/legitimacy':                { name: 'Merchant legitimacy verdict',            category: 'merchant',                credits: 1, method: 'GET' },
 };
 
 // ── Latin1 hygiene ─────────────────────────────────────────────────

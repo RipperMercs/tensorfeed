@@ -30201,6 +30201,143 @@
      }
     }
    }
+  },
+  {
+   "resource": {
+    "url": "https://tensorfeed.ai/api/premium/merchant/legitimacy",
+    "description": "Signed merchant-domain legitimacy verdict for AI commerce agents. Pass a domain and get a proceed/step_up/block/insufficient_data ruling with a 0-100 score, fused from RDAP domain age, DoH DNS hygiene, crt.sh cert history, Majestic top-100k rank, and Phishing.Database active-domain membership. Per-signal reasons and recommendation included. The \"can I trust this merchant domain before paying\" call.",
+    "mimeType": "application/json"
+   },
+   "type": "http",
+   "method": "GET",
+   "x402Version": 2,
+   "accepts": [
+    {
+     "scheme": "exact",
+     "network": "eip155:8453",
+     "amount": "20000",
+     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+     "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "name": "USD Coin",
+      "version": "2"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "domain": "example.com"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "capturedAt": "2026-06-28T12:00:00Z",
+        "domain": "example.com",
+        "verdict": "proceed",
+        "score": 82,
+        "billing": {
+         "credits_charged": 1,
+         "credits_remaining": 49
+        }
+       }
+      }
+     }
+    }
+   ],
+   "lastUpdated": "2026-06-29T00:00:00Z",
+   "metadata": {
+    "name": "Merchant legitimacy verdict",
+    "description": "Signed merchant-domain legitimacy verdict for AI commerce agents. Pass a domain and get a proceed/step_up/block/insufficient_data ruling with a 0-100 score, fused from RDAP domain age, DoH DNS hygiene, crt.sh cert history, Majestic top-100k rank, and Phishing.Database active-domain membership. Per-signal reasons and recommendation included. The \"can I trust this merchant domain before paying\" call.",
+    "tier": 1,
+    "credits": 1,
+    "category": "merchant"
+   },
+   "extensions": {
+    "bazaar": {
+     "info": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "domain": "example.com"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "capturedAt": "2026-06-28T12:00:00Z",
+        "domain": "example.com",
+        "verdict": "proceed",
+        "score": 82,
+        "billing": {
+         "credits_charged": 1,
+         "credits_remaining": 49
+        }
+       }
+      }
+     },
+     "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+       "input": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string",
+          "const": "http"
+         },
+         "method": {
+          "type": "string",
+          "enum": [
+           "GET"
+          ]
+         },
+         "queryParams": {
+          "type": "object",
+          "properties": {
+           "domain": {
+            "type": "string",
+            "description": "Merchant domain to assess (for example example.com). Schemes, paths, and www. prefix are stripped server-side. Required."
+           }
+          },
+          "required": [
+           "domain"
+          ]
+         }
+        },
+        "required": [
+         "type",
+         "method"
+        ],
+        "additionalProperties": false
+       },
+       "output": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string"
+         },
+         "example": {
+          "type": "object"
+         }
+        },
+        "required": [
+         "type"
+        ]
+       }
+      },
+      "required": [
+       "input"
+      ]
+     }
+    }
+   }
   }
  ],
  "freeEndpoints": [
@@ -30272,5 +30409,5 @@
    "manifest": "https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
   }
  ],
- "lastUpdated": "2026-06-28T00:00:00Z"
+ "lastUpdated": "2026-06-29T00:00:00Z"
 }
