@@ -1,6 +1,15 @@
-import { describe, it, expect } from 'vitest';
-import { normalizeDomain, buildMerchantLegitimacyVerdict } from './premium-merchant-legitimacy';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  normalizeDomain,
+  buildMerchantLegitimacyVerdict,
+  redactMerchantLegitimacyForPreview,
+  checkMerchantLegitimacyPreviewRateLimit,
+} from './premium-merchant-legitimacy';
 import type { MerchantSignals } from './merchant-signals';
+
+vi.mock('./kill-switch', () => ({ safePut: vi.fn() }));
+
+import { safePut } from './kill-switch';
 
 describe('normalizeDomain', () => {
   it('lowercases and strips scheme, path, port, and www', () => {
@@ -61,5 +70,27 @@ describe('buildMerchantLegitimacyVerdict', () => {
     expect(j).not.toContain('—');
     expect(j).not.toContain('–');
     expect(j.includes('--')).toBe(false);
+  });
+});
+
+describe('preview redact + rate limit', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('redaction drops signals, reasons, sources, keeps band', () => {
+    const full = buildMerchantLegitimacyVerdict('shop.com', sig({ domainAgeDays: 1200, majestic: { inIndex: true, rank: 5000 } }), CAP);
+    const p = redactMerchantLegitimacyForPreview(full);
+    expect(p).toEqual({ ok: true, preview: true, domain: 'shop.com', verdict: 'proceed', score_band: 'high', capturedAt: CAP });
+  });
+  it('allows under the cap and writes the counter', async () => {
+    const env = { TENSORFEED_CACHE: { get: async () => null } } as never;
+    const r = await checkMerchantLegitimacyPreviewRateLimit(env, '1.2.3.4', 10);
+    expect(r).toEqual({ allowed: true, remaining: 9, limit: 10 });
+    expect(safePut).toHaveBeenCalledTimes(1);
+  });
+  it('blocks at the cap', async () => {
+    const env = { TENSORFEED_CACHE: { get: async () => ({ count: 10 }) } } as never;
+    expect((await checkMerchantLegitimacyPreviewRateLimit(env, '1.2.3.4', 10)).allowed).toBe(false);
   });
 });

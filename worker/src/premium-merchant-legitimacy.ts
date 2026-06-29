@@ -2,7 +2,9 @@
 // open-data signals: RDAP domain age, DoH DNS hygiene, crt.sh cert history,
 // Majestic popularity rank, and Phishing.Database active list.
 
+import type { Env } from './types';
 import type { MerchantSignals } from './merchant-signals';
+import { safePut } from './kill-switch';
 
 const DOMAIN_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 
@@ -131,4 +133,23 @@ export function buildMerchantLegitimacyVerdict(
           : 'Mixed signals; verify before high-value transactions (escrow, identity, or an alternative).';
 
   return { ok: true, capturedAt, domain, verdict, score, signals: s, reasons, recommendation, sources: SOURCES };
+}
+
+export function redactMerchantLegitimacyForPreview(full: MerchantLegitimacyResult): MerchantLegitimacyPreview {
+  const score_band: 'high' | 'medium' | 'low' = full.score >= 70 ? 'high' : full.score >= 40 ? 'medium' : 'low';
+  return { ok: true, preview: true, domain: full.domain, verdict: full.verdict, score_band, capturedAt: full.capturedAt };
+}
+
+export async function checkMerchantLegitimacyPreviewRateLimit(
+  env: Env,
+  ip: string,
+  max = 10,
+): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const date = new Date().toISOString().slice(0, 10);
+  const key = `rate:merchant-legitimacy-preview:${date}:${ip}`;
+  const current = (await env.TENSORFEED_CACHE.get(key, 'json')) as { count: number } | null;
+  const count = current?.count ?? 0;
+  if (count >= max) return { allowed: false, remaining: 0, limit: max };
+  await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
+  return { allowed: true, remaining: max - count - 1, limit: max };
 }
