@@ -326,6 +326,12 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // covers the refresh TTL with headroom, so a sustained upstream outage (a stale
   // captured_at) triggers a no-charge while normal operation never false-positives.
   '/api/premium/settlement/rail-verdict': { maxAgeSeconds: 2 * 60 * 60 },
+  // Merchant legitimacy verdict: fuses live domain signals (RDAP, DoH, crt.sh)
+  // with daily list snapshots (Majestic Million, Phishing.Database). capturedAt
+  // binds to the oldest contributing data. 36h SLA mirrors the daily-snapshot
+  // family: a stale phishing or popularity snapshot bound to the verdict triggers
+  // a no-charge rather than billing on outdated list data.
+  '/api/premium/merchant/legitimacy': { maxAgeSeconds: 36 * 60 * 60 },
 };
 
 /**
@@ -468,6 +474,7 @@ export function describeSLAs(): Array<{ endpoint: string; max_age_seconds: numbe
     '/api/premium/watches': 'registration write, no capture concept',
     '/api/premium/sec/filings/guidance-delta':
       'periodic filings are immutable once filed (no wall-clock staleness); freshness is input-keyed, the endpoint no-charges when a newer same-form filing has superseded the served delta',
+    '/api/premium/merchant/legitimacy': 'merchant-domain signals fused from live fetches and daily list snapshots (Majestic Million, Phishing.Database); 36h SLA so a stale list snapshot bound to the verdict triggers a no-charge rather than billing on outdated data',
   };
   return Object.entries(ENDPOINT_FRESHNESS).map(([endpoint, sla]) => ({
     endpoint,

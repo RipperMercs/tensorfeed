@@ -8170,10 +8170,15 @@ export default {
     // schema validation failure.
     if (path === '/api/premium/merchant/legitimacy') {
       return handlePremium(request, env, ctx, { tier: 1, endpoint: '/api/premium/merchant/legitimacy' }, async () => {
-        const { computeMerchantLegitimacyVerdict, normalizeDomain } = await import('./premium-merchant-legitimacy');
+        const { computeMerchantLegitimacyVerdict, normalizeDomain, billingKindFor } = await import('./premium-merchant-legitimacy');
         const domain = normalizeDomain(url.searchParams.get('domain') || '');
         if (!domain) return { kind: 'validation_failure', error: { error: 'missing_params', required: ['domain'], hint: 'pass ?domain=example.com' } };
         const result = await computeMerchantLegitimacyVerdict(env, domain);
+        if (billingKindFor(result) === 'no_charge') {
+          // No-charge: all live signals failed; TF cannot stand behind a verdict.
+          // The agent still gets the signed result, billed at zero.
+          return { kind: 'no_charge', body: result, reason: 'upstream_failure', dataCapturedAt: result.capturedAt };
+        }
         return { kind: 'ok', body: result, dataCapturedAt: result.capturedAt };
       }, PREMIUM_DEPS);
     }
