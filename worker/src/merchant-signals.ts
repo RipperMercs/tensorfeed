@@ -30,4 +30,34 @@ export async function fetchRdapAgeDays(domain: string, nowMs: number): Promise<n
   }
 }
 
+async function doh(name: string, type: 'MX' | 'TXT'): Promise<{ type: number; data: string }[]> {
+  const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`, {
+    headers: { accept: 'application/dns-json' }, signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) return [];
+  const body = (await res.json()) as { Answer?: { type: number; data: string }[] };
+  return body.Answer ?? [];
+}
+
+function txtValues(answers: { type: number; data: string }[]): string[] {
+  return answers.filter((a) => a.type === 16).map((a) => a.data.replace(/^"|"$/g, '').replace(/" "/g, ''));
+}
+
+export async function fetchDnsHygiene(domain: string): Promise<MerchantSignals['dns']> {
+  try {
+    const [mxA, txtA, dmarcA] = await Promise.all([doh(domain, 'MX'), doh(domain, 'TXT'), doh(`_dmarc.${domain}`, 'TXT')]);
+    const mx = mxA.some((a) => a.type === 15);
+    const spf = txtValues(txtA).some((t) => t.toLowerCase().startsWith('v=spf1'));
+    const dmarcTxt = txtValues(dmarcA).find((t) => t.toLowerCase().startsWith('v=dmarc1'));
+    let dmarc: MerchantSignals['dns']['dmarc'] = null;
+    if (dmarcTxt) {
+      const p = /p\s*=\s*(none|quarantine|reject)/i.exec(dmarcTxt)?.[1]?.toLowerCase();
+      dmarc = (p as MerchantSignals['dns']['dmarc']) ?? 'none';
+    }
+    return { mx, spf, dmarc };
+  } catch {
+    return { mx: false, spf: false, dmarc: null };
+  }
+}
+
 void (0 as unknown as Env);

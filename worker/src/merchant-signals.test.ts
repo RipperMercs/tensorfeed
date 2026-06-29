@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchRdapAgeDays } from './merchant-signals';
+import { fetchRdapAgeDays, fetchDnsHygiene } from './merchant-signals';
 
 const NOW = Date.parse('2026-06-29T00:00:00Z');
 beforeEach(() => vi.restoreAllMocks());
@@ -21,5 +21,23 @@ describe('fetchRdapAgeDays', () => {
   it('returns null on a fetch throw, never raises', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('boom'));
     expect(await fetchRdapAgeDays('example.com', NOW)).toBeNull();
+  });
+});
+
+describe('fetchDnsHygiene', () => {
+  it('detects MX, SPF, and a DMARC reject policy', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const u = new URL(String(input));
+      const name = u.searchParams.get('name'); const type = u.searchParams.get('type');
+      if (type === 'MX') return new Response(JSON.stringify({ Status: 0, Answer: [{ type: 15, data: '5 mx.example.com.' }] }));
+      if (name === 'example.com') return new Response(JSON.stringify({ Status: 0, Answer: [{ type: 16, data: '"v=spf1 include:_spf.example.com ~all"' }] }));
+      if (name === '_dmarc.example.com') return new Response(JSON.stringify({ Status: 0, Answer: [{ type: 16, data: '"v=DMARC1; p=reject"' }] }));
+      return new Response(JSON.stringify({ Status: 0 }));
+    });
+    expect(await fetchDnsHygiene('example.com')).toEqual({ mx: true, spf: true, dmarc: 'reject' });
+  });
+  it('returns all-absent on fetch failure', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('boom'));
+    expect(await fetchDnsHygiene('example.com')).toEqual({ mx: false, spf: false, dmarc: null });
   });
 });
