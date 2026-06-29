@@ -4,6 +4,7 @@
 
 import type { Env } from './types';
 import type { MerchantSignals } from './merchant-signals';
+import { fetchMerchantSignals } from './merchant-signals';
 import { safePut } from './kill-switch';
 
 const DOMAIN_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
@@ -152,4 +153,10 @@ export async function checkMerchantLegitimacyPreviewRateLimit(
   if (count >= max) return { allowed: false, remaining: 0, limit: max };
   await safePut(env, env.TENSORFEED_CACHE, key, JSON.stringify({ count: count + 1 }), { expirationTtl: 60 * 60 * 48 });
   return { allowed: true, remaining: max - count - 1, limit: max };
+}
+
+export async function computeMerchantLegitimacyVerdict(env: Env, domain: string): Promise<MerchantLegitimacyResult> {
+  const nowMs = Date.now();
+  const signals = await fetchMerchantSignals(env, domain, nowMs);
+  return buildMerchantLegitimacyVerdict(domain, signals, new Date(nowMs).toISOString());
 }

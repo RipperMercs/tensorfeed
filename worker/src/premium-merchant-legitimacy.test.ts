@@ -4,12 +4,18 @@ import {
   buildMerchantLegitimacyVerdict,
   redactMerchantLegitimacyForPreview,
   checkMerchantLegitimacyPreviewRateLimit,
+  computeMerchantLegitimacyVerdict,
 } from './premium-merchant-legitimacy';
 import type { MerchantSignals } from './merchant-signals';
 
 vi.mock('./kill-switch', () => ({ safePut: vi.fn() }));
+vi.mock('./merchant-signals', async (orig) => ({
+  ...(await orig<typeof import('./merchant-signals')>()),
+  fetchMerchantSignals: vi.fn(),
+}));
 
 import { safePut } from './kill-switch';
+import { fetchMerchantSignals } from './merchant-signals';
 
 describe('normalizeDomain', () => {
   it('lowercases and strips scheme, path, port, and www', () => {
@@ -92,5 +98,14 @@ describe('preview redact + rate limit', () => {
   it('blocks at the cap', async () => {
     const env = { TENSORFEED_CACHE: { get: async () => ({ count: 10 }) } } as never;
     expect((await checkMerchantLegitimacyPreviewRateLimit(env, '1.2.3.4', 10)).allowed).toBe(false);
+  });
+});
+
+describe('computeMerchantLegitimacyVerdict', () => {
+  it('compute wires signals into the verdict and stamps capturedAt', async () => {
+    vi.mocked(fetchMerchantSignals).mockResolvedValue(sig({ domainAgeDays: 1500, majestic: { inIndex: true, rank: 800 } }));
+    const r = await computeMerchantLegitimacyVerdict({} as never, 'shop.com');
+    expect(r.verdict).toBe('proceed');
+    expect(typeof r.capturedAt).toBe('string');
   });
 });
