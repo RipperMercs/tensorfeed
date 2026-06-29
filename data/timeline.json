@@ -1,6 +1,13 @@
 {
   "events": [
     {
+      "date": "2026-06-24",
+      "title": "OpenAI Unveils Jalapeño, Its First Custom AI Inference Chip",
+      "provider": "OpenAI",
+      "category": "product-launch",
+      "description": "OpenAI and Broadcom unveiled Jalapeño, OpenAI's first custom AI inference processor, designed and built in approximately nine months. OpenAI used its own AI models to accelerate parts of the chip design process. The chip is manufactured by Broadcom and targets OpenAI's inference workloads, with OpenAI claiming better performance per watt than current alternatives. Jalapeño was still in testing at announcement with no production integration timeline disclosed. The launch marks OpenAI's first step toward custom silicon beyond its existing GPU supply chain relationships."
+    },
+    {
       "date": "2026-06-09",
       "title": "Anthropic Releases Claude Fable 5, a New Frontier Tier Above Opus",
       "provider": "Anthropic",

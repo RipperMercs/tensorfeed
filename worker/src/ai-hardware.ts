@@ -46,6 +46,25 @@ export interface AIHardware {
 export const AI_HARDWARE_CATALOG: AIHardware[] = [
   // ── NVIDIA ─────────────────────────────────────────────────
   {
+    id: 'gb300',
+    name: 'NVIDIA GB300 (Blackwell Ultra)',
+    manufacturer: 'NVIDIA',
+    family: 'Blackwell',
+    process: 'TSMC 3nm',
+    released: '2026',
+    memoryGB: 280,
+    memoryBandwidthTBs: 8.0,
+    fp16TFLOPS: 5000,
+    fp8TFLOPS: 10000,
+    fp4TFLOPS: 150000,
+    tdpWatts: null as unknown as number,
+    interconnect: 'NVLink 5 (1.8 TB/s per GPU) + Grace CPU C2C (900 GB/s)',
+    listPriceUSD: null,
+    availability: 'Cloud only (AWS, Google Cloud, Azure, Oracle Cloud)',
+    notes: 'Blackwell Ultra, successor to B200. 280 GB HBM4 per GPU. 2x FP16 throughput vs B200 per chip. FP4 figure (150000 TFLOPS) reflects MXFP4 microscaling mode introduced in Blackwell Ultra. Specs derived from official NVIDIA GB300 NVL72 rack data (20 TB total GPU memory, 576 TB/s bandwidth, 360/720/10802 PFLOPS for FP16/FP8/FP4, divided by 72 chips). Cloud instances went live across major providers mid-2026.',
+    url: 'https://www.nvidia.com/en-us/data-center/gb300-nvl72/',
+  },
+  {
     id: 'gb200',
     name: 'NVIDIA GB200 (Blackwell)',
     manufacturer: 'NVIDIA',
@@ -401,4 +420,4 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
   },
 ];
 
-export const AI_HARDWARE_LAST_UPDATED = '2026-06-05';
+export const AI_HARDWARE_LAST_UPDATED = '2026-06-29';

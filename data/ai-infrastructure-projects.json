@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-06-05T00:00:00Z",
+  "generated_at": "2026-06-29T00:00:00Z",
   "license": "TF curation CC-BY-4.0. Underlying public-record sources retain their original license.",
   "notice": "Editorial registry of disclosed major AI buildout projects. Each entry preserves canonical source URLs. Capacity, capex, and timeline figures reflect publicly announced or reported numbers at time of curation and may evolve. Status enum: announced (publicly committed, no ground broken), permitted (regulatory greenlights obtained), construction (active build), operational (online and serving traffic). Power source enum is the announced primary source; many projects mix multiple feeds.",
   "schema": {
@@ -301,6 +301,23 @@
       "context": "Anthropic committed $50 billion to American AI infrastructure, with Fluidstack as the build partner across initial sites in Texas and New York. Announced November 12, 2025 alongside an expected 800 permanent jobs and 2,400 construction jobs. Sites are designed as custom data centers optimized for Anthropic workloads and are coming online in phases through 2026. The gigawatt-scale capacity complements Anthropic's Google Cloud TPU commitments and its lease of SpaceXAI Colossus 1.",
       "primary_sources": [
         "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure"
+      ]
+    },
+    {
+      "id": "microsoft-pecos-texas",
+      "name": "Microsoft Pecos Campus",
+      "operator": "Microsoft",
+      "partners": [],
+      "location": { "city": "Pecos", "state": "Texas", "country": "USA" },
+      "status": "announced",
+      "capacity_mw_announced": 2000,
+      "power_source": "grid",
+      "announced_date": "2026-06-22",
+      "target_operational": "TBD",
+      "capex_usd_billion": null,
+      "context": "Microsoft announced a new datacenter campus in Pecos, Texas on June 22, 2026, designed for approximately 2 gigawatts of peak capacity. The facility is engineered with over 90 percent closed-loop liquid cooling, which Microsoft says reduces annual water consumption to roughly the equivalent of a single restaurant. At peak build-out the project is expected to support more than 6,000 construction jobs with hundreds of permanent operational positions. Microsoft stated it is funding the energy infrastructure required to serve the load. No capex figure or specific go-live date was disclosed at announcement.",
+      "primary_sources": [
+        "https://blogs.microsoft.com/blog/2026/06/22/powering-the-next-wave-of-ai-expanding-capacity-with-our-new-datacenter-in-pecos/"
       ]
     },
     {
