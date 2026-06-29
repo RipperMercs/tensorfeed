@@ -150,9 +150,11 @@ async function main() {
   writeFileSync(phishingPath, phishingBlob);
 
   function kvPut(key, filePath) {
+    // wrangler writes to the production KV namespace by default when given a binding.
+    // Do not add a remote flag; it is not a valid argument for kv key put in wrangler 3.x.
     const result = spawnSync(
       'npx',
-      ['wrangler', 'kv', 'key', 'put', key, '--path', filePath, '--binding', 'TENSORFEED_CACHE', '--remote'],
+      ['wrangler', 'kv', 'key', 'put', key, '--path', filePath, '--binding', 'TENSORFEED_CACHE'],
       { cwd: WORKER_DIR, stdio: 'inherit' },
     );
     if (result.status !== 0) {
