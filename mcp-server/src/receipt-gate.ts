@@ -58,14 +58,18 @@ function createWatchGate(): ReceiptGate {
     const req = findActionRequirement(MANIFEST, { protocol: 'mcp', tool: 'create_watch' });
     gate = makeReceiptGate({
       action: req?.action_type ?? 'tensorfeed.watch.create',
-      // Demo default: trust the receipt's inline key (proves integrity, NOT
-      // issuer trust). For real enforcement, set TENSORFEED_RECEIPT_TRUSTED_KEYS
-      // to a comma-separated list of issuer SPKI keys and drop allowInlineKey.
+      // Secure by default: pin issuer SPKI keys via TENSORFEED_RECEIPT_TRUSTED_KEYS.
+      // Inline (self-signed) keys are accepted ONLY with an explicit non-prod opt-in
+      // (TENSORFEED_RECEIPT_ALLOW_INLINE_KEY); gateCreateWatch fails closed before
+      // reaching here if neither is configured.
       trustedKeys: trustedKeysFromEnv(),
-      allowInlineKey: trustedKeysFromEnv().length === 0,
+      allowInlineKey: trustedKeysFromEnv().length === 0 && allowInlineKeyFromEnv(),
       maxAgeSec: req?.max_age_sec ?? 900,
       statusCode: RECEIPT_REQUIRED_STATUS,
-      manifestUrl: MANIFEST.service.manifest_url,
+      // Only advertise a manifest URL the server actually serves (set
+      // TENSORFEED_RECEIPT_MANIFEST_URL once you mirror it) so the 428 challenge
+      // never points agents at a 404.
+      manifestUrl: process.env.TENSORFEED_RECEIPT_MANIFEST_URL || undefined,
       assuranceClass: req?.assurance_class,
     });
   }
@@ -77,6 +81,12 @@ function trustedKeysFromEnv(): string[] {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+/** Explicit NON-PRODUCTION opt-in to accept self-signed (inline-key) receipts. */
+function allowInlineKeyFromEnv(): boolean {
+  const v = (process.env.TENSORFEED_RECEIPT_ALLOW_INLINE_KEY ?? '').trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes' || v === 'on';
 }
 
 export interface GateOutcome {
@@ -99,6 +109,19 @@ export async function gateCreateWatch(
   receipt: unknown,
   perform: () => Promise<void>,
 ): Promise<GateOutcome> {
+  // FAIL CLOSED: enforcement is on but no issuer key is trusted and inline keys
+  // are not explicitly enabled. Refuse rather than register a watch / spend a
+  // credit under a self-signed receipt.
+  if (trustedKeysFromEnv().length === 0 && !allowInlineKeyFromEnv()) {
+    return {
+      ok: false,
+      refusalText:
+        'Receipt enforcement misconfigured (receipt_enforcement_misconfigured): set '
+        + 'TENSORFEED_RECEIPT_TRUSTED_KEYS to the issuer key(s) you trust '
+        + '(or TENSORFEED_RECEIPT_ALLOW_INLINE_KEY=1 for non-production demos). '
+        + 'Refusing to register a watch / spend a credit under a self-signed receipt.',
+    };
+  }
   const target = `${binding.type}|${binding.callback_url}`;
   const r = await createWatchGate().run(receipt, { target }, async () => {
     await perform();

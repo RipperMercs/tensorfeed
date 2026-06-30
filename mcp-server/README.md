@@ -88,17 +88,24 @@ It is **off by default** and fully backward-compatible: with no extra config,
 
 ```
 TENSORFEED_RECEIPT_REQUIRED=1
-# optional: pin issuer keys you trust (otherwise the receipt's inline key is
-# accepted, which proves integrity but NOT issuer trust)
+# pin the issuer key(s) you trust (required for enforcement)
 TENSORFEED_RECEIPT_TRUSTED_KEYS=<comma-separated issuer SPKI keys>
+# non-production demos only: accept self-signed (inline-key) receipts
+# TENSORFEED_RECEIPT_ALLOW_INLINE_KEY=1
 ```
+
+**Secure by default:** with enforcement on and no trusted key pinned, the gate
+**fails closed** — `create_watch` is refused (`receipt_enforcement_misconfigured`)
+and never spends the credit, rather than accepting a self-signed receipt. Set
+`TENSORFEED_RECEIPT_ALLOW_INLINE_KEY=1` only for non-production demos.
 
 When enabled, `create_watch` refuses to register the watch (and never spends the
 credit) unless the call carries an `authorization_receipt` bound to that exact
 `type` + `callback_url`: portable proof that a named human authorized this exact
 action. A missing/forged/expired/replayed receipt is refused; a valid receipt is
-consumed one-time only after the registration succeeds. This is *necessary, not
-sufficient* accountability evidence, not auth or permissions. Spec:
+consumed one-time only after the registration succeeds (one-time consumption is
+process-local by default — back it with a durable store for multi-instance). This
+is *necessary, not sufficient* accountability evidence, not auth or permissions. Spec:
 [`draft-schrock-ep-authorization-receipts`](https://www.emiliaprotocol.ai/fire-drill/rr-1)
 (IETF Internet-Draft, not an RFC).
 
