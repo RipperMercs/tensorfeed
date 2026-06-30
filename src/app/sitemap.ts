@@ -263,6 +263,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verdicts/trust-ai-found-cves`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/verdicts/frontier-premium-worth-it`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/copilot-first-cycle-bill-shock-developer-tokenmaxx`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/qwen-agentworld-mcp-simulator-open-frontier`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/tokenmaxxing-cliff-ipo-math`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/inference-money-vs-ai-chip-stocks`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },

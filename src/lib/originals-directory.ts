@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'copilot-first-cycle-bill-shock-developer-tokenmaxx',
+    title:
+      "GitHub Copilot's First Token Cycle Just Closed. The Developer Bill Came In at 10x to 50x.",
+    author: 'Marcus Chen',
+    date: 'June 30, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 30, 2026, the first full 30-day cycle of GitHub Copilot's usage-based billing closed. The flat $10 Pro plan still costs $10, but heavy agentic developers are reporting projected charges of $750 to $3,000 a month, with extreme cases running higher. One AI Credit equals one cent. Pro ships with 1,500 credits, Pro+ with 7,000, the new $100 Copilot Max tier with 20,000. A single 40K-token agentic task on Claude Opus 4.7 burns 60 to 100 credits. Code completions stay free; chat and agentic loops do not. GitHub stopped absorbing the inference subsidy that hid the per-token cost behind a flat subscription, and the buyer-side discipline cliff our tokenmaxxing piece flagged three days ago just landed on the individual contributor through the harness vendor. Inside the meter math, the per-model rates (GPT-5.5 at $5/$30, Claude Opus at $5/$25, MAI-Code-1-Flash at $0.75/$4.50), three concrete substitution behaviors visible in the cycle that closed today, what it does to Anthropic and OpenAI IPO math, and the developer-tooling repricing that has now hit one to two million heavy seats directly.",
+  },
+  {
     slug: 'qwen-agentworld-mcp-simulator-open-frontier',
     title:
       'Qwen Just Open-Sourced a Simulator for Seven Agent Worlds. MCP Is One of Them.',
