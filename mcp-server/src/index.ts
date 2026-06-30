@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { sanitizeToolResponse, sanitizeForLLM } from './sanitize.js';
+import { isReceiptRequired, gateCreateWatch } from './receipt-gate.js';
 
 const API_BASE = 'https://tensorfeed.ai/api';
 
@@ -1784,9 +1785,15 @@ registerTool(
       .describe('type=price uses lt/gt/changes (lt = below threshold, gt = above, changes = any change). type=status uses becomes/changes (becomes = transitions to a specific value; changes = any transition). type=leaderboard_rank uses drops_below/rises_above/changes (rank 1 = best; drops_below: was rank<=N now rank>N; rises_above: was rank>=N now rank<N; changes: any rank movement).'),
     threshold: z.number().optional().describe('type=price (when op is lt or gt) or type=leaderboard_rank (when op is drops_below or rises_above). Integer rank position for leaderboard_rank.'),
     value: z.enum(['operational', 'degraded', 'down']).optional().describe('type=status only. Required when op is becomes.'),
+    authorization_receipt: z
+      .unknown()
+      .optional()
+      .describe(
+        'Optional. An EMILIA authorization receipt (object or compact string) proving a named human authorized this exact watch. Only consulted when the server operator opts in via TENSORFEED_RECEIPT_REQUIRED; ignored otherwise. See https://www.emiliaprotocol.ai/fire-drill/rr-1',
+      ),
   },
   async (args) => {
-    const { type, callback_url, secret, model, field, op, threshold, cadence, provider, value } = args;
+    const { type, callback_url, secret, model, field, op, threshold, cadence, provider, value, authorization_receipt } = args;
     // The merged schema makes every type-specific field optional (each is
     // required for only one type). Guard the required fields per type here so a
     // missing one fails with a clear message instead of an opaque 4xx from the
@@ -1808,6 +1815,11 @@ registerTool(
     if (missingFields.length > 0) {
       return { content: [{ type: 'text' as const, text: `type=${type} requires: ${missingFields.join(', ')}.` }] };
     }
+    // The actual watch registration (POST /premium/watches) + result formatting,
+    // unchanged. Factored into one closure so the OPT-IN receipt gate below can
+    // run it behind a verifiable human-authorization receipt and consume the
+    // receipt only after a successful registration.
+    const runCreateWatch = async (): Promise<{ content: { type: 'text'; text: string }[] }> => {
     switch (type) {
       case 'price': {
         const body: Record<string, unknown> = {
@@ -1889,6 +1901,31 @@ registerTool(
         };
       }
     }
+    // Unreachable: `type` is a 4-value enum and every case returns above. Throw
+    // (rather than burn a credit) if a new type is ever added without a case.
+    throw new Error(`Unhandled watch type: ${type}`);
+    };
+
+    // OPT-IN receipt gate. Off by default (TENSORFEED_RECEIPT_REQUIRED unset) ->
+    // identical behavior to before. When the operator opts in, create_watch only
+    // registers the watch (and spends the credit) if an authorization_receipt
+    // bound to this exact type + callback_url verifies; the receipt is consumed
+    // only on a successful registration.
+    if (!isReceiptRequired()) {
+      return runCreateWatch();
+    }
+    let created: { content: { type: 'text'; text: string }[] } | undefined;
+    const gated = await gateCreateWatch(
+      { type, callback_url },
+      authorization_receipt ?? null,
+      async () => {
+        created = await runCreateWatch();
+      },
+    );
+    if (!gated.ok) {
+      return { content: [{ type: 'text' as const, text: gated.refusalText ?? 'Receipt Required.' }] };
+    }
+    return created!;
   },
   CREATE_TOOL,
 );
