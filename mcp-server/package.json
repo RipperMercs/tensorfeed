@@ -45,6 +45,7 @@
     "url": "https://github.com/RipperMercs/tensorfeed-mcp/issues"
   },
   "dependencies": {
+    "@emilia-protocol/require-receipt": "^0.4.1",
     "@modelcontextprotocol/sdk": "^1.28.0",
     "zod": "^4.3.6"
   },
