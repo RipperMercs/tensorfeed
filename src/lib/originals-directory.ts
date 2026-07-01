@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'claude-science-harness-is-the-product',
+    title:
+      'Claude Science Ships a Coordinating Agent, Not a New Model. The Harness Is the Product Now.',
+    author: 'Ripper',
+    date: 'July 1, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 30, 2026, Anthropic launched Claude Science at its AI for Science briefing. Not a new model. A workbench with a coordinating agent that dispatches specialist sub-agents, a reviewer agent that checks citations and calculations, connectors into more than 60 scientific databases, and prebuilt toolkits for genomics, protein structure, and chemistry. It runs on the lab's own laptop, Linux box, or HPC login node, so raw datasets stay put and only the context each step needs goes to Claude. Available in beta on Pro, Max, Team, and Enterprise seats. Anthropic is funding up to 50 projects with up to $30,000 in credits each (applications open through July 15, awards by July 31, projects running September 1 to December 1). Novo Nordisk and Allen Institute are the named case studies. Eleven days after John Jumper crossed over from DeepMind. Inside why this is a harness product wearing a science skin, what it does to the Anthropic IPO revenue story, the VirBench accuracy math (16.9 percent without retrieval, past 92 percent with a single deterministic tool) that made moving the workflow inside the SKU obvious, why local execution is a compliance wedge Gemini has to answer to, and three signposts in the next 60 days that decide whether Anthropic just set the category template. The models are becoming commodities faster than the labs will publicly say; the workflow is not.",
+  },
+  {
     slug: 'copilot-first-cycle-bill-shock-developer-tokenmaxx',
     title:
       "GitHub Copilot's First Token Cycle Just Closed. The Developer Bill Came In at 10x to 50x.",
