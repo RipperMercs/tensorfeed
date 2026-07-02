@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'cloudflare-monetization-gateway-x402-mcp-edge',
+    title:
+      'Cloudflare Just Wired x402 Into 20 Percent of the Internet. The MCP Tool Is Now a Line Item.',
+    author: 'Ripper',
+    date: 'July 2, 2026',
+    readTime: '6 min read',
+    description:
+      "On July 1, 2026, Cloudflare opened the waitlist for its Monetization Gateway: a single control plane inside the Cloudflare dashboard that lets any customer put a price on a web page, dataset, API, or MCP tool sitting behind Cloudflare, with settlement in stablecoins over the x402 protocol. Peer-to-peer, sub-second, USDC on Base, no signup or API key for buyers, and no take rate on the wire (Cloudflare monetizes the Workers seat, not the transaction). It ships the same week Coinbase and Cloudflare seeded the x402 Foundation as the standards body. Inside why this is the distribution layer moment for agent payments, why MCP sitting on a four-item menu alongside APIs is the categorisation signal every server author should read, the AWS-at-the-origin vs Cloudflare-at-the-edge split now shaping how agents will actually pay, and what it does to Stripe's card-network answer to the same problem. The models are getting cheaper, the harness is getting more valuable, and the money is moving over HTTP; Cloudflare just put its 20 percent share of the web on the winning side of all three.",
+  },
+  {
     slug: 'claude-science-harness-is-the-product',
     title:
       'Claude Science Ships a Coordinating Agent, Not a New Model. The Harness Is the Product Now.',
