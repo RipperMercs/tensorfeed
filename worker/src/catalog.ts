@@ -282,6 +282,9 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'openai', name: 'OpenAI', logo: '/images/providers/openai.png', url: 'https://openai.com',
       models: [
+        { id: 'gpt-5-6-sol', name: 'GPT-5.6 Sol', inputPrice: 5, outputPrice: 30, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
+        { id: 'gpt-5-6-terra', name: 'GPT-5.6 Terra', inputPrice: 2.50, outputPrice: 15, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
+        { id: 'gpt-5-6-luna', name: 'GPT-5.6 Luna', inputPrice: 1, outputPrice: 6, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'gpt-5-5', name: 'GPT-5.5', inputPrice: 5, outputPrice: 30, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'gpt-4o', name: 'GPT-4o', inputPrice: 2.50, outputPrice: 10.00, contextWindow: 128000, released: '2024-05', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'gpt-4o-mini', name: 'GPT-4o-mini', inputPrice: 0.15, outputPrice: 0.60, contextWindow: 128000, released: '2024-07', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'budget' },

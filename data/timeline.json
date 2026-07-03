@@ -1,6 +1,27 @@
 {
   "events": [
     {
+      "date": "2026-06-26",
+      "title": "OpenAI Previews GPT-5.6 Sol, Terra, and Luna in Limited Release",
+      "provider": "OpenAI",
+      "category": "model-release",
+      "description": "OpenAI unveiled GPT-5.6 as a three-model family (Sol, Terra, Luna) on June 26, 2026, then immediately gated it. Per a US Government request, GPT-5.6 went live only to roughly 20 pre-approved organizations in a limited preview, with general availability planned in the coming weeks. Pricing per 1M tokens is $5 input / $30 output for Sol (frontier reasoning and agentic work), $2.50 / $15 for Terra (a balanced model OpenAI says delivers GPT-5.5-level performance at roughly half the cost), and $1 / $6 for Luna (the fastest and cheapest variant). OpenAI published partial benchmarks (coding, biology, cybersecurity), with Sol Ultra reaching 91.9% on Terminal-Bench 2.1 and base Sol at 88.8%. SWE-bench, MMLU-Pro, GDPval, and FrontierMath numbers were held back until GA. A Cerebras deployment targeting roughly 750 tokens per second on Sol is planned for July."
+    },
+    {
+      "date": "2026-06-26",
+      "title": "OpenAI Retires GPT-4.5 From ChatGPT",
+      "provider": "OpenAI",
+      "category": "model-release",
+      "description": "GPT-4.5 was removed from ChatGPT on June 26, 2026. Existing GPT-4.5 conversations route forward to GPT-5.5, and earlier GPT-5.2 variants (Instant, Thinking, Pro) had already been pulled from ChatGPT on June 12. The API listing for gpt-4.5 remains for now, but the deprecation tightens the active OpenAI lineup to GPT-5.5 (with GPT-5.6 still in limited preview), o1, and o3-mini."
+    },
+    {
+      "date": "2026-06-23",
+      "title": "Anthropic Moves Claude Fable 5 From Plan-Included to Usage Credits",
+      "provider": "Anthropic",
+      "category": "pricing",
+      "description": "Anthropic ended the introductory window for Claude Fable 5 on June 23, 2026. From June 9 through June 22 the model was included at no extra cost on Pro, Max, Team, and seat-based Enterprise plans. Starting June 23 Fable 5 use is billed against usage credits on those plans; API pricing stays at $10 per 1M input and $50 per 1M output, with safety-classifier reroutes to Opus 4.8 billed at Opus rates for the rerouted portion. Opus 4.8 remains the default plan-included model."
+    },
+    {
       "date": "2026-06-09",
       "title": "Anthropic Releases Claude Fable 5, a New Frontier Tier Above Opus",
       "provider": "Anthropic",

@@ -20,7 +20,7 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'cloudflare-monetization-gateway-x402-mcp-edge',
     title:
       'Cloudflare Just Wired x402 Into 20 Percent of the Internet. The MCP Tool Is Now a Line Item.',
-    author: 'Ripper',
+    author: 'Adrian Vale',
     date: 'July 2, 2026',
     readTime: '6 min read',
     description:
@@ -30,11 +30,21 @@ export const ORIGINALS: OriginalArticle[] = [
     slug: 'claude-science-harness-is-the-product',
     title:
       'Claude Science Ships a Coordinating Agent, Not a New Model. The Harness Is the Product Now.',
-    author: 'Ripper',
+    author: 'Kira Nolan',
     date: 'July 1, 2026',
     readTime: '6 min read',
     description:
       "On June 30, 2026, Anthropic launched Claude Science at its AI for Science briefing. Not a new model. A workbench with a coordinating agent that dispatches specialist sub-agents, a reviewer agent that checks citations and calculations, connectors into more than 60 scientific databases, and prebuilt toolkits for genomics, protein structure, and chemistry. It runs on the lab's own laptop, Linux box, or HPC login node, so raw datasets stay put and only the context each step needs goes to Claude. Available in beta on Pro, Max, Team, and Enterprise seats. Anthropic is funding up to 50 projects with up to $30,000 in credits each (applications open through July 15, awards by July 31, projects running September 1 to December 1). Novo Nordisk and Allen Institute are the named case studies. Eleven days after John Jumper crossed over from DeepMind. Inside why this is a harness product wearing a science skin, what it does to the Anthropic IPO revenue story, the VirBench accuracy math (16.9 percent without retrieval, past 92 percent with a single deterministic tool) that made moving the workflow inside the SKU obvious, why local execution is a compliance wedge Gemini has to answer to, and three signposts in the next 60 days that decide whether Anthropic just set the category template. The models are becoming commodities faster than the labs will publicly say; the workflow is not.",
+  },
+  {
+    slug: 'claude-sonnet-5-only-frontier-available-federal-gate',
+    title:
+      'Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Is Dark, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.',
+    author: 'Kira Nolan',
+    date: 'July 1, 2026',
+    readTime: '7 min read',
+    description:
+      "On June 30, 2026 Anthropic shipped Claude Sonnet 5 to the public API at $2/$10 introductory pricing with a 1M context, 85.2 percent SWE-Bench Verified, 63.2 percent SWE-Bench Pro (best publicly buyable score), and adaptive thinking through xhigh effort. It landed inside an empty room. Fable 5 has been dark since the June 12 export-control pull, Mythos 5 with it. GPT-5.6 Sol is inside a customer-by-customer NCD and OSTP preview two to eight weeks from broad release. Gemini 3.5 Pro slipped a second I/O commitment to late July. Meituan open-sourced LongCat-2.0 yesterday but it needs a security review to clear Fortune 500 procurement. For the next two to eight weeks the buyable top of the ladder is a two-model set (Sonnet 5 and Opus 4.8 or GPT-5.5) and Anthropic owns two of the three positions with the same billing surface. The federal gate that pulled Anthropic's own flagship 19 days ago is now the reason Sonnet 5 has a distribution runway. Inside the tokenizer footnote (1.0 to 1.35x more tokens per unit text), the SWE-Bench Pro delta, the Terminal-Bench 2.1 gap the buyable market cannot exploit, the S-1 language Anthropic can now lean on, and three signposts in the next ninety days: NCD gate lift on Sol, Fable 5 return, Gemini 3.5 Pro's third slip test.",
   },
   {
     slug: 'copilot-first-cycle-bill-shock-developer-tokenmaxx',
@@ -47,14 +57,44 @@ export const ORIGINALS: OriginalArticle[] = [
       "On June 30, 2026, the first full 30-day cycle of GitHub Copilot's usage-based billing closed. The flat $10 Pro plan still costs $10, but heavy agentic developers are reporting projected charges of $750 to $3,000 a month, with extreme cases running higher. One AI Credit equals one cent. Pro ships with 1,500 credits, Pro+ with 7,000, the new $100 Copilot Max tier with 20,000. A single 40K-token agentic task on Claude Opus 4.7 burns 60 to 100 credits. Code completions stay free; chat and agentic loops do not. GitHub stopped absorbing the inference subsidy that hid the per-token cost behind a flat subscription, and the buyer-side discipline cliff our tokenmaxxing piece flagged three days ago just landed on the individual contributor through the harness vendor. Inside the meter math, the per-model rates (GPT-5.5 at $5/$30, Claude Opus at $5/$25, MAI-Code-1-Flash at $0.75/$4.50), three concrete substitution behaviors visible in the cycle that closed today, what it does to Anthropic and OpenAI IPO math, and the developer-tooling repricing that has now hit one to two million heavy seats directly.",
   },
   {
+    slug: 'meituan-longcat-2-owl-alpha-openrouter',
+    title:
+      'Owl Alpha Was Meituan All Along. LongCat-2.0 Open-Sourced Today at 1.6T, Zero Nvidia, and It Has Been Number One on OpenRouter For Two Months.',
+    author: 'Adrian Vale',
+    date: 'June 30, 2026',
+    readTime: '7 min read',
+    description:
+      "On June 30, 2026 Meituan open-sourced LongCat-2.0 under MIT: a 1.6 trillion-parameter MoE with about 48B active per token, a 1M context window, SWE-bench Pro 59.5 (above GPT-5.5's 58.6), and Terminal-Bench 70.8. The same weights have been the anonymous Owl Alpha on OpenRouter for two months, running at roughly 10.1 trillion monthly tokens, 559 billion a day, +242 percent month over month, number one on Hermes Agent, number two inside Claude Code, number three on OpenClaw. The training cluster is 50,000 to 60,000 domestic Chinese AI ASICs organized into Huawei Atlas-950 superpods with the HCCL collective library, with zero Nvidia in the loop. A food delivery company just shipped the most-used model on the open developer router, on hardware US export controls cannot reach, the same week Anthropic still has Fable 5 dark and Google missed Gemini 3.5 Pro by a month. Inside what shipped, why the export letter does not reach it, what it does to the price floor for closed APIs inside the IPO window, and three signposts in the next ninety days.",
+  },
+  {
     slug: 'qwen-agentworld-mcp-simulator-open-frontier',
     title:
       'Qwen Just Open-Sourced a Simulator for Seven Agent Worlds. MCP Is One of Them.',
-    author: 'Ripper',
+    author: 'Marcus Chen',
     date: 'June 29, 2026',
     readTime: '6 min read',
     description:
       "On June 24, 2026, Alibaba's Qwen team shipped Qwen-AgentWorld, an open-weight Language World Model that simulates seven agent environments inside a single model: MCP, Search, Terminal, Software Engineering, Web, OS, and Android. The 397B-A17B variant scores 58.71 on the team's AgentWorldBench, beating GPT-5.4 (58.25), Claude Opus 4.8 (56.59), and Gemini 3.1 Pro (54.57) at predicting what an agent's tool call will return. A 35B-A3B sibling runs cheap enough to spin up as a training simulator on a single H100. Apache 2.0 weights, 256K context, three-stage training pipeline (CPT, SFT, RL) over 10M+ real interaction trajectories. The agent harness, the thing we have been writing about as the load-bearing piece nobody owns, just became a forward pass you can download from Hugging Face. Inside the seven-environment design, the MCP simulation line that matters most to anyone shipping a server, the irony of an open frontier topping a benchmark on closed-frontier traces, and what it does to the data factory underneath every credible agent training loop.",
+  },
+  {
+    slug: 'deepmind-talent-exodus-gemini-pro-slip',
+    title:
+      'John Jumper Walked. The DeepMind Bench Lost Four in Eleven Days, and Gemini 3.5 Pro Slipped Again.',
+    author: 'Marcus Chen',
+    date: 'June 29, 2026',
+    readTime: '6 min read',
+    description:
+      "Inside eleven days Google DeepMind lost a Nobel laureate and three Gemini contributors to its two largest US rivals. Noam Shazeer went to OpenAI on June 18. John Jumper, the AlphaFold lead and 2024 Nobel laureate in Chemistry, plus Gemini contributors Jonas Adler and Alexander Pritzel, all signed with Anthropic by June 24. Gemini 3.5 Pro slipped from a June ship date previewed at I/O to July, the second consecutive I/O commitment Google has missed on a flagship. Roughly $270 billion came off Alphabet's market cap over the week. The receiving labs are both inside IPO windows: Anthropic filed confidentially on June 1 at $965B, OpenAI is steering toward a 2027 listing. Reporting that shortly before Shazeer's exit Google reassigned compute from one of his projects to a London-based DeepMind team is the structural tell. Inside the four names, the compute slight, the second-slip pattern, the $270B cap hit, why this is structural rather than a comp problem, what builders shipping on Gemini should do, and what the next compute reallocation decision tells you about which DeepMind team gets the next ship date.",
+  },
+  {
+    slug: 'anthropic-alibaba-distillation-senate-banking-sanctions',
+    title:
+      'Anthropic Named Alibaba Inside the Senate Banking Committee. Distillation Just Crossed Into Sanctions Territory.',
+    author: 'Kira Nolan',
+    date: 'June 28, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 24, 2026 CNBC surfaced the letter Anthropic sent the US Senate Banking Committee on June 10, naming Alibaba as the operator of what Anthropic calls the largest known distillation attack on its models to date: roughly 25,000 fraudulent accounts running 28.8 million Claude exchanges between April 22 and June 5, targeting agentic reasoning, software engineering, and long-horizon tasks. Alibaba's American depositary shares closed June 26 at $94.93, a 16-month low and off about 25 percent from May 27. The single campaign exceeded the combined total of the three Chinese-lab campaigns Anthropic disclosed in February (DeepSeek, Moonshot, MiniMax: roughly 24,000 accounts and 16 million exchanges), and the per-account efficiency nearly doubled. Inside the math, why the Senate Banking venue (not Commerce, not Intelligence) is the tell, what an OFAC or entity-list path looks like, the same-day Alibaba lawsuit against the DoD 1260H blacklist and the dropped Greenberg Traurig lobbying contract that confirm the read, and three signposts in the next ninety days that decide whether distillation gets a sanctions designation or stays a TOS dispute.",
   },
   {
     slug: 'tokenmaxxing-cliff-ipo-math',

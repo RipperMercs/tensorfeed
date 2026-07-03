@@ -18,7 +18,7 @@ export const metadata: Metadata = {
       "Qwen-AgentWorld is a Language World Model that simulates MCP, Terminal, SWE, Web, OS, Android, and Search. The 397B variant beats GPT-5.4, Opus 4.8, and Gemini 3.1 Pro at agent environment prediction. Apache 2.0. The agent training loop just got a cheap replicator.",
     type: 'article',
     publishedTime: '2026-06-29T14:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Marcus Chen'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -35,7 +35,7 @@ export default function QwenAgentWorldMCPSimulatorPage() {
         title="Qwen Just Open-Sourced a Simulator for Seven Agent Worlds. MCP Is One of Them."
         description="Alibaba's Qwen team shipped Qwen-AgentWorld on June 24, 2026: an open-weight Language World Model that simulates MCP, Terminal, SWE, Web, OS, Android, and Search inside a single model. The 397B-A17B variant beats GPT-5.4, Claude Opus 4.8, and Gemini 3.1 Pro at predicting what an agent's tool call will return. Apache 2.0 weights. The agent harness just became a model, and the cheapest copy of it ships from China."
         datePublished="2026-06-29"
-        author="Ripper"
+        author="Marcus Chen"
       />
 
       {/* Back link */}
@@ -62,7 +62,7 @@ export default function QwenAgentWorldMCPSimulatorPage() {
           Qwen Just Open-Sourced a Simulator for Seven Agent Worlds. MCP Is One of Them.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Marcus Chen</span>
           <span>&middot;</span>
           <time dateTime="2026-06-29">June 29, 2026</time>
           <span>&middot;</span>

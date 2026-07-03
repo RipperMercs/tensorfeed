@@ -21,7 +21,7 @@ export const metadata: Metadata = {
       "Cloudflare put x402 in front of a fifth of the internet with peer-to-peer settlement and zero take rate on the wire. MCP tools are one of the four resources you can monetize. The x402 distribution layer just resolved.",
     type: 'article',
     publishedTime: '2026-07-02T14:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Adrian Vale'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -39,7 +39,7 @@ export default function CloudflareMonetizationGatewayX402McpEdgePage() {
         title="Cloudflare Just Wired x402 Into 20 Percent of the Internet. The MCP Tool Is Now a Line Item."
         description="On July 1, 2026, Cloudflare opened the waitlist for its Monetization Gateway, a single control plane that charges for web pages, datasets, APIs, and MCP tools behind Cloudflare via x402 with peer-to-peer stablecoin settlement. Inside why this is the distribution layer moment for agent payments, why MCP as a first-class monetizable resource matters, and the AWS-at-the-origin vs Cloudflare-at-the-edge split that now shapes how agents actually pay."
         datePublished="2026-07-02"
-        author="Ripper"
+        author="Adrian Vale"
       />
 
       {/* Back link */}
@@ -66,7 +66,7 @@ export default function CloudflareMonetizationGatewayX402McpEdgePage() {
           Cloudflare Just Wired x402 Into 20 Percent of the Internet. The MCP Tool Is Now a Line Item.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Adrian Vale</span>
           <span>&middot;</span>
           <time dateTime="2026-07-02">July 2, 2026</time>
           <span>&middot;</span>

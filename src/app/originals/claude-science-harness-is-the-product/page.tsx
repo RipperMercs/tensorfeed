@@ -20,7 +20,7 @@ export const metadata: Metadata = {
       "Anthropic just packaged its agent harness as a science product. Coordinating agent, specialist sub-agents, reviewer agent, 60+ databases, local execution. Same models everyone already has. The harness gap thesis just got a $30K per project receipt.",
     type: 'article',
     publishedTime: '2026-07-01T14:00:00Z',
-    authors: ['Ripper'],
+    authors: ['Kira Nolan'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -37,7 +37,7 @@ export default function ClaudeScienceHarnessIsTheProductPage() {
         title="Claude Science Ships a Coordinating Agent, Not a New Model. The Harness Is the Product Now."
         description="On June 30, 2026, Anthropic launched Claude Science: a workbench with a coordinating agent, specialist sub-agents, a reviewer agent, 60+ database connectors, and prebuilt toolkits for genomics, protein structure, and chemistry, running locally on the lab's own hardware. Not a new model. The same Claude everyone already has, packaged as a science workflow. Inside why this is the harness thesis with a bill attached, what it does to the Anthropic IPO story, and why local execution is a wedge against Gemini."
         datePublished="2026-07-01"
-        author="Ripper"
+        author="Kira Nolan"
       />
 
       {/* Back link */}
@@ -64,7 +64,7 @@ export default function ClaudeScienceHarnessIsTheProductPage() {
           Claude Science Ships a Coordinating Agent, Not a New Model. The Harness Is the Product Now.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
-          <span className="text-text-secondary font-medium">Ripper</span>
+          <span className="text-text-secondary font-medium">Kira Nolan</span>
           <span>&middot;</span>
           <time dateTime="2026-07-01">July 1, 2026</time>
           <span>&middot;</span>

@@ -142,6 +142,57 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
 
   // ── OpenAI ─────────────────────────────────────────────────────────
   {
+    slug: 'gpt-5-6-sol',
+    pricingId: 'gpt-5-6-sol',
+    benchmarkName: 'GPT-5.6 Sol',
+    providerId: 'openai',
+    providerName: 'OpenAI',
+    providerUrl: 'https://openai.com',
+    seoTitle: 'GPT-5.6 Sol: Pricing, Preview Access, Specs',
+    seoDescription:
+      'GPT-5.6 Sol by OpenAI, the new flagship reasoning and agentic model. Limited preview from June 26, 2026 at $5/$30 per 1M tokens with a 1M context window on TensorFeed.',
+    intro:
+      'GPT-5.6 Sol is the flagship in OpenAI\'s GPT-5.6 family, previewed on June 26, 2026. Pricing is $5 per million input tokens and $30 per million output, with a 1 million token context window. Access at launch is intentionally narrow: at the request of the US Government, only roughly 20 pre-approved organizations were granted entry to the limited preview, with general availability planned in the weeks that follow. OpenAI positioned Sol for frontier reasoning and agentic work and disclosed partial benchmarks (Sol Ultra at 91.9 percent on Terminal-Bench 2.1, base Sol at 88.8 percent), while holding back SWE-bench, MMLU-Pro, GDPval, and FrontierMath until GA. A Cerebras deployment running Sol at up to 750 tokens per second is planned for July. Treat Sol as a forward-looking option for now: priced, named, and benchmarked in part, but not yet broadly callable.',
+    strengths: ['1M token context window', 'Same headline price as GPT-5.5 ($5/$30) for a new generation', 'Frontier-class agentic and reasoning posture', 'Cerebras hardware path at roughly 750 tokens/sec planned for July', 'Sister to lower-cost Terra and Luna variants in the same family'],
+    useCases: ['Long-horizon agentic workflows', 'Frontier reasoning and research tasks', 'Hardest-tier coding agents', 'Limited-preview evaluation against GPT-5.5 and Claude Fable 5'],
+    docsUrl: 'https://platform.openai.com/docs/models',
+    tier: 'flagship',
+  },
+  {
+    slug: 'gpt-5-6-terra',
+    pricingId: 'gpt-5-6-terra',
+    benchmarkName: 'GPT-5.6 Terra',
+    providerId: 'openai',
+    providerName: 'OpenAI',
+    providerUrl: 'https://openai.com',
+    seoTitle: 'GPT-5.6 Terra: Pricing, Preview Access, Specs',
+    seoDescription:
+      'GPT-5.6 Terra by OpenAI, the balanced mid-tier in the GPT-5.6 family. $2.50/$15 per 1M tokens, 1M context, GPT-5.5-class performance at roughly half the cost. Specs on TensorFeed.',
+    intro:
+      'GPT-5.6 Terra is the balanced everyday model in the GPT-5.6 family, previewed June 26, 2026. OpenAI positions it as GPT-5.5-class performance at roughly half the price: $2.50 per million input tokens and $15 per million output, with a 1 million token context window. Access at launch is limited to roughly 20 pre-approved organizations under a US Government preview arrangement, with broader availability planned in the coming weeks. Detailed SWE-bench, MMLU-Pro, and GDPval results are not yet public; OpenAI disclosed coding, biology, and cybersecurity numbers in the preview post and said the rest land at GA.',
+    strengths: ['Half the input price of GPT-5.5 at GPT-5.5-class performance', '1M token context window', 'Same lineage as Sol with cheaper economics', 'Reasoning, vision, tool use, and code included'],
+    useCases: ['Production agentic workflows where Sol is overkill', 'High-volume coding assistants', 'RAG over very long contexts', 'Migration target from GPT-5.5 once Terra reaches GA'],
+    docsUrl: 'https://platform.openai.com/docs/models',
+    tier: 'mid',
+  },
+  {
+    slug: 'gpt-5-6-luna',
+    pricingId: 'gpt-5-6-luna',
+    benchmarkName: 'GPT-5.6 Luna',
+    providerId: 'openai',
+    providerName: 'OpenAI',
+    providerUrl: 'https://openai.com',
+    seoTitle: 'GPT-5.6 Luna: Pricing, Preview Access, Specs',
+    seoDescription:
+      'GPT-5.6 Luna by OpenAI, the fast and budget-friendly variant of the GPT-5.6 family. $1/$6 per 1M tokens, 1M context, limited preview from June 26, 2026 on TensorFeed.',
+    intro:
+      'GPT-5.6 Luna is the fastest and cheapest model in the GPT-5.6 family, previewed June 26, 2026. Pricing is $1 per million input tokens and $6 per million output, with a 1 million token context window. Like its siblings, Luna entered as a limited preview to roughly 20 pre-approved organizations under a US Government arrangement, with general availability planned in the coming weeks. OpenAI is positioning it for high-volume, latency-sensitive workloads where Sol-level reasoning is not required.',
+    strengths: ['Lowest pricing in the GPT-5.6 family ($1/$6 per 1M)', '1M token context window', 'Frontier-family lineage at budget-tier economics', 'Reasoning, vision, tool use, and code included'],
+    useCases: ['High-volume chat and classification', 'Cost-sensitive coding assistants', 'Real-time tool-augmented workflows', 'Latency-sensitive customer-facing applications'],
+    docsUrl: 'https://platform.openai.com/docs/models',
+    tier: 'budget',
+  },
+  {
     slug: 'gpt-5-5',
     pricingId: 'gpt-5-5',
     benchmarkName: 'GPT-5.5',

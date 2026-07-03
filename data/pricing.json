@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-09",
+  "lastUpdated": "2026-06-28",
   "providers": [
     {
       "id": "anthropic",
@@ -106,13 +106,67 @@
       "url": "https://openai.com",
       "models": [
         {
+          "id": "gpt-5-6-sol",
+          "name": "GPT-5.6 Sol",
+          "inputPrice": 5.0,
+          "outputPrice": 30.0,
+          "contextWindow": 1000000,
+          "released": "2026-06",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
+          "tier": "flagship"
+        },
+        {
+          "id": "gpt-5-6-terra",
+          "name": "GPT-5.6 Terra",
+          "inputPrice": 2.5,
+          "outputPrice": 15.0,
+          "contextWindow": 1000000,
+          "released": "2026-06",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
+          "tier": "mid"
+        },
+        {
+          "id": "gpt-5-6-luna",
+          "name": "GPT-5.6 Luna",
+          "inputPrice": 1.0,
+          "outputPrice": 6.0,
+          "contextWindow": 1000000,
+          "released": "2026-06",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
+          "tier": "budget"
+        },
+        {
           "id": "gpt-5-5",
           "name": "GPT-5.5",
-          "inputPrice": 5.00,
-          "outputPrice": 30.00,
+          "inputPrice": 5.0,
+          "outputPrice": 30.0,
           "contextWindow": 1000000,
           "released": "2026-04",
-          "capabilities": ["text", "vision", "tool-use", "code", "reasoning"],
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
           "tier": "flagship"
         },
         {
@@ -374,7 +428,12 @@
           "released": "2026-04",
           "openSource": true,
           "license": "MIT",
-          "capabilities": ["text", "vision", "code", "reasoning"],
+          "capabilities": [
+            "text",
+            "vision",
+            "code",
+            "reasoning"
+          ],
           "tier": "flagship"
         },
         {
@@ -386,7 +445,11 @@
           "released": "2026-04",
           "openSource": true,
           "license": "MIT",
-          "capabilities": ["text", "vision", "code"],
+          "capabilities": [
+            "text",
+            "vision",
+            "code"
+          ],
           "tier": "budget"
         }
       ]
@@ -404,7 +467,12 @@
           "outputPrice": 7.5,
           "contextWindow": 1000000,
           "released": "2026-05",
-          "capabilities": ["text", "code", "reasoning", "tool-use"],
+          "capabilities": [
+            "text",
+            "code",
+            "reasoning",
+            "tool-use"
+          ],
           "tier": "flagship"
         }
       ]
@@ -422,7 +490,12 @@
           "outputPrice": 2.5,
           "contextWindow": 1000000,
           "released": "2026-04",
-          "capabilities": ["text", "vision", "tool-use", "code"],
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code"
+          ],
           "tier": "flagship"
         }
       ]
@@ -442,7 +515,15 @@
           "released": "2026-04",
           "openSource": true,
           "license": "NVIDIA Open Model License",
-          "capabilities": ["text", "vision", "audio", "video", "code", "reasoning", "tool-use"],
+          "capabilities": [
+            "text",
+            "vision",
+            "audio",
+            "video",
+            "code",
+            "reasoning",
+            "tool-use"
+          ],
           "tier": "mid"
         }
       ]
@@ -460,7 +541,11 @@
           "outputPrice": 4.5,
           "contextWindow": 256000,
           "released": "2026-06",
-          "capabilities": ["text", "code", "tool-use"],
+          "capabilities": [
+            "text",
+            "code",
+            "tool-use"
+          ],
           "tier": "budget"
         }
       ]
@@ -480,7 +565,13 @@
           "released": "2026-06",
           "openSource": true,
           "license": "Open weights, license TBD",
-          "capabilities": ["text", "vision", "video", "code", "tool-use"],
+          "capabilities": [
+            "text",
+            "vision",
+            "video",
+            "code",
+            "tool-use"
+          ],
           "tier": "budget"
         }
       ]
