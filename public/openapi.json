@@ -1471,22 +1471,78 @@
         "parameters": [
           {
             "in": "query",
-            "name": "prompt",
+            "name": "task",
+            "description": "Task type to optimize the ranking for.",
+            "example": "code",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "code",
+                "reasoning",
+                "creative",
+                "general"
+              ]
             }
           },
           {
             "in": "query",
-            "name": "optimize",
+            "name": "budget",
+            "description": "Maximum blended USD per 1M tokens; models above it are filtered out.",
             "schema": {
-              "type": "string",
-              "enum": [
-                "cost",
-                "speed",
-                "quality",
-                "balanced"
-              ]
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "min_quality",
+            "description": "Minimum quality score filter, 0 to 1.",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "top_n",
+            "description": "How many ranked recommendations to return.",
+            "schema": {
+              "type": "integer",
+              "default": 5,
+              "minimum": 1,
+              "maximum": 10
+            }
+          },
+          {
+            "in": "query",
+            "name": "w_quality",
+            "description": "Custom scoring weight for quality; pass all four w_ params together.",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "w_availability",
+            "description": "Custom scoring weight for availability.",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "w_cost",
+            "description": "Custom scoring weight for cost.",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "w_latency",
+            "description": "Custom scoring weight for latency.",
+            "schema": {
+              "type": "number"
             }
           }
         ],
@@ -1497,19 +1553,30 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "prompt": {
-                    "type": "string",
-                    "description": "Free-form task description used to rank candidate models"
-                  },
-                  "optimize": {
+                  "task": {
                     "type": "string",
                     "enum": [
-                      "cost",
-                      "speed",
-                      "quality",
-                      "balanced"
+                      "code",
+                      "reasoning",
+                      "creative",
+                      "general"
                     ],
-                    "description": "Ranking objective"
+                    "description": "Task type to optimize the ranking for"
+                  },
+                  "budget": {
+                    "type": "number",
+                    "description": "Maximum blended USD per 1M tokens; models above it are filtered out"
+                  },
+                  "min_quality": {
+                    "type": "number",
+                    "description": "Minimum quality score filter"
+                  },
+                  "top_n": {
+                    "type": "integer",
+                    "default": 5,
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "How many ranked recommendations to return"
                   }
                 }
               }
@@ -1801,7 +1868,8 @@
             "schema": {
               "type": "integer",
               "default": 10,
-              "maximum": 50
+              "minimum": 1,
+              "maximum": 25
             }
           }
         ],
@@ -1822,8 +1890,9 @@
                   "news_limit": {
                     "type": "integer",
                     "default": 10,
-                    "maximum": 50,
-                    "description": "Max number of news headlines included"
+                    "minimum": 1,
+                    "maximum": 25,
+                    "description": "Max number of news headlines included (server clamps to 25)"
                   }
                 }
               }
