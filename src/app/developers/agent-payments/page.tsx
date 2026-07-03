@@ -1401,7 +1401,7 @@ const ENDPOINTS: PremiumEndpoint[] = [
     description:
       'Side-by-side comparison of 2-5 AI models. Each entry returns pricing, benchmarks (normalized to a union of keys with null for missing scores so downstream code never crashes on undefined), provider live status, capabilities, context window, and recent news. Plus rankings: cheapest blended, most context, and a per-benchmark leaderboard.',
     cost: '1 credit per call',
-    example: `// Query: ?ids=opus-4-7,gpt-5-5,gemini-3
+    example: `// Query: ?ids=opus-4-7,gpt-5-5,gemini-3-5-flash
 {
   "ok": true,
   "benchmark_keys": ["mmlu_pro", "swe_bench"],
@@ -1470,7 +1470,7 @@ const ENDPOINTS: PremiumEndpoint[] = [
     description:
       'Project the cost of a token-usage workload across 1-10 AI models. Returns daily/weekly/monthly/yearly totals per model plus a ranking by cheapest monthly. Pure compute on live /api/models pricing.',
     cost: '1 credit per call',
-    example: `// Query: ?model=opus-4-7,gpt-5-5,gemini-3&input_tokens_per_day=1000000&output_tokens_per_day=500000&horizon=monthly
+    example: `// Query: ?model=opus-4-7,gpt-5-5,gemini-3-5-flash&input_tokens_per_day=1000000&output_tokens_per_day=500000&horizon=monthly
 {
   "ok": true,
   "workload": { "input_tokens_per_day": 1000000, "output_tokens_per_day": 500000, "total_tokens_per_day": 1500000 },

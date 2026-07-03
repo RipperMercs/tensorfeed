@@ -4101,7 +4101,7 @@
        "type": "http",
        "method": "GET",
        "queryParams": {
-        "ids": "opus-4-7,gpt-5-5,gemini-3"
+        "ids": "opus-4-7,gpt-5-5,gemini-3-5-flash"
        }
       }
      }
@@ -4121,7 +4121,7 @@
        "type": "http",
        "method": "GET",
        "queryParams": {
-        "ids": "opus-4-7,gpt-5-5,gemini-3"
+        "ids": "opus-4-7,gpt-5-5,gemini-3-5-flash"
        }
       }
      }
@@ -4142,7 +4142,7 @@
        "type": "http",
        "method": "GET",
        "queryParams": {
-        "ids": "opus-4-7,gpt-5-5,gemini-3"
+        "ids": "opus-4-7,gpt-5-5,gemini-3-5-flash"
        }
       },
       "output": {
@@ -4174,11 +4174,11 @@
         "rankings": {
          "cheapest_blended": [
           "gpt-5-5",
-          "gemini-3",
+          "gemini-3-5-flash",
           "opus-4-7"
          ],
          "widest_context": [
-          "gemini-3",
+          "gemini-3-5-flash",
           "opus-4-7",
           "gpt-5-5"
          ],
@@ -4186,7 +4186,7 @@
           "swe_bench": [
            "opus-4-7",
            "gpt-5-5",
-           "gemini-3"
+           "gemini-3-5-flash"
           ]
          }
         },
@@ -4219,7 +4219,7 @@
           "properties": {
            "ids": {
             "type": "string",
-            "description": "Comma-separated list of 2 to 5 model ids or display names (e.g. \"opus-4-7,gpt-5-5,gemini-3\")."
+            "description": "Comma-separated list of 2 to 5 model ids or display names (e.g. \"opus-4-7,gpt-5-5,gemini-3-5-flash\")."
            }
           },
           "required": [

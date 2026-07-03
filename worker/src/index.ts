@@ -4853,7 +4853,7 @@ export default {
           aftaAdopters: '/api/afta/adopters (free; machine-readable AFTA adopter directory; not authoritative)',
           premiumCostProjection: '/api/premium/cost/projection?model=opus-4-7,gpt-5-5&input_tokens_per_day=&output_tokens_per_day=&horizon=monthly',
           premiumProviderDeepDive: '/api/premium/providers/{name}',
-          premiumCompareModels: '/api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3',
+          premiumCompareModels: '/api/premium/compare/models?ids=opus-4-7,gpt-5-5,gemini-3-5-flash',
           premiumWhatsNew: '/api/premium/whats-new?days=1&news_limit=10',
           premiumWhatsNewPro: '/api/premium/whats-new/pro?days=1&news_limit=10 (10 credits, AFTA-signed; pro tier of the morning brief. Same 24h base payload plus Claude Haiku 4.5 generated analyst summary, 1-5 cited key takeaways, and 1-3 recommended actions targeted by agent class. Every claim cites by stable basis ID; citations are server-side validated, so the agent never sees a hallucinated reference.)',
           premiumPolicyTimeline: '/api/premium/policy/timeline?days_back=&days_forward=&jurisdiction= (1 credit; forward + backward calendar over the AI policy registry with relative-to-now classification, next-3-milestones, days-until-effective per entry)',

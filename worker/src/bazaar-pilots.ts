@@ -279,7 +279,7 @@ const COMPARE_MODELS_PILOT: BazaarPilotConfig = {
         input: {
           type: 'http',
           method: 'GET',
-          queryParams: { ids: 'opus-4-7,gpt-5-5,gemini-3' },
+          queryParams: { ids: 'opus-4-7,gpt-5-5,gemini-3-5-flash' },
         },
         output: {
           type: 'json',
@@ -304,10 +304,10 @@ const COMPARE_MODELS_PILOT: BazaarPilotConfig = {
               },
             ],
             rankings: {
-              cheapest_blended: ['gpt-5-5', 'gemini-3', 'opus-4-7'],
-              widest_context: ['gemini-3', 'opus-4-7', 'gpt-5-5'],
+              cheapest_blended: ['gpt-5-5', 'gemini-3-5-flash', 'opus-4-7'],
+              widest_context: ['gemini-3-5-flash', 'opus-4-7', 'gpt-5-5'],
               per_benchmark: {
-                swe_bench: ['opus-4-7', 'gpt-5-5', 'gemini-3'],
+                swe_bench: ['opus-4-7', 'gpt-5-5', 'gemini-3-5-flash'],
               },
             },
             billing: { credits_charged: 1, credits_remaining: 49 },
@@ -329,7 +329,7 @@ const COMPARE_MODELS_PILOT: BazaarPilotConfig = {
                   ids: {
                     type: 'string',
                     description:
-                      'Comma-separated list of 2 to 5 model ids or display names (e.g. "opus-4-7,gpt-5-5,gemini-3").',
+                      'Comma-separated list of 2 to 5 model ids or display names (e.g. "opus-4-7,gpt-5-5,gemini-3-5-flash").',
                   },
                 },
                 required: ['ids'],

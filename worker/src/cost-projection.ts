@@ -1,5 +1,6 @@
 import { Env } from './types';
 import { PRICING_ATTRIBUTION } from './catalog';
+import { resolveModelKey } from './model-key-resolve';
 
 /**
  * Premium cost projection.
@@ -94,20 +95,13 @@ function round4(n: number): number {
   return parseFloat(n.toFixed(4));
 }
 
+// Exact id/name match first, then unambiguous short forms (opus-4-8,
+// "GPT-5.5"). Shared with compare/models; see model-key-resolve.ts.
 function findModel(
   payload: PricingPayload | null,
   key: string,
 ): { provider: ProviderPricing; model: ModelPricing } | null {
-  if (!payload?.providers) return null;
-  const k = key.toLowerCase();
-  for (const provider of payload.providers) {
-    for (const model of provider.models) {
-      if (model.id.toLowerCase() === k || model.name.toLowerCase() === k) {
-        return { provider, model };
-      }
-    }
-  }
-  return null;
+  return resolveModelKey<ModelPricing, ProviderPricing>(payload?.providers ?? null, key);
 }
 
 function projectOne(

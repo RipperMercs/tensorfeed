@@ -1,5 +1,6 @@
 import { Env } from './types';
 import { BENCHMARK_ATTRIBUTION, PRICING_ATTRIBUTION, BenchmarkAttribution, PricingAttribution } from './catalog';
+import { resolveModelKey } from './model-key-resolve';
 
 /**
  * Premium side-by-side model comparison.
@@ -131,20 +132,13 @@ function round4(n: number): number {
   return parseFloat(n.toFixed(4));
 }
 
+// Exact id/name match first, then unambiguous short forms (opus-4-8,
+// "GPT-5.5"). Shared with cost/projection; see model-key-resolve.ts.
 function findPricing(
   pricing: PricingPayload | null,
   key: string,
 ): { provider: ProviderPricing; model: ModelPricing } | null {
-  if (!pricing?.providers) return null;
-  const k = key.toLowerCase();
-  for (const provider of pricing.providers) {
-    for (const model of provider.models) {
-      if (model.id.toLowerCase() === k || model.name.toLowerCase() === k) {
-        return { provider, model };
-      }
-    }
-  }
-  return null;
+  return resolveModelKey<ModelPricing, ProviderPricing>(pricing?.providers ?? null, key);
 }
 
 function findStatus(
