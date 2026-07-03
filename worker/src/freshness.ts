@@ -171,8 +171,6 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // no wall-clock staleness signal applies (the figures are editorial, not a
   // cron snapshot); same shape as the ai-datacenters buildout aggregate.
   '/api/premium/ai-capex-cycle-verdict': NULL_SLA,
-  // Recession watch: synthesis over BLS + FRED daily snapshots. 24h
-  // matches the cron cadence of underlying data.
   // Model-deprecations timeline: pure compute over a hand-curated registry
   // that updates on redeploy. No staleness signal applies; the relative-to-
   // now math runs at request time. Same shape as policy/timeline.

@@ -28,7 +28,6 @@
     "GET /api/premium/probe/series",
     "GET /api/premium/attention/series",
     "GET /api/premium/policy/timeline",
-    "GET /api/premium/economy/recession-watch",
     "GET /api/premium/economy/series/{source}/{series_id}",
     "GET /api/premium/research/velocity",
     "GET /api/premium/packages/pypi/momentum",

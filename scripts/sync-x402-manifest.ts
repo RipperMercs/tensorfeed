@@ -88,7 +88,6 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   '/api/premium/research/citation-velocity':         { name: 'AI citation velocity',                  category: 'research-citation-velocity', credits: 1, method: 'GET' },
   '/api/premium/research/milestones':                { name: 'arXiv milestone candidates',            category: 'research-milestones',     credits: 1, method: 'GET' },
   '/api/premium/research/emerging-keywords':         { name: 'arXiv emerging keywords',               category: 'research-emerging-keywords', credits: 1, method: 'GET' },
-  '/api/premium/economy/recession-watch':            { name: 'Recession watch',                       category: 'macro-recession-signal',  credits: 1, method: 'GET' },
   '/api/premium/policy/timeline':                    { name: 'AI policy timeline',                    category: 'ai-policy-temporal',      credits: 1, method: 'GET' },
   '/api/premium/apis-guru/ai-feed':                  { name: 'APIs.guru AI feed',                     category: 'ai-api-directory',        credits: 1, method: 'GET' },
   '/api/premium/model-deprecations/timeline':        { name: 'Model deprecations timeline',           category: 'ai-model-lifecycle',      credits: 1, method: 'GET' },
