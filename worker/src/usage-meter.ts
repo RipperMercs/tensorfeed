@@ -171,7 +171,19 @@ export interface UsageReport {
     credits_charged: number;
     wallet_raw?: string;
     rail?: 'evm' | 'svm';
+    // True when the wallet is one of TensorFeed's own test/validation wallets
+    // (from the INTERNAL_WALLETS secret). Kept visible but flagged so it is
+    // never mistaken for organic external demand. See summarizeOrganicPayers.
+    internal?: boolean;
   }>;
+  // Organic external demand: distinct payers and their credits with the
+  // internal-flagged wallets removed. top_payers totals are otherwise inflated
+  // by TF's own on-chain test settles (e.g. 0x55a15d, 4k5cHPAL), which debit
+  // exactly like a real buyer. organic_payers == all distinct payers when no
+  // INTERNAL_WALLETS secret is set (nothing flagged).
+  organic_payers: number;
+  organic_credits_charged: number;
+  internal_payers: number;
   // Per-rail paid totals summed across the window. null when no rollup in
   // the window carries rail attribution (all data predates the rail tag),
   // so a zero is never confused with "not measured".
@@ -292,6 +304,49 @@ function mergePayers(rollups: ReadRollup[]): UsageReport['top_payers'] {
       ...(v.rail ? { rail: v.rail } : {}),
     }))
     .sort((a, b) => b.credits_charged - a.credits_charged);
+}
+
+// Parse the INTERNAL_WALLETS secret (comma-separated addresses) into a
+// lowercased lookup set. TF's own test/validation wallets settle real on-chain
+// USDC against our own endpoints, so they land in the paid rollup exactly like
+// an external buyer and inflate top_payers. Kept as a SECRET (not source) so
+// the public repo never discloses which wallets are ours. Unset/empty = {}.
+export function parseInternalWallets(env: Env): Set<string> {
+  const raw = env.INTERNAL_WALLETS;
+  if (!raw) return new Set();
+  return new Set(
+    raw
+      .split(',')
+      .map((w) => w.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+// Flag internal wallets in the payer list (kept visible) and compute the
+// organic-only summary (external demand with TF's own wallets removed). The
+// rollup keys payers by lowercased wallet; the toLowerCase() compare is
+// belt-and-suspenders. Note: a third-party prober is NOT internal, so it still
+// counts as organic here (only wallets in the secret are excluded). Pure; unit
+// -testable without KV.
+export function summarizeOrganicPayers(
+  payers: UsageReport['top_payers'],
+  internalWallets: Set<string>,
+): {
+  top_payers: UsageReport['top_payers'];
+  organic_payers: number;
+  organic_credits_charged: number;
+  internal_payers: number;
+} {
+  const annotated: UsageReport['top_payers'] = payers.map((p) =>
+    internalWallets.has(p.wallet.toLowerCase()) ? { ...p, internal: true } : p,
+  );
+  const organic = annotated.filter((p) => !p.internal);
+  return {
+    top_payers: annotated.slice(0, 25),
+    organic_payers: organic.length,
+    organic_credits_charged: organic.reduce((sum, p) => sum + p.credits_charged, 0),
+    internal_payers: annotated.length - organic.length,
+  };
 }
 
 // Sum per-rail paid totals across the window. Returns null when NO rollup in
@@ -448,7 +503,8 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
   // over-counts no-charge calls, is surfaced as logged_calls only.
   const top_paid_endpoints = reconcileTopPaidEndpoints(byEndpoint, funnel_by_endpoint);
 
-  const top_payers = mergePayers(rollups).slice(0, 25);
+  const { top_payers, organic_payers, organic_credits_charged, internal_payers } =
+    summarizeOrganicPayers(mergePayers(rollups), parseInternalWallets(env));
   const rails = mergeRails(rollups);
 
   // Crawler-filtered real-agent view, derived from the per-(endpoint, ua) funnel.
@@ -465,7 +521,7 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
   // crawler-only 402 flood (e.g. agents/directory) is never flagged as demand.
   // Falls back to [] when the AE token is absent.
   const build_targets = deriveBuildTargets(real_agent_funnel);
-  return { window, top_paid_endpoints, top_payers, rails, funnel_by_endpoint, real_agent_funnel, crawler_summary, build_targets, funnel_status };
+  return { window, top_paid_endpoints, top_payers, organic_payers, organic_credits_charged, internal_payers, rails, funnel_by_endpoint, real_agent_funnel, crawler_summary, build_targets, funnel_status };
 }
 
 // Request-health threshold: a request that completes slower than this many ms

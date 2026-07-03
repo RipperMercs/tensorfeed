@@ -98,6 +98,15 @@ export interface Env {
   // TensorFeed's own automated callers and are excluded from external-demand
   // funnel metrics. Optional, so unset = nothing tagged.
   INTERNAL_TRAFFIC_KEY?: string;
+  // Comma-separated list of TensorFeed's own test/validation wallet addresses
+  // (e.g. the on-chain buyer wallets used by the catalog-settle and smoke
+  // scripts). They settle real USDC against our own endpoints, so they land in
+  // the paid rollup exactly like an external buyer and inflate top_payers. The
+  // admin usage view flags them and reports an organic-only payer summary that
+  // excludes them (see usage-meter parseInternalWallets / summarizeOrganicPayers).
+  // A SECRET, not a plain var, so the public repo never discloses our wallets.
+  // Optional; unset = nothing flagged (organic == all payers).
+  INTERNAL_WALLETS?: string;
   // Soft per-request deadline in milliseconds for the fetch handler. When a
   // handler hangs past this, the worker sheds a fast structured 504 instead of
   // riding to an opaque, unrecorded edge gateway-timeout (see deadline.ts).

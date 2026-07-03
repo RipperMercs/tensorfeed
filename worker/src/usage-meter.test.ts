@@ -9,6 +9,8 @@ import {
   classifyUaFamily,
   deriveRealAgentFunnel,
   reconcileTopPaidEndpoints,
+  parseInternalWallets,
+  summarizeOrganicPayers,
   SLOW_MS,
 } from './usage-meter';
 import type { Env } from './types';
@@ -419,5 +421,56 @@ describe('deriveRealAgentFunnel', () => {
     // carbonmonitor aggregates across endpoints (1030+600+767=2397) and leads mako (1510).
     expect(crawler_summary.top_crawler_families[0]).toMatchObject({ ua: 'carbonmonitor', unpaid_402: 2397 });
     expect(crawler_summary.top_crawler_families[1]).toMatchObject({ ua: 'mako-pulse-prober', unpaid_402: 1510 });
+  });
+});
+
+describe('parseInternalWallets', () => {
+  it('returns an empty set when the secret is unset', () => {
+    expect(parseInternalWallets({} as Env).size).toBe(0);
+  });
+  it('splits, trims, lowercases, and drops empties', () => {
+    const s = parseInternalWallets({ INTERNAL_WALLETS: '0xAbC, 4k5CHpal ,' } as unknown as Env);
+    expect(s.has('0xabc')).toBe(true);
+    expect(s.has('4k5chpal')).toBe(true);
+    expect(s.size).toBe(2);
+  });
+});
+
+describe('summarizeOrganicPayers', () => {
+  const payers = [
+    { wallet: '0x55a15d', calls: 6, credits_charged: 6 }, // TF's own test wallet
+    { wallet: 'testkwyn', calls: 7, credits_charged: 13 }, // external prober (still organic)
+    { wallet: '0xorganic', calls: 1, credits_charged: 1 }, // real one-shot buyer
+  ];
+
+  it('flags internal wallets but keeps them visible in top_payers', () => {
+    const out = summarizeOrganicPayers(payers, new Set(['0x55a15d']));
+    expect(out.top_payers).toHaveLength(3);
+    expect(out.top_payers.find((p) => p.wallet === '0x55a15d')?.internal).toBe(true);
+    expect(out.top_payers.find((p) => p.wallet === '0xorganic')?.internal).toBeUndefined();
+  });
+
+  it('excludes only flagged wallets from the organic summary (a prober stays organic)', () => {
+    const out = summarizeOrganicPayers(payers, new Set(['0x55a15d']));
+    expect(out.internal_payers).toBe(1);
+    expect(out.organic_payers).toBe(2); // testkwyn (prober) + 0xorganic
+    expect(out.organic_credits_charged).toBe(14); // 13 + 1, not the internal 6
+  });
+
+  it('matches the internal set case-insensitively', () => {
+    const out = summarizeOrganicPayers(
+      [{ wallet: '0xAbC', calls: 1, credits_charged: 2 }],
+      new Set(['0xabc']),
+    );
+    expect(out.top_payers[0].internal).toBe(true);
+    expect(out.organic_payers).toBe(0);
+    expect(out.organic_credits_charged).toBe(0);
+  });
+
+  it('treats an empty internal set as all-organic (no secret set)', () => {
+    const out = summarizeOrganicPayers(payers, new Set());
+    expect(out.organic_payers).toBe(3);
+    expect(out.internal_payers).toBe(0);
+    expect(out.top_payers.every((p) => p.internal === undefined)).toBe(true);
   });
 });
