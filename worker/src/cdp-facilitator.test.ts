@@ -499,6 +499,32 @@ describe('cdpSettle response mapping', () => {
     expect(body.paymentPayload.extensions).toEqual(PILOT_REQUIREMENTS.extensions);
   });
 
+  // Discovery extensions are seller data. Standard buyers (@x402/fetch) echo
+  // the 402 HEADER's size-compacted bazaar block (input-only, NO schema),
+  // which CDP's validator rejects as "invalid discovery configuration".
+  // First observed live 2026-07-03 on the first real Solana settle (tx
+  // 57SDJCcw...): every @x402/fetch settle was rejected while the EVM seed
+  // script, which echoes the full BODY extension, cataloged fine and masked
+  // the bug. The settle must prefer the server's canonical
+  // requirements.extensions per key, preserving buyer-only keys.
+  it('overrides a buyer-echoed (header-compacted) bazaar extension with the canonical server one', async () => {
+    const { captures } = installFetchMock({ success: true, transaction: '0xdef' });
+    const buyerPayload = {
+      ...DUMMY_PAYLOAD,
+      extensions: {
+        bazaar: { info: { input: { type: 'http' } } },
+        'buyer-only-key': { keep: true },
+      },
+    } as unknown as typeof DUMMY_PAYLOAD;
+    await cdpSettle(mockEnv(), buyerPayload, PILOT_REQUIREMENTS);
+
+    const body = parseSettleBody(captures[0].init);
+    expect(body.paymentPayload.extensions?.bazaar).toEqual(
+      (PILOT_REQUIREMENTS.extensions as Record<string, unknown>).bazaar,
+    );
+    expect(body.paymentPayload.extensions?.['buyer-only-key']).toEqual({ keep: true });
+  });
+
   it('maps 5xx HTTP error to unexpected_settle_error', async () => {
     const mock = installFetchMock();
     mock.setResponse({ error: 'oops' }, { status: 500 });

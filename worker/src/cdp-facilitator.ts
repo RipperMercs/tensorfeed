@@ -477,12 +477,19 @@ export async function cdpSettle(
   //      supplied we make it spec-complete ({ url, description, mimeType }):
   //      without the description the cataloged row is metadata-blank and
   //      capability search never surfaces the endpoint.
-  //   2. paymentPayload.extensions: the bazaar extension echoed back from
-  //      the 402 challenge. CDP interprets missing paymentPayload.extensions
-  //      as "no bazaar opt-in" and skips bazaar processing entirely, which
-  //      produces the exact EXTENSION-RESPONSES=e30= ({}) symptom we see
-  //      across every pilot settle in observability.
-  // Non-destructive: keep any value the buyer already supplied.
+  //   2. paymentPayload.extensions: the bazaar extension CDP reads to
+  //      catalog. CDP interprets missing paymentPayload.extensions as "no
+  //      bazaar opt-in" and skips bazaar processing entirely (the
+  //      EXTENSION-RESPONSES=e30= symptom). Discovery extensions are SELLER
+  //      data: standard buyers (@x402/fetch) echo whatever the 402 HEADER
+  //      carried, and the header ships a size-compacted input-only bazaar
+  //      block (no schema) under the 16KB budget, which CDP's validator
+  //      rejects as "invalid discovery configuration". First observed live
+  //      2026-07-03 on the first real Solana settle; the EVM seed script
+  //      masked it by echoing the full BODY extension. So the server's
+  //      canonical requirements.extensions win per key; buyer-only extension
+  //      keys pass through untouched.
+  // Non-destructive for resource: keep any value the buyer already supplied.
   type EnrichablePayload = PaymentPayload & {
     resource?: { url: string; description?: string; mimeType?: string };
     extensions?: Record<string, unknown>;
@@ -513,14 +520,14 @@ export async function cdpSettle(
           mimeType: 'application/json',
         }
       : undefined;
+  const mergedExtensions: Record<string, unknown> = {
+    ...(buyerPayload.extensions ?? {}),
+    ...(reqExtensions ?? {}),
+  };
   const enrichedPayload: EnrichablePayload = {
     ...buyerPayload,
     resource: cdpSafeResource(buyerPayload.resource) ?? enrichedResource,
-    ...(buyerPayload.extensions
-      ? {}
-      : reqExtensions && Object.keys(reqExtensions).length > 0
-        ? { extensions: reqExtensions }
-        : {}),
+    ...(Object.keys(mergedExtensions).length > 0 ? { extensions: mergedExtensions } : {}),
   };
 
   let resp: Response;
