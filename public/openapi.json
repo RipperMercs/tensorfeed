@@ -2179,8 +2179,11 @@
             "in": "query",
             "name": "from",
             "required": true,
+            "description": "The degraded provider to fail over FROM, as a provider id, e.g. anthropic or openai.",
+            "example": "anthropic",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "example": "anthropic"
             }
           },
           {
