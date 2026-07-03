@@ -477,6 +477,8 @@ interface RollupPayer {
   credits_charged: number;
   first_seen: string;
   last_seen: string;
+  wallet_raw?: string;
+  rail?: 'evm' | 'svm';
 }
 interface RollupForTest {
   by_endpoint: Record<
@@ -484,6 +486,7 @@ interface RollupForTest {
     { calls: number; credits_charged: number; distinct_payers?: number }
   >;
   top_payers?: Record<string, RollupPayer>;
+  rails?: Partial<Record<'evm' | 'svm', { calls: number; credits_charged: number }>>;
 }
 
 async function readRollupFromKv(env: Env, date: string): Promise<RollupForTest> {
@@ -530,6 +533,43 @@ describe('logPremiumUsage (payer-wallet rollup)', () => {
     expect(rollup.by_endpoint[template].calls).toBe(1);
     expect(rollup.by_endpoint[template].distinct_payers).toBe(1);
     expect(rollup.top_payers?.['0xpilot_payer'].credits_charged).toBe(1);
+  });
+
+  // Base58 is case-sensitive, so the lowercase top_payers key (kept for
+  // dedupe stability) is lossy for Solana payers. The record must retain
+  // the original form for on-chain lookup, and tag the rail so the daily
+  // rollup can answer Base-vs-Solana questions without wallet-format
+  // heuristics. Found 2026-07-02 tracing the week's Solana payers.
+  it('preserves base58 case and tags the rail per payer, with per-rail rollup counters', async () => {
+    const env = makeEnv();
+    const SOL = 'TeStKWyNre9PW8XbLfvuBm9f6EnTBYqS5GXTzciCnHw';
+    const EVM = '0xAbCd000000000000000000000000000000000001';
+    await logPremiumUsage(env, '/api/premium/x', 'agent/1', 1, 'tok', SOL);
+    await logPremiumUsage(env, '/api/premium/x', 'agent/1', 5, 'tok', SOL);
+    await logPremiumUsage(env, '/api/premium/x', 'node', 1, 'tok', EVM);
+
+    const rollup = await readRollupFromKv(env, new Date().toISOString().slice(0, 10));
+    const sol = rollup.top_payers?.[SOL.toLowerCase()];
+    expect(sol).toBeDefined();
+    expect(sol?.wallet_raw).toBe(SOL);
+    expect(sol?.rail).toBe('svm');
+    expect(sol?.calls).toBe(2);
+
+    const evm = rollup.top_payers?.[EVM.toLowerCase()];
+    expect(evm?.wallet_raw).toBe(EVM);
+    expect(evm?.rail).toBe('evm');
+
+    expect(rollup.rails?.svm?.calls).toBe(2);
+    expect(rollup.rails?.svm?.credits_charged).toBe(6);
+    expect(rollup.rails?.evm?.calls).toBe(1);
+    expect(rollup.rails?.evm?.credits_charged).toBe(1);
+  });
+
+  it('leaves rails absent on the UA-only path (no wallet, no rail attribution)', async () => {
+    const env = makeEnv();
+    await logPremiumUsage(env, '/api/premium/y', 'axios/1', 1, 'tok');
+    const rollup = await readRollupFromKv(env, new Date().toISOString().slice(0, 10));
+    expect(rollup.rails).toBeUndefined();
   });
 });
 

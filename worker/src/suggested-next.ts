@@ -31,6 +31,8 @@
 
 const FREE = 0;
 const ONE_CREDIT = 1;
+const FIVE_CREDITS = 5;
+const TEN_CREDITS = 10;
 
 export interface NextCallSuggestion {
   url: string;
@@ -184,7 +186,7 @@ const SUGGESTION_MAP: Record<string, SuggestionTemplate[]> = {
     {
       path: '/api/premium/probe/series',
       why: 'TF-measured uptime / latency series for any provider in the routing list (90d max).',
-      credits: ONE_CREDIT,
+      credits: FIVE_CREDITS,
     },
   ],
   '/api/premium/compare/models': [
@@ -254,6 +256,225 @@ const SUGGESTION_MAP: Record<string, SuggestionTemplate[]> = {
     {
       path: '/api/premium/probe/series',
       why: 'TF-measured uptime/latency for any provider listed in the directory.',
+      credits: FIVE_CREDITS,
+    },
+  ],
+
+  // === Daily brief family (2026-07-02: whats-new is the top converter;
+  // its buyers were leaving with no pointer to the rest of the catalog) ===
+  '/api/premium/whats-new': [
+    {
+      path: '/api/premium/whats-new/pro',
+      why: 'Analyst layer on this same brief: synthesis summary, cited takeaways, and recommended actions per agent class.',
+      credits: TEN_CREDITS,
+    },
+    {
+      path: '/api/premium/inference-providers/arbitrage',
+      why: 'Act on the pricing deltas above: current cheapest live provider per model with spread magnitudes.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/watches',
+      method: 'POST',
+      why: 'Stop polling: register a standing watch and get a webhook when the next change matching your filter lands.',
+      credits: ONE_CREDIT,
+    },
+  ],
+  '/api/premium/whats-new/pro': [
+    {
+      path: '/api/premium/watches',
+      method: 'POST',
+      why: 'Turn any takeaway into a standing watch so the next relevant change finds you without polling.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/model-deprecations/timeline',
+      why: 'Deprecation and sunset dates for models referenced in the brief, for migration planning.',
+      credits: ONE_CREDIT,
+    },
+  ],
+  '/api/premium/watches': [
+    {
+      path: '/api/premium/whats-new',
+      why: 'One-call catch-up on the last 24h of pricing, model, and status changes while your watches cover the future.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/failover-verdict',
+      why: 'Signed primary-vs-fallback provider verdict, useful when a watch fires on a status incident.',
+      credits: ONE_CREDIT,
+    },
+  ],
+  '/api/premium/model-deprecations/timeline': [
+    {
+      path: '/api/premium/compare/models',
+      why: 'Side-by-side comparison of a deprecated model against its candidate replacements.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/whats-new',
+      why: 'Last 24h of pricing/model/status changes, including newly announced deprecations.',
+      credits: ONE_CREDIT,
+    },
+  ],
+
+  // === Policy / compliance ===
+  '/api/premium/policy/timeline': [
+    {
+      path: '/api/premium/compliance/restricted-party',
+      why: 'Screen a counterparty name against the US Consolidated Screening List with official citations.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/whats-new',
+      why: 'The policy beat in context: last 24h of AI industry changes including regulatory headlines.',
+      credits: ONE_CREDIT,
+    },
+  ],
+
+  // === Provider economics ===
+  '/api/premium/inference-providers/arbitrage': [
+    {
+      path: '/api/premium/routing',
+      why: 'Task-aware model recommendations that weigh the same price data against quality and latency.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/cost/projection',
+      why: 'Project monthly spend if you moved the workload to the cheapest provider surfaced here.',
+      credits: ONE_CREDIT,
+    },
+  ],
+
+  // === Package ecosystem ===
+  '/api/premium/packages/pypi/momentum': [
+    {
+      path: '/api/premium/packages/releases/velocity',
+      why: 'Release cadence per package over time, the maintenance-health signal behind the momentum score.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/ai-safety/packages/security/radar',
+      why: 'Per-package security risk score over the OSV advisory snapshot for the same AI package set.',
+      credits: ONE_CREDIT,
+    },
+  ],
+  '/api/premium/packages/releases/velocity': [
+    {
+      path: '/api/premium/packages/pypi/momentum',
+      why: 'Download-momentum ranking across the curated AI PyPI set, the demand side of release velocity.',
+      credits: FIVE_CREDITS,
+    },
+    {
+      path: '/api/premium/ai-cves/ai-stack-cves',
+      why: 'Open CVEs affecting the AI stack packages you just checked.',
+      credits: ONE_CREDIT,
+    },
+  ],
+
+  // === Security ===
+  '/api/premium/ai-safety/packages/security/radar': [
+    {
+      path: '/api/premium/ai-cves/ai-stack-cves',
+      why: 'The CVE detail behind any hot or critical package in the radar.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/packages/releases/velocity',
+      why: 'Whether risky packages are actively maintained (release cadence over time).',
+      credits: ONE_CREDIT,
+    },
+  ],
+  '/api/premium/ai-cves/ai-stack-cves': [
+    {
+      path: '/api/premium/ai-safety/packages/security/radar',
+      why: 'Per-package 0-100 risk score and risk-band rollup across the curated AI package set.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/security/kev/full',
+      why: 'CISA known-exploited-vulnerabilities catalog, cleaned and queryable, for exploitation-in-the-wild checks.',
+      credits: ONE_CREDIT,
+    },
+  ],
+
+  // === Commerce trust and settlement ===
+  '/api/premium/counterparty/trust-verdict': [
+    {
+      path: '/api/premium/merchant/legitimacy',
+      why: 'Domain-level legitimacy verdict (proceed/step_up/block) for the merchant behind the wallet.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/compliance/restricted-party',
+      why: 'Name-based restricted-party screen against the US Consolidated Screening List.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/settlement/rail-verdict',
+      why: 'Signed cheapest-and-fastest settlement rail recommendation for the payment you are about to make.',
+      credits: ONE_CREDIT,
+    },
+  ],
+  '/api/premium/merchant/legitimacy': [
+    {
+      path: '/api/premium/counterparty/trust-verdict',
+      why: 'Wallet-level trust verdict for the same counterparty, on-chain history plus sanctions screen.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/compliance/restricted-party',
+      why: 'Name-based restricted-party screen to complete the compliance picture.',
+      credits: ONE_CREDIT,
+    },
+  ],
+  '/api/premium/compliance/restricted-party': [
+    {
+      path: '/api/premium/counterparty/trust-verdict',
+      why: 'Wallet-level trust verdict when you also hold a wallet address for the screened party.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/merchant/legitimacy',
+      why: 'Domain-level legitimacy verdict when the screened party operates a storefront.',
+      credits: ONE_CREDIT,
+    },
+  ],
+  '/api/premium/settlement/rail-verdict': [
+    {
+      path: '/api/premium/counterparty/trust-verdict',
+      why: 'Trust-check the counterparty wallet before settling on the recommended rail.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/ai-crypto-pulse',
+      why: 'Market pulse across the AI token cohort if your settlement strategy tracks token conditions.',
+      credits: ONE_CREDIT,
+    },
+  ],
+  '/api/premium/ai-crypto-pulse': [
+    {
+      path: '/api/premium/settlement/rail-verdict',
+      why: 'Cost and finality ranking across x402 settlement rails, signed.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/x402-settlement-verdict',
+      why: 'Signed verdict on x402 settlement conditions across tracked rails.',
+      credits: ONE_CREDIT,
+    },
+  ],
+
+  // === API ecosystem ===
+  '/api/premium/apis-guru/ai-feed': [
+    {
+      path: '/api/premium/agents/directory',
+      why: 'Curated agent and provider directory with status and capability filters.',
+      credits: ONE_CREDIT,
+    },
+    {
+      path: '/api/premium/whats-new',
+      why: 'Last 24h of AI API pricing, model, and status changes in one call.',
       credits: ONE_CREDIT,
     },
   ],

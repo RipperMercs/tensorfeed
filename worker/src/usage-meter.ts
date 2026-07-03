@@ -130,11 +130,22 @@ interface RollupPayerSlot {
   credits_charged: number;
   first_seen: string;
   last_seen: string;
+  // Original-case wallet (base58 Solana addresses are case-sensitive; the
+  // record key is lowercased for dedupe and lossy) + settlement VM tag.
+  // Absent on rollups written before 2026-07-02.
+  wallet_raw?: string;
+  rail?: 'evm' | 'svm';
+}
+
+interface RollupRailSlot {
+  calls: number;
+  credits_charged: number;
 }
 
 interface ReadRollup {
   by_endpoint?: Record<string, RollupEndpointSlot>;
   top_payers?: Record<string, RollupPayerSlot>;
+  rails?: Partial<Record<'evm' | 'svm', RollupRailSlot>>;
 }
 
 export interface UsageReport {
@@ -154,7 +165,17 @@ export interface UsageReport {
     logged_calls: number;
     last_seen: string;
   }>;
-  top_payers: Array<{ wallet: string; calls: number; credits_charged: number }>;
+  top_payers: Array<{
+    wallet: string;
+    calls: number;
+    credits_charged: number;
+    wallet_raw?: string;
+    rail?: 'evm' | 'svm';
+  }>;
+  // Per-rail paid totals summed across the window. null when no rollup in
+  // the window carries rail attribution (all data predates the rail tag),
+  // so a zero is never confused with "not measured".
+  rails: Partial<Record<'evm' | 'svm', { calls: number; credits_charged: number }>> | null;
   funnel_by_endpoint:
     | Array<{ endpoint: string; free_hits: number; unpaid_402: number; paid: number; conversion: number }>
     | null;
@@ -245,19 +266,55 @@ export function reconcileTopPaidEndpoints(
 }
 
 // Sum per-wallet paid totals across the window, sorted by credits desc.
-function mergePayers(rollups: ReadRollup[]): Array<{ wallet: string; calls: number; credits_charged: number }> {
-  const merged: Record<string, { calls: number; credits_charged: number }> = {};
+function mergePayers(rollups: ReadRollup[]): UsageReport['top_payers'] {
+  const merged: Record<
+    string,
+    { calls: number; credits_charged: number; wallet_raw?: string; rail?: 'evm' | 'svm' }
+  > = {};
   for (const r of rollups) {
     for (const [wallet, slot] of Object.entries(r.top_payers || {})) {
       const acc = merged[wallet] || { calls: 0, credits_charged: 0 };
       acc.calls += slot.calls || 0;
       acc.credits_charged += slot.credits_charged || 0;
+      // Newer rollups carry the original-case wallet + rail tag; any day's
+      // value works (a wallet's case and rail never change), so last wins.
+      if (slot.wallet_raw) acc.wallet_raw = slot.wallet_raw;
+      if (slot.rail) acc.rail = slot.rail;
       merged[wallet] = acc;
     }
   }
   return Object.entries(merged)
-    .map(([wallet, v]) => ({ wallet, calls: v.calls, credits_charged: v.credits_charged }))
+    .map(([wallet, v]) => ({
+      wallet,
+      calls: v.calls,
+      credits_charged: v.credits_charged,
+      ...(v.wallet_raw ? { wallet_raw: v.wallet_raw } : {}),
+      ...(v.rail ? { rail: v.rail } : {}),
+    }))
     .sort((a, b) => b.credits_charged - a.credits_charged);
+}
+
+// Sum per-rail paid totals across the window. Returns null when NO rollup in
+// the window carries a rails field (all data predates rail attribution), so
+// callers can distinguish "zero Solana calls" from "not measured yet".
+function mergeRails(
+  rollups: ReadRollup[],
+): Partial<Record<'evm' | 'svm', { calls: number; credits_charged: number }>> | null {
+  let seen = false;
+  const merged: Partial<Record<'evm' | 'svm', { calls: number; credits_charged: number }>> = {};
+  for (const r of rollups) {
+    if (!r.rails) continue;
+    seen = true;
+    for (const rail of ['evm', 'svm'] as const) {
+      const slot = r.rails[rail];
+      if (!slot) continue;
+      const acc = merged[rail] || { calls: 0, credits_charged: 0 };
+      acc.calls += slot.calls || 0;
+      acc.credits_charged += slot.credits_charged || 0;
+      merged[rail] = acc;
+    }
+  }
+  return seen ? merged : null;
 }
 
 // Decide what to build more of. Two signals, both AE-funnel-derived:
@@ -392,6 +449,7 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
   const top_paid_endpoints = reconcileTopPaidEndpoints(byEndpoint, funnel_by_endpoint);
 
   const top_payers = mergePayers(rollups).slice(0, 25);
+  const rails = mergeRails(rollups);
 
   // Crawler-filtered real-agent view, derived from the per-(endpoint, ua) funnel.
   let real_agent_funnel: UsageReport['real_agent_funnel'] = null;
@@ -407,7 +465,7 @@ export async function buildUsageReport(env: Env, window: string): Promise<UsageR
   // crawler-only 402 flood (e.g. agents/directory) is never flagged as demand.
   // Falls back to [] when the AE token is absent.
   const build_targets = deriveBuildTargets(real_agent_funnel);
-  return { window, top_paid_endpoints, top_payers, funnel_by_endpoint, real_agent_funnel, crawler_summary, build_targets, funnel_status };
+  return { window, top_paid_endpoints, top_payers, rails, funnel_by_endpoint, real_agent_funnel, crawler_summary, build_targets, funnel_status };
 }
 
 // Request-health threshold: a request that completes slower than this many ms

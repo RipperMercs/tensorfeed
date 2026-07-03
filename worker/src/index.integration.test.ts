@@ -1281,6 +1281,47 @@ describe('canonical accepts[].outputSchema (x402scan registration)', () => {
     expect(wwwAuth).toContain(b64 as string);
   });
 
+  it('SOLANA RAIL: the solana accepts entry carries outputSchema parity with the Base entry', async () => {
+    const env = await makeEnv({
+      vars: {
+        SOLANA_PAYMENT_ENABLED: 'true',
+        SOLANA_PAYMENT_WALLET: 'B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ',
+      },
+    });
+    const res = await call(env, '/api/premium/routing?task=code', { ip: uniqueIp() });
+
+    expect(res.status).toBe(402);
+
+    // BODY: two rails advertised, and the Solana entry mirrors the full
+    // DiscoveryInfo so rail-filtered indexers (x402gle, x402scan Solana
+    // ingestion, Bazaar records built from a Solana settle) see the same
+    // metadata as the Base entry. Verified gap 2026-07-02: all 16 TF Bazaar
+    // records were Base-only while the live 402 carried outputSchema only
+    // on accepts[0].
+    const accepts = res.json?.accepts as Array<Record<string, unknown>> | undefined;
+    expect(Array.isArray(accepts)).toBe(true);
+    expect(accepts?.length).toBe(2);
+    const sol = accepts?.find((a) => String(a.network).startsWith('solana:'));
+    expect(sol).toBeDefined();
+    expect(sol?.outputSchema).toBeDefined();
+    expect(sol?.outputSchema).toEqual(accepts?.[0]?.outputSchema);
+
+    // HEADER: the generic input-only compaction applies to the Solana entry
+    // too, and the per-header budget still holds with both entries carrying
+    // the input schema.
+    const b64 = res.headers.get('PAYMENT-REQUIRED');
+    expect(b64).not.toBeNull();
+    expect((b64 as string).length).toBeLessThan(16000);
+    const decoded = decodeHeader(b64);
+    const hAccepts = decoded.accepts as Array<Record<string, unknown>> | undefined;
+    const hSol = hAccepts?.find((a) => String(a.network).startsWith('solana:')) as
+      | { outputSchema?: { input?: unknown; output?: unknown } }
+      | undefined;
+    expect(hSol?.outputSchema).toBeDefined();
+    expect(hSol?.outputSchema?.input).toBeDefined();
+    expect(hSol?.outputSchema?.output).toBeUndefined();
+  });
+
   it('a strict-premium path with NO bazaar config yields a valid 402 with no outputSchema and does not throw', async () => {
     const env = await makeEnv();
     // /api/premium/history/news/full is strict-premium but NOT a Bazaar

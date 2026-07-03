@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { buildSuggestedNextCalls, __test } from './suggested-next';
+import { PREMIUM_CATALOG } from './premium-catalog';
 
-const { lookupSuggestions, resolveTemplatePath, renderSuggestion, FALLBACK_SUGGESTIONS } = __test;
+const { lookupSuggestions, resolveTemplatePath, renderSuggestion, FALLBACK_SUGGESTIONS, SUGGESTION_MAP } = __test;
 
 describe('resolveTemplatePath', () => {
   it('returns path unchanged when no placeholders', () => {
@@ -136,5 +137,41 @@ describe('buildSuggestedNextCalls', () => {
     const out = buildSuggestedNextCalls(req);
     expect(out.some((s) => s.url === 'https://tensorfeed.ai/api/security/cve/CVE-2024-3094')).toBe(true);
     expect(out.some((s) => s.url === 'https://tensorfeed.ai/api/security/kev/CVE-2024-3094')).toBe(true);
+  });
+});
+
+// Map integrity: every premium suggestion target must be a real catalog
+// endpoint with the credit cost the suggestion claims. Guards against
+// typo'd paths and against credit drift when an endpoint is repriced
+// (the cross-sell copy quotes a price; a wrong price is a trust bug).
+describe('SUGGESTION_MAP integrity against the premium catalog', () => {
+  const catalogByPath = new Map(PREMIUM_CATALOG.map((e) => [e.path, e]));
+
+  it('every non-template premium suggestion target exists in the catalog', () => {
+    for (const [source, templates] of Object.entries(SUGGESTION_MAP)) {
+      for (const t of templates) {
+        if (!t.path.startsWith('/api/premium/')) continue;
+        if (t.path.includes('{')) continue;
+        expect(
+          catalogByPath.has(t.path),
+          `${source} suggests premium path ${t.path} which is not in PREMIUM_CATALOG`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('every premium suggestion quotes the catalog credit cost', () => {
+    for (const [source, templates] of Object.entries(SUGGESTION_MAP)) {
+      for (const t of templates) {
+        if (!t.path.startsWith('/api/premium/')) continue;
+        if (t.path.includes('{')) continue;
+        const entry = catalogByPath.get(t.path);
+        if (!entry) continue;
+        expect(
+          t.credits,
+          `${source} -> ${t.path} quotes ${t.credits} credits but the catalog charges ${entry.credits}`,
+        ).toBe(entry.credits);
+      }
+    }
   });
 });

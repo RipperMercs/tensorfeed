@@ -38,9 +38,13 @@ import {
   bazaarPilotPaths,
   getBazaarPilotConfig,
   canonicalDiscoveryInput,
-  canonicalDiscoveryOutput,
   type BazaarPilotConfig,
 } from '../worker/src/bazaar-pilots';
+import {
+  SOLANA_NETWORK_V2,
+  SOLANA_USDC_MINT,
+  SOLANA_FEEPAYER_V2,
+} from '../worker/src/solana-rail';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -50,6 +54,13 @@ const USDC_BASE_CONTRACT = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PAYMENT_WALLET = '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1';
 const CENTS_PER_CREDIT = 2; // 1 credit = $0.02 USDC = 20000 atomic units (6 decimals)
 const USDC_DECIMALS = 6;
+
+// Solana rail (mirrors the Worker's runtime 402 second accepts entry; the
+// constants are imported from the same module the Worker uses so the static
+// manifest can never drift from the live challenge). The receive wallet is
+// the value of the Worker's SOLANA_PAYMENT_WALLET var (wrangler.toml), same
+// pattern as PAYMENT_WALLET above.
+const SOLANA_PAYMENT_WALLET = 'B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ';
 
 // ── Per-pilot metadata (path → display info) ───────────────────────
 //
@@ -372,7 +383,7 @@ function resolveSplitParent(concretePath: string): string | null {
 // the full { input, output? } form for the static manifest accepts entry,
 // mirroring the Worker's runtime 402 body. Returns undefined when a pilot
 // has no info.input (then accepts carries no outputSchema, same as runtime).
-function outputSchemaFor(pilot: BazaarPilotConfig): { input: unknown; output?: unknown } | undefined {
+function outputSchemaFor(pilot: BazaarPilotConfig): { input: unknown } | undefined {
   const info = (pilot.extension as { bazaar?: { info?: { input?: unknown; output?: unknown } } })
     ?.bazaar?.info;
   if (!info || info.input === undefined) return undefined;
@@ -381,11 +392,17 @@ function outputSchemaFor(pilot: BazaarPilotConfig): { input: unknown; output?: u
   // registration on unknown keys (queryFields, and any CDP discoverable/url
   // extras). The full extensions.bazaar.info block is emitted untouched
   // elsewhere for CDP/Bazaar; this cleans only the canonical discovery copy.
+  //
+  // INPUT-ONLY in the static manifest as of 2026-07-02: the output example
+  // blocks totaled ~103KB compact (~150KB pretty) and fully duplicated
+  // extensions.bazaar.info.output in the same items, and the manifest sat at
+  // 892KB against the 1MB crawler cap / 900KB test threshold. Dropping the
+  // duplicate funded the Solana accepts entries (applySolanaRail below).
+  // What x402scan requires is the INPUT schema at the canonical location
+  // (its historical rejection was "Missing input schema"); the full
+  // input+output DiscoveryInfo still ships on the Worker's runtime 402 body.
   return {
     input: canonicalDiscoveryInput(info.input as Record<string, unknown>),
-    ...(info.output !== undefined
-      ? { output: canonicalDiscoveryOutput(info.output as Record<string, unknown>) }
-      : {}),
   };
 }
 
@@ -394,10 +411,12 @@ function outputSchemaFor(pilot: BazaarPilotConfig): { input: unknown; output?: u
 function applyOutputSchema(item: ManifestItem, pilot: BazaarPilotConfig): void {
   const schema = outputSchemaFor(pilot);
   if (Array.isArray(item.accepts) && item.accepts.length > 0) {
-    if (schema) {
-      item.accepts[0].outputSchema = schema;
-    } else {
-      delete item.accepts[0].outputSchema;
+    for (const accept of item.accepts) {
+      if (schema) {
+        accept.outputSchema = schema;
+      } else {
+        delete accept.outputSchema;
+      }
     }
   }
 }
@@ -405,6 +424,48 @@ function applyOutputSchema(item: ManifestItem, pilot: BazaarPilotConfig): void {
 // Compute the on-chain atomic-unit amount string for a credit count.
 function amountForCredits(credits: number): string {
   return String(credits * CENTS_PER_CREDIT * Math.pow(10, USDC_DECIMALS - 2));
+}
+
+// Build the Solana accepts entry that mirrors accepts[0] for one item. The
+// runtime 402 advertises this second rail on every premium endpoint; the
+// static manifest must match or Solana-side indexers reading the manifest
+// see a Base-only merchant (found 2026-07-02: 0 of 168 items carried it).
+// outputSchema parity: mirrors accepts[0]'s (input-only) copy when present.
+function solanaAcceptFor(item: ManifestItem): Record<string, unknown> {
+  const base = Array.isArray(item.accepts) && item.accepts.length > 0 ? item.accepts[0] : undefined;
+  return {
+    scheme: 'exact',
+    network: SOLANA_NETWORK_V2,
+    amount: base?.amount ?? amountForCredits(1),
+    asset: SOLANA_USDC_MINT,
+    payTo: SOLANA_PAYMENT_WALLET,
+    maxTimeoutSeconds: 60,
+    extra: { feePayer: SOLANA_FEEPAYER_V2 },
+    ...(base?.outputSchema !== undefined ? { outputSchema: base.outputSchema } : {}),
+  };
+}
+
+// Append (or refresh) the Solana rail entry on an item, in place. Returns
+// true when the item materially changed. Idempotent: a second run with the
+// same inputs is a no-op. Runs as a final pass over EVERY manifest item
+// (pilot or legacy hand-authored) because the Worker's requirePayment
+// advertises the Solana rail on every premium endpoint uniformly.
+function applySolanaRail(item: ManifestItem): boolean {
+  if (!Array.isArray(item.accepts) || item.accepts.length === 0) return false;
+  const desired = solanaAcceptFor(item);
+  const idx = item.accepts.findIndex(
+    (a) => typeof a.network === 'string' && (a.network as string).startsWith('solana:'),
+  );
+  if (idx === -1) {
+    item.accepts.push(desired);
+    return true;
+  }
+  const current = JSON.stringify(item.accepts[idx]);
+  if (current !== JSON.stringify(desired)) {
+    item.accepts[idx] = desired;
+    return true;
+  }
+  return false;
 }
 
 // Reconcile an existing item's advertised price (metadata.credits and the
@@ -619,8 +680,23 @@ function main(): void {
     }
   }
 
+  // Final pass: every item (pilot, split instance, or legacy hand-authored)
+  // advertises the Solana rail, mirroring the Worker's runtime 402 which
+  // attaches the second accepts entry uniformly. Runs after the pilot walk
+  // so new items and refreshed schemas are already in their final shape.
+  let solanaApplied = 0;
+  for (const item of manifest.items) {
+    if (applySolanaRail(item)) {
+      item.lastUpdated = today;
+      solanaApplied++;
+    }
+  }
+  if (solanaApplied > 0) {
+    console.log(`[sync-x402-manifest] solana rail: ${solanaApplied} items updated with the second accepts entry`);
+  }
+
   // Bump the top-level lastUpdated only if anything actually changed.
-  if (added > 0 || refreshed > 0 || splitAdded > 0 || splitRefreshed > 0) {
+  if (added > 0 || refreshed > 0 || splitAdded > 0 || splitRefreshed > 0 || solanaApplied > 0) {
     manifest.lastUpdated = today;
   }
 

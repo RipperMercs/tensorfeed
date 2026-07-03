@@ -201,10 +201,24 @@ interface DailyRollup {
   // Per-wallet paid totals for the day, keyed by lowercased wallet address.
   // Populated only when a payer wallet is surfaced at settle time; the
   // UA-only call path leaves this undefined (backward compatible).
+  // wallet_raw retains the original case: base58 Solana addresses are
+  // case-sensitive, so the lowercase KEY (kept for dedupe stability) is
+  // lossy and cannot be looked up on-chain. rail tags the settlement VM.
   top_payers?: Record<
     string,
-    { calls: number; credits_charged: number; first_seen: string; last_seen: string }
+    {
+      calls: number;
+      credits_charged: number;
+      first_seen: string;
+      last_seen: string;
+      wallet_raw?: string;
+      rail?: 'evm' | 'svm';
+    }
   >;
+  // Per-rail paid totals for the day. Only settle-attributed calls (a payer
+  // wallet was surfaced) count here; bearer-token calls with no wallet have
+  // no rail to attribute. Absent until the first attributed call.
+  rails?: Partial<Record<'evm' | 'svm', { calls: number; credits_charged: number }>>;
   // Persisted dedupe ledger for distinct_payers, keyed by "endpoint|wallet".
   // Lives in the daily rollup so it resets with the day. Lets us increment a
   // per-endpoint distinct-payer count only the first time a wallet hits that
@@ -863,6 +877,7 @@ export async function logPremiumUsage(
 
     if (payerWallet) {
       const w = payerWallet.toLowerCase();
+      const rail: 'evm' | 'svm' = payerWallet.startsWith('0x') ? 'evm' : 'svm';
       rollup.top_payers = rollup.top_payers || {};
       const payer = rollup.top_payers[w] || {
         calls: 0,
@@ -873,7 +888,17 @@ export async function logPremiumUsage(
       payer.calls += 1;
       payer.credits_charged += creditsCharged;
       payer.last_seen = now;
+      // Original case for on-chain lookup (base58 is case-sensitive; the
+      // lowercase key is dedupe-stable but lossy for Solana payers).
+      payer.wallet_raw = payerWallet;
+      payer.rail = rail;
       rollup.top_payers[w] = payer;
+
+      rollup.rails = rollup.rails || {};
+      const railSlot = rollup.rails[rail] || { calls: 0, credits_charged: 0 };
+      railSlot.calls += 1;
+      railSlot.credits_charged += creditsCharged;
+      rollup.rails[rail] = railSlot;
 
       // distinct_payers: increment only the first time this wallet hits this
       // endpoint today. The seen ledger persists in the daily rollup and
@@ -3393,6 +3418,13 @@ export function paymentRequiredResponse(
               maxTimeoutSeconds: 60,
               resource: resourceUrl,
               extra: { feePayer: SOLANA_FEEPAYER_V2, resource: resourceUrl },
+              // Same canonical DiscoveryInfo as the Base entry. Rail-scoped
+              // indexers and Bazaar records built from a Solana settle read
+              // THIS entry, so it must carry the schema parity (2026-07-02:
+              // every TF Bazaar record was Base-only while this entry
+              // shipped without outputSchema). The header compaction below
+              // reduces it to input-only, same as the Base entry.
+              ...(bodyOutputSchema ? { outputSchema: bodyOutputSchema } : {}),
             },
           ]
         : []),

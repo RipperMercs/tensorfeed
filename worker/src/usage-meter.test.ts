@@ -204,6 +204,52 @@ describe('buildUsageReport', () => {
     // build targets degrade to empty without a funnel to derive from.
     expect(report.build_targets).toEqual([]);
   });
+
+  it('carries wallet_raw and rail through the payer merge and sums per-rail totals', async () => {
+    const SOL = 'TeStKWyNre9PW8XbLfvuBm9f6EnTBYqS5GXTzciCnHw';
+    const env = makeEnvWithRollup({
+      by_endpoint: {
+        '/api/premium/x': { calls: 3, credits_charged: 7, first_seen: 't', last_seen: 't', distinct_payers: 2 },
+      },
+      top_payers: {
+        [SOL.toLowerCase()]: {
+          calls: 2,
+          credits_charged: 6,
+          first_seen: 't',
+          last_seen: 't',
+          wallet_raw: SOL,
+          rail: 'svm',
+        },
+        '0xa': { calls: 1, credits_charged: 1, first_seen: 't', last_seen: 't', wallet_raw: '0xA', rail: 'evm' },
+      },
+      rails: {
+        svm: { calls: 2, credits_charged: 6 },
+        evm: { calls: 1, credits_charged: 1 },
+      },
+      call_count: 3,
+      total_credits_charged: 7,
+    });
+    const report = await buildUsageReport(env, 'today');
+    const sol = report.top_payers.find((p) => p.rail === 'svm');
+    expect(sol).toBeDefined();
+    expect(sol?.wallet_raw).toBe(SOL);
+    expect(report.rails).toEqual({
+      svm: { calls: 2, credits_charged: 6 },
+      evm: { calls: 1, credits_charged: 1 },
+    });
+  });
+
+  it('reports rails as null (not zeros) when every rollup predates rail attribution', async () => {
+    const env = makeEnvWithRollup({
+      by_endpoint: { '/api/premium/x': { calls: 1, credits_charged: 1, first_seen: 't', last_seen: 't', distinct_payers: 1 } },
+      top_payers: { '0xa': { calls: 1, credits_charged: 1, first_seen: 't', last_seen: 't' } },
+    });
+    const report = await buildUsageReport(env, 'today');
+    expect(report.rails).toBeNull();
+    // Pre-tag payer records surface without the new optional fields.
+    expect(report.top_payers[0].wallet_raw).toBeUndefined();
+    expect(report.top_payers[0].rail).toBeUndefined();
+  });
 });
 
 describe('reconcileTopPaidEndpoints', () => {
