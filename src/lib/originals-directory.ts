@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'first-macro-ai-print-june-jobs-report',
+    title:
+      'The June Jobs Report Just Landed. AI Capex Is Now a Line Item on the Payroll Print.',
+    author: 'Marcus Chen',
+    date: 'July 3, 2026',
+    readTime: '7 min read',
+    description:
+      "The Bureau of Labor Statistics released the June 2026 employment situation on Thursday morning. Nonfarm payrolls came in at 57,000 against a 115,000 consensus, unemployment fell to 4.2 percent only because participation slumped to a five-year low, and prior months got revised down. It is the softest payroll print in four months, and it is the first monthly release where the AI capex reallocation TF has been tracking for six months shows up cleanly in a top-line macro number. Read together with Challenger, Gray & Christmas' June job cut report (45,849 cuts, tech at 15,503, tech at 31 percent of H1 layoffs, AI cited as the top stated reason for a fourth consecutive month at 101,743 announcements year to date) and the roughly $700 billion of 2026 hyperscaler capex commitment (Amazon, Microsoft, Alphabet, Meta, nearly double 2025), the payroll wire now carries the buyer-side story TF has been publishing all quarter. Inside the numbers, why the participation drop is the same signal the payroll number is, why the leisure and hospitality drag is a separate story that exaggerates the AI-attributable share, why GDP will look better than payrolls for the same reason, what the print does to the July FOMC path and the September rate-cut probability, and three notes for builders shipping into the same infrastructure the S-1 drafts are now writing against. The next print is August 7, and if it lands anywhere near the roughly 40,000 trailing average the composition-shift argument stops being a thesis and becomes the base case.",
+  },
+  {
     slug: 'cloudflare-monetization-gateway-x402-mcp-edge',
     title:
       'Cloudflare Just Wired x402 Into 20 Percent of the Internet. The MCP Tool Is Now a Line Item.',
