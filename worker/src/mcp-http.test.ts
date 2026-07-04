@@ -364,3 +364,67 @@ describe('CORS', () => {
     expect(resp.headers.get('Access-Control-Allow-Methods')).toContain('POST');
   });
 });
+
+describe('strict x402 mode', () => {
+  function strictCall(url: string, params: unknown): Request {
+    return new Request(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 7, method: 'tools/call', params }),
+    });
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns HTTP 402 with PAYMENT-REQUIRED header and JSON-RPC error envelope when unpaid', async () => {
+    const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const resp = await handleMcpHttpRequest(
+      strictCall('https://tensorfeed.ai/api/mcp?x402=strict', { name: 'route_verdict', arguments: { task: 'code' } }),
+      env,
+    );
+    expect(resp.status).toBe(402);
+    expect(resp.headers.get('PAYMENT-REQUIRED')).toBeTruthy();
+    expect(resp.headers.get('Access-Control-Expose-Headers')).toContain('PAYMENT-REQUIRED');
+    const body = (await resp.json()) as {
+      error: { code: number; message: string; data: { x402Version: number; accepts: unknown[] } };
+    };
+    expect(body.error.code).toBe(-32402);
+    expect(body.error.message).toBe('payment_required');
+    expect(body.error.data.x402Version).toBe(2);
+    expect(body.error.data.accepts.length).toBeGreaterThanOrEqual(1);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('works identically through the vanity host URL shape', async () => {
+    const env = makeEnv();
+    const resp = await handleMcpHttpRequest(
+      strictCall('https://mcp.tensorfeed.ai/mcp?x402=strict', { name: 'route_verdict', arguments: { task: 'code' } }),
+      env,
+    );
+    expect(resp.status).toBe(402);
+    expect(resp.headers.get('PAYMENT-REQUIRED')).toBeTruthy();
+  });
+
+  it('does not affect free tools', async () => {
+    const env = makeEnv();
+    const resp = await handleMcpHttpRequest(
+      strictCall('https://tensorfeed.ai/api/mcp?x402=strict', { name: 'check_free_tier_status', arguments: {} }),
+      env,
+    );
+    expect(resp.status).toBe(200);
+  });
+
+  it('strict-mode PAYMENT-REQUIRED header matches the REST sibling byte for byte', async () => {
+    const env = makeEnv();
+    const resp = await handleMcpHttpRequest(
+      strictCall('https://tensorfeed.ai/api/mcp?x402=strict', { name: 'route_verdict', arguments: {} }),
+      env,
+    );
+    const { paymentRequiredResponse } = await import('./payments');
+    const restRes = paymentRequiredResponse(env, 1, 1, new Request('https://tensorfeed.ai/api/premium/route-verdict'));
+    expect(resp.headers.get('PAYMENT-REQUIRED')).toBe(restRes.headers.get('PAYMENT-REQUIRED'));
+  });
+});
