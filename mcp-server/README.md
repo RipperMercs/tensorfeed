@@ -6,6 +6,38 @@
 
 This subfolder remains in the main `tensorfeed` repo as the **publishing source** for the npm package (`@tensorfeed/mcp-server`) and the [official MCP registry](https://registry.modelcontextprotocol.io/v0/servers/ai.tensorfeed/mcp-server) entry. Edits to `src/`, `server.json`, `package.json`, etc. happen here and get pushed to the standalone repo on release.
 
+## Hosted remote endpoint (zero install, wallet-payable)
+
+You do not need to install this package to use TensorFeed over MCP. A hosted Streamable HTTP endpoint serves a curated 33-tool subset (31 free + 2 premium), and the premium tools are payable per call with nothing but a funded USDC wallet: no account, no signup, no API key.
+
+| Surface | URL |
+| --- | --- |
+| Canonical endpoint | `https://mcp.tensorfeed.ai/mcp` |
+| Same endpoint, legacy path | `https://tensorfeed.ai/api/mcp` |
+| Strict x402 transport (for auto-pay wrappers) | `https://mcp.tensorfeed.ai/mcp?x402=strict` |
+
+Connect any MCP client with an HTTP transport:
+
+```json
+{
+  "mcpServers": {
+    "tensorfeed": { "type": "http", "url": "https://mcp.tensorfeed.ai/mcp" }
+  }
+}
+```
+
+`GET` the endpoint for machine-readable discovery info (tool count, payment surfaces, spec version). `POST` a JSON-RPC 2.0 envelope for `initialize`, `tools/list`, `tools/call`, and `ping`.
+
+### Paying premium tools per call (x402)
+
+The two premium tools, `route_verdict` (the signed model-routing decision) and `whats_new` (the full AFTA-signed morning brief), cost 1 credit ($0.02 in USDC, Base or Solana) per call. Three payment paths, pick whichever your client supports:
+
+1. **`arguments.payment`**: call the tool unpaid, read the canonical x402 requirements from the response (`accepts` array), sign, then retry the same call with the base64 payment payload in the `payment` argument. Works in every MCP client, no header access needed.
+2. **`X-PAYMENT` header**: send the same base64 payload as an `X-PAYMENT` (or `PAYMENT-SIGNATURE`) header on the POST.
+3. **Bearer credits**: `Authorization: Bearer tf_live_...` token from [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
+
+x402 client wrappers that auto-pay on HTTP 402 should point at the strict URL (`?x402=strict`): unpaid premium calls there return a real HTTP 402 with a `PAYMENT-REQUIRED` header, the wrapper signs and retries, and the settled response carries a `PAYMENT-RESPONSE` header plus the AFTA-signed receipt in the body. No USDC yet? Claim free trial credits by signing a wallet message at `https://tensorfeed.ai/api/payment/trial-credits` (no payment required).
+
 ## Featured: Route Verdict
 
 The single best model to use right now, as one signed call. `route_verdict` fuses live pricing, contamination-discounted benchmark capability, real production usage, measured p95 latency probes, live incident state, and deprecation flags into one ranked decision, with an AFTA-signed receipt over the exact inputs. Instead of stitching together pricing pages, benchmark leaderboards, status dashboards, and your own latency tests, you get a current, defensible routing answer in one request.
@@ -61,7 +93,7 @@ Models, prices, and latency move week to week. `route_verdict` is one signed cal
 
 ## Catalog
 
-24 tools. The core flagships, the eight signed verdicts, the time-series tools, and the webhook watches are dedicated tools; the rest of the 100+ TensorFeed endpoints are reachable through the `find_tensorfeed_data` discovery tool and callable over HTTP. Free tiers need no token; paid tiers charge USDC on Base via x402 and return an AFTA-signed receipt. The full tool reference lives in the [standalone repo](https://github.com/RipperMercs/tensorfeed-mcp).
+24 tools on this stdio package. The core flagships, the eight signed verdicts, the time-series tools, and the webhook watches are dedicated tools; the rest of the 100+ TensorFeed endpoints are reachable through the `find_tensorfeed_data` discovery tool and callable over HTTP. Free tiers need no token; paid tiers charge USDC on Base via x402 and return an AFTA-signed receipt. The hosted HTTP endpoint above carries a different, broader 33-tool curated subset (SEC EDGAR, openFDA, EIA, USGS, NWS, AI papers, and more). The full tool reference lives in the [standalone repo](https://github.com/RipperMercs/tensorfeed-mcp).
 
 ### Verdict family
 
