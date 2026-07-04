@@ -2679,15 +2679,15 @@ curl -H "X-TensorFeed-Simulate-Latency: 2500" https://tensorfeed.ai/api/status`}
         <div className="bg-bg-secondary border border-border rounded-xl p-5">
           <h2 className="text-lg font-semibold text-text-primary mb-2">Model Context Protocol (MCP)</h2>
           <p className="text-text-secondary text-sm mb-4">
-            TensorFeed ships two MCP transports for two distinct deployment shapes. The npx stdio server carries the full 24-tool set; the hosted HTTP endpoint serves a curated 32-tool subset.
+            TensorFeed ships two MCP transports for two distinct deployment shapes. The npx stdio server carries the full 24-tool set; the hosted HTTP endpoint serves a curated 33-tool subset whose premium tools are wallet-payable per call over x402, no account required.
           </p>
 
           <h3 className="text-sm font-semibold text-text-primary mb-2">Hosted HTTP MCP (Streamable HTTP, MCP 2024-11-05)</h3>
           <p className="text-text-secondary text-sm mb-2">
             The canonical entry for hosted-marketplace listings (Anthropic vertical agent repos, claude.ai connectors, third-party MCP catalogs).
             POST a JSON-RPC 2.0 envelope to <code className="text-accent-primary font-mono">https://mcp.tensorfeed.ai/mcp</code>;
-            GET returns discovery info. CORS open for cross-origin agent fetches. A curated subset of 32 tools spanning AI news, model pricing, AI service status,
-            MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR (search + submissions + ticker lookup), openFDA, EIA Open Data, USGS earthquakes, NWS weather alerts, AI papers, the agent-ecosystem opportunities scan, and the signed route_verdict premium tool.
+            GET returns discovery info. CORS open for cross-origin agent fetches. A curated subset of 33 tools spanning AI news, model pricing, AI service status,
+            MITRE CVE, CISA KEV, EPSS, OSV.dev, SEC EDGAR (search + submissions + ticker lookup), openFDA, EIA Open Data, USGS earthquakes, NWS weather alerts, AI papers, the agent-ecosystem opportunities scan, plus two wallet-payable premium tools: route_verdict (the signed model-routing decision) and whats_new (the full AFTA-signed morning brief).
             The legacy <code className="font-mono">https://tensorfeed.ai/api/mcp</code> path still works for backward compatibility.
           </p>
           <pre className="bg-bg-tertiary/50 border border-border rounded p-3 text-xs font-mono text-text-secondary overflow-x-auto whitespace-pre leading-relaxed mb-3">
@@ -2709,7 +2709,42 @@ curl -X POST https://mcp.tensorfeed.ai/mcp \\
           <p className="text-text-muted text-xs mb-4">
             To add as a Claude Code plugin or vertical-agent MCP entry, point the
             client&apos;s <code className="font-mono">.mcp.json</code> at the URL with{' '}
-            <code className="font-mono">type: &quot;http&quot;</code>. No API key required for V1 free tools.
+            <code className="font-mono">type: &quot;http&quot;</code>. No API key required for free tools.
+          </p>
+
+          <h3 className="text-sm font-semibold text-text-primary mb-2">Paying premium MCP tools per call (x402)</h3>
+          <p className="text-text-secondary text-sm mb-2">
+            Premium tools settle per call in USDC (Base or Solana, 1 credit = $0.02) with no account, no signup, and no API key.
+            Three ways to pay: send the base64 x402 payment payload as an{' '}
+            <code className="text-accent-primary font-mono">X-PAYMENT</code> header on the POST, put the same string in{' '}
+            <code className="text-accent-primary font-mono">arguments.payment</code> if your MCP client cannot set headers,
+            or keep using an <code className="font-mono">Authorization: Bearer tf_live_...</code> credits token.
+            An unpaid premium call returns the canonical x402 payment requirements (the <code className="font-mono">accepts</code> array) to sign against.
+          </p>
+          <p className="text-text-secondary text-sm mb-2">
+            x402 client wrappers that auto-pay on HTTP 402 should use the strict transport URL:{' '}
+            <code className="text-accent-primary font-mono">https://mcp.tensorfeed.ai/mcp?x402=strict</code>. Unpaid premium
+            calls there return a real HTTP 402 with a <code className="font-mono">PAYMENT-REQUIRED</code> header; the wrapper
+            signs and retries, and the settled response carries a <code className="font-mono">PAYMENT-RESPONSE</code> header
+            plus the AFTA-signed receipt in the body.
+          </p>
+          <pre className="bg-bg-tertiary/50 border border-border rounded p-3 text-xs font-mono text-text-secondary overflow-x-auto whitespace-pre leading-relaxed mb-3">
+{`# Unpaid premium call returns payment requirements (default mode, HTTP 200)
+curl -X POST https://mcp.tensorfeed.ai/mcp \\
+  -H 'Content-Type: application/json' \\
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call",
+       "params":{"name":"whats_new","arguments":{"days":1}}}'
+
+# Pay in-band: retry with the signed base64 payload in arguments.payment
+curl -X POST https://mcp.tensorfeed.ai/mcp \\
+  -H 'Content-Type: application/json' \\
+  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call",
+       "params":{"name":"whats_new",
+                 "arguments":{"days":1,"payment":"<base64 x402 payload>"}}}'`}
+          </pre>
+          <p className="text-text-muted text-xs mb-4">
+            No USDC? Claim free trial credits by signing a wallet message at{' '}
+            <code className="font-mono">/api/payment/trial-credits</code> (no payment required), then use the bearer path.
           </p>
 
           <h3 className="text-sm font-semibold text-text-primary mb-2">npm stdio MCP server (client-side install)</h3>
