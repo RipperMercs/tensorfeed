@@ -84,6 +84,7 @@ import { readSECTicker } from './sec-tickers';
 import { parseOsvPackageQuery } from './security-osv';
 import { parseFDAQuery, fetchFDAQuery, FDA_CATEGORIES } from './health-fda';
 import { paymentRequiredResponse } from './payments';
+import { isStrictPremiumPath } from './strict-premium-endpoints';
 
 const PROTOCOL_VERSION = '2024-11-05';
 const SERVER_NAME = 'tensorfeed';
@@ -1221,7 +1222,7 @@ const TOOLS: McpToolDef[] = [
   {
     name: 'route_verdict',
     description:
-      'PREMIUM (1 credit, Authorization: Bearer tf_live_... required). The signed model-routing decision: for a task (code, reasoning, creative, general) or a named model, returns the single best model to use right now, fusing pricing, benchmark capability discounted for contamination, real production usage, measured p95 latency, and live operational state, with runners-up and an AFTA-signed receipt over the inputs. No token yet? Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC).',
+      'PREMIUM (1 credit, $0.02). The signed model-routing decision: for a task (code, reasoning, creative, general) or a named model, returns the single best model to use right now, fusing pricing, benchmark capability discounted for contamination, real production usage, measured p95 latency, and live operational state, with runners-up and an AFTA-signed receipt over the inputs. Pay per call with an x402 wallet payment (arguments.payment, or an X-PAYMENT header; strict HTTP-402 transport at https://mcp.tensorfeed.ai/mcp?x402=strict) or use an Authorization: Bearer tf_live_... credits token. No token and no USDC? Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1462,12 +1463,17 @@ function mcpToolError(message: string): { result: unknown } {
 // what a direct caller of that endpoint sees, including the discovery
 // extensions. Never relays, so the Worker's own egress IP can neither
 // consume nor grant the per-IP free-trial quota through the MCP surface.
+// `strict` must be the caller's own isStrictPremiumPath(premium.restPath)
+// result, threaded in rather than recomputed here, so a strict-premium
+// REST sibling (route-verdict, whats-new) never advertises the per-IP
+// free trial that does not apply to it.
 async function buildPaymentRequiredFor(
   env: Env,
   premium: NonNullable<McpToolDef['premium']>,
+  strict: boolean,
 ): Promise<{ header: string; body: unknown }> {
   const synthetic = new Request(`https://tensorfeed.ai${premium.restPath}`);
-  const res = paymentRequiredResponse(env, premium.credits, premium.paymentTier, synthetic);
+  const res = paymentRequiredResponse(env, premium.credits, premium.paymentTier, synthetic, undefined, strict);
   const body: unknown = await res.json().catch(() => null);
   return { header: res.headers.get('PAYMENT-REQUIRED') ?? '', body };
 }
@@ -1512,7 +1518,12 @@ async function handlePremiumToolCall(
   };
 
   if (!payment && !ctx.bearerToken) {
-    const pr = await buildPaymentRequiredFor(ctx.env, premium);
+    // Computed once here and reused for both the payment requirements body
+    // and the free_trial_note below, so a strict-premium REST sibling
+    // (route-verdict, whats-new) never advertises the per-IP free trial
+    // that does not apply to it.
+    const strict = isStrictPremiumPath(premium.restPath);
+    const pr = await buildPaymentRequiredFor(ctx.env, premium, strict);
     logCall('payment_required');
     await recordHostedToolCall(ctx.env, tool.name, 'premium', 'payment_required');
     if (ctx.strictX402) return { paymentRequired: pr };
@@ -1526,8 +1537,9 @@ async function handlePremiumToolCall(
             'Sign the accepts[0] requirement and retry this exact tools/call with the base64 payment payload in arguments.payment, or send it as an X-PAYMENT header on the POST. Strict HTTP-402 transport for x402 client wrappers: use the endpoint URL https://mcp.tensorfeed.ai/mcp?x402=strict',
           credits:
             'Authorization: Bearer tf_live_... credits token. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC), or buy credits at https://tensorfeed.ai/developers/agent-payments.',
-          free_trial_note:
-            'The 100 calls/IP/day free premium trial applies when calling the REST endpoint directly from your own IP, not through this MCP relay.',
+          free_trial_note: strict
+            ? 'This tool is strict-premium: the per-IP free trial does not apply. Free preview siblings exist for discovery; pay per call or use credits.'
+            : 'The 100 calls/IP/day free premium trial applies when calling the REST endpoint directly from your own IP, not through this MCP relay.',
         },
       }),
     };

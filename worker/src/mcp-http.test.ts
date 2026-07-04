@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { handleMcpHttpRequest, MCP_TOOLS_COUNT, MCP_HTTP_TOOLS } from './mcp-http';
+import { TIER_COSTS } from './payments';
 import type { Env } from './types';
 
 class MockKV {
@@ -239,6 +240,34 @@ describe('whats_new premium tool', () => {
     };
     expect(payload.error).toBe('payment_required');
     expect(payload.payment_requirements.resource.url).toBe('https://tensorfeed.ai/api/premium/whats-new');
+  });
+});
+
+describe('strict-premium honesty in MCP unpaid responses', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('does not advertise the per-IP free trial for a strict-premium tool (whats_new)', async () => {
+    const env = makeEnv();
+    const resp = await handleMcpHttpRequest(
+      rpcRequest('tools/call', { name: 'whats_new', arguments: {} }),
+      env,
+    );
+    const body = (await resp.json()) as { result: { content: { text: string }[] } };
+    const payload = JSON.parse(body.result.content[0].text) as {
+      payment_requirements: { free_trial: unknown };
+      how_to_pay: { free_trial_note: string };
+    };
+    expect(payload.payment_requirements.free_trial).toBeNull();
+    expect(payload.how_to_pay.free_trial_note).toContain('strict-premium');
+  });
+
+  it('every premium tool def prices at its declared payment tier (TIER_COSTS invariant)', () => {
+    for (const tool of MCP_HTTP_TOOLS) {
+      if (!tool.premium) continue;
+      expect(tool.premium.credits).toBe(TIER_COSTS[tool.premium.paymentTier]);
+    }
   });
 });
 
@@ -607,7 +636,10 @@ describe('wallet-native x402 payment paths', () => {
 
   it('rejects oversized payment payloads before any relay', async () => {
     const env = makeEnv();
-    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    // mockRejectedValue rather than an unimplemented spy: if the 8KB guard
+    // ever regresses and this relays anyway, the test fails loudly on the
+    // rejected fetch instead of quietly hitting the network.
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('should not relay'));
     const resp = await handleMcpHttpRequest(
       rpcRequest('tools/call', { name: 'route_verdict', arguments: { payment: 'x'.repeat(9000) } }),
       env,
