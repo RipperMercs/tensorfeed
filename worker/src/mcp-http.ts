@@ -83,6 +83,7 @@ import { getLatestSnapshot as getHFDailyPapersLatest } from './hf-daily-papers';
 import { readSECTicker } from './sec-tickers';
 import { parseOsvPackageQuery } from './security-osv';
 import { parseFDAQuery, fetchFDAQuery, FDA_CATEGORIES } from './health-fda';
+import { paymentRequiredResponse } from './payments';
 
 const PROTOCOL_VERSION = '2024-11-05';
 const SERVER_NAME = 'tensorfeed';
@@ -124,8 +125,19 @@ interface McpToolDef {
   // MCP content[] before being returned).
   // Third arg is the dispatch context (env + bearerToken + ip);
   // pre-existing handlers may ignore it. IP-keyed tools read ctx.ip.
-  handler: (env: Env, args: Record<string, unknown>, ctx?: { ip: string; bearerToken: string | null }) => Promise<unknown>;
+  // Optional because premium tools are dispatched through the shared
+  // relay in handlePremiumToolCall instead of a bespoke handler.
+  handler?: (env: Env, args: Record<string, unknown>, ctx?: { ip: string; bearerToken: string | null }) => Promise<unknown>;
   tier: 'free' | 'premium';
+  // Present on premium tools. The shared dispatch relay forwards the
+  // call to this REST sibling so the audited payment path (requirePayment,
+  // deferred commit, AFTA receipt) runs once in one place.
+  premium?: {
+    restPath: string;
+    credits: number;
+    paymentTier: 1 | 2 | 3 | 4;
+    buildParams: (args: Record<string, unknown>) => URLSearchParams;
+  };
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -1218,51 +1230,28 @@ const TOOLS: McpToolDef[] = [
         max_latency_p95_ms: { type: 'number', description: 'Drop candidates whose measured p95 latency exceeds this floor.' },
         require_operational: { type: 'string', description: 'Default true. Pass "false" to keep candidates known down or in failover.' },
         exclude_deprecated: { type: 'string', description: 'Default true. Pass "false" to keep deprecated or sunsetted models.' },
+        payment: { type: 'string', description: 'Optional base64 x402 payment payload (the same string an X-PAYMENT header would carry). Sign against the accepts[0] requirement returned by an unpaid call. Alternative to the Bearer credits token.' },
       },
     },
     tier: 'premium',
-    handler: async (_env, args, ctx) => {
-      const params = new URLSearchParams();
-      const task = getStringArg(args, 'task');
-      const model = getStringArg(args, 'model');
-      if (task) params.set('task', task);
-      if (model) params.set('model', model);
-      const maxLat = getNumberArg(args, 'max_latency_p95_ms');
-      if (maxLat !== null) params.set('max_latency_p95_ms', String(maxLat));
-      const reqOp = getStringArg(args, 'require_operational');
-      if (reqOp !== null) params.set('require_operational', reqOp);
-      const exDep = getStringArg(args, 'exclude_deprecated');
-      if (exDep !== null) params.set('exclude_deprecated', exDep);
-      // Bound the self-relay so a stalled upstream cannot hang the /mcp
-      // request. 12s sits comfortably under the fetch-handler soft deadline;
-      // an abort returns a clean structured error rather than a raw throw.
-      let res: Response;
-      try {
-        res = await fetch(`https://tensorfeed.ai/api/premium/route-verdict?${params.toString()}`, {
-          headers: {
-            Authorization: `Bearer ${ctx?.bearerToken ?? ''}`,
-            'User-Agent': 'tensorfeed-mcp/route_verdict',
-          },
-          signal: AbortSignal.timeout(12000),
-        });
-      } catch {
-        return {
-          ok: false,
-          error: 'upstream_timeout',
-          detail: 'The route-verdict upstream did not respond in time. Retry shortly.',
-        };
-      }
-      const data = await res.json().catch(() => ({ ok: false, error: 'upstream_parse_error' }));
-      if (res.status === 402) {
-        return {
-          ok: false,
-          error: 'payment_required',
-          detail:
-            'Token rejected or out of credits. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment), or top up at https://tensorfeed.ai/developers/agent-payments.',
-          upstream: data,
-        };
-      }
-      return data;
+    premium: {
+      restPath: '/api/premium/route-verdict',
+      credits: 1,
+      paymentTier: 1,
+      buildParams: (args) => {
+        const params = new URLSearchParams();
+        const task = getStringArg(args, 'task');
+        if (task) params.set('task', task);
+        const model = getStringArg(args, 'model');
+        if (model) params.set('model', model);
+        const maxLat = getNumberArg(args, 'max_latency_p95_ms');
+        if (maxLat !== null) params.set('max_latency_p95_ms', String(maxLat));
+        const reqOp = getStringArg(args, 'require_operational');
+        if (reqOp !== null) params.set('require_operational', reqOp);
+        const exDep = getStringArg(args, 'exclude_deprecated');
+        if (exDep !== null) params.set('exclude_deprecated', exDep);
+        return params;
+      },
     },
   },
 ];
@@ -1320,7 +1309,33 @@ interface DispatchContext {
    * Used by IP-keyed tools (free watches, wantlist, free-tier status)
    * so they can hit the same per-IP storage as the REST endpoints. */
   ip: string;
+  /** Base64 x402 payment payload from the X-PAYMENT header, or the
+   * PAYMENT-SIGNATURE alias when X-PAYMENT is absent. Passed through
+   * opaque; the MCP layer never decodes or logs it. */
+  paymentHeader: string | null;
+  /** True when the request URL carries ?x402=strict. Unpaid premium
+   * calls then return a transport-level HTTP 402 with the canonical
+   * PAYMENT-REQUIRED header so x402 client wrappers engage. */
+  strictX402: boolean;
 }
+
+interface ToolCallOutcome {
+  result?: unknown;
+  error?: { code: number; message: string };
+  // Set on unpaid premium calls in strict mode: the entry point emits
+  // HTTP 402 with this header and a JSON-RPC error envelope body.
+  paymentRequired?: { header: string; body: unknown };
+  // Upstream PAYMENT-RESPONSE settle proof, lifted onto the MCP HTTP
+  // response by the entry point.
+  paymentResponseHeader?: string;
+}
+
+// JSON-RPC application-defined code for payment_required.
+const ERR_PAYMENT_REQUIRED = -32402;
+
+// A signed EIP-3009 payload is roughly 1 to 2 KB of base64. Anything
+// past 8 KB is not a payment; reject before any relay work.
+const MAX_PAYMENT_PAYLOAD_BYTES = 8192;
 
 async function handleInitialize(): Promise<unknown> {
   return INITIALIZE_RESULT;
@@ -1333,7 +1348,7 @@ async function handleToolsList(): Promise<unknown> {
 async function handleToolCall(
   ctx: DispatchContext,
   params: unknown,
-): Promise<{ result?: unknown; error?: { code: number; message: string } }> {
+): Promise<ToolCallOutcome> {
   if (!params || typeof params !== 'object') {
     return { error: { code: ERR_INVALID_PARAMS, message: 'tools/call requires params object' } };
   }
@@ -1350,14 +1365,16 @@ async function handleToolCall(
   if (typeof args !== 'object') {
     return { error: { code: ERR_INVALID_PARAMS, message: 'tools/call params.arguments must be an object' } };
   }
-  if (tool.tier === 'premium' && !ctx.bearerToken) {
-    return mcpToolError(
-      'authentication_required: this tool requires an Authorization: Bearer tf_live_... header. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC), or buy credits at https://tensorfeed.ai/developers/agent-payments.',
-    );
+  if (tool.tier === 'premium') {
+    return handlePremiumToolCall(ctx, tool, args);
   }
   const startMs = Date.now();
-  const tierForCounter: 'free' | 'premium' | 'unknown' = tool.tier === 'premium' ? 'premium' : 'free';
+  // Premium tools already returned above; only 'free' reaches here.
+  const tierForCounter: 'free' | 'premium' | 'unknown' = tool.tier;
   try {
+    if (!tool.handler) {
+      return { error: { code: ERR_INTERNAL, message: `tool ${tool.name} has no handler` } };
+    }
     // Pass the dispatch ctx as a third arg; existing tools that
     // only declare (env, args) ignore it. New IP-keyed tools (free
     // watches, wantlist, free-tier status) read ctx.ip from here.
@@ -1404,6 +1421,152 @@ async function handleToolCall(
 function mcpToolError(message: string): { result: unknown } {
   return {
     result: { content: [{ type: 'text', text: message }], isError: true },
+  };
+}
+
+// Builds the canonical x402 payment-required header + body for a premium
+// tool by calling the SAME exported builder the REST 402s use, against a
+// synthetic Request whose URL is the REST sibling. Byte-consistent with
+// what a direct caller of that endpoint sees, including the discovery
+// extensions. Never relays, so the Worker's own egress IP can neither
+// consume nor grant the per-IP free-trial quota through the MCP surface.
+async function buildPaymentRequiredFor(
+  env: Env,
+  premium: NonNullable<McpToolDef['premium']>,
+): Promise<{ header: string; body: unknown }> {
+  const synthetic = new Request(`https://tensorfeed.ai${premium.restPath}`);
+  const res = paymentRequiredResponse(env, premium.credits, premium.paymentTier, synthetic);
+  const body: unknown = await res.json().catch(() => null);
+  return { header: res.headers.get('PAYMENT-REQUIRED') ?? '', body };
+}
+
+// Single relay path for every premium tool. Selection order for the
+// credential: payment header beats arguments.payment beats bearer token.
+// A fresh explicit payment is stronger intent than a stored token, and
+// it matches how an x402 wrapper's retry arrives (header on attempt two).
+async function handlePremiumToolCall(
+  ctx: DispatchContext,
+  tool: McpToolDef,
+  args: Record<string, unknown>,
+): Promise<ToolCallOutcome> {
+  const premium = tool.premium;
+  if (!premium) {
+    return mcpToolError('tool_error:internal_error premium tool missing relay config');
+  }
+  const paymentArg = typeof args.payment === 'string' ? args.payment : null;
+  const payment = ctx.paymentHeader ?? paymentArg;
+  if (payment && payment.length > MAX_PAYMENT_PAYLOAD_BYTES) {
+    await recordHostedToolCall(ctx.env, tool.name, 'premium', 'validation_error');
+    return mcpToolError('validation_error: payment payload exceeds 8KB');
+  }
+  const paidVia: 'header' | 'arg' | 'bearer' | 'none' = ctx.paymentHeader
+    ? 'header'
+    : paymentArg
+      ? 'arg'
+      : ctx.bearerToken
+        ? 'bearer'
+        : 'none';
+  const startMs = Date.now();
+  const logCall = (outcome: string): void => {
+    // eslint-disable-next-line no-console
+    console.log('mcp_tool_call', JSON.stringify({
+      tool: tool.name,
+      tier: 'premium',
+      authed: Boolean(ctx.bearerToken),
+      paid_via: paidVia,
+      duration_ms: Date.now() - startMs,
+      outcome,
+    }));
+  };
+
+  if (!payment && !ctx.bearerToken) {
+    const pr = await buildPaymentRequiredFor(ctx.env, premium);
+    logCall('payment_required');
+    await recordHostedToolCall(ctx.env, tool.name, 'premium', 'payment_required');
+    if (ctx.strictX402) return { paymentRequired: pr };
+    return {
+      result: mcpContent({
+        ok: false,
+        error: 'payment_required',
+        payment_requirements: pr.body,
+        how_to_pay: {
+          x402_wallet:
+            'Sign the accepts[0] requirement and retry this exact tools/call with the base64 payment payload in arguments.payment, or send it as an X-PAYMENT header on the POST. Strict HTTP-402 transport for x402 client wrappers: use the endpoint URL https://mcp.tensorfeed.ai/mcp?x402=strict',
+          credits:
+            'Authorization: Bearer tf_live_... credits token. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC), or buy credits at https://tensorfeed.ai/developers/agent-payments.',
+          free_trial_note:
+            'The 100 calls/IP/day free premium trial applies when calling the REST endpoint directly from your own IP, not through this MCP relay.',
+        },
+      }),
+    };
+  }
+
+  const qs = premium.buildParams(args).toString();
+  const url = `https://tensorfeed.ai${premium.restPath}${qs ? `?${qs}` : ''}`;
+  const headers: Record<string, string> = { 'User-Agent': `tensorfeed-mcp/${tool.name}` };
+  if (payment) {
+    headers['X-PAYMENT'] = payment;
+  } else {
+    headers.Authorization = `Bearer ${ctx.bearerToken}`;
+  }
+  // Bound the self-relay so a stalled upstream cannot hang the /mcp
+  // request. Paid calls get 20s (verify + settle + data), bearer 12s.
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers,
+      signal: AbortSignal.timeout(payment ? 20000 : 12000),
+    });
+  } catch {
+    logCall('tool_error:upstream_timeout');
+    await recordHostedToolCall(ctx.env, tool.name, 'premium', 'tool_error:upstream_timeout');
+    return {
+      result: mcpContent({
+        ok: false,
+        error: 'upstream_timeout',
+        detail: payment
+          ? 'The upstream did not respond in time. If your payment settled, undelivered data falls under the AFTA no-charge path; verify at https://tensorfeed.ai/api/payment/history before paying again. Do not blind-retry with the same payment payload.'
+          : 'The upstream did not respond in time. Retry shortly.',
+      }),
+    };
+  }
+  const data: unknown = await res.json().catch(() => ({ ok: false, error: 'upstream_parse_error' }));
+  if (res.status === 402) {
+    logCall(payment ? 'payment_failed' : 'payment_required');
+    await recordHostedToolCall(ctx.env, tool.name, 'premium', payment ? 'payment_failed' : 'payment_required');
+    if (payment && ctx.strictX402) {
+      // Pass the corrected requirements through at the transport level so
+      // an x402 wrapper can re-sign and retry.
+      return { paymentRequired: { header: res.headers.get('PAYMENT-REQUIRED') ?? '', body: data } };
+    }
+    return {
+      result: mcpContent({
+        ok: false,
+        error: payment ? 'payment_failed' : 'payment_required',
+        detail: payment
+          ? 'The attached payment was rejected by the settlement layer. Inspect upstream for the exact reason, re-sign against the current requirements, and retry.'
+          : 'Token rejected or out of credits. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment), or top up at https://tensorfeed.ai/developers/agent-payments.',
+        upstream: data,
+      }),
+    };
+  }
+  const paymentResponseHeader = res.headers.get('PAYMENT-RESPONSE');
+  let payload: unknown = data;
+  if (paymentResponseHeader && data && typeof data === 'object') {
+    // Also embed the settle proof in the body for header-blind clients.
+    let decoded: unknown;
+    try {
+      decoded = JSON.parse(atob(paymentResponseHeader));
+    } catch {
+      decoded = paymentResponseHeader;
+    }
+    payload = { ...(data as Record<string, unknown>), payment_response: decoded };
+  }
+  logCall('ok');
+  await recordHostedToolCall(ctx.env, tool.name, 'premium', 'ok');
+  return {
+    result: mcpContent(payload),
+    ...(paymentResponseHeader ? { paymentResponseHeader } : {}),
   };
 }
 
@@ -1472,7 +1635,15 @@ export async function handleMcpHttpRequest(request: Request, env: Env): Promise<
   const id = body.id ?? null;
   const auth = request.headers.get('Authorization') ?? '';
   const bearerToken = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  const ctx: DispatchContext = { env, bearerToken, ip: getClientIP(request) };
+  const paymentHeader = request.headers.get('X-PAYMENT') ?? request.headers.get('PAYMENT-SIGNATURE');
+  const strictX402 = new URL(request.url).searchParams.get('x402') === 'strict';
+  const ctx: DispatchContext = {
+    env,
+    bearerToken,
+    ip: getClientIP(request),
+    paymentHeader,
+    strictX402,
+  };
 
   try {
     switch (body.method) {
@@ -1487,8 +1658,9 @@ export async function handleMcpHttpRequest(request: Request, env: Env): Promise<
         return rpcResponse(rpcSuccess(id, await handleToolsList()));
       case 'tools/call': {
         const out = await handleToolCall(ctx, body.params);
+        if (out.paymentRequired) return paymentRequiredHttpResponse(id, out.paymentRequired);
         if (out.error) return rpcResponse(rpcError(id, out.error.code, out.error.message));
-        return rpcResponse(rpcSuccess(id, out.result));
+        return rpcResponse(rpcSuccess(id, out.result), out.paymentResponseHeader);
       }
       default:
         return rpcResponse(rpcError(id, ERR_METHOD_NOT_FOUND, `method_not_found: ${body.method}`));
@@ -1503,14 +1675,39 @@ export async function handleMcpHttpRequest(request: Request, env: Env): Promise<
   }
 }
 
-function rpcResponse(payload: JsonRpcResponse): Response {
+const MCP_CORS_HEADERS: Record<string, string> = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, MCP-Session-ID, X-PAYMENT, PAYMENT-SIGNATURE',
+  'Access-Control-Expose-Headers': 'PAYMENT-REQUIRED, PAYMENT-RESPONSE',
+};
+
+function rpcResponse(payload: JsonRpcResponse, paymentResponseHeader?: string): Response {
   return new Response(JSON.stringify(payload), {
     status: 200,
     headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, MCP-Session-ID',
+      ...MCP_CORS_HEADERS,
+      ...(paymentResponseHeader ? { 'PAYMENT-RESPONSE': paymentResponseHeader } : {}),
+    },
+  });
+}
+
+// Transport-level x402: HTTP 402 whose PAYMENT-REQUIRED header is what
+// wrappers key off, and whose body is still a JSON-RPC error envelope
+// (error.data carries the same canonical requirements) so an MCP client
+// that surfaces the body gets usable structure. Per the x402 HTTP
+// transport v2 spec the 402 body is a server implementation concern.
+function paymentRequiredHttpResponse(
+  id: string | number | null,
+  pr: { header: string; body: unknown },
+): Response {
+  const envelope = rpcError(id, ERR_PAYMENT_REQUIRED, 'payment_required', pr.body);
+  return new Response(JSON.stringify(envelope), {
+    status: 402,
+    headers: {
+      ...MCP_CORS_HEADERS,
+      ...(pr.header ? { 'PAYMENT-REQUIRED': pr.header } : {}),
     },
   });
 }

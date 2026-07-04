@@ -127,16 +127,34 @@ describe('route_verdict premium tool', () => {
     expect(tool!.tier).toBe('premium');
   });
 
-  it('requires a bearer token and points to the faucet', async () => {
+  it('returns structured payment_required with canonical accepts when unpaid', async () => {
     const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
     const resp = await handleMcpHttpRequest(
       rpcRequest('tools/call', { name: 'route_verdict', arguments: { task: 'code' } }),
       env,
     );
+    expect(resp.status).toBe(200);
     const body = (await resp.json()) as { result: { content: { text: string }[]; isError?: boolean } };
-    expect(body.result.isError).toBe(true);
-    expect(body.result.content[0].text).toContain('authentication_required');
-    expect(body.result.content[0].text).toContain('trial-credits');
+    // In-band mode is a structured result, not an MCP tool error.
+    expect(body.result.isError).toBeUndefined();
+    const payload = JSON.parse(body.result.content[0].text) as {
+      ok: boolean;
+      error: string;
+      payment_requirements: { x402Version: number; accepts: { scheme: string; amount: string }[] };
+      how_to_pay: { x402_wallet: string; credits: string; free_trial_note: string };
+    };
+    expect(payload.ok).toBe(false);
+    expect(payload.error).toBe('payment_required');
+    expect(payload.payment_requirements.x402Version).toBe(2);
+    expect(payload.payment_requirements.accepts.length).toBeGreaterThanOrEqual(1);
+    expect(payload.payment_requirements.accepts[0].scheme).toBe('exact');
+    // 1 credit = $0.02 = 20000 micro-USDC.
+    expect(payload.payment_requirements.accepts[0].amount).toBe('20000');
+    expect(payload.how_to_pay.credits).toContain('trial-credits');
+    expect(payload.how_to_pay.x402_wallet).toContain('x402=strict');
+    // Unpaid calls must never relay: the free-trial IP quota stays unreachable.
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('relays the upstream verdict to the premium REST endpoint with the bearer', async () => {
