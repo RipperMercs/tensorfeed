@@ -418,6 +418,16 @@ bucket_name = "tensorfeed-backups"
 binding = "SNAPSHOTS_R2"
 bucket_name = "tensorfeed-snapshots"
 
+# Self service binding: the MCP premium relay must re-enter this worker's
+# own fetch handler. A plain fetch() to our own hostname is routed past
+# the worker to the Pages origin by Cloudflare (same-zone subrequest
+# bypass), which 404s on /api/premium/*. env.SELF.fetch avoids the edge
+# re-entry entirely. Depth is bounded: relayed /api/premium/* paths never
+# call SELF again.
+[[services]]
+binding = "SELF"
+service = "tensorfeed-api"
+
 # Workers Analytics Engine datasets. Free with Workers Paid (25M
 # datapoints/dataset/month). Purpose-built for high-frequency event
 # logging where KV is the wrong tool.

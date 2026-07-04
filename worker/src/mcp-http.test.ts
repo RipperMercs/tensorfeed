@@ -23,6 +23,10 @@ function makeEnv(extras: Partial<Env> = {}): Env {
     TENSORFEED_CACHE: new MockKV(),
     TENSORFEED_NEWS: new MockKV(),
     TENSORFEED_STATUS: new MockKV(),
+    // SELF service binding stub. Delegates to global fetch so every existing
+    // relay test that spies on globalThis.fetch keeps working unchanged; the
+    // production code now calls ctx.env.SELF.fetch instead of bare fetch.
+    SELF: { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init) } as unknown as Fetcher,
     ...extras,
   } as unknown as Env;
 }
@@ -188,6 +192,28 @@ describe('route_verdict premium tool', () => {
     const body = (await resp.json()) as { result: { content: { text: string }[] } };
     expect(body.result.content[0].text).toContain('payment_required');
     expect(body.result.content[0].text).toContain('trial-credits');
+  });
+
+  it('relays through the SELF service binding, never a bare same-zone fetch', async () => {
+    const selfFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, verdict: { model: { name: 'Claude Sonnet 4.6' } } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const env = makeEnv({ SELF: { fetch: selfFetch } as unknown as Fetcher });
+    const bareFetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() => {
+      throw new Error('bare fetch must not be called; same-zone subrequests bypass the worker');
+    });
+    const resp = await handleMcpHttpRequest(
+      rpcRequest('tools/call', { name: 'route_verdict', arguments: { task: 'code', payment: 'b64payload' } }),
+      env,
+    );
+    expect(resp.status).toBe(200);
+    expect(selfFetch).toHaveBeenCalledTimes(1);
+    const calledUrl = selfFetch.mock.calls[0][0] as string;
+    expect(calledUrl).toContain('/api/premium/route-verdict');
+    expect(bareFetchSpy).not.toHaveBeenCalled();
   });
 });
 

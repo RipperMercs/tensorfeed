@@ -1555,9 +1555,19 @@ async function handlePremiumToolCall(
   }
   // Bound the self-relay so a stalled upstream cannot hang the /mcp
   // request. Paid calls get 20s (verify + settle + data), bearer 12s.
+  // Same-zone subrequest bypass: a bare fetch() to tensorfeed.ai is routed
+  // past this worker to the Pages origin, which has no /api/premium/*
+  // routes and 404s. env.SELF.fetch re-enters this worker's own fetch
+  // handler directly, skipping the edge routing entirely. No bare-fetch
+  // fallback: a missing binding is a deploy config error and must fail
+  // loudly (propagates to the caller's classifyException as internal_error),
+  // not silently degrade back into the same bypass this fix closes.
+  if (!ctx.env.SELF) {
+    throw new Error('SELF service binding is not configured');
+  }
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await ctx.env.SELF.fetch(url, {
       headers,
       signal: AbortSignal.timeout(payment ? 20000 : 12000),
     });

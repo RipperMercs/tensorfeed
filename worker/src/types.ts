@@ -266,6 +266,16 @@ export interface Env {
   // never logged, never echoed, never used outside this module.
   CDP_API_KEY_ID?: string;
   CDP_API_KEY_SECRET?: string;
+  // Self service binding. The MCP premium relay (handlePremiumToolCall in
+  // mcp-http.ts) re-enters this worker's own fetch handler through this
+  // binding instead of a bare fetch() to https://tensorfeed.ai. A plain
+  // fetch to our own hostname is a same-zone subrequest, which Cloudflare
+  // routes past the worker to the Pages origin (no /api/premium/* routes
+  // there, so it 404s). Optional so node-env test fixtures (KV-only Env
+  // mocks) that never exercise the premium relay do not need to stub it;
+  // the relay itself has no bare-fetch fallback, so a real deploy missing
+  // this binding fails loudly instead of silently hitting the bypass again.
+  SELF?: Fetcher;
 }
 
 export interface Article {
