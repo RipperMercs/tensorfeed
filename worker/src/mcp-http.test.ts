@@ -428,3 +428,151 @@ describe('strict x402 mode', () => {
     expect(resp.headers.get('PAYMENT-REQUIRED')).toBe(restRes.headers.get('PAYMENT-REQUIRED'));
   });
 });
+
+describe('wallet-native x402 payment paths', () => {
+  function paidHeaderCall(payment: string, extraHeaders: Record<string, string> = {}): Request {
+    return new Request('https://tensorfeed.ai/api/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-PAYMENT': payment, ...extraHeaders },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'route_verdict', arguments: { task: 'code' } } }),
+    });
+  }
+
+  function okUpstream(headers: Record<string, string> = {}): Response {
+    return new Response(JSON.stringify({ ok: true, verdict: { model: { name: 'Claude Fable 5' } } }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', ...headers },
+    });
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('relays an X-PAYMENT request header as X-PAYMENT to the REST sibling, without Authorization', async () => {
+    const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okUpstream());
+    const resp = await handleMcpHttpRequest(paidHeaderCall('b64payload'), env);
+    expect(resp.status).toBe(200);
+    const init = fetchSpy.mock.calls[0][1] as RequestInit;
+    const headers = init.headers as Record<string, string>;
+    expect(headers['X-PAYMENT']).toBe('b64payload');
+    expect(headers.Authorization).toBeUndefined();
+    expect(headers['User-Agent']).toBe('tensorfeed-mcp/route_verdict');
+  });
+
+  it('accepts PAYMENT-SIGNATURE as an alias, and X-PAYMENT wins when both are present', async () => {
+    const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okUpstream());
+    await handleMcpHttpRequest(
+      new Request('https://tensorfeed.ai/api/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'PAYMENT-SIGNATURE': 'sigpayload' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'route_verdict', arguments: {} } }),
+      }),
+      env,
+    );
+    expect((fetchSpy.mock.calls[0][1] as RequestInit).headers).toMatchObject({ 'X-PAYMENT': 'sigpayload' });
+
+    vi.restoreAllMocks();
+    const fetchSpy2 = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okUpstream());
+    await handleMcpHttpRequest(paidHeaderCall('xp', { 'PAYMENT-SIGNATURE': 'sig' }), env);
+    expect((fetchSpy2.mock.calls[0][1] as RequestInit).headers).toMatchObject({ 'X-PAYMENT': 'xp' });
+  });
+
+  it('relays arguments.payment for header-incapable clients', async () => {
+    const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okUpstream());
+    await handleMcpHttpRequest(
+      rpcRequest('tools/call', { name: 'route_verdict', arguments: { task: 'code', payment: 'argpayload' } }),
+      env,
+    );
+    const headers = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+    expect(headers['X-PAYMENT']).toBe('argpayload');
+    // The payment argument must not leak into the relayed query string.
+    expect(fetchSpy.mock.calls[0][0] as string).not.toContain('argpayload');
+  });
+
+  it('payment header beats arguments.payment beats bearer', async () => {
+    const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okUpstream());
+    await handleMcpHttpRequest(
+      new Request('https://tensorfeed.ai/api/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-PAYMENT': 'headerwins', Authorization: 'Bearer tf_live_x' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'route_verdict', arguments: { payment: 'argloses' } } }),
+      }),
+      env,
+    );
+    const headers = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+    expect(headers['X-PAYMENT']).toBe('headerwins');
+    expect(headers.Authorization).toBeUndefined();
+  });
+
+  it('lifts upstream PAYMENT-RESPONSE onto the MCP response and embeds it in the result', async () => {
+    const env = makeEnv();
+    const settle = btoa(JSON.stringify({ success: true, transaction: '0xabc' }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(okUpstream({ 'PAYMENT-RESPONSE': settle }));
+    const resp = await handleMcpHttpRequest(paidHeaderCall('b64payload'), env);
+    expect(resp.headers.get('PAYMENT-RESPONSE')).toBe(settle);
+    const body = (await resp.json()) as { result: { content: { text: string }[] } };
+    const payload = JSON.parse(body.result.content[0].text) as { payment_response: { transaction: string } };
+    expect(payload.payment_response.transaction).toBe('0xabc');
+  });
+
+  it('maps upstream 402 with payment attached to payment_failed in default mode', async () => {
+    const env = makeEnv();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: false, error: 'settle_failed' }), { status: 402, headers: { 'Content-Type': 'application/json' } }),
+    );
+    const resp = await handleMcpHttpRequest(paidHeaderCall('badpayload'), env);
+    expect(resp.status).toBe(200);
+    const body = (await resp.json()) as { result: { content: { text: string }[] } };
+    const payload = JSON.parse(body.result.content[0].text) as { error: string; upstream: { error: string } };
+    expect(payload.error).toBe('payment_failed');
+    expect(payload.upstream.error).toBe('settle_failed');
+  });
+
+  it('passes upstream 402 through at transport level in strict mode', async () => {
+    const env = makeEnv();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: false, error: 'settle_failed' }), {
+        status: 402,
+        headers: { 'Content-Type': 'application/json', 'PAYMENT-REQUIRED': 'freshreqs' },
+      }),
+    );
+    const resp = await handleMcpHttpRequest(
+      new Request('https://tensorfeed.ai/api/mcp?x402=strict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-PAYMENT': 'badpayload' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'route_verdict', arguments: {} } }),
+      }),
+      env,
+    );
+    expect(resp.status).toBe(402);
+    expect(resp.headers.get('PAYMENT-REQUIRED')).toBe('freshreqs');
+  });
+
+  it('rejects oversized payment payloads before any relay', async () => {
+    const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const resp = await handleMcpHttpRequest(
+      rpcRequest('tools/call', { name: 'route_verdict', arguments: { payment: 'x'.repeat(9000) } }),
+      env,
+    );
+    const body = (await resp.json()) as { result: { content: { text: string }[]; isError?: boolean } };
+    expect(body.result.isError).toBe(true);
+    expect(body.result.content[0].text).toContain('payment payload exceeds 8KB');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('paid upstream timeout tells the agent to verify before re-paying', async () => {
+    const env = makeEnv();
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('The operation was aborted due to timeout'));
+    const resp = await handleMcpHttpRequest(paidHeaderCall('b64payload'), env);
+    const body = (await resp.json()) as { result: { content: { text: string }[] } };
+    const payload = JSON.parse(body.result.content[0].text) as { error: string; detail: string };
+    expect(payload.error).toBe('upstream_timeout');
+    expect(payload.detail).toContain('Do not blind-retry');
+  });
+});
