@@ -44,7 +44,7 @@ describe('handleMcpHttpRequest GET', () => {
     expect(resp.status).toBe(200);
     const body = (await resp.json()) as Record<string, unknown>;
     expect(body.name).toBe('tensorfeed');
-    expect(body.version).toBe('1.36.2');
+    expect(body.version).toBe('1.37.0');
     expect(body.protocolVersion).toBe('2024-11-05');
     expect(body.tools_count).toBe(MCP_TOOLS_COUNT);
     expect(typeof body.full_tool_set).toBe('string');
@@ -60,7 +60,7 @@ describe('initialize', () => {
     expect(resp.status).toBe(200);
     const body = (await resp.json()) as { result: Record<string, unknown> };
     expect(body.result.protocolVersion).toBe('2024-11-05');
-    expect(body.result.serverInfo).toMatchObject({ name: 'tensorfeed', version: '1.36.2' });
+    expect(body.result.serverInfo).toMatchObject({ name: 'tensorfeed', version: '1.37.0' });
     expect(body.result.capabilities).toHaveProperty('tools');
   });
 });
@@ -626,5 +626,23 @@ describe('wallet-native x402 payment paths', () => {
     const payload = JSON.parse(body.result.content[0].text) as { error: string; detail: string };
     expect(payload.error).toBe('upstream_timeout');
     expect(payload.detail).toContain('Do not blind-retry');
+  });
+});
+
+describe('payment self-description', () => {
+  it('GET discovery advertises both payment surfaces and strict mode', async () => {
+    const env = makeEnv();
+    const resp = await handleMcpHttpRequest(new Request('https://tensorfeed.ai/api/mcp', { method: 'GET' }), env);
+    const body = (await resp.json()) as { payment: { premium_tools: string[]; x402: string } };
+    expect(body.payment.premium_tools).toEqual(['route_verdict', 'whats_new']);
+    expect(body.payment.x402).toContain('x402=strict');
+  });
+
+  it('initialize instructions mention wallet-native x402', async () => {
+    const env = makeEnv();
+    const resp = await handleMcpHttpRequest(rpcRequest('initialize'), env);
+    const body = (await resp.json()) as { result: { instructions: string } };
+    expect(body.result.instructions).toContain('X-PAYMENT');
+    expect(body.result.instructions).toContain('x402=strict');
   });
 });

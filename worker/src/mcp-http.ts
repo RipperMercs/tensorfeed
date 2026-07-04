@@ -87,7 +87,7 @@ import { paymentRequiredResponse } from './payments';
 
 const PROTOCOL_VERSION = '2024-11-05';
 const SERVER_NAME = 'tensorfeed';
-const SERVER_VERSION = '1.36.2';
+const SERVER_VERSION = '1.37.0';
 
 // JSON-RPC 2.0 standard error codes
 const ERR_PARSE = -32700;
@@ -1296,12 +1296,12 @@ const INITIALIZE_RESULT = {
     version: SERVER_VERSION,
   },
   instructions:
-    'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp serves a curated subset of 32 tools; the full 24-tool set ships on the npx stdio server @tensorfeed/mcp-server. ' +
+    'TensorFeed.ai MCP server. Hosted HTTP transport at https://tensorfeed.ai/api/mcp serves a curated subset of 33 tools; the full 24-tool set ships on the npx stdio server @tensorfeed/mcp-server. ' +
     'Free tier (31 tools on this hosted endpoint): AI news, model pricing, AI service status, MITRE CVE / CISA KEV / EPSS / OSV.dev, ' +
     'SEC EDGAR search + submissions + ticker lookup, openFDA (drug events, drug labels, drug recalls, food recalls, device events), ' +
     'EIA Open Data series, USGS recent earthquakes, NWS US weather alerts, AI papers (arXiv recent + AI trending + HF daily), ' +
     'and the daily agent-ecosystem opportunities scan. ' +
-    'Premium tools (e.g. route_verdict, the signed model-routing decision) require an Authorization: Bearer tf_live_... token. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC), or buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
+    'Premium tools (route_verdict, the signed model-routing decision; whats_new, the full AFTA-signed morning brief) are wallet-payable per call over x402: an unpaid call returns canonical payment requirements (accepts[]), then pay via arguments.payment or an X-PAYMENT header on the POST. x402 client wrappers can use strict HTTP-402 transport at https://mcp.tensorfeed.ai/mcp?x402=strict. Credits tokens (Authorization: Bearer tf_live_...) also work. Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits (no payment, no USDC), or buy credits at https://tensorfeed.ai/developers/agent-payments. ' +
     'License posture: most data is US Government public domain; commercial redistribution permitted; attribution preserved on every response.',
 } as const;
 
@@ -1323,6 +1323,11 @@ const GET_DISCOVERY_BODY = JSON.stringify({
   body: 'JSON-RPC 2.0 envelope per MCP spec',
   spec: 'https://modelcontextprotocol.io/specification/2024-11-05/basic/transports',
   tools_count: TOOLS.length,
+  payment: {
+    premium_tools: ['route_verdict', 'whats_new'],
+    x402: 'Pay per call in USDC. Send the base64 payment payload in arguments.payment or as an X-PAYMENT (or PAYMENT-SIGNATURE) header. Unpaid premium calls return canonical x402 requirements. Strict HTTP-402 transport for x402 client wrappers: POST https://mcp.tensorfeed.ai/mcp?x402=strict',
+    credits: 'Authorization: Bearer tf_live_... credits token. Free trial credits at https://tensorfeed.ai/api/payment/trial-credits',
+  },
   full_tool_set:
     'The npx stdio server @tensorfeed/mcp-server exposes the full 24-tool set; this hosted HTTP endpoint serves a curated subset.',
 });
