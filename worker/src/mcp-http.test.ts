@@ -190,6 +190,58 @@ describe('route_verdict premium tool', () => {
   });
 });
 
+describe('whats_new premium tool', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('is listed as a premium tool with a payment argument', () => {
+    const tool = MCP_HTTP_TOOLS.find((t) => t.name === 'whats_new');
+    expect(tool).toBeDefined();
+    expect(tool!.tier).toBe('premium');
+    const props = (tool!.inputSchema as { properties: Record<string, unknown> }).properties;
+    expect(props).toHaveProperty('payment');
+    expect(props).toHaveProperty('days');
+    expect(props).toHaveProperty('news_limit');
+    expect(tool!.description).toContain('1 credit');
+    expect(tool!.description).toContain('trial-credits');
+  });
+
+  it('relays to /api/premium/whats-new with mapped params', async () => {
+    const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, brief: { headlines: 12 } }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+    const resp = await handleMcpHttpRequest(
+      rpcRequest('tools/call', { name: 'whats_new', arguments: { days: 2, news_limit: 5, payment: 'b64payload' } }),
+      env,
+    );
+    expect(resp.status).toBe(200);
+    const calledUrl = fetchSpy.mock.calls[0][0] as string;
+    expect(calledUrl).toContain('/api/premium/whats-new');
+    expect(calledUrl).toContain('days=2');
+    expect(calledUrl).toContain('news_limit=5');
+    const headers = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+    expect(headers['X-PAYMENT']).toBe('b64payload');
+    expect(headers['User-Agent']).toBe('tensorfeed-mcp/whats_new');
+  });
+
+  it('returns canonical requirements bound to the whats-new resource when unpaid', async () => {
+    const env = makeEnv();
+    const resp = await handleMcpHttpRequest(
+      rpcRequest('tools/call', { name: 'whats_new', arguments: {} }),
+      env,
+    );
+    const body = (await resp.json()) as { result: { content: { text: string }[] } };
+    const payload = JSON.parse(body.result.content[0].text) as {
+      error: string;
+      payment_requirements: { resource: { url: string } };
+    };
+    expect(payload.error).toBe('payment_required');
+    expect(payload.payment_requirements.resource.url).toBe('https://tensorfeed.ai/api/premium/whats-new');
+  });
+});
+
 describe('tools/call', () => {
   it('returns error for unknown tool', async () => {
     const env = makeEnv();
