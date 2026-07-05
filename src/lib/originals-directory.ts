@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'hyperscaler-fde-turn-microsoft-frontier-aws-billion',
+    title:
+      'AWS and Microsoft Just Stood Up Consulting Arms Three Days Apart. The Hyperscalers Are Copying the FDE Playbook, Not the Cloud One.',
+    author: 'Kira Nolan',
+    date: 'July 5, 2026',
+    readTime: '6 min read',
+    description:
+      "On June 30, 2026, AWS committed $1 billion and thousands of engineers to a new Forward Deployed Engineering unit that runs 45-day embed cycles with pods of five to six inside customer sites (Allen Institute, Cox Automotive, NBA, Ricoh, Southwest, NFL). Two days later on July 2, Microsoft answered with Microsoft Frontier Co.: $2.5 billion and 6,000 employees run by Rodrigo Kede Lima and announced by Judson Althoff. Three days, roughly $3.5 billion of freshly ring-fenced payroll, both hyperscalers lifting a 21-year-old Palantir FDSE model that Anthropic and OpenAI have quietly been running as Applied AI groups for 18 months. Inside the math, why the MIT NANDA 95 percent enterprise-pilot-failure number gave AWS and Microsoft public cover to rewrite the go-to-market from 'buy an API' to 'we will send six engineers,' what it does to the Accenture and Deloitte generative AI backlog, the near-term-bullish and medium-term-scary revenue math for Anthropic and OpenAI whose customer accounts now contain a hyperscaler-badged engineer full time, the margin question (FDE is a 55 to 60 percent op-margin business at Palantir with 20 years of tooling amortization underneath, hyperscaler income statements have been running 30-plus percent on rented compute), the federal gate that just made compliance-cleared distribution partners a rentable moat, and three signposts in the next 90 days (AWS pod utilization on rotation two, whether Google Cloud stands up its own FDE arm, whether Anthropic and OpenAI harden or dissolve their Applied AI groups). The model is not the product, the workflow is, and this week the hyperscalers put $3.5 billion of payroll behind that read.",
+  },
+  {
     slug: 'first-macro-ai-print-june-jobs-report',
     title:
       'The June Jobs Report Just Landed. AI Capex Is Now a Line Item on the Payroll Print.',
