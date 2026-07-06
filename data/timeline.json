@@ -1,6 +1,41 @@
 {
   "events": [
     {
+      "date": "2026-07-02",
+      "title": "UN AI for Good Global Commission Launches in Geneva",
+      "provider": "United Nations",
+      "category": "policy",
+      "description": "The United Nations and ITU launched the AI for Good Global Commission on July 2, 2026, co-chaired by Salesforce CEO Marc Benioff and Rwandan President Paul Kagame. Forty founding members include Jensen Huang (NVIDIA), Andy Jassy (Amazon), Brad Smith (Microsoft), and Anthropic co-founder Jack Clark. The commission is mandated to develop global standards for beneficial AI and to bridge the digital divide affecting roughly 2.2 billion people without internet access. The inaugural meeting opened at the ITU AI for Good Global Summit in Geneva on July 6, drawing more than 11,000 participants from 169 countries."
+    },
+    {
+      "date": "2026-06-30",
+      "title": "US Lifts Export Controls on Claude Fable 5 and Mythos 5",
+      "provider": "Anthropic",
+      "category": "policy",
+      "description": "The US Commerce Department lifted its 18-day export control directive on June 30, 2026. Claude Fable 5 was restored for global access starting July 1; Claude Mythos 5 was restored for a designated set of approved US organizations following government review. Anthropic implemented deeper cyber safeguards, a jailbreak severity framework, and a HackerOne vulnerability disclosure program ahead of the redeployment."
+    },
+    {
+      "date": "2026-06-30",
+      "title": "Anthropic Releases Claude Sonnet 5",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic released Claude Sonnet 5 on June 30, 2026, the most agentic Sonnet model to date. It runs on a 1 million token context window with up to 128K output tokens and uses a new tokenizer producing roughly 30% more tokens for equivalent text. Introductory pricing is $2 per million input tokens and $10 per million output through August 31, 2026, then rises to $3 and $15. SWE-bench Verified score is 85.2%. The model became the default for Claude Free and Pro plans on July 1."
+    },
+    {
+      "date": "2026-06-30",
+      "title": "Anthropic Launches Claude Science Research Workbench",
+      "provider": "Anthropic",
+      "category": "product-launch",
+      "description": "Anthropic launched Claude Science in beta on June 30, 2026, a purpose-built workbench for scientists integrating 60 or more curated skills and connectors for genomics, single-cell biology, proteomics, structural biology, and cheminformatics. The product runs existing Claude models with no new model release and produces auditable artifacts with reproducible computational histories. Available in beta to Claude Pro, Max, Team, and Enterprise subscribers, running locally on macOS or Linux, or on remote HPC systems via SSH."
+    },
+    {
+      "date": "2026-06-29",
+      "title": "California Signs First Statewide Government Partnership with Anthropic",
+      "provider": "Anthropic",
+      "category": "product-launch",
+      "description": "Governor Newsom signed a partnership on June 29, 2026 giving all California state agencies, cities, and counties access to Claude at a 50% discount via the state IT portal, plus free workforce training and Anthropic developer support. Claude deployments were already live at the California DMV and Department of Health Care Services. The deal is the first statewide government Claude partnership in the US."
+    },
+    {
       "date": "2026-06-26",
       "title": "OpenAI Previews GPT-5.6 Sol, Terra, and Luna in Limited Release",
       "provider": "OpenAI",
@@ -22,6 +57,48 @@
       "description": "Anthropic ended the introductory window for Claude Fable 5 on June 23, 2026. From June 9 through June 22 the model was included at no extra cost on Pro, Max, Team, and seat-based Enterprise plans. Starting June 23 Fable 5 use is billed against usage credits on those plans; API pricing stays at $10 per 1M input and $50 per 1M output, with safety-classifier reroutes to Opus 4.8 billed at Opus rates for the rerouted portion. Opus 4.8 remains the default plan-included model."
     },
     {
+      "date": "2026-06-22",
+      "title": "Baseten Raises $1.5B Series F at $13B Valuation",
+      "provider": "Baseten",
+      "category": "funding",
+      "description": "AI inference platform Baseten raised $1.5 billion in a Series F round on June 22, 2026, led by Altimeter Capital, Conviction, and Spark Capital. The company processes over 1 billion inference calls per day across 87 clusters on 18 clouds and grew revenue roughly 20x year-over-year. The raise brings total funding above $2 billion and positions Baseten as a primary independent alternative to hyperscaler inference APIs."
+    },
+    {
+      "date": "2026-06-19",
+      "title": "Nobel Laureate John Jumper Leaves DeepMind for Anthropic",
+      "provider": "Anthropic",
+      "category": "acquisition",
+      "description": "John Jumper, who shared the 2024 Nobel Prize in Chemistry for the AlphaFold protein-structure prediction system, confirmed on June 19, 2026 that he is leaving Google DeepMind after nearly nine years to join Anthropic. The move came one day after Noam Shazeer announced his departure from DeepMind to OpenAI, highlighting a significant talent shift away from Google's AI division."
+    },
+    {
+      "date": "2026-06-18",
+      "title": "Transformer Co-Inventor Noam Shazeer Leaves DeepMind for OpenAI",
+      "provider": "OpenAI",
+      "category": "acquisition",
+      "description": "Noam Shazeer, VP of Engineering at Google DeepMind, Gemini co-lead, and co-author of the 2017 paper that introduced the Transformer architecture, announced his departure to join OpenAI on June 18, 2026. Google had paid a reported $2.7 billion in 2024 to bring him back from his own startup. The move was widely seen as a significant blow to Google's AI leadership pipeline, one day before John Jumper also announced departure to Anthropic."
+    },
+    {
+      "date": "2026-06-16",
+      "title": "SpaceX Acquires Anysphere (Cursor) for $60 Billion",
+      "provider": "SpaceX",
+      "category": "acquisition",
+      "description": "SpaceX agreed to acquire Anysphere, the company behind the Cursor AI coding assistant, in an all-stock deal valued at $60 billion on June 16, 2026, described at the time as the largest acquisition of a venture-backed startup in history. Cursor had approximately $4 billion in annualized recurring revenue and served over 50,000 enterprise clients including roughly two-thirds of Fortune 500 developer teams. The deal was expected to close in Q3 2026."
+    },
+    {
+      "date": "2026-06-12",
+      "title": "SpaceX Completes Record-Setting $75B IPO on Nasdaq",
+      "provider": "SpaceX",
+      "category": "funding",
+      "description": "SpaceX debuted on Nasdaq under ticker SPCX on June 12, 2026, raising $75 billion (expanded to $86.2 billion with the greenshoe option), surpassing Saudi Aramco's 2019 record as the largest IPO in history. Shares opened at $135 and closed up 19% at $160.95 on the first day, giving the company a market capitalization of approximately $2.1 trillion. The offering followed SpaceX's February 2026 acquisition of xAI and its Grok and Colossus AI assets."
+    },
+    {
+      "date": "2026-06-12",
+      "title": "US Issues First-Ever Export Control on a Language Model; Anthropic Suspends Fable 5 Globally",
+      "provider": "Anthropic",
+      "category": "policy",
+      "description": "The US Commerce Department issued a directive on June 12, 2026, barring foreign nationals from accessing Claude Fable 5 and Mythos 5 after Amazon researchers discovered a prompt-based safeguard bypass that could produce exploitable vulnerability code. Unable to verify user nationality in real time, Anthropic suspended both models globally. It was the first US export control applied to a language model. The suspension lasted 18 days and was lifted June 30 after Anthropic implemented deeper cyber safeguards and launched a HackerOne disclosure program."
+    },
+    {
       "date": "2026-06-09",
       "title": "Anthropic Releases Claude Fable 5, a New Frontier Tier Above Opus",
       "provider": "Anthropic",
@@ -29,11 +106,46 @@
       "description": "Anthropic launched Claude Fable 5 (API id claude-fable-5), a new frontier tier positioned above Claude Opus 4.8, which remains the default model. Pricing is $10 per million input tokens and $50 per million output with no long-context surcharge, on a 1 million token default context window with up to 128K output tokens and text plus vision input. Adaptive thinking is always on and cannot be disabled, with effort levels spanning low, medium, high, xhigh, and max. Anthropic's launch table reports 80.3 on SWE-bench Pro, 29.3 on FrontierCode Diamond, 85.0 on OSWorld-Verified, and a GDPval-AA ELO of 1932, all vendor-reported. Always-on safety classifiers can reroute flagged requests to Opus 4.8, billed at Opus rates for the rerouted portion. The model is available on the Claude API, Amazon Bedrock, Google Vertex, and Microsoft Foundry at launch."
     },
     {
+      "date": "2026-06-09",
+      "title": "Anthropic Releases Claude Mythos 5 to Vetted Partners",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic released Claude Mythos 5 on June 9, 2026 alongside Fable 5, but restricted access to a small group of vetted US partners. Mythos 5 is Anthropic's most capable model, with expanded cybersecurity and biology capabilities and fewer safeguard restrictions than Fable 5. Like Fable 5, Mythos 5 was suspended globally on June 12 under a US export control directive; access for a designated set of approved US organizations was restored on June 30."
+    },
+    {
+      "date": "2026-06-09",
+      "title": "Google Releases Gemini 3.5 Live Translate",
+      "provider": "Google",
+      "category": "product-launch",
+      "description": "Google released Gemini 3.5 Live Translate on June 9, 2026, a real-time speech-to-speech translation model built on Gemini 3 Pro. The model automatically detects over 70 languages and preserves the speaker's intonation, pacing, and pitch during translation. Available via the Gemini Live API, Google AI Studio, Google Meet (private preview for Workspace), and Google Translate on iOS and Android globally."
+    },
+    {
+      "date": "2026-06-08",
+      "title": "OpenAI Publicly Announces Confidential S-1 Filing",
+      "provider": "OpenAI",
+      "category": "funding",
+      "description": "OpenAI publicly announced on June 8, 2026 that it had confidentially submitted a draft S-1 registration to the SEC for a proposed initial public offering. The confidential filing was submitted on May 22; underwriters are Goldman Sachs, Morgan Stanley, and JPMorgan. The company is reportedly targeting a valuation above $1 trillion, with a public offering tentatively planned for late 2026 or 2027."
+    },
+    {
       "date": "2026-06-02",
       "title": "Microsoft Launches MAI-Code-1-Flash and MAI-Thinking-1 at Build 2026",
       "provider": "Microsoft",
       "category": "model-release",
       "description": "Microsoft announced its first in-house coding and reasoning models at Build 2026 in San Francisco. MAI-Code-1-Flash rolls out across all GitHub Copilot tiers with a 256K context window, priced at $0.75 per million input tokens ($0.075 cached) and $4.50 per million output, with Microsoft claiming better price to performance than Claude Haiku 4.5 and 60% fewer tokens used on hard tasks. MAI-Thinking-1, a 35B active parameter MoE reasoning model with a 256K context window, posted 97% on AIME 25 and 53% on SWE-Bench Pro, which Microsoft says matches Claude Opus 4.6. It enters private preview on Microsoft Foundry with distribution planned through Fireworks AI, Baseten, and OpenRouter. The launches mark a deliberate step away from Microsoft's dependence on OpenAI models inside Copilot."
+    },
+    {
+      "date": "2026-06-02",
+      "title": "Trump Signs Executive Order on AI Innovation and Security",
+      "provider": "US Government",
+      "category": "policy",
+      "description": "President Trump signed an executive order titled Promoting Advanced Artificial Intelligence Innovation and Security on June 2, 2026, replacing the version he had postponed on May 21. The order mandates AI-enabled cyber defense across federal agencies, creates an AI Cybersecurity Clearinghouse run through the Treasury Department, and establishes a voluntary framework allowing frontier AI developers to submit models to the government for national security assessments before public release."
+    },
+    {
+      "date": "2026-06-01",
+      "title": "ChatGPT Surpasses One Billion Monthly Active Users",
+      "provider": "OpenAI",
+      "category": "product-launch",
+      "description": "OpenAI confirmed that ChatGPT crossed one billion global monthly active users in May 2026, making it the fastest application in history to reach that milestone at roughly three years, compared to five to eight years for Instagram, TikTok, YouTube, and Google Maps. At the same time, ChatGPT's share of the AI assistant market had declined from above 50% in January 2026 to approximately 46.4% in May as Gemini and Claude grew faster on a percentage basis."
     },
     {
       "date": "2026-06-01",

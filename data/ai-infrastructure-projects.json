@@ -59,7 +59,7 @@
       "id": "xai-colossus-memphis",
       "name": "SpaceXAI Colossus",
       "operator": "SpaceXAI",
-      "partners": ["Supermicro", "Dell", "Anthropic (tenant)"],
+      "partners": ["Supermicro", "Dell", "Anthropic (tenant, Colossus 1)", "Google (tenant, Colossus 2)"],
       "location": { "city": "Memphis", "state": "Tennessee", "country": "USA" },
       "status": "operational",
       "capacity_mw_announced": 300,
@@ -67,7 +67,7 @@
       "announced_date": "2024-06-05",
       "target_operational": "2024",
       "capex_usd_billion": null,
-      "context": "Operational since late 2024, initially with 100,000 NVIDIA H100s, expanding to 555,000+ GPUs across Colossus 1 and 2 by 2026. SpaceX acquired xAI in February 2026 and merged the AI division into SpaceXAI in May 2026. In May 2026, Anthropic leased the entire Colossus 1 cluster (220,000+ GPUs, 300+ MW) to supplement its Google Cloud TPU capacity. Local controversy persists over temporary gas turbines and air quality in nearby neighborhoods.",
+      "context": "Operational since late 2024, initially with 100,000 NVIDIA H100s, expanding to 555,000+ GPUs across Colossus 1 and 2 by 2026. SpaceX acquired xAI in February 2026 and merged the AI division into SpaceXAI in May 2026. In May 2026, Anthropic leased the entire Colossus 1 cluster (220,000+ GPUs, 300+ MW) to supplement its Google Cloud TPU capacity. A second campus (Colossus 2) is ramping in Southaven, Mississippi, targeting 2 GW combined capacity; Google signed a separate compute rental agreement for Colossus 2 capacity on June 5, 2026. Local controversy persists over temporary gas turbines and air quality in nearby neighborhoods.",
       "primary_sources": [
         "https://x.ai/news/colossus",
         "https://www.supermicro.com/en/pressreleases/supermicro-and-xai-launch-worlds-largest-ai-supercomputer",
@@ -150,13 +150,13 @@
       "operator": "Microsoft",
       "partners": ["We Energies"],
       "location": { "city": "Mount Pleasant", "state": "Wisconsin", "country": "USA" },
-      "status": "construction",
+      "status": "operational",
       "capacity_mw_announced": null,
       "power_source": "mixed including new gas plants",
       "announced_date": "2024-03-08",
       "target_operational": "2026",
       "capex_usd_billion": 3.3,
-      "context": "Sits on the former Foxconn site. Microsoft announced an additional $3.3 billion commitment in 2024 on top of earlier phases. We Energies has separately filed for approval of two new natural gas peaker plants partly attributed to the data center load.",
+      "context": "Sits on the former Foxconn site. Microsoft announced an additional $3.3 billion commitment in 2024 on top of earlier phases. We Energies has separately filed for approval of two new natural gas peaker plants partly attributed to the data center load. The first building went fully operational on June 24, 2026.",
       "primary_sources": [
         "https://blogs.microsoft.com/blog/2024/05/08/3-3b-microsoft-investment-in-mount-pleasant-to-spur-ai-innovation/"
       ]
@@ -318,6 +318,41 @@
       "context": "Multiple separately-reported feasibility programs into placing AI training or inference capacity in low Earth orbit. Anthropic and SpaceX have publicly discussed orbital extensions of Colossus-class compute; Google has separately explored similar concepts via Starcloud-style partners. Power thesis: continuous solar plus vacuum heat-rejection sidesteps the grid and water constraints driving terrestrial buildouts. Capacity, capex, and timeline figures are all aspirational at this stage. Concept-stage entry; we will reclassify when a launch contract or specific construction commitment lands.",
       "primary_sources": [
         "https://tensorfeed.ai/originals/anthropic-spacexai-colossus-orbital"
+      ]
+    },
+    {
+      "id": "microsoft-pecos-texas",
+      "name": "Microsoft Pecos Campus",
+      "operator": "Microsoft",
+      "partners": ["Chevron"],
+      "location": { "city": "Pecos", "state": "Texas", "country": "USA" },
+      "status": "announced",
+      "capacity_mw_announced": 2000,
+      "power_source": "natural gas plus grid (Chevron 20-year agreement)",
+      "announced_date": "2026-06-22",
+      "target_operational": "2031-2032",
+      "capex_usd_billion": null,
+      "context": "Microsoft announced the Pecos Campus on June 22, 2026, a multibillion buildout in remote Reeves County, West Texas, backed by a 20-year dedicated energy agreement with Chevron. Full buildout targets roughly 2 GW over a five-to-seven-year construction program. The site offers an alternative to the increasingly congested Dallas and Northern Virginia AI infrastructure markets. Exact capex not publicly disclosed.",
+      "primary_sources": [
+        "https://blogs.microsoft.com/blog/2026/06/22/powering-the-next-wave-of-ai-expanding-capacity-with-our-new-datacenter-in-pecos/"
+      ]
+    },
+    {
+      "id": "airtrunk-india",
+      "name": "AirTrunk India AI Infrastructure Program",
+      "operator": "AirTrunk (Blackstone)",
+      "partners": ["Government of Maharashtra"],
+      "location": { "city": "Raigad (flagship)", "state": "Maharashtra and multi-state", "country": "India" },
+      "status": "announced",
+      "capacity_mw_announced": 5000,
+      "power_source": "grid plus renewables",
+      "announced_date": "2026-06-05",
+      "target_operational": "2030",
+      "capex_usd_billion": 30,
+      "context": "AirTrunk, the Asia-Pacific data center operator owned by Blackstone since 2024, committed $30 billion to build 5 GW of AI data center capacity across India by 2030, announced on June 5, 2026. The flagship campus is at the Raigad Pen Growth Center in Maharashtra, with a letter of intent for land allotment signed with the state government. The commitment represents the largest single foreign direct investment in AI infrastructure in India to date, targeting hyperscaler and sovereign AI workloads.",
+      "primary_sources": [
+        "https://techcrunch.com/2026/06/05/airtrunk-commits-30b-to-build-5gw-of-ai-data-centers-in-india/",
+        "https://www.bloomberg.com/news/articles/2026-06-05/blackstone-s-airtrunk-to-spend-30-billion-on-india-data-centers"
       ]
     }
   ]

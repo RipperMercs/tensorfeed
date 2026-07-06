@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-05",
+  "lastUpdated": "2026-07-06",
   "categories": [
     {
       "id": "coding",
@@ -77,6 +77,16 @@
       "url": "https://www.perplexity.ai",
       "pricing": "Free tier, Pro $20/mo",
       "launched": 2022
+    },
+    {
+      "id": "claude-science",
+      "name": "Claude Science",
+      "provider": "Anthropic",
+      "category": "research",
+      "description": "A purpose-built research workbench for scientists integrating 60 or more curated skills and connectors for genomics, single-cell biology, proteomics, structural biology, and cheminformatics. Produces auditable artifacts with reproducible computational histories. Runs existing Claude models (not a new model) locally on macOS or Linux, or on remote HPC systems via SSH.",
+      "url": "https://www.anthropic.com/news/claude-science-ai-workbench",
+      "pricing": "Included for Claude Pro, Max, Team, and Enterprise subscribers (beta)",
+      "launched": 2026
     },
     {
       "id": "elicit",
