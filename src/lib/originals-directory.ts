@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'openai-42-billion-federal-gate-price-tag',
+    title:
+      'OpenAI Just Put a Price on the Federal Gate. The Bid Is $42.6 Billion.',
+    author: 'Adrian Vale',
+    date: 'July 6, 2026',
+    readTime: '6 min read',
+    description:
+      "On July 2, 2026, the Financial Times reported that Sam Altman has been pitching the Trump administration on a 5 percent equity donation into a US sovereign wealth fund modeled on the Alaska Permanent Fund. At OpenAI's March post-money mark of $852 billion the check is $42.6 billion. Altman ran the concept through Commerce Secretary Howard Lutnick and Treasury Secretary Scott Bessent, and the framework asks Anthropic, Google, Meta, and xAI to each cede 5 percent into the same vehicle. Inside the math, why $42.6B works out to roughly 9.5x per point of what the government paid for Intel a year ago at $8.9B for 9.9 percent, what it does to the Anthropic S-1 window that opened 32 days ago (5 percent of $965B is $48.3B), why the total across all five names sits north of $250B when the Alaska Permanent Fund it is modeled on holds only $80B today, and why the closed-versus-open frontier gap widens at exactly the moment LongCat-2.0 topped OpenRouter on hardware US export controls cannot reach. Three signposts in the next 60 days: whether Treasury publishes a term sheet, whether Anthropic files a matching commitment inside the confidential window, and whether xAI ends up on the list at all. The federal gate the industry has been engineering around since Fable 5 got pulled just picked up a line item.",
+  },
+  {
     slug: 'hyperscaler-fde-turn-microsoft-frontier-aws-billion',
     title:
       'AWS and Microsoft Just Stood Up Consulting Arms Three Days Apart. The Hyperscalers Are Copying the FDE Playbook, Not the Cloud One.',
