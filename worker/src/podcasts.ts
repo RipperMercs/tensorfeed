@@ -36,6 +36,8 @@ const PODCAST_SOURCES: PodcastSource[] = [
   { id: 'a16z', name: 'a16z Podcast', feedUrl: 'https://feeds.simplecast.com/JGE3yC0V', active: true },
   { id: 'decoder', name: 'Decoder with Nilay Patel', feedUrl: 'https://feeds.megaphone.fm/recodedecode', active: true },
   { id: 'vergecast', name: 'The Vergecast', feedUrl: 'https://feeds.megaphone.fm/vergecast', active: true },
+  // Added 2026-07-06: consistently appears in engineering-focused AI top-10 roundups
+  { id: 'interconnects', name: 'Interconnects', feedUrl: 'https://api.substack.com/feed/podcast/48206.rss', active: true },
   // Inactive: feeds.transistor.fm is unreachable from the Cloudflare Worker
   // egress (both fetch fine from a local machine). The poll never gets
   // episodes; Acquired's newest episode was newer than the live cutoff yet

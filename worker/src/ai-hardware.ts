@@ -396,9 +396,9 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
     interconnect: 'GroqLink',
     listPriceUSD: null,
     availability: 'Groq Cloud only',
-    notes: 'Deterministic single-thread inference silicon. SRAM-only memory model means small per-chip capacity but massive bandwidth. Behind Groq\'s 700+ tokens/sec Llama 4 Scout serving.',
+    notes: 'Deterministic single-thread inference silicon. SRAM-only memory model means small per-chip capacity but massive bandwidth. Behind Groq\'s 700+ tokens/sec Llama 4 Scout serving. Note: NVIDIA acqui-hired Groq in March 2026 ($20B). The LPU product line continues under NVIDIA ownership; a next-generation Groq 3 LPU was previewed at GTC March 2026 (ships Q3 2026).',
     url: 'https://groq.com/lpu-language-processing-unit/',
   },
 ];
 
-export const AI_HARDWARE_LAST_UPDATED = '2026-06-05';
+export const AI_HARDWARE_LAST_UPDATED = '2026-07-06';
