@@ -209,8 +209,8 @@ export default function OpenAI42BFederalGatePricePage() {
 
         <p>
           That is the tell. $250 billion of frontier-lab equity dwarfs anything the Alaska
-          Permanent Fund vehicle Altman keeps citing has ever managed (Alaska is at about $80
-          billion of assets today). It also dwarfs the $12 billion Congress appropriated for the
+          Permanent Fund vehicle Altman keeps citing has ever managed (Alaska is at about $91
+          billion of assets today). It also dwarfs the $52.7 billion Congress appropriated for the
           CHIPS Act. The proposal is not a program the Treasury can spin up out of existing
           authority. It needs a new statute and a new fund. That timeline runs long past any of
           the IPO windows the labs are currently pointing at.
