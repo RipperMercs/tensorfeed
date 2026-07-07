@@ -5,10 +5,12 @@ import {
   buildUserPrompt,
   deriveCacheKey,
   previewWhatsNewPro,
+  enrichWhatsNewProFromBase,
   type DataIds,
   type WhatsNewProResult,
 } from './premium-whats-new-pro';
 import type { WhatsNewResult } from './whats-new';
+import { makeEnv } from './test-harness';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -424,5 +426,44 @@ describe('validateProBlock', () => {
     );
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toBe('forbidden_chars');
+  });
+});
+
+// ── enrichWhatsNewProFromBase ────────────────────────────────────────
+
+describe('enrichWhatsNewProFromBase', () => {
+  it('returns the cached pro block without calling Haiku (cache hit, no key)', async () => {
+    const env = await makeEnv(); // no PROBE_ANTHROPIC_KEY
+    const base = baseFixture();  // reuse the existing helper in this file
+    const block = {
+      generated_by: 'claude-haiku-4-5-20251001',
+      generated_at: '2026-05-26T08:01:00Z',
+      analyst_summary:
+        'Anthropic cut Claude Opus 4.7 input pricing while OpenAI logged a short latency event. This is a seeded cache block that is well over the one hundred character minimum length.',
+      key_takeaways: [
+        { claim: 'Anthropic cut Claude Opus 4.7 input pricing', basis: ['c1'], confidence: 0.95 },
+      ],
+      recommended_actions: [
+        { for: 'cost-bound', action: 'Re-evaluate the primary model choice this week', priority: 'monitor', basis: ['c1'] },
+      ],
+    };
+    const key = await deriveCacheKey(base.window, 10, base);
+    await env.TENSORFEED_CACHE.put(key, JSON.stringify(block));
+
+    const r = await enrichWhatsNewProFromBase(env, base, {});
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.tier).toBe('pro');
+      expect(r.pro.analyst_summary).toContain('seeded cache block');
+      expect(r.data_ids.pricing_changes.c1).toBeDefined();
+    }
+  });
+
+  it('returns synthesis_unavailable on a cache miss with no key (behavior preserved)', async () => {
+    const env = await makeEnv(); // no PROBE_ANTHROPIC_KEY, empty cache
+    const base = baseFixture();
+    const r = await enrichWhatsNewProFromBase(env, base, {});
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe('synthesis_unavailable');
   });
 });

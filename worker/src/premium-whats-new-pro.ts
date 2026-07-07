@@ -454,38 +454,36 @@ interface AnthropicEnvKey {
 }
 
 /**
- * Top-level entry: compute the Pro response for the given window.
- * Returns WhatsNewProResult on success, WhatsNewProError on any failure
- * mode that should NOT charge the agent (synthesis failure, validation
- * failure twice, base whats-new error).
+ * Enrich a successful base whats-new result with the Haiku analyst layer.
+ * Split out of computeWhatsNewPro so a caller that has already computed the
+ * base (and, for the delta cursor loop, already decided the data is
+ * unchanged) can skip the base recompute, and so an unchanged poll never
+ * reaches this function at all. Returns WhatsNewProError on any failure mode
+ * that should NOT charge the agent (synthesis failure, validation failure
+ * twice, missing key).
  */
-export async function computeWhatsNewPro(
+export async function enrichWhatsNewProFromBase(
   env: Env,
+  base: WhatsNewResult,
   options: WhatsNewOptions = {},
 ): Promise<WhatsNewProResult | WhatsNewProError> {
-  // 1. Compute base whats-new
-  const base = await computeWhatsNew(env, options);
-  if (!base.ok) {
-    return { ok: false, error: 'base_whats_new_failed', hint: (base as WhatsNewError).error };
-  }
-
-  // 2. Assign data IDs
+  // 1. Assign data IDs
   const dataIds = assignDataIds(base);
 
-  // 3. Cache check
+  // 2. Cache check
   const cacheKey = await deriveCacheKey(base.window, options.newsLimit ?? 10, base);
   const cached = await env.TENSORFEED_CACHE.get(cacheKey, 'json') as ProBlock | null;
   if (cached) {
     return mergeProResponse(base, dataIds, cached);
   }
 
-  // 4. Anthropic key check
+  // 3. Anthropic key check
   const apiKey = (env as AnthropicEnvKey).PROBE_ANTHROPIC_KEY;
   if (!apiKey) {
     return { ok: false, error: 'synthesis_unavailable', hint: 'PROBE_ANTHROPIC_KEY not configured' };
   }
 
-  // 5. Haiku call + validation, with one retry on validation failure
+  // 4. Haiku call + validation, with one retry on validation failure
   const userPrompt = buildUserPrompt(base, dataIds);
   let raw = await callHaiku(apiKey, userPrompt, false);
   if (!raw) {
@@ -504,10 +502,26 @@ export async function computeWhatsNewPro(
     }
   }
 
-  // 6. Write to cache
+  // 5. Write to cache
   await env.TENSORFEED_CACHE.put(cacheKey, JSON.stringify(v.block), { expirationTtl: PRO_CACHE_TTL_S });
 
   return mergeProResponse(base, dataIds, v.block);
+}
+
+/**
+ * Top-level entry: compute the Pro response for the given window. Thin
+ * wrapper over computeWhatsNew + enrichWhatsNewProFromBase, preserved so the
+ * free-preview handler (/api/preview/whats-new/pro) is unchanged.
+ */
+export async function computeWhatsNewPro(
+  env: Env,
+  options: WhatsNewOptions = {},
+): Promise<WhatsNewProResult | WhatsNewProError> {
+  const base = await computeWhatsNew(env, options);
+  if (!base.ok) {
+    return { ok: false, error: 'base_whats_new_failed', hint: (base as WhatsNewError).error };
+  }
+  return enrichWhatsNewProFromBase(env, base, options);
 }
 
 function safeParseJson(s: string): unknown {
