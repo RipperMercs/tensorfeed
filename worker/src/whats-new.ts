@@ -331,11 +331,14 @@ export interface WhatsNewContinuation {
 }
 
 /** The exact next call for the poll loop. Null when no cursor was issued. */
-export function buildWhatsNewContinuation(cursor: string): WhatsNewContinuation | null {
+export function buildWhatsNewContinuation(
+  cursor: string,
+  path: string = '/api/premium/whats-new',
+): WhatsNewContinuation | null {
   if (!cursor) return null;
   return {
     method: 'GET',
-    url: `/api/premium/whats-new?since=${cursor}`,
+    url: `${path}?since=${cursor}`,
     description: 'Call again with this cursor to get only what changed since this response. Free if nothing is new.',
   };
 }

@@ -662,3 +662,19 @@ describe('buildWhatsNewContinuation', () => {
     expect(buildWhatsNewContinuation('')).toBeNull();
   });
 });
+
+describe('buildWhatsNewContinuation path parameter', () => {
+  it('defaults to the base whats-new path', () => {
+    const c = buildWhatsNewContinuation('abc123');
+    expect(c?.url).toBe('/api/premium/whats-new?since=abc123');
+  });
+
+  it('uses an explicit path when given (pro tier)', () => {
+    const c = buildWhatsNewContinuation('abc123', '/api/premium/whats-new/pro');
+    expect(c?.url).toBe('/api/premium/whats-new/pro?since=abc123');
+  });
+
+  it('returns null for an empty cursor regardless of path', () => {
+    expect(buildWhatsNewContinuation('', '/api/premium/whats-new/pro')).toBeNull();
+  });
+});
