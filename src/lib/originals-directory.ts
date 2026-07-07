@@ -27,6 +27,16 @@ export const ORIGINALS: OriginalArticle[] = [
       "On July 2, 2026, the Financial Times reported that Sam Altman has been pitching the Trump administration on a 5 percent equity donation into a US sovereign wealth fund modeled on the Alaska Permanent Fund. At OpenAI's March post-money mark of $852 billion the check is $42.6 billion. Altman ran the concept through Commerce Secretary Howard Lutnick and Treasury Secretary Scott Bessent, and the framework asks Anthropic, Google, Meta, and xAI to each cede 5 percent into the same vehicle. Inside the math, why $42.6B works out to roughly 9.5x per point of what the government paid for Intel a year ago at $8.9B for 9.9 percent, what it does to the Anthropic S-1 window that opened 32 days ago (5 percent of $965B is $48.3B), why the total across all five names sits north of $250B when the Alaska Permanent Fund it is modeled on holds only $80B today, and why the closed-versus-open frontier gap widens at exactly the moment LongCat-2.0 topped OpenRouter on hardware US export controls cannot reach. Three signposts in the next 60 days: whether Treasury publishes a term sheet, whether Anthropic files a matching commitment inside the confidential window, and whether xAI ends up on the list at all. The federal gate the industry has been engineering around since Fable 5 got pulled just picked up a line item.",
   },
   {
+    slug: 'un-geneva-dialogue-scientific-panel-alignment-footnote',
+    title:
+      '193 Governments Just Opened the First Intergovernmental AI Summit. The Scientific Panel Handed Them a Footnote That Reframes Everything.',
+    author: 'Kira Nolan',
+    date: 'July 6, 2026',
+    readTime: '7 min read',
+    description:
+      "The first session of the UN Global Dialogue on AI Governance gaveled open at Palexpo this morning with all 193 UN member states in the room, co-chaired by Ambassador Egriselda Lopez of El Salvador and Ambassador Rein Tammsaar of Estonia, running through July 7. It is the first intergovernmental AI summit the international community has ever convened, and it opened informed by the preliminary report the Independent International Scientific Panel on AI released July 1. The Panel, 40 experts co-chaired by Yoshua Bengio and Maria Ressa, put a specific sentence on the record: science cannot guarantee that as capabilities increase, AI will not cause catastrophic harm. It landed alongside a concrete empirical claim, AI task complexity is doubling every 4 to 7 months. That combination reframes what Geneva can produce: the scientific consensus just told 193 governments that alignment is not solved and the ground is moving under them. Inside the venue map (US federal gate, Chinese sovereign rail, EU AI Act, UN Global Dialogue, UN AI for Good Commission), what the Bengio-Ressa sentence does to S-1 risk factors for the Anthropic October and OpenAI September IPO windows, why other governments now have a shared venue to contest the US federal release gate, what the Chinese delegation posture inside working groups will tell us, and three signposts in the next ninety days: the communique language on the Panel report, the working group chair composition, and whether either S-1 cites the Panel by name.",
+  },
+  {
     slug: 'hyperscaler-fde-turn-microsoft-frontier-aws-billion',
     title:
       'AWS and Microsoft Just Stood Up Consulting Arms Three Days Apart. The Hyperscalers Are Copying the FDE Playbook, Not the Cloud One.',
@@ -35,6 +45,26 @@ export const ORIGINALS: OriginalArticle[] = [
     readTime: '6 min read',
     description:
       "On June 30, 2026, AWS committed $1 billion and thousands of engineers to a new Forward Deployed Engineering unit that runs 45-day embed cycles with pods of five to six inside customer sites (Allen Institute, Cox Automotive, NBA, Ricoh, Southwest, NFL). Two days later on July 2, Microsoft answered with Microsoft Frontier Co.: $2.5 billion and 6,000 employees run by Rodrigo Kede Lima and announced by Judson Althoff. Three days, roughly $3.5 billion of freshly ring-fenced payroll, both hyperscalers lifting a 21-year-old Palantir FDSE model that Anthropic and OpenAI have quietly been running as Applied AI groups for 18 months. Inside the math, why the MIT NANDA 95 percent enterprise-pilot-failure number gave AWS and Microsoft public cover to rewrite the go-to-market from 'buy an API' to 'we will send six engineers,' what it does to the Accenture and Deloitte generative AI backlog, the near-term-bullish and medium-term-scary revenue math for Anthropic and OpenAI whose customer accounts now contain a hyperscaler-badged engineer full time, the margin question (FDE is a 55 to 60 percent op-margin business at Palantir with 20 years of tooling amortization underneath, hyperscaler income statements have been running 30-plus percent on rented compute), the federal gate that just made compliance-cleared distribution partners a rentable moat, and three signposts in the next 90 days (AWS pod utilization on rotation two, whether Google Cloud stands up its own FDE arm, whether Anthropic and OpenAI harden or dissolve their Applied AI groups). The model is not the product, the workflow is, and this week the hyperscalers put $3.5 billion of payroll behind that read.",
+  },
+  {
+    slug: 'h1-2026-vc-concentration-two-labs',
+    title:
+      'H1 2026 Just Closed. Two AI Labs Took 43 Percent of All Global Venture Funding. The Concentration Is the Story.',
+    author: 'Marcus Chen',
+    date: 'July 5, 2026',
+    readTime: '7 min read',
+    description:
+      "Global venture funding closed the first half of 2026 at a record $510 billion. OpenAI and Anthropic absorbed roughly $217 billion of it, about 43 cents of every startup dollar raised on the planet, into two companies in six months. The doubling curve is not the story; the concentration is. Anthropic sits at a $965B post-money and a $47B ARR run rate targeting an October IPO with a median 90-day post-listing projection near $1.09 trillion. OpenAI is aiming at September, reportedly with a 5 percent US Government stake baked into the structure. In parallel: the Sanders American AI Sovereign Wealth Fund Act, Trump's June 6 direct-equity floater, and a White House frontier-standards framework announcement expected as soon as this week. Inside the H1 numbers, why two-lab concentration is different from any prior VC cycle, what the S-1 customer concentration language has to look like at these run rates, the concrete moves builders should make against a single-lab dependency (routing abstraction, harness bill vs sticker price, tracking the open-weights floor at LongCat-2.0 and GLM 5.2), and three signposts in the next 90 days: OpenAI S-1 public filing timing, the frontier standards framework signatory list, and the Q3 2026 concentration read. 43 percent is the number that frames everything else on the AI beat this quarter.",
+  },
+  {
+    slug: 'un-ai-commission-geneva-third-rail-governance',
+    title:
+      'The UN Just Seated Jack Clark, Jensen Huang, and Andy Jassy On A Global AI Commission. Geneva Meets Monday. Frontier Governance Just Split Three Ways.',
+    author: 'Kira Nolan',
+    date: 'July 4, 2026',
+    readTime: '7 min read',
+    description:
+      "On July 2, 2026 the UN and ITU launched the AI for Good Global Commission with 40-plus founding members, co-chaired by Rwandan President Paul Kagame and Salesforce CEO Marc Benioff. Anthropic co-founder Jack Clark, Nvidia CEO Jensen Huang, Amazon CEO Andy Jassy, Microsoft President Brad Smith, and Cohere co-founder Aidan Gomez all took seats alongside heads of state from Estonia, Kazakhstan, Namibia, Nigeria, Saudi Arabia, and Singapore. Inaugural meeting is Monday July 7 in Geneva during the AI for Good Summit, immediately after the first UN-mandated Global Dialogue on AI Governance (July 6 to 7). Fable 5 is still dark on a US export directive. Meituan LongCat-2.0 shipped on Chinese silicon two days before the UN announcement. Inside the three parallel governance rails (US federal gate, Chinese sovereign stack, UN commission), why Anthropic took a seat and OpenAI did not, the composition question (Big Tech balance vs Global South convening authority), what Monday actually produces, what a UN convening authority does to the Fable 5 style federal gate, and three signposts in the next ninety days: working group chairs, an OpenAI join by September, and a Chinese participation lane before Q1 2027. The frontier lab that spends the most on policy footprint per dollar of R&D right now is Anthropic, and Geneva is the next line on the ledger.",
   },
   {
     slug: 'first-macro-ai-print-june-jobs-report',
@@ -159,12 +189,12 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'openai-jalapeno-custom-silicon-loop-closed',
     title:
-      'OpenAI Taped Out Jalapeño in Nine Months. The Custom-Silicon Loop Just Closed.',
+      'OpenAI Taped Out JalapeÃ±o in Nine Months. The Custom-Silicon Loop Just Closed.',
     author: 'Marcus Chen',
     date: 'June 25, 2026',
     readTime: '6 min read',
     description:
-      "On June 24, 2026, OpenAI and Broadcom unveiled Jalapeño, OpenAI's first custom Intelligence Processor: a reticle-sized ASIC (roughly 840 mm², 25.46 mm by 33 mm, near the EUV reticle limit) designed by OpenAI, built at TSMC with Broadcom co-design and Celestica packaging, taped out in nine months from initial design (called the fastest advanced-node ASIC cycle ever), and aimed at LLM inference at production scale. OpenAI is claiming roughly 50 percent lower cost per token than current Nvidia GPUs in early testing. First deployment lands by end of 2026, with the multi-generation program targeting 10 gigawatts of capacity by 2029 across OpenAI facilities and partner data centers. The chip closes a custom-silicon table that now includes Google TPU, Amazon Trainium, Microsoft Maia, Meta MTIA, and OpenAI Jalapeño, with Anthropic as the only top-three lab still without an in-house ASIC and instead riding all three hyperscaler platforms. Inside the math, the nine-month tape-out floor that OpenAI compressed by running its own models inside the design loop (Greg Brockman called the speed-up surprising), what changes for Nvidia at the top of the inference buyer list, why Broadcom sits on both sides of the most expensive silicon contracts in the industry (Google TPU and Jalapeño), and the 10 GW physical-buildout floor that converges on the same 2027 to 2029 delivery window as every other frontier program.",
+      "On June 24, 2026, OpenAI and Broadcom unveiled JalapeÃ±o, OpenAI's first custom Intelligence Processor: a reticle-sized ASIC (roughly 840 mmÂ², 25.46 mm by 33 mm, near the EUV reticle limit) designed by OpenAI, built at TSMC with Broadcom co-design and Celestica packaging, taped out in nine months from initial design (called the fastest advanced-node ASIC cycle ever), and aimed at LLM inference at production scale. OpenAI is claiming roughly 50 percent lower cost per token than current Nvidia GPUs in early testing. First deployment lands by end of 2026, with the multi-generation program targeting 10 gigawatts of capacity by 2029 across OpenAI facilities and partner data centers. The chip closes a custom-silicon table that now includes Google TPU, Amazon Trainium, Microsoft Maia, Meta MTIA, and OpenAI JalapeÃ±o, with Anthropic as the only top-three lab still without an in-house ASIC and instead riding all three hyperscaler platforms. Inside the math, the nine-month tape-out floor that OpenAI compressed by running its own models inside the design loop (Greg Brockman called the speed-up surprising), what changes for Nvidia at the top of the inference buyer list, why Broadcom sits on both sides of the most expensive silicon contracts in the industry (Google TPU and JalapeÃ±o), and the 10 GW physical-buildout floor that converges on the same 2027 to 2029 delivery window as every other frontier program.",
   },
   {
     slug: 'openai-samsung-electronics-dx-chaebol-dual-stack',
@@ -314,7 +344,7 @@ export const ORIGINALS: OriginalArticle[] = [
     date: 'June 12, 2026',
     readTime: '8 min read',
     description:
-      'On June 12, 2026 the US government issued an export control directive suspending all foreign-national access to Claude Fable 5 and Mythos 5, including Anthropic’s own foreign-national employees. Because a global API cannot segregate access by nationality, the only compliant path was to disable both models for every customer. The stated basis is a reported jailbreak of Fable 5; the order pulled Mythos 5, the model built for government partners, along with it. Anthropic is complying first and disputing the order in public, warning the standard would halt new model deployments across every frontier lab. The mechanism is the precedent: export control has climbed from chips and weights to a deployed, generally available model that agents call at inference time.',
+      'On June 12, 2026 the US government issued an export control directive suspending all foreign-national access to Claude Fable 5 and Mythos 5, including Anthropicâ€™s own foreign-national employees. Because a global API cannot segregate access by nationality, the only compliant path was to disable both models for every customer. The stated basis is a reported jailbreak of Fable 5; the order pulled Mythos 5, the model built for government partners, along with it. Anthropic is complying first and disputing the order in public, warning the standard would halt new model deployments across every frontier lab. The mechanism is the precedent: export control has climbed from chips and weights to a deployed, generally available model that agents call at inference time.',
   },
   {
     slug: 'coinbase-agents-x402-closed-loop',
@@ -638,12 +668,12 @@ export const ORIGINALS: OriginalArticle[] = [
   {
     slug: 'openai-erdos-unit-distance-disproof',
     title:
-      'OpenAI Just Disproved an 80-Year Erdős Conjecture. The Model Was Not Trained for Math.',
+      'OpenAI Just Disproved an 80-Year ErdÅ‘s Conjecture. The Model Was Not Trained for Math.',
     author: 'Kira Nolan',
     date: 'May 24, 2026',
     readTime: '7 min read',
     description:
-      'On May 20, OpenAI announced that an internal general-purpose reasoning model disproved a 1946 Erdős conjecture on the planar unit distance problem. 125 pages of coherent proof using Golod-Shafarevich theory and infinite class field towers, no math-specific training, no problem-targeted scaffolding. Fields medalist Tim Gowers and Princeton mathematician Will Sawin verified it, with Sawin tightening the bound to n raised to one plus delta with delta equal to 0.014. Inside what actually shipped, why the general-purpose framing is the structural story, the comparison to AlphaProof, FunSearch, and Numina, and what it does to the research-discovery rail and the next pricing tier.',
+      'On May 20, OpenAI announced that an internal general-purpose reasoning model disproved a 1946 ErdÅ‘s conjecture on the planar unit distance problem. 125 pages of coherent proof using Golod-Shafarevich theory and infinite class field towers, no math-specific training, no problem-targeted scaffolding. Fields medalist Tim Gowers and Princeton mathematician Will Sawin verified it, with Sawin tightening the bound to n raised to one plus delta with delta equal to 0.014. Inside what actually shipped, why the general-purpose framing is the structural story, the comparison to AlphaProof, FunSearch, and Numina, and what it does to the research-discovery rail and the next pricing tier.',
   },
   {
     slug: 'openai-ipo-filing-anthropic-first-profit',
@@ -663,7 +693,7 @@ export const ORIGINALS: OriginalArticle[] = [
     date: 'May 21, 2026',
     readTime: '6 min read',
     description:
-      'Two announcements landed on May 20. Fireblocks, the institutional crypto custodian rather than a startup, joined the x402 Foundation and shipped a security extension for request integrity and spend governance. The same day, Germany’s MiCA-regulated AllUnity rolled out Agentic Payments using x402 to settle into a Swedish krona stablecoin. The next morning, a third party offered the spec authors a non-Coinbase, three-rail acceptance fixture on #2207 covering Base USDC, Solana USDC, and JPYC on Polygon. x402 was a Coinbase-and-Cloudflare default six months ago. After this week the variant axis is open.',
+      'Two announcements landed on May 20. Fireblocks, the institutional crypto custodian rather than a startup, joined the x402 Foundation and shipped a security extension for request integrity and spend governance. The same day, Germanyâ€™s MiCA-regulated AllUnity rolled out Agentic Payments using x402 to settle into a Swedish krona stablecoin. The next morning, a third party offered the spec authors a non-Coinbase, three-rail acceptance fixture on #2207 covering Base USDC, Solana USDC, and JPYC on Polygon. x402 was a Coinbase-and-Cloudflare default six months ago. After this week the variant axis is open.',
   },
   {
     slug: 'ai-status-extension-live',
@@ -693,7 +723,7 @@ export const ORIGINALS: OriginalArticle[] = [
     date: 'May 19, 2026',
     readTime: '6 min read',
     description:
-      'Anthropic acquired Stainless, the codegen company that generates the official SDKs (and MCP servers) for OpenAI, Google, Cloudflare, Runway, and Anthropic itself, reportedly for more than $300 million against a $150M Series A seventeen months earlier. Then it said it will wind down every hosted Stainless product. The frozen-SDK reassurance is real and beside the point: the asset was never the generated code, it was the regeneration loop, and that loop is now an Anthropic internal tool. A supply-chain move on the layer between an API and the agents that call it, wearing an acquisition’s clothes.',
+      'Anthropic acquired Stainless, the codegen company that generates the official SDKs (and MCP servers) for OpenAI, Google, Cloudflare, Runway, and Anthropic itself, reportedly for more than $300 million against a $150M Series A seventeen months earlier. Then it said it will wind down every hosted Stainless product. The frozen-SDK reassurance is real and beside the point: the asset was never the generated code, it was the regeneration loop, and that loop is now an Anthropic internal tool. A supply-chain move on the layer between an API and the agents that call it, wearing an acquisitionâ€™s clothes.',
   },
   {
     slug: 'openai-chatgpt-bank-access-agent-trust-gap',

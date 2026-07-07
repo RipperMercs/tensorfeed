@@ -1,6 +1,27 @@
 {
   "events": [
     {
+      "date": "2026-06-30",
+      "title": "Anthropic Releases Claude Sonnet 5 at $2/$10 Introductory Pricing",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic shipped Claude Sonnet 5 on June 30, 2026 as the most agentic Sonnet-class model yet, positioned to narrow the gap to Opus 4.8 on reasoning, tool use, coding, computer use, and knowledge work while staying priced below the flagship. Introductory API rates are $2 per million input tokens and $10 per million output tokens through August 31, 2026, moving to $3 and $15 from September onward. Sonnet 5 ships a 1 million token context window with context compaction and adaptive thinking with selectable effort levels up to xhigh. Anthropic's own numbers show 85.2 on SWE-bench Verified, 63.2 on SWE-bench Pro, 78.3 on SWE-bench Multilingual, 81.2 on OSWorld-Verified, 84.7 on BrowseComp agentic search, and 80.4 on Terminal-Bench 2.1 (which beats Opus 4.8 at 74.6 on that specific benchmark). Available on the Claude API, Amazon Bedrock, Google Vertex, and Microsoft Foundry at launch."
+    },
+    {
+      "date": "2026-06-30",
+      "title": "Meituan Open Sources LongCat-2.0, a 1.6T Agentic Coding Model Trained on Chinese Chips",
+      "provider": "Meituan",
+      "category": "open-source",
+      "description": "Meituan open sourced LongCat-2.0 on June 30, 2026, a 1.6 trillion parameter mixture-of-experts coding model published to GitHub and Hugging Face under an MIT license. Dynamic activation of 33 to 56 billion parameters per token, native 1 million token context, and a 30 trillion token pretraining mix spanning Chinese, English, multilingual, and code data. Meituan reports 59.5 on SWE-Bench Pro (self-reported, ahead of Gemini 3.1 Pro, GPT-5.5, and Claude Opus 4.6 by their measure). The model is the first trillion-parameter release to complete full training and inference entirely on a 50,000-card domestic Chinese compute cluster, an important signal for China's ability to build frontier AI without leading-edge Western chips. A preview version has been quietly running on OpenRouter and longcat.ai for weeks, ranking among the top three models globally by call volume during that stealth window."
+    },
+    {
+      "date": "2026-06-28",
+      "title": "Elon Musk Puts Grok 4.5 in Private Beta at SpaceX and Tesla",
+      "provider": "xAI",
+      "category": "model-release",
+      "description": "Elon Musk announced on June 28, 2026 that xAI's Grok 4.5 is in private beta at SpaceX and Tesla, its first deployment before any wider release. Grok 4.5 is built on xAI's 1.5 trillion parameter V9 foundation model, which finished training on May 26, 2026 and used data from the Cursor coding environment in supplemental training. Musk claimed early evaluations put performance close to, and potentially above, Claude Opus, but xAI has not published benchmarks or a system card, so capability claims remain unverified. Reinforcement learning is ongoing, and xAI says it plans to release new models trained from scratch through SpaceX every month through the end of 2026. There is no public availability window and no API price for Grok 4.5 as of the announcement."
+    },
+    {
       "date": "2026-06-26",
       "title": "OpenAI Previews GPT-5.6 Sol, Terra, and Luna in Limited Release",
       "provider": "OpenAI",

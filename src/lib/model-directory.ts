@@ -106,6 +106,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     tier: 'flagship',
   },
   {
+    slug: 'claude-sonnet-5',
+    pricingId: 'claude-sonnet-5',
+    benchmarkName: 'Claude Sonnet 5',
+    providerId: 'anthropic',
+    providerName: 'Anthropic',
+    providerUrl: 'https://www.anthropic.com',
+    seoTitle: 'Claude Sonnet 5: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Claude Sonnet 5 by Anthropic, released June 30, 2026. $2/$10 introductory pricing, 1M context window, adaptive thinking, and benchmark scores on TensorFeed.',
+    intro:
+      'Claude Sonnet 5 is Anthropic\'s most agentic Sonnet-class model, released June 30, 2026 as an upgrade to Sonnet 4.6 that narrows the gap to Opus 4.8 on reasoning, tool use, coding, computer use, and knowledge work while staying priced below the flagship. Introductory rates are $2 per million input tokens and $10 per million output tokens through August 31, 2026, moving to $3 and $15 from September onward. It ships a 1 million token context window with context compaction and adaptive thinking with selectable effort levels up to xhigh. Anthropic\'s own numbers show 85.2 on SWE-bench Verified, 63.2 on SWE-bench Pro, 78.3 on SWE-bench Multilingual, 81.2 on OSWorld-Verified, 84.7 on BrowseComp, and 80.4 on Terminal-Bench 2.1 (beating Opus 4.8 at 74.6 on that specific benchmark). Available on the Claude API, Amazon Bedrock, Google Vertex, and Microsoft Foundry at launch.',
+    strengths: ['1M token context window with context compaction', 'Introductory $2/$10 pricing through August 31, 2026', 'Adaptive thinking up to xhigh effort level', 'Beats Opus 4.8 on Terminal-Bench 2.1 (80.4 vs 74.6)', 'Day-one availability on Claude API, Bedrock, Vertex, and Foundry'],
+    useCases: ['Cost-sensitive agentic coding pipelines', 'Long-running tool-use workflows', 'Production RAG and knowledge work', 'Computer-use and browser agents'],
+    docsUrl: 'https://docs.anthropic.com/en/docs/about-claude/models',
+    tier: 'mid',
+  },
+  {
     slug: 'claude-sonnet-4-6',
     pricingId: 'claude-sonnet-4-6',
     benchmarkName: 'Claude Sonnet 4.6',
@@ -547,6 +564,25 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     useCases: ['High-volume code completion', 'Copilot-style IDE assistance', 'Refactoring sessions with long file context', 'Budget agentic coding pipelines'],
     docsUrl: 'https://microsoft.ai/models/mai-code-1-flash/',
     tier: 'budget',
+  },
+
+  // ── Meituan ────────────────────────────────────────────────────────
+  {
+    slug: 'longcat-2',
+    pricingId: 'longcat-2',
+    benchmarkName: 'LongCat-2.0',
+    providerId: 'meituan',
+    providerName: 'Meituan',
+    providerUrl: 'https://www.longcatai.org',
+    seoTitle: 'LongCat-2.0: Specs, Benchmarks, Open Source',
+    seoDescription:
+      'Meituan LongCat-2.0, the June 30, 2026 open-source 1.6T MoE agentic coding model. 1M context, MIT license, trained on Chinese chips. Specs on TensorFeed.',
+    intro:
+      'LongCat-2.0 is Meituan\'s open-source flagship, released June 30, 2026 under an MIT license on GitHub and Hugging Face. It is a 1.6 trillion parameter mixture-of-experts model with dynamic activation of 33 to 56 billion parameters per token, purpose-built for agentic coding (code understanding, generation, and execution in real-world agent workflows). Native 1 million token context, pretrained from scratch on more than 30 trillion tokens across Chinese, English, multilingual, and code data. Meituan reports 59.5 on SWE-Bench Pro (self-reported, ahead of Gemini 3.1 Pro, GPT-5.5, and Claude Opus 4.6 by their measure); independent verification is pending. The model is the first trillion-parameter release trained and served entirely on a 50,000-card domestic Chinese compute cluster, a milestone for building frontier AI without leading-edge Western chips. A preview version had quietly been running on OpenRouter and longcat.ai for weeks before the announcement, ranking among the top three models globally by call volume during that stealth window.',
+    strengths: ['1.6T total parameters with 33 to 56B active per token', 'MIT open source license', 'Native 1M token context', 'Purpose-built for agentic coding', 'Trained end-to-end on domestic Chinese silicon'],
+    useCases: ['Self-hosted agentic coding pipelines', 'Long-context repository refactors', 'Sovereign or geopolitically sensitive deployments', 'Research on trillion-parameter MoE training on non-Western hardware'],
+    docsUrl: 'https://www.longcatai.org/models/longcat-2',
+    tier: 'flagship',
   },
 
   // ── MiniMax ────────────────────────────────────────────────────────

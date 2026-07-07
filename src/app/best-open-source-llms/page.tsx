@@ -2,13 +2,13 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArticleJsonLd, FAQPageJsonLd, ItemListJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
-  title: 'Best Open Source LLMs in 2026: Llama, DeepSeek V4, Mistral, Qwen, Cohere Command A+ & More | TensorFeed',
+  title: 'Best Open Source LLMs in 2026: Llama, DeepSeek V4, LongCat-2.0, Mistral, Qwen, Cohere Command A+ & More | TensorFeed',
   description:
-    'Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, MiniMax M3, Mistral, Qwen 2.5, Phi-4, Gemma 2, Cohere Command A+, and Command R. Parameters, benchmarks, licensing, and how to run them locally.',
+    'Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Qwen 2.5, Phi-4, Gemma 2, Cohere Command A+, and Command R. Parameters, benchmarks, licensing, and how to run them locally.',
   openGraph: {
     title: 'Best Open Source LLMs in 2026',
     description:
-      'Compare the best open source LLMs: Llama 4, DeepSeek V4, MiniMax M3, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R.',
+      'Compare the best open source LLMs: Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R.',
     url: 'https://tensorfeed.ai/best-open-source-llms',
   },
   alternates: { canonical: 'https://tensorfeed.ai/best-open-source-llms' },
@@ -104,6 +104,25 @@ const models = [
     ],
     bestFor: 'Cost-sensitive agentic coding and browser-agent workloads that need very long context. One to watch once the weights and technical report land on Hugging Face.',
     considerations: 'Launch benchmarks were run on MiniMax infrastructure with agent scaffolding (Claude Code, Mini-SWE-Agent, Terminus), so treat them as unverified until independent results appear. Weights were not yet downloadable at launch; the API went live first.',
+  },
+  {
+    name: 'LongCat-2.0',
+    company: 'Meituan',
+    parameters: '1.6T total (33 to 56B active per token, dynamic)',
+    architecture: 'Mixture of Experts (MoE) with dynamic activation',
+    contextWindow: '1M tokens (native)',
+    license: 'MIT',
+    released: 'June 2026',
+    highlights: [
+      'Fully MIT licensed on GitHub and Hugging Face',
+      'Dynamic activation of 33 to 56 billion parameters per token, adjusting to task difficulty',
+      'Purpose-built for agentic coding: code understanding, generation, and execution in agent workflows',
+      'Self-reported 59.5 on SWE-Bench Pro, ahead of Gemini 3.1 Pro, GPT-5.5, and Claude Opus 4.6 by Meituan\'s measure',
+      'First trillion-parameter release trained end-to-end on a 50,000-card domestic Chinese compute cluster',
+      'Pretrained on 30T+ tokens spanning Chinese, English, multilingual, and code data',
+    ],
+    bestFor: 'Sovereign or geopolitically sensitive deployments where domestic-chip provenance matters, and agentic coding workloads with variable per-token difficulty that benefit from dynamic activation.',
+    considerations: 'Launch benchmarks are self-reported; independent verification is still pending. At 1.6T total parameters, self-hosting inference at meaningful throughput requires multi-GPU or multi-node infrastructure. A preview version had been running quietly on OpenRouter and longcat.ai for weeks before the announcement, so hosted access is easier than self-host on day one.',
   },
   {
     name: 'Mistral Large',
@@ -241,7 +260,7 @@ export default function BestOpenSourceLLMsPage() {
         title="Best Open Source LLMs in 2026"
         description="Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R. Includes benchmarks, licensing, and how to run locally."
         datePublished="2025-05-01"
-        dateModified="2026-06-07"
+        dateModified="2026-07-05"
       />
 
       <ItemListJsonLd
@@ -251,7 +270,7 @@ export default function BestOpenSourceLLMsPage() {
         items={models.map((model) => ({ name: model.name }))}
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: June 7, 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: July 5, 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         Best Open Source LLMs in 2026

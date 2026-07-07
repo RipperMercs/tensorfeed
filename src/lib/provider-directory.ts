@@ -33,12 +33,12 @@ export const PROVIDERS: ProviderMeta[] = [
     seoDescription:
       'Everything about Anthropic and Claude. Model lineup, API pricing, benchmark scores, and status monitoring. Updated daily on TensorFeed.',
     intro:
-      'Anthropic is the AI safety company behind the Claude family of models. Founded in 2021 by former OpenAI researchers Dario and Daniela Amodei, Anthropic has built a reputation for producing models that lead on reasoning and code generation benchmarks while emphasizing safety research. Their newest model, Claude Fable 5, launched June 9, 2026 as a frontier tier above Opus: $10 input / $50 output per million tokens, a 1 million token context window with 128K output, always-on adaptive thinking, and vendor-reported scores of 80.3 on SWE-bench Pro and 85.0 on OSWorld-Verified. From June 9 through June 22 Fable 5 was included at no extra cost on Pro, Max, Team, and seat-based Enterprise plans; starting June 23 it transitioned to usage-credit billing on those plans, with the underlying $10 / $50 API rate unchanged. Claude Opus 4.8, which shipped on May 28, 2026 just six weeks after Opus 4.7, remains the default model. Opus 4.8 keeps the 1 million token context window and the $15 input / $75 output pricing while improving agentic coding (64.3% to 69.2% on Anthropic\'s own measure), honesty about its own progress, and long-horizon autonomy, with a fast mode that is roughly 2.5x quicker and three times cheaper than before. In late April 2026 the company secured up to $25 billion in additional Amazon investment (April 21) and up to $40 billion in compute and capital from Google (April 24). On May 28, 2026 Anthropic closed a $65 billion Series H at a $965 billion post-money valuation, and on June 1 it confidentially filed a draft S-1 with the SEC for a proposed IPO, getting ahead of rival OpenAI. Their Model Context Protocol (MCP) has become foundational infrastructure for AI agents.',
+      'Anthropic is the AI safety company behind the Claude family of models. Founded in 2021 by former OpenAI researchers Dario and Daniela Amodei, Anthropic has built a reputation for producing models that lead on reasoning and code generation benchmarks while emphasizing safety research. On June 30, 2026 Anthropic released Claude Sonnet 5, the most agentic Sonnet-class model yet, at $2 input / $10 output per 1M tokens through August 31, 2026 (moving to $3 / $15 from September). Sonnet 5 ships a 1M context window with context compaction, adaptive thinking up to xhigh effort, and vendor-reported scores of 85.2 on SWE-bench Verified and 80.4 on Terminal-Bench 2.1, the latter of which actually beats Opus 4.8 on that specific benchmark. Claude Fable 5, launched June 9, 2026, sits above the family as the frontier tier: $10 / $50 per 1M tokens, 1M context with 128K output, always-on adaptive thinking, and vendor-reported scores of 80.3 on SWE-bench Pro and 85.0 on OSWorld-Verified. From June 9 through June 22 Fable 5 was included at no extra cost on Pro, Max, Team, and seat-based Enterprise plans; starting June 23 it moved to usage-credit billing on those plans, with the underlying API rate unchanged. Claude Opus 4.8, which shipped on May 28, 2026, remains the default model with the 1M context window at $15 / $75 pricing, improved agentic coding (64.3% to 69.2% on Anthropic\'s own measure), and a fast mode roughly 2.5x quicker and three times cheaper than before. In late April 2026 the company secured up to $25 billion in additional Amazon investment (April 21) and up to $40 billion in compute and capital from Google (April 24). On May 28, 2026 Anthropic closed a $65 billion Series H at a $965 billion post-money valuation, and on June 1 it confidentially filed a draft S-1 with the SEC for a proposed IPO, getting ahead of rival OpenAI. Their Model Context Protocol (MCP) has become foundational infrastructure for AI agents.',
     founded: '2021',
     headquarters: 'San Francisco, CA',
     ceo: 'Dario Amodei',
-    keyProducts: ['Claude Fable 5', 'Claude Opus 4.8', 'Claude Opus 4.7', 'Claude Sonnet 4.6', 'Claude Haiku 4.5', 'Claude Code', 'Model Context Protocol (MCP)'],
-    strengths: ['Leading benchmark performance', 'Safety-focused development', '1M context on Fable 5 and Opus 4.8', 'Stronger agentic coding and honesty', 'MCP ecosystem for agents'],
+    keyProducts: ['Claude Fable 5', 'Claude Sonnet 5', 'Claude Opus 4.8', 'Claude Opus 4.7', 'Claude Sonnet 4.6', 'Claude Haiku 4.5', 'Claude Code', 'Model Context Protocol (MCP)'],
+    strengths: ['Leading benchmark performance', 'Safety-focused development', '1M context on Fable 5, Sonnet 5, and Opus 4.8', 'Stronger agentic coding and honesty', 'MCP ecosystem for agents'],
     statusSlug: 'is-claude-down',
   },
   {
@@ -188,6 +188,22 @@ export const PROVIDERS: ProviderMeta[] = [
     ceo: 'Satya Nadella',
     keyProducts: ['MAI-Code-1-Flash', 'MAI-Thinking-1', 'GitHub Copilot', 'Microsoft Foundry', 'Microsoft 365 Copilot', 'Azure AI'],
     strengths: ['GitHub Copilot distribution at massive scale', 'Aggressive price to performance on coding', 'Azure and Foundry enterprise reach', 'First-party reasoning model in preview', 'Reduced reliance on OpenAI'],
+  },
+  {
+    slug: 'meituan',
+    pricingId: 'meituan',
+    name: 'Meituan',
+    url: 'https://www.longcatai.org',
+    seoTitle: 'Meituan: LongCat-2.0, Open Source AI, and Overview',
+    seoDescription:
+      'Everything about Meituan\'s AI lab and the LongCat family. LongCat-2.0 open-source 1.6T agentic coding model, MIT license, benchmarks, and specs. Updated on TensorFeed.',
+    intro:
+      'Meituan is the Chinese consumer platform (food delivery, travel, local services) whose AI lab published one of the more consequential open-source releases of 2026. On June 30, 2026 Meituan open sourced LongCat-2.0, a 1.6 trillion parameter mixture-of-experts model with dynamic activation of 33 to 56 billion parameters per token, native 1 million token context, and a purpose-built agentic coding orientation. It was the first trillion-parameter release to complete full training and inference entirely on a 50,000-card domestic Chinese compute cluster, a milestone for building frontier AI without leading-edge Western silicon. Weights ship under MIT on GitHub and Hugging Face. Meituan reports 59.5 on SWE-Bench Pro (self-reported), ahead of Gemini 3.1 Pro, GPT-5.5, and Claude Opus 4.6 by their measure; independent verification is pending. A preview version had been quietly running on OpenRouter and longcat.ai for weeks before the announcement, ranking among the top three models globally by call volume during that stealth window.',
+    founded: '2010 (Meituan); 2024 (Meituan AI Lab)',
+    headquarters: 'Beijing, China',
+    ceo: 'Wang Xing',
+    keyProducts: ['LongCat-2.0', 'LongCat platform (longcat.ai)'],
+    strengths: ['1.6T open-source MoE under MIT', 'Trained end-to-end on domestic Chinese silicon', 'Native 1M context', 'Purpose-built for agentic coding', 'Top-three OpenRouter call volume during stealth preview'],
   },
   {
     slug: 'minimax',

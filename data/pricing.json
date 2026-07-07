@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-28",
+  "lastUpdated": "2026-07-05",
   "providers": [
     {
       "id": "anthropic",
@@ -21,6 +21,22 @@
             "code"
           ],
           "tier": "flagship"
+        },
+        {
+          "id": "claude-sonnet-5",
+          "name": "Claude Sonnet 5",
+          "inputPrice": 2,
+          "outputPrice": 10,
+          "contextWindow": 1000000,
+          "released": "2026-06",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
+          "tier": "mid"
         },
         {
           "id": "claude-opus-4-8",
@@ -573,6 +589,31 @@
             "tool-use"
           ],
           "tier": "budget"
+        }
+      ]
+    },
+    {
+      "id": "meituan",
+      "name": "Meituan",
+      "logo": "/images/providers/meituan.png",
+      "url": "https://www.longcatai.org",
+      "models": [
+        {
+          "id": "longcat-2",
+          "name": "LongCat-2.0",
+          "inputPrice": 0,
+          "outputPrice": 0,
+          "contextWindow": 1000000,
+          "released": "2026-06",
+          "openSource": true,
+          "license": "MIT",
+          "capabilities": [
+            "text",
+            "code",
+            "tool-use",
+            "reasoning"
+          ],
+          "tier": "flagship"
         }
       ]
     }

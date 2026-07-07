@@ -266,12 +266,13 @@ const CATALOG_CHANGE_URLS = [
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 export const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-06-09',
+  lastUpdated: '2026-07-05',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
       models: [
         { id: 'claude-fable-5', name: 'Claude Fable 5', inputPrice: 10.00, outputPrice: 50.00, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
+        { id: 'claude-sonnet-5', name: 'Claude Sonnet 5', inputPrice: 2.00, outputPrice: 10.00, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
         { id: 'claude-opus-4-8', name: 'Claude Opus 4.8', inputPrice: 5.00, outputPrice: 25.00, contextWindow: 1000000, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'claude-opus-4-7', name: 'Claude Opus 4.7', inputPrice: 15.00, outputPrice: 75.00, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', inputPrice: 15.00, outputPrice: 75.00, contextWindow: 200000, released: '2026-03', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'mid' },
@@ -359,6 +360,12 @@ export const BASELINE_PRICING: PricingData = {
         { id: 'minimax-m3', name: 'MiniMax M3', inputPrice: 0.3, outputPrice: 1.2, contextWindow: 1048576, released: '2026-06', openSource: true, license: 'Open weights, license TBD', capabilities: ['text', 'vision', 'video', 'code', 'tool-use'], tier: 'budget' },
       ],
     },
+    {
+      id: 'meituan', name: 'Meituan', logo: '/images/providers/meituan.png', url: 'https://www.longcatai.org',
+      models: [
+        { id: 'longcat-2', name: 'LongCat-2.0', inputPrice: 0, outputPrice: 0, contextWindow: 1000000, released: '2026-06', openSource: true, license: 'MIT', capabilities: ['text', 'code', 'tool-use', 'reasoning'], tier: 'flagship' },
+      ],
+    },
   ],
   pricingNotes: {
     unit: 'per 1M tokens',
@@ -369,7 +376,7 @@ export const BASELINE_PRICING: PricingData = {
 };
 
 export const BASELINE_BENCHMARKS: BenchmarksData = {
-  lastUpdated: '2026-06-11',
+  lastUpdated: '2026-07-05',
   benchmarks: [
     { id: 'swe_bench', name: 'SWE-bench', description: 'Real-world software engineering tasks from GitHub issues (SWE-bench Verified)', maxScore: 100 },
     { id: 'mmlu_pro', name: 'MMLU-Pro', description: 'General knowledge and reasoning across 57 subjects', maxScore: 100 },
@@ -382,6 +389,7 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
     { model: 'DeepSeek V4 Pro', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 91.5, human_eval: 94.8, gpqa_diamond: 73.1, math: 92.4, swe_bench: 80.6 } },
     { model: 'DeepSeek V4 Flash', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 85.2, human_eval: 89.4, gpqa_diamond: 58.7, math: 82.1, swe_bench: 79.0 } },
     { model: 'Claude Fable 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 95.0 } },
+    { model: 'Claude Sonnet 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 85.2 } },
     { model: 'Claude Opus 4.8', provider: 'Anthropic', released: '2026-05', scores: { gpqa_diamond: 93.6, swe_bench: 88.6 } },
     { model: 'Claude Opus 4.7', provider: 'Anthropic', released: '2026-04', scores: { mmlu_pro: 93.8, human_eval: 96.2, gpqa_diamond: 76.5, math: 93.1, swe_bench: 87.6 } },
     { model: 'Claude Opus 4.6', provider: 'Anthropic', released: '2026-03', scores: { mmlu_pro: 92.4, human_eval: 95.1, gpqa_diamond: 74.2, math: 91.8, swe_bench: 80.8 } },
