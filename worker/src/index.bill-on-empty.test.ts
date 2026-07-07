@@ -112,3 +112,43 @@ describe('concentration-verdict no-charges a status-only verdict (no reliability
     expect(await balanceOf(env, token)).toBe(100);
   });
 });
+
+describe('whats-new delta cursor: an unchanged repeat call no-charges', () => {
+  it('charges the first call, then no-charges a repeat whose cursor matches unchanged data', async () => {
+    const env = await makeEnv({
+      status: {
+        services: [
+          {
+            name: 'OpenAI',
+            provider: 'openai',
+            status: 'operational',
+            statusPageUrl: 'https://status.openai.com',
+            components: [],
+            // Relative to Date.now(), not a hardcoded date: the whats-new SLA is
+            // 1h (freshness.ts), so a fixed absolute timestamp goes stale the
+            // day after it's written and wrongly no-charges the first call too.
+            lastChecked: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+          },
+        ],
+      },
+    });
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const first = await call(env, '/api/premium/whats-new', { token, ip: uniqueIp() });
+    expect(first.status).toBe(200);
+    const cursor = first.json?.cursor as string;
+    expect(typeof cursor).toBe('string');
+    expect(cursor.length).toBeGreaterThan(0);
+    expect(await balanceOf(env, token)).toBe(99); // first call charged 1
+
+    const second = await call(env, `/api/premium/whats-new?since=${cursor}`, { token, ip: uniqueIp() });
+    expect(second.status).toBe(200);
+    const billing = second.json?.billing as Record<string, unknown> | undefined;
+    expect(billing?.credits_charged).toBe(0);
+    expect(billing?.no_charge_reason).toBe('no_new_since_cursor');
+    expect(second.json?.new_since_last).toBe(0);
+    expect(second.json?.pricing).toBeUndefined(); // no content on the no-charge path
+    expect(await balanceOf(env, token)).toBe(99); // held
+  });
+});

@@ -222,7 +222,17 @@ import { AFTA_ADOPTERS } from './afta-adopters';
 import { computeCostProjection, CostProjectionOptions } from './cost-projection';
 import { computeProviderDeepDive } from './provider-deepdive';
 import { compareModels } from './compare-models';
-import { computeWhatsNew, previewWhatsNew, checkWhatsNewPreviewRateLimit, checkWhatsNewProPreviewRateLimit } from './whats-new';
+import {
+  computeWhatsNew,
+  previewWhatsNew,
+  checkWhatsNewPreviewRateLimit,
+  checkWhatsNewProPreviewRateLimit,
+  decodeWhatsNewCursor,
+  encodeWhatsNewCursor,
+  computeWhatsNewDelta,
+  buildWhatsNewContinuation,
+  WHATS_NEW_NEXT_CHECK_HINT,
+} from './whats-new';
 import { computeRouting, checkRoutingPreviewRateLimit, hoursUntilUTCRollover, RoutingTask } from './routing';
 import {
   captureRegistrySnapshot,
@@ -14332,12 +14342,51 @@ export default {
           env,
         );
       }
+
+      // Delta cursor loop: an agent passes ?since=<cursor> from a prior response
+      // to get only what changed. Unchanged data no-charges (deferred debit
+      // skipped) so polling is free and only real new content is billed. A
+      // malformed, stale, window-mismatched, or future cursor degrades to a full
+      // brief. The no-charge body carries counts only, never content.
+      const sinceRaw = url.searchParams.get('since');
+      const cursor = sinceRaw ? decodeWhatsNewCursor(sinceRaw) : null;
+      const outcome = cursor ? computeWhatsNewDelta(result, cursor) : ({ mode: 'full' } as const);
+      const freshCursor = encodeWhatsNewCursor(result);
+      const continuation = buildWhatsNewContinuation(freshCursor);
+
+      if (outcome.mode === 'no_charge') {
+        const body = {
+          ok: true,
+          new_since_last: 0,
+          window: result.window,
+          capturedAt: result.capturedAt,
+          cursor: freshCursor,
+          next_check_hint: WHATS_NEW_NEXT_CHECK_HINT,
+          continuation,
+        };
+        return await premiumResponse(body, payment, 1, request, env, 'no_new_since_cursor', result.capturedAt);
+      }
+
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/whats-new', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
+      const body =
+        outcome.mode === 'delta'
+          ? {
+              ...result,
+              new_since_last: outcome.new_since_last,
+              summary: outcome.summary,
+              summary_full: outcome.summary_full,
+              pricing: outcome.pricing,
+              status: outcome.status,
+              news: outcome.news,
+              cursor: freshCursor,
+              continuation,
+            }
+          : { ...result, cursor: freshCursor, continuation };
       // Pass the freshest underlying data-capture time so the 1h staleness
       // SLA can no-charge when the pricing/status/news crons stall.
-      return await premiumResponse(result, payment, 1, request, env, null, result.capturedAt);
+      return await premiumResponse(body, payment, 1, request, env, null, result.capturedAt);
     }
 
     // === PAID PREMIUM: WHATS-NEW PRO TIER (Tier 2, 10 credits) ============
