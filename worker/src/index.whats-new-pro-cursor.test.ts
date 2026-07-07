@@ -174,3 +174,114 @@ describe('pro whats-new full brief charges and issues a cursor, and the repeat p
     expect(await balanceOf(env, token)).toBe(90); // charged 10
   });
 });
+
+describe('pro whats-new charged delta: valid cursor plus genuinely new data since it was minted', () => {
+  it('call 1 mints a cursor at T1; call 2 after new data lands returns the full brief, new_since_last=1, charged 10', async () => {
+    const now = Date.now();
+
+    // T1: base1.capturedAt = now - 10min, via the only status service's
+    // lastChecked. incidentA started 3h ago, i.e. before T1, so it will
+    // NOT count as new once the cursor advances past T1 in call 2.
+    const incidentA = {
+      id: 'i1',
+      service: 'API',
+      provider: 'openai',
+      severity: 'minor' as const,
+      title: 'Elevated latency for the API',
+      startedAt: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
+      resolvedAt: null,
+      durationMinutes: null,
+    };
+    const env = await makeEnv({
+      status: {
+        services: [
+          {
+            name: 'OpenAI',
+            provider: 'openai',
+            status: 'operational',
+            statusPageUrl: 'https://status.openai.com',
+            components: [],
+            lastChecked: new Date(now - 10 * 60 * 1000).toISOString(),
+          },
+        ],
+        incidents: [incidentA],
+      },
+      vars: { PROBE_ANTHROPIC_KEY: 'test-key' } as Record<string, unknown>,
+    });
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    // Canned valid Haiku block citing i1, the only incident present at
+    // mint time. Reused for both calls; i1 still resolves in call 2's
+    // data_ids because incidentA stays first in the reseeded array.
+    const proBlock = {
+      analyst_summary:
+        'OpenAI logged a short minor latency incident on the API earlier in the window. No pricing or model changes landed. This seeded summary clears the one hundred character minimum comfortably for the validator.',
+      key_takeaways: [
+        { claim: 'OpenAI had a minor API latency incident in the window', basis: ['i1'], confidence: 0.95 },
+      ],
+      recommended_actions: [
+        { for: 'inference-bound', action: 'Watch OpenAI API latency before shifting traffic', priority: 'monitor', basis: ['i1'] },
+      ],
+    };
+    const haiku = vi.fn(async (url: string) => {
+      if (typeof url === 'string' && url.includes('api.anthropic.com')) {
+        return new Response(
+          JSON.stringify({ content: [{ type: 'text', text: JSON.stringify(proBlock) }] }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      throw new Error(`unexpected fetch in test: ${url}`);
+    });
+    vi.stubGlobal('fetch', haiku);
+
+    const first = await call(env, '/api/premium/whats-new/pro', { token, ip: uniqueIp() });
+    expect(first.status).toBe(200);
+    expect(first.json?.pro).toBeDefined();
+    const cursor = first.json?.cursor as string;
+    expect(typeof cursor).toBe('string');
+    expect(cursor.length).toBeGreaterThan(0);
+    expect(await balanceOf(env, token)).toBe(90); // charged 10
+    expect(haiku).toHaveBeenCalledTimes(1);
+
+    // Reseed: incidentB started 1 minute ago (after T1) so it counts as
+    // new, and the service's lastChecked advances capturedAt to T2=now,
+    // which is after T1. Both incidents are written so incidentA keeps
+    // its i1 slot and incidentB lands at i2.
+    const incidentB = {
+      id: 'i2',
+      service: 'API',
+      provider: 'openai',
+      severity: 'minor' as const,
+      title: 'Brief follow-up latency blip on the API',
+      startedAt: new Date(now - 1 * 60 * 1000).toISOString(),
+      resolvedAt: null,
+      durationMinutes: null,
+    };
+    await env.TENSORFEED_STATUS.put('incidents', JSON.stringify([incidentA, incidentB]));
+    await env.TENSORFEED_STATUS.put(
+      'services',
+      JSON.stringify([
+        {
+          name: 'OpenAI',
+          provider: 'openai',
+          status: 'operational',
+          statusPageUrl: 'https://status.openai.com',
+          components: [],
+          lastChecked: new Date(now).toISOString(),
+        },
+      ]),
+    );
+
+    const second = await call(env, `/api/premium/whats-new/pro?since=${cursor}`, { token, ip: uniqueIp() });
+    expect(second.status).toBe(200);
+    expect(second.json?.new_since_last).toBe(1); // only incidentB is newer than the cursor
+    const billing = second.json?.billing as Record<string, unknown> | undefined;
+    expect(billing?.credits_charged).toBe(10);
+    expect(billing?.no_charge_reason).toBeFalsy();
+    expect(second.json?.pro).toBeDefined();      // full brief, not withheld
+    expect(second.json?.data_ids).toBeDefined();
+    expect(await balanceOf(env, token)).toBe(80); // charged 10 again
+    expect(haiku).toHaveBeenCalledTimes(2);       // delta path runs enrichment
+  });
+});
