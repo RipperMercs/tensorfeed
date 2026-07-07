@@ -10,7 +10,10 @@ import {
   whatsNewWindowKey,
   encodeWhatsNewCursor,
   decodeWhatsNewCursor,
+  computeWhatsNewDelta,
+  WHATS_NEW_NEXT_CHECK_HINT,
   type WhatsNewResult,
+  type NewsHeadline,
 } from './whats-new';
 import { NEWS_ATTRIBUTION } from './news-search';
 import type { Env } from './types';
@@ -520,5 +523,72 @@ describe('whats-new cursor encode/decode', () => {
   it('returns null on garbage', () => {
     expect(decodeWhatsNewCursor('not-base64-@@')).toBeNull();
     expect(decodeWhatsNewCursor('')).toBeNull();
+  });
+});
+
+function headline(published_at: string, title = 't'): NewsHeadline {
+  return { title, url: 'https://x', source: 's', source_domain: 'x', published_at, snippet: '', categories: [] };
+}
+
+describe('computeWhatsNewDelta', () => {
+  const win = '1d';
+
+  it('falls back to full when the result has no capturedAt', () => {
+    const r = baseResult({ capturedAt: null });
+    expect(computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T00:00:00Z', win }).mode).toBe('full');
+  });
+
+  it('falls back to full on a window mismatch', () => {
+    const r = baseResult();
+    expect(computeWhatsNewDelta(r, { v: 1, capturedAt: r.capturedAt, win: '7d' }).mode).toBe('full');
+  });
+
+  it('falls back to full when the cursor is dated in the future (security clamp)', () => {
+    const r = baseResult({ capturedAt: '2026-07-06T00:00:00Z' });
+    expect(computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-07T00:00:00Z', win }).mode).toBe('full');
+  });
+
+  it('no-charges when capturedAt is unchanged', () => {
+    const r = baseResult({ capturedAt: '2026-07-06T00:00:00Z' });
+    expect(computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T00:00:00Z', win }).mode).toBe('no_charge');
+  });
+
+  it('returns a delta with only newer news when capturedAt advanced', () => {
+    const r = baseResult({
+      capturedAt: '2026-07-06T12:00:00Z',
+      news: [headline('2026-07-06T11:00:00Z', 'new'), headline('2026-07-06T09:00:00Z', 'old')],
+      summary: { total_pricing_changes: 0, new_models: 0, removed_models: 0, incidents: 0, news_articles: 2 },
+    });
+    const out = computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T10:00:00Z', win });
+    expect(out.mode).toBe('delta');
+    if (out.mode !== 'delta') throw new Error('unreachable');
+    expect(out.new_since_last).toBe(1);
+    expect(out.news.map((n) => n.title)).toEqual(['new']);
+    expect(out.summary.news_articles).toBe(1);
+    expect(out.summary_full.news_articles).toBe(2);
+  });
+
+  it('includes items with unparseable timestamps (never hides new content)', () => {
+    const r = baseResult({
+      capturedAt: '2026-07-06T12:00:00Z',
+      news: [headline('not-a-date', 'weird')],
+    });
+    const out = computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T10:00:00Z', win });
+    expect(out.mode).toBe('delta');
+    if (out.mode !== 'delta') throw new Error('unreachable');
+    expect(out.new_since_last).toBe(1);
+  });
+
+  it('no-charges when capturedAt advanced but nothing crossed the threshold', () => {
+    const r = baseResult({
+      capturedAt: '2026-07-06T12:00:00Z',
+      news: [headline('2026-07-06T09:00:00Z', 'old')],
+    });
+    const out = computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T10:00:00Z', win });
+    expect(out.mode).toBe('no_charge');
+  });
+
+  it('exposes a re-poll hint', () => {
+    expect(WHATS_NEW_NEXT_CHECK_HINT.suggested_recheck_seconds).toBeGreaterThan(0);
   });
 });

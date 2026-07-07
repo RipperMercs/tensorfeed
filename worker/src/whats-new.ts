@@ -221,6 +221,75 @@ export function decodeWhatsNewCursor(raw: string): WhatsNewCursor | null {
   }
 }
 
+// Cadence hint returned on a zero-delta poll. The brief refreshes as the
+// pricing, status, and news crons run, roughly hourly.
+export const WHATS_NEW_NEXT_CHECK_HINT = {
+  suggested_recheck_seconds: 3600,
+  reason: 'The brief refreshes as pricing, status, and news crons run, roughly hourly.',
+} as const;
+
+export type WhatsNewDeltaOutcome =
+  | { mode: 'full' }
+  | { mode: 'no_charge' }
+  | {
+      mode: 'delta';
+      new_since_last: number;
+      summary: WhatsNewResult['summary'];
+      summary_full: WhatsNewResult['summary'];
+      pricing: WhatsNewResult['pricing'];
+      status: WhatsNewResult['status'];
+      news: NewsHeadline[];
+    };
+
+/**
+ * Two-tier delta against a caller cursor.
+ *  - full:      no usable cursor for this result (serve and charge the full brief).
+ *  - no_charge: data unchanged since the cursor, or advanced with nothing new.
+ *  - delta:     data advanced with new items; return only those, charged.
+ * Items whose timestamp does not parse are included, so genuinely new content
+ * is never hidden. A cursor dated ahead of the current data is treated as
+ * absent (full), which closes the free-forever poll on a forged future cursor.
+ */
+export function computeWhatsNewDelta(result: WhatsNewResult, cursor: WhatsNewCursor): WhatsNewDeltaOutcome {
+  if (result.capturedAt === null) return { mode: 'full' };
+  if (cursor.win !== whatsNewWindowKey(result.window)) return { mode: 'full' };
+  if (cursor.capturedAt === null) return { mode: 'full' };
+  const c = Date.parse(cursor.capturedAt);
+  const r = Date.parse(result.capturedAt);
+  if (!Number.isFinite(c) || !Number.isFinite(r)) return { mode: 'full' };
+  if (c > r) return { mode: 'full' };
+  if (c === r) return { mode: 'no_charge' };
+
+  const news = result.news.filter((h) => {
+    const t = Date.parse(h.published_at);
+    return !Number.isFinite(t) || t > c;
+  });
+  const incidents = result.status.incidents.filter((i) => {
+    const t = Date.parse(i.started_at);
+    return !Number.isFinite(t) || t > c;
+  });
+  const pricingCount =
+    result.pricing.changes.length + result.pricing.new_models.length + result.pricing.removed_models.length;
+  const new_since_last = news.length + incidents.length + pricingCount;
+  if (new_since_last === 0) return { mode: 'no_charge' };
+
+  return {
+    mode: 'delta',
+    new_since_last,
+    summary: {
+      total_pricing_changes: result.pricing.changes.length,
+      new_models: result.pricing.new_models.length,
+      removed_models: result.pricing.removed_models.length,
+      incidents: incidents.length,
+      news_articles: news.length,
+    },
+    summary_full: result.summary,
+    pricing: result.pricing,
+    status: { ...result.status, incidents },
+    news,
+  };
+}
+
 // === Free preview (the /api/preview/whats-new taste) ===
 
 /** How many headline TITLES the free preview reveals. Titles only, never links or snippets. */
