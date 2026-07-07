@@ -290,6 +290,22 @@ export function computeWhatsNewDelta(result: WhatsNewResult, cursor: WhatsNewCur
   };
 }
 
+export interface WhatsNewContinuation {
+  method: 'GET';
+  url: string;
+  description: string;
+}
+
+/** The exact next call for the poll loop. Null when no cursor was issued. */
+export function buildWhatsNewContinuation(cursor: string): WhatsNewContinuation | null {
+  if (!cursor) return null;
+  return {
+    method: 'GET',
+    url: `/api/premium/whats-new?since=${cursor}`,
+    description: 'Call again with this cursor to get only what changed since this response. Free if nothing is new.',
+  };
+}
+
 // === Free preview (the /api/preview/whats-new taste) ===
 
 /** How many headline TITLES the free preview reveals. Titles only, never links or snippets. */

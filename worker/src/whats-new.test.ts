@@ -11,6 +11,7 @@ import {
   encodeWhatsNewCursor,
   decodeWhatsNewCursor,
   computeWhatsNewDelta,
+  buildWhatsNewContinuation,
   WHATS_NEW_NEXT_CHECK_HINT,
   type WhatsNewResult,
   type NewsHeadline,
@@ -590,5 +591,18 @@ describe('computeWhatsNewDelta', () => {
 
   it('exposes a re-poll hint', () => {
     expect(WHATS_NEW_NEXT_CHECK_HINT.suggested_recheck_seconds).toBeGreaterThan(0);
+  });
+});
+
+describe('buildWhatsNewContinuation', () => {
+  it('points at the same endpoint with the fresh cursor', () => {
+    const c = buildWhatsNewContinuation('abc123');
+    expect(c).not.toBeNull();
+    expect(c!.method).toBe('GET');
+    expect(c!.url).toBe('/api/premium/whats-new?since=abc123');
+  });
+
+  it('returns null when there is no cursor', () => {
+    expect(buildWhatsNewContinuation('')).toBeNull();
   });
 });
