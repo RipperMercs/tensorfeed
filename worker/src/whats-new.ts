@@ -138,6 +138,13 @@ export interface WhatsNewResult {
   // the premium whats-new / whats-new/pro SLA can actually fire when an
   // upstream cron stalls. Null only when no source surfaced a timestamp.
   capturedAt: string | null;
+  // Real capture time of the PRICING snapshot the daily diff is computed
+  // against, EXCLUDING the status feed's lastChecked (which the status cron
+  // rewrites every few minutes and would otherwise make the pricing delta
+  // re-bill on every poll). The delta cursor gates the pricing bucket on this,
+  // not on the status-driven capturedAt. Null when no pricing snapshot or
+  // timestamp is available.
+  pricingCapturedAt: string | null;
   summary: {
     total_pricing_changes: number;
     new_models: number;
@@ -177,12 +184,17 @@ export interface WhatsNewError {
 
 // Bump only if the encoded shape changes. An older-version cursor decodes to
 // null and the caller falls back to a full brief, so a version change is safe.
-export const WHATS_NEW_CURSOR_VERSION = 1;
+export const WHATS_NEW_CURSOR_VERSION = 2;
 
 export interface WhatsNewCursor {
   v: number;
   // The response's real data-capture time when the cursor was issued.
   capturedAt: string | null;
+  // Pricing-snapshot capture time (see WhatsNewResult.pricingCapturedAt). Gates
+  // whether the pricing bucket counts as new, independent of the status-driven
+  // capturedAt. Added in cursor v2. A v1 cursor (no pcap) decodes to null and
+  // the caller falls back to a full brief, which is the safe migration.
+  pcap: string | null;
   // Window shape key, so a cursor is only compared within a consistent window.
   win: string;
 }
@@ -193,14 +205,16 @@ export function whatsNewWindowKey(window: WhatsNewResult['window']): string {
 }
 
 /**
- * Encode an opaque, URL-safe cursor. The payload is ASCII only (an ISO
- * timestamp, an integer, and a short window key), so btoa is safe. Returns ''
- * when there is no capturedAt, in which case no meaningful cursor exists.
+ * Encode an opaque, URL-safe cursor. The payload is ASCII only (ISO
+ * timestamps, an integer, and a short window key), so btoa is safe. Always
+ * returns a non-empty cursor; a result with a null capturedAt encodes a cursor
+ * that later decodes and degrades to a full brief.
  */
 export function encodeWhatsNewCursor(result: WhatsNewResult): string {
   const payload: WhatsNewCursor = {
     v: WHATS_NEW_CURSOR_VERSION,
     capturedAt: result.capturedAt,
+    pcap: result.pricingCapturedAt,
     win: whatsNewWindowKey(result.window),
   };
   return btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -215,7 +229,8 @@ export function decodeWhatsNewCursor(raw: string): WhatsNewCursor | null {
     if (obj.v !== WHATS_NEW_CURSOR_VERSION) return null;
     if (typeof obj.win !== 'string') return null;
     if (!(obj.capturedAt === null || typeof obj.capturedAt === 'string')) return null;
-    return { v: obj.v, capturedAt: obj.capturedAt ?? null, win: obj.win };
+    if (!(obj.pcap === null || typeof obj.pcap === 'string')) return null;
+    return { v: obj.v, capturedAt: obj.capturedAt ?? null, pcap: obj.pcap ?? null, win: obj.win };
   } catch {
     return null;
   }
@@ -240,6 +255,19 @@ export type WhatsNewDeltaOutcome =
       status: WhatsNewResult['status'];
       news: NewsHeadline[];
     };
+
+// Whether the pricing snapshot genuinely advanced since the cursor. Favors the
+// customer when the pricing time is indeterminate (returns false), so a
+// status-only capturedAt bump never re-bills the same daily pricing diff.
+function pricingCapturedAtAdvanced(now: string | null, cursor: string | null): boolean {
+  if (now === null) return false;
+  if (cursor === null) return true;
+  const n = Date.parse(now);
+  const c = Date.parse(cursor);
+  if (!Number.isFinite(n)) return false;
+  if (!Number.isFinite(c)) return true;
+  return n > c;
+}
 
 /**
  * Two-tier delta against a caller cursor.
@@ -268,8 +296,14 @@ export function computeWhatsNewDelta(result: WhatsNewResult, cursor: WhatsNewCur
     const t = Date.parse(i.started_at);
     return !Number.isFinite(t) || t > c;
   });
-  const pricingCount =
-    result.pricing.changes.length + result.pricing.new_models.length + result.pricing.removed_models.length;
+  // Pricing/model diffs are snapshot-level (no per-item timestamp) and
+  // capturedAt is status-driven, so gate the pricing bucket on the pricing
+  // snapshot's own capture time. Otherwise a status-only capturedAt bump would
+  // re-bill the same daily pricing diff on every poll.
+  const pricing = pricingCapturedAtAdvanced(result.pricingCapturedAt, cursor.pcap)
+    ? result.pricing
+    : { changes: [], new_models: [], removed_models: [] };
+  const pricingCount = pricing.changes.length + pricing.new_models.length + pricing.removed_models.length;
   const new_since_last = news.length + incidents.length + pricingCount;
   if (new_since_last === 0) return { mode: 'no_charge' };
 
@@ -277,14 +311,14 @@ export function computeWhatsNewDelta(result: WhatsNewResult, cursor: WhatsNewCur
     mode: 'delta',
     new_since_last,
     summary: {
-      total_pricing_changes: result.pricing.changes.length,
-      new_models: result.pricing.new_models.length,
-      removed_models: result.pricing.removed_models.length,
+      total_pricing_changes: pricing.changes.length,
+      new_models: pricing.new_models.length,
+      removed_models: pricing.removed_models.length,
       incidents: incidents.length,
       news_articles: news.length,
     },
     summary_full: result.summary,
-    pricing: result.pricing,
+    pricing,
     status: { ...result.status, incidents },
     news,
   };
@@ -621,6 +655,7 @@ export async function computeWhatsNew(
     },
     computed_at: new Date().toISOString(),
     capturedAt,
+    pricingCapturedAt: toSnap?.capturedAt ?? pricingRaw?.lastUpdated ?? null,
     summary: {
       total_pricing_changes: changes.length,
       new_models: newModels.length,

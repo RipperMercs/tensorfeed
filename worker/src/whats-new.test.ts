@@ -397,6 +397,7 @@ function fixtureResult(newsTitles: string[]): WhatsNewResult {
     window: { from: '2026-06-23T00:00:00.000Z', to: '2026-06-24T00:00:00.000Z', days: 1 },
     computed_at: '2026-06-24T08:00:00.000Z',
     capturedAt: '2026-06-24T07:55:00.000Z',
+    pricingCapturedAt: null,
     summary: {
       total_pricing_changes: 2,
       new_models: 1,
@@ -492,6 +493,7 @@ function baseResult(over: Partial<WhatsNewResult> = {}): WhatsNewResult {
     window: { from: '2026-07-05T00:00:00Z', to: '2026-07-06T00:00:00Z', days: 1 },
     computed_at: '2026-07-06T00:00:05Z',
     capturedAt: '2026-07-06T00:00:00Z',
+    pricingCapturedAt: null,
     summary: { total_pricing_changes: 0, new_models: 0, removed_models: 0, incidents: 0, news_articles: 0 },
     pricing: { changes: [], new_models: [], removed_models: [] },
     status: { incidents: [], currently_operational: 0, currently_degraded: 0, currently_down: 0, currently_unknown: 0 },
@@ -508,7 +510,7 @@ describe('whats-new cursor encode/decode', () => {
     const r = baseResult();
     const enc = encodeWhatsNewCursor(r);
     const dec = decodeWhatsNewCursor(enc);
-    expect(dec).toEqual({ v: WHATS_NEW_CURSOR_VERSION, capturedAt: '2026-07-06T00:00:00Z', win: '1d' });
+    expect(dec).toEqual({ v: WHATS_NEW_CURSOR_VERSION, capturedAt: '2026-07-06T00:00:00Z', pcap: null, win: '1d' });
   });
 
   it('uses a minutes window key when the window is sub-daily', () => {
@@ -525,6 +527,11 @@ describe('whats-new cursor encode/decode', () => {
     expect(decodeWhatsNewCursor('not-base64-@@')).toBeNull();
     expect(decodeWhatsNewCursor('')).toBeNull();
   });
+
+  it('rejects a v1 cursor (safe migration to full brief)', () => {
+    const v1 = btoa(JSON.stringify({ v: 1, capturedAt: '2026-07-06T00:00:00Z', win: '1d' }));
+    expect(decodeWhatsNewCursor(v1)).toBeNull();
+  });
 });
 
 function headline(published_at: string, title = 't'): NewsHeadline {
@@ -536,22 +543,22 @@ describe('computeWhatsNewDelta', () => {
 
   it('falls back to full when the result has no capturedAt', () => {
     const r = baseResult({ capturedAt: null });
-    expect(computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T00:00:00Z', win }).mode).toBe('full');
+    expect(computeWhatsNewDelta(r, { v: 2, capturedAt: '2026-07-06T00:00:00Z', pcap: null, win }).mode).toBe('full');
   });
 
   it('falls back to full on a window mismatch', () => {
     const r = baseResult();
-    expect(computeWhatsNewDelta(r, { v: 1, capturedAt: r.capturedAt, win: '7d' }).mode).toBe('full');
+    expect(computeWhatsNewDelta(r, { v: 2, capturedAt: r.capturedAt, pcap: null, win: '7d' }).mode).toBe('full');
   });
 
   it('falls back to full when the cursor is dated in the future (security clamp)', () => {
     const r = baseResult({ capturedAt: '2026-07-06T00:00:00Z' });
-    expect(computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-07T00:00:00Z', win }).mode).toBe('full');
+    expect(computeWhatsNewDelta(r, { v: 2, capturedAt: '2026-07-07T00:00:00Z', pcap: null, win }).mode).toBe('full');
   });
 
   it('no-charges when capturedAt is unchanged', () => {
     const r = baseResult({ capturedAt: '2026-07-06T00:00:00Z' });
-    expect(computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T00:00:00Z', win }).mode).toBe('no_charge');
+    expect(computeWhatsNewDelta(r, { v: 2, capturedAt: '2026-07-06T00:00:00Z', pcap: null, win }).mode).toBe('no_charge');
   });
 
   it('returns a delta with only newer news when capturedAt advanced', () => {
@@ -560,7 +567,7 @@ describe('computeWhatsNewDelta', () => {
       news: [headline('2026-07-06T11:00:00Z', 'new'), headline('2026-07-06T09:00:00Z', 'old')],
       summary: { total_pricing_changes: 0, new_models: 0, removed_models: 0, incidents: 0, news_articles: 2 },
     });
-    const out = computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T10:00:00Z', win });
+    const out = computeWhatsNewDelta(r, { v: 2, capturedAt: '2026-07-06T10:00:00Z', pcap: null, win });
     expect(out.mode).toBe('delta');
     if (out.mode !== 'delta') throw new Error('unreachable');
     expect(out.new_since_last).toBe(1);
@@ -574,7 +581,7 @@ describe('computeWhatsNewDelta', () => {
       capturedAt: '2026-07-06T12:00:00Z',
       news: [headline('not-a-date', 'weird')],
     });
-    const out = computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T10:00:00Z', win });
+    const out = computeWhatsNewDelta(r, { v: 2, capturedAt: '2026-07-06T10:00:00Z', pcap: null, win });
     expect(out.mode).toBe('delta');
     if (out.mode !== 'delta') throw new Error('unreachable');
     expect(out.new_since_last).toBe(1);
@@ -585,12 +592,61 @@ describe('computeWhatsNewDelta', () => {
       capturedAt: '2026-07-06T12:00:00Z',
       news: [headline('2026-07-06T09:00:00Z', 'old')],
     });
-    const out = computeWhatsNewDelta(r, { v: 1, capturedAt: '2026-07-06T10:00:00Z', win });
+    const out = computeWhatsNewDelta(r, { v: 2, capturedAt: '2026-07-06T10:00:00Z', pcap: null, win });
     expect(out.mode).toBe('no_charge');
   });
 
   it('exposes a re-poll hint', () => {
     expect(WHATS_NEW_NEXT_CHECK_HINT.suggested_recheck_seconds).toBeGreaterThan(0);
+  });
+
+  it('does NOT re-charge pricing when only status advanced capturedAt (C1 regression)', () => {
+    const r = baseResult({
+      capturedAt: '2026-07-06T12:00:00Z',        // status-driven, advanced
+      pricingCapturedAt: '2026-07-06T06:00:00Z', // daily pricing snapshot, unchanged
+      pricing: {
+        changes: [{ model: 'm', provider: 'p', field: 'inputPrice', from: 1, to: 2, delta_pct: 100 }],
+        new_models: [],
+        removed_models: [],
+      },
+      news: [],
+    });
+    // Cursor from earlier the same day: capturedAt behind (status bumped since),
+    // but the pricing snapshot time (pcap) is identical.
+    const out = computeWhatsNewDelta(r, {
+      v: 2, capturedAt: '2026-07-06T10:00:00Z', pcap: '2026-07-06T06:00:00Z', win: '1d',
+    });
+    expect(out.mode).toBe('no_charge');
+  });
+
+  it('charges a delta when the pricing snapshot advanced', () => {
+    const r = baseResult({
+      capturedAt: '2026-07-07T06:05:00Z',
+      pricingCapturedAt: '2026-07-07T06:00:00Z', // new daily snapshot
+      pricing: {
+        changes: [{ model: 'm', provider: 'p', field: 'inputPrice', from: 1, to: 2, delta_pct: 100 }],
+        new_models: [],
+        removed_models: [],
+      },
+      news: [],
+    });
+    const out = computeWhatsNewDelta(r, {
+      v: 2, capturedAt: '2026-07-06T12:00:00Z', pcap: '2026-07-06T06:00:00Z', win: '1d',
+    });
+    expect(out.mode).toBe('delta');
+    if (out.mode !== 'delta') throw new Error('unreachable');
+    expect(out.new_since_last).toBe(1);
+    expect(out.summary.total_pricing_changes).toBe(1);
+  });
+
+  it('falls back to full when the cursor capturedAt is null', () => {
+    const r = baseResult({ capturedAt: '2026-07-06T00:00:00Z' });
+    expect(computeWhatsNewDelta(r, { v: 2, capturedAt: null, pcap: null, win: '1d' }).mode).toBe('full');
+  });
+
+  it('falls back to full when the cursor capturedAt is unparseable', () => {
+    const r = baseResult({ capturedAt: '2026-07-06T00:00:00Z' });
+    expect(computeWhatsNewDelta(r, { v: 2, capturedAt: 'not-a-date', pcap: null, win: '1d' }).mode).toBe('full');
   });
 });
 
