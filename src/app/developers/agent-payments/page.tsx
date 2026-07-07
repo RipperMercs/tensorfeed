@@ -1190,7 +1190,7 @@ const ENDPOINTS: PremiumEndpoint[] = [
     method: 'GET',
     path: '/api/premium/whats-new',
     description:
-      "Agent morning brief: pricing changes, new/removed models, status incidents, and top news headlines from the last 1-7 days. The single endpoint to call when an agent boots up.",
+      "Agent morning brief: pricing changes, new/removed models, status incidents, and top news headlines from the last 1-7 days. The single endpoint to call when an agent boots up. Pass the cursor from any response back as ?since= to get only what changed since your last call; if nothing changed, the call is free.",
     cost: '1 credit per call',
     example: `// Query: ?days=1&news_limit=10
 {
