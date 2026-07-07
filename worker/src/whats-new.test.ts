@@ -3,7 +3,15 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { computeWhatsNew, previewWhatsNew, type WhatsNewResult } from './whats-new';
+import {
+  computeWhatsNew,
+  previewWhatsNew,
+  WHATS_NEW_CURSOR_VERSION,
+  whatsNewWindowKey,
+  encodeWhatsNewCursor,
+  decodeWhatsNewCursor,
+  type WhatsNewResult,
+} from './whats-new';
 import { NEWS_ATTRIBUTION } from './news-search';
 import type { Env } from './types';
 
@@ -471,5 +479,46 @@ describe('previewWhatsNew (free taste)', () => {
     expect(serialized).not.toContain('SECRET snippet');
     expect(serialized).not.toContain('secret.example');
     expect(serialized).not.toContain('H4'); // the 4th headline is past the top-3 cap
+  });
+});
+
+function baseResult(over: Partial<WhatsNewResult> = {}): WhatsNewResult {
+  return {
+    ok: true,
+    window: { from: '2026-07-05T00:00:00Z', to: '2026-07-06T00:00:00Z', days: 1 },
+    computed_at: '2026-07-06T00:00:05Z',
+    capturedAt: '2026-07-06T00:00:00Z',
+    summary: { total_pricing_changes: 0, new_models: 0, removed_models: 0, incidents: 0, news_articles: 0 },
+    pricing: { changes: [], new_models: [], removed_models: [] },
+    status: { incidents: [], currently_operational: 0, currently_degraded: 0, currently_down: 0, currently_unknown: 0 },
+    news: [],
+    news_attribution: { sources: [], note: '' } as unknown as WhatsNewResult['news_attribution'],
+    data_freshness: { pricing: null, status: null, incidents_count: 0, news_total_corpus: 0 },
+    notes: [],
+    ...over,
+  };
+}
+
+describe('whats-new cursor encode/decode', () => {
+  it('round-trips a cursor', () => {
+    const r = baseResult();
+    const enc = encodeWhatsNewCursor(r);
+    const dec = decodeWhatsNewCursor(enc);
+    expect(dec).toEqual({ v: WHATS_NEW_CURSOR_VERSION, capturedAt: '2026-07-06T00:00:00Z', win: '1d' });
+  });
+
+  it('uses a minutes window key when the window is sub-daily', () => {
+    const r = baseResult({ window: { from: 'a', to: 'b', days: 1, minutes: 60 } });
+    expect(whatsNewWindowKey(r.window)).toBe('60m');
+  });
+
+  it('returns null on a wrong-version cursor', () => {
+    const forged = btoa(JSON.stringify({ v: 999, capturedAt: 'x', win: '1d' }));
+    expect(decodeWhatsNewCursor(forged)).toBeNull();
+  });
+
+  it('returns null on garbage', () => {
+    expect(decodeWhatsNewCursor('not-base64-@@')).toBeNull();
+    expect(decodeWhatsNewCursor('')).toBeNull();
   });
 });

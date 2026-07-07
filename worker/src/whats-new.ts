@@ -173,6 +173,54 @@ export interface WhatsNewError {
   error: string;
 }
 
+// === Delta cursor (retention loop) ===
+
+// Bump only if the encoded shape changes. An older-version cursor decodes to
+// null and the caller falls back to a full brief, so a version change is safe.
+export const WHATS_NEW_CURSOR_VERSION = 1;
+
+export interface WhatsNewCursor {
+  v: number;
+  // The response's real data-capture time when the cursor was issued.
+  capturedAt: string | null;
+  // Window shape key, so a cursor is only compared within a consistent window.
+  win: string;
+}
+
+/** Stable key for a response window. Daily windows key on days, sub-daily on minutes. */
+export function whatsNewWindowKey(window: WhatsNewResult['window']): string {
+  return typeof window.minutes === 'number' ? `${window.minutes}m` : `${window.days}d`;
+}
+
+/**
+ * Encode an opaque, URL-safe cursor. The payload is ASCII only (an ISO
+ * timestamp, an integer, and a short window key), so btoa is safe. Returns ''
+ * when there is no capturedAt, in which case no meaningful cursor exists.
+ */
+export function encodeWhatsNewCursor(result: WhatsNewResult): string {
+  const payload: WhatsNewCursor = {
+    v: WHATS_NEW_CURSOR_VERSION,
+    capturedAt: result.capturedAt,
+    win: whatsNewWindowKey(result.window),
+  };
+  return btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** Decode a cursor. Returns null on any malformed input or version mismatch (never throws). */
+export function decodeWhatsNewCursor(raw: string): WhatsNewCursor | null {
+  if (!raw) return null;
+  try {
+    const b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+    const obj = JSON.parse(atob(b64)) as Partial<WhatsNewCursor>;
+    if (obj.v !== WHATS_NEW_CURSOR_VERSION) return null;
+    if (typeof obj.win !== 'string') return null;
+    if (!(obj.capturedAt === null || typeof obj.capturedAt === 'string')) return null;
+    return { v: obj.v, capturedAt: obj.capturedAt ?? null, win: obj.win };
+  } catch {
+    return null;
+  }
+}
+
 // === Free preview (the /api/preview/whats-new taste) ===
 
 /** How many headline TITLES the free preview reveals. Titles only, never links or snippets. */
