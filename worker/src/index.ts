@@ -14417,14 +14417,51 @@ export default {
 
       const daysParam = parseInt(url.searchParams.get('days') ?? '', 10);
       const newsLimitParam = parseInt(url.searchParams.get('news_limit') ?? '', 10);
-      const { computeWhatsNewPro } = await import('./premium-whats-new-pro');
-      const result = await computeWhatsNewPro(env, {
+      const baseOpts = {
         ...(Number.isFinite(daysParam) ? { days: daysParam } : {}),
         ...(Number.isFinite(newsLimitParam) ? { newsLimit: newsLimitParam } : {}),
-      });
-      if (!result.ok) {
+      };
+
+      const base = await computeWhatsNew(env, baseOpts);
+      if (!base.ok) {
         return await premiumValidationFailure(
-          result as unknown as Record<string, unknown>,
+          base as unknown as Record<string, unknown>,
+          payment,
+          request,
+          env,
+        );
+      }
+
+      // Delta cursor loop (parity with /api/premium/whats-new). An unchanged
+      // poll no-charges and skips the Haiku enrichment entirely; a poll with
+      // new data returns the full cited brief plus new_since_last and a fresh
+      // cursor. Bad/absent cursor degrades to a full charged brief. The
+      // no-charge body carries counts only, never synthesis.
+      const sinceRaw = url.searchParams.get('since');
+      const cursor = sinceRaw ? decodeWhatsNewCursor(sinceRaw) : null;
+      const outcome = cursor ? computeWhatsNewDelta(base, cursor) : ({ mode: 'full' } as const);
+      const freshCursor = encodeWhatsNewCursor(base);
+      const continuation = buildWhatsNewContinuation(freshCursor, '/api/premium/whats-new/pro');
+
+      if (outcome.mode === 'no_charge') {
+        const body = {
+          ok: true,
+          tier: 'pro' as const,
+          new_since_last: 0,
+          window: base.window,
+          capturedAt: base.capturedAt,
+          cursor: freshCursor,
+          next_check_hint: WHATS_NEW_NEXT_CHECK_HINT,
+          continuation,
+        };
+        return await premiumResponse(body, payment, 10, request, env, 'no_new_since_cursor', base.capturedAt);
+      }
+
+      const { enrichWhatsNewProFromBase } = await import('./premium-whats-new-pro');
+      const pro = await enrichWhatsNewProFromBase(env, base, baseOpts);
+      if (!pro.ok) {
+        return await premiumValidationFailure(
+          pro as unknown as Record<string, unknown>,
           payment,
           request,
           env,
@@ -14433,9 +14470,15 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/whats-new/pro', request.headers.get('User-Agent') || 'unknown', 10, payment.token, payment.payerWallet),
       );
-      // Pass the freshest underlying data-capture time so the 6h staleness
-      // SLA can no-charge 10 credits when the base data crons stall.
-      return await premiumResponse(result, payment, 10, request, env, null, result.capturedAt);
+      const body = {
+        ...pro,
+        cursor: freshCursor,
+        continuation,
+        ...(outcome.mode === 'delta' ? { new_since_last: outcome.new_since_last } : {}),
+      };
+      // Pass the freshest underlying data-capture time so the staleness SLA can
+      // no-charge when the base data crons stall.
+      return await premiumResponse(body, payment, 10, request, env, null, base.capturedAt);
     }
 
     // === PAID PREMIUM: RECENT WINDOW (Tier 1, 1 credit) ===
