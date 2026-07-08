@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'microsoft-mai-office-swap-anthropic-ceiling',
+    title:
+      'Microsoft Just Started Swapping Anthropic Out of Excel and Outlook. Suleyman Just Set the Ceiling on the Anthropic S-1.',
+    author: 'Marcus Chen',
+    date: 'July 8, 2026',
+    readTime: '6 min read',
+    description:
+      "On July 7, 2026, Bloomberg reported that Microsoft is routing tens of thousands of Excel and Outlook AI prompts every week away from OpenAI and Anthropic and into its own MAI models. Microsoft AI CEO Mustafa Suleyman told Bloomberg on record that the goal is to reduce and ultimately eliminate the Anthropic cost, and called Anthropic extremely expensive. MSFT closed up 2 percent. This lands 36 days after Anthropic's confidential S-1 filed at a $965B post-money and a $47B ARR run rate. Inside why MAI-Thinking-1 at 35 billion active parameters (matching Opus 4.6 on SWE-Bench Pro per Microsoft) is the sharpest cost signal in the market right now, why Suleyman's public target on eliminating a supplier changes the customer concentration risk factor language every Anthropic banker has to defend inside the confidential window, how this MAI swap is the same hyperscaler move at the model layer that the $3.5 billion FDE consulting turn was at the workflow layer ten days ago, why the inference floor thesis now has a third floor made of buyer captive silicon, and three signposts in the next 90 days: whether the S-1 amendment names Microsoft as declining spend, whether Microsoft ever publishes Copilot revenue split by underlying model, and whether OpenAI answers with its own hyperscaler diversification move before its September window. The largest paying customer of the closed frontier just broke ranks, and it did so on the record while the S-1 clock was already running.",
+  },
+  {
     slug: 'openai-42-billion-federal-gate-price-tag',
     title:
       'OpenAI Just Put a Price on the Federal Gate. The Bid Is $42.6 Billion.',
