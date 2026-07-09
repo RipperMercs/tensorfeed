@@ -25,8 +25,11 @@ function cleanName(name: string): string | null {
   return NAME_RE.test(base) ? base : null;
 }
 
-function cleanVersion(v: string | null | undefined): string | null {
-  if (v == null) return null;
+function cleanVersion(v: unknown): string | null {
+  // A crafted lockfile can put a non-string (number, bool, object) in the
+  // version field. Treat anything that is not a string as an unknown
+  // version rather than throwing: parseLockfile must never throw.
+  if (typeof v !== 'string') return null;
   const stripped = v.replace(/^[\^~>=<! ]+/, '').trim();
   return VERSION_RE.test(stripped) ? stripped : null;
 }
@@ -77,7 +80,7 @@ function parseJson(text: string): ParseLockfileResult {
       const name = cleanName(p.replace(/^.*node_modules\//, ''));
       const version =
         meta && typeof meta === 'object'
-          ? cleanVersion((meta as Record<string, unknown>).version as string | undefined)
+          ? cleanVersion((meta as Record<string, unknown>).version)
           : null;
       truncated = push(out, name, version) || truncated;
     }
@@ -90,7 +93,7 @@ function parseJson(text: string): ParseLockfileResult {
     for (const [rawName, meta] of Object.entries(obj.dependencies as Record<string, unknown>)) {
       const version =
         meta && typeof meta === 'object'
-          ? cleanVersion((meta as Record<string, unknown>).version as string | undefined)
+          ? cleanVersion((meta as Record<string, unknown>).version)
           : null;
       truncated = push(out, cleanName(rawName), version) || truncated;
     }
@@ -103,7 +106,7 @@ function parseJson(text: string): ParseLockfileResult {
     const m = obj[key];
     if (m && typeof m === 'object') {
       for (const [rawName, spec] of Object.entries(m as Record<string, unknown>)) {
-        const version = typeof spec === 'string' ? cleanVersion(spec) : null;
+        const version = cleanVersion(spec);
         truncated = push(out, cleanName(rawName), version) || truncated;
       }
     }

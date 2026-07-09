@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseLockfile, LOCKFILE_MAX_BYTES, LOCKFILE_MAX_PACKAGES } from './lockfile-parse';
+import { parseLockfile, LOCKFILE_MAX_BYTES, LOCKFILE_MAX_PACKAGES, LOCKFILE_MAX_LINES } from './lockfile-parse';
 
 describe('parseLockfile requirements.txt', () => {
   it('parses pinned, unpinned, comments, extras, and env markers', () => {
@@ -98,6 +98,37 @@ describe('parseLockfile JSON manifests', () => {
     if (r.ok) return;
     expect(r.error).toBe('invalid_json');
   });
+
+  it('does not throw on a package-lock v2 with a non-string (numeric) version', () => {
+    const raw = JSON.stringify({
+      lockfileVersion: 3,
+      packages: {
+        '': { name: 'root' },
+        'node_modules/a': { version: 12345 },
+      },
+    });
+    const r = parseLockfile(raw);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.format).toBe('package-lock');
+    expect(r.packages).toContainEqual({ name: 'a', version: null });
+  });
+
+  it('does not throw on a package-lock v1 with boolean or object version fields', () => {
+    const raw = JSON.stringify({
+      lockfileVersion: 1,
+      dependencies: {
+        a: { version: true },
+        b: { version: { x: 1 } },
+      },
+    });
+    const r = parseLockfile(raw);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.format).toBe('package-lock');
+    expect(r.packages).toContainEqual({ name: 'a', version: null });
+    expect(r.packages).toContainEqual({ name: 'b', version: null });
+  });
 });
 
 describe('parseLockfile poetry.lock', () => {
@@ -146,5 +177,17 @@ describe('parseLockfile caps and empties', () => {
     expect(parseLockfile('').ok).toBe(false);
     expect(parseLockfile(null).ok).toBe(false);
     expect(parseLockfile('   \n  ').ok).toBe(false);
+  });
+
+  it('rejects input exceeding the line cap', () => {
+    // All-comment lines so each is cheap; stays well under LOCKFILE_MAX_BYTES.
+    const lines: string[] = [];
+    for (let i = 0; i < LOCKFILE_MAX_LINES + 1; i++) lines.push('#');
+    const raw = lines.join('\n');
+    expect(raw.length).toBeLessThan(LOCKFILE_MAX_BYTES);
+    const r = parseLockfile(raw);
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.error).toBe('too_many_lines');
   });
 });
