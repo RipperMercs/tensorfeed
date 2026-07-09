@@ -8,12 +8,12 @@ import ShareBar from '@/components/originals/ShareBar';
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://tensorfeed.ai/originals/claude-sonnet-5-only-frontier-available-federal-gate' },
-  title: 'Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Is Dark, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.',
+  title: 'Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Pulled, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.',
   description:
-    'On June 30, 2026 Anthropic shipped Claude Sonnet 5 to the public API at $2/$10 introductory pricing with a 1M context, 85.2 percent SWE-Bench Verified, and 63.2 percent SWE-Bench Pro. It is the only top-tier US frontier model a builder without a federal sponsor can call today. Fable 5 is still dark under the export control pull, GPT-5.6 Sol is inside a customer-by-customer NCD and OSTP queue, and Gemini 3.5 Pro slipped a second I/O commitment into July. The federal gate on the frontier just handed Anthropic a two to eight week distribution monopoly on the buyable ceiling.',
+    'On June 30, 2026 Anthropic shipped Claude Sonnet 5 to the public API at $2/$10 introductory pricing with a 1M context, 85.2 percent SWE-Bench Verified, and 63.2 percent SWE-Bench Pro. It is the only top-tier US frontier model a builder without a federal sponsor can call today. Fable 5 was dark under the export-control pull when this ran (lift announced June 30, access back July 1), GPT-5.6 Sol is inside a customer-by-customer NCD and OSTP queue, and Gemini 3.5 Pro slipped a second I/O commitment into July. The distribution window the federal gate handed Anthropic closed almost as soon as it opened: Fable 5 returned the day this piece published.',
   openGraph: {
-    title: 'Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Is Dark, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.',
-    description: 'Sonnet 5 shipped into the one open lane on the frontier ceiling this week. Fable 5 pulled, GPT-5.6 Sol federally gated, Gemini 3.5 Pro slipped again. Here is what the distribution monopoly is worth.',
+    title: 'Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Pulled, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.',
+    description: 'Sonnet 5 shipped into the one open lane on the frontier ceiling this week. Fable 5 pulled, GPT-5.6 Sol federally gated, Gemini 3.5 Pro slipped again. Here is what the distribution window was worth; Fable 5 returned July 1.',
     type: 'article',
     publishedTime: '2026-07-01T10:00:00Z',
     authors: ['Kira Nolan'],
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy.',
-    description: 'Fable dark. GPT-5.6 Sol NCD-gated. Gemini 3.5 slipped. Sonnet 5 owns the buyable ceiling for the next two to eight weeks.',
+    description: "Fable pulled, then back July 1. GPT-5.6 Sol NCD-gated. Gemini 3.5 slipped. Sonnet 5's solo window closed almost as soon as it opened.",
   },
 };
 
@@ -29,8 +29,8 @@ export default function ClaudeSonnet5OnlyFrontierAvailableFederalGatePage() {
   return (
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <ArticleJsonLd
-        title="Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Is Dark, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped."
-        description="Anthropic shipped Claude Sonnet 5 to the public API on June 30, 2026 with $2/$10 introductory pricing, a 1M context, 85.2 percent SWE-Bench Verified, and 63.2 percent SWE-Bench Pro. It is the only broadly-available top-tier US frontier model right now. Fable 5 is dark, GPT-5.6 Sol is federally gated, Gemini 3.5 Pro slipped a second I/O commitment. Anthropic just picked up a two to eight week distribution monopoly on the buyable ceiling."
+        title="Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Pulled, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped."
+        description="Anthropic shipped Claude Sonnet 5 to the public API on June 30, 2026 with $2/$10 introductory pricing, a 1M context, 85.2 percent SWE-Bench Verified, and 63.2 percent SWE-Bench Pro. At publication it was the newest top-tier US frontier model a builder without a federal sponsor could call. Fable 5 was dark until its July 1 return, GPT-5.6 Sol was federally gated, Gemini 3.5 Pro slipped a second I/O commitment. The distribution window closed almost as soon as it opened."
         datePublished="2026-07-01"
         author="Kira Nolan"
       />
@@ -56,7 +56,7 @@ export default function ClaudeSonnet5OnlyFrontierAvailableFederalGatePage() {
 
       <header className="mb-10">
         <h1 className="text-3xl sm:text-4xl font-bold text-text-primary mb-4 leading-tight">
-          Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Is Dark, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.
+          Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Pulled, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.
         </h1>
         <div className="flex items-center gap-3 text-sm text-text-muted">
           <span className="text-text-secondary font-medium">Kira Nolan</span>
@@ -72,11 +72,18 @@ export default function ClaudeSonnet5OnlyFrontierAvailableFederalGatePage() {
 
       <ShareBar
         path="/originals/claude-sonnet-5-only-frontier-available-federal-gate"
-        title="Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Is Dark, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped."
+        title="Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Pulled, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped."
       />
 
       {/* Article body */}
       <div className="prose-custom space-y-6 text-lg text-text-primary leading-relaxed">
+        <p className="italic text-text-muted text-base">
+          Editor&apos;s note (July 9, 2026): this piece published on July 1 describing the ladder
+          as of June 30. Anthropic had announced the Fable 5 export-control lift on June 30, and
+          access was restored on July 1, so the distribution window described below closed almost
+          as soon as it opened. The analysis is preserved as written; read it as of June 30.
+        </p>
+
         <p>
           On June 30, 2026 Anthropic shipped Claude Sonnet 5 into the public API with a 1M token
           context window, 85.2 percent on SWE-Bench Verified, 63.2 percent on SWE-Bench Pro, and a

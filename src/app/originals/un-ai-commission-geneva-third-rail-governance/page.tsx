@@ -11,12 +11,12 @@ export const metadata: Metadata = {
   title:
     'The UN Just Seated Jack Clark, Jensen Huang, and Andy Jassy On A Global AI Commission. Geneva Meets Monday. Frontier Governance Just Split Three Ways.',
   description:
-    'On July 2, 2026 the UN and ITU launched the AI for Good Global Commission with 40-plus founding members, co-chaired by Rwandan President Paul Kagame and Salesforce CEO Marc Benioff. Anthropic co-founder Jack Clark, Nvidia CEO Jensen Huang, Amazon CEO Andy Jassy, Microsoft President Brad Smith, and Cohere co-founder Aidan Gomez all took seats. The inaugural meeting is Monday July 7 in Geneva during the AI for Good Summit. Fable 5 is still dark on a US export directive. Meituan LongCat-2.0 shipped on Chinese silicon two days before the announcement. The governance rails just split three ways: US federal gate, Chinese sovereign stack, UN commission.',
+    'On July 2, 2026 the UN and ITU launched the AI for Good Global Commission with 40-plus founding members, co-chaired by Rwandan President Paul Kagame and Salesforce CEO Marc Benioff. Anthropic co-founder Jack Clark, Nvidia CEO Jensen Huang, Amazon CEO Andy Jassy, Microsoft President Brad Smith, and Cohere co-founder Aidan Gomez all took seats. The inaugural meeting is Monday July 7 in Geneva during the AI for Good Summit. Fable 5 returned to market July 1 after a US export-control pull that ran from June 12 to June 30. Meituan LongCat-2.0 shipped on Chinese silicon two days before the announcement. The governance rails just split three ways: US federal gate, Chinese sovereign stack, UN commission.',
   openGraph: {
     title:
       'The UN Just Seated Jack Clark, Jensen Huang, and Andy Jassy On A Global AI Commission. Geneva Meets Monday.',
     description:
-      'Anthropic, Nvidia, Amazon, Microsoft, and Cohere all took seats on the UN AI for Good Global Commission. Inaugural meeting Monday. Fable 5 is still dark. Here is what the third governance rail changes.',
+      'Anthropic, Nvidia, Amazon, Microsoft, and Cohere all took seats on the UN AI for Good Global Commission. Inaugural meeting Monday. Fable 5 is just back from a US export-control pull. Here is what the third governance rail changes.',
     type: 'article',
     publishedTime: '2026-07-04T10:00:00Z',
     authors: ['Kira Nolan'],
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     title:
       'The UN Just Seated Jack Clark, Jensen Huang, and Andy Jassy On A Global AI Commission.',
     description:
-      'Geneva meets Monday. Fable 5 is still dark. Meituan just shipped on Chinese chips. The governance rails just split three ways.',
+      'Geneva meets Monday. Fable 5 is just back from the export pull. Meituan just shipped on Chinese chips. The governance rails just split three ways.',
   },
 };
 
@@ -35,7 +35,7 @@ export default function UNAICommissionGenevaPage() {
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <ArticleJsonLd
         title="The UN Just Seated Jack Clark, Jensen Huang, and Andy Jassy On A Global AI Commission. Geneva Meets Monday. Frontier Governance Just Split Three Ways."
-        description="On July 2, 2026 the UN and ITU launched the AI for Good Global Commission with 40-plus founding members, co-chaired by Rwandan President Paul Kagame and Salesforce CEO Marc Benioff. Anthropic co-founder Jack Clark, Nvidia CEO Jensen Huang, Amazon CEO Andy Jassy, Microsoft President Brad Smith, and Cohere co-founder Aidan Gomez all took seats. The inaugural meeting is Monday July 7 in Geneva during the AI for Good Summit. Fable 5 is still dark on a US export directive. Meituan LongCat-2.0 shipped on Chinese silicon two days before the announcement."
+        description="On July 2, 2026 the UN and ITU launched the AI for Good Global Commission with 40-plus founding members, co-chaired by Rwandan President Paul Kagame and Salesforce CEO Marc Benioff. Anthropic co-founder Jack Clark, Nvidia CEO Jensen Huang, Amazon CEO Andy Jassy, Microsoft President Brad Smith, and Cohere co-founder Aidan Gomez all took seats. The inaugural meeting is Monday July 7 in Geneva during the AI for Good Summit. Fable 5 returned to market July 1 after a US export-control pull that ran from June 12 to June 30. Meituan LongCat-2.0 shipped on Chinese silicon two days before the announcement."
         datePublished="2026-07-04"
         author="Kira Nolan"
       />
@@ -115,7 +115,7 @@ export default function UNAICommissionGenevaPage() {
                 <td className="px-4 py-3 text-accent-primary font-medium">US federal gate</td>
                 <td className="px-4 py-3">Commerce, NCD, OSTP</td>
                 <td className="px-4 py-3">Export directive, customer-by-customer NCD queue</td>
-                <td className="px-4 py-3">Fable 5 dark, GPT-5.6 Sol NCD-gated</td>
+                <td className="px-4 py-3">Fable 5 pulled June 12 to 30, GPT-5.6 Sol NCD-gated</td>
               </tr>
               <tr>
                 <td className="px-4 py-3 text-accent-primary font-medium">Chinese sovereign stack</td>
@@ -287,7 +287,7 @@ export default function UNAICommissionGenevaPage() {
             href="/originals/claude-sonnet-5-only-frontier-available-federal-gate"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
-            <span className="text-text-primary text-sm">Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Is Dark, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.</span>
+            <span className="text-text-primary text-sm">Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Pulled, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.</span>
           </Link>
           <Link
             href="/originals/meituan-longcat-2-owl-alpha-openrouter"

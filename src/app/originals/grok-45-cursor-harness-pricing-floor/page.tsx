@@ -236,11 +236,12 @@ export default function Grok45CursorHarnessPricingFloorPage() {
 
         <p>
           Where it gets slippery: the frontier reference point in the SpaceXAI charts is Claude Fable
-          5, which tops all four published coding evals. Fable 5 is still dark on day 27 under the
-          Commerce order. So the honest reading of the release is that Grok 4.5 beats the best model
-          you can currently buy at the top of the ladder, and loses to a model nobody can buy at all.
-          Musk himself has conceded that Grok 4.5 trails the leaders. He is right, and it does not
-          matter, because nobody is billing against a dark model.
+          5, which tops all four published coding evals. Fable 5 went dark under the Commerce order
+          on June 12 and came back on July 1 at its full $10/$50 pricing, a week before Grok 4.5
+          shipped. So the honest reading of the release is that Grok 4.5 undercuts the buyable top
+          of the ladder on price and trails it on capability, with both models live and billable.
+          Musk himself has conceded that Grok 4.5 trails the leaders. He is right, and this time it
+          matters, because the model it trails has been back on the market for eight days.
         </p>
 
         <p>
@@ -334,8 +335,7 @@ export default function Grok45CursorHarnessPricingFloorPage() {
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
             <span className="text-text-primary text-sm">
-              GPT-5.6 Sol Just Went Public. Sonnet 5&apos;s 9-Day Monopoly on the Buyable Frontier Just
-              Ended.
+              GPT-5.6 Sol Just Went Public After a 13-Day Federal Gate. OpenAI Was the Last US Lab Missing From the Buyable Frontier.
             </span>
           </Link>
           <Link

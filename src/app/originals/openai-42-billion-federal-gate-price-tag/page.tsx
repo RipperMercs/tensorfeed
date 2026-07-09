@@ -347,7 +347,7 @@ export default function OpenAI42BFederalGatePricePage() {
             href="/originals/claude-sonnet-5-only-frontier-available-federal-gate"
             className="block bg-bg-secondary border border-border rounded-lg px-4 py-3 hover:border-accent-primary transition-colors"
           >
-            <span className="text-text-primary text-sm">Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Is Dark, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.</span>
+            <span className="text-text-primary text-sm">Claude Sonnet 5 Just Became the Only Frontier Model You Can Actually Buy. Fable Pulled, GPT-5.6 Sol Is NCD-Gated, Gemini 3.5 Slipped.</span>
           </Link>
           <Link
             href="/originals/anthropic-confidential-s1-ipo"
