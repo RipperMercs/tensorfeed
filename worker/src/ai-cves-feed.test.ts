@@ -240,6 +240,14 @@ describe('classifyProduct', () => {
     expect(classifyProduct('google-cloud-aiplatform')).toBe('model-gateway');
   });
 
+  it('matches the run 20260709-151659 full-history package-name forms', () => {
+    expect(classifyProduct('mcp')).toBe('mcp-tool');
+    expect(classifyProduct('semantic-kernel')).toBe('agent-framework');
+    expect(classifyProduct('Microsoft.SemanticKernel.Core')).toBe('agent-framework');
+    expect(classifyProduct('llama-cpp-python')).toBe('inference-stack');
+    expect(classifyProduct('llama_cpp')).toBe('inference-stack');
+  });
+
   it('leaves general (non-AI-stack) dependency libs unflagged', () => {
     // These appeared in AI-stack advisories as dependencies but are not AI-stack core.
     expect(classifyProduct('FFmpeg')).toBeNull();

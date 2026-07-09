@@ -276,6 +276,10 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   // inference-stack
   { needle: 'vllm', category: 'inference-stack' },
   { needle: 'llama.cpp', category: 'inference-stack' },
+  // GHSA package-name forms of llama.cpp bindings (run 20260709-151659
+  // full-history corpus): llama-cpp-python et al.
+  { needle: 'llama-cpp', category: 'inference-stack' },
+  { needle: 'llama_cpp', category: 'inference-stack' },
   { needle: 'ggml', category: 'inference-stack' },
   { needle: 'ollama', category: 'inference-stack' },
   { needle: 'mlc-llm', category: 'inference-stack' },
@@ -298,6 +302,10 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'crewai', category: 'agent-framework' },
   { needle: 'haystack', category: 'agent-framework' },
   { needle: 'semantic kernel', category: 'agent-framework' },
+  // Hyphen and dotted package forms (semantic-kernel on pip,
+  // Microsoft.SemanticKernel.Core on NuGet).
+  { needle: 'semantic-kernel', category: 'agent-framework' },
+  { needle: 'semantickernel', category: 'agent-framework' },
   { needle: 'model context protocol', category: 'agent-framework' },
   { needle: 'mcp server', category: 'agent-framework' },
   { needle: 'flowise', category: 'agent-framework' },
@@ -389,6 +397,13 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   // covers the npm scope (@modelcontextprotocol/sdk and friends).
   { needle: 'fastmcp', category: 'mcp-tool' },
   { needle: 'modelcontextprotocol', category: 'mcp-tool' },
+  // The MCP Python SDK ships on pip as literally 'mcp' (4 advisories in
+  // the 20260709-151659 full-history corpus). A bare substring needle is
+  // broader than we normally allow (it also matches any name containing
+  // the letters mcp), but the verdict engine's exact-token paperAffects
+  // gate protects match quality; this only widens cohort membership and
+  // batch flagging. Keep it after the specific mcp needles above.
+  { needle: 'mcp', category: 'mcp-tool' },
 
   // other-ai (ML app UIs and LLM front-ends; added 2026-06-24 from the job #95 corpus)
   { needle: 'gradio', category: 'other-ai' },
