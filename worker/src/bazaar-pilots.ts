@@ -3395,6 +3395,87 @@ const X402_PUBLISHER_VERDICT_PILOT: BazaarPilotConfig = {
   },
 };
 
+/**
+ * /api/premium/cve-check: the productized $1 CVE Check (2026-07-09). POST a
+ * lockfile in the request body, get the same deterministic GO/HOLD/BLOCK
+ * deploy gate as stack-safety-verdict plus the detected format, over the
+ * whole stack, with an AFTA-signed receipt. First POST-based Bazaar pilot:
+ * input.body carries the lockfile text, schema.method is POST.
+ */
+const CVE_CHECK_PILOT: BazaarPilotConfig = {
+  description:
+    'CVE Check: the $1 pre-deploy security gate for an AI stack. POST a lockfile (requirements.txt, package.json, package-lock.json, or poetry.lock) and get a BLOCK/HOLD/PASS deploy gate with matched-CVE evidence per package, fusing the ingested AI-CVE batch with the CISA KEV catalog, plus an AFTA-signed receipt. Deterministic: same lockfile in, same verdict out.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'POST',
+          body: 'vllm==0.5.0\ntransformers==4.40.0\ntorch==2.3.0',
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            gate: 'BLOCK',
+            format: 'requirements',
+            truncated: false,
+            counts: { block: 1, hold: 0, pass: 2, unknown: 0 },
+            packages: [
+              {
+                package: 'vllm',
+                version: '0.5.0',
+                verdict: 'BLOCK',
+                exploited: true,
+                fix_available: false,
+                matched_cves: ['CVE-2026-00000'],
+                reason: 'Exploited-in-wild CVE with no fixed version in the installed range.',
+              },
+              {
+                package: 'transformers',
+                version: '4.40.0',
+                verdict: 'PASS',
+                exploited: false,
+                fix_available: false,
+                matched_cves: [],
+                reason: 'No matching AI-stack CVE.',
+              },
+            ],
+            claim: 'Deterministic deploy gate over the AI-CVE batch and the CISA KEV catalog. Same input yields the same verdict and the same signed receipt.',
+            receipt: { signature: 'ed25519:...', response_hash: 'sha256:...' },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['POST'] },
+              body: {
+                type: 'string',
+                description:
+                  'Lockfile contents as the raw request body: requirements.txt, pip freeze, package.json, package-lock.json, or poetry.lock. Format is auto-detected.',
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: {
+            type: 'object',
+            properties: { type: { type: 'string' }, example: { type: 'object' } },
+            required: ['type'],
+          },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 // Wave 21 (2026-05-28): stack-safety-verdict. GO/HOLD/BLOCK deploy gate
 // over a package list, fusing the ingested AI-CVE batch with CISA KEV.
 // Free taste at /api/preview/stack-safety-verdict. Total pilot count: 45 -> 46.
@@ -7770,6 +7851,10 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/x402-settlement-verdict': X402_SETTLEMENT_VERDICT_PILOT,
   // Wave 21 (2026-05-28): stack-safety-verdict. GO/HOLD/BLOCK deploy gate.
   '/api/premium/stack-safety-verdict': STACK_SAFETY_PILOT,
+  // Wave 48 (2026-07-09): cve-check. The productized $1 CVE Check. First POST
+  // pilot: paste a lockfile in the body, get the stack-safety deploy gate over
+  // the whole stack with an AFTA-signed receipt.
+  '/api/premium/cve-check': CVE_CHECK_PILOT,
   // Wave 22 (2026-05-28): benchmark-trust-verdict. Benchmark trustworthiness.
   '/api/premium/benchmark-trust-verdict': BENCHMARK_TRUST_PILOT,
   // Wave 23 (2026-05-28): failover-verdict. Best operational failover target.

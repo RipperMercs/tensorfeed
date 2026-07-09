@@ -189,6 +189,9 @@ const PILOT_PATHS = [
   // verdict: RDAP age, DoH DNS hygiene, crt.sh cert history, Majestic top-100k,
   // Phishing.Database; proceed/step_up/block/insufficient_data)
   '/api/premium/merchant/legitimacy',
+  // Wave 48 (2026-07-09): cve-check (first POST pilot). Paste a lockfile, get
+  // the stack-safety deploy gate over the whole stack, AFTA-signed.
+  '/api/premium/cve-check',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.
@@ -791,6 +794,50 @@ describe('Wave 29 pilot AJV validation', () => {
       expect(config!.description.length).toBeGreaterThan(40);
     });
   }
+});
+
+describe('Wave 48 pilot AJV validation (cve-check, first POST pilot)', () => {
+  // Same load-bearing AJV check as the GET waves, but the negative control
+  // tampers to GET (not POST) because this pilot's schema is POST-only.
+  const path = '/api/premium/cve-check';
+
+  it(`${path} info validates against its declared schema`, () => {
+    const ext = bazaarExtensionsFor(path);
+    const bazaar = ext.bazaar as Record<string, any>;
+    const ajv = new Ajv({ strict: false, allErrors: true });
+    const validate = ajv.compile(bazaar.schema);
+    const valid = validate(bazaar.info);
+    if (!valid) {
+      throw new Error(
+        `${path} bazaar extension info failed schema validation: ${JSON.stringify(validate.errors, null, 2)}`,
+      );
+    }
+    expect(valid).toBe(true);
+  });
+
+  it(`${path} declares HTTP POST with a body`, () => {
+    const ext = bazaarExtensionsFor(path);
+    const info = (ext.bazaar as Record<string, any>).info;
+    expect(info.input.type).toBe('http');
+    expect(info.input.method).toBe('POST');
+    expect(typeof info.input.body).toBe('string');
+  });
+
+  it(`${path} rejects info with wrong input.method (GET, negative control)`, () => {
+    const ext = bazaarExtensionsFor(path);
+    const bazaar = ext.bazaar as Record<string, any>;
+    const ajv = new Ajv({ strict: false, allErrors: true });
+    const validate = ajv.compile(bazaar.schema);
+    const tampered = JSON.parse(JSON.stringify(bazaar.info));
+    tampered.input.method = 'GET';
+    expect(validate(tampered)).toBe(false);
+  });
+
+  it(`${path} has a description longer than 40 chars`, () => {
+    const config = getBazaarPilotConfig(path);
+    expect(config).not.toBeNull();
+    expect(config!.description.length).toBeGreaterThan(40);
+  });
 });
 
 describe('bazaarPilotPaths', () => {

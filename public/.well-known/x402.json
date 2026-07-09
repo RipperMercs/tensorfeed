@@ -27815,6 +27815,161 @@
      }
     }
    }
+  },
+  {
+   "resource": {
+    "url": "https://tensorfeed.ai/api/premium/cve-check",
+    "description": "CVE Check: the $1 pre-deploy security gate for an AI stack. POST a lockfile (requirements.txt, package.json, package-lock.json, or poetry.lock) and get a BLOCK/HOLD/PASS deploy gate with matched-CVE evidence per package, fusing the ingested AI-CVE batch with the CISA KEV catalog, plus an AFTA-signed receipt. Deterministic: same lockfile in, same verdict out.",
+    "mimeType": "application/json"
+   },
+   "type": "http",
+   "method": "POST",
+   "x402Version": 2,
+   "accepts": [
+    {
+     "scheme": "exact",
+     "network": "eip155:8453",
+     "amount": "1000000",
+     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+     "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "name": "USD Coin",
+      "version": "2"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "POST"
+      }
+     }
+    },
+    {
+     "scheme": "exact",
+     "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+     "amount": "1000000",
+     "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+     "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "feePayer": "GVJJ7rdGiXr5xaYbRwRbjfaJL7fmwRygFi1H6aGqDveb"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "POST"
+      }
+     }
+    }
+   ],
+   "lastUpdated": "2026-07-09T00:00:00Z",
+   "metadata": {
+    "name": "CVE Check",
+    "description": "CVE Check: the $1 pre-deploy security gate for an AI stack. POST a lockfile (requirements.txt, package.json, package-lock.json, or poetry.lock) and get a BLOCK/HOLD/PASS deploy gate with matched-CVE evidence per package, fusing the ingested AI-CVE batch with the CISA KEV catalog, plus an AFTA-signed receipt. Deterministic: same lockfile in, same verdict out.",
+    "tier": 1,
+    "credits": 50,
+    "category": "ai-stack-cve-audit"
+   },
+   "extensions": {
+    "bazaar": {
+     "info": {
+      "input": {
+       "type": "http",
+       "method": "POST",
+       "body": "vllm==0.5.0\ntransformers==4.40.0\ntorch==2.3.0"
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "gate": "BLOCK",
+        "format": "requirements",
+        "truncated": false,
+        "counts": {
+         "block": 1,
+         "hold": 0,
+         "pass": 2,
+         "unknown": 0
+        },
+        "packages": [
+         {
+          "package": "vllm",
+          "version": "0.5.0",
+          "verdict": "BLOCK",
+          "exploited": true,
+          "fix_available": false,
+          "matched_cves": [
+           "CVE-2026-00000"
+          ],
+          "reason": "Exploited-in-wild CVE with no fixed version in the installed range."
+         },
+         {
+          "package": "transformers",
+          "version": "4.40.0",
+          "verdict": "PASS",
+          "exploited": false,
+          "fix_available": false,
+          "matched_cves": [],
+          "reason": "No matching AI-stack CVE."
+         }
+        ],
+        "claim": "Deterministic deploy gate over the AI-CVE batch and the CISA KEV catalog. Same input yields the same verdict and the same signed receipt.",
+        "receipt": {
+         "signature": "ed25519:...",
+         "response_hash": "sha256:..."
+        }
+       }
+      }
+     },
+     "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+       "input": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string",
+          "const": "http"
+         },
+         "method": {
+          "type": "string",
+          "enum": [
+           "POST"
+          ]
+         },
+         "body": {
+          "type": "string",
+          "description": "Lockfile contents as the raw request body: requirements.txt, pip freeze, package.json, package-lock.json, or poetry.lock. Format is auto-detected."
+         }
+        },
+        "required": [
+         "type",
+         "method"
+        ],
+        "additionalProperties": false
+       },
+       "output": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string"
+         },
+         "example": {
+          "type": "object"
+         }
+        },
+        "required": [
+         "type"
+        ]
+       }
+      },
+      "required": [
+       "input"
+      ]
+     }
+    }
+   }
   }
  ],
  "freeEndpoints": [
@@ -27886,5 +28041,5 @@
    "manifest": "https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
   }
  ],
- "lastUpdated": "2026-07-03T00:00:00Z"
+ "lastUpdated": "2026-07-09T00:00:00Z"
 }

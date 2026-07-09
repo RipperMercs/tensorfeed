@@ -123,6 +123,7 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   '/api/premium/provider-reliability-verdict':       { name: 'Provider reliability verdict',          category: 'ai-provider-reliability-verdict', credits: 1, method: 'GET' },
   '/api/premium/x402-settlement-verdict':            { name: 'x402 settlement verdict',               category: 'x402-settlement-verdict', credits: 1, method: 'GET' },
   '/api/premium/stack-safety-verdict':               { name: 'Stack safety verdict',                  category: 'ai-stack-safety-verdict', credits: 1, method: 'GET' },
+  '/api/premium/cve-check':                          { name: 'CVE Check',                             category: 'ai-stack-cve-audit',      credits: 50, method: 'POST' },
   '/api/premium/benchmark-trust-verdict':            { name: 'Benchmark trust verdict',               category: 'ai-benchmark-trust-verdict', credits: 1, method: 'GET' },
   '/api/premium/failover-verdict':                   { name: 'Failover verdict',                      category: 'ai-failover-verdict',     credits: 1, method: 'GET' },
   '/api/premium/sec/filings/guidance-delta':         { name: 'SEC guidance-delta verdict',            category: 'sec-guidance-delta',      credits: 1, method: 'GET' },
