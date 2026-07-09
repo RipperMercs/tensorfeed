@@ -236,11 +236,12 @@ export default function Grok45CursorHarnessPricingFloorPage() {
 
         <p>
           Where it gets slippery: the frontier reference point in the SpaceXAI charts is Claude Fable
-          5, which tops all four published coding evals. Fable 5 is still dark on day 27 under the
-          Commerce order. So the honest reading of the release is that Grok 4.5 beats the best model
-          you can currently buy at the top of the ladder, and loses to a model nobody can buy at all.
-          Musk himself has conceded that Grok 4.5 trails the leaders. He is right, and it does not
-          matter, because nobody is billing against a dark model.
+          5, which tops all four published coding evals. Fable 5 was dark under the Commerce order
+          from June 12 through June 30, when the controls were lifted and the model returned on July
+          1. So the honest reading of the release is that Grok 4.5 beat every model available on the
+          day it shipped, and trails Fable 5, which has been back on the market for eight days. Musk
+          himself has conceded that Grok 4.5 trails the leaders. He is right, and the gap now
+          matters, because Fable 5 is live.
         </p>
 
         <p>
