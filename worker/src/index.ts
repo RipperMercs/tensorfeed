@@ -8291,6 +8291,76 @@ export default {
       );
     }
 
+    // === CVE CHECK PREVIEW (free, rate-limited 1/IP/day) ===
+    // Powers the /cve-check landing-page demo and the tweet funnel. Same
+    // deterministic engine as the paid endpoint, run over the FULL parsed
+    // stack so the free gate is accurate, but the per-package matched-CVE
+    // evidence (the paid moat) is stripped down to the single worst
+    // offender's verdict and reason. No payment, no receipt. Parse, never
+    // resolve.
+    if (path === '/api/preview/cve-check' && request.method === 'POST') {
+      const ccIp = getClientIP(request);
+      const { checkCveCheckSampleRateLimit } = await import('./cve-check-sample');
+      const ccLimit = await checkCveCheckSampleRateLimit(env, ccIp, 1);
+      if (!ccLimit.allowed) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: 'rate_limit_exceeded',
+            limit: ccLimit.limit,
+            remaining: 0,
+            reset_in_hours: hoursUntilUTCRollover(),
+            premium_endpoint: '/api/premium/cve-check',
+            message:
+              'Free CVE Check sample limited to 1 call/day per IP. The paid /api/premium/cve-check runs your full lockfile with matched-CVE evidence (ids, ranges, fixes, KEV status), an AFTA-signed receipt, and no rate limit, for $1 in USDC.',
+          },
+          429,
+        );
+      }
+
+      const { parseLockfile } = await import('./lockfile-parse');
+      const raw = await request.text().catch(() => '');
+      const parsed = parseLockfile(raw);
+      if (!parsed.ok) {
+        return jsonResponse({ ok: false, error: parsed.error, hint: parsed.hint }, 400);
+      }
+
+      const { computeStackSafetyVerdict } = await import('./premium-stack-safety');
+      const verdict = await computeStackSafetyVerdict(env, parsed.packages);
+      // Worst offender only, evidence stripped: the matched CVE ids, ranges,
+      // fixes, and KEV status are the paid moat and are never in this body.
+      const worst =
+        verdict.packages.find((p) => p.verdict === 'BLOCK') ??
+        verdict.packages.find((p) => p.verdict === 'HOLD') ??
+        null;
+      return jsonResponse(
+        {
+          ok: true,
+          preview: true,
+          gate: verdict.gate,
+          counts: verdict.counts,
+          format: parsed.format,
+          truncated: parsed.truncated,
+          worst_offender: worst
+            ? { package: worst.package, version: worst.version, verdict: worst.verdict, reason: worst.reason }
+            : null,
+          claim: verdict.claim,
+          rate_limit: { limit: ccLimit.limit, remaining: ccLimit.remaining, scope: 'per IP per UTC day' },
+          upgrade: {
+            premium_endpoint: '/api/premium/cve-check',
+            adds: [
+              'every package with matched-CVE evidence (ids, ranges, fixes, KEV status)',
+              'AFTA-signed receipt',
+              'no rate limit',
+            ],
+            price: '$1 in USDC over x402',
+          },
+        },
+        200,
+        0,
+      );
+    }
+
     // === PAID PREMIUM ENDPOINT: STACK SAFETY VERDICT (Tier 1, 1 credit) ===
     // /api/premium/stack-safety-verdict
     // GO / HOLD / BLOCK deploy gate per package, fusing the ingested AI-CVE
