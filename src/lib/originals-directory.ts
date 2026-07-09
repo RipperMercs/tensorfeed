@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'gpt-56-sol-public-sonnet-5-monopoly-ends',
+    title:
+      "GPT-5.6 Sol Just Went Public. Sonnet 5's 9-Day Monopoly on the Buyable Frontier Just Ended.",
+    author: 'Adrian Vale',
+    date: 'July 9, 2026',
+    readTime: '6 min read',
+    description:
+      "On July 9, 2026, OpenAI released GPT-5.6 Sol, Terra, and Luna globally, ending a two-week Commerce Department limited-access window and closing the nine-day stretch (July 1 through July 8) in which Claude Sonnet 5 was the only publicly-priced frontier model on the buyable ladder. Fable 5 remains dark on day 27. Inside the asymmetric federal gate math (Sol held 14 days on a trusted-partner lane, Fable 5 pulled fully with no lane), what Anthropic actually booked during the monopoly window (procurement lock-in, the S-1 revenue attribution slide, third-party harness momentum), Sol's $1.75/$8.75 pricing sitting 12.5 percent under Sonnet 5's introductory tier and what that does to the closed-frontier pricing floor, Luna at $0.20/$0.80 attacking the open-weights floor, why the OpenAI September and Anthropic October IPO windows moved in opposite directions on the same day, and three signposts in the next 60 days: Fable 5 return date, Sol enterprise volumes in the S-1 amendment, and whether Anthropic holds the $2/$10 tier through October to match Sol on-ladder. Nine days on the buyable frontier alone was a gift from Commerce, held open the exact number of days it took OpenAI to negotiate a limited-partner lane.",
+  },
+  {
     slug: 'microsoft-mai-office-swap-anthropic-ceiling',
     title:
       'Microsoft Just Started Swapping Anthropic Out of Excel and Outlook. Suleyman Just Set the Ceiling on the Anthropic S-1.',
