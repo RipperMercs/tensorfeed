@@ -11,6 +11,14 @@ name: Originals Fact-Check Agent
 #   - weekly cron -> re-check articles published in the last 7 days (drift backstop; the
 #     on-publish trigger is the thorough per-article gate the day each article ships)
 #
+# TRIGGER SHAPE (fixed 2026-07-09): claude-code-action@v1 rejects plain push
+# events at its entrypoint ("Unsupported event type: push"); its automation
+# mode runs on schedule and workflow_dispatch only. Every push-triggered run
+# since mid-June failed this way while the Monday cron kept passing. So the
+# push trigger no longer runs the agent directly: a light redispatch job
+# re-fires this same workflow as workflow_dispatch (the documented exception
+# GITHUB_TOKEN is allowed to trigger), carrying the push SHAs as inputs.
+#
 # Prerequisites (already satisfied for the freshness agent): repo secret
 # CLAUDE_CODE_OAUTH_TOKEN, the Claude GitHub App, and the repo toggle
 # can_approve_pull_request_reviews = true.
@@ -25,20 +33,43 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "weekly (last 7 days) for a watched manual run"
+        description: "weekly (last 7 days) or publish (diff before..sha)"
         default: "weekly"
+      before:
+        description: "publish mode: the pre-push SHA to diff from"
+        default: ""
+      sha:
+        description: "publish mode: the pushed SHA to diff to"
+        default: ""
 
 permissions:
   contents: write          # push the throwaway branch only (never main directly)
   pull-requests: write     # open the correction PR
   issues: write            # open the flags issue
   id-token: write          # claude-code-action OIDC token exchange
+  actions: write           # redispatch job re-fires this workflow as workflow_dispatch
 
 jobs:
-  factcheck:
+  # Push lands here and only here: claude-code-action cannot run on push
+  # events, so hand the SHAs to a workflow_dispatch run that can.
+  redispatch:
     runs-on: ubuntu-latest
     # Anti-loop: skip the agent's own merged correction (its PR title carries the marker).
-    if: ${{ !contains(github.event.head_commit.message, '[skip-factcheck]') }}
+    if: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip-factcheck]') }}
+    steps:
+      - name: Re-fire as workflow_dispatch with the push SHAs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run originals-factcheck-agent.yml \
+            --repo "${{ github.repository }}" \
+            -f mode=publish \
+            -f before='${{ github.event.before }}' \
+            -f sha='${{ github.sha }}'
+
+  factcheck:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'push' }}
     steps:
       # Stay green (skip cleanly) until the secret exists.
       - name: Verify setup
@@ -70,20 +101,17 @@ jobs:
         id: mode
         if: steps.pre.outputs.ready == 'true'
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            echo "mode=publish" >> "$GITHUB_OUTPUT"
-          else
-            echo "mode=${{ github.event.inputs.mode || 'weekly' }}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "mode=${{ github.event.inputs.mode || 'weekly' }}" >> "$GITHUB_OUTPUT"
 
       - name: Compute changed originals (publish mode)
         if: steps.pre.outputs.ready == 'true' && steps.mode.outputs.mode == 'publish'
         run: |
-          BEFORE='${{ github.event.before }}'
-          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+          BEFORE='${{ github.event.inputs.before }}'
+          SHA='${{ github.event.inputs.sha }}'
+          if [ -z "$BEFORE" ] || [ -z "$SHA" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
             git diff --name-only HEAD~1 HEAD -- 'src/app/originals/**' > changed.txt || true
           else
-            git diff --name-only "$BEFORE" "${{ github.sha }}" -- 'src/app/originals/**' > changed.txt
+            git diff --name-only "$BEFORE" "$SHA" -- 'src/app/originals/**' > changed.txt
           fi
           echo "changed files:"; cat changed.txt
 
