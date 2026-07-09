@@ -20,7 +20,7 @@ export type ComputeResult =
 export type PremiumCompute = (payment: PaymentResult) => Promise<ComputeResult>;
 
 export interface PremiumDescriptor {
-  tier: 1 | 2 | 3 | 4;
+  tier: 1 | 2 | 3 | 4 | 5;
   endpoint: string;
 }
 

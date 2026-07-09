@@ -136,7 +136,7 @@ interface McpToolDef {
   premium?: {
     restPath: string;
     credits: number;
-    paymentTier: 1 | 2 | 3 | 4;
+    paymentTier: 1 | 2 | 3 | 4 | 5;
     buildParams: (args: Record<string, unknown>) => URLSearchParams;
   };
 }
