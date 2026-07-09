@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'grok-45-cursor-harness-pricing-floor',
+    title:
+      'Grok 4.5 Is the First Frontier Model Trained From Inside a Harness. Its Price Advantage Lasted 24 Hours.',
+    author: 'Marcus Chen',
+    date: 'July 9, 2026',
+    readTime: '6 min read',
+    description:
+      "SpaceXAI shipped Grok 4.5 on July 8, 2026, twenty-two days after SpaceX closed the $60 billion Anysphere acquisition. It was trained jointly with Cursor on trillions of tokens of real developer sessions against live codebases, it ships inside Cursor on every plan on day one, and it is priced at $2 input and $6 output per million tokens. Then OpenAI released GPT-5.6 Luna publicly the next morning at $1 and $6, matching it on output and halving it on input. Inside the harness-data thesis (a lab bought the surface, trained on what the surface sees, and distributed the result back through it), the benchmark sleight of hand in leading with a comparison against Claude Fable 5 (still dark on day 27, so unbuyable), the detail nobody covered (SpaceXAI raised its own output price 140 percent, from Grok 4.3's $2.50 to $6.00, while undercutting Opus 4.8 by 76 percent), why the 2x token efficiency claim matters more than the sticker price, and three signposts: EU availability under the AI Act, whether Cursor keeps serving Sonnet 5 and Sol at parity ninety days out, and independent replication of the step-count claim on real repos. The fastest path to a competitive frontier model in 2026 does not run through more compute. It runs through owning the place where developers already work.",
+  },
+  {
     slug: 'gpt-56-sol-public-sonnet-5-monopoly-ends',
     title:
       "GPT-5.6 Sol Just Went Public. Sonnet 5's 9-Day Monopoly on the Buyable Frontier Just Ended.",
