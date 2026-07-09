@@ -219,6 +219,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/a2a-x402`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/hyperliquid`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/cve-watch`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${baseUrl}/cve-check`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/oss-tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/ai-policy`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/conferences`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
