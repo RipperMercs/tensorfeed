@@ -230,6 +230,17 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'verdict',
   },
   {
+    path: '/api/premium/cve-check',
+    credits: 50,
+    strict_premium: true,
+    params: [{ name: 'lockfile', required: true }],
+    returns:
+      'BLOCK/HOLD/PASS deploy gate for a pasted lockfile (requirements.txt, package.json, package-lock.json, poetry.lock), fusing the AI-CVE batch and CISA KEV, with an AFTA-signed receipt.',
+    free_sibling: '/api/preview/cve-check',
+    signed: true,
+    category: 'verdict',
+  },
+  {
     path: '/api/premium/benchmark-trust-verdict',
     credits: 1,
     strict_premium: true,

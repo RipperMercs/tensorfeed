@@ -30,8 +30,8 @@ const INDEX_SRC = readFileSync(join(HERE, 'index.ts'), 'utf8');
 
 // Tier -> real credit cost, mirrors TIER_COSTS in payments.ts. The handler
 // passes a tier to requirePayment(request, env, tier); the catalog stores
-// the charged credits.
-const TIER_COSTS: Record<string, number> = { '1': 1, '2': 1, '3': 5, '4': 10 };
+// the charged credits. Tier 5 (50 credits = $1.00) is the CVE Check product tier.
+const TIER_COSTS: Record<string, number> = { '1': 1, '2': 1, '3': 5, '4': 10, '5': 50 };
 
 /**
  * Map a regex prefix handler (as written in index.ts) to the catalog's
@@ -207,7 +207,7 @@ describe('premium catalog drift guard', () => {
     for (const e of PREMIUM_CATALOG) {
       expect(Number.isInteger(e.credits)).toBe(true);
       expect(e.credits).toBeGreaterThanOrEqual(1);
-      expect(e.credits).toBeLessThanOrEqual(10);
+      expect(e.credits).toBeLessThanOrEqual(50);
       expect(e.signed).toBe(true);
       expect(typeof e.returns).toBe('string');
       expect(e.returns.length).toBeGreaterThan(0);

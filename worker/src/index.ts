@@ -4830,6 +4830,7 @@ export default {
           premiumRouting: '/api/premium/routing?task=code|reasoning|creative|general (1 credit; top-5 ranked models with full score breakdown, pricing, status, and component-level detail. Optional ?budget=, ?min_quality=, ?top_n=1-10, and custom weights ?w_quality=, ?w_availability=, ?w_cost=, ?w_latency=.)',
           premiumRouteVerdict: '/api/premium/route-verdict?task=code|reasoning|creative|general or ?model= (1 credit, AFTA-signed; the single best model to use right now, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state, plus runners-up and a signed receipt. Optional ?max_latency_p95_ms=, ?require_operational=, ?exclude_deprecated=. 30-min freshness SLA, no-charge when stale.)',
           stackSafetyVerdict: '/api/premium/stack-safety-verdict?packages=name@version,... (1 credit, AFTA-signed; GO/HOLD/BLOCK deploy gate per AI-stack package, fusing the ingested AI-CVE batch + CISA KEV. Up to 10 packages. Never-false-confirm: BLOCK only on exploited with no fix, HOLD on version-ambiguous, PASS on no match, UNKNOWN outside the cohort.)',
+          cveCheck: 'POST /api/premium/cve-check (50 credits = $1.00, AFTA-signed; paste a lockfile (requirements.txt, package.json, package-lock.json, or poetry.lock) in the request body and get the BLOCK/HOLD/PASS deploy gate with matched-CVE evidence. Free sample at /api/preview/cve-check.)',
           benchmarkTrustVerdict: '/api/premium/benchmark-trust-verdict?benchmark= or ?category= (1 credit, AFTA-signed; is an AI benchmark a trustworthy capability signal or saturated/contaminated/near-ceiling, so down-weight a high score. Trust band + 0-100 score per benchmark, fusing contamination and saturation flags with live frontier compression, plus a down-weight recommendation and an alternative benchmark.)',
           failoverVerdict: '/api/premium/failover-verdict?from=<provider>&task= (1 credit, AFTA-signed; provider A degraded, recommend the best operational failover target for a task. Confirms A against live incident triage, then runs the route verdict with A and any failover_now provider excluded. Returns destination + incident reason + ranked alternatives.)',
           guidanceDeltaVerdict: '/api/premium/sec/filings/guidance-delta?accession= or ?ticker=&form= (1 credit, AFTA-signed; did this periodic 10-K/10-Q materially change guidance, segment outlook, or risk language vs the prior same-form filing, with the exact changed sentences quoted. Deterministic materiality_summary + full verbatim changes. Input-keyed freshness, no-charge when a newer same-form filing supersedes the delta.)',
@@ -8312,6 +8313,67 @@ export default {
         logPremiumUsage(env, '/api/premium/stack-safety-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
       return await premiumResponse(result, payment, 1, request, env);
+    }
+
+    // === PAID PREMIUM ENDPOINT: CVE CHECK (Tier 5, 50 credits = flat $1.00) ===
+    // POST /api/premium/cve-check
+    // The productized "$1 CVE Check": paste a lockfile (requirements.txt,
+    // package.json, package-lock.json, or poetry.lock) in the request body
+    // and get the same GO/HOLD/BLOCK deploy gate as stack-safety-verdict,
+    // plus the detected format and a truncation flag, with an AFTA-signed
+    // receipt. Param-required (a lockfile body), so strict-premium. The
+    // verdict path is deterministic: no LLM. We parse, never resolve: no
+    // install, no dependency resolution, no fetch of any URL the file names.
+    if (path === '/api/premium/cve-check') {
+      const payment = await requirePayment(request, env, 5);
+      if (!payment.paid) return payment.response!;
+
+      // Method gate runs AFTER payment, not as part of the path match: the
+      // strict-premium invariant is that ANY anonymous call to this path
+      // sees the canonical 402 challenge regardless of HTTP method (an
+      // anonymous GET must not fall through to a bare 404). A valid-payment
+      // non-POST call is a no-charge validation failure, not a raw 405.
+      if (request.method !== 'POST') {
+        return premiumValidationFailure(
+          { ok: false, error: 'method_not_allowed', hint: 'POST a lockfile in the request body.' },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const { parseLockfile, LOCKFILE_MAX_BYTES } = await import('./lockfile-parse');
+
+      // Reject an oversize body without buffering it (defense in depth; the
+      // parser re-checks the actual body length below). Post-payment so the
+      // no-charge path stays uniform: premiumValidationFailure does not charge.
+      const declaredLen = Number(request.headers.get('content-length') || '0');
+      if (Number.isFinite(declaredLen) && declaredLen > LOCKFILE_MAX_BYTES) {
+        return premiumValidationFailure(
+          { ok: false, error: 'too_large', hint: `Lockfile exceeds ${LOCKFILE_MAX_BYTES} bytes.` },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const raw = await request.text().catch(() => '');
+      const parsed = parseLockfile(raw);
+      if (!parsed.ok) {
+        return premiumValidationFailure({ ok: false, error: parsed.error, hint: parsed.hint }, payment, request, env);
+      }
+
+      const { computeStackSafetyVerdict } = await import('./premium-stack-safety');
+      const verdict = await computeStackSafetyVerdict(env, parsed.packages);
+      // Carry the detected format and truncation flag. Spreading the full
+      // verdict preserves capturedAt, so the AFTA freshness no-charge behaves
+      // exactly as it does for stack-safety-verdict.
+      const result = { ...verdict, format: parsed.format, truncated: parsed.truncated };
+
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/cve-check', request.headers.get('User-Agent') || 'unknown', 50, payment.token, payment.payerWallet),
+      );
+      return await premiumResponse(result, payment, 50, request, env);
     }
 
     // === BENCHMARK TRUST VERDICT PREVIEW (free, rate-limited) ===

@@ -289,8 +289,12 @@ describe('isStrictPremiumPath', () => {
       // + 1 (2026-06-28) merchant/legitimacy (param-required ?domain=; signed
       // domain-legitimacy verdict fusing RDAP age, DoH DNS hygiene, crt.sh cert
       // history, Majestic top-100k rank, and Phishing.Database active-domain list).
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(101);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(101); // no duplicates
+      // + 1 (2026-07-09) cve-check (param-required lockfile POST body; the
+      // productized $1 CVE Check, tier 5 = 50 credits; the same deploy gate as
+      // stack-safety-verdict over a pasted requirements.txt, package.json,
+      // package-lock.json, or poetry.lock).
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(102);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(102); // no duplicates
     });
     it('exposes 7 prefix paths (providers + clean-record pilots + ai-companies + x402-index)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(7);

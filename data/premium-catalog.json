@@ -1,8 +1,8 @@
 {
-  "count": 107,
+  "count": 108,
   "credit_range": {
     "min": 1,
-    "max": 10
+    "max": 50
   },
   "categories": {
     "compliance": 1,
@@ -21,7 +21,7 @@
     "sec": 4,
     "security": 14,
     "status": 4,
-    "verdict": 14,
+    "verdict": 15,
     "x402": 4
   },
   "endpoints": [
@@ -1761,6 +1761,21 @@
       ],
       "returns": "Trust band plus 0-100 score per benchmark, flagging saturation and contamination with a down-weight recommendation.",
       "free_sibling": "/api/preview/benchmark-trust-verdict",
+      "signed": true,
+      "category": "verdict"
+    },
+    {
+      "path": "/api/premium/cve-check",
+      "credits": 50,
+      "strict_premium": true,
+      "params": [
+        {
+          "name": "lockfile",
+          "required": true
+        }
+      ],
+      "returns": "BLOCK/HOLD/PASS deploy gate for a pasted lockfile (requirements.txt, package.json, package-lock.json, poetry.lock), fusing the AI-CVE batch and CISA KEV, with an AFTA-signed receipt.",
+      "free_sibling": "/api/preview/cve-check",
       "signed": true,
       "category": "verdict"
     },

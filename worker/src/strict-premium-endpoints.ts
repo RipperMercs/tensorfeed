@@ -131,6 +131,13 @@ export const STRICT_PREMIUM_PATHS: ReadonlyArray<string> = [
   // required (?packages=), so strict-premium gates anonymous crawlers to a
   // clean 402. Free taste at /api/preview/stack-safety-verdict.
   '/api/premium/stack-safety-verdict',
+  // CVE Check (2026-07-09). The productized $1 CVE Check: POST a lockfile,
+  // get the stack-safety deploy gate plus detected format and truncation
+  // flag, tier 5 (50 credits = $1.00), AFTA-signed. Param-required (a
+  // lockfile request body), so strict-premium gates anonymous crawlers to a
+  // clean 402 instead of a free-trial 200 on an empty body. Free taste at
+  // /api/preview/cve-check.
+  '/api/premium/cve-check',
   // Benchmark Trust Verdict (2026-05-28). Is a benchmark a trustworthy
   // capability signal, or saturated/contaminated/near-ceiling so a high
   // score should be down-weighted. No required params (returns all), but
