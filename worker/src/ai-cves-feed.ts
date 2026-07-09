@@ -257,6 +257,10 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'mlc llm', category: 'inference-stack' },
   { needle: 'tensorrt', category: 'inference-stack' },
   { needle: 'triton inference', category: 'inference-stack' },
+  // Bare 'triton' is the pip package (OpenAI's GPU kernel compiler, ships
+  // with torch); 'triton inference' above only matched NVIDIA's server
+  // (added 2026-07-09, run 20260709-111957 cohort widening).
+  { needle: 'triton', category: 'inference-stack' },
   { needle: 'sglang', category: 'inference-stack' },
   { needle: 'onnx', category: 'inference-stack' },
 
@@ -275,6 +279,16 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'langflow', category: 'agent-framework' },
   { needle: 'langsmith', category: 'agent-framework' },
   { needle: 'dspy', category: 'agent-framework' },
+  // GHSA writes the underscore form (run-llama/llama_index,
+  // llama_index.core); the hyphen and joined needles above miss it.
+  { needle: 'llama_index', category: 'agent-framework' },
+  // Structured-output and guardrail libraries from the 91-package CVE
+  // Check cohort (added 2026-07-09, run 20260709-111957). 'instructor'
+  // and 'outlines' are ordinary words, but they are the exact pip
+  // package names, same precedent as the 'cursor' needle below.
+  { needle: 'guardrails', category: 'agent-framework' },
+  { needle: 'instructor', category: 'agent-framework' },
+  { needle: 'outlines', category: 'agent-framework' },
 
   // training-stack
   { needle: 'pytorch', category: 'training-stack' },
@@ -331,6 +345,9 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'replicate', category: 'model-gateway' },
   { needle: 'litellm', category: 'model-gateway' },
   { needle: 'claude sdk', category: 'model-gateway' },
+  // Vertex AI SDK pip package (google-cloud-aiplatform); the 'vertex ai'
+  // needle matches prose but not the package name (added 2026-07-09).
+  { needle: 'aiplatform', category: 'model-gateway' },
 
   // mcp-tool
   { needle: 'claude desktop', category: 'mcp-tool' },
@@ -342,6 +359,11 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'mcp python sdk', category: 'mcp-tool' },
   { needle: 'mcp ruby sdk', category: 'mcp-tool' },
   { needle: 'mcp typescript sdk', category: 'mcp-tool' },
+  // Package-name forms from the run 20260709-111957 corpus: fastmcp is
+  // the de facto Python MCP server framework, and 'modelcontextprotocol'
+  // covers the npm scope (@modelcontextprotocol/sdk and friends).
+  { needle: 'fastmcp', category: 'mcp-tool' },
+  { needle: 'modelcontextprotocol', category: 'mcp-tool' },
 
   // other-ai (ML app UIs and LLM front-ends; added 2026-06-24 from the job #95 corpus)
   { needle: 'gradio', category: 'other-ai' },

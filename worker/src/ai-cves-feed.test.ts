@@ -191,6 +191,23 @@ describe('classifyProduct', () => {
     expect(classifyProduct('dspy-ai')).toBe('agent-framework');
   });
 
+  it('matches the run 20260709-111957 cohort-widening package names', () => {
+    // Product strings verbatim from the widened corpus that the previous
+    // needle list missed (measured: 11 papers would have gone unflagged).
+    expect(classifyProduct('triton')).toBe('inference-stack');
+    expect(classifyProduct('Triton Inference Server')).toBe('inference-stack');
+    expect(classifyProduct('fastmcp')).toBe('mcp-tool');
+    expect(classifyProduct('FastMCP OpenAPI Provider')).toBe('mcp-tool');
+    expect(classifyProduct('@modelcontextprotocol/sdk')).toBe('mcp-tool');
+    expect(classifyProduct('guardrails-ai')).toBe('agent-framework');
+    expect(classifyProduct('Guardrails AI')).toBe('agent-framework');
+    expect(classifyProduct('instructor')).toBe('agent-framework');
+    expect(classifyProduct('outlines')).toBe('agent-framework');
+    expect(classifyProduct('run-llama/llama_index')).toBe('agent-framework');
+    expect(classifyProduct('llama_index.core')).toBe('agent-framework');
+    expect(classifyProduct('google-cloud-aiplatform')).toBe('model-gateway');
+  });
+
   it('leaves general (non-AI-stack) dependency libs unflagged', () => {
     // These appeared in AI-stack advisories as dependencies but are not AI-stack core.
     expect(classifyProduct('FFmpeg')).toBeNull();
