@@ -78,6 +78,38 @@ describe('validateBatch', () => {
     if (!r.ok) expect(r.detail).toMatch(/exploited_in_wild/);
   });
 
+  it('accepts a paper without ecosystems (pre-sidecar batches stay valid)', () => {
+    const r = validateBatch(batch([paper()]));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.batch.papers[0].ecosystems).toBeUndefined();
+  });
+
+  it('accepts ecosystems and normalizes to lowercase', () => {
+    const r = validateBatch(batch([paper({ ecosystems: ['PyPI ', 'npm'] as never })]));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.batch.papers[0].ecosystems).toEqual(['pypi', 'npm']);
+  });
+
+  it('accepts an empty ecosystems array (GHSA record with no package entry)', () => {
+    const r = validateBatch(batch([paper({ ecosystems: [] })]));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.batch.papers[0].ecosystems).toEqual([]);
+  });
+
+  it('rejects non-array ecosystems', () => {
+    const r = validateBatch(batch([paper({ ecosystems: 'pip' as never })]));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.detail).toMatch(/ecosystems must be an array/);
+  });
+
+  it('rejects empty-string and non-string ecosystem elements', () => {
+    for (const bad of [[''], ['  '], [42 as never]]) {
+      const r = validateBatch(batch([paper({ ecosystems: bad as never })]));
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.detail).toMatch(/ecosystems\[0\]/);
+    }
+  });
+
   it('rejects em-dash in severity_label', () => {
     const r = validateBatch(batch([paper({ severity_label: 'high — critical' })]));
     expect(r.ok).toBe(false);

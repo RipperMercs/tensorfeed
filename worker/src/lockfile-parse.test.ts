@@ -16,11 +16,11 @@ describe('parseLockfile requirements.txt', () => {
     if (!r.ok) return;
     expect(r.format).toBe('requirements');
     expect(r.packages).toEqual([
-      { name: 'vllm', version: '0.5.0' },
-      { name: 'transformers', version: '4.40.0' },
-      { name: 'torch', version: null },
-      { name: 'uvicorn', version: '0.29.0' },
-      { name: 'requests', version: '2.31.0' },
+      { name: 'vllm', version: '0.5.0', ecosystem: 'pip' },
+      { name: 'transformers', version: '4.40.0', ecosystem: 'pip' },
+      { name: 'torch', version: null, ecosystem: 'pip' },
+      { name: 'uvicorn', version: '0.29.0', ecosystem: 'pip' },
+      { name: 'requests', version: '2.31.0', ecosystem: 'pip' },
     ]);
   });
 
@@ -36,7 +36,7 @@ describe('parseLockfile requirements.txt', () => {
     const r = parseLockfile(raw);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.packages).toEqual([{ name: 'safe-pkg', version: '1.0.0' }]);
+    expect(r.packages).toEqual([{ name: 'safe-pkg', version: '1.0.0', ecosystem: 'pip' }]);
   });
 
   it('drops package names that fail the allowlist (injection guard)', () => {
@@ -44,7 +44,7 @@ describe('parseLockfile requirements.txt', () => {
     const r = parseLockfile(raw);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.packages).toEqual([{ name: 'legit', version: '2.0.0' }]);
+    expect(r.packages).toEqual([{ name: 'legit', version: '2.0.0', ecosystem: 'pip' }]);
   });
 });
 
@@ -59,8 +59,8 @@ describe('parseLockfile JSON manifests', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.format).toBe('package-json');
-    expect(r.packages).toContainEqual({ name: 'react', version: '18.2.0' });
-    expect(r.packages).toContainEqual({ name: 'vitest', version: '1.6.1' });
+    expect(r.packages).toContainEqual({ name: 'react', version: '18.2.0', ecosystem: 'npm' });
+    expect(r.packages).toContainEqual({ name: 'vitest', version: '1.6.1', ecosystem: 'npm' });
   });
 
   it('parses package-lock v2 packages map, deriving scoped names from paths', () => {
@@ -76,8 +76,8 @@ describe('parseLockfile JSON manifests', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.format).toBe('package-lock');
-    expect(r.packages).toContainEqual({ name: 'left-pad', version: '1.3.0' });
-    expect(r.packages).toContainEqual({ name: '@scope/bar', version: '2.1.0' });
+    expect(r.packages).toContainEqual({ name: 'left-pad', version: '1.3.0', ecosystem: 'npm' });
+    expect(r.packages).toContainEqual({ name: '@scope/bar', version: '2.1.0', ecosystem: 'npm' });
   });
 
   it('parses package-lock v1 dependencies map', () => {
@@ -89,7 +89,7 @@ describe('parseLockfile JSON manifests', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.format).toBe('package-lock');
-    expect(r.packages).toEqual([{ name: 'left-pad', version: '1.3.0' }]);
+    expect(r.packages).toEqual([{ name: 'left-pad', version: '1.3.0', ecosystem: 'npm' }]);
   });
 
   it('rejects invalid JSON that starts with a brace', () => {
@@ -111,7 +111,7 @@ describe('parseLockfile JSON manifests', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.format).toBe('package-lock');
-    expect(r.packages).toContainEqual({ name: 'a', version: null });
+    expect(r.packages).toContainEqual({ name: 'a', version: null, ecosystem: 'npm' });
   });
 
   it('does not throw on a package-lock v1 with boolean or object version fields', () => {
@@ -126,8 +126,8 @@ describe('parseLockfile JSON manifests', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.format).toBe('package-lock');
-    expect(r.packages).toContainEqual({ name: 'a', version: null });
-    expect(r.packages).toContainEqual({ name: 'b', version: null });
+    expect(r.packages).toContainEqual({ name: 'a', version: null, ecosystem: 'npm' });
+    expect(r.packages).toContainEqual({ name: 'b', version: null, ecosystem: 'npm' });
   });
 });
 
@@ -147,8 +147,8 @@ describe('parseLockfile poetry.lock', () => {
     if (!r.ok) return;
     expect(r.format).toBe('poetry-lock');
     expect(r.packages).toEqual([
-      { name: 'vllm', version: '0.5.0' },
-      { name: 'torch', version: '2.3.0' },
+      { name: 'vllm', version: '0.5.0', ecosystem: 'pip' },
+      { name: 'torch', version: '2.3.0', ecosystem: 'pip' },
     ]);
   });
 });

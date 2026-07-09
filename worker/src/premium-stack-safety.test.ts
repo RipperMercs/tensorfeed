@@ -77,6 +77,55 @@ describe('buildStackSafetyVerdict', () => {
     expect(r.extracted_at).toBe(TS);
   });
 
+  it('ecosystem gate: pip package does not match an npm-only same-name advisory', () => {
+    const r = buildStackSafetyVerdict(
+      [paper({ affected_products: ['onnx'], ecosystems: ['npm'] })],
+      [{ ...pkg('onnx', '1.16.0'), ecosystem: 'pip' }],
+      NO_KEV,
+      TS,
+    );
+    expect(r.packages[0].verdict).toBe('PASS');
+    expect(r.packages[0].matched_cves).toEqual([]);
+  });
+
+  it('ecosystem gate: same-ecosystem advisory still matches', () => {
+    const r = buildStackSafetyVerdict(
+      [paper({ affected_products: ['onnx'], ecosystems: ['pip'] })],
+      [{ ...pkg('onnx', '1.16.0'), ecosystem: 'pip' }],
+      NO_KEV,
+      TS,
+    );
+    expect(r.packages[0].verdict).toBe('HOLD');
+    expect(r.packages[0].matched_cves.length).toBeGreaterThan(0);
+  });
+
+  it('ecosystem gate: absent data on either side falls back to name-only matching', () => {
+    // Paper without ecosystems (pre-sidecar batch) vs ecosystem-tagged package.
+    const a = buildStackSafetyVerdict(
+      [paper({ affected_products: ['onnx'] })],
+      [{ ...pkg('onnx', '1.16.0'), ecosystem: 'pip' }],
+      NO_KEV,
+      TS,
+    );
+    expect(a.packages[0].verdict).toBe('HOLD');
+    // Ecosystem-tagged paper vs ?packages= query form (no ecosystem).
+    const b = buildStackSafetyVerdict(
+      [paper({ affected_products: ['onnx'], ecosystems: ['npm'] })],
+      [pkg('onnx', '1.16.0')],
+      NO_KEV,
+      TS,
+    );
+    expect(b.packages[0].verdict).toBe('HOLD');
+    // Empty ecosystems array behaves like absent.
+    const c = buildStackSafetyVerdict(
+      [paper({ affected_products: ['onnx'], ecosystems: [] })],
+      [{ ...pkg('onnx', '1.16.0'), ecosystem: 'pip' }],
+      NO_KEV,
+      TS,
+    );
+    expect(c.packages[0].verdict).toBe('HOLD');
+  });
+
   it('UNKNOWN: package outside the curated AI-stack cohort', () => {
     const r = buildStackSafetyVerdict([], [pkg('zzz-not-an-ai-pkg', '1.0')], NO_KEV, TS);
     expect(r.packages[0].verdict).toBe('UNKNOWN');

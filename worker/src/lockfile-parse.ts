@@ -42,6 +42,11 @@ function push(out: PackageInput[], name: string | null, version: string | null):
   return false;
 }
 
+/** The package ecosystem a lockfile format implies, in GHSA's vocabulary. */
+export function lockfileEcosystem(format: LockfileFormat): string {
+  return format === 'requirements' || format === 'poetry-lock' ? 'pip' : 'npm';
+}
+
 export function parseLockfile(raw: string | null): ParseLockfileResult {
   if (raw == null) {
     return { ok: false, error: 'empty_body', hint: 'POST the lockfile contents as the request body.' };
@@ -54,9 +59,18 @@ export function parseLockfile(raw: string | null): ParseLockfileResult {
     return { ok: false, error: 'empty_body', hint: 'POST the lockfile contents as the request body.' };
   }
   // Detect by content shape, never by filename (a paste may have no filename).
-  if (text[0] === '{') return parseJson(text);
-  if (/^\[\[package\]\]/m.test(text)) return parsePoetry(text);
-  return parseRequirements(text);
+  const result =
+    text[0] === '{' ? parseJson(text)
+    : /^\[\[package\]\]/m.test(text) ? parsePoetry(text)
+    : parseRequirements(text);
+  if (result.ok) {
+    // Stamp once here rather than in every sub-parser: the format tells us
+    // the ecosystem, and the verdict engine uses it to keep same-name
+    // packages in other ecosystems from cross-matching.
+    const eco = lockfileEcosystem(result.format);
+    for (const p of result.packages) p.ecosystem = eco;
+  }
+  return result;
 }
 
 function parseJson(text: string): ParseLockfileResult {

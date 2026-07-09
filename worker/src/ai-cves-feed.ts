@@ -51,6 +51,13 @@ export interface AiCvesPaper {
   /** Provenance metadata. Stored but currently omitted from public reads
    * (pending DP CC's normalize.py span-cleaning patch in job #78). */
   quote_spans: { exploited_in_wild: string; severity_label: string };
+  /** Package ecosystems straight from the GHSA record (e.g. 'pip', 'npm').
+   * Optional: DP CC's fetch captures a deterministic ghsa_id to ecosystem
+   * sidecar; batches before that join simply omit the field. When present,
+   * CVE Check uses it to stop same-name packages in different ecosystems
+   * from cross-matching (pip 'onnx' vs npm 'onnx'). Absent = match on
+   * name alone, exactly the pre-field behavior. */
+  ecosystems?: string[];
 }
 
 export interface AiCvesBatch {
@@ -207,6 +214,23 @@ function validatePaper(p: unknown, idx: number): PaperOk | ValidationErr {
     );
   }
 
+  let ecosystems: string[] | undefined;
+  if (r.ecosystems !== undefined) {
+    if (!Array.isArray(r.ecosystems)) {
+      return failV('validation_failed', `papers[${idx}].ecosystems must be an array when present.`);
+    }
+    for (let j = 0; j < r.ecosystems.length; j++) {
+      const el = r.ecosystems[j];
+      if (typeof el !== 'string' || el.trim().length === 0 || el.length > 32) {
+        return failV(
+          'validation_failed',
+          `papers[${idx}].ecosystems[${j}] must be a non-empty string of at most 32 chars (GHSA ecosystem name, e.g. pip, npm).`,
+        );
+      }
+    }
+    ecosystems = (r.ecosystems as string[]).map((e) => e.trim().toLowerCase());
+  }
+
   return {
     ok: true,
     paper: {
@@ -221,6 +245,7 @@ function validatePaper(p: unknown, idx: number): PaperOk | ValidationErr {
         exploited_in_wild: (qs as Record<string, string>).exploited_in_wild,
         severity_label: (qs as Record<string, string>).severity_label,
       },
+      ...(ecosystems !== undefined ? { ecosystems } : {}),
     },
   };
 }

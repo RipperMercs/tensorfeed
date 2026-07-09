@@ -53,6 +53,10 @@ const VERSION_RE = /^[A-Za-z0-9.+_-]{1,64}$/;
 export interface PackageInput {
   name: string;
   version: string | null;
+  /** GHSA-vocabulary ecosystem implied by the input surface ('pip' from
+   * requirements/poetry lockfiles, 'npm' from package.json/package-lock).
+   * Absent on the ?packages= query form, where the surface says nothing. */
+  ecosystem?: string;
 }
 
 export type ParsePackagesResult =
@@ -191,6 +195,18 @@ function paperAffects(paper: AiCvesPaper, normalizedName: string): boolean {
 }
 
 /**
+ * Ecosystem gate on top of the name match. Excludes a paper ONLY when both
+ * sides state an ecosystem and they disagree (pip 'onnx' must not match an
+ * npm-only 'onnx' advisory). Missing data on either side falls back to
+ * name-only matching, the exact pre-field behavior, so batches ingested
+ * before DP CC's ecosystem sidecar keep matching unchanged.
+ */
+function ecosystemsCompatible(paperEcosystems: string[] | undefined, pkgEcosystem: string | undefined): boolean {
+  if (!pkgEcosystem || !paperEcosystems || paperEcosystems.length === 0) return true;
+  return paperEcosystems.includes(pkgEcosystem);
+}
+
+/**
  * Pure verdict builder. `papers` is the AI-flagged batch subset (or null
  * when no batch is available). `kevCveIds` is the uppercased set of CVE
  * ids currently on the CISA KEV catalog.
@@ -226,7 +242,9 @@ export function buildStackSafetyVerdict(
       };
     }
 
-    const matched = papers!.filter((p) => paperAffects(p, normalizedName));
+    const matched = papers!.filter(
+      (p) => paperAffects(p, normalizedName) && ecosystemsCompatible(p.ecosystems, pkg.ecosystem),
+    );
     const matched_cves: MatchedCve[] = [];
     let exploited = false;
     let fixAvailable = false;
