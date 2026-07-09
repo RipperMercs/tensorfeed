@@ -258,6 +258,7 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'tensorrt', category: 'inference-stack' },
   { needle: 'triton inference', category: 'inference-stack' },
   { needle: 'sglang', category: 'inference-stack' },
+  { needle: 'onnx', category: 'inference-stack' },
 
   // agent-framework
   { needle: 'langchain', category: 'agent-framework' },
@@ -273,6 +274,7 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'flowise', category: 'agent-framework' },
   { needle: 'langflow', category: 'agent-framework' },
   { needle: 'langsmith', category: 'agent-framework' },
+  { needle: 'dspy', category: 'agent-framework' },
 
   // training-stack
   { needle: 'pytorch', category: 'training-stack' },
@@ -286,6 +288,21 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'axolotl', category: 'training-stack' },
   { needle: 'mlflow', category: 'training-stack' },
   { needle: 'ray', category: 'training-stack' },
+  // Real pinned pip package names people put in AI lockfiles (added
+  // 2026-07-09 for CVE Check cohort completeness). The 'pytorch' needle
+  // above matches advisory prose like "PyTorch" but not the pip package
+  // 'torch', so a pinned torch read as UNKNOWN before this. These tokens
+  // are all distinctive enough to avoid polluting the AI-flagged batch;
+  // generic words (accelerate, datasets) are deliberately left out.
+  { needle: 'torch', category: 'training-stack' },
+  { needle: 'tokenizers', category: 'training-stack' },
+  { needle: 'safetensors', category: 'training-stack' },
+  { needle: 'diffusers', category: 'training-stack' },
+  { needle: 'peft', category: 'training-stack' },
+  { needle: 'bitsandbytes', category: 'training-stack' },
+  { needle: 'xformers', category: 'training-stack' },
+  { needle: 'keras', category: 'training-stack' },
+  { needle: 'sentencepiece', category: 'training-stack' },
 
   // vector-db
   { needle: 'pinecone', category: 'vector-db' },

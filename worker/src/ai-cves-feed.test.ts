@@ -173,12 +173,36 @@ describe('classifyProduct', () => {
     expect(classifyProduct('MCP Ruby SDK')).toBe('mcp-tool');
   });
 
+  it('matches the real pinned pip package names people put in AI lockfiles (CVE Check cohort completeness)', () => {
+    // The 'pytorch' needle matches advisory prose but not the pip package
+    // name; these are the names that actually appear in a requirements.txt.
+    expect(classifyProduct('torch')).toBe('training-stack');
+    expect(classifyProduct('torchvision')).toBe('training-stack');
+    expect(classifyProduct('tokenizers')).toBe('training-stack');
+    expect(classifyProduct('safetensors')).toBe('training-stack');
+    expect(classifyProduct('diffusers')).toBe('training-stack');
+    expect(classifyProduct('peft')).toBe('training-stack');
+    expect(classifyProduct('bitsandbytes')).toBe('training-stack');
+    expect(classifyProduct('xformers')).toBe('training-stack');
+    expect(classifyProduct('keras')).toBe('training-stack');
+    expect(classifyProduct('sentencepiece')).toBe('training-stack');
+    expect(classifyProduct('onnxruntime')).toBe('inference-stack');
+    expect(classifyProduct('onnx')).toBe('inference-stack');
+    expect(classifyProduct('dspy-ai')).toBe('agent-framework');
+  });
+
   it('leaves general (non-AI-stack) dependency libs unflagged', () => {
     // These appeared in AI-stack advisories as dependencies but are not AI-stack core.
     expect(classifyProduct('FFmpeg')).toBeNull();
     expect(classifyProduct('Socket.IO')).toBeNull();
     expect(classifyProduct('Pandas')).toBeNull();
     expect(classifyProduct('libopenjp2')).toBeNull();
+    // General web infra ubiquitous in AI deployments but out of the
+    // AI-stack brand on purpose: CVE Check reports these UNKNOWN (not
+    // assessed) rather than pretending to gate the whole lockfile.
+    expect(classifyProduct('fastapi')).toBeNull();
+    expect(classifyProduct('uvicorn')).toBeNull();
+    expect(classifyProduct('pydantic')).toBeNull();
   });
 
   it('returns null for unrelated products', () => {
