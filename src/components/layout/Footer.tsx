@@ -127,14 +127,6 @@ export default function Footer() {
                   {site.name}
                 </a>
               ))}
-              <a
-                href="https://vr.org/connect"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-accent-primary hover:text-accent-cyan transition-colors"
-              >
-                VR.org MCP
-              </a>
             </div>
             <p className="text-xs text-text-muted mt-2">
               Your bearer token works on{' '}
