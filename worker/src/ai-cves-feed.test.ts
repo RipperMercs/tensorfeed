@@ -248,6 +248,24 @@ describe('classifyProduct', () => {
     expect(classifyProduct('llama_cpp')).toBe('inference-stack');
   });
 
+  it('classifies the 2026-07-10 gap-list additions (text-generation, Vercel ai)', () => {
+    // HF Text Generation Inference client, pip package 'text-generation'.
+    expect(classifyProduct('text-generation')).toBe('inference-stack');
+    // Vercel AI SDK, npm package literally named 'ai': EXACT match only.
+    expect(classifyProduct('ai')).toBe('agent-framework');
+    expect(classifyProduct('AI')).toBe('agent-framework');
+  });
+
+  it('the exact-token ai entry never fires as a substring', () => {
+    // 'ai' appears inside countless names (langchain, fastapi, chainlit);
+    // a substring needle would sweep half the ecosystem into the cohort
+    // and turn UNKNOWNs into false-PASS surface.
+    expect(classifyProduct('chainlit')).toBeNull();
+    expect(classifyProduct('some-ai-gateway')).toBeNull();
+    expect(classifyProduct('air')).toBeNull();
+    expect(classifyProduct('langchain')).toBe('agent-framework'); // via its own needle, unchanged
+  });
+
   it('leaves general (non-AI-stack) dependency libs unflagged', () => {
     // These appeared in AI-stack advisories as dependencies but are not AI-stack core.
     expect(classifyProduct('FFmpeg')).toBeNull();

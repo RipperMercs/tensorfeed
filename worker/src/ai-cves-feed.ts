@@ -409,7 +409,22 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
   { needle: 'gradio', category: 'other-ai' },
   { needle: 'open webui', category: 'other-ai' },
   { needle: 'open-webui', category: 'other-ai' },
+
+  // HF Text Generation Inference client, pip 'text-generation' (2026-07-10
+  // gap-list Tier 2; 2 live advisories confirmed on GHSA).
+  { needle: 'text-generation', category: 'inference-stack' },
 ];
+
+// Names too generic for substring matching: they classify ONLY on exact
+// (case-insensitive, trimmed) equality with the product string. 'ai' is the
+// Vercel AI SDK's literal npm name; as a substring needle it would sweep
+// every product containing those letters (langchain, fastapi, chainlit)
+// into the cohort and convert honest UNKNOWNs into false-PASS surface.
+// GHSA's affects filter is exact per ecosystem, so the corpus side is safe
+// (DP verified affects=ai returns exactly one advisory, 2026-07-10).
+const AI_STACK_EXACT: Record<string, AiCategory> = {
+  ai: 'agent-framework',
+};
 
 /**
  * Returns the first matching AI category for a product string, or null
@@ -417,6 +432,8 @@ export const AI_STACK_VENDORS: ReadonlyArray<VendorMatcher> = [
  */
 export function classifyProduct(product: string): AiCategory | null {
   const p = product.toLowerCase();
+  const exact = AI_STACK_EXACT[p.trim()];
+  if (exact) return exact;
   for (const v of AI_STACK_VENDORS) {
     if (p.includes(v.needle)) return v.category;
   }

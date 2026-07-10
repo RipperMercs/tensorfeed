@@ -224,7 +224,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     credits: 1,
     strict_premium: true,
     params: [{ name: 'packages', required: true }],
-    returns: 'GO/HOLD/BLOCK deploy gate per AI-stack package, fusing the AI-CVE batch and CISA KEV.',
+    returns: 'GO/HOLD/BLOCK deploy gate per AI-stack package, fusing the AI-CVE batch and CISA KEV. Pinned versions are checked against advisory ranges; a pin verifiably outside every affected range clears that advisory.',
     free_sibling: '/api/preview/stack-safety-verdict',
     signed: true,
     category: 'verdict',
@@ -235,7 +235,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     strict_premium: true,
     params: [{ name: 'lockfile', required: true }],
     returns:
-      'BLOCK/HOLD/PASS deploy gate for a pasted lockfile (requirements.txt, package.json, package-lock.json, poetry.lock), fusing the AI-CVE batch and CISA KEV, with an AFTA-signed receipt.',
+      'BLOCK/HOLD/PASS deploy gate for a pasted lockfile (requirements.txt, package.json, package-lock.json, poetry.lock), fusing the AI-CVE batch and CISA KEV, with pinned versions checked against advisory ranges and an AFTA-signed receipt.',
     free_sibling: '/api/preview/cve-check',
     signed: true,
     category: 'verdict',

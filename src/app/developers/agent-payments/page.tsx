@@ -490,7 +490,7 @@ const ENDPOINTS: PremiumEndpoint[] = [
   {
     method: 'GET',
     path: '/api/premium/stack-safety-verdict',
-    description: 'GO / HOLD / BLOCK deploy gate for your AI stack. Pass packages=name@version (up to 10) and get a verdict per package plus an overall gate, fusing the ingested AI-CVE batch (GHSA plus vendor advisories) with the CISA KEV catalog. Never-false-confirm: BLOCK only when an exploited CVE has no fix, HOLD when the pinned version must be verified, PASS when no AI-stack CVE matches the package name, UNKNOWN outside the curated cohort. A free gate-only preview (no CVE evidence, capped at 3 packages) lives at /api/preview/stack-safety-verdict, 10 calls per IP per day.',
+    description: 'GO / HOLD / BLOCK deploy gate for your AI stack. Pass packages=name@version (up to 10) and get a verdict per package plus an overall gate, fusing the ingested AI-CVE batch (GHSA plus vendor advisories) with the CISA KEV catalog. Pinned versions are checked against advisory ranges: an advisory clears only when your pin is verifiably outside every affected range (version_cleared_count reports how many cleared), and anything ambiguous stays a conservative HOLD. BLOCK only when an exploited CVE applies with no fix, PASS when nothing matches or every match is version-cleared, UNKNOWN outside the curated cohort. A free gate-only preview (no CVE evidence, capped at 3 packages) lives at /api/preview/stack-safety-verdict, 10 calls per IP per day.',
     cost: '1 credit per call',
     example: `// Query: ?packages=langchain@0.3.27,vllm@0.6.0
 {
@@ -508,11 +508,12 @@ const ENDPOINTS: PremiumEndpoint[] = [
       "fix_available": true,
       "category": "inference-stack",
       "matched_cves": [
-        { "cve_id": "CVE-2026-1234", "on_kev": false, "exploited_in_wild": "stated_no", "severity_label": "high", "affected_version_ranges": ["< 0.6.1"], "fixed_versions": ["0.6.1"], "source_url": "https://github.com/advisories/GHSA-xxxx" }
+        { "cve_id": "CVE-2026-1234", "on_kev": false, "exploited_in_wild": "stated_no", "severity_label": "high", "affected_version_ranges": ["< 0.6.1"], "fixed_versions": ["0.6.1"], "source_url": "https://github.com/advisories/GHSA-xxxx", "version_status": "affected" }
       ],
+      "version_cleared_count": 0,
       "reason": "A known CVE applies to this package (not confirmed exploited). Verify your pinned version against the surfaced ranges and fixes."
     },
-    { "package": "langchain", "version": "0.3.27", "verdict": "PASS", "in_cohort": true, "exploited": false, "fix_available": false, "category": "agent-framework", "matched_cves": [], "reason": "No AI-stack CVE matched this package name. Not a full vulnerability scan." }
+    { "package": "langchain", "version": "0.3.27", "verdict": "PASS", "in_cohort": true, "exploited": false, "fix_available": false, "category": "agent-framework", "matched_cves": [], "version_cleared_count": 2, "reason": "2 advisories match this package name, but pinned version 0.3.27 is outside every affected version range. Not a full vulnerability scan." }
   ],
   "billing": { "credits_charged": 1, "credits_remaining": 48 },
   "receipt": { "id": "rcpt_...", "signing_alg": "EdDSA", "signing_curve": "Ed25519", "signature": "<base64url>" }
