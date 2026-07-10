@@ -65,6 +65,11 @@ export const ENDPOINT_FRESHNESS: Record<string, FreshnessSLA | null> = {
   // pipeline cadence) joined to CISA KEV. 10-day SLA matches the ai-cves
   // batch SLA, so a stale CVE batch triggers a no-charge.
   '/api/premium/stack-safety-verdict': { maxAgeSeconds: 10 * 24 * 60 * 60 },
+  // CVE Check (the $1 lockfile audit): same engine, same ai-cves batch,
+  // same 10-day SLA as its stack-safety sibling. Without this entry the
+  // paid cve-check never triggered the stale-data no-charge (found in the
+  // 2026-07-09 hardening pass).
+  '/api/premium/cve-check': { maxAgeSeconds: 10 * 24 * 60 * 60 },
   // Benchmark trust verdict: pure compute over the editorial benchmark
   // registry plus the daily benchmark scores. No staleness signal applies
   // (the registry updates on redeploy), same shape as model-deprecations.

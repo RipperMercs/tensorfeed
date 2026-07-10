@@ -8382,7 +8382,9 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/stack-safety-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      // Batch unavailable = every package UNKNOWN = the caller learned nothing.
+      // That is an upstream data failure, not a served verdict: no charge.
+      return await premiumResponse(result, payment, 1, request, env, result.batch_available ? null : 'upstream_failure');
     }
 
     // === PAID PREMIUM ENDPOINT: CVE CHECK (Tier 5, 50 credits = flat $1.00) ===
@@ -8443,7 +8445,9 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/cve-check', request.headers.get('User-Agent') || 'unknown', 50, payment.token, payment.payerWallet),
       );
-      return await premiumResponse(result, payment, 50, request, env);
+      // Same upstream_failure no-charge as stack-safety-verdict: an
+      // all-UNKNOWN "batch unavailable" answer must not bill the flat $1.
+      return await premiumResponse(result, payment, 50, request, env, verdict.batch_available ? null : 'upstream_failure');
     }
 
     // === BENCHMARK TRUST VERDICT PREVIEW (free, rate-limited) ===

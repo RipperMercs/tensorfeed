@@ -198,6 +198,14 @@ describe('buildStackSafetyVerdict', () => {
     expect(r.gate).toBe('UNKNOWN');
     expect(r.packages.every((p) => p.verdict === 'UNKNOWN')).toBe(true);
     expect(r.notes.some((n) => n.includes('unavailable'))).toBe(true);
+    // batch_available drives the premium handlers' upstream_failure no-charge:
+    // an all-UNKNOWN "batch unavailable" answer must never bill.
+    expect(r.batch_available).toBe(false);
+  });
+
+  it('batch_available is true whenever the batch was readable, even with zero matches', () => {
+    const r = buildStackSafetyVerdict([], [pkg('vllm', '0.6.0')], NO_KEV, TS);
+    expect(r.batch_available).toBe(true);
   });
 
   it('does not match a substring-only collision (torch must NOT hit pytorch-lightning)', () => {

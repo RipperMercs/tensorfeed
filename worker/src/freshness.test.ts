@@ -26,6 +26,13 @@ describe('resolveSLA', () => {
     expect(resolveSLA('/api/premium/providers/openai')?.maxAgeSeconds).toBe(24 * 60 * 60);
   });
 
+  it('cve-check carries the same 10-day SLA as its stack-safety sibling', () => {
+    // Regression guard (2026-07-09 hardening): the paid $1 cve-check had no
+    // SLA entry, so a stale CVE batch never triggered the stale no-charge.
+    expect(resolveSLA('/api/premium/cve-check')?.maxAgeSeconds).toBe(10 * 24 * 60 * 60);
+    expect(resolveSLA('/api/premium/stack-safety-verdict')?.maxAgeSeconds).toBe(10 * 24 * 60 * 60);
+  });
+
   it('returns null for unknown paths', () => {
     expect(resolveSLA('/totally/unknown/path')).toBeNull();
   });
