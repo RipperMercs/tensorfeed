@@ -100,6 +100,8 @@ export function parsePackagesParam(raw: string | null): ParsePackagesResult {
 
 // ─── Verdict shapes ─────────────────────────────────────────────────
 
+export type MatchedVersionStatus = 'affected' | 'unverified';
+
 export interface MatchedCve {
   cve_id: string;
   on_kev: boolean;
@@ -108,6 +110,11 @@ export interface MatchedCve {
   affected_version_ranges: string[];
   fixed_versions: string[];
   source_url: string;
+  // v2: 'affected' when the pinned version verifiably falls inside this
+  // advisory's applicable range rows; 'unverified' when the version could
+  // not be checked (unpinned, pre-release, misaligned rows) and the match
+  // is kept conservatively.
+  version_status: MatchedVersionStatus;
 }
 
 export interface PackageVerdict {
@@ -119,6 +126,10 @@ export interface PackageVerdict {
   fix_available: boolean;
   category: AiCategory | null;
   matched_cves: MatchedCve[];
+  // v2: advisories that matched this package by name but whose applicable
+  // ranges all verifiably exclude the pinned version. They no longer drive
+  // the verdict; the count is surfaced as evidence of the version check.
+  version_cleared_count: number;
   reason: string;
 }
 
@@ -147,7 +158,7 @@ type FlaggedPaper = AiCvesPaper & { tf_ai_category: AiCategory };
 const GATE_SEVERITY: Record<StackVerdict, number> = { BLOCK: 3, HOLD: 2, UNKNOWN: 1, PASS: 0 };
 
 const CLAIM =
-  'Stack Safety Verdict matches each package name against TensorFeed\'s ingested AI-stack CVE batch (GHSA plus vendor advisories) and joins the CISA KEV catalog for exploitation status. It does NOT parse your pinned version against affected ranges in v1, so verdicts are conservative: BLOCK only when an exploited CVE has no fix; HOLD whenever a known CVE applies and you must verify your version against the surfaced ranges and fixes; PASS when no AI-stack CVE matches the package name (this is the AI-stack batch, not a full vulnerability scan); UNKNOWN when the package is outside the curated AI-stack cohort. AFTA-signed over the inputs.';
+  'Stack Safety Verdict matches each package name against TensorFeed\'s ingested AI-stack CVE batch (GHSA plus vendor advisories) and joins the CISA KEV catalog for exploitation status. Pinned versions are checked against advisory ranges when both sides parse strictly; an advisory is dropped only when the pin verifiably falls outside every applicable range, and anything ambiguous (unpinned, pre-release, unparseable range) stays matched, so verdicts remain conservative: BLOCK only when an exploited CVE has no fix; HOLD whenever a known CVE applies to your pin or could not be version-checked; PASS when no AI-stack CVE matches the name or every match is version-cleared (this is the AI-stack batch, not a full vulnerability scan); UNKNOWN when the package is outside the curated AI-stack cohort. AFTA-signed over the inputs.';
 
 /**
  * Normalize a package identifier to a comparable token: lowercased, scope
@@ -211,6 +222,108 @@ function ecosystemsCompatible(paperEcosystems: string[] | undefined, pkgEcosyste
   return paperEcosystems.includes(pkgEcosystem);
 }
 
+// === v2: strict version-range intersection ==================================
+// Design rule: NEVER produce a false PASS. A paper is version-CLEARED (dropped
+// from the verdict) only when every step parses strictly and the pinned
+// version is outside every applicable range. Any ambiguity anywhere (unpinned
+// package, pre-release tags, epochs, unknown operators, misaligned
+// products/ranges arrays) keeps the paper matched exactly as v1 did.
+
+/**
+ * Parse a version string into numeric segments, STRICTLY: an optional single
+ * leading "v", then 1 to 4 dot-separated non-negative integers, nothing else.
+ * Pre-release/post/dev/local tags, epochs, and npm range sigils all return
+ * null on purpose; the caller treats null as "cannot verify, stay
+ * conservative". The corpus survey (2026-07-09, 1,065 advisories) shows the
+ * GHSA range grammar is purely numeric dotted outside a ~13-row pre-release
+ * tail, so this covers the real data without a PEP 440 / semver ordering
+ * minefield.
+ */
+export function parseStrictVersion(raw: string | null): number[] | null {
+  if (typeof raw !== 'string') return null;
+  let s = raw.trim();
+  if (/^v\d/.test(s)) s = s.slice(1);
+  if (!/^\d+(\.\d+){0,3}$/.test(s)) return null;
+  return s.split('.').map((n) => parseInt(n, 10));
+}
+
+export type RangeCheck = 'inside' | 'outside' | 'unparseable';
+
+/** Compare two parsed versions, zero-padding the shorter one. */
+function compareVersions(a: number[], b: number[]): number {
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    const av = a[i] ?? 0;
+    const bv = b[i] ?? 0;
+    if (av !== bv) return av < bv ? -1 : 1;
+  }
+  return 0;
+}
+
+/**
+ * Evaluate a pinned version against one advisory range string. The grammar is
+ * the observed GHSA form: comma-separated clauses, each `op version` with op
+ * in {>=, <=, =, <, >}, all clauses ANDed (">= 2.4.0, < 2.4.3").
+ * Returns 'inside' (version is affected), 'outside' (version satisfies none
+ * of it), or 'unparseable' (grammar or version out of scope; caller must stay
+ * conservative).
+ */
+export function versionAgainstRange(version: string, range: string): RangeCheck {
+  const v = parseStrictVersion(version);
+  if (!v) return 'unparseable';
+  const clauses = String(range ?? '').split(',');
+  let evaluated = false;
+  for (const clause of clauses) {
+    const m = /^\s*(>=|<=|=|<|>)\s*(\S+)\s*$/.exec(clause);
+    if (!m) return 'unparseable';
+    const bound = parseStrictVersion(m[2]);
+    if (!bound) return 'unparseable';
+    const c = compareVersions(v, bound);
+    const satisfied =
+      m[1] === '>=' ? c >= 0 : m[1] === '<=' ? c <= 0 : m[1] === '=' ? c === 0 : m[1] === '<' ? c < 0 : c > 0;
+    if (!satisfied) return 'outside';
+    evaluated = true;
+  }
+  return evaluated ? 'inside' : 'unparseable';
+}
+
+type PaperVersionStatus = 'affected' | 'unverified' | 'cleared';
+
+/**
+ * Decide the version relationship between one name-matched paper and one
+ * pinned package, using the UNION of ALL of the paper's range rows,
+ * deliberately ignoring which product row a range is attributed to.
+ *
+ * Why union and not per-product rows: the OSV cross-validation harness
+ * (2026-07-09, 8,283 probes over 858 advisories) showed the extraction
+ * ROTATES multi-branch advisories across sibling package names (e.g. a
+ * 3-branch x 3-package tensorflow advisory ships one branch per package
+ * instead of three per package). Per-product row filtering then clears
+ * versions that a lost sibling branch covers: 878 of 8,283 probes came back
+ * as would-be false PASSes. Union semantics removed 874 of the 878 (the
+ * remaining 4 trace to two advisories whose corpus BOUNDS are wrong vs
+ * upstream, a data defect filed with DP CC). Union can only over-hold
+ * relative to true attribution, never over-clear, which is the direction
+ * this product is allowed to be wrong in.
+ */
+function paperVersionStatus(p: AiCvesPaper, pinned: string | null): PaperVersionStatus {
+  if (!pinned) return 'unverified';
+  // Misaligned products/ranges arrays (207 papers in the live batch, mostly
+  // tensorflow mass filings) are STILL evaluated as a union: the second OSV
+  // harness pass ran 1,892 probes over exactly those papers and found zero
+  // dangerous clears, while skipping them left modern pins of the biggest
+  // package family permanently un-clearable. Only an empty ranges list is
+  // unverifiable.
+  if (p.affected_version_ranges.length === 0) return 'unverified';
+  let anyInside = false;
+  for (const range of p.affected_version_ranges) {
+    const check = versionAgainstRange(pinned, range);
+    if (check === 'unparseable') return 'unverified';
+    if (check === 'inside') anyInside = true;
+  }
+  return anyInside ? 'affected' : 'cleared';
+}
+
 /**
  * Pure verdict builder. `papers` is the AI-flagged batch subset (or null
  * when no batch is available). `kevCveIds` is the uppercased set of CVE
@@ -243,17 +356,29 @@ export function buildStackSafetyVerdict(
         fix_available: false,
         category,
         matched_cves: [],
+        version_cleared_count: 0,
         reason: 'AI-CVE batch unavailable; cannot assess.',
       };
     }
 
-    const matched = papers!.filter(
+    const nameMatched = papers!.filter(
       (p) => paperAffects(p, normalizedName) && ecosystemsCompatible(p.ecosystems, pkg.ecosystem),
     );
+    // v2: version-range intersection. A paper is dropped ('cleared') only
+    // when the pinned version verifiably falls outside every applicable
+    // range row; anything unverifiable keeps the paper, preserving the v1
+    // never-false-PASS posture.
+    const matched: { p: (typeof nameMatched)[number]; status: MatchedVersionStatus }[] = [];
+    let versionCleared = 0;
+    for (const p of nameMatched) {
+      const status = paperVersionStatus(p, pkg.version);
+      if (status === 'cleared') versionCleared++;
+      else matched.push({ p, status });
+    }
     const matched_cves: MatchedCve[] = [];
     let exploited = false;
     let fixAvailable = false;
-    for (const p of matched) {
+    for (const { p, status } of matched) {
       if (p.fixed_versions.length > 0) fixAvailable = true;
       const paperExploited = p.exploited_in_wild === 'stated_yes';
       for (const cve of p.cve_ids) {
@@ -267,6 +392,7 @@ export function buildStackSafetyVerdict(
           affected_version_ranges: p.affected_version_ranges,
           fixed_versions: p.fixed_versions,
           source_url: p.source_url,
+          version_status: status,
         });
       }
     }
@@ -276,7 +402,10 @@ export function buildStackSafetyVerdict(
     if (matched.length === 0) {
       if (inCohort) {
         verdict = 'PASS';
-        reason = 'No AI-stack CVE matched this package name. Not a full vulnerability scan.';
+        reason =
+          versionCleared > 0
+            ? `${versionCleared} ${versionCleared === 1 ? 'advisory matches' : 'advisories match'} this package name, but pinned version ${pkg.version} is outside every affected version range. Not a full vulnerability scan.`
+            : 'No AI-stack CVE matched this package name. Not a full vulnerability scan.';
       } else {
         verdict = 'UNKNOWN';
         reason = 'Package is outside TensorFeed\'s curated AI-stack cohort; not assessed.';
@@ -301,6 +430,7 @@ export function buildStackSafetyVerdict(
       fix_available: fixAvailable,
       category,
       matched_cves,
+      version_cleared_count: versionCleared,
       reason,
     };
   });
@@ -315,7 +445,7 @@ export function buildStackSafetyVerdict(
     if (GATE_SEVERITY[p.verdict] > GATE_SEVERITY[gate]) gate = p.verdict;
   }
 
-  notes.push('Coverage is the AI-stack CVE batch (GHSA plus vendor advisories) joined to CISA KEV. EPSS and precise version-range intersection land in v2.');
+  notes.push('Coverage is the AI-stack CVE batch (GHSA plus vendor advisories) joined to CISA KEV. Pinned versions are checked against advisory ranges when both parse strictly; anything ambiguous stays a conservative HOLD. EPSS lands in a future revision.');
 
   return {
     ok: true,

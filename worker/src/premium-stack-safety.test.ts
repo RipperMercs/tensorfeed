@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   parsePackagesParam,
   buildStackSafetyVerdict,
+  parseStrictVersion,
+  versionAgainstRange,
   type PackageInput,
 } from './premium-stack-safety';
 import type { AiCvesPaper, AiCategory, ExploitedInWild } from './ai-cves-feed';
@@ -89,8 +91,10 @@ describe('buildStackSafetyVerdict', () => {
   });
 
   it('ecosystem gate: same-ecosystem advisory still matches', () => {
+    // Wide range keeps the fixture pin inside it (this test is about the
+    // ecosystem gate, not v2 version clearing).
     const r = buildStackSafetyVerdict(
-      [paper({ affected_products: ['onnx'], ecosystems: ['pip'] })],
+      [paper({ affected_products: ['onnx'], ecosystems: ['pip'], affected_version_ranges: ['< 999.0'] })],
       [{ ...pkg('onnx', '1.16.0'), ecosystem: 'pip' }],
       NO_KEV,
       TS,
@@ -100,9 +104,11 @@ describe('buildStackSafetyVerdict', () => {
   });
 
   it('ecosystem gate: absent data on either side falls back to name-only matching', () => {
+    // Wide ranges keep the fixture pin inside them; this test targets the
+    // ecosystem fallback, not v2 version clearing.
     // Paper without ecosystems (pre-sidecar batch) vs ecosystem-tagged package.
     const a = buildStackSafetyVerdict(
-      [paper({ affected_products: ['onnx'] })],
+      [paper({ affected_products: ['onnx'], affected_version_ranges: ['< 999.0'] })],
       [{ ...pkg('onnx', '1.16.0'), ecosystem: 'pip' }],
       NO_KEV,
       TS,
@@ -110,7 +116,7 @@ describe('buildStackSafetyVerdict', () => {
     expect(a.packages[0].verdict).toBe('HOLD');
     // Ecosystem-tagged paper vs ?packages= query form (no ecosystem).
     const b = buildStackSafetyVerdict(
-      [paper({ affected_products: ['onnx'], ecosystems: ['npm'] })],
+      [paper({ affected_products: ['onnx'], ecosystems: ['npm'], affected_version_ranges: ['< 999.0'] })],
       [pkg('onnx', '1.16.0')],
       NO_KEV,
       TS,
@@ -118,7 +124,7 @@ describe('buildStackSafetyVerdict', () => {
     expect(b.packages[0].verdict).toBe('HOLD');
     // Empty ecosystems array behaves like absent.
     const c = buildStackSafetyVerdict(
-      [paper({ affected_products: ['onnx'], ecosystems: [] })],
+      [paper({ affected_products: ['onnx'], ecosystems: [], affected_version_ranges: ['< 999.0'] })],
       [{ ...pkg('onnx', '1.16.0'), ecosystem: 'pip' }],
       NO_KEV,
       TS,
@@ -227,7 +233,7 @@ describe('buildStackSafetyVerdict', () => {
 
   it('a real pytorch package DOES still match pytorch-lightning by token (true positive preserved)', () => {
     const r = buildStackSafetyVerdict(
-      [paper({ affected_products: ['pytorch-lightning'], tf_ai_category: 'training-stack' })],
+      [paper({ affected_products: ['pytorch-lightning'], tf_ai_category: 'training-stack', affected_version_ranges: ['< 999.0'] })],
       [pkg('pytorch-lightning', '2.1.0')],
       NO_KEV,
       TS,
@@ -276,7 +282,7 @@ describe('buildStackSafetyVerdict', () => {
     expect(r1.packages[0].verdict).toBe('HOLD');
 
     const r2 = buildStackSafetyVerdict(
-      [paper({ affected_products: ['llama_index'], tf_ai_category: 'agent-framework' })],
+      [paper({ affected_products: ['llama_index'], tf_ai_category: 'agent-framework', affected_version_ranges: ['< 999.0'] })],
       [pkg('llama-index', '0.10.0')],
       NO_KEV,
       TS,
@@ -286,7 +292,7 @@ describe('buildStackSafetyVerdict', () => {
 
   it('matches a package token embedded in a longer advisory phrase (PyTorch in "PyTorch Lightning")', () => {
     const r = buildStackSafetyVerdict(
-      [paper({ affected_products: ['PyTorch Lightning'], tf_ai_category: 'training-stack' })],
+      [paper({ affected_products: ['PyTorch Lightning'], tf_ai_category: 'training-stack', affected_version_ranges: ['< 999.0'] })],
       [pkg('lightning', '2.1.0')],
       NO_KEV,
       TS,
@@ -320,6 +326,203 @@ describe('buildStackSafetyVerdict', () => {
       new Set(['CVE-2026-0001']),
       TS,
     );
+    const json = JSON.stringify(r);
+    expect(json).not.toContain('—');
+    expect(json.includes('--')).toBe(false);
+  });
+});
+
+// === v2: strict version parsing ===
+describe('parseStrictVersion', () => {
+  it('parses plain numeric dotted versions up to four segments', () => {
+    expect(parseStrictVersion('2.4.0')).toEqual([2, 4, 0]);
+    expect(parseStrictVersion('0.6')).toEqual([0, 6]);
+    expect(parseStrictVersion('10.0.0.365')).toEqual([10, 0, 0, 365]);
+    expect(parseStrictVersion('7')).toEqual([7]);
+  });
+
+  it('tolerates a single leading v and surrounding whitespace', () => {
+    expect(parseStrictVersion('v1.2.3')).toEqual([1, 2, 3]);
+    expect(parseStrictVersion(' 2.0.0 ')).toEqual([2, 0, 0]);
+  });
+
+  it('rejects anything that is not purely numeric dotted (conservative by design)', () => {
+    expect(parseStrictVersion('2.4.0rc1')).toBeNull();
+    expect(parseStrictVersion('2.4.0.post1')).toBeNull();
+    expect(parseStrictVersion('1.2.3-beta.1')).toBeNull();
+    expect(parseStrictVersion('1!2.0')).toBeNull();
+    expect(parseStrictVersion('^1.2.3')).toBeNull();
+    expect(parseStrictVersion('~2.0')).toBeNull();
+    expect(parseStrictVersion('1.2.3.4.5')).toBeNull();
+    expect(parseStrictVersion('')).toBeNull();
+    expect(parseStrictVersion(null)).toBeNull();
+    expect(parseStrictVersion('1..2')).toBeNull();
+    expect(parseStrictVersion('.1.2')).toBeNull();
+  });
+});
+
+// === v2: range clause evaluation ===
+describe('versionAgainstRange', () => {
+  it('handles < (exclusive upper bound)', () => {
+    expect(versionAgainstRange('2.3.3', '< 2.3.4')).toBe('inside');
+    expect(versionAgainstRange('2.3.4', '< 2.3.4')).toBe('outside');
+    expect(versionAgainstRange('2.4.0', '< 2.3.4')).toBe('outside');
+  });
+
+  it('handles >= lower and < upper as a conjunction', () => {
+    expect(versionAgainstRange('2.4.1', '>= 2.4.0, < 2.4.3')).toBe('inside');
+    expect(versionAgainstRange('2.4.0', '>= 2.4.0, < 2.4.3')).toBe('inside');
+    expect(versionAgainstRange('2.4.3', '>= 2.4.0, < 2.4.3')).toBe('outside');
+    expect(versionAgainstRange('2.3.9', '>= 2.4.0, < 2.4.3')).toBe('outside');
+  });
+
+  it('handles = exact and <= inclusive', () => {
+    expect(versionAgainstRange('2.5.0', '= 2.5.0')).toBe('inside');
+    expect(versionAgainstRange('2.5.1', '= 2.5.0')).toBe('outside');
+    expect(versionAgainstRange('1.0.18', '<= 1.0.18')).toBe('inside');
+    expect(versionAgainstRange('1.0.19', '<= 1.0.18')).toBe('outside');
+  });
+
+  it('zero-pads segment-count differences on both sides', () => {
+    expect(versionAgainstRange('2.4', '>= 2.4.0, < 2.4.3')).toBe('inside');
+    expect(versionAgainstRange('2.5.0', '= 2.5')).toBe('inside');
+    expect(versionAgainstRange('2.4.0.1', '< 2.4.1')).toBe('inside');
+  });
+
+  it('returns unparseable for pre-release bounds, unknown operators, and junk', () => {
+    expect(versionAgainstRange('1.0.0', '>= 1.0.0-rc1, < 2.0.0')).toBe('unparseable');
+    expect(versionAgainstRange('1.0.0', '~= 1.0')).toBe('unparseable');
+    expect(versionAgainstRange('1.0.0', '')).toBe('unparseable');
+    expect(versionAgainstRange('1.0.0', 'all versions')).toBe('unparseable');
+    expect(versionAgainstRange('1.0.0rc1', '< 2.0.0')).toBe('unparseable');
+  });
+});
+
+// === v2: version-range intersection in the verdict ===
+describe('buildStackSafetyVerdict version intersection (v2)', () => {
+  const vllmRange = (over: Partial<FlaggedPaper> = {}) =>
+    paper({
+      affected_products: ['vllm'],
+      affected_version_ranges: ['>= 0.6.0, < 0.6.2'],
+      fixed_versions: ['0.6.2'],
+      ...over,
+    });
+
+  it('PASS when the pinned version is outside every applicable range (the v2 flip)', () => {
+    const r = buildStackSafetyVerdict([vllmRange()], [pkg('vllm', '0.6.2')], NO_KEV, TS);
+    expect(r.packages[0].verdict).toBe('PASS');
+    expect(r.packages[0].matched_cves).toHaveLength(0);
+    expect(r.packages[0].version_cleared_count).toBe(1);
+    expect(r.packages[0].reason).toContain('0.6.2');
+    expect(r.gate).toBe('PASS');
+  });
+
+  it('clears an exploited advisory too when the pin is outside the range', () => {
+    const r = buildStackSafetyVerdict(
+      [vllmRange({ exploited_in_wild: 'stated_yes', fixed_versions: [] })],
+      [pkg('vllm', '0.7.0')],
+      NO_KEV,
+      TS,
+    );
+    expect(r.packages[0].verdict).toBe('PASS');
+    expect(r.packages[0].exploited).toBe(false);
+    expect(r.packages[0].version_cleared_count).toBe(1);
+  });
+
+  it('HOLD with version_status affected when the pin falls inside the range', () => {
+    const r = buildStackSafetyVerdict([vllmRange()], [pkg('vllm', '0.6.1')], NO_KEV, TS);
+    expect(r.packages[0].verdict).toBe('HOLD');
+    expect(r.packages[0].matched_cves[0].version_status).toBe('affected');
+    expect(r.packages[0].version_cleared_count).toBe(0);
+  });
+
+  it('keeps the match as unverified when the package is unpinned', () => {
+    const r = buildStackSafetyVerdict([vllmRange()], [pkg('vllm', null)], NO_KEV, TS);
+    expect(r.packages[0].verdict).toBe('HOLD');
+    expect(r.packages[0].matched_cves[0].version_status).toBe('unverified');
+  });
+
+  it('still evaluates the union when products and ranges are misaligned (validated vs OSV)', () => {
+    // 207 live papers ship misaligned arrays; a 1,892-probe OSV pass over
+    // them found zero dangerous clears under union semantics, so they are
+    // evaluated rather than parked as unverified.
+    const r = buildStackSafetyVerdict(
+      [vllmRange({ affected_products: ['vllm', 'vllm-extra'], affected_version_ranges: ['>= 0.6.0, < 0.6.2'] })],
+      [pkg('vllm', '9.9.9')],
+      NO_KEV,
+      TS,
+    );
+    expect(r.packages[0].verdict).toBe('PASS');
+    expect(r.packages[0].version_cleared_count).toBe(1);
+  });
+
+  it('keeps the match as unverified when the paper carries no ranges at all', () => {
+    const r = buildStackSafetyVerdict(
+      [vllmRange({ affected_version_ranges: [] })],
+      [pkg('vllm', '9.9.9')],
+      NO_KEV,
+      TS,
+    );
+    expect(r.packages[0].verdict).toBe('HOLD');
+    expect(r.packages[0].matched_cves[0].version_status).toBe('unverified');
+  });
+
+  it('keeps the match as unverified when any applicable range is unparseable', () => {
+    const r = buildStackSafetyVerdict(
+      [vllmRange({ affected_version_ranges: ['>= 0.6.0-rc1, < 0.6.2'] })],
+      [pkg('vllm', '9.9.9')],
+      NO_KEV,
+      TS,
+    );
+    expect(r.packages[0].verdict).toBe('HOLD');
+    expect(r.packages[0].matched_cves[0].version_status).toBe('unverified');
+  });
+
+  it('keeps the match as unverified when the pinned version itself is not strictly parseable', () => {
+    const r = buildStackSafetyVerdict([vllmRange()], [pkg('vllm', '0.6.2rc1')], NO_KEV, TS);
+    expect(r.packages[0].verdict).toBe('HOLD');
+    expect(r.packages[0].matched_cves[0].version_status).toBe('unverified');
+  });
+
+  it('evaluates the UNION of all range rows, not just the rows attributed to the package', () => {
+    // The extraction rotates multi-branch advisories across sibling package
+    // names (OSV harness finding, 2026-07-09), so row attribution cannot be
+    // trusted. A sibling row's range MUST keep the match alive: union can
+    // only over-hold, never over-clear.
+    const multi = paper({
+      affected_products: ['tensorflow', 'tensorflow', 'tensorflow-cpu'],
+      affected_version_ranges: ['< 2.3.4', '>= 2.4.0, < 2.4.3', '>= 2.5.0, < 2.5.1'],
+      fixed_versions: ['2.3.4', '2.4.3', '2.5.1'],
+      tf_ai_category: 'training-stack' as AiCategory,
+    });
+    // tensorflow@2.5.0 is outside both tensorflow-attributed rows, but inside
+    // the sibling tensorflow-cpu row: HOLD, not a version-cleared PASS.
+    const r = buildStackSafetyVerdict([multi], [pkg('tensorflow', '2.5.0')], NO_KEV, TS);
+    expect(r.packages[0].verdict).toBe('HOLD');
+    expect(r.packages[0].matched_cves[0].version_status).toBe('affected');
+    expect(r.packages[0].version_cleared_count).toBe(0);
+    // A pin outside EVERY row of the union still clears.
+    const r2 = buildStackSafetyVerdict([multi], [pkg('tensorflow', '2.5.1')], NO_KEV, TS);
+    expect(r2.packages[0].verdict).toBe('PASS');
+    expect(r2.packages[0].version_cleared_count).toBe(1);
+  });
+
+  it('a mix of cleared and affected papers keeps the affected verdict and counts the cleared', () => {
+    const cleared = vllmRange({ source_url: 'https://github.com/advisories/GHSA-clear' });
+    const affected = vllmRange({
+      affected_version_ranges: ['< 1.0.0'],
+      cve_ids: ['CVE-2026-0002'],
+      source_url: 'https://github.com/advisories/GHSA-hit',
+    });
+    const r = buildStackSafetyVerdict([cleared, affected], [pkg('vllm', '0.9.0')], NO_KEV, TS);
+    expect(r.packages[0].verdict).toBe('HOLD');
+    expect(r.packages[0].version_cleared_count).toBe(1);
+    expect(r.packages[0].matched_cves).toHaveLength(1);
+    expect(r.packages[0].matched_cves[0].cve_id).toBe('CVE-2026-0002');
+  });
+
+  it('version-cleared PASS reasons carry no em dashes or double hyphens', () => {
+    const r = buildStackSafetyVerdict([vllmRange()], [pkg('vllm', '0.6.2')], NO_KEV, TS);
     const json = JSON.stringify(r);
     expect(json).not.toContain('—');
     expect(json.includes('--')).toBe(false);
