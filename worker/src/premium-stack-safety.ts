@@ -129,10 +129,10 @@ export interface StackSafetyResult {
   // capturedAt, NOT extracted_at). extracted_at is the descriptive alias.
   capturedAt: string | null;
   extracted_at: string | null;
-  // False when the AI-CVE batch could not be read: every package is UNKNOWN
-  // and the caller learned nothing. The premium handlers no-charge on this
-  // (upstream_failure); billing a full-price all-UNKNOWN answer is the
-  // paid-but-got-nothing outcome the billing rules exist to prevent.
+  // False when the AI-CVE batch could not be read: every package is UNKNOWN.
+  // Surfaced so callers can distinguish "assessed clean" from "could not
+  // assess". Billing on this state is a policy decision made in the handlers,
+  // not here.
   batch_available: boolean;
   counts: { block: number; hold: number; pass: number; unknown: number };
   packages: PackageVerdict[];

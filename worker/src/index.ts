@@ -8382,9 +8382,10 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/stack-safety-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
       );
-      // Batch unavailable = every package UNKNOWN = the caller learned nothing.
-      // That is an upstream data failure, not a served verdict: no charge.
-      return await premiumResponse(result, payment, 1, request, env, result.batch_available ? null : 'upstream_failure');
+      // Policy (Evan, 2026-07-09): a batch-unavailable all-UNKNOWN answer
+      // still charges as-is (honestly disclosed "cannot assess"). Do not
+      // wire batch_available into a no-charge here without a new ruling.
+      return await premiumResponse(result, payment, 1, request, env);
     }
 
     // === PAID PREMIUM ENDPOINT: CVE CHECK (Tier 5, 50 credits = flat $1.00) ===
@@ -8445,9 +8446,10 @@ export default {
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/cve-check', request.headers.get('User-Agent') || 'unknown', 50, payment.token, payment.payerWallet),
       );
-      // Same upstream_failure no-charge as stack-safety-verdict: an
-      // all-UNKNOWN "batch unavailable" answer must not bill the flat $1.
-      return await premiumResponse(result, payment, 50, request, env, verdict.batch_available ? null : 'upstream_failure');
+      // Policy (Evan, 2026-07-09): batch-unavailable charges as-is, same as
+      // stack-safety-verdict above. batch_available is surfaced in the body
+      // so the caller can see why everything is UNKNOWN.
+      return await premiumResponse(result, payment, 50, request, env);
     }
 
     // === BENCHMARK TRUST VERDICT PREVIEW (free, rate-limited) ===

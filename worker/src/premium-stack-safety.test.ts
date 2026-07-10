@@ -198,8 +198,8 @@ describe('buildStackSafetyVerdict', () => {
     expect(r.gate).toBe('UNKNOWN');
     expect(r.packages.every((p) => p.verdict === 'UNKNOWN')).toBe(true);
     expect(r.notes.some((n) => n.includes('unavailable'))).toBe(true);
-    // batch_available drives the premium handlers' upstream_failure no-charge:
-    // an all-UNKNOWN "batch unavailable" answer must never bill.
+    // batch_available lets callers distinguish "assessed clean" from
+    // "could not assess" (billing policy on this state lives in the handlers).
     expect(r.batch_available).toBe(false);
   });
 
