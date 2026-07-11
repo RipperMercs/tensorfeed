@@ -17,9 +17,17 @@
  * is_milestone_candidate, affiliations, summary).
  *
  * Usage:
- *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path>
- *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --max-papers 25000
- *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --dry-run
+ *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids <file|none>
+ *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids TF_demote_ids.json --expect-count 2190
+ *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids none --dry-run
+ *
+ * --demote-ids is REQUIRED (resurrection guard): rollup_milestones from a raw
+ * re-roll carries the full window, including records the v3 corroborator sweep
+ * demoted as ungrounded and the hand-purged known-bad ones. Uploading that
+ * verbatim resurrects them on the live premium feed. Pass the grounding-demotion
+ * id list to filter them out before upload, or --demote-ids none to skip for a
+ * clean corpus with no demotions. --expect-count N fails the run if the post-demote
+ * milestone count is not N, so a stale demote list cannot pass silently.
  *
  * Pre-reqs:
  *   - Wrangler v3+ installed (verified: 3.114.x at scaffold time)
@@ -56,14 +64,16 @@ const KV_VALUE_HARD_CAP = 24 * 1024 * 1024; // 24 MB to stay under the 25 MB KV 
 // ── CLI parsing ─────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { rollupsDir: null, maxPapers: DEFAULT_MAX_PAPERS, dryRun: false };
+  const args = { rollupsDir: null, maxPapers: DEFAULT_MAX_PAPERS, dryRun: false, demoteIds: null, expectCount: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--rollups-dir') args.rollupsDir = argv[++i];
     else if (a === '--max-papers') args.maxPapers = parseInt(argv[++i], 10);
+    else if (a === '--demote-ids') args.demoteIds = argv[++i];
+    else if (a === '--expect-count') args.expectCount = parseInt(argv[++i], 10);
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '-h' || a === '--help') {
-      console.log('Usage: upload-research-rollups.mjs --rollups-dir <path> [--max-papers N] [--dry-run]');
+      console.log('Usage: upload-research-rollups.mjs --rollups-dir <path> --demote-ids <file|none> [--expect-count N] [--max-papers N] [--dry-run]');
       process.exit(0);
     } else {
       console.error(`Unknown arg: ${a}`);
@@ -76,6 +86,21 @@ function parseArgs(argv) {
   }
   if (!Number.isFinite(args.maxPapers) || args.maxPapers <= 0) {
     console.error(`Invalid --max-papers: ${args.maxPapers}`);
+    process.exit(1);
+  }
+  // Resurrection guard: rollup_milestones from a raw re-roll carries the full
+  // window, including v3-demoted-ungrounded and hand-purged known-bad records.
+  // Uploading verbatim would resurrect them on the live premium feed. Require an
+  // explicit demote decision so it can never be silently forgotten: a JSON
+  // id-list file, or the literal "none".
+  if (args.demoteIds === null) {
+    console.error('Missing required --demote-ids <file|none>');
+    console.error('  Pass the grounding-demotion id list (e.g. TF_demote_ids.json) to filter');
+    console.error('  rollup_milestones before upload, or --demote-ids none to explicitly skip.');
+    process.exit(1);
+  }
+  if (args.expectCount !== null && (!Number.isFinite(args.expectCount) || args.expectCount < 0)) {
+    console.error(`Invalid --expect-count: ${args.expectCount}`);
     process.exit(1);
   }
   return args;
@@ -244,10 +269,51 @@ function main() {
     }
   }
 
+  // 2b. Resurrection guard: filter the grounding-demotion ids out of
+  // rollup_milestones BEFORE upload. The demote id list ships with the refresh
+  // bundle so the exact filter is versioned with the data, not a manual staging
+  // step. `--demote-ids none` is the explicit opt-out for a clean corpus.
+  let milestonesUploadPath = milestonesPath;
+  if (args.demoteIds === 'none') {
+    console.log(color('  demote: --demote-ids none (no rollup_milestones filter applied)', 'yellow'));
+    console.log();
+  } else {
+    const demoteList = loadJson(resolve(args.demoteIds));
+    if (!Array.isArray(demoteList)) {
+      console.error(color(`  ERROR: --demote-ids file is not a JSON array: ${args.demoteIds}`, 'red'));
+      rmSync(tmp, { recursive: true, force: true });
+      process.exit(1);
+    }
+    const demoteSet = new Set(demoteList.map((x) => String(x)));
+    const ms = loadJson(milestonesPath);
+    const before = Array.isArray(ms.papers) ? ms.papers.length : 0;
+    ms.papers = (Array.isArray(ms.papers) ? ms.papers : []).filter((p) => !demoteSet.has(String(p.arxiv_id)));
+    const after = ms.papers.length;
+    const excluded = before - after;
+    console.log(color(`  rollup_milestones demote: ${before} -> ${after} (excluded ${excluded}; ${demoteSet.size} ids in list)`, 'gray'));
+    if (excluded === 0) {
+      console.log(color('  WARNING: demote excluded 0 records; the id list may be stale or for a different corpus', 'yellow'));
+    }
+    if (args.expectCount !== null && after !== args.expectCount) {
+      console.error(color(`  ERROR: post-demote rollup_milestones = ${after}, expected ${args.expectCount} (--expect-count). Stale demote list or wrong bundle; refusing to upload.`, 'red'));
+      rmSync(tmp, { recursive: true, force: true });
+      process.exit(1);
+    }
+    milestonesUploadPath = join(tmp, 'rollup_milestones_demoted.json');
+    writeFileSync(milestonesUploadPath, JSON.stringify(ms), 'utf-8');
+    const sz = statSync(milestonesUploadPath).size;
+    if (sz > KV_VALUE_HARD_CAP) {
+      console.error(color(`  ERROR: filtered rollup_milestones is ${fmtBytes(sz)}, exceeds 24 MB safety cap`, 'red'));
+      rmSync(tmp, { recursive: true, force: true });
+      process.exit(1);
+    }
+    console.log();
+  }
+
   // 3. Upload all 4 keys via wrangler kv key put
   console.log(color('  uploading to KV...', 'gray'));
   const uploads = [
-    [KEYS.milestones, milestonesPath, 'rollup_milestones.json'],
+    [KEYS.milestones, milestonesUploadPath, 'rollup_milestones.json'],
     [KEYS.keywords, keywordsPath, 'rollup_keywords.json'],
     [KEYS.topicIndex, indexPath, 'topic_search_index.json (built)'],
     [KEYS.labs, labsPath, 'rollup_labs.json'],
