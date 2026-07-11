@@ -18,7 +18,7 @@
  *
  * Usage:
  *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids <file|none>
- *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids TF_demote_ids.json --expect-count 2190
+ *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids scripts/research-demote-ids.json --expect-count 2184
  *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids none --dry-run
  *
  * --demote-ids is REQUIRED (resurrection guard): rollup_milestones from a raw
@@ -28,6 +28,14 @@
  * id list to filter them out before upload, or --demote-ids none to skip for a
  * clean corpus with no demotions. --expect-count N fails the run if the post-demote
  * milestone count is not N, so a stale demote list cannot pass silently.
+ *
+ * Canonical demote list: scripts/research-demote-ids.json (a bare JSON array of
+ * arxiv_ids). This is the current served-based D, versioned with this guard so the
+ * required input is not a loose file. It is derived from the SERVED papers.json
+ * evidence (the deduped milestone winner), so it demotes the record that actually
+ * serves, not a losing duplicate chunk. Each refresh updates it in place; git
+ * history is the version trail. As of the 2026-07-11 go-forward refresh it holds
+ * 1,041 ids and yields a served milestones feed of 2,184.
  *
  * Pre-reqs:
  *   - Wrangler v3+ installed (verified: 3.114.x at scaffold time)
