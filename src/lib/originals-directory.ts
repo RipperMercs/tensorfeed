@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'chatgpt-work-agent-product-outcome-not-tokens',
+    title:
+      'OpenAI Stopped Selling You a Model. On July 9 It Started Selling You the Finished Job.',
+    author: 'Kira Nolan',
+    date: 'July 10, 2026',
+    readTime: '7 min read',
+    description:
+      "OpenAI paired the public GPT-5.6 rollout with ChatGPT Work, an agent that gathers context across your connected apps, breaks a goal into steps, works for hours, and returns finished sheets, slides, docs, and interactive web apps instead of a chat reply. The detail that matters is the billing: ChatGPT Work is not a flat subscription feature, it draws from a shared agent-consumption pool alongside Codex, ChatGPT for Excel, and Workspace Agents, priced by the size and complexity of the job rather than per token. That repricing landed the same 48 hours the token tier collapsed toward a dollar: Grok 4.5 at $2/$6, GPT-5.6 Luna at $1/$6, Sonnet 5 introductory at $2/$10. Inside why per-token pricing is legible (any buyer can pick the cheap model) and consumption-pool pricing is deliberately illegible (you cannot benchmark a finished deck), why Codex passing 5 million weekly users and the Ona acquisition were the dress rehearsal, how ChatGPT Work is the FDE outcome-selling move aimed at the individual seat instead of the enterprise contract, and the catch: OpenAI now competes with Salesforce, Adobe, and Canva, the same apps sitting in its own launch-day plugin directory. Three signposts: whether Anthropic and Google answer with outcome-priced agents, whether the pool produces a public billing-shock story, and whether the plugin partners stay friendly once the agent starts producing the deliverables they sell. The token got cheap this week. The leader moved the price tag onto the outcome while everyone argued about leaderboards.",
+  },
+  {
     slug: 'grok-45-cursor-harness-pricing-floor',
     title:
       'Grok 4.5 Is the First Frontier Model Trained From Inside a Harness. Its Price Advantage Lasted 24 Hours.',
