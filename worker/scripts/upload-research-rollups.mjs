@@ -130,9 +130,25 @@ function loadJson(path) {
   }
 }
 
+// The grounding-demotion id set governs BOTH served surfaces from one list: it
+// is filtered out of rollup_milestones AND flips is_milestone_candidate=false in
+// the topic-search projection, so the two endpoints agree on what is a grounded
+// milestone. Applied only at the serve layer; papers.json stays the pre-demote
+// source of truth (evidence preserved), so a future v3 improvement can un-demote
+// a record without re-extraction.
+function loadDemoteSet(args) {
+  if (args.demoteIds === 'none') return new Set();
+  const demoteList = loadJson(resolve(args.demoteIds));
+  if (!Array.isArray(demoteList)) {
+    console.error(color(`  ERROR: --demote-ids file is not a JSON array: ${args.demoteIds}`, 'red'));
+    process.exit(1);
+  }
+  return new Set(demoteList.map((x) => String(x)));
+}
+
 // ── Topic-search index projection ───────────────────────────────────
 
-function buildTopicSearchIndex(papers, maxPapers) {
+function buildTopicSearchIndex(papers, maxPapers, demoteSet) {
   if (!Array.isArray(papers)) {
     throw new Error('papers.json is not an array');
   }
@@ -146,6 +162,7 @@ function buildTopicSearchIndex(papers, maxPapers) {
 
   const subfieldSet = new Set();
   const methodologySet = new Set();
+  let demotedFlags = 0;
 
   const projected = sorted.map((p) => {
     const subfield = typeof p.subfield_tag === 'string' ? p.subfield_tag : 'other';
@@ -157,23 +174,32 @@ function buildTopicSearchIndex(papers, maxPapers) {
       ? p.affiliations_normalized.map((a) => String(a)).filter(Boolean)
       : [];
 
+    // The grounding-demote flips is_milestone_candidate to false in the projection
+    // so topic-search milestone_only agrees with the milestones feed. papers.json
+    // is untouched (evidence preserved); this is a serve-layer view only.
+    const grounded = !!p.is_milestone_candidate && !demoteSet.has(String(p.arxiv_id));
+    if (!!p.is_milestone_candidate && !grounded) demotedFlags += 1;
+
     return {
       arxiv_id: String(p.arxiv_id ?? ''),
       date: p.date,
       title: typeof p.title === 'string' ? p.title : '',
       subfield_tag: subfield,
       methodology_bucket: methodology,
-      is_milestone_candidate: !!p.is_milestone_candidate,
+      is_milestone_candidate: grounded,
       affiliations,
       summary: typeof p.summary_one_sentence === 'string' ? p.summary_one_sentence : '',
     };
   });
 
   return {
-    as_of: sorted[0]?.date ?? new Date().toISOString().slice(0, 10),
-    subfield_tags: [...subfieldSet].sort(),
-    methodology_buckets: [...methodologySet].sort(),
-    papers: projected,
+    index: {
+      as_of: sorted[0]?.date ?? new Date().toISOString().slice(0, 10),
+      subfield_tags: [...subfieldSet].sort(),
+      methodology_buckets: [...methodologySet].sort(),
+      papers: projected,
+    },
+    demotedFlags,
   };
 }
 
@@ -231,16 +257,23 @@ function main() {
   }
   console.log();
 
+  // Load the grounding-demotion set once; it governs both served surfaces
+  // (rollup_milestones filter + topic-search candidate flag).
+  const demoteSet = loadDemoteSet(args);
+  console.log(`  demote-ids:  ${args.demoteIds === 'none' ? 'none (no filter)' : `${demoteSet.size} ids from ${args.demoteIds}`}`);
+  console.log();
+
   // 1. Build topic-search index from papers.json
   console.log(color('  building topic-search index...', 'gray'));
   const papersPath = join(dir, SOURCE_FILES.papers);
   const papers = loadJson(papersPath);
-  const index = buildTopicSearchIndex(papers, args.maxPapers);
+  const { index, demotedFlags } = buildTopicSearchIndex(papers, args.maxPapers, demoteSet);
   console.log(`    papers loaded:        ${papers.length}`);
   console.log(`    papers in index:      ${index.papers.length}`);
   console.log(`    subfield tags:        ${index.subfield_tags.length} (${index.subfield_tags.slice(0, 5).join(', ')}${index.subfield_tags.length > 5 ? ', ...' : ''})`);
   console.log(`    methodology buckets:  ${index.methodology_buckets.length}`);
   console.log(`    as_of:                ${index.as_of}`);
+  console.log(`    milestone flags demoted (topic-search): ${demotedFlags}`);
 
   const tmp = mkdtempSync(join(tmpdir(), 'tensorfeed-research-upload-'));
   const indexPath = join(tmp, 'topic_search_index.json');
@@ -278,13 +311,6 @@ function main() {
     console.log(color('  demote: --demote-ids none (no rollup_milestones filter applied)', 'yellow'));
     console.log();
   } else {
-    const demoteList = loadJson(resolve(args.demoteIds));
-    if (!Array.isArray(demoteList)) {
-      console.error(color(`  ERROR: --demote-ids file is not a JSON array: ${args.demoteIds}`, 'red'));
-      rmSync(tmp, { recursive: true, force: true });
-      process.exit(1);
-    }
-    const demoteSet = new Set(demoteList.map((x) => String(x)));
     const ms = loadJson(milestonesPath);
     const before = Array.isArray(ms.papers) ? ms.papers.length : 0;
     ms.papers = (Array.isArray(ms.papers) ? ms.papers : []).filter((p) => !demoteSet.has(String(p.arxiv_id)));
