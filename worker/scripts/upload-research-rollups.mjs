@@ -18,7 +18,7 @@
  *
  * Usage:
  *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids <file|none>
- *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids scripts/research-demote-ids.json --expect-count 2184
+ *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids scripts/research-demote-ids.json
  *   node worker/scripts/upload-research-rollups.mjs --rollups-dir <path> --demote-ids none --dry-run
  *
  * --demote-ids is REQUIRED (resurrection guard): rollup_milestones from a raw
@@ -29,13 +29,23 @@
  * clean corpus with no demotions. --expect-count N fails the run if the post-demote
  * milestone count is not N, so a stale demote list cannot pass silently.
  *
- * Canonical demote list: scripts/research-demote-ids.json (a bare JSON array of
- * arxiv_ids). This is the current served-based D, versioned with this guard so the
- * required input is not a loose file. It is derived from the SERVED papers.json
- * evidence (the deduped milestone winner), so it demotes the record that actually
- * serves, not a losing duplicate chunk. Each refresh updates it in place; git
- * history is the version trail. As of the 2026-07-11 go-forward refresh it holds
- * 1,041 ids and yields a served milestones feed of 2,184.
+ * Canonical demote list: scripts/research-demote-ids.json. This is the current
+ * served-based D, versioned with this guard so the required input is not a loose
+ * file. It is derived from the SERVED papers.json evidence (the deduped milestone
+ * winner), so it demotes the record that actually serves, not a losing duplicate
+ * chunk. Each refresh updates it in place; git history is the version trail.
+ *
+ * The canonical D is a pinned object: { served_sha256, expect_count, generated,
+ * note, ids: [...] }. It carries the served-snapshot id it was derived against and
+ * the post-demote milestone count that snapshot yields, so the pairing is
+ * self-checking. When the demote file carries expect_count, the guard auto-applies
+ * it: pointing --demote-ids at the canonical D enforces the count even if
+ * --expect-count is omitted, and a stale D against a fresh re-roll fails loud on
+ * the count check. An explicit --expect-count that disagrees with the pin is a
+ * hard error (the D is pinned to a different snapshot). A bare JSON array is still
+ * accepted (legacy / ad-hoc lists) and carries no pin. As of the 2026-07-11
+ * go-forward refresh the canonical D holds 1,041 ids, pins served 01d87247, and
+ * yields a served milestones feed of 2,184.
  *
  * Pre-reqs:
  *   - Wrangler v3+ installed (verified: 3.114.x at scaffold time)
@@ -144,14 +154,31 @@ function loadJson(path) {
 // milestone. Applied only at the serve layer; papers.json stays the pre-demote
 // source of truth (evidence preserved), so a future v3 improvement can un-demote
 // a record without re-extraction.
-function loadDemoteSet(args) {
-  if (args.demoteIds === 'none') return new Set();
-  const demoteList = loadJson(resolve(args.demoteIds));
-  if (!Array.isArray(demoteList)) {
-    console.error(color(`  ERROR: --demote-ids file is not a JSON array: ${args.demoteIds}`, 'red'));
+function loadDemote(args) {
+  if (args.demoteIds === 'none') return { set: new Set(), embeddedExpectCount: null, servedSha: null };
+  const raw = loadJson(resolve(args.demoteIds));
+  let ids;
+  let embeddedExpectCount = null;
+  let servedSha = null;
+  if (Array.isArray(raw)) {
+    // Legacy / ad-hoc bare-array shape: ids only, no pin.
+    ids = raw;
+  } else if (raw && typeof raw === 'object' && Array.isArray(raw.ids)) {
+    // Pinned-object shape: ids plus the served-snapshot pin.
+    ids = raw.ids;
+    if (raw.expect_count !== undefined && raw.expect_count !== null) {
+      if (!Number.isInteger(raw.expect_count) || raw.expect_count < 0) {
+        console.error(color(`  ERROR: --demote-ids embedded expect_count is not a non-negative integer: ${raw.expect_count}`, 'red'));
+        process.exit(1);
+      }
+      embeddedExpectCount = raw.expect_count;
+    }
+    if (typeof raw.served_sha256 === 'string' && raw.served_sha256) servedSha = raw.served_sha256;
+  } else {
+    console.error(color(`  ERROR: --demote-ids must be a JSON array or an object with an "ids" array: ${args.demoteIds}`, 'red'));
     process.exit(1);
   }
-  return new Set(demoteList.map((x) => String(x)));
+  return { set: new Set(ids.map((x) => String(x))), embeddedExpectCount, servedSha };
 }
 
 // ── Topic-search index projection ───────────────────────────────────
@@ -267,8 +294,26 @@ function main() {
 
   // Load the grounding-demotion set once; it governs both served surfaces
   // (rollup_milestones filter + topic-search candidate flag).
-  const demoteSet = loadDemoteSet(args);
+  const { set: demoteSet, embeddedExpectCount, servedSha } = loadDemote(args);
   console.log(`  demote-ids:  ${args.demoteIds === 'none' ? 'none (no filter)' : `${demoteSet.size} ids from ${args.demoteIds}`}`);
+  if (servedSha) console.log(`  served pin:  ${servedSha} (D pairs with this served snapshot)`);
+
+  // Effective post-demote milestone count check. The canonical D file carries its
+  // own expect_count pinned to the served snapshot it was built for, so pointing
+  // --demote-ids at it auto-applies the count guard even if the operator forgets
+  // --expect-count. An explicit --expect-count that disagrees with the pin means
+  // this D is being applied to the wrong re-roll: fail loud rather than silently
+  // under- or over-demote.
+  let effectiveExpectCount = args.expectCount;
+  let expectSource = '--expect-count';
+  if (embeddedExpectCount !== null) {
+    if (args.expectCount !== null && args.expectCount !== embeddedExpectCount) {
+      console.error(color(`  ERROR: --expect-count ${args.expectCount} contradicts the demote list's pinned expect_count ${embeddedExpectCount} (served ${servedSha ?? 'n/a'}). This D is pinned to a different snapshot; refusing to upload.`, 'red'));
+      process.exit(1);
+    }
+    if (args.expectCount === null) { effectiveExpectCount = embeddedExpectCount; expectSource = 'D pin'; }
+  }
+  if (effectiveExpectCount !== null) console.log(`  expect-count: ${effectiveExpectCount} (${expectSource})`);
   console.log();
 
   // 1. Build topic-search index from papers.json
@@ -328,8 +373,8 @@ function main() {
     if (excluded === 0) {
       console.log(color('  WARNING: demote excluded 0 records; the id list may be stale or for a different corpus', 'yellow'));
     }
-    if (args.expectCount !== null && after !== args.expectCount) {
-      console.error(color(`  ERROR: post-demote rollup_milestones = ${after}, expected ${args.expectCount} (--expect-count). Stale demote list or wrong bundle; refusing to upload.`, 'red'));
+    if (effectiveExpectCount !== null && after !== effectiveExpectCount) {
+      console.error(color(`  ERROR: post-demote rollup_milestones = ${after}, expected ${effectiveExpectCount} (${expectSource}). Stale demote list or wrong bundle; refusing to upload.`, 'red'));
       rmSync(tmp, { recursive: true, force: true });
       process.exit(1);
     }
