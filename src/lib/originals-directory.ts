@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'five-coding-models-48-hours-scoreboard',
+    title:
+      'Five Frontier Coding Models Shipped in 48 Hours. Here Is the Scoreboard.',
+    author: 'Adrian Vale',
+    date: 'July 11, 2026',
+    readTime: '7 min read',
+    description:
+      "Between July 8 and July 9, 2026, five frontier coding and agentic models shipped in one window: Grok 4.5, the GPT-5.6 family of Sol, Terra, and Luna, Meta's Muse Spark 1.1, and ByteDance's Seedream 5.0 Pro. A week later, Claude Mythos 5 and Fable 5 still top SWE-Bench Pro by fifteen points, while Grok 4.5 and all three GPT-5.6 tiers cluster inside a six-point band. The leaderboard did not move. The floor did: Luna at $1/$6 and Grok 4.5 at $2/$6 score within a couple points of Sol at a fifth to a tenth of the output cost, and on DeepSWE per dollar Luna returns roughly 24 benchmark points against 4.5 for Opus 4.8 and 3.2 for Fable 5. Two opposite bets landed in the same 48 hours: Anthropic defending the premium ceiling, OpenAI and SpaceXAI attacking the commodity floor. All benchmark numbers are vendor-reported and Fable 5's score is contested pending neutral-harness replication. Three signposts: independent replication, Gemini 3.5 Pro's July GA entry, and whether the premium holds after a month of production data.",
+  },
+  {
     slug: 'chatgpt-work-agent-product-outcome-not-tokens',
     title:
       'OpenAI Stopped Selling You a Model. On July 9 It Started Selling You the Finished Job.',
