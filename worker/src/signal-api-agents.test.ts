@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { deriveApiAgentsView, clampApiAgentsDays } from './signal-api-agents';
+import { deriveApiAgentsView, clampApiAgentsDays, deriveEndpointTrends } from './signal-api-agents';
+import type { EndpointDailyRow } from './signal-api-agents';
 import type { FunnelByUaRow } from './usage-meter';
 
 // Fixtures span two real agents (gptbot, claude-user) and one known x402
@@ -77,6 +78,46 @@ describe('deriveApiAgentsView', () => {
     expect(totals.distinctAgents).toBe(0);
     expect(agents).toEqual([]);
     expect(endpoints).toEqual([]);
+  });
+});
+
+describe('deriveEndpointTrends', () => {
+  const NOW = Date.UTC(2026, 6, 12, 12, 0, 0); // 2026-07-12T12:00Z
+  // days=2 -> current window [07-11, 07-12], prior window [07-09, 07-10].
+  const ROWS: EndpointDailyRow[] = [
+    { endpoint: '/api/premium/arb', ua: 'gptbot', day: '2026-07-12', paid: 2, demand: 40 },
+    { endpoint: '/api/premium/arb', ua: 'axios', day: '2026-07-11', paid: 1, demand: 30 },
+    { endpoint: '/api/premium/arb', ua: 'gptbot', day: '2026-07-10', paid: 1, demand: 20 }, // prior
+    { endpoint: '/api/premium/arb', ua: 'gptbot', day: '2026-07-09', paid: 0, demand: 10 }, // prior
+    // a crawler row (substring 'prober') that must be dropped from demand
+    { endpoint: '/api/premium/arb', ua: 'mako-pulse-prober', day: '2026-07-12', paid: 0, demand: 999 },
+    // outside both windows, must be ignored
+    { endpoint: '/api/premium/arb', ua: 'gptbot', day: '2026-07-01', paid: 5, demand: 500 },
+  ];
+
+  it('computes the paid delta of the current vs the prior window', () => {
+    const t = deriveEndpointTrends(ROWS, 2, NOW).get('/api/premium/arb')!;
+    expect(t.paidCurrent).toBe(3); // 07-12: 2 + 07-11: 1
+    expect(t.paidPrior).toBe(1); // 07-10: 1 + 07-09: 0
+    expect(t.paidDelta).toBe(2);
+  });
+
+  it('builds a crawler-filtered daily demand series, oldest to newest', () => {
+    const t = deriveEndpointTrends(ROWS, 2, NOW).get('/api/premium/arb')!;
+    // [07-11, 07-12]; the crawler's 999 on 07-12 is dropped, leaving 40
+    expect(t.dailyDemand).toEqual([30, 40]);
+  });
+
+  it('ignores rows outside the current and prior windows', () => {
+    const t = deriveEndpointTrends(ROWS, 2, NOW).get('/api/premium/arb')!;
+    expect(t.paidCurrent + t.paidPrior).toBe(4); // the 07-01 paid:5 never counts
+  });
+
+  it('returns no entry for an endpoint seen only via crawlers', () => {
+    const rows: EndpointDailyRow[] = [
+      { endpoint: '/api/premium/x', ua: 'carbonmonitor', day: '2026-07-12', paid: 0, demand: 500 },
+    ];
+    expect(deriveEndpointTrends(rows, 2, NOW).has('/api/premium/x')).toBe(false);
   });
 });
 

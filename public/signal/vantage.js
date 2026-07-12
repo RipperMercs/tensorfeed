@@ -222,6 +222,27 @@ const CSS = `
   .bars-ref .bar { grid-template-columns: minmax(0, 1.7fr) minmax(60px, 1fr) minmax(96px, auto); gap: 14px; align-items: center; }
   .bars-ref .bl { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: 1.3; }
   .bars-ref .bl code { word-break: break-all; }
+  /* Premium endpoint demand rows: full path + demand bar + demand sparkline +
+     value with a paid movers delta vs the prior equal-length window. */
+  .erows { margin-top: 6px; }
+  .erow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(64px, 0.5fr) 84px minmax(150px, auto); gap: 14px; align-items: center; padding: 9px 0; }
+  .erow + .erow { border-top: 1px solid var(--border); }
+  .erow .epath code { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink); word-break: break-all; line-height: 1.3; }
+  .erow .etrack { height: 9px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+  .erow .efill { height: 100%; background: var(--accent); border-radius: 5px; min-width: 3px; transition: width .75s cubic-bezier(.2,.7,.2,1); }
+  .erow .espark { height: 26px; }
+  .erow .espark .spark { width: 84px; height: 26px; display: block; }
+  .erow .emeta { text-align: right; font-family: var(--font-mono); }
+  .erow .eval { font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .erow .eval i { color: var(--muted); font-style: normal; font-size: 10.5px; }
+  .erow .edelta { font-size: 10px; margin-top: 3px; letter-spacing: 0.02em; }
+  .erow .edelta.up { color: var(--good); }
+  .erow .edelta.down { color: var(--muted); }
+  .erow .edelta.flat { color: var(--muted); opacity: 0.65; }
+  @media (max-width: 720px) {
+    .erow { grid-template-columns: minmax(0,1fr) auto; row-gap: 6px; }
+    .erow .etrack, .erow .espark { display: none; }
+  }
 
   /*  status stack  */
   .stack { display: flex; height: 30px; border-radius: 8px; overflow: hidden; margin: 8px 0 14px; border: 1px solid var(--border); }
@@ -550,8 +571,8 @@ const MARKUP = `<div class="wrap">
     </div>
 
     <div class="panel" style="margin-bottom:14px;">
-      <div class="panel-h"><h3>Premium endpoint demand</h3><span class="note">real agents · full path · paid + unpaid</span></div>
-      <div class="panel-b"><div class="bars bars-ref" id="apiEndpoints"></div></div>
+      <div class="panel-h"><h3>Premium endpoint demand</h3><span class="note">paid-ranked · demand trend · &#916; paid vs prior window</span></div>
+      <div class="panel-b"><div class="erows" id="apiEndpoints"></div></div>
     </div>
     <div class="panel">
       <div class="panel-h"><h3>Discovery crawlers</h3><span class="note">non-paying · 402 probes</span></div>
@@ -872,6 +893,39 @@ function renderAiModes(){
   $("#aiModeLiveSub").textContent = `${fmt(m.live.ips)} sessions · ${pct(m.live.hits,tot).toFixed(0)}% of AI reads`;
   $("#aiModeCrawlSub").textContent = `${fmt(m.crawl.ips)} crawler IPs · ${pct(m.crawl.hits,tot).toFixed(0)}% of AI reads`;
 }
+function endpointDeltaBadge(e){
+  const d=e.paidDelta||0, prior=e.paidPrior||0, paid=e.paid||0;
+  let cls="flat", txt="";
+  if(paid>0 && prior===0){ cls="up"; txt="▲ new · +"+fmt(paid)+" paid"; }
+  else if(d>0){ cls="up"; txt="▲ +"+fmt(d)+" paid vs prior"; }
+  else if(d<0){ cls="down"; txt="▼ "+fmt(Math.abs(d))+" paid vs prior"; }
+  else if(paid>0){ cls="flat"; txt="◦ flat vs prior"; }
+  return el("div","edelta "+cls, esc(txt));
+}
+function renderEndpointDemand(endpoints){
+  const host=$("#apiEndpoints"); host.innerHTML="";
+  const eps=(endpoints||[]).slice(0,25);
+  const maxDemand=Math.max(1, ...eps.map(e=>e.paid+e.unpaid402));
+  eps.forEach((e,idx)=>{
+    const demand=e.paid+e.unpaid402;
+    const row=el("div","erow");
+    row.appendChild(el("div","epath","<code>"+esc(e.endpoint)+"</code>"));
+    const track=el("div","etrack"), fill=el("div","efill");
+    const pctW=Math.max(2, 100*demand/maxDemand);
+    if(REDUCE||!INITIAL){ fill.style.width=pctW+"%"; }
+    else { fill.style.width="0%"; requestAnimationFrame(()=> setTimeout(()=>{ fill.style.width=pctW+"%"; }, idx*45)); }
+    track.appendChild(fill); row.appendChild(track);
+    const spark=el("div","espark");
+    spark.innerHTML=sparkline(e.dailyDemand||[], {color:cssv("--series-cyan")});
+    row.appendChild(spark);
+    const meta=el("div","emeta");
+    const convTxt = e.paid>0 ? fmt(e.paid)+" paid · "+(e.conversion*100).toFixed(1)+"%" : fmt(e.unpaid402)+" unpaid";
+    meta.appendChild(el("div","eval", fmt(demand)+" <i>"+esc(convTxt)+"</i>"));
+    meta.appendChild(endpointDeltaBadge(e));
+    row.appendChild(meta);
+    host.appendChild(row);
+  });
+}
 function renderApiAgents(){
   if(!APIAG) return;
   const t = APIAG.totals || {calls:0,paid:0,unpaid402:0,free:0,realAgentCalls:0,crawlerCalls:0,distinctAgents:0};
@@ -900,8 +954,7 @@ function renderApiAgents(){
   const crawlers = (APIAG.agents||[]).filter(a=>a.kind==="crawler");
   barList("#apiCrawlers", crawlers.slice(0,20).map(a=>({label:a.ua, value:a.total, mono:true, tag:"402", sub:"non-paying"})));
 
-  barList("#apiEndpoints", (APIAG.endpoints||[]).slice(0,25).map(e=>({label:e.endpoint, value:e.paid+e.unpaid402, mono:true,
-    sub: e.paid>0 ? `${fmt(e.paid)} paid · ${(e.conversion*100).toFixed(1)}% conv` : `${fmt(e.unpaid402)} unpaid`})));
+  renderEndpointDemand(APIAG.endpoints);
 
   const tot = Math.max(1, t.realAgentCalls + t.crawlerCalls);
   const stk=$("#apiSplitStack"); stk.innerHTML="";

@@ -34,7 +34,7 @@ export function normalizeUaFamily(ua: string): string {
 // indexers that walk our manifest on a schedule. These dominate the raw 402
 // funnel (CarbonMonitor alone is tens of thousands per week) but never pay, so
 // counting them as "demand" is how the build-target heuristic gets misled.
-const CRAWLER_UA_FAMILIES = new Set<string>([
+export const CRAWLER_UA_FAMILIES = new Set<string>([
   'carbonmonitor', 'x402station', 'x402-observer', 'mako-pulse-prober',
   'lion-probe', 'dexter-verifier', 'ari-indexer', 'ioi-indexer',
   'mpp32-health', 'nitrograph-healthcheck', 'coinbasebazaardiscovery', 'weftsearchbot',
