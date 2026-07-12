@@ -27,6 +27,7 @@ import {
 } from './signal-auth';
 import { buildSignalStats } from './signal-stats';
 import { buildSignalAiStats } from './signal-ai-stats';
+import { buildSignalApiAgents, clampApiAgentsDays } from './signal-api-agents';
 
 function jsonPrivate(data: unknown, status = 200, extraHeaders: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(data), {
@@ -134,6 +135,16 @@ export async function handleSignalRoute(
     if (!(await authedEmail(request, env))) return jsonPrivate({ ok: false, error: 'unauthorized' }, 401);
     const trend = clampTrend(url.searchParams.get('trend'));
     const bodyText = await cached60(ctx, `/ai-stats?trend=${trend}`, () => buildSignalAiStats(env, trend));
+    return new Response(bodyText, {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' },
+    });
+  }
+
+  if (path === '/api/signal/api-agents') {
+    if (method !== 'GET') return jsonPrivate({ ok: false, error: 'method_not_allowed' }, 405);
+    if (!(await authedEmail(request, env))) return jsonPrivate({ ok: false, error: 'unauthorized' }, 401);
+    const days = clampApiAgentsDays(url.searchParams.get('days'));
+    const bodyText = await cached60(ctx, `/api-agents?days=${days}`, () => buildSignalApiAgents(env, days));
     return new Response(bodyText, {
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' },
     });

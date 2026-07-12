@@ -279,21 +279,31 @@ const CSS = `
   }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
-  /*  color-coded tabs (Overview / Regular / AI)  */
+  /*  color-coded tabs (Overview / Regular / AI / API)  */
   .tab-btn[data-tab="overview"] { --tc: #6366f1; }
   .tab-btn[data-tab="regular"]  { --tc: #10b981; }
   .tab-btn[data-tab="ai"]       { --tc: #a78bfa; }
+  .tab-btn[data-tab="api"]      { --tc: #f59e0b; }
   @media (prefers-color-scheme: light) {
     .tab-btn[data-tab="overview"] { --tc: #4f46e5; }
     .tab-btn[data-tab="regular"]  { --tc: #059669; }
     .tab-btn[data-tab="ai"]       { --tc: #7c3aed; }
+    .tab-btn[data-tab="api"]      { --tc: #b45309; }
   }
   :root[data-theme="dark"] .tab-btn[data-tab="overview"] { --tc: #6366f1; }
   :root[data-theme="dark"] .tab-btn[data-tab="regular"]  { --tc: #10b981; }
   :root[data-theme="dark"] .tab-btn[data-tab="ai"]       { --tc: #a78bfa; }
+  :root[data-theme="dark"] .tab-btn[data-tab="api"]      { --tc: #f59e0b; }
   :root[data-theme="light"] .tab-btn[data-tab="overview"] { --tc: #4f46e5; }
   :root[data-theme="light"] .tab-btn[data-tab="regular"]  { --tc: #059669; }
   :root[data-theme="light"] .tab-btn[data-tab="ai"]       { --tc: #7c3aed; }
+  :root[data-theme="light"] .tab-btn[data-tab="api"]      { --tc: #b45309; }
+  /*  window toggle on the API Agents tab  */
+  .apiwin { display: flex; gap: 7px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .apiwin .lbl { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+  .apiwin-btn { font: inherit; font-size: 12px; cursor: pointer; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink-2); }
+  .apiwin-btn:hover { color: var(--ink); }
+  .apiwin-btn[aria-pressed="true"] { background: color-mix(in srgb, #f59e0b 18%, transparent); border-color: #f59e0b; color: var(--ink); }
   .tab-btn::before {
     content: ""; width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto;
     background: var(--tc); opacity: 0.5; transition: opacity .15s, box-shadow .15s;
@@ -324,6 +334,7 @@ const MARKUP = `<div class="wrap">
     <button class="tab-btn" role="tab" aria-selected="true" data-tab="overview">Overview <span class="cnt">general</span></button>
     <button class="tab-btn" role="tab" aria-selected="false" data-tab="regular">Regular Traffic</button>
     <button class="tab-btn" role="tab" aria-selected="false" data-tab="ai">AI Traffic <span class="cnt" id="aiCnt">…</span></button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="api">API Agents <span class="cnt" id="apiCnt">…</span></button>
   </nav>
 
   <!-- ============ OVERVIEW ============ -->
@@ -498,14 +509,59 @@ const MARKUP = `<div class="wrap">
     </div>
   </section>
 
-  <footer><div><b>Signal</b> · internal live console. Endpoints: <b>/api/signal/stats</b> (regular traffic) and <b>/api/signal/ai-stats</b> (AI bots + referrals, <b>?trend=N</b>). 60-second server cache; refresh to update.</div></footer>
+  <!-- ============ API AGENTS ============ -->
+  <section class="tab" id="tab-api">
+    <div class="snap" style="margin-top:0;"><span>🔌 <b>Backend traffic.</b> Agents calling your paid + free API (<span class="k">/api/*</span>), served by the Worker. The AI Traffic tab is page-side only and cannot see this.</span><span>Sourced from <span class="k">tf_usage</span>, external callers only (TF's own test traffic excluded).</span></div>
+
+    <div class="apiwin">
+      <span class="lbl">Window</span>
+      <button class="apiwin-btn" type="button" data-days="1">Today</button>
+      <button class="apiwin-btn" type="button" data-days="7" aria-pressed="true">7 days</button>
+      <button class="apiwin-btn" type="button" data-days="30">30 days</button>
+    </div>
+
+    <div class="kpis" id="apiKpis"></div>
+
+    <div class="grid g3" style="margin-bottom:14px;">
+      <div class="panel">
+        <div class="panel-h"><h3>Real agents hitting the backend</h3><span class="note" id="apiAgentsNote">total calls · paid</span></div>
+        <div class="panel-b">
+          <div class="bars" id="apiAgents"></div>
+          <div class="empty" id="apiAgentsEmpty" style="display:none;"><span class="ic">◷</span><span><b style="color:var(--ink-2)">No real-agent API calls in this window.</b> Only discovery crawlers so far. This fills as paying and evaluating agents arrive.</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Real agents vs. discovery crawlers</h3><span class="note">API calls · this window</span></div>
+        <div class="panel-b">
+          <div class="stack" id="apiSplitStack"></div>
+          <div class="cmp">
+            <div class="cb"><div class="cl">Real agents</div><div class="cv" id="apiSplitReal">…</div><div class="ct" style="background:var(--series-cyan);"></div><div class="csub" id="apiSplitRealSub" style="font-size:11.5px;color:var(--muted);margin-top:6px;">…</div></div>
+            <div class="cb"><div class="cl">Discovery crawlers</div><div class="cv" id="apiSplitCrawler">…</div><div class="ct" style="background:var(--warn);"></div><div class="csub" id="apiSplitCrawlerSub" style="font-size:11.5px;color:var(--muted);margin-top:6px;">…</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <div class="panel-h"><h3>Premium endpoint demand</h3><span class="note">real agents · paid + unpaid</span></div>
+        <div class="panel-b"><div class="bars" id="apiEndpoints"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Discovery crawlers</h3><span class="note">non-paying · 402 probes</span></div>
+        <div class="panel-b"><div class="bars" id="apiCrawlers"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer><div><b>Signal</b> · internal live console. Endpoints: <b>/api/signal/stats</b> (regular traffic), <b>/api/signal/ai-stats</b> (AI bots + referrals, <b>?trend=N</b>), and <b>/api/signal/api-agents</b> (backend API agents, <b>?days=N</b>). 60-second server cache; refresh to update.</div></footer>
 </div>`;
 const st=document.createElement("style"); st.textContent=CSS; document.head.appendChild(st);
 document.body.insertAdjacentHTML("afterbegin", MARKUP);
 document.title = "TensorFeed Signal";
 const tipEl=document.createElement("div"); tipEl.id="tip"; tipEl.className="tip"; document.body.appendChild(tipEl);
 
-let STATS=null, AI=null, TREND=null;
+let STATS=null, AI=null, TREND=null, APIAG=null, API_WINDOW=7;
 
 /* ============================ HELPERS ============================ */
 const $ = s => document.querySelector(s);
@@ -805,6 +861,47 @@ function renderAiModes(){
   $("#aiModeLiveSub").textContent = `${fmt(m.live.ips)} sessions · ${pct(m.live.hits,tot).toFixed(0)}% of AI reads`;
   $("#aiModeCrawlSub").textContent = `${fmt(m.crawl.ips)} crawler IPs · ${pct(m.crawl.hits,tot).toFixed(0)}% of AI reads`;
 }
+function renderApiAgents(){
+  if(!APIAG) return;
+  const t = APIAG.totals || {calls:0,paid:0,unpaid402:0,free:0,realAgentCalls:0,crawlerCalls:0,distinctAgents:0};
+  const winLabel = APIAG.windowDays===1 ? "today" : APIAG.windowDays+" days";
+  const denom = Math.max(1, t.calls);
+  // KPIs
+  const c=$("#apiKpis"); c.innerHTML="";
+  c.appendChild(kpi("API calls · "+winLabel, fmt(t.calls), "all tracked /api/* calls"));
+  c.appendChild(kpi("Real agent calls", fmt(t.realAgentCalls), pct(t.realAgentCalls,denom).toFixed(0)+"% of API traffic", {hot:true}));
+  c.appendChild(kpi("Discovery crawlers", fmt(t.crawlerCalls), `<span class="pill flat">${pct(t.crawlerCalls,denom).toFixed(0)}% · non-paying</span>`));
+  c.appendChild(kpi("Paid conversions", fmt(t.paid), `<span class="pill good">settled premium calls</span>`));
+  c.appendChild(kpi("Distinct agents", fmt(t.distinctAgents), "real-agent families"));
+  c.appendChild(kpi("Paywall shown", fmt(t.unpaid402), "402 responses to agents"));
+  $("#apiCnt").textContent = fmt(t.realAgentCalls);
+  $("#apiAgentsNote").textContent = winLabel+" · total / paid";
+
+  const agents = (APIAG.agents||[]).filter(a=>a.kind==="agent");
+  if(agents.length){
+    barList("#apiAgents", agents.slice(0,14).map(a=>({label:a.ua, value:a.total, mono:true,
+      sub: a.paid>0 ? `${fmt(a.paid)} paid · ${fmt(a.unpaid402)} 402` : `${fmt(a.unpaid402)} 402 · ${fmt(a.free)} free`})));
+    $("#apiAgents").style.display=""; $("#apiAgentsEmpty").style.display="none";
+  } else {
+    $("#apiAgents").innerHTML=""; $("#apiAgents").style.display="none"; $("#apiAgentsEmpty").style.display="flex";
+  }
+
+  const crawlers = (APIAG.agents||[]).filter(a=>a.kind==="crawler");
+  barList("#apiCrawlers", crawlers.slice(0,12).map(a=>({label:a.ua, value:a.total, mono:true, tag:"402", sub:"non-paying"})));
+
+  barList("#apiEndpoints", (APIAG.endpoints||[]).slice(0,12).map(e=>({label:e.endpoint, value:e.paid+e.unpaid402, mono:true,
+    sub: e.paid>0 ? `${fmt(e.paid)} paid · ${(e.conversion*100).toFixed(1)}% conv` : `${fmt(e.unpaid402)} unpaid`})));
+
+  const tot = Math.max(1, t.realAgentCalls + t.crawlerCalls);
+  const stk=$("#apiSplitStack"); stk.innerHTML="";
+  [["--series-cyan", t.realAgentCalls, "Real agents"], ["--warn", t.crawlerCalls, "Discovery crawlers"]].forEach(([col,v,lab])=>{
+    if(v>0){ const sp=document.createElement("span"); sp.style.width=(100*v/tot)+"%"; sp.style.background=cssv(col); sp.title=`${lab}: ${fmt(v)}`; stk.appendChild(sp); }
+  });
+  $("#apiSplitReal").textContent = fmt(t.realAgentCalls);
+  $("#apiSplitCrawler").textContent = fmt(t.crawlerCalls);
+  $("#apiSplitRealSub").textContent = pct(t.realAgentCalls,tot).toFixed(0)+"% of API calls";
+  $("#apiSplitCrawlerSub").textContent = pct(t.crawlerCalls,tot).toFixed(0)+"% · probes, never pay";
+}
 function renderStatic(){ if(!STATS||!AI||!TREND) return;
   const SEARCH_TOTAL = AI.search.reduce((s,x)=>s+x[1],0);
   // overview
@@ -856,6 +953,9 @@ function renderStatic(){ if(!STATS||!AI||!TREND) return;
   $("#snapDate").textContent = d.toLocaleDateString("en-US",opt);
   const t=new Date(STATS.fetchedAt);
   $("#updated").textContent = "updated "+t.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+
+  // api agents (independent data source; no-ops until loadApiAgents resolves)
+  renderApiAgents();
 }
 function renderCharts(){ if(!STATS||!AI||!TREND) return;
   areaChart("#ovArea", STATS.hourly, {h:180, name:"requests", unit:"requests", hi:STATS.hourly.length-1,
@@ -938,7 +1038,23 @@ async function loadSignalData(){
   adapt(stats, ai);
   renderStatic();
   renderCharts();
+  // Backend API agents load independently and are non-fatal: a failure here
+  // leaves the other tabs fully working, and the API tab shows its empty state.
+  loadApiAgents(API_WINDOW).catch(()=>{});
 }
+async function loadApiAgents(days){
+  API_WINDOW = days;
+  document.querySelectorAll(".apiwin-btn").forEach(b=> b.setAttribute("aria-pressed", String(Number(b.dataset.days)===days)));
+  try{
+    const r = await fetch("/api/signal/api-agents?days="+days, {cache:"no-store"});
+    if(!r.ok) throw new Error("api-agents "+r.status);
+    APIAG = await r.json();
+  }catch(e){ /* keep any previously loaded data; leave APIAG unchanged */ }
+  renderApiAgents();
+}
+document.querySelectorAll(".apiwin-btn").forEach(b=>{
+  b.addEventListener("click",()=> loadApiAgents(Number(b.dataset.days)));
+});
 async function initSignal(){
   const u=document.getElementById("updated"); if(u) u.textContent="loading live data…";
   // The stats endpoints can briefly be unavailable right after a deploy, so
