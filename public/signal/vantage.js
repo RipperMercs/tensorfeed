@@ -325,7 +325,7 @@ const MARKUP = `<div class="wrap">
     </span>
     <span class="updated"><span class="live"></span> <span id="updated">updated …</span></span>
     <button class="tbtn" id="themeBtn" type="button">Theme</button>
-      <span class="tbtn" style="cursor:default;">Internal console</span>
+    <button class="tbtn" id="logoutBtn" type="button">Log out</button>
   </header>
 
   <div class="snap"><span>🟢 <b>Live</b> · reading <span class="k">/api/signal/stats</span> + <span class="k">/api/signal/ai-stats</span>.</span><span>Internal console, 60s server cache. Data as of <span class="k" id="snapDate">…</span>, refresh for the latest.</span></div>
@@ -989,6 +989,16 @@ $("#themeBtn").addEventListener("click",()=>{
   applyTheme(cur==="dark"?"light":"dark"); renderStatic(); renderCharts();
 });
 (function initTheme(){ let t="dark"; try{ t=localStorage.getItem("signal-theme")||"dark"; }catch(e){} document.documentElement.setAttribute("data-theme",t); })();
+
+// Log out: clear the session cookie via the existing endpoint, then replace the
+// history entry with a fresh /signal load so the gate re-checks (now unauthed)
+// and shows the login form. replace() so the back button cannot return to the
+// authenticated console view.
+$("#logoutBtn").addEventListener("click", async ()=>{
+  const b=$("#logoutBtn"); b.disabled=true; b.textContent="Signing out…";
+  try{ await fetch("/api/signal/logout",{method:"POST",cache:"no-store",credentials:"same-origin"}); }catch(e){}
+  window.location.replace("/signal");
+});
 
 let rz; window.addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(renderCharts,150); });
 renderStatic();
