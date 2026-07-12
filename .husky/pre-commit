@@ -26,3 +26,17 @@ if git diff --cached --diff-filter=d -- 'src/app' 'mcp-server/src' 'public/llms.
   echo "Replace it with a colon, period, comma, or parentheses (project rule #1), then retry."
   exit 1
 fi
+
+# Originals completeness gate. The on-rig daily-article cadence writes drafts to the
+# working tree for review, so a direct push to main deploys whatever gets committed;
+# this is the real backstop. When a commit touches any originals surface, the set must
+# stay in sync AND complete: no retired byline, every article has its OG shim, the newest
+# article has a hero. scripts/check-originals-sync.mjs reads the working tree and exits
+# non-zero on any drift, blocking a broken or half-finished article from being committed.
+if git diff --cached --name-only | grep -qE '^(src/app/originals/|src/lib/originals-directory\.ts|src/app/sitemap\.ts|public/llms\.txt)'; then
+  if ! node scripts/check-originals-sync.mjs; then
+    echo "COMMIT BLOCKED: originals sync-check failed (see above)."
+    echo "Fix the byline, hero, OG shim, or registration, then retry."
+    exit 1
+  fi
+fi
