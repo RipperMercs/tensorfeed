@@ -94,6 +94,17 @@ export interface Env {
   // Read API token; CF_ACCOUNT_ID is the Cloudflare account id for the SQL URL.
   CF_ANALYTICS_TOKEN?: string;
   CF_ACCOUNT_ID?: string;
+  // Signal console (private /signal dashboard). CF_ZONE_TAG is the tensorfeed.ai
+  // zone tag for the GraphQL Analytics API that powers /api/signal/stats (the
+  // existing CF_ANALYTICS_TOKEN also needs Zone Analytics Read for that query).
+  // CONSOLE_USERS is "email:saltHex:pbkdf2HashHex,..." minted by
+  // scripts/signal-hash-password.mjs; CONSOLE_SESSION_SECRET HMAC-signs the
+  // session cookie. All optional: /api/signal/* fails closed (rejects everyone)
+  // when the auth secrets are unset, and /api/signal/stats degrades to zeros
+  // without the zone tag.
+  CF_ZONE_TAG?: string;
+  CONSOLE_USERS?: string;
+  CONSOLE_SESSION_SECRET?: string;
   // Shared secret: requests sending header `X-TF-Internal` equal to it are
   // TensorFeed's own automated callers and are excluded from external-demand
   // funnel metrics. Optional, so unset = nothing tagged.

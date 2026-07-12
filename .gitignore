@@ -106,6 +106,7 @@ scripts/validate-cookbook-nb.py
 scripts/push-via-gh-api.py
 scripts/mint-test-token.ps1
 scripts/phase-2-premium-audit.ps1
+scripts/signal-hash-password.mjs
 scripts/mcp-registry/
 
 # Local-only weekly-update notes + widget debug screenshots (housekeeping)

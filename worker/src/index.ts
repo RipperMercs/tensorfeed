@@ -11,6 +11,7 @@ import { captureHistory, listHistory, readHistory } from './history';
 import { cdpGetSupported, cdpListDiscoveryResources } from './cdp-facilitator';
 import { bazaarPilotPaths, pilotCatalogStatus, pilotTemplatePath } from './bazaar-pilots';
 import { deriveUsageEvent, recordUsageEvent, buildUsageReport, isInternalTraffic, recordRequestHealth, queryRequestHealth } from './usage-meter';
+import { handleSignalRoute } from './signal-routes';
 import { resolveDeadlineMs, isDeadlineExempt, raceDeadline, buildDeadlineResponse } from './deadline';
 import { cachedFetch } from './edge-cache';
 import aiInfraProjects from '../../data/ai-infrastructure-projects.json';
@@ -1378,6 +1379,12 @@ export default {
     // paths) plus the 5xx no-charge ledger entry + signed receipt
     // (premium paths). The catch NEVER debits.
     try {
+    // Private Signal console API (/api/signal/*). Session-gated, self-contained,
+    // and short-circuited before any other routing or activity tracking.
+    if (path.startsWith('/api/signal/')) {
+      return await handleSignalRoute(request, env, ctx, url, path);
+    }
+
     // Track agent/bot activity (non-blocking, batched in memory)
     ctx.waitUntil(trackAgentActivity(request, env, path));
 

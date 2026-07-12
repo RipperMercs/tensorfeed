@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /signal
+Disallow: /api/signal/
 Sitemap: https://tensorfeed.ai/sitemap.xml
 
 # AI Crawlers Welcome
