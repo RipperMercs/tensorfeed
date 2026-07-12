@@ -215,6 +215,13 @@ const CSS = `
   .bar .fill.violet { background: var(--series-violet); }
   .bar .bv { text-align: right; font-family: var(--font-mono); font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
   .bar .bv i { color: var(--muted); font-style: normal; font-size: 10.5px; }
+  /* Reference bar lists (API Agents tab): show the COMPLETE label (full endpoint
+     path or agent UA), never truncate. The label column takes priority width and
+     the bar/value columns flex, so a path sits on one line in a full-width panel
+     and wraps cleanly only when a narrow panel leaves no other option. */
+  .bars-ref .bar { grid-template-columns: minmax(0, 1.7fr) minmax(60px, 1fr) minmax(96px, auto); gap: 14px; align-items: center; }
+  .bars-ref .bl { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: 1.3; }
+  .bars-ref .bl code { word-break: break-all; }
 
   /*  status stack  */
   .stack { display: flex; height: 30px; border-radius: 8px; overflow: hidden; margin: 8px 0 14px; border: 1px solid var(--border); }
@@ -526,7 +533,7 @@ const MARKUP = `<div class="wrap">
       <div class="panel">
         <div class="panel-h"><h3>Real agents hitting the backend</h3><span class="note" id="apiAgentsNote">total calls · paid</span></div>
         <div class="panel-b">
-          <div class="bars" id="apiAgents"></div>
+          <div class="bars bars-ref" id="apiAgents"></div>
           <div class="empty" id="apiAgentsEmpty" style="display:none;"><span class="ic">◷</span><span><b style="color:var(--ink-2)">No real-agent API calls in this window.</b> Only discovery crawlers so far. This fills as paying and evaluating agents arrive.</span></div>
         </div>
       </div>
@@ -542,15 +549,13 @@ const MARKUP = `<div class="wrap">
       </div>
     </div>
 
-    <div class="grid g2">
-      <div class="panel">
-        <div class="panel-h"><h3>Premium endpoint demand</h3><span class="note">real agents · paid + unpaid</span></div>
-        <div class="panel-b"><div class="bars" id="apiEndpoints"></div></div>
-      </div>
-      <div class="panel">
-        <div class="panel-h"><h3>Discovery crawlers</h3><span class="note">non-paying · 402 probes</span></div>
-        <div class="panel-b"><div class="bars" id="apiCrawlers"></div></div>
-      </div>
+    <div class="panel" style="margin-bottom:14px;">
+      <div class="panel-h"><h3>Premium endpoint demand</h3><span class="note">real agents · full path · paid + unpaid</span></div>
+      <div class="panel-b"><div class="bars bars-ref" id="apiEndpoints"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h3>Discovery crawlers</h3><span class="note">non-paying · 402 probes</span></div>
+      <div class="panel-b"><div class="bars bars-ref" id="apiCrawlers"></div></div>
     </div>
   </section>
 
@@ -885,7 +890,7 @@ function renderApiAgents(){
 
   const agents = (APIAG.agents||[]).filter(a=>a.kind==="agent");
   if(agents.length){
-    barList("#apiAgents", agents.slice(0,14).map(a=>({label:a.ua, value:a.total, mono:true,
+    barList("#apiAgents", agents.slice(0,20).map(a=>({label:a.ua, value:a.total, mono:true,
       sub: a.paid>0 ? `${fmt(a.paid)} paid · ${fmt(a.unpaid402)} 402` : `${fmt(a.unpaid402)} 402 · ${fmt(a.free)} free`})));
     $("#apiAgents").style.display=""; $("#apiAgentsEmpty").style.display="none";
   } else {
@@ -893,9 +898,9 @@ function renderApiAgents(){
   }
 
   const crawlers = (APIAG.agents||[]).filter(a=>a.kind==="crawler");
-  barList("#apiCrawlers", crawlers.slice(0,12).map(a=>({label:a.ua, value:a.total, mono:true, tag:"402", sub:"non-paying"})));
+  barList("#apiCrawlers", crawlers.slice(0,20).map(a=>({label:a.ua, value:a.total, mono:true, tag:"402", sub:"non-paying"})));
 
-  barList("#apiEndpoints", (APIAG.endpoints||[]).slice(0,12).map(e=>({label:e.endpoint, value:e.paid+e.unpaid402, mono:true,
+  barList("#apiEndpoints", (APIAG.endpoints||[]).slice(0,25).map(e=>({label:e.endpoint, value:e.paid+e.unpaid402, mono:true,
     sub: e.paid>0 ? `${fmt(e.paid)} paid · ${(e.conversion*100).toFixed(1)}% conv` : `${fmt(e.unpaid402)} unpaid`})));
 
   const tot = Math.max(1, t.realAgentCalls + t.crawlerCalls);
