@@ -86,6 +86,28 @@ async function main() {
   }
   if (!missingLlms.length && llmsCount === slugs.length) passed.push(`llms.txt: ${slugs.length} match plus count`);
 
+  // 4) Retired bylines. "Ripper" is a retired persona (Evan's old byline; he stepped off
+  //    the page to run the backend, and Adrian Vale inherited the writing seat). The
+  //    daily-article skill bans it, but an automated run can still fall back to it (a
+  //    generation pass once wrote the git user.name "Ripper" instead of rotating), so this
+  //    hard-gates it: no article's canonical byline may be a retired name. Checks the two
+  //    machine-parseable positions per article, the directory `author:` field and the
+  //    page's <ArticleJsonLd author="..."> prop, which is enough to fail a PR before
+  //    auto-merge. Add names here as personas retire.
+  const RETIRED_BYLINES = new Set(['Ripper']);
+  const dirAuthors = [...dirSrc.matchAll(/author:\s*'([^']+)'/g)].map((m) => m[1]);
+  const retiredInDir = uniqueSorted(dirAuthors.filter((a) => RETIRED_BYLINES.has(a)));
+  const retiredInPages = [];
+  for (const slug of pageSlugs) {
+    const page = await read('src/app/originals/' + slug + '/page.tsx');
+    for (const m of page.matchAll(/author=["']([^"']+)["']/g)) {
+      if (RETIRED_BYLINES.has(m[1])) { retiredInPages.push(slug); break; }
+    }
+  }
+  if (retiredInDir.length) problems.push(['directory RETIRED byline (author is a retired persona)', retiredInDir]);
+  if (retiredInPages.length) problems.push(['page.tsx RETIRED byline (ArticleJsonLd author is a retired persona)', uniqueSorted(retiredInPages)]);
+  if (!retiredInDir.length && !retiredInPages.length) passed.push(`bylines: no retired names (${[...RETIRED_BYLINES].join(', ')} guarded)`);
+
   const out = [];
   out.push(`Originals sync-check  (source of truth: ${slugs.length} articles in originals-directory.ts)`);
   out.push('');
