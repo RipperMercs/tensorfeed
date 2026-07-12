@@ -331,14 +331,14 @@ const MARKUP = `<div class="wrap">
   <div class="snap"><span>🟢 <b>Live</b> · reading <span class="k">/api/signal/stats</span> + <span class="k">/api/signal/ai-stats</span>.</span><span>Internal console, 60s server cache. Data as of <span class="k" id="snapDate">…</span>, refresh for the latest.</span></div>
 
   <nav class="tabs" role="tablist">
-    <button class="tab-btn" role="tab" aria-selected="true" data-tab="overview">Overview <span class="cnt">general</span></button>
+    <button class="tab-btn" role="tab" aria-selected="true" data-tab="api">API Agents <span class="cnt" id="apiCnt">…</span></button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="overview">Overview <span class="cnt">general</span></button>
     <button class="tab-btn" role="tab" aria-selected="false" data-tab="regular">Regular Traffic</button>
     <button class="tab-btn" role="tab" aria-selected="false" data-tab="ai">AI Traffic <span class="cnt" id="aiCnt">…</span></button>
-    <button class="tab-btn" role="tab" aria-selected="false" data-tab="api">API Agents <span class="cnt" id="apiCnt">…</span></button>
   </nav>
 
   <!-- ============ OVERVIEW ============ -->
-  <section class="tab active" id="tab-overview">
+  <section class="tab" id="tab-overview">
     <div class="kpis" id="ovKpis"></div>
 
     <div class="grid g3" style="margin-bottom:14px;">
@@ -510,7 +510,7 @@ const MARKUP = `<div class="wrap">
   </section>
 
   <!-- ============ API AGENTS ============ -->
-  <section class="tab" id="tab-api">
+  <section class="tab active" id="tab-api">
     <div class="snap" style="margin-top:0;"><span>🔌 <b>Backend traffic.</b> Agents calling your paid + free API (<span class="k">/api/*</span>), served by the Worker. The AI Traffic tab is page-side only and cannot see this.</span><span>Sourced from <span class="k">tf_usage</span>, external callers only (TF's own test traffic excluded).</span></div>
 
     <div class="apiwin">
@@ -765,6 +765,12 @@ function areaChart(sel, data, opts={}){
 /* ============================ TREND (two series) ============================ */
 function trendChart(sel){
   const host=$(sel); host.innerHTML="";
+  // A line needs at least two points; with one day of data X(i) would divide by
+  // (n-1)=0 and emit NaN SVG coordinates. Show a short note until day two lands.
+  if(!TREND || TREND.length < 2){
+    host.innerHTML='<div class="empty"><span class="ic">◷</span><span><b style="color:var(--ink-2)">Trend needs a second day of data.</b> AI-visibility logging began today; this chart fills in once there are at least two daily points.</span></div>';
+    return;
+  }
   const W=host.clientWidth||900, H=210, padL=10, padR=48, padT=16, padB=24;
   const iw=W-padL-padR, ih=H-padT-padB, n=TREND.length;
   const all=TREND.flatMap(r=>[r[1],r[2]]); const max=Math.max(...all)*1.1;
