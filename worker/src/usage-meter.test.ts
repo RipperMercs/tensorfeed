@@ -11,9 +11,35 @@ import {
   reconcileTopPaidEndpoints,
   parseInternalWallets,
   summarizeOrganicPayers,
+  funnelSinceClause,
   SLOW_MS,
 } from './usage-meter';
 import type { Env } from './types';
+
+describe('funnelSinceClause', () => {
+  // The single-day ("today") window must align to the START of the current UTC
+  // calendar day, so the AE funnel covers the same period as the KV daily
+  // rollup (which is calendar-day-bucketed). Without this, right after UTC
+  // midnight the rolling INTERVAL '1' DAY funnel still shows yesterday's paid
+  // calls while the calendar-day payer table is empty, and the two halves of
+  // /api/admin/usage?window=today disagree.
+  it('days=1 uses seconds-since-UTC-midnight, not a rolling day', () => {
+    const now = Date.UTC(2026, 6, 12, 0, 35, 0); // 2026-07-12T00:35:00Z -> 2100s in
+    expect(funnelSinceClause(1, now)).toBe(`timestamp > now() - INTERVAL '2100' SECOND`);
+  });
+  it('days=1 mid-day reflects the full elapsed calendar day', () => {
+    const now = Date.UTC(2026, 6, 12, 12, 0, 0); // 43200s into the day
+    expect(funnelSinceClause(1, now)).toBe(`timestamp > now() - INTERVAL '43200' SECOND`);
+  });
+  it('days=1 at exactly UTC midnight clamps to 1 second (never a 0/empty interval)', () => {
+    const now = Date.UTC(2026, 6, 12, 0, 0, 0);
+    expect(funnelSinceClause(1, now)).toBe(`timestamp > now() - INTERVAL '1' SECOND`);
+  });
+  it('multi-day windows keep the established rolling INTERVAL N DAY behavior', () => {
+    expect(funnelSinceClause(7, Date.UTC(2026, 6, 12, 6, 0, 0))).toBe(`timestamp > now() - INTERVAL '7' DAY`);
+    expect(funnelSinceClause(30, Date.UTC(2026, 6, 12, 6, 0, 0))).toBe(`timestamp > now() - INTERVAL '30' DAY`);
+  });
+});
 
 describe('deriveUsageEvent', () => {
   it('classifies a paid premium 200 as premium/paid', () => {

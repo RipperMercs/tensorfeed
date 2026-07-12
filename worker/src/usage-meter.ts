@@ -605,6 +605,25 @@ export async function queryRequestHealth(env: Env, days: number): Promise<Reques
   };
 }
 
+// Time-window lower bound for the AE funnel queries. The single-day ("today")
+// window aligns to the START of the current UTC calendar day so the funnel
+// covers the same period as the KV daily rollup, which is calendar-day-bucketed.
+// Without this, right after UTC midnight the rolling INTERVAL '1' DAY funnel
+// still counts yesterday's paid calls while the calendar-day payer table
+// (top_payers, top_paid_endpoints, rails) is empty, so the two halves of
+// /api/admin/usage?window=today disagree (the "today under-reports the payer"
+// artifact). Multi-day windows keep the established rolling INTERVAL 'N' DAY
+// behavior so their historical numbers are unchanged. nowMs is injected so the
+// clause is deterministically unit-testable.
+export function funnelSinceClause(days: number, nowMs: number): string {
+  if (days === 1) {
+    const startOfUtcDay = Math.floor(nowMs / 86_400_000) * 86_400_000;
+    const secondsIntoDay = Math.max(1, Math.floor((nowMs - startOfUtcDay) / 1000));
+    return `timestamp > now() - INTERVAL '${secondsIntoDay}' SECOND`;
+  }
+  return `timestamp > now() - INTERVAL '${days}' DAY`;
+}
+
 // Analytics Engine SQL read. Returns null (graceful degrade) when the token or
 // account id are absent, or when the query fails. Never throws. The funnel is
 // external-only: events tagged internal (blob7 = '1', TF's own automated
@@ -622,7 +641,7 @@ export async function queryUsageFunnel(
       sum(if(blob3='served_free',1,0)) AS free_hits,
       sum(if(blob3='unpaid_402',1,0)) AS unpaid_402,
       sum(if(blob3='paid',1,0)) AS paid
-      FROM tf_usage WHERE timestamp > now() - INTERVAL '${days}' DAY AND (blob7 IS NULL OR blob7 != '1') GROUP BY endpoint ORDER BY paid DESC LIMIT 100`;
+      FROM tf_usage WHERE ${funnelSinceClause(days, Date.now())} AND (blob7 IS NULL OR blob7 != '1') GROUP BY endpoint ORDER BY paid DESC LIMIT 100`;
     const resp = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/analytics_engine/sql`,
       {
@@ -667,7 +686,7 @@ export async function queryUsageFunnelByUa(env: Env, days: number): Promise<Funn
       sum(if(blob3='served_free',1,0)) AS free_hits,
       sum(if(blob3='unpaid_402',1,0)) AS unpaid_402,
       sum(if(blob3='paid',1,0)) AS paid
-      FROM tf_usage WHERE timestamp > now() - INTERVAL '${days}' DAY AND (blob7 IS NULL OR blob7 != '1') GROUP BY endpoint, ua ORDER BY unpaid_402 DESC LIMIT 1000`;
+      FROM tf_usage WHERE ${funnelSinceClause(days, Date.now())} AND (blob7 IS NULL OR blob7 != '1') GROUP BY endpoint, ua ORDER BY unpaid_402 DESC LIMIT 1000`;
     const resp = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/analytics_engine/sql`,
       {
