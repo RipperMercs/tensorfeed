@@ -29,6 +29,12 @@
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=3600
 
+# Signal internal console (gate + dashboard JS). Single-user and actively
+# iterated, so never hold a stale copy: always revalidate (a 304 when unchanged
+# is cheap) so a normal refresh shows the latest, not a copy cached for hours.
+/signal/*
+  Cache-Control: no-cache, must-revalidate
+
 # Embeddable widget surfaces. The site-wide policy (X-Frame-Options:
 # DENY plus CSP frame-ancestors 'none') blocks all framing. CRITICAL:
 # Cloudflare Pages COMBINES same-name headers from every matching rule,
