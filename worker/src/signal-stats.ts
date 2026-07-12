@@ -56,7 +56,6 @@ function zeroedSignalStats(): SignalStatsResponse {
 interface AdaptiveGroup {
   count?: number;
   sum?: { edgeResponseBytes?: number };
-  uniq?: { uniques?: number };
   dimensions?: {
     edgeResponseStatus?: number;
     cacheStatus?: string;
@@ -64,6 +63,12 @@ interface AdaptiveGroup {
     clientRequestPath?: string;
     datetimeHour?: string;
   };
+}
+
+// httpRequests1dGroups is a separate dataset that DOES expose uniq { uniques };
+// the adaptive dataset does not. Used only for the unique-visitor count.
+interface DailyUniqGroup {
+  uniq?: { uniques?: number };
 }
 
 interface SignalStatsZone {
@@ -76,6 +81,7 @@ interface SignalStatsZone {
   topCountry?: AdaptiveGroup[];
   topPath?: AdaptiveGroup[];
   hourly?: AdaptiveGroup[];
+  uniques?: DailyUniqGroup[];
 }
 
 interface SignalStatsGraphQL {
@@ -88,12 +94,14 @@ interface SignalStatsGraphQL {
 // breakdowns, the single top path and country, and 24 hourly buckets ordered
 // oldest first. Variables carry every datetime; no untrusted value is ever
 // interpolated into the query text.
-const SIGNAL_STATS_QUERY = `query SignalStats($zone: string!, $since: string!, $until: string!, $prevSince: string!, $h1: string!, $m5: string!) {
+const SIGNAL_STATS_QUERY = `query SignalStats($zone: string!, $since: string!, $until: string!, $prevSince: string!, $h1: string!, $m5: string!, $dSince: string!, $dUntil: string!) {
   viewer {
     zones(filter: { zoneTag: $zone }) {
       overall: httpRequestsAdaptiveGroups(limit: 1, filter: { datetime_geq: $since, datetime_leq: $until }) {
         count
         sum { edgeResponseBytes }
+      }
+      uniques: httpRequests1dGroups(limit: 2, filter: { date_geq: $dSince, date_leq: $dUntil }) {
         uniq { uniques }
       }
       last1h: httpRequestsAdaptiveGroups(limit: 1, filter: { datetime_geq: $h1, datetime_leq: $until }) { count }
@@ -138,6 +146,7 @@ export async function buildSignalStats(env: Env): Promise<SignalStatsResponse> {
     const now = Date.now();
     const H = 60 * 60 * 1000;
     const iso = (ms: number): string => new Date(ms).toISOString();
+    const day = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
     const variables = {
       zone: env.CF_ZONE_TAG,
       since: iso(now - 24 * H),
@@ -145,6 +154,8 @@ export async function buildSignalStats(env: Env): Promise<SignalStatsResponse> {
       prevSince: iso(now - 48 * H),
       h1: iso(now - H),
       m5: iso(now - 5 * 60 * 1000),
+      dSince: day(now - 24 * H),
+      dUntil: day(now),
     };
     const resp = await fetch('https://api.cloudflare.com/client/v4/graphql', {
       method: 'POST',
@@ -166,8 +177,15 @@ export async function buildSignalStats(env: Env): Promise<SignalStatsResponse> {
 
     const overall = zone.overall?.[0];
     const requests24h = num(overall?.count);
-    const uniqueVisitors24h = num(overall?.uniq?.uniques);
     const bandwidth24h = num(overall?.sum?.edgeResponseBytes);
+    // The adaptive dataset has no uniques field, so unique visitors come from
+    // httpRequests1dGroups (daily-deduped). The rolling 24h window can straddle
+    // two calendar days; take the busier day so the figure does not collapse to
+    // near-zero right after UTC midnight.
+    let uniqueVisitors24h = 0;
+    for (const d of zone.uniques ?? []) {
+      uniqueVisitors24h = Math.max(uniqueVisitors24h, num(d.uniq?.uniques));
+    }
     const requests1h = num(zone.last1h?.[0]?.count);
     const requests5m = num(zone.last5m?.[0]?.count);
     const requests24hPrev = num(zone.prev?.[0]?.count);
