@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'meta-iris-chip-broadcom-nvidia-ceiling',
+    title:
+      "Meta's Iris Chip Enters Production in September. Broadcom Is Quietly Winning the Custom Silicon Race.",
+    author: 'Marcus Chen',
+    date: 'July 13, 2026',
+    readTime: '6 min read',
+    description:
+      "An internal Meta memo Reuters saw on July 9, 2026 puts the in-house MTIA Iris chip into mass manufacturing this September, on the way to doubling data-center compute from 7 GW to 14 GW by 2027 and raising the 2026 AI CapEx ceiling from a prior $118B to as much as $145B. Broadcom is the design partner. TSMC is the fab. The chip cleared its bug-testing window in about six weeks with no significant issues, which is roughly the fastest anyone has taken a custom AI accelerator from tape-out to production this cycle. The read: Meta is the last of the top-four hyperscalers to lock in its own ASIC (Google TPU v7, Amazon Trainium 3, Microsoft Maia 200, and now Meta Iris), and Broadcom is quietly the design partner on three of the five biggest programs (Google TPU, Meta MTIA, and OpenAI Jalapeno). Custom AI chip shipments are on pace to grow roughly 45 percent in 2026 against 16 percent for merchant GPU shipments. Nvidia is not losing revenue on any of this, but the customer-concentration bull case just got harder: OpenAI and Anthropic are now the last two frontier buyers whose growth still runs primarily through Nvidia silicon, and Anthropic's $200B commitment is TPU-anchored. Meanwhile, doubling to 14 GW inside twelve months is a power problem, not a silicon one, and adds Meta to the 2027 gigawatt cliff already crowding onto the same grid. Three signposts: whether Meta lets an outside customer touch Iris at all, whether Broadcom guides Q3 AI revenue up on the design-win pipeline, and whether Iris inference cost per token lands close to the TPU curve and reprices Meta's consumer AI stack downward.",
+  },
+  {
     slug: 'five-coding-models-48-hours-scoreboard',
     title:
       'Five Frontier Coding Models Shipped in 48 Hours. Here Is the Scoreboard.',
