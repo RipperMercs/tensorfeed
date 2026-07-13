@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-05",
+  "lastUpdated": "2026-07-13",
   "providers": [
     {
       "id": "anthropic",
@@ -353,6 +353,22 @@
             "code"
           ],
           "tier": "flagship"
+        },
+        {
+          "id": "muse-spark-1-1",
+          "name": "Muse Spark 1.1",
+          "inputPrice": 1.25,
+          "outputPrice": 4.25,
+          "contextWindow": 1000000,
+          "released": "2026-07",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
+          "tier": "flagship"
         }
       ]
     },
@@ -506,6 +522,21 @@
           "outputPrice": 2.5,
           "contextWindow": 1000000,
           "released": "2026-04",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code"
+          ],
+          "tier": "flagship"
+        },
+        {
+          "id": "grok-4-5",
+          "name": "Grok 4.5",
+          "inputPrice": 2,
+          "outputPrice": 6,
+          "contextWindow": 500000,
+          "released": "2026-07",
           "capabilities": [
             "text",
             "vision",

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-05",
+  "lastUpdated": "2026-07-13",
   "benchmarks": [
     { "id": "swe_bench", "name": "SWE-bench", "description": "Real-world software engineering tasks from GitHub issues (SWE-bench Verified)", "maxScore": 100 },
     { "id": "mmlu_pro", "name": "MMLU-Pro", "description": "General knowledge and reasoning across 57 subjects", "maxScore": 100 },
@@ -8,6 +8,24 @@
     { "id": "math", "name": "MATH", "description": "Competition-level mathematics problems", "maxScore": 100 }
   ],
   "models": [
+    {
+      "model": "GPT-5.6 Sol",
+      "provider": "OpenAI",
+      "released": "2026-07",
+      "scores": { "gpqa_diamond": 94.6 }
+    },
+    {
+      "model": "Grok 4.5",
+      "provider": "xAI",
+      "released": "2026-07",
+      "scores": { "swe_bench": 86.6, "gpqa_diamond": 93.1 }
+    },
+    {
+      "model": "Muse Spark 1.1",
+      "provider": "Meta",
+      "released": "2026-07",
+      "scores": { "gpqa_diamond": 88.4 }
+    },
     {
       "model": "GPT-5.5",
       "provider": "OpenAI",

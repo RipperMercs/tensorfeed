@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-06-05T00:00:00Z",
+  "generated_at": "2026-07-13T00:00:00Z",
   "license": "TF curation CC-BY-4.0. Underlying public-record sources retain their original license.",
   "notice": "Editorial registry of disclosed major AI buildout projects. Each entry preserves canonical source URLs. Capacity, capex, and timeline figures reflect publicly announced or reported numbers at time of curation and may evolve. Status enum: announced (publicly committed, no ground broken), permitted (regulatory greenlights obtained), construction (active build), operational (online and serving traffic). Power source enum is the announced primary source; many projects mix multiple feeds.",
   "schema": {
@@ -48,11 +48,12 @@
       "power_source": "natural gas plus grid",
       "announced_date": "2024-12-04",
       "target_operational": "2030",
-      "capex_usd_billion": 27,
-      "context": "Meta's largest single data center campus. Originally announced December 2024 as a $10 billion independent project; restructured in October 2025 into a $27 billion joint venture with Blue Owl Capital (80% Blue Owl, 20% Meta). Up to 5 GW total capacity; Phase 1 targets 1.5 GW by late 2027, using roughly 1.3 million NVIDIA Blackwell GPUs. Entergy Louisiana is the serving utility and is building 10 gas-fired plants to serve the load.",
+      "capex_usd_billion": 50,
+      "context": "Meta's largest single data center campus. Originally announced December 2024 as a $10 billion independent project; restructured in October 2025 into a joint venture with Blue Owl Capital (80 percent Blue Owl, 20 percent Meta). Total investment reached $50 billion as of July 2026, per CNBC reporting. Up to 5 GW total capacity; Phase 1 targets 1.5 GW by late 2027, using roughly 1.3 million NVIDIA Blackwell GPUs. Entergy Louisiana is the serving utility and is building 10 natural gas plants to serve the load.",
       "primary_sources": [
         "https://about.fb.com/news/2024/12/meta-establishing-louisiana-data-center/",
-        "https://about.fb.com/news/2025/10/meta-blue-owl-capital-develop-hyperion-data-center/"
+        "https://about.fb.com/news/2025/10/meta-blue-owl-capital-develop-hyperion-data-center/",
+        "https://www.cnbc.com/2026/07/13/meta-louisiana-data-center-investment-reaches-50-billion-amid-ai-push.html"
       ]
     },
     {
@@ -150,15 +151,16 @@
       "operator": "Microsoft",
       "partners": ["We Energies"],
       "location": { "city": "Mount Pleasant", "state": "Wisconsin", "country": "USA" },
-      "status": "construction",
+      "status": "operational",
       "capacity_mw_announced": null,
       "power_source": "mixed including new gas plants",
       "announced_date": "2024-03-08",
       "target_operational": "2026",
       "capex_usd_billion": 3.3,
-      "context": "Sits on the former Foxconn site. Microsoft announced an additional $3.3 billion commitment in 2024 on top of earlier phases. We Energies has separately filed for approval of two new natural gas peaker plants partly attributed to the data center load.",
+      "context": "Sits on the former Foxconn site. Microsoft announced an additional $3.3 billion commitment in 2024 on top of earlier phases. We Energies has separately filed for approval of two new natural gas peaker plants partly attributed to the data center load. The first facility (Fairwater Datacenter) became operational June 23, 2026, built by approximately 10,000 construction workers and completed ahead of schedule. A second adjacent building is under construction with completion targeted for 2028.",
       "primary_sources": [
-        "https://blogs.microsoft.com/blog/2024/05/08/3-3b-microsoft-investment-in-mount-pleasant-to-spur-ai-innovation/"
+        "https://blogs.microsoft.com/blog/2024/05/08/3-3b-microsoft-investment-in-mount-pleasant-to-spur-ai-innovation/",
+        "https://news.microsoft.com/source/2026/06/23/microsoft-completes-construction-on-first-datacenter-facility-in-mount-pleasant-wisconsin/"
       ]
     },
     {
@@ -301,6 +303,60 @@
       "context": "Anthropic committed $50 billion to American AI infrastructure, with Fluidstack as the build partner across initial sites in Texas and New York. Announced November 12, 2025 alongside an expected 800 permanent jobs and 2,400 construction jobs. Sites are designed as custom data centers optimized for Anthropic workloads and are coming online in phases through 2026. The gigawatt-scale capacity complements Anthropic's Google Cloud TPU commitments and its lease of SpaceXAI Colossus 1.",
       "primary_sources": [
         "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure"
+      ]
+    },
+    {
+      "id": "microsoft-pecos",
+      "name": "Microsoft Pecos Campus",
+      "operator": "Microsoft",
+      "partners": ["Chevron (Project Kilby)"],
+      "location": { "city": "Pecos", "state": "Texas", "country": "USA" },
+      "status": "construction",
+      "capacity_mw_announced": 2000,
+      "power_source": "natural gas (off-grid, Chevron Project Kilby co-located generation)",
+      "announced_date": "2026-06-22",
+      "target_operational": "2028",
+      "capex_usd_billion": null,
+      "context": "Announced June 22, 2026, the Pecos campus targets approximately 2 GW of IT load in Reeves County, West Texas. Power comes from Chevron Project Kilby, a co-located 2.67 GW natural gas generation facility under a 20-year power purchase agreement with Microsoft. The campus uses closed-loop cooling with no ongoing water withdrawals. First power is targeted for 2028. GE Vernova large gas turbines and Solar Turbines are the primary power equipment.",
+      "primary_sources": [
+        "https://blogs.microsoft.com/blog/2026/06/22/powering-the-next-wave-of-ai-expanding-capacity-with-our-new-datacenter-in-pecos/",
+        "https://www.chevron.com/newsroom/2026/q2/chevron-signs-20-year-power-agreement-with-microsoft-for-west-texas-data-center"
+      ]
+    },
+    {
+      "id": "meta-alberta",
+      "name": "Meta Alberta Campus",
+      "operator": "Meta",
+      "partners": ["Government of Alberta"],
+      "location": { "city": "Sturgeon County", "state": "Alberta", "country": "Canada" },
+      "status": "construction",
+      "capacity_mw_announced": 1000,
+      "power_source": "natural gas plus renewable matching",
+      "announced_date": "2026-07-08",
+      "target_operational": "2029",
+      "capex_usd_billion": 9.17,
+      "context": "Meta broke ground on its first Canadian data center on July 8, 2026, in Sturgeon County near Edmonton, Alberta. The campus targets 1 GW of capacity scalable to 1.8 GW, at a total investment of approximately $9.17 billion (CAD $12.5 billion). It is Meta's 33rd global data center. Power is supplied under a long-term agreement tied to a new natural gas facility, with electricity use matched 100 percent with clean or renewable energy. The campus is expected to employ approximately 3,000 construction workers and 300 permanent staff.",
+      "primary_sources": [
+        "https://about.fb.com/news/2026/07/breaking-ground-on-metas-first-data-center-in-canada/",
+        "https://www.cnbc.com/2026/07/08/meta-is-building-its-first-big-data-center-in-canada-amid-ai-push.html"
+      ]
+    },
+    {
+      "id": "prometheus-hyperscale-wyoming",
+      "name": "Prometheus Hyperscale Wyoming",
+      "operator": "Prometheus Hyperscale",
+      "partners": ["In-Q-Tel"],
+      "location": { "city": "Evanston", "state": "Wyoming", "country": "USA" },
+      "status": "permitted",
+      "capacity_mw_announced": 1250,
+      "power_source": "natural gas (islanded microgrid, no public grid connection)",
+      "announced_date": "2026-06-22",
+      "target_operational": "2029",
+      "capex_usd_billion": null,
+      "context": "Prometheus Hyperscale received unanimous conditional use permit approval from Uinta County commissioners on June 18, 2026, for a 506-acre campus approximately 12 miles east of Evanston, Wyoming. Initial capacity targets 1.25 GW from an islanded natural gas microgrid with no public utility connection; the site can expand to 5 GW. The backer, Prometheus Hyperscale, is affiliated with In-Q-Tel, the CIA-affiliated venture firm. Construction is expected within six months of final permitting, with the full 1.25 GW buildout planned over 48 to 60 months. The initial phase would exceed all Wyoming residential electricity consumption combined.",
+      "primary_sources": [
+        "https://www.datacenterdynamics.com/en/news/prometheus-hyperscale-secures-planning-approval-for-gigawatt-data-center-campus-in-wyoming/",
+        "https://www.prnewswire.com/news-releases/prometheus-hyperscale-secures-unanimous-conditional-use-permit-approval-from-uinta-county-commissioners-302803665.html"
       ]
     },
     {

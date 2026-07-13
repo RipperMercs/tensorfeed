@@ -46,6 +46,25 @@ export interface AIHardware {
 export const AI_HARDWARE_CATALOG: AIHardware[] = [
   // ── NVIDIA ─────────────────────────────────────────────────
   {
+    id: 'vera-rubin-r200',
+    name: 'NVIDIA Vera Rubin R200',
+    manufacturer: 'NVIDIA',
+    family: 'Rubin',
+    process: 'TSMC 3nm',
+    released: '2026',
+    memoryGB: 288,
+    memoryBandwidthTBs: 22.0,
+    fp16TFLOPS: 12500,
+    fp8TFLOPS: 25000,
+    fp4TFLOPS: 50000,
+    tdpWatts: null as unknown as number,
+    interconnect: 'NVLink 6 (3.6 TB/s per GPU, 260 TB/s per NVL72 rack)',
+    listPriceUSD: null,
+    availability: 'Cloud only (Microsoft Azure, Google Cloud, AWS, Oracle, CoreWeave); first shipments July 2026',
+    notes: 'Rubin generation flagship. 288 GB HBM4, 22 TB/s bandwidth. Part of the Vera Rubin platform (Vera CPU plus R200 GPU plus NVLink 6). Ships in NVL72 racks of 72 GPUs. Roughly 5x the FP4 throughput of the B200 at the same precision. TDP not officially disclosed.',
+    url: 'https://nvidianews.nvidia.com/news/vera-rubin-full-production-agentic-ai-factory',
+  },
+  {
     id: 'gb200',
     name: 'NVIDIA GB200 (Blackwell)',
     manufacturer: 'NVIDIA',
@@ -401,4 +420,4 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
   },
 ];
 
-export const AI_HARDWARE_LAST_UPDATED = '2026-06-05';
+export const AI_HARDWARE_LAST_UPDATED = '2026-07-13';

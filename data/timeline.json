@@ -1,6 +1,48 @@
 {
   "events": [
     {
+      "date": "2026-07-11",
+      "title": "Apple Sues OpenAI Over Alleged Trade Secret Theft",
+      "provider": "Apple",
+      "category": "policy",
+      "description": "Apple filed a trade secret lawsuit against OpenAI in federal court in Northern California on July 11, 2026, citing more than 400 former Apple employees now at OpenAI, particularly from silicon and on-device AI teams. The suit alleges that OpenAI hardware chief Tang Tan, a former Apple VP, directed job candidates to bring confidential materials from Apple and coached employees on evading Apple security processes. The lawsuit marks a dramatic turn for two companies that had a ChatGPT integration partnership beginning in 2024, with relations cooling after OpenAI's $6.4 billion acquisition of Jony Ive's IO Products."
+    },
+    {
+      "date": "2026-07-09",
+      "title": "OpenAI Releases GPT-5.6 Family to General Availability",
+      "provider": "OpenAI",
+      "category": "model-release",
+      "description": "OpenAI brought the GPT-5.6 family to general availability on July 9, 2026, following a two-week limited preview. The three-tier release includes Sol (flagship, $5 per million input tokens and $30 per million output tokens), Terra (balanced, $2.50 and $15 per million tokens), and Luna (budget, $1 and $6 per million tokens), all with 1 million token context windows. Terra delivers performance comparable to GPT-5.5 at roughly half the cost. Sol runs at approximately 750 tokens per second on Cerebras hardware. OpenAI also launched ChatGPT Work alongside the models, a general-purpose agentic assistant that can manage long-horizon projects, create documents, and run scheduled tasks."
+    },
+    {
+      "date": "2026-07-09",
+      "title": "Meta Releases Muse Spark 1.1",
+      "provider": "Meta",
+      "category": "model-release",
+      "description": "Meta Superintelligence Labs launched Muse Spark 1.1 on July 9, 2026, alongside the first public preview of the Meta Model API for developers. The model has a 1 million token context window with native computer use, tool orchestration, and multi-agent coordination. API pricing is $1.25 per million input tokens and $4.25 per million output tokens. Muse Spark 1.1 is Meta's first paid proprietary model."
+    },
+    {
+      "date": "2026-07-08",
+      "title": "SpaceXAI Releases Grok 4.5 Publicly",
+      "provider": "xAI",
+      "category": "model-release",
+      "description": "SpaceXAI launched Grok 4.5 to the public on July 8, 2026, after a private beta at SpaceX and Tesla. Built on a 1.5 trillion parameter V9 foundation model trained in part on data from the Cursor coding environment, Grok 4.5 is priced at $2 per million input tokens and $6 per million output tokens with a 500,000 token context window. Elon Musk described it as Opus-class in capability but faster and more token-efficient."
+    },
+    {
+      "date": "2026-07-06",
+      "title": "Illinois Enacts AI Safety Measures Act",
+      "provider": "US Government",
+      "category": "policy",
+      "description": "Illinois Governor Pritzker signed the AI Safety Measures Act on July 6, 2026, making Illinois the first US state to impose mandatory safety requirements on frontier AI developers. The law applies to AI models generating more than $500 million in annual revenue and requires a published AI safety framework identifying catastrophic risk, 72-hour incident reporting (24-hour for imminent threats), annual independent third-party audits, and whistleblower protections. Civil penalties apply for violations. The law takes effect January 1, 2027."
+    },
+    {
+      "date": "2026-07-01",
+      "title": "Anthropic Redeploys Claude Fable 5 After Export Control Pause",
+      "provider": "Anthropic",
+      "category": "policy",
+      "description": "Anthropic restored global access to Claude Fable 5 and Claude Mythos 5 on July 1, 2026, following a 19-day suspension under a US Commerce Department export control directive. The models had been pulled June 12 after researchers published a jailbreak method bypassing their safeguards. Anthropic added a new cybersecurity classifier trained with government collaboration that blocks the specific attack vector in more than 99 percent of cases. Access was initially capped at 50 percent of weekly usage limits for paid plan users through July 7 while the rollout stabilized."
+    },
+    {
       "date": "2026-06-30",
       "title": "Anthropic Releases Claude Sonnet 5 at $2/$10 Introductory Pricing",
       "provider": "Anthropic",
@@ -36,6 +78,13 @@
       "description": "GPT-4.5 was removed from ChatGPT on June 26, 2026. Existing GPT-4.5 conversations route forward to GPT-5.5, and earlier GPT-5.2 variants (Instant, Thinking, Pro) had already been pulled from ChatGPT on June 12. The API listing for gpt-4.5 remains for now, but the deprecation tightens the active OpenAI lineup to GPT-5.5 (with GPT-5.6 still in limited preview), o1, and o3-mini."
     },
     {
+      "date": "2026-06-24",
+      "title": "OpenAI and Broadcom Unveil Jalapeño Inference Chip",
+      "provider": "OpenAI",
+      "category": "product-launch",
+      "description": "OpenAI and Broadcom announced the Jalapeño inference chip on June 24, 2026. OpenAI's first custom silicon, the chip is a near-reticle-sized ASIC built on TSMC 3nm and optimized for LLM inference. The full design-to-tape-out cycle took nine months, with OpenAI using its own models to accelerate parts of the chip design. Prototype deployments are targeted for late 2026 and mass production for 2027, with full-scale deployment planned for the first half of 2028."
+    },
+    {
       "date": "2026-06-23",
       "title": "Anthropic Moves Claude Fable 5 From Plan-Included to Usage Credits",
       "provider": "Anthropic",
@@ -43,11 +92,46 @@
       "description": "Anthropic ended the introductory window for Claude Fable 5 on June 23, 2026. From June 9 through June 22 the model was included at no extra cost on Pro, Max, Team, and seat-based Enterprise plans. Starting June 23 Fable 5 use is billed against usage credits on those plans; API pricing stays at $10 per 1M input and $50 per 1M output, with safety-classifier reroutes to Opus 4.8 billed at Opus rates for the rerouted portion. Opus 4.8 remains the default plan-included model."
     },
     {
+      "date": "2026-06-16",
+      "title": "SpaceX Agrees to Acquire Cursor for $60B",
+      "provider": "SpaceX",
+      "category": "acquisition",
+      "description": "SpaceX announced a $60 billion all-stock acquisition of Anysphere, maker of the Cursor AI code editor, on June 16, 2026, four days after SpaceX's Nasdaq IPO. The deal is described as the largest acquisition of a venture-backed startup in history. Cursor had been building its Composer agentic coding capabilities using SpaceXAI infrastructure, and SpaceX had held an acquisition option since April 21 with a $10 billion breakup fee. The deal is expected to close in Q3 2026."
+    },
+    {
+      "date": "2026-06-15",
+      "title": "Salesforce Agrees to Acquire Fin (formerly Intercom) for $3.6B",
+      "provider": "Salesforce",
+      "category": "acquisition",
+      "description": "Salesforce signed a definitive agreement to acquire Fin, the AI-native customer experience platform formerly known as Intercom, for $3.6 billion on June 15, 2026. Fin's proprietary Apex AI model resolves 76 percent of customer support volume without human intervention across chat, email, WhatsApp, SMS, phone, and Slack. The deal brings approximately 30,000 business customers to Salesforce and is expected to close in Salesforce Q4 FY2027."
+    },
+    {
+      "date": "2026-06-12",
+      "title": "SpaceX Lists on Nasdaq in Record $75B IPO",
+      "provider": "SpaceX",
+      "category": "funding",
+      "description": "SpaceX completed the largest technology IPO in history on June 12, 2026, raising $75 billion at $135 per share on Nasdaq under the ticker SPCX. First-day trading pushed the market capitalization to approximately $2.1 trillion. SpaceX had merged the xAI division into SpaceXAI in May 2026, making the listing also a major AI infrastructure event. The offering made Elon Musk the first person to reach a net worth of one trillion US dollars."
+    },
+    {
+      "date": "2026-06-12",
+      "title": "US Applies Export Controls to Claude Fable 5 and Mythos 5",
+      "provider": "US Government",
+      "category": "policy",
+      "description": "The US Commerce Department applied export control restrictions to Claude Fable 5 and Claude Mythos 5 on June 12, 2026, suspending global access to both models. The action followed the publication of a jailbreak method by Amazon researchers that bypassed the models' safety guardrails. Anthropic later added a government-approved cybersecurity classifier and restored global access on July 1, 2026."
+    },
+    {
       "date": "2026-06-09",
       "title": "Anthropic Releases Claude Fable 5, a New Frontier Tier Above Opus",
       "provider": "Anthropic",
       "category": "model-release",
       "description": "Anthropic launched Claude Fable 5 (API id claude-fable-5), a new frontier tier positioned above Claude Opus 4.8, which remains the default model. Pricing is $10 per million input tokens and $50 per million output with no long-context surcharge, on a 1 million token default context window with up to 128K output tokens and text plus vision input. Adaptive thinking is always on and cannot be disabled, with effort levels spanning low, medium, high, xhigh, and max. Anthropic's launch table reports 80.3 on SWE-bench Pro, 29.3 on FrontierCode Diamond, 85.0 on OSWorld-Verified, and a GDPval-AA ELO of 1932, all vendor-reported. Always-on safety classifiers can reroute flagged requests to Opus 4.8, billed at Opus rates for the rerouted portion. The model is available on the Claude API, Amazon Bedrock, Google Vertex, and Microsoft Foundry at launch."
+    },
+    {
+      "date": "2026-06-08",
+      "title": "Apple Introduces AFM 3 Foundation Models at WWDC 2026",
+      "provider": "Apple",
+      "category": "model-release",
+      "description": "Apple unveiled its third-generation Apple Foundation Models (AFM 3) at WWDC 2026 on June 8. The five-model family includes two on-device models (AFM 3 Core at roughly 3B parameters and AFM 3 Core Advanced at roughly 20B parameters) and three server-side models running on Private Cloud Compute (AFM 3 Cloud, AFM 3 Cloud Image, and AFM 3 Cloud Pro). AFM 3 Cloud Pro runs on NVIDIA GPUs hosted on Google Cloud. Apple also announced Xcode 27 at the same event, a redesigned IDE with native support for coding agents from Anthropic, Google, and OpenAI."
     },
     {
       "date": "2026-06-02",
