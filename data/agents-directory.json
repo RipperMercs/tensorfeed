@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-05",
+  "lastUpdated": "2026-07-13",
   "categories": [
     {
       "id": "coding",
@@ -79,6 +79,16 @@
       "launched": 2022
     },
     {
+      "id": "claude-science",
+      "name": "Claude Science",
+      "provider": "Anthropic",
+      "category": "research",
+      "description": "A scientific research workbench analogous to Claude Code for software engineering. Integrates with 60-plus scientific databases and computation tools, produces auditable and reproducible artifacts (3D protein structures, chemistry visualizations), and can run on a lab's own infrastructure to keep data on-premises. Designed for computational biology, drug development, and experimental science workflows.",
+      "url": "https://www.anthropic.com/news/claude-science-ai-workbench",
+      "pricing": "Included in paid Claude plans (Pro $20/mo and above). Research credit grants also available.",
+      "launched": 2026
+    },
+    {
       "id": "elicit",
       "name": "Elicit",
       "provider": "Elicit Inc.",
@@ -117,6 +127,16 @@
       "url": "https://gemini.google.com",
       "pricing": "Free tier, Advanced $19.99/mo (included with Google One AI Premium)",
       "launched": 2023
+    },
+    {
+      "id": "microsoft-scout",
+      "name": "Microsoft Scout",
+      "provider": "Microsoft",
+      "category": "general",
+      "description": "An always-on personal AI agent that runs continuously in the background across Microsoft 365 (Teams, Outlook, OneDrive, SharePoint). Scout proactively schedules meetings, flags risks, identifies upcoming deliverables, and pre-blocks calendar time. It holds its own governed Microsoft Entra identity and operates with Microsoft Purview enforcement for enterprise security and compliance.",
+      "url": "https://www.microsoft.com/en-us/microsoft-365/blog/2026/06/02/introducing-microsoft-scout-your-always-on-personal-agent/",
+      "pricing": "Governance layer $15/user/month plus Azure execution credits. Requires M365 enterprise plan and GitHub Copilot license.",
+      "launched": 2026
     },
     {
       "id": "gemini-spark",

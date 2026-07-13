@@ -58,6 +58,8 @@ export const SEED_DOMAINS: SeedDomain[] = [
   { domain: 'ai21.com', sector: 'ai-company' },
   // expansion to 500 (2026-06-02)
   { domain: 'x.ai', sector: 'ai-company' },
+  // review additions (2026-07-13)
+  { domain: 'z.ai', sector: 'ai-company' },
   { domain: 'deepseek.com', sector: 'ai-company' },
   { domain: 'moonshot.ai', sector: 'ai-company' },
   { domain: '01.ai', sector: 'ai-company' },
