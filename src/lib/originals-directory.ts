@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-blomfield-compute-monzo-operator',
+    title:
+      "Anthropic Just Put Monzo's Founder on the Compute Team. Anthropic Thinks Compute Is a Logistics Problem Now.",
+    author: 'Kira Nolan',
+    date: 'July 14, 2026',
+    readTime: '6 min read',
+    description:
+      "On July 13, 2026, Tom Blomfield confirmed on X that he is taking leave from Y Combinator and joining Anthropic as a member of technical staff on the compute team, reporting to co-founder and Chief Compute Officer Tom Brown. The AI press covered it as another entry in the Anthropic talent-raid storyline alongside Andrej Karpathy (pre-training, May), John Jumper (research, June), and Eric Boyd (infrastructure, April). That is the surface story. The story underneath is which side of the org chart he is joining: Karpathy and Jumper landed on research, Boyd and now Blomfield on compute. A payments and fintech operator, not a chip architect, on the team responsible for turning the $200 billion five-year TPU commitment into gigawatts on time. Compute in 2026 is a supply chain problem, a vendor SLA problem, a transformer lead-time problem, and a finance ops problem, not a research problem, and Anthropic hired for the shape of the actual problem rather than the label on the industry. This lands against a wall of pressure: Microsoft's public target to eliminate Anthropic spend from Excel and Outlook, Meta's Iris chip entering production in September, and OpenAI's GPT-5.6 Sol matching Anthropic on the premium tier. Three signposts: whether Anthropic names a COO or SVP of compute delivery in the S-1 amendment, whether the compute team starts publishing vendor and site milestones, and whether the 2027 TPU gigawatts arrive in the delivery windows they were sold in.",
+  },
+  {
     slug: 'meta-iris-chip-broadcom-nvidia-ceiling',
     title:
       "Meta's Iris Chip Enters Production in September. Broadcom Is Quietly Winning the Custom Silicon Race.",
