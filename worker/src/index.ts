@@ -366,6 +366,7 @@ import {
   rateLimitedResponse,
 } from './rate-limit';
 import { isStrictPremiumPath } from './strict-premium-endpoints';
+import { checkPremiumInput, premiumInputErrorBody } from './premium-input-guard';
 import { buildPremiumCatalog } from './premium-catalog';
 import { handlePremium } from './premium-handler';
 import { buildOfficialSurfaces } from './official-surfaces';
@@ -1295,6 +1296,27 @@ export default {
       rateInfo = checkIPRateLimit(ip);
       if (!rateInfo.allowed) {
         return rateLimitedResponse(rateInfo);
+      }
+    }
+
+    // Pre-payment input guard (2026-07-13 money-path incident). Param-required
+    // premium endpoints used to validate their query params only AFTER
+    // requirePayment, which on the fresh-mint x402 path has already SETTLED
+    // USDC on chain. A bare call therefore paid first and got its 400 second:
+    // one agent wallet burned 30 x $0.02 across a 10-endpoint sweep, minting
+    // and discarding a bearer token every call and never receiving any data.
+    //
+    // Running the guard here, ahead of every premium handler, means a request
+    // missing its required params never reaches requirePayment, so it is never
+    // issued a 402 challenge and no spec-compliant x402 client will settle for
+    // it. Pure and zero-I/O, so it costs nothing on the hot path. The
+    // per-handler validators stay in place as a backstop.
+    // GET only: the guard reads the query string, and a POST endpoint takes its
+    // input from the body (see NON_QUERY_INPUT in premium-input-guard.ts).
+    if (request.method === 'GET') {
+      const inputCheck = checkPremiumInput(path, url.searchParams);
+      if (!inputCheck.ok) {
+        return jsonResponse(premiumInputErrorBody(path, inputCheck), 400);
       }
     }
 

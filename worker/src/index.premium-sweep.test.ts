@@ -14,6 +14,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { PREMIUM_CATALOG, type PremiumEndpoint } from './premium-catalog';
+import { PREMIUM_REQUIRED_PARAMS } from './premium-input-guard';
 import { makeEnv, seedToken, balanceOf, call } from './test-harness';
 
 // Unique per-call IP: the per-IP trial / rate-limit counters are module-level
@@ -82,12 +83,31 @@ function decodeChallengeHeader(b64: string | null): Record<string, unknown> {
   return JSON.parse(Buffer.from(b64, 'base64').toString('utf-8')) as Record<string, unknown>;
 }
 
+// A param-required endpoint is only ever offered a 402 once its required query
+// params are present: since 2026-07-13 the pre-payment input guard rejects a
+// bare call with a free 400 BEFORE the payment gate (see premium-input-guard.ts,
+// index.validate-before-settle.test.ts). So the 402 invariant below is asserted
+// against a call the guard lets through, which is exactly the call a real paying
+// agent makes. Endpoints with no guard entry are unchanged (bare path).
+function payableUrl(path: string): string {
+  const concrete = concretePath(path);
+  const spec = PREMIUM_REQUIRED_PARAMS[path];
+  if (!spec) return concrete;
+  // Prefer the curated example. Otherwise synthesize a value per param in the
+  // first rule: the guard only checks presence, and the 402 gate fires before
+  // the handler ever inspects the VALUE, so a placeholder is sufficient here.
+  const query =
+    spec.example ??
+    spec.rules[0].map((name) => `${name.split('|')[0]}=x-test`).join('&');
+  return `${concrete}?${query}`;
+}
+
 describe('strict endpoints: no-token 402 gate + header health', () => {
   for (const ep of PREMIUM_CATALOG.filter((e) => e.strict_premium)) {
     it(`gates ${ep.path} with a well-formed 402`, async () => {
       if (isException(ep.path, 'gate')) return;
       const env = await makeEnv();
-      const res = await call(env, concretePath(ep.path), { ip: uniqueIp() });
+      const res = await call(env, payableUrl(ep.path), { ip: uniqueIp() });
 
       // Invariant 1: canonical x402 V2 challenge, no free trial.
       expect(res.status).toBe(402);
@@ -128,17 +148,30 @@ describe('non-strict premium endpoints: no-token is not a 402', () => {
   }
 });
 
-// A VALID-token call to a strict endpoint that has a required QUERY param, made
-// WITHOUT that param, must no-charge: the deferred debit must never commit, so
-// the balance is held. The status may be a 400 validation no-charge or a 200
-// empty no-charge; the money invariant is credits_charged === 0 AND balance
-// unchanged (catches raw-4xx-after-payment for the param-required class).
-describe('strict endpoints: missing required query param no-charges', () => {
+// A call to a strict endpoint that has a required QUERY param, made WITHOUT
+// that param, must be rejected for FREE and BEFORE the payment gate.
+//
+// This used to assert the weaker "pay first, then no-charge" contract: the
+// deferred debit never committed, so credits_charged was 0 and the balance was
+// held. That was true but insufficient. On the fresh-mint x402 path
+// requirePayment SETTLES USDC on chain before the handler ever reads the query
+// string, so a bare call still cost the agent real money even though it cost
+// them no credits. On 2026-07-13 one wallet burned 30 x $0.02 that way.
+//
+// The invariant is now the stronger one: no 402 challenge is issued at all, so
+// no x402 client can settle, and the credit balance is untouched.
+describe('strict endpoints: missing required query param is rejected free, pre-payment', () => {
   const candidates = PREMIUM_CATALOG.filter(
-    (e) => e.strict_premium && requiredQueryParams(e).length > 0,
+    (e) =>
+      e.strict_premium &&
+      requiredQueryParams(e).length > 0 &&
+      // Guard-covered only. An endpoint whose required input is a POST body
+      // (cve-check: `lockfile`) cannot be judged on its query string; see the
+      // dedicated case below.
+      PREMIUM_REQUIRED_PARAMS[e.path] !== undefined,
   );
   for (const ep of candidates) {
-    it(`no-charges ${ep.path} when its required query param is absent`, async () => {
+    it(`rejects ${ep.path} for free when its required query param is absent`, async () => {
       if (isException(ep.path, 'no_charge_missing_param')) return;
       const env = await makeEnv();
       const token = uniqueToken();
@@ -148,13 +181,39 @@ describe('strict endpoints: missing required query param no-charges', () => {
       // omitted. concretePath fills only the {path} template; we add no query.
       const res = await call(env, concretePath(ep.path), { token, ip: uniqueIp() });
 
-      const billing = res.json?.billing as Record<string, unknown> | undefined;
-      expect(billing).toBeDefined();
-      expect(billing?.credits_charged).toBe(0);
-      expect(typeof billing?.no_charge_reason).toBe('string');
-      expect((billing?.no_charge_reason as string).length).toBeGreaterThan(0);
+      // Never a 402: that is the only thing an x402 client would settle against.
+      expect(res.status).not.toBe(402);
+      expect(res.status).toBe(400);
+      expect(res.json?.error).toBe('missing_required_params');
+      // Rejected ahead of the payment gate, so there is nothing to bill.
+      expect(res.json?.billing ?? null).toBeNull();
       // The hard invariant: the deferred debit never committed.
       expect(await balanceOf(env, token)).toBe(100);
     });
   }
+
+  // KNOWN REMAINING GAP (2026-07-14). cve-check is a POST and reads `lockfile`
+  // from the request BODY, so the query-string guard cannot cover it. It still
+  // takes the OLD path: requirePayment settles first (50 credits, $1.00 on the
+  // fresh-mint x402 rail), and only then does the handler reject the empty
+  // body as a no-charge. Credits are correctly never debited, but an agent that
+  // POSTs without a lockfile over the x402 rail still spends real USDC for a
+  // 400. Closing it means reading and validating the body before the payment
+  // gate. Pinned here so the gap is visible and cannot be mistaken for covered.
+  it('cve-check still no-charges a bodyless POST (known pre-payment gap, body-input)', async () => {
+    const env = await makeEnv();
+    const token = uniqueToken();
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/cve-check', {
+      method: 'POST',
+      body: JSON.stringify({}),
+      token,
+      ip: uniqueIp(),
+    });
+
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing?.credits_charged).toBe(0);
+    expect(await balanceOf(env, token)).toBe(100);
+  });
 });

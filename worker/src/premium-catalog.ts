@@ -68,7 +68,10 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     credits: 1,
     strict_premium: true,
     params: [
-      { name: 'model', required: false },
+      // The handler returns model_required without this; the catalog used to
+      // advertise it as optional, which is how a paying agent ended up calling
+      // this endpoint bare (2026-07-13). See premium-input-guard.ts.
+      { name: 'model', required: true },
       { name: 'from', required: false },
       { name: 'to', required: false },
     ],
@@ -82,8 +85,8 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     credits: 1,
     strict_premium: true,
     params: [
-      { name: 'model', required: false },
-      { name: 'benchmark', required: false },
+      { name: 'model', required: true },
+      { name: 'benchmark', required: true },
       { name: 'from', required: false },
       { name: 'to', required: false },
     ],
@@ -97,7 +100,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     credits: 1,
     strict_premium: true,
     params: [
-      { name: 'provider', required: false },
+      { name: 'provider', required: true },
       { name: 'from', required: false },
       { name: 'to', required: false },
     ],
@@ -1412,8 +1415,10 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     strict_premium: true,
     params: [
       { name: 'model', required: true },
-      { name: 'input_tokens_per_day', required: false },
-      { name: 'output_tokens_per_day', required: false },
+      // computeCostProjection rejects a non-finite value for either of these,
+      // so they are as required as `model` is. The catalog said otherwise.
+      { name: 'input_tokens_per_day', required: true },
+      { name: 'output_tokens_per_day', required: true },
       { name: 'horizon', required: false },
     ],
     returns: 'Projected spend per model over a horizon given daily token volumes.',

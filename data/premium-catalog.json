@@ -163,11 +163,11 @@
       "params": [
         {
           "name": "model",
-          "required": false
+          "required": true
         },
         {
           "name": "benchmark",
-          "required": false
+          "required": true
         },
         {
           "name": "from",
@@ -282,7 +282,7 @@
       "params": [
         {
           "name": "model",
-          "required": false
+          "required": true
         },
         {
           "name": "from",
@@ -305,7 +305,7 @@
       "params": [
         {
           "name": "provider",
-          "required": false
+          "required": true
         },
         {
           "name": "from",
@@ -786,11 +786,11 @@
         },
         {
           "name": "input_tokens_per_day",
-          "required": false
+          "required": true
         },
         {
           "name": "output_tokens_per_day",
-          "required": false
+          "required": true
         },
         {
           "name": "horizon",

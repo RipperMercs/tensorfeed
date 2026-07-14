@@ -266,7 +266,9 @@ describe('x402 publisher-verdict', () => {
 
   // NO-CHARGE on missing param: valid token, no ?domain=. premiumValidationFailure
   // returns 400 with the schema_validation_failure no-charge receipt; balance held.
-  it('no-charges a valid-token call that is missing the domain param', async () => {
+  // Pre-payment input guard (2026-07-13): a missing domain is now rejected for
+  // free, ahead of requirePayment, so no USDC can settle against a 400.
+  it('rejects a call missing the domain param for free, before the payment gate', async () => {
     const env = await makeEnv();
     const token = uniqueToken();
     await seedToken(env, token, 100);
@@ -274,10 +276,8 @@ describe('x402 publisher-verdict', () => {
     const res = await call(env, '/api/premium/x402-publisher-verdict', { token, ip: uniqueIp() });
 
     expect(res.status).toBe(400);
-    const billing = res.json?.billing as Record<string, unknown> | undefined;
-    expect(billing).toBeDefined();
-    expect(billing?.credits_charged).toBe(0);
-    expect(billing?.no_charge_reason).toBe('schema_validation_failure');
+    expect(res.json?.error).toBe('missing_required_params');
+    expect(res.json?.billing ?? null).toBeNull();
 
     // Balance unchanged: the deferred debit never committed.
     expect(await balanceOf(env, token)).toBe(100);
@@ -453,7 +453,10 @@ describe('substrate-changelog', () => {
 
   // NO-CHARGE on missing param: valid token, no from/to. premiumValidationFailure
   // returns 400 with the schema_validation_failure no-charge receipt; balance held.
-  it('no-charges a valid-token history call that is missing from/to', async () => {
+  // Since 2026-07-13 this is rejected by the pre-payment input guard rather
+  // than no-charged after requirePayment has already settled on-chain. Same
+  // money outcome for credits, strictly better outcome for USDC.
+  it('rejects a history call missing from/to for free, before the payment gate', async () => {
     const env = await makeEnv();
     const token = uniqueToken();
     await seedToken(env, token, 100);
@@ -461,10 +464,9 @@ describe('substrate-changelog', () => {
     const res = await call(env, '/api/premium/substrate-changelog/history', { token, ip: uniqueIp() });
 
     expect(res.status).toBe(400);
-    const billing = res.json?.billing as Record<string, unknown> | undefined;
-    expect(billing).toBeDefined();
-    expect(billing?.credits_charged).toBe(0);
-    expect(billing?.no_charge_reason).toBe('schema_validation_failure');
+    expect(res.json?.error).toBe('missing_required_params');
+    // No payment gate was reached, so there is nothing to bill.
+    expect(res.json?.billing ?? null).toBeNull();
 
     // Balance unchanged: the deferred debit never committed.
     expect(await balanceOf(env, token)).toBe(100);
@@ -1642,16 +1644,19 @@ describe('security/epss/series (migrated)', () => {
     expect(res.json?.free_trial ?? null).toBeNull();
   });
 
-  it('no-charges a valid-token call missing cve_id, balance held', async () => {
+  // Since 2026-07-13 a call missing cve_id is rejected by the pre-payment input
+  // guard, ahead of requirePayment. It used to be a post-payment no-charge:
+  // correct on credits, but on the fresh-mint x402 path requirePayment had
+  // already settled USDC on chain, so a bare call cost the agent real money for
+  // a 400. Now there is no payment gate to reach, hence no billing block.
+  it('rejects a call missing cve_id for free, before the payment gate, balance held', async () => {
     const env = await makeEnv();
     const token = uniqueToken();
     await seedToken(env, token, 100);
     const res = await call(env, '/api/premium/security/epss/series', { token, ip: uniqueIp() });
     expect(res.status).toBe(400);
-    const billing = res.json?.billing as Record<string, unknown> | undefined;
-    expect(billing).toBeDefined();
-    expect(billing?.credits_charged).toBe(0);
-    expect(billing?.no_charge_reason).toBe('schema_validation_failure');
+    expect(res.json?.error).toBe('missing_required_params');
+    expect(res.json?.billing ?? null).toBeNull();
     expect(await balanceOf(env, token)).toBe(100);
   });
 });
