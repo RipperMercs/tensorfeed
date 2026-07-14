@@ -37,6 +37,26 @@ export const ORIGINALS: OriginalArticle[] = [
       "An internal Meta memo Reuters saw on July 9, 2026 puts the in-house MTIA Iris chip into mass manufacturing this September, on the way to doubling data-center compute from 7 GW to 14 GW by 2027 and raising the 2026 AI CapEx ceiling from a prior $118B to as much as $145B. Broadcom is the design partner. TSMC is the fab. The chip cleared its bug-testing window in about six weeks with no significant issues, which is roughly the fastest anyone has taken a custom AI accelerator from tape-out to production this cycle. The read: Meta is the last of the top-four hyperscalers to lock in its own ASIC (Google TPU v7, Amazon Trainium 3, Microsoft Maia 200, and now Meta Iris), and Broadcom is quietly the design partner on three of the five biggest programs (Google TPU, Meta MTIA, and OpenAI Jalapeno). Custom AI chip shipments are on pace to grow roughly 45 percent in 2026 against 16 percent for merchant GPU shipments. Nvidia is not losing revenue on any of this, but the customer-concentration bull case just got harder: OpenAI and Anthropic are now the last two frontier buyers whose growth still runs primarily through Nvidia silicon, and Anthropic's $200B commitment is TPU-anchored. Meanwhile, doubling to 14 GW inside twelve months is a power problem, not a silicon one, and adds Meta to the 2027 gigawatt cliff already crowding onto the same grid. Three signposts: whether Meta lets an outside customer touch Iris at all, whether Broadcom guides Q3 AI revenue up on the design-win pipeline, and whether Iris inference cost per token lands close to the TPU curve and reprices Meta's consumer AI stack downward.",
   },
   {
+    slug: 'nvidia-escape-chip-vs-compiler-layer',
+    title:
+      'Everyone Is Racing to Build a Chip. Qualcomm Bought the One Thing Nvidia Actually Guards.',
+    author: 'Marcus Chen',
+    date: 'July 14, 2026',
+    readTime: '7 min read',
+    description:
+      "In three weeks Meta (Iris, September production with Broadcom at TSMC), OpenAI (Jalapeño, a Broadcom-built inference ASIC taped out in nine months), and Anthropic (in talks with Samsung on 2nm) all moved on custom silicon, each framed as an escape from Nvidia. The argument: the chip is the easy part now, and Nvidia's real moat is CUDA, the software layer under roughly four million developers. The only mid-2026 move aimed at that layer is Qualcomm paying about $3.9 billion for Modular (Chris Lattner's Mojo language and MAX engine, hardware-agnostic, reportedly built with no Nvidia vendor libraries), paired with its reported $8B to $10B pursuit of RISC-V accelerator maker Tenstorrent, a combined bet north of $14 billion. Whoever owns the hardware-agnostic compiler owns the switching costs. Includes a five-row table of the escape moves by layer and status, the history of failed CUDA challengers (Triton, XLA, TVM), and three signposts: independent MAX-vs-CUDA parity on non-Nvidia hardware, whether the Tenstorrent talks convert, and whether any lab commits real production inference to a portable compiler.",
+  },
+  {
+    slug: 'glm-5-2-open-weights-not-sovereignty',
+    title:
+      'GLM-5.2 Now Runs 40% of Developer Tokens on OpenRouter. Open Weights Are Not the Same as Sovereignty.',
+    author: 'Adrian Vale',
+    date: 'July 13, 2026',
+    readTime: '7 min read',
+    description:
+      "Z.ai's GLM-5.2 is now fourth overall and first among open-weight models on the Artificial Analysis Intelligence Index, scoring 51, with a vendor-reported 62.1 on SWE-Bench Pro that tops GPT-5.5. It was trained on roughly 100,000 Huawei Ascend chips with no Nvidia silicon, at an estimated $25 million all-in, and it is priced around $1.40/$4.40 on Z.ai's API, roughly 82% below Opus 4.8. On OpenRouter it is reportedly moving something like 40% of developer tokens. The argument: open weights and data sovereignty are two different claims that everyone is collapsing into one. Self-hosting GLM-5.2 at full precision needs about 1.5TB of GPU memory (roughly nineteen H100s), so most teams route through hosted inference, and any call through Z.ai's own cloud is processed under China's National Intelligence Law. A three-row decision table (self-host, Western host, Z.ai API) for who actually gets sovereignty, why the compute-moat and capability moats both took a hit from outside the Nvidia stack, and what the frontier labs have left to sell (the trust moat). Three signposts: neutral-harness replication of the SWE-Bench number, whether Western hosts keep serving it at scale, and how the next Gemini and Sonnet price against a competitor that is free to download and runs on chips no one can embargo.",
+  },
+  {
     slug: 'five-coding-models-48-hours-scoreboard',
     title:
       'Five Frontier Coding Models Shipped in 48 Hours. Here Is the Scoreboard.',

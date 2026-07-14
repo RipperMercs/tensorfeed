@@ -1,6 +1,41 @@
 {
   "events": [
     {
+      "date": "2026-07-09",
+      "title": "OpenAI Makes GPT-5.6 Sol, Terra, and Luna Generally Available",
+      "provider": "OpenAI",
+      "category": "model-release",
+      "description": "OpenAI moved the GPT-5.6 family to general availability on July 9, 2026, two weeks after the June 26 limited preview that had been gated to roughly 20 pre-approved organizations. The three tiers are Sol (flagship, $5 input / $30 output per 1M tokens), Terra (balanced, $2.50 / $15, which OpenAI says matches GPT-5.5 at roughly half the cost), and Luna (fast and cheap, $1 / $6), with cached reads keeping a 90% discount. GPT-5.6 becomes the new default in ChatGPT: Free and Go users get Terra in Work mode, while paid users default to Sol. OpenAI cited gains across coding, biology, and cybersecurity. Aggregate scores put Sol Ultra at 91.9, Sol at 88.8, Terra at 84.3, and Luna at 82.5 against GPT-5.5 at 83.4."
+    },
+    {
+      "date": "2026-07-09",
+      "title": "Meta Opens Muse Spark 1.1, Its First Paid API Model, at $1.25/$4.25",
+      "provider": "Meta",
+      "category": "model-release",
+      "description": "Meta released Muse Spark 1.1 on July 9, 2026, its first paid API model and a break from the fully open-source Llama strategy. Priced at $1.25 per million input tokens and $4.25 per million output, roughly a quarter of OpenAI and Anthropic list rates, with $20 in free credits per new account and a launch preview limited to US developers. Muse Spark 1.1 is a multimodal reasoning model built for agentic and coding work, with a self-managed 1 million token context window, native primary-agent and subagent orchestration, and MCP plus custom-skill support. Meta AI chief Alexandr Wang called it the company's strongest model for agentic and coding work yet. It tops tool-use suites (88.1 on MCP Atlas, 54.7 on JobBench, 62.1 on Humanity's Last Exam with tools) but trails the leaders on pure coding (61.5 on SWE-Bench Pro, 80.0 on Terminal-Bench 2.1). Mark Zuckerberg returned to X after three years to promote the launch."
+    },
+    {
+      "date": "2026-07-08",
+      "title": "xAI Releases Grok 4.5, a Coding Model on the V9 Foundation at $2/$6",
+      "provider": "xAI",
+      "category": "model-release",
+      "description": "xAI released Grok 4.5 on July 8, 2026, its first model built specifically for coding and agentic work, ten days after the private-beta announcement. Built on the 1.5 trillion parameter V9 foundation (up from Grok 4.3's V8) and trained on real coding-agent data, it lands fourth on the Artificial Analysis Intelligence Index, above every open-weight model and every Gemini model, at a price more than 60% below Claude Opus 4.8 or GPT-5.5. API pricing is $2 per million input tokens and $6 per million output, with cached input at $0.50 (a 75% discount) and a higher-context surcharge above 200K tokens. xAI narrowed the context window to 500K tokens to focus on coding. Grok 4.5 leads Opus 4.8 on the provider-harness DeepSWE 1.0 score and on Terminal-Bench 2.1 (83.3) but trails it on the neutral DeepSWE 1.1 run and on SWE-Bench Pro (64.7). Built-in tools bill separately at $2.50 to $10 per 1,000 calls."
+    },
+    {
+      "date": "2026-07-07",
+      "title": "Google Delays Gemini 3.5 Pro to July 17 for a Full Architectural Rebuild",
+      "provider": "Google",
+      "category": "model-release",
+      "description": "Google DeepMind delayed Gemini 3.5 Pro to July 17, 2026, scrapping the existing 2.5 Pro architecture for a complete rebuild. The overhaul targets mathematical reasoning, SVG scene generation, and image quality to compete with OpenAI's GPT-5.6 and Anthropic's Fable 5. The model was originally expected around Google I/O in May and slipped through June. As of the delay there is no public API availability, and the launch now trails GPT-5.6 general availability and the Grok 4.5 and Muse Spark 1.1 releases from the same week."
+    },
+    {
+      "date": "2026-07-06",
+      "title": "Baseten Raises $1.5 Billion Series F as AI Inference Infrastructure Consolidates",
+      "provider": "Baseten",
+      "category": "funding",
+      "description": "AI inference platform Baseten raised $1.5 billion in a Series F on July 6, 2026, its fourth fundraise in 18 months, as capital continued to concentrate in the infrastructure layer that serves open-weight and proprietary models. The round landed in a week where roughly four of every five venture dollars went to AI infrastructure, alongside Groq closing $650 million led by Infinitum and Disruptive and Taktile raising $110 million for an agentic decision platform for banks and insurers. PitchBook reported US venture funding hit $412.7 billion in the first half of 2026, with AI deals dominating."
+    },
+    {
       "date": "2026-06-30",
       "title": "Anthropic Releases Claude Sonnet 5 at $2/$10 Introductory Pricing",
       "provider": "Anthropic",

@@ -971,6 +971,78 @@ export const COMPARISONS: ComparisonMeta[] = [
       'Production systems that cannot wait for M3 verification',
     ],
   },
+  {
+    slug: 'grok-4-5-vs-claude-opus-4-8',
+    modelA: 'grok-4-5',
+    modelB: 'claude-opus-4-8',
+    nameA: 'Grok 4.5',
+    nameB: 'Claude Opus 4.8',
+    providerA: 'xAI',
+    providerB: 'Anthropic',
+    benchmarkNameA: 'Grok 4.5',
+    benchmarkNameB: 'Claude Opus 4.8',
+    seoTitle: 'Grok 4.5 vs Claude Opus 4.8: Pricing, Benchmarks, Verdict',
+    seoDescription:
+      'Grok 4.5 vs Claude Opus 4.8 compared. xAI\'s coding model at $2/$6 against Anthropic\'s default flagship, benchmarks, context, and verdicts on TensorFeed.',
+    intro:
+      'xAI put Grok 4.5 straight up against Claude Opus 4.8 on July 8, 2026, and the pitch is price. Grok 4.5, built on the 1.5 trillion parameter V9 foundation and trained on real coding-agent data, lands fourth on the Artificial Analysis Intelligence Index at $2 input / $6 output per 1M tokens, more than 60% below Opus 4.8 at $5 / $25. Grok leads Opus on the provider-harness DeepSWE 1.0 score and on Terminal-Bench 2.1 (83.3), but Opus 4.8 pulls ahead on the neutral DeepSWE 1.1 run and on SWE-Bench Pro (64.7 for Grok), and it ships a 1M context window against Grok\'s 500K. The choice comes down to cheap coding throughput versus verified accuracy and longer context.',
+    verdicts: [
+      { category: 'Pricing', winner: 'A', reason: 'Grok 4.5 is $2/$6 per 1M tokens vs Opus 4.8 at $5/$25, roughly 60 to 76% cheaper' },
+      { category: 'Terminal-Bench 2.1', winner: 'A', reason: 'Grok 4.5 leads on the provider harness at 83.3 and on DeepSWE 1.0' },
+      { category: 'Verified coding (SWE-Bench Pro)', winner: 'B', reason: 'Opus 4.8 edges Grok 4.5, which scores 64.7 on the neutral SWE-Bench Pro run' },
+      { category: 'Neutral agentic run (DeepSWE 1.1)', winner: 'B', reason: 'Opus 4.8 leads on the neutral DeepSWE 1.1 harness where provider tuning is removed' },
+      { category: 'Context window', winner: 'B', reason: 'Opus 4.8 ships 1M tokens vs Grok 4.5 at 500K' },
+      { category: 'Real-time data', winner: 'A', reason: 'Grok 4.5 integrates native X and web search tools for live-grounded agents' },
+    ],
+    chooseA: [
+      'Cost-sensitive coding and agentic pipelines',
+      'Terminal and shell-style agent tasks',
+      'Real-time X and web-grounded agents',
+      'Frontier-class index score at budget pricing',
+    ],
+    chooseB: [
+      'Maximum verified coding accuracy',
+      'Workloads that need a 1M token context window',
+      'The hardest reasoning and knowledge work',
+      'Mature Anthropic ecosystem and MCP tooling',
+    ],
+  },
+  {
+    slug: 'muse-spark-1-1-vs-claude-sonnet-5',
+    modelA: 'muse-spark-1-1',
+    modelB: 'claude-sonnet-5',
+    nameA: 'Muse Spark 1.1',
+    nameB: 'Claude Sonnet 5',
+    providerA: 'Meta',
+    providerB: 'Anthropic',
+    benchmarkNameA: 'Muse Spark 1.1',
+    benchmarkNameB: 'Claude Sonnet 5',
+    seoTitle: 'Muse Spark 1.1 vs Claude Sonnet 5: Agentic Value Compared',
+    seoDescription:
+      'Muse Spark 1.1 vs Claude Sonnet 5 compared. Meta\'s first paid agentic model at $1.25/$4.25 against Anthropic\'s price/performance pick, benchmarks and verdicts on TensorFeed.',
+    intro:
+      'Two mid-tier price/performance plays landed within days of each other: Meta\'s Muse Spark 1.1 on July 9, 2026 and Anthropic\'s Claude Sonnet 5 on June 30. Muse Spark 1.1 is Meta\'s first paid API model, a multimodal agentic model at $1.25 input / $4.25 output that tops tool-use suites (88.1 on MCP Atlas) with native subagent orchestration. Claude Sonnet 5 costs $2 / $10 introductory (moving to $3 / $15 in September) and leads on verified coding and reasoning, with 85.2 on SWE-bench Verified and adaptive thinking up to xhigh effort. Both ship 1M token context. Muse Spark wins on raw agentic tool-use and price; Sonnet 5 wins on verified accuracy and cross-cloud availability.',
+    verdicts: [
+      { category: 'Pricing', winner: 'A', reason: 'Muse Spark 1.1 is $1.25/$4.25 vs Sonnet 5 at $2/$10 introductory (then $3/$15)' },
+      { category: 'Tool-use and orchestration', winner: 'A', reason: 'Muse Spark tops MCP Atlas at 88.1 with native primary-agent and subagent orchestration' },
+      { category: 'Verified coding', winner: 'B', reason: 'Sonnet 5 leads on SWE-bench Verified (85.2) and edges Muse on SWE-Bench Pro (63.2 vs 61.5)' },
+      { category: 'Reasoning depth', winner: 'B', reason: 'Sonnet 5 offers adaptive thinking up to xhigh effort and stronger verified reasoning' },
+      { category: 'Context window', winner: 'tie', reason: 'Both ship 1M token context windows' },
+      { category: 'Availability', winner: 'B', reason: 'Sonnet 5 is on Claude API, Bedrock, Vertex, and Foundry day one; Muse Spark preview is US-only' },
+    ],
+    chooseA: [
+      'Lowest-cost hosted agentic pipelines',
+      'Heavy MCP and tool-use orchestration',
+      'Multi-agent systems with subagents',
+      'US developers optimizing for price',
+    ],
+    chooseB: [
+      'Top verified coding and reasoning accuracy',
+      'Global availability across major clouds',
+      'Adaptive deep thinking on hard tasks',
+      'Production work needing a proven Anthropic model',
+    ],
+  },
 ];
 
 export function getComparisonBySlug(slug: string): ComparisonMeta | undefined {

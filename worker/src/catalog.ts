@@ -305,6 +305,7 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'meta', name: 'Meta', logo: '/images/providers/meta.png', url: 'https://ai.meta.com',
       models: [
+        { id: 'muse-spark-1-1', name: 'Muse Spark 1.1', inputPrice: 1.25, outputPrice: 4.25, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
         { id: 'llama-4-scout', name: 'Llama 4 Scout', inputPrice: 0, outputPrice: 0, contextWindow: 10000000, released: '2025-04', openSource: true, license: 'Llama 4 Community License', capabilities: ['text', 'vision', 'code'], tier: 'mid' },
         { id: 'llama-4-maverick', name: 'Llama 4 Maverick', inputPrice: 0, outputPrice: 0, contextWindow: 1000000, released: '2025-04', openSource: true, license: 'Llama 4 Community License', capabilities: ['text', 'vision', 'code'], tier: 'flagship' },
       ],
@@ -339,6 +340,7 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'xai', name: 'xAI', logo: '/images/providers/xai.png', url: 'https://x.ai',
       models: [
+        { id: 'grok-4-5', name: 'Grok 4.5', inputPrice: 2, outputPrice: 6, contextWindow: 500000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'grok-4-3', name: 'Grok 4.3', inputPrice: 1.25, outputPrice: 2.5, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
       ],
     },

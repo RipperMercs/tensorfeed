@@ -401,6 +401,24 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     tier: 'mid',
   },
 
+  {
+    slug: 'muse-spark-1-1',
+    pricingId: 'muse-spark-1-1',
+    benchmarkName: 'Muse Spark 1.1',
+    providerId: 'meta',
+    providerName: 'Meta',
+    providerUrl: 'https://ai.meta.com',
+    seoTitle: 'Muse Spark 1.1: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Meta Muse Spark 1.1, the July 9, 2026 first paid Meta model. $1.25/$4.25 pricing, 1M context, agentic tool-use benchmarks, and specs on TensorFeed.',
+    intro:
+      'Muse Spark 1.1 is Meta\'s first paid API model, opened to US developers on July 9, 2026 at roughly a quarter of OpenAI and Anthropic list rates. It is a multimodal reasoning model built for agentic and coding work, with a self-managed 1 million token context window, native primary-agent and subagent orchestration, and MCP plus custom-skill support. Meta AI chief Alexandr Wang called it the company\'s strongest model for agentic and coding work yet. On tool-use and agentic suites it beats the frontier in places (88.1 on MCP Atlas, 54.7 on JobBench against Opus 4.8\'s 48.4, and 62.1 on Humanity\'s Last Exam with tools over Opus 4.8\'s 57.9), but on pure coding it trails the leaders (61.5 on SWE-Bench Pro versus Opus 4.8 at 69.2, and 80.0 on Terminal-Bench 2.1 versus GPT-5.5 at 83.4). API pricing is $1.25 per million input tokens and $4.25 per million output, with $20 in free credits for every new account. The launch preview is limited to US developers.',
+    strengths: ['Very low pricing ($1.25/$4.25), roughly a quarter of frontier rates', '1M self-managed context window', 'Native primary-agent and subagent orchestration', 'MCP and custom-skill support', 'Tops tool-use benchmarks (88.1 MCP Atlas)'],
+    useCases: ['Cost-sensitive agentic pipelines', 'Multi-agent orchestration with tool use', 'MCP-driven automation', 'High-volume coding agents where price matters more than peak accuracy'],
+    docsUrl: 'https://ai.meta.com/muse/',
+    tier: 'mid',
+  },
+
   // ── Mistral ────────────────────────────────────────────────────────
   {
     slug: 'mistral-large',
@@ -602,6 +620,25 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     useCases: ['Budget agentic coding', 'Long-context repository analysis', 'Browser and tool-use agents', 'Self-hosted inference once weights land'],
     docsUrl: 'https://www.minimax.io/platform',
     tier: 'budget',
+  },
+
+  // ── xAI ─────────────────────────────────────────
+  {
+    slug: 'grok-4-5',
+    pricingId: 'grok-4-5',
+    benchmarkName: 'Grok 4.5',
+    providerId: 'xai',
+    providerName: 'xAI',
+    providerUrl: 'https://x.ai',
+    seoTitle: 'Grok 4.5: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'xAI Grok 4.5, the July 8, 2026 coding and agentic model on the V9 foundation. $2/$6 pricing, 500K context, Intelligence Index benchmarks, and specs on TensorFeed.',
+    intro:
+      'Grok 4.5 is xAI\'s first model built specifically for coding and agentic work, released July 8, 2026 on the 1.5 trillion parameter V9 foundation (up from Grok 4.3\'s V8) and trained on real coding-agent data. It lands fourth on the Artificial Analysis Intelligence Index, above every open-weight model and every Gemini model, at a price more than 60% below Claude Opus 4.8 or GPT-5.5. It leads Opus 4.8 on the provider-harness DeepSWE 1.0 score and on Terminal-Bench 2.1 (83.3), but trails Opus 4.8 on the neutral DeepSWE 1.1 run and on SWE-Bench Pro (64.7). API pricing is $2 per million input tokens and $6 per million output, with cached input at $0.50 (a 75% discount) and a higher-context surcharge above 200K tokens. xAI narrowed the context window to 500K tokens (down from 1M on Grok 4.3) to point the model squarely at coding and agentic use. Reasoning effort is configurable (low, medium, high; default high). Built-in tools bill separately: Web Search, X Search, and Code Execution at $5 per 1,000 calls, File Attachments at $10 per 1,000, and Collections Search at $2.50 per 1,000.',
+    strengths: ['Fourth on the Artificial Analysis Intelligence Index', 'Over 60% cheaper than Opus 4.8 or GPT-5.5', 'Terminal-Bench 2.1 leader (83.3) against Opus 4.8', 'Cached input at $0.50 (75% discount)', 'Configurable reasoning effort'],
+    useCases: ['Coding agents and IDE automation', 'Tool-use and agentic workflows', 'Cost-sensitive frontier-class reasoning', 'X and web-grounded research agents'],
+    docsUrl: 'https://docs.x.ai',
+    tier: 'flagship',
   },
 ];
 

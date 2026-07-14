@@ -266,6 +266,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/originals/anthropic-blomfield-compute-monzo-operator`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/meta-iris-chip-broadcom-nvidia-ceiling`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/nvidia-escape-chip-vs-compiler-layer`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
+    { url: `${baseUrl}/originals/glm-5-2-open-weights-not-sovereignty`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/five-coding-models-48-hours-scoreboard`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/chatgpt-work-agent-product-outcome-not-tokens`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/grok-45-cursor-harness-pricing-floor`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
