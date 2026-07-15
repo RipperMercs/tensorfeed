@@ -366,7 +366,7 @@ import {
   rateLimitedResponse,
 } from './rate-limit';
 import { isStrictPremiumPath } from './strict-premium-endpoints';
-import { checkPremiumInput, premiumInputErrorBody } from './premium-input-guard';
+import { checkPremiumInput, premiumInputErrorBody, premiumBodyErrorBody } from './premium-input-guard';
 import { buildPremiumCatalog } from './premium-catalog';
 import { handlePremium } from './premium-handler';
 import { buildOfficialSurfaces } from './official-surfaces';
@@ -1317,6 +1317,39 @@ export default {
       const inputCheck = checkPremiumInput(path, url.searchParams);
       if (!inputCheck.ok) {
         return jsonResponse(premiumInputErrorBody(path, inputCheck), 400);
+      }
+    }
+
+    // Pre-payment BODY guard (2026-07-15). The query guard above cannot see a
+    // POST endpoint whose required input is the request body. cve-check is the
+    // one such premium endpoint: it reads a lockfile from the body. Until now a
+    // bodyless or unparseable POST reached requirePayment, which on the
+    // fresh-mint x402 path SETTLES 50 credits ($1.00) on chain, and only then
+    // did the handler reject the empty body as a no-charge: the credit was held
+    // but the USDC was already gone (the known gap the 2026-07-14 query-guard
+    // fix left open). Validating the body HERE, ahead of the payment gate,
+    // rejects a malformed call with a free 400: no 402 is issued, so no
+    // spec-compliant x402 client will settle. request.clone() leaves the
+    // handler's own request.text() read intact, and the handler keeps its parse
+    // as the backstop. A WELL-FORMED but unpaid POST passes the guard and still
+    // hits the 402 gate, so x402 discovery is unchanged. Scoped to the single
+    // body-input path so no other POST endpoint is affected.
+    if (request.method === 'POST' && path === '/api/premium/cve-check') {
+      const { parseLockfile, LOCKFILE_MAX_BYTES } = await import('./lockfile-parse');
+      // Reject an oversize body on its declared length without buffering it,
+      // mirroring the handler's own defense-in-depth content-length check.
+      const declaredLen = Number(request.headers.get('content-length') || '0');
+      if (Number.isFinite(declaredLen) && declaredLen > LOCKFILE_MAX_BYTES) {
+        return jsonResponse(
+          premiumBodyErrorBody(path, 'too_large', `Lockfile exceeds ${LOCKFILE_MAX_BYTES} bytes.`),
+          400,
+        );
+      }
+      // Read a CLONE so the handler's own request.text() still sees the body.
+      const raw = await request.clone().text().catch(() => '');
+      const parsed = parseLockfile(raw);
+      if (!parsed.ok) {
+        return jsonResponse(premiumBodyErrorBody(path, parsed.error, parsed.hint), 400);
       }
     }
 

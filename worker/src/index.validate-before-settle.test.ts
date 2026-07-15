@@ -123,3 +123,107 @@ describe('premium input guard runs before the payment gate', () => {
     expect(await balanceOf(env, token)).toBe(99);
   });
 });
+
+// cve-check is the one param-required premium endpoint whose required input is
+// the request BODY (a lockfile), not the query string, so the GET input guard
+// above cannot cover it. Until 2026-07-15 a bodyless or unparseable POST reached
+// requirePayment, which on the fresh-mint x402 path SETTLES 50 credits ($1.00)
+// on chain, and only then did the handler reject the empty body as a no-charge:
+// the credit was correctly held, but the USDC was already gone. The pre-payment
+// BODY guard closes it with the same invariant the query guard enforces: a
+// malformed call is rejected for a free 400 ahead of the payment gate, so no
+// 402 is issued and no x402 client settles. request.clone() in the guard leaves
+// the handler's own body read intact.
+describe('cve-check body guard runs before the payment gate', () => {
+  const FRESH_BATCH = () => ({
+    'ai-cves:ai-flagged': {
+      batch_id: 'test-batch',
+      extracted_at: new Date().toISOString(),
+      papers: [],
+    },
+  });
+
+  it('rejects a bodyless POST with 400, never a 402 challenge', async () => {
+    const env = await makeEnv();
+    const res = await call(env, '/api/premium/cve-check', { method: 'POST', ip: uniqueIp() });
+
+    // A 402 is the only thing an x402 client settles against. A bodyless POST
+    // must never see one.
+    expect(res.status).not.toBe(402);
+    expect(res.status).toBe(400);
+    expect(res.json?.error).toBe('empty_body');
+    // Rejected ahead of the payment gate, so there is nothing to bill and the
+    // response says so explicitly.
+    expect(res.json?.payment).toBe('none');
+    expect(res.json?.billing ?? null).toBeNull();
+  });
+
+  it('rejects a present-but-unparseable body with 400, never a 402 challenge', async () => {
+    const env = await makeEnv();
+    // Valid JSON, zero packages: parseLockfile returns no_packages.
+    const res = await call(env, '/api/premium/cve-check', {
+      method: 'POST',
+      body: '{}',
+      ip: uniqueIp(),
+    });
+
+    expect(res.status).not.toBe(402);
+    expect(res.status).toBe(400);
+    expect(res.json?.error).toBe('no_packages');
+    expect(res.json?.payment).toBe('none');
+  });
+
+  it('still demands payment (402) for a well-formed lockfile with no token', async () => {
+    const env = await makeEnv();
+    // Guard must not turn cve-check into a free endpoint. A well-formed but
+    // unpaid POST is exactly the call that SHOULD get the 402 challenge, so
+    // x402 discovery keeps working.
+    const res = await call(env, '/api/premium/cve-check', {
+      method: 'POST',
+      body: 'requests==2.31.0\nflask==3.0.0\n',
+      ip: uniqueIp(),
+    });
+
+    expect(res.status).toBe(402);
+  });
+
+  it('a bodyless POST does not touch a seeded balance', async () => {
+    const env = await makeEnv();
+    const token = 'tf_live_cvecheck_balance';
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/cve-check', {
+      method: 'POST',
+      token,
+      ip: uniqueIp(),
+    });
+
+    expect(res.status).toBe(400);
+    // Rejected before the payment gate, so the credit balance is untouched.
+    expect(await balanceOf(env, token)).toBe(100);
+  });
+
+  it('a paid, well-formed POST still reaches the handler, serves, and charges 50', async () => {
+    // The guard reads the body via request.clone(); this proves the handler's
+    // own request.text() still sees the body. If clone consumed the stream the
+    // handler would parse an empty body and 400 with empty_body instead.
+    const env = await makeEnv({ news: FRESH_BATCH() });
+    const token = 'tf_live_cvecheck_happy';
+    await seedToken(env, token, 100);
+
+    const res = await call(env, '/api/premium/cve-check', {
+      method: 'POST',
+      body: 'requests==2.31.0\nflask==3.0.0\n',
+      token,
+      ip: uniqueIp(),
+      settle: true,
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.json?.error ?? null).toBeNull();
+    const billing = res.json?.billing as Record<string, unknown> | undefined;
+    expect(billing?.credits_charged).toBe(50);
+    expect(billing?.no_charge_reason ?? null).toBeNull();
+    expect(await balanceOf(env, token)).toBe(50);
+  });
+});

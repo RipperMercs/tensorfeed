@@ -220,3 +220,30 @@ export function premiumInputErrorBody(
     doc: 'https://tensorfeed.ai/developers',
   };
 }
+
+/**
+ * The 400 body served when a POST premium endpoint whose required input is the
+ * request BODY (not a query param) is called with a missing or unparseable
+ * body, rejected ahead of the payment gate. cve-check is the only such endpoint
+ * today (a lockfile in the body; see NON_QUERY_INPUT). Mirrors
+ * premiumInputErrorBody: it states explicitly that nothing was settled or
+ * charged, so an agent that just received a 400 knows not to expect a
+ * settlement. `error` and `hint` are surfaced verbatim from the body parser so
+ * the reason is specific (empty_body, no_packages, invalid_json, too_large).
+ */
+export function premiumBodyErrorBody(
+  path: string,
+  error: string,
+  hint: string,
+): Record<string, unknown> {
+  return {
+    ok: false,
+    error,
+    endpoint: path,
+    hint,
+    payment: 'none',
+    message:
+      'This request was rejected before the payment gate. No payment challenge was issued, no USDC was settled, and no credits were charged. Fix the request body and retry.',
+    doc: 'https://tensorfeed.ai/developers',
+  };
+}
