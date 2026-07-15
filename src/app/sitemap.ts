@@ -264,6 +264,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verdicts/trust-ai-found-cves`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/verdicts/frontier-premium-worth-it`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/new-york-data-center-moratorium-blueprint`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/anthropic-blomfield-compute-monzo-operator`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/meta-iris-chip-broadcom-nvidia-ceiling`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/nvidia-escape-chip-vs-compiler-layer`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },

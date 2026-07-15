@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'new-york-data-center-moratorium-blueprint',
+    title:
+      "New York Just Froze $10 Billion in Data Centers. The Blueprint Is What Actually Travels.",
+    author: 'Kira Nolan',
+    date: 'July 15, 2026',
+    readTime: '6 min read',
+    description:
+      "On Tuesday, July 14, 2026, Governor Kathy Hochul signed Executive Order 62 and made New York the first US state to pause new hyperscale data center permits. The threshold is 50 megawatts, up from the 20 MW the state legislature had passed in June, and the pause runs up to twelve months while the Department of Public Service builds a Generic Environmental Impact Statement and Department of Environmental Conservation freezes any discretionary permit not already deemed complete. Bisnow puts the frozen pipeline at roughly $10 billion of early-stage projects. The wires ran the pause as the story. The more consequential move is what she signed alongside it: the Energize NY Development proceeding, which directs the Public Service Commission to write a pay-or-supply framework where large loads either cover the true cost of the grid upgrades their interconnect requires or bring their own generation, plus a proposed New York Grid Acceleration Fund that would turn data center interconnect into an impact fee for statewide transmission, and a community investment framework due in 60 days. Axios reports Hochul's team briefed at least five other governors on the draft before Tuesday. The pause will lapse. The pay-or-supply framework and the community floor are the pieces designed to travel to Virginia, Georgia, Ohio, and Texas, and they reprice every gigawatt-scale AI compute commitment sitting on 2027 delivery. Three signposts: which state files a version of Energize NY next, whether the PSC's interconnection tariff prices upgrades in a way operators can absorb or pushes them onto onsite generation by default, and whether the paused $10B of New York projects file for the deemed-complete exemption or shop themselves west.",
+  },
+  {
     slug: 'anthropic-blomfield-compute-monzo-operator',
     title:
       "Anthropic Just Put Monzo's Founder on the Compute Team. Anthropic Thinks Compute Is a Logistics Problem Now.",
