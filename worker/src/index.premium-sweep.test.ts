@@ -192,15 +192,16 @@ describe('strict endpoints: missing required query param is rejected free, pre-p
     });
   }
 
-  // KNOWN REMAINING GAP (2026-07-14). cve-check is a POST and reads `lockfile`
-  // from the request BODY, so the query-string guard cannot cover it. It still
-  // takes the OLD path: requirePayment settles first (50 credits, $1.00 on the
-  // fresh-mint x402 rail), and only then does the handler reject the empty
-  // body as a no-charge. Credits are correctly never debited, but an agent that
-  // POSTs without a lockfile over the x402 rail still spends real USDC for a
-  // 400. Closing it means reading and validating the body before the payment
-  // gate. Pinned here so the gap is visible and cannot be mistaken for covered.
-  it('cve-check still no-charges a bodyless POST (known pre-payment gap, body-input)', async () => {
+  // GAP CLOSED (2026-07-15). cve-check is a POST that reads `lockfile` from the
+  // request BODY, so the query-string guard could not cover it: it used to take
+  // the OLD path where requirePayment settled first (50 credits, $1.00 on the
+  // fresh-mint x402 rail) and only then rejected the empty body as a no-charge,
+  // so a bodyless x402 POST spent real USDC for a 400. The pre-payment BODY
+  // guard now validates the lockfile ahead of the payment gate, so a malformed
+  // POST is rejected for a free 400 and never reaches a settlement. Full
+  // money-path coverage lives in index.validate-before-settle.test.ts; this
+  // pins the credit-balance invariant alongside the query-param sweep.
+  it('cve-check rejects a malformed POST for free, before the payment gate, balance held', async () => {
     const env = await makeEnv();
     const token = uniqueToken();
     await seedToken(env, token, 100);
@@ -212,8 +213,14 @@ describe('strict endpoints: missing required query param is rejected free, pre-p
       ip: uniqueIp(),
     });
 
-    const billing = res.json?.billing as Record<string, unknown> | undefined;
-    expect(billing?.credits_charged).toBe(0);
+    // Never a 402: that is the only thing an x402 client would settle against.
+    expect(res.status).not.toBe(402);
+    expect(res.status).toBe(400);
+    expect(res.json?.error).toBe('no_packages');
+    // Rejected ahead of the payment gate, so there is nothing to bill.
+    expect(res.json?.billing ?? null).toBeNull();
+    expect(res.json?.payment).toBe('none');
+    // The hard invariant: the credit balance is untouched.
     expect(await balanceOf(env, token)).toBe(100);
   });
 });

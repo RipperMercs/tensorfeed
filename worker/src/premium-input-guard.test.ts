@@ -14,7 +14,12 @@
  * required params is rejected for free and never reaches a settlement.
  */
 import { describe, it, expect } from 'vitest';
-import { checkPremiumInput, PREMIUM_REQUIRED_PARAMS, NON_QUERY_INPUT } from './premium-input-guard';
+import {
+  checkPremiumInput,
+  PREMIUM_REQUIRED_PARAMS,
+  NON_QUERY_INPUT,
+  premiumBodyErrorBody,
+} from './premium-input-guard';
 import { PREMIUM_CATALOG } from './premium-catalog';
 
 function check(path: string, query = '') {
@@ -159,5 +164,18 @@ describe('checkPremiumInput', () => {
       expect(r.hint.length).toBeGreaterThan(0);
       expect(r.missing.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('premiumBodyErrorBody', () => {
+  it('surfaces the parser error and hint and states no payment was taken', () => {
+    const body = premiumBodyErrorBody('/api/premium/cve-check', 'empty_body', 'POST a lockfile.');
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe('empty_body');
+    expect(body.endpoint).toBe('/api/premium/cve-check');
+    expect(body.hint).toBe('POST a lockfile.');
+    // The agent needs to know a 400 here means nothing settled.
+    expect(body.payment).toBe('none');
+    expect(typeof body.message).toBe('string');
   });
 });
