@@ -344,7 +344,7 @@ import {
   ReceiptCore,
   NoChargeReason,
 } from './receipts';
-import { checkStaleness, resolveSLA, describeSLAs } from './freshness';
+import { checkStaleness, resolveSLA, describeSLAs, responseFreshnessBlock } from './freshness';
 import { recordPollRun, checkNewsStaleness, alertStaleNews, sendDailySummary, getAlertsStatus } from './alerts';
 import {
   maybeSimulatedErrorResponse,
@@ -936,6 +936,20 @@ async function premiumResponse(
     bodyResult.stale = true;
     bodyResult.stale_age_seconds = staleness.ageSeconds;
     bodyResult.stale_sla_seconds = staleness.slaSeconds;
+  }
+  // Top-level freshness block on every premium 200 (charged or no-charge):
+  // surfaces as_of / data_age_seconds / max_age_seconds / fresh / sla_applies
+  // so an agent reads the data age and SLA without parsing the signed receipt.
+  // Rides on no-charge responses too (including the retention-loop unchanged
+  // poll), so a poller still sees the current as_of. The legacy stale_* markers
+  // above are left in place for back-compat. Guard: never clobber a handler
+  // that publishes its OWN top-level freshness contract. guidance-delta returns
+  // an input-keyed `freshness` (supersession semantics, no wall-clock SLA), and
+  // overwriting it with the generic block would strip the explanation the buyer
+  // paid for and diverge the paid response from its Bazaar manifest and free
+  // preview. Only attach the standard block when the handler supplied none.
+  if (bodyResult.freshness === undefined) {
+    bodyResult.freshness = responseFreshnessBlock(staleness);
   }
   // Cross-sell hints: per-endpoint static map of suggested next TF
   // endpoints, with inherited query params where applicable. Surfaced
@@ -4628,6 +4642,25 @@ export default {
 
     // === META ENDPOINT (cached 60s) ===
 
+    if (path === '/api/freshness') {
+      // Free, unauthenticated manifest of every premium endpoint's freshness
+      // SLA and the no-charge-on-stale guarantee. Pure compute over the
+      // in-memory SLA registry (no I/O); deploy-static, so edge-cache it for an
+      // hour. The 402 echoes each endpoint's own promise; the paid response
+      // carries the live as_of and data_age_seconds.
+      const freshnessRows = describeSLAs();
+      return jsonResponse(
+        {
+          ok: true,
+          count: freshnessRows.length,
+          note: 'Per-endpoint data-freshness commitments. If the data behind a paid call is staler than max_age_seconds, you are not charged: the response carries no_charge_reason stale_data and credits_charged 0. A null max_age_seconds means immutable historical data or a value computed live from current inputs, with no staleness concept. Each premium 402 echoes its own endpoint promise, and each paid response carries a top-level freshness block with the live as_of and data_age_seconds.',
+          endpoints: freshnessRows,
+        },
+        200,
+        3600,
+      );
+    }
+
     if (path === '/api/meta') {
       const newsMeta = await cachedKVGet(request, env.TENSORFEED_NEWS, 'meta', 60);
       return jsonResponse({
@@ -5015,6 +5048,7 @@ export default {
           no_charge_guarantees: ['5xx', 'circuit_breaker', 'schema_validation_failure', 'upstream_failure', 'stale_data', 'empty_result'],
           receipts: receiptStatus(env),
           freshness_slas: describeSLAs(),
+          freshness_manifest: '/api/freshness',
           standard_manifest: '/.well-known/agent-fair-trade.json',
           public_record: '/api/payment/no-charge-stats',
           doc: 'https://tensorfeed.ai/agent-fair-trade',

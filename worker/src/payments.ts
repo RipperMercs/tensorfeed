@@ -9,6 +9,7 @@ import {
   type FreeTrialQuota,
 } from './rate-limit';
 import { isStrictPremiumPath } from './strict-premium-endpoints';
+import { describe402Freshness } from './freshness';
 import {
   parseAnyXPaymentHeader,
   verifyPayment as verifyX402Payment,
@@ -3523,6 +3524,14 @@ export function paymentRequiredResponse(
       // its first paid call, not only after. Body-only (not in the base64
       // header), so the Bazaar manifest is untouched.
       ...(pollHintFor(url.pathname) ? { returning: pollHintFor(url.pathname) } : {}),
+      // Static freshness commitment for this endpoint: the SLA it promises and
+      // the no-charge-on-stale guarantee, so an agent reads the freshness terms
+      // BEFORE paying. Derived only from the in-memory SLA registry, so it adds
+      // zero I/O to the challenge path (the high-volume indexer/prober traffic
+      // must never trigger a KV or cache read). Body-only, like free_preview and
+      // returning; the base64 header and Bazaar manifest are untouched. The live
+      // data age ships on the paid response and its receipt, not here.
+      freshness: describe402Freshness(url.pathname),
       payment: {
         wallet: env.PAYMENT_WALLET,
         currency: 'USDC',
