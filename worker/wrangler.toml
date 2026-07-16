@@ -133,6 +133,12 @@ crons = [
   # Daily 5 minutes past midnight UTC: roll yesterday's per-provider
   # 24h buffer into a dated daily aggregate for premium time series.
   "5 0 * * *",
+  # Daily 00:19 UTC: rebuild yesterday's premium rollup from the lossless
+  # pay:evt:* trail (payments.ts reconcileRollupForDate), then recompute
+  # the lifetime counter from the rollups. Fixes the KV read-modify-write
+  # undercount on burst settles. Minute 19 is odd and off the */2, */5,
+  # */10, */15, hourly-:00 and :27 grids, so it stays collision-free.
+  "19 0 * * *",
   # GPU pricing refresh (worker/src/gpu-pricing.ts): every 4 hours at :15
   # past, poll RunPod (if RUNPOD_API_KEY set) and write the unified
   # snapshot to gpu:current. Powers /api/gpu/pricing and

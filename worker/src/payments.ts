@@ -171,7 +171,7 @@ interface TxRecord {
 // KV's documented worst-case global propagation window (~60 seconds).
 const CLAIM_INTENT_TTL_SECONDS = 60;
 
-interface DailyRollup {
+export interface DailyRollup {
   date: string;
   // Revenue side (credit purchases)
   total_usd: number;
@@ -798,32 +798,226 @@ function bumpTopAgent(
   rollup: DailyRollup,
   agentUa: string,
   delta: { calls?: number; credits?: number; purchased_usd?: number },
+  at: string,
 ): void {
-  const now = new Date().toISOString();
   let entry = rollup.top_agents.find(a => a.agent_ua === agentUa);
   if (!entry) {
-    entry = { agent_ua: agentUa, calls: 0, credits: 0, purchased_usd: 0, last_seen: now };
+    entry = { agent_ua: agentUa, calls: 0, credits: 0, purchased_usd: 0, last_seen: at };
     rollup.top_agents.push(entry);
   }
   entry.calls += delta.calls ?? 0;
   entry.credits += delta.credits ?? 0;
   entry.purchased_usd = parseFloat(((entry.purchased_usd ?? 0) + (delta.purchased_usd ?? 0)).toFixed(2));
-  entry.last_seen = now;
+  entry.last_seen = at;
   rollup.top_agents.sort((a, b) => b.calls - a.calls || b.credits - a.credits);
   if (rollup.top_agents.length > ROLLUP_TOP_AGENTS_CAP) {
     rollup.top_agents = rollup.top_agents.slice(0, ROLLUP_TOP_AGENTS_CAP);
   }
 }
 
+// === Lossless per-event rollup trail ===
+//
+// The daily rollup (pay:rollup:{date}) is written read-modify-write by
+// every settle and every served call. KV has no atomic increment and is
+// last-writer-wins, so N same-second events keep ~1 update: a 19-settle
+// burst on 2026-07-15 recorded as 7 calls / 6 settles. Billing was never
+// affected (per-token balances are per-key), only the ledger undercounted.
+//
+// Fix: every settle and serve ALSO appends its own single-writer event key
+// (pay:evt:{date}:{at}:{rand}, 30-day TTL). Nothing races because no two
+// events share a key. A daily cron (19 0 * * *, index.ts) rebuilds
+// yesterday's rollup from its events via the exact same fold functions the
+// live path uses, then recomputes the lifetime counter from the rollups.
+// The live rollup stays as the fast approximate view during the day; every
+// completed day becomes exact. Admin force-run: /api/admin/rollup-reconcile.
+
+export interface RevenueEvent {
+  k: 'rev';
+  at: string;
+  usd: number;
+  ua: string;
+}
+
+export interface UsageEvent {
+  k: 'use';
+  at: string;
+  endpoint: string;
+  ua: string;
+  credits: number;
+  wallet?: string;
+}
+
+export type RollupEvent = RevenueEvent | UsageEvent;
+
+const ROLLUP_EVENT_TTL_SECONDS = 30 * 24 * 60 * 60;
+
+async function appendRollupEvent(env: Env, evt: RollupEvent): Promise<void> {
+  try {
+    const date = evt.at.slice(0, 10);
+    // Timestamp in the key keeps KV's lexicographic listing chronological;
+    // the random suffix makes same-millisecond events distinct keys.
+    const key = `pay:evt:${date}:${evt.at}:${crypto.randomUUID().slice(0, 8)}`;
+    await env.TENSORFEED_CACHE.put(key, JSON.stringify(evt), {
+      expirationTtl: ROLLUP_EVENT_TTL_SECONDS,
+    });
+  } catch (e) {
+    console.error('appendRollupEvent failed:', e);
+  }
+}
+
+// Pure fold of one settle into a rollup. Shared verbatim between the live
+// logRevenue path and the reconciler so the two can never diverge.
+function foldRevenueEvent(rollup: DailyRollup, evt: RevenueEvent): void {
+  rollup.total_usd = parseFloat((rollup.total_usd + evt.usd).toFixed(2));
+  rollup.tx_count += 1;
+  noteUniqueAgent(rollup, evt.ua);
+  bumpTopAgent(rollup, evt.ua, { purchased_usd: evt.usd }, evt.at);
+}
+
+// Pure fold of one served call into a rollup. Shared verbatim between the
+// live logPremiumUsage path and the reconciler.
+function foldUsageEvent(rollup: DailyRollup, evt: UsageEvent): void {
+  rollup.call_count += 1;
+  rollup.total_credits_charged += evt.credits;
+  noteUniqueAgent(rollup, evt.ua);
+  bumpTopAgent(rollup, evt.ua, { calls: 1, credits: evt.credits }, evt.at);
+
+  const slot = rollup.by_endpoint[evt.endpoint] || {
+    calls: 0,
+    credits_charged: 0,
+    first_seen: evt.at,
+    last_seen: evt.at,
+    distinct_payers: 0,
+  };
+  slot.calls += 1;
+  slot.credits_charged += evt.credits;
+  slot.last_seen = evt.at;
+
+  if (evt.wallet) {
+    const w = evt.wallet.toLowerCase();
+    const rail: 'evm' | 'svm' = evt.wallet.startsWith('0x') ? 'evm' : 'svm';
+    rollup.top_payers = rollup.top_payers || {};
+    const payer = rollup.top_payers[w] || {
+      calls: 0,
+      credits_charged: 0,
+      first_seen: evt.at,
+      last_seen: evt.at,
+    };
+    payer.calls += 1;
+    payer.credits_charged += evt.credits;
+    payer.last_seen = evt.at;
+    // Original case for on-chain lookup (base58 is case-sensitive; the
+    // lowercase key is dedupe-stable but lossy for Solana payers).
+    payer.wallet_raw = evt.wallet;
+    payer.rail = rail;
+    rollup.top_payers[w] = payer;
+
+    rollup.rails = rollup.rails || {};
+    const railSlot = rollup.rails[rail] || { calls: 0, credits_charged: 0 };
+    railSlot.calls += 1;
+    railSlot.credits_charged += evt.credits;
+    rollup.rails[rail] = railSlot;
+
+    // distinct_payers: increment only the first time this wallet hits this
+    // endpoint today. The seen ledger persists in the daily rollup and
+    // resets with the day.
+    const seenKey = `${evt.endpoint}|${w}`;
+    rollup._payer_seen = rollup._payer_seen || {};
+    if (!rollup._payer_seen[seenKey]) {
+      slot.distinct_payers = (slot.distinct_payers || 0) + 1;
+      rollup._payer_seen[seenKey] = true;
+    }
+  }
+
+  rollup.by_endpoint[evt.endpoint] = slot;
+}
+
+export interface RollupReconcileResult {
+  date: string;
+  action: 'reconciled' | 'dry_run' | 'skipped_no_events' | 'skipped_partial_coverage';
+  events: number;
+  rebuilt?: DailyRollup;
+}
+
+/**
+ * Rebuild one day's rollup from its lossless event trail and overwrite the
+ * racy live-written rollup with the exact version.
+ *
+ * Coverage guard (write mode only): events started accumulating mid-day on
+ * the deploy date, so rebuilding any date on or before `pay:evt:since`
+ * would DROP the pre-deploy portion of that day. The first write-mode call
+ * stamps the marker and skips; only strictly later dates are rebuilt. Dry
+ * runs skip the guard because they never write: they rebuild from whatever
+ * events exist and return the result for inspection.
+ */
+export async function reconcileRollupForDate(
+  env: Env,
+  date: string,
+  opts: { dry?: boolean } = {},
+): Promise<RollupReconcileResult> {
+  if (!opts.dry) {
+    const since = await env.TENSORFEED_CACHE.get('pay:evt:since');
+    if (!since) {
+      await env.TENSORFEED_CACHE.put('pay:evt:since', new Date().toISOString().slice(0, 10));
+      return { date, action: 'skipped_partial_coverage', events: 0 };
+    }
+    if (date <= since.trim()) {
+      return { date, action: 'skipped_partial_coverage', events: 0 };
+    }
+  }
+
+  const prefix = `pay:evt:${date}:`;
+  const events: RollupEvent[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await env.TENSORFEED_CACHE.list({ prefix, cursor });
+    for (const k of page.keys) {
+      // Do not rely on list() honoring the prefix; guard explicitly (same
+      // posture as backfillLifetimeFromRollups).
+      if (!k.name.startsWith(prefix)) continue;
+      const evt = (await env.TENSORFEED_CACHE.get(k.name, 'json')) as RollupEvent | null;
+      if (evt && (evt.k === 'rev' || evt.k === 'use')) events.push(evt);
+    }
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+
+  if (events.length === 0) {
+    // A zero-traffic day, or a date before the trail existed: leave the
+    // live rollup alone rather than overwrite it with an empty one.
+    return { date, action: 'skipped_no_events', events: 0 };
+  }
+
+  // Key order is already chronological; sort defensively so fold order
+  // (first_seen, top_agents ties) never depends on KV listing behavior.
+  events.sort((a, b) => a.at.localeCompare(b.at));
+  const rollup = emptyRollup(date);
+  for (const e of events) {
+    if (e.k === 'rev') foldRevenueEvent(rollup, e);
+    else foldUsageEvent(rollup, e);
+  }
+
+  if (opts.dry) {
+    return { date, action: 'dry_run', events: events.length, rebuilt: rollup };
+  }
+  await writeRollup(env, rollup);
+  return { date, action: 'reconciled', events: events.length, rebuilt: rollup };
+}
+
 export async function logRevenue(env: Env, amountUsd: number, agentUa: string): Promise<void> {
   try {
-    const date = new Date().toISOString().slice(0, 10);
-    const rollup = await readRollup(env, date);
-    rollup.total_usd = parseFloat((rollup.total_usd + amountUsd).toFixed(2));
-    rollup.tx_count += 1;
-    noteUniqueAgent(rollup, agentUa);
-    bumpTopAgent(rollup, agentUa, { purchased_usd: amountUsd });
+    const evt: RevenueEvent = {
+      k: 'rev',
+      at: new Date().toISOString(),
+      usd: amountUsd,
+      ua: agentUa,
+    };
+    const rollup = await readRollup(env, evt.at.slice(0, 10));
+    foldRevenueEvent(rollup, evt);
     await writeRollup(env, rollup);
+
+    // Lossless single-writer event record; the daily reconcile cron
+    // rebuilds the rollup from these so burst clobbering self-heals.
+    await appendRollupEvent(env, evt);
 
     // Lifetime real-money counter. Same best-effort path as the rollup
     // write above; surfaced on /api/stats as the actual revenue signal.
@@ -858,65 +1052,22 @@ export async function logPremiumUsage(
   payerWallet?: string,
 ): Promise<void> {
   try {
-    const date = new Date().toISOString().slice(0, 10);
     const now = new Date().toISOString();
-    const rollup = await readRollup(env, date);
-
-    rollup.call_count += 1;
-    rollup.total_credits_charged += creditsCharged;
-    noteUniqueAgent(rollup, agentUa);
-    bumpTopAgent(rollup, agentUa, { calls: 1, credits: creditsCharged });
-
-    const slot = rollup.by_endpoint[endpoint] || {
-      calls: 0,
-      credits_charged: 0,
-      first_seen: now,
-      last_seen: now,
-      distinct_payers: 0,
+    const evt: UsageEvent = {
+      k: 'use',
+      at: now,
+      endpoint,
+      ua: agentUa,
+      credits: creditsCharged,
+      ...(payerWallet ? { wallet: payerWallet } : {}),
     };
-    slot.calls += 1;
-    slot.credits_charged += creditsCharged;
-    slot.last_seen = now;
-
-    if (payerWallet) {
-      const w = payerWallet.toLowerCase();
-      const rail: 'evm' | 'svm' = payerWallet.startsWith('0x') ? 'evm' : 'svm';
-      rollup.top_payers = rollup.top_payers || {};
-      const payer = rollup.top_payers[w] || {
-        calls: 0,
-        credits_charged: 0,
-        first_seen: now,
-        last_seen: now,
-      };
-      payer.calls += 1;
-      payer.credits_charged += creditsCharged;
-      payer.last_seen = now;
-      // Original case for on-chain lookup (base58 is case-sensitive; the
-      // lowercase key is dedupe-stable but lossy for Solana payers).
-      payer.wallet_raw = payerWallet;
-      payer.rail = rail;
-      rollup.top_payers[w] = payer;
-
-      rollup.rails = rollup.rails || {};
-      const railSlot = rollup.rails[rail] || { calls: 0, credits_charged: 0 };
-      railSlot.calls += 1;
-      railSlot.credits_charged += creditsCharged;
-      rollup.rails[rail] = railSlot;
-
-      // distinct_payers: increment only the first time this wallet hits this
-      // endpoint today. The seen ledger persists in the daily rollup and
-      // resets with the day.
-      const seenKey = `${endpoint}|${w}`;
-      rollup._payer_seen = rollup._payer_seen || {};
-      if (!rollup._payer_seen[seenKey]) {
-        slot.distinct_payers = (slot.distinct_payers || 0) + 1;
-        rollup._payer_seen[seenKey] = true;
-      }
-    }
-
-    rollup.by_endpoint[endpoint] = slot;
-
+    const rollup = await readRollup(env, now.slice(0, 10));
+    foldUsageEvent(rollup, evt);
     await writeRollup(env, rollup);
+
+    // Lossless single-writer event record; the daily reconcile cron
+    // rebuilds the rollup from these so burst clobbering self-heals.
+    await appendRollupEvent(env, evt);
 
     // Lifetime traction counter. Same best-effort try/catch, same
     // fire-and-forget call path. Never sums rollups per request.

@@ -15545,6 +15545,24 @@ export default {
       return jsonResponse({ ok: true, report }, 200, 0);
     }
 
+    // === ADMIN: rebuild a day's premium rollup from its event trail ===
+    // Dry by default (returns the rebuilt rollup without writing); pass
+    // write=1 to persist. The write path enforces the pay:evt:since
+    // coverage guard so a partially-covered day can never be clobbered.
+    // GET /api/admin/rollup-reconcile?date=YYYY-MM-DD[&write=1]
+    if (path === '/api/admin/rollup-reconcile' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      const dateParam = url.searchParams.get('date')
+        || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+        return jsonResponse({ ok: false, error: 'bad_date', hint: 'date=YYYY-MM-DD' }, 400, 0);
+      }
+      const { reconcileRollupForDate } = await import('./payments');
+      const result = await reconcileRollupForDate(env, dateParam, {
+        dry: url.searchParams.get('write') !== '1',
+      });
+      return jsonResponse({ ok: true, ...result }, 200, 0);
+    }
+
     if (path === '/api/admin/anomalies' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const events = await getAnomalyEvents(env);
       const severityFilter = url.searchParams.get('severity');
@@ -16751,6 +16769,19 @@ export default {
     if (cron === '41 6 * * *') {
       const { runDriftAudit } = await import('./drift-audit');
       await run('runDriftAudit', () => runDriftAudit(env));
+    }
+
+    // Daily 00:19 UTC: rebuild yesterday's premium rollup from the lossless
+    // per-event trail (heals the KV read-modify-write undercount on burst
+    // settles), then recompute the lifetime counter from the now-exact
+    // rollups. Lifetime backfill only runs when a rebuild actually landed.
+    if (cron === '19 0 * * *') {
+      const { reconcileRollupForDate, backfillLifetimeFromRollups } = await import('./payments');
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const result = await run('reconcileRollup', () => reconcileRollupForDate(env, yesterday));
+      if (result && result.action === 'reconciled') {
+        await run('backfillLifetime', () => backfillLifetimeFromRollups(env));
+      }
     }
 
     // Record RSS poll history for the daily summary digest
