@@ -1,9 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   buildDriftReport,
   publicView,
   shouldAlert,
   formatAlertBody,
+  needsSelfFetch,
+  checkUrl,
   type UrlCheck,
   type DriftReport,
 } from './drift-audit';
@@ -184,5 +186,75 @@ describe('formatAlertBody', () => {
     const body = formatAlertBody(report);
     expect(body.includes(EM_DASH)).toBe(false);
     expect(body.includes(DOUBLE_HYPHEN)).toBe(false);
+  });
+});
+
+// Same-zone /api/* URLs must be checked through the SELF service binding:
+// a plain fetch() from the worker to its own hostname skips the worker
+// (same-zone subrequest bypass) and hits Pages static, where worker-only
+// routes like /api/meta have no file and read as phantom 404s. This is the
+// regression test for the drift audit reporting "down" on healthy routes.
+describe('needsSelfFetch', () => {
+  it('routes own-zone /api/* through SELF', () => {
+    expect(needsSelfFetch('https://tensorfeed.ai/api/meta')).toBe(true);
+    expect(needsSelfFetch('https://tensorfeed.ai/api/today')).toBe(true);
+  });
+
+  it('leaves pages, static assets, and other hosts on plain fetch', () => {
+    expect(needsSelfFetch('https://tensorfeed.ai/')).toBe(false);
+    expect(needsSelfFetch('https://tensorfeed.ai/developers')).toBe(false);
+    expect(needsSelfFetch('https://tensorfeed.ai/sitemap.xml')).toBe(false);
+    expect(needsSelfFetch('https://terminalfeed.io/api/anything')).toBe(false);
+    expect(needsSelfFetch('not a url')).toBe(false);
+  });
+});
+
+describe('checkUrl fetch routing', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function entry(url: string, critical = true): UrlCheck {
+    return { url, status_code: 0, ok: false, critical };
+  }
+
+  it('uses the SELF binding for own-zone /api/* URLs', async () => {
+    const selfCalls: string[] = [];
+    const self = {
+      fetch: async (input: RequestInfo | URL) => {
+        selfCalls.push(String(input));
+        return new Response('{}', { status: 200 });
+      },
+    } as unknown as Fetcher;
+    const globalFetch = vi.fn(async () => new Response('', { status: 404 }));
+    vi.stubGlobal('fetch', globalFetch);
+
+    const result = await checkUrl(entry('https://tensorfeed.ai/api/meta'), self);
+    expect(selfCalls).toEqual(['https://tensorfeed.ai/api/meta']);
+    expect(globalFetch).not.toHaveBeenCalled();
+    expect(result.ok).toBe(true);
+    expect(result.status_code).toBe(200);
+  });
+
+  it('uses plain fetch for page URLs even when SELF is available', async () => {
+    const self = {
+      fetch: vi.fn(async () => new Response('', { status: 500 })),
+    } as unknown as Fetcher;
+    const globalFetch = vi.fn(async () => new Response('', { status: 200 }));
+    vi.stubGlobal('fetch', globalFetch);
+
+    const result = await checkUrl(entry('https://tensorfeed.ai/developers'), self);
+    expect(self.fetch).not.toHaveBeenCalled();
+    expect(globalFetch).toHaveBeenCalled();
+    expect(result.ok).toBe(true);
+  });
+
+  it('falls back to plain fetch when SELF is not bound', async () => {
+    const globalFetch = vi.fn(async () => new Response('', { status: 200 }));
+    vi.stubGlobal('fetch', globalFetch);
+
+    const result = await checkUrl(entry('https://tensorfeed.ai/api/meta'), undefined);
+    expect(globalFetch).toHaveBeenCalled();
+    expect(result.ok).toBe(true);
   });
 });

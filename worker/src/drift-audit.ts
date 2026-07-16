@@ -319,12 +319,35 @@ async function collectUrls(): Promise<UrlCheck[]> {
 }
 
 /**
- * HEAD-check one URL. Retries once with GET if HEAD throws or returns 405.
- * Any failure resolves to a failed check, never a thrown error.
+ * Worker-only routes on our own zone must be checked through the SELF
+ * service binding. A plain fetch() from this worker to its own hostname is
+ * routed past the worker to the Pages origin (Cloudflare's same-zone
+ * subrequest bypass), which 404s every /api/* route that has no static
+ * file, so /api/meta and /api/today read as permanently down when they are
+ * fine. Page URLs and static assets ARE genuinely served by Pages, so a
+ * plain fetch measures their real serving path and stays correct.
  */
-async function checkUrl(entry: UrlCheck): Promise<UrlCheck> {
+export function needsSelfFetch(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.hostname === 'tensorfeed.ai' && u.pathname.startsWith('/api/');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * HEAD-check one URL. Retries once with GET if HEAD throws or returns 405.
+ * Any failure resolves to a failed check, never a thrown error. Same-zone
+ * /api/* URLs go through the SELF binding (see needsSelfFetch); depth is
+ * bounded because none of the audited API routes call SELF themselves.
+ * Exported for tests.
+ */
+export async function checkUrl(entry: UrlCheck, self?: Fetcher): Promise<UrlCheck> {
+  const doFetch: typeof fetch =
+    needsSelfFetch(entry.url) && self ? self.fetch.bind(self) : fetch;
   const attempt = async (method: 'HEAD' | 'GET'): Promise<number> => {
-    const res = await fetch(entry.url, {
+    const res = await doFetch(entry.url, {
       method,
       headers: { 'User-Agent': 'tensorfeed-drift-audit' },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
@@ -365,7 +388,7 @@ export async function runDriftAudit(env: Env): Promise<DriftReport> {
   const urlChecks: UrlCheck[] = [];
   for (let i = 0; i < entries.length; i += FETCH_CONCURRENCY) {
     const chunk = entries.slice(i, i + FETCH_CONCURRENCY);
-    const results = await Promise.all(chunk.map((e) => checkUrl(e)));
+    const results = await Promise.all(chunk.map((e) => checkUrl(e, env.SELF)));
     urlChecks.push(...results);
   }
 

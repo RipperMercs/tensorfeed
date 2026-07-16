@@ -15534,6 +15534,17 @@ export default {
       }
     }
 
+    // === ADMIN: force-run the drift audit (auth-gated) ===
+    // The audit normally runs on the daily 06:41 UTC cron and /api/health/drift
+    // serves the precomputed report from KV. This route runs it on demand so a
+    // fix or an incident can be re-checked immediately instead of waiting a
+    // day. Same code path as the cron, including alert emails on status flips.
+    if (path === '/api/admin/drift-run' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      const { runDriftAudit } = await import('./drift-audit');
+      const report = await runDriftAudit(env);
+      return jsonResponse({ ok: true, report }, 200, 0);
+    }
+
     if (path === '/api/admin/anomalies' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       const events = await getAnomalyEvents(env);
       const severityFilter = url.searchParams.get('severity');
