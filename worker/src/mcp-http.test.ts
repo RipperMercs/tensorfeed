@@ -234,6 +234,27 @@ describe('whats_new premium tool', () => {
     expect(tool!.description).toContain('trial-credits');
   });
 
+  it('exposes the free-poll cursor: a since param and the free-poll pitch in its description', () => {
+    const tool = MCP_HTTP_TOOLS.find((t) => t.name === 'whats_new');
+    const props = (tool!.inputSchema as { properties: Record<string, unknown> }).properties;
+    expect(props).toHaveProperty('since');
+    // The description must teach the free unchanged-poll before the agent pays.
+    expect(tool!.description).toContain('since');
+  });
+
+  it('forwards since to the REST query so the free unchanged-poll works via MCP', async () => {
+    const env = makeEnv();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+    await handleMcpHttpRequest(
+      rpcRequest('tools/call', { name: 'whats_new', arguments: { since: 'cursor_abc123', payment: 'b64' } }),
+      env,
+    );
+    const calledUrl = fetchSpy.mock.calls[0][0] as string;
+    expect(calledUrl).toContain('since=cursor_abc123');
+  });
+
   it('relays to /api/premium/whats-new with mapped params', async () => {
     const env = makeEnv();
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
