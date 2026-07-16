@@ -2102,7 +2102,7 @@ export default function AgentPaymentsPage() {
                 </span>
               </div>
               <p className="text-text-secondary text-sm">
-                Code-enforced no-charge on 5xx, breaker, schema fail, or stale data. Every successful paid response carries an Ed25519-signed receipt your agent can verify. Open standard, machine-readable manifest at <code className="font-mono text-xs text-accent-primary">/.well-known/agent-fair-trade.json</code>.
+                Code-enforced no-charge on 5xx, breaker, schema fail, or stale data. Every successful paid response carries an Ed25519-signed receipt your agent can verify. Open standard, machine-readable manifest at <code className="font-mono text-xs text-accent-primary">/.well-known/agent-fair-trade.json</code>. Every endpoint&apos;s freshness commitment is published at <code className="font-mono text-xs text-accent-primary">/api/freshness</code>, and each paid response carries a top-level freshness block with the live data age.
               </p>
             </div>
             <div className="flex items-center gap-1.5 text-accent-primary text-sm font-medium shrink-0 group-hover:gap-2.5 transition-all">

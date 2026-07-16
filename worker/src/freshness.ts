@@ -354,6 +354,48 @@ export function resolveSLA(path: string): FreshnessSLA | null {
   return NULL_SLA;
 }
 
+/**
+ * Human-readable rendering of an SLA duration for agent-facing 402 copy.
+ * A whole number of days renders in days (24h -> "1 day", 48h -> "2 days",
+ * 10 days -> "10 days"); anything else at or above an hour renders in hours
+ * (36h -> "36 hours", 9h -> "9 hours"); sub-hour renders in minutes. The unit
+ * is singular for exactly one.
+ */
+export function formatMaxAge(seconds: number): string {
+  const unit = (n: number, word: string): string => `${n} ${word}${n === 1 ? '' : 's'}`;
+  if (seconds < 60 * 60) return unit(Math.round(seconds / 60), 'minute');
+  const days = seconds / (24 * 60 * 60);
+  if (days >= 1 && Number.isInteger(days)) return unit(days, 'day');
+  return unit(Math.round(seconds / (60 * 60)), 'hour');
+}
+
+/**
+ * The static `freshness` block for a 402 challenge body. Derived ONLY from the
+ * in-memory SLA registry via resolveSLA, so it adds ZERO I/O per 402: the
+ * high-volume challenge path (indexers, probers) must never trigger a KV or
+ * cache read. It advertises the PROMISE (the SLA and the no-charge-on-stale
+ * guarantee), never a live data-age lookup. The current data age ships on the
+ * paid response and its signed receipt instead.
+ */
+export function describe402Freshness(pathname: string): Record<string, unknown> {
+  const sla = resolveSLA(pathname);
+  if (!sla) {
+    return {
+      max_age_seconds: null,
+      promise:
+        'This endpoint has no wall-clock freshness SLA: it serves either immutable historical data or a value computed live from current inputs, so there is no staleness risk.',
+      manifest: '/api/freshness',
+    };
+  }
+  return {
+    max_age_seconds: sla.maxAgeSeconds,
+    promise: `This endpoint serves data no older than ${formatMaxAge(sla.maxAgeSeconds)}. If the data behind your paid call is staler than that, you are not charged: the response carries no_charge_reason "stale_data" and credits_charged 0.`,
+    verify:
+      'The paid response and its signed receipt carry as_of and data_age_seconds so you can confirm freshness after the call.',
+    manifest: '/api/freshness',
+  };
+}
+
 export interface StalenessCheck {
   stale: boolean;
   ageSeconds: number | null;
@@ -416,6 +458,24 @@ export function checkStaleness(
     slaSeconds: sla.maxAgeSeconds,
     capturedAt,
     applies: true,
+  };
+}
+
+/**
+ * The top-level `freshness` block attached to every premium 200. It lifts the
+ * staleness signal (already computed for billing) out of the signed receipt so
+ * an agent can read the data age and the SLA without parsing the receipt.
+ * `fresh` is null when no SLA applies (immutable or computed-live data), where
+ * there is nothing to be stale against; billing only ever no-charges when the
+ * SLA applies AND the data is stale.
+ */
+export function responseFreshnessBlock(s: StalenessCheck): Record<string, unknown> {
+  return {
+    as_of: s.capturedAt,
+    data_age_seconds: s.ageSeconds,
+    max_age_seconds: s.slaSeconds,
+    fresh: s.applies ? !s.stale : null,
+    sla_applies: s.applies,
   };
 }
 
