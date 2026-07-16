@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'fli-safety-index-conditional-pause-clause',
+    title:
+      'Every Frontier Lab Promised to Pause. Now They Only Promise to Pause If Everyone Else Does.',
+    author: 'Kira Nolan',
+    date: 'July 15, 2026',
+    readTime: '7 min read',
+    description:
+      "The Future of Life Institute published its Summer 2026 AI Safety Index on July 7: seven outside reviewers, nine companies, 37 indicators, six domains. Every outlet ran the same headline, that nobody got an A. Anthropic first at C+, OpenAI and Google DeepMind at C, Meta D+, and failing grades for xAI, DeepSeek, and Mistral, one company each from the US, China, and Europe. The grades are the least interesting thing in the report. Three bullets into the executive summary is a policy diff: Anthropic, OpenAI, Google DeepMind, and Meta have all weakened or voided their pledges to pause development unilaterally if red lines are approached. Anthropic will now consider pausing if competitors do the same; OpenAI attached similar conditions; DeepMind and Meta voided the promise entirely. Reviewers call it moving goalposts. A pause that triggers only when your rivals pause is not a red line, it is a request, and it is structurally unpayable in a market where five frontier models shipped in one 48-hour window and US startups took $412.7B in H1 with 86 percent going to AI. Includes the full six-domain grade matrix (Existential Safety is underwater industry-wide, no company above C-, the panel's objection being that detection is not prevention), the 2024-to-2026 pause pledge diff by company, the military-ban reversal across all four labs, and Mistral's open-weights methodology rebuttal. Three signposts: whether any lab restores an unconditional pause clause, whether the four survey holdouts participate in the Winter index, and whether a binding statutory threshold with real enforcement lands before the next index ships.",
+  },
+  {
     slug: 'anthropic-blomfield-compute-monzo-operator',
     title:
       "Anthropic Just Put Monzo's Founder on the Compute Team. Anthropic Thinks Compute Is a Logistics Problem Now.",
