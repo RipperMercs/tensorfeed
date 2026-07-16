@@ -1258,12 +1258,13 @@ const TOOLS: McpToolDef[] = [
   {
     name: 'whats_new',
     description:
-      'PREMIUM (1 credit, $0.02). The full TensorFeed morning brief: every AI headline in the window with links, model pricing deltas, and incident detail, AFTA-signed. The free preview sibling (/api/preview/whats-new, 10 calls/IP/day) returns only summary counts plus the top 3 headline titles; this paid call returns the complete brief with no rate limit. Pay per call with an x402 wallet payment (arguments.payment, or an X-PAYMENT header; strict HTTP-402 transport at https://mcp.tensorfeed.ai/mcp?x402=strict) or use an Authorization: Bearer tf_live_... credits token. No token and no USDC? Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits.',
+      'PREMIUM (1 credit, $0.02). The full TensorFeed morning brief: every AI headline in the window with links, model pricing deltas, and incident detail, AFTA-signed. The free preview sibling (/api/preview/whats-new, 10 calls/IP/day) returns only summary counts plus the top 3 headline titles; this paid call returns the complete brief with no rate limit. Pay per call with an x402 wallet payment (arguments.payment, or an X-PAYMENT header; strict HTTP-402 transport at https://mcp.tensorfeed.ai/mcp?x402=strict) or use an Authorization: Bearer tf_live_... credits token. No token and no USDC? Claim free trial credits by signing a wallet message at https://tensorfeed.ai/api/payment/trial-credits. Returning caller? Pass since=<cursor> from your last brief and an unchanged poll is free (no credit charged); you pay only when something new has broken since that cursor.',
     inputSchema: {
       type: 'object',
       properties: {
         days: { type: 'number', description: 'Lookback window in days. Default 1.' },
         news_limit: { type: 'number', description: 'Maximum headlines returned. Default 10.' },
+        since: { type: 'string', description: 'Cursor from your last paid brief (returned as the `poll` continuation on every paid call). Pass it back and an unchanged poll returns for free: no credit is charged. You are billed only when something new has broken since that cursor.' },
         payment: { type: 'string', description: 'Optional base64 x402 payment payload (the same string an X-PAYMENT header would carry). Sign against the accepts[0] requirement returned by an unpaid call. Alternative to the Bearer credits token.' },
       },
     },
@@ -1278,6 +1279,9 @@ const TOOLS: McpToolDef[] = [
         if (days !== null) params.set('days', String(days));
         const newsLimit = getNumberArg(args, 'news_limit');
         if (newsLimit !== null) params.set('news_limit', String(newsLimit));
+        // Forward the delta cursor so the free unchanged-poll works via MCP.
+        const since = getStringArg(args, 'since');
+        if (since !== null) params.set('since', since);
         return params;
       },
     },

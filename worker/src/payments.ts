@@ -3249,6 +3249,38 @@ export function previewSiblingFor(pathname: string): string | undefined {
   return PREVIEW_SIBLINGS[pathname];
 }
 
+// Returning-caller free-poll hint, keyed by the paid endpoint's pathname. The
+// whats-new briefs (base + pro) issue an opaque `cursor` on every paid brief
+// and honor `?since=<cursor>`: an unchanged poll is a free no-charge (no 402,
+// no settlement, no credit), so an agent pays only when something new has
+// broken since its cursor. The delta-cursor mechanic shipped 2026-07-06 (base)
+// and 2026-07-07 (pro) but was invisible before payment. Advertising it in the
+// 402 lets a returning agent learn the free-poll loop BEFORE its first paid
+// call, not only after it. Add an entry when another endpoint gains the
+// delta-cursor mechanic.
+export interface PollHint {
+  param: 'since';
+  how: string;
+  benefit: string;
+  cursor_lives_in: string;
+}
+const WHATS_NEW_POLL_HINT: PollHint = {
+  param: 'since',
+  how: 'Pass ?since=<cursor> using the cursor from your last paid brief.',
+  benefit:
+    'An unchanged poll is free: no 402, no settlement, no credit. You are billed only when something new has broken since your cursor.',
+  cursor_lives_in: 'the `poll` continuation returned on every paid brief',
+};
+const POLL_HINTS: Record<string, PollHint> = {
+  '/api/premium/whats-new': WHATS_NEW_POLL_HINT,
+  '/api/premium/whats-new/pro': WHATS_NEW_POLL_HINT,
+};
+
+/** The returning-caller free-poll hint for a paid pathname, or undefined. */
+export function pollHintFor(pathname: string): PollHint | undefined {
+  return POLL_HINTS[pathname];
+}
+
 // Base builder-code (ERC-8021) attribution. The seller app code `a` is declared
 // in the 402 extensions under the canonical "builder-code" key (the exact shape
 // @x402/extensions declareBuilderCodeExtension emits, pinned by payments.test).
@@ -3486,6 +3518,11 @@ export function paymentRequiredResponse(
       free_trial: freeTrialAdvert,
       // Point bounced agents at the free preview taste when this endpoint has one.
       ...(previewSiblingFor(url.pathname) ? { free_preview: previewSiblingFor(url.pathname) } : {}),
+      // Teach a returning caller the free unchanged-poll (?since=<cursor>) on
+      // the cursor-enabled endpoints, so it learns the retention loop before
+      // its first paid call, not only after. Body-only (not in the base64
+      // header), so the Bazaar manifest is untouched.
+      ...(pollHintFor(url.pathname) ? { returning: pollHintFor(url.pathname) } : {}),
       payment: {
         wallet: env.PAYMENT_WALLET,
         currency: 'USDC',
