@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'kimi-k3-open-frontier-ceiling-8x',
+    title:
+      'Kimi K3 Ships With 2.8 Trillion Open Weights. The Open Frontier Ceiling Just Went Up 8x in Three Days.',
+    author: 'Adrian Vale',
+    date: 'July 17, 2026',
+    readTime: '7 min read',
+    description:
+      "Moonshot AI put Kimi K3 live on Thursday, July 16, 2026: a 2.8 trillion parameter Mixture-of-Experts model with a 1 million token context window, native vision, hosted at $3 input and $15 output per million tokens (with a $0.30 cache-hit rate), and full weights promised under a Modified MIT license by July 27. Two variants at launch: K3 Max for chat and agent work, K3 Swarm Max for large-scale parallel. Vendor-reported benchmarks put it in Opus 4.8 and Fable 5 range on coding suites (DeepSWE 67.5, Terminal-Bench 88.3, FrontierSWE 81.2), with the usual first-day skepticism until neutral harnesses replicate. Three days earlier the open ceiling sat at Z.ai's GLM-5.2 at roughly 355B total parameters. Kimi K3 is roughly 8x larger by total params and 8x by context length. Active parameters land near 50B (16 of 896 experts fire per token), so per-token inference cost is closer to 1.6x GLM than 8x. Includes the numbers table, the three-day ramp from DeepSeek V4 through GLM-5.2 to Kimi K3, the full-precision self-host math (5.6 TB fp16, roughly 70 H100 80GB cards for weights alone before KV cache pressure from a 1M-token window), the sovereignty catch that gets sharper when the model gets bigger and the fraction routing through Kimi's own China-based API approaches one, and the two-clock read on the closed premium tier (price pressure now, capability pressure pending replication). Three signposts: whether the July 27 weights drop lands intact on Hugging Face, whether a neutral harness confirms or shaves the vendor benchmarks, and whether Anthropic or OpenAI answer with a premium-tier price move.",
+  },
+  {
     slug: 'fli-safety-index-conditional-pause-clause',
     title:
       'Every Frontier Lab Promised to Pause. Now They Only Promise to Pause If Everyone Else Does.',
