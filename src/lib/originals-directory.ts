@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'thinking-machines-inkling-tinker-bet',
+    title:
+      "Thinking Machines Shipped Inkling and Admitted It Is Not the Best. Bridgewater Already Beat Every Frontier Model at One Fourteenth the Cost.",
+    author: 'Marcus Chen',
+    date: 'July 18, 2026',
+    readTime: '7 min read',
+    description:
+      "Mira Murati's Thinking Machines released Inkling on Wednesday, July 15, 2026: a 975 billion parameter Mixture-of-Experts model with roughly 41 billion active per token, natively multimodal across text, image, audio and video, trained on 45 trillion tokens, weights on Hugging Face under Apache 2.0, hosted via Tinker at $1.87 per million input tokens on 64K context (with a 50 percent introductory discount). The official launch post says Inkling is not the strongest overall model available today, open or closed. That sentence is the entire business strategy. Before the launch, Bridgewater Associates took an existing open model into Tinker, fine-tuned it against the hedge fund's financial reasoning corpus, and scored 84.7 percent on a financial reasoning suite ahead of every top proprietary model at roughly one fourteenth the inference cost. Includes the full launch numbers table, the Kimi K3 (frontier ceiling) versus Inkling (specialization floor) side-by-side, the sovereignty contrast to GLM-5.2, why the ex-OpenAI CTO is running the anti-frontier play, and what a second Bridgewater-shape customer story does to the Anthropic and OpenAI IPO pitches. Three signposts: whether independent researchers replicate the Terminal Bench and IFBench claims outside Tinker, whether a second Tinker customer lands in a non-finance regulated vertical with a similar cost delta, and whether frontier labs open up their own fine-tuning economics before their IPO windows close.",
+  },
+  {
     slug: 'kimi-k3-open-frontier-ceiling-8x',
     title:
       'Kimi K3 Ships With 2.8 Trillion Open Weights. The Open Frontier Ceiling Just Went Up 8x in Three Days.',
