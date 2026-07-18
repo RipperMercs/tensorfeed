@@ -833,6 +833,49 @@ export async function logRevenue(env: Env, amountUsd: number, agentUa: string): 
   }
 }
 
+// === Commit-outcome bridge ===
+//
+// logPremiumUsage historically logged the endpoint's nominal cost the
+// moment a route scheduled it, before commitPayment decided whether the
+// call actually debited anything. Free-trial and AFTA no-charge calls
+// (stale_data, empty_result, ...) were therefore double-counted: once
+// in the paid rollup (pay:rollup:{date} plus the lifetime counter that
+// feeds /api/stats) as if charged, and again in the no-charge rollup.
+// By 2026-07-18 the large majority of "charged" rollup credits were
+// free-trial traffic, so the public headline badly overstated paid use.
+//
+// The bridge keys a one-shot promise off the route's PaymentResult
+// object. logPremiumUsage awaits it (bounded by a fallback timer) and
+// logs the credits commitPayment actually debited; a zero debit skips
+// the paid rollup entirely because the no-charge rollup already owns
+// that event. Routes that never reach commitPayment (legacy handlers
+// that predate the deferred-debit flow, e.g. /api/premium/routing) hit
+// the fallback timer and log the nominal cost, preserving their
+// pre-bridge behavior. WeakMap entries die with the request-scoped
+// PaymentResult, so the bridge holds no state across requests.
+
+const COMMIT_OUTCOME_FALLBACK_MS = 10_000;
+
+interface CommitSignal {
+  promise: Promise<number>;
+  resolve: (creditsCharged: number) => void;
+}
+
+const commitSignals = new WeakMap<PaymentResult, CommitSignal>();
+
+function commitSignalFor(payment: PaymentResult): CommitSignal {
+  let signal = commitSignals.get(payment);
+  if (!signal) {
+    let resolve!: (creditsCharged: number) => void;
+    const promise = new Promise<number>(r => {
+      resolve = r;
+    });
+    signal = { promise, resolve };
+    commitSignals.set(payment, signal);
+  }
+  return signal;
+}
+
 /**
  * Record a successful premium endpoint call so we can see what's selling.
  * Caller should wrap in ctx.waitUntil so this never blocks the response.
@@ -848,6 +891,14 @@ export async function logRevenue(env: Env, amountUsd: number, agentUa: string): 
  * surfaced at settle time, it accumulates a per-wallet paid total
  * (top_payers, keyed by lowercased wallet) and counts distinct payers per
  * endpoint. The UA-only call path (no wallet) is unchanged.
+ *
+ * When the route passes its PaymentResult, the write is deferred until
+ * commitPayment reports the actual debit (see the commit-outcome bridge
+ * above); a zero debit skips the paid rollup because the no-charge
+ * rollup already logged the event. Without a PaymentResult (internal
+ * cross-Worker charges, tests) the nominal creditsCharged is logged
+ * immediately, which is correct there because those paths only log
+ * after an atomic charge has succeeded.
  */
 export async function logPremiumUsage(
   env: Env,
@@ -856,8 +907,19 @@ export async function logPremiumUsage(
   creditsCharged: number,
   token?: string,
   payerWallet?: string,
+  payment?: PaymentResult,
 ): Promise<void> {
   try {
+    if (payment) {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const fallback = new Promise<number>(resolve => {
+        timer = setTimeout(() => resolve(creditsCharged), COMMIT_OUTCOME_FALLBACK_MS);
+      });
+      const actual = await Promise.race([commitSignalFor(payment).promise, fallback]);
+      if (timer !== undefined) clearTimeout(timer);
+      if (actual === 0) return;
+      creditsCharged = actual;
+    }
     const date = new Date().toISOString().slice(0, 10);
     const now = new Date().toISOString();
     const rollup = await readRollup(env, date);
@@ -3690,6 +3752,27 @@ async function logNoChargeEvent(
  * deferred-debit refactor does not introduce a new risk.
  */
 export async function commitPayment(
+  env: Env,
+  payment: PaymentResult,
+  endpoint: string,
+  noChargeReason: NoChargeReason,
+): Promise<{ creditsCharged: number; balanceAfter: number; noChargeReason: NoChargeReason }> {
+  // Resolve the commit-outcome bridge whatever happens so a pending
+  // logPremiumUsage never waits out its fallback timer. On a commit
+  // crash we resolve with the nominal cost, degrading the usage log to
+  // its pre-bridge behavior rather than dropping the call.
+  const signal = commitSignalFor(payment);
+  try {
+    const result = await commitPaymentImpl(env, payment, endpoint, noChargeReason);
+    signal.resolve(result.creditsCharged);
+    return result;
+  } catch (err) {
+    signal.resolve(payment.cost ?? 0);
+    throw err;
+  }
+}
+
+async function commitPaymentImpl(
   env: Env,
   payment: PaymentResult,
   endpoint: string,

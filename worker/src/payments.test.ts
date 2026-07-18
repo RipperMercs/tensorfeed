@@ -10,6 +10,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
   logPremiumUsage,
+  commitPayment,
   getLifetimeStats,
   backfillLifetimeFromRollups,
   logRevenue,
@@ -31,6 +32,7 @@ import {
   paymentRequiredResponse,
   normalizeBazaarExtensionsForCDP,
 } from './payments';
+import type { PaymentResult } from './payments';
 import type { Env } from './types';
 import { PaymentClaim } from './payment-claim';
 
@@ -1280,6 +1282,84 @@ describe('lifetime traction counter', () => {
     const a = await backfillLifetimeFromRollups(env);
     expect(a.premium_calls).toBe(2);
     expect(a.total_credits_charged).toBe(2);
+  });
+});
+
+describe('commit-outcome bridge (usage log accuracy)', () => {
+  const trialQuota = {
+    allowed: true,
+    used: 1,
+    remaining: 99,
+    limit: 100,
+    resetSeconds: 3600,
+    resetAt: '2026-07-19T00:00:00Z',
+  };
+
+  it('skips the paid rollup for free-trial calls', async () => {
+    const env = makeEnv();
+    const payment: PaymentResult = { paid: true, cost: 1, freeTrial: trialQuota };
+    const pending = logPremiumUsage(env, '/api/premium/news/search', 'axios/1.14.0', 1, undefined, undefined, payment);
+    const commit = await commitPayment(env, payment, '/api/premium/news/search', null);
+    await pending;
+    expect(commit.creditsCharged).toBe(0);
+    const s = await getLifetimeStats(env);
+    expect(s.premium_calls).toBe(0);
+    expect(s.total_credits_charged).toBe(0);
+    const rollup = await (env.TENSORFEED_CACHE as unknown as MockKV).get('pay:rollup:' + new Date().toISOString().slice(0, 10));
+    expect(rollup).toBeNull();
+    // The no-charge rollup still owns the event.
+    const noCharge = (await (env.TENSORFEED_CACHE as unknown as MockKV).get(
+      'pay:no-charge:' + new Date().toISOString().slice(0, 10),
+    )) as { count: number; by_reason: Record<string, number> } | null;
+    expect(noCharge?.count).toBe(1);
+    expect(noCharge?.by_reason.free_trial).toBe(1);
+  });
+
+  it('skips the paid rollup on an AFTA no-charge commit (stale_data)', async () => {
+    const env = makeEnv();
+    seedCredits(env, 47);
+    const payment: PaymentResult = { paid: true, token: FIXTURE, cost: 1, currentBalance: 47 };
+    const pending = logPremiumUsage(env, '/api/premium/whats-new', 'agent/1', 1, FIXTURE, undefined, payment);
+    await commitPayment(env, payment, '/api/premium/whats-new', 'stale_data');
+    await pending;
+    const s = await getLifetimeStats(env);
+    expect(s.premium_calls).toBe(0);
+    const usage = await getTokenUsage(env, FIXTURE);
+    expect(usage?.total_calls).toBe(0);
+  });
+
+  it('logs the actual debit for a charged call', async () => {
+    const env = makeEnv();
+    seedCredits(env, 47);
+    const payment: PaymentResult = { paid: true, token: FIXTURE, cost: 2, currentBalance: 47 };
+    const pending = logPremiumUsage(env, '/api/premium/history/pricing/series', 'agent/1', 2, FIXTURE, undefined, payment);
+    const commit = await commitPayment(env, payment, '/api/premium/history/pricing/series', null);
+    await pending;
+    expect(commit.creditsCharged).toBe(2);
+    const s = await getLifetimeStats(env);
+    expect(s.premium_calls).toBe(1);
+    expect(s.total_credits_charged).toBe(2);
+    const usage = await getTokenUsage(env, FIXTURE);
+    expect(usage?.total_calls).toBe(1);
+    expect(usage?.total_credits_spent).toBe(2);
+  });
+
+  it('falls back to the nominal cost when no commit ever arrives', async () => {
+    // Legacy routes (e.g. /api/premium/routing) never call commitPayment;
+    // the fallback timer must preserve their pre-bridge logging behavior.
+    vi.useFakeTimers();
+    try {
+      const env = makeEnv();
+      const payment: PaymentResult = { paid: true, token: FIXTURE, cost: 1, currentBalance: 47 };
+      const pending = logPremiumUsage(env, '/api/premium/routing', 'agent/1', 1, FIXTURE, undefined, payment);
+      await vi.advanceTimersByTimeAsync(10_000);
+      await pending;
+      const s = await getLifetimeStats(env);
+      expect(s.premium_calls).toBe(1);
+      expect(s.total_credits_charged).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

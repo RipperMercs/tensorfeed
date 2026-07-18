@@ -6498,7 +6498,7 @@ export default {
       if (!result.has_data) {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
-      ctx.waitUntil(logPremiumUsage(env, '/api/premium/hf-leaderboard/movers', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
+      ctx.waitUntil(logPremiumUsage(env, '/api/premium/hf-leaderboard/movers', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment));
       return await premiumResponse(result, payment, 1, request, env);
     }
 
@@ -7310,7 +7310,7 @@ export default {
 
       // Fire-and-forget usage logging so the response isn't blocked
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/routing', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/routing', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
 
       // Route the paid 200 through premiumResponse so the deferred debit
@@ -7467,7 +7467,7 @@ export default {
         };
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/model-intelligence', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/model-intelligence', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -7512,7 +7512,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/models/frontier', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/models/frontier', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env, null, result.as_of);
     }
@@ -7586,7 +7586,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/stack-drift-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/stack-drift-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -7638,7 +7638,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/model-migration-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/model-migration-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -7671,7 +7671,7 @@ export default {
         return await premiumResponse(series, payment, 2, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/model-intelligence/history', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/model-intelligence/history', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(series, payment, 2, request, env);
     }
@@ -7743,7 +7743,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/provider-reliability-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/provider-reliability-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -7816,7 +7816,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/resilience/concentration-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/resilience/concentration-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env, null, result.captured_at);
     }
@@ -7949,7 +7949,7 @@ export default {
       const { computeX402SettlementVerdict } = await import('./premium-x402-settlement-verdict');
       const result = await computeX402SettlementVerdict(env, window);
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/x402-settlement-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/x402-settlement-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -8476,7 +8476,7 @@ export default {
       const result = await computeStackSafetyVerdict(env, ssParsed.packages);
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/stack-safety-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/stack-safety-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Policy (Evan, 2026-07-09): a batch-unavailable all-UNKNOWN answer
       // still charges as-is (honestly disclosed "cannot assess"). Do not
@@ -8540,7 +8540,7 @@ export default {
       const result = { ...verdict, format: parsed.format, truncated: parsed.truncated };
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/cve-check', request.headers.get('User-Agent') || 'unknown', 50, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/cve-check', request.headers.get('User-Agent') || 'unknown', 50, payment.token, payment.payerWallet, payment),
       );
       // Policy (Evan, 2026-07-09): batch-unavailable charges as-is, same as
       // stack-safety-verdict above. batch_available is surfaced in the body
@@ -8619,7 +8619,7 @@ export default {
       });
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/benchmark-trust-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/benchmark-trust-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -8704,7 +8704,7 @@ export default {
       const result = await computeFailoverVerdict(env, { from: foFrom.trim(), task: foTask, model: url.searchParams.get('model') ?? undefined });
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/failover-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/failover-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -8755,6 +8755,7 @@ export default {
           1,
           payment.token,
           payment.payerWallet,
+          payment,
         ),
       );
       return await premiumResponse(
@@ -8811,6 +8812,7 @@ export default {
           1,
           payment.token,
           payment.payerWallet,
+          payment,
         ),
       );
       return await premiumResponse(
@@ -8866,7 +8868,7 @@ export default {
         return await premiumResponse(result, payment, 2, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/history/pricing/series', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/history/pricing/series', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 2, request, env);
     }
@@ -8912,7 +8914,7 @@ export default {
         return await premiumResponse(result, payment, 2, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/history/benchmarks/series', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/history/benchmarks/series', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 2, request, env);
     }
@@ -8954,7 +8956,7 @@ export default {
         return await premiumResponse(result, payment, 2, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/history/status/uptime', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/history/status/uptime', request.headers.get('User-Agent') || 'unknown', 2, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 2, request, env);
     }
@@ -8984,7 +8986,7 @@ export default {
           return jsonResponse({ ok: false, error: 'not_found', date }, 404);
         }
         ctx.waitUntil(
-          logPremiumUsage(env, '/api/premium/history/news/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+          logPremiumUsage(env, '/api/premium/history/news/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
         );
         return await premiumResponse(
           { ok: true, mode: 'single', ...snapshot },
@@ -9047,7 +9049,7 @@ export default {
         0,
       );
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/history/news/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/history/news/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(
         {
@@ -9104,6 +9106,7 @@ export default {
           1,
           payment.token,
           payment.payerWallet,
+          payment,
         ),
       );
       return await premiumResponse(
@@ -9132,6 +9135,7 @@ export default {
           1,
           payment.token,
           payment.payerWallet,
+          payment,
         ),
       );
       return await premiumResponse(
@@ -9177,6 +9181,7 @@ export default {
             1,
             payment.token,
             payment.payerWallet,
+            payment,
           ),
         );
         return await premiumResponse(
@@ -9238,6 +9243,7 @@ export default {
           1,
           payment.token,
           payment.payerWallet,
+          payment,
         ),
       );
       return await premiumResponse(
@@ -9290,6 +9296,7 @@ export default {
             1,
             payment.token,
             payment.payerWallet,
+            payment,
           ),
         );
         return await premiumResponse(
@@ -9359,6 +9366,7 @@ export default {
           1,
           payment.token,
           payment.payerWallet,
+          payment,
         ),
       );
       return await premiumResponse(
@@ -9438,7 +9446,7 @@ export default {
         }),
       );
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/history/news/source-health', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/history/news/source-health', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(
         {
@@ -9760,6 +9768,7 @@ export default {
           1,
           payment.token,
           payment.payerWallet,
+          payment,
         ),
       );
       // No single dataCapturedAt: the top-N is a heterogeneous set whose rows
@@ -10689,6 +10698,7 @@ export default {
           3,
           payment.token,
           payment.payerWallet,
+          payment,
         ),
       );
       return await premiumResponse(result, payment, 3, request, env);
@@ -10739,7 +10749,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/attention/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/attention/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -10777,7 +10787,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/mcp/registry/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/mcp/registry/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -10814,7 +10824,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/openrouter/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/openrouter/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -10851,7 +10861,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/x402-registry/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/x402-registry/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -10890,7 +10900,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/hf/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/hf/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -10939,7 +10949,7 @@ export default {
 
       const result = await getProviderSeries(env, provider, range.from!, range.to!);
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/probe/series', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/probe/series', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 3, request, env);
     }
@@ -11103,7 +11113,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-capex-cycle-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-capex-cycle-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env, null, result.captured_at);
     }
@@ -11208,7 +11218,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/funding/federal/momentum', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/funding/federal/momentum', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -11278,7 +11288,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/procurement/ai-contracts/demand', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/procurement/ai-contracts/demand', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -11342,7 +11352,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/procurement/ai-opportunities/deadlines', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/procurement/ai-opportunities/deadlines', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(payload, payment, 1, request, env);
     }
@@ -11401,7 +11411,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/federal-ai-policy', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/federal-ai-policy', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(payload, payment, 1, request, env);
     }
@@ -11436,7 +11446,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/cve/kev-exploitation-timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/cve/kev-exploitation-timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -11475,7 +11485,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/security/corroborated', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/security/corroborated', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -11501,7 +11511,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/research/milestones', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/research/milestones', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
@@ -11526,7 +11536,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/research/emerging-keywords', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/research/emerging-keywords', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
@@ -11742,7 +11752,7 @@ export default {
       });
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/status/incidents/triage', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/status/incidents/triage', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -11799,7 +11809,7 @@ export default {
         });
 
         ctx.waitUntil(
-          logPremiumUsage(env, `/api/premium/status/${provider}/incidents/triage`, request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+          logPremiumUsage(env, `/api/premium/status/${provider}/incidents/triage`, request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
         );
         return await premiumResponse(result, payment, 1, request, env);
       }
@@ -11872,7 +11882,7 @@ export default {
       });
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/news/action-cards', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/news/action-cards', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -11986,7 +11996,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-cves/ai-stack-cves', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-cves/ai-stack-cves', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Pass the DP CC batch extraction time so the 10-day staleness SLA can
       // no-charge a stalled extraction pipeline. extracted_at is the batch's
@@ -12017,7 +12027,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-cves/exploited-in-wild', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-cves/exploited-in-wild', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Pass the DP CC batch extraction time so the 10-day staleness SLA can
       // no-charge a stalled extraction pipeline. extracted_at is the batch's
@@ -12073,7 +12083,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-cves/cve', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-cves/cve', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Pass the resolved batch's extraction time so the 10-day staleness SLA
       // can no-charge a stalled extraction pipeline. extracted_at is the DP CC
@@ -12144,7 +12154,7 @@ export default {
       const { buildFullResponse } = await import('./premium-ai-crawler-access');
       const snap = await readSnapshot(env);
       const result = buildFullResponse(snap);
-      ctx.waitUntil(logPremiumUsage(env, '/api/premium/ai-crawler-access/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
+      ctx.waitUntil(logPremiumUsage(env, '/api/premium/ai-crawler-access/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment));
       // captured_at carries the real data time; null snapshot => empty_result no-charge
       return await premiumResponse(result, payment, 1, request, env, snap ? null : 'empty_result');
     }
@@ -12170,7 +12180,7 @@ export default {
       const { buildChangesResponse } = await import('./premium-ai-crawler-access');
       const [flips, snap] = await Promise.all([readFlips(env), readSnapshot(env)]);
       const result = buildChangesResponse(flips, domain, from, to, snap?.dataCapturedAt ?? null);
-      ctx.waitUntil(logPremiumUsage(env, '/api/premium/ai-crawler-access/changes', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
+      ctx.waitUntil(logPremiumUsage(env, '/api/premium/ai-crawler-access/changes', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment));
       return await premiumResponse(result, payment, 1, request, env, result.has_data ? null : 'empty_result');
     }
 
@@ -12206,7 +12216,7 @@ export default {
       const { buildAgentReadyFull } = await import('./agent-ready');
       const snap = await readSnapshot(env);
       const result = buildAgentReadyFull(snap);
-      ctx.waitUntil(logPremiumUsage(env, '/api/premium/agent-ready/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet));
+      ctx.waitUntil(logPremiumUsage(env, '/api/premium/agent-ready/full', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment));
       return await premiumResponse(result, payment, 1, request, env, snap ? null : 'empty_result');
     }
 
@@ -12261,7 +12271,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/sec/filings/ai-flagged', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/sec/filings/ai-flagged', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -12300,7 +12310,7 @@ export default {
       });
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/sec/filings/by-form', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/sec/filings/by-form', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -12350,7 +12360,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/sec/filings/ai-disclosures', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/sec/filings/ai-disclosures', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -12605,7 +12615,7 @@ export default {
         return await premiumResponse(gdResult, payment, 1, request, env, 'stale_data');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/sec/filings/guidance-delta', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/sec/filings/guidance-delta', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(gdResult, payment, 1, request, env);
     }
@@ -12703,6 +12713,7 @@ export default {
           1,
           payment.token,
           payment.payerWallet,
+          payment,
         ),
       );
       // dataCapturedAt = CISA's SSVC scoring timestamp (real data time, never
@@ -12769,7 +12780,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-companies', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-companies', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(envelope, payment, 1, request, env);
     }
@@ -12920,7 +12931,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/x402-index/publisher', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/x402-index/publisher', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse({ ok: true, ...result }, payment, 1, request, env);
     }
@@ -12996,7 +13007,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/x402-index/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/x402-index/series', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse({ ok: true, ...result }, payment, 1, request, env);
     }
@@ -13111,7 +13122,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/export-controls/ai/history', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/export-controls/ai/history', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // captured_at carries the real snapshot data time; premiumResponse picks
       // it up for the AFTA staleness no-charge. Never new Date().
@@ -13220,7 +13231,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/eu-ai-act/notified-bodies/history', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/eu-ai-act/notified-bodies/history', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // captured_at carries the events-log update time; premiumResponse picks
       // it up for the AFTA staleness no-charge. Never new Date().
@@ -13279,7 +13290,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-cves/batch', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-cves/batch', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -13378,7 +13389,7 @@ export default {
       });
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/coding-harnesses/weekly-deltas', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/coding-harnesses/weekly-deltas', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -13521,7 +13532,7 @@ export default {
       });
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-crypto-pulse', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-crypto-pulse', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Partial (single-source) snapshot: the squeeze/chase join is missing
       // an entire side (movers or funding down) and could not be back-filled
@@ -13611,7 +13622,7 @@ export default {
       });
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Partial (single-source) snapshot: the cross-join is missing an
       // entire surface (HF or GitHub down) and could not be back-filled
@@ -13708,7 +13719,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/packages/releases/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/packages/releases/velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -13791,7 +13802,7 @@ export default {
       }, new Date());
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-safety/packages/security/radar', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-safety/packages/security/radar', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -13869,7 +13880,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/security/package-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/security/package-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env, null, result.captured_at);
     }
@@ -13960,7 +13971,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-safety/incidents/exposure', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/ai-safety/incidents/exposure', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -13998,7 +14009,7 @@ export default {
         return await premiumResponse(result, payment, 1, request, env, 'empty_result');
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/inference-providers/arbitrage', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/inference-providers/arbitrage', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -14101,7 +14112,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/inference/cost-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/inference/cost-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -14155,7 +14166,7 @@ export default {
       const result = buildRailVerdict(snapshot, paymentUsd, prefer, acceptedRails);
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/settlement/rail-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/settlement/rail-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env, null, snapshot.capturedAt);
     }
@@ -14234,7 +14245,7 @@ export default {
       );
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/model-deprecations/timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/model-deprecations/timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -14297,7 +14308,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/research/topic-search', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/research/topic-search', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
@@ -14339,7 +14350,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/research/lab-productivity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/research/lab-productivity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse({ ...result, capturedAt: result.capturedAt }, payment, 1, request, env);
     }
@@ -14371,7 +14382,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/packages/pypi/momentum', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/packages/pypi/momentum', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet, payment),
       );
       // Pass the real PyPI snapshot time so the 24h staleness SLA can
       // no-charge a stalled 03:45 UTC cron; the result surfaces the data
@@ -14462,7 +14473,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/policy/timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/policy/timeline', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -14602,7 +14613,7 @@ export default {
       }
 
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/whats-new', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/whats-new', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       const body =
         outcome.mode === 'delta'
@@ -14702,7 +14713,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/whats-new/pro', request.headers.get('User-Agent') || 'unknown', 10, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/whats-new/pro', request.headers.get('User-Agent') || 'unknown', 10, payment.token, payment.payerWallet, payment),
       );
       const body = {
         ...pro,
@@ -14756,7 +14767,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/recent', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/recent', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Pass the freshest underlying data-capture time so the 1h staleness
       // SLA can no-charge when the news/status crons stall.
@@ -14790,7 +14801,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/security/ghsa/ai-feed', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/security/ghsa/ai-feed', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Pass generated_at (the last successful refresh write) as the
       // billing capture time so the 9h freshness SLA can no-charge when
@@ -14825,7 +14836,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/research/authors', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/research/authors', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse({ ok: true, ...snapshot }, payment, 1, request, env);
     }
@@ -14854,7 +14865,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/research/citation-velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/research/citation-velocity', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       const cleanedPaid = filterVelocityPapers(snapshot.papers ?? [], new Date().getUTCFullYear());
       return await premiumResponse({ ok: true, ...snapshot, papers: cleanedPaid }, payment, 1, request, env);
@@ -14886,7 +14897,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/apis-guru/ai-feed', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/apis-guru/ai-feed', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // generated_at = last successful daily refresh. Surfaced as the
       // billing capture time so the 36h freshness SLA no-charges a stalled
@@ -14920,7 +14931,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/compare/models', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/compare/models', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Pass the real pricing capture time so the 24h staleness SLA can
       // no-charge stale pricing; the capture time lives nested under
@@ -14946,7 +14957,7 @@ export default {
         return jsonResponse(result, 404);
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/providers', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/providers', request.headers.get('User-Agent') || 'unknown', 3, payment.token, payment.payerWallet, payment),
       );
       // Gate the 24h staleness SLA on the LIVE status capture time
       // (data_freshness.status = the latest probe lastChecked), which advances
@@ -15023,7 +15034,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/cost/projection', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/cost/projection', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -15057,7 +15068,7 @@ export default {
         );
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/news/search', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/news/search', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
@@ -15115,7 +15126,7 @@ export default {
 
       const result = await getEnrichedDirectory(env, opts);
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/agents/directory', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/agents/directory', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       // Bill staleness against the real directory ingest time (the only
       // top-level field on this result is computed_at = build time, invisible
@@ -15158,7 +15169,7 @@ export default {
         return await premiumValidationFailure(result as unknown as Record<string, unknown>, payment, request, env);
       }
       ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/watches', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet),
+        logPremiumUsage(env, '/api/premium/watches', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
     }
