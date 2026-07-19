@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'anthropic-meta-10b-fourth-compute-vendor',
+    title:
+      "Anthropic's Fourth Compute Vendor Ships Llama. Meta Just Became a Hyperscaler in the Same News Cycle.",
+    author: 'Adrian Vale',
+    date: 'July 19, 2026',
+    readTime: '7 min read',
+    description:
+      "The New York Times reported on Friday, July 17, 2026 that Anthropic is in early talks to lease up to $10 billion of computing power from Meta over two years, paid in monthly increments with early-exit rights on both sides. Neither company has confirmed. Meta declined comment. Anthropic declined comment. Read the sentence twice: the lab that ships Llama is about to sell $10 billion of computing power to the lab that ships Claude. Anthropic's compute stack now has four active vendors (Google TPU at $200B over five years, SpaceX Colossus 1 at $1.25 billion a month, AWS Trainium at an undisclosed but material line, and Meta at $5 billion a year if the talks close), three of which also ship competing frontier models. Meta needed a named external tenant fast enough to defend $145 billion of 2026 CapEx on the next earnings call, and Anthropic needed a fourth compute vendor fast enough to survive a Google delivery slip in 2027. Both problems got solved by the same leak on the same Friday. Inside the full compute stack table, the market-structure implication (the pure-play frontier lab club just shrank to Anthropic and OpenAI while Google, Microsoft, Meta, and Amazon all now build models and rent compute to competitors), the data-security posture that lets a rival-as-vendor deal actually close, and three signposts: whether the deal converts at the full ceiling, whether Meta discloses cloud compute revenue as a Q3 segment, and whether OpenAI or xAI shows up as the second named Meta Compute tenant.",
+  },
+  {
     slug: 'thinking-machines-inkling-tinker-bet',
     title:
       "Thinking Machines Shipped Inkling and Admitted It Is Not the Best. Bridgewater Already Beat Every Frontier Model at One Fourteenth the Cost.",
