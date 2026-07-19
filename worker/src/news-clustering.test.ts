@@ -288,3 +288,97 @@ describe('runDailyClustering', () => {
     expect(result.date).toBe('2026-05-01');
   });
 });
+
+describe('centroid persistence (corroboration corpus)', () => {
+  it('packVector / unpackVector roundtrip preserves float32 values', async () => {
+    const { packVector, unpackVector } = await import('./news-clustering');
+    const vec = [0.5, -0.25, 1, 0, -1, 0.125, 0.75, -0.0625];
+    expect(unpackVector(packVector(vec))).toEqual(vec);
+  });
+
+  it('computeCentroids returns the normalized mean per cluster and skips unknown members', async () => {
+    const { computeCentroids, unpackVector, buildClusters } = await import('./news-clustering');
+    const articles = [
+      fakeArticle('a1', 'Reuters'),
+      fakeArticle('a2', 'Anthropic'),
+      fakeArticle('a3', 'TechCrunch'),
+    ];
+    const embeddings = [
+      { id: 'a1', vector: [1, 0, 0, 0, 0, 0, 0, 0] },
+      { id: 'a2', vector: [0, 1, 0, 0, 0, 0, 0, 0] },
+      { id: 'a3', vector: [0, 0, 1, 0, 0, 0, 0, 0] },
+    ];
+    // a1 + a2 forced into one cluster via threshold 0 on just those two.
+    const clusters = buildClusters({
+      date: '2026-05-08',
+      articles,
+      embeddings,
+      threshold: 0.99,
+    });
+    // With orthogonal vectors and a high threshold, everything is a
+    // singleton; each centroid must equal its member vector (already unit).
+    const centroids = computeCentroids(clusters, embeddings);
+    expect(centroids.length).toBe(3);
+    for (const c of centroids) {
+      const v = unpackVector(c.vec);
+      const mag = Math.sqrt(v.reduce((s, x) => s + x * x, 0));
+      expect(mag).toBeCloseTo(1, 5);
+    }
+    // Multi-member cluster: mean of [1,0,..] and [0,1,..] normalized is
+    // [0.7071, 0.7071, 0, ...].
+    const merged = computeCentroids(
+      [
+        {
+          cluster_id: 'm1',
+          date: '2026-05-08',
+          article_count: 2,
+          source_count: 2,
+          sources: ['x', 'y'],
+          article_ids: ['a1', 'a2', 'ghost'],
+          hero: { id: 'a1', title: 't', url: 'u', source: 's', publishedAt: null },
+          first_seen_at: null,
+          corroboration_band: 'limited',
+        },
+      ],
+      embeddings,
+    );
+    expect(merged.length).toBe(1);
+    const mv = unpackVector(merged[0].vec);
+    expect(mv[0]).toBeCloseTo(Math.SQRT1_2, 5);
+    expect(mv[1]).toBeCloseTo(Math.SQRT1_2, 5);
+    expect(mv[2]).toBeCloseTo(0, 5);
+  });
+
+  it('runDailyClustering writes a durable news:cluster:vecs:{date} record with model + dims', async () => {
+    const ai = new MockAI((texts) =>
+      texts.map((t) => {
+        if (/mythos/i.test(t)) return fakeVec('a');
+        return fakeVec('c');
+      }),
+    );
+    const env = makeEnv(ai);
+    const cache = env.TENSORFEED_CACHE as unknown as MockKV;
+    cache.store.set(
+      'news:daily:2026-05-08',
+      JSON.stringify({
+        date: '2026-05-08',
+        captured_at: '2026-05-08T23:00:00.000Z',
+        articles_count: 2,
+        articles: [
+          fakeArticle('a1', 'Reuters', 'Mythos launches'),
+          fakeArticle('a2', 'Anthropic', 'Mythos launches details'),
+        ],
+      }),
+    );
+    const result = await runDailyClustering(env, new Date('2026-05-09T07:30:00.000Z'));
+    expect(result.ok).toBe(true);
+    const raw = cache.store.get('news:cluster:vecs:2026-05-08');
+    expect(raw).toBeTruthy();
+    const record = JSON.parse(raw!);
+    expect(record.model).toBe('@cf/baai/bge-base-en-v1.5');
+    expect(record.dims).toBe(8);
+    expect(record.centroids.length).toBe(result.clusters_found);
+    // Durable: no TTL on the centroid key.
+    expect(cache.ttls.get('news:cluster:vecs:2026-05-08')).toBeUndefined();
+  });
+});

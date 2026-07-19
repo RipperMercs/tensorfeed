@@ -29,7 +29,10 @@ import type { Env } from './types';
 import type { NewsDailySnapshot } from './news-history';
 import { sanitizeTitle, sanitizeSnippet } from './sanitize';
 
-const EMBED_MODEL = '@cf/baai/bge-base-en-v1.5';
+// Exported so query-time consumers (the planned corroboration endpoint)
+// embed with the SAME model the corpus was built with. A model change
+// invalidates every stored centroid; bump in lockstep or not at all.
+export const EMBED_MODEL = '@cf/baai/bge-base-en-v1.5';
 const EMBED_BATCH_SIZE = 50;
 const CLUSTER_THRESHOLD = 0.82;
 const MAX_ARTICLES_PER_DAY = 200;
@@ -39,6 +42,7 @@ const NEWS_EMBED_KEY = (date: string) => `news:embeddings:${date}`;
 const NEWS_CLUSTER_KEY = (date: string, cid: string) => `news:cluster:${date}:${cid}`;
 const NEWS_CLUSTER_INDEX_DATE = (date: string) => `news:cluster:index:${date}`;
 const NEWS_CLUSTER_DATES = 'news:cluster:dates';
+export const NEWS_CLUSTER_VECS_KEY = (date: string) => `news:cluster:vecs:${date}`;
 const EMBED_TTL = 30 * 24 * 60 * 60;
 const INDEX_CAP_DAYS = 730;
 
@@ -137,6 +141,93 @@ export function clusterByEmbedding(embeddings: number[][], threshold: number): n
     out[i] = remap.get(out[i])!;
   }
   return out;
+}
+
+// === Durable cluster centroids ===
+//
+// The per-article embeddings above (news:embeddings:{date}) expire after
+// 30 days and weigh ~1MB/day as JSON, which makes them the wrong corpus
+// for a query-time similarity check. Centroids fix both problems: one
+// L2-normalized 768-dim vector per cluster, packed as base64 float32,
+// written once per day under news:cluster:vecs:{date} with NO TTL.
+// ~40 clusters x ~4KB is ~160KB/day, far under the 25MB KV value cap,
+// and one extra KV write per cron run. Normalizing at write time means
+// query-time similarity against a normalized probe is a plain dot
+// product. This is the accumulation half of the corroboration product
+// (specs/moat-wave-20.md C.3); the corpus can only cover dates from
+// this ship date forward, which is why it lands ahead of the endpoint.
+
+export interface ClusterCentroid {
+  cid: string;
+  vec: string; // base64 little-endian float32, L2-normalized
+}
+
+export interface ClusterCentroidsRecord {
+  date: string;
+  dims: number;
+  model: string;
+  centroids: ClusterCentroid[];
+}
+
+export function packVector(vec: number[]): string {
+  const f32 = new Float32Array(vec);
+  const bytes = new Uint8Array(f32.buffer);
+  let bin = '';
+  const CHUNK = 8192;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
+}
+
+export function unpackVector(b64: string): number[] {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+  return Array.from(new Float32Array(bytes.buffer));
+}
+
+/**
+ * Pure function: mean of each cluster's member vectors, L2-normalized.
+ * Members without an embedding are skipped; a cluster whose members all
+ * lack embeddings is dropped (cannot happen in practice because cluster
+ * membership is derived FROM the embeddings, but the guard keeps this
+ * function total).
+ */
+export function computeCentroids(
+  clusters: ClusterEntry[],
+  embeddings: ArticleEmbedding[],
+): ClusterCentroid[] {
+  const vecById = new Map(embeddings.map((e) => [e.id, e.vector]));
+  const out: ClusterCentroid[] = [];
+  for (const cluster of clusters) {
+    const members = cluster.article_ids
+      .map((id) => vecById.get(id))
+      .filter((v): v is number[] => Array.isArray(v) && v.length > 0);
+    if (members.length === 0) continue;
+    const dims = members[0].length;
+    const sum = new Array<number>(dims).fill(0);
+    for (const v of members) {
+      for (let i = 0; i < dims; i += 1) sum[i] += v[i];
+    }
+    let mag = 0;
+    for (let i = 0; i < dims; i += 1) {
+      sum[i] /= members.length;
+      mag += sum[i] * sum[i];
+    }
+    mag = Math.sqrt(mag);
+    if (mag === 0) continue;
+    for (let i = 0; i < dims; i += 1) sum[i] /= mag;
+    out.push({ cid: cluster.cluster_id, vec: packVector(sum) });
+  }
+  return out;
+}
+
+export async function readCentroidsForDate(
+  env: Env,
+  date: string,
+): Promise<ClusterCentroidsRecord | null> {
+  return env.TENSORFEED_CACHE.get<ClusterCentroidsRecord>(NEWS_CLUSTER_VECS_KEY(date), 'json');
 }
 
 interface ArticleLite {
@@ -385,6 +476,24 @@ export async function runDailyClustering(
     JSON.stringify(clusters.map((c) => c.cluster_id)),
   );
   await ensureDateInIndex(env, NEWS_CLUSTER_DATES, date);
+
+  // Durable centroids for the corroboration corpus. Best-effort: a
+  // failure here must not fail the clustering run the free cluster
+  // surfaces depend on.
+  try {
+    const centroids = computeCentroids(clusters, embeddings);
+    if (centroids.length > 0) {
+      const record: ClusterCentroidsRecord = {
+        date,
+        dims: embeddings[0].vector.length,
+        model: EMBED_MODEL,
+        centroids,
+      };
+      await env.TENSORFEED_CACHE.put(NEWS_CLUSTER_VECS_KEY(date), JSON.stringify(record));
+    }
+  } catch (e) {
+    console.error('centroid persistence failed:', e);
+  }
 
   return {
     ok: true,

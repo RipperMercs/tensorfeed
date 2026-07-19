@@ -344,6 +344,14 @@ import {
   ReceiptCore,
   NoChargeReason,
 } from './receipts';
+import {
+  attestRequested,
+  storeAttestation,
+  deleteAttestation,
+  getAttestation,
+  attestationBlock,
+  ATTEST_SURCHARGE_CREDITS,
+} from './attest';
 import { checkStaleness, resolveSLA, describeSLAs, responseFreshnessBlock } from './freshness';
 import { recordPollRun, checkNewsStaleness, alertStaleNews, sendDailySummary, getAlertsStatus } from './alerts';
 import {
@@ -1040,6 +1048,63 @@ async function premiumResponse(
     if (agentNonce) headers['X-Agent-Nonce-Echo'] = agentNonce;
   } else {
     responseBody.receipt_status = 'pending_key_bootstrap';
+  }
+
+  // Attestation opt-in (attest.ts): persist the signed receipt as a
+  // public third-party-checkable citation for a 1-credit surcharge.
+  // Only a call that actually debited credits from a bearer token can
+  // be attested; every other case explains itself instead of charging.
+  // Note the attestation block rides OUTSIDE response_hash coverage
+  // (hash was computed over bodyResult before billing/receipt attach),
+  // which is correct: the attestation cites the data payload, it is
+  // not part of it. Store-then-debit ordering: if the surcharge loses
+  // a balance race the stored record is deleted best-effort, so the
+  // agent is never charged for an attestation that does not exist.
+  if (attestRequested(request, url)) {
+    if (!signed) {
+      responseBody.attestation_unavailable = 'receipt_key_bootstrap';
+    } else if (commit.creditsCharged === 0 || !payment.token) {
+      responseBody.attestation_unavailable = payment.freeTrial
+        ? 'free_trial_calls_cannot_be_attested'
+        : 'no_charge_calls_cannot_be_attested';
+    } else if (commit.balanceAfter < ATTEST_SURCHARGE_CREDITS) {
+      responseBody.attestation_unavailable = 'insufficient_credits_for_surcharge';
+    } else {
+      try {
+        const record = await storeAttestation(env, signed);
+        const surcharge = await commitPayment(
+          env,
+          {
+            paid: true,
+            token: payment.token,
+            cost: ATTEST_SURCHARGE_CREDITS,
+            currentBalance: commit.balanceAfter,
+          },
+          '/api/attest/store',
+          null,
+        );
+        if (surcharge.creditsCharged === ATTEST_SURCHARGE_CREDITS) {
+          responseBody.attestation = attestationBlock(record, env.SITE_URL);
+          billing.credits_charged = commit.creditsCharged + ATTEST_SURCHARGE_CREDITS;
+          billing.credits_remaining = surcharge.balanceAfter;
+          headers['X-Payment-Token-Balance'] = String(surcharge.balanceAfter);
+          await logPremiumUsage(
+            env,
+            '/api/attest/store',
+            request.headers.get('User-Agent') || 'unknown',
+            ATTEST_SURCHARGE_CREDITS,
+            payment.token,
+            payment.payerWallet,
+          );
+        } else {
+          await deleteAttestation(env, record.id);
+          responseBody.attestation_unavailable = 'surcharge_debit_failed';
+        }
+      } catch (e) {
+        console.error('attestation store failed:', e);
+        responseBody.attestation_unavailable = 'storage_error';
+      }
+    }
   }
 
   const finalResponse = new Response(JSON.stringify(responseBody), { status: 200, headers });
@@ -4996,6 +5061,10 @@ export default {
           paymentRevoke: 'POST /api/payment/revoke',
           paymentNoChargeStats: '/api/payment/no-charge-stats',
           receiptVerify: '/api/receipt/verify',
+          attestFetch:
+            '/api/attest/{id} (free; fetch a stored data attestation: the Ed25519-signed receipt a paying agent persisted as a public citation via ?attest=store on any premium call. Ids look like att_ plus 16 hex. Human view at /attest?id=. Verify the embedded receipt via POST /api/receipt/verify.)',
+          attestStore:
+            'Add ?attest=store (or header X-Attest: store) to any premium call to persist its signed receipt for 90 days as a third-party-checkable citation. +1 credit surcharge, charged only when storage succeeds; only calls that actually debited credits can be attested.',
           aiCrawlerAccessSummary: '/api/ai-crawler-access/summary.json (free; aggregate AI crawler access map across curated domains: per-bot allow/block percentages (GPTBot, ClaudeBot, PerplexityBot, CCBot, and more), plus llms.txt and ai.txt adoption. We report stated robots.txt policy, not enforcement. No parameters.)',
           aiCrawlerAccessSite: '/api/ai-crawler-access/site?domain= (free; per-site robots.txt verdict for each tracked AI bot, plus llms.txt and ai.txt presence, for one domain. Required param: domain.)',
           aiCrawlerAccessCheck: '/api/ai-crawler-access/check?domain= (free; live on-demand robots.txt verdict for any public domain not in the tracked set: per-bot allowed/blocked/partial/unknown plus llms.txt/ai.txt presence. Rate-limited 120/min/IP, cached 1h.)',
@@ -7186,6 +7255,50 @@ export default {
         );
       }
       return jsonResponse({ ok: true, ...rollup }, 200, 60);
+    }
+
+    // === ATTESTATIONS: PUBLIC FETCH (free) ===
+    // Serve a stored attestation (a premium call's signed receipt that
+    // the paying agent chose to persist via ?attest=store). The audience
+    // is the agent's PRINCIPAL, a party that never called TF before, so
+    // this stays free and cacheable: it is the top of a funnel, not a
+    // product. Verification of the embedded receipt rides the existing
+    // free POST /api/receipt/verify. Immutable once stored; cache 300s.
+
+    {
+      const attestMatch = path.match(/^\/api\/attest\/(att_[0-9a-f]{16})$/);
+      if (attestMatch && request.method === 'GET') {
+        const stored = await getAttestation(env, attestMatch[1]);
+        if (!stored) {
+          return jsonResponse(
+            {
+              ok: false,
+              error: 'not_found_or_expired',
+              message:
+                'No attestation with this id. Attestations expire 90 days after storage. The agent that created it can re-attest with a fresh premium call using ?attest=store.',
+            },
+            404,
+            60,
+          );
+        }
+        return jsonResponse(
+          {
+            ok: true,
+            attestation: stored,
+            verify: {
+              endpoint: '/api/receipt/verify',
+              method: 'POST',
+              body_shape: '{ "receipt": <the attestation.receipt object> }',
+              offline_key: '/.well-known/tensorfeed-receipt-key.json',
+            },
+            human_view: `${env.SITE_URL}/attest?id=${stored.id}`,
+            about:
+              'This is a TensorFeed data attestation: an Ed25519-signed record of a premium API response, persisted by the paying agent as a third-party-checkable citation.',
+          },
+          200,
+          300,
+        );
+      }
     }
 
     // === AFTA: RECEIPT VERIFY (free, public) ===

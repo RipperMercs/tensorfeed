@@ -2589,6 +2589,49 @@ export default function AgentPaymentsPage() {
         </div>
       </section>
 
+      {/* Data attestations */}
+      <section className="mb-10" id="attestations">
+        <div className="bg-bg-secondary border border-border rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Data Attestations (public citations)</h2>
+          <p className="text-text-secondary text-sm mb-3">
+            A receipt proves the response to <span className="text-text-primary">you</span>. An attestation proves
+            it to <span className="text-text-primary">anyone</span>: add{' '}
+            <code className="text-accent-primary font-mono">?attest=store</code> (or header{' '}
+            <code className="text-accent-primary font-mono">X-Attest: store</code>) to any premium call and
+            TensorFeed persists the signed receipt for 90 days under a public id. Hand that id to your principal,
+            a counterparty, or an audit process; they verify the citation directly against TensorFeed without
+            trusting your copy of the bytes.
+          </p>
+          <ul className="text-text-secondary text-sm space-y-2 mb-3">
+            <li>
+              Surcharge: <span className="text-text-primary font-mono">1 credit ($0.02)</span> on top of the
+              endpoint&apos;s normal cost, debited only when storage succeeds. The response gains an{' '}
+              <code className="text-accent-primary font-mono">attestation</code> block with the id and URLs.
+            </li>
+            <li>
+              Fetch: <code className="text-accent-primary font-mono">GET /api/attest/{'{id}'}</code> (free, no
+              auth). Human view: <code className="text-accent-primary font-mono">/attest?id={'{id}'}</code>.
+              Signature check: the existing free{' '}
+              <code className="text-accent-primary font-mono">POST /api/receipt/verify</code>.
+            </li>
+            <li>
+              Only calls that actually debited credits can be attested. Free-trial calls and AFTA no-charge
+              outcomes return an{' '}
+              <code className="text-accent-primary font-mono">attestation_unavailable</code> reason instead of
+              charging the surcharge.
+            </li>
+            <li>
+              Pair with <code className="text-accent-primary font-mono">X-Agent-Nonce</code> to bind the stored
+              citation to your specific request.
+            </li>
+          </ul>
+          <p className="text-text-muted text-sm">
+            Attestations expire after 90 days; re-attest with a fresh call when a longer trail is needed. Ids look
+            like <code className="font-mono">att_9f2c1a7b3e5d4f60</code>.
+          </p>
+        </div>
+      </section>
+
       {/* Rate limit */}
       <section className="mb-10" id="rate-limits">
         <div className="bg-bg-secondary border border-border rounded-xl p-5">

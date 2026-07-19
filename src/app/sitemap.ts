@@ -247,6 +247,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/mcp`, lastModified: now, changeFrequency: 'daily', priority: 0.95 },
     { url: `${baseUrl}/x402-registry`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${baseUrl}/agent-fair-trade`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/attest`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/afta-network`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${baseUrl}/afta-certified`, lastModified: now, changeFrequency: 'monthly', priority: 0.85 },
     { url: `${baseUrl}/pricing/packs`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
