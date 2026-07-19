@@ -352,6 +352,15 @@ import {
   attestationBlock,
   ATTEST_SURCHARGE_CREDITS,
 } from './attest';
+import {
+  TIME_MACHINE_DOMAINS,
+  isTimeMachineDomain,
+  isValidTimeMachineDate,
+  getTimeMachineCoverage,
+  readTimeMachineDomain,
+  readTimeMachineAll,
+  MIN_DOMAINS_FOR_CHARGE,
+} from './time-machine';
 import { checkStaleness, resolveSLA, describeSLAs, responseFreshnessBlock } from './freshness';
 import { recordPollRun, checkNewsStaleness, alertStaleNews, sendDailySummary, getAlertsStatus } from './alerts';
 import {
@@ -5061,6 +5070,12 @@ export default {
           paymentRevoke: 'POST /api/payment/revoke',
           paymentNoChargeStats: '/api/payment/no-charge-stats',
           receiptVerify: '/api/receipt/verify',
+          timeMachineCoverage:
+            '/api/time-machine/coverage (free; per-domain earliest/latest captured date and day count for the Time Machine replay corpus: pricing, models, benchmarks, status, news, gpu, kev. The discovery sibling for the premium point-in-time endpoints. Cached 1h.)',
+          premiumTimeMachine:
+            '/api/premium/time-machine/{dataset}?date=YYYY-MM-DD (1 credit, AFTA-signed, strict-premium; one dataset exactly as captured on that UTC date. Datasets: pricing, models, benchmarks, status, news (with clusters), gpu, kev. Missing date = empty_result no-charge with the live coverage range.)',
+          premiumTimeMachineAll:
+            '/api/premium/time-machine/all?date=YYYY-MM-DD (5 credits, AFTA-signed, strict-premium; the state of the AI stack on one date in one call: every domain for that UTC date. Charged only when at least 3 domains resolve, else empty_result no-charge.)',
           attestFetch:
             '/api/attest/{id} (free; fetch a stored data attestation: the Ed25519-signed receipt a paying agent persisted as a public citation via ?attest=store on any premium call. Ids look like att_ plus 16 hex. Human view at /attest?id=. Verify the embedded receipt via POST /api/receipt/verify.)',
           attestStore:
@@ -8942,6 +8957,149 @@ export default {
         request,
         env,
       );
+    }
+
+    // === TIME MACHINE: FREE COVERAGE MAP (cached 1h) ===
+    // The discovery sibling for the strict-premium replay endpoints
+    // below: per-domain earliest/latest captured date and day count, so
+    // an agent can plan point-in-time queries (and watch the moat grow)
+    // before paying. Coverage only ever expands; 1h edge cache keeps
+    // the 4 index reads per hour, not per request.
+    if (path === '/api/time-machine/coverage') {
+      const coverage = await getTimeMachineCoverage(env);
+      return jsonResponse(
+        {
+          ...coverage,
+          premium: {
+            single_domain: '/api/premium/time-machine/{domain}?date=YYYY-MM-DD (1 credit)',
+            composite: '/api/premium/time-machine/all?date=YYYY-MM-DD (5 credits, every domain in one call)',
+            domains: TIME_MACHINE_DOMAINS,
+          },
+        },
+        200,
+        3600,
+      );
+    }
+
+    // === TIME MACHINE: POINT-IN-TIME REPLAY (strict premium) ===
+    // "What did the AI stack look like on date D." Pure read layer over
+    // the dated snapshot keys captured daily since late April 2026; the
+    // corpus cannot be backfilled by a competitor, which makes these
+    // the most direct moat-monetizing endpoints in the catalog. A
+    // missing date is an AFTA empty_result no-charge whose body carries
+    // the domain's live coverage range. Historical data is immutable,
+    // so no freshness SLA applies; captured_at on the receipt is the
+    // snapshot's ORIGINAL capture time, which composes with
+    // ?attest=store into a durable signed citation of a historical fact.
+    if (path === '/api/premium/time-machine/all' && request.method === 'GET') {
+      // Composite envelope, tier 3 (5 credits): every domain for one
+      // date in one call. Charged only when at least
+      // MIN_DOMAINS_FOR_CHARGE domains resolve.
+      const payment = await requirePayment(request, env, 3);
+      if (!payment.paid) return payment.response!;
+
+      const dateParam = (url.searchParams.get('date') ?? '').trim();
+      if (!isValidTimeMachineDate(dateParam)) {
+        return await premiumValidationFailure(
+          {
+            ok: false,
+            error: 'invalid_date',
+            hint: 'Pass ?date=YYYY-MM-DD (UTC, not in the future). Coverage ranges: /api/time-machine/coverage',
+          },
+          payment,
+          request,
+          env,
+        );
+      }
+
+      const all = await readTimeMachineAll(env, dateParam);
+      const body = {
+        ok: true,
+        ...all,
+        coverage_note: 'TensorFeed daily capture, running since 2026-04. Free coverage map: /api/time-machine/coverage',
+      };
+      if (all.resolved < MIN_DOMAINS_FOR_CHARGE) {
+        // Not enough of the stack existed on that date to be worth
+        // charging for; serve what there is as a free empty_result.
+        return await premiumResponse(body, payment, 5, request, env, 'empty_result', all.captured_at);
+      }
+      ctx.waitUntil(
+        logPremiumUsage(env, '/api/premium/time-machine/all', request.headers.get('User-Agent') || 'unknown', 5, payment.token, payment.payerWallet, payment),
+      );
+      return await premiumResponse(body, payment, 5, request, env, null, all.captured_at);
+    }
+
+    {
+      const tmMatch = path.match(/^\/api\/premium\/time-machine\/([a-z-]+)$/);
+      if (tmMatch && request.method === 'GET') {
+        const domainParam = tmMatch[1];
+        if (!isTimeMachineDomain(domainParam)) {
+          return jsonResponse(
+            {
+              ok: false,
+              error: 'unknown_dataset',
+              datasets: [...TIME_MACHINE_DOMAINS, 'all'],
+              coverage: '/api/time-machine/coverage',
+            },
+            404,
+            60,
+          );
+        }
+        // Single dataset, tier 2 (1 credit).
+        const payment = await requirePayment(request, env, 2);
+        if (!payment.paid) return payment.response!;
+
+        const dateParam = (url.searchParams.get('date') ?? '').trim();
+        if (!isValidTimeMachineDate(dateParam)) {
+          return await premiumValidationFailure(
+            {
+              ok: false,
+              error: 'invalid_date',
+              hint: 'Pass ?date=YYYY-MM-DD (UTC, not in the future). Coverage ranges: /api/time-machine/coverage',
+            },
+            payment,
+            request,
+            env,
+          );
+        }
+
+        const read = await readTimeMachineDomain(env, domainParam, dateParam);
+        if (!read.ok) {
+          return await premiumResponse(
+            {
+              ok: false,
+              error: 'date_not_captured',
+              domain: read.domain,
+              as_of: read.as_of,
+              coverage: read.coverage,
+              hint: 'This domain has no snapshot for that date. The coverage range shows what exists; /api/time-machine/coverage is free.',
+            },
+            payment,
+            1,
+            request,
+            env,
+            'empty_result',
+          );
+        }
+        ctx.waitUntil(
+          logPremiumUsage(env, '/api/premium/time-machine/{dataset}', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
+        );
+        return await premiumResponse(
+          {
+            ok: true,
+            domain: read.domain,
+            as_of: read.as_of,
+            snapshot: read.snapshot,
+            coverage_note: 'TensorFeed daily capture, running since 2026-04. Free coverage map: /api/time-machine/coverage',
+          },
+          payment,
+          1,
+          request,
+          env,
+          null,
+          read.captured_at,
+        );
+      }
     }
 
     if (path === '/api/premium/history/pricing/series') {

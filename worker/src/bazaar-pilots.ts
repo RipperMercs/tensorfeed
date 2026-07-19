@@ -7761,6 +7761,119 @@ const MERCHANT_LEGITIMACY_PILOT: BazaarPilotConfig = {
   },
 };
 
+const TIME_MACHINE_DATASET_PILOT: BazaarPilotConfig = {
+  description:
+    'Point-in-time replay of one AI-stack dataset. Pass a dataset (pricing, models, benchmarks, status, news, gpu, kev) and a UTC date, get that dataset exactly as TensorFeed captured it that day. Dated daily corpus running since late April 2026; historical snapshots are immutable and cannot be backfilled by anyone starting later. Missing dates are a free empty_result carrying the live coverage range. Free coverage map at /api/time-machine/coverage.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { date: '2026-06-01' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            domain: 'pricing',
+            as_of: '2026-06-01',
+            snapshot: {
+              date: '2026-06-01',
+              type: 'pricing',
+              capturedAt: '2026-06-01T00:05:00Z',
+              data: { models: [{ model: 'Claude Opus 4.7', provider: 'anthropic', input_per_1m: 15, output_per_1m: 75 }] },
+            },
+            billing: { credits_charged: 1, credits_remaining: 49 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  date: {
+                    type: 'string',
+                    description: 'UTC date to replay, YYYY-MM-DD, not in the future. Required. Coverage ranges at the free /api/time-machine/coverage.',
+                  },
+                },
+                required: ['date'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
+const TIME_MACHINE_ALL_PILOT: BazaarPilotConfig = {
+  description:
+    'The state of the AI stack on one date, in one call. Pass a UTC date and get every Time Machine dataset (model pricing, model catalog, benchmarks, provider status, the news corpus with source-corroboration clusters, GPU pricing, KEV additions) exactly as captured that day. Charged only when at least 3 datasets resolve; otherwise a free empty_result with per-dataset coverage. The backtesting and audit-reconstruction endpoint: what was known, when.',
+  extension: {
+    bazaar: {
+      info: {
+        input: {
+          type: 'http',
+          method: 'GET',
+          queryParams: { date: '2026-06-01' },
+        },
+        output: {
+          type: 'json',
+          example: {
+            ok: true,
+            as_of: '2026-06-01',
+            resolved: 7,
+            partial: false,
+            domains: { pricing: {}, models: {}, benchmarks: {}, status: {}, news: {}, gpu: {}, kev: {} },
+            missing: [],
+            billing: { credits_charged: 5, credits_remaining: 45 },
+          },
+        },
+      },
+      schema: {
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        type: 'object',
+        properties: {
+          input: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', const: 'http' },
+              method: { type: 'string', enum: ['GET'] },
+              queryParams: {
+                type: 'object',
+                properties: {
+                  date: {
+                    type: 'string',
+                    description: 'UTC date to replay, YYYY-MM-DD, not in the future. Required. Coverage ranges at the free /api/time-machine/coverage.',
+                  },
+                },
+                required: ['date'],
+              },
+            },
+            required: ['type', 'method'],
+            additionalProperties: false,
+          },
+          output: { type: 'object', properties: { type: { type: 'string' }, example: { type: 'object' } }, required: ['type'] },
+        },
+        required: ['input'],
+      },
+    },
+  },
+};
+
 const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/whats-new': WHATS_NEW_PILOT,
   '/api/premium/routing': ROUTING_PILOT,
@@ -7971,6 +8084,11 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   // verdict for AI commerce agents (param-required ?domain=). Free taste at
   // /api/preview/merchant/legitimacy.
   '/api/premium/merchant/legitimacy': MERCHANT_LEGITIMACY_PILOT,
+  // Wave 20 moat (2026-07-18): Time Machine point-in-time replay. The exact
+  // 'all' key is checked before templates in getBazaarPilotConfig, so the
+  // composite gets its own catalog row instead of collapsing into :dataset.
+  '/api/premium/time-machine/:dataset': TIME_MACHINE_DATASET_PILOT,
+  '/api/premium/time-machine/all': TIME_MACHINE_ALL_PILOT,
 };
 
 // Template-match helper. Splits both paths on '/' and matches segment-by-

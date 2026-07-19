@@ -64,6 +64,31 @@ export interface PremiumEndpoint {
 export const PREMIUM_CATALOG: PremiumEndpoint[] = [
   // === HISTORY ===
   {
+    path: '/api/premium/time-machine/{dataset}',
+    credits: 1,
+    strict_premium: true,
+    params: [
+      { name: 'dataset', required: true },
+      { name: 'date', required: true },
+    ],
+    returns:
+      'Point-in-time replay: one domain (pricing, models, benchmarks, status, news, gpu, kev) exactly as captured on the given UTC date. Immutable historical snapshot; missing dates are an empty_result no-charge carrying the live coverage range.',
+    free_sibling: '/api/time-machine/coverage',
+    signed: true,
+    category: 'history',
+  },
+  {
+    path: '/api/premium/time-machine/all',
+    credits: 5,
+    strict_premium: true,
+    params: [{ name: 'date', required: true }],
+    returns:
+      'The state of the AI stack on one date, in one call: every time-machine domain (pricing, models, benchmarks, status, news with clusters, gpu, kev) for the given UTC date. Charged only when at least 3 domains resolve; otherwise empty_result no-charge with per-domain coverage.',
+    free_sibling: '/api/time-machine/coverage',
+    signed: true,
+    category: 'history',
+  },
+  {
     path: '/api/premium/history/pricing/series',
     credits: 1,
     strict_premium: true,

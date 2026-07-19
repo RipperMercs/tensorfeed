@@ -296,8 +296,9 @@ describe('isStrictPremiumPath', () => {
       expect(STRICT_PREMIUM_PATHS).toHaveLength(102);
       expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(102); // no duplicates
     });
-    it('exposes 7 prefix paths (providers + clean-record pilots + ai-companies + x402-index)', () => {
-      expect(STRICT_PREMIUM_PREFIXES).toHaveLength(7);
+    it('exposes 8 prefix paths (providers + clean-record pilots + ai-companies + x402-index + time-machine)', () => {
+      expect(STRICT_PREMIUM_PREFIXES).toHaveLength(8);
+      expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/time-machine/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/providers/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/clean/cve/');
       expect(STRICT_PREMIUM_PREFIXES).toContain('/api/premium/clean/kev/');

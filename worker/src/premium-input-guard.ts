@@ -176,8 +176,39 @@ function isPresent(params: URLSearchParams, name: string): boolean {
  * set comes from the rule the caller came closest to satisfying, so the hint
  * points at the path of least effort rather than an arbitrary first rule.
  */
+/**
+ * Resolve a concrete request path to a catalog {param} template key.
+ * Segment-count exact, template segments in braces are wildcards. First
+ * template row wins; templates never overlap in the catalog today.
+ * Needed the moment a slug endpoint also has REQUIRED QUERY params
+ * (first case: /api/premium/time-machine/{dataset}?date=), because the
+ * request path arrives concrete while the guard table is keyed by the
+ * catalog template.
+ */
+function templateKeyFor(path: string): string | null {
+  const pathSegs = path.split('/');
+  for (const key of Object.keys(PREMIUM_REQUIRED_PARAMS)) {
+    if (!key.includes('{')) continue;
+    const tmplSegs = key.split('/');
+    if (tmplSegs.length !== pathSegs.length) continue;
+    let match = true;
+    for (let i = 0; i < tmplSegs.length; i++) {
+      if (tmplSegs[i].startsWith('{') && tmplSegs[i].endsWith('}')) continue;
+      if (tmplSegs[i] !== pathSegs[i]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return key;
+  }
+  return null;
+}
+
 export function checkPremiumInput(path: string, params: URLSearchParams): PremiumInputCheck {
-  const spec = PREMIUM_REQUIRED_PARAMS[path];
+  const spec = PREMIUM_REQUIRED_PARAMS[path] ?? (() => {
+    const tmpl = templateKeyFor(path);
+    return tmpl ? PREMIUM_REQUIRED_PARAMS[tmpl] : undefined;
+  })();
   if (!spec) return { ok: true };
 
   let best: string[] | null = null;

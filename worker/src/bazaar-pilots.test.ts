@@ -192,6 +192,11 @@ const PILOT_PATHS = [
   // Wave 48 (2026-07-09): cve-check (first POST pilot). Paste a lockfile, get
   // the stack-safety deploy gate over the whole stack, AFTA-signed.
   '/api/premium/cve-check',
+  // Wave 20 moat (2026-07-18): Time Machine point-in-time replay. Single
+  // dataset (template) + full-stack composite (exact 'all' key wins over
+  // the template in getBazaarPilotConfig).
+  '/api/premium/time-machine/:dataset',
+  '/api/premium/time-machine/all',
 ] as const;
 
 // Concrete request paths that should match a Wave 14 template.

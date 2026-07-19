@@ -27970,6 +27970,314 @@
      }
     }
    }
+  },
+  {
+   "resource": {
+    "url": "https://tensorfeed.ai/api/premium/time-machine/:dataset",
+    "description": "Point-in-time replay of one AI-stack dataset. Pass a dataset (pricing, models, benchmarks, status, news, gpu, kev) and a UTC date, get that dataset exactly as TensorFeed captured it that day. Dated daily corpus running since late April 2026; historical snapshots are immutable and cannot be backfilled by anyone starting later. Missing dates are a free empty_result carrying the live coverage range. Free coverage map at /api/time-machine/coverage.",
+    "mimeType": "application/json"
+   },
+   "type": "http",
+   "method": "GET",
+   "x402Version": 2,
+   "accepts": [
+    {
+     "scheme": "exact",
+     "network": "eip155:8453",
+     "amount": "20000",
+     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+     "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "name": "USD Coin",
+      "version": "2"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "date": "2026-06-01"
+       }
+      }
+     }
+    },
+    {
+     "scheme": "exact",
+     "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+     "amount": "20000",
+     "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+     "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "feePayer": "GVJJ7rdGiXr5xaYbRwRbjfaJL7fmwRygFi1H6aGqDveb"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "date": "2026-06-01"
+       }
+      }
+     }
+    }
+   ],
+   "lastUpdated": "2026-07-19T00:00:00Z",
+   "metadata": {
+    "name": "Time Machine: single dataset",
+    "description": "Point-in-time replay of one AI-stack dataset. Pass a dataset (pricing, models, benchmarks, status, news, gpu, kev) and a UTC date, get that dataset exactly as TensorFeed captured it that day. Dated daily corpus running since late April 2026; historical snapshots are immutable and cannot be backfilled by anyone starting later. Missing dates are a free empty_result carrying the live coverage range. Free coverage map at /api/time-machine/coverage.",
+    "tier": 1,
+    "credits": 1,
+    "category": "ai-history-replay"
+   },
+   "extensions": {
+    "bazaar": {
+     "info": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "date": "2026-06-01"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "domain": "pricing",
+        "as_of": "2026-06-01",
+        "snapshot": {
+         "date": "2026-06-01",
+         "type": "pricing",
+         "capturedAt": "2026-06-01T00:05:00Z",
+         "data": {
+          "models": [
+           {
+            "model": "Claude Opus 4.7",
+            "provider": "anthropic",
+            "input_per_1m": 15,
+            "output_per_1m": 75
+           }
+          ]
+         }
+        },
+        "billing": {
+         "credits_charged": 1,
+         "credits_remaining": 49
+        }
+       }
+      }
+     },
+     "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+       "input": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string",
+          "const": "http"
+         },
+         "method": {
+          "type": "string",
+          "enum": [
+           "GET"
+          ]
+         },
+         "queryParams": {
+          "type": "object",
+          "properties": {
+           "date": {
+            "type": "string",
+            "description": "UTC date to replay, YYYY-MM-DD, not in the future. Required. Coverage ranges at the free /api/time-machine/coverage."
+           }
+          },
+          "required": [
+           "date"
+          ]
+         }
+        },
+        "required": [
+         "type",
+         "method"
+        ],
+        "additionalProperties": false
+       },
+       "output": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string"
+         },
+         "example": {
+          "type": "object"
+         }
+        },
+        "required": [
+         "type"
+        ]
+       }
+      },
+      "required": [
+       "input"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "resource": {
+    "url": "https://tensorfeed.ai/api/premium/time-machine/all",
+    "description": "The state of the AI stack on one date, in one call. Pass a UTC date and get every Time Machine dataset (model pricing, model catalog, benchmarks, provider status, the news corpus with source-corroboration clusters, GPU pricing, KEV additions) exactly as captured that day. Charged only when at least 3 datasets resolve; otherwise a free empty_result with per-dataset coverage. The backtesting and audit-reconstruction endpoint: what was known, when.",
+    "mimeType": "application/json"
+   },
+   "type": "http",
+   "method": "GET",
+   "x402Version": 2,
+   "accepts": [
+    {
+     "scheme": "exact",
+     "network": "eip155:8453",
+     "amount": "100000",
+     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+     "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "name": "USD Coin",
+      "version": "2"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "date": "2026-06-01"
+       }
+      }
+     }
+    },
+    {
+     "scheme": "exact",
+     "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+     "amount": "100000",
+     "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+     "payTo": "B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ",
+     "maxTimeoutSeconds": 60,
+     "extra": {
+      "feePayer": "GVJJ7rdGiXr5xaYbRwRbjfaJL7fmwRygFi1H6aGqDveb"
+     },
+     "outputSchema": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "date": "2026-06-01"
+       }
+      }
+     }
+    }
+   ],
+   "lastUpdated": "2026-07-19T00:00:00Z",
+   "metadata": {
+    "name": "Time Machine: full AI stack",
+    "description": "The state of the AI stack on one date, in one call. Pass a UTC date and get every Time Machine dataset (model pricing, model catalog, benchmarks, provider status, the news corpus with source-corroboration clusters, GPU pricing, KEV additions) exactly as captured that day. Charged only when at least 3 datasets resolve; otherwise a free empty_result with per-dataset coverage. The backtesting and audit-reconstruction endpoint: what was known, when.",
+    "tier": 1,
+    "credits": 5,
+    "category": "ai-history-replay"
+   },
+   "extensions": {
+    "bazaar": {
+     "info": {
+      "input": {
+       "type": "http",
+       "method": "GET",
+       "queryParams": {
+        "date": "2026-06-01"
+       }
+      },
+      "output": {
+       "type": "json",
+       "example": {
+        "ok": true,
+        "as_of": "2026-06-01",
+        "resolved": 7,
+        "partial": false,
+        "domains": {
+         "pricing": {},
+         "models": {},
+         "benchmarks": {},
+         "status": {},
+         "news": {},
+         "gpu": {},
+         "kev": {}
+        },
+        "missing": [],
+        "billing": {
+         "credits_charged": 5,
+         "credits_remaining": 45
+        }
+       }
+      }
+     },
+     "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+       "input": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string",
+          "const": "http"
+         },
+         "method": {
+          "type": "string",
+          "enum": [
+           "GET"
+          ]
+         },
+         "queryParams": {
+          "type": "object",
+          "properties": {
+           "date": {
+            "type": "string",
+            "description": "UTC date to replay, YYYY-MM-DD, not in the future. Required. Coverage ranges at the free /api/time-machine/coverage."
+           }
+          },
+          "required": [
+           "date"
+          ]
+         }
+        },
+        "required": [
+         "type",
+         "method"
+        ],
+        "additionalProperties": false
+       },
+       "output": {
+        "type": "object",
+        "properties": {
+         "type": {
+          "type": "string"
+         },
+         "example": {
+          "type": "object"
+         }
+        },
+        "required": [
+         "type"
+        ]
+       }
+      },
+      "required": [
+       "input"
+      ]
+     }
+    }
+   }
   }
  ],
  "freeEndpoints": [
@@ -28041,5 +28349,5 @@
    "manifest": "https://github.com/RipperMercs/tensorfeed/blob/main/mcp-server/server.json"
   }
  ],
- "lastUpdated": "2026-07-09T00:00:00Z"
+ "lastUpdated": "2026-07-19T00:00:00Z"
 }

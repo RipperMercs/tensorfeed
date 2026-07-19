@@ -194,6 +194,10 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   // Wave 47 (2026-06-28): merchant/legitimacy. Signed merchant-domain legitimacy
   // verdict for AI commerce agents (param-required ?domain=).
   '/api/premium/merchant/legitimacy':                { name: 'Merchant legitimacy verdict',            category: 'merchant',                credits: 1, method: 'GET' },
+  // Wave 20 moat (2026-07-18): Time Machine point-in-time replay of the
+  // dated snapshot corpus (unbackfillable; daily since late April 2026).
+  '/api/premium/time-machine/:dataset':              { name: 'Time Machine: single dataset',           category: 'ai-history-replay',       credits: 1, method: 'GET' },
+  '/api/premium/time-machine/all':                   { name: 'Time Machine: full AI stack',            category: 'ai-history-replay',       credits: 5, method: 'GET' },
 };
 
 // ── Latin1 hygiene ─────────────────────────────────────────────────

@@ -37,6 +37,9 @@ function pathParamNames(path: string): string[] {
 }
 const SYNTH_PATH_VALUE: Record<string, string> = {
   ticker: 'nvda',
+  // time-machine/{dataset}: must be a real dataset name so the request
+  // routes past the unknown_dataset 404 and reaches the payment gate.
+  dataset: 'pricing',
   provider: 'anthropic',
   company: 'anthropic',
   domain: 'example.com',

@@ -455,6 +455,13 @@ export const STRICT_PREMIUM_PREFIXES: ReadonlyArray<string> = [
   '/api/premium/x402-index/',
   // Wave 29 (2026-05-30): per-series economic history (parametric source/id).
   // Param-required, so strict gates anonymous crawlers to a clean 402.
+  // Wave 20 moat (2026-07-18): Time Machine point-in-time replay. Full
+  // historical snapshots are the moat itself (unbackfillable dated
+  // corpus); the free discovery sibling is /api/time-machine/coverage,
+  // so "try before buy" adds no signal the coverage map does not give.
+  // Domain is a required path segment, so strict also keeps anonymous
+  // Bazaar crawler probes on the clean 402 they need for cataloging.
+  '/api/premium/time-machine/',
 ];
 
 /**
