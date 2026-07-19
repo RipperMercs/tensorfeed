@@ -94,7 +94,7 @@ describe('captureKEV', () => {
     globalThis.fetch = originalFetch;
   });
 
-  it('writes the full catalog and harvests today-added entries', async () => {
+  it('writes the full catalog and harvests the trailing window of added entries', async () => {
     globalThis.fetch = (async () => ({ ok: true, status: 200, json: async () => SAMPLE_CATALOG })) as unknown as typeof globalThis.fetch;
 
     const result = await captureKEV(env, new Date('2026-05-08T20:00:00Z'));
@@ -110,8 +110,26 @@ describe('captureKEV', () => {
     expect(added.length).toBe(1);
     expect(added[0].cveID).toBe('CVE-2026-42208');
 
+    // The 2026-05-07 entry falls inside the 7-day harvest window too.
     const dates = await listKEVAddedDates(env);
-    expect(dates).toEqual(['2026-05-08']);
+    expect(dates).toEqual(['2026-05-07', '2026-05-08']);
+  });
+
+  it('harvests entries CISA published after the cron ran on their dateAdded (the 06:30 UTC lag)', async () => {
+    // Production bug found 2026-07-18: the cron fires at 06:30 UTC but
+    // CISA publishes later in the day, so an entry dated D first appears
+    // in the feed AFTER the run on D, and the old dateAdded === today
+    // filter never harvested anything. A run on D+1 must pick it up.
+    globalThis.fetch = (async () => ({ ok: true, status: 200, json: async () => SAMPLE_CATALOG })) as unknown as typeof globalThis.fetch;
+
+    const result = await captureKEV(env, new Date('2026-05-09T06:30:00Z'));
+    expect(result.ok).toBe(true);
+    expect(result.newly_added_today).toBe(0);
+
+    const added = await readKEVAddedOnDate(env, '2026-05-08');
+    expect(added.length).toBe(1);
+    const dates = await listKEVAddedDates(env);
+    expect(dates).toEqual(['2026-05-07', '2026-05-08']);
   });
 
   it('writes meta with the catalog version', async () => {

@@ -39,6 +39,10 @@ const KEV_ADDED_KEY = (date: string) => `kev:added:${date}`;
 const KEV_ADDED_INDEX = 'kev:added:index';
 const KEV_META_KEY = 'kev:meta';
 const INDEX_CAP_DAYS = 730;
+// How many trailing days each cron run re-harvests into kev:added:{date}.
+// Covers CISA's publish-time lag past the 06:30 UTC cron plus several
+// days of cron-outage slack.
+const HARVEST_WINDOW_DAYS = 7;
 
 const ATTRIBUTION = {
   source: 'CISA Known Exploited Vulnerabilities Catalog',
@@ -155,10 +159,23 @@ export async function captureKEV(env: Env, now: Date = new Date()): Promise<KEVC
 
   await env.TENSORFEED_CACHE.put(KEV_CURRENT_KEY, JSON.stringify(catalog));
 
+  // Harvest a trailing window, not just today. The cron fires at 06:30
+  // UTC while CISA publishes during US Eastern business hours, so
+  // entries dated day D are not in the feed at 06:30 on D, and the old
+  // dateAdded === today filter had permanently moved on by the next
+  // run: NO kev:added:{date} key was ever written in production
+  // (discovered 2026-07-18 when Time Machine coverage read 0 days).
+  // Re-writing a past date is idempotent: a date's entry set is stable
+  // in the feed once published. Worst case is HARVEST_WINDOW_DAYS
+  // writes per run; in practice only 1 or 2 dates have entries.
   const addedToday = catalog.vulnerabilities.filter((v) => v.dateAdded === today);
-  if (addedToday.length > 0) {
-    await env.TENSORFEED_CACHE.put(KEV_ADDED_KEY(today), JSON.stringify(addedToday));
-    await ensureDateInIndex(env, today);
+  for (let i = 0; i < HARVEST_WINDOW_DAYS; i++) {
+    const d = todayUTC(new Date(now.getTime() - i * 24 * 60 * 60 * 1000));
+    const added = i === 0 ? addedToday : catalog.vulnerabilities.filter((v) => v.dateAdded === d);
+    if (added.length > 0) {
+      await env.TENSORFEED_CACHE.put(KEV_ADDED_KEY(d), JSON.stringify(added));
+      await ensureDateInIndex(env, d);
+    }
   }
 
   await env.TENSORFEED_CACHE.put(
