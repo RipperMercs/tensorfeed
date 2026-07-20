@@ -263,7 +263,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     strict_premium: true,
     params: [{ name: 'lockfile', required: true }],
     returns:
-      'BLOCK/HOLD/PASS deploy gate for a pasted lockfile (requirements.txt, package.json, package-lock.json, poetry.lock), fusing the AI-CVE batch and CISA KEV, with pinned versions checked against advisory ranges and an AFTA-signed receipt.',
+      'BLOCK/HOLD/PASS deploy gate for a pasted lockfile (requirements.txt, package.json, package-lock.json, poetry.lock), fusing the AI-CVE batch and CISA KEV, with pinned versions checked against advisory ranges and an AFTA-signed receipt. Pass ?since=<cursor> from a prior paid audit to re-check the same lockfile; an unchanged re-audit is free (no charge), and every paid response returns a cursor.',
     free_sibling: '/api/preview/cve-check',
     signed: true,
     category: 'verdict',
