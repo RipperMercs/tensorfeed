@@ -374,6 +374,13 @@ import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
 import { backupKvToR2, backupNamespaceChunk, getBackupHealth, listRecentBackups, readManifest } from './backup';
 import { buildSuggestedNextCalls } from './suggested-next';
+import {
+  DELTA_CURSOR_VERSION,
+  decodeDeltaCursor,
+  encodeDeltaCursor,
+  gateDeltaCursor,
+  buildDeltaContinuation,
+} from './delta-cursor';
 import { deleteWantlistItem, listWantlist, listWantlistForAdmin, submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
 import { getGhsaAiFeed, refreshGhsaAiFeed } from './ghsa-ai-feed';
@@ -1197,6 +1204,21 @@ async function premiumValidationFailure(
 // index.ts. logPremiumUsage is imported above; the two settle functions are
 // hoisted declarations.
 const PREMIUM_DEPS = { premiumResponse, premiumValidationFailure, logPremiumUsage };
+
+// Stable identity hash of a parsed lockfile: SHA-256 of the sorted name@version
+// list. Reformatting the same lockfile does not change it; a genuinely
+// different stack does. Binds a cve-check delta cursor to its stack so a
+// different lockfile can never earn a wrong free poll.
+async function lockfileIdentityHash(packages: { name: string; version: string | null }[]): Promise<string> {
+  const norm = packages.map((p) => `${p.name}@${p.version ?? ''}`).sort().join('\n');
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(norm));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+const CVE_CHECK_NEXT_CHECK_HINT = {
+  suggested_recheck_seconds: 86400,
+  reason: 'The AI-stack CVE batch refreshes roughly daily; re-poll then.',
+} as const;
 
 // ─────────────────────────────────────────────────────────────────────
 
@@ -8539,13 +8561,49 @@ export default {
       // exactly as it does for stack-safety-verdict.
       const result = { ...verdict, format: parsed.format, truncated: parsed.truncated };
 
+      // Delta cursor loop: re-POST the same lockfile with ?since=<cursor> to
+      // re-audit for free until a new ai-cves batch lands for your stack. The
+      // no-charge body carries counts + the gate letter only, never the
+      // matched-CVE evidence (that ships on the charged path). A malformed,
+      // future, or wrong-stack cursor degrades to a full charged audit.
+      const url2 = new URL(request.url);
+      const sinceRaw = url2.searchParams.get('since');
+      const cursor = sinceRaw ? decodeDeltaCursor(sinceRaw, DELTA_CURSOR_VERSION) : null;
+      const stackKey = await lockfileIdentityHash(parsed.packages);
+      const outcome = cursor
+        ? gateDeltaCursor({ resultCap: verdict.capturedAt, cursorCap: cursor.cap, resultKey: stackKey, cursorKey: cursor.key })
+        : 'full';
+      const freshCursor = encodeDeltaCursor(DELTA_CURSOR_VERSION, verdict.capturedAt, stackKey);
+      const continuation = buildDeltaContinuation(
+        'POST',
+        '/api/premium/cve-check',
+        freshCursor,
+        'Re-POST the same lockfile with this cursor; free unless a new CVE batch has landed for your stack.',
+      );
+
+      if (outcome === 'no_charge') {
+        const body = {
+          ok: true,
+          changed: false,
+          gate: result.gate,
+          counts: result.counts,
+          format: result.format,
+          batch_captured_at: verdict.capturedAt,
+          cursor: freshCursor,
+          continuation,
+          next_check_hint: CVE_CHECK_NEXT_CHECK_HINT,
+        };
+        return await premiumResponse(body, payment, 50, request, env, 'no_new_since_cursor', verdict.capturedAt);
+      }
+
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/cve-check', request.headers.get('User-Agent') || 'unknown', 50, payment.token, payment.payerWallet),
       );
       // Policy (Evan, 2026-07-09): batch-unavailable charges as-is, same as
       // stack-safety-verdict above. batch_available is surfaced in the body
       // so the caller can see why everything is UNKNOWN.
-      return await premiumResponse(result, payment, 50, request, env);
+      const body = { ...result, cursor: freshCursor, continuation };
+      return await premiumResponse(body, payment, 50, request, env, null, verdict.capturedAt);
     }
 
     // === BENCHMARK TRUST VERDICT PREVIEW (free, rate-limited) ===
