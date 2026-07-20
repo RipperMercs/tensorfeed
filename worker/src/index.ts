@@ -1291,7 +1291,7 @@ async function lockfileIdentityHash(packages: { name: string; version: string | 
 
 const CVE_CHECK_NEXT_CHECK_HINT = {
   suggested_recheck_seconds: 86400,
-  reason: 'The AI-stack CVE batch refreshes roughly daily; re-poll then.',
+  reason: 'The AI-stack CVE batch refreshes on a daily to weekly cadence; re-poll daily and pay only when it advances.',
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────
