@@ -60,4 +60,8 @@ describe('buildDeltaContinuation', () => {
   it('returns null for an empty cursor', () => {
     expect(buildDeltaContinuation('POST', '/api/premium/cve-check', '', 'desc')).toBeNull();
   });
+  it('joins with & when the path already has a query string', () => {
+    const c = buildDeltaContinuation('GET', '/api/premium/x402-settlement-verdict?window=7d', 'CUR', 'd');
+    expect(c).toEqual({ method: 'GET', url: '/api/premium/x402-settlement-verdict?window=7d&since=CUR', description: 'd' });
+  });
 });
