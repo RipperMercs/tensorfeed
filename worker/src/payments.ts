@@ -3337,6 +3337,13 @@ const WHATS_NEW_POLL_HINT: PollHint = {
 const POLL_HINTS: Record<string, PollHint> = {
   '/api/premium/whats-new': WHATS_NEW_POLL_HINT,
   '/api/premium/whats-new/pro': WHATS_NEW_POLL_HINT,
+  '/api/premium/cve-check': {
+    param: 'since',
+    how: 'Re-POST the same lockfile with ?since=<cursor> using the cursor from your last paid audit.',
+    benefit:
+      'An unchanged re-audit is free: no 402, no settlement, no credit. You are billed only when a new AI-stack CVE batch has landed for your stack.',
+    cursor_lives_in: 'the `cursor` field on every paid cve-check response',
+  },
 };
 
 /** The returning-caller free-poll hint for a paid pathname, or undefined. */
