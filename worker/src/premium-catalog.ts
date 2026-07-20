@@ -242,7 +242,7 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     credits: 1,
     strict_premium: true,
     params: [{ name: 'window', required: false }],
-    returns: 'Ruling on the Base x402 USDC settlement market: momentum, concentration (HHI), and leading publisher.',
+    returns: 'Ruling on the Base x402 USDC settlement market: momentum, concentration (HHI), and leading publisher. Pass ?since=<cursor> with the same window from a prior verdict to re-poll for free; billed only when a new settlement has landed.',
     free_sibling: '/api/preview/x402-settlement-verdict',
     signed: true,
     category: 'verdict',
