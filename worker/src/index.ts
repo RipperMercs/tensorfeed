@@ -389,7 +389,7 @@ import { handlePremium } from './premium-handler';
 import { buildOfficialSurfaces } from './official-surfaces';
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
-import { backupKvToR2, listRecentBackups, readManifest } from './backup';
+import { backupKvToR2, backupNamespaceChunk, getBackupHealth, listRecentBackups, readManifest } from './backup';
 import { buildSuggestedNextCalls } from './suggested-next';
 import { deleteWantlistItem, listWantlist, listWantlistForAdmin, submitWantlistItem, WANTLIST_DEFAULTS } from './wantlist';
 import { getAiSupplyChainIocs, refreshAiSupplyChainIocs } from './ai-supply-chain-iocs';
@@ -15489,6 +15489,42 @@ export default {
     // against SHARED_INTERNAL_SECRET. NOT advertised in /api/meta,
     // /llms.txt, /api/payment/info, or any agent-facing surface.
 
+    // === INTERNAL: backup chunk (SELF fan-out) ===
+    // The daily KV->R2 backup orchestrator (backupKvToR2) calls this via
+    // the SELF service binding, once per KV list page. Every SELF call is
+    // a FRESH Worker invocation with its own ~1000-subrequest budget, so
+    // one chunk can safely walk one page (<= CHUNK_PAGE_SIZE gets) no
+    // matter how large the namespace is. This is what lets TENSORFEED_CACHE
+    // (tens of thousands of keys) actually get backed up. Authenticated by
+    // SHARED_INTERNAL_SECRET, same as the other internal endpoints. NOT in
+    // /api/meta or any agent-facing surface.
+    if (path === '/api/internal/backup-chunk') {
+      if (request.method !== 'POST') {
+        return jsonResponse({ error: 'method_not_allowed' }, 405, 0);
+      }
+      const auth = request.headers.get('X-Internal-Auth') ?? '';
+      const secret = env.SHARED_INTERNAL_SECRET ?? '';
+      if (!secret || !constantTimeEqual(auth, secret)) {
+        return jsonResponse({ error: 'unauthorized' }, 401, 0);
+      }
+      let body: { name?: unknown; date?: unknown; runId?: unknown; cursor?: unknown; partIndex?: unknown };
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ error: 'bad_json' }, 400, 0);
+      }
+      const name = typeof body?.name === 'string' ? body.name : '';
+      const date = typeof body?.date === 'string' ? body.date : '';
+      const runId = typeof body?.runId === 'string' ? body.runId : '';
+      const cursor = typeof body?.cursor === 'string' ? body.cursor : null;
+      const partIndex = Number.isInteger(body?.partIndex) ? (body.partIndex as number) : 0;
+      if (!name || !date || !runId) {
+        return jsonResponse({ error: 'bad_request' }, 400, 0);
+      }
+      const result = await backupNamespaceChunk(env, { name, date, runId, cursor, partIndex });
+      return jsonResponse(result, 200, 0);
+    }
+
     if (path === '/api/internal/validate-and-charge') {
       if (request.method !== 'POST') {
         return jsonResponse({ error: 'method_not_allowed' }, 405, 0);
@@ -15785,8 +15821,27 @@ export default {
         return jsonResponse({ ok: false, error: 'POST_required' }, 405);
       }
       try {
-        const manifest = await backupKvToR2(env, 'admin', env.ENVIRONMENT || 'unknown');
+        // The backup is resumable: an admin trigger runs within a wall-clock
+        // budget (default 70s, under the edge response deadline) and returns
+        // in_progress when the budget is hit. Re-POST to resume the same-day
+        // run until manifest.in_progress is absent and complete is true. The
+        // cron path passes no budget and completes in one invocation.
+        const budgetMs = Math.min(
+          600_000,
+          Math.max(10_000, parseInt(url.searchParams.get('budget_ms') || '70000', 10) || 70_000),
+        );
+        const manifest = await backupKvToR2(env, 'admin', env.ENVIRONMENT || 'unknown', { budgetMs });
         return jsonResponse({ ok: true, manifest }, 200, 0);
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
+    }
+
+    // /api/admin/backup/health GET &key=<ADMIN_KEY>  Last run's completeness (from backup:last)
+    if (path === '/api/admin/backup/health' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      try {
+        const health = await getBackupHealth(env);
+        return jsonResponse({ ok: true, health: health ?? null }, 200, 0);
       } catch (e) {
         return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
       }
