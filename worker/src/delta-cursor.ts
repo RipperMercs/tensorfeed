@@ -80,5 +80,6 @@ export function buildDeltaContinuation(
   description: string,
 ): DeltaContinuation | null {
   if (!cursor) return null;
-  return { method, url: `${path}?since=${cursor}`, description };
+  const sep = path.includes('?') ? '&' : '?';
+  return { method, url: `${path}${sep}since=${cursor}`, description };
 }
