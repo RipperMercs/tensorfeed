@@ -30,6 +30,7 @@ import {
   requirePayment,
   paymentRequiredResponse,
   normalizeBazaarExtensionsForCDP,
+  pollHintFor,
 } from './payments';
 import type { Env } from './types';
 import { PaymentClaim } from './payment-claim';
@@ -420,6 +421,15 @@ describe('paymentRequiredResponse Solana advertisement', () => {
     const resp = paymentRequiredResponse(makeEnv(), 1, 1, req());
     const body = (await resp.json()) as { accepts: unknown[] };
     expect(body.accepts.length).toBe(1);
+  });
+});
+
+describe('pollHintFor', () => {
+  it('advertises the cve-check free-poll loop', () => {
+    const hint = pollHintFor('/api/premium/cve-check');
+    expect(hint).toBeTruthy();
+    expect(hint!.param).toBe('since');
+    expect(hint!.how.toLowerCase()).toContain('lockfile');
   });
 });
 
