@@ -198,7 +198,46 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
     url: 'https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/',
   },
 
+  {
+    id: 'vera-rubin-r100',
+    name: 'NVIDIA Vera Rubin (R100)',
+    manufacturer: 'NVIDIA',
+    family: 'Rubin',
+    process: 'TSMC N3',
+    released: '2026',
+    memoryGB: 288,
+    memoryBandwidthTBs: 22.0,
+    fp16TFLOPS: 4000,
+    fp8TFLOPS: 17500,
+    fp4TFLOPS: 50000,
+    tdpWatts: null as unknown as number,
+    interconnect: 'NVLink + Vera CPU C2C (NVL72 rack: 260 TB/s scale-up)',
+    listPriceUSD: null,
+    availability: 'Cloud only (AWS, Azure, GCP, Oracle, CoreWeave, Lambda; deliveries begin fall 2026)',
+    notes: 'Rubin-generation flagship. 288 GB HBM4 at 22 TB/s. In full production since June 2026. FP4 and FP8 tensor core width doubled versus Blackwell; FP16 scales at 1.6x Blackwell. Ships as NVL72 (72 GPUs paired with 36 Vera CPUs). fp8TFLOPS derived from NVL72 system spec of 1,260 PFLOPS divided by 72 chips.',
+    url: 'https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/',
+  },
+
   // ── AMD ────────────────────────────────────────────────────
+  {
+    id: 'mi350x',
+    name: 'AMD MI350X',
+    manufacturer: 'AMD',
+    family: 'Instinct',
+    process: 'TSMC N3P / N6 I/O',
+    released: '2025-Q3',
+    memoryGB: 288,
+    memoryBandwidthTBs: 8.0,
+    fp16TFLOPS: 2310,
+    fp8TFLOPS: 4610,
+    fp4TFLOPS: 9230,
+    tdpWatts: 1000,
+    interconnect: 'Infinity Fabric (CDNA 4)',
+    listPriceUSD: null,
+    availability: 'Cloud (TensorWave, Vultr, Oracle, others) and direct sale',
+    notes: 'CDNA 4 architecture. 288 GB HBM3e at 8 TB/s. First AMD Instinct with native FP4 and FP6 support. Roughly 4x generational AI compute improvement over MI300X. Shipping since Q3 2025.',
+    url: 'https://www.amd.com/en/products/accelerators/instinct/mi350/mi350x.html',
+  },
   {
     id: 'mi325x',
     name: 'AMD MI325X',
@@ -276,6 +315,26 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
     availability: 'Google Cloud only',
     notes: 'TPU inference tier. Cheaper than v5p; 256-chip pods. Best fit for Google Cloud customers serving Gemini-style inference at scale.',
     url: 'https://cloud.google.com/tpu/docs/v5e',
+  },
+
+  {
+    id: 'tpu-v7',
+    name: 'Google TPU v7 (Ironwood)',
+    manufacturer: 'Google',
+    family: 'TPU',
+    process: 'TSMC N3',
+    released: '2026-04',
+    memoryGB: 192,
+    memoryBandwidthTBs: 7.38,
+    fp16TFLOPS: 2307,
+    fp8TFLOPS: 4614,
+    fp4TFLOPS: null,
+    tdpWatts: null as unknown as number,
+    interconnect: 'ICI (Inter-Chip Interconnect); 9,216-chip superpod at 42.5 ExaFLOPS FP8',
+    listPriceUSD: null,
+    availability: 'Google Cloud only (GA April 2026, Vertex AI and GCE)',
+    notes: "Google's inference-era TPU. First generation with native FP8 support. 192 GB HBM at 7.38 TB/s. fp16/fp8 from Google Cloud official docs. Anthropic committed to up to one million Ironwood chips for Claude training and serving.",
+    url: 'https://cloud.google.com/tpu/docs/tpu7x',
   },
 
   // ── AWS Trainium ──────────────────────────────────────────
@@ -401,4 +460,4 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
   },
 ];
 
-export const AI_HARDWARE_LAST_UPDATED = '2026-06-05';
+export const AI_HARDWARE_LAST_UPDATED = '2026-07-20';
