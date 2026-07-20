@@ -1294,6 +1294,11 @@ const CVE_CHECK_NEXT_CHECK_HINT = {
   reason: 'The AI-stack CVE batch refreshes on a daily to weekly cadence; re-poll daily and pay only when it advances.',
 } as const;
 
+const X402_SETTLEMENT_NEXT_CHECK_HINT = {
+  suggested_recheck_seconds: 600,
+  reason: 'The settlement index refreshes about every 5 minutes; re-poll and pay only when a new settlement lands.',
+} as const;
+
 // ─────────────────────────────────────────────────────────────────────
 
 // CreditLedger Durable Object class. Cloudflare instantiates a DO class
@@ -8098,10 +8103,49 @@ export default {
         windowParam === '24h' || windowParam === '30d' ? windowParam : '7d';
       const { computeX402SettlementVerdict } = await import('./premium-x402-settlement-verdict');
       const result = await computeX402SettlementVerdict(env, window);
+
+      // Delta cursor loop: gate on the NEWEST SETTLEMENT timestamp so an agent
+      // polling a quiet market re-checks for free until a real settlement lands.
+      // This is intentionally NOT the index captured_at (which ticks every 5 min)
+      // and NOT the windowed count (which drifts as the trailing window slides).
+      // The no-charge body carries the headline verdict only (what the free
+      // preview gives), never the paid ranking / ecosystem / hhi.
+      const { getRecent } = await import('./x402-index/query');
+      const recent = await getRecent(env, 1);
+      const settlementCap = recent.events[0]?.ts ?? null;
+      const sinceRaw = url.searchParams.get('since');
+      const cursor = sinceRaw ? decodeDeltaCursor(sinceRaw, DELTA_CURSOR_VERSION) : null;
+      const outcome = cursor
+        ? gateDeltaCursor({ resultCap: settlementCap, cursorCap: cursor.cap, resultKey: window, cursorKey: cursor.key })
+        : 'full';
+      const freshCursor = encodeDeltaCursor(DELTA_CURSOR_VERSION, settlementCap, window);
+      const continuation = buildDeltaContinuation(
+        'GET',
+        `/api/premium/x402-settlement-verdict?window=${window}`,
+        freshCursor,
+        'Call again with this cursor; free unless a new settlement has landed since this response.',
+      );
+
+      if (outcome === 'no_charge') {
+        const body = {
+          ok: true,
+          changed: false,
+          window_label: result.window_label,
+          verdict: result.verdict,
+          captured_at: result.capturedAt,
+          newest_settlement_at: settlementCap,
+          cursor: freshCursor,
+          continuation,
+          next_check_hint: X402_SETTLEMENT_NEXT_CHECK_HINT,
+        };
+        return await premiumResponse(body, payment, 1, request, env, 'no_new_since_cursor', result.capturedAt);
+      }
+
       ctx.waitUntil(
         logPremiumUsage(env, '/api/premium/x402-settlement-verdict', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
-      return await premiumResponse(result, payment, 1, request, env);
+      const body = { ...result, cursor: freshCursor, continuation };
+      return await premiumResponse(body, payment, 1, request, env, null, result.capturedAt);
     }
 
     // === PAID PREMIUM ENDPOINT: X402 PUBLISHER TRUST VERDICT (Tier 1, 1 credit) ===
