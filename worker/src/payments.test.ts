@@ -431,6 +431,13 @@ describe('pollHintFor', () => {
     expect(hint!.param).toBe('since');
     expect(hint!.how.toLowerCase()).toContain('lockfile');
   });
+
+  it('advertises the x402-settlement free-poll loop', () => {
+    const hint = pollHintFor('/api/premium/x402-settlement-verdict');
+    expect(hint).toBeTruthy();
+    expect(hint!.param).toBe('since');
+    expect(hint!.benefit.toLowerCase()).toContain('settlement');
+  });
 });
 
 describe('logPremiumUsage (per-token path)', () => {

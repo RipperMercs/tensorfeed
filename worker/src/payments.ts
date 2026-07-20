@@ -3433,6 +3433,13 @@ const POLL_HINTS: Record<string, PollHint> = {
       'An unchanged re-audit is free: no 402, no settlement, no credit. You are billed only when a new AI-stack CVE batch has landed for your stack.',
     cursor_lives_in: 'the `cursor` field on every paid cve-check response',
   },
+  '/api/premium/x402-settlement-verdict': {
+    param: 'since',
+    how: 'Call again with ?since=<cursor> and the same window, using the cursor from your last paid verdict.',
+    benefit:
+      'An unchanged poll is free: no 402, no settlement, no credit. You are billed only when a new settlement has landed since your cursor.',
+    cursor_lives_in: 'the `cursor` field on every paid x402-settlement-verdict response',
+  },
 };
 
 /** The returning-caller free-poll hint for a paid pathname, or undefined. */
