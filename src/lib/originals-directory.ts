@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'white-house-ai-finra-sec-regulator-frontier',
+    title:
+      'The White House Wants an AI FINRA. Silicon Valley Asked For It Six Days Earlier.',
+    author: 'Kira Nolan',
+    date: 'July 20, 2026',
+    readTime: '6 min read',
+    description:
+      "Bloomberg reported on Friday, July 17, 2026 that the Trump administration is weighing an independent regulator to vet frontier AI models before public release, structured on the Financial Industry Regulatory Authority, reporting into the Securities and Exchange Commission, industry funded, and gated on a voluntary 30 day pre release submission covering cyber, bio, and deception capability screens. Treasury Secretary Scott Bessent developed the plan. Chief of Staff Susie Wiles is reviewing it. Trump has not been briefed. Six days earlier, on Tuesday, July 14, Google DeepMind CEO Demis Hassabis published a manifesto asking for the same body shape for shape: US led standards board, 30 day voluntary window, cyber-bio-deception rubric, industry funded, voluntary now and mandatory once proven. The two proposals converge because the ad hoc federal export control regime that pulled Fable 5 in June and staggered GPT-5.6 by customer in the same month is unpayable across an S-1 window. Includes a side by side table of the two proposals, a walk through of why the SEC is a strange home for a capability regulator (FINRA governs market integrity, not lab benches, so the testing likely gets outsourced to AISI or accredited third parties), what industry funded self regulation costs frontier labs in fees and calendar drag versus what a surprise federal takedown costs in revenue and enterprise leverage, the trade instrument angle (an SRO whose rulebook can require US corporate presence starts to look a lot like the export controls it replaces), and the China lever (a US point of entry gate on foreign frontier models like DeepSeek and Kimi K3 without a Congressional hearing). Three signposts: whether Trump greenlights in 30 days, whether Anthropic and OpenAI and Meta issue a public endorsement, and whether the Senate response is a companion statutory bill or a jurisdictional objection from the Commerce Committee (which houses AISI and would lose oversight if the SEC becomes the front door).",
+  },
+  {
     slug: 'anthropic-meta-10b-fourth-compute-vendor',
     title:
       "Anthropic's Fourth Compute Vendor Ships Llama. Meta Just Became a Hyperscaler in the Same News Cycle.",
