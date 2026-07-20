@@ -18,18 +18,41 @@ export interface DeltaCursor {
   key: string | null;
 }
 
-/** Opaque, URL-safe base64url JSON. Payload is ASCII (ISO time, short key), so btoa is safe. */
+// Byte-level base64url helpers so a cursor payload carrying any Unicode (not
+// just Latin1) encodes without throwing. btoa alone rejects code points above
+// U+00FF, so a raw btoa(JSON.stringify(...)) would throw if a caller ever passed
+// a non-ASCII cap or key. For an ASCII payload these produce output byte for
+// byte identical to the old btoa form, so cursors issued before this change
+// still decode. Kept self-contained (no imports) to keep the module pure.
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64UrlToBytes(s: string): Uint8Array {
+  const pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
+  const b64 = (s + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+const CURSOR_ENC = new TextEncoder();
+const CURSOR_DEC = new TextDecoder();
+
+/** Opaque, URL-safe base64url JSON. UTF-8 safe: any Unicode in cap/key encodes without throwing. */
 export function encodeDeltaCursor(version: number, cap: string | null, key: string | null): string {
   const payload: DeltaCursor = { v: version, cap, key };
-  return btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return bytesToBase64Url(CURSOR_ENC.encode(JSON.stringify(payload)));
 }
 
 /** Decode a cursor. Returns null on any malformed input or version mismatch. Never throws. */
 export function decodeDeltaCursor(raw: string, expectedVersion: number): DeltaCursor | null {
   if (!raw) return null;
   try {
-    const b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
-    const obj = JSON.parse(atob(b64)) as Partial<DeltaCursor>;
+    const obj = JSON.parse(CURSOR_DEC.decode(base64UrlToBytes(raw))) as Partial<DeltaCursor>;
     if (obj.v !== expectedVersion) return null;
     if (!(obj.cap === null || typeof obj.cap === 'string')) return null;
     if (!(obj.key === null || typeof obj.key === 'string')) return null;

@@ -25,6 +25,12 @@ describe('encode/decode round-trip', () => {
     const raw = encodeDeltaCursor(DELTA_CURSOR_VERSION, '2026-07-20T00:00:00.000Z', 'k');
     expect(decodeDeltaCursor(raw, DELTA_CURSOR_VERSION + 1)).toBeNull();
   });
+  it('round-trips a key with code points above U+00FF without throwing (UTF-8 safe)', () => {
+    const key = 'stack_\u{1F512}_中'; // a lock emoji and a CJK char, both above the Latin1 range
+    const raw = encodeDeltaCursor(DELTA_CURSOR_VERSION, '2026-07-20T00:00:00.000Z', key);
+    const d = decodeDeltaCursor(raw, DELTA_CURSOR_VERSION);
+    expect(d).toEqual({ v: DELTA_CURSOR_VERSION, cap: '2026-07-20T00:00:00.000Z', key });
+  });
 });
 
 describe('gateDeltaCursor', () => {
