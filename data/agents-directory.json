@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-05",
+  "lastUpdated": "2026-07-20",
   "categories": [
     {
       "id": "coding",
@@ -207,6 +207,16 @@
       "url": "https://platform.openai.com/docs/assistants",
       "pricing": "Usage-based via OpenAI API",
       "launched": 2023
+    },
+    {
+      "id": "amazon-bedrock-agentcore",
+      "name": "Amazon Bedrock AgentCore",
+      "provider": "Amazon Web Services",
+      "category": "frameworks",
+      "description": "A managed orchestration runtime on Amazon Bedrock that handles models, tools, instructions, memory, and error recovery for production agentic workflows. Reached general availability in July 2026 with MCP Tasks and Apps extensions, enabling developers to build multi-step AI agents without managing the orchestration infrastructure.",
+      "url": "https://aws.amazon.com/bedrock/",
+      "pricing": "Usage-based via AWS",
+      "launched": 2026
     },
     {
       "id": "claude-mcp",

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-06-05T00:00:00Z",
+  "generated_at": "2026-07-20T00:00:00Z",
   "license": "TF curation CC-BY-4.0. Underlying public-record sources retain their original license.",
   "notice": "Editorial registry of disclosed major AI buildout projects. Each entry preserves canonical source URLs. Capacity, capex, and timeline figures reflect publicly announced or reported numbers at time of curation and may evolve. Status enum: announced (publicly committed, no ground broken), permitted (regulatory greenlights obtained), construction (active build), operational (online and serving traffic). Power source enum is the announced primary source; many projects mix multiple feeds.",
   "schema": {
@@ -47,9 +47,9 @@
       "capacity_mw_announced": 5000,
       "power_source": "natural gas plus grid",
       "announced_date": "2024-12-04",
-      "target_operational": "2030",
-      "capex_usd_billion": 27,
-      "context": "Meta's largest single data center campus. Originally announced December 2024 as a $10 billion independent project; restructured in October 2025 into a $27 billion joint venture with Blue Owl Capital (80% Blue Owl, 20% Meta). Up to 5 GW total capacity; Phase 1 targets 1.5 GW by late 2027, using roughly 1.3 million NVIDIA Blackwell GPUs. Entergy Louisiana is the serving utility and is building 10 gas-fired plants to serve the load.",
+      "target_operational": "2032",
+      "capex_usd_billion": 50,
+      "context": "Meta's largest single data center campus. Originally announced December 2024 as a $10 billion independent project; restructured in October 2025 into a $27 billion joint venture with Blue Owl Capital (80% Blue Owl, 20% Meta). On July 13, 2026, Meta expanded the plan to a confirmed 5 GW, $50 billion build on roughly 2,250 acres (approximately 4 million sq ft), pushing the timeline to 2032 at full build. Meta committed over $1 billion in local infrastructure including roads, water, and wastewater. Entergy Louisiana is the serving utility and is building dedicated gas-fired plants to serve the load.",
       "primary_sources": [
         "https://about.fb.com/news/2024/12/meta-establishing-louisiana-data-center/",
         "https://about.fb.com/news/2025/10/meta-blue-owl-capital-develop-hyperion-data-center/"
@@ -150,13 +150,13 @@
       "operator": "Microsoft",
       "partners": ["We Energies"],
       "location": { "city": "Mount Pleasant", "state": "Wisconsin", "country": "USA" },
-      "status": "construction",
+      "status": "operational",
       "capacity_mw_announced": null,
       "power_source": "mixed including new gas plants",
       "announced_date": "2024-03-08",
-      "target_operational": "2026",
+      "target_operational": "ongoing",
       "capex_usd_billion": 3.3,
-      "context": "Sits on the former Foxconn site. Microsoft announced an additional $3.3 billion commitment in 2024 on top of earlier phases. We Energies has separately filed for approval of two new natural gas peaker plants partly attributed to the data center load.",
+      "context": "Sits on the former Foxconn site. Microsoft announced an additional $3.3 billion commitment in 2024 on top of earlier phases. The first Fairwater facility went fully operational on June 23, 2026, after roughly two years of construction with nearly 10,000 workers. Approximately 550 full-time employees on-site. A second adjacent facility is under construction, scheduled for 2028. We Energies has separately filed for approval of new natural gas peaker plants attributed to the data center load.",
       "primary_sources": [
         "https://blogs.microsoft.com/blog/2024/05/08/3-3b-microsoft-investment-in-mount-pleasant-to-spur-ai-innovation/"
       ]
@@ -284,6 +284,24 @@
       "primary_sources": [
         "https://www.constructiondive.com/news/walbridge-breaks-ground-stargate-data-center-openai-oracle/821972/",
         "https://www.cnbc.com/2026/06/01/stargate-project-michigan-live-updates.html"
+      ]
+    },
+    {
+      "id": "microsoft-pecos-tx",
+      "name": "Microsoft Pecos Campus",
+      "operator": "Microsoft",
+      "partners": ["Chevron"],
+      "location": { "city": "Pecos", "state": "Texas", "country": "USA" },
+      "status": "announced",
+      "capacity_mw_announced": 2000,
+      "power_source": "natural gas (dedicated behind-the-meter, Chevron 20-year supply agreement)",
+      "announced_date": "2026-06-22",
+      "target_operational": "2028",
+      "capex_usd_billion": null,
+      "context": "Microsoft's largest single capacity addition at announcement. A campus in Reeves County, West Texas targeting approximately 2 GW of IT capacity, scaling to 2.67 GW at full build. Power comes from a dedicated behind-the-meter natural gas plant through a 20-year supply agreement with Chevron, bypassing public grid interconnection at launch. First power targeted 2028. Over 6,000 peak construction jobs projected.",
+      "primary_sources": [
+        "https://blogs.microsoft.com/blog/2026/06/22/powering-the-next-wave-of-ai-expanding-capacity-with-our-new-datacenter-in-pecos/",
+        "https://www.datacenterdynamics.com/en/news/microsoft-plans-2gw-data-center-campus-in-pecos-texas/"
       ]
     },
     {

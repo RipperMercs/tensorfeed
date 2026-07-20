@@ -1,6 +1,20 @@
 {
   "events": [
     {
+      "date": "2026-07-16",
+      "title": "Moonshot AI Releases Kimi K3, a 2.8T Open-Weight Flagship",
+      "provider": "Moonshot AI",
+      "category": "model-release",
+      "description": "Moonshot AI released Kimi K3 on July 16, 2026, a 2.8 trillion parameter mixture-of-experts model and the largest open-weight model released to date. The model uses 896 experts with 16 active per token (roughly 1.8% activation rate), supports a 1 million token context window with always-on thinking mode, and is multimodal. API access went live immediately at $3 per million input tokens and $15 per million output, with open weights promised by July 27. Independent benchmarks place Kimi K3 fourth among all frontier models, behind Claude Fable 5 and GPT-5.6 Sol but above Claude Opus 4.8 on several agentic coding tasks. The model is available on Kimi.com, Kimi Work, Kimi Code, and the Kimi API."
+    },
+    {
+      "date": "2026-07-13",
+      "title": "Meta Expands Hyperion Campus to 5 GW and $50 Billion",
+      "provider": "Meta",
+      "category": "funding",
+      "description": "Meta announced on July 13, 2026 that its Hyperion campus in Richland Parish, Louisiana has been expanded from its original $27 billion joint-venture plan to a confirmed 5 GW, $50 billion build spanning roughly 2,250 acres (approximately 4 million square feet). The 2 GW phase is targeted for completion by 2030; full 5 GW by approximately 2032. Meta also committed over $1 billion in local infrastructure including roads, water, and wastewater systems. Since construction began in December 2024, local businesses have received $1.6 billion in contracts. Hyperion is now the largest announced single AI datacenter campus by committed capital."
+    },
+    {
       "date": "2026-07-09",
       "title": "OpenAI Makes GPT-5.6 Sol, Terra, and Luna Generally Available",
       "provider": "OpenAI",

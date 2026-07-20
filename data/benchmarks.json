@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-05",
+  "lastUpdated": "2026-07-20",
   "benchmarks": [
     { "id": "swe_bench", "name": "SWE-bench", "description": "Real-world software engineering tasks from GitHub issues (SWE-bench Verified)", "maxScore": 100 },
     { "id": "mmlu_pro", "name": "MMLU-Pro", "description": "General knowledge and reasoning across 57 subjects", "maxScore": 100 },
@@ -30,13 +30,13 @@
       "model": "Claude Fable 5",
       "provider": "Anthropic",
       "released": "2026-06",
-      "scores": { "swe_bench": 95.0 }
+      "scores": { "gpqa_diamond": 92.6, "swe_bench": 95.0 }
     },
     {
       "model": "Claude Sonnet 5",
       "provider": "Anthropic",
       "released": "2026-06",
-      "scores": { "swe_bench": 85.2 }
+      "scores": { "gpqa_diamond": 91.1, "swe_bench": 85.2 }
     },
     {
       "model": "Claude Opus 4.8",

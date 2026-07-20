@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-12",
+  "lastUpdated": "2026-07-20",
   "providers": [
     {
       "id": "anthropic",
@@ -621,6 +621,32 @@
             "tool-use"
           ],
           "tier": "budget"
+        }
+      ]
+    },
+    {
+      "id": "moonshot",
+      "name": "Moonshot AI",
+      "logo": "/images/providers/moonshot.png",
+      "url": "https://moonshot.ai",
+      "models": [
+        {
+          "id": "kimi-k3",
+          "name": "Kimi K3",
+          "inputPrice": 3,
+          "outputPrice": 15,
+          "contextWindow": 1000000,
+          "released": "2026-07",
+          "openSource": true,
+          "license": "Open weights, license TBD",
+          "capabilities": [
+            "text",
+            "vision",
+            "code",
+            "reasoning",
+            "tool-use"
+          ],
+          "tier": "flagship"
         }
       ]
     },
