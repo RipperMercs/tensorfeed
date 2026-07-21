@@ -13,11 +13,17 @@ import { Env } from './types';
  * submissions in 24 hours from one ad-hoc scan. Daily snapshotting turns
  * that ad-hoc scan into recurring infrastructure.
  *
- * Sources via GitHub Search API (/search/repositories): seven fan-out
+ * Sources via GitHub Search API (/search/repositories): eleven fan-out
  * queries. Each query is sorted by `updated` (most-recent first) so we
  * surface what changed today, not historical popularity. Dedup by
  * full_name across the fanout, classify by signal, sort by composite
- * score (signal_weight * recency_factor + log10(stars)).
+ * score (signal_weight * recency_factor + log10(stars) + novelty).
+ *
+ * per_page is deliberately well above the 25-slot output. Sorting by
+ * `updated` means a small page is a rotating slice of an org rather than
+ * a stable set: anthropics has far more than 10 repos and automation
+ * touches a different handful each day, so a 10-item page made the
+ * candidate pool churn on its own. Pulling 30 costs the same one request.
  *
  * Free tier of GitHub Search API: 10 req/min unauthenticated, 30 req/min
  * authenticated. We use the existing GITHUB_TOKEN secret when present
@@ -27,6 +33,8 @@ import { Env } from './types';
  *   opps:latest               -> AgentOpportunitiesSnapshot
  *   opps:daily:{YYYY-MM-DD}   -> AgentOpportunitiesSnapshot (compounds, future premium)
  *   opps:index                -> string[] of dates
+ *   opps:seen                 -> SeenLedger, full_name to first-surfaced date
+ *   opps:alert:{YYYY-MM-DD}   -> audit log of one alert run
  */
 
 const SEARCH_BASE = 'https://api.github.com/search/repositories';
@@ -41,40 +49,48 @@ interface QuerySpec {
 const QUERIES: QuerySpec[] = [
   // Anthropic org: highest leverage. New repos here drive vertical-marketplace
   // submissions (financial-services, life-sciences, skills, knowledge-work-plugins).
-  { signal: 'anthropic-org', signal_weight: 10, q: 'org:anthropics', per_page: 10 },
+  { signal: 'anthropic-org', signal_weight: 10, q: 'org:anthropics', per_page: 30 },
   // OpenAI: same vertical-marketplace pattern (openai/skills for Codex).
-  { signal: 'openai-org', signal_weight: 9, q: 'org:openai', per_page: 10 },
+  { signal: 'openai-org', signal_weight: 9, q: 'org:openai', per_page: 30 },
   // MCP foundation: protocol-level changes affect every MCP-aware client.
-  { signal: 'mcp-org', signal_weight: 8, q: 'org:modelcontextprotocol', per_page: 10 },
+  { signal: 'mcp-org', signal_weight: 8, q: 'org:modelcontextprotocol', per_page: 30 },
   // Microsoft: MCP-relevant subset (skills, mcp catalog, agent-related).
-  { signal: 'microsoft-org', signal_weight: 7, q: 'org:microsoft mcp OR agent OR skill', per_page: 10 },
+  { signal: 'microsoft-org', signal_weight: 7, q: 'org:microsoft mcp OR agent OR skill', per_page: 30 },
   // HuggingFace: ships agent-relevant tools and reference repos that fit the
   // same data-layer pattern.
-  { signal: 'huggingface-org', signal_weight: 7, q: 'org:huggingface', per_page: 10 },
+  { signal: 'huggingface-org', signal_weight: 7, q: 'org:huggingface', per_page: 30 },
   // LangChain ecosystem: orchestration layer; catches new templates, integrations,
   // and the langgraph extensions agents commonly depend on.
-  { signal: 'langchain-org', signal_weight: 6, q: 'org:langchain-ai', per_page: 10 },
+  { signal: 'langchain-org', signal_weight: 6, q: 'org:langchain-ai', per_page: 30 },
   // Other frontier labs combined: Cohere, Mistral, DeepSeek, xAI, Groq. Smaller
   // distribution surfaces individually but collectively meaningful, and any of
   // them shipping their own vertical-repo pattern is a leading indicator.
-  { signal: 'frontier-labs', signal_weight: 7, q: 'org:cohere-ai OR org:mistralai OR org:deepseek-ai OR org:xai-org OR org:groq', per_page: 10 },
+  { signal: 'frontier-labs', signal_weight: 7, q: 'org:cohere-ai OR org:mistralai OR org:deepseek-ai OR org:xai-org OR org:groq', per_page: 30 },
   // MCP server keyword: broader pool of new MCP servers across the ecosystem.
-  { signal: 'mcp-keyword', signal_weight: 5, q: '"mcp server" stars:>=10', per_page: 10 },
+  { signal: 'mcp-keyword', signal_weight: 5, q: '"mcp server" stars:>=10', per_page: 15 },
   // x402 keyword: agent-payments protocol projects (TF is canonical V2 merchant).
-  { signal: 'x402-keyword', signal_weight: 6, q: 'x402 stars:>=5', per_page: 10 },
+  { signal: 'x402-keyword', signal_weight: 6, q: 'x402 stars:>=5', per_page: 15 },
   // Agent skills catalogs: cross-vendor pattern (anthropics/skills, openai/skills,
   // microsoft/skills all exist; this catches the next one when it lands).
-  { signal: 'skill-keyword', signal_weight: 6, q: '"agent skills" OR "claude skills" stars:>=10', per_page: 10 },
+  { signal: 'skill-keyword', signal_weight: 6, q: '"agent skills" OR "claude skills" stars:>=10', per_page: 15 },
   // Vertical reference repo pattern: catches "claude-for-X" / "openai-for-X" /
   // similar new vertical bundles before they show up under their parent org's
   // daily updated list. The pattern that drove today's life-sciences submission.
-  { signal: 'vertical-pattern', signal_weight: 8, q: '"claude for" OR "openai for" OR "claude-for-" stars:>=20', per_page: 10 },
+  { signal: 'vertical-pattern', signal_weight: 8, q: '"claude for" OR "openai for" OR "claude-for-" stars:>=20', per_page: 30 },
 ];
 
 const RECENT_WINDOW_DAYS = 30;
 const FINAL_TOP_N = 25;
 const QUERY_DELAY_MS = 1100;
 const DESC_CAP = 240;
+
+// How long a repo counts as newly created for scoring purposes, and how
+// much that novelty is worth. The weight has to exceed the log10(stars)
+// spread between a day-one repo and an established SDK (roughly 1.7 vs
+// 4.5) or a brand-new anthropics repo ranks below anthropic-sdk-python
+// on the day it lands, which defeats the point of the scan.
+const NOVELTY_WINDOW_DAYS = 60;
+const NOVELTY_WEIGHT = 6;
 
 const LATEST_KEY = 'opps:latest';
 const DAILY_PREFIX = 'opps:daily:';
@@ -156,17 +172,36 @@ function recencyFactor(updated_at: string, now: Date = new Date()): number {
   return 1 - ageDays / RECENT_WINDOW_DAYS;
 }
 
+/**
+ * Novelty factor: 1.0 for a repo created today, decaying linearly to 0.0
+ * at the novelty-window boundary. This is the term that separates "a repo
+ * that appeared this week" from "a repo that got a dependabot bump this
+ * week". updated_at alone cannot tell those apart, and every org SDK is
+ * touched daily by automation.
+ */
+export function noveltyFactor(created_at: string, now: Date = new Date()): number {
+  const t = Date.parse(created_at);
+  if (!Number.isFinite(t)) return 0;
+  const ageDays = (now.getTime() - t) / (24 * 60 * 60 * 1000);
+  if (ageDays < 0) return 1; // future-dated, treat as brand new
+  if (ageDays >= NOVELTY_WINDOW_DAYS) return 0;
+  return 1 - ageDays / NOVELTY_WINDOW_DAYS;
+}
+
 export function compositeScore(
   signal_weight: number,
   stars: number,
   updated_at: string,
   now: Date = new Date(),
+  created_at: string = '',
 ): number {
   // signal weight scaled by recency, plus a log-stars term so a
-  // brand-new 50-star repo can beat a 30-day-stale 50,000-star one.
+  // brand-new 50-star repo can beat a 30-day-stale 50,000-star one,
+  // plus a novelty term so a genuinely new repo outranks an old one.
   const recency = recencyFactor(updated_at, now);
   const starsTerm = stars > 0 ? Math.log10(stars + 1) : 0;
-  return Math.round((signal_weight * recency + starsTerm) * 100) / 100;
+  const noveltyTerm = created_at ? NOVELTY_WEIGHT * noveltyFactor(created_at, now) : 0;
+  return Math.round((signal_weight * recency + starsTerm + noveltyTerm) * 100) / 100;
 }
 
 export function normalizeRepo(
@@ -196,7 +231,7 @@ export function normalizeRepo(
     topics,
     signal,
     signal_weight,
-    composite_score: compositeScore(signal_weight, stars, updated_at, now),
+    composite_score: compositeScore(signal_weight, stars, updated_at, now, created_at),
   };
 }
 
@@ -434,10 +469,57 @@ export async function getSnapshotForDate(
 
 // === Proactive opportunity alerts ===
 //
-// After each daily scan, diff against yesterday's snapshot. If new repos
-// appear that meet the alert threshold, email evan@tensorfeed.ai via
-// Resend. Throttled implicitly because the cron is daily; first-run is a
-// no-op (no previous snapshot to diff against).
+// After each daily scan, diff the snapshot against a persistent ledger of
+// every repo we have ever surfaced. If repos we have never reported appear
+// and meet the alert threshold, email evan@tensorfeed.ai via Resend.
+//
+// This used to diff against yesterday's snapshot alone, which was wrong.
+// The snapshot is a 25-slot window ranked on recency, and each query pulls
+// only the most-recently-updated slice of its org, so the window turns over
+// heavily every day. On 2026-07-21 that produced an alert announcing
+// openai/openai-python, openai/openai-node, huggingface/trl,
+// microsoft/agent-framework and sangrokjung/claude-forge as new discoveries.
+// All five had been surfaced on 07-19, dropped out on 07-20, and come back
+// on 07-21. The ledger makes "new" mean never reported, not absent
+// yesterday. Cost is one extra KV read and one write per day.
+
+const SEEN_KEY = 'opps:seen';
+const SEEN_RETENTION_DAYS = 400;
+
+/** full_name to the ISO date (YYYY-MM-DD) TF first surfaced it. */
+export interface SeenLedger {
+  [full_name: string]: string;
+}
+
+export function selectUnseen(current: AgentOpportunity[], seen: SeenLedger): AgentOpportunity[] {
+  return current.filter((o) => !Object.prototype.hasOwnProperty.call(seen, o.full_name));
+}
+
+/**
+ * Fold today's surfaced repos into the ledger, preserving the original
+ * first-seen date, and prune anything past the retention window so the
+ * value stays bounded. Entries with an unparseable date are kept rather
+ * than dropped, so a malformed write can never silently re-open the
+ * floodgates on a repo we already reported.
+ */
+export function mergeSeen(
+  seen: SeenLedger,
+  opps: AgentOpportunity[],
+  date: string,
+  now: Date = new Date(),
+): SeenLedger {
+  const cutoff = now.getTime() - SEEN_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  const out: SeenLedger = {};
+  for (const [full_name, firstSeen] of Object.entries(seen)) {
+    const t = Date.parse(firstSeen);
+    if (Number.isFinite(t) && t < cutoff) continue;
+    out[full_name] = firstSeen;
+  }
+  for (const o of opps) {
+    if (!out[o.full_name]) out[o.full_name] = date;
+  }
+  return out;
+}
 
 const HIGH_VALUE_SIGNALS = new Set([
   'anthropic-org',
@@ -451,20 +533,6 @@ const HIGH_VALUE_SIGNALS = new Set([
 ]);
 const KEYWORD_STAR_THRESHOLD = 100;
 const ALERT_ITEM_CAP = 25;
-
-function isoDaysAgoUTC(n: number, ref: Date = new Date()): string {
-  const d = new Date(ref);
-  d.setUTCDate(d.getUTCDate() - n);
-  return d.toISOString().slice(0, 10);
-}
-
-export function findNewOpportunities(
-  current: AgentOpportunity[],
-  previous: AgentOpportunity[],
-): AgentOpportunity[] {
-  const previousNames = new Set(previous.map((o) => o.full_name));
-  return current.filter((o) => !previousNames.has(o.full_name));
-}
 
 export function filterAlertWorthy(newOpps: AgentOpportunity[]): AgentOpportunity[] {
   return newOpps.filter((o) => {
@@ -488,11 +556,28 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
+/**
+ * Compact repo age for the alert table. Age is the single fastest way to
+ * tell a genuine day-one find from an SDK that has existed for years, so
+ * it belongs next to the star count rather than buried in the JSON.
+ */
+export function repoAgeLabel(created_at: string, now: Date = new Date()): string {
+  const t = Date.parse(created_at);
+  if (!Number.isFinite(t)) return 'unknown';
+  const days = Math.max(0, Math.floor((now.getTime() - t) / (24 * 60 * 60 * 1000)));
+  if (days === 0) return 'today';
+  if (days === 1) return '1d old';
+  if (days < 30) return `${days}d old`;
+  if (days < 365) return `${Math.round(days / 30)}mo old`;
+  return `${(days / 365).toFixed(1)}y old`;
+}
+
 function buildAlertEmail(
   opps: AgentOpportunity[],
   date: string,
+  now: Date = new Date(),
 ): { subject: string; html: string; text: string } {
-  const subject = `[TF] ${opps.length} new agent ecosystem repo${opps.length === 1 ? '' : 's'} on ${date}`;
+  const subject = `[TF] ${opps.length} first-time agent ecosystem repo${opps.length === 1 ? '' : 's'} on ${date}`;
 
   const rows = opps
     .slice(0, ALERT_ITEM_CAP)
@@ -501,10 +586,12 @@ function buildAlertEmail(
       const fn = escapeHtml(o.full_name);
       const url = escapeHtml(o.html_url);
       const sig = escapeHtml(o.signal);
+      const age = escapeHtml(repoAgeLabel(o.created_at, now));
       return `<tr>
   <td style="padding:8px 12px;border-bottom:1px solid #1f2937;font-family:ui-monospace,monospace;font-size:13px;"><a href="${url}" style="color:#6366f1;text-decoration:none;">${fn}</a></td>
   <td style="padding:8px 12px;border-bottom:1px solid #1f2937;font-size:12px;color:#9ca3af;">${sig}</td>
   <td style="padding:8px 12px;border-bottom:1px solid #1f2937;font-size:12px;text-align:right;color:#d1d5db;">${o.stars.toLocaleString()}★</td>
+  <td style="padding:8px 12px;border-bottom:1px solid #1f2937;font-size:12px;white-space:nowrap;color:#9ca3af;">${age}</td>
   <td style="padding:8px 12px;border-bottom:1px solid #1f2937;font-size:13px;color:#9ca3af;">${desc}</td>
 </tr>`;
     })
@@ -514,13 +601,14 @@ function buildAlertEmail(
 <html><body style="background:#0a0a0b;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin:0;padding:24px;">
 <div style="max-width:780px;margin:0 auto;">
 <h2 style="margin:0 0 6px 0;color:#fff;">New agent ecosystem opportunities</h2>
-<p style="margin:0 0 16px 0;color:#9ca3af;font-size:14px;">${date} · ${opps.length} new repo${opps.length === 1 ? '' : 's'} surfaced by the daily scan${opps.length > ALERT_ITEM_CAP ? ` (top ${ALERT_ITEM_CAP} shown)` : ''}.</p>
+<p style="margin:0 0 16px 0;color:#9ca3af;font-size:14px;">${date} · ${opps.length} repo${opps.length === 1 ? '' : 's'} TF has never surfaced before${opps.length > ALERT_ITEM_CAP ? ` (top ${ALERT_ITEM_CAP} shown)` : ''}.</p>
 <table style="width:100%;border-collapse:collapse;background:#111827;border:1px solid #1f2937;border-radius:8px;overflow:hidden;">
 <thead>
 <tr style="background:#1f2937;">
 <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;">Repo</th>
 <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;">Signal</th>
 <th style="padding:10px 12px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;">Stars</th>
+<th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;">Age</th>
 <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;">Description</th>
 </tr>
 </thead>
@@ -536,10 +624,11 @@ ${rows}
     .slice(0, ALERT_ITEM_CAP)
     .map((o) => {
       const desc = o.description || '(no description)';
-      return `[${o.signal}] ${o.full_name} (${o.stars.toLocaleString()} stars)\n  ${o.html_url}\n  ${desc}`;
+      const age = repoAgeLabel(o.created_at, now);
+      return `[${o.signal}] ${o.full_name} (${o.stars.toLocaleString()} stars, ${age})\n  ${o.html_url}\n  ${desc}`;
     })
     .join('\n\n');
-  const text = `New agent ecosystem opportunities · ${date}\n\n${opps.length} new repo${opps.length === 1 ? '' : 's'} surfaced by the daily scan${opps.length > ALERT_ITEM_CAP ? ` (top ${ALERT_ITEM_CAP} shown)` : ''}.\n\n${textRows}\n\nFull snapshot: https://tensorfeed.ai/api/agents/opportunities`;
+  const text = `New agent ecosystem opportunities · ${date}\n\n${opps.length} repo${opps.length === 1 ? '' : 's'} TF has never surfaced before${opps.length > ALERT_ITEM_CAP ? ` (top ${ALERT_ITEM_CAP} shown)` : ''}.\n\n${textRows}\n\nFull snapshot: https://tensorfeed.ai/api/agents/opportunities`;
 
   return { subject, html, text };
 }
@@ -593,23 +682,44 @@ export async function checkAndSendOpportunityAlerts(
   env: Env,
   current: AgentOpportunitiesSnapshot,
 ): Promise<AlertResult> {
-  const yesterday = isoDaysAgoUTC(1, new Date(current.capturedAt));
-  const previous = await env.TENSORFEED_CACHE.get<AgentOpportunitiesSnapshot>(
-    dailyKey(yesterday),
-    'json',
-  );
-  if (!previous) {
-    return { ok: true, new_count: 0, alert_worthy_count: 0, emailed: false, reason: 'no_previous_snapshot' };
+  const now = new Date(current.capturedAt);
+  const seen = await env.TENSORFEED_CACHE.get<SeenLedger>(SEEN_KEY, 'json');
+
+  // First run: seed the ledger and stay quiet. Without this the very first
+  // scan after deploy would email all 25 as fresh discoveries.
+  if (!seen) {
+    await env.TENSORFEED_CACHE.put(
+      SEEN_KEY,
+      JSON.stringify(mergeSeen({}, current.opportunities, current.date, now)),
+    );
+    return { ok: true, new_count: 0, alert_worthy_count: 0, emailed: false, reason: 'seeded_seen_ledger' };
   }
-  const newOpps = findNewOpportunities(current.opportunities, previous.opportunities);
+
+  const newOpps = selectUnseen(current.opportunities, seen);
   const alertWorthy = filterAlertWorthy(newOpps);
 
   if (alertWorthy.length === 0) {
+    await env.TENSORFEED_CACHE.put(
+      SEEN_KEY,
+      JSON.stringify(mergeSeen(seen, current.opportunities, current.date, now)),
+    );
     return { ok: true, new_count: newOpps.length, alert_worthy_count: 0, emailed: false, reason: 'no_alert_worthy' };
   }
 
-  const payload = buildAlertEmail(alertWorthy, current.date);
+  const payload = buildAlertEmail(alertWorthy, current.date, now);
   const emailed = await sendAlertEmail(env as AlertEnv, payload);
+
+  // Record what was surfaced. If the send failed, hold the alert-worthy
+  // repos out of the ledger so they retry tomorrow instead of being lost
+  // to a Resend outage. Everything else gets recorded either way.
+  const alertWorthyNames = new Set(alertWorthy.map((o) => o.full_name));
+  const toRecord = emailed
+    ? current.opportunities
+    : current.opportunities.filter((o) => !alertWorthyNames.has(o.full_name));
+  await env.TENSORFEED_CACHE.put(
+    SEEN_KEY,
+    JSON.stringify(mergeSeen(seen, toRecord, current.date, now)),
+  );
 
   // Audit-log the alert run regardless of email send result. KV write
   // is single, idempotent per date.
