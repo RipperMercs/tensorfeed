@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'z-ai-1gw-domestic-chips-sovereignty-stack',
+    title:
+      'Z.ai Just Powered On a Gigawatt Without a Single Nvidia Chip. Sovereignty Is a Hardware Story Now.',
+    author: 'Marcus Chen',
+    date: 'July 21, 2026',
+    readTime: '6 min read',
+    description:
+      "Bloomberg reported on Monday, July 20, 2026 that Z.ai (the former Zhipu) finished a 1 gigawatt AI data center and switched part of it on, with every chip inside the building sourced from a Chinese fab. A person familiar with the buildout told Bloomberg the company now operates several clusters of more than 10,000 chips each and none of it is Nvidia. Read against the revenue number Bloomberg reported three days earlier, this lands hard: Z.ai is on track for $1 billion ARR and already booked the full-year 2026 sales target in July, growing about 15x from a $100 million run rate at the start of the year, versus roughly 15 months for Anthropic to cover the same $100M to $1B stretch. The sovereignty stack we called out on the API side in June just closed on the training side. Includes a full numbers table (1 GW site, multiple 10K clusters, zero Nvidia, ~$1B ARR, 15x H1 growth, +60 percent Q1 net losses, US export blacklist since January 2025), the Ascend at gigawatt scale math (60 to 80 percent of an H100 at the chip layer collapses at the rack layer once CloudMatrix 384 and the Atlas 950 SuperPoD are stitched into the fabric), what this closes on the sovereignty catch we flagged for GLM-5.2 and Kimi K3, how a fully domestic training substrate changes what a US point of entry gate like the AI FINRA can actually enforce, why Vera Rubin production capacity in 2027 does not have a Chinese buyer on the list, and the state financing frame from the 2 trillion yuan sovereign grid rail we covered in June (public capital gets the interconnect, the lab gets the racks, the revenue backfills the depreciation). Three signposts: whether the next GLM release trains inside this facility and what token-throughput the vendor claims, whether a second Chinese lab (Moonshot, DeepSeek, Alibaba Qwen) announces a comparable domestic-only gigawatt site by year end, and whether Washington responds with an entity list expansion at the toolchain layer (MindSpore, the Ascend software stack, the packaging vendors) or lets the fait accompli stand.",
+  },
+  {
     slug: 'white-house-ai-finra-sec-regulator-frontier',
     title:
       'The White House Wants an AI FINRA. Silicon Valley Asked For It Six Days Earlier.',
