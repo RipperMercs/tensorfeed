@@ -4,9 +4,12 @@ import {
   dedupAndRank,
   summarize,
   compositeScore,
-  findNewOpportunities,
+  noveltyFactor,
+  selectUnseen,
+  mergeSeen,
   filterAlertWorthy,
   type AgentOpportunity,
+  type SeenLedger,
 } from './agent-opportunities';
 
 function opp(over: Partial<AgentOpportunity> = {}): AgentOpportunity {
@@ -281,24 +284,103 @@ describe('summarize', () => {
   });
 });
 
-describe('findNewOpportunities', () => {
-  it('returns repos in current that are not in previous', () => {
-    const previous = [opp({ full_name: 'a/x' }), opp({ full_name: 'a/y' })];
+describe('selectUnseen', () => {
+  it('returns only repos absent from the seen ledger', () => {
+    const seen: SeenLedger = { 'a/x': '2026-07-01', 'a/y': '2026-07-01' };
     const current = [opp({ full_name: 'a/x' }), opp({ full_name: 'a/z' })];
-    const out = findNewOpportunities(current, previous);
-    expect(out.length).toBe(1);
-    expect(out[0].full_name).toBe('a/z');
+    const out = selectUnseen(current, seen);
+    expect(out.map((o) => o.full_name)).toEqual(['a/z']);
   });
 
-  it('returns all current when previous is empty', () => {
-    const out = findNewOpportunities([opp({ full_name: 'a/b' }), opp({ full_name: 'c/d' })], []);
+  it('returns all current when the ledger is empty', () => {
+    const out = selectUnseen([opp({ full_name: 'a/b' }), opp({ full_name: 'c/d' })], {});
     expect(out.length).toBe(2);
   });
 
-  it('returns empty when nothing new', () => {
-    const set = [opp({ full_name: 'a/x' }), opp({ full_name: 'a/y' })];
-    const out = findNewOpportunities(set, set);
-    expect(out.length).toBe(0);
+  // Regression: the 2026-07-21 alert announced openai/openai-python,
+  // openai/openai-node, huggingface/trl, microsoft/agent-framework and
+  // sangrokjung/claude-forge as new. All five had been surfaced on 07-19,
+  // fell out of the 25-slot window on 07-20, and re-entered on 07-21. A
+  // one-day diff called that a discovery. The ledger must not.
+  it('does not re-announce a repo that churned out of the window and back in', () => {
+    const seen: SeenLedger = {
+      'openai/openai-python': '2026-07-18',
+      'openai/openai-node': '2026-07-18',
+      'huggingface/trl': '2026-07-18',
+      'microsoft/agent-framework': '2026-07-18',
+      'sangrokjung/claude-forge': '2026-07-19',
+    };
+    // Yesterday's snapshot (07-20) contained none of them, which is exactly
+    // what made the old one-day diff report all five as new.
+    const current = [
+      opp({ full_name: 'openai/openai-python', signal: 'openai-org', signal_weight: 9 }),
+      opp({ full_name: 'openai/openai-node', signal: 'openai-org', signal_weight: 9 }),
+      opp({ full_name: 'huggingface/trl', signal: 'huggingface-org', signal_weight: 7 }),
+      opp({ full_name: 'microsoft/agent-framework', signal: 'microsoft-org', signal_weight: 7 }),
+      opp({ full_name: 'sangrokjung/claude-forge', signal: 'vertical-pattern', signal_weight: 8 }),
+      opp({ full_name: 'anthropics/genuinely-new', signal: 'anthropic-org', signal_weight: 10 }),
+    ];
+    const out = selectUnseen(current, seen);
+    expect(out.map((o) => o.full_name)).toEqual(['anthropics/genuinely-new']);
+  });
+});
+
+describe('mergeSeen', () => {
+  it('records a first-seen date for repos not already in the ledger', () => {
+    const out = mergeSeen({}, [opp({ full_name: 'a/x' })], '2026-07-21', NOW);
+    expect(out['a/x']).toBe('2026-07-21');
+  });
+
+  it('preserves the original first-seen date on a repeat sighting', () => {
+    const seen: SeenLedger = { 'a/x': '2026-05-01' };
+    const out = mergeSeen(seen, [opp({ full_name: 'a/x' })], '2026-07-21', NOW);
+    expect(out['a/x']).toBe('2026-05-01');
+  });
+
+  it('prunes entries older than the retention window so the value stays bounded', () => {
+    const seen: SeenLedger = { 'old/repo': '2024-01-01', 'recent/repo': '2026-05-01' };
+    const out = mergeSeen(seen, [], '2026-05-09', NOW);
+    expect(out['old/repo']).toBeUndefined();
+    expect(out['recent/repo']).toBe('2026-05-01');
+  });
+
+  it('keeps entries whose stored date is unparseable rather than dropping them', () => {
+    const out = mergeSeen({ 'weird/repo': 'not-a-date' }, [], '2026-05-09', NOW);
+    expect(out['weird/repo']).toBe('not-a-date');
+  });
+});
+
+describe('noveltyFactor', () => {
+  it('is 1 for a repo created today and 0 past the novelty window', () => {
+    expect(noveltyFactor(NOW.toISOString(), NOW)).toBeCloseTo(1, 2);
+    const old = new Date(NOW.getTime() - 400 * 24 * 60 * 60 * 1000).toISOString();
+    expect(noveltyFactor(old, NOW)).toBe(0);
+  });
+
+  it('decays linearly across the window', () => {
+    const halfway = new Date(NOW.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    expect(noveltyFactor(halfway, NOW)).toBeCloseTo(0.5, 1);
+  });
+
+  it('returns 0 for a missing or unparseable created_at', () => {
+    expect(noveltyFactor('', NOW)).toBe(0);
+    expect(noveltyFactor('garbage', NOW)).toBe(0);
+  });
+});
+
+describe('compositeScore novelty term', () => {
+  // Regression: on 2026-07-21 a day-one anthropics repo would have scored
+  // below openai/openai-python, a 5-year-old SDK with a fresh dependabot
+  // commit. The whole point of the scan is catching the day-one repo.
+  it('ranks a day-one org repo above an established SDK touched the same day', () => {
+    const dayOne = compositeScore(10, 50, NOW.toISOString(), NOW, NOW.toISOString());
+    const establishedSdk = compositeScore(9, 31192, NOW.toISOString(), NOW, '2020-11-01T00:00:00Z');
+    expect(dayOne).toBeGreaterThan(establishedSdk);
+  });
+
+  it('leaves the score unchanged when created_at is absent', () => {
+    const withoutCreated = compositeScore(10, 99, NOW.toISOString(), NOW);
+    expect(withoutCreated).toBeCloseTo(12, 1);
   });
 });
 
