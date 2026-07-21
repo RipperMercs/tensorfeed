@@ -4,10 +4,14 @@
  * A dataset (model benchmarks, harness leaderboard) is stale if it predates
  * the catalog's newest flagship model: the model names it covers do not
  * include the newest flagship surfaced on /api/models. It is also stale if it
- * is older than its SLA in days. The catalog (/api/models) is kept live by the
- * daily LiteLLM cron, so the moment a new flagship lands there, every dataset
- * that has not caught up flags itself. This is distinct from the premium
- * billing freshness in freshness.ts.
+ * is older than its SLA in days. The flagship set comes from BASELINE_PRICING,
+ * so a new flagship lands on deploy and every dataset that has not caught up
+ * flags itself. Note the two halves have different clocks: the daily LiteLLM
+ * cron refreshes prices and context but deliberately does NOT bump
+ * lastUpdated (see catalog.ts), so the age check measures the editorial review
+ * cadence on data/pricing.json, not cron liveness. A models age alert means
+ * nobody has reviewed the catalog, not that the cron died. This is distinct
+ * from the premium billing freshness in freshness.ts.
  */
 import type { Env } from './types';
 import { sendEmail } from './alerts';

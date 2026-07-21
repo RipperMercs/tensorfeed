@@ -15,7 +15,7 @@ import { BASELINE_PRICING } from './catalog';
  * is that every provider id and model id in the canonical file is present in the
  * baseline, so the worker can never serve a narrower catalog than canonical.
  */
-function loadCanonical(): { providers: { id: string; models: { id: string }[] }[] } {
+function loadCanonical(): { lastUpdated: string; providers: { id: string; models: { id: string }[] }[] } {
   for (const rel of ['../data/pricing.json', 'data/pricing.json', '../../data/pricing.json']) {
     const abs = resolve(process.cwd(), rel);
     if (existsSync(abs)) return JSON.parse(readFileSync(abs, 'utf8'));
@@ -64,5 +64,16 @@ describe('BASELINE_PRICING covers every provider and model in data/pricing.json'
     for (const p of canonical.providers) {
       expect(baseById.get(p.id)).toEqual(p.models.map((m) => m.id));
     }
+  });
+
+  // The benchmarks and agents mirrors get this free from their exact-equality
+  // check; pricing is a coverage check (LiteLLM revises prices at runtime), so
+  // lastUpdated was the one canonical field nothing guarded. It drifted: on
+  // 2026-07-21 canonical read 2026-07-12 while the baseline still read
+  // 2026-07-05, and since the worker rebuilds the models KV from the baseline
+  // every run, /api/models published a freshness date a week older than the
+  // editorial data and flagged itself stale against its own 7d SLA.
+  it('matches the canonical lastUpdated date', () => {
+    expect(BASELINE_PRICING.lastUpdated).toBe(canonical.lastUpdated);
   });
 });
