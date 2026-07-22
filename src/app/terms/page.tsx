@@ -4,19 +4,19 @@ import { FileText } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
-  description: 'TensorFeed.ai terms of service covering acceptable use, intellectual property, content attribution, disclaimers, and limitation of liability.',
+  description: 'TensorFeed.ai terms of service covering acceptable use, data sourcing and derived works, premium API payments in USDC on Base and Solana, disclaimers, and limitation of liability.',
   openGraph: {
     type: 'website',
     url: 'https://tensorfeed.ai/terms',
     title: 'Terms of Service',
-    description: 'TensorFeed.ai terms of service covering acceptable use, intellectual property, content attribution, disclaimers, and limitation of liability.',
+    description: 'TensorFeed.ai terms of service covering acceptable use, data sourcing and derived works, premium API payments in USDC on Base and Solana, disclaimers, and limitation of liability.',
     siteName: 'TensorFeed.ai',
     images: [{ url: '/tensorfeed-logo.png', width: 1024, height: 1024 }],
   },
   twitter: {
     card: 'summary',
     title: 'Terms of Service',
-    description: 'TensorFeed.ai terms of service covering acceptable use, intellectual property, content attribution, disclaimers, and limitation of liability.',
+    description: 'TensorFeed.ai terms of service covering acceptable use, data sourcing and derived works, premium API payments in USDC on Base and Solana, disclaimers, and limitation of liability.',
   },
 };
 
@@ -29,7 +29,7 @@ export default function TermsPage() {
           <FileText className="w-7 h-7 text-accent-primary" />
           <h1 className="text-3xl font-bold text-text-primary">Terms of Service</h1>
         </div>
-        <p className="text-text-muted text-sm">Last updated: April 28, 2026</p>
+        <p className="text-text-muted text-sm">Last updated: July 21, 2026</p>
       </div>
 
       <div className="space-y-8 text-text-secondary leading-relaxed">
@@ -41,9 +41,11 @@ export default function TermsPage() {
             you do not agree to these Terms, please do not use the Site. TensorFeed.ai, the Premium
             API, and all related services are operated by Pizza Robot Studios LLC, a California
             limited liability company (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). Pizza
-            Robot Studios LLC is the legal entity responsible for the payment wallet at
+            Robot Studios LLC is the legal entity responsible for the payment wallets at
             <code className="bg-bg-tertiary px-1 py-0.5 rounded text-xs font-mono mx-1">0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1</code>
-            on Base mainnet and is the counterparty for all premium-tier purchases and disputes
+            on Base mainnet and
+            <code className="bg-bg-tertiary px-1 py-0.5 rounded text-xs font-mono mx-1">B8uYDm3snMCAUwt6NWTV3u7akcmd1AWzCXKQ1dDKWcFJ</code>
+            on Solana mainnet, and is the counterparty for all premium-tier purchases and disputes
             per the Premium API and Agent Payments section below. Premium credits are
             non-refundable; see Section 17.5.
           </p>
@@ -90,9 +92,14 @@ export default function TermsPage() {
             is the property of Pizza Robot Studios LLC. You may quote or reference our original content
             with proper attribution and a link back to the source article.
           </p>
-          <p>
+          <p className="mb-3">
             The TensorFeed name, logo, and site design are the property of Pizza Robot Studios LLC. You
             may not use our branding without prior written permission.
+          </p>
+          <p>
+            Our normalized, scored, ranked, and otherwise derived data products are governed by
+            Section 20, which sets out where our source material comes from, how we collect it,
+            what we transform it into, what we claim, and what we expressly do not claim.
           </p>
         </section>
 
@@ -108,6 +115,7 @@ export default function TermsPage() {
             <li>We reserve the right to rate-limit or block abusive usage</li>
             <li>Data obtained from our API should not be resold as a standalone product</li>
             <li>We may modify or discontinue API endpoints at any time</li>
+            <li>Free-tier data is subject to the sourcing, transformation, and derived-works terms in Section 20</li>
           </ul>
         </section>
 
@@ -117,7 +125,11 @@ export default function TermsPage() {
           <p className="mb-4">
             TensorFeed offers a paid premium API tier for AI agents and developers who need ranked
             routing recommendations, computed intelligence, and historical data. Premium access is
-            paid via USDC on Base mainnet only. By using premium endpoints (any path under
+            paid in USDC on two supported settlement rails: Base mainnet (native USDC) and Solana
+            mainnet (the canonical USDC SPL mint). No other chain, token, or payment method is
+            accepted. Both rails settle into the same credit-accounting system, so a credit bought
+            on one rail behaves identically to a credit bought on the other, and every provision of
+            this Section applies to both rails equally. By using premium endpoints (any path under
             <code className="bg-bg-tertiary px-1 py-0.5 rounded text-xs font-mono mx-1">/api/premium/</code>)
             you agree to the additional terms below.
           </p>
@@ -144,24 +156,37 @@ export default function TermsPage() {
             </div>
 
             <div>
-              <h3 className="text-base font-semibold text-text-primary mb-2">17.3 Wallet verification</h3>
-              <p>
-                Always cross-check the TensorFeed payment wallet across our published locations
+              <h3 className="text-base font-semibold text-text-primary mb-2">17.3 Wallet verification and rail selection</h3>
+              <p className="mb-3">
+                Always cross-check the TensorFeed payment wallet for your chosen rail across our
+                published locations
                 (<code className="bg-bg-tertiary px-1 py-0.5 rounded text-xs font-mono">/llms.txt</code>,
                 {' '}
                 <code className="bg-bg-tertiary px-1 py-0.5 rounded text-xs font-mono">/api/payment/info</code>,
                 {' '}
-                the GitHub README, and the verified X bio) before sending funds. We are not
-                responsible for funds sent to incorrect addresses.
+                <code className="bg-bg-tertiary px-1 py-0.5 rounded text-xs font-mono">/.well-known/x402.json</code>,
+                {' '}
+                the GitHub README, and the verified X bio) before sending funds. The Base wallet and
+                the Solana wallet are different addresses on incompatible networks and are not
+                interchangeable.
+              </p>
+              <p>
+                You are solely responsible for selecting the correct rail, network, token, and
+                destination address. Funds sent to the wrong address, on the wrong network, in the
+                wrong asset, or in an amount below the quoted price will not mint credits, are
+                generally not recoverable by anyone including us, and will not be refunded or
+                replaced. See Section 17.17.
               </p>
             </div>
 
             <div>
               <h3 className="text-base font-semibold text-text-primary mb-2">17.4 Replay protection</h3>
               <p>
-                Each USDC transaction can be used to mint credits exactly once. The transaction
-                hash is recorded server-side on first use; submitting the same tx hash a second
-                time will be rejected.
+                Each on-chain payment can be used to mint credits exactly once, on either rail. The
+                settlement identifier (the Base transaction hash or the Solana transaction
+                signature, together with the derived per-payment discriminator) is recorded
+                server-side on first use; resubmitting the same payment a second time will be
+                rejected.
               </p>
             </div>
 
@@ -333,7 +358,8 @@ export default function TermsPage() {
             <div>
               <h3 className="text-base font-semibold text-text-primary mb-2">17.14 Chargeback, reversal, and fraudulent purchase handling</h3>
               <p>
-                USDC transfers on Base mainnet are technically irreversible, and once we have
+                USDC transfers on Base mainnet and on Solana mainnet are technically irreversible,
+                and once we have
                 confirmed an inbound transaction and minted credits to a bearer token, we are not
                 in a position to return the original USDC. Where, however, an underlying fiat-to-
                 USDC purchase is later reversed, charged back, voided, or determined by us in good
@@ -356,11 +382,53 @@ export default function TermsPage() {
                 Pizza Robot Studios LLC is not, and does not hold itself out as, a money services
                 business, money transmitter, virtual asset service provider, exchange, custodian,
                 broker-dealer, investment adviser, or other financial institution. We accept USDC
-                on Base mainnet as payment for our own data and information services, and we do
-                not exchange currencies, custody assets for users, facilitate transfers of value
-                between users, or hold customer funds beyond the period reasonably required to
-                confirm a credit purchase. Nothing in these Terms creates any fiduciary, advisory,
-                agency, or banking relationship between you and Pizza Robot Studios LLC.
+                on Base mainnet and Solana mainnet as payment for our own data and information
+                services, and we do not exchange currencies, custody assets for users, facilitate
+                transfers of value between users, or hold customer funds beyond the period
+                reasonably required to confirm a credit purchase. Accepting a second settlement
+                rail does not change that posture: both rails are inbound payment for our own
+                service, and neither is offered as a transfer, conversion, or bridging service for
+                anyone else. Nothing in these Terms creates any fiduciary, advisory, agency, or
+                banking relationship between you and Pizza Robot Studios LLC.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-text-primary mb-2">17.16 Sanctions screening of payments</h3>
+              <p>
+                Inbound payment wallets on both rails are screened against a third-party blockchain
+                analytics sanctions oracle before credits are minted. Screening operates on a
+                fail-closed basis: where a wallet returns a sanctions hit, or where the screening
+                provider is unavailable and we cannot complete the check, the payment does not mint
+                credits. We may block, hold, or decline any payment on this basis, and we may
+                report blocked activity to the relevant authorities where we believe we are
+                required or permitted to do so. Funds already transferred on-chain in connection
+                with a blocked or declined payment are not returned, exchanged, or credited, and
+                Section 17.5 governs. Screening is a compliance control operated for our own
+                benefit; it is not a certification, endorsement, or clearance of any wallet,
+                counterparty, or transaction, and you may not rely on it as such.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-text-primary mb-2">17.17 Assumption of on-chain and infrastructure risk</h3>
+              <p>
+                Blockchain payments carry risks we cannot control or reverse. By paying for premium
+                access you accept sole responsibility for, and assume the risk of: sending to an
+                incorrect address; selecting the wrong network or rail, including sending a Base
+                asset to the Solana wallet or a Solana asset to the Base wallet; sending an
+                unsupported token; underpaying or overpaying the quoted amount; loss or compromise
+                of your private keys, seed phrase, wallet software, or bearer token; transaction
+                fees, priority fees, slippage, and rent; chain reorganizations, congestion, forks,
+                halts, or finality delays; and outages, errors, censorship, or discontinuation
+                affecting any wallet provider, RPC provider, indexer, facilitator, sponsor of
+                transaction fees, bridge, exchange, or stablecoin issuer involved in your payment.
+                We rely on third-party infrastructure to observe, verify, and settle payments and
+                to serve the Service, and we are not liable for the acts, omissions, downtime, or
+                failures of those third parties. We do not guarantee that any particular rail
+                remains available; we may add, suspend, or retire a settlement rail at any time,
+                and previously minted credits remain spendable regardless of which rail was used to
+                buy them.
               </p>
             </div>
           </div>
@@ -425,8 +493,8 @@ export default function TermsPage() {
               /api/agents/bans
             </Link>{' '}
             with the reason for the ban. Ban appeals may be sent to{' '}
-            <a href="mailto:evan@pizzarobotstudios.com" className="text-accent-primary hover:underline">
-              evan@pizzarobotstudios.com
+            <a href="mailto:contact@tensorfeed.ai" className="text-accent-primary hover:underline">
+              contact@tensorfeed.ai
             </a>
             ; we will review them in good faith but make no commitment to overturn any ban.
           </p>
@@ -499,6 +567,145 @@ export default function TermsPage() {
             </a>
             ; appeals are reviewed in good faith with no commitment to overturn.
           </p>
+        </section>
+
+        {/* Data Sourcing, Transformation, and Derived Works */}
+        <section id="data-sourcing">
+          <h2 className="text-lg font-semibold text-text-primary mb-3">
+            20. Data Sourcing, Transformation, and Ownership of Derived Works
+          </h2>
+
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-base font-semibold text-text-primary mb-2">20.1 What we collect and where it comes from</h3>
+              <p>
+                Everything TensorFeed ingests comes from one of four categories: (a) publicly
+                available sources that their publishers make available for programmatic
+                consumption, including RSS and Atom feeds, JSON feeds, documented public HTTP APIs,
+                public status pages, public pricing and model documentation pages, public code
+                repositories, and public package registries; (b) open data published under an open
+                license or dedicated to the public domain, including open vulnerability, scholarly,
+                and benchmark datasets, used in accordance with the terms of the applicable license
+                and with attribution where that license requires it; (c) public blockchain data,
+                which is by design world-readable; and (d) first-party data we generate ourselves,
+                including our own service telemetry, our own observed interactions with agents and
+                endpoints, our own probes of publicly reachable endpoints, and our own original
+                editorial work.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-text-primary mb-2">20.2 How we collect it</h3>
+              <p>
+                We do not circumvent paywalls, logins, authentication, authorization, session
+                controls, CAPTCHAs, or other technical protection measures, and we do not ingest
+                data obtained by anyone who did. We do not use credentials we are not entitled to
+                use, and we do not accept or ingest third-party datasets that we believe were
+                assembled in violation of a provider&apos;s terms. We fetch on a modest, scheduled
+                cadence designed not to burden any source, we identify our automated traffic with a
+                descriptive User-Agent, we honor published exclusion signals on the surfaces we
+                fetch, and we honor the redistribution restrictions of any provider whose terms
+                prohibit redistribution by declining to carry that provider&apos;s data at all. We
+                do not seek out, and do not knowingly ingest, personal data, and where personal
+                data incidentally appears in a public source we do not build profiles of natural
+                persons from it. See our{' '}
+                <Link href="/privacy" className="text-accent-primary hover:underline">Privacy Policy</Link>{' '}
+                for how we handle personal data generally.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-text-primary mb-2">20.3 What we do to it</h3>
+              <p>
+                TensorFeed is a transformation service, not a mirror. Source material is collected,
+                normalized to common schemas, deduplicated, cross-referenced across independent
+                sources, clipped, classified, scored, ranked, time-series-tracked, diffed against
+                prior observations, reasoned over by automated systems, annotated with our own
+                judgments, and repackaged into machine-readable form for agent consumption. The
+                output we publish and sell is a derived work and a compilation: the selection,
+                arrangement, normalization, scoring, weighting, reasoning, verdicts, and
+                presentation are our own contribution, produced by systems we built and maintain,
+                and they are the property of Pizza Robot Studios LLC. We license access to that
+                derived output. We do not license, and do not purport to license, the underlying
+                third-party material itself.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-text-primary mb-2">20.4 What we do not claim</h3>
+              <p>
+                We claim no ownership of facts. Prices, version numbers, release dates, benchmark
+                results, incident timelines, identifiers, and similar factual data points are not
+                ours and are not owned by anyone; our rights attach to our compilation, our derived
+                metrics, our reasoning, and our expression, not to the underlying facts. We claim
+                no ownership of any third-party article, post, document, or dataset. Where a
+                third-party headline, snippet, or excerpt is displayed, it is displayed in limited
+                length for the purpose of identification, commentary, and referral, attributed to
+                its publisher, and linked back to the original; we do not republish full
+                third-party works and we do not present third-party work as our own. Where an open
+                license governs a source, that license continues to govern that source material in
+                our output, and we do not assert rights beyond it.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-text-primary mb-2">20.5 Automated reasoning and derived judgments</h3>
+              <p>
+                Some published fields are not observations but conclusions: scores, grades,
+                verdicts, rankings, risk classifications, matches between records, and summaries.
+                These are produced by automated pipelines, including statistical and
+                machine-learning systems, applied to the source material described above. They are
+                our opinion and our derived output, offered for informational purposes. They may be
+                incomplete, stale, mis-matched, or wrong. They are not statements of fact about any
+                company, product, publisher, operator, or person, are not a rating in any
+                regulated sense, are not a consumer report, and must not be used as a factor in
+                establishing eligibility for employment, credit, insurance, housing, or any other
+                purpose covered by the US Fair Credit Reporting Act or analogous law with respect
+                to any natural person. Always verify a material decision against the primary
+                source, which we link.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-text-primary mb-2">20.6 Your responsibility as a consumer of our data</h3>
+              <p>
+                A license to our derived output is not a license to any upstream provider&apos;s
+                content, and it does not relieve you of your own obligations. If you follow our
+                links, call an upstream API, or otherwise obtain material from a source we
+                reference, your use of that material is governed by that source&apos;s terms and
+                licenses, not by ours, and compliance is yours. You are also responsible for
+                complying with the inference-only license in Section 17.1, the Premium API
+                acceptable-use terms in Section 17.12, and any restriction that applies to your own
+                jurisdiction, industry, or downstream customers.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-base font-semibold text-text-primary mb-2">20.7 Source removal and correction requests</h3>
+              <p>
+                We would rather fix a problem than argue about it. If you publish a source we
+                aggregate and you want your feed excluded, your snippet shortened, your attribution
+                corrected, or your material removed, write to{' '}
+                <a href="mailto:legal@tensorfeed.ai" className="text-accent-primary hover:underline">
+                  legal@tensorfeed.ai
+                </a>{' '}
+                from a domain-matching address and identify the source and the specific request. We
+                review every such request in good faith and act on valid ones promptly, ordinarily
+                within ten business days, and we will confirm when the change is live. Copyright and
+                DMCA notices go to{' '}
+                <a href="mailto:dmca@tensorfeed.ai" className="text-accent-primary hover:underline">
+                  dmca@tensorfeed.ai
+                </a>
+                . Factual corrections to derived fields or to original editorial content go to{' '}
+                <a href="mailto:contact@tensorfeed.ai" className="text-accent-primary hover:underline">
+                  contact@tensorfeed.ai
+                </a>
+                , and our correction practice is described in our{' '}
+                <Link href="/editorial-policy" className="text-accent-primary hover:underline">editorial policy</Link>.
+                Honoring a request is not an admission of liability or of infringement.
+              </p>
+            </div>
+          </div>
         </section>
 
         {/* Disclaimers */}
@@ -589,20 +796,101 @@ export default function TermsPage() {
           </p>
         </section>
 
+        {/* Class Action and Jury Waiver */}
+        <section>
+          <h2 className="text-lg font-semibold text-text-primary mb-3">Class Action and Jury Trial Waiver</h2>
+          <p className="mb-3">
+            To the fullest extent permitted by applicable law, you and Pizza Robot Studios LLC each
+            agree that any dispute will be brought in an individual capacity only, and not as a
+            plaintiff or class member in any purported class, collective, consolidated, or
+            representative proceeding. No arbitrator or court may consolidate the claims of more
+            than one person or preside over any form of representative proceeding without the
+            written consent of both parties.
+          </p>
+          <p>
+            To the fullest extent permitted by applicable law, you and Pizza Robot Studios LLC each
+            knowingly and voluntarily waive any right to a trial by jury in any action arising out
+            of or related to these Terms or your use of the Service. If this waiver is held
+            unenforceable in a given proceeding, the remainder of these Terms continues to apply.
+          </p>
+        </section>
+
+        {/* General Provisions */}
+        <section>
+          <h2 className="text-lg font-semibold text-text-primary mb-3">General Provisions</h2>
+          <ul className="list-disc list-inside space-y-3 pl-2">
+            <li>
+              <span className="text-text-primary font-medium">Entire agreement:</span> These Terms,
+              together with our Privacy Policy and any terms expressly incorporated by reference
+              (including the premium API documentation), constitute the entire agreement between
+              you and Pizza Robot Studios LLC regarding the Service and supersede all prior
+              understandings on that subject.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Severability:</span> If any provision
+              is held invalid or unenforceable, that provision is limited or severed to the minimum
+              extent necessary and the remaining provisions remain in full force.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">No waiver:</span> Our failure to
+              enforce any right or provision is not a waiver of that right or provision. Any waiver
+              must be in writing to be effective.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Assignment:</span> You may not assign
+              or transfer these Terms, your credits, or your bearer tokens by operation of law or
+              otherwise except as contemplated by Section 17.8 and Section 17.12. We may assign
+              these Terms in connection with a merger, acquisition, reorganization, or sale of
+              assets.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Survival:</span> Provisions that by
+              their nature should survive termination do survive it, including the intellectual
+              property, data sourcing and derived works, no refunds, disclaimer, limitation of
+              liability, indemnification, waiver, and governing law provisions.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Force majeure:</span> We are not
+              liable for any delay or failure to perform caused by events beyond our reasonable
+              control, including infrastructure and network provider outages, blockchain or
+              facilitator failures, upstream data source changes or withdrawals, denial-of-service
+              attacks, acts of government, and natural events.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">No third-party beneficiaries:</span>{' '}
+              These Terms confer no rights on any third party, except that the Released Parties
+              defined in Section 17.13 may enforce the provisions that benefit them.
+            </li>
+            <li>
+              <span className="text-text-primary font-medium">Language and headings:</span> These
+              Terms are drafted in English, which controls in the event of any translation
+              conflict. Headings and section numbers are for convenience and do not affect
+              interpretation.
+            </li>
+          </ul>
+        </section>
+
         {/* Changes */}
         <section>
           <h2 className="text-lg font-semibold text-text-primary mb-3">Changes to These Terms</h2>
-          <p>
+          <p className="mb-3">
             We may update these Terms from time to time. When we do, we will revise the &quot;Last
             updated&quot; date at the top of this page. Continued use of the Site after changes
             constitutes acceptance of the updated Terms.
+          </p>
+          <p>
+            The version of these Terms in effect at the time of a given premium purchase governs
+            that purchase. Amendments are not retroactive and do not apply to a dispute that has
+            already arisen. Because premium credits do not expire, credits bought under an earlier
+            version remain spendable, and calls made with them after an amendment are governed by
+            the amended Terms.
           </p>
         </section>
 
         {/* Contact */}
         <section>
           <h2 className="text-lg font-semibold text-text-primary mb-3">Contact</h2>
-          <p>
+          <p className="mb-3">
             If you have questions about these Terms of Service, contact us at{' '}
             <a href="mailto:support@tensorfeed.ai" className="text-accent-primary hover:underline">
               support@tensorfeed.ai
@@ -611,6 +899,22 @@ export default function TermsPage() {
             <Link href="/contact" className="text-accent-primary hover:underline">
               contact page
             </Link>.
+          </p>
+          <p>
+            Legal notices, source removal requests, and matters arising under these Terms should be
+            directed to{' '}
+            <a href="mailto:legal@tensorfeed.ai" className="text-accent-primary hover:underline">
+              legal@tensorfeed.ai
+            </a>
+            . Copyright and DMCA notices go to{' '}
+            <a href="mailto:dmca@tensorfeed.ai" className="text-accent-primary hover:underline">
+              dmca@tensorfeed.ai
+            </a>
+            . Premium billing, ban appeals, and listing removals go to{' '}
+            <a href="mailto:contact@tensorfeed.ai" className="text-accent-primary hover:underline">
+              contact@tensorfeed.ai
+            </a>
+            . All addresses reach Pizza Robot Studios LLC, a California limited liability company.
           </p>
         </section>
       </div>

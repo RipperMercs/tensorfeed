@@ -29,7 +29,7 @@ export default function PrivacyPage() {
           <Shield className="w-7 h-7 text-accent-primary" />
           <h1 className="text-3xl font-bold text-text-primary">Privacy Policy</h1>
         </div>
-        <p className="text-text-muted text-sm">Last updated: May 29, 2026</p>
+        <p className="text-text-muted text-sm">Last updated: July 21, 2026</p>
       </div>
 
       <div className="space-y-8 text-text-secondary leading-relaxed">
@@ -218,8 +218,9 @@ export default function PrivacyPage() {
           <ul className="list-disc list-inside space-y-2 pl-2 mb-4">
             <li>
               <span className="text-text-primary font-medium">Sender wallet address.</span> When
-              you, or an autonomous agent acting on your behalf, send USDC to our published Base
-              mainnet wallet to purchase credits, we record the sender wallet address as part of
+              you, or an autonomous agent acting on your behalf, send USDC to one of our published
+              payment wallets (Base mainnet or Solana mainnet) to purchase credits, we record the
+              sender wallet address as part of
               the payment confirmation flow. Wallet addresses are pseudonymous but, under EU GDPR,
               UK GDPR, the California Consumer Privacy Act, and similar laws, may constitute
               personal data because they uniquely identify a transacting party. We use this data
@@ -228,9 +229,10 @@ export default function PrivacyPage() {
               respond to lawful requests from regulators or law enforcement.
             </li>
             <li>
-              <span className="text-text-primary font-medium">Transaction hash.</span> The Base
-              mainnet transaction hash is recorded server-side and used to enforce one-time credit
-              issuance under the replay-protection rule in Section 17.4 of the Terms.
+              <span className="text-text-primary font-medium">Settlement identifier.</span> The
+              Base mainnet transaction hash, or the Solana mainnet transaction signature, is
+              recorded server-side and used to enforce one-time credit issuance under the
+              replay-protection rule in Section 17.4 of the Terms.
             </li>
             <li>
               <span className="text-text-primary font-medium">Bearer token (hashed).</span> We do
@@ -280,14 +282,16 @@ export default function PrivacyPage() {
             generated on either site are processed by the same operating entity for the unified
             credit-accounting system. No third-party data processor outside Pizza Robot Studios
             LLC and our infrastructure providers (currently Cloudflare, Chainalysis sanctions
-            screening, and the Base mainnet network itself) receives this data for the cross-site
+            screening, the Coinbase Developer Platform settlement facilitator, and the Base and
+            Solana mainnet networks themselves) receives this data for the cross-site
             bundle.
           </p>
 
           <p className="mb-3">
             <span className="text-text-primary font-medium">Blockchain analysis and sanctions screening.</span>{' '}
-            The Base mainnet ledger is a public blockchain, and any party, including us, can
-            inspect on-chain transactions involving the published wallet. We screen every inbound
+            The Base mainnet and Solana mainnet ledgers are public blockchains, and any party,
+            including us, can inspect on-chain transactions involving the published wallets. We
+            screen every inbound
             credit-purchase transaction against the Chainalysis public sanctions API, which checks
             the sender wallet against the United States OFAC SDN list and other major sanctions
             regimes. Where such screening identifies a sanctioned address, an address with
