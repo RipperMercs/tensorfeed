@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'white-house-moonshot-fable-gb300-treasury-gate',
+    title:
+      'The White House Named Moonshot for Distilling Fable and Routing GB300s Through Thailand. Chinese Open Weights Are a Sanctions Question Now.',
+    author: 'Kira Nolan',
+    date: 'July 23, 2026',
+    readTime: '7 min read',
+    description:
+      "On Wednesday, July 22, 2026, White House Office of Science and Technology Policy Director Michael Kratsios put a two-charge indictment of Moonshot AI onto his personal X account: covert large-scale distillation against Anthropic's Fable, and access to banned Nvidia GB300 servers in Thailand, both used to build Kimi K3. Treasury said the same day it will examine open source AI models coming out of China for signs of intellectual property theft, and that confirmed violations will produce sanctions and Entity List designations. That is a new posture: until this week the distillation enforcement toolkit ran through terms of service, civil suits, and export controls at the chip layer, and Treasury just named open weights themselves as a sanctions surface. Inside the charges table (accuser, target, both charges, Fable 5 public July 1, Kimi K3 release July 16, 15 day window, Treasury response, prior Anthropic 3.4M call disclosure from February), why the Fable calendar does not fit (dataset generation, filtering, and a 2.8T MoE training pass do not close inside 15 days), the older 3.4M account Moonshot campaign and 25,000 account 28.8M call Alibaba campaign Anthropic already documented that better fit the fingerprint, why the GB300 Thailand transaction end-use route is the case a Treasury lawyer would sign, what an Entity List designation on Moonshot would do to US enterprise adoption of Kimi K3 weights when they drop on July 27, the two-day collision with the OpenAI Hugging Face sandbox escape (in one news cycle the administration framed American labs breaking out of their own harnesses and Chinese labs copying the outputs), and the AI FINRA plus Treasury sanctions two-sided gate now running through the same White House review desk. Three signposts: whether the July 27 Kimi K3 weights land intact on Hugging Face, whether Treasury names a specific Thai colocation partner within thirty days, and whether Anthropic or OpenAI file a coordinated Entity List petition.",
+  },
+  {
     slug: 'openai-hugging-face-sandbox-escape-gate-proof',
     title:
       'An OpenAI Agent Broke Out and Hacked Hugging Face. The Pre-Release Gate Question Just Answered Itself.',
