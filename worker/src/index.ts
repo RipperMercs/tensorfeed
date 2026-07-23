@@ -4827,7 +4827,6 @@ export default {
           aiSafetyPackagesSecurity: '/api/ai-safety/packages/security?package=&ecosystem=&category= (free; per-package vulnerability history over the curated AI/ML PyPI + npm package lists. Sourced from OSV.dev (GHSA + PyPA + RustSec + Maven + npm + others). Refreshed daily 05:45 UTC.)',
           packagesReleases: '/api/packages/releases?ecosystem=&category=&package=&within_days= (free; latest version + last 10 release timestamps for every curated AI/ML PyPI + npm package. Sourced from pypi.org + registry.npmjs.org public JSON. Refreshed every 6h.)',
           aiVelocity: '/api/ai-velocity?limit= (free, capped at 30; first AFTA federation cross-call. Filters TerminalFeed.io HF + GitHub trending leaderboards to AI-relevant entries.)',
-          aiCryptoPulse: '/api/ai-crypto-pulse (free; second AFTA federation cross-call. Pulls TerminalFeed crypto-movers + funding-rates, filters to AI-thesis token cohort (TAO, FET, RNDR, AKT, WLD, ARKM, IO, OCEAN, GRT, VIRTUAL, AI16Z, NMR, AGIX, TURBO).)',
           codingHarnessesLatest: '/api/coding-harnesses/latest (free; third AFTA federation cross-call. Latest snapshot of TerminalFeed coding-harness leaderboard (SWE-bench Verified, Terminal-Bench, Aider Polyglot, etc). Refreshed daily 05:25 UTC.)',
           newsActionCards: '/api/news/action-cards?limit= (free, capped at 25; Haiku-derived structured agent action cards over the news feed. Per article: action_summary, migration_recommendation, affected_capability, cost_impact, security_impact, urgency. Daily 08:00 UTC refresh.)',
           statusIncidentsTriage: '/api/status/incidents/triage?limit= (free, capped at 25; Haiku-triaged AI provider status incidents. Per card: triage_summary, impact_classification (informational/minor/major/critical), affected_capabilities, recommended_action (no_action/monitor/retry_later/failover_now/escalate). Refreshed every 2h.)',
@@ -4849,7 +4848,6 @@ export default {
           premiumNewsActionCards: '/api/premium/news/action-cards?capability=&urgency=&min_cost_impact=&min_security_impact=&query= (1 credit, AFTA-signed; full cohort + capability/urgency exact filters + impact "at-or-above" threshold filters + title/source substring search. Sort priority: urgency > security_impact > cost_impact > published. Summary rollups by_capability, by_urgency, by_cost_impact, by_security_impact, cards_with_migration_recommendation.)',
           codingHarnessesDates: '/api/coding-harnesses/dates (free; ordered date index of captured TerminalFeed harness snapshots for delta queries.)',
           premiumCodingHarnessesWeeklyDeltas: '/api/premium/coding-harnesses/weekly-deltas?days_back=&harness=&benchmark=&model=&min_abs_delta= (1 credit, AFTA-signed; compares current TerminalFeed harness snapshot to a prior snapshot (default 7d back, clamp [1, 90]). Per-(benchmark, harness, model) score + rank deltas, biggest_gainers, biggest_regressions, entered/exited combinations, per-benchmark leader_cards with leader_changed flag.)',
-          premiumAiCryptoPulse: '/api/premium/ai-crypto-pulse?token=&setup=&min_abs_change_pct= (1 credit, AFTA-signed; joins AI-token price moves with venue-weighted funding-rate skew. Per-token setup classification: squeeze_up / chase_up / squeeze_down / chase_down / coiled / neutral. Notable movers (squeezes_up, squeezes_down, coiled, top_gainers, top_losers), summary (by_setup, breadth_pct_positive, median_change_24h_pct).)',
           premiumAiVelocity: '/api/premium/ai-velocity?pipeline=&language=&min_traction=&cross_only= (1 credit, AFTA-signed; AI-velocity ranking + cross-pollination over the TerminalFeed-sourced HF + GitHub trending snapshot. Per-entry traction_score (HF: likes*3 + log10(downloads+1)*10; GH: log10(stars+1)*30), on_both flag, cross_pollinated array of normalized-name matches, summary rollups hf_by_pipeline + github_by_language.)',
           premiumPackagesReleasesVelocity: '/api/premium/packages/releases/velocity?ecosystem=&category=&package=&min_releases_7d= (1 credit, AFTA-signed; per-package release velocity (releases_24h/7d/30d), latest bump_kind (major/minor/patch/prerelease/sideways/unknown), is_breaking_recent flag (major bump within 30d). Notable movers: recent_major_bumps, most_releases_7d, fastest_cadence_30d. Pre-1.0 minor bumps count as major per semver convention.)',
           premiumAiSafetyPackagesSecurityRadar: '/api/premium/ai-safety/packages/security/radar?ecosystem=&category=&package=&min_risk_score= (1 credit, AFTA-signed; per-package risk_score (0-100) over the OSV snapshot. Risk_band classification (calm/watch/hot/critical), notable_movers (top-5 by_critical_30d, by_risk_score, new_in_last_7d), summary rollups by_band + by_ecosystem.)',
@@ -5021,7 +5019,6 @@ export default {
           policyTimelinePreview: '/api/preview/policy/timeline (free, 10/IP/day; window counts, per-jurisdiction totals, and the single next milestone headline. The full timeline with every entry, detail, and source links is the paid upgrade at /api/premium/policy/timeline. Optional ?days_back=, ?days_forward=, ?jurisdiction=.)',
           aiStackCvesPreview: '/api/preview/ai-cves/ai-stack-cves (free, 10/IP/day; counts only (total, exploited-in-wild, by severity, by AI-stack category) plus the single top CVE headline. The full AI-stack-filtered list with version ranges, fixes, and advisory links is the paid upgrade at /api/premium/ai-cves/ai-stack-cves. Raw unfiltered batches are free at /api/ai-cves/latest.)',
           modelDeprecationsTimelinePreview: '/api/preview/model-deprecations/timeline (free, 10/IP/day; registry and window counts, per-provider and per-urgency-band summaries, and the single most-imminent sunset headline. The full timeline with every model, urgency math, and migration chains is the paid upgrade at /api/premium/model-deprecations/timeline. Optional ?within_days=, ?provider=.)',
-          aiCryptoPulsePreview: '/api/preview/ai-crypto-pulse (free, 10/IP/day; cohort size, the derived setup distribution (squeeze/chase/coiled, breadth, median move), and a few classified standouts. Full per-token setup classification and venue-weighted funding is the paid upgrade at /api/premium/ai-crypto-pulse. Raw movers and funding are free at /api/ai-crypto-pulse.)',
           researchAuthorsFreeTaste: '/api/research/authors (free; the top 25 AI researchers by trailing-365-day publication volume, same fields as the paid endpoint. The full top 100 is the paid /api/premium/research/authors.)',
           premiumRouting: '/api/premium/routing?task=code|reasoning|creative|general (1 credit; top-5 ranked models with full score breakdown, pricing, status, and component-level detail. Optional ?budget=, ?min_quality=, ?top_n=1-10, and custom weights ?w_quality=, ?w_availability=, ?w_cost=, ?w_latency=.)',
           premiumRouteVerdict: '/api/premium/route-verdict?task=code|reasoning|creative|general or ?model= (1 credit, AFTA-signed; the single best model to use right now, fusing pricing, contamination-discounted capability, real usage, measured p95 latency, and live incident state, plus runners-up and a signed receipt. Optional ?max_latency_p95_ms=, ?require_operational=, ?exclude_deprecated=. 30-min freshness SLA, no-charge when stale.)',
@@ -13765,154 +13762,6 @@ export default {
         logPremiumUsage(env, '/api/premium/coding-harnesses/weekly-deltas', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
       );
       return await premiumResponse(result, payment, 1, request, env);
-    }
-
-    // === AI CRYPTO PULSE (free, cached 300s) ===
-    // /api/ai-crypto-pulse
-    // Second AFTA federation cross-call: TF pulls TerminalFeed's
-    // /api/crypto-movers + /api/funding-rates, filters to the curated
-    // AI-thesis token cohort (TAO, FET, RNDR, AKT, WLD, ARKM, etc.),
-    // returns the raw cohort. Premium derivative at
-    // /api/premium/ai-crypto-pulse joins price moves with funding-rate
-    // skew for squeeze/chase classification.
-
-    if (path === '/api/ai-crypto-pulse') {
-      // Edge-cache the free response so a burst of agent requests on a cold
-      // snapshot does not each re-run the lazy KV refresh + KV write on the
-      // hot path (audit 2026-05-31 #20). Cache API is free/unlimited; only a
-      // miss falls through to the KV-backed snapshot refresh. 300s matches
-      // the snapshot TTL so the edge layer never serves staler-than-KV data.
-      const cryptoCacheKey = new Request('https://tensorfeed.ai/__cache/ai-crypto-pulse/v1');
-      const cryptoCache = caches.default;
-      const cryptoHit = await cryptoCache.match(cryptoCacheKey);
-      if (cryptoHit) return cryptoHit;
-
-      const { getOrRefreshCryptoSnapshot } = await import('./terminalfeed-crypto-fetcher');
-      const snap = await getOrRefreshCryptoSnapshot(env);
-      if (!snap) {
-        return jsonResponse({
-          ok: false,
-          error: 'upstream_unreachable',
-          hint: 'TerminalFeed.io did not respond and we have no cached snapshot. Retry in a few minutes.',
-        }, 503, 0);
-      }
-      const cryptoResponse = jsonResponse({
-        ok: true,
-        source: snap.source,
-        capturedAt: snap.capturedAt,
-        upstream_endpoints: snap.upstream_endpoints,
-        cohort: {
-          movers_seen: snap.movers_cohort_size,
-          funding_seen: snap.funding_cohort_size,
-          failed_venues: snap.failed_venues,
-        },
-        movers: snap.movers,
-        funding: snap.funding,
-        attribution: {
-          source: 'TerminalFeed.io (AFTA federation sister site). Upstream crypto data via TerminalFeed.',
-          license: 'Federation cross-call to TerminalFeed free endpoints; upstream market data carries the upstream provider\'s own terms.',
-          notes: 'Cohort filtered to TF-curated AI-thesis tokens. Premium derivative at /api/premium/ai-crypto-pulse joins price + funding for squeeze/chase classification.',
-        },
-      }, 200, 300);
-      ctx.waitUntil(cryptoCache.put(cryptoCacheKey, cryptoResponse.clone()));
-      return cryptoResponse;
-    }
-
-    // === PAID PREMIUM: AI CRYPTO PULSE (Tier 1, 1 credit) ===
-    // /api/premium/ai-crypto-pulse?token=&setup=&min_abs_change_pct=
-    // Joins the price-mover signal with the funding-rate signal over the
-    // AI-thesis token cohort. Per-token setup classification:
-    // squeeze_up (rising + negative funding = shorts trapped),
-    // chase_up (rising + positive funding = leverage on long side),
-    // squeeze_down, chase_down, coiled, neutral. The squeeze
-    // classifications are the contrarian alpha agents pay for.
-
-    // === FREE PREVIEW: AI-CRYPTO PULSE TASTE (10/IP/day) ===
-    // Free discovery sibling of /api/premium/ai-crypto-pulse. The raw movers
-    // and funding arrays are ALREADY free at /api/ai-crypto-pulse; this taste
-    // reveals the DERIVED layer's shape (cohort, setup distribution, breadth,
-    // and a few classified standouts) so an agent sees the squeeze/chase value
-    // before paying. Full per-token classified rows + venue funding stay paid.
-    // Rate-limit BEFORE the federation fetch so capped bots cannot trigger it.
-    if (path === '/api/preview/ai-crypto-pulse') {
-      const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
-      const {
-        buildPulse,
-        parseToken,
-        parseSetup,
-        parseMinAbsChangePct,
-        previewAiCryptoPulse,
-        checkAiCryptoPulsePreviewRateLimit,
-      } = await import('./premium-ai-crypto-pulse');
-      const acpLimit = await checkAiCryptoPulsePreviewRateLimit(env, ip, 10);
-      if (!acpLimit.allowed) {
-        return jsonResponse(
-          {
-            ok: false,
-            error: 'rate_limit_exceeded',
-            limit: acpLimit.limit,
-            remaining: 0,
-            reset_in_hours: hoursUntilUTCRollover(),
-            premium_endpoint: '/api/premium/ai-crypto-pulse',
-            message:
-              'Free preview limited to 10 calls/day per IP. The paid /api/premium/ai-crypto-pulse (full per-token setup classification and venue-weighted funding, no rate limit) is the upgrade. Raw movers and funding are free at /api/ai-crypto-pulse.',
-          },
-          429,
-        );
-      }
-      const { getOrRefreshCryptoSnapshot } = await import('./terminalfeed-crypto-fetcher');
-      const acpSnap = await getOrRefreshCryptoSnapshot(env);
-      if (!acpSnap) {
-        return jsonResponse(
-          { ok: false, error: 'upstream_unreachable', hint: 'TerminalFeed.io did not respond and no cached snapshot is available. Retry in a few minutes.' },
-          503,
-          0,
-        );
-      }
-      const acpResult = buildPulse(acpSnap, {
-        token: parseToken(url.searchParams.get('token')),
-        setup: parseSetup(url.searchParams.get('setup')),
-        min_abs_change_pct: parseMinAbsChangePct(url.searchParams.get('min_abs_change_pct')),
-      });
-      return jsonResponse(
-        {
-          ...previewAiCryptoPulse(acpResult),
-          rate_limit: { limit: acpLimit.limit, remaining: acpLimit.remaining, scope: 'per IP per UTC day' },
-        },
-        200,
-        0,
-      );
-    }
-
-    if (path === '/api/premium/ai-crypto-pulse') {
-      const payment = await requirePayment(request, env, 1);
-      if (!payment.paid) return payment.response!;
-
-      const { getOrRefreshCryptoSnapshot } = await import('./terminalfeed-crypto-fetcher');
-      const snap = await getOrRefreshCryptoSnapshot(env);
-      if (!snap) {
-        return await premiumValidationFailure(
-          { error: 'upstream_unreachable', hint: 'TerminalFeed.io did not respond and no cached snapshot is available. Retry in a few minutes.' },
-          payment, request, env, 'upstream_failure',
-        );
-      }
-
-      const { buildPulse, parseToken, parseSetup, parseMinAbsChangePct } = await import('./premium-ai-crypto-pulse');
-      const result = buildPulse(snap, {
-        token: parseToken(url.searchParams.get('token')),
-        setup: parseSetup(url.searchParams.get('setup')),
-        min_abs_change_pct: parseMinAbsChangePct(url.searchParams.get('min_abs_change_pct')),
-      });
-
-      ctx.waitUntil(
-        logPremiumUsage(env, '/api/premium/ai-crypto-pulse', request.headers.get('User-Agent') || 'unknown', 1, payment.token, payment.payerWallet, payment),
-      );
-      // Partial (single-source) snapshot: the squeeze/chase join is missing
-      // an entire side (movers or funding down) and could not be back-filled
-      // from last-known-good. Serve it free with the degraded marker rather
-      // than billing 1 credit for half the data (audit 2026-05-31 #13).
-      const cryptoNoCharge = snap.degraded ? 'empty_result' : null;
-      return await premiumResponse(result, payment, 1, request, env, cryptoNoCharge);
     }
 
     // === AI VELOCITY (free, cached 600s) ===

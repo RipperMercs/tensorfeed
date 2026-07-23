@@ -1,5 +1,5 @@
 {
-  "count": 110,
+  "count": 109,
   "credit_range": {
     "min": 1,
     "max": 50
@@ -14,7 +14,7 @@
     "intelligence": 3,
     "mcp": 1,
     "merchant": 1,
-    "misc": 36,
+    "misc": 35,
     "packages": 2,
     "policy": 1,
     "research": 8,
@@ -559,29 +559,6 @@
       "params": [],
       "returns": "Every tracked domain with per-bot robots.txt verdicts, llms.txt and ai.txt flags, plus sector rollups.",
       "free_sibling": "/api/ai-crawler-access/summary.json",
-      "signed": true,
-      "category": "misc"
-    },
-    {
-      "path": "/api/premium/ai-crypto-pulse",
-      "credits": 1,
-      "strict_premium": true,
-      "params": [
-        {
-          "name": "token",
-          "required": false
-        },
-        {
-          "name": "setup",
-          "required": false
-        },
-        {
-          "name": "min_abs_change_pct",
-          "required": false
-        }
-      ],
-      "returns": "AI-token price moves joined with venue-weighted funding-rate skew, with per-token setup classification.",
-      "free_sibling": "/api/ai-crypto-pulse",
       "signed": true,
       "category": "misc"
     },

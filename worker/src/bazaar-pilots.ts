@@ -1554,97 +1554,6 @@ const AI_VELOCITY_PILOT: BazaarPilotConfig = {
 };
 
 /**
- * /api/premium/ai-crypto-pulse: Wave 9 pilot (2026-05-24).
- * Second AFTA federation cross-call: TF joins TerminalFeed's crypto-movers
- * + funding-rates streams over an AI-thesis token cohort, classifies each
- * position as squeeze/chase/coiled/neutral based on the funding-rate vs
- * price-move signal. The "what AI tokens are about to move and why" call.
- */
-const AI_CRYPTO_PULSE_PILOT: BazaarPilotConfig = {
-  description:
-    'AI-thesis token pulse: joins price moves with venue-weighted perp funding-rate skew. Per-token setup classification (squeeze_up = rising + negative funding = shorts trapped; chase_up = rising + positive funding = leverage mean-reversion risk; squeeze_down; chase_down; coiled = flat + extreme funding). Notable movers cohort + breadth + median change summary. Filters: token substring, setup kind, min_abs_change_pct.',
-  extension: {
-    bazaar: {
-      info: {
-        input: {
-          type: 'http',
-          method: 'GET',
-          queryParams: { token: 'TAO', setup: 'squeeze_up', min_abs_change_pct: 1 },
-        },
-        output: {
-          type: 'json',
-          example: {
-            ok: true,
-            capturedAt: '2026-05-24T18:00:00Z',
-            snapshot_captured_at: '2026-05-24T17:57:00Z',
-            source: 'terminalfeed.io federation cross-call',
-            filter: { token: 'TAO', setup: 'squeeze_up', min_abs_change_pct: 1 },
-            cohort: { cohort_size: 1, movers_seen: 6, funding_seen: 4, failed_venues: [] },
-            rows: [
-              {
-                symbol: 'TAO',
-                display_name: 'Bittensor',
-                thesis: 'decentralized ML training network',
-                price_usd: 412.5,
-                change_24h_percent: 8.4,
-                market_cap: 3700000000,
-                funding_venue_count: 3,
-                funding_median_annualized_pct: -28.5,
-                funding_venue_spread_pct: 6.2,
-                funding_by_venue: [
-                  { venue: 'binance', annualized_pct: -25.4, period_rate: -0.000232, mark_price: 412.4 },
-                  { venue: 'bybit', annualized_pct: -28.5, period_rate: -0.000261, mark_price: 412.5 },
-                  { venue: 'hyperliquid', annualized_pct: -31.6, period_rate: -0.000289, mark_price: 412.6 },
-                ],
-                setup: 'squeeze_up',
-              },
-            ],
-            notable_movers: {
-              squeezes_up: [],
-              squeezes_down: [],
-              coiled: [],
-              top_gainers: [],
-              top_losers: [],
-            },
-            summary: { by_setup: { squeeze_up: 1, chase_up: 0, squeeze_down: 0, chase_down: 0, coiled: 0, neutral: 0 }, breadth_pct_positive: 100, median_change_24h_pct: 8.4 },
-            billing: { credits_charged: 1, credits_remaining: 49 },
-          },
-        },
-      },
-      schema: {
-        $schema: 'https://json-schema.org/draft/2020-12/schema',
-        type: 'object',
-        properties: {
-          input: {
-            type: 'object',
-            properties: {
-              type: { type: 'string', const: 'http' },
-              method: { type: 'string', enum: ['GET'] },
-              queryParams: {
-                type: 'object',
-                properties: {
-                  token: { type: 'string', description: 'Case-insensitive substring match against symbol or display_name (TAO, Bittensor, etc).' },
-                  setup: { type: 'string', enum: ['squeeze_up', 'chase_up', 'squeeze_down', 'chase_down', 'coiled', 'neutral'] },
-                  min_abs_change_pct: { type: 'number', minimum: 0, maximum: 1000, description: 'Minimum |change_24h_percent| to include in rows. Default 0.' },
-                },
-              },
-            },
-            required: ['type', 'method'],
-            additionalProperties: false,
-          },
-          output: {
-            type: 'object',
-            properties: { type: { type: 'string' }, example: { type: 'object' } },
-            required: ['type'],
-          },
-        },
-        required: ['input'],
-      },
-    },
-  },
-};
-
-/**
  * /api/premium/coding-harnesses/weekly-deltas: Wave 10 pilot (2026-05-24).
  * Third AFTA federation cross-call. Compares two daily TerminalFeed
  * harness snapshots to surface score + rank deltas, entered/exited
@@ -3058,11 +2967,6 @@ const AI_COMPANIES_AGGREGATE_PILOT: BazaarPilotConfig = {
  * Wave 8 (2026-05-24): ai-velocity. First AFTA federation cross-call. TF
  * pulls TerminalFeed's HF + GitHub trending leaderboards, derives
  * AI-cohort traction + cross-pollination. Total pilot count: 20 -> 21.
- *
- * Wave 9 (2026-05-24): ai-crypto-pulse. Second federation cross-call.
- * TF joins TerminalFeed's crypto-movers + funding-rates for the
- * AI-thesis token cohort with squeeze/chase classification. Total
- * pilot count: 21 -> 22.
  *
  * Wave 10 (2026-05-24): coding-harnesses/weekly-deltas. Third federation
  * cross-call. Daily-snapshotted TerminalFeed harness leaderboard with
@@ -7902,8 +7806,6 @@ const BAZAAR_PILOTS: Record<string, BazaarPilotConfig> = {
   '/api/premium/packages/releases/velocity': PKG_RELEASES_VELOCITY_PILOT,
   // Wave 8
   '/api/premium/ai-velocity': AI_VELOCITY_PILOT,
-  // Wave 9
-  '/api/premium/ai-crypto-pulse': AI_CRYPTO_PULSE_PILOT,
   // Wave 10
   '/api/premium/coding-harnesses/weekly-deltas': HARNESS_DELTAS_PILOT,
   // Wave 11

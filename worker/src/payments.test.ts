@@ -1439,7 +1439,6 @@ describe('previewSiblingFor', () => {
     expect(previewSiblingFor('/api/premium/policy/timeline')).toBe('/api/preview/policy/timeline');
     expect(previewSiblingFor('/api/premium/ai-cves/ai-stack-cves')).toBe('/api/preview/ai-cves/ai-stack-cves');
     expect(previewSiblingFor('/api/premium/model-deprecations/timeline')).toBe('/api/preview/model-deprecations/timeline');
-    expect(previewSiblingFor('/api/premium/ai-crypto-pulse')).toBe('/api/preview/ai-crypto-pulse');
     // research/authors points at its existing free top-25 sibling, not a new preview route.
     expect(previewSiblingFor('/api/premium/research/authors')).toBe('/api/research/authors');
     // the 10-credit pro tier points at its own dedicated free taste.

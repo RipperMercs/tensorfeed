@@ -446,23 +446,6 @@ const SUGGESTION_MAP: Record<string, SuggestionTemplate[]> = {
       why: 'Trust-check the counterparty wallet before settling on the recommended rail.',
       credits: ONE_CREDIT,
     },
-    {
-      path: '/api/premium/ai-crypto-pulse',
-      why: 'Market pulse across the AI token cohort if your settlement strategy tracks token conditions.',
-      credits: ONE_CREDIT,
-    },
-  ],
-  '/api/premium/ai-crypto-pulse': [
-    {
-      path: '/api/premium/settlement/rail-verdict',
-      why: 'Cost and finality ranking across x402 settlement rails, signed.',
-      credits: ONE_CREDIT,
-    },
-    {
-      path: '/api/premium/x402-settlement-verdict',
-      why: 'Signed verdict on x402 settlement conditions across tracked rails.',
-      credits: ONE_CREDIT,
-    },
   ],
 
   // === API ecosystem ===
