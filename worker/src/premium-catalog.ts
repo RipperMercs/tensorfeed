@@ -1164,20 +1164,6 @@ export const PREMIUM_CATALOG: PremiumEndpoint[] = [
     category: 'misc',
   },
   {
-    path: '/api/premium/ai-crypto-pulse',
-    credits: 1,
-    strict_premium: true,
-    params: [
-      { name: 'token', required: false },
-      { name: 'setup', required: false },
-      { name: 'min_abs_change_pct', required: false },
-    ],
-    returns: 'AI-token price moves joined with venue-weighted funding-rate skew, with per-token setup classification.',
-    free_sibling: '/api/ai-crypto-pulse',
-    signed: true,
-    category: 'misc',
-  },
-  {
     path: '/api/premium/ai-velocity',
     credits: 1,
     strict_premium: true,

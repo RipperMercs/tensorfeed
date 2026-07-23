@@ -51,8 +51,6 @@ const PILOT_PATHS = [
   '/api/premium/packages/releases/velocity',
   // Wave 8
   '/api/premium/ai-velocity',
-  // Wave 9
-  '/api/premium/ai-crypto-pulse',
   // Wave 10
   '/api/premium/coding-harnesses/weekly-deltas',
   // Wave 11
@@ -531,8 +529,6 @@ describe('Wave 2 pilot AJV validation', () => {
     '/api/premium/packages/releases/velocity',
     // Wave 8 (2026-05-24)
     '/api/premium/ai-velocity',
-    // Wave 9 (2026-05-24)
-    '/api/premium/ai-crypto-pulse',
     // Wave 10 (2026-05-24)
     '/api/premium/coding-harnesses/weekly-deltas',
     // Wave 11 (2026-05-24)

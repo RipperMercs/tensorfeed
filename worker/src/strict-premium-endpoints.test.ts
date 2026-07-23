@@ -151,12 +151,6 @@ describe('isStrictPremiumPath', () => {
     });
   });
 
-  describe('Wave 9 Bazaar pilot (2026-05-24)', () => {
-    it('matches /api/premium/ai-crypto-pulse', () => {
-      expect(isStrictPremiumPath('/api/premium/ai-crypto-pulse')).toBe(true);
-    });
-  });
-
   describe('Wave 10 Bazaar pilot (2026-05-24)', () => {
     it('matches /api/premium/coding-harnesses/weekly-deltas', () => {
       expect(isStrictPremiumPath('/api/premium/coding-harnesses/weekly-deltas')).toBe(true);
@@ -293,8 +287,10 @@ describe('isStrictPremiumPath', () => {
       // productized $1 CVE Check, tier 5 = 50 credits; the same deploy gate as
       // stack-safety-verdict over a pasted requirements.txt, package.json,
       // package-lock.json, or poetry.lock).
-      expect(STRICT_PREMIUM_PATHS).toHaveLength(102);
-      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(102); // no duplicates
+      // - 1 (2026-07-23) ai-crypto-pulse removed (upstream CoinGecko + exchange
+      // ToS bar commercial redistribution, so the endpoint no longer ships).
+      expect(STRICT_PREMIUM_PATHS).toHaveLength(101);
+      expect(new Set(STRICT_PREMIUM_PATHS).size).toBe(101); // no duplicates
     });
     it('exposes 7 prefix paths (providers + clean-record pilots + ai-companies + x402-index)', () => {
       expect(STRICT_PREMIUM_PREFIXES).toHaveLength(7);

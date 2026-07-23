@@ -97,7 +97,6 @@ const PILOT_METADATA: Record<string, PilotMeta> = {
   '/api/premium/ai-safety/packages/security/radar':  { name: 'AI-package security radar',             category: 'ai-package-security',     credits: 1, method: 'GET' },
   '/api/premium/packages/releases/velocity':         { name: 'AI-package release velocity',           category: 'package-release-velocity', credits: 1, method: 'GET' },
   '/api/premium/ai-velocity':                        { name: 'AI velocity (federation cross-call)',   category: 'ai-velocity-cross-surface', credits: 1, method: 'GET' },
-  '/api/premium/ai-crypto-pulse':                    { name: 'AI-thesis crypto pulse',                category: 'ai-crypto-funding',       credits: 1, method: 'GET' },
   '/api/premium/coding-harnesses/weekly-deltas':     { name: 'Coding-harness weekly deltas',          category: 'coding-harness-deltas',   credits: 1, method: 'GET' },
   '/api/premium/news/action-cards':                  { name: 'News action cards (Haiku-derived)',     category: 'news-action-cards',       credits: 1, method: 'GET' },
   '/api/premium/status/incidents/triage':            { name: 'Status incident triage (Haiku-derived)', category: 'status-incident-triage', credits: 1, method: 'GET' },

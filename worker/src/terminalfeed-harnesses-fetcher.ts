@@ -1,7 +1,7 @@
 /**
  * TerminalFeed coding-harness fetcher.
  *
- * Third AFTA federation cross-call (after ai-velocity + ai-crypto-pulse).
+ * Third AFTA federation cross-call (after ai-velocity).
  * Pulls TerminalFeed's /api/harnesses leaderboard (agentic-coding
  * harnesses + benchmarks: SWE-bench Verified, Terminal-Bench, Aider
  * Polyglot, SWE-Lancer) and snapshots it daily to KV so we can compute
