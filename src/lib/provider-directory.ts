@@ -134,7 +134,7 @@ export const PROVIDERS: ProviderMeta[] = [
     seoDescription:
       'Everything about DeepSeek. V4 Pro and Flash models, MIT license, pricing, benchmarks, and capabilities. Updated daily on TensorFeed.',
     intro:
-      'DeepSeek is the Chinese AI lab that keeps closing the gap with frontier proprietary models while releasing everything under the MIT license. Their V4 family, launched in April 2026, includes V4 Pro (1.6 trillion parameters, 49B active) and V4 Flash (284B total, 13B active), both with native 1M token context windows. V4 Pro scored 80.6% on SWE-bench Verified, within 0.2 points of Claude Opus 4.6. At $1.74 per million input tokens for Pro and $0.14 for Flash, they offer near-frontier performance at a fraction of proprietary pricing.',
+      'DeepSeek is the Chinese AI lab that keeps closing the gap with frontier proprietary models while releasing everything under the MIT license. Their V4 family, launched in April 2026, includes V4 Pro (1.6 trillion parameters, 49B active) and V4 Flash (284B total, 13B active), both with native 1M token context windows. V4 Pro scored 80.6% on SWE-bench Verified, within 0.2 points of Claude Opus 4.6. At $0.435 per million input tokens for Pro and $0.14 for Flash, they offer near-frontier performance at a fraction of proprietary pricing.',
     founded: '2023',
     headquarters: 'Hangzhou, China',
     ceo: 'Liang Wenfeng',

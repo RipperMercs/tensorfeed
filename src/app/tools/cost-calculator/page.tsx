@@ -63,7 +63,7 @@ const FAQ_ITEMS = [
   {
     question: 'How much does the Claude API cost?',
     answer:
-      'Claude API pricing varies by model tier. Claude Opus 4.7 costs $15/1M input tokens and $75/1M output tokens and ships with a 1M context window. Claude Sonnet 4.6 is $3/1M input and $15/1M output with a 200K context window. Claude Haiku 4.5 is the most affordable at $0.80/1M input and $4/1M output with 200K context.',
+      'Claude API pricing varies by model tier. Claude Opus 5, the current flagship, costs $5/1M input tokens and $25/1M output tokens and ships with a 1M context window. Claude Sonnet 4.6 is $3/1M input and $15/1M output with a 200K context window. Claude Haiku 4.5 is the most affordable at $0.80/1M input and $4/1M output with 200K context.',
   },
   {
     question: 'What is the cheapest AI API?',

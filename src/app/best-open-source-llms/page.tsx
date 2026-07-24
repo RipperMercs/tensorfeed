@@ -64,7 +64,7 @@ const models = [
       'MIT license allows unrestricted commercial use',
       'Native 1M token context window',
       'Hybrid Attention architecture for better long-context recall',
-      'API pricing at $1.74/$3.48 per 1M tokens (9x cheaper than Claude)',
+      'API pricing at $0.435/$0.87 per 1M tokens (roughly 11x cheaper input than Claude Opus 5)',
     ],
     bestFor: 'The strongest open source model available. Near-frontier coding and reasoning at a fraction of proprietary pricing. Ideal for teams that want Claude-level quality with MIT license freedom.',
     considerations: 'The 1.6T parameter model requires multi-GPU infrastructure to self-host. API access through DeepSeek is affordable but subject to China-based hosting. V4 Flash is the better choice for latency-sensitive workloads.',

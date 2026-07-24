@@ -635,7 +635,7 @@ export default function AgiAsiPage() {
           {[
             {
               name: 'Anthropic',
-              focus: 'Frontier capability research with an explicit safety mission. Claude 3 and the Claude 4 family (Opus 4.7, Sonnet 4.6, Haiku 4.5) are its flagship model lines. Dario Amodei publicly targets powerful AI within a few years and has argued that the first companies to reach advanced systems should use them to help solve the alignment problem.',
+              focus: 'Frontier capability research with an explicit safety mission. The Claude 5 family (Opus 5, Fable 5, Sonnet 5) and the preceding Claude 4 line are its flagship model lines. Dario Amodei publicly targets powerful AI within a few years and has argued that the first companies to reach advanced systems should use them to help solve the alignment problem.',
             },
             {
               name: 'OpenAI',

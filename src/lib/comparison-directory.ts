@@ -339,7 +339,7 @@ export const COMPARISONS: ComparisonMeta[] = [
     seoDescription:
       'GPT-5.5 vs Gemini 2.5 Pro head to head. Two 1M-context flagships from OpenAI and Google compared on pricing, benchmarks, and capabilities.',
     intro:
-      'GPT-5.5 and Gemini 2.5 Pro are the flagship models from OpenAI and Google, both with 1M token context windows. GPT-5.5 dominates benchmarks across the board but costs 4x more on input. Gemini remains the best value for long-context production workloads, especially teams processing high volumes on Google Cloud.',
+      'GPT-5.5 and Gemini 2.5 Pro were the flagship models from OpenAI and Google through mid-2026, both with 1M token context windows. GPT-5.5 dominates benchmarks across the board but costs 4x more on input. Gemini remains the best value for long-context production workloads, especially teams processing high volumes on Google Cloud.',
     verdicts: [
       { category: 'Benchmarks', winner: 'A', reason: 'GPT-5.5 leads on MMLU-Pro (94.2 vs 91.2), HumanEval (97.1 vs 93.8), and MATH (95.8 vs 90.5)' },
       { category: 'Input pricing', winner: 'B', reason: 'Gemini at $1.25/1M vs GPT-5.5 at $5/1M' },
@@ -375,13 +375,13 @@ export const COMPARISONS: ComparisonMeta[] = [
     seoDescription:
       'DeepSeek V4 Pro vs GPT-5.5 head to head. The MIT-licensed open source flagship against OpenAI\'s newest closed model. Pricing, benchmarks, and 1M context compared.',
     intro:
-      'DeepSeek V4 Pro and GPT-5.5 both shipped within 24 hours of each other in late April 2026 (V4 on April 24, GPT-5.5 on April 23). They both target the same problem: long-context reasoning at the frontier. GPT-5.5 leads benchmarks across the board, but DeepSeek V4 Pro costs $1.74 per million input tokens versus $5.00 for GPT-5.5, and ships under the MIT license with weights anyone can download. The choice comes down to closed-API quality versus open-source independence at roughly one-third the price.',
+      'DeepSeek V4 Pro and GPT-5.5 both shipped within 24 hours of each other in late April 2026 (V4 on April 24, GPT-5.5 on April 23). They both target the same problem: long-context reasoning at the frontier. GPT-5.5 leads benchmarks across the board, but DeepSeek V4 Pro costs $0.435 per million input tokens versus $5.00 for GPT-5.5, and ships under the MIT license with weights anyone can download. The choice comes down to closed-API quality versus open-source independence at roughly one-third the price.',
     verdicts: [
       { category: 'MMLU-Pro', winner: 'B', reason: 'GPT-5.5 scores 94.2 vs DeepSeek V4 Pro at 91.5' },
       { category: 'Code generation (HumanEval)', winner: 'B', reason: 'GPT-5.5 at 97.1 vs V4 Pro at 94.8' },
       { category: 'SWE-bench', winner: 'B', reason: 'GPT-5.5 at 68.7 vs V4 Pro at 63.8 on the TensorFeed harness' },
       { category: 'Math', winner: 'B', reason: 'GPT-5.5 at 95.8 vs V4 Pro at 92.4' },
-      { category: 'Pricing', winner: 'A', reason: 'V4 Pro at $1.74/$3.48 vs GPT-5.5 at $5/$30 per 1M tokens' },
+      { category: 'Pricing', winner: 'A', reason: 'V4 Pro at $0.435/$0.87 vs GPT-5.5 at $5/$30 per 1M tokens' },
       { category: 'License', winner: 'A', reason: 'MIT license allows unrestricted self-hosting and fine-tuning' },
       { category: 'Context window', winner: 'tie', reason: 'Both ship with native 1M token context windows' },
       { category: 'Multimodal', winner: 'B', reason: 'GPT-5.5 supports text, image, audio, and video; V4 Pro is text and vision' },
@@ -458,7 +458,7 @@ export const COMPARISONS: ComparisonMeta[] = [
       { category: 'SWE-bench', winner: 'A', reason: 'Opus 4.7 at 65.4 vs V4 Pro at 63.8' },
       { category: 'Graduate-level science (GPQA)', winner: 'A', reason: 'Opus 4.7 at 76.5 vs V4 Pro at 73.1' },
       { category: 'Math', winner: 'tie', reason: 'Opus 4.7 at 93.1 vs V4 Pro at 92.4. Within noise.' },
-      { category: 'Pricing', winner: 'B', reason: 'V4 Pro at $1.74/$3.48 vs Opus at $15/$75. ~10x cheaper input, ~20x cheaper output.' },
+      { category: 'Pricing', winner: 'B', reason: 'V4 Pro at $0.435/$0.87 vs Opus 4.7 at $15/$75. ~34x cheaper input, ~86x cheaper output.' },
       { category: 'License', winner: 'B', reason: 'V4 Pro is MIT-licensed open weights; Opus is closed API only.' },
       { category: 'Context window', winner: 'tie', reason: 'Both ship 1M token native context.' },
     ],
@@ -794,9 +794,9 @@ export const COMPARISONS: ComparisonMeta[] = [
     benchmarkNameB: 'Claude Opus 4.7',
     seoTitle: 'Claude Opus 4.8 vs 4.7: What Actually Changed',
     seoDescription:
-      'Claude Opus 4.8 vs 4.7 compared. Same $15/$75 pricing, same 1M context, sharper agentic coding, a cheaper fast mode, and more honesty. Full generational diff on TensorFeed.',
+      'Claude Opus 4.8 vs 4.7 compared. A 3x price cut to $5/$25, same 1M context, sharper agentic coding, a cheaper fast mode, and more honesty. Full generational diff on TensorFeed.',
     intro:
-      'Anthropic released Claude Opus 4.8 on May 28, 2026, just six weeks after Opus 4.7. Pricing held steady at $15 input and $75 output per million tokens, and the 1 million token context window carries over unchanged. The gains are in capability and economics: Anthropic\'s own numbers put agentic coding at 69.2% (up from 64.3%), knowledge work at 1890 (up from 1753), and agentic financial analysis at 53.9% (up from 51.5%), while the new fast mode runs roughly 2.5x quicker and about three times cheaper than before. Anthropic also frames 4.8 as more honest about its own progress and better at working independently for longer. Here is the full generational diff.',
+      'Anthropic released Claude Opus 4.8 on May 28, 2026, just six weeks after Opus 4.7. The headline is the price: 4.8 costs $5 per million input tokens and $25 per million output, against $15 and $75 for Opus 4.7, a three-fold cut for the newer and stronger model. The 1 million token context window carries over unchanged. The gains are in capability and economics: Anthropic\'s own numbers put agentic coding at 69.2% (up from 64.3%), knowledge work at 1890 (up from 1753), and agentic financial analysis at 53.9% (up from 51.5%), while the new fast mode runs roughly 2.5x quicker and about three times cheaper than before. Anthropic also frames 4.8 as more honest about its own progress and better at working independently for longer. Here is the full generational diff.',
     verdicts: [
       { category: 'Agentic coding', winner: 'A', reason: 'Opus 4.8 scores 69.2% vs 4.7 at 64.3% on Anthropic\'s agentic coding measure' },
       { category: 'Knowledge work', winner: 'A', reason: 'Opus 4.8 posts 1890 vs 4.7 at 1753 on Anthropic\'s knowledge work score' },
@@ -804,7 +804,7 @@ export const COMPARISONS: ComparisonMeta[] = [
       { category: 'Agentic computer use', winner: 'A', reason: 'Opus 4.8 reaches 83.4% vs 4.7 at 82.8%' },
       { category: 'Agentic financial analysis', winner: 'A', reason: 'Opus 4.8 improves to 53.9% from 4.7 at 51.5%' },
       { category: 'Fast mode', winner: 'A', reason: 'Opus 4.8 fast mode is roughly 2.5x faster and about 3x cheaper than the previous fast mode' },
-      { category: 'Pricing', winner: 'tie', reason: 'Both cost $15 input and $75 output per 1M tokens' },
+      { category: 'Pricing', winner: 'A', reason: 'Opus 4.8 costs $5 input and $25 output per 1M tokens vs $15 and $75 for Opus 4.7, a 3x cut' },
       { category: 'Context window', winner: 'tie', reason: 'Both ship a 1 million token context window' },
     ],
     chooseA: [
@@ -983,7 +983,7 @@ export const COMPARISONS: ComparisonMeta[] = [
     benchmarkNameB: 'Claude Opus 4.8',
     seoTitle: 'Grok 4.5 vs Claude Opus 4.8: Pricing, Benchmarks, Verdict',
     seoDescription:
-      'Grok 4.5 vs Claude Opus 4.8 compared. xAI\'s coding model at $2/$6 against Anthropic\'s default flagship, benchmarks, context, and verdicts on TensorFeed.',
+      'Grok 4.5 vs Claude Opus 4.8 compared. xAI\'s coding model at $2/$6 against Anthropic\'s Opus 4.8, benchmarks, context, and verdicts on TensorFeed.',
     intro:
       'xAI put Grok 4.5 straight up against Claude Opus 4.8 on July 8, 2026, and the pitch is price. Grok 4.5, built on the 1.5 trillion parameter V9 foundation and trained on real coding-agent data, lands fourth on the Artificial Analysis Intelligence Index at $2 input / $6 output per 1M tokens, more than 60% below Opus 4.8 at $5 / $25. Grok leads Opus on the provider-harness DeepSWE 1.0 score and on Terminal-Bench 2.1 (83.3), but Opus 4.8 pulls ahead on the neutral DeepSWE 1.1 run and on SWE-Bench Pro (64.7 for Grok), and it ships a 1M context window against Grok\'s 500K. The choice comes down to cheap coding throughput versus verified accuracy and longer context.',
     verdicts: [

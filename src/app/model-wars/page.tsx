@@ -161,7 +161,7 @@ const FAQS = [
   {
     question: 'Which AI model is the best in 2026?',
     answer:
-      'There is no single best model. Claude Opus 4.7 leads on coding and agentic benchmarks and ships with a 1M context window. OpenAI o1 and o3 lead on math reasoning. Gemini 2.5 Pro leads on price-per-token at long context. The right answer depends on the workload. See our benchmark leaderboard for category winners.',
+      'There is no single best model. Claude Opus 5 leads on coding and agentic benchmarks and ships with a 1M context window. OpenAI o1 and o3 lead on math reasoning. Gemini 2.5 Pro leads on price-per-token at long context. The right answer depends on the workload. See our benchmark leaderboard for category winners.',
   },
   {
     question: 'Who is winning the frontier AI race?',

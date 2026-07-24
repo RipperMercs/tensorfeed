@@ -510,9 +510,9 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [Mistral Small](https://tensorfeed.ai/models/mistral-small): Pricing, benchmarks, specs for Mistral AI's budget model
 - [Command R+](https://tensorfeed.ai/models/command-r-plus): Pricing, benchmarks, specs for Cohere's RAG flagship
 - [Command R](https://tensorfeed.ai/models/command-r): Pricing, benchmarks, specs for Cohere's affordable RAG model
-- [GPT-5.6 Sol](https://tensorfeed.ai/models/gpt-5-6-sol): Pricing, preview access, specs for OpenAI's June 26, 2026 frontier reasoning model (limited preview to ~20 orgs at $5/$30, 1M context, GA in coming weeks)
-- [GPT-5.6 Terra](https://tensorfeed.ai/models/gpt-5-6-terra): Pricing, preview access, specs for OpenAI's balanced mid-tier in the GPT-5.6 family (limited preview at $2.50/$15, GPT-5.5-class performance at roughly half the cost)
-- [GPT-5.6 Luna](https://tensorfeed.ai/models/gpt-5-6-luna): Pricing, preview access, specs for OpenAI's fast budget variant of the GPT-5.6 family (limited preview at $1/$6, 1M context)
+- [GPT-5.6 Sol](https://tensorfeed.ai/models/gpt-5-6-sol): Pricing, benchmarks, specs for OpenAI's frontier reasoning model (previewed June 26, generally available July 9, 2026; $5/$30 per 1M tokens; 1M context)
+- [GPT-5.6 Terra](https://tensorfeed.ai/models/gpt-5-6-terra): Pricing, benchmarks, specs for OpenAI's balanced mid-tier in the GPT-5.6 family (generally available July 9, 2026; $2.50/$15; GPT-5.5-class performance at roughly half the cost)
+- [GPT-5.6 Luna](https://tensorfeed.ai/models/gpt-5-6-luna): Pricing, benchmarks, specs for OpenAI's fast budget variant of the GPT-5.6 family (generally available July 9, 2026; $1/$6; 1M context)
 - [GPT-5.5](https://tensorfeed.ai/models/gpt-5-5): Pricing, benchmarks, specs for OpenAI's broadly available flagship (1M context, omnimodal, $5/$30)
 - [DeepSeek V4 Pro](https://tensorfeed.ai/models/deepseek-v4-pro): Pricing, benchmarks, specs for DeepSeek's 1.6T parameter open source flagship
 - [DeepSeek V4 Flash](https://tensorfeed.ai/models/deepseek-v4-flash): Pricing, benchmarks, specs for DeepSeek's ultra-affordable open source model
