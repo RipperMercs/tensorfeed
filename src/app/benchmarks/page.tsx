@@ -52,7 +52,10 @@ type SortKey = 'rank' | 'model' | 'provider' | 'score' | 'released';
 type SortDir = 'asc' | 'desc';
 
 export default function BenchmarksPage() {
-  const [data, setData] = useState<BenchmarksData>(fallbackData as BenchmarksData);
+  // Cast through unknown: the JSON literal infers a wide union of per-model score
+  // shapes (each benchmark id optional per row), which no longer directly overlaps
+  // the Record<string, number> index signature. Runtime shape is unchanged.
+  const [data, setData] = useState<BenchmarksData>(fallbackData as unknown as BenchmarksData);
 
   useEffect(() => {
     fetch('https://tensorfeed.ai/api/benchmarks')

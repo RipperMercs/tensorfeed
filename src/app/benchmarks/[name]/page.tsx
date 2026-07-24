@@ -43,7 +43,10 @@ export default function BenchmarkLeaderboardPage({ params }: { params: { name: s
   const meta = getBenchmarkBySlug(params.name);
   if (!meta) notFound();
 
-  const data = benchmarkData as BenchmarksFile;
+  // Cast through unknown: the JSON literal infers a wide union of per-model score
+  // shapes (each benchmark id optional per row), which no longer directly overlaps
+  // the Record<string, number> index signature. Runtime shape is unchanged.
+  const data = benchmarkData as unknown as BenchmarksFile;
   const benchDef = data.benchmarks.find(b => b.id === meta.slug);
 
   // Build the leaderboard: filter to models that have a numeric score for this benchmark
