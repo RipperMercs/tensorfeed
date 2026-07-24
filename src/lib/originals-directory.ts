@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'amd-anthropic-2gw-mi450-fifth-vendor',
+    title:
+      'AMD Put $5 Billion Into Anthropic for 2 Gigawatts of MI450. The Fifth Compute Vendor Comes With a ROCm Engineering Team Attached.',
+    author: 'Marcus Chen',
+    date: 'July 24, 2026',
+    readTime: '7 min read',
+    description:
+      "On Wednesday, July 22, 2026, AMD and Anthropic announced a strategic partnership at Advancing AI 2026 to deploy up to 2 gigawatts of Instinct MI450 Series GPUs inside AMD Helios rack-scale systems, with the first gigawatt landing in the first half of 2027 and AMD committing an equity investment of up to $5 billion into Anthropic. AMD also disclosed a joint engineering track under which Claude is used to accelerate ROCm software development. That is the fifth distinct silicon source now feeding Claude (after Google TPU, SpaceX Colossus, AWS Trainium, and the still-unconfirmed Meta talks), and the third compute vendor in nine months to write its customer an equity check to close a training-scale commitment. Inside the deal numbers table, the fifth-vendor stack view, why the vendor-equity loop is now the standard contract on both sides of the merchant silicon market, the ROCm co-engineering clause and how it lands directly on the harness-is-the-product thesis, the Helios tokens-per-dollar claim against Nvidia's Rubin NVL72, and what a second credible rack-scale vendor does to the inference price floor. Three signposts: whether Meta closes to make it six, whether MLPerf replicates the 30 percent tokens-per-dollar Helios number within two quarters of shipment, and whether the Anthropic S-1 amendment names AMD as a supplier concentration line item.",
+  },
+  {
     slug: 'white-house-moonshot-fable-gb300-treasury-gate',
     title:
       'The White House Named Moonshot for Distilling Fable and Routing GB300s Through Thailand. Chinese Open Weights Are a Sanctions Question Now.',
