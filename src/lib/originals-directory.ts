@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'claude-opus-5-same-price-half-of-fable',
+    title:
+      'Anthropic Shipped Opus 5 at the Old Opus Price. It Beats Fable 5 on Most Rows for Half the Money.',
+    author: 'Adrian Vale',
+    date: 'July 24, 2026',
+    readTime: '8 min read',
+    description:
+      "Claude Opus 5 landed July 24, 2026 at $5 per million input tokens and $25 per million output, which is exactly what Opus 4.8 costs and exactly half of Fable 5. The default assumption that a new Opus tier costs more does not hold: every benchmark gain in this release is free in dollar terms, which is not how GPT-5.5 or Fable 5 went. Against Opus 4.8 the gains are large and lopsided. ARC-AGI-3 goes from 1.5 percent to 30.2, which is not an increment but a capability the previous model did not have, and on a benchmark built to resist memorization that is either real generalization or a contamination story that only independent replication settles. Computer use on OSWorld 2.0 climbs 55.7 to 70.6, the fifteen points that separate a GUI agent needing supervision from one that can be left alone. Agentic terminal coding on Frontier-Bench doubles, 21.1 to 43.3, and knowledge work on GDPval-AA v2 goes 1593 to 1861. The awkward part is Fable 5: across the eleven rows where both models report a directly comparable number, Opus 5 takes seven and Fable 5 takes four, and two of Fable 5's four are inside two tenths of a point. Anthropic still calls Fable 5 the highest capability tier while charging double for it, leaving legal agent work and sub-point coding edges as the whole argument. Two further rows are excluded here because the Fable column reports a Mythos 5 ceiling, the safeguards-lifted Project Glasswing variant no normal customer can buy. The upgrade is free but the port is not: thinking is now on by default so a request that omitted the parameter silently spends more and can truncate against a tight max_tokens, disabling thinking above high effort now returns a 400 where 4.8 accepted it, and the prompt cache minimum halves to 512 tokens. Opus 5 also uses a separate rate-limit pool and is excluded from Priority Tier. Includes a generational table, a row-by-row Fable 5 split, and three signposts: whether ARC-AGI-3 survives replication, whether Fable 5 gets repriced, and why no SWE-bench Verified number appears on a coding-focused launch table.",
+  },
+  {
     slug: 'open-weights-coalition-letter-who-didnt-sign',
     title:
       '25 Companies Signed the Open Weights Letter. The Story Is the Three That Did Not.',
