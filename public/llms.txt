@@ -501,6 +501,7 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [Gemini 2.0 Flash](https://tensorfeed.ai/models/gemini-2-0-flash): Pricing, benchmarks, specs for Google's speed model
 - [Llama 4 Scout](https://tensorfeed.ai/models/llama-4-scout): Benchmarks, specs for Meta's 10M context open source model
 - [Llama 4 Maverick](https://tensorfeed.ai/models/llama-4-maverick): Benchmarks, specs for Meta's high-performance open source model
+- [Mistral Medium 3.5](https://tensorfeed.ai/models/mistral-medium-3-5): Pricing, benchmarks, specs for Mistral's 128B open-weight coder (public preview May 3, 2026; $1.50/$7.50 per 1M tokens; 256K context; 77.6 percent SWE-Bench Verified; modified MIT; runs on a single H100 at 4-bit)
 - [Mistral Large](https://tensorfeed.ai/models/mistral-large): Pricing, benchmarks, specs for Mistral AI's flagship
 - [Mistral Small](https://tensorfeed.ai/models/mistral-small): Pricing, benchmarks, specs for Mistral AI's budget model
 - [Command R+](https://tensorfeed.ai/models/command-r-plus): Pricing, benchmarks, specs for Cohere's RAG flagship
@@ -515,6 +516,8 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [Nemotron 3 Nano Omni](https://tensorfeed.ai/models/nemotron-3-nano-omni): Specs and benchmarks for NVIDIA's open multimodal 30B-A3B model
 - [MAI-Code-1-Flash](https://tensorfeed.ai/models/mai-code-1-flash): Pricing, specs for Microsoft's first in-house Copilot coding model (Build 2026)
 - [MiniMax M3](https://tensorfeed.ai/models/minimax-m3): Pricing, specs for MiniMax's June 2026 open-weight sparse-attention coding model (1M context)
+- [GLM-5.2](https://tensorfeed.ai/models/glm-5-2): Pricing, benchmarks, specs for Z.ai's 744B MoE (June 13, 2026; $1.40/$4.40 per 1M tokens; 1M context, 131K output; MIT weights; first among open-weight models on the Artificial Analysis index; trained on ~100k Huawei Ascend chips with no Nvidia)
+- [Kimi K3](https://tensorfeed.ai/models/kimi-k3): Pricing, benchmarks, specs for Moonshot AI's 2.8T MoE, the largest open-weight model ever shipped (July 16, 2026; $0.30 cache-hit / $3.00 input, $15.00 output; 1M context; native vision; 93.5 percent GPQA Diamond; needs ~1,450GB VRAM at 4-bit)
 - [LongCat-2.0](https://tensorfeed.ai/models/longcat-2): Specs and benchmarks for Meituan's June 30, 2026 open-source 1.6T MoE agentic coding model under MIT (1M context; trained end-to-end on domestic Chinese chips)
 - [Grok 4.5](https://tensorfeed.ai/models/grok-4-5): Pricing, benchmarks, specs for xAI's July 8, 2026 coding model on the V9 foundation ($2/$6, 500K context, fourth on the Artificial Analysis Intelligence Index)
 - [Muse Spark 1.1](https://tensorfeed.ai/models/muse-spark-1-1): Pricing, benchmarks, specs for Meta's July 9, 2026 first paid API model ($1.25/$4.25, 1M context, agentic tool-use leader on MCP Atlas)
@@ -558,6 +561,8 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [NVIDIA](https://tensorfeed.ai/providers/nvidia): Nemotron open multimodal models and self-host overview
 - [Microsoft](https://tensorfeed.ai/providers/microsoft): MAI models, GitHub Copilot integration, Foundry, and overview
 - [MiniMax](https://tensorfeed.ai/providers/minimax): M3 open-weight model, sparse attention, pricing, and overview
+- [Z.ai (Zhipu AI)](https://tensorfeed.ai/providers/zhipu): GLM family, GLM-5.2 flagship, MIT open weights, Huawei Ascend training story, pricing, and overview
+- [Moonshot AI](https://tensorfeed.ai/providers/moonshot): Kimi family, Kimi K3 flagship, largest open-weight model shipped, pricing, and overview
 - [Meituan](https://tensorfeed.ai/providers/meituan): LongCat-2.0 open-source 1.6T MoE coding model, MIT license, domestic-chip training story, and overview
 - [xAI](https://tensorfeed.ai/providers/xai): Grok models, Grok 4.5 coding model, pricing, real-time X data, and company overview
 

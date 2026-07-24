@@ -438,6 +438,23 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
 
   // ── Mistral ────────────────────────────────────────────────────────
   {
+    slug: 'mistral-medium-3-5',
+    pricingId: 'mistral-medium-3-5',
+    benchmarkName: 'Mistral Medium 3.5',
+    providerId: 'mistral',
+    providerName: 'Mistral',
+    providerUrl: 'https://mistral.ai',
+    seoTitle: 'Mistral Medium 3.5: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Mistral Medium 3.5 by Mistral AI, a 128B open-weight coder at $1.50/$7.50 per 1M tokens with 256K context and 77.6 percent on SWE-Bench Verified. Specs on TensorFeed.',
+    intro:
+      'Mistral Medium 3.5 entered public preview on May 3, 2026 and is the most practical entry in the open-weight coding tier. It is a dense 128 billion parameter model with a 256K context window, released under a modified MIT license, priced at $1.50 per million input tokens and $7.50 per million output. It posts 77.6 percent on SWE-Bench Verified, which is frontier-adjacent coding performance at a size that fits on a single node. The reason it matters more than its benchmark rank suggests is deployability: quantized to 4-bit it needs roughly 72GB, so it runs on one H100. Compare that to Kimi K3 at about 1,450GB and eight B200-class cards for the same license freedom. Strong enough to matter, small enough to actually run, and licensed permissively enough to ship.',
+    strengths: ['77.6 percent on SWE-Bench Verified at 128B dense', 'Runs on a single H100 at 4-bit (roughly 72GB)', '256K context window', 'Modified MIT license permitting commercial self-hosting', 'Best capability-per-GPU ratio in the open-weight coding tier'],
+    useCases: ['Single-node self-hosted coding agents', 'European data-residency deployments', 'Cost-controlled IDE and refactor automation', 'Teams that need open weights they can actually run'],
+    docsUrl: 'https://docs.mistral.ai',
+    tier: 'mid',
+  },
+  {
     slug: 'mistral-large',
     pricingId: 'mistral-large',
     benchmarkName: 'Mistral Large',
@@ -655,6 +672,42 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     strengths: ['Fourth on the Artificial Analysis Intelligence Index', 'Over 60% cheaper than Opus 4.8 or GPT-5.5', 'Terminal-Bench 2.1 leader (83.3) against Opus 4.8', 'Cached input at $0.50 (75% discount)', 'Configurable reasoning effort'],
     useCases: ['Coding agents and IDE automation', 'Tool-use and agentic workflows', 'Cost-sensitive frontier-class reasoning', 'X and web-grounded research agents'],
     docsUrl: 'https://docs.x.ai',
+    tier: 'flagship',
+  },
+  // ── Z.ai (Zhipu AI) ────────────────────────────────────────────────
+  {
+    slug: 'glm-5-2',
+    pricingId: 'glm-5-2',
+    benchmarkName: 'GLM-5.2',
+    providerId: 'zhipu',
+    providerName: 'Z.ai (Zhipu AI)',
+    providerUrl: 'https://z.ai',
+    seoTitle: 'GLM-5.2: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'GLM-5.2 by Z.ai, the leading open-weight model on the Artificial Analysis index. $1.40/$4.40 per 1M tokens, 1M context, MIT weights, trained on Huawei Ascend silicon.',
+    intro:
+      'GLM-5.2 is Z.ai\'s (Zhipu AI) flagship, shipped June 13, 2026. It is a 744 billion parameter mixture-of-experts model with a 1 million token context window, 131K max output, and a Max-effort reasoning mode, released under an MIT license. API pricing is roughly $1.40 per million input tokens and $4.40 per million output, which is on the order of 80 percent below Claude Opus 4.8. Z.ai reports 62.1 on SWE-Bench Pro, which would top GPT-5.5, and the model sits fourth overall and first among open-weight models on the Artificial Analysis Intelligence Index at 51; treat both as vendor-reported. The detail that makes it strategically interesting is the training run: roughly 100,000 Huawei Ascend 910B chips with no Nvidia silicon in the loop, at an estimated $25 million all-in. Reporting puts it at something like 40 percent of developer tokens on OpenRouter. Self-hosting at full precision needs about 1.5TB of GPU memory, roughly nineteen H100s, so the MIT license buys far more freedom than most teams can actually exercise.',
+    strengths: ['First among open-weight models on the Artificial Analysis index', 'MIT licensed with 1M context and 131K output', 'Roughly 80 percent cheaper than Opus 4.8', 'Trained end to end on Huawei Ascend silicon, no Nvidia', 'Vendor-reported 62.1 on SWE-Bench Pro'],
+    useCases: ['Cost-sensitive coding agents', 'Sovereign deployments avoiding US silicon', 'High-volume agentic pipelines', 'Self-hosting where MIT terms matter'],
+    docsUrl: 'https://docs.z.ai',
+    tier: 'flagship',
+  },
+  // ── Moonshot AI ────────────────────────────────────────────────────
+  {
+    slug: 'kimi-k3',
+    pricingId: 'kimi-k3',
+    benchmarkName: 'Kimi K3',
+    providerId: 'moonshot',
+    providerName: 'Moonshot AI',
+    providerUrl: 'https://www.moonshot.cn',
+    seoTitle: 'Kimi K3: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Kimi K3 by Moonshot AI, the largest open-weight model ever shipped at 2.8T parameters. $3/$15 per 1M tokens, 1M context, native vision, and specs on TensorFeed.',
+    intro:
+      'Kimi K3 is Moonshot AI\'s flagship, released July 16, 2026 and the largest open-weight system anyone has shipped: 2.8 trillion total parameters across 896 experts with roughly 16 active per token, so only about 1.8 percent of the network fires on any given token. It carries a 1 million token context window and native vision. API pricing is $0.30 per million cache-hit input tokens, $3.00 on a cache miss, and $15.00 output. Moonshot reports roughly 57 on the Artificial Analysis Intelligence Index, placing it third or fourth overall behind Claude Fable 5 and GPT-5.6 Sol, alongside first place on Frontend Code Arena at 1,679 points, the strongest open-weight GPQA Diamond result on record at 93.5 percent, and third on GDPval-AA v2 at 1,687; all vendor-reported. On normalized cost per task it is the cheapest of the leaders. Downloadable is not the same as runnable here: it ships natively in MXFP4 with no FP16 checkpoint, and even at 4-bit it needs roughly 1,450GB of VRAM, which means eight B200-class cards. This needs a rack, not a workstation.',
+    strengths: ['Largest open-weight model ever shipped at 2.8T parameters', 'Sparse MoE fires only about 1.8 percent of the network per token', '1M context with native vision', 'Vendor-reported 93.5 on GPQA Diamond, best open-weight result on record', 'Cheapest normalized cost per task among the index leaders'],
+    useCases: ['Frontier-class self-hosting at rack scale', 'Frontend and UI code generation', 'Long-context multimodal research', 'Sovereign deployments needing open weights'],
+    docsUrl: 'https://platform.moonshot.cn/docs',
     tier: 'flagship',
   },
 ];
