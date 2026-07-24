@@ -71,7 +71,13 @@ const adminBuckets: Map<string, IPState> = new Map();
 // for a trial feature where slight over-generosity is preferable to
 // under-grant. KV-backed counters would be exact but cost ops/req.
 const FREE_TRIAL_WINDOW_MS = 24 * 60 * 60 * 1000;
-const FREE_TRIAL_LIMIT_PER_DAY = 100;
+/**
+ * Free premium calls per IP per 24h window. EXPORTED because the 402
+ * challenge in payments.ts advertises this number to every agent; a
+ * hardcoded duplicate there would make the challenge lie the moment this
+ * value changed. Single source of truth: change it here only.
+ */
+export const FREE_TRIAL_LIMIT_PER_DAY = 100;
 const freeTrialBuckets: Map<string, IPState> = new Map();
 
 export interface RateLimitResult {
