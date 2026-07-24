@@ -395,6 +395,23 @@
       "url": "https://mistral.ai",
       "models": [
         {
+          "id": "mistral-medium-3-5",
+          "name": "Mistral Medium 3.5",
+          "inputPrice": 1.5,
+          "outputPrice": 7.5,
+          "contextWindow": 256000,
+          "released": "2026-05",
+          "openSource": true,
+          "license": "Modified MIT",
+          "capabilities": [
+            "text",
+            "code",
+            "tool-use",
+            "reasoning"
+          ],
+          "tier": "mid"
+        },
+        {
           "id": "mistral-large",
           "name": "Mistral Large",
           "inputPrice": 2,
@@ -657,6 +674,57 @@
           "license": "MIT",
           "capabilities": [
             "text",
+            "code",
+            "tool-use",
+            "reasoning"
+          ],
+          "tier": "flagship"
+        }
+      ]
+    },
+    {
+      "id": "zhipu",
+      "name": "Z.ai (Zhipu AI)",
+      "logo": "/images/providers/zhipu.png",
+      "url": "https://z.ai",
+      "models": [
+        {
+          "id": "glm-5-2",
+          "name": "GLM-5.2",
+          "inputPrice": 1.4,
+          "outputPrice": 4.4,
+          "contextWindow": 1000000,
+          "released": "2026-06",
+          "openSource": true,
+          "license": "MIT",
+          "capabilities": [
+            "text",
+            "code",
+            "tool-use",
+            "reasoning"
+          ],
+          "tier": "flagship"
+        }
+      ]
+    },
+    {
+      "id": "moonshot",
+      "name": "Moonshot AI",
+      "logo": "/images/providers/moonshot.png",
+      "url": "https://www.moonshot.cn",
+      "models": [
+        {
+          "id": "kimi-k3",
+          "name": "Kimi K3",
+          "inputPrice": 3,
+          "outputPrice": 15,
+          "contextWindow": 1000000,
+          "released": "2026-07",
+          "openSource": true,
+          "license": "Modified MIT",
+          "capabilities": [
+            "text",
+            "vision",
             "code",
             "tool-use",
             "reasoning"

@@ -315,6 +315,7 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'mistral', name: 'Mistral', logo: '/images/providers/mistral.png', url: 'https://mistral.ai',
       models: [
+        { id: 'mistral-medium-3-5', name: 'Mistral Medium 3.5', inputPrice: 1.50, outputPrice: 7.50, contextWindow: 256000, released: '2026-05', openSource: true, license: 'Modified MIT', capabilities: ['text', 'code', 'tool-use', 'reasoning'], tier: 'mid' },
         { id: 'mistral-large', name: 'Mistral Large', inputPrice: 2.00, outputPrice: 6.00, contextWindow: 128000, released: '2025-01', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'mistral-small', name: 'Mistral Small', inputPrice: 0.10, outputPrice: 0.30, contextWindow: 128000, released: '2025-01', capabilities: ['text', 'tool-use', 'code'], tier: 'budget' },
       ],
@@ -370,6 +371,18 @@ export const BASELINE_PRICING: PricingData = {
         { id: 'longcat-2', name: 'LongCat-2.0', inputPrice: 0, outputPrice: 0, contextWindow: 1000000, released: '2026-06', openSource: true, license: 'MIT', capabilities: ['text', 'code', 'tool-use', 'reasoning'], tier: 'flagship' },
       ],
     },
+    {
+      id: 'zhipu', name: 'Z.ai (Zhipu AI)', logo: '/images/providers/zhipu.png', url: 'https://z.ai',
+      models: [
+        { id: 'glm-5-2', name: 'GLM-5.2', inputPrice: 1.40, outputPrice: 4.40, contextWindow: 1000000, released: '2026-06', openSource: true, license: 'MIT', capabilities: ['text', 'code', 'tool-use', 'reasoning'], tier: 'flagship' },
+      ],
+    },
+    {
+      id: 'moonshot', name: 'Moonshot AI', logo: '/images/providers/moonshot.png', url: 'https://www.moonshot.cn',
+      models: [
+        { id: 'kimi-k3', name: 'Kimi K3', inputPrice: 3.00, outputPrice: 15.00, contextWindow: 1000000, released: '2026-07', openSource: true, license: 'Modified MIT', capabilities: ['text', 'vision', 'code', 'tool-use', 'reasoning'], tier: 'flagship' },
+      ],
+    },
   ],
   pricingNotes: {
     unit: 'per 1M tokens',
@@ -396,6 +409,8 @@ export const BASELINE_BENCHMARKS: BenchmarksData = {
     { model: 'GPT-5.5', provider: 'OpenAI', released: '2026-04', scores: { mmlu_pro: 94.2, human_eval: 97.1, gpqa_diamond: 78.3, math: 95.8, swe_bench: 82.6 } },
     { model: 'DeepSeek V4 Pro', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 91.5, human_eval: 94.8, gpqa_diamond: 73.1, math: 92.4, swe_bench: 80.6 } },
     { model: 'DeepSeek V4 Flash', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 85.2, human_eval: 89.4, gpqa_diamond: 58.7, math: 82.1, swe_bench: 79.0 } },
+    { model: 'Kimi K3', provider: 'Moonshot AI', released: '2026-07', scores: { gpqa_diamond: 93.5 } },
+    { model: 'Mistral Medium 3.5', provider: 'Mistral', released: '2026-05', scores: { swe_bench: 77.6 } },
     { model: 'Claude Opus 5', provider: 'Anthropic', released: '2026-07', scores: { osworld_2: 70.6, browsecomp: 90.8, frontier_code: 53.4, hle_tools: 64.7 } },
     { model: 'Claude Fable 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 95.0, osworld_2: 66.1, browsecomp: 87.4, frontier_code: 53.5, hle_tools: 63.9 } },
     { model: 'Claude Sonnet 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 85.2 } },

@@ -237,6 +237,38 @@ export const PROVIDERS: ProviderMeta[] = [
     keyProducts: ['Grok 4.5', 'Grok 4.3', 'Grok API', 'Grok in X', 'SuperGrok'],
     strengths: ['Fourth on the Artificial Analysis Intelligence Index', 'Over 60% cheaper than Opus 4.8 or GPT-5.5', 'Real-time X data integration', 'Coding-focused V9 foundation', 'Monthly from-scratch training cadence'],
   },
+  {
+    slug: 'zhipu',
+    pricingId: 'zhipu',
+    name: 'Z.ai (Zhipu AI)',
+    url: 'https://z.ai',
+    seoTitle: 'Z.ai (Zhipu AI): GLM Models, Pricing, and API Overview',
+    seoDescription:
+      'Everything about Z.ai and the GLM family. GLM-5.2 pricing, MIT open weights, 1M context, Huawei Ascend training, and benchmarks. Updated daily on TensorFeed.',
+    intro:
+      'Z.ai, formerly Zhipu AI, is the Beijing lab behind the GLM family and the most credible open-weight challenger to the closed frontier. GLM-5.2 shipped June 13, 2026: a 744 billion parameter mixture-of-experts model with a 1 million token context window, 131K max output, a Max-effort reasoning mode, and MIT-licensed weights, priced around $1.40 input and $4.40 output per million tokens. It sits fourth overall and first among open-weight models on the Artificial Analysis Intelligence Index at 51, with a vendor-reported 62.1 on SWE-Bench Pro that would top GPT-5.5. The strategically important fact is the hardware: the training pipeline ran on roughly 100,000 Huawei Ascend 910B chips with zero Nvidia in the loop, at an estimated $25 million all-in, which makes GLM the proof case that frontier-adjacent training no longer requires US silicon. Reporting puts GLM-5.2 at something like 40 percent of developer tokens flowing through OpenRouter. The practical catch is that full-precision self-hosting needs about 1.5TB of GPU memory, roughly nineteen H100s.',
+    founded: '2019',
+    headquarters: 'Beijing, China',
+    ceo: 'Tang Jie',
+    keyProducts: ['GLM-5.2', 'GLM-5.1', 'GLM Coding Plan', 'Z.ai chatbot'],
+    strengths: ['First among open-weight models on the Artificial Analysis index', 'MIT-licensed weights with 1M context', 'Trained end to end on Huawei Ascend silicon', 'Roughly 80 percent cheaper than Opus 4.8', 'Heavy OpenRouter developer adoption'],
+  },
+  {
+    slug: 'moonshot',
+    pricingId: 'moonshot',
+    name: 'Moonshot AI',
+    url: 'https://www.moonshot.cn',
+    seoTitle: 'Moonshot AI: Kimi Models, Pricing, and API Overview',
+    seoDescription:
+      'Everything about Moonshot AI and Kimi. Kimi K3 pricing, the largest open-weight model ever shipped at 2.8T parameters, 1M context, and benchmarks on TensorFeed.',
+    intro:
+      'Moonshot AI is the Beijing lab behind the Kimi family. Kimi K3, released July 16, 2026, is the largest open-weight system anyone has shipped: 2.8 trillion total parameters across 896 experts with roughly 16 active per token, a 1 million token context window, and native vision. API pricing is $0.30 per million cache-hit input tokens, $3.00 on a cache miss, and $15.00 output, which works out to the cheapest normalized cost per task among the index leaders. Moonshot reports roughly 57 on the Artificial Analysis Intelligence Index, first place on Frontend Code Arena at 1,679 points ahead of Claude Fable 5, and 93.5 percent on GPQA Diamond, the strongest open-weight result on record; all vendor-reported. Moonshot is also at the center of the July 2026 distillation dispute, after OSTP director Michael Kratsios accused it of distilling Anthropic\'s Fable model and training on export-controlled Nvidia GB300 servers reached through Thailand. Independent experts have questioned the distillation half of that claim. K3 ships natively in MXFP4 with no FP16 checkpoint, and even at 4-bit it needs roughly 1,450GB of VRAM, so downloadable does not mean runnable without a rack.',
+    founded: '2023',
+    headquarters: 'Beijing, China',
+    ceo: 'Yang Zhilin',
+    keyProducts: ['Kimi K3', 'Kimi K2', 'Kimi chat assistant'],
+    strengths: ['Largest open-weight model ever shipped at 2.8T parameters', 'Cheapest normalized cost per task among index leaders', 'First on Frontend Code Arena, ahead of Fable 5', 'Best open-weight GPQA Diamond result on record', '1M context with native vision'],
+  },
 ];
 
 export function getProviderBySlug(slug: string): ProviderMeta | undefined {

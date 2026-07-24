@@ -31,6 +31,18 @@
       "scores": { "mmlu_pro": 85.2, "human_eval": 89.4, "gpqa_diamond": 58.7, "math": 82.1, "swe_bench": 79.0 }
     },
     {
+      "model": "Kimi K3",
+      "provider": "Moonshot AI",
+      "released": "2026-07",
+      "scores": { "gpqa_diamond": 93.5 }
+    },
+    {
+      "model": "Mistral Medium 3.5",
+      "provider": "Mistral",
+      "released": "2026-05",
+      "scores": { "swe_bench": 77.6 }
+    },
+    {
       "model": "Claude Opus 5",
       "provider": "Anthropic",
       "released": "2026-07",
