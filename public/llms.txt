@@ -488,6 +488,7 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [CLAUDE.md Generator](https://tensorfeed.ai/claude-md-generator): Interactive tool to generate a custom CLAUDE.md for your project
 
 ## Individual Model Pages
+- [Claude Opus 5](https://tensorfeed.ai/models/claude-opus-5): Pricing, benchmarks, specs for Anthropic's July 2026 Opus release (released July 24, 2026; $5/$25 per 1M tokens, unchanged from Opus 4.8 and half the Fable 5 rate; 1M context as default and maximum, 128K output; leads Fable 5 on OSWorld 2.0, BrowseComp, and GDPval-AA)
 - [Claude Fable 5](https://tensorfeed.ai/models/claude-fable-5): Pricing, benchmarks, specs for Anthropic's frontier tier above Opus 4.8 (released June 9, 2026; $10/$50 per 1M tokens; 1M context, 128K output)
 - [Claude Sonnet 5](https://tensorfeed.ai/models/claude-sonnet-5): Pricing, benchmarks, specs for Anthropic's most agentic Sonnet-class model (released June 30, 2026; $2/$10 introductory through August 31; 1M context; beats Opus 4.8 on Terminal-Bench 2.1)
 - [Claude Opus 4.8](https://tensorfeed.ai/models/claude-opus-4-8): Pricing, benchmarks, specs for Anthropic's default model (released May 28, 2026; 1M context)
@@ -546,6 +547,8 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [Claude Sonnet 5 vs Claude Opus 4.8](https://tensorfeed.ai/compare/claude-sonnet-5-vs-claude-opus-4-8): Anthropic's June 30, 2026 Sonnet-class release vs the current default flagship, pricing and benchmark breakdown
 - [LongCat-2.0 vs DeepSeek V4 Pro](https://tensorfeed.ai/compare/longcat-2-vs-deepseek-v4-pro): Meituan's June 30, 2026 open-source flagship vs DeepSeek's incumbent, both MIT-licensed and 1M-context
 - [Grok 4.5 vs Claude Opus 4.8](https://tensorfeed.ai/compare/grok-4-5-vs-claude-opus-4-8): xAI's July 8, 2026 coding model at $2/$6 vs Anthropic's default flagship, pricing and benchmark breakdown
+- [Claude Opus 5 vs Claude Opus 4.8](https://tensorfeed.ai/compare/claude-opus-5-vs-claude-opus-4-8): Anthropic's July 24, 2026 Opus release vs its predecessor at identical $5/$25 pricing, plus the three API defaults that changed
+- [Claude Opus 5 vs Claude Fable 5](https://tensorfeed.ai/compare/claude-opus-5-vs-claude-fable-5): Half the price at $5/$25 vs $10/$50, and the row-by-row benchmark split where the cheaper model wins most comparisons
 - [Muse Spark 1.1 vs Claude Sonnet 5](https://tensorfeed.ai/compare/muse-spark-1-1-vs-claude-sonnet-5): Meta's first paid agentic model vs Anthropic's price/performance pick, tool-use versus verified accuracy
 
 ## AI Providers

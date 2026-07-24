@@ -1043,6 +1043,88 @@ export const COMPARISONS: ComparisonMeta[] = [
       'Production work needing a proven Anthropic model',
     ],
   },
+  // ── Added July 24, 2026 ─────────────────────────────────────────────
+  {
+    slug: 'claude-opus-5-vs-claude-opus-4-8',
+    modelA: 'claude-opus-5',
+    modelB: 'claude-opus-4-8',
+    nameA: 'Claude Opus 5',
+    nameB: 'Claude Opus 4.8',
+    providerA: 'Anthropic',
+    providerB: 'Anthropic',
+    benchmarkNameA: 'Claude Opus 5',
+    benchmarkNameB: 'Claude Opus 4.8',
+    seoTitle: 'Claude Opus 5 vs Opus 4.8: Same Price, What Actually Changed',
+    seoDescription:
+      'Claude Opus 5 vs Claude Opus 4.8 compared. Identical $5/$25 pricing, the OSWorld and ARC-AGI-3 jumps, and the three API changes that break a 4.8 port, on TensorFeed.',
+    intro:
+      'This is the rare generational upgrade with no price attached. Claude Opus 5, released July 24, 2026, costs exactly what Claude Opus 4.8 costs: $5 per million input tokens and $25 per million output. Every benchmark gain is therefore free in dollar terms, and on Anthropic\'s own launch table the gains are large. Computer use on OSWorld 2.0 goes from 55.7 to 70.6 percent. Agentic terminal coding on Frontier-Bench v0.1 more than doubles, 21.1 to 43.3. Knowledge work on GDPval-AA v2 climbs from 1593 to 1861. The starkest row is ARC-AGI-3, where Opus 4.8 scored 1.5 percent and Opus 5 scores 30.2. Treat all of it as vendor-reported until independent runs land. The catch is not cost, it is porting: three API defaults changed, and two of them can break working 4.8 code rather than merely alter output.',
+    verdicts: [
+      { category: 'Price per 1M tokens', winner: 'tie', reason: 'Both are $5 input and $25 output, so the upgrade carries no rate increase' },
+      { category: 'Computer use (OSWorld 2.0)', winner: 'A', reason: 'Opus 5 scores 70.6 vs Opus 4.8 at 55.7, the widest capability gap on the launch table' },
+      { category: 'Novel problem-solving (ARC-AGI-3)', winner: 'A', reason: 'Opus 5 scores 30.2 vs Opus 4.8 at 1.5, effectively a new capability rather than an increment' },
+      { category: 'Agentic terminal coding (Frontier-Bench v0.1)', winner: 'A', reason: 'Opus 5 scores 43.3 vs Opus 4.8 at 21.1' },
+      { category: 'Knowledge work (GDPval-AA v2)', winner: 'A', reason: 'Opus 5 scores 1861 vs Opus 4.8 at 1593' },
+      { category: 'Agentic search (BrowseComp)', winner: 'A', reason: 'Opus 5 scores 90.8 vs Opus 4.8 at 84.3' },
+      { category: 'Context window', winner: 'tie', reason: 'Both ship 1 million tokens with up to 128K output; on Opus 5 the 1M figure is both the default and the maximum' },
+      { category: 'Prompt cache minimum', winner: 'A', reason: 'Opus 5 caches prompts from 512 tokens vs 1024 on Opus 4.8, so shorter prompts start caching with no code change' },
+      { category: 'Thinking default', winner: 'B', reason: 'Omitting the thinking parameter runs adaptive thinking on Opus 5 but no thinking on Opus 4.8, so a 4.8 request ported unchanged spends more tokens and can truncate against a tight max_tokens' },
+      { category: 'Priority Tier', winner: 'B', reason: 'Opus 4.8 is covered by Priority Tier; Opus 5 is excluded, and it draws on a separate rate-limit pool from the Opus 4.x models' },
+    ],
+    chooseA: [
+      'Computer-use and GUI automation, where the 15-point OSWorld gap is decisive',
+      'Long-horizon autonomous agent runs and complex multi-file coding',
+      'Agentic search and deep research workloads',
+      'Any 4.8 workload with room to re-test, since the price is identical',
+    ],
+    chooseB: [
+      'Workloads on Priority Tier, which does not cover Opus 5',
+      'Latency-sensitive routes that deliberately disable thinking above high effort',
+      'Pipelines with prompts and evals tightly tuned to 4.8 behavior and no budget to re-tune',
+      'Capacity planning already sized against the shared Opus 4.x rate-limit pool',
+    ],
+  },
+  {
+    slug: 'claude-opus-5-vs-claude-fable-5',
+    modelA: 'claude-opus-5',
+    modelB: 'claude-fable-5',
+    nameA: 'Claude Opus 5',
+    nameB: 'Claude Fable 5',
+    providerA: 'Anthropic',
+    providerB: 'Anthropic',
+    benchmarkNameA: 'Claude Opus 5',
+    benchmarkNameB: 'Claude Fable 5',
+    seoTitle: 'Claude Opus 5 vs Fable 5: Half the Price, Most of the Wins',
+    seoDescription:
+      'Claude Opus 5 vs Claude Fable 5 compared. Opus 5 costs half as much at $5/$25 and leads on most published rows, but Fable 5 is still the stated top tier. On TensorFeed.',
+    intro:
+      'Anthropic now sells two frontier models where the cheaper one wins most of the published comparisons. Claude Opus 5 is $5 input and $25 output per million tokens. Claude Fable 5 is $10 and $50, exactly double. On Anthropic\'s own launch table Opus 5 leads Fable 5 on computer use (70.6 to 66.1), agentic search (90.8 to 87.4), knowledge work (1861 to 1747), agentic terminal coding (43.3 to 33.7), business workflows (26.0 to 17.4), and Humanity\'s Last Exam with tools (64.7 to 63.9). Fable 5 holds narrow leads on FrontierCode (53.5 to 53.4), DeepSWE (69.7 to 68.8), and Humanity\'s Last Exam without tools (56.5 to 56.3), and its Health and Biology headline rows are Mythos 5 ceilings rather than Fable 5 scores. Anthropic still describes Fable 5 as its highest-capability tier, so read this as a positioning claim the published benchmarks do not currently support at the row level. Every figure here is vendor-reported.',
+    verdicts: [
+      { category: 'Price per 1M tokens', winner: 'A', reason: 'Opus 5 is $5/$25 against Fable 5 at $10/$50, exactly half' },
+      { category: 'Computer use (OSWorld 2.0)', winner: 'A', reason: 'Opus 5 scores 70.6 vs Fable 5 at 66.1' },
+      { category: 'Agentic search (BrowseComp)', winner: 'A', reason: 'Opus 5 scores 90.8 vs Fable 5 at 87.4' },
+      { category: 'Knowledge work (GDPval-AA v2)', winner: 'A', reason: 'Opus 5 scores 1861 vs Fable 5 at 1747' },
+      { category: 'Agentic terminal coding (Frontier-Bench v0.1)', winner: 'A', reason: 'Opus 5 scores 43.3 vs Fable 5 at 33.7' },
+      { category: 'Business workflows (AutomationBench)', winner: 'A', reason: 'Opus 5 scores 26.0 vs Fable 5 at 17.4, the widest proportional gap on the table' },
+      { category: 'Agentic coding (DeepSWE v1.1)', winner: 'B', reason: 'Fable 5 scores 69.7 vs Opus 5 at 68.8' },
+      { category: 'Agentic coding (FrontierCode v1.1)', winner: 'B', reason: 'Fable 5 scores 53.5 vs Opus 5 at 53.4, inside any reasonable margin' },
+      { category: 'Legal (Legal Agent Benchmark)', winner: 'B', reason: 'Fable 5 scores 13.3 vs Opus 5 at 11.7 on the held-out split' },
+      { category: 'Thinking control', winner: 'A', reason: 'Opus 5 accepts disabled thinking at effort high or below; on Fable 5 thinking is always on and cannot be disabled at all' },
+      { category: 'Context window', winner: 'tie', reason: 'Both ship 1 million tokens with up to 128K output' },
+    ],
+    chooseA: [
+      'Almost every workload, given half the price and the majority of published wins',
+      'Computer use, agentic search, and business-process automation',
+      'Routes that need the option to disable thinking for latency',
+      'Cost-sensitive deployments that still want frontier-tier capability',
+    ],
+    chooseB: [
+      'Coding pipelines where the sub-point DeepSWE and FrontierCode edges are worth double the rate',
+      'Legal agent workloads, the one row with a clear Fable 5 margin',
+      'Existing deployments already tuned to Fable 5 with no reason to re-test',
+      'Teams that want Anthropic\'s nominal top capability tier regardless of row-level results',
+    ],
+  },
 ];
 
 export function getComparisonBySlug(slug: string): ComparisonMeta | undefined {

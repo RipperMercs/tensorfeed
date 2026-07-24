@@ -150,6 +150,7 @@ export const PRICING_ATTRIBUTION: PricingAttribution = {
 // membership source.
 
 const TRACKED_MODELS: Record<string, { providerId: string; ourId: string; name: string }> = {
+  'claude-opus-5': { providerId: 'anthropic', ourId: 'claude-opus-5', name: 'Claude Opus 5' },
   'claude-fable-5': { providerId: 'anthropic', ourId: 'claude-fable-5', name: 'Claude Fable 5' },
   'claude-opus-4-8': { providerId: 'anthropic', ourId: 'claude-opus-4-8', name: 'Claude Opus 4.8' },
   'claude-sonnet-4-5': { providerId: 'anthropic', ourId: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5' },
@@ -266,11 +267,12 @@ const CATALOG_CHANGE_URLS = [
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 export const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-07-05',
+  lastUpdated: '2026-07-24',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
       models: [
+        { id: 'claude-opus-5', name: 'Claude Opus 5', inputPrice: 5.00, outputPrice: 25.00, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'claude-fable-5', name: 'Claude Fable 5', inputPrice: 10.00, outputPrice: 50.00, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'claude-sonnet-5', name: 'Claude Sonnet 5', inputPrice: 2.00, outputPrice: 10.00, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
         { id: 'claude-opus-4-8', name: 'Claude Opus 4.8', inputPrice: 5.00, outputPrice: 25.00, contextWindow: 1000000, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
@@ -378,21 +380,26 @@ export const BASELINE_PRICING: PricingData = {
 };
 
 export const BASELINE_BENCHMARKS: BenchmarksData = {
-  lastUpdated: '2026-07-05',
+  lastUpdated: '2026-07-24',
   benchmarks: [
     { id: 'swe_bench', name: 'SWE-bench', description: 'Real-world software engineering tasks from GitHub issues (SWE-bench Verified)', maxScore: 100 },
     { id: 'mmlu_pro', name: 'MMLU-Pro', description: 'General knowledge and reasoning across 57 subjects', maxScore: 100 },
     { id: 'human_eval', name: 'HumanEval', description: 'Python code generation and problem solving', maxScore: 100 },
     { id: 'gpqa_diamond', name: 'GPQA Diamond', description: 'Graduate-level science questions verified by domain experts', maxScore: 100 },
     { id: 'math', name: 'MATH', description: 'Competition-level mathematics problems', maxScore: 100 },
+    { id: 'osworld_2', name: 'OSWorld 2.0', description: 'Computer use across real desktop applications and multi-step GUI tasks', maxScore: 100 },
+    { id: 'browsecomp', name: 'BrowseComp', description: 'Agentic web search and browsing over hard-to-find facts', maxScore: 100 },
+    { id: 'frontier_code', name: 'FrontierCode v1.1', description: 'Agentic coding on frontier software engineering tasks (Main split)', maxScore: 100 },
+    { id: 'hle_tools', name: 'Humanity\'s Last Exam (tools)', description: 'Multidisciplinary expert-level reasoning with tool access', maxScore: 100 },
   ],
   models: [
     { model: 'GPT-5.5', provider: 'OpenAI', released: '2026-04', scores: { mmlu_pro: 94.2, human_eval: 97.1, gpqa_diamond: 78.3, math: 95.8, swe_bench: 82.6 } },
     { model: 'DeepSeek V4 Pro', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 91.5, human_eval: 94.8, gpqa_diamond: 73.1, math: 92.4, swe_bench: 80.6 } },
     { model: 'DeepSeek V4 Flash', provider: 'DeepSeek', released: '2026-04', scores: { mmlu_pro: 85.2, human_eval: 89.4, gpqa_diamond: 58.7, math: 82.1, swe_bench: 79.0 } },
-    { model: 'Claude Fable 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 95.0 } },
+    { model: 'Claude Opus 5', provider: 'Anthropic', released: '2026-07', scores: { osworld_2: 70.6, browsecomp: 90.8, frontier_code: 53.4, hle_tools: 64.7 } },
+    { model: 'Claude Fable 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 95.0, osworld_2: 66.1, browsecomp: 87.4, frontier_code: 53.5, hle_tools: 63.9 } },
     { model: 'Claude Sonnet 5', provider: 'Anthropic', released: '2026-06', scores: { swe_bench: 85.2 } },
-    { model: 'Claude Opus 4.8', provider: 'Anthropic', released: '2026-05', scores: { gpqa_diamond: 93.6, swe_bench: 88.6 } },
+    { model: 'Claude Opus 4.8', provider: 'Anthropic', released: '2026-05', scores: { gpqa_diamond: 93.6, swe_bench: 88.6, osworld_2: 55.7, browsecomp: 84.3, frontier_code: 46.5, hle_tools: 57.9 } },
     { model: 'Claude Opus 4.7', provider: 'Anthropic', released: '2026-04', scores: { mmlu_pro: 93.8, human_eval: 96.2, gpqa_diamond: 76.5, math: 93.1, swe_bench: 87.6 } },
     { model: 'Claude Opus 4.6', provider: 'Anthropic', released: '2026-03', scores: { mmlu_pro: 92.4, human_eval: 95.1, gpqa_diamond: 74.2, math: 91.8, swe_bench: 80.8 } },
     { model: 'Claude Sonnet 4.6', provider: 'Anthropic', released: '2026-02', scores: { mmlu_pro: 88.7, human_eval: 92.0, gpqa_diamond: 65.8, math: 85.4, swe_bench: 79.6 } },
