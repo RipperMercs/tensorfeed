@@ -5116,7 +5116,13 @@ export default {
           },
         },
         news: newsMeta,
-      }, 200, 60);
+        // 300s edge cache, raised from 60s on 2026-07-24. This payload is ~90KB
+        // and is almost entirely the static endpoint catalog, which only changes
+        // on deploy. At a 60s TTL one agent per minute paid a ~3.8s cold rebuild
+        // on the endpoint agents hit FIRST, which is the worst possible place to
+        // spend that latency. The only live part is `news`, and a discovery
+        // catalog tolerates news counts being up to 5 minutes stale.
+      }, 200, 300);
     }
 
     // === CRON DEBUG LOG ===
@@ -16137,7 +16143,49 @@ export default {
     //   return jsonResponse({ ok: true, message: 'Posted top stories to X' });
     // }
 
-    return jsonResponse({ error: 'Not found', endpoints: ['/api/health', '/api/news', '/api/status', '/api/models', '/api/benchmarks', '/api/harnesses', '/api/podcasts', '/api/trending-repos', '/api/feed.xml', '/api/feed.json', '/api/meta'] }, 404);
+    // Retired endpoints: 410 Gone, not 404. An agent that discovered an
+    // endpoint before it was pulled keeps polling it, and a bare 404 gives it
+    // no reason and no alternative, so it silently drops TensorFeed instead of
+    // migrating. 410 is the correct signal (deliberately removed, stop asking)
+    // and carrying the reason plus a replacement lets the agent self-heal.
+    // Observed 2026-07-24: live agent traffic still hitting ai-crypto-pulse
+    // weeks after removal, getting only {"error":"Not found"}.
+    const RETIRED_ENDPOINTS: Record<string, { retiredOn: string; reason: string; alternatives: string[] }> = {
+      '/api/premium/ai-crypto-pulse': {
+        retiredOn: '2026-07-21',
+        reason: 'Removed permanently: the upstream data provider prohibits commercial redistribution, so TensorFeed cannot resell this feed under the AFTA terms it publishes.',
+        alternatives: ['/api/premium/whats-new', '/api/x402-index/summary'],
+      },
+    };
+    const retired = RETIRED_ENDPOINTS[path];
+    if (retired) {
+      return jsonResponse({
+        ok: false,
+        error: 'endpoint_retired',
+        resource: path,
+        retired_on: retired.retiredOn,
+        reason: retired.reason,
+        permanent: true,
+        stop_polling: true,
+        alternatives: retired.alternatives,
+        catalog: '/api/meta',
+        premium_catalog: '/api/meta/premium',
+      }, 410);
+    }
+
+    return jsonResponse({
+      ok: false,
+      error: 'not_found',
+      resource: path,
+      // Point at the machine-readable catalogs rather than an 11-item hand-kept
+      // list. TensorFeed serves 350+ endpoints; a lost agent should be handed
+      // the full index, not a fraction of it.
+      catalog: '/api/meta',
+      premium_catalog: '/api/meta/premium',
+      docs: 'https://tensorfeed.ai/developers',
+      llms_txt: 'https://tensorfeed.ai/llms.txt',
+      popular_endpoints: ['/api/today', '/api/news', '/api/models', '/api/benchmarks', '/api/status', '/api/harnesses', '/api/open-weights', '/api/intelligence', '/api/feed.json', '/api/meta'],
+    }, 404);
 
     } catch (err) {
       // Deferred-debit already guarantees no credit was charged on a
