@@ -25,7 +25,7 @@ const FAQ_JSONLD = {
       name: 'How do I pick the right AI model for a coding agent?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Use TensorFeed\'s premium routing endpoint with task=code and your budget. The endpoint synthesizes live SWE-bench scores, HumanEval scores, current pricing, and provider status into a ranked list. As of mid-2026, Claude Opus 4.7 leads SWE-bench at ~73-75%, GPT-5.5 follows in the 68-70% range, and DeepSeek V4 Pro matches mid-pack performance at roughly an order of magnitude lower price. The right pick depends entirely on your budget and latency constraints.',
+        text: 'Use TensorFeed\'s premium routing endpoint with task=code and your budget. The endpoint synthesizes live SWE-bench scores, HumanEval scores, current pricing, and provider status into a ranked list. As of July 2026, Claude Opus 5 leads Anthropic\'s lineup on agentic coding, with Claude Fable 5 leading SWE-bench at ~73-75%, GPT-5.5 follows in the 68-70% range, and DeepSeek V4 Pro matches mid-pack performance at roughly an order of magnitude lower price. The right pick depends entirely on your budget and latency constraints.',
       },
     },
     {

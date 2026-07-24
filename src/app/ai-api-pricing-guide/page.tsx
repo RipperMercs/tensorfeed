@@ -35,7 +35,7 @@ export default function AIAPIPricingGuidePage() {
       <div className="bg-accent-primary/5 border border-accent-primary/20 rounded-xl p-4 mb-8">
         <p className="text-text-secondary text-base leading-relaxed">
           AI API pricing in 2026 ranges from free open-source models to around $60 per million
-          output tokens for premium reasoning models. The current flagship Claude Opus 4.8 runs $5
+          output tokens for premium reasoning models. The current flagship Claude Opus 5 runs $5
           input and $25 output per million tokens. Most developers spend between $0.10 and $15 per
           million input tokens depending on the model tier and use case.
         </p>

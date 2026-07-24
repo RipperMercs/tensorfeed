@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import premiumCatalog from '@/../data/premium-catalog.json';
 import {
   CreditCard,
   Zap,
@@ -76,7 +77,7 @@ const FAQS = [
   {
     question: 'Who actually uses x402 today?',
     answer:
-      'As of May 2026, the live adopter set includes Coinbase (reference SDK and the spec itself), Amazon Bedrock AgentCore Payments (Preview, launched May 7 2026, with native x402 execution and a Coinbase x402 Bazaar MCP server exposing 10,000+ pay-per-use endpoints), Stripe (Link for agents using the stripe x402 method variant), TensorFeed (14 paid premium endpoints, AFTA-certified, end-to-end USDC loop verified on Base mainnet April 27 2026), TerminalFeed (federated with TensorFeed via the AFTA cross-Worker rail), the @coinbase/x402 SDK, the tensorfeed Python and JavaScript SDKs, the afta-gateway Cloudflare Worker template, the @tensorfeed/mcp-server data MCP, and the @tensorfeed/x402-base-mcp chain-verifier MCP (read-only Base reader that lets any agent independently verify an x402 payment receipt on-chain). Live adopter directory at tensorfeed.ai/x402-adopters.',
+      'As of May 2026, the live adopter set includes Coinbase (reference SDK and the spec itself), Amazon Bedrock AgentCore Payments (Preview, launched May 7 2026, with native x402 execution and a Coinbase x402 Bazaar MCP server exposing 10,000+ pay-per-use endpoints), Stripe (Link for agents using the stripe x402 method variant), TensorFeed (AFTA-certified, end-to-end USDC loop verified on Base mainnet April 27 2026), TerminalFeed (federated with TensorFeed via the AFTA cross-Worker rail), the @coinbase/x402 SDK, the tensorfeed Python and JavaScript SDKs, the afta-gateway Cloudflare Worker template, the @tensorfeed/mcp-server data MCP, and the @tensorfeed/x402-base-mcp chain-verifier MCP (read-only Base reader that lets any agent independently verify an x402 payment receipt on-chain). Live adopter directory at tensorfeed.ai/x402-adopters.',
   },
   {
     question: 'Why x402 instead of Stripe or a traditional payment API?',
@@ -221,8 +222,8 @@ export default function X402HubPage() {
               TensorFeed is x402-native
             </h2>
             <p className="text-text-secondary leading-relaxed mb-4">
-              14 paid premium endpoints. End-to-end USDC loop verified on Base mainnet on April 27,
-              2026. AFTA-certified: code-enforced no-charge guarantees plus Ed25519-signed receipts
+              {premiumCatalog.count} paid premium endpoints. End-to-end USDC loop verified on Base
+              mainnet on April 27, 2026. AFTA-certified: code-enforced no-charge guarantees plus Ed25519-signed receipts
               on every paid call. Free tier remains free; pay only when you hit a premium endpoint.
             </p>
             <div className="flex flex-wrap items-center gap-3 text-sm">

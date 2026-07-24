@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import premiumCatalog from '@/../data/premium-catalog.json';
 import {
   Cpu, DollarSign, Server, Microchip, Boxes, Database, Network, Image as ImageIcon,
   Wrench, Plug, Code, Trophy, Activity, BarChart2, Shield, Calendar, Scale, Store,
@@ -145,7 +146,7 @@ export default function CatalogsPage() {
         name: 'Are all TensorFeed catalogs free?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes. Every catalog listed on /catalogs is free with no auth. The 19 paid premium endpoints (routing, history series, watches, deep-dives, comparison) live under /developers/agent-payments and are billed in USDC on Base via the Agent Fair-Trade Agreement.',
+          text: `Yes. Every catalog listed on /catalogs is free with no auth. The ${premiumCatalog.count} paid premium endpoints (routing, history series, watches, deep-dives, comparison) live under /developers/agent-payments and are billed in USDC on Base via the Agent Fair-Trade Agreement.`,
         },
       },
       {
