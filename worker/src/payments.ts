@@ -6,6 +6,7 @@ import { recordAndAssess as recordAnomalySpend, listAnomalyEvents, AnomalyEvent 
 import {
   checkFreeTrialQuota,
   getClientIP as getClientIPFromRequest,
+  FREE_TRIAL_LIMIT_PER_DAY,
   type FreeTrialQuota,
 } from './rate-limit';
 import { isStrictPremiumPath } from './strict-premium-endpoints';
@@ -3506,12 +3507,14 @@ export function paymentRequiredResponse(
   const freeTrialAdvert = strictPremium
     ? null
     : {
-        calls_per_ip_per_day: 100,
+        calls_per_ip_per_day: FREE_TRIAL_LIMIT_PER_DAY,
         window: '24h rolling per IP',
         auth_required: false,
         docs: '/api/free-tier/status',
         note:
-          'TensorFeed offers 100 free premium API calls per IP per 24-hour window. No authentication, no signup, no wallet required. After the cap is reached this 402 challenge fires and on-chain or credit-flow payment is required.',
+          'TensorFeed offers ' +
+          FREE_TRIAL_LIMIT_PER_DAY +
+          ' free premium API calls per IP per 24-hour window. No authentication, no signup, no wallet required. After the cap is reached this 402 challenge fires and on-chain or credit-flow payment is required.',
         ...(exhaustedFreeTrial
           ? {
               status: 'exhausted',

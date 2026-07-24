@@ -7,6 +7,10 @@
  * retention leak, not a cosmetic one: an agent has no way to tell "this moved"
  * from "this is permanently gone", so it keeps burning calls or drops the
  * publisher entirely. These tests lock in the two fixes.
+ *
+ * Narrowing note: the harness types `res.json` as `Record<string, unknown> |
+ * null`, so assertions use optional chaining (`res.json?.x`) to match the
+ * pattern in index.integration.test.ts and stay clean under `tsc --noEmit`.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -28,16 +32,16 @@ describe('retired endpoints return 410 Gone, not 404', () => {
     // polling, which a 404 (possibly transient) does not.
     expect(res.status).toBe(410);
     expect(res.json).not.toBeNull();
-    expect(res.json.error).toBe('endpoint_retired');
-    expect(res.json.permanent).toBe(true);
-    expect(res.json.stop_polling).toBe(true);
+    expect(res.json?.error).toBe('endpoint_retired');
+    expect(res.json?.permanent).toBe(true);
+    expect(res.json?.stop_polling).toBe(true);
 
     // The agent must be able to self-heal without a human reading a changelog.
-    expect(Array.isArray(res.json.alternatives)).toBe(true);
-    expect(res.json.alternatives.length).toBeGreaterThan(0);
-    expect(res.json.reason).toBeTruthy();
-    expect(res.json.retired_on).toBe('2026-07-21');
-    expect(res.json.catalog).toBe('/api/meta');
+    expect(Array.isArray(res.json?.alternatives)).toBe(true);
+    expect((res.json?.alternatives as string[]).length).toBeGreaterThan(0);
+    expect(res.json?.reason).toBeTruthy();
+    expect(res.json?.retired_on).toBe('2026-07-21');
+    expect(res.json?.catalog).toBe('/api/meta');
   });
 
   it('does not charge or issue a payment challenge for a retired endpoint', async () => {
@@ -59,14 +63,14 @@ describe('generic 404 hands agents the real catalog', () => {
 
     expect(res.status).toBe(404);
     expect(res.json).not.toBeNull();
-    expect(res.json.error).toBe('not_found');
+    expect(res.json?.error).toBe('not_found');
     // The catalog pointers are the whole point: TensorFeed serves 350+
     // endpoints, so enumerating a fraction of them in the 404 body is worse
     // than linking the machine-readable index.
-    expect(res.json.catalog).toBe('/api/meta');
-    expect(res.json.premium_catalog).toBe('/api/meta/premium');
-    expect(res.json.llms_txt).toContain('llms.txt');
-    expect(Array.isArray(res.json.popular_endpoints)).toBe(true);
+    expect(res.json?.catalog).toBe('/api/meta');
+    expect(res.json?.premium_catalog).toBe('/api/meta/premium');
+    expect(String(res.json?.llms_txt)).toContain('llms.txt');
+    expect(Array.isArray(res.json?.popular_endpoints)).toBe(true);
   });
 
   it('echoes the requested path so an agent can log what it got wrong', async () => {
@@ -74,6 +78,6 @@ describe('generic 404 hands agents the real catalog', () => {
     const res = await call(env, '/api/nope', { ip: uniqueIp() });
 
     expect(res.status).toBe(404);
-    expect(res.json.resource).toBe('/api/nope');
+    expect(res.json?.resource).toBe('/api/nope');
   });
 });
