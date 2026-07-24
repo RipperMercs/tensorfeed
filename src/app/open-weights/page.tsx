@@ -52,6 +52,7 @@ const FAMILY_COLORS: Record<string, string> = {
   Meituan: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   MiniMax: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20',
   Cohere: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  NVIDIA: 'bg-green-500/10 text-green-400 border-green-500/20',
 };
 
 function formatContext(n: number): string {
@@ -78,7 +79,7 @@ export default function OpenWeightsPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <DatasetJsonLd
         name="Open-Weights Model Deployment Catalog"
-        description="Self-hosting requirements for major open-weights LLMs (Kimi K3, GLM-5.2, LongCat-2.0, MiniMax M3, DeepSeek V4, Command A+, Mistral, Llama, Qwen, Gemma, Phi): VRAM per quantization (FP16, FP8, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, context window, and capabilities."
+        description="Self-hosting requirements for major open-weights LLMs (NVIDIA Nemotron 3, Kimi K3, GLM-5.2, LongCat-2.0, MiniMax M3, DeepSeek V4, Command A+, Mistral, Llama, Qwen, Gemma, Phi): VRAM per quantization (BF16, FP8, NVFP4, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, context window, and capabilities."
         url="https://tensorfeed.ai/open-weights"
         jsonUrl="/api/open-weights"
         keywords={['open-weights models', 'self-hosting llms', 'vram requirements', 'model quantization', 'gpu recommendations', 'open source ai models', 'llm licenses']}
@@ -91,7 +92,7 @@ export default function OpenWeightsPage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary">Open-Weights Deployment</h1>
         </div>
         <p className="text-text-secondary text-lg max-w-3xl">
-          What you actually need to self-host the major open-weights models. VRAM per quantization (FP16, FP8, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, capabilities. The &ldquo;I want to run this myself&rdquo; companion to <Link href="/inference-providers" className="text-accent-primary hover:underline">/inference-providers</Link> (hosted pricing). {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
+          What you actually need to self-host the major open-weights models. VRAM per quantization (FP16, FP8, NVFP4, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, capabilities. This is the &ldquo;I want to run this myself&rdquo; side of the market. Rent it instead via <Link href="/inference-providers" className="text-accent-primary hover:underline">/inference-providers</Link> (hosted open-weights pricing) or <Link href="/models" className="text-accent-primary hover:underline">/models</Link> (frontier closed-model pricing per token). Compare open models on capability at <Link href="/best-open-source-llms" className="text-accent-primary hover:underline">/best-open-source-llms</Link>. {data?.lastUpdated && `Updated ${data.lastUpdated}.`}
         </p>
         <MachineReadableLink endpoint="/api/open-weights" className="mt-2" />
       </div>
@@ -171,7 +172,7 @@ export default function OpenWeightsPage() {
         <p>
           For agents: same data at{' '}
           <Link href="/api-reference/open-weights" className="text-accent-primary hover:underline font-mono">/api/open-weights</Link>
-          . Filter with <code className="font-mono">?family=Meta|DeepSeek|Moonshot|Zhipu|Meituan|MiniMax|Cohere|Alibaba|Mistral|Google|Microsoft</code>. Free, no auth, cached 10 min.
+          . Filter with <code className="font-mono">?family=NVIDIA|Meta|DeepSeek|Moonshot|Zhipu|Meituan|MiniMax|Cohere|Alibaba|Mistral|Google|Microsoft</code>. Free, no auth, cached 10 min.
         </p>
       </div>
     </div>
