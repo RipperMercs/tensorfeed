@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'open-weights-coalition-letter-who-didnt-sign',
+    title:
+      '25 Companies Signed the Open Weights Letter. The Story Is the Three That Did Not.',
+    author: 'Kira Nolan',
+    date: 'July 24, 2026',
+    readTime: '8 min read',
+    description:
+      "Jensen Huang opened an X account after 33 years running NVIDIA and used his first post to publish \"Open Weights and American AI Leadership,\" a joint letter signed by 25 companies including NVIDIA, Microsoft, Meta, IBM, Dell, Palantir, CrowdStrike, Hugging Face, Mistral, Mozilla, The Linux Foundation, Andreessen Horowitz, Y Combinator, Replit, Perplexity, and ServiceNow. OpenAI, Anthropic, and Google did not sign, and no signatory's primary revenue comes from metered access to a closed frontier model: sorted by layer the coalition is silicon, distribution, cloud, applications, deployment, open model builders, and capital, meaning every member sells a complement that gets more valuable when models stop being the scarce part. The letter's sharpest line repurposes safety as antitrust, arguing that concentrating advanced AI behind a few closed models \"results in a small number of single points of failure, weakens competition, and leaves critical technology in the hands of a few providers,\" which Microsoft signed while remaining OpenAI's largest partner. The unquoted payload is on the last page: policymakers \"should be careful not to conflate legitimate model-development techniques with misappropriation,\" and distillation is \"a widely used technique for model improvement, evaluation, and validation\" deserving targeted legal frameworks rather than sweeping restrictions. That lands two days after OSTP director Michael Kratsios accused Moonshot AI of distilling Anthropic's Fable model, with Anthropic endorsing and Treasury threatening sanctions. Four concrete asks: expand compute access for startups and researchers, fund shared training assets, avoid premature restrictions on open models, and stop treating distillation as misappropriation. Includes a signatory-by-layer table and a 4-bit VRAM table showing the sovereignty gap: Kimi K3 needs 1,450GB and 8x B200 while Mistral Medium 3.5 needs 72GB and one H100, so a permissive license on a 2.8T model buys a county government nothing. NVIDIA is sincere that open weights enable sovereignty and NVIDIA sells the sovereignty. Three signposts: whether the closed labs answer publicly, whether the distillation paragraph reaches the August White House framework, and whether any signatory funds cheaper ways to run the models that already exist.",
+  },
+  {
     slug: 'fli-safety-index-conditional-pause-clause',
     title:
       'Every Frontier Lab Promised to Pause. Now They Only Promise to Pause If Everyone Else Does.',
