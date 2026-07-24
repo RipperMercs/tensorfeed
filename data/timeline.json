@@ -1,6 +1,41 @@
 {
   "events": [
     {
+      "date": "2026-07-24",
+      "title": "Anthropic Ships Claude Opus 5 at Opus 4.8 Pricing, Half the Cost of Fable 5",
+      "provider": "Anthropic",
+      "category": "model-release",
+      "description": "Anthropic released Claude Opus 5 (API id claude-opus-5) at $5 per million input tokens and $25 per million output, unchanged from Claude Opus 4.8 and exactly half of Claude Fable 5 at $10/$50. It carries a 1 million token context window as both default and maximum, up to 128K output tokens, and text plus vision input. Anthropic's launch table shows it leading Fable 5 on most published rows despite the lower price: 70.6 percent on OSWorld 2.0 versus 66.1, 90.8 percent on BrowseComp versus 87.4, 64.7 percent on Humanity's Last Exam with tools versus 63.9, and a GDPval-AA v2 score of 1861 versus 1747. It also posts 30.2 percent on ARC-AGI-3, where Opus 4.8 scored 1.5. Fable 5 keeps narrow leads on FrontierCode and DeepSWE and remains Anthropic's stated top capability tier. All figures are vendor-reported. Adaptive thinking is now on by default when the thinking parameter is omitted, disabling thinking is rejected above high effort, and the minimum cacheable prompt drops to 512 tokens from 1024. Opus 5 uses a separate rate-limit pool from the Opus 4.x models and is excluded from Priority Tier. Available on the Claude API, Amazon Bedrock, Google Cloud, and Microsoft Foundry."
+    },
+    {
+      "date": "2026-07-16",
+      "title": "Gemini 3.5 Pro Misses Its July 17 Target as Google Weighs a Stopgap Flash Release",
+      "provider": "Google",
+      "category": "model-release",
+      "description": "Google DeepMind let the July 17, 2026 target for Gemini 3.5 Pro pass without a launch, the third missed window after the original Google I/O timeframe in May and a June slip. Reporting attributes the delay to persistent hallucinations, inconsistent real-world outputs, and structural failures in recursive tool calling and SVG generation in the rebuilt architecture, plus a failure to match GPT-5.6 on key benchmarks. Google has registered names including Gemini 3.6 Flash and Gemini 3.5 Flash Light, a sign it may ship a cheaper stopgap Flash variant to manage the competitive gap while Pro development continues. There is still no public API, model card, or pricing for Gemini 3.5 Pro, and every spec, including the rumored 2 million token context window, remains unconfirmed by Google."
+    },
+    {
+      "date": "2026-07-14",
+      "title": "Helsing Raises $1.8 Billion in Europe's Largest Venture Round",
+      "provider": "Helsing",
+      "category": "funding",
+      "description": "Munich defense AI startup Helsing raised $1.8 billion in a Series E at an $18 billion post-money valuation on July 14, 2026, co-led by Lightspeed and General Catalyst, the largest venture round in European history. It capped another concentrated week for AI capital: Fireworks closed a $1.505 billion Series D at a $17.5 billion valuation led by Atreides, Index Ventures, and TCV, Databricks signed a term sheet for a strategic round at a $188 billion valuation led by Coatue, and Chai Discovery raised $400 million for AI drug discovery. PitchBook put first half 2026 US venture funding at $412.7 billion, with AI deals dominating."
+    },
+    {
+      "date": "2026-07-14",
+      "title": "DeepSeek Sets a July 24 Deadline to Retire deepseek-chat and deepseek-reasoner",
+      "provider": "DeepSeek",
+      "category": "model-release",
+      "description": "DeepSeek notified developers that the legacy deepseek-chat and deepseek-reasoner API endpoints stop working on July 24, 2026 at 15:59 UTC, forcing a migration to the V4 model names that have served those aliases since the V4 preview launched on April 24, 2026. The fix is a one-line change of the model parameter to deepseek-v4-pro or deepseek-v4-flash on the same base URL and key, but the mapping has a trap: deepseek-reasoner routes to V4 Flash in thinking mode, not to the stronger V4 Pro, so teams running heavy reasoning on the old alias can quietly drop to Flash tier capability unless they switch explicitly. V4 uses a 1.6 trillion parameter mixture of experts design that activates 49 billion parameters per token, with V4 Pro priced near one fifth of GPT-5.5."
+    },
+    {
+      "date": "2026-07-13",
+      "title": "Anthropic Moves Claude Fable 5 to Metered Usage Credits on July 20",
+      "provider": "Anthropic",
+      "category": "pricing",
+      "description": "Anthropic set July 20, 2026 as the switch to metered usage credits for Claude Fable 5, ending a run of free included access for subscribers that it had extended twice in a week, first to July 12 and then to July 19. From July 20, Fable 5 bills at $10 per million input tokens and $50 per million output on Pro, Max, Team, and select Enterprise plans, with the existing prompt caching discounts (cache reads at $1.00 per million, 5 minute cache writes at $12.50, 1 hour writes at $20.00). Fable 5 is Anthropic's Mythos class flagship for autonomous knowledge work and coding, with a 1 million token context window and up to 128,000 tokens of output. The rate matches the standing list price, so this transition confirms the current number rather than changing it."
+    },
+    {
       "date": "2026-07-09",
       "title": "OpenAI Makes GPT-5.6 Sol, Terra, and Luna Generally Available",
       "provider": "OpenAI",

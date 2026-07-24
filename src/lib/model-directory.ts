@@ -38,6 +38,23 @@ export interface ModelPageMeta {
 export const MODEL_DIRECTORY: ModelPageMeta[] = [
   // ── Anthropic ──────────────────────────────────────────────────────
   {
+    slug: 'claude-opus-5',
+    pricingId: 'claude-opus-5',
+    benchmarkName: 'Claude Opus 5',
+    providerId: 'anthropic',
+    providerName: 'Anthropic',
+    providerUrl: 'https://www.anthropic.com',
+    seoTitle: 'Claude Opus 5: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Claude Opus 5 by Anthropic, released July 2026 at $5/$25 per 1M tokens, the same price as Opus 4.8 and half of Fable 5. 1M context and 128K output on TensorFeed.',
+    intro:
+      'Claude Opus 5 is Anthropic\'s July 2026 Opus release, and the pricing is the story: $5 per million input tokens and $25 per million output, identical to Claude Opus 4.8 and exactly half of Claude Fable 5 at $10/$50. The API id is claude-opus-5. It ships a 1 million token context window as both the default and the maximum, up to 128K output tokens, and text plus vision input. Anthropic\'s launch table puts it ahead of Fable 5 on most published rows despite the lower price: 70.6 percent on OSWorld 2.0 computer use against Fable 5\'s 66.1, 90.8 percent on BrowseComp against 87.4, 64.7 percent on Humanity\'s Last Exam with tools against 63.9, a GDPval-AA v2 knowledge-work score of 1861 against 1747, and 30.2 percent on ARC-AGI-3, a benchmark where Opus 4.8 scored 1.5. Fable 5 still edges it on FrontierCode (53.5 to 53.4) and DeepSWE (69.7 to 68.8), and Anthropic continues to position Fable 5 as the highest-capability tier. Treat every one of these as vendor-reported until independent runs land. Three operational changes matter for anyone porting from 4.8: adaptive thinking is now on by default when the thinking parameter is omitted, disabling thinking is only accepted at effort high or below (pairing it with xhigh or max returns a 400), and the minimum cacheable prompt drops to 512 tokens from 1024, so prompts previously too short to cache now create entries with no code change. Opus 5 draws on its own rate-limit bucket rather than the shared Opus 4.x pool, and Priority Tier does not cover it. Available on the Claude API, Amazon Bedrock, Google Cloud, and Microsoft Foundry.',
+    strengths: ['Same $5/$25 pricing as Opus 4.8, half the cost of Fable 5', '1M token context window as both default and maximum, 128K output', 'Leads Fable 5 on OSWorld 2.0, BrowseComp, HLE with tools, and GDPval-AA', '30.2 percent on ARC-AGI-3 against 1.5 percent for Opus 4.8', 'Prompt cache minimum halved to 512 tokens', 'Full effort ladder from low through max'],
+    useCases: ['Complex agentic coding and long-horizon autonomous runs', 'Computer-use and GUI automation', 'Agentic search and deep research', 'Whole-repository refactors and code review'],
+    docsUrl: 'https://docs.anthropic.com/en/docs/about-claude/models',
+    tier: 'flagship',
+  },
+  {
     slug: 'claude-fable-5',
     pricingId: 'claude-fable-5',
     benchmarkName: 'Claude Fable 5',
