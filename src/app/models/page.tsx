@@ -29,6 +29,33 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * The models on this page are the hosted, pay-per-token side of the market.
+ * These are the surfaces for the other side: models you download and run on
+ * your own hardware. Kept adjacent on purpose, because the real decision is
+ * usually "rent or own" rather than "which vendor".
+ */
+const selfHostSurfaces = [
+  {
+    name: 'Open-Weights Deployment',
+    href: '/open-weights',
+    description:
+      'VRAM per quantization, recommended GPU class, and license for every major open-weights model. Nemotron 3, Kimi K3, GLM-5.2, LongCat-2.0, DeepSeek V4, Llama 4. What it costs to run it yourself.',
+  },
+  {
+    name: 'Best Open Source LLMs',
+    href: '/best-open-source-llms',
+    description:
+      'The comparison guide: parameters, architecture, context, licensing, and what each open model is actually good for. Start here if you are choosing rather than deploying.',
+  },
+  {
+    name: 'Inference Providers',
+    href: '/inference-providers',
+    description:
+      'Hosted pricing for open-weights models across third-party providers. The middle option when you want open weights without owning the GPUs.',
+  },
+];
+
 const leaderboards = [
   {
     name: 'LMArena',
@@ -131,11 +158,42 @@ export default function ModelsPage() {
             for real-world cost estimates, or{' '}
             <Link href="/compare" className="text-accent-primary hover:underline">compare models side by side</Link>.
           </p>
+          <p>
+            Everything above is priced per token because someone else runs it. If you would rather own the
+            inference, the open-weights side of the market is tracked separately:{' '}
+            <Link href="/open-weights" className="text-accent-primary hover:underline">open-weights deployment specs</Link>{' '}
+            gives you the VRAM, GPU class, and license for each downloadable model, and{' '}
+            <Link href="/best-open-source-llms" className="text-accent-primary hover:underline">best open source LLMs</Link>{' '}
+            compares them on capability. Frontier closed models and frontier open models are both real options
+            now, and the cost curves cross at different points depending on your volume.
+          </p>
         </div>
       </section>
 
       {/* Latest Releases + Pricing Comparison (client-hydrated) */}
       <ModelsDataSection initialData={initialData} />
+
+      {/* Rent vs own: the open-weights counterpart to the hosted pricing above */}
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-text-primary mb-2">Run It Yourself</h2>
+        <p className="text-text-secondary text-sm mb-6 max-w-3xl">
+          The pricing above is what it costs to rent a model. These are what it costs to own one.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {selfHostSurfaces.map((surface) => (
+            <Link
+              key={surface.href}
+              href={surface.href}
+              className="bg-bg-secondary border border-border rounded-xl p-5 hover:shadow-glow hover:border-accent-primary transition-all group"
+            >
+              <h3 className="text-text-primary font-semibold mb-2 group-hover:text-accent-primary transition-colors">
+                {surface.name}
+              </h3>
+              <p className="text-text-muted text-sm">{surface.description}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Leaderboard Links */}
       <section className="mb-10">

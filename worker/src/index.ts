@@ -4723,7 +4723,7 @@ export default {
           usageRankings: '/api/usage-rankings',
           frameworks: '/api/frameworks?language=python|typescript&category=agent-orchestration|rag|multi-agent|sdk|workflow|voice-agent|browser-agent',
           benchmarkRegistry: '/api/benchmark-registry?category=knowledge|math|code|multimodal|agents|long-context&status=active|saturated',
-          openWeights: '/api/open-weights?family=Meta|DeepSeek|Moonshot|Zhipu|Meituan|MiniMax|Cohere|Mistral|Alibaba|Google|Microsoft',
+          openWeights: '/api/open-weights?family=NVIDIA|Meta|DeepSeek|Moonshot|Zhipu|Meituan|MiniMax|Cohere|Mistral|Alibaba|Google|Microsoft',
           aiHardware: '/api/ai-hardware?manufacturer=NVIDIA|AMD|Google|AWS|Apple|Cerebras|Groq',
           mcpServers: '/api/mcp-servers?capability=filesystem|web-search|browser|github|slack|database&first_party=true',
           trainingDatasets: '/api/training-datasets?stage=pretraining|instruction-tuning|dpo|rlhf|multimodal',

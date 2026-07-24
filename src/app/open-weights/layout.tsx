@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Open-Weights Model Deployment Specs: VRAM, GPU, Quantization',
   description:
-    'How to self-host Kimi K3, GLM-5.2, LongCat-2.0, MiniMax M3, DeepSeek V4, Command A+, Mistral Medium 3.5, and Llama 4: VRAM per quantization (FP16, FP8, AWQ, GGUF), recommended GPU, license, capabilities. Free, no auth.',
+    'How to self-host NVIDIA Nemotron 3, Kimi K3, GLM-5.2, LongCat-2.0, MiniMax M3, DeepSeek V4, Command A+, and Llama 4: VRAM per quantization (FP16, FP8, AWQ, GGUF), recommended GPU, license, capabilities. Free, no auth.',
   alternates: { canonical: 'https://tensorfeed.ai/open-weights' },
   openGraph: {
     type: 'website',
