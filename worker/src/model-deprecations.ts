@@ -201,6 +201,32 @@ export const MODEL_DEPRECATIONS: ModelDeprecation[] = [
     notes: 'Pre-RAG Command family. Replaced by Command R+ optimized for retrieval.',
     sourceUrl: 'https://docs.cohere.com/docs/deprecations',
   },
+
+  // === DeepSeek ===
+  {
+    id: 'deepseek-chat-alias',
+    provider: 'DeepSeek',
+    model: 'deepseek-chat',
+    status: 'sunsetted',
+    announcedDate: '2026-07-14',
+    deprecationDate: '2026-07-24',
+    sunsetDate: '2026-07-24',
+    replacement: 'deepseek-v4-pro',
+    notes: 'Legacy alias stopped serving on 2026-07-24 at 15:59 UTC. Same base URL and key, so migration is a one-line model parameter change.',
+    sourceUrl: 'https://api-docs.deepseek.com/updates',
+  },
+  {
+    id: 'deepseek-reasoner-alias',
+    provider: 'DeepSeek',
+    model: 'deepseek-reasoner',
+    status: 'sunsetted',
+    announcedDate: '2026-07-14',
+    deprecationDate: '2026-07-24',
+    sunsetDate: '2026-07-24',
+    replacement: 'deepseek-v4-flash',
+    notes: 'Legacy alias stopped serving on 2026-07-24 at 15:59 UTC. Mapping trap: deepseek-reasoner routed to V4 Flash in thinking mode, not to the stronger V4 Pro, so a naive swap to deepseek-v4-pro changes cost and a swap to Flash changes nothing. Teams running heavy reasoning on the old alias should pick the tier deliberately.',
+    sourceUrl: 'https://api-docs.deepseek.com/updates',
+  },
 ];
 
-export const MODEL_DEPRECATIONS_LAST_UPDATED = '2026-05-06';
+export const MODEL_DEPRECATIONS_LAST_UPDATED = '2026-07-24';
