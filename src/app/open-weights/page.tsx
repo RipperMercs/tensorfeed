@@ -27,6 +27,8 @@ interface OpenWeightModel {
   hfUrl: string;
   url: string;
   capabilities: string[];
+  weightsAvailable: boolean;
+  weightsExpected?: string;
   notes: string;
   quantizations: Quant[];
 }
@@ -45,6 +47,11 @@ const FAMILY_COLORS: Record<string, string> = {
   Alibaba: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
   Google: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   Microsoft: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  Moonshot: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+  Zhipu: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  Meituan: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  MiniMax: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20',
+  Cohere: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
 };
 
 function formatContext(n: number): string {
@@ -71,7 +78,7 @@ export default function OpenWeightsPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <DatasetJsonLd
         name="Open-Weights Model Deployment Catalog"
-        description="Self-hosting requirements for major open-weights LLMs (Llama, DeepSeek, Mistral, Qwen, Gemma, Phi): VRAM per quantization (FP16, FP8, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, context window, and capabilities."
+        description="Self-hosting requirements for major open-weights LLMs (Kimi K3, GLM-5.2, LongCat-2.0, MiniMax M3, DeepSeek V4, Command A+, Mistral, Llama, Qwen, Gemma, Phi): VRAM per quantization (FP16, FP8, AWQ INT4, GGUF Q4_K_M), recommended GPU class, license, context window, and capabilities."
         url="https://tensorfeed.ai/open-weights"
         jsonUrl="/api/open-weights"
         keywords={['open-weights models', 'self-hosting llms', 'vram requirements', 'model quantization', 'gpu recommendations', 'open source ai models', 'llm licenses']}
@@ -112,6 +119,11 @@ export default function OpenWeightsPage() {
                 <span className="text-text-muted">{formatContext(m.contextWindow)} context</span>
                 <span className="text-text-muted">{m.license}</span>
                 <span className="text-text-muted">Released {m.released}</span>
+                {m.weightsAvailable === false && (
+                  <span className="px-2 py-0.5 rounded-full border font-medium bg-amber-500/10 text-amber-400 border-amber-500/20">
+                    Weights pending{m.weightsExpected ? ` ${m.weightsExpected}` : ''}
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-1 flex-wrap">
@@ -159,7 +171,7 @@ export default function OpenWeightsPage() {
         <p>
           For agents: same data at{' '}
           <Link href="/api-reference/open-weights" className="text-accent-primary hover:underline font-mono">/api/open-weights</Link>
-          . Filter with <code className="font-mono">?family=Meta|DeepSeek|Alibaba|Mistral|Google|Microsoft</code>. Free, no auth, cached 10 min.
+          . Filter with <code className="font-mono">?family=Meta|DeepSeek|Moonshot|Zhipu|Meituan|MiniMax|Cohere|Alibaba|Mistral|Google|Microsoft</code>. Free, no auth, cached 10 min.
         </p>
       </div>
     </div>
