@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'google-cloud-514b-backlog-tpu-in-customer-dc',
+    title:
+      'Google Cloud Booked $514 Billion in Backlog. Q2 Was the First Quarter TPUs Shipped Into Customer Data Centers.',
+    author: 'Marcus Chen',
+    date: 'July 25, 2026',
+    readTime: '7 min read',
+    description:
+      "Alphabet reported Q2 2026 after the close on Tuesday, July 22. Google Cloud grew 82 percent year over year to $24.8B and posted a 35.6 percent operating margin ($8.81B, up from $2.83B), the cloud backlog jumped $54B in a single quarter to $514B (up 385 percent YoY, roughly $257B set to convert within 24 months), Q2 CapEx nearly doubled to $44.9B, full-year 2026 CapEx guidance was raised from $180B to $190B up to $195B to $205B, and free cash flow printed roughly negative $5.9B for the first time in years. The stock dropped about five percent after hours and most wires ran that as the story. The story CFO Anat Ashkenazi actually gave on the call is one sentence: Google recognized revenues from TPU system sales delivered to customer data centers for the first time in Q2. That is a chip line, not a cloud line, and it puts Alphabet inside Nvidia's business model on top of the cloud business already running against AWS and Azure. The 2026 dollars are small and the ramp is 2027 per Ashkenazi. Inside the full numbers table (revenue, cloud growth, backlog composition, CapEx, FCF, TPU into customer DCs), the merchant-silicon versus bundled-sale question the disclosure did not answer, why the backlog print is the first hard data point for the bull side of the CapEx debate, and what a working TPU-in-customer-rack product does to the Nvidia and Broadcom picture we sketched in the Meta Iris piece. Three signposts: whether Q3 breaks out TPU-system revenue as a named line, whether backlog crosses $600B, and what Nvidia says on the late-August call about custom-silicon customer mix.",
+  },
+  {
     slug: 'claude-opus-5-same-price-half-of-fable',
     title:
       'Anthropic Shipped Opus 5 at the Old Opus Price. It Beats Fable 5 on Most Rows for Half the Money.',
