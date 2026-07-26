@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'mcp-stateless-monday-session-handshake-gone',
+    title:
+      'MCP Goes Stateless on Monday. The Session Handshake Is Gone, and So Is the Reason Servers Were Hard to Run.',
+    author: 'Adrian Vale',
+    date: 'July 26, 2026',
+    readTime: '7 min read',
+    description:
+      "The Model Context Protocol ships its biggest revision since launch on Tuesday, July 28, 2026, with the 2026-07-28 release candidate signed off by lead maintainers David Soria Parra and Den Delimarsky. The change list rearranges the entire runtime: the initialize / initialized handshake is removed, the Mcp-Session-Id header is removed, and any request can hit any server instance because client information now travels via a _meta field on every call. Extensions become first-class with reverse-DNS identifiers, capability negotiation, and independent version cadence, and the first two official extensions ship alongside the core. MCP Apps lets a server ship interactive HTML that the host renders in a sandboxed iframe with templates prefetched and security-reviewed, so a tool call can become a small application surface instead of a JSON round trip. Tasks graduates out of the experimental core into SEP-2663, blocking tasks/result is replaced by polling via tasks/get, tasks/update, and tasks/cancel, session-bound tasks/list is removed outright, and servers return task handles from tools/call that the model reasons about. Six authorization proposals harden the spec against real OAuth 2.0 and OpenID Connect deployments (RFC 9207 iss validation, application_type on registration, refresh token guidance), with Enterprise-Managed Authorization stable on July 6, 2026 and Okta named as the reference identity provider alongside Anthropic's Claude, Claude Code, Cowork, plus VS Code as reference clients. Roots, Sampling, and Logging get deprecated in the core, and a formal Active / Deprecated / Removed policy with a 12-month minimum window replaces silent breaking changes between spec revisions. Inside the changes table (session model, Tasks redesign, MCP Apps, auth hardening, deprecations, deprecation policy), why the stateless bet is the whole story (a request behind a normal load balancer, autoscaling on horizontal replicas, serverless without a shared session store), what breaks (initialize-first servers, session-bound task queues, tasks/list-driven UIs), and the migration pattern of explicit handles instead of transport-hidden state. The edge angle: the stateless move is the change that finally lets MCP land clean on Cloudflare Workers and AWS Lambda cold starts, which is exactly the mental model x402 already assumed when the monetization gateways shipped two weeks ago. Our own @tensorfeed/mcp-server ships a stateless upgrade alongside the spec. Three signposts: whether Anthropic ships MCP Apps in Claude Desktop and Claude Code by Q4, whether OpenAI adopts the auth hardening for the ChatGPT MCP surface, and whether the first paid x402-metered MCP Apps land on any hosted registry before Q3 close.",
+  },
+  {
     slug: 'google-cloud-514b-backlog-tpu-in-customer-dc',
     title:
       'Google Cloud Booked $514 Billion in Backlog. Q2 Was the First Quarter TPUs Shipped Into Customer Data Centers.',
