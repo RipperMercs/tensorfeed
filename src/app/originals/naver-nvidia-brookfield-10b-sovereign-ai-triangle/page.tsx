@@ -171,7 +171,7 @@ export default function NaverNvidiaBrookfield10BSovereignAiTrianglePage() {
           <Link href="/originals/amd-anthropic-2gw-mi450-fifth-vendor" className="text-accent-primary hover:underline">
             last Thursday&apos;s piece
           </Link>
-          . NVIDIA itself sent $40B toward OpenAI to anchor a Vera Rubin commitment,{' '}
+          . NVIDIA itself sent $30B toward OpenAI to anchor a Vera Rubin commitment,{' '}
           <Link href="/originals/nvidia-40b-equity-customer-investor-loop" className="text-accent-primary hover:underline">
             the closed loop we sketched in April
           </Link>
