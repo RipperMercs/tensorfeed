@@ -165,7 +165,7 @@ export default function AmdAnthropic2gwMi450FifthVendorPage() {
         <ul className="list-disc pl-6 space-y-2">
           <li>Google TPU, roughly 3.5 gigawatts of committed capacity from 2027, anchored by the $200 billion Broadcom TPU deal in May.</li>
           <li>AWS Trainium, Project Rainier scale, undisclosed but material.</li>
-          <li>SpaceX Colossus, 300 megawatts of Nvidia GPUs at Grimes, Iowa via the Colossus 1 lease we{' '}
+          <li>SpaceX Colossus, 300 megawatts of Nvidia GPUs at Memphis, Tennessee via the Colossus 1 lease we{' '}
             <Link href="/originals/anthropic-spacexai-colossus-orbital" className="text-accent-primary hover:underline">
               covered in May
             </Link>
