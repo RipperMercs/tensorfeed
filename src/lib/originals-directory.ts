@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'naver-nvidia-brookfield-10b-sovereign-ai-triangle',
+    title:
+      "NAVER, NVIDIA, and Brookfield Put $10 Billion Behind Korea's 200 Megawatt Sovereign AI Factory. The Financing Template Is the Story.",
+    author: 'Marcus Chen',
+    date: 'July 27, 2026',
+    readTime: '7 min read',
+    description:
+      "On Friday, July 25, 2026, NAVER, NVIDIA, and Brookfield announced a $10 billion expansion of NAVER's GAK Sejong DSX AI factory from 55 megawatts to 200 megawatts by 2028, with NVIDIA writing $1B of equity into NAVER, Brookfield committing up to $9B on a non-binding term sheet as exclusive capital partner, and NAVER carrying the remainder and running the site. Blackwell today, Vera Rubin from 2027, with a stated long-term ambition of 1 gigawatt on the same Sejong campus. The megawatt count is not the story. The financing structure is. The vendor-equity loop we have been tracking all year (Google recycling $40B into Anthropic TPU offtake, AMD writing a $5B check to close a 2GW MI450 commitment, NVIDIA sending $40B toward OpenAI to anchor Vera Rubin) only closes when the customer is a US frontier lab with hyperscaler credit behind it. NAVER is not that customer. The gap gets filled by Brookfield's $100 billion AI infrastructure fund, itself anchored by NVIDIA and KIA. NVIDIA writes a token equity check for alignment, Brookfield writes the majority of the bill against the physical asset, the customer signs a compute offtake that services the debt, and the whole thing gets built without a hyperscaler landlord. Inside the numbers table, the two sovereign AI templates now in the field (Beijing burns political will and takes the yield hit on domestic silicon, Seoul keeps the frontier stack and dilutes to allied counterparties), what a repeatable NVIDIA plus project-finance placement mechanism does to the growth vector nobody had priced (sovereign compute in Korea, Japan, Taiwan, Singapore, the Gulf, and slices of the EU), the concentration risk when the same NVIDIA-anchored Brookfield fund shows up on every allied deal, why the 2028 delivery window puts NAVER's take-or-pay math on the same 24-month clock as every other frontier commitment written this year, and why NAVER's stated 1 GW ceiling is the number the deal actually depends on. Three signposts: whether the Brookfield term sheet hardens into binding debt before year end, whether Japan or Taiwan announces a comparable NVIDIA plus project-finance deal before Q1 2027, and whether the AI FINRA gate ends up applying to sovereign AI factories that host US-designed model weights.",
+  },
+  {
     slug: 'mcp-stateless-monday-session-handshake-gone',
     title:
       'MCP Goes Stateless on Monday. The Session Handshake Is Gone, and So Is the Reason Servers Were Hard to Run.',
