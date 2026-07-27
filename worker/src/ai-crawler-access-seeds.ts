@@ -54,6 +54,7 @@ export const SEED_DOMAINS: SeedDomain[] = [
   { domain: 'pika.art', sector: 'ai-company' },
   { domain: 'lovable.dev', sector: 'ai-company' },
   { domain: 'cursor.com', sector: 'ai-company' },
+  { domain: 'devin.ai', sector: 'ai-company' },
   { domain: 'contextual.ai', sector: 'ai-company' },
   { domain: 'ai21.com', sector: 'ai-company' },
   // expansion to 500 (2026-06-02)

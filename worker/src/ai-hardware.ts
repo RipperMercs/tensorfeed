@@ -13,7 +13,7 @@
 export interface AIHardware {
   id: string;
   name: string;
-  manufacturer: 'NVIDIA' | 'AMD' | 'Google' | 'AWS' | 'Intel' | 'Apple' | 'Cerebras' | 'Groq';
+  manufacturer: 'NVIDIA' | 'AMD' | 'Google' | 'AWS' | 'Intel' | 'Apple' | 'Cerebras' | 'Groq' | 'Microsoft';
   family: string;
   /** Process node (e.g. "TSMC 4N", "TSMC 3nm"). */
   process: string;
@@ -277,6 +277,25 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
     notes: 'TPU inference tier. Cheaper than v5p; 256-chip pods. Best fit for Google Cloud customers serving Gemini-style inference at scale.',
     url: 'https://cloud.google.com/tpu/docs/v5e',
   },
+  {
+    id: 'tpu-v7-ironwood',
+    name: 'Google TPU v7 (Ironwood)',
+    manufacturer: 'Google',
+    family: 'TPU',
+    process: 'TSMC (node undisclosed)',
+    released: '2026',
+    memoryGB: 192,
+    memoryBandwidthTBs: 7.38,
+    fp16TFLOPS: 2307,
+    fp8TFLOPS: 4614,
+    fp4TFLOPS: null,
+    tdpWatts: 600,
+    interconnect: 'ICI (1.2 TB/s bidirectional per chip, 3D torus)',
+    listPriceUSD: null,
+    availability: 'Google Cloud only (GA April 2026)',
+    notes: "Google's first inference-first TPU. Dual-chiplet design with SparseCores. Full 9,216-chip pod hits 42.5 ExaFLOPS FP8. 2x better perf/watt vs TPU v6e (Trillium).",
+    url: 'https://cloud.google.com/tpu/docs/tpu7x',
+  },
 
   // ── AWS Trainium ──────────────────────────────────────────
   {
@@ -379,6 +398,27 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
     url: 'https://cerebras.ai/product-chip/',
   },
 
+  // ── Microsoft ─────────────────────────────────────────────
+  {
+    id: 'maia-200',
+    name: 'Microsoft Maia 200',
+    manufacturer: 'Microsoft',
+    family: 'Maia',
+    process: 'TSMC 3nm',
+    released: '2026',
+    memoryGB: 216,
+    memoryBandwidthTBs: 7.0,
+    fp16TFLOPS: null as unknown as number,
+    fp8TFLOPS: 5000,
+    fp4TFLOPS: 10000,
+    tdpWatts: 750,
+    interconnect: 'Azure custom backend fabric',
+    listPriceUSD: null,
+    availability: 'Azure only (inference workloads inside Microsoft 365 Copilot, Foundry)',
+    notes: 'Microsoft\'s first in-house AI accelerator, live in Azure as of January 2026. 216 GB HBM3e, 30% better perf/dollar over prior systems. BF16 TFLOPS not publicly disclosed.',
+    url: 'https://news.microsoft.com/source/2026/01/microsoft-introduces-maia-200-new-inference-accelerator-enhances-ai-performance-in-azure/',
+  },
+
   // ── Groq ──────────────────────────────────────────────────
   {
     id: 'groq-lpu',
@@ -401,4 +441,4 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
   },
 ];
 
-export const AI_HARDWARE_LAST_UPDATED = '2026-06-05';
+export const AI_HARDWARE_LAST_UPDATED = '2026-07-27';

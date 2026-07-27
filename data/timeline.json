@@ -141,6 +141,13 @@
       "description": "MiniMax launched M3, an open-weight coding and agentic model built on MiniMax Sparse Attention, which replaces full attention with KV-block selection and cuts per-token compute at 1M context to roughly one twentieth of the previous generation. M3 accepts text, image, and video input across a 1,048,576 token context window with up to 512K output tokens, priced at $0.30 per million input and $1.20 per million output. MiniMax reports 59% on SWE-Bench Pro and 83.5 on BrowseComp, though headline runs used its own infrastructure with agent scaffolding, so independent verification is pending. Weights and a technical report are due on Hugging Face within about ten days."
     },
     {
+      "date": "2026-05-30",
+      "title": "SoftBank Commits Up to $85 Billion to Build 5 GW of AI Datacenters in France",
+      "provider": "SoftBank",
+      "category": "funding",
+      "description": "SoftBank Group announced up to 75 billion euros ($85 billion) for 5 GW of AI datacenter capacity across three sites in the Hauts-de-France region, announced at President Macron's 2026 Choose France summit. Phase 1 is a firm 45 billion euro commitment to deliver 3.1 GW by 2031 at Dunkirk (Loon-Plage), Bosquel, and Bouchain, powered primarily by EDF nuclear supply. The remaining 30 billion euros and 1.9 GW of Phase 2 capacity are conditional on Phase 1 delivery. The announcement is one of the largest single AI infrastructure commitments in European history."
+    },
+    {
       "date": "2026-05-28",
       "title": "Anthropic Raises $65B Series H at $965B Valuation",
       "provider": "Anthropic",

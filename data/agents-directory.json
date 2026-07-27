@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-05",
+  "lastUpdated": "2026-07-27",
   "categories": [
     {
       "id": "coding",
@@ -117,6 +117,16 @@
       "url": "https://gemini.google.com",
       "pricing": "Free tier, Advanced $19.99/mo (included with Google One AI Premium)",
       "launched": 2023
+    },
+    {
+      "id": "muse-spark",
+      "name": "Muse Spark",
+      "provider": "Meta",
+      "category": "general",
+      "description": "Meta's first paid commercial API model, released July 9, 2026. A multimodal reasoning model built for agentic and coding work with a 1 million token self-managed context window, native primary-agent and subagent orchestration, and MCP plus custom-skill support. Priced at $1.25 per million input tokens and $4.25 per million output, with $20 in free credits per new account.",
+      "url": "https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/",
+      "pricing": "$1.25/M input, $4.25/M output; $20 free credit on signup",
+      "launched": 2026
     },
     {
       "id": "gemini-spark",

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated_at": "2026-06-05T00:00:00Z",
+  "generated_at": "2026-07-27T00:00:00Z",
   "license": "TF curation CC-BY-4.0. Underlying public-record sources retain their original license.",
   "notice": "Editorial registry of disclosed major AI buildout projects. Each entry preserves canonical source URLs. Capacity, capex, and timeline figures reflect publicly announced or reported numbers at time of curation and may evolve. Status enum: announced (publicly committed, no ground broken), permitted (regulatory greenlights obtained), construction (active build), operational (online and serving traffic). Power source enum is the announced primary source; many projects mix multiple feeds.",
   "schema": {
@@ -146,19 +146,20 @@
     },
     {
       "id": "microsoft-mount-pleasant-wisconsin",
-      "name": "Microsoft Mount Pleasant Campus",
+      "name": "Microsoft Mount Pleasant Campus (Fairwater)",
       "operator": "Microsoft",
       "partners": ["We Energies"],
       "location": { "city": "Mount Pleasant", "state": "Wisconsin", "country": "USA" },
-      "status": "construction",
+      "status": "operational",
       "capacity_mw_announced": null,
       "power_source": "mixed including new gas plants",
       "announced_date": "2024-03-08",
       "target_operational": "2026",
       "capex_usd_billion": 3.3,
-      "context": "Sits on the former Foxconn site. Microsoft announced an additional $3.3 billion commitment in 2024 on top of earlier phases. We Energies has separately filed for approval of two new natural gas peaker plants partly attributed to the data center load.",
+      "context": "Sits on the former Foxconn site. Microsoft announced an additional $3.3 billion commitment in 2024 on top of earlier phases. The Fairwater datacenter completed construction in June 2026 and is now fully operational, with roughly 550 full-time employees on site. A second facility of similar scale is planned for $4 billion by end of 2028, bringing total Wisconsin investment above $7 billion. We Energies has separately filed for approval of two new natural gas peaker plants partly attributed to the data center load.",
       "primary_sources": [
-        "https://blogs.microsoft.com/blog/2024/05/08/3-3b-microsoft-investment-in-mount-pleasant-to-spur-ai-innovation/"
+        "https://blogs.microsoft.com/blog/2024/05/08/3-3b-microsoft-investment-in-mount-pleasant-to-spur-ai-innovation/",
+        "https://news.microsoft.com/source/2026/06/23/microsoft-completes-construction-on-first-datacenter-facility-in-mount-pleasant-wisconsin/"
       ]
     },
     {
@@ -301,6 +302,24 @@
       "context": "Anthropic committed $50 billion to American AI infrastructure, with Fluidstack as the build partner across initial sites in Texas and New York. Announced November 12, 2025 alongside an expected 800 permanent jobs and 2,400 construction jobs. Sites are designed as custom data centers optimized for Anthropic workloads and are coming online in phases through 2026. The gigawatt-scale capacity complements Anthropic's Google Cloud TPU commitments and its lease of SpaceXAI Colossus 1.",
       "primary_sources": [
         "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure"
+      ]
+    },
+    {
+      "id": "softbank-france-hauts-de-france",
+      "name": "SoftBank France AI Datacenter Program",
+      "operator": "SoftBank Group",
+      "partners": ["EDF", "Schneider Electric", "SB Energy"],
+      "location": { "city": "Dunkirk, Bosquel, Bouchain", "state": "Hauts-de-France", "country": "France" },
+      "status": "announced",
+      "capacity_mw_announced": 5000,
+      "power_source": "nuclear (EDF grid)",
+      "announced_date": "2026-05-30",
+      "target_operational": "2031",
+      "capex_usd_billion": 85,
+      "context": "Announced at President Macron's 2026 Choose France summit on May 30, 2026. SoftBank committed up to 75 billion euros (roughly $85 billion) for up to 5 GW of AI datacenter capacity across three sites in the Hauts-de-France region. Phase 1 is a firm 45 billion euro commitment to deliver 3.1 GW by 2031 at Dunkirk (Loon-Plage), Bosquel, and Bouchain. The remaining 30 billion euros and 1.9 GW of Phase 2 capacity are conditional on Phase 1 delivery. EDF supplies nuclear power; Schneider Electric is co-developing industrial facilities at Dunkirk.",
+      "primary_sources": [
+        "https://group.softbank/en/news/press/20260531_0",
+        "https://www.cnbc.com/2026/05/31/softbank-to-build-up-ai-data-centers-in-france-with-major-investment.html"
       ]
     },
     {
