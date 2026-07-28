@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'meta-blackrock-el-paso-14b-second-eighty-twenty-jv',
+    title:
+      "Meta Handed BlackRock 80 Percent of a $14 Billion El Paso Data Center. That's the Second 80/20 JV in Nine Months.",
+    author: 'Marcus Chen',
+    date: 'July 28, 2026',
+    readTime: '7 min read',
+    description:
+      "On Tuesday, July 28, 2026, Meta and BlackRock announced a $14 billion, 1 gigawatt data center campus in El Paso for a 2028 launch, with Meta as the first and only tenant, BlackRock funds holding 80 percent of the JV, Meta keeping 20 percent, Meta contributing $2.3 billion in land and other assets, Meta pocketing a $1 billion one-time payment on close, BlackRock writing $4.9 billion in cash, and $12.5 billion of bonds sitting on top of the capital stack. The El Paso structure is a direct rerun of the 80/20 template Meta used with Blue Owl Capital in October 2025 to build Hyperion in Richland Parish, Louisiana, which two weeks ago was expanded to 5 gigawatts and $50 billion. Two JVs in nine months, both with an asset manager holding title on the gigawatt while Meta writes the compute offtake and takes the tokens. Inside the numbers table (build cost, capacity, asset manager, ownership split, contribution, one-time payment, cash, debt tranche, anchor tenant, first-tokens window on both campuses), what an 80/20 project-finance JV with an asset manager on the majority position actually does to hyperscaler accounting (equity method share on the balance sheet, lease payments as operating expense, the physical asset off the tenant's books), the $1 billion one-time payment as the tell that Meta gets compensated on the way in for entitlements it already spent to permit the site, the rhyme with the NAVER, NVIDIA, and Brookfield deal from Korea yesterday (asset manager on the majority position, hyperscaler-adjacent equity for alignment, contracted offtake underneath, gigawatt in the middle that nobody wants on the operating company's balance sheet), why the hyperscaler CapEx number is now a lower bound on effective compute spend rather than a ceiling and analysts have to read through JV commitments in the 10-K to size the real exposure, why the compute buildout risk is migrating from hyperscaler shareholders to asset manager LPs, where the rest of the complex goes next (Google, Microsoft, Amazon), and why BlackRock, Blue Owl, Brookfield, and Apollo already have the dedicated AI infrastructure funds sized for this shape. Three signposts: whether Meta names a third asset manager on a third US JV before year end, whether Google, Microsoft, or Amazon files a comparable 80/20 project-finance JV on a named US site by Q1 2027, and whether SEC disclosure rules catch up before the pattern becomes universal.",
+  },
+  {
     slug: 'naver-nvidia-brookfield-10b-sovereign-ai-triangle',
     title:
       "NAVER, NVIDIA, and Brookfield Put $10 Billion Behind Korea's 200 Megawatt Sovereign AI Factory. The Financing Template Is the Story.",
