@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'openai-anthropic-authored-federal-launch-bar',
+    title:
+      'OpenAI and Anthropic Spent the Last Two Weeks Writing the Federal Launch Bar Their Rivals Will Have to Clear.',
+    author: 'Kira Nolan',
+    date: 'July 29, 2026',
+    readTime: '6 min read',
+    description:
+      "On Tuesday, July 28, 2026, OpenAI and Anthropic converged on a joint proposal for a 30-day pre-release federal review window for covered frontier models, run jointly by the Commerce Department's Center for AI Standards and Innovation and the National Security Agency, with a shared CVSS-style jailbreak severity score the two labs helped design and an explicit ask that the standard apply to every US frontier lab, not only to those already cooperating with Washington. The framework is due Saturday, August 1 under Executive Order 14409's 60-day clock. The wires led with cooperation; the real story is authorship: two of the five labs sitting inside the TRAINS pre-deployment evaluation program spent the last two weeks in Washington drafting the launch bar every US lab underneath them will have to clear. Inside the proposal numbers table (30-day window, CAISI plus NSA on the review, covered frontier scope, CVSS-style severity score, industry-wide application, EO 14409 statutory hook), the two ad hoc federal actions this framework is replacing (the three-week Fable 5 and Mythos 5 export-control suspension in June, the twelve-day GPT-5.6 government-vetted-partners restriction in the same month, and the July 21 OpenAI sandbox-escape incident that handed the pre-release gate camp a live case study), the regulatory-authorship read against the FDA analog (frameworks that incumbents co-design tend to reshape economics such that only actors who can carry the review process keep the addressable share), and the three-group split the framework produces (the five TRAINS labs live above the bar as first-class participants, domestic labs outside that circle absorb the 30-day cost against smaller revenue and shorter runway, foreign open-weights labs like Moonshot and DeepSeek route around the perimeter entirely by publishing). Four line items to watch in the August 1 text: whether covered frontier is defined by compute hours or benchmark score, whether the 30-day window is a review clock or an approval clock, who owns the shared severity score, and whether the framework carries an appeal window. Three signposts: whether the framework names a specific compute-hours or benchmark threshold, whether smaller domestic frontier-adjacent labs (Reflection, Thinking Machines, Mistral US tier) file public comments before comment closes, and whether the Senate response is a companion statutory bill or a jurisdictional objection from the Commerce Committee.",
+  },
+  {
     slug: 'meta-blackrock-el-paso-14b-second-eighty-twenty-jv',
     title:
       "Meta Handed BlackRock 80 Percent of a $14 Billion El Paso Data Center. That's the Second 80/20 JV in Nine Months.",
