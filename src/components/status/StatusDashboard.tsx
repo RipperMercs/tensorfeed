@@ -122,8 +122,15 @@ export default function StatusDashboard() {
 
   useEffect(() => {
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // Poll cadence, tightened while anything is down or degraded so a recovery
+    // clears fast. A stale "operational" is harmless; a stale "down" is not.
+    const POLL_OK_MS = 120_000;
+    const POLL_INCIDENT_MS = 30_000;
 
     async function pollAll() {
+      // Default to the slow cadence so a failed poll cannot pin us to the fast one.
+      let nextDelay = POLL_OK_MS;
       try {
         const [statusRes, probeRes, incidentRes] = await Promise.all([
           fetch('https://tensorfeed.ai/api/status', { cache: 'no-store' }),
@@ -141,6 +148,11 @@ export default function StatusDashboard() {
             );
             setStatuses(sorted);
             setLastSweep(new Date());
+            nextDelay = sorted.some(
+              (s: StatusService) => s.status === 'down' || s.status === 'degraded',
+            )
+              ? POLL_INCIDENT_MS
+              : POLL_OK_MS;
           }
         }
 
@@ -157,18 +169,20 @@ export default function StatusDashboard() {
       } catch {
         // Network blip; keep last-known.
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          timer = setTimeout(pollAll, nextDelay);
+        }
       }
     }
 
     pollAll();
-    const interval = setInterval(pollAll, 120_000);
     // Tick re-renders the last-incident counter every second without
-    // touching other state. Single setInterval per spec section 7.
+    // touching other state.
     const tickInterval = setInterval(() => setTick((n) => n + 1), 1000);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      if (timer) clearTimeout(timer);
       clearInterval(tickInterval);
     };
   }, []);

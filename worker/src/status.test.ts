@@ -10,6 +10,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { aggregateCoreStatus, _internal } from './status';
+import { STATUS_PAGES } from './sources';
 
 const {
   normalizeInstatusComponentStatus,
@@ -23,6 +24,42 @@ const {
   parseAzureRssItems,
   azureItemSeverity,
 } = _internal;
+
+describe('Anthropic status config', () => {
+  const anthropic = STATUS_PAGES.find((s) => s.provider === 'Anthropic');
+
+  it('is still tracked', () => {
+    expect(anthropic).toBeDefined();
+    expect(anthropic?.name).toBe('Claude API');
+  });
+
+  it('scopes the headline away from client tools', () => {
+    // Regression guard: dropping peripheralExtra here silently reintroduces
+    // "Claude API is Down" during a Claude Code outage.
+    const extra = anthropic?.peripheralExtra ?? [];
+    expect(extra.length).toBeGreaterThan(0);
+    expect(extra.some((p) => p.test('Claude Code'))).toBe(true);
+  });
+
+  it('keeps claude.ai core so a real consumer outage is still reported', () => {
+    // Deliberate: claude.ai is what most people mean by "is Claude down".
+    // Under-reporting a genuine outage is worse than over-reporting one, so the
+    // consumer app must keep driving this headline.
+    const extra = anthropic?.peripheralExtra ?? [];
+    expect(extra.some((p) => p.test('claude.ai'))).toBe(false);
+  });
+
+  it('leaves the inference API surfaces core', () => {
+    const extra = anthropic?.peripheralExtra ?? [];
+    for (const name of ['api.anthropic.com', 'Claude on AWS Bedrock', 'Claude on Google Cloud Vertex AI']) {
+      expect(extra.some((p) => p.test(name)), `${name} must stay core`).toBe(false);
+    }
+  });
+
+  it('does not use an explicit componentFilter, which would fail closed to unknown', () => {
+    expect(anthropic?.componentFilter).toBeUndefined();
+  });
+});
 
 describe('aggregateCoreStatus', () => {
   it('returns null when no components are present so caller falls back to umbrella', () => {
@@ -119,6 +156,110 @@ describe('aggregateCoreStatus', () => {
       { name: 'Codex CLI', status: 'degraded' },
     ]);
     expect(result).toBe('operational');
+  });
+
+  describe('with peripheralExtra (e.g. Anthropic client tools)', () => {
+    // Same bug class as the Codex case above, on the Anthropic row: Claude Code
+    // and claude.ai live on the same status page as api.anthropic.com, so a
+    // broken client tool rendered as "Claude API is Down" while the inference
+    // API served fine. The "Claude API" row answers whether the API is callable.
+    const ANTHROPIC_EXTRA = [/claude\s*code/i, /desktop/i, /chrome/i, /\bextension\b/i];
+
+    it('keeps the headline operational when only a client tool is down', () => {
+      const result = aggregateCoreStatus(
+        [
+          { name: 'api.anthropic.com', status: 'operational' },
+          { name: 'Claude on AWS Bedrock', status: 'operational' },
+          { name: 'Claude Code', status: 'down' },
+          { name: 'claude.ai', status: 'operational' },
+        ],
+        undefined,
+        ANTHROPIC_EXTRA,
+      );
+      expect(result).toBe('operational');
+    });
+
+    it('reports down when claude.ai is out even if the API is green', () => {
+      // The 2026-07-29 shape: consumer app down, API serving. This must read as
+      // an outage, since claude.ai is what "is Claude down" usually means.
+      const result = aggregateCoreStatus(
+        [
+          { name: 'api.anthropic.com', status: 'operational' },
+          { name: 'claude.ai', status: 'down' },
+          { name: 'Claude Code', status: 'degraded' },
+        ],
+        undefined,
+        ANTHROPIC_EXTRA,
+      );
+      expect(result).toBe('down');
+    });
+
+    it('still reports down when the inference API itself is down', () => {
+      const result = aggregateCoreStatus(
+        [
+          { name: 'api.anthropic.com', status: 'down' },
+          { name: 'Claude Code', status: 'operational' },
+        ],
+        undefined,
+        ANTHROPIC_EXTRA,
+      );
+      expect(result).toBe('down');
+    });
+
+    it('still reports degraded from a cloud-hosted Claude endpoint', () => {
+      const result = aggregateCoreStatus(
+        [
+          { name: 'api.anthropic.com', status: 'operational' },
+          { name: 'Claude on Google Cloud Vertex AI', status: 'degraded' },
+          { name: 'Claude Code', status: 'operational' },
+        ],
+        undefined,
+        ANTHROPIC_EXTRA,
+      );
+      expect(result).toBe('degraded');
+    });
+
+    it('matches Claude Code name variants', () => {
+      for (const name of ['Claude Code', 'ClaudeCode', 'Claude Code CLI', 'claude code (beta)']) {
+        const result = aggregateCoreStatus(
+          [{ name: 'api.anthropic.com', status: 'operational' }, { name, status: 'down' }],
+          undefined,
+          ANTHROPIC_EXTRA,
+        );
+        expect(result, `${name} should be peripheral`).toBe('operational');
+      }
+    });
+
+    it('does not filter the API row itself', () => {
+      // The tool patterns must not swallow api.anthropic.com or a "Claude API" row.
+      const result = aggregateCoreStatus(
+        [{ name: 'Claude API', status: 'down' }],
+        undefined,
+        ANTHROPIC_EXTRA,
+      );
+      expect(result).toBe('down');
+    });
+
+    it('returns null when everything is peripheral so the caller falls back to the umbrella', () => {
+      // This is the graceful-degradation property that makes peripheralExtra
+      // safer than an explicit componentFilter: no match means fall back to the
+      // vendor indicator, not a blank 'unknown' headline.
+      const result = aggregateCoreStatus(
+        [{ name: 'Claude Code', status: 'down' }, { name: 'Claude Desktop', status: 'down' }],
+        undefined,
+        ANTHROPIC_EXTRA,
+      );
+      expect(result).toBeNull();
+    });
+
+    it('is ignored when an explicitFilter is also present', () => {
+      const result = aggregateCoreStatus(
+        [{ name: 'Claude Code', status: 'down' }],
+        [/claude\s*code/i],
+        ANTHROPIC_EXTRA,
+      );
+      expect(result).toBe('down');
+    });
   });
 
   describe('with explicitFilter (e.g. GitHub Copilot)', () => {

@@ -6,12 +6,18 @@ import { Zap, X } from 'lucide-react';
 import StatusAlertBar from './StatusAlertBar';
 import {
   chooseBar,
+  classifySeverity,
   isSafeHref,
   type StatusAlertBarService,
   type BreakingAlert,
 } from '@/lib/alert-bar-logic';
 
-const POLL_INTERVAL_MS = 90_000;
+// Poll cadence, tightened while any provider is non-operational. A stale
+// "operational" costs nothing, but a stale "down" left up after a provider
+// recovers is the failure users actually notice. Incidents are rare and the
+// edge cache absorbs the reads, so the fast cadence is close to free.
+const POLL_OK_MS = 90_000;
+const POLL_INCIDENT_MS = 30_000;
 const DISMISS_KEY = 'tf-breaking-dismissed';
 
 export default function TopAlertBar() {
@@ -26,7 +32,11 @@ export default function TopAlertBar() {
       /* sessionStorage unavailable */
     }
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const fetchOnce = async () => {
+      // Default to the slow cadence so a failed poll can never pin the page
+      // to the fast one.
+      let nextDelay = POLL_OK_MS;
       try {
         const [s, b] = await Promise.all([
           fetch('/api/status', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)),
@@ -34,19 +44,21 @@ export default function TopAlertBar() {
         ]);
         if (cancelled) return;
         if (s?.ok && Array.isArray(s.services)) {
-          setServices(s.services.map((x: StatusAlertBarService) => ({ name: x.name, status: x.status })));
+          const next = s.services.map((x: StatusAlertBarService) => ({ name: x.name, status: x.status }));
+          setServices(next);
+          nextDelay = classifySeverity(next) === 'ok' ? POLL_OK_MS : POLL_INCIDENT_MS;
         }
         // Server is the sole expiry authority: trust its alert (or null) verbatim.
         if (b?.ok) setBreaking(b.alert ?? null);
       } catch {
         /* keep last-known-good */
       }
+      if (!cancelled) timer = setTimeout(fetchOnce, nextDelay);
     };
     fetchOnce();
-    const t = setInterval(fetchOnce, POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
-      clearInterval(t);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 

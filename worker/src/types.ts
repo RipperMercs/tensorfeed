@@ -323,6 +323,16 @@ export interface ServiceStatus {
     detected_at: string | null;
     probe_signal: string;
   };
+  // Set when the vendor still reports an incident but TensorFeed's own probes
+  // are completing normally again. Additive: `status` above stays vendor-
+  // authoritative. See worker/src/probe-early-warning.ts.
+  recovery_observed?: {
+    source: string;
+    note: string;
+    observed_at: string | null;
+    window_minutes: number;
+    probe_signal: string;
+  };
 }
 
 export interface StatusPageResponse {
