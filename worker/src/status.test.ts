@@ -33,12 +33,15 @@ describe('Anthropic status config', () => {
     expect(anthropic?.name).toBe('Claude API');
   });
 
-  it('scopes the headline away from client tools', () => {
+  it('scopes the headline away from client tools and non-API product surfaces', () => {
     // Regression guard: dropping peripheralExtra here silently reintroduces
-    // "Claude API is Down" during a Claude Code outage.
+    // "Claude API is Down" during a Claude Code outage. Names are the real ones
+    // observed on status.anthropic.com 2026-07-29.
     const extra = anthropic?.peripheralExtra ?? [];
     expect(extra.length).toBeGreaterThan(0);
-    expect(extra.some((p) => p.test('Claude Code'))).toBe(true);
+    for (const name of ['Claude Code', 'Claude Cowork', 'Claude for Government']) {
+      expect(extra.some((p) => p.test(name)), `${name} should be peripheral`).toBe(true);
+    }
   });
 
   it('keeps claude.ai core so a real consumer outage is still reported', () => {
@@ -163,7 +166,33 @@ describe('aggregateCoreStatus', () => {
     // and claude.ai live on the same status page as api.anthropic.com, so a
     // broken client tool rendered as "Claude API is Down" while the inference
     // API served fine. The "Claude API" row answers whether the API is callable.
-    const ANTHROPIC_EXTRA = [/claude\s*code/i, /desktop/i, /chrome/i, /\bextension\b/i];
+    const ANTHROPIC_EXTRA = [
+      /claude\s*code/i,
+      /cowork/i,
+      /government/i,
+      /desktop/i,
+      /chrome/i,
+      /\bextension\b/i,
+    ];
+
+    it('keeps the headline operational when only non-API product surfaces are down', () => {
+      // The real component roster from status.anthropic.com on 2026-07-29, with
+      // the inference path healthy. None of Cowork, Government, or Code being
+      // down means the API is uncallable.
+      const result = aggregateCoreStatus(
+        [
+          { name: 'claude.ai', status: 'operational' },
+          { name: 'Claude API (api.anthropic.com)', status: 'operational' },
+          { name: 'Claude Code', status: 'down' },
+          { name: 'Claude Cowork', status: 'down' },
+          { name: 'Claude for Government', status: 'down' },
+          { name: 'Claude Console (platform.claude.com)', status: 'operational' },
+        ],
+        undefined,
+        ANTHROPIC_EXTRA,
+      );
+      expect(result).toBe('operational');
+    });
 
     it('keeps the headline operational when only a client tool is down', () => {
       const result = aggregateCoreStatus(

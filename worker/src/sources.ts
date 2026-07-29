@@ -151,9 +151,21 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     url: 'https://status.anthropic.com/api/v2/summary.json',
     statusPageUrl: 'https://status.anthropic.com',
     type: 'statuspage',
-    // Client TOOLS on Anthropic's status page must not drive this headline: a
-    // broken CLI, desktop app, or browser extension is not an inference outage,
-    // and Claude Code in particular flaps independently of the API.
+    // Surfaces that must not drive this headline, because none of them being
+    // down means "you cannot call the Claude inference API":
+    //   - Client tools (Claude Code, desktop, Chrome, extensions). Claude Code
+    //     in particular flaps independently of the API.
+    //   - Claude Cowork: a product built ON the API, same category as Code.
+    //   - Claude for Government: a separate deployment almost no caller of this
+    //     row is on, so a gov-only incident would show red for everyone whose
+    //     API is fine. The default peripheral list already carries a /fedramp/
+    //     pattern, i.e. excluding government and compliance surfaces was always
+    //     the intent; the row name simply never matched it.
+    //
+    // Marking a surface peripheral no longer hides it: surfaceSplit (see
+    // src/lib/status-display.ts) names every affected component underneath the
+    // verdict, so a Cowork or gov outage is still reported on the page. It just
+    // stops being the headline.
     //
     // claude.ai is deliberately NOT in this list. It is the surface most people
     // mean when they search "is Claude down", so a claude.ai outage is a real
@@ -163,6 +175,8 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     // tracked service row is the way to sharpen this further.
     peripheralExtra: [
       /claude\s*code/i,
+      /cowork/i,
+      /government/i,
       /desktop/i,
       /chrome/i,
       /\bextension\b/i,
