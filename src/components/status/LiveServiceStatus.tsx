@@ -9,6 +9,7 @@ import {
   statusBg,
   pickService,
   recoveryNote,
+  surfaceSplitNote,
 } from '@/lib/status-display';
 
 // Poll cadence. The slow path matches the "auto-refreshes every 2 minutes"
@@ -78,6 +79,7 @@ export default function LiveServiceStatus({
 
   const status = service?.status || 'unknown';
   const recovery = recoveryNote(service);
+  const surfaces = surfaceSplitNote(service);
 
   return (
     <>
@@ -96,6 +98,9 @@ export default function LiveServiceStatus({
         <p className="text-text-secondary text-lg max-w-xl mx-auto">
           {statusMessage(providerName, status)}
         </p>
+        {surfaces && (
+          <p className="text-text-secondary text-sm max-w-xl mx-auto mt-4">{surfaces}</p>
+        )}
         {recovery && (
           <p
             className="text-sm max-w-xl mx-auto mt-4 px-4 py-3 rounded-lg border text-left"

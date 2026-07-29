@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { statusHeading, statusMessage, statusBg, pickService, recoveryNote } from './status-display';
+import {
+  statusHeading,
+  statusMessage,
+  statusBg,
+  pickService,
+  recoveryNote,
+  surfaceSplit,
+  surfaceSplitNote,
+} from './status-display';
 import type { ServiceStatusData } from './status-display';
 
 describe('statusHeading', () => {
@@ -89,5 +97,95 @@ describe('recoveryNote', () => {
 
   it('falls back to generic wording when the window is missing', () => {
     expect(recoveryNote(svc({ recovery_observed: {} }))).toContain('recent checks');
+  });
+});
+
+describe('surfaceSplit', () => {
+  const withComponents = (components: { name: string; status: string }[]): ServiceStatusData => ({
+    name: 'Claude API',
+    provider: 'Claude',
+    status: 'degraded',
+    components,
+  });
+
+  it('splits affected from healthy when the vendor components disagree', () => {
+    // The real 2026-07-29 Anthropic payload.
+    const split = surfaceSplit(
+      withComponents([
+        { name: 'claude.ai', status: 'degraded' },
+        { name: 'Claude API (api.anthropic.com)', status: 'degraded' },
+        { name: 'Claude Code', status: 'degraded' },
+        { name: 'Claude Cowork', status: 'degraded' },
+        { name: 'Claude for Government', status: 'operational' },
+        { name: 'Claude Console (platform.claude.com)', status: 'operational' },
+      ]),
+    );
+    expect(split?.affected).toHaveLength(4);
+    expect(split?.healthy).toEqual(['Claude for Government', 'Claude Console (platform.claude.com)']);
+  });
+
+  it('returns null when every component agrees, so we do not restate the headline', () => {
+    expect(
+      surfaceSplit(
+        withComponents([
+          { name: 'claude.ai', status: 'down' },
+          { name: 'api.anthropic.com', status: 'down' },
+        ]),
+      ),
+    ).toBeNull();
+    expect(
+      surfaceSplit(
+        withComponents([
+          { name: 'claude.ai', status: 'operational' },
+          { name: 'api.anthropic.com', status: 'operational' },
+        ]),
+      ),
+    ).toBeNull();
+  });
+
+  it('treats unknown and maintenance as neither affected nor healthy', () => {
+    // unknown plus down is not a disagreement worth narrating: nothing is
+    // affirmatively healthy.
+    expect(
+      surfaceSplit(
+        withComponents([
+          { name: 'A', status: 'down' },
+          { name: 'B', status: 'unknown' },
+          { name: 'C', status: 'maintenance' },
+        ]),
+      ),
+    ).toBeNull();
+  });
+
+  it('returns null for a single component or a missing service', () => {
+    expect(surfaceSplit(withComponents([{ name: 'API', status: 'down' }]))).toBeNull();
+    expect(surfaceSplit(null)).toBeNull();
+  });
+
+  it('names the split in prose with correct agreement', () => {
+    const note = surfaceSplitNote(
+      withComponents([
+        { name: 'claude.ai', status: 'down' },
+        { name: 'api.anthropic.com', status: 'operational' },
+      ]),
+    );
+    expect(note).toContain('Not every surface is affected');
+    expect(note).toContain('claude.ai is reporting problems');
+    expect(note).toContain('api.anthropic.com is operational');
+  });
+
+  it('caps long lists rather than dumping every component name', () => {
+    const note = surfaceSplitNote(
+      withComponents([
+        { name: 'A', status: 'down' },
+        { name: 'B', status: 'down' },
+        { name: 'C', status: 'down' },
+        { name: 'D', status: 'down' },
+        { name: 'E', status: 'down' },
+        { name: 'Z', status: 'operational' },
+      ]),
+    );
+    expect(note).toContain('A, B and C and 2 more');
+    expect(note).toContain('Z is operational');
   });
 });
