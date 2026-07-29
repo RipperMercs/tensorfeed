@@ -33,13 +33,20 @@ describe('Anthropic status config', () => {
     expect(anthropic?.name).toBe('Claude API');
   });
 
-  it('scopes the headline away from Claude Code and claude.ai', () => {
+  it('scopes the headline away from client tools', () => {
     // Regression guard: dropping peripheralExtra here silently reintroduces
     // "Claude API is Down" during a Claude Code outage.
     const extra = anthropic?.peripheralExtra ?? [];
     expect(extra.length).toBeGreaterThan(0);
     expect(extra.some((p) => p.test('Claude Code'))).toBe(true);
-    expect(extra.some((p) => p.test('claude.ai'))).toBe(true);
+  });
+
+  it('keeps claude.ai core so a real consumer outage is still reported', () => {
+    // Deliberate: claude.ai is what most people mean by "is Claude down".
+    // Under-reporting a genuine outage is worse than over-reporting one, so the
+    // consumer app must keep driving this headline.
+    const extra = anthropic?.peripheralExtra ?? [];
+    expect(extra.some((p) => p.test('claude.ai'))).toBe(false);
   });
 
   it('leaves the inference API surfaces core', () => {
@@ -156,7 +163,7 @@ describe('aggregateCoreStatus', () => {
     // and claude.ai live on the same status page as api.anthropic.com, so a
     // broken client tool rendered as "Claude API is Down" while the inference
     // API served fine. The "Claude API" row answers whether the API is callable.
-    const ANTHROPIC_EXTRA = [/claude\s*code/i, /^claude\.ai$/i, /desktop/i, /chrome/i, /\bextension\b/i];
+    const ANTHROPIC_EXTRA = [/claude\s*code/i, /desktop/i, /chrome/i, /\bextension\b/i];
 
     it('keeps the headline operational when only a client tool is down', () => {
       const result = aggregateCoreStatus(
@@ -170,6 +177,21 @@ describe('aggregateCoreStatus', () => {
         ANTHROPIC_EXTRA,
       );
       expect(result).toBe('operational');
+    });
+
+    it('reports down when claude.ai is out even if the API is green', () => {
+      // The 2026-07-29 shape: consumer app down, API serving. This must read as
+      // an outage, since claude.ai is what "is Claude down" usually means.
+      const result = aggregateCoreStatus(
+        [
+          { name: 'api.anthropic.com', status: 'operational' },
+          { name: 'claude.ai', status: 'down' },
+          { name: 'Claude Code', status: 'degraded' },
+        ],
+        undefined,
+        ANTHROPIC_EXTRA,
+      );
+      expect(result).toBe('down');
     });
 
     it('still reports down when the inference API itself is down', () => {
@@ -208,8 +230,8 @@ describe('aggregateCoreStatus', () => {
       }
     });
 
-    it('does not filter the API row itself, even though claude.ai is anchored', () => {
-      // /^claude\.ai$/ must not swallow api.anthropic.com or a "Claude API" row.
+    it('does not filter the API row itself', () => {
+      // The tool patterns must not swallow api.anthropic.com or a "Claude API" row.
       const result = aggregateCoreStatus(
         [{ name: 'Claude API', status: 'down' }],
         undefined,
@@ -223,7 +245,7 @@ describe('aggregateCoreStatus', () => {
       // safer than an explicit componentFilter: no match means fall back to the
       // vendor indicator, not a blank 'unknown' headline.
       const result = aggregateCoreStatus(
-        [{ name: 'Claude Code', status: 'down' }, { name: 'claude.ai', status: 'down' }],
+        [{ name: 'Claude Code', status: 'down' }, { name: 'Claude Desktop', status: 'down' }],
         undefined,
         ANTHROPIC_EXTRA,
       );
