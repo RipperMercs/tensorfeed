@@ -712,9 +712,66 @@ const KV_CACHE_AT_HEADER = 'X-TF-Cached-At';
 const KV_CACHE_HARD_TTL_SECONDS = 21_600;
 const DEFAULT_KV_READ_TIMEOUT_MS = 10_000;
 
+/**
+ * Per-payload freshness policy for cachedKVGet. Lets a caller judge freshness
+ * from the CONTENT of the cached value rather than from a single fixed TTL.
+ *
+ * The status path needs this because the two directions are not equally
+ * expensive to get wrong. Serving a stale "operational" for two minutes is
+ * harmless. Serving a stale "down" after a provider has recovered is the
+ * failure users actually notice, and under plain SWR it costs a full TTL plus
+ * one request interval. Incidents are rare, so shortening the TTL and
+ * disabling stale-serving only while something is broken adds effectively no
+ * KV reads in steady state.
+ */
+interface KvFreshnessPolicy {
+  /** Logical TTL in seconds to judge this payload against. */
+  ttlFor(data: unknown): number;
+  /**
+   * When false, a stale entry is never SWR-served: the read falls through to
+   * an inline KV read, with the stale value kept as the fallback if that read
+   * fails or times out (so this can never blank the response).
+   */
+  allowStaleServe(data: unknown): boolean;
+}
+
 function resolveKvReadTimeoutMs(raw: string | undefined): number {
   const n = raw === undefined ? NaN : parseInt(raw, 10);
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_KV_READ_TIMEOUT_MS;
+}
+
+// === Status freshness (shared by /api/status and /api/status/summary) ===
+
+const STATUS_OK_TTL_SECONDS = 120;
+// Converge fast while something is non-operational. Also used as the response
+// max-age during an incident so embedders and intermediaries follow suit.
+const STATUS_INCIDENT_TTL_SECONDS = 30;
+
+/**
+ * True when no tracked service is currently down or degraded.
+ *
+ * Deliberately ignores 'unknown' and 'maintenance': 'unknown' is a normal,
+ * long-lived condition for providers whose status page we cannot read (e.g.
+ * status.x.ai is Cloudflare-gated), and treating it as an incident would pin
+ * the whole status path to the 30s cadence permanently.
+ */
+export function statusPayloadAllClear(data: unknown): boolean {
+  if (!Array.isArray(data)) return true;
+  return !data.some((entry) => {
+    const raw = (entry as { status?: unknown } | null)?.status;
+    const v = typeof raw === 'string' ? raw.toLowerCase() : '';
+    return v === 'down' || v === 'degraded';
+  });
+}
+
+const STATUS_FRESHNESS_POLICY: KvFreshnessPolicy = {
+  ttlFor: (data) => (statusPayloadAllClear(data) ? STATUS_OK_TTL_SECONDS : STATUS_INCIDENT_TTL_SECONDS),
+  allowStaleServe: (data) => statusPayloadAllClear(data),
+};
+
+/** Response max-age for the status endpoints, tightened during an incident. */
+function statusMaxAge(data: unknown): number {
+  return statusPayloadAllClear(data) ? STATUS_OK_TTL_SECONDS : STATUS_INCIDENT_TTL_SECONDS;
 }
 
 /**
@@ -729,6 +786,9 @@ function resolveKvReadTimeoutMs(raw: string | undefined): number {
  * carrying a heavy latency tail (6-20s, occasionally hanging into the 20s
  * deadline 504); SWR takes KV off those request paths entirely except on a
  * true cold miss. Without `swrCtx` the behavior is the pre-SWR inline read.
+ *
+ * When `policy` is passed, the logical TTL and whether stale-serving is
+ * allowed are derived from the cached payload itself (see KvFreshnessPolicy).
  */
 async function cachedKVGet(
   request: Request,
@@ -736,7 +796,8 @@ async function cachedKVGet(
   key: string,
   cacheTTL: number,
   swrCtx?: ExecutionContext,
-  env?: { KV_READ_TIMEOUT_MS?: string }
+  env?: { KV_READ_TIMEOUT_MS?: string },
+  policy?: KvFreshnessPolicy
 ): Promise<unknown> {
   // Synthetic cache key URL. Pinned to a constant origin + no search
   // params so every caller of cachedKVGet(..., key, ...) hits the same
@@ -770,6 +831,13 @@ async function cachedKVGet(
     return data;
   };
 
+  // Stale payload held back from a policy-blocked stale-serve, used as the
+  // fallback if the inline KV read below fails or times out. Serving a stale
+  // value beats serving nothing, so declining to SWR-serve can only ever cost
+  // latency, never content.
+  let stalePayload: unknown;
+  let haveStalePayload = false;
+
   // Try Cache API first (free, unlimited)
   try {
     const cached = await cacheGet(cacheRequest);
@@ -779,22 +847,30 @@ async function cachedKVGet(
       // Entries without the header predate it and are bounded by their own
       // short max-age, so they count as fresh.
       const ageMs = Number.isFinite(cachedAt) ? Date.now() - cachedAt : 0;
-      if (ageMs <= cacheTTL * 1000) {
-        return cached.json();
+      // Read the body once: a Response body cannot be consumed twice, and the
+      // policy needs the parsed payload to decide freshness.
+      const payload = await cached.json();
+      const effectiveTTL = policy ? policy.ttlFor(payload) : cacheTTL;
+      if (ageMs <= effectiveTTL * 1000) {
+        return payload;
       }
-      if (swrCtx) {
+      if (swrCtx && (!policy || policy.allowStaleServe(payload))) {
         // Stale-while-revalidate: serve the stale copy now, refresh KV off
         // the request path.
         swrCtx.waitUntil(readKvAndRecache().catch(() => undefined));
-        return cached.json();
+        return payload;
       }
-      // Stale without a ctx: fall through to the inline KV read below.
+      // Either no ctx, or the policy refuses to stale-serve this payload
+      // (e.g. a non-operational status that must converge fast). Fall through
+      // to the inline KV read, keeping this value as the fallback.
+      stalePayload = payload;
+      haveStalePayload = true;
     }
   } catch (cacheErr) {
     console.warn(`Cache API read failed for key "${key}":`, cacheErr);
   }
 
-  // Cache miss (or stale entry without SWR): read from KV inline.
+  // Cache miss (or stale entry we declined to serve): read from KV inline.
   if (swrCtx) {
     // Bound the inline read so a hung KV operation cannot ride the request
     // into the deadline 504. The read itself continues via waitUntil, so a
@@ -803,16 +879,24 @@ async function cachedKVGet(
     const read = readKvAndRecache();
     swrCtx.waitUntil(read.catch(() => undefined));
     const TIMED_OUT = Symbol('kv-read-timeout');
+    const FAILED = Symbol('kv-read-failed');
     const winner = await Promise.race([
       read.catch((kvErr) => {
         console.error(`KV read failed for key "${key}":`, kvErr);
-        return undefined;
+        return FAILED;
       }),
       new Promise<typeof TIMED_OUT>((resolve) => setTimeout(() => resolve(TIMED_OUT), timeoutMs)),
     ]);
     if (winner === TIMED_OUT) {
+      if (haveStalePayload) {
+        console.warn(`KV read for key "${key}" exceeded ${timeoutMs}ms; serving the stale cached value`);
+        return stalePayload;
+      }
       console.warn(`KV read for key "${key}" exceeded ${timeoutMs}ms; serving empty (cache warms when the read lands)`);
       return undefined;
+    }
+    if (winner === FAILED) {
+      return haveStalePayload ? stalePayload : undefined;
     }
     return winner;
   }
@@ -821,7 +905,7 @@ async function cachedKVGet(
     return await readKvAndRecache();
   } catch (kvErr) {
     console.error(`KV read failed for key "${key}":`, kvErr);
-    return undefined;
+    return haveStalePayload ? stalePayload : undefined;
   }
 }
 
@@ -2143,13 +2227,21 @@ export default {
     // === STATUS ENDPOINTS (cached 120s) ===
 
     if (path === '/api/status' || path === '/api/agents/status' || path === '/api/agents/status.json') {
-      const services = await cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120, ctx, env);
+      const services = await cachedKVGet(
+        request,
+        env.TENSORFEED_STATUS,
+        'services',
+        STATUS_OK_TTL_SECONDS,
+        ctx,
+        env,
+        STATUS_FRESHNESS_POLICY,
+      );
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
         checked: new Date().toISOString(),
         services: services || [],
-      }, 200, 120);
+      }, 200, statusMaxAge(services));
     }
 
     // === INCIDENTS ENDPOINT (cached 120s) ===
@@ -2171,23 +2263,44 @@ export default {
       // stale for up to a cache TTL. Sharing the 'services' read removes the
       // desync and drops a per-cron KV write.
       type EarlyWarning = { source: string; note: string; detected_at: string | null; probe_signal: string };
-      const services = (await cachedKVGet(request, env.TENSORFEED_STATUS, 'services', 120, ctx, env)) as
-        | Array<{ name: string; status: string; provider: string; early_warning?: EarlyWarning }>
-        | null;
+      type RecoveryObserved = {
+        source: string;
+        note: string;
+        observed_at: string | null;
+        window_minutes: number;
+        probe_signal: string;
+      };
+      type SummaryEntry = {
+        name: string;
+        status: string;
+        provider: string;
+        early_warning?: EarlyWarning;
+        recovery_observed?: RecoveryObserved;
+      };
+      const services = (await cachedKVGet(
+        request,
+        env.TENSORFEED_STATUS,
+        'services',
+        STATUS_OK_TTL_SECONDS,
+        ctx,
+        env,
+        STATUS_FRESHNESS_POLICY,
+      )) as SummaryEntry[] | null;
       const summary = (services || []).map((s) => {
-        const entry: { name: string; status: string; provider: string; early_warning?: EarlyWarning } = {
+        const entry: SummaryEntry = {
           name: s.name,
           status: s.status,
           provider: s.provider,
         };
         if (s.early_warning) entry.early_warning = s.early_warning;
+        if (s.recovery_observed) entry.recovery_observed = s.recovery_observed;
         return entry;
       });
       return jsonResponse({
         ok: true,
         source: 'tensorfeed.ai',
         services: summary,
-      }, 200, 120);
+      }, 200, statusMaxAge(services));
     }
 
     // Breaking-alert banner, public read. Cache-API-first read of the single

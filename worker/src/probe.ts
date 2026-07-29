@@ -64,6 +64,11 @@ export interface ProbeSignalDetail {
 
 const PROBE_SIGNAL_WINDOW_MIN = 60;
 const PROBE_SIGNAL_FAIL_THRESHOLD = 2;
+// Recovery window. Probes run every 15 minutes, so 20 minutes is the smallest
+// window that reliably contains at least one sample. This is the hard floor on
+// how fast a probe-derived recovery observation can possibly appear; raising it
+// requires raising the probe cadence, which costs real inference calls.
+const PROBE_RECOVERY_WINDOW_MIN = 20;
 
 /**
  * Classify a provider's recent probe failures as our-side vs provider-side.
@@ -103,6 +108,22 @@ export function classifyProbeSignal(results: ProbeResult[], now: Date = new Date
   };
 }
 
+/**
+ * Short-window "our probes are currently succeeding" detail. Deliberately
+ * separate from ProbeSignalDetail: that one answers "has this provider been
+ * failing recently" over a 60-minute window, which by construction still reads
+ * provider_degraded for an hour after a real outage ends. This one answers the
+ * narrower, factual question "did every probe in the last few minutes succeed",
+ * which is what a recovery looks like from our side.
+ */
+export interface ProbeRecoveryDetail {
+  /** Every probe inside the window succeeded, and there was at least one. */
+  all_ok: boolean;
+  window_minutes: number;
+  window_count: number;
+  last_ok_at: string | null;
+}
+
 export interface ProviderAggregate {
   provider: string;
   count: number;
@@ -114,6 +135,10 @@ export interface ProviderAggregate {
   last_probe_at: string | null;
   last_error: string | null;
   probe_signal: ProbeSignalDetail;
+  // Optional because entries already in KV (probe:latest, probe:daily:*) were
+  // written before this field existed, and historical daily rows are never
+  // backfilled. Readers must treat absence as "no recovery signal".
+  probe_recovery?: ProbeRecoveryDetail;
 }
 
 export interface LatestSummary {
@@ -253,6 +278,29 @@ const PROVIDERS: ProviderConfig[] = [
 
 // === Pure logic: percentile + aggregate ===
 
+/**
+ * Did every probe in the last PROBE_RECOVERY_WINDOW_MIN minutes succeed?
+ *
+ * Reports a fact ("our probes are getting 2xx right now"), never a verdict.
+ * The vendor status page stays authoritative for the headline; this only
+ * exists so we can say so when our own measurements disagree with a vendor
+ * that is still reporting an incident. Pure; never throws.
+ */
+export function classifyProbeRecovery(results: ProbeResult[], now: Date = new Date()): ProbeRecoveryDetail {
+  const cutoff = now.getTime() - PROBE_RECOVERY_WINDOW_MIN * 60_000;
+  const recent = results.filter((r) => {
+    const t = Date.parse(r.timestamp);
+    return Number.isFinite(t) && t >= cutoff;
+  });
+  const lastOk = [...recent].reverse().find((r) => r.ok) || null;
+  return {
+    all_ok: recent.length > 0 && recent.every((r) => r.ok),
+    window_minutes: PROBE_RECOVERY_WINDOW_MIN,
+    window_count: recent.length,
+    last_ok_at: lastOk?.timestamp || null,
+  };
+}
+
 export function percentile(values: number[], p: number): number | null {
   if (values.length === 0) return null;
   const sorted = [...values].sort((a, b) => a - b);
@@ -282,6 +330,7 @@ export function aggregateResults(provider: string, results: ProbeResult[], now: 
     last_probe_at: last?.timestamp || null,
     last_error: lastError,
     probe_signal: classifyProbeSignal(results, now),
+    probe_recovery: classifyProbeRecovery(results, now),
   };
 }
 

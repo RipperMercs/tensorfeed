@@ -1,7 +1,7 @@
 import { Env, ServiceStatus, StatusPageResponse } from './types';
 import { STATUS_PAGES, StatusPageConfig } from './sources';
 import { getLatestSummary } from './probe';
-import { computeEarlyWarning } from './probe-early-warning';
+import { computeEarlyWarning, computeRecoveryObserved } from './probe-early-warning';
 import { dispatchStatusWatches, StatusTransition } from './watches';
 import { recordPollCycle } from './status-counters';
 import { pingIndexNow, statusFlipUrlList } from './indexnow';
@@ -67,8 +67,9 @@ const PERIPHERAL_COMPONENT_PATTERNS: RegExp[] = [
   /playground/i,
 ];
 
-function isCoreComponent(name: string): boolean {
-  return !PERIPHERAL_COMPONENT_PATTERNS.some((p) => p.test(name));
+function isCoreComponent(name: string, peripheralExtra?: RegExp[]): boolean {
+  if (PERIPHERAL_COMPONENT_PATTERNS.some((p) => p.test(name))) return false;
+  return !(peripheralExtra || []).some((p) => p.test(name));
 }
 
 // Returns the worst status across core inference components, or null if the
@@ -78,13 +79,18 @@ function isCoreComponent(name: string): boolean {
 // When `explicitFilter` is supplied (e.g. GitHub's status page where we only
 // care about Copilot components), every matching component is treated as core
 // and the default peripheral filter is bypassed.
+//
+// `peripheralExtra` adds service-scoped peripheral patterns on top of the
+// default list (see StatusPageConfig.peripheralExtra). It is ignored when
+// `explicitFilter` is set, since that already names exactly what counts.
 export function aggregateCoreStatus(
   components: { name: string; status: string }[],
   explicitFilter?: RegExp[],
+  peripheralExtra?: RegExp[],
 ): 'operational' | 'degraded' | 'down' | 'unknown' | null {
   const candidates = explicitFilter
     ? components.filter((c) => explicitFilter.some((p) => p.test(c.name)))
-    : components.filter((c) => isCoreComponent(c.name));
+    : components.filter((c) => isCoreComponent(c.name, peripheralExtra));
 
   if (candidates.length === 0) return null;
 
@@ -453,7 +459,11 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
         name: c.name,
         status: normalizeInstatusComponentStatus(c.status),
       }));
-      const componentDerived = aggregateCoreStatus(allComponents, service.componentFilter);
+      const componentDerived = aggregateCoreStatus(
+        allComponents,
+        service.componentFilter,
+        service.peripheralExtra,
+      );
       const headlineStatus =
         componentDerived ?? normalizeInstatusPageStatus(data.page?.status || '');
       const components = allComponents.length > 0
@@ -547,7 +557,11 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
     // When the service config supplies an explicit componentFilter (e.g.
     // GitHub's status page where we only care about Copilot rows), we ignore
     // the umbrella entirely since it covers far more than our service.
-    const componentDerived = aggregateCoreStatus(allComponents, service.componentFilter);
+    const componentDerived = aggregateCoreStatus(
+      allComponents,
+      service.componentFilter,
+      service.peripheralExtra,
+    );
     const headlineStatus = service.componentFilter
       ? componentDerived ?? 'unknown'
       : componentDerived ?? normalizeStatus(data.status?.indicator);
@@ -558,7 +572,7 @@ async function fetchServiceStatus(service: StatusPageConfig): Promise<ServiceSta
     const inScope = (c: { name: string }) =>
       service.componentFilter
         ? service.componentFilter.some((p) => p.test(c.name))
-        : isCoreComponent(c.name);
+        : isCoreComponent(c.name, service.peripheralExtra);
     const sortedComponents = [
       ...allComponents.filter(inScope),
       ...allComponents.filter((c) => !inScope(c)),
@@ -604,15 +618,20 @@ export async function pollStatusPages(env: Env): Promise<void> {
     }
   }
 
-  // Early-warning enrichment: when our probes detect provider-side degradation
-  // while the vendor still says operational, attach an additive early_warning
-  // to the service. The vendor `status` is never changed. Best-effort: a
-  // probe-read failure leaves services unchanged. Done BEFORE the services
-  // write so both /api/status (services) and /api/status/summary carry it.
+  // Probe enrichment, both directions. When our probes detect provider-side
+  // degradation while the vendor still says operational, attach early_warning.
+  // When the vendor still reports an incident but our probes are completing
+  // again, attach recovery_observed. The vendor `status` is never changed by
+  // either. Best-effort: a probe-read failure leaves services unchanged. Done
+  // BEFORE the services write so both /api/status (services) and
+  // /api/status/summary carry it. The two are mutually exclusive by
+  // construction (they key off opposite vendor states).
   const probeSummary = await getLatestSummary(env).catch(() => null);
   for (const s of statuses) {
     const ew = computeEarlyWarning(probeSummary, s.provider, s.status);
     if (ew) s.early_warning = ew;
+    const rec = computeRecoveryObserved(probeSummary, s.provider, s.status);
+    if (rec) s.recovery_observed = rec;
   }
 
   await env.TENSORFEED_STATUS.put('services', JSON.stringify(statuses), {

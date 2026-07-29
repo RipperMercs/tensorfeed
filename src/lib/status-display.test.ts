@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { statusHeading, statusMessage, statusBg, pickService } from './status-display';
+import { statusHeading, statusMessage, statusBg, pickService, recoveryNote } from './status-display';
+import type { ServiceStatusData } from './status-display';
 
 describe('statusHeading', () => {
   it('names the provider and the state', () => {
@@ -63,5 +64,30 @@ describe('pickService', () => {
   it('returns null for a null or non-object payload', () => {
     expect(pickService(null, 'Claude API')).toBeNull();
     expect(pickService('nope', 'Claude API')).toBeNull();
+  });
+});
+
+describe('recoveryNote', () => {
+  const svc = (over: Partial<ServiceStatusData> = {}): ServiceStatusData => ({
+    name: 'Claude API',
+    provider: 'Claude',
+    status: 'down',
+    components: [],
+    ...over,
+  });
+
+  it('returns null when there is no recovery annotation', () => {
+    expect(recoveryNote(svc())).toBeNull();
+    expect(recoveryNote(null)).toBeNull();
+  });
+
+  it('names the provider and the observation window', () => {
+    const note = recoveryNote(svc({ recovery_observed: { window_minutes: 20 } }));
+    expect(note).toContain('Claude still reports an incident');
+    expect(note).toContain('the last 20 minutes');
+  });
+
+  it('falls back to generic wording when the window is missing', () => {
+    expect(recoveryNote(svc({ recovery_observed: {} }))).toContain('recent checks');
   });
 });
