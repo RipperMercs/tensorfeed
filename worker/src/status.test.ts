@@ -64,6 +64,45 @@ describe('Anthropic status config', () => {
   });
 });
 
+describe('Cursor status config', () => {
+  const cursor = STATUS_PAGES.find((s) => s.name === 'Cursor');
+
+  it('is tracked as a plain Atlassian statuspage', () => {
+    expect(cursor).toBeDefined();
+    expect(cursor?.provider).toBe('Cursor');
+    expect(cursor?.type).toBe('statuspage');
+    expect(cursor?.url).toBe('https://status.cursor.com/api/v2/summary.json');
+  });
+
+  it('uses neither a componentFilter nor peripheralExtra', () => {
+    // Cursor is an editor product, not an inference API, so the IDE and web app
+    // ARE the service. Over-reporting is the safe direction here.
+    expect(cursor?.componentFilter).toBeUndefined();
+    expect(cursor?.peripheralExtra).toBeUndefined();
+  });
+
+  it('reports down when the IDE is out, the real 2026-07-29 payload', () => {
+    const result = aggregateCoreStatus([
+      { name: 'Automations', status: 'operational' },
+      { name: 'Bugbot', status: 'operational' },
+      { name: 'CLI', status: 'operational' },
+      { name: 'Cloud Agents', status: 'operational' },
+      { name: 'cursor.com', status: 'operational' },
+      { name: 'IDE', status: 'down' },
+    ]);
+    expect(result).toBe('down');
+  });
+
+  it('drops the CLI row from the headline via the default peripheral list', () => {
+    const result = aggregateCoreStatus([
+      { name: 'IDE', status: 'operational' },
+      { name: 'cursor.com', status: 'operational' },
+      { name: 'CLI', status: 'down' },
+    ]);
+    expect(result).toBe('operational');
+  });
+});
+
 describe('aggregateCoreStatus', () => {
   it('returns null when no components are present so caller falls back to umbrella', () => {
     expect(aggregateCoreStatus([])).toBeNull();

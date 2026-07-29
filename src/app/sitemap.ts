@@ -144,6 +144,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/is-gemini-down`, lastModified: now, changeFrequency: 'always', priority: 0.9 },
     { url: `${baseUrl}/is-perplexity-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
     { url: `${baseUrl}/is-copilot-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
+    { url: `${baseUrl}/is-cursor-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
     { url: `${baseUrl}/is-midjourney-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
     { url: `${baseUrl}/is-huggingface-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },
     { url: `${baseUrl}/is-mistral-down`, lastModified: now, changeFrequency: 'always', priority: 0.8 },

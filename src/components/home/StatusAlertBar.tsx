@@ -14,6 +14,7 @@ const SERVICE_HREFS: Record<string, string> = {
   Gemini: '/is-gemini-down',
   'GitHub Copilot': '/is-copilot-down',
   Copilot: '/is-copilot-down',
+  Cursor: '/is-cursor-down',
   Perplexity: '/is-perplexity-down',
   Cohere: '/is-cohere-down',
   Mistral: '/is-mistral-down',

@@ -106,6 +106,13 @@ const PROVIDERS: ProviderConfig[] = [
     description: 'GitHub Copilot AI pair programmer powered by multiple AI model providers.',
   },
   {
+    slug: 'cursor',
+    name: 'Cursor',
+    shortName: 'Cursor',
+    isDownHref: '/is-cursor-down',
+    description: 'Cursor AI code editor, covering the IDE, Cloud Agents, Bugbot, and cursor.com.',
+  },
+  {
     slug: 'huggingface',
     name: 'Hugging Face',
     shortName: 'Hugging Face',

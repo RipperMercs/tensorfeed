@@ -208,6 +208,24 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     componentFilter: [/copilot/i],
   },
   {
+    // Verified live 2026-07-29: standard Atlassian Statuspage, 200 on
+    // /api/v2/summary.json, components Automations, Bugbot, CLI, Cloud Agents,
+    // cursor.com, IDE. Peer to GitHub Copilot, which we already track.
+    //
+    // No peripheralExtra on purpose. Cursor is an editor product, not an
+    // inference API, so the IDE and the web app ARE the service: there is no
+    // "the API is fine, only the tool is broken" distinction to draw the way
+    // there is for Anthropic. The default peripheral list already drops the CLI
+    // row via /\bcli\b/i. Leaving everything else core over-reports rather than
+    // under-reports, which is the safer direction, and surfaceSplit names the
+    // affected surface underneath the verdict.
+    name: 'Cursor',
+    provider: 'Cursor',
+    url: 'https://status.cursor.com/api/v2/summary.json',
+    statusPageUrl: 'https://status.cursor.com',
+    type: 'statuspage',
+  },
+  {
     name: 'Perplexity',
     provider: 'Perplexity AI',
     url: 'https://status.perplexity.com/summary.json',

@@ -56,6 +56,71 @@ export function buildIsDownMetadata(s: IsDownService): Metadata {
 }
 
 export const IS_DOWN_SERVICES: Record<string, IsDownService> = {
+  "cursor": {
+    "slug": "cursor",
+    "displayName": "Cursor",
+    "statusServiceName": "Cursor",
+    "providerName": "Cursor",
+    "providerUrl": "https://cursor.com",
+    "statusPageUrl": "https://status.cursor.com",
+    "metaTitle": "Is Cursor Down? Live Cursor Status",
+    "metaDescription": "Is Cursor down right now? Live Cursor status with per-component detail for the IDE, Cloud Agents, Bugbot, Automations, the CLI, and cursor.com, plus what to do during an outage.",
+    "serviceDescription": "Cursor is an AI-first code editor built on VS Code, pairing inline completions and an agent-style chat with model backends from Anthropic, OpenAI, and others. Beyond the desktop IDE it runs Cloud Agents for background tasks, Bugbot for automated code review, Automations, a CLI, and the cursor.com web app and dashboard.",
+    "faqs": [
+      {
+        "question": "Is Cursor down right now?",
+        "answer": "The live indicator at the top of this page is the answer, read from Cursor's official status page every couple of minutes. Green means every tracked component is operational, amber means degraded performance somewhere, and red means a confirmed outage. Read the component list below the headline too, because Cursor's surfaces fail independently: the IDE can be in a major outage while Cloud Agents, Bugbot, and cursor.com stay green."
+      },
+      {
+        "question": "How do I check if Cursor is down?",
+        "answer": "Three places. This page, which polls status.cursor.com and breaks the result out by component. The official page at status.cursor.com directly. And the Cursor community forum, where users tend to report problems before a status item posts. If this page is green but your editor is failing, suspect something local first: sign out and back in, reload the window, check that your Cursor extension and app are current, and confirm you are not out of requests on your plan."
+      },
+      {
+        "question": "What should I do when Cursor is down?",
+        "answer": "Cursor is a fork of VS Code, so the fastest unblock is usually to open the same folder in VS Code and use a different assistant there. GitHub Copilot is the closest substitute for inline completions and chat, and Claude Code works well for agent-style edits from the terminal. If only Cursor's model routing is degraded rather than the editor itself, you can often keep working by switching to a different model in the chat model picker, since Cursor routes to several providers whose capacity is separate."
+      },
+      {
+        "question": "Why is Cursor slow or failing when the status page says operational?",
+        "answer": "Two common causes that are not outages. First, plan limits: once you exhaust the fast or included requests on your tier, completions and chat slow down or queue, which feels like an outage but is a quota state. Second, upstream model providers: Cursor routes to Anthropic, OpenAI, and others, so a Claude or GPT incident can degrade Cursor for the models you picked while Cursor's own infrastructure is healthy. Checking the underlying provider's status often explains a green Cursor page and a broken editor."
+      },
+      {
+        "question": "Does a Cursor outage mean my code is at risk?",
+        "answer": "No. Cursor edits files on your local disk and your repository is still yours, so an outage costs you AI assistance, not your work. Normal editing, search, terminals, extensions, and git all keep functioning because they do not depend on Cursor's servers. The features that stop are the ones requiring a round trip: completions, chat, Cloud Agents, and Bugbot reviews. Commit as usual and the AI features resume when the status page clears."
+      },
+      {
+        "question": "Where can I see Cursor incident history?",
+        "answer": "Cursor publishes past incidents and per-component uptime at status.cursor.com, which is the authoritative record. TensorFeed tracks Cursor alongside GitHub Copilot and the model providers both of them depend on, so you can tell a Cursor-specific incident apart from an upstream Anthropic or OpenAI event that is degrading every coding tool at once."
+      }
+    ],
+    "failover": [
+      {
+        "title": "Open the same project in VS Code",
+        "text": "Cursor is a VS Code fork, so your workspace, extensions, and settings largely carry over. Opening the folder in VS Code with GitHub Copilot gets you inline completions and chat back immediately, and Claude Code covers agent-style multi-file edits from the terminal without needing an editor at all.",
+        "links": [
+          { "label": "Is GitHub Copilot down?", "href": "/is-copilot-down" },
+          { "label": "Is Claude down?", "href": "/is-claude-down" },
+          { "label": "Compare AI coding tools", "href": "/best-ai-tools" }
+        ]
+      },
+      {
+        "title": "Switch models instead of switching tools",
+        "text": "Cursor routes to several model providers, so a degradation often affects one backend rather than the whole editor. Picking a different model in the chat model selector moves you onto separate capacity and frequently restores service without leaving Cursor. Check which upstream provider is actually having the incident before you pick.",
+        "links": [
+          { "label": "Is Claude down?", "href": "/is-claude-down" },
+          { "label": "Is ChatGPT (OpenAI) down?", "href": "/is-chatgpt-down" },
+          { "label": "All AI provider status", "href": "/status" }
+        ]
+      },
+      {
+        "title": "Get notified when status changes",
+        "text": "Rather than refreshing during an incident, subscribe to TensorFeed outage alerts and get told the moment Cursor flips to degraded or down, and again when it recovers. Free, no account needed, and it covers every tracked AI service so one alert stream watches your whole toolchain.",
+        "links": [
+          { "label": "Set up status alerts", "href": "/alerts" },
+          { "label": "Provider uptime leaderboard", "href": "/leaderboard" }
+        ]
+      }
+    ]
+  },
   "midjourney": {
     "slug": "midjourney",
     "displayName": "Midjourney",
