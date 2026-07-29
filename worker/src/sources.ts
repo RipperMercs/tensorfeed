@@ -151,19 +151,18 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     url: 'https://status.anthropic.com/api/v2/summary.json',
     statusPageUrl: 'https://status.anthropic.com',
     type: 'statuspage',
-    // This row answers "can I call the Claude inference API right now?", so the
-    // client-tool and consumer-app components on Anthropic's status page must
-    // not drive its headline. Anthropic ships Claude Code and claude.ai rows
-    // alongside api.anthropic.com; leaving them core meant a broken CLI or web
-    // app rendered as "Claude API is Down" while the API served fine.
+    // Client TOOLS on Anthropic's status page must not drive this headline: a
+    // broken CLI, desktop app, or browser extension is not an inference outage,
+    // and Claude Code in particular flaps independently of the API.
     //
-    // Note the tradeoff this encodes: a visitor searching "is Claude down"
-    // because the chat app broke will now see the API reported operational.
-    // Fixing that properly means tracking claude.ai as its own service row
-    // rather than widening this one back out.
+    // claude.ai is deliberately NOT in this list. It is the surface most people
+    // mean when they search "is Claude down", so a claude.ai outage is a real
+    // outage this row should report even when api.anthropic.com is green. For a
+    // status site, under-reporting a genuine outage is worse than over-reporting
+    // one, so the consumer app stays core. Splitting claude.ai into its own
+    // tracked service row is the way to sharpen this further.
     peripheralExtra: [
       /claude\s*code/i,
-      /^claude\.ai$/i,
       /desktop/i,
       /chrome/i,
       /\bextension\b/i,
