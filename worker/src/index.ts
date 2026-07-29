@@ -16419,15 +16419,32 @@ export default {
       // cadence at which the 7-day leaderboard meaningfully shifts.
       await run('runLeaderboardWatchCycle', () => runLeaderboardWatchCycle(env));
     } else if (cron === '*/2 * * * *') {
-      // Status polling cadence is the public promise behind every
-      // /is-X-down page and the homepage alert bar ("polled every
-      // 2 minutes"). Six providers × ~3 KV writes × 720 runs/day
-      // = ~13k writes/day, well under the 100k/day free-tier cap.
+      // Status polling cadence is the public promise behind every /is-X-down
+      // page and the homepage alert bar ("polled every 2 minutes").
+      //
+      // Cost is flat in provider count, not linear: pollStatusPages writes a
+      // handful of AGGREGATE keys (services, previous-status, incidents, one
+      // counter) regardless of how many status pages it fetched. That is ~4
+      // writes + ~4 reads per run, so ~6k KV ops/day at 720 runs. The old
+      // comment here claimed "six providers × ~3 KV writes", which mis-modelled
+      // the cost as per-provider.
+      //
+      // Do NOT raise this to "* * * * *" without first removing the hardcoded
+      // POLL_INTERVAL_MINUTES = 2 in status-leaderboard.ts and
+      // status-history.ts. See the note in wrangler.toml.
       await run('pollStatusPages', () => pollStatusPages(env));
     } else if (cron === '0 * * * *') {
-      // Hourly: refresh RSS + status + rolling snapshot
+      // Hourly: refresh RSS + rolling snapshot.
+      //
+      // pollStatusPages deliberately does NOT run here. Cloudflare fires
+      // scheduled() once per MATCHING pattern (verified from worker logs, see
+      // the */5 note above), so at :00 both this pattern and "*/2" fire.
+      // Calling pollStatusPages in both ran two concurrent polls against the
+      // same previous-status and incidents keys once an hour, a read-modify-
+      // write race that could drop an incident transition or double-open an
+      // incident at the top of every hour. The "*/2" branch already covers
+      // this instant.
       rssResult = await run('pollRSSFeeds', () => pollRSSFeeds(env));
-      await run('pollStatusPages', () => pollStatusPages(env));
       await run('captureAllSnapshots', () => captureAllSnapshots(env));
       // Pull VR/AR/XR data from vr.org (supportive site in the network).
       // vr.org refreshes every 15 min; hourly downstream is plenty.

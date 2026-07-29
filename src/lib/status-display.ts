@@ -19,6 +19,64 @@ export interface ServiceStatusData {
 }
 
 /**
+ * Split a service's components into affected and healthy, but ONLY when the two
+ * genuinely disagree. Returns null when every component agrees, so callers can
+ * stay silent rather than restating the headline.
+ *
+ * This is the answer to "the API is up but the app is down". A single
+ * worst-of-core headline necessarily collapses that distinction, and the
+ * collapse is the actual defect: during the 2026-07-29 Anthropic incident the
+ * inference API, the consumer app, and Claude Code were each in different
+ * states behind one word. Rather than track every surface as its own service
+ * row (which multiplies uptime history, leaderboard entries, and routes for
+ * every provider), we keep one vendor-authoritative verdict and name the split
+ * underneath it. Provider-agnostic on purpose: it reads whatever components the
+ * vendor publishes and needs no per-provider configuration.
+ *
+ * 'unknown' and 'maintenance' are treated as neither affected nor healthy: they
+ * are not evidence of an outage and not evidence of health.
+ */
+export function surfaceSplit(
+  service: ServiceStatusData | null,
+): { affected: string[]; healthy: string[] } | null {
+  const components = service?.components;
+  if (!Array.isArray(components) || components.length < 2) return null;
+  const affected: string[] = [];
+  const healthy: string[] = [];
+  for (const c of components) {
+    const v = (c?.status || '').toLowerCase();
+    if (v === 'down' || v === 'degraded') affected.push(c.name);
+    else if (v === 'operational') healthy.push(c.name);
+  }
+  if (affected.length === 0 || healthy.length === 0) return null;
+  return { affected, healthy };
+}
+
+/** Join names for prose: "A", "A and B", "A, B and C". */
+function joinNames(names: string[], max = 3): string {
+  const shown = names.slice(0, max);
+  const extra = names.length - shown.length;
+  let text: string;
+  if (shown.length === 1) text = shown[0];
+  else text = `${shown.slice(0, -1).join(', ')} and ${shown[shown.length - 1]}`;
+  return extra > 0 ? `${text} and ${extra} more` : text;
+}
+
+/**
+ * One-line "not everything is affected" sentence, or null when the vendor's
+ * components all agree. Pure so the wording stays testable and consistent.
+ */
+export function surfaceSplitNote(service: ServiceStatusData | null): string | null {
+  const split = surfaceSplit(service);
+  if (!split) return null;
+  return `Not every surface is affected. ${joinNames(split.affected)} ${
+    split.affected.length === 1 ? 'is' : 'are'
+  } reporting problems, while ${joinNames(split.healthy)} ${
+    split.healthy.length === 1 ? 'is' : 'are'
+  } operational.`;
+}
+
+/**
  * Human sentence for a recovery_observed annotation, or null when there is
  * nothing to say. Kept pure so the wording is unit-testable and identical
  * across surfaces.

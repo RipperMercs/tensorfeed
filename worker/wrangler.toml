@@ -41,6 +41,14 @@ head_sampling_rate = 1.0
 [triggers]
 crons = [
   "*/10 * * * *",
+  # Status polling. Held at */2 deliberately: raising it to "* * * * *" would
+  # double every downtime_minutes / hard_down_minutes figure on the free AND
+  # paid status leaderboards, because status-leaderboard.ts and
+  # status-history.ts convert sample counts to minutes via a hardcoded
+  # POLL_INTERVAL_MINUTES = 2. Flipping that constant to 1 instead corrupts
+  # every historical window, since counters written before the change were
+  # sampled at 2 minutes and the day-counter map has no per-day interval
+  # provenance to distinguish them. Fix the conversion first, then the cadence.
   "*/2 * * * *",
   "0 * * * *",
   # Every 2 hours at :25 past (00:25, 02:25, 04:25, ...): podcast feeds
