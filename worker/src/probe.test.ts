@@ -8,6 +8,7 @@ import {
   PROBE_DEFAULT_RANGE_DAYS,
   ProbeResult,
   classifyProbeSignal,
+  classifyProbeRecovery,
 } from './probe';
 
 const probe = (over: Partial<ProbeResult> = {}): ProbeResult => ({
@@ -242,5 +243,44 @@ describe('aggregateResults probe_signal', () => {
     const agg = aggregateResults('openai', [okResult(30), okResult(10)]);
     expect(agg.probe_signal.signal).toBe('healthy');
     expect(agg.probe_signal.window_minutes).toBe(60);
+  });
+});
+
+describe('classifyProbeRecovery', () => {
+  it('reports all_ok when every probe in the 20 minute window succeeded', () => {
+    const r = classifyProbeRecovery([okResult(18), okResult(3)]);
+    expect(r.all_ok).toBe(true);
+    expect(r.window_count).toBe(2);
+    expect(r.window_minutes).toBe(20);
+    expect(r.last_ok_at).toBe(mkResult(3, { ok: true, status: 200 }).timestamp);
+  });
+
+  it('is not all_ok when any probe in the window failed', () => {
+    expect(classifyProbeRecovery([okResult(15), mkResult(4, { status: 503 })]).all_ok).toBe(false);
+  });
+
+  it('is not all_ok on an empty window, since no samples prove nothing', () => {
+    const r = classifyProbeRecovery([]);
+    expect(r.all_ok).toBe(false);
+    expect(r.window_count).toBe(0);
+    expect(r.last_ok_at).toBeNull();
+  });
+
+  it('ignores failures older than the window, which is how recovery is detected', () => {
+    // The outage (45 and 30 minutes ago) is outside the window; the last two
+    // probes succeeded. This is exactly the post-outage state.
+    const r = classifyProbeRecovery([
+      mkResult(45, { status: 503 }),
+      mkResult(30, { status: 503 }),
+      okResult(15),
+      okResult(2),
+    ]);
+    expect(r.all_ok).toBe(true);
+    expect(r.window_count).toBe(2);
+  });
+
+  it('is surfaced on the aggregate', () => {
+    const agg = aggregateResults('anthropic', [okResult(10)]);
+    expect(agg.probe_recovery?.all_ok).toBe(true);
   });
 });

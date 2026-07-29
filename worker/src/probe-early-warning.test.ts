@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computeEarlyWarning, PROBE_TO_STATUS } from './probe-early-warning';
-import type { LatestSummary, ProbeSignal } from './probe';
+import { computeEarlyWarning, computeRecoveryObserved, PROBE_TO_STATUS } from './probe-early-warning';
+import type { LatestSummary, ProbeRecoveryDetail, ProbeSignal } from './probe';
 
 function summaryWith(provider: string, signal: ProbeSignal, lastProbeAt = '2026-06-03T12:00:00.000Z'): LatestSummary {
   return {
@@ -55,5 +55,75 @@ describe('computeEarlyWarning', () => {
 
   it('maps all five probed providers to their status slug', () => {
     expect(PROBE_TO_STATUS).toEqual({ anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', mistral: 'Mistral AI', cohere: 'Cohere' });
+  });
+});
+
+function summaryWithRecovery(
+  provider: string,
+  recovery: ProbeRecoveryDetail | undefined,
+  signal: ProbeSignal = 'provider_degraded',
+): LatestSummary {
+  const base = summaryWith(provider, signal);
+  base.providers[0].probe_recovery = recovery;
+  return base;
+}
+
+const ALL_OK: ProbeRecoveryDetail = {
+  all_ok: true,
+  window_minutes: 20,
+  window_count: 2,
+  last_ok_at: '2026-06-03T11:58:00.000Z',
+};
+
+describe('computeRecoveryObserved', () => {
+  it('fires when the vendor still says down but recent probes all succeeded', () => {
+    const rec = computeRecoveryObserved(summaryWithRecovery('anthropic', ALL_OK), 'Anthropic', 'down');
+    expect(rec).not.toBeNull();
+    expect(rec?.source).toBe('tensorfeed_probe');
+    expect(rec?.probe_signal).toBe('recovery_observed');
+    expect(rec?.observed_at).toBe('2026-06-03T11:58:00.000Z');
+    expect(rec?.window_minutes).toBe(20);
+  });
+
+  it('fires for a degraded vendor status too', () => {
+    expect(computeRecoveryObserved(summaryWithRecovery('anthropic', ALL_OK), 'Anthropic', 'degraded')).not.toBeNull();
+  });
+
+  it('fires even while the 60-minute signal still reads provider_degraded', () => {
+    // This is the whole point: right after a real outage the long window still
+    // says degraded, and that is exactly when we need to report recovery.
+    const rec = computeRecoveryObserved(
+      summaryWithRecovery('anthropic', ALL_OK, 'provider_degraded'),
+      'Anthropic',
+      'down',
+    );
+    expect(rec).not.toBeNull();
+  });
+
+  it('does not fire when the vendor already says operational', () => {
+    expect(computeRecoveryObserved(summaryWithRecovery('anthropic', ALL_OK), 'Anthropic', 'operational')).toBeNull();
+  });
+
+  it('does not fire on an unknown vendor status', () => {
+    expect(computeRecoveryObserved(summaryWithRecovery('anthropic', ALL_OK), 'Anthropic', 'unknown')).toBeNull();
+  });
+
+  it('does not fire when a probe in the window failed', () => {
+    const failed: ProbeRecoveryDetail = { ...ALL_OK, all_ok: false };
+    expect(computeRecoveryObserved(summaryWithRecovery('anthropic', failed), 'Anthropic', 'down')).toBeNull();
+  });
+
+  it('does not fire on an empty window (no samples proves nothing)', () => {
+    const empty: ProbeRecoveryDetail = { all_ok: false, window_minutes: 20, window_count: 0, last_ok_at: null };
+    expect(computeRecoveryObserved(summaryWithRecovery('anthropic', empty), 'Anthropic', 'down')).toBeNull();
+  });
+
+  it('does not fire when probe_recovery is absent (pre-existing KV entries)', () => {
+    expect(computeRecoveryObserved(summaryWithRecovery('anthropic', undefined), 'Anthropic', 'down')).toBeNull();
+  });
+
+  it('does not fire for a non-probed provider or a missing summary', () => {
+    expect(computeRecoveryObserved(summaryWithRecovery('anthropic', ALL_OK), 'GitHub', 'down')).toBeNull();
+    expect(computeRecoveryObserved(null, 'Anthropic', 'down')).toBeNull();
   });
 });

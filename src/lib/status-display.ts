@@ -9,6 +9,26 @@ export interface ServiceStatusData {
   statusPageUrl?: string;
   components: { name: string; status: string }[];
   lastChecked?: string;
+  // Present when the vendor still reports an incident but TensorFeed's own
+  // probes are completing again. Additive: `status` stays vendor-authoritative.
+  recovery_observed?: {
+    note?: string;
+    observed_at?: string | null;
+    window_minutes?: number;
+  };
+}
+
+/**
+ * Human sentence for a recovery_observed annotation, or null when there is
+ * nothing to say. Kept pure so the wording is unit-testable and identical
+ * across surfaces.
+ */
+export function recoveryNote(service: ServiceStatusData | null): string | null {
+  const rec = service?.recovery_observed;
+  if (!rec) return null;
+  const mins = typeof rec.window_minutes === 'number' ? rec.window_minutes : null;
+  const window = mins ? `the last ${mins} minutes` : 'recent checks';
+  return `${service?.provider ?? 'This provider'} still reports an incident on its own status page, but TensorFeed's direct API probes have completed normally for ${window}.`;
 }
 
 // Big-indicator heading, e.g. "Claude is Operational".

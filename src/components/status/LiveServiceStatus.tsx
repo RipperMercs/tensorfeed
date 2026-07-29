@@ -8,11 +8,17 @@ import {
   statusMessage,
   statusBg,
   pickService,
+  recoveryNote,
 } from '@/lib/status-display';
 
-// Poll cadence. Matches the "auto-refreshes every 2 minutes" copy on the page
-// and the 120s revalidate the static build uses for the first paint.
-const POLL_MS = 120_000;
+// Poll cadence. The slow path matches the "auto-refreshes every 2 minutes"
+// copy on the page and the 120s revalidate the static build uses for the first
+// paint. While this service is down or degraded we poll faster, so a recovery
+// clears in well under a minute instead of up to two: a stale "down" is the
+// expensive direction to be wrong in, and the copy stays true either way
+// because 2 minutes remains the floor.
+const POLL_OK_MS = 120_000;
+const POLL_INCIDENT_MS = 30_000;
 
 /**
  * The big status indicator + component breakdown for an /is-X-down page, made
@@ -43,25 +49,35 @@ export default function LiveServiceStatus({
     // No tracked service name means nothing to poll against; show initial only.
     if (!serviceName) return;
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const poll = async () => {
+      // Default to the slow cadence so a failed poll cannot pin us to the fast one.
+      let nextDelay = POLL_OK_MS;
       try {
         const res = await fetch('/api/status', { cache: 'no-store' });
-        if (!res.ok) return;
-        const next = pickService(await res.json(), serviceName);
-        if (!cancelled && next) setService(next);
+        if (res.ok) {
+          const next = pickService(await res.json(), serviceName);
+          if (cancelled) return;
+          if (next) {
+            setService(next);
+            const v = (next.status || '').toLowerCase();
+            nextDelay = v === 'down' || v === 'degraded' ? POLL_INCIDENT_MS : POLL_OK_MS;
+          }
+        }
       } catch {
         // keep the last known state on a failed poll
       }
+      if (!cancelled) timer = setTimeout(poll, nextDelay);
     };
     poll();
-    const id = setInterval(poll, POLL_MS);
     return () => {
       cancelled = true;
-      clearInterval(id);
+      if (timer) clearTimeout(timer);
     };
   }, [serviceName]);
 
   const status = service?.status || 'unknown';
+  const recovery = recoveryNote(service);
 
   return (
     <>
@@ -80,6 +96,18 @@ export default function LiveServiceStatus({
         <p className="text-text-secondary text-lg max-w-xl mx-auto">
           {statusMessage(providerName, status)}
         </p>
+        {recovery && (
+          <p
+            className="text-sm max-w-xl mx-auto mt-4 px-4 py-3 rounded-lg border text-left"
+            style={{
+              color: 'var(--accent-green)',
+              background: 'rgba(16,185,129,0.08)',
+              borderColor: 'rgba(16,185,129,0.28)',
+            }}
+          >
+            {recovery}
+          </p>
+        )}
         {mounted && service?.lastChecked && (
           <p className="text-text-muted text-xs mt-4">
             Last checked:{' '}

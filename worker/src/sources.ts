@@ -117,6 +117,17 @@ export interface StatusPageConfig {
   // covers all of GitHub but we only care about Copilot). When unset, the
   // default core/peripheral filter in status.ts applies.
   componentFilter?: RegExp[];
+  // Extra peripheral patterns applied ON TOP of the default list in status.ts,
+  // scoped to this service only. Use when a vendor publishes client-tool rows
+  // on the same status page as the inference API: those rows must not drive an
+  // "API is down" headline.
+  //
+  // Preferred over componentFilter for this job because it degrades gracefully.
+  // An explicit componentFilter that matches nothing resolves to 'unknown',
+  // so a vendor renaming a row would silently blank the headline. Extra
+  // peripheral patterns can only ever shrink the candidate set, and an empty
+  // set falls back to the vendor's umbrella indicator.
+  peripheralExtra?: RegExp[];
   // For gcp-incidents: list of Google Cloud product IDs (from
   // status.cloud.google.com/products.json) whose active incidents should
   // bubble up to this service's status.
@@ -140,6 +151,23 @@ export const STATUS_PAGES: StatusPageConfig[] = [
     url: 'https://status.anthropic.com/api/v2/summary.json',
     statusPageUrl: 'https://status.anthropic.com',
     type: 'statuspage',
+    // This row answers "can I call the Claude inference API right now?", so the
+    // client-tool and consumer-app components on Anthropic's status page must
+    // not drive its headline. Anthropic ships Claude Code and claude.ai rows
+    // alongside api.anthropic.com; leaving them core meant a broken CLI or web
+    // app rendered as "Claude API is Down" while the API served fine.
+    //
+    // Note the tradeoff this encodes: a visitor searching "is Claude down"
+    // because the chat app broke will now see the API reported operational.
+    // Fixing that properly means tracking claude.ai as its own service row
+    // rather than widening this one back out.
+    peripheralExtra: [
+      /claude\s*code/i,
+      /^claude\.ai$/i,
+      /desktop/i,
+      /chrome/i,
+      /\bextension\b/i,
+    ],
   },
   {
     name: 'OpenAI API',

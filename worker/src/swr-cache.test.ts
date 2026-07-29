@@ -72,6 +72,94 @@ describe('cachedKVGet stale-while-revalidate (/api/status)', () => {
     expect((fresh.json?.services as Array<{ name: string }>)[0]?.name).toBe('B');
   });
 
+  it('refuses to stale-serve a non-operational status and returns the fresh value', async () => {
+    const env = await makeEnv();
+    // Provider is down; the cached entry records that.
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'Claude API', status: 'down' }]));
+    const first = await call(env, '/api/status', { ip: nextIp(), settle: true });
+    expect((first.json?.services as Array<{ status: string }>)[0]?.status).toBe('down');
+
+    // Provider recovers in KV, and the cached entry ages past the 30s incident TTL.
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'Claude API', status: 'operational' }]));
+    await ageCachedEntry(SERVICES_CACHE_URL, 45 * 1000);
+
+    // Under plain SWR this request would serve the stale "down". The incident
+    // policy declines to stale-serve, so the recovery lands on THIS request.
+    const recovered = await call(env, '/api/status', { ip: nextIp(), settle: true });
+    expect(recovered.status).toBe(200);
+    expect((recovered.json?.services as Array<{ status: string }>)[0]?.status).toBe('operational');
+  });
+
+  it('still stale-serves an all-operational status (the cheap direction to be wrong)', async () => {
+    const env = await makeEnv();
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'Claude API', status: 'operational' }]));
+    await call(env, '/api/status', { ip: nextIp(), settle: true });
+
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'Claude API', status: 'down' }]));
+    // Past the 120s operational TTL but the payload is all-clear, so SWR applies.
+    await ageCachedEntry(SERVICES_CACHE_URL, 10 * 60 * 1000);
+
+    const stale = await call(env, '/api/status', { ip: nextIp(), settle: true });
+    expect((stale.json?.services as Array<{ status: string }>)[0]?.status).toBe('operational');
+    const fresh = await call(env, '/api/status', { ip: nextIp(), settle: true });
+    expect((fresh.json?.services as Array<{ status: string }>)[0]?.status).toBe('down');
+  });
+
+  it('holds a non-operational entry fresh for the full 30s incident TTL', async () => {
+    const env = await makeEnv();
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'Claude API', status: 'down' }]));
+    await call(env, '/api/status', { ip: nextIp(), settle: true });
+
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'Claude API', status: 'operational' }]));
+    // Inside 30s: still fresh, no KV re-read, cached value served.
+    await ageCachedEntry(SERVICES_CACHE_URL, 10 * 1000);
+    const held = await call(env, '/api/status', { ip: nextIp(), settle: true });
+    expect((held.json?.services as Array<{ status: string }>)[0]?.status).toBe('down');
+  });
+
+  // These two live in separate `it` blocks on purpose: the fake Cache API entry
+  // is keyed by KV key name alone, so a second makeEnv() inside one test would
+  // hit the first env's cached payload instead of its own KV.
+  it('tightens response max-age during an incident', async () => {
+    const env = await makeEnv();
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'Claude API', status: 'down' }]));
+    const incident = await call(env, '/api/status', { ip: nextIp(), settle: true });
+    expect(incident.headers.get('Cache-Control')).toBe('public, max-age=30');
+  });
+
+  it('leaves response max-age relaxed when all clear', async () => {
+    const env = await makeEnv();
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'Claude API', status: 'operational' }]));
+    const ok = await call(env, '/api/status', { ip: nextIp(), settle: true });
+    expect(ok.headers.get('Cache-Control')).toBe('public, max-age=120');
+  });
+
+  it('treats unknown as all-clear so unreadable status pages do not pin the fast cadence', async () => {
+    const env = await makeEnv();
+    // status.x.ai is Cloudflare-gated and sits at 'unknown' indefinitely.
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'xAI API', status: 'unknown' }]));
+    const res = await call(env, '/api/status', { ip: nextIp(), settle: true });
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=120');
+  });
+
+  it('falls back to the stale value when the forced KV re-read times out', async () => {
+    const env = await makeEnv();
+    await env.TENSORFEED_STATUS.put('services', JSON.stringify([{ name: 'Claude API', status: 'down' }]));
+    await call(env, '/api/status', { ip: nextIp(), settle: true });
+    await ageCachedEntry(SERVICES_CACHE_URL, 45 * 1000);
+
+    // The policy refuses to stale-serve, so it falls through to an inline KV
+    // read. That read now hangs. Declining to stale-serve must never blank the
+    // response: the stale value is the fallback.
+    env.TENSORFEED_STATUS.get = (() => new Promise(() => undefined)) as typeof env.TENSORFEED_STATUS.get;
+    env.KV_READ_TIMEOUT_MS = '100';
+    env.REQUEST_DEADLINE_MS = '2000';
+
+    const res = await call(env, '/api/status', { ip: nextIp() });
+    expect(res.status).toBe(200);
+    expect((res.json?.services as Array<{ status: string }>)[0]?.status).toBe('down');
+  });
+
   it('bounds a hung KV read on a cold miss instead of riding to the deadline 504', async () => {
     const env = await makeEnv();
     // Cold cache + a KV namespace whose read never resolves.
