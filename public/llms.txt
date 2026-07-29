@@ -820,6 +820,7 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [Is Gemini Down?](https://tensorfeed.ai/is-gemini-down): Live Google Gemini status
 - [Is Perplexity Down?](https://tensorfeed.ai/is-perplexity-down): Live Perplexity AI status
 - [Is Copilot Down?](https://tensorfeed.ai/is-copilot-down): Live Microsoft Copilot status
+- [Is Cursor Down?](https://tensorfeed.ai/is-cursor-down): Live Cursor status, per-component (IDE, Cloud Agents, Bugbot, Automations, CLI, cursor.com)
 - [Is Midjourney Down?](https://tensorfeed.ai/is-midjourney-down): Live Midjourney status
 - [Is Hugging Face Down?](https://tensorfeed.ai/is-huggingface-down): Live Hugging Face status
 - [Is Mistral Down?](https://tensorfeed.ai/is-mistral-down): Live Mistral AI status
