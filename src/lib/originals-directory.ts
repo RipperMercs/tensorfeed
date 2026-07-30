@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'pacing-frontier-letter-endorsement-split',
+    title:
+      '1,178 Frontier AI Employees Signed the Pacing Letter. Two Labs Endorsed at the CEO Seat, Two Did Not.',
+    author: 'Kira Nolan',
+    date: 'July 30, 2026',
+    readTime: '7 min read',
+    description:
+      "On Tuesday, July 28, 2026, 1,178 employees at OpenAI, Anthropic, Google DeepMind, Meta, and Thinking Machines signed Pacing the Frontier, asking Washington to fund the technical and governance tools needed for a verifiable slowdown if recursive self-improvement runs ahead of oversight. Within roughly six hours OpenAI and Anthropic endorsed the letter at the corporate level, aligning the CEO seat with the researcher signatures. Meta declined to comment. Google did not respond. Mark Zuckerberg published a Wall Street Journal opinion column the same afternoon arguing that broadly distributed weights are the pacing mechanism and a centralized regime concentrates the risk it claims to reduce. The four labs whose employees drafted the letter are the same four labs whose corporate positions diverged in public on the same day. Halfway through week two of writing the federal launch bar due August 1 under Executive Order 14409, the closed-API incumbents endorsed pacing and the open-weights-adjacent incumbents declined. Inside the numbers table (1,178 signatories, 5 labs represented, CEOs and chief scientists on the signature list, 2 of 4 corporate endorsements, 2 of 4 non-endorsements, Zuckerberg WSJ column as the same-day counter, three concrete asks, RSI as the trigger scenario), why the same two labs authored yesterday's launch bar and endorsed today's pacing letter (they want scheduled processes for both near-term releases and long-term capability jumps, and they are willing to spend visible political capital to get them), why Meta declined and Google went quiet (Llama and Gemma ship open weights, so a pacing regime that runs on pre-release review has no perimeter to sit in front of), the read against the open-weights coalition letter six days earlier (same axis, opposite ends), what Washington is being asked to fund (verification research, treaty groundwork, federal eval capacity inside CAISI), and the difference between the FLI conditional pause proposal and the pacing letter (RSI trigger vs benchmark trigger, federal capacity vs independent auditor). Three signposts: whether Google publishes a corporate position before Saturday's launch bar text lands, whether Meta's Q3 open weights release cadence changes, and whether Congress attaches pacing infrastructure funding to the FY2027 appropriations cycle in September.",
+  },
+  {
     slug: 'openai-anthropic-authored-federal-launch-bar',
     title:
       'OpenAI and Anthropic Spent the Last Two Weeks Writing the Federal Launch Bar Their Rivals Will Have to Clear.',
