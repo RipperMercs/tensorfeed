@@ -331,6 +331,7 @@ import {
   validateOnly,
   commitInternal,
 } from './payments';
+import { buildPremiumBillingBlock } from './premium-billing';
 import {
   signReceipt,
   hashRequest,
@@ -1069,18 +1070,10 @@ async function premiumResponse(
     bodyResult.suggested_next_calls = suggestedNext;
   }
 
-  const billing: Record<string, unknown> = {
-    credits_charged: commit.creditsCharged,
-    credits_remaining: commit.balanceAfter,
-  };
-  if (commit.noChargeReason !== null) {
-    billing.no_charge_reason = commit.noChargeReason;
-    billing.afta_doc = 'https://tensorfeed.ai/agent-fair-trade';
-  }
-  if (payment.newToken) {
-    billing.new_token_issued = true;
-    billing.token = payment.token;
-  }
+  const billing = buildPremiumBillingBlock(
+    { creditsCharged: commit.creditsCharged, balanceAfter: commit.balanceAfter, noChargeReason: commit.noChargeReason },
+    payment,
+  );
   // Surface free-trial state when the call was granted under the
   // 100-call/IP/24h trial. Lets agents budget without an extra round
   // trip to /api/free-tier/status. Mirrors the X-RateLimit-* header
@@ -1305,16 +1298,10 @@ async function premiumValidationFailure(
   }
   if (payment.paymentResponseHeader) headers['PAYMENT-RESPONSE'] = payment.paymentResponseHeader;
 
-  const billing: Record<string, unknown> = {
-    credits_charged: 0,
-    credits_remaining: commit.balanceAfter,
-    no_charge_reason: noChargeReason,
-    afta_doc: 'https://tensorfeed.ai/agent-fair-trade',
-  };
-  if (payment.newToken) {
-    billing.new_token_issued = true;
-    billing.token = payment.token;
-  }
+  const billing = buildPremiumBillingBlock(
+    { creditsCharged: 0, balanceAfter: commit.balanceAfter, noChargeReason },
+    payment,
+  );
 
   const bodyResult: Record<string, unknown> = { ok: false, ...errorBody };
 
