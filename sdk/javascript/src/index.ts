@@ -10,7 +10,7 @@
  */
 
 const DEFAULT_BASE_URL = 'https://tensorfeed.ai/api';
-const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/2.3';
+const DEFAULT_USER_AGENT = 'TensorFeed-SDK-JS/3.0';
 
 // ── Error types ─────────────────────────────────────────────────────
 
