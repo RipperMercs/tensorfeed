@@ -143,7 +143,8 @@ curl https://tensorfeed.ai/api/premium/routing
 # Send USDC on Base to the wallet from the response, then:
 curl https://tensorfeed.ai/api/premium/routing?task=code \\
   -H "X-Payment-Tx: 0x..."
-# -> data + bearer token in X-Payment-Token header`}</code></pre>
+# -> data + bearer token in X-Payment-Token header (only there, never the body)
+# Store that header value as a secret and keep header dumps out of logs`}</code></pre>
 
         <h2 className="text-2xl font-semibold text-text-primary pt-2">Path 4: MCP integration (Claude Desktop / Code)</h2>
         <p>

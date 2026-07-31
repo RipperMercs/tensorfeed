@@ -2047,7 +2047,10 @@ curl -X POST https://tensorfeed.ai/api/payment/buy-credits \\
 curl -H "X-Payment-Tx: 0xYOUR_TX" \\
      -H "X-Payment-Quote: tf-abc123" \\
   "https://tensorfeed.ai/api/premium/routing?task=code"
-# Returns the data + a fresh token in X-Payment-Token header for future calls`;
+# Returns the data + a fresh token in X-Payment-Token header for future calls.
+# The token is a bearer credential and appears ONLY in that header, never in
+# the JSON body. Read it once, store it as a secret (env var or secret store),
+# and keep response headers out of logs. If it leaks: POST /api/payment/revoke`;
 
 export default function AgentPaymentsPage() {
   return (
@@ -2334,6 +2337,15 @@ export default function AgentPaymentsPage() {
                 <code className="font-mono">X-Payment-Token</code> header
               </li>
             </ol>
+            <p className="text-sm text-text-secondary mt-3">
+              Treat the token as a secret. It arrives only in the{' '}
+              <code className="font-mono">X-Payment-Token</code> response header, never in
+              the JSON body, so plain body logging cannot capture it. Store it in an env
+              var or secret store, keep response header dumps out of logs and LLM
+              transcripts, and if it does leak, burn it at{' '}
+              <code className="font-mono">POST /api/payment/revoke</code> and mint a
+              fresh one.
+            </p>
           </div>
         </div>
       </section>
