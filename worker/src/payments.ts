@@ -1388,6 +1388,34 @@ function parseWalletSeen(raw: unknown): WalletSeenMarker | 'legacy' | null {
   return 'legacy';
 }
 
+// MCP relay origin marker. The hosted MCP relay (mcp-http.ts) tags its
+// SELF fetch with this header. MCP tool results never include the minted
+// tf_live_ token (transcript safety: MCP hosts persist conversation
+// transcripts), so granting the one-shot first-payment welcome bonus
+// into that token would strand it in a credential the buyer never
+// receives. A marked mint skips BOTH the grant and the eligibility
+// consumption: the wallet's bonus stays claimable on its next direct
+// payment. Forging the header from outside only defers the forger's own
+// bonus, so it needs no authentication.
+export const MCP_RELAY_HEADER = 'X-TF-MCP-Relay';
+
+export function isMcpRelayOrigin(request: Request): boolean {
+  return request.headers.get(MCP_RELAY_HEADER) === '1';
+}
+
+// Single wrapper for the two x402 mint sites inside requirePayment.
+// Keeps the relay-deferral rule in one place so the sites cannot drift.
+export async function welcomeBonusForMint(
+  env: Env,
+  walletAddress: string | undefined,
+  request: Request,
+): Promise<{ isFirstPayment: boolean; bonusCredits: number }> {
+  if (isMcpRelayOrigin(request)) {
+    return { isFirstPayment: false, bonusCredits: 0 };
+  }
+  return checkAndMarkFirstPayment(env, walletAddress);
+}
+
 export async function checkAndMarkFirstPayment(
   env: Env,
   walletAddress: string | undefined,
@@ -2657,7 +2685,7 @@ export async function requirePayment(
     }
 
     const baseCredits = calculateCredits(verified.amountUsd);
-    const welcome = await checkAndMarkFirstPayment(env, verified.senderAddress);
+    const welcome = await welcomeBonusForMint(env, verified.senderAddress, request);
     const credits = baseCredits + welcome.bonusCredits;
     if (credits < cost) {
       return {
@@ -3155,7 +3183,7 @@ export async function requirePayment(
         ? Number(requirements.amount) / 1e6
         : Number(parsed.payload.payload.authorization.value) / 1e6;
     const baseCredits = calculateCredits(amountUsd);
-    const welcome = await checkAndMarkFirstPayment(env, payerAddress);
+    const welcome = await welcomeBonusForMint(env, payerAddress, request);
     const credits = baseCredits + welcome.bonusCredits;
     if (credits < cost) {
       return {

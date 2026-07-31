@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkAndMarkFirstPayment, markWalletSeen } from './payments';
+import { checkAndMarkFirstPayment, markWalletSeen, welcomeBonusForMint, MCP_RELAY_HEADER } from './payments';
 import type { Env } from './types';
 
 // ── Mock KV ────────────────────────────────────────────────────────
@@ -215,5 +215,49 @@ describe('stake then mark end-to-end', () => {
     // Next caller against same wallet must NOT get the bonus
     const r2 = await checkAndMarkFirstPayment(env, WALLET);
     expect(r2.isFirstPayment).toBe(false);
+  });
+});
+
+describe('welcomeBonusForMint (MCP relay deferral)', () => {
+  const WALLET = '0xabcdef1234567890abcdef1234567890abcdef12';
+  const relayReq = () =>
+    new Request('https://tensorfeed.ai/api/premium/whats-new', {
+      headers: { [MCP_RELAY_HEADER]: '1' },
+    });
+  const directReq = () => new Request('https://tensorfeed.ai/api/premium/whats-new');
+
+  it('skips the grant and does not consume eligibility on a relay-marked mint', async () => {
+    const env = makeMockEnv();
+    const r = await welcomeBonusForMint(env, WALLET, relayReq());
+    expect(r).toEqual({ isFirstPayment: false, bonusCredits: 0 });
+    const stake = await env.TENSORFEED_CACHE.get(`pay:wallet-seen:${WALLET.toLowerCase()}`);
+    expect(stake).toBeNull();
+  });
+
+  it('defers, then grants on the next direct payment from the same wallet', async () => {
+    const env = makeMockEnv();
+    await welcomeBonusForMint(env, WALLET, relayReq());
+    const later = await welcomeBonusForMint(env, WALLET, directReq());
+    expect(later.isFirstPayment).toBe(true);
+    expect(later.bonusCredits).toBe(50);
+  });
+
+  it('delegates unchanged on a direct mint', async () => {
+    const env = makeMockEnv();
+    const r = await welcomeBonusForMint(env, WALLET, directReq());
+    expect(r.isFirstPayment).toBe(true);
+    expect(r.bonusCredits).toBe(50);
+  });
+
+  it('treats any marker value other than the literal 1 as a direct mint', async () => {
+    const env = makeMockEnv();
+    const r = await welcomeBonusForMint(
+      env,
+      WALLET,
+      new Request('https://tensorfeed.ai/api/premium/whats-new', {
+        headers: { [MCP_RELAY_HEADER]: 'yes' },
+      }),
+    );
+    expect(r.isFirstPayment).toBe(true);
   });
 });
