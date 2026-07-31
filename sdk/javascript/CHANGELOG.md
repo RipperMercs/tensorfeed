@@ -2,6 +2,10 @@
 
 All notable changes to the TypeScript / JavaScript SDK for [TensorFeed.ai](https://tensorfeed.ai). The full set of premium endpoints is documented at [tensorfeed.ai/developers/agent-payments](https://tensorfeed.ai/developers/agent-payments).
 
+## 3.0.0 (2026-07-31)
+
+Breaking: `billing.token` is removed from premium response types. The API no longer returns the minted bearer token in any JSON body; it arrives only in the `X-Payment-Token` response header. Read the header on your first paid call, store the value as a secret, and send `Authorization: Bearer <token>` afterward. A new optional `billing.token_delivery` field names the header. If your integration read `billing.token`, switch to the header before upgrading.
+
 ## 2.3.1 - 2026-06-13
 
 ### Fixed

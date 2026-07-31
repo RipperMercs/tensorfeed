@@ -217,7 +217,10 @@ export interface RoutingResponse {
     credits_charged: number;
     credits_remaining?: number;
     new_token_issued?: boolean;
-    token?: string;
+    // The minted credential arrives ONLY in the X-Payment-Token response
+    // header. It was removed from the body in API change 2026-07-31 so
+    // logged payloads no longer contain a live bearer token.
+    token_delivery?: string;
   };
 }
 
