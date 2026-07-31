@@ -725,3 +725,93 @@ describe('payment self-description', () => {
     expect(body.result.instructions).toContain('x402=strict');
   });
 });
+
+describe('premium relay credential hygiene', () => {
+  const findRelayableTool = () =>
+    MCP_HTTP_TOOLS.find((t) => {
+      if (!t.premium) return false;
+      try {
+        t.premium.buildParams({});
+        return true;
+      } catch {
+        return false;
+      }
+    });
+
+  const bearerRpc = (toolName: string): Request =>
+    new Request('https://tensorfeed.ai/api/mcp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer tf_live_' + 'c'.repeat(64),
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: toolName, arguments: {} },
+      }),
+    });
+
+  const leakyUpstream = () =>
+    new Response(
+      JSON.stringify({
+        ok: true,
+        data: { example: true },
+        billing: {
+          credits_charged: 1,
+          credits_remaining: 0,
+          new_token_issued: true,
+          token: 'tf_live_' + 'd'.repeat(64),
+        },
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Payment-Token': 'tf_live_' + 'd'.repeat(64),
+        },
+      },
+    );
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('sends the relay-origin marker on the upstream fetch', async () => {
+    const tool = findRelayableTool();
+    expect(tool).toBeDefined();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(leakyUpstream());
+    await handleMcpHttpRequest(bearerRpc(tool!.name), makeEnv());
+    expect(fetchSpy).toHaveBeenCalled();
+    const init = fetchSpy.mock.calls[0][1] as RequestInit;
+    const headers = init.headers as Record<string, string>;
+    expect(headers['X-TF-MCP-Relay']).toBe('1');
+  });
+
+  it('strips any tf_live_ value from the relayed billing block', async () => {
+    const tool = findRelayableTool();
+    expect(tool).toBeDefined();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(leakyUpstream());
+    const resp = await handleMcpHttpRequest(bearerRpc(tool!.name), makeEnv());
+    const raw = await resp.text();
+    expect(raw).not.toContain('tf_live_');
+    const body = JSON.parse(raw) as {
+      result: { content: Array<{ type: string; text: string }> };
+    };
+    const payload = JSON.parse(body.result.content[0].text) as {
+      billing: Record<string, unknown>;
+    };
+    expect(payload.billing.token).toBeUndefined();
+    expect(payload.billing.new_token_issued).toBe(true);
+    expect(payload.billing.token_delivery).toBe('not_available_via_mcp');
+    expect(typeof payload.billing.note).toBe('string');
+  });
+
+  it('no premium tool relays a dedicated credential endpoint', () => {
+    for (const t of MCP_HTTP_TOOLS) {
+      const rest = t.premium?.restPath ?? '';
+      expect(rest).not.toMatch(/\/api\/payment\/(trial-credits|buy-credits|confirm|revoke)/);
+    }
+  });
+});

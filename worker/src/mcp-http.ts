@@ -83,7 +83,7 @@ import { getLatestSnapshot as getHFDailyPapersLatest } from './hf-daily-papers';
 import { readSECTicker } from './sec-tickers';
 import { parseOsvPackageQuery } from './security-osv';
 import { parseFDAQuery, fetchFDAQuery, FDA_CATEGORIES } from './health-fda';
-import { paymentRequiredResponse } from './payments';
+import { paymentRequiredResponse, MCP_RELAY_HEADER } from './payments';
 import { isStrictPremiumPath } from './strict-premium-endpoints';
 
 const PROTOCOL_VERSION = '2024-11-05';
@@ -1482,6 +1482,31 @@ async function buildPaymentRequiredFor(
   return { header: res.headers.get('PAYMENT-REQUIRED') ?? '', body };
 }
 
+// Transcript safety invariant: no MCP tool result ever includes a
+// reusable tf_live_ credential. The REST sibling delivers a minted token
+// only in the X-Payment-Token response header (never the body), and this
+// relay drops response headers; this strip is the defensive backstop in
+// case any upstream body ever regresses to carrying one. Agents that
+// want the low latency bearer path prepay over REST at
+// /api/payment/buy-credits from their own runtime, where the token stays
+// out of persisted transcripts.
+function stripMintedCredential(data: unknown): void {
+  if (!data || typeof data !== 'object') return;
+  const billing = (data as { billing?: unknown }).billing;
+  if (!billing || typeof billing !== 'object') return;
+  const b = billing as Record<string, unknown>;
+  for (const [key, value] of Object.entries(b)) {
+    if (typeof value === 'string' && value.startsWith('tf_live_')) {
+      delete b[key];
+    }
+  }
+  if (b.new_token_issued === true) {
+    b.token_delivery = 'not_available_via_mcp';
+    b.note =
+      'This payment covered exactly this call. No reusable token is included in MCP tool results. For the low latency bearer path, buy credits at https://tensorfeed.ai/api/payment/buy-credits from your own runtime and send Authorization: Bearer on future calls; the first payment welcome bonus is granted there.';
+  }
+}
+
 // Single relay path for every premium tool. Selection order for the
 // credential: payment header beats arguments.payment beats bearer token.
 // A fresh explicit payment is stronger intent than a stored token, and
@@ -1551,7 +1576,13 @@ async function handlePremiumToolCall(
 
   const qs = premium.buildParams(args).toString();
   const url = `https://tensorfeed.ai${premium.restPath}${qs ? `?${qs}` : ''}`;
-  const headers: Record<string, string> = { 'User-Agent': `tensorfeed-mcp/${tool.name}` };
+  const headers: Record<string, string> = {
+    'User-Agent': `tensorfeed-mcp/${tool.name}`,
+    // Origin marker: tells the mint path to defer the first-payment
+    // welcome bonus, because the token it would ride in never reaches
+    // the caller through this relay. See welcomeBonusForMint.
+    [MCP_RELAY_HEADER]: '1',
+  };
   if (payment) {
     headers['X-PAYMENT'] = payment;
   } else {
@@ -1589,6 +1620,7 @@ async function handlePremiumToolCall(
     };
   }
   const data: unknown = await res.json().catch(() => ({ ok: false, error: 'upstream_parse_error' }));
+  stripMintedCredential(data);
   if (res.status === 402) {
     logCall(payment ? 'payment_failed' : 'payment_required');
     await recordHostedToolCall(ctx.env, tool.name, 'premium', payment ? 'payment_failed' : 'payment_required');
