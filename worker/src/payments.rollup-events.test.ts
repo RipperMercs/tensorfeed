@@ -138,9 +138,16 @@ describe('event trail emission', () => {
     const result = await reconcileRollupForDate(env, today, { dry: true });
     expect(result.action).toBe('dry_run');
     expect(result.events).toBe(3);
-    // last_seen/first_seen come from each event's own timestamp on both
-    // paths, so sequential live writes and the rebuild agree exactly.
-    expect(result.rebuilt).toEqual(live);
+    // Three writes inside one millisecond share an `at`, so their event keys
+    // differ only by the random suffix and the rebuild can fold them in a
+    // different order than the live path did. Every aggregate is order
+    // independent, and unique_agents is a membership list whose order carries
+    // no meaning, so compare it as a set. That the numbers agree while the
+    // order does not is exactly what sharing the fold functions buys.
+    const { unique_agents: rebuiltAgents, ...rebuiltRest } = result.rebuilt as DailyRollup;
+    const { unique_agents: liveAgents, ...liveRest } = live;
+    expect(rebuiltRest).toEqual(liveRest);
+    expect([...rebuiltAgents].sort()).toEqual([...liveAgents].sort());
   });
 });
 
