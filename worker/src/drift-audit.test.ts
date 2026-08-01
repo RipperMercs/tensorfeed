@@ -1,9 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   buildDriftReport,
   publicView,
   shouldAlert,
   formatAlertBody,
+  selectCheckUrls,
+  needsSelfFetch,
+  checkUrl,
   type UrlCheck,
   type DriftReport,
 } from './drift-audit';
@@ -16,6 +19,113 @@ function check(url: string, status_code: number, critical = false): UrlCheck {
 
 const EM_DASH = String.fromCharCode(0x2014);
 const DOUBLE_HYPHEN = '-' + '-';
+
+// Same-zone /api/* URLs must be checked through the SELF service binding:
+// a plain fetch() from the worker to its own hostname skips the worker
+// (same-zone subrequest bypass) and hits Pages static, where worker-only
+// routes like /api/meta have no file and read as phantom 404s. This is the
+// regression test for the drift audit reporting "down" on healthy routes.
+describe('needsSelfFetch', () => {
+  it('routes own-zone /api/* through SELF', () => {
+    expect(needsSelfFetch('https://tensorfeed.ai/api/meta')).toBe(true);
+    expect(needsSelfFetch('https://tensorfeed.ai/api/today')).toBe(true);
+  });
+
+  it('leaves pages, static assets, and other hosts on plain fetch', () => {
+    expect(needsSelfFetch('https://tensorfeed.ai/')).toBe(false);
+    expect(needsSelfFetch('https://tensorfeed.ai/developers')).toBe(false);
+    expect(needsSelfFetch('https://tensorfeed.ai/sitemap.xml')).toBe(false);
+    expect(needsSelfFetch('https://terminalfeed.io/api/anything')).toBe(false);
+    expect(needsSelfFetch('not a url')).toBe(false);
+  });
+});
+
+describe('checkUrl fetch routing', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function entry(url: string, critical = true): UrlCheck {
+    return { url, status_code: 0, ok: false, critical };
+  }
+
+  it('uses the SELF binding for own-zone /api/* URLs', async () => {
+    const selfCalls: string[] = [];
+    const self = {
+      fetch: async (input: RequestInfo | URL) => {
+        selfCalls.push(String(input));
+        return new Response('{}', { status: 200 });
+      },
+    } as unknown as Fetcher;
+    const globalFetch = vi.fn(async () => new Response('', { status: 404 }));
+    vi.stubGlobal('fetch', globalFetch);
+
+    const result = await checkUrl(entry('https://tensorfeed.ai/api/meta'), self);
+    expect(selfCalls).toEqual(['https://tensorfeed.ai/api/meta']);
+    expect(globalFetch).not.toHaveBeenCalled();
+    expect(result.ok).toBe(true);
+    expect(result.status_code).toBe(200);
+  });
+
+  it('uses plain fetch for page URLs even when SELF is available', async () => {
+    const self = {
+      fetch: vi.fn(async () => new Response('', { status: 500 })),
+    } as unknown as Fetcher;
+    const globalFetch = vi.fn(async () => new Response('', { status: 200 }));
+    vi.stubGlobal('fetch', globalFetch);
+
+    const result = await checkUrl(entry('https://tensorfeed.ai/developers'), self);
+    expect(self.fetch).not.toHaveBeenCalled();
+    expect(globalFetch).toHaveBeenCalled();
+    expect(result.ok).toBe(true);
+  });
+
+  it('falls back to plain fetch when SELF is not bound', async () => {
+    const globalFetch = vi.fn(async () => new Response('', { status: 200 }));
+    vi.stubGlobal('fetch', globalFetch);
+
+    const result = await checkUrl(entry('https://tensorfeed.ai/api/meta'), undefined);
+    expect(globalFetch).toHaveBeenCalled();
+    expect(result.ok).toBe(true);
+  });
+});
+
+describe('selectCheckUrls', () => {
+  // The real sitemap runs to several hundred non-originals pages.
+  const manyPages = Array.from({ length: 865 }, (_, i) => `https://tensorfeed.ai/page-${i}`);
+  const originals = Array.from({ length: 10 }, (_, i) => `https://tensorfeed.ai/originals/story-${i}`);
+  const llms = Array.from({ length: 15 }, (_, i) => `https://tensorfeed.ai/models/model-${i}`);
+
+  it('keeps every original and llms.txt link even when the sitemap dwarfs the cap', () => {
+    const picked = selectCheckUrls(manyPages, originals, llms).map((c) => c.url);
+    for (const url of originals) expect(picked).toContain(url);
+    for (const url of llms) expect(picked).toContain(url);
+  });
+
+  it('still honours the cap and keeps the critical paths flagged', () => {
+    const picked = selectCheckUrls(manyPages, originals, llms);
+    expect(picked.length).toBeLessThanOrEqual(90);
+    const home = picked.find((c) => c.url === 'https://tensorfeed.ai/');
+    expect(home?.critical).toBe(true);
+    expect(picked.filter((c) => c.critical).length).toBeGreaterThan(0);
+  });
+
+  it('samples the sitemap beyond its head instead of slicing the first N', () => {
+    const picked = selectCheckUrls(manyPages, originals, llms).map((c) => c.url);
+    const sampled = picked.filter((u) => u.startsWith('https://tensorfeed.ai/page-'));
+    expect(sampled.length).toBeGreaterThan(0);
+    const indices = sampled.map((u) => Number(u.split('page-')[1]));
+    // A head slice would top out around the number of slots left; an even
+    // sample must reach deep into the tail.
+    expect(Math.max(...indices)).toBeGreaterThan(400);
+  });
+
+  it('degrades cleanly when the sitemap and llms.txt both failed to load', () => {
+    const picked = selectCheckUrls([], [], []);
+    expect(picked.length).toBeGreaterThan(0);
+    expect(picked.every((c) => c.critical)).toBe(true);
+  });
+});
 
 describe('buildDriftReport', () => {
   it('all urls ok, no stale datasets -> ok, changed false when previous also ok', () => {
