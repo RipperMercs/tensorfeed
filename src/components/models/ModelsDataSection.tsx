@@ -16,7 +16,14 @@ interface ModelEntry {
   openSource?: boolean;
   license?: string;
   tier?: string;
-  intelligence?: { tfii: number; methodology_version: string; as_of: string };
+  intelligence?: {
+    tfii: number | null;
+    low_coverage?: boolean;
+    coverage?: number;
+    benchmarks_used?: string[];
+    methodology_version: string;
+    as_of: string;
+  };
 }
 
 interface ProviderEntry {

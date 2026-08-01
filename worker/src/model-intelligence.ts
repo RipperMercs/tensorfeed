@@ -217,6 +217,14 @@ interface PricingLike {
   providers: Array<{ models: Array<{ name?: string } & Record<string, unknown>> } & Record<string, unknown>>;
 }
 
+/**
+ * Attach the TFII to each catalog model. A model under the coverage floor is
+ * published with tfii null, never a number. Scoring Claude Opus 5 at 0 because
+ * every benchmark it reports postdates the weighted set, or Kimi K3 at 93.5 off
+ * one benchmark, reads as a verdict when it is really an absence of data. Null
+ * also keeps this endpoint consistent with the /api/intelligence ranking, which
+ * already drops low-coverage models instead of scoring them.
+ */
 export function enrichModelsWithIntelligence<T extends PricingLike>(pricing: T, snapshot: IntelligenceSnapshot): T {
   const byName = new Map(snapshot.models.map(m => [m.name.toLowerCase().trim(), m]));
   return {
@@ -225,9 +233,18 @@ export function enrichModelsWithIntelligence<T extends PricingLike>(pricing: T, 
       ...p,
       models: p.models.map(model => {
         const mi = byName.get((model.name || '').toLowerCase().trim());
-        return mi
-          ? { ...model, intelligence: { tfii: mi.tfii, methodology_version: mi.methodology_version, as_of: mi.as_of } }
-          : model;
+        if (!mi) return model;
+        return {
+          ...model,
+          intelligence: {
+            tfii: mi.trust.low_coverage ? null : mi.tfii,
+            low_coverage: mi.trust.low_coverage,
+            coverage: mi.trust.coverage,
+            benchmarks_used: mi.trust.benchmarks_used,
+            methodology_version: mi.methodology_version,
+            as_of: mi.as_of,
+          },
+        };
       }),
     })),
   };

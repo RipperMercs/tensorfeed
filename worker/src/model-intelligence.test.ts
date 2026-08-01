@@ -88,6 +88,44 @@ describe('enrichModelsWithIntelligence', () => {
     expect(out.providers[0].models[0].intelligence?.tfii).toBe(90.1);
   });
 
+  it('publishes tfii null for a low-coverage model instead of a misleading number', () => {
+    const snap: IntelligenceSnapshot = {
+      as_of: '2026-08-01T07:00:00.000Z',
+      methodology_version: METHODOLOGY_VERSION,
+      models: [
+        {
+          model_id: 'claude-opus-5', name: 'Claude Opus 5', provider: 'Anthropic', tfii: 0,
+          subscores: { code: 0, reasoning: 0, creative: 0, general: 0 },
+          trust: { contamination: 'unknown', benchmarks_used: [], coverage: 0, low_coverage: true, flagged: [] },
+          rank: 0, methodology_version: METHODOLOGY_VERSION, as_of: '2026-08-01T07:00:00.000Z',
+        },
+        {
+          model_id: 'kimi-k3', name: 'Kimi K3', provider: 'Moonshot AI', tfii: 93.5,
+          subscores: { code: 0, reasoning: 93.5, creative: 0, general: 93.5 },
+          trust: { contamination: 'low', benchmarks_used: ['gpqa_diamond'], coverage: 0.2, low_coverage: true, flagged: [] },
+          rank: 0, methodology_version: METHODOLOGY_VERSION, as_of: '2026-08-01T07:00:00.000Z',
+        },
+      ],
+    };
+    const pricing = {
+      providers: [
+        { id: 'anthropic', name: 'Anthropic', models: [{ id: 'claude-opus-5', name: 'Claude Opus 5', inputPrice: 5, outputPrice: 25, contextWindow: 1000000 }] },
+        { id: 'moonshot', name: 'Moonshot AI', models: [{ id: 'kimi-k3', name: 'Kimi K3', inputPrice: 1, outputPrice: 3, contextWindow: 256000 }] },
+      ],
+    };
+    const out = enrichModelsWithIntelligence(pricing, snap) as typeof pricing & {
+      providers: Array<{ models: Array<{ intelligence?: { tfii: number | null; low_coverage: boolean; coverage: number } }> }>;
+    };
+    const opus = out.providers[0].models[0];
+    const kimi = out.providers[1].models[0];
+    // A zero from an unscored flagship and a 93.5 off one benchmark are both
+    // absences of data, not verdicts. Neither may ship as a number.
+    expect(opus.intelligence?.tfii).toBeNull();
+    expect(opus.intelligence?.low_coverage).toBe(true);
+    expect(kimi.intelligence?.tfii).toBeNull();
+    expect(kimi.intelligence?.coverage).toBe(0.2);
+  });
+
   it('leaves models without a snapshot match unchanged', () => {
     const snap: IntelligenceSnapshot = { as_of: 'x', methodology_version: METHODOLOGY_VERSION, models: [] };
     const pricing = { providers: [{ id: 'p', name: 'P', models: [{ id: 'm', name: 'No Match', inputPrice: 0, outputPrice: 0, contextWindow: 1 }] }] };
