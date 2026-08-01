@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-24",
+  "lastUpdated": "2026-08-01",
   "providers": [
     {
       "id": "anthropic",
@@ -143,7 +143,7 @@
           "inputPrice": 5.0,
           "outputPrice": 30.0,
           "contextWindow": 1000000,
-          "released": "2026-06",
+          "released": "2026-07",
           "capabilities": [
             "text",
             "vision",
@@ -156,10 +156,10 @@
         {
           "id": "gpt-5-6-terra",
           "name": "GPT-5.6 Terra",
-          "inputPrice": 2.5,
-          "outputPrice": 15.0,
+          "inputPrice": 2.0,
+          "outputPrice": 12.0,
           "contextWindow": 1000000,
-          "released": "2026-06",
+          "released": "2026-07",
           "capabilities": [
             "text",
             "vision",
@@ -172,10 +172,10 @@
         {
           "id": "gpt-5-6-luna",
           "name": "GPT-5.6 Luna",
-          "inputPrice": 1.0,
-          "outputPrice": 6.0,
+          "inputPrice": 0.2,
+          "outputPrice": 1.2,
           "contextWindow": 1000000,
-          "released": "2026-06",
+          "released": "2026-07",
           "capabilities": [
             "text",
             "vision",
@@ -329,6 +329,40 @@
             "reasoning"
           ],
           "tier": "mid"
+        },
+        {
+          "id": "gemini-3-6-flash",
+          "name": "Gemini 3.6 Flash",
+          "inputPrice": 1.5,
+          "outputPrice": 7.5,
+          "contextWindow": 1048576,
+          "released": "2026-07",
+          "capabilities": [
+            "text",
+            "vision",
+            "audio",
+            "video",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
+          "tier": "mid"
+        },
+        {
+          "id": "gemini-3-5-flash-lite",
+          "name": "Gemini 3.5 Flash-Lite",
+          "inputPrice": 0.3,
+          "outputPrice": 2.5,
+          "contextWindow": 1048576,
+          "released": "2026-07",
+          "capabilities": [
+            "text",
+            "vision",
+            "tool-use",
+            "code",
+            "reasoning"
+          ],
+          "tier": "budget"
         }
       ]
     },
@@ -730,6 +764,31 @@
             "reasoning"
           ],
           "tier": "flagship"
+        }
+      ]
+    },
+    {
+      "id": "poolside",
+      "name": "poolside",
+      "logo": "/images/providers/poolside.png",
+      "url": "https://poolside.ai",
+      "models": [
+        {
+          "id": "laguna-s-2-1",
+          "name": "Laguna S 2.1",
+          "inputPrice": 0.1,
+          "outputPrice": 0.2,
+          "contextWindow": 1048576,
+          "released": "2026-07",
+          "openSource": true,
+          "license": "OpenMDW-1.1",
+          "capabilities": [
+            "text",
+            "code",
+            "tool-use",
+            "reasoning"
+          ],
+          "tier": "mid"
         }
       ]
     }

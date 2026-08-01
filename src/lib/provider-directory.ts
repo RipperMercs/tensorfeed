@@ -67,12 +67,12 @@ export const PROVIDERS: ProviderMeta[] = [
     seoDescription:
       'Everything about Google AI and Gemini. Model lineup, pricing, 1M context window, benchmarks, and status. Updated daily on TensorFeed.',
     intro:
-      'Google brings the deepest infrastructure advantage to the AI race. Their Gemini 2.5 Pro offers a 1 million token context window, and their Flash models deliver some of the lowest per-token pricing available. At Google I/O 2026 on May 19, Google shipped Gemini 3.5 Flash, the first Flash-tier release that beats the previous Pro flagship on agentic coding suites at roughly 4x the throughput, alongside Gemini Spark, a general-purpose agent that reasons across connected apps. At Google Cloud Next \'26 in Las Vegas on April 22, 2026, Google launched the Gemini Enterprise Agent Platform (the evolution of Vertex AI), backed by a $750 million partner fund, and announced that Gemini will power the next generation of Apple\'s Siri. Backed by custom TPU hardware and decades of ML research (Transformer architecture was invented at Google), they compete on both the frontier and the budget ends of the market.',
+      'Google brings the deepest infrastructure advantage to the AI race. Their Gemini 2.5 Pro offers a 1 million token context window, and their Flash models deliver some of the lowest per-token pricing available. At Google I/O 2026 on May 19, Google shipped Gemini 3.5 Flash, the first Flash-tier release that beats the previous Pro flagship on agentic coding suites at roughly 4x the throughput, alongside Gemini Spark, a general-purpose agent that reasons across connected apps. At Google Cloud Next \'26 in Las Vegas on April 22, 2026, Google launched the Gemini Enterprise Agent Platform (the evolution of Vertex AI), backed by a $750 million partner fund, and announced that Gemini will power the next generation of Apple\'s Siri. On July 21, 2026 Google shipped three models in a single announcement: Gemini 3.6 Flash at $1.50/$7.50 per 1M tokens (a cut from the $9.00 output rate on 3.5 Flash), Gemini 3.5 Flash-Lite at $0.30/$2.50 and 350 output tokens per second, and Gemini 3.5 Flash Cyber, a vulnerability-finding model restricted to governments and trusted partners through the CodeMender agent. The framing was efficiency rather than capability: Artificial Analysis scored 3.6 Flash flat at 50 on its Intelligence Index, identical to 3.5 Flash, while measured time per task fell from 2.7 minutes to 1.3 and cost per task from $0.59 to $0.50. The same post confirmed that Gemini 3.5 Pro is still only testing with partners after missing its July 17 target, and that pre-training has begun on Gemini 4, which Google calls its most ambitious run yet. Backed by custom TPU hardware and decades of ML research (Transformer architecture was invented at Google), they compete on both the frontier and the budget ends of the market.',
     founded: '1998 (Google); 2023 (Google DeepMind)',
     headquarters: 'Mountain View, CA',
     ceo: 'Sundar Pichai',
-    keyProducts: ['Gemini 3.5 Flash', 'Gemini 2.5 Pro', 'Gemini 3.1 Flash-Lite', 'Gemini 2.0 Flash', 'Gemini Spark', 'Gemini Enterprise Agent Platform', 'NotebookLM', 'Vertex AI', 'Google AI Studio'],
-    strengths: ['1M token context window', 'Lowest-cost budget models', 'Custom TPU infrastructure', 'Vertex AI enterprise platform', 'NotebookLM research integration'],
+    keyProducts: ['Gemini 3.6 Flash', 'Gemini 3.5 Flash-Lite', 'Gemini 3.5 Flash', 'Gemini 2.5 Pro', 'Gemini 3.1 Flash-Lite', 'Gemini 2.0 Flash', 'Gemini Spark', 'Gemini Enterprise Agent Platform', 'NotebookLM', 'Vertex AI', 'Google AI Studio'],
+    strengths: ['1M token context window across the Flash line', 'Lowest-cost budget models', 'Token efficiency as a stated design goal on 3.6 Flash', 'Custom TPU infrastructure', 'Gemini Enterprise Agent Platform', 'NotebookLM research integration'],
     statusSlug: 'is-gemini-down',
   },
   {
@@ -268,6 +268,22 @@ export const PROVIDERS: ProviderMeta[] = [
     ceo: 'Yang Zhilin',
     keyProducts: ['Kimi K3', 'Kimi K2', 'Kimi chat assistant'],
     strengths: ['Largest open-weight model ever shipped at 2.8T parameters', 'Cheapest normalized cost per task among index leaders', 'First on Frontend Code Arena, ahead of Fable 5', 'Best open-weight GPQA Diamond result on record', '1M context with native vision'],
+  },
+  {
+    slug: 'poolside',
+    pricingId: 'poolside',
+    name: 'poolside',
+    url: 'https://poolside.ai',
+    seoTitle: 'poolside: Laguna Models, Pricing, and API Overview',
+    seoDescription:
+      'Everything about poolside and the Laguna coding models. Laguna S 2.1 pricing at $0.10/$0.20 per 1M tokens, open weights, 1M context, and benchmarks on TensorFeed.',
+    intro:
+      'poolside is the San Francisco lab building foundation models specifically for software development, founded in 2023 by former GitHub CTO Jason Warner and Eiso Kant. It raised a $500 million Series B led by Bain Capital Ventures in October 2024, and in October 2025 Nvidia announced an investment of up to $1 billion that valued the company around $12 billion. Laguna S 2.1, released July 21, 2026, is poolside\'s first major public model: a 118 billion parameter mixture-of-experts with roughly 8 billion active per token, a 1 million token context window, and open weights on Hugging Face day one under the OpenMDW-1.1 license. Hosted pricing is $0.10 per million input tokens and $0.20 per million output, among the cheapest frontier-adjacent coding rates available. poolside reports 70.2 percent on Terminal-Bench 2.1 in thinking mode, 78.5 percent on SWE-Bench Multilingual, and 40.4 percent on DeepSWE, and it published the full unedited trajectory of every benchmark trial alongside a disclosure that the Terminal-Bench numbers come from its own harness. In a week when three separate launches shipped with no independently checkable evidence at all, that transparency is the differentiator worth watching more than the score itself. The 8 billion active parameter design also makes it one of the few open-weight coding models that a small team can actually self-host.',
+    founded: '2023',
+    headquarters: 'San Francisco, CA',
+    ceo: 'Jason Warner',
+    keyProducts: ['Laguna S 2.1', 'poolside Assistant', 'poolside API'],
+    strengths: ['Open weights on Hugging Face day one under OpenMDW-1.1', '$0.10/$0.20 per 1M tokens, among the cheapest coding models', 'Only ~8B active parameters, genuinely self-hostable', 'Full benchmark trajectories published and harness disclosed', 'Purpose-built for software engineering rather than general chat'],
   },
 ];
 

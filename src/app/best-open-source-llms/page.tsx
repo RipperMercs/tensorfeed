@@ -2,19 +2,55 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArticleJsonLd, FAQPageJsonLd, ItemListJsonLd } from '@/components/seo/JsonLd';
 export const metadata: Metadata = {
-  title: 'Best Open Source LLMs in 2026: Llama, DeepSeek V4, LongCat-2.0, Mistral, Qwen, Cohere Command A+ & More | TensorFeed',
+  title: 'Best Open Source LLMs in 2026: Kimi K3, Laguna S 2.1, Llama, DeepSeek V4 & More | TensorFeed',
   description:
-    'Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Qwen 2.5, Phi-4, Gemma 2, Cohere Command A+, and Command R. Parameters, benchmarks, licensing, and how to run them locally.',
+    'Compare the best open source large language models in 2026: Kimi K3, poolside Laguna S 2.1, Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Qwen, Phi-4, Gemma, and Cohere Command A+. Parameters, benchmarks, licensing, and how to run them locally.',
   openGraph: {
     title: 'Best Open Source LLMs in 2026',
     description:
-      'Compare the best open source LLMs: Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R.',
+      'Compare the best open source LLMs: Kimi K3, Laguna S 2.1, Llama 4, DeepSeek V4, LongCat-2.0, MiniMax M3, Mistral, Qwen, Phi-4, Gemma, and Cohere Command A+.',
     url: 'https://tensorfeed.ai/best-open-source-llms',
   },
   alternates: { canonical: 'https://tensorfeed.ai/best-open-source-llms' },
 };
 
 const models = [
+  {
+    name: 'Kimi K3',
+    company: 'Moonshot AI',
+    parameters: '2.8T total (roughly 16B active per token, 896 experts)',
+    architecture: 'Mixture of Experts (MoE), native MXFP4',
+    contextWindow: '1M tokens',
+    license: 'Modified MIT',
+    released: 'July 2026',
+    highlights: [
+      'Largest open-weight model ever shipped at 2.8 trillion parameters',
+      'Strongest open-weight GPQA Diamond result on record at 93.5 percent (vendor-reported)',
+      'First on Frontend Code Arena at 1,679 points, ahead of Claude Fable 5',
+      'Native vision alongside text, with a 1M token context window',
+      'API pricing at $3.00 input (or $0.30 on a cache hit) and $15.00 output per 1M tokens',
+    ],
+    bestFor: 'Teams that want the closest open-weight model to the proprietary frontier for general knowledge work, science reasoning, and visual tasks, and are content to reach it through a hosted API.',
+    considerations: 'Open weights and self-hostable are two different claims here. K3 ships natively in MXFP4 with no FP16 checkpoint, and even at 4-bit it needs roughly 1,450GB of accelerator memory before the KV cache, so it wants eight B200-class cards. Most usage routes through hosted inference, and calls to Moonshot\'s own API are processed under Chinese jurisdiction. Moonshot is also the subject of a July 2026 US government distillation and export-control accusation that remains contested.',
+  },
+  {
+    name: 'Laguna S 2.1',
+    company: 'poolside',
+    parameters: '118B total (roughly 8B active per token)',
+    architecture: 'Mixture of Experts (MoE)',
+    contextWindow: '1M tokens',
+    license: 'OpenMDW-1.1',
+    released: 'July 2026',
+    highlights: [
+      'Only about 8B active parameters, so a small team can genuinely self-host it',
+      '70.2 percent on Terminal-Bench 2.1 in thinking mode and 78.5 percent on SWE-Bench Multilingual',
+      'Weights on Hugging Face day one, no waitlist and no delayed drop',
+      'Hosted pricing of $0.10 input and $0.20 output per 1M tokens, among the cheapest anywhere',
+      'poolside published every unedited benchmark trajectory and disclosed its own harness',
+    ],
+    bestFor: 'Cost-sensitive agentic coding at volume, terminal and shell automation, and any team that actually intends to run the weights rather than call someone else\'s endpoint.',
+    considerations: 'This is a coding specialist, not a general assistant: text and code only, no vision. The headline Terminal-Bench number comes from poolside\'s own harness, which the company disclosed openly, but it still has not been reproduced by an independent party. As poolside\'s first major public model it has no production track record yet.',
+  },
   {
     name: 'Llama 4 Scout',
     company: 'Meta',
@@ -66,7 +102,7 @@ const models = [
       'Hybrid Attention architecture for better long-context recall',
       'API pricing at $0.435/$0.87 per 1M tokens (roughly 11x cheaper input than Claude Opus 5)',
     ],
-    bestFor: 'The strongest open source model available. Near-frontier coding and reasoning at a fraction of proprietary pricing. Ideal for teams that want Claude-level quality with MIT license freedom.',
+    bestFor: 'The strongest MIT-licensed open source model available. Near-frontier coding and reasoning at a fraction of proprietary pricing. Ideal for teams that want Claude-level quality with genuinely unrestricted license freedom, which Kimi K3 and Laguna S 2.1 do not offer.',
     considerations: 'The 1.6T parameter model requires multi-GPU infrastructure to self-host. API access through DeepSeek is affordable but subject to China-based hosting. V4 Flash is the better choice for latency-sensitive workloads.',
   },
   {
@@ -258,9 +294,9 @@ export default function BestOpenSourceLLMsPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <ArticleJsonLd
         title="Best Open Source LLMs in 2026"
-        description="Compare the best open source large language models in 2026: Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R. Includes benchmarks, licensing, and how to run locally."
+        description="Compare the best open source large language models in 2026: Kimi K3, poolside Laguna S 2.1, Llama 4, DeepSeek V4, Mistral, Qwen, Phi-4, Gemma, Cohere Command A+, and Command R. Includes benchmarks, licensing, and how to run locally."
         datePublished="2025-05-01"
-        dateModified="2026-07-05"
+        dateModified="2026-07-26"
       />
 
       <ItemListJsonLd
@@ -270,7 +306,7 @@ export default function BestOpenSourceLLMsPage() {
         items={models.map((model) => ({ name: model.name }))}
       />
 
-      <p className="text-text-muted text-sm mb-4">Last Updated: July 5, 2026</p>
+      <p className="text-text-muted text-sm mb-4">Last Updated: July 26, 2026</p>
 
       <h1 className="text-4xl font-bold text-text-primary mb-6">
         Best Open Source LLMs in 2026

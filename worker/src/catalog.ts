@@ -267,7 +267,7 @@ const CATALOG_CHANGE_URLS = [
 // ── Baseline data (mirrors data/*.json for first-run seeding) ───────
 
 export const BASELINE_PRICING: PricingData = {
-  lastUpdated: '2026-07-24',
+  lastUpdated: '2026-08-01',
   providers: [
     {
       id: 'anthropic', name: 'Anthropic', logo: '/images/providers/anthropic.png', url: 'https://www.anthropic.com',
@@ -285,9 +285,9 @@ export const BASELINE_PRICING: PricingData = {
     {
       id: 'openai', name: 'OpenAI', logo: '/images/providers/openai.png', url: 'https://openai.com',
       models: [
-        { id: 'gpt-5-6-sol', name: 'GPT-5.6 Sol', inputPrice: 5, outputPrice: 30, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
-        { id: 'gpt-5-6-terra', name: 'GPT-5.6 Terra', inputPrice: 2.50, outputPrice: 15, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
-        { id: 'gpt-5-6-luna', name: 'GPT-5.6 Luna', inputPrice: 1, outputPrice: 6, contextWindow: 1000000, released: '2026-06', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
+        { id: 'gpt-5-6-sol', name: 'GPT-5.6 Sol', inputPrice: 5, outputPrice: 30, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
+        { id: 'gpt-5-6-terra', name: 'GPT-5.6 Terra', inputPrice: 2.00, outputPrice: 12, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
+        { id: 'gpt-5-6-luna', name: 'GPT-5.6 Luna', inputPrice: 0.20, outputPrice: 1.20, contextWindow: 1000000, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'gpt-5-5', name: 'GPT-5.5', inputPrice: 5, outputPrice: 30, contextWindow: 1000000, released: '2026-04', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'flagship' },
         { id: 'gpt-4o', name: 'GPT-4o', inputPrice: 2.50, outputPrice: 10.00, contextWindow: 128000, released: '2024-05', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'flagship' },
         { id: 'gpt-4o-mini', name: 'GPT-4o-mini', inputPrice: 0.15, outputPrice: 0.60, contextWindow: 128000, released: '2024-07', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'budget' },
@@ -302,6 +302,8 @@ export const BASELINE_PRICING: PricingData = {
         { id: 'gemini-2-0-flash', name: 'Gemini 2.0 Flash', inputPrice: 0.10, outputPrice: 0.40, contextWindow: 1000000, released: '2025-02', capabilities: ['text', 'vision', 'tool-use', 'code'], tier: 'budget' },
         { id: 'gemini-3-1-flash-lite', name: 'Gemini 3.1 Flash-Lite', inputPrice: 0.25, outputPrice: 1.5, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
         { id: 'gemini-3-5-flash', name: 'Gemini 3.5 Flash', inputPrice: 1.5, outputPrice: 9, contextWindow: 1048576, released: '2026-05', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
+        { id: 'gemini-3-6-flash', name: 'Gemini 3.6 Flash', inputPrice: 1.5, outputPrice: 7.5, contextWindow: 1048576, released: '2026-07', capabilities: ['text', 'vision', 'audio', 'video', 'tool-use', 'code', 'reasoning'], tier: 'mid' },
+        { id: 'gemini-3-5-flash-lite', name: 'Gemini 3.5 Flash-Lite', inputPrice: 0.3, outputPrice: 2.5, contextWindow: 1048576, released: '2026-07', capabilities: ['text', 'vision', 'tool-use', 'code', 'reasoning'], tier: 'budget' },
       ],
     },
     {
@@ -381,6 +383,12 @@ export const BASELINE_PRICING: PricingData = {
       id: 'moonshot', name: 'Moonshot AI', logo: '/images/providers/moonshot.png', url: 'https://www.moonshot.cn',
       models: [
         { id: 'kimi-k3', name: 'Kimi K3', inputPrice: 3.00, outputPrice: 15.00, contextWindow: 1000000, released: '2026-07', openSource: true, license: 'Modified MIT', capabilities: ['text', 'vision', 'code', 'tool-use', 'reasoning'], tier: 'flagship' },
+      ],
+    },
+    {
+      id: 'poolside', name: 'poolside', logo: '/images/providers/poolside.png', url: 'https://poolside.ai',
+      models: [
+        { id: 'laguna-s-2-1', name: 'Laguna S 2.1', inputPrice: 0.10, outputPrice: 0.20, contextWindow: 1048576, released: '2026-07', openSource: true, license: 'OpenMDW-1.1', capabilities: ['text', 'code', 'tool-use', 'reasoning'], tier: 'mid' },
       ],
     },
   ],

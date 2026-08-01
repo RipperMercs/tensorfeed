@@ -526,6 +526,9 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [LongCat-2.0](https://tensorfeed.ai/models/longcat-2): Specs and benchmarks for Meituan's June 30, 2026 open-source 1.6T MoE agentic coding model under MIT (1M context; trained end-to-end on domestic Chinese chips)
 - [Grok 4.5](https://tensorfeed.ai/models/grok-4-5): Pricing, benchmarks, specs for xAI's July 8, 2026 coding model on the V9 foundation ($2/$6, 500K context, fourth on the Artificial Analysis Intelligence Index)
 - [Muse Spark 1.1](https://tensorfeed.ai/models/muse-spark-1-1): Pricing, benchmarks, specs for Meta's July 9, 2026 first paid API model ($1.25/$4.25, 1M context, agentic tool-use leader on MCP Atlas)
+- [Gemini 3.6 Flash](https://tensorfeed.ai/models/gemini-3-6-flash): Pricing, benchmarks, specs for Google's July 21, 2026 workhorse Flash model ($1.50/$7.50, down from $9.00 output on 3.5 Flash; 1M context, 64K output; 17 percent fewer output tokens)
+- [Gemini 3.5 Flash-Lite](https://tensorfeed.ai/models/gemini-3-5-flash-lite): Pricing, benchmarks, specs for Google's fastest 3.5-series model (July 21, 2026; $0.30/$2.50; 1M context; about 350 output tokens per second)
+- [Laguna S 2.1](https://tensorfeed.ai/models/laguna-s-2-1): Pricing, benchmarks, specs for poolside's first public model (July 21, 2026; 118B total / ~8B active MoE; open weights day one under OpenMDW-1.1; $0.10/$0.20; 1M context)
 
 ## Model Comparisons
 - [Claude Opus 4.7 vs 4.6](https://tensorfeed.ai/compare/claude-opus-4-7-vs-claude-opus-4-6): Generational comparison of Anthropic flagships
@@ -553,6 +556,9 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [Claude Opus 5 vs Claude Opus 4.8](https://tensorfeed.ai/compare/claude-opus-5-vs-claude-opus-4-8): Anthropic's July 24, 2026 Opus release vs its predecessor at identical $5/$25 pricing, plus the three API defaults that changed
 - [Claude Opus 5 vs Claude Fable 5](https://tensorfeed.ai/compare/claude-opus-5-vs-claude-fable-5): Half the price at $5/$25 vs $10/$50, and the row-by-row benchmark split where the cheaper model wins most comparisons
 - [Muse Spark 1.1 vs Claude Sonnet 5](https://tensorfeed.ai/compare/muse-spark-1-1-vs-claude-sonnet-5): Meta's first paid agentic model vs Anthropic's price/performance pick, tool-use versus verified accuracy
+- [Gemini 3.6 Flash vs Gemini 3.5 Flash](https://tensorfeed.ai/compare/gemini-3-6-flash-vs-gemini-3-5-flash): Output drops to $7.50 from $9.00 while capability holds, an economics upgrade rather than a capability jump
+- [Gemini 3.6 Flash vs Claude Sonnet 5](https://tensorfeed.ai/compare/gemini-3-6-flash-vs-claude-sonnet-5): Mid-tier head to head. $1.50/$7.50 against $2/$10, token efficiency and multimodal input against vendor-reported SWE-bench Verified scores
+- [Laguna S 2.1 vs Kimi K3](https://tensorfeed.ai/compare/laguna-s-2-1-vs-kimi-k3): Open weights you can actually run. 118B / ~8B active against 2.8T needing roughly 1,450GB at 4-bit, $0.10/$0.20 against $3/$15
 
 ## AI Providers
 - [Anthropic](https://tensorfeed.ai/providers/anthropic): Claude models, pricing, benchmarks, and company overview
@@ -570,6 +576,7 @@ Substrate changelog (human): https://tensorfeed.ai/substrate (model lifecycle, M
 - [Moonshot AI](https://tensorfeed.ai/providers/moonshot): Kimi family, Kimi K3 flagship, largest open-weight model shipped, pricing, and overview
 - [Meituan](https://tensorfeed.ai/providers/meituan): LongCat-2.0 open-source 1.6T MoE coding model, MIT license, domestic-chip training story, and overview
 - [xAI](https://tensorfeed.ai/providers/xai): Grok models, Grok 4.5 coding model, pricing, real-time X data, and company overview
+- [poolside](https://tensorfeed.ai/providers/poolside): Laguna coding models, Laguna S 2.1 open weights at ~8B active, $0.10/$0.20 pricing, and company overview
 
 ## Merchant Surfaces (paid offerings)
 - [Premium API Packs](https://tensorfeed.ai/pricing/packs): Six themed credit bundles for the TensorFeed premium API (Starter $5, AI Routing $20, Macro $20, Research Velocity $20, Provider Intel $30, Agent Brief $30). Credits are fully fungible across all premium endpoints; packs suggest USD amounts and highlight endpoint groupings to reduce decision friction. Paid in USDC on Base. Machine-readable catalog at /api/payment/packs.

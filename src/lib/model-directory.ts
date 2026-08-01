@@ -381,6 +381,40 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     docsUrl: 'https://ai.google.dev/gemini-api/docs',
     tier: 'mid',
   },
+  {
+    slug: 'gemini-3-6-flash',
+    pricingId: 'gemini-3-6-flash',
+    benchmarkName: 'Gemini 3.6 Flash',
+    providerId: 'google',
+    providerName: 'Google',
+    providerUrl: 'https://ai.google.dev',
+    seoTitle: 'Gemini 3.6 Flash: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Gemini 3.6 Flash by Google, released July 21, 2026 at $1.50/$7.50 per 1M tokens, a cheaper output rate than 3.5 Flash. 1M context, specs, and benchmarks on TensorFeed.',
+    intro:
+      'Gemini 3.6 Flash went generally available on July 21, 2026, and the pitch is efficiency rather than raw intelligence. The model id is gemini-3.6-flash, priced at $1.50 per million input tokens and $7.50 per million output, a cut from the $9.00 output rate on Gemini 3.5 Flash, with cached input at $0.15. It carries a 1,048,576 token input window, up to 65,536 output tokens, and takes text, image, audio, video, and PDF input. Google says it is built directly on Gemini 3.5 Flash and consumes 17 percent fewer output tokens on the Artificial Analysis Index, with up to 65 percent fewer on DeepSWE. Google\'s published gains over 3.5 Flash are DeepSWE 49 percent against 37, MLE-Bench 63.9 against 49.7, OSWorld-Verified 83.0 against 78.4, and GDPval-AA v2 at 1421 Elo against 1349. The honest caveat is that Artificial Analysis scored the Intelligence Index flat at 50, identical to 3.5 Flash, while measuring average time per task falling from 2.7 minutes to 1.3 and measured cost per task from $0.59 to $0.50. Read it as a per-task economics upgrade for existing Flash workloads, not a capability jump. Computer use is now a built-in client-side tool through the Gemini API, and the knowledge cutoff is March 2026. Day-one availability spans Google AI Studio, the Gemini API, Android Studio, Google Antigravity, the Gemini Enterprise Agent Platform, and the Gemini app.',
+    strengths: ['$7.50 per 1M output, down from $9.00 on 3.5 Flash', '17 percent fewer output tokens on the Artificial Analysis Index', 'Measured time per task roughly halved, 2.7 minutes to 1.3', 'OSWorld-Verified 83.0 percent with computer use as a built-in tool', '1M token input window with 64K output', 'Text, image, audio, video, and PDF input'],
+    useCases: ['Long-running agentic workflows where token spend dominates', 'Agentic coding and multi-step tool use', 'Computer-use and GUI automation', 'Document parsing, chart analysis, and report drafting'],
+    docsUrl: 'https://ai.google.dev/gemini-api/docs',
+    tier: 'mid',
+  },
+  {
+    slug: 'gemini-3-5-flash-lite',
+    pricingId: 'gemini-3-5-flash-lite',
+    benchmarkName: 'Gemini 3.5 Flash-Lite',
+    providerId: 'google',
+    providerName: 'Google',
+    providerUrl: 'https://ai.google.dev',
+    seoTitle: 'Gemini 3.5 Flash-Lite: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'Gemini 3.5 Flash-Lite by Google, released July 21, 2026 at $0.30/$2.50 per 1M tokens and 350 output tokens per second. Pricing, context, and specs on TensorFeed.',
+    intro:
+      'Gemini 3.5 Flash-Lite shipped alongside Gemini 3.6 Flash on July 21, 2026 as the fastest model in the 3.5 series. Pricing is $0.30 per million input tokens and $2.50 per million output, and Artificial Analysis clocks it at 350 output tokens per second. Google positions it for high-throughput production traffic: agentic search, document processing, and any workload where latency and volume matter more than frontier reasoning. The gains over Gemini 3.1 Flash-Lite are large on Google\'s own numbers: Terminal-Bench 2.1 at 54 percent against 31, GDM-MRCR v2 long context at 72.2 percent against 60.1, and GDPval-AA v2 at 1140 against 642. More interesting for anyone still on an older Flash tier, Google reports it beating Gemini 3 Flash on SWE-Bench Pro (54.2 percent against 49.6) and OSWorld-Verified (74.0 against 65.1), which makes it a faster and cheaper option than the Flash model it sits under. Thinking levels are configurable, so the same model can run minimal-thinking high-volume batches or engage higher effort for multi-step subagent work, and computer use is a built-in tool. It is rolling out in Google Search as well as the API.',
+    strengths: ['$0.30 per 1M input, $2.50 per 1M output', '350 output tokens per second, fastest in the 3.5 series', 'Beats Gemini 3 Flash on SWE-Bench Pro and OSWorld-Verified', 'Configurable thinking levels from minimal upward', '1M token context window', 'Computer use as a built-in tool'],
+    useCases: ['High-volume classification, extraction, and batch processing', 'Agentic search and document pipelines', 'Subagent workers under a larger orchestrator', 'Latency-sensitive customer-facing traffic'],
+    docsUrl: 'https://ai.google.dev/gemini-api/docs',
+    tier: 'budget',
+  },
 
   // ── Meta ───────────────────────────────────────────────────────────
   {
@@ -709,6 +743,25 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     useCases: ['Frontier-class self-hosting at rack scale', 'Frontend and UI code generation', 'Long-context multimodal research', 'Sovereign deployments needing open weights'],
     docsUrl: 'https://platform.moonshot.cn/docs',
     tier: 'flagship',
+  },
+
+  // ── poolside ─────────────────────────────────────
+  {
+    slug: 'laguna-s-2-1',
+    pricingId: 'laguna-s-2-1',
+    benchmarkName: 'Laguna S 2.1',
+    providerId: 'poolside',
+    providerName: 'poolside',
+    providerUrl: 'https://poolside.ai',
+    seoTitle: 'poolside Laguna S 2.1: Pricing, Benchmarks, Specs',
+    seoDescription:
+      'poolside Laguna S 2.1, an open-weight 118B MoE coding model released July 21, 2026 at $0.10/$0.20 per 1M tokens with a 1M context window. Specs on TensorFeed.',
+    intro:
+      'Laguna S 2.1 is poolside\'s first major public model release, shipped July 21, 2026 with open weights on Hugging Face the same day under the OpenMDW-1.1 license. It is a 118 billion parameter mixture-of-experts with roughly 8 billion active per token, a 1,048,576 token context window, and up to 131,072 output tokens. Hosted pricing on OpenRouter is $0.10 per million input tokens and $0.20 per million output, with cache reads at $0.01, which puts it among the cheapest frontier-adjacent coding options available. poolside reports 70.2 percent on Terminal-Bench 2.1 in thinking mode, 78.5 percent on SWE-Bench Multilingual, and 40.4 percent on DeepSWE, claiming it leads open models of disclosed size and outranks systems roughly ten times larger. The part worth noting is the eval hygiene: poolside disclosed that Terminal-Bench results come from its own harness and published the full unedited trajectory of every benchmark trial, which is a materially higher standard than the vendor-claimed tables that shipped with most of the same week\'s launches. At 8 billion active parameters the model is genuinely runnable on modest hardware, which separates it from the 1T-plus open-weight releases where downloadable does not mean deployable.',
+    strengths: ['$0.10/$0.20 per 1M tokens hosted, among the cheapest coding models', 'Open weights on Hugging Face day one under OpenMDW-1.1', '118B total parameters with only ~8B active per token', '1M token context, 131K max output', '70.2 percent on Terminal-Bench 2.1 in thinking mode', 'Full benchmark trajectories published, harness disclosed'],
+    useCases: ['Cost-sensitive agentic coding at volume', 'Self-hosted coding assistants on modest hardware', 'Terminal and shell-driven automation', 'Worker models under a more expensive planner'],
+    docsUrl: 'https://poolside.ai',
+    tier: 'mid',
   },
 ];
 

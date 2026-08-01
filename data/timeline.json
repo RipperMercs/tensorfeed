@@ -8,6 +8,48 @@
       "description": "Anthropic released Claude Opus 5 (API id claude-opus-5) at $5 per million input tokens and $25 per million output, unchanged from Claude Opus 4.8 and exactly half of Claude Fable 5 at $10/$50. It carries a 1 million token context window as both default and maximum, up to 128K output tokens, and text plus vision input. Anthropic's launch table shows it leading Fable 5 on most published rows despite the lower price: 70.6 percent on OSWorld 2.0 versus 66.1, 90.8 percent on BrowseComp versus 87.4, 64.7 percent on Humanity's Last Exam with tools versus 63.9, and a GDPval-AA v2 score of 1861 versus 1747. It also posts 30.2 percent on ARC-AGI-3, where Opus 4.8 scored 1.5. Fable 5 keeps narrow leads on FrontierCode and DeepSWE and remains Anthropic's stated top capability tier. All figures are vendor-reported. Adaptive thinking is now on by default when the thinking parameter is omitted, disabling thinking is rejected above high effort, and the minimum cacheable prompt drops to 512 tokens from 1024. Opus 5 uses a separate rate-limit pool from the Opus 4.x models and is excluded from Priority Tier. Available on the Claude API, Amazon Bedrock, Google Cloud, and Microsoft Foundry."
     },
     {
+      "date": "2026-07-23",
+      "title": "Ant Group Releases Ling-3.0-flash and Black Forest Labs Announces FLUX 3",
+      "provider": "Ant Group",
+      "category": "model-release",
+      "description": "Ant Group released Ling-3.0-flash, a 124 billion parameter mixture-of-experts activating roughly 5.1 billion per token, claiming it matches the company's own 1 trillion parameter flagship on a twelfth of the active parameters. Ant states an Apache 2.0 license, but the weights had not been posted at launch, so the open-weight status is stated rather than confirmed. The model is free on OpenRouter through August 3, 2026, which makes it a zero-cost evaluation window. All performance figures are vendor-claimed with no independent verification published. The same day Black Forest Labs announced FLUX 3, its first multimodal frontier model, jointly training image, video, audio, and action. Only the video variant is in gated early access, the image model is weeks out, the open-weight Dev backbone has no date, and the only evidence published is Black Forest Labs' own human-preference evals (a claimed 77 percent preference over Runway Gen-4.5 and 93 percent over Luma Ray 3.2). Neither release is in the TensorFeed pricing index yet: Ling has no list price and FLUX 3 has no pricing at all."
+    },
+    {
+      "date": "2026-07-22",
+      "title": "Cursor Ships Router as Model Routing Becomes the Answer to Release Velocity",
+      "provider": "Cursor",
+      "category": "product-launch",
+      "description": "Cursor released Cursor Router, per-request automatic model routing that classifies each task and sends it to the cheapest capable model, claiming 30 to 50 percent cost savings in early access with no quality drop. The claim is vendor-stated with press corroboration. The context is what makes it notable: two days earlier Cursor published an agent-swarm SQLite rebuild in which an equivalent-quality task cost $9,373 with a single frontier model doing everything and $411 with a planner and worker pairing, a roughly 23x spread driven entirely by model choice rather than by doing less work. Cline's same-week head-to-head on a real bug fix landed the same point from the other direction: Claude Fable 5 finished 3.4x faster (3.5 minutes, 18 tool calls) while Kimi K3 came out 2.3x cheaper overall ($0.92 against $2.13) despite consuming 1.7x more tokens. Speed, cost, and token count went to different models on a single task. With seven models shipping in seven days, routing infrastructure is becoming the layer that absorbs release velocity so application code does not have to."
+    },
+    {
+      "date": "2026-07-21",
+      "title": "Google Ships Gemini 3.6 Flash, 3.5 Flash-Lite, and 3.5 Flash Cyber, Confirms Gemini 4 Pre-Training",
+      "provider": "Google",
+      "category": "model-release",
+      "description": "Google released three models in a single announcement. Gemini 3.6 Flash (model id gemini-3.6-flash) is the new workhorse at $1.50 per million input tokens and $7.50 per million output, a cut from the $9.00 output rate on Gemini 3.5 Flash, with cached input at $0.15, a 1,048,576 token input window, 64K output, and text, image, audio, video, and PDF input. Google reports DeepSWE at 49 percent against 37 for 3.5 Flash, MLE-Bench at 63.9 against 49.7, OSWorld-Verified at 83.0 against 78.4, GDPval-AA v2 at 1421 Elo against 1349, and 17 percent fewer output tokens on the Artificial Analysis Index. Artificial Analysis independently scored the Intelligence Index flat at 50 for both models while measuring average time per task falling from 2.7 minutes to 1.3 and cost per task from $0.59 to $0.50, which frames this as a per-task economics upgrade rather than a capability jump. Gemini 3.5 Flash-Lite landed at $0.30 and $2.50 running 350 output tokens per second, beating Gemini 3 Flash on SWE-Bench Pro (54.2 against 49.6) and OSWorld-Verified (74.0 against 65.1). Gemini 3.5 Flash Cyber, built on 3.5 Flash and fine-tuned to find and patch vulnerabilities, is restricted to governments and trusted partners through the CodeMender agent under a limited-access pilot, with no public pricing. Google also confirmed that Gemini 3.5 Pro is still only testing with partners after missing its July 17 target, and that pre-training has begun on Gemini 4, which it calls its most ambitious run yet. Computer use is now a built-in client-side tool in the Gemini API."
+    },
+    {
+      "date": "2026-07-21",
+      "title": "poolside Releases Laguna S 2.1, an 8B-Active Open-Weight Coding Model at $0.10/$0.20",
+      "provider": "poolside",
+      "category": "open-source",
+      "description": "poolside, the San Francisco lab founded by former GitHub CTO Jason Warner and Eiso Kant, released Laguna S 2.1, its first major public model. It is a 118 billion parameter mixture-of-experts activating roughly 8 billion per token, with a 1,048,576 token context window and up to 131,072 output tokens. Weights hit Hugging Face on day one under the OpenMDW-1.1 license, and hosted pricing on OpenRouter is $0.10 per million input tokens, $0.20 per million output, and $0.01 for cache reads. poolside reports 70.2 percent on Terminal-Bench 2.1 in thinking mode, 78.5 percent on SWE-Bench Multilingual, and 40.4 percent on DeepSWE, claiming it outranks models roughly ten times its size. The more durable detail is the eval hygiene: poolside disclosed that its Terminal-Bench numbers come from its own harness and published the full unedited trajectory of every benchmark trial, in a week when three separate launches shipped with nothing an independent party could rerun. At 8 billion active parameters it is also one of the few genuinely self-hostable open-weight coding models, in contrast to the trillion-parameter open releases that still need a rack to load."
+    },
+    {
+      "date": "2026-07-20",
+      "title": "Alibaba Compresses Three Qwen Releases Into 72 Hours With Almost No Published Evidence",
+      "provider": "Alibaba",
+      "category": "model-release",
+      "description": "Alibaba shipped three Qwen models in three days. Qwen3.8-Max-Preview debuted July 19 at WAIC in Shanghai via a single X post claiming it ranks second only to Claude Fable 5, with no benchmark table, model card, or independent leaderboard listing, and it is closed and API-only. Qwen-Audio-3.0-TTS followed July 20 as a hosted-only voice model priced at roughly a third of ElevenLabs and MiniMax rates, and it is the one release of the three with independent verification: first place on the Artificial Analysis TTS arena at about 1,236 Elo, a statistical tie with second. Qwen-Image-3.0 arrived July 21 through an invite-only API with no benchmarks, weights, license, or technical report, a reversal from Qwen-Image 1.0, which shipped Apache 2.0 the same day it launched. The pattern across the three is a pivot away from the open-weight posture that built Qwen's developer base. None are in the TensorFeed pricing index: the two LLM-adjacent releases publish no usable list pricing or verifiable specs, and the TTS model does not fit a per-token schema."
+    },
+    {
+      "date": "2026-07-20",
+      "title": "CuspAI Raises $450 Million Series B for AI-Designed Materials",
+      "provider": "CuspAI",
+      "category": "funding",
+      "description": "Cambridge, UK based CuspAI raised a $450 million Series B led by Kleiner Perkins and NEA, with participation from Bezos Expeditions, the UK government, AMD Ventures, Lux Capital, and Glade Brook Capital Partners, bringing total funding past $650 million. The company applies AI to materials discovery. The same week London-based AI and robotics firm Humanoid raised $152 million at a $1.35 billion post-money valuation. The pattern across the week's rounds is a shift away from paying for generic AI exposure and toward control points: the largest checks went to companies sitting close to budget owners, regulated workflows, or procurement systems that are difficult to displace once embedded."
+    },
+    {
       "date": "2026-07-16",
       "title": "Gemini 3.5 Pro Misses Its July 17 Target as Google Weighs a Stopgap Flash Release",
       "provider": "Google",
