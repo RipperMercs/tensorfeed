@@ -285,6 +285,11 @@ async function collectUrls(): Promise<UrlCheck[]> {
         (m) => m[0].replace(/[.,;]+$/, ''),
       );
       for (const link of links) {
+        // Page classes only. The premium API shares these path words
+        // (/api/premium/models/frontier, /api/premium/compare/models), and
+        // those answer 402 by design, so matching them here just manufactures
+        // failures for endpoints that are working exactly as sold.
+        if (link.includes('/api/')) continue;
         if (
           link.includes('/models/') ||
           link.includes('/compare/') ||
@@ -405,8 +410,10 @@ export async function checkUrl(entry: UrlCheck, self?: Fetcher): Promise<UrlChec
   }
 
   // 3xx from redirect:'manual' is a healthy redirect (canonical / trailing
-  // slash). Treat 2xx and 3xx as ok.
-  const ok = status >= 200 && status < 400;
+  // slash). Treat 2xx and 3xx as ok. 402 is also healthy: a premium endpoint
+  // demanding payment is the product working, and reading it as down would
+  // make the whole paid catalog look like an outage.
+  const ok = (status >= 200 && status < 400) || status === 402;
   return { url: entry.url, status_code: status, ok, critical: entry.critical };
 }
 

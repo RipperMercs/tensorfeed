@@ -80,6 +80,23 @@ describe('checkUrl fetch routing', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('scores a 402 as healthy because a paid endpoint demanding payment is working', async () => {
+    const globalFetch = vi.fn(async () => new Response('', { status: 402 }));
+    vi.stubGlobal('fetch', globalFetch);
+
+    const result = await checkUrl(entry('https://tensorfeed.ai/premium-thing'), undefined);
+    expect(result.status_code).toBe(402);
+    expect(result.ok).toBe(true);
+  });
+
+  it('still scores a real 404 as down', async () => {
+    const globalFetch = vi.fn(async () => new Response('', { status: 404 }));
+    vi.stubGlobal('fetch', globalFetch);
+
+    const result = await checkUrl(entry('https://tensorfeed.ai/gone'), undefined);
+    expect(result.ok).toBe(false);
+  });
+
   it('falls back to plain fetch when SELF is not bound', async () => {
     const globalFetch = vi.fn(async () => new Response('', { status: 200 }));
     vi.stubGlobal('fetch', globalFetch);
