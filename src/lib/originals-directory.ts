@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'gpt-56-luna-80-cut-sol-rewrote-inference-stack',
+    title:
+      'OpenAI Cut Luna 80 Percent Because Sol Rewrote Its Own Inference Stack. The Pacing Letter Just Got a Live Case.',
+    author: 'Marcus Chen',
+    date: 'August 1, 2026',
+    readTime: '7 min read',
+    description:
+      "On Thursday, July 30, 2026, twenty-one days after the GPT-5.6 family launched on July 9, OpenAI cut GPT-5.6 Luna 80 percent (from $1 to $0.20 per million input tokens and from $6 to $1.20 per million output), cut GPT-5.6 Terra 20 percent (to $2 and $12), and left GPT-5.6 Sol untouched at $5 and $30. The cut is the news. The cause is the story: OpenAI pointed Sol at its own production inference stack through Codex, and Sol rewrote the GPU kernels in Triton and Gluon and redesigned the speculative-decoding draft model that runs in front of it, cutting end-to-end serving cost 20 percent and improving token-generation efficiency 15 percent, correctness gated by OpenAI's open-source FpSan floating-point sanitizer. Two days after 1,178 employees at the same five labs signed the pacing letter asking Washington to fund the tools for a verifiable slowdown if recursive self-improvement runs ahead of oversight, and OpenAI endorsed it at the corporate level within six hours, the same lab used its flagship model to rewrite its own production serving code, published the mechanism, and passed the savings to customers. Inside the numbers table (cut date, per-tier input and output moves, serving cost delta, token efficiency delta, Codex plus Triton plus Gluon toolchain, FpSan correctness gate), where the cut came from and why the target being the inference stack itself is the interesting fact (Sol's tokens per dollar are now a function of Sol's ability to make itself faster to run and every follow-on Sol becomes an inference-cost update on the same day), the pacing-letter live-case read (the narrow, inference-time, fixed-architecture, correctness-gated version of the loop the letter is about, landing inside the endorsement window), what the CAISI text due today either does or does not add on post-deployment inference-stack disclosure, what the cut does to the inference floor (Luna undercuts DeepSeek V3.2 on input and matches or beats Gemini 3.6 Flash on both columns, and the floor is now set by a US closed-API incumbent whose serving cost was reduced by model-driven kernel work rather than by an open-weights lab accepting thin margin), why Terra got 20 percent and Sol kept its price (the mid-tier squeezes Sonnet 5, the flagship rent pays for the rewrites), and the compounding-serving-cost moat that only three labs in the world can run (OpenAI, Anthropic, Google, the ones with both a frontier coding model and a production inference stack under one roof). Three signposts: whether Anthropic or Google publishes a comparable inference-stack rewrite from its own flagship inside 30 days, whether the CAISI text this weekend adds a post-deployment inference-modification disclosure, and whether Luna sits at $0.20 or moves again before end of Q3.",
+  },
+  {
     slug: 'anthropic-audit-claude-breached-three-orgs-since-april',
     title:
       'Two of Two Labs That Audited Found Agent Breaches. Anthropic Says Claude Hit Three Orgs Since April.',
