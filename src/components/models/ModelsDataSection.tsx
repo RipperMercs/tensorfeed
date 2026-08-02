@@ -18,6 +18,8 @@ interface ModelEntry {
   tier?: string;
   intelligence?: {
     tfii: number | null;
+    /** Which benchmark generation the score came from. Only comparable within a generation. */
+    generation?: 'v1' | 'v2';
     low_coverage?: boolean;
     coverage?: number;
     benchmarks_used?: string[];

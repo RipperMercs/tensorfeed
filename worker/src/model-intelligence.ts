@@ -22,7 +22,7 @@ import { BENCHMARK_REGISTRY, type BenchmarkMeta } from './benchmark-registry';
 import { safePut } from './kill-switch';
 import type { Env } from './types';
 
-export const METHODOLOGY_VERSION = '1.0';
+export const METHODOLOGY_VERSION = '1.1';
 
 // Coverage floor: a model scored on fewer than this fraction of the general
 // weighting's benchmarks is flagged low_coverage and excluded from the ranking.
@@ -32,12 +32,68 @@ const COVERAGE_FLOOR = 0.6;
 
 export const TASKS: RoutingTask[] = ['code', 'reasoning', 'creative', 'general'];
 
+/**
+ * Benchmark generations (methodology 1.1).
+ *
+ * v1 is the 2024 era set nearly every model in the catalog was scored on.
+ * v2 is the set 2026 frontier vendors actually publish. They do not measure
+ * the same thing at the same difficulty: Frontier-Bench tops out near 43
+ * where MMLU-Pro sits in the 80s, so a v2 composite and a v1 composite are
+ * not on one scale and must never be subtracted from each other.
+ *
+ * Equating the two would need a decent overlap of models carrying both.
+ * The catalog has two (Claude Fable 5 and Claude Opus 4.8), which is far
+ * too thin to calibrate on, so we do not try. A model is scored on the
+ * generation it actually covers and ranked only against models on that same
+ * generation. This is the rule the harness board applies to Terminal-Bench
+ * 2.0 against 2.1, for the same reason.
+ *
+ * Before 1.1 the weights were v1 only, so every 2026 flagship fell under the
+ * coverage floor and published no score at all.
+ */
+export type BenchmarkGeneration = 'v1' | 'v2';
+
 export const TASK_BENCHMARK_WEIGHTS: Record<RoutingTask, Record<string, number>> = {
   code: { human_eval: 0.4, swe_bench: 0.4, mmlu_pro: 0.2 },
   reasoning: { gpqa_diamond: 0.4, math: 0.4, mmlu_pro: 0.2 },
   creative: { mmlu_pro: 0.5, human_eval: 0.25, math: 0.25 },
   general: { mmlu_pro: 0.25, human_eval: 0.25, gpqa_diamond: 0.15, math: 0.15, swe_bench: 0.2 },
 };
+
+/**
+ * v2 weights. frontier_code is agentic terminal coding (Frontier-Bench),
+ * osworld_2 is computer use, browsecomp is browsing and retrieval, and
+ * hle_tools is hard broad reasoning with tool access.
+ */
+export const TASK_BENCHMARK_WEIGHTS_V2: Record<RoutingTask, Record<string, number>> = {
+  code: { frontier_code: 0.6, osworld_2: 0.2, hle_tools: 0.2 },
+  reasoning: { hle_tools: 0.5, frontier_code: 0.25, browsecomp: 0.25 },
+  creative: { hle_tools: 0.4, browsecomp: 0.4, osworld_2: 0.2 },
+  general: { frontier_code: 0.3, hle_tools: 0.3, osworld_2: 0.2, browsecomp: 0.2 },
+};
+
+/** Weight table for a generation. Defaults to v1 so existing callers are unaffected. */
+export function weightsFor(generation: BenchmarkGeneration = 'v1'): Record<RoutingTask, Record<string, number>> {
+  return generation === 'v2' ? TASK_BENCHMARK_WEIGHTS_V2 : TASK_BENCHMARK_WEIGHTS;
+}
+
+/** Fraction of a generation's general-weighting benchmarks the model actually carries. */
+export function coverageFor(generation: BenchmarkGeneration, scores: Record<string, number>): number {
+  const keys = Object.keys(weightsFor(generation).general);
+  if (keys.length === 0) return 0;
+  const present = keys.filter(k => typeof scores[k] === 'number' && scores[k] > 0);
+  return present.length / keys.length;
+}
+
+/**
+ * Pick the generation a model is scored on: whichever it covers better, with
+ * ties going to v2 as the current set. A model under the floor on both is
+ * still assigned its better generation so the trust block can explain why it
+ * is unscored, but low_coverage stays true and no number is published.
+ */
+export function pickGeneration(scores: Record<string, number>): BenchmarkGeneration {
+  return coverageFor('v2', scores) > coverageFor('v1', scores) ? 'v2' : 'v1';
+}
 
 // Maps the underscored benchmark score keys to the hyphenated ids used in
 // BENCHMARK_REGISTRY, so contamination and saturation state can be joined to
@@ -48,6 +104,13 @@ export const SCORE_KEY_TO_REGISTRY_ID: Record<string, string> = {
   mmlu_pro: 'mmlu-pro',
   gpqa_diamond: 'gpqa-diamond',
   math: 'math',
+  // v2. osworld_2 and hle_tools are the current variants of registry entries
+  // we already carry, both active and low contamination, so they take the
+  // neutral 1.0 multiplier. browsecomp and frontier_code have no registry
+  // entry yet and fall through to the same neutral 1.0, which is the right
+  // default for a new benchmark that is neither saturated nor contaminated.
+  osworld_2: 'osworld',
+  hle_tools: 'hle',
 };
 
 export const CONTAMINATION_MULTIPLIER: Record<BenchmarkMeta['contaminationRisk'], number> = {
@@ -66,8 +129,12 @@ export const STATUS_MULTIPLIER: Record<BenchmarkMeta['status'], number> = {
  * Base quality for a task: weighted, renormalized average of the task's
  * benchmark scores (each 0..1). Mirrors routing.ts computeQualityForTask.
  */
-export function taskQuality(task: RoutingTask, scores: Record<string, number>): number {
-  const weights = TASK_BENCHMARK_WEIGHTS[task];
+export function taskQuality(
+  task: RoutingTask,
+  scores: Record<string, number>,
+  generation: BenchmarkGeneration = 'v1',
+): number {
+  const weights = weightsFor(generation)[task];
   let total = 0;
   let applied = 0;
   for (const [bench, w] of Object.entries(weights)) {
@@ -89,8 +156,9 @@ export function trustForTask(
   task: RoutingTask,
   scores: Record<string, number>,
   registryById: Map<string, BenchmarkMeta>,
+  generation: BenchmarkGeneration = 'v1',
 ): { multiplier: number; worstContamination: BenchmarkMeta['contaminationRisk'] | null; flagged: string[] } {
-  const weights = TASK_BENCHMARK_WEIGHTS[task];
+  const weights = weightsFor(generation)[task];
   let total = 0;
   let applied = 0;
   let worst: BenchmarkMeta['contaminationRisk'] | null = null;
@@ -119,6 +187,11 @@ export function trustForTask(
 
 export interface ModelIntelligenceCore {
   tfii: number;
+  /**
+   * Which benchmark generation this score was computed on. Scores are only
+   * comparable within a generation; never subtract a v1 tfii from a v2 one.
+   */
+  generation: BenchmarkGeneration;
   subscores: { code: number; reasoning: number; creative: number; general: number };
   trust: {
     contamination: 'low' | 'medium' | 'high' | 'unknown';
@@ -169,18 +242,20 @@ export function computeModelIntelligence(
   scores: Record<string, number>,
   registryById: Map<string, BenchmarkMeta>,
 ): ModelIntelligenceCore {
+  const generation = pickGeneration(scores);
   const subscores = { code: 0, reasoning: 0, creative: 0, general: 0 };
   for (const t of TASKS) {
-    const q = taskQuality(t, scores);
-    const trust = trustForTask(t, scores, registryById);
+    const q = taskQuality(t, scores, generation);
+    const trust = trustForTask(t, scores, registryById, generation);
     subscores[t as keyof typeof subscores] = toScore(q * trust.multiplier);
   }
-  const generalTrust = trustForTask('general', scores, registryById);
-  const generalKeys = Object.keys(TASK_BENCHMARK_WEIGHTS.general);
+  const generalTrust = trustForTask('general', scores, registryById, generation);
+  const generalKeys = Object.keys(weightsFor(generation).general);
   const present = generalKeys.filter(k => typeof scores[k] === 'number' && scores[k] > 0);
   const coverage = generalKeys.length === 0 ? 0 : present.length / generalKeys.length;
   return {
     tfii: subscores.general,
+    generation,
     subscores,
     trust: {
       contamination: generalTrust.worstContamination ?? 'unknown',
@@ -203,11 +278,17 @@ export function buildIntelligenceSnapshot(data: BenchmarksData, asOf: string): I
     as_of: asOf,
     ...computeModelIntelligence(row.scores, registryById),
   }));
-  // Rank adequately-covered models by tfii desc; low-coverage stay rank 0.
-  const ranked = models.filter(m => !m.trust.low_coverage).sort((a, b) => b.tfii - a.tfii);
-  ranked.forEach((m, i) => {
-    m.rank = i + 1;
-  });
+  // Rank adequately-covered models by tfii desc, WITHIN their generation.
+  // A v1 composite and a v2 composite are different measurements, so a single
+  // merged ordering would be fiction. Low-coverage models stay rank 0.
+  for (const gen of ['v1', 'v2'] as BenchmarkGeneration[]) {
+    const ranked = models
+      .filter(m => !m.trust.low_coverage && m.generation === gen)
+      .sort((a, b) => b.tfii - a.tfii);
+    ranked.forEach((m, i) => {
+      m.rank = i + 1;
+    });
+  }
   return { as_of: asOf, methodology_version: METHODOLOGY_VERSION, models };
 }
 
@@ -238,6 +319,7 @@ export function enrichModelsWithIntelligence<T extends PricingLike>(pricing: T, 
           ...model,
           intelligence: {
             tfii: mi.trust.low_coverage ? null : mi.tfii,
+            generation: mi.generation,
             low_coverage: mi.trust.low_coverage,
             coverage: mi.trust.coverage,
             benchmarks_used: mi.trust.benchmarks_used,

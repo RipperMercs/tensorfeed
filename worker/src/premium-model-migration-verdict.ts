@@ -43,6 +43,12 @@ export interface MigrationModelRef {
   provider: string | null;
   cost_blended_per_1m: number | null;
   capability_tfii: number | null;
+  /**
+   * Which TFII benchmark generation the score above came from. A v1 and a v2
+   * score are different measurements, so the two are only subtractable when
+   * this matches on both sides of the migration.
+   */
+  capability_generation: 'v1' | 'v2' | null;
 }
 
 export interface MigrationVerdictResult {
@@ -86,17 +92,23 @@ function buildPriceMap(pricing: PricingDataLite): Map<string, PriceInfo> {
   return m;
 }
 
-function buildCapMap(intelligence: IntelligenceSnapshot | null): Map<string, { tfii: number; name: string; provider: string }> {
-  const m = new Map<string, { tfii: number; name: string; provider: string }>();
+function buildCapMap(
+  intelligence: IntelligenceSnapshot | null,
+): Map<string, { tfii: number; name: string; provider: string; generation: 'v1' | 'v2' }> {
+  const m = new Map<string, { tfii: number; name: string; provider: string; generation: 'v1' | 'v2' }>();
   for (const im of intelligence?.models ?? []) {
-    const info = { tfii: im.tfii, name: im.name, provider: im.provider };
+    const info = { tfii: im.tfii, name: im.name, provider: im.provider, generation: im.generation };
     m.set(normalize(im.model_id), info);
     m.set(normalize(im.name), info);
   }
   return m;
 }
 
-function refFor(id: string, priceMap: Map<string, PriceInfo>, capMap: Map<string, { tfii: number; name: string; provider: string }>): MigrationModelRef {
+function refFor(
+  id: string,
+  priceMap: Map<string, PriceInfo>,
+  capMap: Map<string, { tfii: number; name: string; provider: string; generation: 'v1' | 'v2' }>,
+): MigrationModelRef {
   const key = normalize(id);
   const price = priceMap.get(key);
   const cap = capMap.get(key);
@@ -106,6 +118,7 @@ function refFor(id: string, priceMap: Map<string, PriceInfo>, capMap: Map<string
     provider: cap?.provider ?? price?.provider ?? null,
     cost_blended_per_1m: price ? round2(price.blended) : null,
     capability_tfii: cap ? cap.tfii : null,
+    capability_generation: cap ? cap.generation : null,
   };
 }
 
@@ -179,8 +192,16 @@ export function buildMigrationVerdict(
       costDelta != null && currentRef.cost_blended_per_1m != null && currentRef.cost_blended_per_1m > 0
         ? Math.round((costDelta / currentRef.cost_blended_per_1m) * 1000) / 10
         : null;
+    // Only subtract TFII when both sides were scored on the same benchmark
+    // generation. A v1 score against a v2 score is two different measurements,
+    // and differencing them would report a capability drop on what is actually
+    // an upgrade. Better to return no delta than a confident wrong one.
+    const sameGeneration =
+      currentRef.capability_generation != null &&
+      successorRef.capability_generation != null &&
+      currentRef.capability_generation === successorRef.capability_generation;
     const capDelta =
-      successorRef.capability_tfii != null && currentRef.capability_tfii != null
+      successorRef.capability_tfii != null && currentRef.capability_tfii != null && sameGeneration
         ? successorRef.capability_tfii - currentRef.capability_tfii
         : null;
     deltas = { cost_blended_per_1m: costDelta, cost_pct: costPct, capability_tfii: capDelta };
@@ -216,9 +237,16 @@ export function buildMigrationVerdict(
           : deltas.cost_blended_per_1m < 0
             ? `${Math.abs(deltas.cost_blended_per_1m)} per 1M cheaper`
             : `${deltas.cost_blended_per_1m} per 1M pricier`;
+    const crossGeneration =
+      deltas.capability_tfii == null &&
+      currentRef.capability_tfii != null &&
+      successorRef?.capability_tfii != null &&
+      currentRef.capability_generation !== successorRef.capability_generation;
     const capPhrase =
       deltas.capability_tfii == null
-        ? 'capability delta unavailable'
+        ? crossGeneration
+          ? 'capability delta not comparable (the two models are scored on different benchmark generations)'
+          : 'capability delta unavailable'
         : deltas.capability_tfii >= 0
           ? `TFII up ${deltas.capability_tfii}`
           : `TFII down ${Math.abs(deltas.capability_tfii)}`;

@@ -17,7 +17,13 @@ const PRICING: PricingDataLite = {
   ],
 };
 
-function mi(model_id: string, name: string, provider: string, tfii: number): ModelIntelligence {
+function mi(
+  model_id: string,
+  name: string,
+  provider: string,
+  tfii: number,
+  generation: 'v1' | 'v2' = 'v1',
+): ModelIntelligence {
   return {
     model_id,
     name,
@@ -25,7 +31,7 @@ function mi(model_id: string, name: string, provider: string, tfii: number): Mod
     rank: 1,
     as_of: '2026-06-06',
     tfii,
-    subscores: { code: tfii, reasoning: tfii, creative: tfii, general: tfii },
+    generation, subscores: { code: tfii, reasoning: tfii, creative: tfii, general: tfii },
     trust: { contamination: 'low', benchmarks_used: ['mmlu_pro'], coverage: 1, low_coverage: false, flagged: [] },
     methodology_version: 'tfii-1',
   };
@@ -91,6 +97,40 @@ describe('/api/premium/model-migration-verdict', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.deadline?.sunset_before_deadline).toBe(true); // sunset 30d < deadline ~56d
+  });
+
+  // The successor of a deprecated model is usually the newer generation, which
+  // is exactly the case where the two TFII scores are not on one scale. A naive
+  // subtraction here reports a capability DROP on what is really an upgrade,
+  // inside a paid verdict.
+  it('refuses to difference TFII across benchmark generations', () => {
+    const crossGen: IntelligenceSnapshot = {
+      as_of: '2026-06-06',
+      methodology_version: 'tfii-1',
+      models: [
+        mi('claude-3-opus', 'Claude 3 Opus', 'Anthropic', 74, 'v1'),
+        mi('claude-opus-4-8', 'Claude Opus 4.8', 'Anthropic', 43, 'v2'),
+      ],
+    };
+    const r = buildMigrationVerdict('claude-3-opus', null, SRC({ intelligence: crossGen }), NOW);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.model.capability_generation).toBe('v1');
+    expect(r.successor?.capability_generation).toBe('v2');
+    // Both scores are present, so this is not a missing-data null.
+    expect(r.model.capability_tfii).toBe(74);
+    expect(r.successor?.capability_tfii).toBe(43);
+    expect(r.deltas?.capability_tfii).toBeNull();
+    expect(r.recommendation).toContain('not comparable');
+    expect(r.recommendation).not.toContain('TFII down');
+  });
+
+  it('still differences TFII when both sides share a generation', () => {
+    const r = buildMigrationVerdict('claude-3-opus', null, SRC(), NOW);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.deltas?.capability_tfii).toBe(18); // 92 - 74, both v1
+    expect(r.recommendation).toContain('TFII up 18');
   });
 
   it('emits no em dashes or double hyphens in any output string', () => {

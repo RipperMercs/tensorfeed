@@ -52,7 +52,7 @@ describe('buildIntelligenceHistory', () => {
           name: 'GPT-5.5',
           provider: 'OpenAI',
           tfii,
-          subscores: { code: 1, reasoning: 1, creative: 1, general: tfii },
+          generation: 'v1', subscores: { code: 1, reasoning: 1, creative: 1, general: tfii },
           trust: { contamination: 'low', benchmarks_used: [], coverage: 1, low_coverage: false, flagged: [] },
           rank: 1,
           methodology_version: '1.0',

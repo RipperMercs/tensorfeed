@@ -80,7 +80,7 @@ describe('enrichModelsWithIntelligence', () => {
       as_of: '2026-06-01T07:00:00.000Z',
       methodology_version: METHODOLOGY_VERSION,
       models: [
-        { model_id: 'gpt-5.5', name: 'GPT-5.5', provider: 'OpenAI', tfii: 90.1, subscores: { code: 1, reasoning: 1, creative: 1, general: 90.1 }, trust: { contamination: 'low', benchmarks_used: [], coverage: 1, low_coverage: false, flagged: [] }, rank: 1, methodology_version: METHODOLOGY_VERSION, as_of: '2026-06-01T07:00:00.000Z' },
+        { model_id: 'gpt-5.5', name: 'GPT-5.5', provider: 'OpenAI', tfii: 90.1, generation: 'v1', subscores: { code: 1, reasoning: 1, creative: 1, general: 90.1 }, trust: { contamination: 'low', benchmarks_used: [], coverage: 1, low_coverage: false, flagged: [] }, rank: 1, methodology_version: METHODOLOGY_VERSION, as_of: '2026-06-01T07:00:00.000Z' },
       ],
     };
     const pricing = { providers: [{ id: 'openai', name: 'OpenAI', models: [{ id: 'gpt-5.5', name: 'GPT-5.5', inputPrice: 1, outputPrice: 2, contextWindow: 1000 }] }] };
@@ -95,13 +95,13 @@ describe('enrichModelsWithIntelligence', () => {
       models: [
         {
           model_id: 'claude-opus-5', name: 'Claude Opus 5', provider: 'Anthropic', tfii: 0,
-          subscores: { code: 0, reasoning: 0, creative: 0, general: 0 },
+          generation: 'v1', subscores: { code: 0, reasoning: 0, creative: 0, general: 0 },
           trust: { contamination: 'unknown', benchmarks_used: [], coverage: 0, low_coverage: true, flagged: [] },
           rank: 0, methodology_version: METHODOLOGY_VERSION, as_of: '2026-08-01T07:00:00.000Z',
         },
         {
           model_id: 'kimi-k3', name: 'Kimi K3', provider: 'Moonshot AI', tfii: 93.5,
-          subscores: { code: 0, reasoning: 93.5, creative: 0, general: 93.5 },
+          generation: 'v1', subscores: { code: 0, reasoning: 93.5, creative: 0, general: 93.5 },
           trust: { contamination: 'low', benchmarks_used: ['gpqa_diamond'], coverage: 0.2, low_coverage: true, flagged: [] },
           rank: 0, methodology_version: METHODOLOGY_VERSION, as_of: '2026-08-01T07:00:00.000Z',
         },
@@ -131,6 +131,55 @@ describe('enrichModelsWithIntelligence', () => {
     const pricing = { providers: [{ id: 'p', name: 'P', models: [{ id: 'm', name: 'No Match', inputPrice: 0, outputPrice: 0, contextWindow: 1 }] }] };
     const out = enrichModelsWithIntelligence(pricing, snap) as typeof pricing & { providers: Array<{ models: Array<{ intelligence?: unknown }> }> };
     expect(out.providers[0].models[0].intelligence).toBeUndefined();
+  });
+});
+
+// Claude Opus 5 carries only the 2026 set. Before methodology 1.1 that meant
+// no score at all, because the weights only knew the 2024 benchmarks.
+const V2_SCORES = { osworld_2: 70.6, browsecomp: 90.8, frontier_code: 53.4, hle_tools: 64.7 };
+
+describe('benchmark generations (methodology 1.1)', () => {
+  it('scores a model that carries only the 2026 benchmark set', () => {
+    const core = computeModelIntelligence(V2_SCORES, registryMap());
+    expect(core.generation).toBe('v2');
+    expect(core.trust.coverage).toBe(1);
+    expect(core.trust.low_coverage).toBe(false);
+    expect(core.tfii).toBeGreaterThan(0);
+  });
+
+  it('keeps the 2024 set on v1', () => {
+    const core = computeModelIntelligence(FRONTIER_SCORES, registryMap());
+    expect(core.generation).toBe('v1');
+    expect(core.trust.low_coverage).toBe(false);
+  });
+
+  it('picks the generation the model actually covers, not the newest by default', () => {
+    // One legacy benchmark plus the full 2026 set: v2 wins on coverage.
+    expect(computeModelIntelligence({ swe_bench: 95.0, ...V2_SCORES }, registryMap()).generation).toBe('v2');
+    // A single legacy benchmark and nothing modern stays v1, still unscored.
+    const thin = computeModelIntelligence({ gpqa_diamond: 93.5 }, registryMap());
+    expect(thin.generation).toBe('v1');
+    expect(thin.trust.low_coverage).toBe(true);
+  });
+
+  it('ranks within a generation rather than across them', () => {
+    const data = {
+      lastUpdated: '2026-08-01',
+      benchmarks: [],
+      models: [
+        { model: 'Legacy Strong', provider: 'A', scores: FRONTIER_SCORES },
+        { model: 'Legacy Weak', provider: 'B', scores: { mmlu_pro: 70, human_eval: 60, gpqa_diamond: 40, math: 50, swe_bench: 30 } },
+        { model: 'Modern', provider: 'C', scores: V2_SCORES },
+      ],
+    };
+    const snap = buildIntelligenceSnapshot(data, '2026-08-01T07:00:00.000Z');
+    const byName = (n: string) => snap.models.find(m => m.name === n)!;
+    expect(byName('Legacy Strong').rank).toBe(1);
+    expect(byName('Legacy Weak').rank).toBe(2);
+    // The modern model leads its own generation. It is not slotted into the
+    // legacy ordering, because the two composites are not the same measurement.
+    expect(byName('Modern').generation).toBe('v2');
+    expect(byName('Modern').rank).toBe(1);
   });
 });
 

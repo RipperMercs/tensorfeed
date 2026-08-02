@@ -10,7 +10,7 @@ function mi(model_id: string, name: string, provider: string, general: number, o
     rank: 1,
     as_of: '2026-06-06',
     tfii: general,
-    subscores: { code: general, reasoning: general, creative: general, general, ...over },
+    generation: 'v1', subscores: { code: general, reasoning: general, creative: general, general, ...over },
     trust: { contamination: 'low', benchmarks_used: ['mmlu_pro'], coverage: 1, low_coverage: false, flagged: [] },
     methodology_version: 'tfii-1',
   };

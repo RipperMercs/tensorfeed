@@ -2432,10 +2432,25 @@ export default {
           503,
         );
       }
+      // Rank is WITHIN a benchmark generation, so the list is grouped by
+      // generation (v2, the current set, first) and then by rank. A v1 score
+      // and a v2 score are different measurements; see the note below.
+      const genOrder = (g: string) => (g === 'v2' ? 0 : 1);
       const models = snap.models
         .filter(m => !m.trust.low_coverage)
-        .sort((a, b) => a.rank - b.rank)
-        .map(m => ({ model_id: m.model_id, name: m.name, provider: m.provider, tfii: m.tfii, rank: m.rank }));
+        .sort((a, b) => genOrder(a.generation) - genOrder(b.generation) || a.rank - b.rank)
+        .map(m => ({
+          model_id: m.model_id,
+          name: m.name,
+          provider: m.provider,
+          tfii: m.tfii,
+          rank: m.rank,
+          generation: m.generation,
+        }));
+      const genCounts = models.reduce<Record<string, number>>((acc, m) => {
+        acc[m.generation] = (acc[m.generation] ?? 0) + 1;
+        return acc;
+      }, {});
       return jsonResponse(
         {
           ok: true,
@@ -2443,6 +2458,9 @@ export default {
           methodology_version: snap.methodology_version,
           methodology_url: 'https://tensorfeed.ai/intelligence',
           count: models.length,
+          generations: genCounts,
+          generation_note:
+            'rank is within a benchmark generation, not across the whole list. v1 is the 2024 era set (MMLU-Pro, HumanEval, GPQA-Diamond, MATH, SWE-bench); v2 is the 2026 set frontier vendors now publish (Frontier-Bench, OSWorld 2, BrowseComp, HLE with tools). The two are not on one scale, so comparing a v1 tfii against a v2 tfii is not meaningful. Models below the coverage floor are omitted entirely rather than scored.',
           models,
         },
         200,
@@ -4885,7 +4903,7 @@ export default {
           status: '/api/agents/status',
           pricing: '/api/agents/pricing',
           models: '/api/models',
-          intelligence: '/api/intelligence (free; TFII Model Intelligence Index headline ranking, a 0 to 100 composite per model from public benchmarks (MMLU-Pro, HumanEval, GPQA-Diamond, MATH, SWE-bench) discounted for contamination and saturation. Free per-model field on /api/models; signed premium breakdown at /api/premium/model-intelligence.)',
+          intelligence: '/api/intelligence (free; TFII Model Intelligence Index headline ranking, a 0 to 100 composite per model from public benchmarks, discounted for contamination and saturation. Scored on two benchmark generations: v1 is the 2024 era set (MMLU-Pro, HumanEval, GPQA-Diamond, MATH, SWE-bench) and v2 is the 2026 set (Frontier-Bench, OSWorld 2, BrowseComp, HLE with tools). Rank is within a generation because the two are not on one scale. Free per-model field on /api/models; signed premium breakdown at /api/premium/model-intelligence.)',
           benchmarks: '/api/benchmarks',
           harnesses: '/api/harnesses',
           attention: '/api/attention',
