@@ -56,7 +56,13 @@ import {
   type BenchmarkMeta,
 } from './benchmark-registry';
 import { MODEL_DEPRECATIONS, type ModelDeprecation } from './model-deprecations';
-import { TASKS, taskQuality, trustForTask } from './model-intelligence';
+import {
+  TASKS,
+  taskQuality,
+  trustForTask,
+  pickGeneration,
+  type BenchmarkGeneration,
+} from './model-intelligence';
 
 // ─── Local shapes for the two KV blobs and the status list ─────────
 // Declared locally to keep this module free of cross-imports into
@@ -152,7 +158,19 @@ export interface VerdictCandidate {
   rank: number;
   model: { id: string; name: string; provider: string; openSource: boolean; contextWindow: number };
   pricing: { input: number; output: number; blended: number; currency: 'USD'; unit: 'per 1M tokens' };
-  quality: { task_score: number; trust_discounted: number; contamination_note: string | null };
+  quality: {
+    task_score: number;
+    trust_discounted: number;
+    /** Benchmark generation the two scores above were computed on. */
+    generation: BenchmarkGeneration;
+    /**
+     * trust_discounted as a share of the best candidate on the same
+     * generation. This is what the capability floor and the composite use,
+     * because raw scores from different generations are not comparable.
+     */
+    generation_relative: number;
+    contamination_note: string | null;
+  };
   usage: { corroborated: boolean; rank: number | null; share_pct: number | null; trend: UsageRanking['trend'] | null };
   latency: { measured_p95_ms: number | null; source: LatencySource };
   operational: { ok: boolean | null; status: ServiceStatus['status'] | 'failover_now'; source: OperationalSource };
@@ -231,6 +249,16 @@ interface ScratchCandidate {
   blended: number;
   baseQuality: number;
   discountedQuality: number;
+  /** Which benchmark generation the two numbers above were computed on. */
+  generation: BenchmarkGeneration;
+  /**
+   * discountedQuality expressed against the best candidate scored on the SAME
+   * generation, so candidates measured on different benchmark sets can be
+   * compared at all. Assigned after the gates, once the surviving cohort per
+   * generation is known. This, not the raw value, drives the capability floor
+   * and the composite.
+   */
+  comparableQuality: number;
   contaminationNote: string | null;
   usage: VerdictCandidate['usage'];
   measuredP95: number | null;
@@ -344,10 +372,15 @@ export function buildRouteVerdict(
       if (modelNeedle && normName(model.id) !== modelNeedle && normName(model.name) !== modelNeedle) continue;
       const bench = benchByName.get(normName(model.name));
       if (!bench) continue;
-      const baseQuality = taskQuality(task, bench.scores);
+      // Score on whichever benchmark generation this model actually carries.
+      // Before this, a v2-only model (Claude Opus 5 and every flagship that
+      // follows it) scored 0 against the 2024 weights and was dropped from the
+      // candidate set entirely, so the router could never return it.
+      const generation = pickGeneration(bench.scores);
+      const baseQuality = taskQuality(task, bench.scores, generation);
       if (baseQuality === 0) continue;
 
-      const trust = trustForTask(task, bench.scores, registryById);
+      const trust = trustForTask(task, bench.scores, registryById, generation);
       const discountedQuality = baseQuality * trust.multiplier;
       const contaminationNote = trust.flagged.length > 0 ? trust.flagged.join('; ') : null;
 
@@ -388,6 +421,8 @@ export function buildRouteVerdict(
         blended: (model.inputPrice + model.outputPrice) / 2,
         baseQuality,
         discountedQuality,
+        generation,
+        comparableQuality: 0, // assigned after the gates, once the cohort is known
         contaminationNote,
         usage,
         measuredP95,
@@ -444,16 +479,39 @@ export function buildRouteVerdict(
     }
   }
 
+  // Express each candidate's quality against the best candidate measured the SAME
+  // way, so the capability floor and the composite can compare models scored on
+  // different benchmark generations. A raw v2 quality is structurally lower than
+  // a raw v1 one (Frontier-Bench tops out near 43 where HumanEval sits in the
+  // 90s), so comparing the raw numbers would rank the newest frontier models
+  // out as if they were weak. The claim this makes is only "how close is this
+  // model to the best model measured the same way", never that a v1 and a v2
+  // score are the same thing.
+  const maxByGeneration = new Map<BenchmarkGeneration, number>();
+  for (const c of filtered) {
+    const prev = maxByGeneration.get(c.generation) ?? 0;
+    if (c.discountedQuality > prev) maxByGeneration.set(c.generation, c.discountedQuality);
+  }
+  for (const c of filtered) {
+    const max = maxByGeneration.get(c.generation) ?? 0;
+    c.comparableQuality = max > 0 ? c.discountedQuality / max : 0;
+  }
+  if (maxByGeneration.size > 1) {
+    notes.push(
+      'Candidates span more than one benchmark generation, so capability is compared as a share of the best model measured on the same generation rather than as raw scores. Per-candidate quality.generation and quality.generation_relative carry the basis.',
+    );
+  }
+
   // Capability floor (capability-first): keep only candidates within
-  // CAPABILITY_FLOOR_RATIO of the best trust-discounted quality. Cost,
+  // CAPABILITY_FLOOR_RATIO of the best generation-relative quality. Cost,
   // latency, and operational state then break ties AMONG these strong
   // models, so a materially weaker model never wins on price alone.
   let belowFloorCount = 0;
   let eligible = filtered;
   if (filtered.length > 0) {
-    const maxQ = Math.max(...filtered.map((c) => c.discountedQuality));
+    const maxQ = Math.max(...filtered.map((c) => c.comparableQuality));
     const floor = maxQ * CAPABILITY_FLOOR_RATIO;
-    const passed = filtered.filter((c) => c.discountedQuality >= floor);
+    const passed = filtered.filter((c) => c.comparableQuality >= floor);
     belowFloorCount = filtered.length - passed.length;
     eligible = passed;
   }
@@ -469,6 +527,15 @@ export function buildRouteVerdict(
   const maxLat = measured.length ? Math.max(...measured) : 0;
   const latRange = maxLat - minLat;
 
+  // The capability floor is scale invariant, so using the generation-relative
+  // value there is identical to the raw one when every candidate shares a
+  // generation. The composite is NOT scale invariant: normalising would widen
+  // the quality term and quietly reweight quality against cost and latency for
+  // the all-v1 traffic that is nearly all of production today. So the composite
+  // only switches to the relative value when the set actually spans
+  // generations, which is the case the raw value cannot express.
+  const spansGenerations = maxByGeneration.size > 1;
+
   const scored = eligible.map((c) => {
     const cost = priceRange === 0 ? 1.0 : 1 - (c.blended - minPrice) / priceRange;
     const latency =
@@ -476,7 +543,7 @@ export function buildRouteVerdict(
     const opKey = c.operationalStatus === 'failover_now' ? 'failover_now' : c.operationalStatus;
     const operational = OPERATIONAL_SCORE[opKey] ?? 0.7;
     let composite =
-      COMPOSITE_WEIGHTS.quality * c.discountedQuality +
+      COMPOSITE_WEIGHTS.quality * (spansGenerations ? c.comparableQuality : c.discountedQuality) +
       COMPOSITE_WEIGHTS.cost * cost +
       COMPOSITE_WEIGHTS.latency * latency +
       COMPOSITE_WEIGHTS.operational * operational;
@@ -489,7 +556,9 @@ export function buildRouteVerdict(
   function toVerdict(s: (typeof scored)[number], rank: number): VerdictCandidate {
     const c = s.c;
     const reasons: string[] = [];
-    reasons.push(`${task} quality ${round4(c.discountedQuality)} after trust discount`);
+    reasons.push(
+      `${task} quality ${round4(c.discountedQuality)} after trust discount on the ${c.generation} benchmark set (${round4(c.comparableQuality)} of the best model measured the same way)`,
+    );
     if (c.usage.corroborated) reasons.push(`corroborated by real usage (rank ${c.usage.rank}, ${c.usage.share_pct}% share, ${c.usage.trend})`);
     if (c.measuredP95 !== null) reasons.push(`measured p95 ${c.measuredP95} ms`);
     else reasons.push('latency not measured for this provider');
@@ -501,7 +570,13 @@ export function buildRouteVerdict(
       rank,
       model: { id: c.id, name: c.name, provider: c.provider, openSource: c.openSource, contextWindow: c.contextWindow },
       pricing: { input: c.inputPrice, output: c.outputPrice, blended: round4(c.blended), currency: 'USD', unit: 'per 1M tokens' },
-      quality: { task_score: round4(c.baseQuality), trust_discounted: round4(c.discountedQuality), contamination_note: c.contaminationNote },
+      quality: {
+        task_score: round4(c.baseQuality),
+        trust_discounted: round4(c.discountedQuality),
+        generation: c.generation,
+        generation_relative: round4(c.comparableQuality),
+        contamination_note: c.contaminationNote,
+      },
       usage: c.usage,
       latency: { measured_p95_ms: c.measuredP95, source: c.latencySource },
       operational: { ok: c.operationalOk, status: c.operationalStatus, source: c.operationalSource },

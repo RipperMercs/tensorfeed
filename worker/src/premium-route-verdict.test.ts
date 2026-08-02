@@ -484,3 +484,82 @@ describe('buildRouteVerdict', () => {
     expect(sonnet.operational.ok).toBe(true);
   });
 });
+
+
+// ─── Benchmark generations ─────────────────────────────────────────
+//
+// Claude Opus 5 and every flagship after it publish only the 2026 benchmark
+// set. Under the old v1-only weights their task quality was 0, so the
+// `baseQuality === 0` guard dropped them from the candidate set and the router
+// could never return them at all.
+describe('buildRouteVerdict across benchmark generations', () => {
+  function withOpus5(): RouteVerdictInputs {
+    const base = baseInputs();
+    const pricing = base.pricing!;
+    const benchmarks = base.benchmarks!;
+    return {
+      ...base,
+      pricing: {
+        ...pricing,
+        providers: [
+          {
+            id: 'anthropic',
+            name: 'anthropic',
+            models: [
+              ...pricing.providers[0].models,
+              { id: 'claude-opus-5', name: 'Claude Opus 5', inputPrice: 5, outputPrice: 25, contextWindow: 1000000, openSource: false },
+            ],
+          },
+          pricing.providers[1],
+        ],
+      },
+      benchmarks: {
+        ...benchmarks,
+        models: [
+          ...benchmarks.models,
+          // v2 only, the Opus 5 shape.
+          { model: 'Claude Opus 5', provider: 'anthropic', scores: { frontier_code: 53.4, osworld_2: 70.6, hle_tools: 64.7, browsecomp: 90.8 } },
+        ],
+      },
+    };
+  }
+
+  it('returns a v2-only model as a candidate at all', () => {
+    const r = buildRouteVerdict(withOpus5(), CODE, NOW);
+    const all = [r.verdict!, ...r.runners_up];
+    const opus5 = all.find((c) => c.model.id === 'claude-opus-5');
+    expect(opus5).toBeDefined();
+    expect(opus5!.quality.generation).toBe('v2');
+  });
+
+  it('does not let the capability floor drop a v2 model for having a lower raw score', () => {
+    const r = buildRouteVerdict(withOpus5(), CODE, NOW);
+    const all = [r.verdict!, ...r.runners_up];
+    const opus5 = all.find((c) => c.model.id === 'claude-opus-5')!;
+    const sonnet = all.find((c) => c.model.id === 'claude-sonnet-4-6')!;
+    // The raw scores are genuinely far apart, because they are not the same
+    // measurement. Compared raw, Opus 5 sits under the 0.9 capability floor and
+    // would have been eliminated as if it were a weak model.
+    expect(opus5.quality.trust_discounted).toBeLessThan(sonnet.quality.trust_discounted * 0.9);
+    // Compared against the best model measured the same way, it leads.
+    expect(opus5.quality.generation_relative).toBe(1);
+    expect(sonnet.quality.generation).toBe('v1');
+    expect(sonnet.quality.generation_relative).toBe(1);
+  });
+
+  it('discloses the mixed basis in the notes', () => {
+    const r = buildRouteVerdict(withOpus5(), CODE, NOW);
+    expect(r.notes.some((n) => n.includes('benchmark generation'))).toBe(true);
+  });
+
+  it('leaves a single-generation verdict byte for byte unchanged', () => {
+    // No v2 candidate in the set, so the composite keeps using the raw quality
+    // and nothing about today's production behaviour moves.
+    const before = buildRouteVerdict(baseInputs(), CODE, NOW);
+    expect(before.notes.some((n) => n.includes('benchmark generation'))).toBe(false);
+    // Same winner the suite has always asserted for this fixture.
+    expect(before.verdict!.model.id).toBe('deepseek-chat');
+    const all = [before.verdict!, ...before.runners_up];
+    for (const c of all) expect(c.quality.generation).toBe('v1');
+  });
+});
