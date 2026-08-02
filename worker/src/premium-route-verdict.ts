@@ -16,8 +16,9 @@
  * reasoning itself, and ships an AFTA-signed receipt over the verdict so
  * the routing decision is cryptographically attestable.
  *
- * Free sibling: /api/route-verdict (top verdict only, rate-limited,
- * unsigned) so an agent can evaluate the shape before paying.
+ * Free sibling: /api/preview/route-verdict (top verdict only, rate-limited,
+ * unsigned) so an agent can evaluate the shape before paying. There is no
+ * bare /api/route-verdict; that path 404s.
  * Premium: /api/premium/route-verdict (full verdict plus runners-up,
  * trust block, signed receipt). 1 credit. Strict-premium (param-required).
  *
