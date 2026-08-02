@@ -31,7 +31,17 @@ const HARNESS_NAME_ALIASES: Record<string, string> = {
 // TF benchmark ids the federation board can fill. The other TF column
 // (swe_lancer) is no longer published by the board, and the board's own
 // extra column (metr_hcast) is not part of TF's set.
-const FEDERATION_FED_BENCHMARKS = new Set(['swe_bench_verified', 'terminal_bench', 'aider_polyglot']);
+//
+// terminal_bench_2_1 is a separate column from terminal_bench on purpose.
+// 2.1 is the harder revision of the same suite, so the two are different
+// measurements and merging them would read as a regression that never
+// happened. The board publishes both; TF shows both.
+const FEDERATION_FED_BENCHMARKS = new Set([
+  'swe_bench_verified',
+  'terminal_bench',
+  'terminal_bench_2_1',
+  'aider_polyglot',
+]);
 
 function normName(s: string): string {
   return s.toLowerCase().trim().replace(/\s+/g, ' ');

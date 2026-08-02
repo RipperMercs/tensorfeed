@@ -111,4 +111,31 @@ describe('buildHarnessesView', () => {
     expect(amp!.model).toBe('Claude Sonnet 4.6');
     expect(amp!.scores.swe_bench_verified).toBe(70.8);
   });
+
+  // Terminal-Bench 2.1 is the harder revision of the same suite, so it rides
+  // its own column. Merging it into terminal_bench would read as a regression
+  // that never happened.
+  it('fills Terminal-Bench 2.1 as a separate column, leaving 2.0 untouched', () => {
+    const withTb21: HarnessesData = {
+      ...STATIC,
+      benchmarks: [
+        ...STATIC.benchmarks,
+        { id: 'terminal_bench_2_1', name: 'Terminal-Bench 2.1', description: '', maxScore: 100, unit: '%', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1' },
+      ],
+    };
+    const s = snap();
+    s.benchmarks.push({
+      id: 'terminal_bench_2_1',
+      results: [
+        { id: 'claude-code:opus-4.8', harness: 'Claude Code', model: 'Claude Opus 4.8 Thinking', score: 78.9, reported_at: '2026-07-11', source_url: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1' },
+      ],
+    });
+    const v = buildHarnessesView(s, withTb21);
+    const row = v.results.find((r) => r.harness === 'claude-code' && r.model === 'Claude Opus 4.8 Thinking');
+    expect(row).toBeDefined();
+    expect(row!.scores.terminal_bench_2_1).toBe(78.9);
+    // The 2.0 column is not published for this pair in the snapshot, so it
+    // must stay null rather than inheriting the 2.1 number.
+    expect(row!.scores.terminal_bench).toBeNull();
+  });
 });

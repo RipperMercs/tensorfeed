@@ -19,6 +19,14 @@
       "sourceUrl": "https://www.tbench.ai/"
     },
     {
+      "id": "terminal_bench_2_1",
+      "name": "Terminal-Bench 2.1",
+      "description": "The current revision of the Terminal-Bench shell-task suite, with repaired and rewritten tasks. Not comparable to the Terminal-Bench column: 2.1 is the harder revision, so the same harness and model pair scores lower on it.",
+      "maxScore": 100,
+      "unit": "% solved",
+      "sourceUrl": "https://www.tbench.ai/leaderboard/terminal-bench/2.1"
+    },
+    {
       "id": "aider_polyglot",
       "name": "Aider Polyglot",
       "description": "225 of the hardest Exercism coding exercises across C++, Go, Java, JavaScript, Python, and Rust. Measures whole-file edit-by-diff quality, not just code generation.",
@@ -155,6 +163,7 @@
         "swe_bench_verified": 74.5,
         "terminal_bench": 52.3,
         "aider_polyglot": 84.2,
+        "terminal_bench_2_1": null,
         "swe_lancer": 41.8
       }
     },
@@ -165,6 +174,7 @@
         "swe_bench_verified": 70.6,
         "terminal_bench": 47.1,
         "aider_polyglot": 78.4,
+        "terminal_bench_2_1": null,
         "swe_lancer": 36.2
       }
     },
@@ -175,6 +185,7 @@
         "swe_bench_verified": 68.4,
         "terminal_bench": 42,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -185,6 +196,7 @@
         "swe_bench_verified": 70.1,
         "terminal_bench": 41.5,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -195,6 +207,7 @@
         "swe_bench_verified": 72.8,
         "terminal_bench": 48.2,
         "aider_polyglot": 82.1,
+        "terminal_bench_2_1": null,
         "swe_lancer": 39.6
       }
     },
@@ -205,6 +218,7 @@
         "swe_bench_verified": 69.1,
         "terminal_bench": 40.4,
         "aider_polyglot": 76.9,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -215,6 +229,7 @@
         "swe_bench_verified": null,
         "terminal_bench": 31.2,
         "aider_polyglot": 84.2,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -225,6 +240,7 @@
         "swe_bench_verified": null,
         "terminal_bench": 28.5,
         "aider_polyglot": 81.8,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -235,6 +251,7 @@
         "swe_bench_verified": null,
         "terminal_bench": 19.7,
         "aider_polyglot": 73.4,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -245,6 +262,7 @@
         "swe_bench_verified": 65.8,
         "terminal_bench": 30.1,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": 28.4
       }
     },
@@ -255,6 +273,7 @@
         "swe_bench_verified": 64.2,
         "terminal_bench": 29.6,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -265,6 +284,7 @@
         "swe_bench_verified": 61.7,
         "terminal_bench": null,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": 32.5
       }
     },
@@ -275,6 +295,7 @@
         "swe_bench_verified": 63.4,
         "terminal_bench": null,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -285,6 +306,7 @@
         "swe_bench_verified": 64.1,
         "terminal_bench": 37.8,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -295,6 +317,7 @@
         "swe_bench_verified": 58.2,
         "terminal_bench": 30.4,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -305,6 +328,7 @@
         "swe_bench_verified": 70.8,
         "terminal_bench": null,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -315,6 +339,7 @@
         "swe_bench_verified": 52.4,
         "terminal_bench": null,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     },
@@ -325,6 +350,7 @@
         "swe_bench_verified": 57.3,
         "terminal_bench": null,
         "aider_polyglot": null,
+        "terminal_bench_2_1": null,
         "swe_lancer": null
       }
     }
