@@ -86,7 +86,7 @@ export default function AmazonAnthropicMark496bBacklogPage() {
         <p>
           That resolves the first signpost from our Wednesday piece cleanly. We asked whether Amazon
           would confirm the split the market drew on Tuesday night, where backlog plus acceleration
-          gets rewarded and everything else gets sold. It did. Alphabet fell 5, Meta fell 10,
+          gets rewarded and everything else gets sold. It did. Alphabet fell 5, Meta fell 8,
           Microsoft rose 8, Amazon rose 9, and the two winners are the two companies that walked in
           holding a half-trillion-dollar order book.
         </p>

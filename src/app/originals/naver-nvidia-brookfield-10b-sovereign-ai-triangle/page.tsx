@@ -286,7 +286,7 @@ export default function NaverNvidiaBrookfield10BSovereignAiTrianglePage() {
           That matters because the offtake math on a sovereign AI factory is nothing like the
           offtake math on a frontier lab. NAVER cannot double revenue every six months. It runs a
           business inside Korea&apos;s advertising, commerce, and mapping economy, and its top
-          line is roughly $10B. The compute at Sejong has to service a longer, flatter demand
+          line is roughly $8 billion. The compute at Sejong has to service a longer, flatter demand
           curve than what Anthropic or OpenAI runs against, and Brookfield knows this. That is
           precisely why the term sheet is non-binding today and why the guarantee, when it
           hardens, will be a much stronger take-or-pay than any hyperscaler has ever asked a
