@@ -269,6 +269,24 @@
       ]
     },
     {
+      "id": "stargate-uae",
+      "name": "Stargate UAE",
+      "operator": "OpenAI",
+      "partners": ["G42", "Oracle", "NVIDIA", "SoftBank", "Cisco"],
+      "location": { "city": "Abu Dhabi", "state": "Abu Dhabi Emirate", "country": "UAE" },
+      "status": "construction",
+      "capacity_mw_announced": 1000,
+      "power_source": "grid plus renewable mix",
+      "announced_date": "2026-05-22",
+      "target_operational": "2026",
+      "capex_usd_billion": 30,
+      "context": "First international Stargate deployment, a 1 GW AI compute campus in Abu Dhabi. Built by G42 and operated by OpenAI and Oracle, backed by SoftBank, NVIDIA, and Cisco. The first 200 MW phase targets 2026 delivery on an accelerated construction schedule. The campus occupies a 10-square-mile site that is part of a broader US-UAE AI campus planned for up to 5 GW total including adjacent developments. Announced during the Trump administration visit to the UAE in May 2026 as part of the US-UAE AI Acceleration Partnership.",
+      "primary_sources": [
+        "https://openai.com/index/introducing-stargate-uae/",
+        "https://www.g42.ai/resources/news/global-tech-alliance-launches-stargate-uae"
+      ]
+    },
+    {
       "id": "stargate-michigan",
       "name": "Stargate Michigan (The Barn)",
       "operator": "OpenAI",

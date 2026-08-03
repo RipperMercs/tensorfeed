@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-01",
+  "lastUpdated": "2026-08-03",
   "providers": [
     {
       "id": "anthropic",
@@ -573,6 +573,23 @@
             "tool-use"
           ],
           "tier": "flagship"
+        },
+        {
+          "id": "qwen3-7-flash",
+          "name": "Qwen3.7-Flash",
+          "inputPrice": 0.03,
+          "outputPrice": 0.13,
+          "contextWindow": 1000000,
+          "released": "2026-07",
+          "capabilities": [
+            "text",
+            "vision",
+            "video",
+            "code",
+            "reasoning",
+            "tool-use"
+          ],
+          "tier": "budget"
         }
       ]
     },

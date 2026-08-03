@@ -200,6 +200,25 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
 
   // ── AMD ────────────────────────────────────────────────────
   {
+    id: 'mi455x',
+    name: 'AMD Instinct MI455X',
+    manufacturer: 'AMD',
+    family: 'Instinct',
+    process: 'TSMC 2nm',
+    released: '2026-H2',
+    memoryGB: 432,
+    memoryBandwidthTBs: 19.6,
+    fp16TFLOPS: 10000,
+    fp8TFLOPS: 20000,
+    fp4TFLOPS: 40000,
+    tdpWatts: null as unknown as number,
+    interconnect: 'Infinity Fabric (300 GB/s scale-out)',
+    listPriceUSD: null,
+    availability: 'Cloud (Azure, OCI); sampling Q3 2026, volume ramp H2 2026',
+    notes: 'CDNA 5 architecture on TSMC 2nm. 432 GB HBM4 at 19.6 TB/s. Doubles FP8 compute of MI325X. Helios rack fits 72 MI455X GPUs at list $5.25M. OpenAI and Meta have signed multi-GW commitments.',
+    url: 'https://www.amd.com/en/products/accelerators/instinct/mi400/mi455x.html',
+  },
+  {
     id: 'mi325x',
     name: 'AMD MI325X',
     manufacturer: 'AMD',
@@ -401,4 +420,4 @@ export const AI_HARDWARE_CATALOG: AIHardware[] = [
   },
 ];
 
-export const AI_HARDWARE_LAST_UPDATED = '2026-06-05';
+export const AI_HARDWARE_LAST_UPDATED = '2026-08-03';

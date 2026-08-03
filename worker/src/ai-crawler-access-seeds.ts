@@ -82,6 +82,9 @@ export const SEED_DOMAINS: SeedDomain[] = [
   { domain: 'qdrant.tech', sector: 'ai-company' },
   { domain: 'milvus.io', sector: 'ai-company' },
   { domain: 'turbopuffer.com', sector: 'ai-company' },
+  // new labs 2026-08-03
+  { domain: 'poolside.ai', sector: 'ai-company' },
+  { domain: 'longcatai.org', sector: 'ai-company' },
 
   // ai-media (tech and AI news outlets agents read for current events)
   { domain: 'techcrunch.com', sector: 'ai-media' },
