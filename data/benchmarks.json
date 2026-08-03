@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-24",
+  "lastUpdated": "2026-08-03",
   "benchmarks": [
     { "id": "swe_bench", "name": "SWE-bench", "description": "Real-world software engineering tasks from GitHub issues (SWE-bench Verified)", "maxScore": 100 },
     { "id": "mmlu_pro", "name": "MMLU-Pro", "description": "General knowledge and reasoning across 57 subjects", "maxScore": 100 },
@@ -12,6 +12,18 @@
     { "id": "hle_tools", "name": "Humanity's Last Exam (tools)", "description": "Multidisciplinary expert-level reasoning with tool access", "maxScore": 100 }
   ],
   "models": [
+    {
+      "model": "GPT-5.6 Sol",
+      "provider": "OpenAI",
+      "released": "2026-07",
+      "scores": { "gpqa_diamond": 94.6 }
+    },
+    {
+      "model": "Muse Spark 1.1",
+      "provider": "Meta",
+      "released": "2026-07",
+      "scores": { "hle_tools": 62.1 }
+    },
     {
       "model": "GPT-5.5",
       "provider": "OpenAI",

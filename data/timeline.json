@@ -1,6 +1,20 @@
 {
   "events": [
     {
+      "date": "2026-08-02",
+      "title": "EU AI Act Transparency Obligations Take Effect",
+      "provider": "EU",
+      "category": "policy",
+      "description": "The EU Artificial Intelligence Act's transparency rules (Article 50) entered into force on August 2, 2026, with the European Commission's AI Office and national authorities beginning enforcement the same day. Companies operating in Europe must now tell users when they are interacting with an AI system rather than a human. AI-generated or AI-altered deepfakes must be labeled. Synthetic text and images published to inform the public on matters of public interest must carry machine-readable marks so they can be identified as artificially generated. Maximum fines for non-compliance are up to 15 million euros or 3 percent of global annual turnover. The Commission also published implementation guidelines and a voluntary code of practice to support compliance. The Act's high-risk AI system rules and general-purpose AI model obligations follow on a staggered timeline, with fuller enforcement beginning in August 2027."
+    },
+    {
+      "date": "2026-08-01",
+      "title": "OpenAI Previews Astra by Publishing Ten Machine-Checked Mathematical Proofs",
+      "provider": "OpenAI",
+      "category": "model-release",
+      "description": "OpenAI announced its next major model family, tentatively called Astra, on August 1, 2026, releasing ten machine-checkable Lean 4 proofs of decade-old unsolved problems in mathematics and theoretical computer science alongside a 249-page manuscript on GitHub. The headline result is the first construction of a non-sofic group, settling a central question in group theory that has stood since Mikhail Gromov introduced the concept of soficity in 1999. Other results include Alain Connes's rigidity conjecture, Ehrhart's volume conjecture, and three problems from Paul Erdos's list. The problems span high-dimensional geometry, coding theory, arithmetic circuit complexity, group theory, operator algebras, quantum complexity, lattice cryptography, and extremal combinatorics. The total compute cost for all ten solutions was roughly $2,000 at Sol API rates. OpenAI simultaneously announced free frontier model access for 100,000 academic researchers through 2027. Astra itself has no published API pricing, context window, or general release date as of the announcement."
+    },
+    {
       "date": "2026-07-24",
       "title": "Anthropic Ships Claude Opus 5 at Opus 4.8 Pricing, Half the Cost of Fable 5",
       "provider": "Anthropic",
@@ -13,6 +27,13 @@
       "provider": "Ant Group",
       "category": "model-release",
       "description": "Ant Group released Ling-3.0-flash, a 124 billion parameter mixture-of-experts activating roughly 5.1 billion per token, claiming it matches the company's own 1 trillion parameter flagship on a twelfth of the active parameters. Ant states an Apache 2.0 license, but the weights had not been posted at launch, so the open-weight status is stated rather than confirmed. The model is free on OpenRouter through August 3, 2026, which makes it a zero-cost evaluation window. All performance figures are vendor-claimed with no independent verification published. The same day Black Forest Labs announced FLUX 3, its first multimodal frontier model, jointly training image, video, audio, and action. Only the video variant is in gated early access, the image model is weeks out, the open-weight Dev backbone has no date, and the only evidence published is Black Forest Labs' own human-preference evals (a claimed 77 percent preference over Runway Gen-4.5 and 93 percent over Luma Ray 3.2). Neither release is in the TensorFeed pricing index yet: Ling has no list price and FLUX 3 has no pricing at all."
+    },
+    {
+      "date": "2026-07-22",
+      "title": "AMD Launches Instinct MI400 Series and Helios Rack at Advancing AI 2026",
+      "provider": "AMD",
+      "category": "product-launch",
+      "description": "AMD launched the Instinct MI400 series at its Advancing AI 2026 conference in San Francisco on July 22 to 23, marking its first CDNA 5 architecture and the first AMD datacenter GPU built on TSMC 2nm. The flagship MI455X targets large-scale AI training and cloud deployments with 432 GB of HBM4 memory at 19.6 TB/s, 40 PFLOPs of FP4 compute, and 20 PFLOPs of FP8, doubling the FP8 performance of the MI325X. A 300 GB/s scale-out link replaces the prior Infinity Fabric configuration for rack-scale deployments. AMD simultaneously unveiled the Helios rack system, which houses 72 MI455X GPUs at a list price of $5.25 million per rack. AMD CEO Lisa Su disclosed that OpenAI and Meta together have signed multi-gigawatt capacity commitments, with Microsoft Azure and Oracle Cloud as early Helios customers. First shipments are targeted for the end of Q3 2026, with volume production ramping into Q4. A companion MI430X variant targets sovereign AI and HPC workloads. AMD also confirmed the MI500 series is in advanced design for a 2027 launch."
     },
     {
       "date": "2026-07-22",
