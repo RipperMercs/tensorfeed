@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'alibaba-qwen-3-8-max-open-weights-inference-floor',
+    title:
+      'Alibaba Priced Qwen 3.8 Max at 40 Percent of Opus 5 Input. The Open Weights Drop Next Week Is the Sanctions Question.',
+    author: 'Marcus Chen',
+    date: 'August 5, 2026',
+    readTime: '6 min read',
+    description:
+      "On August 3, 2026, Alibaba turned on paid API access to Qwen 3.8 Max: a 2.4 trillion parameter mixture-of-experts model with 95 billion active parameters, a 1M-token context window, and multimodal input across text, image, and video. International API pricing landed at roughly 40 percent of Claude Opus 5 for input tokens and 24 percent for output, putting the flagship somewhere near $2 per million input and $6 per million output. Alibaba said the weights ship open next week, alongside a smaller Qwen 3.8-27B checkpoint that also goes open. Inside the numbers table (2.4T parameters, 95B active, 1M context, text plus image plus video input, ~$2 input and ~$6 output pricing, #5 Text Arena and #2 Vision Arena vendor rank, open weights due next week), what the price does to the closed-API inference floor (the marginal supplier at the top of the buyer curve is now a Chinese open-model shop and the Sol premium survives an open-weights step-down only if the harness and long-horizon reasoning gap is worth the multiple), the sanctions question the Moonshot Fable case did not answer (Treasury turned Chinese open weights into a sanctions surface six weeks ago when the trigger was distillation of a US frontier model, and a Qwen open-weights release under an Alibaba license is a different legal object that has not yet been graded), the CAISI-framework vacuum (the August 1 text never shipped and the open-weights coalition letter did not propose a country-of-origin regime), what Alibaba actually gets (a top-of-Arena leaderboard slot for enterprise procurement, a hosted-endpoint pricing anchor for Alibaba Cloud inside China, and a distribution surface it does not have to pay for once the weights ship open), and the second-order effect that matters most (not the Opus 5 or Sol comparison but the Sonnet-class and mini-class tiers where the closed-API premium is thinner and workload swap-cost is lower). Three signposts: whether the weights drop on the announced schedule next week, whether any US agency issues guidance on Chinese-origin open weights in the wake of the Moonshot precedent, and whether OpenAI or Anthropic cuts a Sonnet-class or mini-class tier inside 30 days.",
+  },
+  {
     slug: 'anthropic-india-in-country-inference-bfsi-unlock',
     title:
       'Anthropic Just Put Claude Inference on Indian Soil. The BFSI Gate Only One Frontier Lab Can Clear Right Now.',
