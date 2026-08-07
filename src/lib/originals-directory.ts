@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'cloudflare-wallets-buyer-side-x402-loop-closed',
+    title:
+      'Cloudflare Just Closed the Buyer Side of x402. cloudflare.pay Turns the Edge Into a Two-Sided Agent Payments Network.',
+    author: 'Adrian Vale',
+    date: 'August 7, 2026',
+    readTime: '6 min read',
+    description:
+      "On Tuesday, August 4, 2026, Cloudflare launched Cloudflare Wallets and cloudflare.pay: a two-tier wallet system (Account Wallet for humans, Virtual Wallet for agents behind an API key) with programmable allowances, merchant allow-lists, per-transaction ceilings, and a permanent handle every agent can present to a merchant. The wallet infrastructure itself ships over the following months, so Tuesday was a claim-your-name-first day, not a payments-live-today day, but the sequence is the story. Five weeks after the Monetization Gateway put x402 in front of the seller side of a fifth of the internet, Cloudflare closed the buyer side on the same rail, and it is now the only edge network in the world running both halves of an agent payments loop under one roof. Inside the numbers table (Aug 4 launch, 34-day gap from July 1 Monetization Gateway, ~20 percent of the internet on the edge, two wallet tiers, four per-agent controls, x402 / USDC on Base settlement, cloudflare.pay handle, 50M+ cumulative x402 volume), the two-tier wallet mechanic and why the Virtual Wallet API-key allowance is the payment-layer answer to prompt injection, why the handle is the new domain name for agent commerce and how DNS-flavored identity beats OAuth tokens and wallet addresses as the accountability anchor, what this does to Coinbase Agentic Wallets (distribution move not technology move; Cloudflare settles without a third-party SDK round trip), Stripe through Privy (bridge to the card graph still matters for consumer merchants but the buyer side Stripe was expected to own just got a rival that does not need the card graph), and MCP server authors (the two-sided loop closes here first because MCP tools are already machine-facing), the AFTA overlap (TF's own manifest + Ed25519 receipt standard covers what Cloudflare Wallets does not, an agent holding a cloudflare.pay handle can call an AFTA-manifest endpoint and get a receipt binding merchant, amount, and agent name in one artifact), the dispute-schema gap on both sides that will decide which standard sets the vocabulary, and the honest read that handle reservations opened Tuesday and the wallet stack ships in months so the product risk is real. Three signposts: whether Virtual Wallets ship before end of Q3 or slip into Q4, whether a top-ten MCP server accepts a cloudflare.pay handle inside 60 days, and whether Coinbase or Stripe responds with a rival edge-native handle scheme or concedes the identity layer.",
+  },
+  {
     slug: 'anthropic-silicon-team-sixth-lever',
     title:
       'Anthropic Built a Chip Team to Cut Inference Cost in Half. It Is the Sixth Silicon Lever Under Claude.',
