@@ -15921,6 +15921,24 @@ export default {
       }
     }
 
+    // /api/admin/verdict-panel/run POST &key=<ADMIN_KEY>
+    //   Force a verdict-ledger capture now instead of waiting for the 07:00
+    //   UTC daily cron. Same code path as the cron. Re-running on the same day
+    //   overwrites that day's records rather than duplicating them, because
+    //   the key is date-scoped and the panel is deterministic.
+    if (path === '/api/admin/verdict-panel/run' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      if (request.method !== 'POST') {
+        return jsonResponse({ ok: false, error: 'POST_required' }, 405);
+      }
+      try {
+        const { captureVerdictPanel } = await import('./verdict-ledger');
+        const report = await captureVerdictPanel(env, new Date().toISOString());
+        return jsonResponse({ ok: true, report }, 200, 0);
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
+    }
+
     // /api/admin/backup/health GET &key=<ADMIN_KEY>  Last run's completeness (from backup:last)
     if (path === '/api/admin/backup/health' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       try {
@@ -16828,6 +16846,19 @@ export default {
         const { captureIntelligenceSnapshot } = await import('./model-intelligence');
         const res = await captureIntelligenceSnapshot(env, new Date().toISOString());
         if (!res.ok) throw new Error(`intelligence snapshot skipped: ${res.error}`);
+      });
+      // Daily verdict ledger. Records WHAT WAS DECIDED, from a fixed panel of
+      // questions, so the decision history accrues day by day. Deliberately
+      // hosted here rather than on its own cron trigger: route-verdict reads
+      // intelligence:snapshot:latest, so running immediately after
+      // captureIntelligenceSnapshot guarantees the verdict is computed from
+      // same-day fresh inputs instead of racing them. Panel-driven, so the
+      // write count is set by panel size and stays flat under a traffic wave.
+      // Nothing is served from this yet; the clock is the asset.
+      // See worker/src/verdict-ledger.ts.
+      await run('captureVerdictPanel', async () => {
+        const { captureVerdictPanel } = await import('./verdict-ledger');
+        return captureVerdictPanel(env, new Date().toISOString());
       });
       // Daily AI Attention Index snapshot. Compounds into a multi-month
       // series of per-provider attention. Backs /api/attention/history
