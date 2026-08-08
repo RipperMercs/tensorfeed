@@ -1,21 +1,26 @@
 name: Worker tests
 
-# Runs the Cloudflare Worker test suite (worker/src/**/*.test.ts, 4000+ tests)
-# on every push to main that touches worker/**, plus manual dispatch. The
-# deploy-worker workflow ships the Worker on the same trigger but does not run
-# the tests, so this is the only CI signal on Worker test health. It runs
-# alongside the deploy rather than gating it, so a red here flags a regression
-# to investigate without freezing an unrelated deploy.
+# Runs the Cloudflare Worker test suite (worker/src/**/*.test.ts, 4000+ tests).
+#
+# This is a REUSABLE workflow. deploy-worker.yml calls it and gates the deploy
+# on it (needs: test), so a red suite now blocks shipping the Worker. It used
+# to run alongside the deploy on the same push trigger without gating it, which
+# meant 4000+ tests could fail and the Worker shipped anyway.
+#
+# The push trigger here is deliberately narrowed to this file only. A worker/**
+# push is covered by deploy-worker.yml calling this workflow, so a broader
+# trigger would run the whole suite twice per push. Changes to this file still
+# get their own run so the gate itself stays exercised.
 #
 # Locally: cd worker && npm test
 
 on:
+  workflow_call:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - 'worker/**'
       - '.github/workflows/worker-tests.yml'
-  workflow_dispatch:
 
 jobs:
   test:
