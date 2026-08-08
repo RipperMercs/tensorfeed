@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false, "noEmit": true },
+  "include": [],
+  "files": [
+    "next-env.d.ts",
+    "src/app/originals/apple-openai-injunction-io-court-clock/page.tsx",
+    "src/lib/originals-directory.ts",
+    "src/app/sitemap.ts"
+  ]
+}

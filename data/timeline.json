@@ -1,6 +1,55 @@
 {
   "events": [
     {
+      "date": "2026-08-02",
+      "title": "EU AI Act Becomes Generally Applicable as High-Risk Obligations Take Effect",
+      "provider": "EU",
+      "category": "policy",
+      "description": "August 2, 2026 is the EU AI Act's main application milestone: the bulk of the regulation, including the obligations for high-risk AI systems listed in Annex III and the Article 50 transparency rules for AI-generated content, is now generally applicable across member states. General-purpose model obligations began in August 2025; this date extends enforcement to deployers and providers of high-risk systems, with penalties of up to 35 million euros or 7 percent of global turnover for prohibited practices. Providers selling into the EU now need conformity assessments, technical documentation, and post-market monitoring in place rather than on a roadmap."
+    },
+    {
+      "date": "2026-08-02",
+      "title": "California SB 942 Goes Operative, the First Binding US Provenance Regime for Generative AI",
+      "provider": "California",
+      "category": "policy",
+      "description": "California SB 942, the AI Transparency Act as amended by AB 853, became operative on August 2, 2026. Any generative AI provider with more than one million monthly users accessible in California must now offer a free public AI detection tool that answers whether content came from that provider's own system, a visible disclosure option, and a machine-readable C2PA-compatible latent disclosure embedded in AI-generated images, video, and audio. Enforcement runs at $5,000 per violation with each day counted separately, by the Attorney General, city attorneys, and county counsels. AB 853 moved the operative date from January 1 to August 2 to synchronize with the EU AI Act's Article 50 clock, and hosting-platform obligations follow on January 1, 2027."
+    },
+    {
+      "date": "2026-07-30",
+      "title": "OpenAI Cuts GPT-5.6 Luna by 80 Percent and Terra by 20 Percent Three Weeks After Launch",
+      "provider": "OpenAI",
+      "category": "pricing",
+      "description": "OpenAI cut API pricing for two of the three GPT-5.6 models on July 30, three weeks after the family went generally available on July 9. GPT-5.6 Luna dropped 80 percent, from $1 per million input tokens and $6 per million output to $0.20 and $1.20, with cached input reads falling to $0.02. GPT-5.6 Terra dropped 20 percent, from $2.50/$15 to $2/$12, with cached input at $0.20. Flagship Sol stays at $5/$30 but gains a fast mode at twice the price for roughly 2.5 times the speed. ChatGPT and Codex subscription prices and quota budgets are unchanged, though Terra and Luna usage now draws down fewer credits. The cut lands Luna below DeepSeek V4 Flash on output price and reads as a direct response to open-weight price pressure from Kimi K3 and GLM 5.2."
+    },
+    {
+      "date": "2026-07-28",
+      "title": "Meta and BlackRock Form $14 Billion, 1 GW El Paso Data Center JV on the 80/20 Template",
+      "provider": "Meta",
+      "category": "funding",
+      "description": "Meta and BlackRock announced a $14 billion joint venture to develop a 1 gigawatt data center campus in El Paso, Texas, targeting a 2028 launch with Meta as sole tenant. BlackRock funds own 80 percent and Meta keeps 20, with Meta contributing $2.3 billion in land, receiving a $1 billion one-time payment, BlackRock writing $4.9 billion of cash, and $12.5 billion of bonds on top of the capital stack. It is Meta's second 80/20 structure in nine months after the Blue Owl Hyperion JV in Richland Parish, which has since expanded to 5 gigawatts and $50 billion: an asset manager holds title to the gigawatt while Meta signs a compute offtake and keeps the tokens off its CapEx line."
+    },
+    {
+      "date": "2026-07-28",
+      "title": "1,178 Frontier Lab Employees Sign Pacing the Frontier; OpenAI and Anthropic Endorse, Meta and Google Do Not",
+      "provider": "Multiple",
+      "category": "policy",
+      "description": "1,178 employees at OpenAI, Anthropic, Google DeepMind, Meta, and Thinking Machines signed Pacing the Frontier, an open letter asking Washington to fund the technical and governance tooling needed for a verifiable slowdown if recursive self-improvement outruns oversight. Within about six hours OpenAI and Anthropic endorsed the letter at the corporate level. Meta declined to comment, Google did not respond, and Mark Zuckerberg published a Wall Street Journal column the same afternoon arguing that broadly distributed weights are the pacing mechanism. The split mirrors the federal launch-bar fight: the two labs that helped write the pre-release gate endorsed a second regulatory instrument, and the two that route around a closed perimeter said no."
+    },
+    {
+      "date": "2026-07-27",
+      "title": "NVIDIA Invests $5 Billion in Safe Superintelligence for Vera Rubin Compute Access",
+      "provider": "Safe Superintelligence",
+      "category": "funding",
+      "description": "NVIDIA announced a $5 billion investment in Safe Superintelligence, the AI startup co-founded by Ilya Sutskever, paired with a long-term partnership that gives SSI access to NVIDIA's next-generation Vera Rubin CPU-GPU platform and increases its compute by an order of magnitude. SSI has said it does not plan to commercialize products in the near term; it previously raised roughly $3 billion from investors including Andreessen Horowitz, Sequoia, and DST at a reported $32 billion valuation. For NVIDIA the deal buys privileged visibility into frontier research workloads at a moment when hyperscaler customers are shifting spend toward custom silicon."
+    },
+    {
+      "date": "2026-07-27",
+      "title": "Moonshot Releases Kimi K3 Open Weights, the Largest Open-Weight Model Ever Shipped",
+      "provider": "Moonshot AI",
+      "category": "open-source",
+      "description": "Moonshot AI published the weights for Kimi K3 on July 27, eleven days after the API launch. The mixture-of-experts model totals 2.8 trillion parameters with 104 billion active per token, takes text, image, and video input, and carries a 1 million token context window. The download weighs roughly 1.4 terabytes in MXFP4 quantization, making it the largest open-weight release to date. K3 sits fourth on the Artificial Analysis Intelligence Index at 57, first among open-weight models, and holds the number one spot on LMArena's Frontend Code Arena. The release came with a technical report and per-benchmark footnotes naming the harness behind every published score, and API pricing stays at $3 per million input tokens and $15 per million output."
+    },
+    {
       "date": "2026-07-24",
       "title": "Anthropic Ships Claude Opus 5 at Opus 4.8 Pricing, Half the Cost of Fable 5",
       "provider": "Anthropic",
