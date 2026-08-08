@@ -15947,12 +15947,16 @@ export default {
       if (request.method !== 'POST') {
         return jsonResponse({ ok: false, error: 'POST_required' }, 405);
       }
+      // Horizon 0 is allowed on purpose: it scores today's records against
+      // today, which must come back all `held`. That is the self-check that
+      // the compute path is deterministic, and it is the only way to verify
+      // the scoring end to end in production before the ledger is 7 days old.
       const raw = url.searchParams.get('horizons');
       const horizons = raw
-        ? raw.split(',').map((n) => parseInt(n.trim(), 10)).filter((n) => Number.isFinite(n) && n > 0)
+        ? raw.split(',').map((n) => parseInt(n.trim(), 10)).filter((n) => Number.isFinite(n) && n >= 0)
         : undefined;
       if (raw && (!horizons || horizons.length === 0)) {
-        return jsonResponse({ ok: false, error: 'horizons_must_be_positive_integers' }, 400);
+        return jsonResponse({ ok: false, error: 'horizons_must_be_non_negative_integers' }, 400);
       }
       try {
         const { scoreVerdictHorizons } = await import('./verdict-ledger');
