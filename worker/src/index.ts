@@ -390,7 +390,16 @@ import { handlePremium } from './premium-handler';
 import { buildOfficialSurfaces } from './official-surfaces';
 import { maybeHandleHoneypot } from './honeypot';
 import { handleIocExport } from './iocs';
-import { backupKvToR2, backupNamespaceChunk, getBackupHealth, listRecentBackups, readManifest } from './backup';
+import {
+  backupKvToR2,
+  backupNamespaceChunk,
+  getBackupHealth,
+  listRecentBackups,
+  readManifest,
+  resolveBackupNamespace,
+  restoreNamespaceFromR2,
+  restoreWriteAuthorized,
+} from './backup';
 import { buildSuggestedNextCalls } from './suggested-next';
 import {
   DELTA_CURSOR_VERSION,
@@ -15927,6 +15936,60 @@ export default {
         const limit = Math.min(90, Math.max(1, parseInt(url.searchParams.get('limit') || '30', 10) || 30));
         const recent = await listRecentBackups(env, limit);
         return jsonResponse({ ok: true, count: recent.length, backups: recent }, 200, 0);
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
+    }
+
+    // /api/admin/backup/restore POST &key=<ADMIN_KEY>&date=YYYY-MM-DD&namespace=NAME
+    //   Optional: &prefix=pay:  &allow_incomplete=1  &confirm=RESTORE-YYYY-MM-DD
+    //
+    // DRY RUN unless `confirm` names the exact date. A dry run still reads and
+    // decompresses every part, so it doubles as the recoverability drill: it
+    // proves the bytes come back and reconcile against the manifest key count,
+    // which `complete: true` alone never proves.
+    if (path === '/api/admin/backup/restore' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      if (request.method !== 'POST') {
+        return jsonResponse({ ok: false, error: 'POST_required' }, 405);
+      }
+      const date = url.searchParams.get('date');
+      const namespace = url.searchParams.get('namespace');
+      if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return jsonResponse({ ok: false, error: 'date_param_required_YYYY-MM-DD' }, 400);
+      }
+      if (!namespace) {
+        return jsonResponse({ ok: false, error: 'namespace_param_required' }, 400);
+      }
+      const target = resolveBackupNamespace(env, namespace);
+      if (!target) {
+        return jsonResponse({ ok: false, error: `unknown_or_unbound_namespace: ${namespace}` }, 400);
+      }
+      try {
+        const dryRun = !restoreWriteAuthorized(date, url.searchParams.get('confirm'));
+        const report = await restoreNamespaceFromR2(env, {
+          date,
+          namespace,
+          target,
+          dryRun,
+          prefix: url.searchParams.get('prefix') || undefined,
+          allowIncomplete: url.searchParams.get('allow_incomplete') === '1',
+        });
+        if (dryRun) {
+          console.log('[restore] dry run', JSON.stringify(report));
+        } else {
+          console.error('[restore] WROTE TO KV', JSON.stringify(report));
+        }
+        return jsonResponse(
+          {
+            ok: true,
+            report,
+            note: dryRun
+              ? `Dry run. Nothing was written. To write, re-POST with confirm=RESTORE-${date}`
+              : 'Keys were written to live KV.',
+          },
+          200,
+          0,
+        );
       } catch (e) {
         return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
       }

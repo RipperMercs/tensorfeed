@@ -626,26 +626,187 @@ export async function backupKvToR2(
   return manifest;
 }
 
+// === restore ===
+
 /**
- * List the last N daily backups by date prefix. Returns a flat list
- * across all dates for ease of admin display.
+ * A restore WRITE requires a confirmation token naming the exact date being
+ * restored, so a generic `confirm=1` or a token copied from a previous day's
+ * command cannot overwrite live KV by accident. Anything else is a dry run.
+ */
+export function restoreWriteAuthorized(date: string, confirm: string | null | undefined): boolean {
+  return !!confirm && confirm === `RESTORE-${date}`;
+}
+
+/** Resolve a manifest namespace name to its live KV binding, or null. */
+export function resolveBackupNamespace(env: Env, name: string): KVNamespace | null {
+  const entry = BACKUP_NAMESPACES.find((n) => n.name === name);
+  if (!entry) return null;
+  return (env[entry.binding] as KVNamespace | undefined) ?? null;
+}
+
+export interface RestoreReport {
+  date: string;
+  namespace: string;
+  dry_run: boolean;
+  parts_expected: number;
+  parts_read: number;
+  records: number;
+  keys_written: number;
+  manifest_key_count: number;
+  matches_manifest: boolean;
+  prefix: string | null;
+  errors: string[];
+}
+
+/** Ungzip a part body back into its JSONL text. */
+async function gunzipToText(buf: ArrayBuffer): Promise<string> {
+  const src = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new Uint8Array(buf));
+      controller.close();
+    },
+  });
+  return new Response(src.pipeThrough(new DecompressionStream('gzip'))).text();
+}
+
+/**
+ * Read one namespace's backup for `date` out of R2 and optionally write it
+ * back into `target`.
+ *
+ * DRY RUN BY DEFAULT. Restoring is destructive (it overwrites live keys), so
+ * a caller must pass `dryRun: false` explicitly. A dry run still reads and
+ * decompresses every part, which is what makes it a real recoverability check
+ * rather than a existence check: `complete: true` on a manifest only proves
+ * the upload succeeded, never that the bytes parse back.
+ *
+ * The manifest's `parts` list is authoritative, per the restore contract:
+ * same-day reruns can leave orphan higher-index parts in R2 that the manifest
+ * deliberately excludes.
+ */
+export async function restoreNamespaceFromR2(
+  env: Env,
+  params: {
+    date: string;
+    namespace: string;
+    target: KVNamespace;
+    dryRun?: boolean;
+    prefix?: string;
+    allowIncomplete?: boolean;
+  },
+): Promise<RestoreReport> {
+  if (!env.BACKUPS_R2) throw new Error('BACKUPS_R2 binding missing from worker env');
+  const { date, namespace, target } = params;
+  const dryRun = params.dryRun !== false;
+  const prefix = params.prefix ?? null;
+
+  const manifest = await readManifest(env, date);
+  if (!manifest) throw new Error(`no manifest for date ${date}`);
+
+  const ns = manifest.namespaces.find((n) => n.name === namespace);
+  if (!ns) throw new Error(`namespace ${namespace} is not in the manifest for ${date}`);
+
+  if (!ns.complete && !params.allowIncomplete) {
+    throw new Error(
+      `namespace ${namespace} is marked incomplete in the ${date} manifest; pass allowIncomplete to restore it anyway`,
+    );
+  }
+
+  const report: RestoreReport = {
+    date,
+    namespace,
+    dry_run: dryRun,
+    parts_expected: ns.parts.length,
+    parts_read: 0,
+    records: 0,
+    keys_written: 0,
+    manifest_key_count: ns.key_count,
+    matches_manifest: false,
+    prefix,
+    errors: [],
+  };
+
+  for (const partKey of ns.parts) {
+    const obj = await env.BACKUPS_R2.get(partKey);
+    if (!obj) {
+      report.errors.push(`missing part: ${partKey}`);
+      continue;
+    }
+
+    let text: string;
+    try {
+      text = await gunzipToText(await obj.arrayBuffer());
+    } catch (e) {
+      report.errors.push(`unreadable part ${partKey}: ${e instanceof Error ? e.message : String(e)}`);
+      continue;
+    }
+    report.parts_read++;
+
+    for (const line of text.split('\n')) {
+      if (!line) continue;
+      let rec: { k: string; v: string; m?: unknown };
+      try {
+        rec = JSON.parse(line);
+      } catch {
+        report.errors.push(`unparseable line in ${partKey}`);
+        continue;
+      }
+      report.records++;
+      if (prefix && !rec.k.startsWith(prefix)) continue;
+      if (dryRun) continue;
+      await target.put(rec.k, rec.v, rec.m ? { metadata: rec.m } : undefined);
+      report.keys_written++;
+    }
+  }
+
+  report.matches_manifest = report.errors.length === 0 && report.records === ns.key_count;
+  return report;
+}
+
+/** Every object under one `YYYY-MM-DD/` prefix, following the list cursor. */
+async function listObjectsForDate(
+  env: Env,
+  date: string,
+): Promise<Array<{ key: string; size: number; uploaded: string }>> {
+  const out: Array<{ key: string; size: number; uploaded: string }> = [];
+  let cursor: string | undefined;
+  do {
+    const page = await env.BACKUPS_R2!.list({ prefix: `${date}/`, limit: 1000, cursor });
+    for (const obj of page.objects) {
+      out.push({ key: obj.key, size: obj.size, uploaded: obj.uploaded.toISOString() });
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  return out;
+}
+
+/**
+ * List the last N daily backups, newest first.
+ *
+ * Walks date prefixes backwards from today rather than taking a single
+ * unprefixed page. R2 lists lexicographically and every key starts with its
+ * date, so an unprefixed `list({ limit: 1000 })` has its window consumed by
+ * the OLDEST objects: once the bucket holds more than 1000 objects the admin
+ * view goes blind to the most recent backups, which are exactly the restore
+ * points you need during an incident. Dates with no objects are skipped, so
+ * a missed day does not truncate the result.
  */
 export async function listRecentBackups(
   env: Env,
   limit: number = 30,
+  opts?: { today?: string; maxLookbackDays?: number },
 ): Promise<Array<{ date: string; objects: Array<{ key: string; size: number; uploaded: string }> }>> {
   if (!env.BACKUPS_R2) throw new Error('BACKUPS_R2 binding missing from worker env');
-  const objects = await env.BACKUPS_R2.list({ limit: 1000 });
-  const byDate = new Map<string, Array<{ key: string; size: number; uploaded: string }>>();
-  for (const obj of objects.objects) {
-    const m = obj.key.match(/^(\d{4}-\d{2}-\d{2})\//);
-    if (!m) continue;
-    const date = m[1]!;
-    if (!byDate.has(date)) byDate.set(date, []);
-    byDate.get(date)!.push({ key: obj.key, size: obj.size, uploaded: obj.uploaded.toISOString() });
+  const today = opts?.today ?? new Date().toISOString().slice(0, 10);
+  const maxLookback = opts?.maxLookbackDays ?? limit + 60;
+  const startMs = Date.parse(`${today}T00:00:00Z`);
+
+  const out: Array<{ date: string; objects: Array<{ key: string; size: number; uploaded: string }> }> = [];
+  for (let back = 0; back < maxLookback && out.length < limit; back++) {
+    const date = new Date(startMs - back * 86400000).toISOString().slice(0, 10);
+    const objects = await listObjectsForDate(env, date);
+    if (objects.length > 0) out.push({ date, objects });
   }
-  const sortedDates = Array.from(byDate.keys()).sort((a, b) => b.localeCompare(a)).slice(0, limit);
-  return sortedDates.map((date) => ({ date, objects: byDate.get(date)! }));
+  return out;
 }
 
 /**
