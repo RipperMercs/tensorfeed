@@ -15939,6 +15939,22 @@ export default {
       }
     }
 
+    // /api/admin/verdict-panel/records GET &key=<ADMIN_KEY>&date=YYYY-MM-DD
+    //   Inspect one day of the verdict ledger. Admin only: the decision
+    //   history is the asset, not a public feed.
+    if (path === '/api/admin/verdict-panel/records' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return jsonResponse({ ok: false, error: 'date_param_must_be_YYYY-MM-DD' }, 400);
+      }
+      try {
+        const { readVerdictDay } = await import('./verdict-ledger');
+        return jsonResponse({ ok: true, day: await readVerdictDay(env, date) }, 200, 0);
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
+    }
+
     // /api/admin/backup/health GET &key=<ADMIN_KEY>  Last run's completeness (from backup:last)
     if (path === '/api/admin/backup/health' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
       try {
