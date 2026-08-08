@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { backupKvToR2, backupNamespaceChunk, listRecentBackups, readManifest } from './backup';
+import {
+  backupKvToR2,
+  backupNamespaceChunk,
+  listRecentBackups,
+  readManifest,
+  resolveBackupNamespace,
+  restoreNamespaceFromR2,
+  restoreWriteAuthorized,
+} from './backup';
 import type { Env } from './types';
 
 /**
@@ -278,14 +286,101 @@ describe('backupKvToR2', () => {
   });
 });
 
+/**
+ * An R2 mock that honours the real bucket's list() semantics: keys come back
+ * in lexicographic order, `prefix` filters, `limit` truncates, and `cursor`
+ * resumes. The older fixed-response mock above hid a real bug, because the
+ * production code's unprefixed `list({ limit: 1000 })` gets its window eaten
+ * by the OLDEST keys once the bucket holds more than 1000 objects.
+ */
+function faithfulR2(keys: string[]): any {
+  const sorted = [...keys].sort();
+  return {
+    list: vi.fn(async (opts: any = {}) => {
+      const prefix = opts.prefix ?? '';
+      const limit = opts.limit ?? 1000;
+      const matching = sorted.filter((k) => k.startsWith(prefix));
+      const start = opts.cursor ? parseInt(opts.cursor, 10) : 0;
+      const slice = matching.slice(start, start + limit);
+      const nextStart = start + slice.length;
+      const truncated = nextStart < matching.length;
+      return {
+        objects: slice.map((k) => ({ key: k, size: 100, uploaded: new Date('2026-08-01T06:00:00Z') })),
+        truncated,
+        cursor: truncated ? String(nextStart) : undefined,
+      };
+    }),
+  };
+}
+
+/** 30 objects per date across `dates`, mirroring the real part-NNNN layout. */
+function keysForDates(dates: string[]): string[] {
+  const out: string[] = [];
+  for (const d of dates) {
+    out.push(`${d}/manifest.json`);
+    for (let i = 0; i < 29; i++) {
+      out.push(`${d}/TENSORFEED_CACHE.part-${String(i).padStart(4, '0')}.jsonl.gz`);
+    }
+  }
+  return out;
+}
+
 describe('listRecentBackups', () => {
   it('groups objects by date prefix, newest first', async () => {
-    const { bucket } = mockR2();
+    const bucket = faithfulR2([
+      '2026-05-12/TENSORFEED_CACHE.part-0000.jsonl.gz',
+      '2026-05-12/manifest.json',
+      '2026-05-05/TENSORFEED_NEWS.part-0000.jsonl.gz',
+    ]);
     const env = { BACKUPS_R2: bucket } as unknown as Env;
-    const recent = await listRecentBackups(env, 30);
+    const recent = await listRecentBackups(env, 30, { today: '2026-05-12', maxLookbackDays: 30 });
     expect(recent.length).toBe(2);
     expect(recent[0]!.date).toBe('2026-05-12');
+    expect(recent[0]!.objects.length).toBe(2);
     expect(recent[1]!.date).toBe('2026-05-05');
+  });
+
+  it('returns the newest dates when older objects would fill a single 1000-object list window', async () => {
+    // 40 dates x 30 objects = 1200 objects, so a single unprefixed
+    // list({ limit: 1000 }) never reaches the most recent dates.
+    const dates: string[] = [];
+    for (let i = 0; i < 40; i++) {
+      const d = new Date(Date.UTC(2026, 5, 1) + i * 86400000);
+      dates.push(d.toISOString().slice(0, 10));
+    }
+    const newest = dates[dates.length - 1]!;
+    const bucket = faithfulR2(keysForDates(dates));
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    const recent = await listRecentBackups(env, 5, { today: newest, maxLookbackDays: 60 });
+
+    expect(recent[0]!.date).toBe(newest);
+    expect(recent.map((r) => r.date)).toEqual(dates.slice(-5).reverse());
+  });
+
+  it('skips dates with no backup and still fills the requested count', async () => {
+    const present = ['2026-08-07', '2026-08-05', '2026-08-01'];
+    const bucket = faithfulR2(keysForDates(present));
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    const recent = await listRecentBackups(env, 3, { today: '2026-08-07', maxLookbackDays: 30 });
+
+    expect(recent.map((r) => r.date)).toEqual(present);
+  });
+
+  it('returns every object for a date whose part count exceeds one list page', async () => {
+    // 1400 parts for a single day forces cursor pagination within that prefix.
+    const keys = ['2026-08-07/manifest.json'];
+    for (let i = 0; i < 1400; i++) {
+      keys.push(`2026-08-07/TENSORFEED_CACHE.part-${String(i).padStart(4, '0')}.jsonl.gz`);
+    }
+    const bucket = faithfulR2(keys);
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    const recent = await listRecentBackups(env, 1, { today: '2026-08-07', maxLookbackDays: 1 });
+
+    expect(recent[0]!.objects.length).toBe(1401);
+    expect(recent[0]!.objects.some((o) => o.key.endsWith('manifest.json'))).toBe(true);
   });
 });
 
@@ -302,5 +397,278 @@ describe('readManifest', () => {
     const env = { BACKUPS_R2: bucket } as unknown as Env;
     const m = await readManifest(env, '2026-01-01');
     expect(m).toBeNull();
+  });
+});
+
+// === restore ===
+
+/** Gzip a JSONL body the same way backupNamespaceChunk writes parts. */
+async function gzipJsonl(records: Array<{ k: string; v: string; m?: unknown }>): Promise<Uint8Array> {
+  const text = records.map((r) => JSON.stringify({ k: r.k, v: r.v, m: r.m })).join('\n') + '\n';
+  const src = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
+  return new Uint8Array(await new Response(src).arrayBuffer());
+}
+
+/**
+ * An R2 mock holding a manifest plus real gzipped parts, so restore is
+ * exercised against the exact bytes the backup writer produces.
+ */
+async function r2WithBackup(
+  date: string,
+  namespaces: Array<{
+    name: string;
+    records: Array<{ k: string; v: string; m?: unknown }>;
+    perPart?: number;
+    complete?: boolean;
+    keyCountOverride?: number;
+  }>,
+): Promise<any> {
+  const store = new Map<string, Uint8Array | string>();
+  const manifestNs: unknown[] = [];
+
+  for (const ns of namespaces) {
+    const perPart = ns.perPart ?? 2;
+    const parts: string[] = [];
+    for (let i = 0; i * perPart < ns.records.length; i++) {
+      const key = `${date}/${ns.name}.part-${String(i).padStart(4, '0')}.jsonl.gz`;
+      store.set(key, await gzipJsonl(ns.records.slice(i * perPart, (i + 1) * perPart)));
+      parts.push(key);
+    }
+    manifestNs.push({
+      name: ns.name,
+      key_count: ns.keyCountOverride ?? ns.records.length,
+      byte_count: 0,
+      sha256_hex: '',
+      duration_ms: 0,
+      parts,
+      complete: ns.complete !== false,
+      error: null,
+    });
+  }
+
+  store.set(
+    `${date}/manifest.json`,
+    JSON.stringify({ run_id: 'restore-fixture', date, complete: true, namespaces: manifestNs }),
+  );
+
+  return {
+    get: vi.fn(async (key: string) => {
+      if (!store.has(key)) return null;
+      const val = store.get(key)!;
+      if (typeof val === 'string') {
+        return { json: async () => JSON.parse(val) };
+      }
+      return { arrayBuffer: async () => val.buffer.slice(val.byteOffset, val.byteOffset + val.byteLength) };
+    }),
+  };
+}
+
+/** A KV target that records writes. */
+function targetKv(): any {
+  const written = new Map<string, { value: string; metadata?: unknown }>();
+  return {
+    _written: written,
+    put: vi.fn(async (key: string, value: string, opts?: any) => {
+      written.set(key, { value, metadata: opts?.metadata });
+    }),
+  };
+}
+
+describe('restoreWriteAuthorized', () => {
+  it('refuses a write with no confirmation token', () => {
+    expect(restoreWriteAuthorized('2026-08-07', null)).toBe(false);
+    expect(restoreWriteAuthorized('2026-08-07', '')).toBe(false);
+  });
+
+  it('refuses a confirmation token for a different date', () => {
+    expect(restoreWriteAuthorized('2026-08-07', 'RESTORE-2026-08-06')).toBe(false);
+  });
+
+  it('refuses a truthy but wrong token', () => {
+    expect(restoreWriteAuthorized('2026-08-07', 'yes')).toBe(false);
+    expect(restoreWriteAuthorized('2026-08-07', 'true')).toBe(false);
+    expect(restoreWriteAuthorized('2026-08-07', '1')).toBe(false);
+  });
+
+  it('authorizes only the token naming the exact date being restored', () => {
+    expect(restoreWriteAuthorized('2026-08-07', 'RESTORE-2026-08-07')).toBe(true);
+  });
+});
+
+describe('resolveBackupNamespace', () => {
+  it('resolves a known namespace name to its binding', () => {
+    const cache = { put: vi.fn() };
+    const env = { TENSORFEED_CACHE: cache } as unknown as Env;
+    expect(resolveBackupNamespace(env, 'TENSORFEED_CACHE')).toBe(cache);
+  });
+
+  it('returns null for a name outside the backup set', () => {
+    const env = { TENSORFEED_CACHE: {} } as unknown as Env;
+    expect(resolveBackupNamespace(env, 'SOMETHING_ELSE')).toBeNull();
+    expect(resolveBackupNamespace(env, 'BACKUPS_R2')).toBeNull();
+  });
+
+  it('returns null when the binding is absent from env', () => {
+    const env = {} as unknown as Env;
+    expect(resolveBackupNamespace(env, 'TENSORFEED_CACHE')).toBeNull();
+  });
+});
+
+describe('restoreNamespaceFromR2', () => {
+  const DATE = '2026-08-07';
+
+  it('reads every part listed in the manifest and counts records without writing in dry run', async () => {
+    const records = [
+      { k: 'pay:evt:a', v: '{"usd":0.02}' },
+      { k: 'pay:evt:b', v: '{"usd":0.10}' },
+      { k: 'history:2026-08-01', v: 'x' },
+    ];
+    const bucket = await r2WithBackup(DATE, [{ name: 'TENSORFEED_CACHE', records, perPart: 2 }]);
+    const target = targetKv();
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    const report = await restoreNamespaceFromR2(env, {
+      date: DATE,
+      namespace: 'TENSORFEED_CACHE',
+      target,
+    });
+
+    expect(report.dry_run).toBe(true);
+    expect(report.parts_read).toBe(2);
+    expect(report.records).toBe(3);
+    expect(report.keys_written).toBe(0);
+    expect(target.put).not.toHaveBeenCalled();
+    expect(report.matches_manifest).toBe(true);
+  });
+
+  it('writes every record back into the target namespace when dry run is disabled', async () => {
+    const records = [
+      { k: 'pay:evt:a', v: '{"usd":0.02}', m: { rail: 'evm' } },
+      { k: 'pay:evt:b', v: '{"usd":0.10}' },
+    ];
+    const bucket = await r2WithBackup(DATE, [{ name: 'TENSORFEED_CACHE', records, perPart: 1 }]);
+    const target = targetKv();
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    const report = await restoreNamespaceFromR2(env, {
+      date: DATE,
+      namespace: 'TENSORFEED_CACHE',
+      target,
+      dryRun: false,
+    });
+
+    expect(report.keys_written).toBe(2);
+    expect(target._written.get('pay:evt:a')!.value).toBe('{"usd":0.02}');
+    expect(target._written.get('pay:evt:a')!.metadata).toEqual({ rail: 'evm' });
+    expect(target._written.get('pay:evt:b')!.value).toBe('{"usd":0.10}');
+  });
+
+  it('restores only keys matching the prefix filter', async () => {
+    const records = [
+      { k: 'pay:evt:a', v: '1' },
+      { k: 'news:top', v: '2' },
+      { k: 'pay:evt:b', v: '3' },
+    ];
+    const bucket = await r2WithBackup(DATE, [{ name: 'TENSORFEED_CACHE', records, perPart: 3 }]);
+    const target = targetKv();
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    const report = await restoreNamespaceFromR2(env, {
+      date: DATE,
+      namespace: 'TENSORFEED_CACHE',
+      target,
+      dryRun: false,
+      prefix: 'pay:',
+    });
+
+    expect(report.keys_written).toBe(2);
+    expect([...target._written.keys()].sort()).toEqual(['pay:evt:a', 'pay:evt:b']);
+  });
+
+  it('refuses to write from a namespace the manifest marks incomplete', async () => {
+    const bucket = await r2WithBackup(DATE, [
+      { name: 'TENSORFEED_CACHE', records: [{ k: 'a', v: '1' }], complete: false },
+    ]);
+    const target = targetKv();
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    await expect(
+      restoreNamespaceFromR2(env, { date: DATE, namespace: 'TENSORFEED_CACHE', target, dryRun: false }),
+    ).rejects.toThrow(/incomplete/i);
+    expect(target.put).not.toHaveBeenCalled();
+  });
+
+  it('restores an incomplete namespace only when explicitly allowed', async () => {
+    const bucket = await r2WithBackup(DATE, [
+      { name: 'TENSORFEED_CACHE', records: [{ k: 'a', v: '1' }], complete: false },
+    ]);
+    const target = targetKv();
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    const report = await restoreNamespaceFromR2(env, {
+      date: DATE,
+      namespace: 'TENSORFEED_CACHE',
+      target,
+      dryRun: false,
+      allowIncomplete: true,
+    });
+
+    expect(report.keys_written).toBe(1);
+  });
+
+  it('flags a record count that disagrees with the manifest key count', async () => {
+    const bucket = await r2WithBackup(DATE, [
+      { name: 'TENSORFEED_CACHE', records: [{ k: 'a', v: '1' }], keyCountOverride: 99 },
+    ]);
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    const report = await restoreNamespaceFromR2(env, {
+      date: DATE,
+      namespace: 'TENSORFEED_CACHE',
+      target: targetKv(),
+    });
+
+    expect(report.records).toBe(1);
+    expect(report.manifest_key_count).toBe(99);
+    expect(report.matches_manifest).toBe(false);
+  });
+
+  it('throws when the date has no manifest', async () => {
+    const bucket = await r2WithBackup(DATE, [{ name: 'TENSORFEED_CACHE', records: [{ k: 'a', v: '1' }] }]);
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    await expect(
+      restoreNamespaceFromR2(env, { date: '2020-01-01', namespace: 'TENSORFEED_CACHE', target: targetKv() }),
+    ).rejects.toThrow(/manifest/i);
+  });
+
+  it('throws when the namespace is absent from the manifest', async () => {
+    const bucket = await r2WithBackup(DATE, [{ name: 'TENSORFEED_CACHE', records: [{ k: 'a', v: '1' }] }]);
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    await expect(
+      restoreNamespaceFromR2(env, { date: DATE, namespace: 'TENSORFEED_STATUS', target: targetKv() }),
+    ).rejects.toThrow(/TENSORFEED_STATUS/);
+  });
+
+  it('records a missing part as an error instead of silently restoring less', async () => {
+    const bucket = await r2WithBackup(DATE, [
+      { name: 'TENSORFEED_CACHE', records: [{ k: 'a', v: '1' }, { k: 'b', v: '2' }], perPart: 1 },
+    ]);
+    const realGet = bucket.get;
+    bucket.get = vi.fn(async (key: string) =>
+      key.endsWith('part-0001.jsonl.gz') ? null : realGet(key),
+    );
+    const env = { BACKUPS_R2: bucket } as unknown as Env;
+
+    const report = await restoreNamespaceFromR2(env, {
+      date: DATE,
+      namespace: 'TENSORFEED_CACHE',
+      target: targetKv(),
+    });
+
+    expect(report.records).toBe(1);
+    expect(report.errors.some((e) => /part-0001/.test(e))).toBe(true);
+    expect(report.matches_manifest).toBe(false);
   });
 });
