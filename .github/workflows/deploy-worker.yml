@@ -5,9 +5,22 @@ on:
     branches: [main]
     paths:
       - 'worker/**'
+  # Manual re-run. The deploy is gated on the full Worker suite, and
+  # src/probe.test.ts has a known open race, so a deploy can be blocked by a
+  # flake rather than a real regression. This re-runs the gate; it does not
+  # bypass it. If the suite is genuinely red, fix the suite.
+  workflow_dispatch:
 
 jobs:
+  # Gate: the full Worker suite must pass before anything ships. Reuses
+  # worker-tests.yml rather than duplicating the steps, so there is one
+  # definition of what "tests pass" means. A skipped test job (fork, where
+  # the repository guard fails) also skips the deploy, which is intended.
+  test:
+    uses: ./.github/workflows/worker-tests.yml
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
