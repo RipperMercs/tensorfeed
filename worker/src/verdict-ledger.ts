@@ -189,6 +189,44 @@ export async function captureVerdictPanel(
   return { date, written: written.length, skipped, errors };
 }
 
+export interface VerdictDayIndex {
+  date: string;
+  captured_at: string;
+  question_ids: string[];
+  skipped: string[];
+  errors: string[];
+  methodology_digest: string;
+  panel_digest: string;
+}
+
+/**
+ * Read back one day of the ledger.
+ *
+ * A write-only store is one you cannot verify, and "the put succeeded" is not
+ * the same claim as "the record is there and readable". That distinction cost
+ * this repo a real DR gap once already, so the ledger ships with an inspection
+ * path from day one. Admin-gated at the route layer; nothing here is public.
+ *
+ * Driven off the index rather than a KV prefix list, so a record named by the
+ * index but absent from KV is REPORTED rather than silently omitted.
+ */
+export async function readVerdictDay(
+  env: Env,
+  date: string,
+): Promise<{ date: string; index: VerdictDayIndex | null; records: VerdictRecord[]; missing: string[] }> {
+  const index = (await env.TENSORFEED_CACHE.get(verdictIndexKey(date), 'json')) as VerdictDayIndex | null;
+  if (!index) return { date, index: null, records: [], missing: [] };
+
+  const records: VerdictRecord[] = [];
+  const missing: string[] = [];
+  for (const id of index.question_ids) {
+    const rec = (await env.TENSORFEED_CACHE.get(verdictKey(date, id), 'json')) as VerdictRecord | null;
+    if (rec) records.push(rec);
+    else missing.push(id);
+  }
+  return { date, index, records, missing };
+}
+
 // === the canonical panel ===
 
 const ROUTING_TASKS: RoutingTask[] = ['code', 'reasoning', 'creative', 'general'];

@@ -6,6 +6,7 @@ import {
   verdictIndexKey,
   verdictKey,
   VERDICT_PANEL,
+  readVerdictDay,
   type PanelQuestion,
 } from './verdict-ledger';
 import type { Env } from './types';
@@ -228,5 +229,44 @@ describe('VERDICT_PANEL', () => {
     // by caller count, so it does not scale with a traffic wave.
     expect(VERDICT_PANEL.length).toBeGreaterThan(0);
     expect(VERDICT_PANEL.length).toBeLessThanOrEqual(25);
+  });
+});
+
+describe('readVerdictDay', () => {
+  const NOW = '2026-08-07T07:05:00.000Z';
+
+  it('returns the index and every record written for that date', async () => {
+    const cache = mockCache();
+    const env = { TENSORFEED_CACHE: cache } as unknown as Env;
+    await captureVerdictPanel(env, NOW, fakePanel({ a: CORE_A, b: CORE_A }));
+
+    const day = await readVerdictDay(env, '2026-08-07');
+
+    expect(day.index?.question_ids.sort()).toEqual(['a', 'b']);
+    expect(day.records.length).toBe(2);
+    expect(day.records.map((r) => r.question_id).sort()).toEqual(['a', 'b']);
+    expect(day.records[0]!.decision).toBe('anthropic/claude-sonnet-4.6');
+  });
+
+  it('returns an empty day rather than throwing when nothing was written', async () => {
+    const cache = mockCache();
+    const env = { TENSORFEED_CACHE: cache } as unknown as Env;
+
+    const day = await readVerdictDay(env, '2020-01-01');
+
+    expect(day.index).toBeNull();
+    expect(day.records).toEqual([]);
+  });
+
+  it('reports a record named by the index that is missing from KV', async () => {
+    const cache = mockCache();
+    const env = { TENSORFEED_CACHE: cache } as unknown as Env;
+    await captureVerdictPanel(env, NOW, fakePanel({ a: CORE_A, b: CORE_A }));
+    cache._store.delete(verdictKey('2026-08-07', 'b'));
+
+    const day = await readVerdictDay(env, '2026-08-07');
+
+    expect(day.records.length).toBe(1);
+    expect(day.missing).toEqual(['b']);
   });
 });
