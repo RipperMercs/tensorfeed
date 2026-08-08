@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'google-deepmind-consolidation-cost-four-fellows',
+    title:
+      'Google Collapsed the Brain and DeepMind Split Into One Chain of Command. The Price Was Four Fellows and 5 Percent of Alphabet.',
+    author: 'Kira Nolan',
+    date: 'August 8, 2026',
+    readTime: '6 min read',
+    description:
+      "On Wednesday, August 5, 2026, Sundar Pichai reset the top of Google's AI stack. Demis Hassabis stepped back to Chair of Google DeepMind and Chief Scientist of Alphabet (keeping the operating seat only at Isomorphic Labs). Koray Kavukcuoglu, a 13-year DeepMind veteran now based in Mountain View, took over as SVP of Google DeepMind reporting directly to Pichai, with ownership of Gemini model development, frontier AI research, and the Gemini app and developer teams. Inside the same 48-hour window, four of Google's most load-bearing AI ICs walked out: Jeff Dean and Sanjay Ghemawat (27 years each, Chief Scientist and Senior Fellow), Quoc Le (founding Google Brain member), and Oriol Vinyals (DeepMind senior research scientist). They are co-founding Discovery Loop, a public benefit corporation aimed at automating machine learning research, with Radical Ventures and Khosla Ventures co-leading the seed round and Google itself on the cap table. Alphabet closed the week off roughly 5 percent. Inside the numbers table (reshuffle date, Kavukcuoglu role, Hassabis role, four fellows out, 27-year tenures, Discovery Loop as PBC, seed leads plus Google, roughly 5 percent market read, three-year-stale 2023 Brain plus DeepMind merger), what the org chart actually says now (single-continent single-chain-of-command shape Anthropic and OpenAI have had all along, the coordination tax that shows up in every launch cycle whether the org chart admits it or not), the price of consolidation (four load-bearing ICs walking on the same day is not coincidence, it is the tax on collapsing two chains into one), why Google wrote the seed check anyway (call option on the four people it could not keep inside a single chain, the alumni-startup-with-check hedge already stable across Anthropic and OpenAI), what this does to Gemini (Kavukcuoglu inherits a closed-most-of-the-gap benchmark posture, the $200B Anthropic TPU commitment as a validation datapoint, and just lost the four researchers most closely associated with the research culture, competitive window narrow against Claude Opus 5 at the top of Artificial Analysis and OpenAI Sol running a 20 percent per cycle inference-cost rewrite), and the governance read for a general counsel watching frontier-lab structure in the wake of the EU AI Act enforcement start (Brussels wants one name in one time zone at one company). Three signposts: whether Discovery Loop ships a public research artifact inside 12 months and Google prioritizes it as first-look, whether Gemini's next flagship launches under Kavukcuoglu with a shorter thrash window than the Gemini 3.x cycle, and whether Meta, xAI, or Mistral is the next to collapse a two-continent structure into a one-continent one.",
+  },
+  {
     slug: 'cloudflare-wallets-buyer-side-x402-loop-closed',
     title:
       'Cloudflare Just Closed the Buyer Side of x402. cloudflare.pay Turns the Edge Into a Two-Sided Agent Payments Network.',
