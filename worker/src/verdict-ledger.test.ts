@@ -430,3 +430,19 @@ describe('scoreVerdictHorizons', () => {
     expect(computes).toBe(1);
   });
 });
+
+describe('scoreVerdictHorizons at horizon 0', () => {
+  it('scores today against today, which is the production self-check', async () => {
+    const cache = mockCache();
+    const env = await seedDay(cache, '2026-08-14', 'model-x');
+
+    const res = await scoreVerdictHorizons(env, '2026-08-14T09:00:00.000Z', [0], scorablePanel('model-x'));
+
+    expect(res.scored).toBe(1);
+    expect(res.horizons[0]!.origin_date).toBe('2026-08-14');
+    const out = JSON.parse(cache._store.get(verdictOutcomeKey('2026-08-14', 0, 'route-verdict:task=code'))!);
+    // Same inputs, same binary, same day: anything but held means the compute
+    // path is not deterministic and the whole ledger is untrustworthy.
+    expect(out.label).toBe('held');
+  });
+});
