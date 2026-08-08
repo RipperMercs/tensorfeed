@@ -7,6 +7,8 @@ import {
   verdictKey,
   VERDICT_PANEL,
   readVerdictDay,
+  scoreVerdictHorizons,
+  verdictOutcomeKey,
   type PanelQuestion,
 } from './verdict-ledger';
 import type { Env } from './types';
@@ -268,5 +270,163 @@ describe('readVerdictDay', () => {
 
     expect(day.records.length).toBe(1);
     expect(day.missing).toEqual(['b']);
+  });
+});
+
+// === phase B: forward scoring ===
+
+/** A panel question that can also report whether a past decision still stands. */
+function scorablePanel(
+  todayDecision: string | null,
+  invalidated: Record<string, boolean> = {},
+): PanelQuestion[] {
+  return [
+    {
+      id: 'route-verdict:task=code',
+      endpoint: '/api/premium/route-verdict',
+      verdict_class: 'model_choice',
+      compute: async () =>
+        todayDecision === null
+          ? null
+          : { decision: todayDecision, alternatives: [], detail: {}, inputs: { pricing: '2026-08-14' } },
+      statusOf: async (_env: Env, decision: string) => ({
+        invalidated: !!invalidated[decision],
+        reason: invalidated[decision] ? 'sunsetted' : 'operational',
+        evidence: { checked: decision },
+      }),
+    },
+  ];
+}
+
+async function seedDay(cache: any, date: string, decision: string): Promise<Env> {
+  const env = { TENSORFEED_CACHE: cache } as unknown as Env;
+  await captureVerdictPanel(env, `${date}T07:00:00.000Z`, [
+    {
+      id: 'route-verdict:task=code',
+      endpoint: '/api/premium/route-verdict',
+      verdict_class: 'model_choice',
+      compute: async () => ({ decision, alternatives: ['b'], detail: {}, inputs: { pricing: date } }),
+    },
+  ]);
+  return env;
+}
+
+describe('scoreVerdictHorizons', () => {
+  it('labels a decision that still stands today as held', async () => {
+    const cache = mockCache();
+    const env = await seedDay(cache, '2026-08-07', 'model-x');
+
+    const res = await scoreVerdictHorizons(env, '2026-08-14T07:00:00.000Z', [7], scorablePanel('model-x'));
+
+    expect(res.scored).toBe(1);
+    const out = JSON.parse(cache._store.get(verdictOutcomeKey('2026-08-07', 7, 'route-verdict:task=code'))!);
+    expect(out.label).toBe('held');
+    expect(out.original_decision).toBe('model-x');
+    expect(out.current_decision).toBe('model-x');
+    expect(out.horizon_days).toBe(7);
+  });
+
+  it('labels a changed answer superseded when the original is still valid', async () => {
+    const cache = mockCache();
+    const env = await seedDay(cache, '2026-08-07', 'model-x');
+
+    await scoreVerdictHorizons(env, '2026-08-14T07:00:00.000Z', [7], scorablePanel('model-y'));
+
+    const out = JSON.parse(cache._store.get(verdictOutcomeKey('2026-08-07', 7, 'route-verdict:task=code'))!);
+    // The world moved. The call was not wrong when it was made.
+    expect(out.label).toBe('superseded');
+    expect(out.current_decision).toBe('model-y');
+  });
+
+  it('labels it reversed when the original decision was invalidated', async () => {
+    const cache = mockCache();
+    const env = await seedDay(cache, '2026-08-07', 'model-x');
+
+    await scoreVerdictHorizons(
+      env,
+      '2026-08-14T07:00:00.000Z',
+      [7],
+      scorablePanel('model-y', { 'model-x': true }),
+    );
+
+    const out = JSON.parse(cache._store.get(verdictOutcomeKey('2026-08-07', 7, 'route-verdict:task=code'))!);
+    expect(out.label).toBe('reversed');
+    expect(out.reason).toContain('sunsetted');
+    expect(out.evidence.checked).toBe('model-x');
+  });
+
+  it('records that our own methodology moved, so a reversal is not blamed on the world', async () => {
+    const cache = mockCache();
+    const env = await seedDay(cache, '2026-08-07', 'model-x');
+    // Rewrite the stored record as if it had been captured under a different
+    // methodology, which is what a weights change would look like later.
+    const key = verdictKey('2026-08-07', 'route-verdict:task=code');
+    const rec = JSON.parse(cache._store.get(key)!);
+    rec.methodology_digest = 'ffffffffffffffff';
+    cache._store.set(key, JSON.stringify(rec));
+
+    await scoreVerdictHorizons(env, '2026-08-14T07:00:00.000Z', [7], scorablePanel('model-y'));
+
+    const out = JSON.parse(cache._store.get(verdictOutcomeKey('2026-08-07', 7, 'route-verdict:task=code'))!);
+    expect(out.methodology_changed).toBe(true);
+  });
+
+  it('marks a question that is no longer on the panel as unresolved, not reversed', async () => {
+    const cache = mockCache();
+    const env = await seedDay(cache, '2026-08-07', 'model-x');
+
+    // Today's panel no longer contains that question id.
+    const otherPanel: PanelQuestion[] = [
+      { id: 'route-verdict:task=general', endpoint: '/e', verdict_class: 'model_choice', compute: async () => null },
+    ];
+    await scoreVerdictHorizons(env, '2026-08-14T07:00:00.000Z', [7], otherPanel);
+
+    const out = JSON.parse(cache._store.get(verdictOutcomeKey('2026-08-07', 7, 'route-verdict:task=code'))!);
+    expect(out.label).toBe('unresolved');
+    expect(out.reason).toContain('retired');
+  });
+
+  it('marks it unresolved when today cannot answer, rather than guessing', async () => {
+    const cache = mockCache();
+    const env = await seedDay(cache, '2026-08-07', 'model-x');
+
+    await scoreVerdictHorizons(env, '2026-08-14T07:00:00.000Z', [7], scorablePanel(null));
+
+    const out = JSON.parse(cache._store.get(verdictOutcomeKey('2026-08-07', 7, 'route-verdict:task=code'))!);
+    expect(out.label).toBe('unresolved');
+  });
+
+  it('does nothing for a horizon with no origin day, without throwing', async () => {
+    const cache = mockCache();
+    const env = { TENSORFEED_CACHE: cache } as unknown as Env;
+
+    const res = await scoreVerdictHorizons(env, '2026-08-14T07:00:00.000Z', [7, 30, 90], scorablePanel('x'));
+
+    expect(res.scored).toBe(0);
+    expect(res.horizons.find((h) => h.horizon_days === 7)?.origin_date).toBe('2026-08-07');
+  });
+
+  it('scores each horizon into its own key so the three never collide', () => {
+    const a = verdictOutcomeKey('2026-08-07', 7, 'q');
+    const b = verdictOutcomeKey('2026-08-07', 30, 'q');
+    expect(a).not.toBe(b);
+    expect(a).toMatch(/^verdict:outcome:/);
+  });
+
+  it('computes today once per question rather than once per record', async () => {
+    const cache = mockCache();
+    const env = await seedDay(cache, '2026-08-07', 'model-x');
+    await seedDay(cache, '2026-07-15', 'model-x'); // a D+30 origin as well
+
+    let computes = 0;
+    const panel = scorablePanel('model-x');
+    const counting: PanelQuestion[] = [
+      { ...panel[0]!, compute: async (e) => { computes++; return panel[0]!.compute(e); } },
+    ];
+
+    await scoreVerdictHorizons(env, '2026-08-14T07:00:00.000Z', [7, 30], counting);
+
+    // Two horizons both scored, but today's verdict is computed once.
+    expect(computes).toBe(1);
   });
 });

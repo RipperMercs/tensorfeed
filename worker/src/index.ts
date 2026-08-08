@@ -15939,6 +15939,30 @@ export default {
       }
     }
 
+    // /api/admin/verdict-panel/score POST &key=<ADMIN_KEY>[&horizons=7,30,90]
+    //   Force the forward scoring now instead of waiting for the daily cron.
+    //   Idempotent: re-scoring a horizon overwrites that horizon's outcome
+    //   rather than accumulating, since the key is (origin date, horizon).
+    if (path === '/api/admin/verdict-panel/score' && isAuthorizedAdmin(env, extractAdminKey(request, url))) {
+      if (request.method !== 'POST') {
+        return jsonResponse({ ok: false, error: 'POST_required' }, 405);
+      }
+      const raw = url.searchParams.get('horizons');
+      const horizons = raw
+        ? raw.split(',').map((n) => parseInt(n.trim(), 10)).filter((n) => Number.isFinite(n) && n > 0)
+        : undefined;
+      if (raw && (!horizons || horizons.length === 0)) {
+        return jsonResponse({ ok: false, error: 'horizons_must_be_positive_integers' }, 400);
+      }
+      try {
+        const { scoreVerdictHorizons } = await import('./verdict-ledger');
+        const report = await scoreVerdictHorizons(env, new Date().toISOString(), horizons);
+        return jsonResponse({ ok: true, report }, 200, 0);
+      } catch (e) {
+        return jsonResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+      }
+    }
+
     // /api/admin/verdict-panel/records GET &key=<ADMIN_KEY>&date=YYYY-MM-DD
     //   Inspect one day of the verdict ledger. Admin only: the decision
     //   history is the asset, not a public feed.
@@ -16875,6 +16899,17 @@ export default {
       await run('captureVerdictPanel', async () => {
         const { captureVerdictPanel } = await import('./verdict-ledger');
         return captureVerdictPanel(env, new Date().toISOString());
+      });
+      // Phase B: score the verdicts made 7, 30 and 90 days ago against what is
+      // true now. Runs right after the capture so today's answer is computed
+      // from the same freshly-updated inputs the capture used. A day with no
+      // origin records is a no-op, which is the normal case until the ledger
+      // is 7 days old. Labels held / superseded / reversed / unresolved; the
+      // held-vs-superseded split is what stops a competitor's launch reading
+      // as TensorFeed being wrong.
+      await run('scoreVerdictHorizons', async () => {
+        const { scoreVerdictHorizons } = await import('./verdict-ledger');
+        return scoreVerdictHorizons(env, new Date().toISOString());
       });
       // Daily AI Attention Index snapshot. Compounds into a multi-month
       // series of per-provider attention. Backs /api/attention/history
