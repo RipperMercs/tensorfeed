@@ -29,6 +29,7 @@
  */
 
 import type { Env } from './types';
+import { sanitizeMcpPayload } from './sanitize';
 import { recordHostedToolCall } from './mcp-activity';
 import { fetchCVE } from './security-cve';
 import { readKEVCurrent, summarizeKEVForFreeTier } from './security-kev';
@@ -156,9 +157,21 @@ function rpcError(
   return { jsonrpc: '2.0', id, error: { code, message, ...(data !== undefined ? { data } : {}) } };
 }
 
+/**
+ * Single assembly point for every hosted tool result, and therefore the
+ * place the output scrub belongs.
+ *
+ * Everything this server returns lands in a calling agent's context, and a
+ * lot of it is text TF did not write: operators self-describe in the agent
+ * directory, CVE and advisory text comes from upstream, feed items come
+ * from publishers. Scrubbing here rather than in each handler means a tool
+ * added later cannot forget it. Payment material is exempted inside
+ * sanitizeMcpPayload so signed x402 requirements stay byte-exact.
+ */
 function mcpContent(payload: unknown): { content: Array<{ type: 'text'; text: string }> } {
+  const safe = sanitizeMcpPayload(payload);
   const text =
-    typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+    typeof safe === 'string' ? safe : JSON.stringify(safe, null, 2);
   return { content: [{ type: 'text', text }] };
 }
 
