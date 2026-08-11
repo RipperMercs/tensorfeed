@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'google-mechanize-1-5b-third-reverse-acqui-hire',
+    title:
+      'Google Is in Talks to Pay $1.5B for Mechanize, a 103-Day-Old Startup. Third Reverse Acqui-Hire in Two Years, and the Coding-Agent Gap Made Visible.',
+    author: 'Marcus Chen',
+    date: 'August 11, 2026',
+    readTime: '6 min read',
+    description:
+      "Google is negotiating a $1.5 billion-plus non-exclusive licensing and staff hire deal for Mechanize, an AI coding-evaluation startup that closed a $9.1 million seed on April 24, 2026, only 103 days before the offer. The three founders (Tamay Besiroglu, Matthew Barnett, Ege Erdil) came out of Epoch AI and now run a roughly 25-person shop building simulated work environments and evaluation systems for coding agents: end-to-end software engineering trajectories that live somewhere between a benchmark and a production repo. Inside the numbers table (deal size, seed size, seed-to-offer gap, implied 165x mark, Character AI $2.7B in Aug 2024, Windsurf $2.4B in July 2025, three-deal $6.6B total, ~25 headcount, April 2025 founding), the reverse acqui-hire playbook Google has now run three times inside two years (non-exclusive license plus hire of the load-bearing staff into DeepMind, startup entity survives with license fee on balance sheet, merger review skipped by design), what Mechanize actually sells (evaluation trajectories with the ambiguous requirements, flaky tests, and multi-step tool calls a real developer session generates, the exact bottleneck every frontier lab is trying to solve now that SWE-Bench saturates in a quarter, the shop that grades the harness against reality while Meta gradient-shares a co-trained harness inside its own weights), the six-day gradient inversion (Jeff Dean, Sanjay Ghemawat, Quoc Le, and Oriol Vinyals walked on August 5, four 27-year fellows out and 25 coding-eval researchers in on August 11, average tenure collapsing and the org rebuilding around the coding-agent problem specifically), what this does to the coding-agent market (near-term nothing because Mechanize does not ship code, longer-term a Gemini 4 flagship effect in first half of 2027, and a floor price of $1.5B on any comparable coding-eval shop that resets the Series A market for the category overnight), and the FTC pattern (three reverse acqui-hires by the same buyer in two years for $6.6B combined, all shaped to skip merger review, is exactly the pattern that produces a policy response even if a rule change is not imminent). Three signposts: whether the terms close inside 30 days at the reported $1.5B band or come in structurally different, whether the FTC or DOJ opens an informal inquiry into the reverse acqui-hire pattern before end of Q4, and whether Anthropic or OpenAI responds with a counter-hire from the same coding-eval bench inside 60 days.",
+  },
+  {
     slug: 'meta-muse-glimmer-open-weights-local-agent-floor',
     title:
       'Meta Shipped a 30B Agent That Runs on a Laptop. Muse Glimmer Is the Second Track, and the Zuckerberg Op-Ed Is the Ask.',
