@@ -266,6 +266,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/verdicts/trust-ai-found-cves`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/verdicts/frontier-premium-worth-it`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/originals`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/originals/openai-gpt-56-cyber-93-point-alignment-gap`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/google-mechanize-1-5b-third-reverse-acqui-hire`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/meta-muse-glimmer-open-weights-local-agent-floor`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
     { url: `${baseUrl}/originals/meta-muse-spark-1-2-harness-cotrained-contributor-tier`, lastModified: now, changeFrequency: 'weekly', priority: 0.95 },
