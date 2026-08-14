@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'deepseek-v4-pro-price-inversion-open-harness',
+    title:
+      'DeepSeek Just Inverted the Pricing War. V4-Pro Ships With Higher Prices and an Open-Source Rival to Claude Code.',
+    author: 'Adrian Vale',
+    date: 'August 14, 2026',
+    readTime: '6 min read',
+    description:
+      "On Thursday, August 13, 2026, DeepSeek shipped V4-Pro-0813 to general availability across app, web, and API, raised paid-tier prices between 51 and 355 percent depending on token type, introduced peak and off-peak billing keyed to Beijing time, and open-sourced DeepSeek Harness under MIT the same afternoon (a plugin-first coding agent that landed at roughly 27,000 GitHub stars inside hours and targets Claude Code directly). Inside the numbers table (V4-Pro input cache-miss $0.66 off-peak and $1.32 peak vs $0.435 prior, output $1.98 off-peak and $3.96 peak vs $0.87 prior, peak windows 09:00 to 12:00 and 14:00 to 18:00 Beijing time so US and European developers sit inside off-peak, Terminal Bench 2.1 self-report of 87.9 vs Fable 5 at 88.0, CyberGym 83.3, 1M input and 384K output context with thinking and non-thinking modes and Anthropic plus Responses API compatibility native), why the pricing move works now (Fable-tier benchmark on the same day as the invoice turns cheap-inference from a customer-acquisition tool into an operating tax the supplier no longer wants to pay), why the peak-window geometry lands on the side of the export customer, the Harness read (MIT license, plugin runtime on Cordis, npx launcher, dsh-plugin GitHub topic, roughly 27,000 stars in 24 hours, ships in front of any provider that speaks Anthropic or Responses API), what the two-front attack does to Claude Code (the top of the Claude buyer list is intact but the individual developer, small agent shop, and OSS project standardizing on a coding harness just got a serious open-source alternative that runs V4-Pro underneath at Sonnet-class economics), the agent-payments read (the harness floor and the pricing floor moved in opposite directions on the same day and both benefit an agent builder paying compute out of the same margin as merchant fees, giving the first plausible full stack where none of harness, wire protocol, payments layer, or frontier model charges runtime rent), the sanctions caveat (a Chinese-hosted paid API with tool-calling permissions is a different question than open weights and CAISI has not answered it), and why the Harness is the workaround for exactly that concern (provider-agnostic MIT code swaps V4-Pro out for Opus 5 or Fable 5 the day procurement says no, so the wedge stays useful even if the model underneath changes). Three signposts: whether Anthropic or OpenAI ships a permissive-license coding harness inside 60 days, whether a closed-API vendor cuts a Sonnet-class or Flash-class SKU 30 to 50 percent to reset the mid-tier price, and whether an independent evaluator (Artificial Analysis, LMArena, or an enterprise buyer running its own eval) confirms the Terminal Bench 2.1 number DeepSeek self-reported.",
+  },
+  {
     slug: 'anthropic-watermarks-claude-worldwide-eu-ai-act-floor',
     title:
       'Anthropic Will Watermark Every Claude Output Worldwide. The EU AI Act Just Got Its First Real Compliance Ship.',
