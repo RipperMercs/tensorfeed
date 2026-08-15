@@ -17,6 +17,16 @@ export interface OriginalArticle {
 
 export const ORIGINALS: OriginalArticle[] = [
   {
+    slug: 'gemini-3-7-flash-half-price-mechanize-coding-loop',
+    title:
+      'Google Cut Gemini Flash 50 Percent the Same Day DeepSeek Raised Prices. Gemini 3.7 Flash Is the Mechanize Answer.',
+    author: 'Marcus Chen',
+    date: 'August 15, 2026',
+    readTime: '6 min read',
+    description:
+      "On Thursday, August 13, 2026, Google DeepMind shipped Gemini 3.7 Flash three weeks after 3.6 Flash, cut introductory pricing to $0.75 input and $3.75 output per million through December 31 (standard rate $1.50 and $7.50 from January 1, 2027), posted a 16.3 point jump on DeepSWE v1.1 from 49.0 to 65.3 percent, a 9.2 point jump on FrontierCode 1.1 Main from 34.4 to 43.6 percent, kept the 1M input and 65K output context envelope, and wired the model into Gemini Spark (the 24/7 personal agent for Pro and Ultra subscribers in 160+ countries) on ship day. Two frontier labs moved in opposite directions on the same day: DeepSeek raised V4-Pro paid prices between 51 and 355 percent and open-sourced an MIT-licensed Claude Code rival, while Google cut its workhorse tier by half and pointed it at coding and agents specifically. Inside the numbers table (ship date, intro and post-intro pricing, DeepSWE and FrontierCode gains, context envelope, Gemini Spark day-0 integration), the same-day split as a two-theory pricing story (DeepSeek says operator margin lives at the model provider so the price should reflect benchmark parity, Google says operator margin lives at the platform so per-token price is a knob to turn while the stack is assembled), the Mechanize throughline (Google was in talks to buy a 103-day-old coding-evaluation startup for $1.5 billion just two days before the Flash release, and the DeepSWE jump is the kind of gain a lab with new evaluation trajectories would post), the tier read (the US developer floor for a frontier-adjacent coding model is now $0.75 input and $3.75 output for the next four and a half months without the sanctions overhang of a Chinese hosted API, the DeepSeek Harness thesis gets a natural second provider through a Vertex OpenAI-compatible bridge, and Claude Code priced against Sonnet 5 economics sits in a squeeze between Fable-tier V4-Pro and workhorse-tier 3.7 Flash), and the January 1 reset (the intro price doubles back to standard on New Year and Google is betting four and a half months of promotional pricing is enough to make switching cost real, though the harness layer may make switching cost smaller than any prior tier reset assumed). Three signposts: whether Anthropic responds inside 30 days with a Sonnet 5 pricing move or a Claude Code integration push, whether Google ships a permissive-license coding harness of its own before end of quarter, and whether the DeepSeek Harness contributor pool ships a Gemini adapter before end of month.",
+  },
+  {
     slug: 'deepseek-v4-pro-price-inversion-open-harness',
     title:
       'DeepSeek Just Inverted the Pricing War. V4-Pro Ships With Higher Prices and an Open-Source Rival to Claude Code.',
