@@ -84,12 +84,12 @@ export const PROVIDERS: ProviderMeta[] = [
     seoDescription:
       'Everything about Meta AI and Llama. Open source models, 10M context window, benchmarks, and deployment options. Updated daily on TensorFeed.',
     intro:
-      'Meta has positioned itself as the champion of open-source AI. Their Llama 4 family includes Scout (with a record 10 million token context window) and Maverick (which competes with proprietary mid-tier models on benchmarks), all free to download and self-host under the Llama Community License. On July 9, 2026 Meta shifted strategy with Muse Spark 1.1, its first paid API model, opened to US developers at $1.25 input / $4.25 output per 1M tokens, roughly a quarter of OpenAI and Anthropic list rates. Muse Spark 1.1 is a multimodal reasoning model built for agentic and coding work, with a 1M self-managed context window, native primary-agent and subagent orchestration, and MCP support. It tops tool-use benchmarks (88.1 on MCP Atlas) though it trails the leaders on pure coding accuracy. Meta remains the most important player for teams that need on-premise deployments, fine-tuning, or zero marginal inference cost, and now also competes on low-cost hosted agentic inference.',
+      'Meta has positioned itself as the champion of open-source AI. Their Llama 4 family includes Scout (with a record 10 million token context window) and Maverick (which competes with proprietary mid-tier models on benchmarks), all free to download and self-host under the Llama Community License. On July 9, 2026 Meta shifted strategy with Muse Spark 1.1, its first paid API model, opened to US developers at $1.25 input / $4.25 output per 1M tokens, roughly a quarter of OpenAI and Anthropic list rates. On August 5, 2026 it followed with Muse Code, a terminal coding agent for macOS and Linux, and Muse Spark 1.2, a coding-focused update co-trained inside the Muse Code harness. Standard 1.2 pricing holds at $1.25/$4.25, but the new muse-spark-1.2-contributor tier serves the same weights at $0.10/$0.20 in exchange for training rights on your data, currently the cheapest frontier-adjacent coding path on the market. Meta remains the most important player for teams that need on-premise deployments, fine-tuning, or zero marginal inference cost, and now also competes hard on low-cost hosted agentic inference.',
     founded: '2004 (Meta); 2013 (FAIR)',
     headquarters: 'Menlo Park, CA',
     ceo: 'Mark Zuckerberg',
-    keyProducts: ['Muse Spark 1.1', 'Llama 4 Scout', 'Llama 4 Maverick', 'Meta AI Assistant'],
-    strengths: ['Muse Spark 1.1 low-cost agentic API ($1.25/$4.25)', 'Fully open-source Llama family', 'Free to self-host and fine-tune', '10M token context (Scout)', 'No per-token cost for open weights'],
+    keyProducts: ['Muse Spark 1.2', 'Muse Code', 'Muse Spark 1.1', 'Llama 4 Scout', 'Llama 4 Maverick', 'Meta AI Assistant'],
+    strengths: ['Muse Spark 1.2 contributor tier at $0.10/$0.20, cheapest frontier-adjacent coding path', 'Muse Code terminal agent co-trained with the model', 'Fully open-source Llama family', 'Free to self-host and fine-tune', '10M token context (Scout)'],
   },
   {
     slug: 'mistral',
@@ -228,13 +228,13 @@ export const PROVIDERS: ProviderMeta[] = [
     url: 'https://x.ai',
     seoTitle: 'xAI: Grok Models, Pricing, and API Overview',
     seoDescription:
-      'Everything about xAI and Grok. Grok 4.5 coding model, pricing, 500K context, benchmarks, and company overview. Updated daily on TensorFeed.',
+      'Everything about xAI and Grok. Grok 4.6 launch, Grok 4.5 pricing, 500K context, benchmarks, and company overview. Updated daily on TensorFeed.',
     intro:
-      'xAI is Elon Musk\'s AI company, founded in 2023 and integrated with X (formerly Twitter) for real-time data. On July 8, 2026 it released Grok 4.5, its first model built specifically for coding and agentic work, on the 1.5 trillion parameter V9 foundation (up from Grok 4.3\'s V8) and trained on real coding-agent data. Grok 4.5 lands fourth on the Artificial Analysis Intelligence Index, above every open-weight model and every Gemini model, at a price more than 60% below Claude Opus 4.8 or GPT-5.5. It leads Opus 4.8 on the provider-harness DeepSWE 1.0 score and on Terminal-Bench 2.1 (83.3) while trailing it on the neutral DeepSWE 1.1 run and on SWE-Bench Pro (64.7). API pricing is $2 input / $6 output per 1M tokens, with cached input at $0.50 and a higher-context surcharge above 200K tokens. xAI narrowed the context window to 500K tokens to focus the model on coding, and says it plans to train new models from scratch on a monthly cadence through the end of 2026.',
+      'xAI is Elon Musk\'s AI company, founded in 2023 and integrated with X (formerly Twitter) for real-time data. On August 7, 2026 it launched Grok 4.6, built on the same 1.5 trillion parameter V9 foundation as Grok 4.5 with the entire upgrade coming from improved supervised fine-tuning and reinforcement learning; xAI positions it against Kimi K3 and Claude Opus 4.8 while preserving Grok 4.5\'s speed and cost envelope. At launch xAI had not published a separate Grok 4.6 rate card, official benchmarks, or a confirmed context window, and a larger 2.1T Grok 4.7 is slated to follow within weeks. Its predecessor Grok 4.5, released July 8, 2026, was xAI\'s first model built specifically for coding and agentic work: fourth on the Artificial Analysis Intelligence Index at $2 input / $6 output per 1M tokens, with cached input at $0.50, a higher-context surcharge above 200K tokens, and a 500K context window narrowed to focus the model on coding. xAI says it plans to train new models from scratch on a monthly cadence through the end of 2026.',
     founded: '2023',
     headquarters: 'Palo Alto, CA',
     ceo: 'Elon Musk',
-    keyProducts: ['Grok 4.5', 'Grok 4.3', 'Grok API', 'Grok in X', 'SuperGrok'],
+    keyProducts: ['Grok 4.6', 'Grok 4.5', 'Grok 4.3', 'Grok API', 'Grok in X', 'SuperGrok'],
     strengths: ['Fourth on the Artificial Analysis Intelligence Index', 'Over 60% cheaper than Opus 4.8 or GPT-5.5', 'Real-time X data integration', 'Coding-focused V9 foundation', 'Monthly from-scratch training cadence'],
   },
   {

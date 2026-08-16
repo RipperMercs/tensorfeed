@@ -82,6 +82,14 @@ const categories: { title: string; id: string; tools: Tool[] }[] = [
         url: 'https://claude.ai',
       },
       {
+        name: 'Muse Code',
+        description:
+          'Meta\'s terminal coding agent, released in beta on August 5, 2026 for macOS and Linux. Powered by Muse Spark 1.2, which was co-trained inside the Muse Code harness. Persistent background agents run subtasks across the session, and a replay-safe event log makes it restart-safe after a crash. The standout is pricing: the optional contributor tier serves the model at $0.10 input / $0.20 output per 1M tokens if you allow Meta to train on your data.',
+        pricing: 'Pay per use via Meta Model API: $1.25/$4.25 per 1M tokens standard, $0.10/$0.20 contributor tier.',
+        bestFor: 'Cost-sensitive agentic coding at high volume',
+        url: 'https://dev.meta.ai',
+      },
+      {
         name: 'Windsurf',
         description:
           'An AI-powered IDE that emphasizes collaborative workflows between human and AI. Features a "Cascade" flow for multi-step tasks and strong support for full-stack web development.',

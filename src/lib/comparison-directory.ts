@@ -1243,6 +1243,45 @@ export const COMPARISONS: ComparisonMeta[] = [
       'Teams comparing against the top of the open-weight index rather than the top of the coding niche',
     ],
   },
+  // ── Added August 9, 2026 ────────────────────────────────────────────
+  {
+    slug: 'muse-spark-1-2-vs-claude-opus-5',
+    modelA: 'muse-spark-1-2',
+    modelB: 'claude-opus-5',
+    nameA: 'Muse Spark 1.2',
+    nameB: 'Claude Opus 5',
+    providerA: 'Meta',
+    providerB: 'Anthropic',
+    benchmarkNameA: 'Muse Spark 1.2',
+    benchmarkNameB: 'Claude Opus 5',
+    seoTitle: 'Muse Spark 1.2 vs Claude Opus 5: Price Against Peak Accuracy',
+    seoDescription:
+      'Meta Muse Spark 1.2 vs Claude Opus 5 compared. $1.25/$4.25 (or $0.10/$0.20 contributor) against $5/$25, Terminal-Bench and DeepSWE scores, and verdicts on TensorFeed.',
+    intro:
+      'Meta picked this fight itself: the Muse Spark 1.2 launch charts on August 5, 2026 benchmark directly against Claude Opus 5, and Opus 5 wins every one of them. On Terminal-Bench 2.1 it is 86.7 to 82.9, on DeepSWE 1.1 it is 65.0 to 59.3, and on Meta\'s own internal coding bench 79.4 to 70.6, all vendor-reported. What Meta is actually selling is the price sheet. Standard Muse Spark 1.2 runs $1.25 input / $4.25 output per 1M tokens against $5 / $25 for Opus 5, and the muse-spark-1.2-contributor tier drops to $0.10 / $0.20 if you let Meta train on your data, a gap of 50x on input and 125x on output. Both models ship 1M token context. Muse Spark 1.2 was co-trained inside its own Muse Code harness, which helps it there and reportedly degrades tool calling elsewhere; Opus 5 is the stronger, harness-agnostic model with verified leaderboard presence. If accuracy per task decides, buy Opus 5. If cost per task decides and your code can be training data, nothing hosted is cheaper than the contributor tier.',
+    verdicts: [
+      { category: 'Terminal coding (Terminal-Bench 2.1)', winner: 'B', reason: 'Opus 5 scores 86.7 vs Muse Spark 1.2 at 82.9 on Meta\'s own launch chart, vendor-reported' },
+      { category: 'Agentic software engineering (DeepSWE 1.1)', winner: 'B', reason: 'Opus 5 leads 65.0 to 59.3 on the neutral harness run' },
+      { category: 'List pricing', winner: 'A', reason: 'Muse Spark 1.2 is $1.25/$4.25 vs Opus 5 at $5/$25, a 4x to 6x gap before the contributor tier' },
+      { category: 'Contributor-tier pricing', winner: 'A', reason: 'At $0.10/$0.20 with data-training opt-in, the gap widens to 50x on input and 125x on output' },
+      { category: 'Harness portability', winner: 'B', reason: 'Muse Spark 1.2 was co-trained with Muse Code and early reports describe degraded tool calling in other harnesses; Opus 5 runs cleanly across Claude Code, MCP stacks, and third-party agents' },
+      { category: 'Context window', winner: 'tie', reason: 'Both ship 1M token context windows' },
+      { category: 'Verified benchmark presence', winner: 'B', reason: 'Opus 5 has broad verified leaderboard coverage; Muse Spark 1.2 published two vendor charts and no MMLU, GPQA, or SWE-bench Verified numbers' },
+      { category: 'Data policy clarity', winner: 'A', reason: 'Meta prices the data-for-discount trade as an explicit tier rather than burying it in terms of service' },
+    ],
+    chooseA: [
+      'High-volume agent inner loops where cost per task dominates',
+      'Teams whose code can be training data and want the $0.10/$0.20 contributor rate',
+      'Terminal-first development inside Muse Code itself',
+      'Budget-capped experimentation with long-horizon coding agents',
+    ],
+    chooseB: [
+      'Peak verified accuracy on coding and reasoning',
+      'Harness-agnostic deployment across Claude Code, MCP, Bedrock, and Vertex',
+      'Work where prompts and code must stay out of training data at list price',
+      'Long-horizon autonomous runs where reliability beats a price gap',
+    ],
+  },
 ];
 
 export function getComparisonBySlug(slug: string): ComparisonMeta | undefined {

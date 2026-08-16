@@ -470,6 +470,24 @@ export const MODEL_DIRECTORY: ModelPageMeta[] = [
     tier: 'mid',
   },
 
+  {
+    slug: 'muse-spark-1-2',
+    pricingId: 'muse-spark-1-2',
+    benchmarkName: 'Muse Spark 1.2',
+    providerId: 'meta',
+    providerName: 'Meta',
+    providerUrl: 'https://ai.meta.com',
+    seoTitle: 'Muse Spark 1.2: Pricing, Contributor Tier, Specs',
+    seoDescription:
+      'Meta Muse Spark 1.2, the August 5, 2026 coding update behind Muse Code. $1.25/$4.25 standard, $0.10/$0.20 contributor tier, 1M context, and specs on TensorFeed.',
+    intro:
+      'Muse Spark 1.2 is Meta\'s coding-focused update to Muse Spark 1.1, released August 5, 2026 alongside Muse Code, a terminal coding agent for macOS and Linux. The structural choice worth noticing: the model was co-trained inside the Muse Code harness, so its behavior and the harness\'s goals, compaction, and subagent recipes were optimized as one unit, and early reports describe degraded tool calling in other harnesses. Standard pricing holds at $1.25 per million input tokens and $4.25 per million output with a 1M self-managed context window. The new muse-spark-1.2-contributor tier serves the same weights at $0.10 input and $0.20 output, roughly 12x cheaper on input, if you agree to let Meta train on your data; that undercuts DeepSeek V4 Flash ($0.14/$0.28) and GPT-5.6 Luna ($0.20/$1.20). Meta reports 82.9 on Terminal-Bench 2.1 and 59.3 on DeepSWE 1.1, second to Claude Opus 5 on both (86.7 and 65.0), and its flagship demo had Muse Code optimizing GPU kernels over 1,000+ tool calls across 24 hours. Treat all scores as vendor-reported; they are not on verified leaderboards, and standard MMLU or SWE-bench numbers are not published.',
+    strengths: ['Contributor tier at $0.10/$0.20 is the cheapest frontier-adjacent coding path', 'Co-trained with the Muse Code harness for agentic reliability', '1M self-managed context window', 'Replay-safe event log and persistent background agents in Muse Code', 'Long-horizon training: whole-repo generation and 24-hour kernel optimization runs'],
+    useCases: ['High-volume coding agent inner loops where per-token cost dominates', 'Terminal-first agentic development via Muse Code', 'Long-horizon multi-step engineering tasks', 'Teams comfortable trading training data for a 12x discount'],
+    docsUrl: 'https://developer.meta.com/ai/models/muse-spark/',
+    tier: 'mid',
+  },
+
   // ── Mistral ────────────────────────────────────────────────────────
   {
     slug: 'mistral-medium-3-5',
