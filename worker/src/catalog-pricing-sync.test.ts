@@ -15,7 +15,7 @@ import { BASELINE_PRICING } from './catalog';
  * is that every provider id and model id in the canonical file is present in the
  * baseline, so the worker can never serve a narrower catalog than canonical.
  */
-function loadCanonical(): { providers: { id: string; models: { id: string }[] }[] } {
+function loadCanonical(): { lastUpdated: string; providers: { id: string; models: { id: string }[] }[] } {
   for (const rel of ['../data/pricing.json', 'data/pricing.json', '../../data/pricing.json']) {
     const abs = resolve(process.cwd(), rel);
     if (existsSync(abs)) return JSON.parse(readFileSync(abs, 'utf8'));
@@ -64,5 +64,15 @@ describe('BASELINE_PRICING covers every provider and model in data/pricing.json'
     for (const p of canonical.providers) {
       expect(baseById.get(p.id)).toEqual(p.models.map((m) => m.id));
     }
+  });
+
+  // The date is what the freshness audit and every "how current is this" claim
+  // read, and it drifted independently of the model rows: canonical said
+  // 2026-08-09 while the worker mirror still said 2026-08-01, so /api/models
+  // served two new models under a stale date and the drift audit kept reporting
+  // models as stale after the catalog had actually been refreshed. Membership
+  // parity alone never catches that, so assert the date too.
+  it('matches the canonical lastUpdated date', () => {
+    expect(BASELINE_PRICING.lastUpdated).toBe(canonical.lastUpdated);
   });
 });
