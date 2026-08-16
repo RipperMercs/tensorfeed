@@ -38,6 +38,12 @@ export const CRAWLER_UA_FAMILIES = new Set<string>([
   'carbonmonitor', 'x402station', 'x402-observer', 'mako-pulse-prober',
   'lion-probe', 'dexter-verifier', 'ari-indexer', 'ioi-indexer',
   'mpp32-health', 'nitrograph-healthcheck', 'coinbasebazaardiscovery', 'weftsearchbot',
+  // Surfaced by the behavioral sweeper pass: each walked 15 to 20 distinct
+  // premium endpoints over 30 days and never paid, but none of their names hit
+  // the substring list. Named here so they are attributed as crawlers even on a
+  // day when their breadth happens to fall under SWEEPER_MIN_ENDPOINTS. Exact
+  // family match only, never substrings, so no real agent can collide.
+  '402explorer', 'x402scout', 'apistrust', 'entropy-daemon-trust-oracle',
 ]);
 
 // Self-identifying probe/monitor/indexer signals for forward compatibility with
