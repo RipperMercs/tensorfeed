@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-05",
+  "lastUpdated": "2026-08-16",
   "categories": [
     {
       "id": "coding",
@@ -28,6 +28,26 @@
     }
   ],
   "agents": [
+    {
+      "id": "muse-code",
+      "name": "Muse Code",
+      "provider": "Meta",
+      "category": "coding",
+      "description": "A terminal coding agent for macOS and Linux, released August 5, 2026 and co-trained as one unit with Muse Spark 1.2 so the model and the harness share goals, compaction, and subagent recipes. Runs persistent background agents across a session and keeps a replay-safe event log so it survives a crash.",
+      "url": "https://dev.meta.ai",
+      "pricing": "Usage-based via the Meta Model API: $1.25/$4.25 per 1M tokens standard, or $0.10/$0.20 on the contributor tier if you let Meta train on your data",
+      "launched": 2026
+    },
+    {
+      "id": "deepseek-harness",
+      "name": "DeepSeek Harness",
+      "provider": "DeepSeek",
+      "category": "coding",
+      "description": "A plugin-first open-source coding agent released August 13, 2026 under MIT, aimed directly at Claude Code. Shipped the same day DeepSeek moved V4-Pro to general availability and raised API prices, pairing an open harness with a more expensive model.",
+      "url": "https://www.deepseek.com",
+      "pricing": "Free and open source under MIT; model inference billed separately",
+      "launched": 2026
+    },
     {
       "id": "claude-code",
       "name": "Claude Code",
