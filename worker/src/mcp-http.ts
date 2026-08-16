@@ -1899,8 +1899,22 @@ export async function handleMcpHttpRequest(request: Request, env: Env): Promise<
 
   if (request.method === 'GET') {
     // Minimal discovery surface for clients that probe via GET. Memoized.
+    //
+    // This is 98.8% of everything that reaches /api/mcp: a single prober family
+    // made 859 GET probes and zero tool calls in the window that first carried
+    // method telemetry. The body is a compile-time constant that only changes on
+    // deploy, so there is no reason for each probe to spend a Worker invocation.
+    // Let the edge serve it. A deploy takes up to s-maxage to be reflected in
+    // the discovery doc, which is fine for a document describing a tool list.
     recordMcpMethod(env, 'GET', uaFamily);
-    return new Response(GET_DISCOVERY_BODY, { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(GET_DISCOVERY_BODY, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=300, s-maxage=300',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }
   if (request.method !== 'POST') {
     return new Response('method_not_allowed', { status: 405 });

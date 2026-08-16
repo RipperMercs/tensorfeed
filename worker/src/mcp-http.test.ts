@@ -61,6 +61,19 @@ describe('handleMcpHttpRequest GET', () => {
     expect(body.related_surface).toContain('24');
     expect(typeof body.superseded_tools).toBe('string');
   });
+
+  it('lets the edge serve the GET discovery probe', async () => {
+    // 98.8% of this endpoint's traffic is GET probes from one prober family
+    // that never calls a tool. The body is a compile-time constant, so paying a
+    // Worker invocation per probe bought nothing.
+    const resp = await handleMcpHttpRequest(
+      new Request('https://tensorfeed.ai/api/mcp', { method: 'GET' }),
+      {} as Env,
+    );
+    const cc = resp.headers.get('Cache-Control') ?? '';
+    expect(cc).toContain('s-maxage=300');
+    expect(cc).toContain('public');
+  });
 });
 
 describe('initialize', () => {
